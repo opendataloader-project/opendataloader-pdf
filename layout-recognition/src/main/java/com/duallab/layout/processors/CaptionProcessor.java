@@ -1,0 +1,89 @@
+package com.duallab.layout.processors;
+
+import com.duallab.layout.Info;
+import com.duallab.layout.containers.StaticLayoutContainers;
+import com.duallab.layout.pdf.PDFWriter;
+import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.SemanticFigure;
+import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
+import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
+import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.CaptionUtils;
+
+import java.util.List;
+
+import static com.duallab.layout.processors.DocumentProcessor.getContentsValueForTextNode;
+
+public class CaptionProcessor {
+
+    public static void processCaptions(List<IObject> contents) {
+        SemanticFigure imageNode = null;
+        SemanticTextNode lastTextNode = null;
+        for (IObject content : contents) {
+            if (content != null) {
+                if (content instanceof SemanticTextNode) {
+                    SemanticTextNode textNode = (SemanticTextNode)content;
+                    if (!textNode.isSpaceNode() && !textNode.isEmpty()) {
+                        if (imageNode != null) {
+                            acceptImageCaption(imageNode, lastTextNode, textNode);
+                            imageNode = null;
+                        }
+                        lastTextNode = textNode;
+                    }
+                } else if (content instanceof ImageChunk) {
+                    if (imageNode != null) {
+                        acceptImageCaption(imageNode, lastTextNode, null);
+                        lastTextNode = null;
+                    }
+                    imageNode = new SemanticFigure((ImageChunk) content);
+                } else if (content instanceof TableBorder) {
+                    if (imageNode != null) {
+                        acceptImageCaption(imageNode, lastTextNode, null);
+                        lastTextNode = null;
+                    }
+                    ImageChunk imageChunk = new ImageChunk(content.getBoundingBox());
+                    imageChunk.setRecognizedStructureId(content.getRecognizedStructureId());
+                    imageNode = new SemanticFigure(imageChunk);
+                }
+            }
+        }
+        if (imageNode != null) {
+            acceptImageCaption(imageNode, lastTextNode, null);
+        }
+//        for (IObject content1 : contents) {
+//            if (content1 instanceof SemanticTextNode) {
+//                SemanticTextNode textNode = (SemanticTextNode)content1;
+//                for (IObject content2 : contents) {
+//                    if (content2 instanceof ImageChunk) {
+//                        SemanticFigure imageNode = new SemanticFigure((ImageChunk) content2);
+//                        acceptImageCaption(imageNode, textNode, textNode);
+//                    }
+//                }
+//            }
+//        }
+    }
+
+    private static void acceptImageCaption(SemanticFigure imageNode, SemanticTextNode previousNode, SemanticTextNode nextNode) {
+        if (imageNode.getImages().isEmpty()) {
+            return;
+        }
+        double previousCaptionProbability = CaptionUtils.imageCaptionProbability(previousNode, imageNode);
+        double nextCaptionProbability = CaptionUtils.imageCaptionProbability(nextNode, imageNode);
+        double captionProbability;
+        SemanticTextNode captionNode;
+//        Long connectedId = null;
+        if (previousCaptionProbability > nextCaptionProbability) {
+//            connectedId = previousNode.
+            captionProbability = previousCaptionProbability;
+            captionNode = previousNode;
+        } else {
+            captionProbability = nextCaptionProbability;
+            captionNode = nextNode;
+        }
+        if (captionProbability >= 0.75) {
+            captionNode.setSemanticType(SemanticType.CAPTION);
+            StaticLayoutContainers.getMap().put(captionNode, new Info(getContentsValueForTextNode(captionNode) + ", connected with object with id = " + imageNode.getImages().get(0).getRecognizedStructureId(), PDFWriter.getColor(SemanticType.CAPTION)));
+        }
+    }
+}
