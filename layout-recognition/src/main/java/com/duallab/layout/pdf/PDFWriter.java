@@ -1,7 +1,8 @@
 package com.duallab.layout.pdf;
 
-import com.duallab.layout.Info;
+import com.duallab.layout.ContentInfo;
 import com.duallab.layout.containers.StaticLayoutContainers;
+import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
@@ -25,66 +26,59 @@ import java.io.IOException;
 import java.util.List;
 
 public class PDFWriter {
-    public static void updatePDF(String pdfName, String password, String outputName, List<List<IObject>> contents, List<TextChunk> hiddenTextChunks/*,
-            List<TableBorderCell> tableBorderCells*/) throws IOException {
-        org.apache.pdfbox.pdmodel.PDDocument document = org.apache.pdfbox.pdmodel.PDDocument.load(new File(pdfName), password);
-//        int id = 1;
+    public static void updatePDF(String pdfName, String password, String outputName, List<List<IObject>> contents, 
+                                 List<TextChunk> hiddenTextChunks) throws IOException {
+        PDDocument document = PDDocument.load(new File(pdfName), password);
         for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
             for (IObject content : contents.get(pageNumber)) {
-//        for (int i = contents.size() - 1; i >= 0; i--) {
-//            IObject content = contents.get(i);
-//            if (!(content instanceof Table)) {
-//                continue;
-//            }
-                Info info = StaticLayoutContainers.getMap().get(content);
-                if (info != null /*&& content instanceof INode && (SemanticType.LIST == ((INode) content).getSemanticType()*/ /*&& (info.contents.contains(SemanticType.HEADER.getValue()) || info.contents.contains(SemanticType.FOOTER.getValue())))*/) {
-                    PDAnnotation annot = draw(document, content.getBoundingBox(), info.color, info.contents, content.getRecognizedStructureId(), null);
+                ContentInfo contentInfo = StaticLayoutContainers.getContentInfoMap().get(content);
+                if (contentInfo != null) {
+                    PDAnnotation annot = draw(document, content.getBoundingBox(), contentInfo.color, contentInfo.contents, 
+                            content.getRecognizedStructureId(), null);
                     if (content instanceof TableBorder) {
-                        TableBorder border = (TableBorder) content;
-                        for (int rowNumber = 0; rowNumber < border.getNumberOfRows(); rowNumber++) {
-                            TableBorderRow row = border.getRow(rowNumber);
-                            for (int colNumber = 0; colNumber < border.getNumberOfColumns(); colNumber++) {
-                                TableBorderCell cell = row.getCell(colNumber);
-                                if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
-                                    StringBuilder contentValue = new StringBuilder();
-                                    for (TableToken token : cell.getContent()) {
-                                        contentValue.append(token.getValue());
-                                    }
-                                    String cellValue = String.format("Table cell: row number %s, column number %s, row span %s, column span %s, text content \"%s\"",
-                                            cell.getRowNumber() + 1, cell.getColNumber() + 1, cell.getRowSpan(), cell.getColSpan(), contentValue);
-                                    draw(document, cell.getBoundingBox(), getColor(SemanticType.TABLE), cellValue, null, annot);
-                                }
-                            }
-                        }
+                        drawTableCells(document, (TableBorder) content, annot);
                     } else if (content instanceof PDFList) {
-                        PDFList list = (PDFList) content;
-                        for (ListItem listItem : list.getListItems()) {
-                            String contentValue = String.format("List item: text content \"%s\"", listItem.toString());
-                            draw(document, listItem.getBoundingBox(), getColor(SemanticType.LIST), contentValue, null, annot);
-                        }
+                        drawListItems(document, (PDFList) content, annot);
                     }
                 }
             }
         }
         for (TextChunk textChunk : hiddenTextChunks) {
-            draw(document, textChunk.getBoundingBox(), getColor(SemanticType.FIGURE), String.format("Hidden text, value = \"%s\"", textChunk.getValue()), null, null);
+            draw(document, textChunk.getBoundingBox(), getColor(SemanticType.FIGURE), 
+                    String.format("Hidden text, value = \"%s\"", textChunk.getValue()), null, null);
         }
-//        for (TableBorderCell cell : tableBorderCells) {
-//            StringBuilder contentValue = new StringBuilder();
-//            for (TableToken token : cell.getContent()) {
-//                contentValue.append(token.getValue());
-//            }
-//            String cellValue = String.format("Table cell: row number %s, column number %s, row span %s, column span %s, text content \"%s\"",
-//                    cell.getRowNumber() + 1, cell.getColNumber() + 1, cell.getRowSpan(), cell.getColSpan(), contentValue);
-//            draw(document, cell.getBoundingBox(), getColor(SemanticType.TABLE), cellValue, null);
-//        }
         System.out.println("Created " + outputName);
         document.setAllSecurityToBeRemoved(true);
         document.save(outputName);
         document.close();
     }
+    
+    private static void drawTableCells(PDDocument document, TableBorder border, PDAnnotation annot) throws IOException {
+        for (int rowNumber = 0; rowNumber < border.getNumberOfRows(); rowNumber++) {
+            TableBorderRow row = border.getRow(rowNumber);
+            for (int colNumber = 0; colNumber < border.getNumberOfColumns(); colNumber++) {
+                TableBorderCell cell = row.getCell(colNumber);
+                if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
+                    StringBuilder contentValue = new StringBuilder();
+                    for (TableToken token : cell.getContent()) {
+                        contentValue.append(token.getValue());
+                    }
+                    String cellValue = String.format("Table cell: row number %s, column number %s, row span %s, column span %s, text content \"%s\"",
+                            cell.getRowNumber() + 1, cell.getColNumber() + 1, cell.getRowSpan(), cell.getColSpan(), contentValue);
+                    draw(document, cell.getBoundingBox(), getColor(SemanticType.TABLE), cellValue, null, annot);
+                }
+            }
+        }
+    }
+    
+    private static void drawListItems(PDDocument document, PDFList list, PDAnnotation annot) throws IOException {
+        for (ListItem listItem : list.getListItems()) {
+            String contentValue = String.format("List item: text content \"%s\"", listItem.toString());
+            draw(document, listItem.getBoundingBox(), getColor(SemanticType.LIST), contentValue, null, annot);
+        }
+    }
 
-    public static PDAnnotation draw(org.apache.pdfbox.pdmodel.PDDocument document, BoundingBox boundingBox, float[] colorArray,
+    public static PDAnnotation draw(PDDocument document, BoundingBox boundingBox, float[] colorArray,
                                     String contents, Long id, PDAnnotation linkedAnnot) throws IOException {
         PDPage page = document.getPage(boundingBox.getPageNumber());
         PDAnnotationSquareCircle square = new PDAnnotationSquareCircle(PDAnnotationSquareCircle.SUB_TYPE_SQUARE);

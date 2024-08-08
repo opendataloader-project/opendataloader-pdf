@@ -1,6 +1,6 @@
 package com.duallab.layout.processors;
 
-import com.duallab.layout.Info;
+import com.duallab.layout.ContentInfo;
 import com.duallab.layout.containers.StaticLayoutContainers;
 import com.duallab.layout.pdf.PDFWriter;
 import org.verapdf.wcag.algorithms.entities.IObject;
@@ -12,8 +12,6 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.CaptionUtils;
 
 import java.util.List;
-
-import static com.duallab.layout.processors.DocumentProcessor.getContentsValueForTextNode;
 
 public class CaptionProcessor {
 
@@ -72,9 +70,7 @@ public class CaptionProcessor {
         double nextCaptionProbability = CaptionUtils.imageCaptionProbability(nextNode, imageNode);
         double captionProbability;
         SemanticTextNode captionNode;
-//        Long connectedId = null;
         if (previousCaptionProbability > nextCaptionProbability) {
-//            connectedId = previousNode.
             captionProbability = previousCaptionProbability;
             captionNode = previousNode;
         } else {
@@ -83,7 +79,7 @@ public class CaptionProcessor {
         }
         if (captionProbability >= 0.75) {
             captionNode.setSemanticType(SemanticType.CAPTION);
-            StaticLayoutContainers.getMap().put(captionNode, new Info(getContentsValueForTextNode(captionNode) + ", connected with object with id = " + imageNode.getImages().get(0).getRecognizedStructureId(), PDFWriter.getColor(SemanticType.CAPTION)));
+            StaticLayoutContainers.getContentInfoMap().put(captionNode, new ContentInfo(DocumentProcessor.getContentsValueForTextNode(captionNode) + ", connected with object with id = " + imageNode.getImages().get(0).getRecognizedStructureId(), PDFWriter.getColor(SemanticType.CAPTION)));
         }
     }
 }

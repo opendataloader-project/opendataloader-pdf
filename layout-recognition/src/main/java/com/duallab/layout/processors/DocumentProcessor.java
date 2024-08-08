@@ -30,50 +30,37 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.duallab.layout.processors.TableBorderProcessor.processTableBorders;
-
 public class DocumentProcessor {
     private static final Logger LOGGER = Logger.getLogger(DocumentProcessor.class.getCanonicalName());
 
     public static void processFile(String pdfName, String outputName, String password) throws IOException {
-//        System.out.println("Process " + pdfName);
         preprocessing(pdfName, password);
-        calculateInfo(pdfName);
+        calculateDocumentInfo(pdfName);
         List<TextChunk> hiddenTexts = new ArrayList<>();
         List<List<IObject>> contents = new ArrayList<>();
         for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
             List<IObject> pageContents = new ArrayList<>(StaticContainers.getDocument().getArtifacts(pageNumber));
-            contents.add(pageContents);
-            if (StaticLayoutContainers.findHiddenText) {
+            if (StaticLayoutContainers.isFindHiddenText()) {
                 hiddenTexts.addAll(HiddenTextProcessor.findHiddenText(pdfName, pageContents));
             }
-//        System.out.println("Table borders");
-            /*List<TableBorderCell> tableBorderCells =*/ processTableBorders(pageContents, pageNumber);
-//        System.out.println("Lists");
-//        processClusterDetectionLists(contents);
-//        System.out.println("Paragraphs");
-            processBackgrounds(pageContents);
-            removeSpaces(pageContents);
-            TextLineProcessor.processLines(pageContents);
-            ListProcessor.processExperimentalLists(pageContents);
-            ParagraphProcessor.processParagraphs(pageContents);
-//        System.out.println("Headings");
+            TableBorderProcessor.processTableBorders(pageContents, pageNumber);
+            processBackgrounds(pageNumber, pageContents);
+            pageContents = TextLineProcessor.processTextLines(pageContents);
+            ListProcessor.processLists(pageContents);
+            pageContents = ParagraphProcessor.processParagraphs(pageContents);
             HeadingProcessor.processHeadings(pageContents);
-//        System.out.println("Lists");
-//       processLists(contents);
             setIDs(pageContents);
-//        System.out.println("Captions");
             CaptionProcessor.processCaptions(pageContents);
-//        System.out.println("Images");
             ImageProcessor.processImages(pageContents);
+            contents.add(pageContents);
         }
         HeaderFooterProcessor.processHeadersAndFooters(contents);
-        PDFWriter.updatePDF(pdfName, password, outputName, contents, hiddenTexts/*, tableBorderCells*/);
+        PDFWriter.updatePDF(pdfName, password, outputName, contents, hiddenTexts);
     }
 
     public static void preprocessing(String pdfName, String password) throws IOException {
         StaticResources.clear();
-        StaticLayoutContainers.setId(1);
+        StaticLayoutContainers.setContentId(1);
         org.verapdf.gf.model.impl.containers.StaticContainers.clearAllContainers();
         StaticResources.setPassword(password);
         PDDocument pdDocument = new PDDocument(pdfName);
@@ -94,7 +81,7 @@ public class DocumentProcessor {
         }
     }
 
-    private static void calculateInfo(String pdfName) {
+    private static void calculateDocumentInfo(String pdfName) {
         PDDocument document = StaticResources.getDocument();
         System.out.println("File name: " + pdfName);
         System.out.println("Number of pages: " + document.getNumberOfPages());
@@ -126,7 +113,6 @@ public class DocumentProcessor {
             i++;
         }
         if (index == null) {
-//            System.out.println("Some problem");
             return;
         }
         contents.set(index, result);
@@ -178,31 +164,44 @@ public class DocumentProcessor {
     }
 
     public static String getContentsValueForTextNode(SemanticTextNode textNode) {
-        return String.format("%s: font %s, text size %.2f, text color %s, text content \"%s\"", textNode.getSemanticType().getValue(),
-                textNode.getFirstLine().getFirstTextChunk().getFontName(), textNode.getFirstLine().getFirstTextChunk().getFontSize(),
-                Arrays.toString(textNode.getTextColor()), textNode.getValue().length() > 15 ? textNode.getValue().substring(0, 15) + "..." : textNode.getValue());
+        return String.format("%s: font %s, text size %.2f, text color %s, text content \"%s\"", 
+                textNode.getSemanticType().getValue(), textNode.getFirstLine().getFirstTextChunk().getFontName(), 
+                textNode.getFirstLine().getFirstTextChunk().getFontSize(), Arrays.toString(textNode.getTextColor()), 
+                textNode.getValue().length() > 15 ? textNode.getValue().substring(0, 15) + "..." : textNode.getValue());
     }
 
-    public static void processBackgrounds(List<IObject> contents) {
+    public static void processBackgrounds(int pageNumber, List<IObject> contents) {
+        BoundingBox pageBoundingBox = getPageBoundingBox(pageNumber);
+        if (pageBoundingBox == null) {
+            return;
+        }
         Set<LineArtChunk> backgrounds = new HashSet<>();
         for (IObject content : contents) {
             if (content instanceof LineArtChunk) {
-                double[] cropBox = StaticResources.getDocument().getPage(content.getPageNumber()).getCropBox();
-                if (cropBox != null) {
-                    BoundingBox pageBoundingBox = new BoundingBox(content.getPageNumber(), cropBox);
-                    if ((content.getBoundingBox().getWidth() > 0.5 * pageBoundingBox.getWidth() &&
-                            content.getBoundingBox().getHeight() > 0.1 * pageBoundingBox.getHeight()) ||
-                            (content.getBoundingBox().getWidth() > 0.1 * pageBoundingBox.getWidth() &&
-                                    content.getBoundingBox().getHeight() > 0.5 * pageBoundingBox.getHeight())) {
-                        backgrounds.add((LineArtChunk)content);
-                    }
+                if (isBackground(content, pageBoundingBox)) {
+                    backgrounds.add((LineArtChunk)content);
                 }
             }
         }
         if (!backgrounds.isEmpty()) {
-            LOGGER.log(Level.WARNING, "Detected background on page " + backgrounds.iterator().next().getPageNumber());
+            LOGGER.log(Level.WARNING, "Detected background on page " + pageNumber);
             contents.removeAll(backgrounds);
         }
+    }
+    
+    private static BoundingBox getPageBoundingBox(int pageNumber) {
+        double[] cropBox = StaticResources.getDocument().getPage(pageNumber).getCropBox();
+        if (cropBox == null) {
+            return null;
+        }
+        return new BoundingBox(pageNumber, cropBox);
+    }
+    
+    private static boolean isBackground(IObject content, BoundingBox pageBoundingBox) {
+        return (content.getBoundingBox().getWidth() > 0.5 * pageBoundingBox.getWidth() &&
+                content.getBoundingBox().getHeight() > 0.1 * pageBoundingBox.getHeight()) ||
+                (content.getBoundingBox().getWidth() > 0.1 * pageBoundingBox.getWidth() &&
+                        content.getBoundingBox().getHeight() > 0.5 * pageBoundingBox.getHeight());
     }
 
     public static void removeSpaces(List<IObject> contents) {
@@ -217,27 +216,9 @@ public class DocumentProcessor {
         contents.removeAll(spaceTextChunks);
     }
 
-    public static TextLine getTextLine(TextLine line) {
+    public static TextLine getTrimTextLine(TextLine line) {
+        //remove spaces, update boundingBox
         return line;
-//        int index = 0;
-//        for (TextChunk textChunk : line.getTextChunks()) {
-//            if (!textChunk.isWhiteSpaceChunk()) {
-//                break;
-//            }
-//            index++;
-//        }
-//        if (index == 0) {
-//            return line;
-//        }
-//        TextLine newLine = new TextLine();
-//        int i = 0;
-//        for (TextChunk chunk : line.getTextChunks()) {
-//            if (i >= index) {
-//                newLine.add(chunk);
-//            }
-//            i++;
-//        }
-//        return newLine;
     }
 
     public static List<IObject> sortContents(List<IObject> contents) {

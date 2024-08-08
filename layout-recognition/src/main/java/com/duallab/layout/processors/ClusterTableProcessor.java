@@ -1,6 +1,6 @@
 package com.duallab.layout.processors;
 
-import com.duallab.layout.Info;
+import com.duallab.layout.ContentInfo;
 import com.duallab.layout.containers.StaticLayoutContainers;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticFigure;
@@ -33,7 +33,7 @@ public class ClusterTableProcessor {
         for (PDFList list : clusterTableConsumer.getLists()) {
             DocumentProcessor.replaceContentsToResult(contents, list);
             String value = String.format("List: number of items %s", list.getNumberOfListItems());
-            StaticLayoutContainers.getMap().put(list, new Info(value, PDFWriter.getColor(SemanticType.LIST)));
+            StaticLayoutContainers.getContentInfoMap().put(list, new ContentInfo(value, PDFWriter.getColor(SemanticType.LIST)));
         }
 //        for (Table table : clusterTableConsumer.getTables()) {
 //            replaceContentsToResult(contents, table);

@@ -1,6 +1,6 @@
 package com.duallab.layout.processors;
 
-import com.duallab.layout.Info;
+import com.duallab.layout.ContentInfo;
 import com.duallab.layout.containers.StaticLayoutContainers;
 import com.duallab.layout.pdf.PDFWriter;
 import org.verapdf.wcag.algorithms.entities.IObject;
@@ -30,7 +30,8 @@ public class HeadingProcessor {
                     textNodes.get(index + 1) , textNodes.get(index));
             if (probability > 0.75 && textNode.getSemanticType() != SemanticType.LIST) {
                 textNode.setSemanticType(SemanticType.HEADING);
-                StaticLayoutContainers.getMap().put(textNode, new Info(DocumentProcessor.getContentsValueForTextNode(textNode), PDFWriter.getColor(SemanticType.HEADING)));
+                StaticLayoutContainers.getContentInfoMap().put(textNode, 
+                        new ContentInfo(DocumentProcessor.getContentsValueForTextNode(textNode), PDFWriter.getColor(SemanticType.HEADING)));
             }
         }
     }

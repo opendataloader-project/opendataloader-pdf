@@ -1,71 +1,66 @@
 package com.duallab.layout.processors;
 
-import com.duallab.layout.Info;
+import com.duallab.layout.ContentInfo;
 import com.duallab.layout.containers.StaticLayoutContainers;
-import com.duallab.layout.pdf.PDFWriter;
-import org.verapdf.wcag.algorithms.entities.INode;
 import org.verapdf.wcag.algorithms.entities.IObject;
-import org.verapdf.wcag.algorithms.entities.SemanticPart;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.TextBlock;
+import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextColumn;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
-import org.verapdf.wcag.algorithms.entities.geometry.MultiBoundingBox;
-import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.AccumulatedNodeConsumer;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.CaptionUtils;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
 
-import java.util.LinkedList;
+import com.duallab.layout.pdf.PDFWriter;
+
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class ParagraphProcessor {
 
-    public static void processParagraphs(List<IObject> contents) {
-        SemanticPart part = null;
+    private static final double DIFFERENT_LINES_PROBABILITY = 0.75;
+
+    public static List<IObject> processParagraphs(List<IObject> contents) {
+        List<IObject> newContents = new ArrayList<>();
+        TextBlock previousBlock = new TextBlock();
+        previousBlock.add(new TextLine(new TextChunk()));
+        List<SemanticTextNode> paragraphs = new ArrayList<>();
         for (IObject content : contents) {
-            if (content instanceof SemanticTextNode && ((INode) content).getSemanticType() != SemanticType.LIST) {
-                if (part == null) {
-                    part = AccumulatedNodeConsumer.buildPartFromNode((SemanticTextNode)content);
+            if (content instanceof TextLine) {
+                TextLine currentLine = (TextLine)content;
+                TextLine previousLine = previousBlock.getLastLine();
+                double differentLinesProbability;
+                if (previousBlock.getLinesNumber() > 1) {
+                    differentLinesProbability = ChunksMergeUtils.toParagraphMergeProbability(previousLine, currentLine);
                 } else {
-                    AccumulatedNodeConsumer.toPartMergeProbability(part, (SemanticTextNode)content);
+                    differentLinesProbability = ChunksMergeUtils.mergeLeadingProbability(previousLine, currentLine);
                 }
+                if (!CaptionUtils.areOverlapping(previousLine, currentLine.getBoundingBox())) {
+                    differentLinesProbability = 0d;
+                }
+                if (differentLinesProbability > DIFFERENT_LINES_PROBABILITY) {
+                    previousBlock.add(currentLine);
+                } else {
+                    previousBlock = new TextBlock(currentLine);
+                    SemanticTextNode textNode = new SemanticTextNode();
+                    textNode.getColumns().add(new TextColumn());
+                    textNode.getLastColumn().getBlocks().add(previousBlock);
+                    textNode.getBoundingBox().union(previousBlock.getBoundingBox());
+                    newContents.add(textNode);
+                    textNode.setSemanticType(SemanticType.PARAGRAPH);
+                    textNode.setCorrectSemanticScore(1.0);
+                    paragraphs.add(textNode);
+                }
+            } else {
+                newContents.add(content);
             }
         }
-//        for (IObject content : contents) {
-//            if (content instanceof TextChunk) {//image chunk?
-//                SemanticTextNode textNode = new SemanticTextNode((TextChunk)content, SemanticType.SPAN);
-//                textNode.setSemanticType(SemanticType.SPAN);
-//                if (part == null) {
-//                    part = AccumulatedNodeConsumer.buildPartFromNode(textNode);
-//                } else {
-//                    AccumulatedNodeConsumer.toPartMergeProbability(part, textNode);
-//                }
-//            }
-//        }
-        List<SemanticTextNode> textNodes = new LinkedList<>();
-        if (part == null) {
-            return;
+        for (SemanticTextNode textNode : paragraphs) {
+            textNode.setBoundingBox(textNode.getFirstColumn().getFirstTextBlock().getBoundingBox());
+            StaticLayoutContainers.getContentInfoMap().put(textNode, 
+                    new ContentInfo(DocumentProcessor.getContentsValueForTextNode(textNode), PDFWriter.getColor(SemanticType.PARAGRAPH)));
         }
-        for (TextColumn column : part.getColumns()) {
-            for (TextBlock textBlock : column.getBlocks()) {
-                SemanticTextNode textNode = new SemanticTextNode(new MultiBoundingBox());
-                for (TextLine line : textBlock.getLines()) {
-                    if (textNode.getPageNumber() != null && !Objects.equals(textNode.getPageNumber(), line.getPageNumber())) {
-                        textNodes.add(textNode);
-                        textNode = new SemanticTextNode(new MultiBoundingBox());
-                    }
-                    textNode.add(line);
-//                    textNode.getLastColumn().add(line);
-//                    textNode.getBoundingBox().union(new BoundingBox(line.getBoundingBox()));
-                }
-                textNodes.add(textNode);
-            }
-        }
-        for (SemanticTextNode textNode : textNodes) {
-            DocumentProcessor.replaceContentsToResult(contents, textNode);//refactoring
-            textNode.setSemanticType(SemanticType.PARAGRAPH);
-            textNode.setCorrectSemanticScore(1.0);
-            StaticLayoutContainers.getMap().put(textNode, new Info(DocumentProcessor.getContentsValueForTextNode(textNode), PDFWriter.getColor(SemanticType.PARAGRAPH)));
-        }
+        return newContents;
     }
 }

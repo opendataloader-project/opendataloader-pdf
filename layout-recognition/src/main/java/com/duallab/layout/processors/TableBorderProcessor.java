@@ -1,6 +1,6 @@
 package com.duallab.layout.processors;
 
-import com.duallab.layout.Info;
+import com.duallab.layout.ContentInfo;
 import com.duallab.layout.containers.StaticLayoutContainers;
 import com.duallab.layout.pdf.PDFWriter;
 import org.verapdf.wcag.algorithms.entities.IObject;
@@ -17,27 +17,16 @@ import java.util.List;
 
 public class TableBorderProcessor {
 
-    public static void/*List<TableBorderCell>*/ processTableBorders(List<IObject> contents, int pageNumber) {
+    public static void processTableBorders(List<IObject> contents, int pageNumber) {
         for (IObject content : contents) {
             addContentToTableBorder(content);
         }
         TableBordersCollection tableBordersCollection = StaticContainers.getTableBordersCollection();
-        //List<TableBorderCell> tableBorderCells = new LinkedList<>();
         for (TableBorder border : tableBordersCollection.getTableBorders(pageNumber)) {
             DocumentProcessor.replaceContentsToResult(contents, border);
             String value = String.format("Table: %s rows, %s columns", border.getNumberOfRows(), border.getNumberOfColumns());
-            StaticLayoutContainers.getMap().put(border, new Info(value, PDFWriter.getColor(SemanticType.TABLE)));
-//                for (int rowNumber = 0; rowNumber < border.getNumberOfRows(); rowNumber++) {
-//                    TableBorderRow row = border.getRow(rowNumber);
-//                    for (int colNumber = 0; colNumber < border.getNumberOfColumns(); colNumber++) {
-//                        TableBorderCell cell = row.getCell(colNumber);
-//                        if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
-//                            tableBorderCells.add(cell);
-//                        }
-//                    }
-//                }
+            StaticLayoutContainers.getContentInfoMap().put(border, new ContentInfo(value, PDFWriter.getColor(SemanticType.TABLE)));
         }
-        //return tableBorderCells;
     }
 
     private static void addContentToTableBorder(IObject content) {

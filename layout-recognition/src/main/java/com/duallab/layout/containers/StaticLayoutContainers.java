@@ -1,6 +1,6 @@
 package com.duallab.layout.containers;
 
-import com.duallab.layout.Info;
+import com.duallab.layout.ContentInfo;
 import org.verapdf.wcag.algorithms.entities.IObject;
 
 import java.util.HashMap;
@@ -8,25 +8,31 @@ import java.util.Map;
 
 public class StaticLayoutContainers {
 
-    private static final Map<IObject, Info> map = new HashMap<>();
+    private static final Map<IObject, ContentInfo> contentInfoMap = new HashMap<>();
+    private static long contentId = 1;
+    private static boolean findHiddenText = false;
 
-    private static long id = 1;
-
-    public static boolean findHiddenText = false;
-
-    public static long getId() {
-        return id;
+    public static long getContentId() {
+        return contentId;
     }
 
     public static long incrementId() {
-        return StaticLayoutContainers.id++;
+        return StaticLayoutContainers.contentId++;
     }
 
-    public static void setId(long id) {
-        StaticLayoutContainers.id = id;
+    public static void setContentId(long contentId) {
+        StaticLayoutContainers.contentId = contentId;
     }
 
-    public static Map<IObject, Info> getMap() {
-        return map;
+    public static Map<IObject, ContentInfo> getContentInfoMap() {
+        return contentInfoMap;
+    }
+
+    public static boolean isFindHiddenText() {
+        return findHiddenText;
+    }
+
+    public static void setFindHiddenText(boolean findHiddenText) {
+        StaticLayoutContainers.findHiddenText = findHiddenText;
     }
 }

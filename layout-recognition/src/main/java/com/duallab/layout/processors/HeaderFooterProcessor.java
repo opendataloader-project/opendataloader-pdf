@@ -1,6 +1,6 @@
 package com.duallab.layout.processors;
 
-import com.duallab.layout.Info;
+import com.duallab.layout.ContentInfo;
 import com.duallab.layout.containers.StaticLayoutContainers;
 import com.duallab.layout.pdf.PDFWriter;
 import org.verapdf.wcag.algorithms.entities.IObject;
@@ -17,7 +17,6 @@ import org.verapdf.wcag.algorithms.entities.lists.info.ListItemTextInfo;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ListLabelsUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.listLabelsDetection.*;
 
-import javax.print.Doc;
 import java.util.*;
 
 import static com.duallab.layout.processors.DocumentProcessor.sortContents;
@@ -32,14 +31,10 @@ public class HeaderFooterProcessor {
         for (List<IObject> content : contents) {
             sortedContents.add(sortContents(content));
         }
-//        sortContents()
-//        List<IObject> sortedContents = sortContents(contents);
         List<SemanticTextNode> headers = findPossibleHeaders(sortedContents);
         processHeadersOrFooters(headers, true);
         List<SemanticTextNode> footers = findPossibleFooters(sortedContents);
         processHeadersOrFooters(footers, false);
-//        System.out.println("HEADERS" + headers);
-//        System.out.println("FOOTERS" + footers);
     }
 
     private static void processHeadersOrFooters(List<SemanticTextNode> textNodes, boolean isHeader) {
@@ -50,8 +45,9 @@ public class HeaderFooterProcessor {
                 SemanticTextNode textNode = textNodes.get(i);
                 box.union(textNode.getBoundingBox());
                 textNode.setSemanticType(isHeader ? SemanticType.HEADER : SemanticType.FOOTER);
-                //                System.out.println(value);
-                StaticLayoutContainers.getMap().put(textNodes.get(i), new Info(DocumentProcessor.getContentsValueForTextNode(textNode), PDFWriter.getColor(SemanticType.HEADING)));
+                StaticLayoutContainers.getContentInfoMap().put(textNodes.get(i), 
+                        new ContentInfo(DocumentProcessor.getContentsValueForTextNode(textNode), 
+                                PDFWriter.getColor(SemanticType.HEADING)));
             }
         }
     }
@@ -79,10 +75,6 @@ public class HeaderFooterProcessor {
         ListIntervalsCollection listIntervals = new ListIntervalsCollection();
         listIntervals.putAll((new AlfaLettersListLabelsDetectionAlgorithm1()).getItemsIntervals(itemsInfo));
         listIntervals.putAll((new AlfaLettersListLabelsDetectionAlgorithm2()).getItemsIntervals(itemsInfo));
-        if (!(new KoreanLettersListLabelsDetectionAlgorithm()).getItemsIntervals(itemsInfo).isEmpty()) {
-//            System.out.println("Korean numbers!");
-        }
-
         listIntervals.putAll((new KoreanLettersListLabelsDetectionAlgorithm()).getItemsIntervals(itemsInfo));
         listIntervals.putAll((new RomanNumbersListLabelsDetectionAlgorithm()).getItemsIntervals(itemsInfo));
         ArabicNumbersListLabelsDetectionAlgorithm arabicNumbersListLabelsDetectionAlgorithm = new ArabicNumbersListLabelsDetectionAlgorithm();
