@@ -3,7 +3,7 @@ package com.duallab.layout.processors;
 import com.duallab.layout.ContentInfo;
 import com.duallab.layout.containers.StaticLayoutContainers;
 import org.verapdf.wcag.algorithms.entities.IObject;
-import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
+import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.content.TextBlock;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextColumn;
@@ -25,7 +25,7 @@ public class ParagraphProcessor {
         List<IObject> newContents = new ArrayList<>();
         TextBlock previousBlock = new TextBlock();
         previousBlock.add(new TextLine(new TextChunk()));
-        List<SemanticTextNode> paragraphs = new ArrayList<>();
+        List<SemanticParagraph> paragraphs = new ArrayList<>();
         for (IObject content : contents) {
             if (content instanceof TextLine) {
                 TextLine currentLine = (TextLine)content;
@@ -43,23 +43,23 @@ public class ParagraphProcessor {
                     previousBlock.add(currentLine);
                 } else {
                     previousBlock = new TextBlock(currentLine);
-                    SemanticTextNode textNode = new SemanticTextNode();
-                    textNode.getColumns().add(new TextColumn());
-                    textNode.getLastColumn().getBlocks().add(previousBlock);
-                    textNode.getBoundingBox().union(previousBlock.getBoundingBox());
-                    newContents.add(textNode);
-                    textNode.setSemanticType(SemanticType.PARAGRAPH);
-                    textNode.setCorrectSemanticScore(1.0);
-                    paragraphs.add(textNode);
+                    SemanticParagraph textParagraph = new SemanticParagraph();
+                    textParagraph.getColumns().add(new TextColumn());
+                    textParagraph.getLastColumn().getBlocks().add(previousBlock);
+                    textParagraph.getBoundingBox().union(previousBlock.getBoundingBox());
+                    newContents.add(textParagraph);
+                    //textNode.setSemanticType(SemanticType.PARAGRAPH);
+                    textParagraph.setCorrectSemanticScore(1.0);
+                    paragraphs.add(textParagraph);
                 }
             } else {
                 newContents.add(content);
             }
         }
-        for (SemanticTextNode textNode : paragraphs) {
-            textNode.setBoundingBox(textNode.getFirstColumn().getFirstTextBlock().getBoundingBox());
-            StaticLayoutContainers.getContentInfoMap().put(textNode, 
-                    new ContentInfo(DocumentProcessor.getContentsValueForTextNode(textNode), PDFWriter.getColor(SemanticType.PARAGRAPH)));
+        for (SemanticParagraph textParagraph : paragraphs) {
+            textParagraph.setBoundingBox(textParagraph.getFirstColumn().getFirstTextBlock().getBoundingBox());
+            StaticLayoutContainers.getContentInfoMap().put(textParagraph,
+                    new ContentInfo(DocumentProcessor.getContentsValueForTextNode(textParagraph), PDFWriter.getColor(SemanticType.PARAGRAPH)));
         }
         return newContents;
     }

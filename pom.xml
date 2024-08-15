@@ -9,10 +9,7 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
-        <module>veraPDF-parser</module>
         <module>layout-recognition</module>
-        <module>veraPDF-wcag-algs</module>
-        <module>veraPDF-validation</module>
     </modules>
 
     <properties>
