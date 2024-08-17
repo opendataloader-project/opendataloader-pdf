@@ -13,6 +13,8 @@ import java.util.List;
 
 public class HeadingProcessor {
 
+    private static final double HEADING_PROBABILITY = 0.75;
+
     public static void processHeadings(List<IObject> contents) {
         List<SemanticTextNode> textNodes = new LinkedList<>();
         for (IObject content : contents) {
@@ -28,7 +30,7 @@ public class HeadingProcessor {
             double probability = NodeUtils.headingProbability(textNode,
                     index != 0 ? textNodes.get(index - 1) : null,
                     textNodes.get(index + 1) , textNodes.get(index));
-            if (probability > 0.75 && textNode.getSemanticType() != SemanticType.LIST) {
+            if (probability > HEADING_PROBABILITY && textNode.getSemanticType() != SemanticType.LIST) {
                 textNode.setSemanticType(SemanticType.HEADING);
                 StaticLayoutContainers.getContentInfoMap().put(textNode, 
                         new ContentInfo(DocumentProcessor.getContentsValueForTextNode(textNode), PDFWriter.getColor(SemanticType.HEADING)));

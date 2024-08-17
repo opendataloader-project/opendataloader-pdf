@@ -9,19 +9,19 @@ import java.util.Map;
 public class StaticLayoutContainers {
 
     private static final Map<IObject, ContentInfo> contentInfoMap = new HashMap<>();
-    private static long contentId = 1;
+    private static long currentContentId = 1;
     private static boolean findHiddenText = false;
 
-    public static long getContentId() {
-        return contentId;
+    public static long getCurrentContentId() {
+        return currentContentId;
     }
 
-    public static long incrementId() {
-        return StaticLayoutContainers.contentId++;
+    public static long incrementContentId() {
+        return StaticLayoutContainers.currentContentId++;
     }
 
-    public static void setContentId(long contentId) {
-        StaticLayoutContainers.contentId = contentId;
+    public static void setCurrentContentId(long currentContentId) {
+        StaticLayoutContainers.currentContentId = currentContentId;
     }
 
     public static Map<IObject, ContentInfo> getContentInfoMap() {

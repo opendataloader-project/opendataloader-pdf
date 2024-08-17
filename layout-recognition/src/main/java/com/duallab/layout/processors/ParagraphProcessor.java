@@ -30,15 +30,7 @@ public class ParagraphProcessor {
             if (content instanceof TextLine) {
                 TextLine currentLine = (TextLine)content;
                 TextLine previousLine = previousBlock.getLastLine();
-                double differentLinesProbability;
-                if (previousBlock.getLinesNumber() > 1) {
-                    differentLinesProbability = ChunksMergeUtils.toParagraphMergeProbability(previousLine, currentLine);
-                } else {
-                    differentLinesProbability = ChunksMergeUtils.mergeLeadingProbability(previousLine, currentLine);
-                }
-                if (!CaptionUtils.areOverlapping(previousLine, currentLine.getBoundingBox())) {
-                    differentLinesProbability = 0d;
-                }
+                double differentLinesProbability = getDifferentLinesProbability(previousBlock, previousLine, currentLine);
                 if (differentLinesProbability > DIFFERENT_LINES_PROBABILITY) {
                     previousBlock.add(currentLine);
                 } else {
@@ -62,5 +54,18 @@ public class ParagraphProcessor {
                     new ContentInfo(DocumentProcessor.getContentsValueForTextNode(textParagraph), PDFWriter.getColor(SemanticType.PARAGRAPH)));
         }
         return newContents;
+    }
+
+    private static double getDifferentLinesProbability(TextBlock previousBlock, TextLine previousLine, TextLine currentLine) {
+        double differentLinesProbability;
+        if (previousBlock.getLinesNumber() > 1) {
+            differentLinesProbability = ChunksMergeUtils.toParagraphMergeProbability(previousLine, currentLine);
+        } else {
+            differentLinesProbability = ChunksMergeUtils.mergeLeadingProbability(previousLine, currentLine);
+        }
+        if (!CaptionUtils.areOverlapping(previousLine, currentLine.getBoundingBox())) {
+            differentLinesProbability = 0d;
+        }
+        return differentLinesProbability;
     }
 }

@@ -62,7 +62,7 @@ public class DocumentProcessor {
 
     public static void preprocessing(String pdfName, String password) throws IOException {
         StaticResources.clear();
-        StaticLayoutContainers.setContentId(1);
+        StaticLayoutContainers.setCurrentContentId(1);
         org.verapdf.gf.model.impl.containers.StaticContainers.clearAllContainers();
         StaticResources.setPassword(password);
         PDDocument pdDocument = new PDDocument(pdfName);
@@ -77,9 +77,9 @@ public class DocumentProcessor {
         StaticContainers.setTableBordersCollection(new TableBordersCollection(linesPreprocessingConsumer.getTableBorders()));
     }
 
-    private static void setIDs(List<IObject> contents) {
+    public static void setIDs(List<IObject> contents) {
         for (IObject object : contents) {
-            object.setRecognizedStructureId(StaticLayoutContainers.incrementId());
+            object.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
         }
     }
 

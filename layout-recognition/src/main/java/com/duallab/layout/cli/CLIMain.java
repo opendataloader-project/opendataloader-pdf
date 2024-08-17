@@ -32,7 +32,7 @@ public class CLIMain {
             password = commandLine.getOptionValue(CLIOptions.PASSWORD_OPTION);
         }
         
-        StaticLayoutContainers.setFindHiddenText(commandLine.hasOption(CLIOptions.HIDDEN_TEXT_OPTION));;
+        StaticLayoutContainers.setFindHiddenText(commandLine.hasOption(CLIOptions.HIDDEN_TEXT_OPTION));
 
         File file = new File(arguments[0]);
         if (file.isDirectory()) {

@@ -10,6 +10,8 @@ import java.util.List;
 
 public class HiddenTextProcessor {
 
+    private static final double MIN_CONTRAST_RATIO = 1.2d;
+    
     public static List<TextChunk> findHiddenText(String pdfName, List<IObject> contents) throws IOException {
         List<TextChunk> textChunks = new LinkedList<>();
         try (ContrastRatioConsumer contrastRatioConsumer = new ContrastRatioConsumer(pdfName)) {
@@ -17,7 +19,7 @@ public class HiddenTextProcessor {
                 if (content instanceof TextChunk) {
                     TextChunk textChunk = (TextChunk)content;
                     contrastRatioConsumer.calculateContrastRatio(textChunk);
-                    if (textChunk.getContrastRatio() < 1.2d) {
+                    if (textChunk.getContrastRatio() < MIN_CONTRAST_RATIO) {
                         textChunks.add(textChunk);
                     }
                 }

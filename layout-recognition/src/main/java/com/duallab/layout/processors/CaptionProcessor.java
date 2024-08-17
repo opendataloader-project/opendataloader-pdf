@@ -15,6 +15,8 @@ import java.util.List;
 
 public class CaptionProcessor {
 
+    private static final double CAPTION_PROBABILITY = 0.75;
+
     public static void processCaptions(List<IObject> contents) {
         SemanticFigure imageNode = null;
         SemanticTextNode lastTextNode = null;
@@ -77,7 +79,7 @@ public class CaptionProcessor {
             captionProbability = nextCaptionProbability;
             captionNode = nextNode;
         }
-        if (captionProbability >= 0.75) {
+        if (captionProbability >= CAPTION_PROBABILITY) {
             captionNode.setSemanticType(SemanticType.CAPTION);
             StaticLayoutContainers.getContentInfoMap().put(captionNode, new ContentInfo(DocumentProcessor.getContentsValueForTextNode(captionNode) + ", connected with object with id = " + imageNode.getImages().get(0).getRecognizedStructureId(), PDFWriter.getColor(SemanticType.CAPTION)));
         }

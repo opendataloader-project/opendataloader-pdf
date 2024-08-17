@@ -22,6 +22,8 @@ import com.duallab.layout.pdf.PDFWriter;
 
 public class ListProcessor {
 
+    private static final double LIST_ITEM_PROBABILITY = 0.7;
+
     public static void processLists(List<IObject> contents) {
         List<TextLine> textLines = new LinkedList<>();
         for (IObject content : contents) {
@@ -75,7 +77,7 @@ public class ListProcessor {
 //            if (interval.getNumberOfColumns() > 1/*== interval.getNumberOfListItems()*/) {//to fix bounding box for multi-column lists
 //                continue;
 //            }
-            if (!isCorrectList(interval)) {
+            if (!isCorrectList(interval)) {//todo move to arabic number list recognition
                 continue;
             }
             PDFList list = calculateList(interval, textLines);
@@ -117,7 +119,7 @@ public class ListProcessor {
     }
     
     private static boolean isListItemLine(TextLine listLine, TextLine nextLine) {
-        return ChunksMergeUtils.mergeLeadingProbability(listLine, nextLine) > 0.7 &&
+        return ChunksMergeUtils.mergeLeadingProbability(listLine, nextLine) > LIST_ITEM_PROBABILITY &&
                 (NodeUtils.areCloseNumbers(listLine.getLeftX(), nextLine.getLeftX()) ||
                         nextLine.getLeftX() > listLine.getLeftX()) && Objects.equals(listLine.getPageNumber(), nextLine.getPageNumber());
     }
