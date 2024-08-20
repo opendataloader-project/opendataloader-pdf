@@ -44,7 +44,7 @@ public class DocumentProcessor {
             if (StaticLayoutContainers.isFindHiddenText()) {
                 hiddenTexts.addAll(HiddenTextProcessor.findHiddenText(pdfName, pageContents));
             }
-            TableBorderProcessor.processTableBorders(pageContents, pageNumber);
+            pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber);
             processBackgrounds(pageNumber, pageContents);
             pageContents = TextLineProcessor.processTextLines(pageContents);
             ListProcessor.processLists(pageContents);
