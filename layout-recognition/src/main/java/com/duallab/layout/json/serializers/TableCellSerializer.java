@@ -3,7 +3,7 @@ package com.duallab.layout.json.serializers;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import org.verapdf.wcag.algorithms.entities.tables.TableToken;
+import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 
 import java.io.IOException;
@@ -23,8 +23,8 @@ public class TableCellSerializer extends StdSerializer<TableBorderCell> {
 		jsonGenerator.writeNumberField(JsonName.COLUMN_NUMBER, cell.getColNumber());
 		SerializerUtil.writeEssentialInfo(jsonGenerator, cell);
 		jsonGenerator.writeArrayFieldStart(JsonName.CHILDREN);
-		for (TableToken tableToken : cell.getContent()) {
-			ObjectSerializer.serialize(jsonGenerator, tableToken);
+		for (IObject content : cell.getContents()) {
+			ObjectSerializer.serialize(jsonGenerator, content);
 		}
 
 		jsonGenerator.writeEndArray();

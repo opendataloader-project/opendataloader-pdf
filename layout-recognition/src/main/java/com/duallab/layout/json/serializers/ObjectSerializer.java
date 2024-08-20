@@ -56,8 +56,8 @@ public class ObjectSerializer {
 		SemanticTextNodeSerializer semanticTextNodeSerializer = new SemanticTextNodeSerializer(SemanticTextNode.class);
 		module.addSerializer(SemanticTextNode.class, semanticTextNodeSerializer);
 
-		RowSerializer rowSerializer = new RowSerializer(TableBorderRow.class);
-		module.addSerializer(TableBorderRow.class, rowSerializer);
+		TableRowSerializer tableRowSerializer = new TableRowSerializer(TableBorderRow.class);
+		module.addSerializer(TableBorderRow.class, tableRowSerializer);
 
 		//ParagraphSerializer paragraphSerializer = new ParagraphSerializer(SemanticParagraph.class);
 		//module.addSerializer(SemanticParagraph.class, paragraphSerializer);

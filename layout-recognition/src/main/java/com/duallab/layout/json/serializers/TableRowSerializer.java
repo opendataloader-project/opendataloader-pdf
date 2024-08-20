@@ -8,9 +8,9 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 
 import java.io.IOException;
 
-public class RowSerializer extends StdSerializer<TableBorderRow> {
+public class TableRowSerializer extends StdSerializer<TableBorderRow> {
 
-	protected RowSerializer(Class<TableBorderRow> t) {
+	protected TableRowSerializer(Class<TableBorderRow> t) {
 		super(t);
 	}
 

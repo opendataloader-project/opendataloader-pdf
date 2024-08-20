@@ -10,9 +10,9 @@ import org.verapdf.wcag.algorithms.entities.SemanticSpan;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 import org.verapdf.wcag.algorithms.entities.tables.TableBordersCollection;
-import org.verapdf.wcag.algorithms.entities.tables.TableToken;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
 import java.util.ArrayList;
@@ -38,6 +38,7 @@ public class TableBorderProcessor {
         }
         TableBordersCollection tableBordersCollection = StaticContainers.getTableBordersCollection();
         for (TableBorder border : tableBordersCollection.getTableBorders(pageNumber)) {
+            processTableBorder(border);
             String value = String.format("Table: %s rows, %s columns", border.getNumberOfRows(), border.getNumberOfColumns());//todo improve
             StaticLayoutContainers.getContentInfoMap().put(border, new ContentInfo(value, PDFWriter.getColor(SemanticType.TABLE)));
         }
@@ -53,8 +54,7 @@ public class TableBorderProcessor {
             TableBorderCell tableBorderCell = tableBorder.getTableBorderCell(content);
             if (tableBorderCell != null) {
                 if (content instanceof TextChunk) {
-                    SemanticSpan semanticSpan = new SemanticSpan((TextChunk)content);
-                    tableBorderCell.addContent(new TableToken((TextChunk)content, semanticSpan));
+                    tableBorderCell.addContentObject(content);
                     return tableBorder;
                 }
             }
@@ -62,7 +62,15 @@ public class TableBorderProcessor {
         return null;
     }
 
-    public static List<IObject> processTableCellContent(List<IObject> contents, int pageNumber) {
+    public static void processTableBorder(TableBorder tableBorder) {
+        for (TableBorderRow tableBorderRow : tableBorder.getRows()) {
+            for (TableBorderCell tableBorderCell : tableBorderRow.getCells()) {
+                tableBorderCell.setContents(processTableCellContent(tableBorderCell.getContents()));
+            }
+        }
+    }
+
+    public static List<IObject> processTableCellContent(List<IObject> contents) {
 //        contents = TableBorderProcessor.processTableBorders(contents, pageNumber);//todo table inside tables
         List<IObject> newContents = TextLineProcessor.processTextLines(contents);
         ListProcessor.processLists(newContents);
