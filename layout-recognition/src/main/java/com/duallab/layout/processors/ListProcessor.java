@@ -24,6 +24,8 @@ public class ListProcessor {
 
     private static final double LIST_ITEM_PROBABILITY = 0.7;
 
+    private static final double LIST_ITEM_X_INTERVAL_RATIO = 0.5;
+
     public static void processLists(List<IObject> contents) {
         List<TextLine> textLines = new LinkedList<>();
         for (IObject content : contents) {
@@ -45,7 +47,8 @@ public class ListProcessor {
             TextLine line = DocumentProcessor.getTrimTextLine(textLine);
             ListItemTextInfo listItemTextInfo = new ListItemTextInfo(i, SemanticType.PARAGRAPH,
                     line, line.getValue().trim(), true);
-            while (((!NodeUtils.areCloseNumbers(leftStack.peek(), line.getLeftX()) && leftStack.peek() > line.getLeftX()) ||
+            double maxXInterval = getMaxXInterval(line.getFontSize());
+            while (((!NodeUtils.areCloseNumbers(leftStack.peek(), line.getLeftX(), maxXInterval) && leftStack.peek() > line.getLeftX()) ||
                     line.getPageNumber() != pageNumber)) {
                 intervalsSet.addAll(ListLabelsUtils.getListItemsIntervals(textChildrenInfoList));
 //                intervalsSet.addAll(ListUtils.getChildrenListIntervals(ListLabelsUtils.getListItemsIntervals(textChildrenInfoList), nodes));
@@ -56,7 +59,7 @@ public class ListProcessor {
                 textChildrenInfoList = stack.pop();
                 leftStack.pop();
             }
-            if (NodeUtils.areCloseNumbers(leftStack.peek(), line.getLeftX())) {
+            if (NodeUtils.areCloseNumbers(leftStack.peek(), line.getLeftX(), maxXInterval)) {
                 textChildrenInfoList.add(listItemTextInfo);
             } else if (leftStack.peek() < line.getLeftX()) {
                 leftStack.push(line.getLeftX());
@@ -124,6 +127,9 @@ public class ListProcessor {
                         nextLine.getLeftX() > listLine.getLeftX()) && Objects.equals(listLine.getPageNumber(), nextLine.getPageNumber());
     }
 
+    private static double getMaxXInterval(double fontSize) {
+        return fontSize * LIST_ITEM_X_INTERVAL_RATIO;
+    }
 //    private static void processLists(List<IObject> contents) {
 //        List<SemanticTextNode> textNodes = new LinkedList<>();
 //        for (IObject content : contents) {
