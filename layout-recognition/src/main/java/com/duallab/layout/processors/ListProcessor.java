@@ -94,37 +94,40 @@ public class ListProcessor {
     }
 
     private static PDFList calculateList(ListInterval interval, List<TextLine> textLines) {
-        SemanticTextNode list = new SemanticTextNode();
-        PDFList list1 = new PDFList(0L);
+        PDFList list = new PDFList(0L);
         for (int i = 0; i < interval.getNumberOfListItems(); i++) {
             ListItemInfo currentInfo = interval.getListItemsInfos().get(i);
             int nextIndex = i != interval.getNumberOfListItems() - 1 ? interval.getListItemsInfos().get(i + 1).getIndex() : textLines.size();
             ListItem listItem = new ListItem(new BoundingBox(), null);
             TextLine textLine = DocumentProcessor.getTrimTextLine(textLines.get(currentInfo.getIndex()));
             listItem.add(textLine);
-            list.add(textLine);
             int index = currentInfo.getIndex() + 1;
             while (index < nextIndex) {
-                TextLine line = list.getLastLine();
                 TextLine nextLine = DocumentProcessor.getTrimTextLine(textLines.get(index));
-                if (isListItemLine(line, nextLine)) {
+                if (isListItemLine(listItem, nextLine)) {
                     listItem.add(nextLine);
-                    list.add(nextLine);
                 } else {
                     break;
                 }
                 index++;
             }
-            list1.add(listItem);
+            list.add(listItem);
         }
-        list.setSemanticType(SemanticType.LIST);
-        return list1;
+        return list;
     }
     
-    private static boolean isListItemLine(TextLine listLine, TextLine nextLine) {
-        return ChunksMergeUtils.mergeLeadingProbability(listLine, nextLine) > LIST_ITEM_PROBABILITY &&
-                (NodeUtils.areCloseNumbers(listLine.getLeftX(), nextLine.getLeftX()) ||
-                        nextLine.getLeftX() > listLine.getLeftX()) && Objects.equals(listLine.getPageNumber(), nextLine.getPageNumber());
+    private static boolean isListItemLine(ListItem listItem, TextLine nextLine) {
+        TextLine listLine = listItem.getLastLine();
+        if (ChunksMergeUtils.mergeLeadingProbability(listLine, nextLine) < LIST_ITEM_PROBABILITY) {
+            return false;
+        }
+        if (!Objects.equals(listLine.getPageNumber(), nextLine.getPageNumber())) {
+            return false;
+        }
+        if (listItem.getLinesNumber() > 1) {
+            return NodeUtils.areCloseNumbers(listLine.getLeftX(), nextLine.getLeftX());
+        }
+        return nextLine.getLeftX() > listLine.getLeftX();
     }
 
     private static double getMaxXInterval(double fontSize) {
