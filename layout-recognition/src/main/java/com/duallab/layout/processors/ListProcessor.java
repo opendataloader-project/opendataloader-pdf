@@ -40,11 +40,10 @@ public class ListProcessor {
         Set<ListInterval> intervalsSet = new HashSet<>();
         int pageNumber = 0;
         for (int i = 0; i < textLines.size(); i++) {
-            TextLine textLine = textLines.get(i);
-            if (textLine.isSpaceLine() || textLine.isEmpty()) {
+            TextLine line = textLines.get(i);
+            if (line.isSpaceLine() || line.isEmpty()) {
                 continue;
             }
-            TextLine line = DocumentProcessor.getTrimTextLine(textLine);
             ListItemTextInfo listItemTextInfo = new ListItemTextInfo(i, SemanticType.PARAGRAPH,
                     line, line.getValue().trim(), true);
             double maxXInterval = getMaxXInterval(line.getFontSize());
@@ -99,11 +98,11 @@ public class ListProcessor {
             ListItemInfo currentInfo = interval.getListItemsInfos().get(i);
             int nextIndex = i != interval.getNumberOfListItems() - 1 ? interval.getListItemsInfos().get(i + 1).getIndex() : textLines.size();
             ListItem listItem = new ListItem(new BoundingBox(), null);
-            TextLine textLine = DocumentProcessor.getTrimTextLine(textLines.get(currentInfo.getIndex()));
+            TextLine textLine = textLines.get(currentInfo.getIndex());
             listItem.add(textLine);
             int index = currentInfo.getIndex() + 1;
             while (index < nextIndex) {
-                TextLine nextLine = DocumentProcessor.getTrimTextLine(textLines.get(index));
+                TextLine nextLine = textLines.get(index);
                 if (isListItemLine(listItem, nextLine)) {
                     listItem.add(nextLine);
                 } else {

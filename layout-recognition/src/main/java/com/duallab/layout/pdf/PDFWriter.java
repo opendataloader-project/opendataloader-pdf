@@ -10,6 +10,7 @@ import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationSquareCircle;
 import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
@@ -60,8 +61,10 @@ public class PDFWriter {
                 TableBorderCell cell = row.getCell(colNumber);
                 if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
                     StringBuilder contentValue = new StringBuilder();
-                    for (TableToken token : cell.getContent()) {
-                        contentValue.append(token.getValue());
+                    for (IObject object : cell.getContents()) {
+                        if (object instanceof SemanticTextNode) {
+                            contentValue.append(((SemanticTextNode)object).getValue());
+                        }
                     }
                     String cellValue = String.format("Table cell: row number %s, column number %s, row span %s, column span %s, text content \"%s\"",
                             cell.getRowNumber() + 1, cell.getColNumber() + 1, cell.getRowSpan(), cell.getColSpan(), contentValue);

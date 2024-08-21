@@ -19,12 +19,12 @@ import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
-import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.geometry.MultiBoundingBox;
 import org.verapdf.wcag.algorithms.entities.tables.TableBordersCollection;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.LinesPreprocessingConsumer;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
 
 import java.io.IOException;
 import java.util.*;
@@ -41,6 +41,7 @@ public class DocumentProcessor {
         List<List<IObject>> contents = new ArrayList<>();
         for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
             List<IObject> pageContents = new ArrayList<>(StaticContainers.getDocument().getArtifacts(pageNumber));
+            trimTextChunksWhiteSpaces(pageContents);
             if (StaticLayoutContainers.isFindHiddenText()) {
                 hiddenTexts.addAll(HiddenTextProcessor.findHiddenText(pdfName, pageContents));
             }
@@ -206,21 +207,13 @@ public class DocumentProcessor {
                         content.getBoundingBox().getHeight() > 0.5 * pageBoundingBox.getHeight());
     }
 
-    public static void removeSpaces(List<IObject> contents) {
-        Set<TextChunk> spaceTextChunks = new HashSet<>();
-        for (IObject content : contents) {
-            if (content instanceof TextChunk) {
-                if (((TextChunk)content).isWhiteSpaceChunk()) {
-                    spaceTextChunks.add((TextChunk)content);
-                }
+    private static void trimTextChunksWhiteSpaces(List<IObject> contents) {
+        for (int i = 0; i < contents.size(); i++) {
+            IObject object = contents.get(i);
+            if (object instanceof TextChunk) {
+                contents.set(i, ChunksMergeUtils.getTrimTextChunk((TextChunk) object));
             }
         }
-        contents.removeAll(spaceTextChunks);
-    }
-
-    public static TextLine getTrimTextLine(TextLine line) {
-        //remove spaces, update boundingBox
-        return line;
     }
 
     public static List<IObject> sortContents(List<IObject> contents) {
