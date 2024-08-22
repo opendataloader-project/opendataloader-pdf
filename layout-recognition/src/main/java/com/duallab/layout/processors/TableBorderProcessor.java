@@ -6,7 +6,6 @@ import com.duallab.layout.pdf.PDFWriter;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
 import org.verapdf.wcag.algorithms.entities.content.LineChunk;
-import org.verapdf.wcag.algorithms.entities.SemanticSpan;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 import org.verapdf.wcag.algorithms.entities.tables.TableBordersCollection;
@@ -73,7 +72,7 @@ public class TableBorderProcessor {
     public static List<IObject> processTableCellContent(List<IObject> contents) {
 //        contents = TableBorderProcessor.processTableBorders(contents, pageNumber);//todo table inside tables
         List<IObject> newContents = TextLineProcessor.processTextLines(contents);
-        ListProcessor.processLists(newContents);
+        newContents = ListProcessor.processLists(newContents);
         newContents = ParagraphProcessor.processParagraphs(newContents);
         HeadingProcessor.processHeadings(newContents);
         DocumentProcessor.setIDs(newContents);

@@ -32,16 +32,7 @@ public class PDFWriter {
         PDDocument document = PDDocument.load(new File(pdfName), password);
         for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
             for (IObject content : contents.get(pageNumber)) {
-                ContentInfo contentInfo = StaticLayoutContainers.getContentInfoMap().get(content);
-                if (contentInfo != null) {
-                    PDAnnotation annot = draw(document, content.getBoundingBox(), contentInfo.color, contentInfo.contents, 
-                            content.getRecognizedStructureId(), null);
-                    if (content instanceof TableBorder) {
-                        drawTableCells(document, (TableBorder) content, annot);
-                    } else if (content instanceof PDFList) {
-                        drawListItems(document, (PDFList) content, annot);
-                    }
-                }
+                drawContent(document, content);
             }
         }
         for (TextChunk textChunk : hiddenTextChunks) {
@@ -52,6 +43,19 @@ public class PDFWriter {
         document.setAllSecurityToBeRemoved(true);
         document.save(outputName);
         document.close();
+    }
+    
+    private static void drawContent(PDDocument document, IObject content) throws IOException {
+        ContentInfo contentInfo = StaticLayoutContainers.getContentInfoMap().get(content);
+        if (contentInfo != null) {
+            PDAnnotation annot = draw(document, content.getBoundingBox(), contentInfo.color, contentInfo.contents,
+                    content.getRecognizedStructureId(), null);
+            if (content instanceof TableBorder) {
+                drawTableCells(document, (TableBorder) content, annot);
+            } else if (content instanceof PDFList) {
+                drawListItems(document, (PDFList) content, annot);
+            }
+        }
     }
     
     private static void drawTableCells(PDDocument document, TableBorder border, PDAnnotation annot) throws IOException {
@@ -69,6 +73,9 @@ public class PDFWriter {
                     String cellValue = String.format("Table cell: row number %s, column number %s, row span %s, column span %s, text content \"%s\"",
                             cell.getRowNumber() + 1, cell.getColNumber() + 1, cell.getRowSpan(), cell.getColSpan(), contentValue);
                     draw(document, cell.getBoundingBox(), getColor(SemanticType.TABLE), cellValue, null, annot);
+                    for (IObject content : cell.getContents()) {
+                        drawContent(document, content);
+                    }
                 }
             }
         }
@@ -78,6 +85,9 @@ public class PDFWriter {
         for (ListItem listItem : list.getListItems()) {
             String contentValue = String.format("List item: text content \"%s\"", listItem.toString());
             draw(document, listItem.getBoundingBox(), getColor(SemanticType.LIST), contentValue, null, annot);
+            for (IObject content : listItem.getContents()) {
+                drawContent(document, content);
+            }
         }
     }
 

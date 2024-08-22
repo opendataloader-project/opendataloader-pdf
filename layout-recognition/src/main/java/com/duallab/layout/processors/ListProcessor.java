@@ -3,7 +3,6 @@ package com.duallab.layout.processors;
 import com.duallab.layout.ContentInfo;
 import com.duallab.layout.containers.StaticLayoutContainers;
 import org.verapdf.wcag.algorithms.entities.IObject;
-import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
@@ -17,39 +16,69 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ListLabelsUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.duallab.layout.pdf.PDFWriter;
 
 public class ListProcessor {
 
+    private static final Logger LOGGER = Logger.getLogger(ListProcessor.class.getCanonicalName());
+
     private static final double LIST_ITEM_PROBABILITY = 0.7;
 
-    private static final double LIST_ITEM_X_INTERVAL_RATIO = 0.5;
+    private static final double LIST_ITEM_X_INTERVAL_RATIO = 0.4;
 
-    public static void processLists(List<IObject> contents) {
-        List<TextLine> textLines = new LinkedList<>();
+    public static List<IObject> processLists(List<IObject> contents) {
+        List<ListInterval> intervalsList = getListIntervalsList(contents);
+        for (ListInterval interval : intervalsList) {
+//            if (interval.getNumberOfColumns() > 1/*== interval.getNumberOfListItems()*/) {//to fix bounding box for multi-column lists
+//                continue;
+//            }
+            if (!isCorrectList(interval)) {//todo move to arabic number list recognition
+                continue;
+            }
+            PDFList list = calculateList(interval, contents);
+            for (ListItem listItem : list.getListItems()) {
+                processListItemContent(listItem.getContents());
+            }
+            String value = String.format("List: number of items %s", interval.getNumberOfListItems());
+            StaticLayoutContainers.getContentInfoMap().put(list, new ContentInfo(value, PDFWriter.getColor(SemanticType.LIST)));
+        }
+        List<IObject> newContents = new ArrayList<>();
         for (IObject content : contents) {
-            if (content instanceof TextLine) {
-                textLines.add((TextLine) content);
+            if (content != null) {
+                newContents.add(content);
             }
         }
+        return newContents;
+    }
+
+    public static void processListItemContent(List<IObject> contents) {
+//        List<IObject> newContents = TextLineProcessor.processTextLines(contents);
+//        newContents = ParagraphProcessor.processParagraphs(newContents);
+//        HeadingProcessor.processHeadings(newContents);
+        DocumentProcessor.setIDs(contents);
+        ImageProcessor.processImages(contents);
+    }
+    
+    private static List<ListInterval> getListIntervalsList(List<IObject> contents) {
         Stack<List<ListItemTextInfo>> stack = new Stack<>();
         Stack<Double> leftStack = new Stack<>();
         leftStack.push(-Double.MAX_VALUE);
         List<ListItemTextInfo> textChildrenInfoList = new ArrayList<>();
-        Set<ListInterval> intervalsSet = new HashSet<>();
-        int pageNumber = 0;
-        for (int i = 0; i < textLines.size(); i++) {
-            TextLine line = textLines.get(i);
-            if (line.isSpaceLine() || line.isEmpty()) {
+        List<ListInterval> intervalsList = new LinkedList<>();
+        for (int i = 0; i < contents.size(); i++) {
+            IObject content = contents.get(i);
+            if (!(content instanceof TextLine)) {
                 continue;
             }
+            TextLine line = (TextLine) content;
             ListItemTextInfo listItemTextInfo = new ListItemTextInfo(i, SemanticType.PARAGRAPH,
                     line, line.getValue().trim(), true);
             double maxXInterval = getMaxXInterval(line.getFontSize());
-            while (((!NodeUtils.areCloseNumbers(leftStack.peek(), line.getLeftX(), maxXInterval) && leftStack.peek() > line.getLeftX()) ||
-                    line.getPageNumber() != pageNumber)) {
-                intervalsSet.addAll(ListLabelsUtils.getListItemsIntervals(textChildrenInfoList));
+            while (!NodeUtils.areCloseNumbers(leftStack.peek(), line.getLeftX(), maxXInterval) && leftStack.peek() > line.getLeftX()) {
+                intervalsList.addAll(ListLabelsUtils.getListItemsIntervals(textChildrenInfoList));
 //                intervalsSet.addAll(ListUtils.getChildrenListIntervals(ListLabelsUtils.getListItemsIntervals(textChildrenInfoList), nodes));
                 if (stack.isEmpty()) {
                     textChildrenInfoList = new ArrayList<>();
@@ -66,49 +95,54 @@ public class ListProcessor {
                 textChildrenInfoList = new ArrayList<>();
                 textChildrenInfoList.add(listItemTextInfo);
             }
-            pageNumber = line.getPageNumber();
         }
         while (!stack.isEmpty()) {
-            intervalsSet.addAll(ListLabelsUtils.getListItemsIntervals(textChildrenInfoList));
+            intervalsList.addAll(ListLabelsUtils.getListItemsIntervals(textChildrenInfoList));
 //                    ListUtils.getTextLinesListIntervals(, 
 //                    textLines));
             textChildrenInfoList = stack.pop();
             leftStack.pop();
         }
-        for (ListInterval interval : intervalsSet) {
-//            if (interval.getNumberOfColumns() > 1/*== interval.getNumberOfListItems()*/) {//to fix bounding box for multi-column lists
-//                continue;
-//            }
-            if (!isCorrectList(interval)) {//todo move to arabic number list recognition
-                continue;
-            }
-            PDFList list = calculateList(interval, textLines);
-            if (!Objects.equals(list.getPageNumber(), list.getLastPageNumber())) {
-                continue;
-            }
-            DocumentProcessor.replaceContentsToResult(contents, list);
-            String value = String.format("List: number of items %s", interval.getNumberOfListItems());
-            StaticLayoutContainers.getContentInfoMap().put(list, new ContentInfo(value, PDFWriter.getColor(SemanticType.LIST)));
-        }
+        return intervalsList;
     }
 
-    private static PDFList calculateList(ListInterval interval, List<TextLine> textLines) {
+    private static PDFList calculateList(ListInterval interval, List<IObject> contents) {
         PDFList list = new PDFList(0L);
         for (int i = 0; i < interval.getNumberOfListItems(); i++) {
             ListItemInfo currentInfo = interval.getListItemsInfos().get(i);
-            int nextIndex = i != interval.getNumberOfListItems() - 1 ? interval.getListItemsInfos().get(i + 1).getIndex() : textLines.size();
+            int nextIndex = i != interval.getNumberOfListItems() - 1 ? interval.getListItemsInfos().get(i + 1).getIndex() : contents.size();
             ListItem listItem = new ListItem(new BoundingBox(), null);
-            TextLine textLine = textLines.get(currentInfo.getIndex());
+            TextLine textLine = (TextLine)contents.get(currentInfo.getIndex());
+            if (textLine == null) {
+                LOGGER.log(Level.WARNING, "List item is null");
+                continue;
+            }
+            contents.set(currentInfo.getIndex(), i == 0 ? list : null);
             listItem.add(textLine);
-            int index = currentInfo.getIndex() + 1;
-            while (index < nextIndex) {
-                TextLine nextLine = textLines.get(index);
-                if (isListItemLine(listItem, nextLine)) {
-                    listItem.add(nextLine);
-                } else {
-                    break;
+            if (i != interval.getNumberOfListItems() - 1) {
+                for (int index = currentInfo.getIndex() + 1; index < nextIndex; index++) {
+                    IObject content = contents.get(index);
+                    if (content instanceof TextLine) {
+                        listItem.add((TextLine) content);
+                    } else if (content != null) {
+                        listItem.getContents().add(content);
+                    }
+                    contents.set(index, null);
                 }
-                index++;
+            } else {
+                for (int index = currentInfo.getIndex() + 1; index < nextIndex; index++) {
+                    IObject content = contents.get(index);
+                    if (!(content instanceof TextLine)) {
+                        continue;
+                    }
+                    TextLine nextLine = (TextLine) content;
+                    if (isListItemLine(listItem, nextLine)) {
+                        listItem.add(nextLine);
+                        contents.set(index, null);
+                    } else {
+                        break;
+                    }
+                }
             }
             list.add(listItem);
         }
@@ -118,9 +152,6 @@ public class ListProcessor {
     private static boolean isListItemLine(ListItem listItem, TextLine nextLine) {
         TextLine listLine = listItem.getLastLine();
         if (ChunksMergeUtils.mergeLeadingProbability(listLine, nextLine) < LIST_ITEM_PROBABILITY) {
-            return false;
-        }
-        if (!Objects.equals(listLine.getPageNumber(), nextLine.getPageNumber())) {
             return false;
         }
         if (listItem.getLinesNumber() > 1) {

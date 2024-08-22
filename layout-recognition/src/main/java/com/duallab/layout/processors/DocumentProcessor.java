@@ -48,7 +48,7 @@ public class DocumentProcessor {
             pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber);
             processBackgrounds(pageNumber, pageContents);
             pageContents = TextLineProcessor.processTextLines(pageContents);
-            ListProcessor.processLists(pageContents);
+            pageContents = ListProcessor.processLists(pageContents);
             pageContents = ParagraphProcessor.processParagraphs(pageContents);
             HeadingProcessor.processHeadings(pageContents);
             setIDs(pageContents);
@@ -120,37 +120,6 @@ public class DocumentProcessor {
         }
         contents.set(index, result);
         contents.removeAll(replacedContents);
-    }
-
-    public static void replaceContentsToResult(List<IObject> contents, IObject result, List<IObject> replacedContents) {
-        Integer index = null;
-        int i = 0;
-        for (IObject content : contents) {
-            if (replacedContents.contains(content)) {
-                index = i;
-                break;
-            }
-            i++;
-        }
-        if (index != null) {
-            contents.set(index, result);
-            contents.removeAll(replacedContents);
-        }
-    }
-
-    public static void replaceContentsToResult(List<IObject> contents, List<? extends IObject> newContents,
-                                               Stack<Integer> replaceIndexes, Stack<Integer> insertIndexes) {
-        int listIndex = newContents.size() - 1;
-        while (!replaceIndexes.isEmpty() && !insertIndexes.isEmpty()) {
-            if (replaceIndexes.peek() < insertIndexes.peek()) {
-                contents.add(insertIndexes.pop(), newContents.get(listIndex--));
-            } else if (replaceIndexes.peek() > insertIndexes.peek()) {
-                contents.remove((int)replaceIndexes.pop());
-            } else {
-                contents.set(insertIndexes.pop(), newContents.get(listIndex--));
-                replaceIndexes.pop();
-            }
-        }
     }
 
     public static boolean contains(BoundingBox box, BoundingBox box2) {

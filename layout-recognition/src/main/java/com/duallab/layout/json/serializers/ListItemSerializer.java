@@ -3,6 +3,7 @@ package com.duallab.layout.json.serializers;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
 
 import java.io.IOException;
@@ -24,6 +25,11 @@ public class ListItemSerializer extends StdSerializer<ListItem> {
 		jsonGenerator.writeStringField(JsonName.TEXT_COLOR, Arrays.toString(
 				item.getFirstLine().getFirstTextChunk().getFontColor()));
 		jsonGenerator.writeStringField(JsonName.CONTENT, item.toString());
+		jsonGenerator.writeArrayFieldStart(JsonName.CHILDREN);
+		for (IObject content : item.getContents()) {
+			ObjectSerializer.serialize(jsonGenerator, content);
+		}
+		jsonGenerator.writeEndArray();
 		SerializerUtil.writeEssentialInfo(jsonGenerator, item);
 		jsonGenerator.writeEndObject();
 	}
