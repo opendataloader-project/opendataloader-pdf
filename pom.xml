@@ -31,7 +31,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>org.example.Main</mainClass>
+                            <mainClass>com.duallab.layout.cli.CLIMain</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
