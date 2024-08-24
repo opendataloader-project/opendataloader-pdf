@@ -35,9 +35,9 @@ public class TableBorderProcessor {
                 newContents.add(content);
             }
         }
-        TableBordersCollection tableBordersCollection = StaticContainers.getTableBordersCollection();
-        for (TableBorder border : tableBordersCollection.getTableBorders(pageNumber)) {
-            processTableBorder(border);
+        for (TableBorder border : processedTableBorders) {
+            StaticContainers.getTableBordersCollection().removeTableBorder(border, pageNumber);
+            processTableBorder(border, pageNumber);
             String value = String.format("Table: %s rows, %s columns", border.getNumberOfRows(), border.getNumberOfColumns());//todo improve
             StaticLayoutContainers.getContentInfoMap().put(border, new ContentInfo(value, PDFWriter.getColor(SemanticType.TABLE)));
         }
@@ -61,17 +61,17 @@ public class TableBorderProcessor {
         return null;
     }
 
-    public static void processTableBorder(TableBorder tableBorder) {
+    public static void processTableBorder(TableBorder tableBorder, int pageNumber) {
         for (TableBorderRow tableBorderRow : tableBorder.getRows()) {
             for (TableBorderCell tableBorderCell : tableBorderRow.getCells()) {
-                tableBorderCell.setContents(processTableCellContent(tableBorderCell.getContents()));
+                tableBorderCell.setContents(processTableCellContent(tableBorderCell.getContents(), pageNumber));
             }
         }
     }
 
-    public static List<IObject> processTableCellContent(List<IObject> contents) {
-//        contents = TableBorderProcessor.processTableBorders(contents, pageNumber);//todo table inside tables
-        List<IObject> newContents = TextLineProcessor.processTextLines(contents);
+    public static List<IObject> processTableCellContent(List<IObject> contents, int pageNumber) {
+        List<IObject> newContents = TableBorderProcessor.processTableBorders(contents, pageNumber);
+        newContents = TextLineProcessor.processTextLines(newContents);
         newContents = ListProcessor.processLists(newContents);
         newContents = ParagraphProcessor.processParagraphs(newContents);
         HeadingProcessor.processHeadings(newContents);

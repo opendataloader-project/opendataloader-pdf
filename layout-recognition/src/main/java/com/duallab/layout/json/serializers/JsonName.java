@@ -23,6 +23,8 @@ public class JsonName {
     public static final String TITLE = "title";
     public static final String COLUMN_NUMBER = "column number";
     public static final String ROW_NUMBER = "row number";
+    public static final String COLUMN_SPAN = "column span";
+    public static final String ROW_SPAN = "row span";
     public static final String NUMBER_OF_CHILDREN = "number of children";
     public static final String NUMBER_OF_ROWS = "number of rows";
     public static final String NUMBER_OF_COLUMNS = "number of columns";
