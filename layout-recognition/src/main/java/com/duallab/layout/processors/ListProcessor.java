@@ -57,7 +57,6 @@ public class ListProcessor {
     public static void processListItemContent(List<IObject> contents) {
 //        List<IObject> newContents = TextLineProcessor.processTextLines(contents);
 //        newContents = ParagraphProcessor.processParagraphs(newContents);
-//        HeadingProcessor.processHeadings(newContents);
         DocumentProcessor.setIDs(contents);
         ImageProcessor.processImages(contents);
     }
@@ -210,7 +209,7 @@ public class ListProcessor {
         boolean doubles = true;
         for (ListItemInfo listItemTextInfo : interval.getListItemsInfos()) {
             if (listItemTextInfo instanceof ListItemTextInfo) {
-                if (!((ListItemTextInfo)listItemTextInfo).getListItemValue().getValue().matches("^\\d+\\.\\d+.*")) {
+                if (!((ListItemTextInfo)listItemTextInfo).getListItemValue().getValue().matches("^\\d+\\.\\d+$")) {
                     doubles = false;
                     return true;
                 }
