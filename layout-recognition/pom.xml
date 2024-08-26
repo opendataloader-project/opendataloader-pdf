@@ -28,6 +28,20 @@
             <groupId>org.verapdf</groupId>
             <artifactId>validation-model</artifactId>
             <version>${verapdf.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.verapdf</groupId>
+                    <artifactId>core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.verapdf</groupId>
+                    <artifactId>metadata-fixer</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.verapdf</groupId>
+                    <artifactId>feature-reporting</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>

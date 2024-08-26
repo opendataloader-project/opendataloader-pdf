@@ -12,7 +12,6 @@ import org.verapdf.cos.COSObjType;
 import org.verapdf.cos.COSObject;
 import org.verapdf.cos.COSTrailer;
 import org.verapdf.gf.model.impl.cos.GFCosInfo;
-import org.verapdf.model.coslayer.CosInfo;
 import org.verapdf.pd.PDDocument;
 import org.verapdf.tools.StaticResources;
 import org.verapdf.wcag.algorithms.entities.IObject;
@@ -51,7 +50,7 @@ public class JsonWriter {
         generator.writeNumberField(JsonName.NUMBER_OF_PAGES, document.getNumberOfPages());
         COSTrailer trailer = document.getDocument().getTrailer();
         COSObject object = trailer.getKey(ASAtom.INFO);
-        CosInfo info = new GFCosInfo((COSDictionary)
+        GFCosInfo info = new GFCosInfo((COSDictionary)
                 (object != null && object.getType() == COSObjType.COS_DICT ?
                         object.getDirectBase() : COSDictionary.construct().get()));
         generator.writeStringField(JsonName.AUTHOR, info.getAuthor() != null ? info.getAuthor() : info.getXMPCreator());

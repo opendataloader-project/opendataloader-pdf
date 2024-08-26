@@ -10,10 +10,8 @@ import org.verapdf.cos.COSObject;
 import org.verapdf.cos.COSTrailer;
 import org.verapdf.gf.model.impl.cos.GFCosInfo;
 import org.verapdf.gf.model.impl.sa.GFSAPDFDocument;
-import org.verapdf.model.coslayer.CosInfo;
 import org.verapdf.parser.PDFFlavour;
 import org.verapdf.pd.PDDocument;
-import org.verapdf.pdfa.flavours.PDFAFlavour;
 import org.verapdf.tools.StaticResources;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
@@ -69,7 +67,7 @@ public class DocumentProcessor {
         PDDocument pdDocument = new PDDocument(pdfName);
         StaticResources.setDocument(pdDocument);
         GFSAPDFDocument document = new GFSAPDFDocument(pdDocument);
-        org.verapdf.gf.model.impl.containers.StaticContainers.setFlavour(Collections.singletonList(PDFAFlavour.WCAG_2_2));
+//        org.verapdf.gf.model.impl.containers.StaticContainers.setFlavour(Collections.singletonList(PDFAFlavour.WCAG_2_2));
         StaticResources.setFlavour(Collections.singletonList(PDFFlavour.WCAG_2_2));
         document.parseChunks();
         StaticContainers.updateContainers(document);
@@ -89,14 +87,14 @@ public class DocumentProcessor {
         System.out.println("File name: " + pdfName);
         System.out.println("Number of pages: " + document.getNumberOfPages());
         COSTrailer trailer = document.getDocument().getTrailer();
-        CosInfo info = getInfo(trailer);
+        GFCosInfo info = getInfo(trailer);
         System.out.println("Author: " + (info.getAuthor() != null ? info.getAuthor() : info.getXMPCreator()));
         System.out.println("Title: " + (info.getTitle() != null ? info.getTitle() : info.getXMPTitle()));
         System.out.println("Creation date: " + (info.getCreationDate() != null ? info.getCreationDate() : info.getXMPCreateDate()));
         System.out.println("Modification date: " + (info.getModDate() != null ? info.getModDate() : info.getXMPModifyDate()));
     }
 
-    private static CosInfo getInfo(COSTrailer trailer) {
+    private static GFCosInfo getInfo(COSTrailer trailer) {
         COSObject object = trailer.getKey(ASAtom.INFO);
         return new GFCosInfo((COSDictionary) (object != null && object.getType() == COSObjType.COS_DICT ? object.getDirectBase() : COSDictionary.construct().get()));
     }
