@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
@@ -58,6 +59,9 @@ public class ObjectSerializer {
 
 		TableRowSerializer tableRowSerializer = new TableRowSerializer(TableBorderRow.class);
 		module.addSerializer(TableBorderRow.class, tableRowSerializer);
+		
+		HeadingSerializer headingSerializer = new HeadingSerializer(SemanticHeading.class);
+		module.addSerializer(SemanticHeading.class, headingSerializer);
 
 		//ParagraphSerializer paragraphSerializer = new ParagraphSerializer(SemanticParagraph.class);
 		//module.addSerializer(SemanticParagraph.class, paragraphSerializer);

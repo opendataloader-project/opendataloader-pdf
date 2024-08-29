@@ -18,6 +18,7 @@ public class JsonName {
     public static final String FONT_SIZE = "font size";
     public static final String TEXT_COLOR = "text color";
     public static final String PARAGRAPH_TYPE = "paragraph";
+    public static final String HEADING_TYPE = "heading";
     public static final String CHILDREN = "children";
     public static final String AUTHOR = "author";
     public static final String TITLE = "title";
@@ -30,6 +31,7 @@ public class JsonName {
     public static final String NUMBER_OF_COLUMNS = "number of columns";
     public static final String NUMBER_OF_PAGES = "number of pages";
     public static final String FILE_NAME = "file name";
+    public static final String HEADING_LEVEL = "heading level";
     public static final String CREATION_DATE = "creation date";
     public static final String MODIFICATION_DATE = "modification date";
     public static final String ROWS = "rows";

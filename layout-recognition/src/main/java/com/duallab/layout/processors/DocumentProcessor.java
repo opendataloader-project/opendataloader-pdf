@@ -55,12 +55,14 @@ public class DocumentProcessor {
             contents.add(pageContents);
         }
         HeaderFooterProcessor.processHeadersAndFooters(contents);
+        HeadingProcessor.detectHeadingsLevels(contents);
         PDFWriter.updatePDF(pdfName, password, outputName, contents, hiddenTexts);
         JsonWriter.writeToJson(pdfName, outputName, contents);
     }
 
     public static void preprocessing(String pdfName, String password) throws IOException {
         StaticResources.clear();
+        StaticLayoutContainers.clear();
         StaticLayoutContainers.setCurrentContentId(1);
         org.verapdf.gf.model.impl.containers.StaticContainers.clearAllContainers();
         StaticResources.setPassword(password);
