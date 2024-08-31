@@ -73,8 +73,12 @@ public class ListProcessor {
                 continue;
             }
             TextLine line = (TextLine) content;
+            String value = line.getValue().trim();
+            if (value.isEmpty()) {
+                continue;
+            }
             ListItemTextInfo listItemTextInfo = new ListItemTextInfo(i, SemanticType.PARAGRAPH,
-                    line, line.getValue().trim(), true);
+                    line, value, true);
             double maxXInterval = getMaxXInterval(line.getFontSize());
             while (!NodeUtils.areCloseNumbers(leftStack.peek(), line.getLeftX(), maxXInterval) && leftStack.peek() > line.getLeftX()) {
                 intervalsList.addAll(ListLabelsUtils.getListItemsIntervals(textChildrenInfoList));
