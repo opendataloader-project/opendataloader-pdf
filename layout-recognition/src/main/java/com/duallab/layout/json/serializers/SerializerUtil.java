@@ -9,7 +9,7 @@ import java.util.Arrays;
 
 public class SerializerUtil {
     public static void writeEssentialInfo(JsonGenerator generator, IObject object) throws IOException {
-        generator.writeNumberField(JsonName.PAGE_NUMBER, object.getPageNumber());
+        generator.writeNumberField(JsonName.PAGE_NUMBER, object.getPageNumber() + 1);
         generator.writeArrayFieldStart(JsonName.BOUNDING_BOX);
         generator.writeNumber(object.getLeftX());
         generator.writeNumber(object.getBottomY());
