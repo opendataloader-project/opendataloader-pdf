@@ -19,7 +19,7 @@ public class TableRowSerializer extends StdSerializer<TableBorderRow> {
 			throws IOException {
 		jsonGenerator.writeStartObject();
 		jsonGenerator.writeStringField(JsonName.TYPE, JsonName.ROW_TYPE);
-		jsonGenerator.writeNumberField(JsonName.ROW_NUMBER, row.getRowNumber());
+		jsonGenerator.writeNumberField(JsonName.ROW_NUMBER, row.getRowNumber() + 1);
 		jsonGenerator.writeArrayFieldStart(JsonName.CELLS);
 		for (TableBorderCell cell : row.getCells()) {
 			ObjectSerializer.serialize(jsonGenerator, cell);
