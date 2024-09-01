@@ -1,7 +1,7 @@
 package com.duallab.layout.json;
 
 import com.duallab.layout.json.serializers.JsonName;
-import com.duallab.layout.json.serializers.ObjectSerializer;
+import com.duallab.layout.json.serializers.ObjectMapperHolder;
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -22,26 +22,29 @@ import java.io.IOException;
 import java.util.List;
 
 public class JsonWriter {
+    private static JsonGenerator getJsonGenerator(String fileName) throws IOException {
+        JsonFactory jsonFactory = new JsonFactory();
+        return jsonFactory.createGenerator(new File(fileName), JsonEncoding.UTF8)
+                .setPrettyPrinter(new DefaultPrettyPrinter())
+                .setCodec(ObjectMapperHolder.getObjectMapper());
+    }
 
-    protected static final JsonFactory FACTORY = new JsonFactory();
-
-    public static void writeToJson(String pdfName, String outputName, List<List<IObject>> contents) throws IOException {
-        String string = outputName.substring(0, outputName.length()- 3) + "json";
-        JsonGenerator generator = FACTORY.createGenerator(new File(string), JsonEncoding.UTF8);
-        generator.setPrettyPrinter(new DefaultPrettyPrinter());
-        generator.writeStartObject();
-        writeDocumentInfo(generator, pdfName);
-        generator.writeArrayFieldStart(JsonName.CHILDREN);
+    public static void writeToJson(String pdfFileName, String outputName, List<List<IObject>> contents) throws IOException {
+        String jsonFileName = outputName.substring(0, outputName.length()- 3) + "json";
+        JsonGenerator jsonGenerator = getJsonGenerator(jsonFileName);
+        jsonGenerator.writeStartObject();
+        writeDocumentInfo(jsonGenerator, pdfFileName);
+        jsonGenerator.writeArrayFieldStart(JsonName.CHILDREN);
         for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
             for (IObject content : contents.get(pageNumber)) {
-                ObjectSerializer.serialize(generator,content);
+                jsonGenerator.writePOJO(content);
             }
         }
 
-        generator.writeEndArray();
-        generator.writeEndObject();
-        generator.close();
-        System.out.println("Created " + string);
+        jsonGenerator.writeEndArray();
+        jsonGenerator.writeEndObject();
+        jsonGenerator.close();
+        System.out.println("Created " + jsonFileName);
     }
 
     private static void writeDocumentInfo(JsonGenerator generator, String pdfName) throws IOException {

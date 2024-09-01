@@ -22,7 +22,7 @@ public class TableRowSerializer extends StdSerializer<TableBorderRow> {
 		jsonGenerator.writeNumberField(JsonName.ROW_NUMBER, row.getRowNumber() + 1);
 		jsonGenerator.writeArrayFieldStart(JsonName.CELLS);
 		for (TableBorderCell cell : row.getCells()) {
-			ObjectSerializer.serialize(jsonGenerator, cell);
+			jsonGenerator.writePOJO(cell);
 		}
 
 		jsonGenerator.writeEndArray();

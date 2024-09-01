@@ -24,7 +24,7 @@ public class TableSerializer extends StdSerializer<TableBorder> {
 		SerializerUtil.writeEssentialInfo(jsonGenerator, table);
 		jsonGenerator.writeArrayFieldStart(JsonName.ROWS);
 		for (TableBorderRow row : table.getRows()) {
-			ObjectSerializer.serialize(jsonGenerator, row);
+			jsonGenerator.writePOJO(row);
 		}
 
 		jsonGenerator.writeEndArray();

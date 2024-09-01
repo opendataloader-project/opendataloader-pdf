@@ -1,6 +1,5 @@
 package com.duallab.layout.json.serializers;
 
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -16,13 +15,7 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-public class ObjectSerializer {
-
-	private static final Logger LOGGER = Logger.getLogger(ObjectSerializer.class.getCanonicalName());
-
+public class ObjectMapperHolder {
 	private static final ObjectMapper objectMapper = new ObjectMapper();
 
 	static {
@@ -59,9 +52,12 @@ public class ObjectSerializer {
 
 		TableRowSerializer tableRowSerializer = new TableRowSerializer(TableBorderRow.class);
 		module.addSerializer(TableBorderRow.class, tableRowSerializer);
-		
+
 		HeadingSerializer headingSerializer = new HeadingSerializer(SemanticHeading.class);
 		module.addSerializer(SemanticHeading.class, headingSerializer);
+
+		DoubleSerializer doubleSerializer = new DoubleSerializer(Double.class);
+		module.addSerializer(Double.class, doubleSerializer);
 
 		//ParagraphSerializer paragraphSerializer = new ParagraphSerializer(SemanticParagraph.class);
 		//module.addSerializer(SemanticParagraph.class, paragraphSerializer);
@@ -69,11 +65,7 @@ public class ObjectSerializer {
 		objectMapper.registerModule(module);
 	}
 
-	public static void serialize(JsonGenerator generator, Object object) {
-		try {
-			objectMapper.writeValue(generator, object);
-		} catch (Exception e) {
-			LOGGER.log(Level.WARNING, "Exception during serializing object: " + e.getMessage());
-		}
+	public static ObjectMapper getObjectMapper() {
+		return objectMapper;
 	}
 }

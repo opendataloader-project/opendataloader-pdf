@@ -24,7 +24,7 @@ public class ListSerializer extends StdSerializer<PDFList> {
 		SerializerUtil.writeEssentialInfo(jsonGenerator, list);
 		jsonGenerator.writeArrayFieldStart(JsonName.CHILDREN);
 		for (ListItem item : list.getListItems()) {
-			ObjectSerializer.serialize(jsonGenerator, item);
+			jsonGenerator.writePOJO(item);
 		}
 
 		jsonGenerator.writeEndArray();

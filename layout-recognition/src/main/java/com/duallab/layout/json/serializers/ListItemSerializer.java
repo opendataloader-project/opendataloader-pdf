@@ -27,7 +27,7 @@ public class ListItemSerializer extends StdSerializer<ListItem> {
 		jsonGenerator.writeStringField(JsonName.CONTENT, item.toString());
 		jsonGenerator.writeArrayFieldStart(JsonName.CHILDREN);
 		for (IObject content : item.getContents()) {
-			ObjectSerializer.serialize(jsonGenerator, content);
+			jsonGenerator.writePOJO(content);
 		}
 		jsonGenerator.writeEndArray();
 		SerializerUtil.writeEssentialInfo(jsonGenerator, item);
