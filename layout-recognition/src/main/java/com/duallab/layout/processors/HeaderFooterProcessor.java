@@ -79,7 +79,7 @@ public class HeaderFooterProcessor {
             for (ListItemInfo info : listInterval.getListItemsInfos()) {
                 labels.add(((ListItemTextInfo)info).getListItem());
             }
-            if (ListLabelsUtils.isListLabels(labels)) {
+            if (ListLabelsUtils.isListLabels(labels, 1)) {
                 correctIntervals.put(listInterval);
             }
         }
