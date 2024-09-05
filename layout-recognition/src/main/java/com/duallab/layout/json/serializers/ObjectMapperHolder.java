@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
+import org.verapdf.wcag.algorithms.entities.SemanticCaption;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
@@ -55,6 +56,9 @@ public class ObjectMapperHolder {
 
 		HeadingSerializer headingSerializer = new HeadingSerializer(SemanticHeading.class);
 		module.addSerializer(SemanticHeading.class, headingSerializer);
+
+		CaptionSerializer captionSerializer = new CaptionSerializer(SemanticCaption.class);
+		module.addSerializer(SemanticCaption.class, captionSerializer);
 
 		DoubleSerializer doubleSerializer = new DoubleSerializer(Double.class);
 		module.addSerializer(Double.class, doubleSerializer);

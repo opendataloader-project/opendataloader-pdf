@@ -51,7 +51,6 @@ public class DocumentProcessor {
             HeadingProcessor.processHeadings(pageContents);
             setIDs(pageContents);
             CaptionProcessor.processCaptions(pageContents);
-            ImageProcessor.processImages(pageContents);
             contents.add(pageContents);
         }
         HeaderFooterProcessor.processHeadersAndFooters(contents);
@@ -81,6 +80,18 @@ public class DocumentProcessor {
     public static void setIDs(List<IObject> contents) {
         for (IObject object : contents) {
             object.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+        }
+    }
+
+    public static void setIndexesForDocumentContents(List<List<IObject>> contents) {
+        for (List<IObject> pageContents : contents) {
+            setIndexesForContentsList(pageContents);
+        }
+    }
+
+    public static void setIndexesForContentsList(List<IObject> contents) {
+        for (int index = 0; index < contents.size(); index++) {
+            contents.get(index).setIndex(index);
         }
     }
 
@@ -161,7 +172,7 @@ public class DocumentProcessor {
         }
     }
     
-    private static BoundingBox getPageBoundingBox(int pageNumber) {
+    public static BoundingBox getPageBoundingBox(int pageNumber) {
         double[] cropBox = StaticResources.getDocument().getPage(pageNumber).getCropBox();
         if (cropBox == null) {
             return null;

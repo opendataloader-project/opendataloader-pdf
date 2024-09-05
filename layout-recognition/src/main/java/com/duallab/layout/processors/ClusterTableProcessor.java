@@ -1,20 +1,15 @@
 package com.duallab.layout.processors;
 
-import com.duallab.layout.ContentInfo;
-import com.duallab.layout.containers.StaticLayoutContainers;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticFigure;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
-import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 import org.verapdf.wcag.algorithms.entities.tables.TableToken;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ClusterTableConsumer;
 
 import java.util.List;
-
-import com.duallab.layout.pdf.PDFWriter;
 
 public class ClusterTableProcessor {
 
@@ -32,8 +27,6 @@ public class ClusterTableProcessor {
         clusterTableConsumer.processEnd();
         for (PDFList list : clusterTableConsumer.getLists()) {
             DocumentProcessor.replaceContentsToResult(contents, list);
-            String value = String.format("List: number of items %s", list.getNumberOfListItems());
-            StaticLayoutContainers.getContentInfoMap().put(list, new ContentInfo(value, PDFWriter.getColor(SemanticType.LIST)));
         }
 //        for (Table table : clusterTableConsumer.getTables()) {
 //            replaceContentsToResult(contents, table);

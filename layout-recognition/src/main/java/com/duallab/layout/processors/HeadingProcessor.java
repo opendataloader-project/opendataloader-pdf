@@ -1,8 +1,6 @@
 package com.duallab.layout.processors;
 
-import com.duallab.layout.ContentInfo;
 import com.duallab.layout.containers.StaticLayoutContainers;
-import com.duallab.layout.pdf.PDFWriter;
 import org.verapdf.wcag.algorithms.entities.INode;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
@@ -62,9 +60,6 @@ public class HeadingProcessor {
             previousTextStyle = entry.getKey();
             for (SemanticHeading heading : entry.getValue()) {
                 heading.setHeadingLevel(level);
-                StaticLayoutContainers.getContentInfoMap().put(heading,
-                        new ContentInfo(DocumentProcessor.getContentsValueForTextNode(heading) + 
-                                ", heading level " + heading.getHeadingLevel(), PDFWriter.getColor(SemanticType.HEADING)));
             }
         }
     }

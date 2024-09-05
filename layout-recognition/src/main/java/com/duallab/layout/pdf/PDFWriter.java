@@ -1,7 +1,6 @@
 package com.duallab.layout.pdf;
 
-import com.duallab.layout.ContentInfo;
-import com.duallab.layout.containers.StaticLayoutContainers;
+import com.duallab.layout.processors.DocumentProcessor;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
@@ -9,8 +8,9 @@ import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationSquareCircle;
-import org.verapdf.wcag.algorithms.entities.IObject;
-import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
+import org.verapdf.wcag.algorithms.entities.*;
+import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
+import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
@@ -45,15 +45,12 @@ public class PDFWriter {
     }
     
     private static void drawContent(PDDocument document, IObject content) throws IOException {
-        ContentInfo contentInfo = StaticLayoutContainers.getContentInfoMap().get(content);
-        if (contentInfo != null) {
-            PDAnnotation annot = draw(document, content.getBoundingBox(), contentInfo.color, contentInfo.contents,
-                    content.getRecognizedStructureId(), null);
-            if (content instanceof TableBorder) {
-                drawTableCells(document, (TableBorder) content, annot);
-            } else if (content instanceof PDFList) {
-                drawListItems(document, (PDFList) content, annot);
-            }
+        PDAnnotation annot = draw(document, content.getBoundingBox(), getColor(content), getContents(content),
+                content.getRecognizedStructureId(), null);
+        if (content instanceof TableBorder) {
+            drawTableCells(document, (TableBorder) content, annot);
+        } else if (content instanceof PDFList) {
+            drawListItems(document, (PDFList) content, annot);
         }
     }
     
@@ -107,9 +104,66 @@ public class PDFWriter {
         page.getAnnotations().add(square);
         return square;
     }
+    
+    public static String getContents(IObject content) {
+        if (content instanceof TableBorder) {
+            TableBorder border = (TableBorder) content;
+            return String.format("Table: %s rows, %s columns", border.getNumberOfRows(), border.getNumberOfColumns());
+        }
+        if (content instanceof PDFList) {
+            PDFList list = (PDFList) content;
+            return String.format("List: number of items %s", list.getNumberOfListItems());
+        }
+        if (content instanceof INode) {
+            INode node = (INode) content;
+            if (node.getSemanticType() == SemanticType.HEADER || node.getSemanticType() == SemanticType.FOOTER) {
+                return node.getSemanticType().getValue();
+            }
+            if (node.getSemanticType() == SemanticType.CAPTION) {
+                SemanticCaption caption = (SemanticCaption) node;
+                return DocumentProcessor.getContentsValueForTextNode(caption) + ", connected with object with id = " +
+                        caption.getLinkedContentId();
+            }
+            if (node.getSemanticType() == SemanticType.HEADING) {
+                SemanticHeading heading = (SemanticHeading) node;
+                return DocumentProcessor.getContentsValueForTextNode(heading) +
+                        ", heading level " + heading.getHeadingLevel();
+            }
+            if (node instanceof SemanticTextNode) {
+                return DocumentProcessor.getContentsValueForTextNode((SemanticTextNode) node);
+            }
+        }
+        if (content instanceof ImageChunk) {
+            return String.format("Image: height %.2f, width %.2f", content.getHeight(), content.getWidth());
+        }
+        if (content instanceof LineArtChunk) {
+            return String.format("Line Art: height %.2f, width %.2f", content.getHeight(), content.getWidth());
+        }
+        return "";
+    }
+
+    public static float[] getColor(IObject content) {
+        if (content instanceof TableBorder) {
+            return getColor(SemanticType.TABLE);
+        }
+        if (content instanceof PDFList) {
+            return getColor(SemanticType.LIST);
+        }
+        if (content instanceof INode) {
+            INode node = (INode) content;
+            return getColor(node.getSemanticType());
+        }
+        if (content instanceof ImageChunk) {
+            return getColor(SemanticType.FIGURE);
+        }
+        if (content instanceof LineArtChunk) {
+            return getColor(SemanticType.PART);
+        }
+        return new float[]{};
+    }
 
     public static float[] getColor(SemanticType semanticType) {
-        if (semanticType == SemanticType.HEADING) {
+        if (semanticType == SemanticType.HEADING || semanticType == SemanticType.HEADER || semanticType == SemanticType.FOOTER) {
             return new float[]{0, 0, 1};
         }
         if (semanticType == SemanticType.LIST) {

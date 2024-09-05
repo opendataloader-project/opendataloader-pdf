@@ -1,9 +1,7 @@
 package com.duallab.layout.processors;
 
-import com.duallab.layout.ContentInfo;
-import com.duallab.layout.containers.StaticLayoutContainers;
-import com.duallab.layout.pdf.PDFWriter;
 import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.SemanticHeader;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
 import org.verapdf.wcag.algorithms.entities.content.LineChunk;
@@ -18,8 +16,6 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ListLabelsUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.listLabelsDetection.*;
 
 import java.util.*;
-
-import static com.duallab.layout.processors.DocumentProcessor.sortContents;
 
 public class HeaderFooterProcessor {
 
@@ -45,9 +41,6 @@ public class HeaderFooterProcessor {
                 SemanticTextNode textNode = textNodes.get(i);
                 box.union(textNode.getBoundingBox());
                 textNode.setSemanticType(isHeader ? SemanticType.HEADER : SemanticType.FOOTER);
-                StaticLayoutContainers.getContentInfoMap().put(textNodes.get(i), 
-                        new ContentInfo(DocumentProcessor.getContentsValueForTextNode(textNode), 
-                                PDFWriter.getColor(SemanticType.HEADING)));
             }
         }
     }

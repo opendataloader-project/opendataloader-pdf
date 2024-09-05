@@ -1,7 +1,6 @@
 package com.duallab.layout.processors;
 
-import com.duallab.layout.ContentInfo;
-import com.duallab.layout.containers.StaticLayoutContainers;
+import org.verapdf.wcag.algorithms.entities.INode;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
@@ -42,8 +41,6 @@ public class ListProcessor {
             for (ListItem listItem : list.getListItems()) {
                 processListItemContent(listItem.getContents());
             }
-            String value = String.format("List: number of items %s", interval.getNumberOfListItems());
-            StaticLayoutContainers.getContentInfoMap().put(list, new ContentInfo(value, PDFWriter.getColor(SemanticType.LIST)));
         }
         List<IObject> newContents = new ArrayList<>();
         for (IObject content : contents) {
@@ -58,7 +55,6 @@ public class ListProcessor {
 //        List<IObject> newContents = TextLineProcessor.processTextLines(contents);
 //        newContents = ParagraphProcessor.processParagraphs(newContents);
         DocumentProcessor.setIDs(contents);
-        ImageProcessor.processImages(contents);
     }
     
     private static List<ListInterval> getListIntervalsList(List<IObject> contents) {

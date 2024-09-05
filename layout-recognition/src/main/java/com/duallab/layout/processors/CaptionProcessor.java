@@ -1,13 +1,10 @@
 package com.duallab.layout.processors;
 
-import com.duallab.layout.ContentInfo;
-import com.duallab.layout.containers.StaticLayoutContainers;
-import com.duallab.layout.pdf.PDFWriter;
 import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.SemanticCaption;
 import org.verapdf.wcag.algorithms.entities.SemanticFigure;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
-import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.CaptionUtils;
 
@@ -18,38 +15,40 @@ public class CaptionProcessor {
     private static final double CAPTION_PROBABILITY = 0.75;
 
     public static void processCaptions(List<IObject> contents) {
+        DocumentProcessor.setIndexesForContentsList(contents);
         SemanticFigure imageNode = null;
         SemanticTextNode lastTextNode = null;
         for (IObject content : contents) {
-            if (content != null) {
-                if (content instanceof SemanticTextNode) {
-                    SemanticTextNode textNode = (SemanticTextNode)content;
-                    if (!textNode.isSpaceNode() && !textNode.isEmpty()) {
-                        if (imageNode != null) {
-                            acceptImageCaption(imageNode, lastTextNode, textNode);
-                            imageNode = null;
-                        }
-                        lastTextNode = textNode;
-                    }
-                } else if (content instanceof ImageChunk) {
+            if (content == null) {
+                continue;
+            }
+            if (content instanceof SemanticTextNode) {
+                SemanticTextNode textNode = (SemanticTextNode)content;
+                if (!textNode.isSpaceNode() && !textNode.isEmpty()) {
                     if (imageNode != null) {
-                        acceptImageCaption(imageNode, lastTextNode, null);
-                        lastTextNode = null;
+                        acceptImageCaption(contents, imageNode, lastTextNode, textNode);
+                        imageNode = null;
                     }
-                    imageNode = new SemanticFigure((ImageChunk) content);
-                } else if (content instanceof TableBorder) {
-                    if (imageNode != null) {
-                        acceptImageCaption(imageNode, lastTextNode, null);
-                        lastTextNode = null;
-                    }
-                    ImageChunk imageChunk = new ImageChunk(content.getBoundingBox());
-                    imageChunk.setRecognizedStructureId(content.getRecognizedStructureId());
-                    imageNode = new SemanticFigure(imageChunk);
+                    lastTextNode = textNode;
                 }
+            } else if (content instanceof ImageChunk) {
+                if (imageNode != null) {
+                    acceptImageCaption(contents, imageNode, lastTextNode, null);
+                    lastTextNode = null;
+                }
+                imageNode = new SemanticFigure((ImageChunk) content);
+            } else if (content instanceof TableBorder) {
+                if (imageNode != null) {
+                    acceptImageCaption(contents, imageNode, lastTextNode, null);
+                    lastTextNode = null;
+                }
+                ImageChunk imageChunk = new ImageChunk(content.getBoundingBox());
+                imageChunk.setRecognizedStructureId(content.getRecognizedStructureId());
+                imageNode = new SemanticFigure(imageChunk);
             }
         }
         if (imageNode != null) {
-            acceptImageCaption(imageNode, lastTextNode, null);
+            acceptImageCaption(contents, imageNode, lastTextNode, null);
         }
 //        for (IObject content1 : contents) {
 //            if (content1 instanceof SemanticTextNode) {
@@ -64,7 +63,8 @@ public class CaptionProcessor {
 //        }
     }
 
-    private static void acceptImageCaption(SemanticFigure imageNode, SemanticTextNode previousNode, SemanticTextNode nextNode) {
+    private static void acceptImageCaption(List<IObject> contents, SemanticFigure imageNode, 
+                                           SemanticTextNode previousNode, SemanticTextNode nextNode) {
         if (imageNode.getImages().isEmpty()) {
             return;
         }
@@ -80,8 +80,9 @@ public class CaptionProcessor {
             captionNode = nextNode;
         }
         if (captionProbability >= CAPTION_PROBABILITY) {
-            captionNode.setSemanticType(SemanticType.CAPTION);
-            StaticLayoutContainers.getContentInfoMap().put(captionNode, new ContentInfo(DocumentProcessor.getContentsValueForTextNode(captionNode) + ", connected with object with id = " + imageNode.getImages().get(0).getRecognizedStructureId(), PDFWriter.getColor(SemanticType.CAPTION)));
+            SemanticCaption semanticCaption = new SemanticCaption(captionNode);//copy index
+            contents.set(captionNode.getIndex(), semanticCaption);
+            semanticCaption.setLinkedContentId(imageNode.getRecognizedStructureId());
         }
     }
 }

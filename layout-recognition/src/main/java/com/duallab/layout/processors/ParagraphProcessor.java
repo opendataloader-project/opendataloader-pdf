@@ -1,7 +1,5 @@
 package com.duallab.layout.processors;
 
-import com.duallab.layout.ContentInfo;
-import com.duallab.layout.containers.StaticLayoutContainers;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.content.TextBlock;
@@ -11,8 +9,6 @@ import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.CaptionUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
-
-import com.duallab.layout.pdf.PDFWriter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,8 +46,6 @@ public class ParagraphProcessor {
         }
         for (SemanticParagraph textParagraph : paragraphs) {
             textParagraph.setBoundingBox(textParagraph.getFirstColumn().getFirstTextBlock().getBoundingBox());
-            StaticLayoutContainers.getContentInfoMap().put(textParagraph,
-                    new ContentInfo(DocumentProcessor.getContentsValueForTextNode(textParagraph), PDFWriter.getColor(SemanticType.PARAGRAPH)));
         }
         return newContents;
     }

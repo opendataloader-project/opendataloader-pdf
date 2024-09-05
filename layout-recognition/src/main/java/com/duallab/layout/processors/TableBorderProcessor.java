@@ -1,13 +1,9 @@
 package com.duallab.layout.processors;
 
-import com.duallab.layout.ContentInfo;
-import com.duallab.layout.containers.StaticLayoutContainers;
-import com.duallab.layout.pdf.PDFWriter;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
 import org.verapdf.wcag.algorithms.entities.content.LineChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
-import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
@@ -37,8 +33,6 @@ public class TableBorderProcessor {
         for (TableBorder border : processedTableBorders) {
             StaticContainers.getTableBordersCollection().removeTableBorder(border, pageNumber);
             processTableBorder(border, pageNumber);
-            String value = String.format("Table: %s rows, %s columns", border.getNumberOfRows(), border.getNumberOfColumns());//todo improve
-            StaticLayoutContainers.getContentInfoMap().put(border, new ContentInfo(value, PDFWriter.getColor(SemanticType.TABLE)));
         }
         return newContents;
     }
@@ -76,7 +70,6 @@ public class TableBorderProcessor {
         HeadingProcessor.processHeadings(newContents);
         DocumentProcessor.setIDs(newContents);
         CaptionProcessor.processCaptions(newContents);
-        ImageProcessor.processImages(newContents);
         return newContents;
     }
 }
