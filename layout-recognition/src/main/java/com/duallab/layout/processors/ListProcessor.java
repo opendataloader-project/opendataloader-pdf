@@ -220,4 +220,51 @@ public class ListProcessor {
         }
         return false;//!doubles;
     }
+    
+    //todo for lists inside tables and lists
+    public static void checkNeighborLists(List<List<IObject>> contents) {
+        PDFList previousList = null;
+        for (List<IObject> iObjects : contents) {
+            for (IObject content : iObjects) {
+                if (content instanceof PDFList) {
+                    PDFList currentList = (PDFList) content;
+                    if (previousList != null) {
+                        checkNeighborLists(previousList, currentList);
+                    }
+                    previousList = currentList;
+                } else {
+                    if (!HeaderFooterProcessor.isHeaderOrFooter(content)) {
+                        previousList = null;
+                    }
+                }
+            }
+        }
+    }
+    
+    public static void checkNeighborLists(PDFList previousList, PDFList currentList) {
+        Set<ListInterval> listIntervals = ListLabelsUtils.getListItemsIntervals(getTextChildrenInfosForNeighborLists(previousList, currentList));
+        if (listIntervals.size() != 1) {
+            return;
+        }
+        ListInterval interval = listIntervals.iterator().next();
+        if (interval.getNumberOfListItems() != 4) {
+            return;
+        }
+        currentList.setPreviousListId(previousList.getRecognizedStructureId());
+    }
+
+    private static List<ListItemTextInfo> getTextChildrenInfosForNeighborLists(PDFList previousList, PDFList currentList) {
+        List<ListItemTextInfo> textChildrenInfo = new ArrayList<>(4);
+        textChildrenInfo.add(createListItemTextInfoFromListItem(0, previousList.getPenultListItem()));
+        textChildrenInfo.add(createListItemTextInfoFromListItem(0, previousList.getLastListItem()));
+        textChildrenInfo.add(createListItemTextInfoFromListItem(0, currentList.getFirstListItem()));
+        textChildrenInfo.add(createListItemTextInfoFromListItem(0, currentList.getSecondListItem()));
+        return textChildrenInfo;
+    }
+    
+    private static ListItemTextInfo createListItemTextInfoFromListItem(int index, ListItem listItem) {
+        TextLine line = listItem.getFirstLine();
+        String value = line.getValue().trim();
+        return new ListItemTextInfo(index, SemanticType.LIST_ITEM, line, value, listItem.getLinesNumber() == 1);
+    }
 }

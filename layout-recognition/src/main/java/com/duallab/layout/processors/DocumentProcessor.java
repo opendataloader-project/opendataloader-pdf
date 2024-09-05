@@ -54,6 +54,7 @@ public class DocumentProcessor {
             contents.add(pageContents);
         }
         HeaderFooterProcessor.processHeadersAndFooters(contents);
+        ListProcessor.checkNeighborLists(contents);
         HeadingProcessor.detectHeadingsLevels(contents);
         PDFWriter.updatePDF(pdfName, password, outputName, contents, hiddenTexts);
         JsonWriter.writeToJson(pdfName, outputName, contents);
