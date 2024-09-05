@@ -3,6 +3,7 @@ package com.duallab.layout.json.serializers;
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticCaption;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
@@ -62,6 +63,9 @@ public class ObjectMapperHolder {
 
 		DoubleSerializer doubleSerializer = new DoubleSerializer(Double.class);
 		module.addSerializer(Double.class, doubleSerializer);
+
+		HeaderFooterSerializer headerFooterSerializer = new HeaderFooterSerializer(SemanticHeaderOrFooter.class);
+		module.addSerializer(SemanticHeaderOrFooter.class, headerFooterSerializer);
 
 		//ParagraphSerializer paragraphSerializer = new ParagraphSerializer(SemanticParagraph.class);
 		//module.addSerializer(SemanticParagraph.class, paragraphSerializer);

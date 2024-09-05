@@ -1,10 +1,10 @@
 package com.duallab.layout.processors;
 
+import com.duallab.layout.containers.StaticLayoutContainers;
+import org.verapdf.wcag.algorithms.entities.INode;
 import org.verapdf.wcag.algorithms.entities.IObject;
-import org.verapdf.wcag.algorithms.entities.SemanticHeader;
+import org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
-import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
-import org.verapdf.wcag.algorithms.entities.content.LineChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
@@ -20,58 +20,212 @@ import java.util.*;
 public class HeaderFooterProcessor {
 
     public static void processHeadersAndFooters(List<List<IObject>> contents) {
-        //support of 2-pages/books style
-        //to check same/intersect position of headers/footers, but on different pages
-        //sort before
+        DocumentProcessor.setIndexesForDocumentContents(contents);
         List<List<IObject>> sortedContents = new ArrayList<>();
         for (List<IObject> content : contents) {
-            sortedContents.add(sortContents(content));
+            sortedContents.add(DocumentProcessor.sortContents(content));
         }
-        List<SemanticTextNode> headers = findPossibleHeaders(sortedContents);
-        processHeadersOrFooters(headers, true);
-        List<SemanticTextNode> footers = findPossibleFooters(sortedContents);
-        processHeadersOrFooters(footers, false);
+        List<SemanticHeaderOrFooter> footers = getHeadersOrFooters(sortedContents, false);
+        List<SemanticHeaderOrFooter> headers = getHeadersOrFooters(sortedContents, true);
+        for (int pageNumber = 0; pageNumber < contents.size(); pageNumber++) {
+            contents.set(pageNumber, updatePageContents(contents.get(pageNumber), headers.get(pageNumber), footers.get(pageNumber)));
+        }
     }
-
-    private static void processHeadersOrFooters(List<SemanticTextNode> textNodes, boolean isHeader) {
-        Set<ListInterval> intervals = getHeadersOrFootersIntervals(textNodes);
-        for (ListInterval interval : intervals) {
-            BoundingBox box = new BoundingBox();
-            for (int i = interval.getStart(); i <= interval.getEnd(); i++) {
-                SemanticTextNode textNode = textNodes.get(i);
-                box.union(textNode.getBoundingBox());
-                textNode.setSemanticType(isHeader ? SemanticType.HEADER : SemanticType.FOOTER);
+    
+    private static List<IObject> updatePageContents(List<IObject> pageContents, SemanticHeaderOrFooter header, SemanticHeaderOrFooter footer) {
+        SortedSet<Integer> headerAndFooterIndexes = new TreeSet<>();
+        headerAndFooterIndexes.addAll(getHeaderOrFooterContentsIndexes(header));
+        headerAndFooterIndexes.addAll(getHeaderOrFooterContentsIndexes(footer));
+        if (headerAndFooterIndexes.isEmpty()) {
+            return pageContents;
+        }
+        List<IObject> result = new ArrayList<>();
+        if (header != null) {
+            result.add(header);
+        }
+        Iterator<Integer> iterator = headerAndFooterIndexes.iterator();
+        int nextHeaderOrFooterIndex = iterator.hasNext() ? iterator.next() : pageContents.size();
+        for (int index = 0; index < pageContents.size(); index++) {
+            if (index < nextHeaderOrFooterIndex) {
+                result.add(pageContents.get(index));
+            } else {
+                nextHeaderOrFooterIndex = iterator.hasNext() ? iterator.next() : pageContents.size();
             }
         }
+        if (footer != null) {
+            result.add(footer);
+        }
+        return result;
     }
 
-    private static Set<ListInterval> getHeadersOrFootersIntervals(List<SemanticTextNode> textNodes) {
+    private static Set<Integer> getHeaderOrFooterContentsIndexes(SemanticHeaderOrFooter header) {
+        if (header == null) {
+            return Collections.emptySet();
+        }
+        SortedSet<Integer> set = new TreeSet<>();
+        for (IObject content : header.getContents()) {
+            set.add(content.getIndex());
+        }
+        return set;
+    }
+    
+    private static List<SemanticHeaderOrFooter> getHeadersOrFooters(List<List<IObject>> sortedContents, boolean isHeaderDetection) {
+        List<SemanticHeaderOrFooter> headersOrFooters = new ArrayList<>(sortedContents.size());
+        List<Integer> numberOfHeaderOrFooterContentsForEachPage = getNumberOfHeaderOrFooterContentsForEachPage(sortedContents, isHeaderDetection);
+        for (int pageNumber = 0; pageNumber < sortedContents.size(); pageNumber++) {
+            Integer currentIndex = numberOfHeaderOrFooterContentsForEachPage.get(pageNumber);
+            if (currentIndex == 0) {
+                headersOrFooters.add(null);
+                continue;
+            }
+            List<IObject> pageContents = sortedContents.get(pageNumber);
+            List<IObject> headerContents = filterHeaderOrFooterContents(isHeaderDetection ? pageContents.subList(0, currentIndex) :
+                    pageContents.subList(pageContents.size() - currentIndex, pageContents.size()), pageNumber, isHeaderDetection);
+            if (headerContents.isEmpty()) {
+                headersOrFooters.add(null);
+                continue;
+            }
+            SemanticHeaderOrFooter semanticHeaderOrFooter = new SemanticHeaderOrFooter(isHeaderDetection ? SemanticType.HEADER : SemanticType.FOOTER);
+            semanticHeaderOrFooter.addContents(headerContents);
+            semanticHeaderOrFooter.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+            headersOrFooters.add(semanticHeaderOrFooter);
+        }
+        return headersOrFooters;
+    }
+    
+    private static List<Integer> getNumberOfHeaderOrFooterContentsForEachPage(List<List<IObject>> sortedContents, boolean isHeaderDetection) {
+        List<Integer> numberOfHeaderOrFooterContentsForEachPage = new ArrayList<>(sortedContents.size());
+        for (int pageNumber = 0; pageNumber < sortedContents.size(); pageNumber++) {
+            numberOfHeaderOrFooterContentsForEachPage.add(0);
+        }
+        int currentIndex = 0;
+        while (true) {
+            List<IObject> contents = new ArrayList<>(sortedContents.size());
+            for (int pageNumber = 0; pageNumber < sortedContents.size(); pageNumber++) {
+                if (numberOfHeaderOrFooterContentsForEachPage.get(pageNumber) != currentIndex) {
+                    contents.add(null);
+                    continue;
+                }
+                List<IObject> pageContents = sortedContents.get(pageNumber);
+                int index = isHeaderDetection ? currentIndex : pageContents.size() - 1 - currentIndex;
+                if (index >= 0 && index < pageContents.size()) {
+                    contents.add(pageContents.get(index));
+                } else {
+                    contents.add(null);
+                }
+            }
+            Set<Integer> newIndexes = getIndexesOfHeaderOrFootersContents(contents);
+            if (newIndexes.isEmpty()) {
+                break;
+            }
+            for (Integer newIndex : newIndexes) {
+                numberOfHeaderOrFooterContentsForEachPage.set(newIndex, currentIndex + 1);
+            }
+            currentIndex++;
+        }
+        return numberOfHeaderOrFooterContentsForEachPage;
+    }
+    
+    private static Set<Integer> getIndexesOfHeaderOrFootersContents(List<IObject> contents) {
+        Set<Integer> result = new HashSet<>(contents.size());
+        for (int pageNumber = 0; pageNumber < contents.size() - 1; pageNumber++) {
+            IObject currentObject = contents.get(pageNumber);
+            IObject nextObject = contents.get(pageNumber + 1);
+            if (currentObject != null && nextObject != null) {
+                if (arePossibleHeadersOrFooters(currentObject, nextObject, 1)) {
+                    result.add(pageNumber);
+                    result.add(pageNumber + 1);
+                }
+            }
+        }
+        //2-page style
+        for (int pageNumber = 0; pageNumber < contents.size() - 2; pageNumber++) {
+            IObject currentObject = contents.get(pageNumber);
+            IObject nextObject = contents.get(pageNumber + 2);
+            if (currentObject != null && nextObject != null) {
+                if (arePossibleHeadersOrFooters(currentObject, nextObject, 2)) {
+                    result.add(pageNumber);
+                    result.add(pageNumber + 2);
+                }
+            }
+        }
+        return result;
+    }
+
+    public static boolean isHeaderOrFooter(IObject content) {
+        if (content instanceof INode) {
+            INode node = (INode) content;
+            if (node.getSemanticType() == SemanticType.HEADER || node.getSemanticType() == SemanticType.FOOTER) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static List<IObject> filterHeaderOrFooterContents(List<IObject> contents, int pageNumber, boolean isHeaderDetection) {
+        BoundingBox boundingBox = DocumentProcessor.getPageBoundingBox(pageNumber);
+        if (boundingBox == null) {
+            return contents;
+        }
+        List<IObject> result = new ArrayList<>();
+        for (IObject content : contents) {
+            if (isHeaderDetection) {
+                if (content.getBottomY() < boundingBox.getCenterY()) {
+                    continue;
+                }
+            } else {
+                if (content.getTopY() > boundingBox.getCenterY()) {
+                    continue;
+                }
+            }
+            result.add(content);
+        }
+        return result;
+    }
+    
+    private static boolean arePossibleHeadersOrFooters(IObject object1, IObject object2, int increment) {
+        if (object1 instanceof SemanticTextNode && object2 instanceof SemanticTextNode) {
+            SemanticTextNode textNode1 = (SemanticTextNode) object1;
+            SemanticTextNode textNode2 = (SemanticTextNode) object2;
+            //todo check boundingBoxes
+            if (Objects.equals(textNode1.getValue(), textNode2.getValue())) {
+                return true;
+            }
+            List<SemanticTextNode> textNodes = new ArrayList<>(2);
+            textNodes.add(textNode1);
+            textNodes.add(textNode2);
+            if (getHeadersOrFootersIntervals(textNodes, increment).size() == 1) {
+                return true;
+            }
+        } else {
+            if (BoundingBox.areSameBoundingBoxesExcludingPages(object1.getBoundingBox(), object2.getBoundingBox())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static Set<ListInterval> getHeadersOrFootersIntervals(List<SemanticTextNode> textNodes, int increment) {
         List<ListItemTextInfo> textChildrenInfo = new ArrayList<>(textNodes.size());
         for (int i = 0; i < textNodes.size(); i++) {
             SemanticTextNode textNode = textNodes.get(i);
-            if (textNode == null) {
-//                textChildrenInfo.add(new ListItemTextInfo(i, null,
-//                        line, line.getValue().trim(), secondLine == null));
-            } else {
-                TextLine line = textNode.getFirstNonSpaceLine();
-                TextLine secondLine = textNode.getNonSpaceLine(1);
-                textChildrenInfo.add(new ListItemTextInfo(i, textNode.getSemanticType(),
-                        line, line.getValue().trim(), secondLine == null));
-            }
-
+            TextLine line = textNode.getFirstNonSpaceLine();
+            TextLine secondLine = textNode.getNonSpaceLine(1);
+            textChildrenInfo.add(new ListItemTextInfo(i, textNode.getSemanticType(), 
+                    line, line.getValue().trim(), secondLine == null));
         }
-        Set<ListInterval> intervals = getHeadersOfFooterIntervals(textChildrenInfo);
+        Set<ListInterval> intervals = getHeadersOfFooterIntervals(textChildrenInfo, increment);
         return intervals;
     }
 
-    public static Set<ListInterval> getHeadersOfFooterIntervals(List<ListItemTextInfo> itemsInfo) {
+    private static Set<ListInterval> getHeadersOfFooterIntervals(List<ListItemTextInfo> itemsInfo, int increment) {
         ListIntervalsCollection listIntervals = new ListIntervalsCollection();
-        listIntervals.putAll((new AlfaLettersListLabelsDetectionAlgorithm1()).getItemsIntervals(itemsInfo));
-        listIntervals.putAll((new AlfaLettersListLabelsDetectionAlgorithm2()).getItemsIntervals(itemsInfo));
-        listIntervals.putAll((new KoreanLettersListLabelsDetectionAlgorithm()).getItemsIntervals(itemsInfo));
-        listIntervals.putAll((new RomanNumbersListLabelsDetectionAlgorithm()).getItemsIntervals(itemsInfo));
-        ArabicNumbersListLabelsDetectionAlgorithm arabicNumbersListLabelsDetectionAlgorithm = new ArabicNumbersListLabelsDetectionAlgorithm();
-        arabicNumbersListLabelsDetectionAlgorithm.isHeaderOrFooter = true;
+        listIntervals.putAll((new AlfaLettersListLabelsDetectionAlgorithm1(increment)).getItemsIntervals(itemsInfo));
+        listIntervals.putAll((new AlfaLettersListLabelsDetectionAlgorithm2(increment)).getItemsIntervals(itemsInfo));
+        listIntervals.putAll((new KoreanLettersListLabelsDetectionAlgorithm(increment)).getItemsIntervals(itemsInfo));
+        listIntervals.putAll((new RomanNumbersListLabelsDetectionAlgorithm(increment)).getItemsIntervals(itemsInfo));
+        ArabicNumbersListLabelsDetectionAlgorithm arabicNumbersListLabelsDetectionAlgorithm = new ArabicNumbersListLabelsDetectionAlgorithm(increment);
+        arabicNumbersListLabelsDetectionAlgorithm.setHeaderOrFooterDetection(true);
         listIntervals.putAll((arabicNumbersListLabelsDetectionAlgorithm).getItemsIntervals(itemsInfo));
         ListIntervalsCollection correctIntervals = new ListIntervalsCollection(getEqualsItems(itemsInfo));
         for (ListInterval listInterval : listIntervals.getSet()) {
@@ -79,75 +233,14 @@ public class HeaderFooterProcessor {
             for (ListItemInfo info : listInterval.getListItemsInfos()) {
                 labels.add(((ListItemTextInfo)info).getListItem());
             }
-            if (ListLabelsUtils.isListLabels(labels, 1)) {
+            if (ListLabelsUtils.isListLabels(labels, increment)) {
                 correctIntervals.put(listInterval);
             }
         }
         return correctIntervals.getSet();
     }
 
-    private static List<SemanticTextNode> findPossibleHeaders(List<List<IObject>> contents) {
-        List<SemanticTextNode> textNodes = new LinkedList<>();
-        int currentPage = 0;
-        for (List<IObject> iObjects : contents) {
-            for (IObject content : iObjects) {
-                while (currentPage < content.getPageNumber()) {
-//                textNodes.add(null);
-                    currentPage++;
-                }
-                if (currentPage == content.getPageNumber()) {
-                    if (content instanceof SemanticTextNode) {
-                        SemanticTextNode textNode = (SemanticTextNode) content;
-                        if (textNode.isSpaceNode() || textNode.isEmpty()) {
-                            continue;
-                        }
-                        textNodes.add(textNode);
-                        currentPage++;
-                    } else if (!(content instanceof LineChunk || content instanceof LineArtChunk)) {
-//                    textNodes.add(null);
-                        currentPage++;
-                    }
-                }
-            }
-        }
-        return textNodes;
-    }
-
-    private static List<SemanticTextNode> findPossibleFooters(List<List<IObject>> contents) {
-        List<SemanticTextNode> textNodes = new LinkedList<>();
-        int currentPage = 0;
-        IObject previousNode = null;
-        for (List<IObject> iObjects : contents) {
-            for (IObject content : iObjects) {
-                if (previousNode != null && previousNode.getPageNumber() < content.getPageNumber()) {
-                    if (previousNode instanceof SemanticTextNode) {
-                        textNodes.add((SemanticTextNode) previousNode);
-                        previousNode = null;
-                    }
-                }
-                if (content instanceof SemanticTextNode) {
-                    SemanticTextNode textNode = (SemanticTextNode) content;
-                    if (textNode.isSpaceNode() || textNode.isEmpty()) {
-                        continue;
-                    }
-                }
-                if (content instanceof LineChunk || content instanceof LineArtChunk) {
-                    continue;
-                }
-                previousNode = content;
-                while (currentPage < previousNode.getPageNumber()) {
-//                textNodes.add(null);
-                    currentPage++;
-                }
-            }
-        }
-        if (previousNode instanceof SemanticTextNode) {
-            textNodes.add((SemanticTextNode)previousNode);
-        }
-        return textNodes;
-    }
-
-    public static Set<ListInterval> getEqualsItems(List<ListItemTextInfo> itemsInfo) {
+    private static Set<ListInterval> getEqualsItems(List<ListItemTextInfo> itemsInfo) {
         Set<ListInterval> listIntervals = new HashSet<>();
         String value = null;
         ListInterval interval = new ListInterval();
