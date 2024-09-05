@@ -37,6 +37,7 @@ public class CaptionProcessor {
                     lastTextNode = null;
                 }
                 imageNode = new SemanticFigure((ImageChunk) content);
+                imageNode.setRecognizedStructureId(content.getRecognizedStructureId());
             } else if (content instanceof TableBorder) {
                 if (imageNode != null) {
                     acceptImageCaption(contents, imageNode, lastTextNode, null);
@@ -45,6 +46,7 @@ public class CaptionProcessor {
                 ImageChunk imageChunk = new ImageChunk(content.getBoundingBox());
                 imageChunk.setRecognizedStructureId(content.getRecognizedStructureId());
                 imageNode = new SemanticFigure(imageChunk);
+                imageNode.setRecognizedStructureId(content.getRecognizedStructureId());
             }
         }
         if (imageNode != null) {
@@ -80,7 +82,7 @@ public class CaptionProcessor {
             captionNode = nextNode;
         }
         if (captionProbability >= CAPTION_PROBABILITY) {
-            SemanticCaption semanticCaption = new SemanticCaption(captionNode);//copy index
+            SemanticCaption semanticCaption = new SemanticCaption(captionNode);
             contents.set(captionNode.getIndex(), semanticCaption);
             semanticCaption.setLinkedContentId(imageNode.getRecognizedStructureId());
         }
