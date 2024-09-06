@@ -55,9 +55,13 @@ public class TableBorderProcessor {
     }
 
     public static void processTableBorder(TableBorder tableBorder, int pageNumber) {
-        for (TableBorderRow tableBorderRow : tableBorder.getRows()) {
-            for (TableBorderCell tableBorderCell : tableBorderRow.getCells()) {
-                tableBorderCell.setContents(processTableCellContent(tableBorderCell.getContents(), pageNumber));
+        for (int rowNumber = 0; rowNumber < tableBorder.getNumberOfRows(); rowNumber++) {
+            TableBorderRow row = tableBorder.getRow(rowNumber);
+            for (int colNumber = 0; colNumber < tableBorder.getNumberOfColumns(); colNumber++) {
+                TableBorderCell tableBorderCell = row.getCell(colNumber);
+                if (tableBorderCell.getRowNumber() == rowNumber && tableBorderCell.getColNumber() == colNumber) {
+                    tableBorderCell.setContents(processTableCellContent(tableBorderCell.getContents(), pageNumber));
+                }
             }
         }
     }
