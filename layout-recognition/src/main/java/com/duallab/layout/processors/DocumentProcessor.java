@@ -2,6 +2,7 @@ package com.duallab.layout.processors;
 
 import com.duallab.layout.json.JsonWriter;
 import com.duallab.layout.containers.StaticLayoutContainers;
+import com.duallab.layout.markdown.MarkdownGenerator;
 import com.duallab.layout.pdf.PDFWriter;
 import org.verapdf.as.ASAtom;
 import org.verapdf.cos.COSDictionary;
@@ -58,6 +59,7 @@ public class DocumentProcessor {
         HeadingProcessor.detectHeadingsLevels(contents);
         PDFWriter.updatePDF(pdfName, password, outputName, contents, hiddenTexts);
         JsonWriter.writeToJson(pdfName, outputName, contents);
+        MarkdownGenerator.writeToMarkdown(outputName, contents);
     }
 
     public static void preprocessing(String pdfName, String password) throws IOException {
