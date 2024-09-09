@@ -14,6 +14,9 @@ public class CaptionProcessor {
 
     private static final double CAPTION_PROBABILITY = 0.75;
 
+    private static final double CAPTION_VERTICAL_OFFSET_RATIO = 1;
+    private static final double CAPTION_HORIZONTAL_OFFSET_RATIO = 1;
+
     public static void processCaptions(List<IObject> contents) {
         DocumentProcessor.setIndexesForContentsList(contents);
         SemanticFigure imageNode = null;
@@ -24,22 +27,25 @@ public class CaptionProcessor {
             }
             if (content instanceof SemanticTextNode) {
                 SemanticTextNode textNode = (SemanticTextNode)content;
-                if (!textNode.isSpaceNode() && !textNode.isEmpty()) {
-                    if (imageNode != null) {
-                        acceptImageCaption(contents, imageNode, lastTextNode, textNode);
-                        imageNode = null;
-                    }
-                    lastTextNode = textNode;
+                if (textNode.isSpaceNode() || textNode.isEmpty()) {
+                    continue;
                 }
+
+                if (imageNode != null && isTextNotContainedInImage(imageNode, textNode)) {
+                    acceptImageCaption(contents, imageNode, lastTextNode, textNode);
+                    imageNode = null;
+                }
+
+                lastTextNode = textNode;
             } else if (content instanceof ImageChunk) {
-                if (imageNode != null) {
+                if (imageNode != null && isTextNotContainedInImage(imageNode, lastTextNode)) {
                     acceptImageCaption(contents, imageNode, lastTextNode, null);
                     lastTextNode = null;
                 }
                 imageNode = new SemanticFigure((ImageChunk) content);
                 imageNode.setRecognizedStructureId(content.getRecognizedStructureId());
             } else if (content instanceof TableBorder) {
-                if (imageNode != null) {
+                if (imageNode != null && isTextNotContainedInImage(imageNode, lastTextNode)) {
                     acceptImageCaption(contents, imageNode, lastTextNode, null);
                     lastTextNode = null;
                 }
@@ -65,7 +71,19 @@ public class CaptionProcessor {
 //        }
     }
 
-    private static void acceptImageCaption(List<IObject> contents, SemanticFigure imageNode, 
+
+    public static boolean isTextNotContainedInImage(SemanticFigure image, SemanticTextNode text) {
+        if (text == null) {
+            return true;
+        }
+
+        double textSize = text.getFontSize();
+        return !image.getBoundingBox().contains(text.getBoundingBox(),
+                textSize * CAPTION_HORIZONTAL_OFFSET_RATIO,
+                textSize * CAPTION_VERTICAL_OFFSET_RATIO);
+    }
+
+    private static void acceptImageCaption(List<IObject> contents, SemanticFigure imageNode,
                                            SemanticTextNode previousNode, SemanticTextNode nextNode) {
         if (imageNode.getImages().isEmpty()) {
             return;
