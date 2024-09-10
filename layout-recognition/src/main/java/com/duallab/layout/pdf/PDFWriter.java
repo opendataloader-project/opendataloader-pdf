@@ -23,38 +23,47 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainer
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class PDFWriter {
+    
+    private static final List<List<PDAnnotation>> annotations = new ArrayList<>();
+    
     public static void updatePDF(String pdfName, String password, String outputName, List<List<IObject>> contents, 
                                  List<TextChunk> hiddenTextChunks) throws IOException {
         PDDocument document = PDDocument.load(new File(pdfName), password);
         for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
+            annotations.add(new ArrayList<>());
             for (IObject content : contents.get(pageNumber)) {
-                drawContent(document, content);
+                drawContent(content);
             }
         }
         for (TextChunk textChunk : hiddenTextChunks) {
-            draw(document, textChunk.getBoundingBox(), getColor(SemanticType.FIGURE), 
+            draw(textChunk.getBoundingBox(), getColor(SemanticType.FIGURE), 
                     String.format("Hidden text, value = \"%s\"", textChunk.getValue()), null, null);
         }
+        for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
+            document.getPage(pageNumber).getAnnotations().addAll(annotations.get(pageNumber));
+        } 
+        annotations.clear();
         System.out.println("Created " + outputName);
         document.setAllSecurityToBeRemoved(true);
         document.save(outputName);
         document.close();
     }
     
-    private static void drawContent(PDDocument document, IObject content) throws IOException {
-        PDAnnotation annot = draw(document, content.getBoundingBox(), getColor(content), getContents(content),
+    private static void drawContent(IObject content) throws IOException {
+        PDAnnotation annot = draw(content.getBoundingBox(), getColor(content), getContents(content),
                 content.getRecognizedStructureId(), null);
         if (content instanceof TableBorder) {
-            drawTableCells(document, (TableBorder) content, annot);
+            drawTableCells((TableBorder) content, annot);
         } else if (content instanceof PDFList) {
-            drawListItems(document, (PDFList) content, annot);
+            drawListItems((PDFList) content, annot);
         }
     }
     
-    private static void drawTableCells(PDDocument document, TableBorder border, PDAnnotation annot) throws IOException {
+    private static void drawTableCells(TableBorder border, PDAnnotation annot) throws IOException {
         for (int rowNumber = 0; rowNumber < border.getNumberOfRows(); rowNumber++) {
             TableBorderRow row = border.getRow(rowNumber);
             for (int colNumber = 0; colNumber < border.getNumberOfColumns(); colNumber++) {
@@ -68,28 +77,27 @@ public class PDFWriter {
                     }
                     String cellValue = String.format("Table cell: row number %s, column number %s, row span %s, column span %s, text content \"%s\"",
                             cell.getRowNumber() + 1, cell.getColNumber() + 1, cell.getRowSpan(), cell.getColSpan(), contentValue);
-                    draw(document, cell.getBoundingBox(), getColor(SemanticType.TABLE), cellValue, null, annot);
+                    draw(cell.getBoundingBox(), getColor(SemanticType.TABLE), cellValue, null, annot);
                     for (IObject content : cell.getContents()) {
-                        drawContent(document, content);
+                        drawContent(content);
                     }
                 }
             }
         }
     }
     
-    private static void drawListItems(PDDocument document, PDFList list, PDAnnotation annot) throws IOException {
+    private static void drawListItems(PDFList list, PDAnnotation annot) throws IOException {
         for (ListItem listItem : list.getListItems()) {
             String contentValue = String.format("List item: text content \"%s\"", listItem.toString());
-            draw(document, listItem.getBoundingBox(), getColor(SemanticType.LIST), contentValue, null, annot);
+            draw(listItem.getBoundingBox(), getColor(SemanticType.LIST), contentValue, null, annot);
             for (IObject content : listItem.getContents()) {
-                drawContent(document, content);
+                drawContent(content);
             }
         }
     }
 
-    public static PDAnnotation draw(PDDocument document, BoundingBox boundingBox, float[] colorArray,
-                                    String contents, Long id, PDAnnotation linkedAnnot) throws IOException {
-        PDPage page = document.getPage(boundingBox.getPageNumber());
+    public static PDAnnotation draw(BoundingBox boundingBox, float[] colorArray,
+                                    String contents, Long id, PDAnnotation linkedAnnot) {
         PDAnnotationSquareCircle square = new PDAnnotationSquareCircle(PDAnnotationSquareCircle.SUB_TYPE_SQUARE);
         square.setRectangle(new PDRectangle((float)boundingBox.getLeftX(), (float)boundingBox.getBottomY(),
                 (float)boundingBox.getWidth(), (float)boundingBox.getHeight()));
@@ -101,7 +109,7 @@ public class PDFWriter {
         if (linkedAnnot != null) {
             square.setInReplyTo(linkedAnnot);
         }
-        page.getAnnotations().add(square);
+        annotations.get(boundingBox.getPageNumber()).add(square);
         return square;
     }
     
