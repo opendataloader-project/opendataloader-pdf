@@ -1,6 +1,5 @@
 package com.duallab.layout.processors;
 
-import org.verapdf.wcag.algorithms.entities.INode;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
@@ -18,15 +17,13 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.duallab.layout.pdf.PDFWriter;
-
 public class ListProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(ListProcessor.class.getCanonicalName());
 
     private static final double LIST_ITEM_PROBABILITY = 0.7;
 
-    private static final double LIST_ITEM_X_INTERVAL_RATIO = 0.4;
+    private static final double LIST_ITEM_X_INTERVAL_RATIO = 0.3;
 
     public static List<IObject> processLists(List<IObject> contents) {
         List<ListInterval> intervalsList = getListIntervalsList(contents);
