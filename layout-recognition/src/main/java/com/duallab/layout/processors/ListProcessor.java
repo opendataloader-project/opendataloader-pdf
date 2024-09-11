@@ -104,6 +104,7 @@ public class ListProcessor {
 
     private static PDFList calculateList(ListInterval interval, List<IObject> contents) {
         PDFList list = new PDFList(0L);
+        list.setNumberingStyle(interval.getNumberingStyle());
         for (int i = 0; i < interval.getNumberOfListItems(); i++) {
             ListItemInfo currentInfo = interval.getListItemsInfos().get(i);
             int nextIndex = i != interval.getNumberOfListItems() - 1 ? interval.getListItemsInfos().get(i + 1).getIndex() : contents.size();

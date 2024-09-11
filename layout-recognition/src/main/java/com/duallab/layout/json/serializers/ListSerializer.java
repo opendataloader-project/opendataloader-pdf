@@ -20,6 +20,7 @@ public class ListSerializer extends StdSerializer<PDFList> {
 		jsonGenerator.writeStartObject();
 		jsonGenerator.writeStringField(JsonName.TYPE, JsonName.LIST_TYPE);
 		jsonGenerator.writeNumberField(JsonName.ID, list.getRecognizedStructureId());
+		jsonGenerator.writeStringField(JsonName.NUMBERING_STYLE, list.getNumberingStyle());
 		jsonGenerator.writeNumberField(JsonName.NUMBER_OF_CHILDREN, list.getNumberOfListItems());
 		if (list.getPreviousListId() != null) {
 			jsonGenerator.writeNumberField("previous list id", list.getPreviousListId());
