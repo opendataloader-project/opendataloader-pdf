@@ -198,8 +198,6 @@ public class ParagraphProcessor {
                 TextBlock nextBlock = textBlocks.get(i);
                 if (isOneParagraph(previousBlock, nextBlock)) {
                     previousBlock.add(nextBlock.getLines());
-                    previousBlock.setHasStartLine(true);
-                    previousBlock.setHasEndLine(true);
                 } else {
                     newBlocks.add(nextBlock);
                 }
@@ -212,7 +210,6 @@ public class ParagraphProcessor {
         double probability = getDifferentLinesProbability(previousBlock, nextBlock);
         return CaptionUtils.areOverlapping(previousBlock.getLastLine(), nextBlock.getFirstLine().getBoundingBox()) &&
                 probability > DIFFERENT_LINES_PROBABILITY &&
-                previousBlock.getLastLine().getLeftX() > nextBlock.getFirstLine().getLeftX() &&
                 (previousBlock.getLinesNumber() == 1 || previousBlock.getTextAlignment() == null) &&
                 (nextBlock.getLinesNumber() == 1 || nextBlock.getTextAlignment() == null);
     }
