@@ -3,6 +3,7 @@ package com.duallab.layout.processors;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
+import org.verapdf.wcag.algorithms.entities.enums.TextAlignment;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.lists.ListInterval;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
@@ -152,7 +153,8 @@ public class ListProcessor {
             return false;
         }
         if (listItem.getLinesNumber() > 1) {
-            return NodeUtils.areCloseNumbers(listLine.getLeftX(), nextLine.getLeftX());
+            TextAlignment alignment = ChunksMergeUtils.getAlignment(listLine, nextLine);
+            return alignment == TextAlignment.JUSTIFY || alignment == TextAlignment.LEFT;
         }
         return nextLine.getLeftX() > listLine.getLeftX();
     }
@@ -249,6 +251,7 @@ public class ListProcessor {
             return;
         }
         currentList.setPreviousListId(previousList.getRecognizedStructureId());
+        previousList.setNextListId(currentList.getRecognizedStructureId());
     }
 
     private static List<ListItemTextInfo> getTextChildrenInfosForNeighborLists(PDFList previousList, PDFList currentList) {
