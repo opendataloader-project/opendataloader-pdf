@@ -66,7 +66,6 @@ public class DocumentProcessor {
         StaticResources.clear();
         StaticLayoutContainers.clear();
         StaticLayoutContainers.setCurrentContentId(1);
-        org.verapdf.gf.model.impl.containers.StaticContainers.clearAllContainers();
         StaticResources.setPassword(password);
         PDDocument pdDocument = new PDDocument(pdfName);
         StaticResources.setDocument(pdDocument);

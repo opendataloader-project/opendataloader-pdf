@@ -3,6 +3,7 @@ package com.duallab.layout.cli;
 import com.duallab.layout.containers.StaticLayoutContainers;
 import com.duallab.layout.processors.DocumentProcessor;
 import org.apache.commons.cli.*;
+import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,13 +27,16 @@ public class CLIMain {
             formatter.printHelp(HELP, options);
             return;
         }
+
         String[] arguments = commandLine.getArgs();
         String password = null;
         if (commandLine.hasOption(CLIOptions.PASSWORD_OPTION)) {
             password = commandLine.getOptionValue(CLIOptions.PASSWORD_OPTION);
         }
-        
+
+        org.verapdf.gf.model.impl.containers.StaticContainers.clearAllContainers();
         StaticLayoutContainers.setFindHiddenText(commandLine.hasOption(CLIOptions.HIDDEN_TEXT_OPTION));
+        StaticContainers.setTextFormatting(commandLine.hasOption(CLIOptions.FORMATTED_TEXT_OPTION));
 
         File file = new File(arguments[0]);
         if (file.isDirectory()) {
