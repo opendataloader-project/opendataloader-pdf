@@ -2,6 +2,7 @@ package com.duallab.layout.processors;
 
 import com.duallab.layout.json.JsonWriter;
 import com.duallab.layout.containers.StaticLayoutContainers;
+import com.duallab.layout.markdown.MarkdownGeneratorFactory;
 import com.duallab.layout.markdown.MarkdownGenerator;
 import com.duallab.layout.pdf.PDFWriter;
 import org.verapdf.as.ASAtom;
@@ -56,6 +57,7 @@ public class DocumentProcessor {
             CaptionProcessor.processCaptions(pageContents);
             contents.add(pageContents);
         }
+
         HeaderFooterProcessor.processHeadersAndFooters(contents);
         ListProcessor.checkNeighborLists(contents);
         HeadingProcessor.detectHeadingsLevels(contents);
@@ -66,7 +68,9 @@ public class DocumentProcessor {
             JsonWriter.writeToJson(pdfName, outputName, contents);
         }
         if (config.isGenerateMarkdown()) {
-            MarkdownGenerator.writeToMarkdown(pdfName, outputName, contents);
+            MarkdownGenerator markdownGenerator = MarkdownGeneratorFactory
+                    .getMarkdownGenerator(pdfName, outputName, config.isUseHTMLInMarkdown());
+            markdownGenerator.writeToMarkdown(contents);
         }
     }
 
@@ -83,14 +87,13 @@ public class DocumentProcessor {
         linesPreprocessingConsumer.findTableBorders();
         StaticContainers.setTableBordersCollection(new TableBordersCollection(linesPreprocessingConsumer.getTableBorders()));
     }
-    
+
     private static void updateStaticContainers(Config config) {
         StaticResources.clear();
         StaticLayoutContainers.clearContainers();
         org.verapdf.gf.model.impl.containers.StaticContainers.clearAllContainers();
         StaticCoreContainers.clearAllContainers();
         StaticXmpCoreContainers.clearAllContainers();
-        
         StaticLayoutContainers.setFindHiddenText(config.isFindHiddenText());
         StaticContainers.setTextFormatting(config.isTextFormatted());
         StaticLayoutContainers.setCurrentContentId(1);

@@ -27,24 +27,26 @@ import java.util.logging.Logger;
 
 public class MarkdownGenerator implements Closeable {
 
-    private static final Logger LOGGER = Logger.getLogger(MarkdownGenerator.class.getCanonicalName());
-    private final FileWriter markdownWriter;
-    private final String pdfFileName;
-    private final String directory;
-    private ContrastRatioConsumer contrastRatioConsumer;
+    protected static final Logger LOGGER = Logger.getLogger(MarkdownGenerator.class.getCanonicalName());
+    protected final FileWriter markdownWriter;
+    protected final String pdfFileName;
+    protected final String directory;
+    protected ContrastRatioConsumer contrastRatioConsumer;
+    protected final String markdownFileName;
+    protected int tableNesting = 0;
 
-    private MarkdownGenerator(String pdfFileName, String fileName) throws IOException {
-        directory = fileName.substring(0, fileName.lastIndexOf("\\"));
-        markdownWriter = new FileWriter(fileName);
+    MarkdownGenerator(String pdfFileName, String outputFileName) throws IOException {
+        markdownFileName = outputFileName.substring(0, outputFileName.length() - 3) + "md";
+        directory = outputFileName.substring(0, outputFileName.lastIndexOf("\\"));
+        markdownWriter = new FileWriter(markdownFileName);
         this.pdfFileName = pdfFileName;
     }
 
-    public static void writeToMarkdown(String pdfFileName, String outputName, List<List<IObject>> contents) {
-        String markdownFileName = outputName.substring(0, outputName.length() - 3) + "md";
-        try (MarkdownGenerator generator = new MarkdownGenerator(pdfFileName, markdownFileName)) {
+    public void writeToMarkdown(List<List<IObject>> contents) {
+        try {
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 for (IObject content : contents.get(pageNumber)) {
-                    generator.write(content, false);
+                    this.write(content);
                 }
             }
 
@@ -54,13 +56,13 @@ public class MarkdownGenerator implements Closeable {
         }
     }
 
-    private void write(IObject object, boolean isTable) throws IOException {
+    protected void write(IObject object) throws IOException {
         if (object instanceof ImageChunk) {
             writeImage((ImageChunk) object);
         } else if (object instanceof SemanticHeading) {
             writeHeading((SemanticHeading) object);
         } else if (object instanceof SemanticParagraph) {
-            writeParagraph((SemanticParagraph) object, isTable);
+            writeParagraph((SemanticParagraph) object);
         } else if (object instanceof SemanticTextNode) {
             writeSemanticTextNode((SemanticTextNode) object);
         } else if (object instanceof TableBorder) {
@@ -71,12 +73,12 @@ public class MarkdownGenerator implements Closeable {
             return;
         }
 
-        if (!isTable) {
+        if (!isInsideTable()) {
             markdownWriter.write(MarkdownSyntax.LINE_BREAK);
         }
     }
 
-    private void writeImage(ImageChunk image) throws IOException {
+    protected void writeImage(ImageChunk image) throws IOException {
         int currentImageIndex = StaticLayoutContainers.incrementImageIndex();
         if (currentImageIndex == 1) {
             new File(directory + "/images").mkdirs();
@@ -91,7 +93,7 @@ public class MarkdownGenerator implements Closeable {
         }
     }
 
-    private boolean createImageFile(ImageChunk image, String fileName) {
+    protected boolean createImageFile(ImageChunk image, String fileName) {
         try {
             BoundingBox imageBox = image.getBoundingBox();
             BufferedImage targetImage = contrastRatioConsumer.getPageSubImage(imageBox);
@@ -109,29 +111,30 @@ public class MarkdownGenerator implements Closeable {
 
     }
 
-    private void writeList(PDFList list) throws IOException {
+    protected void writeList(PDFList list) throws IOException {
         markdownWriter.write(MarkdownSyntax.LINE_BREAK);
         for (ListItem item : list.getListItems()) {
             markdownWriter.write(item.toString());
             for (IObject object : item.getContents()) {
-                write(object, false);
+                write(object);
             }
 
             markdownWriter.write(MarkdownSyntax.LINE_BREAK);
         }
     }
 
-    private void writeSemanticTextNode(SemanticTextNode textNode) throws IOException {
+    protected void writeSemanticTextNode(SemanticTextNode textNode) throws IOException {
         markdownWriter.write(textNode.getValue());
     }
 
-    private void writeTable(TableBorder table) throws IOException {
+    protected void writeTable(TableBorder table) throws IOException {
+        enterTable();
         markdownWriter.write(MarkdownSyntax.LINE_BREAK);
         for (TableBorderRow row : table.getRows()) {
             markdownWriter.write(MarkdownSyntax.TABLE_COLUMN_SEPARATOR);
             for (TableBorderCell cell : row.getCells()) {
                 for (IObject object : cell.getContents()) {
-                    this.write(object, true);
+                    this.write(object);
                 }
 
                 markdownWriter.write(MarkdownSyntax.TABLE_COLUMN_SEPARATOR);
@@ -149,20 +152,20 @@ public class MarkdownGenerator implements Closeable {
                 markdownWriter.write(MarkdownSyntax.LINE_BREAK);
             }
         }
+
+        leaveTable();
     }
 
-    private void writeParagraph(SemanticParagraph textNode, boolean isTable) throws IOException {
-        String value;
-        if (isTable) {
-            value = textNode.getValue().replace(MarkdownSyntax.LINE_BREAK, MarkdownSyntax.SPACE);
-        } else {
-            value = textNode.getValue();
+    protected void writeParagraph(SemanticParagraph textNode) throws IOException {
+        String value = textNode.getValue();
+        if (isInsideTable() && !StaticContainers.isTextFormatted()) {
+            value = value.replace(MarkdownSyntax.LINE_BREAK, MarkdownSyntax.SPACE);
         }
 
         markdownWriter.write(value);
     }
 
-    private void writeHeading(SemanticHeading heading) throws IOException {
+    protected void writeHeading(SemanticHeading heading) throws IOException {
         int headingLevel = heading.getHeadingLevel();
         for (int i = 0; i < headingLevel; i++) {
             markdownWriter.write(MarkdownSyntax.HEADING_LEVEL);
@@ -171,6 +174,21 @@ public class MarkdownGenerator implements Closeable {
         markdownWriter.write(MarkdownSyntax.SPACE);
         markdownWriter.write(heading.getValue());
     }
+
+    protected void enterTable() {
+        tableNesting++;
+    }
+
+    protected void leaveTable() {
+        if (tableNesting > 0) {
+            tableNesting--;
+        }
+    }
+
+    protected boolean isInsideTable() {
+        return tableNesting > 0;
+    }
+
 
     @Override
     public void close() throws IOException {

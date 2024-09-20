@@ -29,6 +29,9 @@ public class Config {
         if (commandLine.hasOption(CLIOptions.MARKDOWN_REPORT_OPTION)) {
             config.setGenerateMarkdown(true);
         }
+        if (commandLine.hasOption(CLIOptions.HTML_OPTION)) {
+            config.setUseHTMLInMarkdown(true);
+        }
         return config;
     }
 

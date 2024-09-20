@@ -11,8 +11,11 @@ public class CLIOptions {
     public static final String PASSWORD_OPTION = "p";
     private static final String PASSWORD_LONG_OPTION = "password";
 
+    public static final String HTML_OPTION = "html";
+    private static final String HTML_LONG_OPTION = "htmlinmarkdown";
+
     public static final String FORMATTED_TEXT_OPTION = "ft";
-    private static final String FORMATTED_TEXT_LONG_OPTION = "formatText";
+    private static final String FORMATTED_TEXT_LONG_OPTION = "formattext";
 
     public static final String PDF_REPORT_OPTION = "pdf";
     public static final String MARKDOWN_REPORT_OPTION = "markdown";
@@ -26,6 +29,9 @@ public class CLIOptions {
         Option password = new Option(PASSWORD_OPTION, PASSWORD_LONG_OPTION, true, "Specifies password");
         password.setRequired(false);
         options.addOption(password);
+        Option html = new Option(HTML_OPTION, HTML_LONG_OPTION, false, "Use html in markdown");
+        html.setRequired(false);
+        options.addOption(html);
         Option formatText = new Option(FORMATTED_TEXT_OPTION, FORMATTED_TEXT_LONG_OPTION, false, "Format text");
         formatText.setRequired(false);
         options.addOption(formatText);
