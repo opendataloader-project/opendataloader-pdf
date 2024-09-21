@@ -7,39 +7,51 @@ import java.util.List;
 
 public class StaticLayoutContainers {
 
-    private static long currentContentId = 1;
-    private static boolean findHiddenText = false;
-    private static List<SemanticHeading> headings = new LinkedList<>();
+    private static final ThreadLocal<Long> currentContentId = new ThreadLocal<>();
+    private static final ThreadLocal<Boolean> findHiddenText = new ThreadLocal<>();
+    private static final ThreadLocal<List<SemanticHeading>> headings = new ThreadLocal<>();
+    private static final ThreadLocal<Integer> imageIndex = new ThreadLocal<>();
+
+    public static void clearContainers() {
+        currentContentId.set(1L);
+        findHiddenText.set(false);
+        headings.set(new LinkedList<>());
+        imageIndex.set(1);
+    }
 
     public static long getCurrentContentId() {
-        return currentContentId;
+        return currentContentId.get();
     }
 
     public static long incrementContentId() {
-        return StaticLayoutContainers.currentContentId++;
+        long id = getCurrentContentId();
+        StaticLayoutContainers.setCurrentContentId(id + 1);
+        return id;
     }
 
     public static void setCurrentContentId(long currentContentId) {
-        StaticLayoutContainers.currentContentId = currentContentId;
+        StaticLayoutContainers.currentContentId.set(currentContentId);
     }
 
     public static boolean isFindHiddenText() {
-        return findHiddenText;
+        return findHiddenText.get();
     }
 
     public static void setFindHiddenText(boolean findHiddenText) {
-        StaticLayoutContainers.findHiddenText = findHiddenText;
+        StaticLayoutContainers.findHiddenText.set(findHiddenText);
     }
 
     public static List<SemanticHeading> getHeadings() {
-        return headings;
+        return headings.get();
     }
 
     public static void setHeadings(List<SemanticHeading> headings) {
-        StaticLayoutContainers.headings = headings;
+        StaticLayoutContainers.headings.set(headings);
     }
 
-    public static void clear() {
-        StaticLayoutContainers.headings.clear();
+    public static int incrementImageIndex() {
+        int imageIndex = StaticLayoutContainers.imageIndex.get();
+        StaticLayoutContainers.imageIndex.set(imageIndex + 1);
+        return imageIndex;
     }
 }

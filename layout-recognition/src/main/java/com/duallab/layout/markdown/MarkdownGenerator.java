@@ -1,5 +1,6 @@
 package com.duallab.layout.markdown;
 
+import com.duallab.layout.containers.StaticLayoutContainers;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
@@ -29,7 +30,6 @@ public class MarkdownGenerator implements Closeable {
     private static final Logger LOGGER = Logger.getLogger(MarkdownGenerator.class.getCanonicalName());
     private final FileWriter markdownWriter;
     private final String pdfFileName;
-    private static int imageIndex = 1;
     private final String directory;
     private ContrastRatioConsumer contrastRatioConsumer;
 
@@ -77,7 +77,7 @@ public class MarkdownGenerator implements Closeable {
     }
 
     private void writeImage(ImageChunk image) throws IOException {
-        int currentImageIndex = imageIndex++;
+        int currentImageIndex = StaticLayoutContainers.incrementImageIndex();
         if (currentImageIndex == 1) {
             new File(directory + "/images").mkdirs();
             contrastRatioConsumer = new ContrastRatioConsumer(this.pdfFileName);

@@ -64,7 +64,6 @@ public class DocumentProcessor {
 
     public static void preprocessing(String pdfName, String password) throws IOException {
         StaticResources.clear();
-        StaticLayoutContainers.clear();
         StaticLayoutContainers.setCurrentContentId(1);
         StaticResources.setPassword(password);
         PDDocument pdDocument = new PDDocument(pdfName);

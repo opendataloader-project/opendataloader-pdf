@@ -34,6 +34,7 @@ public class CLIMain {
             password = commandLine.getOptionValue(CLIOptions.PASSWORD_OPTION);
         }
 
+        StaticLayoutContainers.clearContainers();
         org.verapdf.gf.model.impl.containers.StaticContainers.clearAllContainers();
         StaticLayoutContainers.setFindHiddenText(commandLine.hasOption(CLIOptions.HIDDEN_TEXT_OPTION));
         StaticContainers.setTextFormatting(commandLine.hasOption(CLIOptions.FORMATTED_TEXT_OPTION));
