@@ -59,7 +59,7 @@ public class DocumentProcessor {
         HeadingProcessor.detectHeadingsLevels(contents);
         PDFWriter.updatePDF(pdfName, password, outputName, contents, hiddenTexts);
         JsonWriter.writeToJson(pdfName, outputName, contents);
-        MarkdownGenerator.writeToMarkdown(pdfName,outputName, contents);
+        MarkdownGenerator.writeToMarkdown(pdfName, outputName, contents);
     }
 
     public static void preprocessing(String pdfName, String password) throws IOException {

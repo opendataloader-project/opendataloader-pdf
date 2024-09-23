@@ -67,7 +67,7 @@ public class ListProcessor {
                 continue;
             }
             TextLine line = (TextLine) content;
-            String value = line.getValue().trim();
+            String value = line.getValue();
             if (value.isEmpty()) {
                 continue;
             }
@@ -205,20 +205,21 @@ public class ListProcessor {
 //        }
 //    }
 
-    private static boolean isCorrectList(ListInterval interval) {
-        boolean doubles = true;
+    private static boolean isCorrectList(ListInterval interval) {//move inside arabic numeration detection
+        return !isDoubles(interval);
+    }
+    
+    private static boolean isDoubles(ListInterval interval) {
         for (ListItemInfo listItemTextInfo : interval.getListItemsInfos()) {
             if (listItemTextInfo instanceof ListItemTextInfo) {
                 if (!((ListItemTextInfo)listItemTextInfo).getListItemValue().getValue().matches("^\\d+\\.\\d+$")) {
-                    doubles = false;
-                    return true;
+                    return false;
                 }
             } else {
-                doubles = false;
-                return true;
+                return false;
             }
         }
-        return false;//!doubles;
+        return true;
     }
     
     //todo for lists inside tables and lists
@@ -265,7 +266,6 @@ public class ListProcessor {
     
     private static ListItemTextInfo createListItemTextInfoFromListItem(int index, ListItem listItem) {
         TextLine line = listItem.getFirstLine();
-        String value = line.getValue().trim();
-        return new ListItemTextInfo(index, SemanticType.LIST_ITEM, line, value, listItem.getLinesNumber() == 1);
+        return new ListItemTextInfo(index, SemanticType.LIST_ITEM, line, line.getValue(), listItem.getLinesNumber() == 1);
     }
 }

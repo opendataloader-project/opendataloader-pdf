@@ -19,14 +19,7 @@ public class LineArtSerializer extends StdSerializer<LineArtChunk> {
 		jsonGenerator.writeStartObject();
 		jsonGenerator.writeStringField(JsonName.TYPE, JsonName.IMAGE_CHUNK_TYPE);
 		jsonGenerator.writeNumberField(JsonName.ID, lineArtChunk.getRecognizedStructureId());
-		SerializerUtil.writeEssentialInfo(jsonGenerator,lineArtChunk);
-//		if (!lineArtChunk.getLineChunks().isEmpty()) {
-//			jsonGenerator.writeArrayFieldStart("lines");
-//			for (LineChunk line : lineArtChunk.getLineChunks()) {
-//				jsonGenerator.writeObject(line);
-//			}
-//			jsonGenerator.writeEndArray();
-//		}
+		SerializerUtil.writeEssentialInfo(jsonGenerator, lineArtChunk);
 		jsonGenerator.writeEndObject();
 	}
 }
