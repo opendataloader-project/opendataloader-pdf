@@ -14,6 +14,10 @@ public class CLIOptions {
     public static final String FORMATTED_TEXT_OPTION = "ft";
     private static final String FORMATTED_TEXT_LONG_OPTION = "formatText";
 
+    public static final String PDF_REPORT_OPTION = "pdf";
+    public static final String MARKDOWN_REPORT_OPTION = "markdown";
+
+
     public static Options defineOptions() {
         Options options = new Options();
         Option findHiddenText = new Option(HIDDEN_TEXT_OPTION, HIDDEN_TEXT_LONG_OPTION, false, "Find hidden text");
@@ -25,6 +29,12 @@ public class CLIOptions {
         Option formatText = new Option(FORMATTED_TEXT_OPTION, FORMATTED_TEXT_LONG_OPTION, false, "Format text");
         formatText.setRequired(false);
         options.addOption(formatText);
+        Option pdfOutput = new Option(PDF_REPORT_OPTION, PDF_REPORT_OPTION, false, "Generates pdf output");
+        formatText.setRequired(false);
+        options.addOption(pdfOutput);
+        Option markdownOutput = new Option(MARKDOWN_REPORT_OPTION, MARKDOWN_REPORT_OPTION, false, "Generates markdown output");
+        formatText.setRequired(false);
+        options.addOption(markdownOutput);
         return options;
     }
 }

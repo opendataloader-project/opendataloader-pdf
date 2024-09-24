@@ -1,9 +1,8 @@
 package com.duallab.layout.cli;
 
-import com.duallab.layout.containers.StaticLayoutContainers;
+import com.duallab.layout.processors.Config;
 import com.duallab.layout.processors.DocumentProcessor;
 import org.apache.commons.cli.*;
-import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,23 +28,14 @@ public class CLIMain {
         }
 
         String[] arguments = commandLine.getArgs();
-        String password = null;
-        if (commandLine.hasOption(CLIOptions.PASSWORD_OPTION)) {
-            password = commandLine.getOptionValue(CLIOptions.PASSWORD_OPTION);
-        }
-
-        StaticLayoutContainers.clearContainers();
-        org.verapdf.gf.model.impl.containers.StaticContainers.clearAllContainers();
-        StaticLayoutContainers.setFindHiddenText(commandLine.hasOption(CLIOptions.HIDDEN_TEXT_OPTION));
-        StaticContainers.setTextFormatting(commandLine.hasOption(CLIOptions.FORMATTED_TEXT_OPTION));
-
+        Config config = Config.createConfigFromCommandLine(commandLine);
         File file = new File(arguments[0]);
         if (file.isDirectory()) {
             for (File pdf : file.listFiles()) {
-                DocumentProcessor.processFile(pdf.getAbsolutePath(), arguments[1] + File.separator + pdf.getName(), password);
+                DocumentProcessor.processFile(pdf.getAbsolutePath(), arguments[1] + File.separator + pdf.getName(), config);
             }
         } else if (file.isFile()) {
-            DocumentProcessor.processFile(file.getAbsolutePath(), arguments[1], password);
+            DocumentProcessor.processFile(file.getAbsolutePath(), arguments[1], config);
         }
     }
 

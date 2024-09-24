@@ -5,6 +5,7 @@ import com.duallab.layout.containers.StaticLayoutContainers;
 import com.duallab.layout.markdown.MarkdownGenerator;
 import com.duallab.layout.pdf.PDFWriter;
 import org.verapdf.as.ASAtom;
+import org.verapdf.containers.StaticCoreContainers;
 import org.verapdf.cos.COSDictionary;
 import org.verapdf.cos.COSObjType;
 import org.verapdf.cos.COSObject;
@@ -24,6 +25,7 @@ import org.verapdf.wcag.algorithms.entities.tables.TableBordersCollection;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.LinesPreprocessingConsumer;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
+import org.verapdf.xmp.containers.StaticXmpCoreContainers;
 
 import java.io.IOException;
 import java.util.*;
@@ -33,8 +35,8 @@ import java.util.logging.Logger;
 public class DocumentProcessor {
     private static final Logger LOGGER = Logger.getLogger(DocumentProcessor.class.getCanonicalName());
 
-    public static void processFile(String pdfName, String outputName, String password) throws IOException {
-        preprocessing(pdfName, password);
+    public static void processFile(String pdfName, String outputName, Config config) throws IOException {
+        preprocessing(pdfName, config);
         calculateDocumentInfo(pdfName);
         List<TextChunk> hiddenTexts = new ArrayList<>();
         List<List<IObject>> contents = new ArrayList<>();
@@ -57,15 +59,19 @@ public class DocumentProcessor {
         HeaderFooterProcessor.processHeadersAndFooters(contents);
         ListProcessor.checkNeighborLists(contents);
         HeadingProcessor.detectHeadingsLevels(contents);
-        PDFWriter.updatePDF(pdfName, password, outputName, contents, hiddenTexts);
-        JsonWriter.writeToJson(pdfName, outputName, contents);
-        MarkdownGenerator.writeToMarkdown(pdfName, outputName, contents);
+        if (config.isGeneratePDF()) {
+            PDFWriter.updatePDF(pdfName, config.getPassword(), outputName, contents, hiddenTexts);
+        }
+        if (config.isGenerateJSON()) {
+            JsonWriter.writeToJson(pdfName, outputName, contents);
+        }
+        if (config.isGenerateMarkdown()) {
+            MarkdownGenerator.writeToMarkdown(pdfName, outputName, contents);
+        }
     }
 
-    public static void preprocessing(String pdfName, String password) throws IOException {
-        StaticResources.clear();
-        StaticLayoutContainers.setCurrentContentId(1);
-        StaticResources.setPassword(password);
+    public static void preprocessing(String pdfName, Config config) throws IOException {
+        updateStaticContainers(config);
         PDDocument pdDocument = new PDDocument(pdfName);
         StaticResources.setDocument(pdDocument);
         GFSAPDFDocument document = new GFSAPDFDocument(pdDocument);
@@ -76,6 +82,19 @@ public class DocumentProcessor {
         LinesPreprocessingConsumer linesPreprocessingConsumer = new LinesPreprocessingConsumer();
         linesPreprocessingConsumer.findTableBorders();
         StaticContainers.setTableBordersCollection(new TableBordersCollection(linesPreprocessingConsumer.getTableBorders()));
+    }
+    
+    private static void updateStaticContainers(Config config) {
+        StaticResources.clear();
+        StaticLayoutContainers.clearContainers();
+        org.verapdf.gf.model.impl.containers.StaticContainers.clearAllContainers();
+        StaticCoreContainers.clearAllContainers();
+        StaticXmpCoreContainers.clearAllContainers();
+        
+        StaticLayoutContainers.setFindHiddenText(config.isFindHiddenText());
+        StaticContainers.setTextFormatting(config.isTextFormatted());
+        StaticLayoutContainers.setCurrentContentId(1);
+        StaticResources.setPassword(config.getPassword());
     }
 
     public static void setIDs(List<IObject> contents) {
