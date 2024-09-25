@@ -1,6 +1,7 @@
 package com.duallab.layout.markdown;
 
 import com.duallab.layout.containers.StaticLayoutContainers;
+import com.duallab.layout.processors.Config;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
@@ -34,12 +35,14 @@ public class MarkdownGenerator implements Closeable {
     protected ContrastRatioConsumer contrastRatioConsumer;
     protected final String markdownFileName;
     protected int tableNesting = 0;
+    protected boolean isImageSupported;
 
-    MarkdownGenerator(File inputPdf, String outputFolder) throws IOException {
+    MarkdownGenerator(File inputPdf, String outputFolder, Config config) throws IOException {
         this.markdownFileName = outputFolder + inputPdf.getName().substring(0, inputPdf.getName().length() - 3) + "md";
         this.directory = outputFolder;
         this.markdownWriter = new FileWriter(markdownFileName);
         this.pdfFileName = inputPdf.getAbsolutePath();
+        isImageSupported = config.isAddImageToMarkdown();
     }
 
     public void writeToMarkdown(List<List<IObject>> contents) {
@@ -57,8 +60,12 @@ public class MarkdownGenerator implements Closeable {
     }
 
     protected void write(IObject object) throws IOException {
-        if (object instanceof ImageChunk) {
-            writeImage((ImageChunk) object);
+        if (object instanceof ImageChunk ) {
+            if (isImageSupported) {
+                writeImage((ImageChunk) object);
+            } else {
+                return;
+            }
         } else if (object instanceof SemanticHeading) {
             writeHeading((SemanticHeading) object);
         } else if (object instanceof SemanticParagraph) {

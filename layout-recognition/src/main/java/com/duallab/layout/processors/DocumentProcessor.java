@@ -71,7 +71,7 @@ public class DocumentProcessor {
         }
         if (config.isGenerateMarkdown()) {
             MarkdownGenerator markdownGenerator = MarkdownGeneratorFactory
-                    .getMarkdownGenerator(inputPDF, outputFolder, config.isUseHTMLInMarkdown());
+                    .getMarkdownGenerator(inputPDF, outputFolder, config);
             markdownGenerator.writeToMarkdown(contents);
         }
     }

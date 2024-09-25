@@ -11,6 +11,7 @@ public class Config {
     private boolean isTextFormatted = false;
     private boolean isGenerateJSON = true;
     private boolean useHTMLInMarkdown = false;
+    private boolean addImageToMarkdown = false;
     
     public static Config createConfigFromCommandLine(CommandLine commandLine) {
         Config config = new Config();
@@ -31,6 +32,9 @@ public class Config {
         }
         if (commandLine.hasOption(CLIOptions.HTML_OPTION)) {
             config.setUseHTMLInMarkdown(true);
+        }
+        if (commandLine.hasOption(CLIOptions.MARKDOWN_IMAGE_OPTION)) {
+            config.setAddImageToMarkdown(true);
         }
         return config;
     }
@@ -89,5 +93,13 @@ public class Config {
 
     public void setUseHTMLInMarkdown(boolean useHTMLInMarkdown) {
         this.useHTMLInMarkdown = useHTMLInMarkdown;
+    }
+
+    public boolean isAddImageToMarkdown() {
+        return addImageToMarkdown;
+    }
+
+    public void setAddImageToMarkdown(boolean addImageToMarkdown) {
+        this.addImageToMarkdown = addImageToMarkdown;
     }
 }

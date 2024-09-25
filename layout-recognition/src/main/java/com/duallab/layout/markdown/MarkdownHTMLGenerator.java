@@ -1,5 +1,6 @@
 package com.duallab.layout.markdown;
 
+import com.duallab.layout.processors.Config;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
@@ -15,8 +16,8 @@ import java.util.List;
 
 public class MarkdownHTMLGenerator extends MarkdownGenerator {
 
-    protected MarkdownHTMLGenerator(File inputPdf, String fileName) throws IOException {
-        super(inputPdf, fileName);
+    protected MarkdownHTMLGenerator(File inputPdf, String fileName, Config config) throws IOException {
+        super(inputPdf, fileName, config);
     }
 
     @Override

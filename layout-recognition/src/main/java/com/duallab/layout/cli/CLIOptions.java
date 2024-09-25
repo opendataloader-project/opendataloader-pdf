@@ -20,6 +20,8 @@ public class CLIOptions {
     public static final String PDF_REPORT_OPTION = "pdf";
     public static final String MARKDOWN_REPORT_OPTION = "markdown";
 
+    public static final String MARKDOWN_IMAGE_OPTION = "im";
+    private static final String MARKDOWN_IMAGE_LONG_OPTION = "addimagetomarkdown";
 
     public static Options defineOptions() {
         Options options = new Options();
@@ -41,6 +43,9 @@ public class CLIOptions {
         Option markdownOutput = new Option(MARKDOWN_REPORT_OPTION, MARKDOWN_REPORT_OPTION, false, "Generates markdown output");
         formatText.setRequired(false);
         options.addOption(markdownOutput);
+        Option imageSupport = new Option(MARKDOWN_IMAGE_OPTION, MARKDOWN_IMAGE_LONG_OPTION, false, "Add images to markdown");
+        imageSupport.setRequired(false);
+        options.addOption(imageSupport);
         return options;
     }
 }
