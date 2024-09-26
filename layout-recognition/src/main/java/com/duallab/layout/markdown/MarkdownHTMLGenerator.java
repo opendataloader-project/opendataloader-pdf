@@ -9,13 +9,14 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
 public class MarkdownHTMLGenerator extends MarkdownGenerator {
 
-    protected MarkdownHTMLGenerator(String pdfFileName, String fileName) throws IOException {
-        super(pdfFileName, fileName);
+    protected MarkdownHTMLGenerator(File inputPdf, String fileName) throws IOException {
+        super(inputPdf, fileName);
     }
 
     @Override

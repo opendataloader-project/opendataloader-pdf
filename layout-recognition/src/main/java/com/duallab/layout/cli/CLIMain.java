@@ -9,7 +9,7 @@ import java.io.IOException;
 
 public class CLIMain {
 
-    private static final String HELP = "[options] <INPUT FILE OR FOLDER> <OUTPUT FILE OR FOLDER>\n Options:";
+    private static final String HELP = "[options] <INPUT FILE OR FOLDER> <OUTPUT FOLDER>\n Options:";
     
     public static void main(String[] args) throws IOException {
         Options options = CLIOptions.defineOptions();
@@ -32,7 +32,7 @@ public class CLIMain {
         File file = new File(arguments[0]);
         if (file.isDirectory()) {
             for (File pdf : file.listFiles()) {
-                DocumentProcessor.processFile(pdf.getAbsolutePath(), arguments[1] + File.separator + pdf.getName(), config);
+                DocumentProcessor.processFile(pdf.getAbsolutePath(), arguments[1], config);
             }
         } else if (file.isFile()) {
             DocumentProcessor.processFile(file.getAbsolutePath(), arguments[1], config);

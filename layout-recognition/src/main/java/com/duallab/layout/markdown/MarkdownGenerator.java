@@ -35,11 +35,11 @@ public class MarkdownGenerator implements Closeable {
     protected final String markdownFileName;
     protected int tableNesting = 0;
 
-    MarkdownGenerator(String pdfFileName, String outputFileName) throws IOException {
-        markdownFileName = outputFileName.substring(0, outputFileName.length() - 3) + "md";
-        directory = outputFileName.substring(0, outputFileName.lastIndexOf("\\"));
-        markdownWriter = new FileWriter(markdownFileName);
-        this.pdfFileName = pdfFileName;
+    MarkdownGenerator(File inputPdf, String outputFolder) throws IOException {
+        this.markdownFileName = outputFolder + inputPdf.getName().substring(0, inputPdf.getName().length() - 3) + "md";
+        this.directory = outputFolder;
+        this.markdownWriter = new FileWriter(markdownFileName);
+        this.pdfFileName = inputPdf.getAbsolutePath();
     }
 
     public void writeToMarkdown(List<List<IObject>> contents) {

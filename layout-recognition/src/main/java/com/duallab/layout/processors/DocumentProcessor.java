@@ -28,6 +28,7 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainer
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
 import org.verapdf.xmp.containers.StaticXmpCoreContainers;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.Level;
@@ -36,16 +37,16 @@ import java.util.logging.Logger;
 public class DocumentProcessor {
     private static final Logger LOGGER = Logger.getLogger(DocumentProcessor.class.getCanonicalName());
 
-    public static void processFile(String pdfName, String outputName, Config config) throws IOException {
-        preprocessing(pdfName, config);
-        calculateDocumentInfo(pdfName);
+    public static void processFile(String inputPdfName, String outputFolder, Config config) throws IOException {
+        preprocessing(inputPdfName, config);
+        calculateDocumentInfo(inputPdfName);
         List<TextChunk> hiddenTexts = new ArrayList<>();
         List<List<IObject>> contents = new ArrayList<>();
         for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
             List<IObject> pageContents = new ArrayList<>(StaticContainers.getDocument().getArtifacts(pageNumber));
             trimTextChunksWhiteSpaces(pageContents);
             if (StaticLayoutContainers.isFindHiddenText()) {
-                hiddenTexts.addAll(HiddenTextProcessor.findHiddenText(pdfName, pageContents));
+                hiddenTexts.addAll(HiddenTextProcessor.findHiddenText(inputPdfName, pageContents));
             }
             pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber);
             processBackgrounds(pageNumber, pageContents);
@@ -61,15 +62,16 @@ public class DocumentProcessor {
         HeaderFooterProcessor.processHeadersAndFooters(contents);
         ListProcessor.checkNeighborLists(contents);
         HeadingProcessor.detectHeadingsLevels(contents);
+        File inputPDF = new File(inputPdfName);
         if (config.isGeneratePDF()) {
-            PDFWriter.updatePDF(pdfName, config.getPassword(), outputName, contents, hiddenTexts);
+            PDFWriter.updatePDF(inputPDF, config.getPassword(), outputFolder, contents, hiddenTexts);
         }
         if (config.isGenerateJSON()) {
-            JsonWriter.writeToJson(pdfName, outputName, contents);
+            JsonWriter.writeToJson(inputPDF, outputFolder, contents);
         }
         if (config.isGenerateMarkdown()) {
             MarkdownGenerator markdownGenerator = MarkdownGeneratorFactory
-                    .getMarkdownGenerator(pdfName, outputName, config.isUseHTMLInMarkdown());
+                    .getMarkdownGenerator(inputPDF, outputFolder, config.isUseHTMLInMarkdown());
             markdownGenerator.writeToMarkdown(contents);
         }
     }

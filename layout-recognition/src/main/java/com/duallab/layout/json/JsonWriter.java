@@ -29,11 +29,11 @@ public class JsonWriter {
                 .setCodec(ObjectMapperHolder.getObjectMapper());
     }
 
-    public static void writeToJson(String pdfFileName, String outputName, List<List<IObject>> contents) throws IOException {
-        String jsonFileName = outputName.substring(0, outputName.length()- 3) + "json";
+    public static void writeToJson(File inputPDF, String outputFolder, List<List<IObject>> contents) throws IOException {
+        String jsonFileName = outputFolder + File.separator + inputPDF.getName().substring(0, inputPDF.getName().length() - 3) + "json";
         JsonGenerator jsonGenerator = getJsonGenerator(jsonFileName);
         jsonGenerator.writeStartObject();
-        writeDocumentInfo(jsonGenerator, pdfFileName);
+        writeDocumentInfo(jsonGenerator, inputPDF.getAbsolutePath());
         jsonGenerator.writeArrayFieldStart(JsonName.CHILDREN);
         for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
             for (IObject content : contents.get(pageNumber)) {

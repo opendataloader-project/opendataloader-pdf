@@ -29,9 +29,9 @@ public class PDFWriter {
     
     private static final List<List<PDAnnotation>> annotations = new ArrayList<>();
     
-    public static void updatePDF(String pdfName, String password, String outputName, List<List<IObject>> contents, 
+    public static void updatePDF(File inputPDF, String password, String outputFolder, List<List<IObject>> contents, 
                                  List<TextChunk> hiddenTextChunks) throws IOException {
-        PDDocument document = PDDocument.load(new File(pdfName), password);
+        PDDocument document = PDDocument.load(inputPDF, password);
         for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
             annotations.add(new ArrayList<>());
             for (IObject content : contents.get(pageNumber)) {
@@ -46,10 +46,11 @@ public class PDFWriter {
             document.getPage(pageNumber).getAnnotations().addAll(annotations.get(pageNumber));
         } 
         annotations.clear();
-        System.out.println("Created " + outputName);
         document.setAllSecurityToBeRemoved(true);
-        document.save(outputName);
+        String outputFileName = outputFolder + File.separator + inputPDF.getName();
+        document.save(outputFileName);
         document.close();
+        System.out.println("Created " + outputFileName);
     }
     
     private static void drawContent(IObject content) throws IOException {
