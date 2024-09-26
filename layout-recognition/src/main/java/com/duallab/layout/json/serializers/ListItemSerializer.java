@@ -25,7 +25,7 @@ public class ListItemSerializer extends StdSerializer<ListItem> {
 		jsonGenerator.writeStringField(JsonName.TEXT_COLOR, Arrays.toString(
 				item.getFirstLine().getFirstTextChunk().getFontColor()));
 		jsonGenerator.writeStringField(JsonName.CONTENT, item.toString());
-		jsonGenerator.writeArrayFieldStart(JsonName.CHILDREN);
+		jsonGenerator.writeArrayFieldStart(JsonName.KIDS);
 		for (IObject content : item.getContents()) {
 			jsonGenerator.writePOJO(content);
 		}

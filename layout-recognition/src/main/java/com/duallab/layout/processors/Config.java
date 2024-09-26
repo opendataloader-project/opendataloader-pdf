@@ -3,6 +3,8 @@ package com.duallab.layout.processors;
 import com.duallab.layout.cli.CLIOptions;
 import org.apache.commons.cli.CommandLine;
 
+import java.io.File;
+
 public class Config {
     private String password;
     private boolean findHiddenText = false;
@@ -12,6 +14,7 @@ public class Config {
     private boolean isGenerateJSON = true;
     private boolean useHTMLInMarkdown = false;
     private boolean addImageToMarkdown = false;
+    private String outputFolder;
     
     public static Config createConfigFromCommandLine(CommandLine commandLine) {
         Config config = new Config();
@@ -35,6 +38,16 @@ public class Config {
         }
         if (commandLine.hasOption(CLIOptions.MARKDOWN_IMAGE_OPTION)) {
             config.setAddImageToMarkdown(true);
+        }
+        if (commandLine.hasOption(CLIOptions.MARKDOWN_IMAGE_OPTION)) {
+            config.setAddImageToMarkdown(true);
+        }
+        if (commandLine.hasOption(CLIOptions.FOLDER_OPTION)) {
+            config.setOutputFolder(commandLine.getOptionValue(CLIOptions.FOLDER_OPTION));
+        } else {
+            String argument = commandLine.getArgs()[0];
+            File file = new File(argument);
+            config.setOutputFolder(file.isDirectory() ? file.getAbsolutePath() : file.getParent());
         }
         return config;
     }
@@ -101,5 +114,13 @@ public class Config {
 
     public void setAddImageToMarkdown(boolean addImageToMarkdown) {
         this.addImageToMarkdown = addImageToMarkdown;
+    }
+
+    public String getOutputFolder() {
+        return outputFolder;
+    }
+
+    public void setOutputFolder(String outputFolder) {
+        this.outputFolder = outputFolder;
     }
 }

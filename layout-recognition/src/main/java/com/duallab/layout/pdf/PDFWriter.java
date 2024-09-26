@@ -47,7 +47,9 @@ public class PDFWriter {
         } 
         annotations.clear();
         document.setAllSecurityToBeRemoved(true);
-        String outputFileName = outputFolder + File.separator + inputPDF.getName();
+        
+        String outputFileName = outputFolder + File.separator + 
+                inputPDF.getName().substring(0, inputPDF.getName().length() - 4) + "_annotated.pdf";
         document.save(outputFileName);
         document.close();
         System.out.println("Created " + outputFileName);

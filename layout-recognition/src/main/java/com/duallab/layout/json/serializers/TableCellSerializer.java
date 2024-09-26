@@ -24,7 +24,7 @@ public class TableCellSerializer extends StdSerializer<TableBorderCell> {
 		jsonGenerator.writeNumberField(JsonName.ROW_SPAN, cell.getRowSpan());
 		jsonGenerator.writeNumberField(JsonName.COLUMN_SPAN, cell.getColSpan());
 		SerializerUtil.writeEssentialInfo(jsonGenerator, cell);
-		jsonGenerator.writeArrayFieldStart(JsonName.CHILDREN);
+		jsonGenerator.writeArrayFieldStart(JsonName.KIDS);
 		for (IObject content : cell.getContents()) {
 			jsonGenerator.writePOJO(content);
 		}

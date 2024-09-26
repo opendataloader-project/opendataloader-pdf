@@ -37,7 +37,7 @@ import java.util.logging.Logger;
 public class DocumentProcessor {
     private static final Logger LOGGER = Logger.getLogger(DocumentProcessor.class.getCanonicalName());
 
-    public static void processFile(String inputPdfName, String outputFolder, Config config) throws IOException {
+    public static void processFile(String inputPdfName, Config config) throws IOException {
         preprocessing(inputPdfName, config);
         calculateDocumentInfo(inputPdfName);
         List<TextChunk> hiddenTexts = new ArrayList<>();
@@ -63,14 +63,15 @@ public class DocumentProcessor {
         ListProcessor.checkNeighborLists(contents);
         HeadingProcessor.detectHeadingsLevels(contents);
         File inputPDF = new File(inputPdfName);
+        new File(config.getOutputFolder()).mkdirs();
         if (config.isGeneratePDF()) {
-            PDFWriter.updatePDF(inputPDF, config.getPassword(), outputFolder, contents, hiddenTexts);
+            PDFWriter.updatePDF(inputPDF, config.getPassword(), config.getOutputFolder(), contents, hiddenTexts);
         }
         if (config.isGenerateJSON()) {
-            JsonWriter.writeToJson(inputPDF, outputFolder, contents);
+            JsonWriter.writeToJson(inputPDF, config.getOutputFolder(), contents);
         }
         if (config.isGenerateMarkdown()) {
-            MarkdownGenerator markdownGenerator = MarkdownGeneratorFactory.getMarkdownGenerator(inputPDF, outputFolder, config);
+            MarkdownGenerator markdownGenerator = MarkdownGeneratorFactory.getMarkdownGenerator(inputPDF, config.getOutputFolder(), config);
             markdownGenerator.writeToMarkdown(contents);
         }
     }

@@ -18,9 +18,9 @@ public class HeaderFooterSerializer extends StdSerializer<SemanticHeaderOrFooter
 	public void serialize(SemanticHeaderOrFooter header, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
 			throws IOException {
 		jsonGenerator.writeStartObject();
-		jsonGenerator.writeStringField(JsonName.TYPE, header.getSemanticType().getValue());
+		jsonGenerator.writeStringField(JsonName.TYPE, header.getSemanticType().getValue().toLowerCase());
 		jsonGenerator.writeNumberField(JsonName.ID, header.getRecognizedStructureId());
-		jsonGenerator.writeArrayFieldStart(JsonName.CHILDREN);
+		jsonGenerator.writeArrayFieldStart(JsonName.KIDS);
 		for (IObject content : header.getContents()) {
 			jsonGenerator.writePOJO(content);
 		}

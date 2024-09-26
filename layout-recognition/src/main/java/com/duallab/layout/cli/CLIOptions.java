@@ -23,6 +23,9 @@ public class CLIOptions {
     public static final String MARKDOWN_IMAGE_OPTION = "im";
     private static final String MARKDOWN_IMAGE_LONG_OPTION = "addimagetomarkdown";
 
+    public static final String FOLDER_OPTION = "f";
+    private static final String FOLDER_LONG_OPTION = "folder";
+
     public static Options defineOptions() {
         Options options = new Options();
         Option findHiddenText = new Option(HIDDEN_TEXT_OPTION, HIDDEN_TEXT_LONG_OPTION, false, "Find hidden text");
@@ -38,14 +41,17 @@ public class CLIOptions {
         keepLineBreaks.setRequired(false);
         options.addOption(keepLineBreaks);
         Option pdfOutput = new Option(PDF_REPORT_OPTION, PDF_REPORT_OPTION, false, "Generates pdf output");
-        keepLineBreaks.setRequired(false);
+        pdfOutput.setRequired(false);
         options.addOption(pdfOutput);
         Option markdownOutput = new Option(MARKDOWN_REPORT_OPTION, MARKDOWN_REPORT_OPTION, false, "Generates markdown output");
-        keepLineBreaks.setRequired(false);
+        markdownOutput.setRequired(false);
         options.addOption(markdownOutput);
         Option imageSupport = new Option(MARKDOWN_IMAGE_OPTION, MARKDOWN_IMAGE_LONG_OPTION, false, "Add images to markdown");
         imageSupport.setRequired(false);
         options.addOption(imageSupport);
+        Option folder = new Option(FOLDER_OPTION, FOLDER_LONG_OPTION, true, "Specify output folder (default the folder of source PDF file)");
+        folder.setRequired(false);
+        options.addOption(folder);
         return options;
     }
 }
