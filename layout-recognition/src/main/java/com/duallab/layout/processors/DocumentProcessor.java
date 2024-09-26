@@ -70,8 +70,7 @@ public class DocumentProcessor {
             JsonWriter.writeToJson(inputPDF, outputFolder, contents);
         }
         if (config.isGenerateMarkdown()) {
-            MarkdownGenerator markdownGenerator = MarkdownGeneratorFactory
-                    .getMarkdownGenerator(inputPDF, outputFolder, config);
+            MarkdownGenerator markdownGenerator = MarkdownGeneratorFactory.getMarkdownGenerator(inputPDF, outputFolder, config);
             markdownGenerator.writeToMarkdown(contents);
         }
     }

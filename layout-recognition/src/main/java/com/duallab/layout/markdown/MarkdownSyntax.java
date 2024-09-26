@@ -6,7 +6,7 @@ public class MarkdownSyntax {
     public static final String LINE_BREAK = "\n";
     public static final String SPACE = " ";
     public static final String HEADING_LEVEL = "#";
-    public static final String IMAGE_FILE_NAME_FORMAT = "%s\\images\\imageFile%d.png";
+    public static final String IMAGE_FILE_NAME_FORMAT = "%s\\imageFile%d.png";
     public static final String IMAGE_FORMAT = "![%s](%s)";
     public static final String HTML_TABLE_TAG = "<table>";
     public static final String HTML_TABLE_CLOSE_TAG = "</table>";

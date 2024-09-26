@@ -31,18 +31,19 @@ public class MarkdownGenerator implements Closeable {
     protected static final Logger LOGGER = Logger.getLogger(MarkdownGenerator.class.getCanonicalName());
     protected final FileWriter markdownWriter;
     protected final String pdfFileName;
-    protected final String directory;
+    protected final String imageDirectoryName;
     protected ContrastRatioConsumer contrastRatioConsumer;
     protected final String markdownFileName;
     protected int tableNesting = 0;
     protected boolean isImageSupported;
 
     MarkdownGenerator(File inputPdf, String outputFolder, Config config) throws IOException {
-        this.markdownFileName = outputFolder + File.separator + inputPdf.getName().substring(0, inputPdf.getName().length() - 3) + "md";
-        this.directory = outputFolder;
-        this.markdownWriter = new FileWriter(markdownFileName);
+        String cutPdfFileName = inputPdf.getName();
+        this.markdownFileName = outputFolder + File.separator + cutPdfFileName.substring(0, cutPdfFileName.length() - 3) + "md";
+        this.imageDirectoryName = outputFolder + File.separator + cutPdfFileName.substring(0, cutPdfFileName.length() - 4) + "Images";
         this.pdfFileName = inputPdf.getAbsolutePath();
-        isImageSupported = config.isAddImageToMarkdown();
+        this.markdownWriter = new FileWriter(markdownFileName);
+        this.isImageSupported = config.isAddImageToMarkdown();
     }
 
     public void writeToMarkdown(List<List<IObject>> contents) {
@@ -88,11 +89,11 @@ public class MarkdownGenerator implements Closeable {
     protected void writeImage(ImageChunk image) throws IOException {
         int currentImageIndex = StaticLayoutContainers.incrementImageIndex();
         if (currentImageIndex == 1) {
-            new File(directory + "/images").mkdirs();
+            new File(imageDirectoryName).mkdirs();
             contrastRatioConsumer = new ContrastRatioConsumer(this.pdfFileName);
         }
 
-        String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, directory, currentImageIndex);
+        String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, imageDirectoryName, currentImageIndex);
         boolean isFileCreated = createImageFile(image, fileName);
         if (isFileCreated) {
             String imageString = String.format(MarkdownSyntax.IMAGE_FORMAT, "image " + currentImageIndex, fileName);
