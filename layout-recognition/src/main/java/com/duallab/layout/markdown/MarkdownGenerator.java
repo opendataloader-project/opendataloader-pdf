@@ -38,7 +38,7 @@ public class MarkdownGenerator implements Closeable {
     protected boolean isImageSupported;
 
     MarkdownGenerator(File inputPdf, String outputFolder, Config config) throws IOException {
-        this.markdownFileName = outputFolder + inputPdf.getName().substring(0, inputPdf.getName().length() - 3) + "md";
+        this.markdownFileName = outputFolder + File.separator + inputPdf.getName().substring(0, inputPdf.getName().length() - 3) + "md";
         this.directory = outputFolder;
         this.markdownWriter = new FileWriter(markdownFileName);
         this.pdfFileName = inputPdf.getAbsolutePath();
