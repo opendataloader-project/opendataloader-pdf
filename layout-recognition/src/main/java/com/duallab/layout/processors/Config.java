@@ -8,7 +8,7 @@ public class Config {
     private boolean findHiddenText = false;
     private boolean isGenerateMarkdown = false;
     private boolean isGeneratePDF = false;
-    private boolean isTextFormatted = false;
+    private boolean keepLineBreaks = false;
     private boolean isGenerateJSON = true;
     private boolean useHTMLInMarkdown = false;
     private boolean addImageToMarkdown = false;
@@ -21,8 +21,8 @@ public class Config {
         if (commandLine.hasOption(CLIOptions.HIDDEN_TEXT_OPTION)) {
             config.setFindHiddenText(true);
         }
-        if (commandLine.hasOption(CLIOptions.FORMATTED_TEXT_OPTION)) {
-            config.setTextFormatted(true);
+        if (commandLine.hasOption(CLIOptions.KEEP_LINE_BREAKS_OPTION)) {
+            config.setKeepLineBreaks(true);
         }
         if (commandLine.hasOption(CLIOptions.PDF_REPORT_OPTION)) {
             config.setGeneratePDF(true);
@@ -71,12 +71,12 @@ public class Config {
         isGeneratePDF = generatePDF;
     }
 
-    public boolean isTextFormatted() {
-        return isTextFormatted;
+    public boolean isKeepLineBreaks() {
+        return keepLineBreaks;
     }
 
-    public void setTextFormatted(boolean textFormatted) {
-        isTextFormatted = textFormatted;
+    public void setKeepLineBreaks(boolean keepLineBreaks) {
+        this.keepLineBreaks = keepLineBreaks;
     }
 
     public boolean isGenerateJSON() {

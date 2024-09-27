@@ -40,7 +40,7 @@ public class MarkdownGenerator implements Closeable {
     MarkdownGenerator(File inputPdf, String outputFolder, Config config) throws IOException {
         String cutPdfFileName = inputPdf.getName();
         this.markdownFileName = outputFolder + File.separator + cutPdfFileName.substring(0, cutPdfFileName.length() - 3) + "md";
-        this.imageDirectoryName = outputFolder + File.separator + cutPdfFileName.substring(0, cutPdfFileName.length() - 4) + "Images";
+        this.imageDirectoryName = outputFolder + File.separator + cutPdfFileName.substring(0, cutPdfFileName.length() - 4) + "_images";
         this.pdfFileName = inputPdf.getAbsolutePath();
         this.markdownWriter = new FileWriter(markdownFileName);
         this.isImageSupported = config.isAddImageToMarkdown();
@@ -166,7 +166,7 @@ public class MarkdownGenerator implements Closeable {
 
     protected void writeParagraph(SemanticParagraph textNode) throws IOException {
         String value = textNode.getValue();
-        if (isInsideTable() && !StaticContainers.isTextFormatted()) {
+        if (isInsideTable() && !StaticContainers.isKeepLineBreaks()) {
             value = value.replace(MarkdownSyntax.LINE_BREAK, MarkdownSyntax.SPACE);
         }
 

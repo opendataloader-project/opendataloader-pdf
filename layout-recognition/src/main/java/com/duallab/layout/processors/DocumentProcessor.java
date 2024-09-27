@@ -83,7 +83,7 @@ public class DocumentProcessor {
 //        org.verapdf.gf.model.impl.containers.StaticContainers.setFlavour(Collections.singletonList(PDFAFlavour.WCAG_2_2));
         StaticResources.setFlavour(Collections.singletonList(PDFFlavour.WCAG_2_2));
         document.parseChunks();
-        StaticContainers.updateContainers(document);
+        StaticContainers.setDocument(document);
         LinesPreprocessingConsumer linesPreprocessingConsumer = new LinesPreprocessingConsumer();
         linesPreprocessingConsumer.findTableBorders();
         StaticContainers.setTableBordersCollection(new TableBordersCollection(linesPreprocessingConsumer.getTableBorders()));
@@ -91,14 +91,16 @@ public class DocumentProcessor {
 
     private static void updateStaticContainers(Config config) {
         StaticResources.clear();
+        StaticContainers.updateContainers(null);
         StaticLayoutContainers.clearContainers();
         org.verapdf.gf.model.impl.containers.StaticContainers.clearAllContainers();
         StaticCoreContainers.clearAllContainers();
         StaticXmpCoreContainers.clearAllContainers();
         StaticLayoutContainers.setFindHiddenText(config.isFindHiddenText());
-        StaticContainers.setTextFormatting(config.isTextFormatted());
+        StaticContainers.setKeepLineBreaks(config.isKeepLineBreaks());
         StaticLayoutContainers.setCurrentContentId(1);
         StaticResources.setPassword(config.getPassword());
+
     }
 
     public static void setIDs(List<IObject> contents) {
