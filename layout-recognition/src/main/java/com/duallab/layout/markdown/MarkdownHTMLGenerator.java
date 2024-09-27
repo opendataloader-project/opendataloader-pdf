@@ -28,7 +28,7 @@ public class MarkdownHTMLGenerator extends MarkdownGenerator {
             markdownWriter.write(MarkdownSyntax.HTML_INDENT);
         }
 
-        if (isInsideTable() && !StaticContainers.isTextFormatted()) {
+        if (isInsideTable() && StaticContainers.isKeepLineBreaks()) {
             paragraphValue = paragraphValue.replace(MarkdownSyntax.LINE_BREAK , MarkdownSyntax.HTML_LINE_BREAK_TAG);
         }
 

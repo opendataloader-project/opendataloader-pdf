@@ -166,7 +166,7 @@ public class MarkdownGenerator implements Closeable {
 
     protected void writeParagraph(SemanticParagraph textNode) throws IOException {
         String value = textNode.getValue();
-        if (isInsideTable() && !StaticContainers.isKeepLineBreaks()) {
+        if (isInsideTable() && StaticContainers.isKeepLineBreaks()) {
             value = value.replace(MarkdownSyntax.LINE_BREAK, MarkdownSyntax.SPACE);
         }
 
