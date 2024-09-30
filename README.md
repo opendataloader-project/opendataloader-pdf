@@ -1,15 +1,25 @@
+# Prerequisites
+
+Java 8+ runtime environment. 
+
 # CLI usage
 
+```
 java -jar ... [options] <INPUT FILE OR FOLDER>
+```
 
-This will generate JSON file with layout recognition results in the specified output folder. Additionally, annotated PDF with recognized structures and Markdown file will be generated if options --pdf and --markdown are specified.
+This will generate JSON file with layout recognition results in the specified output folder. Additionally, annotated PDF with recognized structures and Markdown file will be generated if options `--pdf` and `--markdown` are specified.
 
-By default the Markdown will not include any images and will not use any HTML. All line breaks and hyphenation signed will be removed.
+By default all line breaks and hyphenation characters are be removed, the Markdown does not include any images and does not use any HTML.
 
-The --html option enables use of HTML in Markdown, with may improve Markdown preview in processors that support HTML tags in Markdown. The option --addimagetomarkdown enables inclusion of image references into the output Markdown. The images are extracted from PDF as individual files and stored in a subfolder next to the Markdown output. Finally, the options --keeplinebreaks causes Markdown output to preserve the original line breaks from the PDF.
+The option `--keeplinebreaks` to preserve the original line breaks text content in JSON and Markdown output.
 
+The option `--html` enables use of HTML in Markdown, which may improve Markdown preview in processors that support HTML tags. The option `--addimagetomarkdown` enables inclusion of image references into the output Markdown. The images are extracted from PDF as individual files and stored in a subfolder next to the Markdown output. 
+
+The complete set of options:
+```
 Options:
--f,--folder <arg>          Specify output folder (default the folder of source PDF file)
+-f,--folder <arg>          Specify output folder (default the folder of the input PDF)
 -klb,--keeplinebreaks      Keep line breaks
 -ht,--findhiddentext       Find hidden text
 -html,--htmlinmarkdown     Use html in markdown
@@ -17,8 +27,9 @@ Options:
 -markdown,--markdown       Generates markdown output
 -p,--password <arg>        Specifies password
 -pdf,--pdf                 Generates pdf output
+```
 
-# Java code usage
+# Java code integration
 
 To integrate Layout recognition API into Java code, one can follow the sample code below.
 
@@ -30,6 +41,10 @@ import java.io.IOException;
 
         //create default config
         Config config = new Config();
+
+        //set output folder relative to the input PDF
+        //if the output folder is not set, the current folder of the input PDF is used
+        config.setOutputFolder("output");
         
         //generating pdf output file
         config.setGeneratePDF(true);
@@ -54,10 +69,7 @@ import java.io.IOException;
         
         //find hidden text
         config.setFindHiddenText(true);
-
-        //find hidden text
-        config.setOutputFolder("output");
-        
+      
         try {
                 //process pdf file
                 DocumentProcessor.processFile("input.pdf", config);
