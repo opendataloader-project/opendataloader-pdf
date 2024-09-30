@@ -8,9 +8,9 @@ Java 8+ runtime environment.
 java -jar ... [options] <INPUT FILE OR FOLDER>
 ```
 
-This will generate JSON file with layout recognition results in the specified output folder. Additionally, annotated PDF with recognized structures and Markdown file will be generated if options `--pdf` and `--markdown` are specified.
+This generates a JSON file with layout recognition results in the specified output folder. Additionally, annotated PDF with recognized structures and Markdown file are generated if options `--pdf` and `--markdown` are specified.
 
-By default all line breaks and hyphenation characters are be removed, the Markdown does not include any images and does not use any HTML.
+By default all line breaks and hyphenation characters are removed, the Markdown does not include any images and does not use any HTML.
 
 The option `--keeplinebreaks` to preserve the original line breaks text content in JSON and Markdown output.
 
