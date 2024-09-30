@@ -31,19 +31,19 @@ public class JsonWriter {
 
     public static void writeToJson(File inputPDF, String outputFolder, List<List<IObject>> contents) throws IOException {
         String jsonFileName = outputFolder + File.separator + inputPDF.getName().substring(0, inputPDF.getName().length() - 3) + "json";
-        JsonGenerator jsonGenerator = getJsonGenerator(jsonFileName);
-        jsonGenerator.writeStartObject();
-        writeDocumentInfo(jsonGenerator, inputPDF.getAbsolutePath());
-        jsonGenerator.writeArrayFieldStart(JsonName.KIDS);
-        for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
-            for (IObject content : contents.get(pageNumber)) {
-                jsonGenerator.writePOJO(content);
+        try (JsonGenerator jsonGenerator = getJsonGenerator(jsonFileName)) {
+            jsonGenerator.writeStartObject();
+            writeDocumentInfo(jsonGenerator, inputPDF.getAbsolutePath());
+            jsonGenerator.writeArrayFieldStart(JsonName.KIDS);
+            for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
+                for (IObject content : contents.get(pageNumber)) {
+                    jsonGenerator.writePOJO(content);
+                }
             }
-        }
 
-        jsonGenerator.writeEndArray();
-        jsonGenerator.writeEndObject();
-        jsonGenerator.close();
+            jsonGenerator.writeEndArray();
+            jsonGenerator.writeEndObject();
+        }
         System.out.println("Created " + jsonFileName);
     }
 

@@ -36,6 +36,7 @@ public class MarkdownGenerator implements Closeable {
     protected final String markdownFileName;
     protected int tableNesting = 0;
     protected boolean isImageSupported;
+    private final String password;
 
     MarkdownGenerator(File inputPdf, String outputFolder, Config config) throws IOException {
         String cutPdfFileName = inputPdf.getName();
@@ -44,6 +45,7 @@ public class MarkdownGenerator implements Closeable {
         this.pdfFileName = inputPdf.getAbsolutePath();
         this.markdownWriter = new FileWriter(markdownFileName);
         this.isImageSupported = config.isAddImageToMarkdown();
+        this.password = config.getPassword();
     }
 
     public void writeToMarkdown(List<List<IObject>> contents) {
@@ -90,7 +92,7 @@ public class MarkdownGenerator implements Closeable {
         int currentImageIndex = StaticLayoutContainers.incrementImageIndex();
         if (currentImageIndex == 1) {
             new File(imageDirectoryName).mkdirs();
-            contrastRatioConsumer = new ContrastRatioConsumer(this.pdfFileName);
+            contrastRatioConsumer = new ContrastRatioConsumer(this.pdfFileName, password);
         }
 
         String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, imageDirectoryName, currentImageIndex);

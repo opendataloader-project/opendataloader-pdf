@@ -10,6 +10,7 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationSquareCircle
 import org.verapdf.wcag.algorithms.entities.*;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
+import org.verapdf.wcag.algorithms.entities.content.LineChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
@@ -31,31 +32,34 @@ public class PDFWriter {
     
     public static void updatePDF(File inputPDF, String password, String outputFolder, List<List<IObject>> contents, 
                                  List<TextChunk> hiddenTextChunks) throws IOException {
-        PDDocument document = PDDocument.load(inputPDF, password);
-        for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
-            annotations.add(new ArrayList<>());
-            for (IObject content : contents.get(pageNumber)) {
-                drawContent(content);
+        try (PDDocument document = PDDocument.load(inputPDF, password)) {
+            for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
+                annotations.add(new ArrayList<>());
+                for (IObject content : contents.get(pageNumber)) {
+                    drawContent(content);
+                }
             }
+            for (TextChunk textChunk : hiddenTextChunks) {
+                draw(textChunk.getBoundingBox(), getColor(SemanticType.FIGURE),
+                        String.format("Hidden text, value = \"%s\"", textChunk.getValue()), null, null);
+            }
+            for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
+                document.getPage(pageNumber).getAnnotations().addAll(annotations.get(pageNumber));
+            }
+            annotations.clear();
+            document.setAllSecurityToBeRemoved(true);
+
+            String outputFileName = outputFolder + File.separator +
+                    inputPDF.getName().substring(0, inputPDF.getName().length() - 4) + "_annotated.pdf";
+            document.save(outputFileName);
+            System.out.println("Created " + outputFileName);
         }
-        for (TextChunk textChunk : hiddenTextChunks) {
-            draw(textChunk.getBoundingBox(), getColor(SemanticType.FIGURE), 
-                    String.format("Hidden text, value = \"%s\"", textChunk.getValue()), null, null);
-        }
-        for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
-            document.getPage(pageNumber).getAnnotations().addAll(annotations.get(pageNumber));
-        } 
-        annotations.clear();
-        document.setAllSecurityToBeRemoved(true);
-        
-        String outputFileName = outputFolder + File.separator + 
-                inputPDF.getName().substring(0, inputPDF.getName().length() - 4) + "_annotated.pdf";
-        document.save(outputFileName);
-        document.close();
-        System.out.println("Created " + outputFileName);
     }
     
     private static void drawContent(IObject content) throws IOException {
+        if (content instanceof LineChunk) {
+            return;
+        }
         PDAnnotation annot = draw(content.getBoundingBox(), getColor(content), getContents(content),
                 content.getRecognizedStructureId(), null);
         if (content instanceof TableBorder) {
@@ -149,6 +153,9 @@ public class PDFWriter {
         if (content instanceof LineArtChunk) {
             return String.format("Line Art: height %.2f, width %.2f", content.getHeight(), content.getWidth());
         }
+        if (content instanceof LineChunk) {
+            return String.format("Line");
+        }
         return "";
     }
 
@@ -166,7 +173,7 @@ public class PDFWriter {
         if (content instanceof ImageChunk) {
             return getColor(SemanticType.FIGURE);
         }
-        if (content instanceof LineArtChunk) {
+        if (content instanceof LineArtChunk || content instanceof LineChunk) {
             return getColor(SemanticType.PART);
         }
         return new float[]{};

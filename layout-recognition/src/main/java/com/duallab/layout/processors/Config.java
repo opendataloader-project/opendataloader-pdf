@@ -47,6 +47,7 @@ public class Config {
         } else {
             String argument = commandLine.getArgs()[0];
             File file = new File(argument);
+            file = new File(file.getAbsolutePath());
             config.setOutputFolder(file.isDirectory() ? file.getAbsolutePath() : file.getParent());
         }
         return config;

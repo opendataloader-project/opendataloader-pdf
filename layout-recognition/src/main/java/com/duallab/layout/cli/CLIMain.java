@@ -6,8 +6,12 @@ import org.apache.commons.cli.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class CLIMain {
+
+    private static final Logger LOGGER = Logger.getLogger(CLIMain.class.getCanonicalName());
 
     private static final String HELP = "[options] <INPUT FILE OR FOLDER>\n Options:";
     
@@ -36,6 +40,8 @@ public class CLIMain {
             }
         } else if (file.isFile()) {
             DocumentProcessor.processFile(file.getAbsolutePath(), config);
+        } else {
+            LOGGER.log(Level.WARNING, "File or folder " + file.getAbsolutePath() + " not found.");
         }
     }
 

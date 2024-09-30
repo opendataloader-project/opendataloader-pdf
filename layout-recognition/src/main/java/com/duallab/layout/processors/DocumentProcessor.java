@@ -46,7 +46,7 @@ public class DocumentProcessor {
             List<IObject> pageContents = new ArrayList<>(StaticContainers.getDocument().getArtifacts(pageNumber));
             trimTextChunksWhiteSpaces(pageContents);
             if (StaticLayoutContainers.isFindHiddenText()) {
-                hiddenTexts.addAll(HiddenTextProcessor.findHiddenText(inputPdfName, pageContents));
+                hiddenTexts.addAll(HiddenTextProcessor.findHiddenText(inputPdfName, pageContents, config.getPassword()));
             }
             pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber);
             processBackgrounds(pageNumber, pageContents);
@@ -71,8 +71,9 @@ public class DocumentProcessor {
             JsonWriter.writeToJson(inputPDF, config.getOutputFolder(), contents);
         }
         if (config.isGenerateMarkdown()) {
-            MarkdownGenerator markdownGenerator = MarkdownGeneratorFactory.getMarkdownGenerator(inputPDF, config.getOutputFolder(), config);
-            markdownGenerator.writeToMarkdown(contents);
+            try (MarkdownGenerator markdownGenerator = MarkdownGeneratorFactory.getMarkdownGenerator(inputPDF, config.getOutputFolder(), config)) {
+                markdownGenerator.writeToMarkdown(contents);
+            }
         }
     }
 

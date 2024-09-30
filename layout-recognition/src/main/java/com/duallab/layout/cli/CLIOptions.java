@@ -49,7 +49,7 @@ public class CLIOptions {
         Option imageSupport = new Option(MARKDOWN_IMAGE_OPTION, MARKDOWN_IMAGE_LONG_OPTION, false, "Add images to markdown");
         imageSupport.setRequired(false);
         options.addOption(imageSupport);
-        Option folder = new Option(FOLDER_OPTION, FOLDER_LONG_OPTION, true, "Specify output folder (default the folder of source PDF file)");
+        Option folder = new Option(FOLDER_OPTION, FOLDER_LONG_OPTION, true, "Specify output folder (default the folder of the input PDF)");
         folder.setRequired(false);
         options.addOption(folder);
         return options;
