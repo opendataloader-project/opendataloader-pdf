@@ -95,7 +95,7 @@ public class MarkdownGenerator implements Closeable {
             contrastRatioConsumer = new ContrastRatioConsumer(this.pdfFileName, password);
         }
 
-        String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, imageDirectoryName, currentImageIndex);
+        String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, imageDirectoryName, File.separator, currentImageIndex);
         boolean isFileCreated = createImageFile(image, fileName);
         if (isFileCreated) {
             String imageString = String.format(MarkdownSyntax.IMAGE_FORMAT, "image " + currentImageIndex, fileName);
