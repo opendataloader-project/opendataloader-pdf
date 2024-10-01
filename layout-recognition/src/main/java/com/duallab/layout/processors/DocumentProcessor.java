@@ -176,8 +176,8 @@ public class DocumentProcessor {
 
     public static String getContentsValueForTextNode(SemanticTextNode textNode) {
         return String.format("%s: font %s, text size %.2f, text color %s, text content \"%s\"", 
-                textNode.getSemanticType().getValue(), textNode.getFirstLine().getFirstTextChunk().getFontName(), 
-                textNode.getFirstLine().getFirstTextChunk().getFontSize(), Arrays.toString(textNode.getTextColor()), 
+                textNode.getSemanticType().getValue(), textNode.getFontName(),
+                textNode.getFontSize(), Arrays.toString(textNode.getTextColor()),
                 textNode.getValue().length() > 15 ? textNode.getValue().substring(0, 15) + "..." : textNode.getValue());
     }
 

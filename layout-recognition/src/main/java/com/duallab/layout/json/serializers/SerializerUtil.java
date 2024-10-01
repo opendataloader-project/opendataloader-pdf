@@ -19,8 +19,8 @@ public class SerializerUtil {
     }
 
     public static void writeTextInfo(JsonGenerator jsonGenerator, SemanticTextNode textNode) throws IOException {
-        jsonGenerator.writeStringField(JsonName.FONT_TYPE, textNode.getFirstLine().getFirstTextChunk().getFontName());
-        jsonGenerator.writePOJOField(JsonName.FONT_SIZE, textNode.getFirstLine().getFirstTextChunk().getFontSize());
+        jsonGenerator.writeStringField(JsonName.FONT_TYPE, textNode.getFontName());
+        jsonGenerator.writePOJOField(JsonName.FONT_SIZE, textNode.getFontSize());
         jsonGenerator.writeStringField(JsonName.TEXT_COLOR, Arrays.toString(textNode.getTextColor()));
         jsonGenerator.writeStringField(JsonName.CONTENT, textNode.getValue());
     }
