@@ -12,6 +12,8 @@ import org.verapdf.wcag.algorithms.entities.INode;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
+import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
+import org.verapdf.wcag.algorithms.entities.content.LineChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
@@ -23,6 +25,7 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ListLabelsUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.listLabelsDetection.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class HeaderFooterProcessor {
 
@@ -32,8 +35,12 @@ public class HeaderFooterProcessor {
         for (List<IObject> content : contents) {
             sortedContents.add(DocumentProcessor.sortContents(content));
         }
-        List<SemanticHeaderOrFooter> footers = getHeadersOrFooters(sortedContents, false);
-        List<SemanticHeaderOrFooter> headers = getHeadersOrFooters(sortedContents, true);
+        List<List<IObject>> filteredSortedContents = new ArrayList<>();
+        for (List<IObject> content : sortedContents) {
+            filteredSortedContents.add(content.stream().filter(c -> !(c instanceof LineChunk) && !(c instanceof LineArtChunk)).collect(Collectors.toList()));
+        }
+        List<SemanticHeaderOrFooter> footers = getHeadersOrFooters(filteredSortedContents, false);
+        List<SemanticHeaderOrFooter> headers = getHeadersOrFooters(filteredSortedContents, true);
         for (int pageNumber = 0; pageNumber < contents.size(); pageNumber++) {
             contents.set(pageNumber, updatePageContents(contents.get(pageNumber), headers.get(pageNumber), footers.get(pageNumber)));
         }
