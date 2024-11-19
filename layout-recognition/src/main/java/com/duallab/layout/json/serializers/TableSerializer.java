@@ -28,6 +28,12 @@ public class TableSerializer extends StdSerializer<TableBorder> {
 		jsonGenerator.writeNumberField(JsonName.ID, table.getRecognizedStructureId());
 		jsonGenerator.writeNumberField(JsonName.NUMBER_OF_ROWS, table.getNumberOfRows());
 		jsonGenerator.writeNumberField(JsonName.NUMBER_OF_COLUMNS, table.getNumberOfColumns());
+		if (table.getPreviousTableId() != null) {
+			jsonGenerator.writeNumberField(JsonName.PREVIOUS_TABLE_ID, table.getPreviousTableId());
+		}
+		if (table.getNextTableId() != null) {
+			jsonGenerator.writeNumberField(JsonName.NEXT_TABLE_ID, table.getNextTableId());
+		}
 		SerializerUtil.writeEssentialInfo(jsonGenerator, table);
 		jsonGenerator.writeArrayFieldStart(JsonName.ROWS);
 		for (TableBorderRow row : table.getRows()) {

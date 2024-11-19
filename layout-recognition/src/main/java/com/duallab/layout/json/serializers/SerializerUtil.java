@@ -17,6 +17,9 @@ import java.util.Arrays;
 public class SerializerUtil {
     public static void writeEssentialInfo(JsonGenerator jsonGenerator, IObject object) throws IOException {
         jsonGenerator.writeNumberField(JsonName.PAGE_NUMBER, object.getPageNumber() + 1);
+        if (object.getLevel() != null) {
+            jsonGenerator.writeNumberField(JsonName.LEVEL, object.getLevel());
+        }
         jsonGenerator.writeArrayFieldStart(JsonName.BOUNDING_BOX);
         jsonGenerator.writePOJO(object.getLeftX());
         jsonGenerator.writePOJO(object.getBottomY());

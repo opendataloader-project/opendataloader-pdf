@@ -9,6 +9,7 @@ package com.duallab.layout.json.serializers;
 
 public class JsonName {
     public static final String PAGE_NUMBER = "page number";
+    public static final String LEVEL = "level";
     public static final String BOUNDING_BOX = "bounding box";
     public static final String TYPE = "type";
     public static final String ID = "id";
@@ -31,6 +32,8 @@ public class JsonName {
     public static final String NUMBER_OF_LIST_ITEMS = "number of list items";
     public static final String PREVIOUS_LIST_ID = "previous list id";
     public static final String NEXT_LIST_ID = "next list id";
+    public static final String PREVIOUS_TABLE_ID = "previous table id";
+    public static final String NEXT_TABLE_ID = "next table id";
     public static final String AUTHOR = "author";
     public static final String TITLE = "title";
     public static final String COLUMN_NUMBER = "column number";

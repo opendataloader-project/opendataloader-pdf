@@ -48,7 +48,7 @@ public class PDFWriter {
             }
             for (TextChunk textChunk : hiddenTextChunks) {
                 draw(textChunk.getBoundingBox(), getColor(SemanticType.FIGURE),
-                        String.format("Hidden text, value = \"%s\"", textChunk.getValue()), null, null);
+                        String.format("Hidden text, value = \"%s\"", textChunk.getValue()), null, null, null);
             }
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 document.getPage(pageNumber).getAnnotations().addAll(annotations.get(pageNumber));
@@ -64,15 +64,23 @@ public class PDFWriter {
     }
     
     private static void drawContent(IObject content) throws IOException {
+        drawContent(content, null);
+    }
+
+    private static void drawContent(IObject content, PDAnnotation linkedAnnot) throws IOException {
         if (content instanceof LineChunk) {
             return;
         }
         PDAnnotation annot = draw(content.getBoundingBox(), getColor(content), getContents(content),
-                content.getRecognizedStructureId(), null);
+                content.getRecognizedStructureId(), linkedAnnot, content.getLevel());
         if (content instanceof TableBorder) {
             drawTableCells((TableBorder) content, annot);
         } else if (content instanceof PDFList) {
             drawListItems((PDFList) content, annot);
+        } else if (content instanceof SemanticHeaderOrFooter) {
+            for (IObject contentItem : ((SemanticHeaderOrFooter)content).getContents()) {
+                drawContent(contentItem, annot);
+            }
         }
     }
     
@@ -90,7 +98,7 @@ public class PDFWriter {
                     }
                     String cellValue = String.format("Table cell: row number %s, column number %s, row span %s, column span %s, text content \"%s\"",
                             cell.getRowNumber() + 1, cell.getColNumber() + 1, cell.getRowSpan(), cell.getColSpan(), contentValue);
-                    draw(cell.getBoundingBox(), getColor(SemanticType.TABLE), cellValue, null, annot);
+                    draw(cell.getBoundingBox(), getColor(SemanticType.TABLE), cellValue, null, annot, cell.getLevel());
                     for (IObject content : cell.getContents()) {
                         drawContent(content);
                     }
@@ -102,7 +110,7 @@ public class PDFWriter {
     private static void drawListItems(PDFList list, PDAnnotation annot) throws IOException {
         for (ListItem listItem : list.getListItems()) {
             String contentValue = String.format("List item: text content \"%s\"", listItem.toString());
-            draw(listItem.getBoundingBox(), getColor(SemanticType.LIST), contentValue, null, annot);
+            draw(listItem.getBoundingBox(), getColor(SemanticType.LIST), contentValue, null, annot, listItem.getLevel());
             for (IObject content : listItem.getContents()) {
                 drawContent(content);
             }
@@ -110,7 +118,7 @@ public class PDFWriter {
     }
 
     public static PDAnnotation draw(BoundingBox boundingBox, float[] colorArray,
-                                    String contents, Long id, PDAnnotation linkedAnnot) {
+                                    String contents, Long id, PDAnnotation linkedAnnot, Integer level) {
         PDAnnotationSquareCircle square = new PDAnnotationSquareCircle(PDAnnotationSquareCircle.SUB_TYPE_SQUARE);
         square.setRectangle(new PDRectangle((float)boundingBox.getLeftX(), (float)boundingBox.getBottomY(),
                 (float)boundingBox.getWidth(), (float)boundingBox.getHeight()));
@@ -118,7 +126,7 @@ public class PDFWriter {
         PDColor color = new PDColor(colorArray, PDDeviceRGB.INSTANCE);
         square.setColor(color);
         square.setInteriorColor(color);
-        square.setContents((id != null ? "id = " + id + ", " : "") + contents);
+        square.setContents((id != null ? "id = " + id + ", " : "") + (level != null ? "level = " + level + ", " : "") + contents);
         if (linkedAnnot != null) {
             square.setInReplyTo(linkedAnnot);
         }
@@ -129,11 +137,13 @@ public class PDFWriter {
     public static String getContents(IObject content) {
         if (content instanceof TableBorder) {
             TableBorder border = (TableBorder) content;
-            return String.format("Table: %s rows, %s columns", border.getNumberOfRows(), border.getNumberOfColumns());
+            return String.format("Table: %s rows, %s columns, previous table id %s, next table id %s", 
+                    border.getNumberOfRows(), border.getNumberOfColumns(), border.getPreviousTableId(), border.getNextTableId());
         }
         if (content instanceof PDFList) {
             PDFList list = (PDFList) content;
-            return String.format("List: number of items %s", list.getNumberOfListItems());
+            return String.format("List: number of items %s, previous list id %s, next list id %s", 
+                    list.getNumberOfListItems(), list.getPreviousListId(), list.getNextListId());
         }
         if (content instanceof INode) {
             INode node = (INode) content;
