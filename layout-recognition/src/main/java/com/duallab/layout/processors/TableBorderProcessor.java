@@ -15,11 +15,9 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class TableBorderProcessor {
 
@@ -82,5 +80,46 @@ public class TableBorderProcessor {
         DocumentProcessor.setIDs(newContents);
         CaptionProcessor.processCaptions(newContents);
         return newContents;
+    }
+
+    public static void checkNeighborTables(List<List<IObject>> contents) {
+        TableBorder previousTable = null;
+        for (List<IObject> iObjects : contents) {
+            for (IObject content : iObjects) {
+                if (content instanceof TableBorder) {
+                    TableBorder currentTable = (TableBorder) content;
+                    if (previousTable != null) {
+                        checkNeighborTables(previousTable, currentTable);
+                    }
+                    previousTable = currentTable;
+                } else {
+                    if (!HeaderFooterProcessor.isHeaderOrFooter(content) &&
+                            !(content instanceof LineChunk) && !(content instanceof LineArtChunk)) {
+                        previousTable = null;
+                    }
+                }
+            }
+        }
+    }
+
+    public static void checkNeighborTables(TableBorder previousTable, TableBorder currentTable) {
+        if (Objects.equals(previousTable.getPageNumber(), currentTable.getPageNumber())) {
+            return;
+        }
+        if (currentTable.getNumberOfColumns() != previousTable.getNumberOfColumns()) {
+            return;
+        }
+        if (!NodeUtils.areCloseNumbers(currentTable.getWidth(), previousTable.getWidth())) {
+            return;
+        }
+        for (int columnNumber = 0; columnNumber < previousTable.getNumberOfColumns(); columnNumber++) {
+            TableBorderCell cell1 = previousTable.getRow(0).getCell(columnNumber);
+            TableBorderCell cell2 = currentTable.getRow(0).getCell(columnNumber);
+            if (!NodeUtils.areCloseNumbers(cell1.getWidth(), cell2.getWidth())) {
+                return;
+            }
+        }
+        previousTable.setPreviousTableId(currentTable.getRecognizedStructureId());
+        currentTable.setNextTableId(previousTable.getRecognizedStructureId());
     }
 }
