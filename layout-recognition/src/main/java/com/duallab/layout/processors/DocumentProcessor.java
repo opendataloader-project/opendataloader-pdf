@@ -58,12 +58,18 @@ public class DocumentProcessor {
             pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber);
             processBackgrounds(pageNumber, pageContents);
             pageContents = TextLineProcessor.processTextLines(pageContents);
-            pageContents = ListProcessor.processLists(pageContents);
+            contents.add(pageContents);
+        }
+        HeaderFooterProcessor.processHeadersAndFooters(contents);
+        ListProcessor.processLists(contents, false);
+        for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
+            List<IObject> pageContents = contents.get(pageNumber);
             pageContents = ParagraphProcessor.processParagraphs(pageContents);
+            pageContents = ListProcessor.processListsFromTextNodes(pageContents);
             HeadingProcessor.processHeadings(pageContents);
             setIDs(pageContents);
             CaptionProcessor.processCaptions(pageContents);
-            contents.add(pageContents);
+            contents.set(pageNumber, pageContents);
         }
 
         HeaderFooterProcessor.processHeadersAndFooters(contents);
@@ -129,6 +135,16 @@ public class DocumentProcessor {
         for (int index = 0; index < contents.size(); index++) {
             contents.get(index).setIndex(index);
         }
+    }
+    
+    public static List<IObject> removeNullObjectsFromList(List<IObject> contents) {
+        List<IObject> newContents = new ArrayList<>();
+        for (IObject content : contents) {
+            if (content != null) {
+                newContents.add(content);
+            }
+        }
+        return newContents;
     }
 
     private static void calculateDocumentInfo(String pdfName) {

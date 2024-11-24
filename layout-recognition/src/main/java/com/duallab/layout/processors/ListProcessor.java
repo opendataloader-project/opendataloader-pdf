@@ -62,7 +62,7 @@ public class ListProcessor {
         DocumentProcessor.setIDs(contents);
     }
     
-    private static List<ListInterval> getListIntervalsList(List<IObject> contents) {
+    private static List<ListInterval> getListIntervalsList(List<List<IObject>> contents) {
         Stack<List<ListItemTextInfo>> stack = new Stack<>();
         Stack<Double> leftStack = new Stack<>();
         leftStack.push(-Double.MAX_VALUE);
@@ -232,8 +232,10 @@ public class ListProcessor {
     //todo for lists inside tables and lists
     public static void checkNeighborLists(List<List<IObject>> contents) {
         PDFList previousList = null;
-        for (List<IObject> iObjects : contents) {
-            for (IObject content : iObjects) {
+        SemanticTextNode middleContent = null;
+        for (List<IObject> pageContents : contents) {
+            DocumentProcessor.setIndexesForContentsList(pageContents);
+            for (IObject content : pageContents) {
                 if (content instanceof PDFList) {
                     PDFList currentList = (PDFList) content;
                     if (previousList != null) {
@@ -264,10 +266,14 @@ public class ListProcessor {
 
     private static List<ListItemTextInfo> getTextChildrenInfosForNeighborLists(PDFList previousList, PDFList currentList) {
         List<ListItemTextInfo> textChildrenInfo = new ArrayList<>(4);
-        textChildrenInfo.add(createListItemTextInfoFromListItem(0, previousList.getPenultListItem()));
-        textChildrenInfo.add(createListItemTextInfoFromListItem(0, previousList.getLastListItem()));
-        textChildrenInfo.add(createListItemTextInfoFromListItem(0, currentList.getFirstListItem()));
-        textChildrenInfo.add(createListItemTextInfoFromListItem(0, currentList.getSecondListItem()));
+        if (previousList.getNumberOfListItems() > 1) {
+            textChildrenInfo.add(createListItemTextInfoFromListItem(0, previousList.getPenultListItem()));
+        }
+        textChildrenInfo.add(createListItemTextInfoFromListItem(1, previousList.getLastListItem()));
+        textChildrenInfo.add(createListItemTextInfoFromListItem(2, currentList.getFirstListItem()));
+        if (currentList.getNumberOfListItems() > 1) {
+            textChildrenInfo.add(createListItemTextInfoFromListItem(3, currentList.getSecondListItem()));
+        }
         return textChildrenInfo;
     }
     

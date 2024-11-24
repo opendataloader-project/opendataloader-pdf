@@ -44,6 +44,16 @@ public class HeaderFooterProcessor {
         for (int pageNumber = 0; pageNumber < contents.size(); pageNumber++) {
             contents.set(pageNumber, updatePageContents(contents.get(pageNumber), headers.get(pageNumber), footers.get(pageNumber)));
         }
+        processHeadersOrFootersContents(footers);
+        processHeadersOrFootersContents(headers);
+    }
+    
+    private static void processHeadersOrFootersContents(List<SemanticHeaderOrFooter> headersOrFooters) {
+        for (SemanticHeaderOrFooter headerOrFooter : headersOrFooters) {
+            if (headerOrFooter != null) {
+                headerOrFooter.setContents(processHeaderOrFooterContent(headerOrFooter.getContents()));
+            }
+        }
     }
     
     private static List<IObject> updatePageContents(List<IObject> pageContents, SemanticHeaderOrFooter header, SemanticHeaderOrFooter footer) {
@@ -105,6 +115,15 @@ public class HeaderFooterProcessor {
             headersOrFooters.add(semanticHeaderOrFooter);
         }
         return headersOrFooters;
+    }
+    
+    private static List<IObject> processHeaderOrFooterContent(List<IObject> contents) {
+        List<IObject> newContents = ParagraphProcessor.processParagraphs(contents);
+        newContents = ListProcessor.processListsFromTextNodes(newContents);
+        HeadingProcessor.processHeadings(newContents);
+        DocumentProcessor.setIDs(newContents);
+        CaptionProcessor.processCaptions(newContents);
+        return newContents;
     }
     
     private static List<Integer> getNumberOfHeaderOrFooterContentsForEachPage(List<List<IObject>> sortedContents, boolean isHeaderDetection) {
@@ -198,9 +217,11 @@ public class HeaderFooterProcessor {
     }
     
     private static boolean arePossibleHeadersOrFooters(IObject object1, IObject object2, int increment) {
-        if (object1 instanceof SemanticTextNode && object2 instanceof SemanticTextNode) {
-            SemanticTextNode textNode1 = (SemanticTextNode) object1;
-            SemanticTextNode textNode2 = (SemanticTextNode) object2;
+        if (object1 instanceof TextLine && object2 instanceof TextLine) {
+            SemanticTextNode textNode1 = new SemanticTextNode();
+            textNode1.add((TextLine) object1);
+            SemanticTextNode textNode2 = new SemanticTextNode();
+            textNode2.add((TextLine) object2);
             //todo check boundingBoxes
             if (Objects.equals(textNode1.getValue(), textNode2.getValue())) {
                 return true;

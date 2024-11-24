@@ -74,7 +74,10 @@ public class TableBorderProcessor {
     public static List<IObject> processTableCellContent(List<IObject> contents, int pageNumber) {
         List<IObject> newContents = TableBorderProcessor.processTableBorders(contents, pageNumber);
         newContents = TextLineProcessor.processTextLines(newContents);
-        newContents = ListProcessor.processLists(newContents);
+        List<List<IObject>> contentsList = new ArrayList<>();
+        contentsList.add(newContents);
+        ListProcessor.processLists(contentsList, true);
+        newContents = contentsList.get(0);
         newContents = ParagraphProcessor.processParagraphs(newContents);
         HeadingProcessor.processHeadings(newContents);
         DocumentProcessor.setIDs(newContents);
@@ -119,7 +122,7 @@ public class TableBorderProcessor {
                 return;
             }
         }
-        previousTable.setPreviousTableId(currentTable.getRecognizedStructureId());
-        currentTable.setNextTableId(previousTable.getRecognizedStructureId());
+        previousTable.setNextTable(currentTable);
+        currentTable.setPreviousTable(previousTable);
     }
 }
