@@ -84,10 +84,16 @@ public class PDFWriter {
         }
     }
     
-    private static void drawTableCells(TableBorder border, PDAnnotation annot) throws IOException {
-        for (int rowNumber = 0; rowNumber < border.getNumberOfRows(); rowNumber++) {
-            TableBorderRow row = border.getRow(rowNumber);
-            for (int colNumber = 0; colNumber < border.getNumberOfColumns(); colNumber++) {
+    private static void drawTableCells(TableBorder table, PDAnnotation annot) throws IOException {
+        if (table.isTextBlock()) {
+            for (IObject content : table.getCell(0, 0).getContents()) {
+                drawContent(content);
+            }
+            return;
+        }
+        for (int rowNumber = 0; rowNumber < table.getNumberOfRows(); rowNumber++) {
+            TableBorderRow row = table.getRow(rowNumber);
+            for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
                 TableBorderCell cell = row.getCell(colNumber);
                 if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
                     StringBuilder contentValue = new StringBuilder();
@@ -137,6 +143,9 @@ public class PDFWriter {
     public static String getContents(IObject content) {
         if (content instanceof TableBorder) {
             TableBorder border = (TableBorder) content;
+            if (border.isTextBlock()) {
+                return "Text block";
+            }
             return String.format("Table: %s rows, %s columns, previous table id %s, next table id %s", 
                     border.getNumberOfRows(), border.getNumberOfColumns(), border.getPreviousTableId(), border.getNextTableId());
         }
@@ -171,7 +180,7 @@ public class PDFWriter {
             return String.format("Line Art: height %.2f, width %.2f", content.getHeight(), content.getWidth());
         }
         if (content instanceof LineChunk) {
-            return String.format("Line");
+            return "Line";
         }
         return "";
     }

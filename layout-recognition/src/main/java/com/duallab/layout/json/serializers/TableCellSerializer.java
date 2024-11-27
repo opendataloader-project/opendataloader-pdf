@@ -35,7 +35,6 @@ public class TableCellSerializer extends StdSerializer<TableBorderCell> {
 		for (IObject content : cell.getContents()) {
 			jsonGenerator.writePOJO(content);
 		}
-
 		jsonGenerator.writeEndArray();
 		jsonGenerator.writeEndObject();
 	}

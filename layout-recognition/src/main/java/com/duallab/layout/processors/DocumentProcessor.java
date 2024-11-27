@@ -71,8 +71,6 @@ public class DocumentProcessor {
             CaptionProcessor.processCaptions(pageContents);
             contents.set(pageNumber, pageContents);
         }
-
-        HeaderFooterProcessor.processHeadersAndFooters(contents);
         ListProcessor.checkNeighborLists(contents);
         TableBorderProcessor.checkNeighborTables(contents);
         HeadingProcessor.detectHeadingsLevels(contents);

@@ -8,7 +8,6 @@
 package com.duallab.layout.containers;
 
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
-import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 
 import java.util.LinkedList;
 import java.util.List;

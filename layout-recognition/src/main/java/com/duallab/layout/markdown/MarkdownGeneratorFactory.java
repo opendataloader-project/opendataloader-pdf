@@ -17,8 +17,7 @@ public class MarkdownGeneratorFactory {
                                                          Config config) throws IOException {
         if (config.isUseHTMLInMarkdown()) {
             return new MarkdownHTMLGenerator(inputPdf, outputFileName, config);
-        } else {
-            return new MarkdownGenerator(inputPdf, outputFileName, config);
         }
+        return new MarkdownGenerator(inputPdf, outputFileName, config);
     }
 }

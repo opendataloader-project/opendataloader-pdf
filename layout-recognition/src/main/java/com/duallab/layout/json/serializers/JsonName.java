@@ -19,6 +19,7 @@ public class JsonName {
     public static final String CONTENT = "content";
     public static final String TEXT_CHUNK_TYPE = "text chunk";
     public static final String TABLE_TYPE = "table";
+    public static final String TEXT_BLOCK = "text block";
     public static final String LIST_TYPE = "list";
     public static final String TABLE_CELL_TYPE = "table cell";
     public static final String ROW_TYPE = "table row";

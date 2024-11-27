@@ -116,8 +116,8 @@ public class TableBorderProcessor {
             return;
         }
         for (int columnNumber = 0; columnNumber < previousTable.getNumberOfColumns(); columnNumber++) {
-            TableBorderCell cell1 = previousTable.getRow(0).getCell(columnNumber);
-            TableBorderCell cell2 = currentTable.getRow(0).getCell(columnNumber);
+            TableBorderCell cell1 = previousTable.getCell(0, columnNumber);
+            TableBorderCell cell2 = currentTable.getCell(0, columnNumber);
             if (!NodeUtils.areCloseNumbers(cell1.getWidth(), cell2.getWidth())) {
                 return;
             }
