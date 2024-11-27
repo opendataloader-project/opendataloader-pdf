@@ -5,8 +5,9 @@
  * accepted by the licensee when buying and/or downloading the
  * software do apply.
  */
-package com.duallab.layout.json.serializers;
+package com.duallab.layout.json;
 
+import com.duallab.layout.json.serializers.*;
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;

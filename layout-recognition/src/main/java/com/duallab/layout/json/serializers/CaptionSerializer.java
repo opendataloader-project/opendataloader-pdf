@@ -16,7 +16,7 @@ import java.io.IOException;
 
 public class CaptionSerializer extends StdSerializer<SemanticCaption> {
 
-	protected CaptionSerializer(Class<SemanticCaption> t) {
+	public CaptionSerializer(Class<SemanticCaption> t) {
 		super(t);
 	}
 
@@ -24,11 +24,9 @@ public class CaptionSerializer extends StdSerializer<SemanticCaption> {
 	public void serialize(SemanticCaption caption, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
 			throws IOException {
 		jsonGenerator.writeStartObject();
-		jsonGenerator.writeStringField(JsonName.TYPE, "Caption");
-		jsonGenerator.writeNumberField(JsonName.ID, caption.getRecognizedStructureId());
+		SerializerUtil.writeEssentialInfo(jsonGenerator, caption, "Caption");
 		jsonGenerator.writeNumberField("linked content id", caption.getLinkedContentId());
 		SerializerUtil.writeTextInfo(jsonGenerator, caption);
-		SerializerUtil.writeEssentialInfo(jsonGenerator, caption);
 		jsonGenerator.writeEndObject();
 	}
 }

@@ -7,6 +7,7 @@
  */
 package com.duallab.layout.json.serializers;
 
+import com.duallab.layout.json.JsonName;
 import com.fasterxml.jackson.core.JsonGenerator;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
@@ -15,11 +16,15 @@ import java.io.IOException;
 import java.util.Arrays;
 
 public class SerializerUtil {
-    public static void writeEssentialInfo(JsonGenerator jsonGenerator, IObject object) throws IOException {
-        jsonGenerator.writeNumberField(JsonName.PAGE_NUMBER, object.getPageNumber() + 1);
+    public static void writeEssentialInfo(JsonGenerator jsonGenerator, IObject object, String type) throws IOException {
+        jsonGenerator.writeStringField(JsonName.TYPE, type);
+        if (object.getRecognizedStructureId() != null) {
+            jsonGenerator.writeNumberField(JsonName.ID, object.getRecognizedStructureId());
+        }
         if (object.getLevel() != null) {
             jsonGenerator.writeNumberField(JsonName.LEVEL, object.getLevel());
         }
+        jsonGenerator.writeNumberField(JsonName.PAGE_NUMBER, object.getPageNumber() + 1);
         jsonGenerator.writeArrayFieldStart(JsonName.BOUNDING_BOX);
         jsonGenerator.writePOJO(object.getLeftX());
         jsonGenerator.writePOJO(object.getBottomY());
@@ -34,6 +39,4 @@ public class SerializerUtil {
         jsonGenerator.writeStringField(JsonName.TEXT_COLOR, Arrays.toString(textNode.getTextColor()));
         jsonGenerator.writeStringField(JsonName.CONTENT, textNode.getValue());
     }
-
-
 }

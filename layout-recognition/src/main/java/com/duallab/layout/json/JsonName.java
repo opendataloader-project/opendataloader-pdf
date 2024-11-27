@@ -5,7 +5,7 @@
  * accepted by the licensee when buying and/or downloading the
  * software do apply.
  */
-package com.duallab.layout.json.serializers;
+package com.duallab.layout.json;
 
 public class JsonName {
     public static final String PAGE_NUMBER = "page number";

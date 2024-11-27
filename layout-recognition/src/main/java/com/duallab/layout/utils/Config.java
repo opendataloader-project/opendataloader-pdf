@@ -5,7 +5,7 @@
  * accepted by the licensee when buying and/or downloading the
  * software do apply.
  */
-package com.duallab.layout.processors;
+package com.duallab.layout.utils;
 
 import com.duallab.layout.cli.CLIOptions;
 import org.apache.commons.cli.CommandLine;

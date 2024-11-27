@@ -7,6 +7,7 @@
  */
 package com.duallab.layout.json.serializers;
 
+import com.duallab.layout.json.JsonName;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
@@ -16,7 +17,7 @@ import java.io.IOException;
 
 public class LineArtSerializer extends StdSerializer<LineArtChunk> {
 
-	protected LineArtSerializer(Class<LineArtChunk> t) {
+	public LineArtSerializer(Class<LineArtChunk> t) {
 		super(t);
 	}
 
@@ -24,9 +25,7 @@ public class LineArtSerializer extends StdSerializer<LineArtChunk> {
 	public void serialize(LineArtChunk lineArtChunk, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
 			throws IOException {
 		jsonGenerator.writeStartObject();
-		jsonGenerator.writeStringField(JsonName.TYPE, JsonName.IMAGE_CHUNK_TYPE);
-		jsonGenerator.writeNumberField(JsonName.ID, lineArtChunk.getRecognizedStructureId());
-		SerializerUtil.writeEssentialInfo(jsonGenerator, lineArtChunk);
+		SerializerUtil.writeEssentialInfo(jsonGenerator, lineArtChunk, JsonName.IMAGE_CHUNK_TYPE);
 		jsonGenerator.writeEndObject();
 	}
 }

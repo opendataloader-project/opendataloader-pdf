@@ -17,7 +17,7 @@ import java.math.RoundingMode;
 
 public class DoubleSerializer extends StdSerializer<Double> {
 
-    protected DoubleSerializer(Class<Double> t) {
+    public DoubleSerializer(Class<Double> t) {
         super(t);
     }
 

@@ -7,7 +7,7 @@
  */
 package com.duallab.layout.cli;
 
-import com.duallab.layout.processors.Config;
+import com.duallab.layout.utils.Config;
 import com.duallab.layout.processors.DocumentProcessor;
 import org.apache.commons.cli.*;
 

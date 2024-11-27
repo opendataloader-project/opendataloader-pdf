@@ -34,7 +34,7 @@ Options:
 To integrate Layout recognition API into Java code, one can follow the sample code below.
 
 ```java
-import com.duallab.layout.processors.Config;
+import com.duallab.layout.utils.Config;
 import com.duallab.layout.processors.DocumentProcessor;
 
 import java.io.IOException;

@@ -7,6 +7,7 @@
  */
 package com.duallab.layout.json.serializers;
 
+import com.duallab.layout.json.JsonName;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
@@ -17,7 +18,7 @@ import java.io.IOException;
 
 public class TableCellSerializer extends StdSerializer<TableBorderCell> {
 
-	protected TableCellSerializer(Class<TableBorderCell> t) {
+	public TableCellSerializer(Class<TableBorderCell> t) {
 		super(t);
 	}
 
@@ -25,12 +26,11 @@ public class TableCellSerializer extends StdSerializer<TableBorderCell> {
 	public void serialize(TableBorderCell cell, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
 			throws IOException {
 		jsonGenerator.writeStartObject();
-		jsonGenerator.writeStringField(JsonName.TYPE, JsonName.TABLE_CELL_TYPE);
+		SerializerUtil.writeEssentialInfo(jsonGenerator, cell, JsonName.TABLE_CELL_TYPE);
 		jsonGenerator.writeNumberField(JsonName.ROW_NUMBER, cell.getRowNumber() + 1);
 		jsonGenerator.writeNumberField(JsonName.COLUMN_NUMBER, cell.getColNumber() + 1);
 		jsonGenerator.writeNumberField(JsonName.ROW_SPAN, cell.getRowSpan());
 		jsonGenerator.writeNumberField(JsonName.COLUMN_SPAN, cell.getColSpan());
-		SerializerUtil.writeEssentialInfo(jsonGenerator, cell);
 		jsonGenerator.writeArrayFieldStart(JsonName.KIDS);
 		for (IObject content : cell.getContents()) {
 			jsonGenerator.writePOJO(content);

@@ -7,6 +7,7 @@
  */
 package com.duallab.layout.processors;
 
+import com.duallab.layout.utils.BulletedParagraphUtils;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.content.*;
@@ -218,7 +219,8 @@ public class ParagraphProcessor {
         return CaptionUtils.areOverlapping(previousBlock.getLastLine(), nextBlock.getFirstLine().getBoundingBox()) &&
                 probability > DIFFERENT_LINES_PROBABILITY &&
                 (previousBlock.getLinesNumber() == 1 || previousBlock.getTextAlignment() == null) &&
-                (nextBlock.getLinesNumber() == 1 || nextBlock.getTextAlignment() == null);
+                (nextBlock.getLinesNumber() == 1 || nextBlock.getTextAlignment() == null) && 
+                !BulletedParagraphUtils.isBulletedLine(nextBlock.getFirstLine());
     }
     
     private static boolean isFirstLineOfBlock(TextBlock previousBlock, TextBlock nextBlock, TextAlignment textAlignment,

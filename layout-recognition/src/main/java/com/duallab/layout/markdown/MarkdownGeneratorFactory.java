@@ -7,7 +7,7 @@
  */
 package com.duallab.layout.markdown;
 
-import com.duallab.layout.processors.Config;
+import com.duallab.layout.utils.Config;
 
 import java.io.File;
 import java.io.IOException;

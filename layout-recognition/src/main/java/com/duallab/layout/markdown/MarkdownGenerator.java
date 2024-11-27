@@ -8,7 +8,7 @@
 package com.duallab.layout.markdown;
 
 import com.duallab.layout.containers.StaticLayoutContainers;
-import com.duallab.layout.processors.Config;
+import com.duallab.layout.utils.Config;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;

@@ -7,8 +7,6 @@
  */
 package com.duallab.layout.json;
 
-import com.duallab.layout.json.serializers.JsonName;
-import com.duallab.layout.json.serializers.ObjectMapperHolder;
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;

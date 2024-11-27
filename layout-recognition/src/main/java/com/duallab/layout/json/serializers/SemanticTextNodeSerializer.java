@@ -7,6 +7,7 @@
  */
 package com.duallab.layout.json.serializers;
 
+import com.duallab.layout.json.JsonName;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
@@ -17,7 +18,7 @@ import java.io.IOException;
 //For now this class is used to process headers, footers, headings, captions.
 public class SemanticTextNodeSerializer extends StdSerializer<SemanticTextNode> {
 
-	protected SemanticTextNodeSerializer(Class<SemanticTextNode> t) {
+	public SemanticTextNodeSerializer(Class<SemanticTextNode> t) {
 		super(t);
 	}
 
@@ -25,10 +26,8 @@ public class SemanticTextNodeSerializer extends StdSerializer<SemanticTextNode> 
 	public void serialize(SemanticTextNode textNode, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
 			throws IOException {
 		jsonGenerator.writeStartObject();
-		jsonGenerator.writeStringField(JsonName.TYPE, textNode.getSemanticType().toString().toLowerCase());
-		jsonGenerator.writeNumberField(JsonName.ID, textNode.getRecognizedStructureId());
+		SerializerUtil.writeEssentialInfo(jsonGenerator, textNode, textNode.getSemanticType().toString().toLowerCase());
 		SerializerUtil.writeTextInfo(jsonGenerator, textNode);
-		SerializerUtil.writeEssentialInfo(jsonGenerator, textNode);
 		jsonGenerator.writeEndObject();
 	}
 }

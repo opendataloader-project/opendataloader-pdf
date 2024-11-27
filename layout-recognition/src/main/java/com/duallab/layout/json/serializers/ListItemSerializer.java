@@ -7,6 +7,7 @@
  */
 package com.duallab.layout.json.serializers;
 
+import com.duallab.layout.json.JsonName;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
@@ -18,7 +19,7 @@ import java.util.Arrays;
 
 public class ListItemSerializer extends StdSerializer<ListItem> {
 
-	protected ListItemSerializer(Class<ListItem> t) {
+	public ListItemSerializer(Class<ListItem> t) {
 		super(t);
 	}
 
@@ -26,7 +27,7 @@ public class ListItemSerializer extends StdSerializer<ListItem> {
 	public void serialize(ListItem item, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
 			throws IOException {
 		jsonGenerator.writeStartObject();
-		jsonGenerator.writeStringField(JsonName.TYPE, JsonName.LIST_ITEM_TYPE);
+		SerializerUtil.writeEssentialInfo(jsonGenerator, item, JsonName.LIST_ITEM_TYPE);
 		jsonGenerator.writeStringField(JsonName.FONT_TYPE, item.getFirstLine().getFirstTextChunk().getFontName());
 		jsonGenerator.writeNumberField(JsonName.FONT_SIZE,  item.getFontSize());
 		jsonGenerator.writeStringField(JsonName.TEXT_COLOR, Arrays.toString(
@@ -37,7 +38,6 @@ public class ListItemSerializer extends StdSerializer<ListItem> {
 			jsonGenerator.writePOJO(content);
 		}
 		jsonGenerator.writeEndArray();
-		SerializerUtil.writeEssentialInfo(jsonGenerator, item);
 		jsonGenerator.writeEndObject();
 	}
 }

@@ -7,6 +7,7 @@
  */
 package com.duallab.layout.json.serializers;
 
+import com.duallab.layout.json.JsonName;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
@@ -16,7 +17,7 @@ import java.io.IOException;
 
 public class ParagraphSerializer extends StdSerializer<SemanticParagraph> {
 
-	protected ParagraphSerializer(Class<SemanticParagraph> t) {
+	public ParagraphSerializer(Class<SemanticParagraph> t) {
 		super(t);
 	}
 
@@ -24,10 +25,8 @@ public class ParagraphSerializer extends StdSerializer<SemanticParagraph> {
 	public void serialize(SemanticParagraph textParagraph, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
 			throws IOException {
 		jsonGenerator.writeStartObject();
-		jsonGenerator.writeStringField(JsonName.TYPE, JsonName.PARAGRAPH_TYPE);
-		jsonGenerator.writeNumberField(JsonName.ID, textParagraph.getRecognizedStructureId());
+		SerializerUtil.writeEssentialInfo(jsonGenerator, textParagraph, JsonName.PARAGRAPH_TYPE);
 		SerializerUtil.writeTextInfo(jsonGenerator, textParagraph);
-		SerializerUtil.writeEssentialInfo(jsonGenerator, textParagraph);
 		jsonGenerator.writeEndObject();
 	}
 }

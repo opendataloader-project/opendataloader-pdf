@@ -7,6 +7,7 @@
  */
 package com.duallab.layout.json.serializers;
 
+import com.duallab.layout.json.JsonName;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
@@ -17,7 +18,7 @@ import java.io.IOException;
 
 public class ListSerializer extends StdSerializer<PDFList> {
 
-	protected ListSerializer(Class<PDFList> t) {
+	public ListSerializer(Class<PDFList> t) {
 		super(t);
 	}
 
@@ -25,8 +26,7 @@ public class ListSerializer extends StdSerializer<PDFList> {
 	public void serialize(PDFList list, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
 			throws IOException {
 		jsonGenerator.writeStartObject();
-		jsonGenerator.writeStringField(JsonName.TYPE, JsonName.LIST_TYPE);
-		jsonGenerator.writeNumberField(JsonName.ID, list.getRecognizedStructureId());
+		SerializerUtil.writeEssentialInfo(jsonGenerator, list, JsonName.LIST_TYPE);
 		jsonGenerator.writeStringField(JsonName.NUMBERING_STYLE, list.getNumberingStyle());
 		jsonGenerator.writeNumberField(JsonName.NUMBER_OF_LIST_ITEMS, list.getNumberOfListItems());
 		if (list.getPreviousListId() != null) {
@@ -35,7 +35,6 @@ public class ListSerializer extends StdSerializer<PDFList> {
 		if (list.getNextListId() != null) {
 			jsonGenerator.writeNumberField(JsonName.NEXT_LIST_ID, list.getNextListId());
 		}
-		SerializerUtil.writeEssentialInfo(jsonGenerator, list);
 		jsonGenerator.writeArrayFieldStart(JsonName.LIST_ITEMS);
 		for (ListItem item : list.getListItems()) {
 			jsonGenerator.writePOJO(item);

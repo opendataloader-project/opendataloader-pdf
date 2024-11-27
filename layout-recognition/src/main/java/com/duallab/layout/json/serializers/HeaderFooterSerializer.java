@@ -7,6 +7,7 @@
  */
 package com.duallab.layout.json.serializers;
 
+import com.duallab.layout.json.JsonName;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
@@ -17,7 +18,7 @@ import java.io.IOException;
 
 public class HeaderFooterSerializer extends StdSerializer<SemanticHeaderOrFooter> {
 
-	protected HeaderFooterSerializer(Class<SemanticHeaderOrFooter> t) {
+	public HeaderFooterSerializer(Class<SemanticHeaderOrFooter> t) {
 		super(t);
 	}
 
@@ -25,8 +26,7 @@ public class HeaderFooterSerializer extends StdSerializer<SemanticHeaderOrFooter
 	public void serialize(SemanticHeaderOrFooter header, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
 			throws IOException {
 		jsonGenerator.writeStartObject();
-		jsonGenerator.writeStringField(JsonName.TYPE, header.getSemanticType().getValue().toLowerCase());
-		jsonGenerator.writeNumberField(JsonName.ID, header.getRecognizedStructureId());
+		SerializerUtil.writeEssentialInfo(jsonGenerator, header, header.getSemanticType().getValue().toLowerCase());
 		jsonGenerator.writeArrayFieldStart(JsonName.KIDS);
 		for (IObject content : header.getContents()) {
 			jsonGenerator.writePOJO(content);
