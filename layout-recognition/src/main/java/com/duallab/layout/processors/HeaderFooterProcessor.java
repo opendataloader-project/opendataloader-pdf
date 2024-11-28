@@ -218,6 +218,9 @@ public class HeaderFooterProcessor {
     
     private static boolean arePossibleHeadersOrFooters(IObject object1, IObject object2, int increment) {
         if (object1 instanceof TextLine && object2 instanceof TextLine) {
+            if (!BoundingBox.areOverlapsBoundingBoxesExcludingPages(object1.getBoundingBox(), object2.getBoundingBox())) {
+                return false;
+            }
             SemanticTextNode textNode1 = new SemanticTextNode();
             textNode1.add((TextLine) object1);
             SemanticTextNode textNode2 = new SemanticTextNode();

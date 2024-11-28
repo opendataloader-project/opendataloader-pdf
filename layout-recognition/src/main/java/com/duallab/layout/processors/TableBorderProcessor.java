@@ -10,7 +10,7 @@ package com.duallab.layout.processors;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
 import org.verapdf.wcag.algorithms.entities.content.LineChunk;
-import org.verapdf.wcag.algorithms.entities.content.TextChunk;
+import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
@@ -45,15 +45,16 @@ public class TableBorderProcessor {
     private static TableBorder addContentToTableBorder(IObject content) {
         TableBorder tableBorder = StaticContainers.getTableBordersCollection().getTableBorder(content.getBoundingBox());
         if (tableBorder != null) {
-            if ((content instanceof LineArtChunk) || (content instanceof LineChunk)) {
+            if (content instanceof LineChunk) {
+                return tableBorder;
+            }
+            if (content instanceof LineArtChunk && BoundingBox.areSameBoundingBoxes(tableBorder.getBoundingBox(), content.getBoundingBox())) {
                 return tableBorder;
             }
             TableBorderCell tableBorderCell = tableBorder.getTableBorderCell(content);
             if (tableBorderCell != null) {
-                if (content instanceof TextChunk) {
-                    tableBorderCell.addContentObject(content);
-                    return tableBorder;
-                }
+                tableBorderCell.addContentObject(content);
+                return tableBorder;
             }
         }
         return null;
