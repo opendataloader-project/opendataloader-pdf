@@ -53,13 +53,13 @@ import java.io.IOException;
         config.setPassword("password");
         
         //generate markdown output file
-        config.setGenerateMarkdown(true);        
+        config.setGenerateMarkdown(true);
         
         //enable html in markdown output file
         config.setUseHTMLInMarkdown(true);
 
         //add images to markdown output file
-        config.setAddImageToMarkdown(true);        
+        config.setAddImageToMarkdown(true);
         
         //disable json output file
         config.setGenerateJSON(false);
@@ -74,7 +74,7 @@ import java.io.IOException;
                 //process pdf file
                 DocumentProcessor.processFile("input.pdf", config);
         } catch (IOException exception) {
-                //exception during processing       
+                //exception during processing
         }
 ```
 
@@ -94,12 +94,12 @@ Root json node
 
 Common fields of content json nodes
 
-| Field             | Type    | Description                                                                                                                                                                             |
-|-------------------|---------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| id                | integer | Unique id of content element                                                                                                                                                            |
-| type              | string  | Type of content element<br/>Possible types: `footer`, `header`, `heading`, `line`, `table`, `table row`, `table cell`, `paragraph`, `list`, `list item`, `image`, `line art`, `caption` |
-| page number       | integer | Page number of content element                                                                                                                                                          |
-| bounding box      | array   | Bounding box of content element                                                                                                                                                         |
+| Field             | Type    | Description                                                                                                                                                                                           |
+|-------------------|---------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| id                | integer | Unique id of content element                                                                                                                                                                          |
+| type              | string  | Type of content element<br/>Possible types: `footer`, `header`, `heading`, `line`, `table`, `table row`, `table cell`, `paragraph`, `list`, `list item`, `image`, `line art`, `caption`, `text block` |
+| page number       | integer | Page number of content element                                                                                                                                                                        |
+| bounding box      | array   | Bounding box of content element                                                                                                                                                                       |
 
 Specific fields of text content json nodes (`list item`, `caption`, `heading`, `paragraph`)
 
@@ -112,11 +112,13 @@ Specific fields of text content json nodes (`list item`, `caption`, `heading`, `
 
 Specific fields of `table` json nodes
 
-| Field              | Type     | Description             |
-|--------------------|----------|-------------------------|
-| number of rows     | integer  | Number of table rows    |
-| number of columns  | integer  | Number of table columns |
-| rows               | array    | Array of table rows     |
+| Field             | Type     | Description                    |
+|-------------------|----------|--------------------------------|
+| number of rows    | integer  | Number of table rows           |
+| number of columns | integer  | Number of table columns        |
+| rows              | array    | Array of table rows            |
+| previous table id | integer  | Id of previous connected table |
+| next table id     | integer  | Id of next connected table     |
 
 Specific fields of `table row` json nodes
 
@@ -141,7 +143,7 @@ Specific fields of `heading` json nodes
 |---------------|---------|--------------------------|
 | heading level | integer | Heading level of heading |
 
-Specific fields of `list json` nodes
+Specific fields of `list` json nodes
 
 | Field                | Type    | Description                         |
 |----------------------|---------|-------------------------------------|
@@ -163,3 +165,9 @@ Specific fields of `header` and `footer` json nodes
 | Field  | Type   | Description                             |
 |--------|--------|-----------------------------------------|
 | kids   | array  | Array of header/footer content elements |
+
+Specific fields of `text block` json nodes
+
+| Field  | Type   | Description                          |
+|--------|--------|--------------------------------------|
+| kids   | array  | Array of text block content elements |
