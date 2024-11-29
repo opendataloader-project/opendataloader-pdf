@@ -7,6 +7,7 @@
  */
 package com.duallab.layout.processors;
 
+import com.duallab.layout.utils.BulletedParagraphUtils;
 import org.verapdf.wcag.algorithms.entities.INode;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
