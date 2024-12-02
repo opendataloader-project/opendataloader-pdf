@@ -22,6 +22,7 @@ import org.verapdf.wcag.algorithms.entities.lists.ListIntervalsCollection;
 import org.verapdf.wcag.algorithms.entities.lists.info.ListItemInfo;
 import org.verapdf.wcag.algorithms.entities.lists.info.ListItemTextInfo;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ListLabelsUtils;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.listLabelsDetection.*;
 
 import java.util.*;
@@ -221,10 +222,15 @@ public class HeaderFooterProcessor {
             if (!BoundingBox.areOverlapsBoundingBoxesExcludingPages(object1.getBoundingBox(), object2.getBoundingBox())) {
                 return false;
             }
+            TextLine line1 = (TextLine) object1;
+            TextLine line2 = (TextLine) object2;
+            if (!NodeUtils.areCloseNumbers(line1.getFontSize(), line2.getFontSize())) {
+                return false;
+            }
             SemanticTextNode textNode1 = new SemanticTextNode();
-            textNode1.add((TextLine) object1);
+            textNode1.add(line1);
             SemanticTextNode textNode2 = new SemanticTextNode();
-            textNode2.add((TextLine) object2);
+            textNode2.add(line2);
             //todo check boundingBoxes
             if (Objects.equals(textNode1.getValue(), textNode2.getValue())) {
                 return true;

@@ -51,7 +51,7 @@ public class CaptionProcessor {
                 }
                 imageNode = new SemanticFigure((ImageChunk) content);
                 imageNode.setRecognizedStructureId(content.getRecognizedStructureId());
-            } else if (content instanceof TableBorder) {
+            } else if (content instanceof TableBorder && !((TableBorder)content).isTextBlock()) {
                 if (imageNode != null && isTextNotContainedInImage(imageNode, lastTextNode)) {
                     acceptImageCaption(contents, imageNode, lastTextNode, null);
                     lastTextNode = null;

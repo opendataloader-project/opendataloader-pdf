@@ -56,6 +56,9 @@ public class TableBorderProcessor {
                 tableBorderCell.addContentObject(content);
                 return tableBorder;
             }
+            if (content instanceof LineArtChunk) {
+                return tableBorder;
+            }
         }
         return null;
     }

@@ -75,6 +75,7 @@ public class ListProcessor {
 
     private static List<IObject> processListItemContent(List<IObject> contents) {
         List<IObject> newContents = ParagraphProcessor.processParagraphs(contents);
+        newContents = ListProcessor.processListsFromTextNodes(newContents);
         DocumentProcessor.setIDs(newContents);
         return newContents;
     }
@@ -105,7 +106,6 @@ public class ListProcessor {
                 double maxXInterval = getMaxXInterval(line.getFontSize());
                 while (!NodeUtils.areCloseNumbers(leftStack.peek(), line.getLeftX(), maxXInterval) && leftStack.peek() > line.getLeftX()) {
                     intervalsList.addAll(ListLabelsUtils.getListItemsIntervals(textChildrenInfoList));
-//                intervalsSet.addAll(ListUtils.getChildrenListIntervals(ListLabelsUtils.getListItemsIntervals(textChildrenInfoList), nodes));
                     if (stack.isEmpty()) {
                         textChildrenInfoList = new ArrayList<>();
                         break;
@@ -125,8 +125,6 @@ public class ListProcessor {
         }
         while (!stack.isEmpty()) {
             intervalsList.addAll(ListLabelsUtils.getListItemsIntervals(textChildrenInfoList));
-//                    ListUtils.getTextLinesListIntervals(, 
-//                    textLines));
             textChildrenInfoList = stack.pop();
             leftStack.pop();
         }
@@ -143,7 +141,7 @@ public class ListProcessor {
             ListItem listItem = new ListItem(new BoundingBox(), null);
             IObject object = pageContents.get(currentInfo.getIndex());
             if (object == null || object instanceof PDFList) {
-//                LOGGER.log(Level.WARNING, "List item is null");
+                LOGGER.log(Level.INFO, "List item is connected with different lists");
                 continue;
             }
             pageContents.set(currentInfo.getIndex(), isListSet ? null : list);
@@ -292,11 +290,14 @@ public class ListProcessor {
                                         BoundingBox.areHorizontalOverlapping(previousList.getBoundingBox(), currentList.getBoundingBox())) {
                                     previousList.add(currentList);
                                     pageContents.set(currentList.getIndex(), null);
+                                    currentList = null;
                                 }
                             }
                         }
                     }
-                    previousList = currentList;
+                    if (currentList != null) {
+                        previousList = currentList;
+                    }
                     middleContent = null;
                 } else {
                     if (!HeaderFooterProcessor.isHeaderOrFooter(content) && 
