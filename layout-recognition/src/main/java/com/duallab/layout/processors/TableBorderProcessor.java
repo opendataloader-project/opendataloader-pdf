@@ -86,6 +86,9 @@ public class TableBorderProcessor {
         HeadingProcessor.processHeadings(newContents);
         DocumentProcessor.setIDs(newContents);
         CaptionProcessor.processCaptions(newContents);
+        contentsList.set(0, newContents);
+        LevelProcessor.detectLevels(contentsList);
+        newContents = contentsList.get(0);
         return newContents;
     }
 
