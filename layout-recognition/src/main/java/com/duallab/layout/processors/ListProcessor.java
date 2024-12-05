@@ -82,6 +82,10 @@ public class ListProcessor {
         List<IObject> newContents = ParagraphProcessor.processParagraphs(contents);
         newContents = ListProcessor.processListsFromTextNodes(newContents);
         DocumentProcessor.setIDs(newContents);
+        List<List<IObject>> contentsList = new ArrayList<>(1);
+        contentsList.add(newContents);
+        ListProcessor.checkNeighborLists(contentsList);
+        newContents = contentsList.get(0);
         return newContents;
     }
 
@@ -193,6 +197,9 @@ public class ListProcessor {
                 }
             }
             list.add(listItem);
+        }
+        if (list.getListItems().isEmpty()) {
+            LOGGER.log(Level.WARNING, "List is not added to contents");
         }
         return list;
     }
@@ -321,8 +328,8 @@ public class ListProcessor {
                 }
             }
         }
-        for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
-            contents.set(pageNumber, DocumentProcessor.removeNullObjectsFromList(contents.get(pageNumber)));
+        for (int index = 0; index < contents.size(); index++) {
+            contents.set(index, DocumentProcessor.removeNullObjectsFromList(contents.get(index)));
         }
     }
     

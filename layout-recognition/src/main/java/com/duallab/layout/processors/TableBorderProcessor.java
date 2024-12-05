@@ -78,15 +78,17 @@ public class TableBorderProcessor {
     public static List<IObject> processTableCellContent(List<IObject> contents, int pageNumber) {
         List<IObject> newContents = TableBorderProcessor.processTableBorders(contents, pageNumber);
         newContents = TextLineProcessor.processTextLines(newContents);
-        List<List<IObject>> contentsList = new ArrayList<>();
+        List<List<IObject>> contentsList = new ArrayList<>(1);
         contentsList.add(newContents);
         ListProcessor.processLists(contentsList, true);
         newContents = contentsList.get(0);
         newContents = ParagraphProcessor.processParagraphs(newContents);
+        newContents = ListProcessor.processListsFromTextNodes(newContents);
         HeadingProcessor.processHeadings(newContents);
         DocumentProcessor.setIDs(newContents);
         CaptionProcessor.processCaptions(newContents);
         contentsList.set(0, newContents);
+        ListProcessor.checkNeighborLists(contentsList);
         LevelProcessor.detectLevels(contentsList);
         newContents = contentsList.get(0);
         return newContents;
