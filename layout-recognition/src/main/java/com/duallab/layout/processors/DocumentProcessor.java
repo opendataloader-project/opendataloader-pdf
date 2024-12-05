@@ -56,8 +56,8 @@ public class DocumentProcessor {
             if (StaticLayoutContainers.isFindHiddenText()) {
                 hiddenTexts.addAll(HiddenTextProcessor.findHiddenText(inputPdfName, pageContents, config.getPassword()));
             }
-            pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber);
             processBackgrounds(pageNumber, pageContents);
+            pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber);
             pageContents = TextLineProcessor.processTextLines(pageContents);
             contents.add(pageContents);
         }

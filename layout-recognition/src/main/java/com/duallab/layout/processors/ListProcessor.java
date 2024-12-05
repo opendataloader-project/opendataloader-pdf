@@ -36,7 +36,12 @@ public class ListProcessor {
     private static final double LIST_ITEM_X_INTERVAL_RATIO = 0.3;
 
     public static void processLists(List<List<IObject>> contents, boolean isTableCell) {
-        List<ListInterval> intervalsList = getListIntervalsList(contents);
+        List<ListInterval> intervalsList = getTextLabelListIntervals(contents);
+        for (ListInterval interval : intervalsList) {
+            for (ListItemInfo info : interval.getListItemsInfos()) {
+                ((ListItemTextInfo)info).getListItemValue().setListLine(true);
+            }
+        }
         for (ListInterval interval : intervalsList) {
 //            if (interval.getNumberOfColumns() > 1/*== interval.getNumberOfListItems()*/) {//to fix bounding box for multi-column lists
 //                continue;
@@ -84,7 +89,7 @@ public class ListProcessor {
         DocumentProcessor.setIDs(contents);
     }
     
-    private static List<ListInterval> getListIntervalsList(List<List<IObject>> contents) {
+    private static List<ListInterval> getTextLabelListIntervals(List<List<IObject>> contents) {
         Stack<List<ListItemTextInfo>> stack = new Stack<>();
         Stack<Double> leftStack = new Stack<>();
         leftStack.push(-Double.MAX_VALUE);
@@ -205,6 +210,9 @@ public class ListProcessor {
             return false;
         }
         if (BulletedParagraphUtils.isBulletedLine(nextLine)) {
+            return false;
+        }
+        if (nextLine.isListLine()) {
             return false;
         }
         return true;
