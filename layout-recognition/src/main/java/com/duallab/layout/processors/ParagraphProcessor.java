@@ -145,7 +145,8 @@ public class ParagraphProcessor {
         double probability = getDifferentLinesProbability(previousBlock, nextBlock);
         return textAlignment == TextAlignment.LEFT && probability > DIFFERENT_LINES_PROBABILITY &&
                 (previousBlock.getLinesNumber() == 1 || previousBlock.getTextAlignment() == TextAlignment.LEFT) &&
-                (nextBlock.getLinesNumber() == 1 || nextBlock.getTextAlignment() == TextAlignment.LEFT);
+                (nextBlock.getLinesNumber() == 1 || nextBlock.getTextAlignment() == TextAlignment.LEFT) && 
+                !BulletedParagraphUtils.isLabeledLine(nextBlock.getFirstLine());
     }
 
     private static List<TextBlock> detectFirstLinesOfParagraphWithLeftAlignments(List<TextBlock> textBlocks) {
@@ -180,8 +181,10 @@ public class ParagraphProcessor {
         double probability = getDifferentLinesProbability(previousBlock, nextBlock);
         return previousBlock.getLinesNumber() == 1 && previousBlock.getLastLine().getLeftX() < nextBlock.getFirstLine().getLeftX() &&
                 CaptionUtils.areOverlapping(previousBlock.getLastLine(), nextBlock.getFirstLine().getBoundingBox()) &&
-                nextBlock.getTextAlignment() == TextAlignment.LEFT && !nextBlock.isHasStartLine() && probability > DIFFERENT_LINES_PROBABILITY &&
-                BulletedParagraphUtils.isLabeledLine(previousBlock.getFirstLine());
+                (nextBlock.getTextAlignment() == TextAlignment.LEFT || nextBlock.getLinesNumber() == 1) && 
+                !nextBlock.isHasStartLine() && probability > DIFFERENT_LINES_PROBABILITY &&
+                BulletedParagraphUtils.isLabeledLine(previousBlock.getFirstLine()) && 
+                !BulletedParagraphUtils.isLabeledLine(nextBlock.getFirstLine());
     }
 
     private static List<TextBlock> detectParagraphsWithRightAlignments(List<TextBlock> textBlocks) {
