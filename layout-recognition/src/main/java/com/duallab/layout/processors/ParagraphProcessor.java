@@ -36,6 +36,7 @@ public class ParagraphProcessor {
         blocks = detectFirstAndLastLinesOfParagraphsWithJustifyAlignments(blocks);
         blocks = detectParagraphsWithLeftAlignments(blocks);
         blocks = detectFirstLinesOfParagraphWithLeftAlignments(blocks);
+        blocks = detectBulletedParagraphsWithLeftAlignments(blocks);
         blocks = detectParagraphsWithRightAlignments(blocks);
         blocks = processOtherLines(blocks);
         return getContentsWithDetectedParagraphs(contents, blocks);
@@ -175,6 +176,14 @@ public class ParagraphProcessor {
                 nextBlock.getTextAlignment() == TextAlignment.LEFT && !nextBlock.isHasStartLine() && probability > DIFFERENT_LINES_PROBABILITY;
     }
 
+    private static boolean isFirstLineOfBulletedParagraphWithLeftAlignment(TextBlock previousBlock, TextBlock nextBlock) {
+        double probability = getDifferentLinesProbability(previousBlock, nextBlock);
+        return previousBlock.getLinesNumber() == 1 && previousBlock.getLastLine().getLeftX() < nextBlock.getFirstLine().getLeftX() &&
+                CaptionUtils.areOverlapping(previousBlock.getLastLine(), nextBlock.getFirstLine().getBoundingBox()) &&
+                nextBlock.getTextAlignment() == TextAlignment.LEFT && !nextBlock.isHasStartLine() && probability > DIFFERENT_LINES_PROBABILITY &&
+                BulletedParagraphUtils.isLabeledLine(previousBlock.getFirstLine());
+    }
+
     private static List<TextBlock> detectParagraphsWithRightAlignments(List<TextBlock> textBlocks) {
         List<TextBlock> newBlocks = new ArrayList<>();
         if (!textBlocks.isEmpty()) {
@@ -187,6 +196,27 @@ public class ParagraphProcessor {
                 if (areLinesOfParagraphsWithRightAlignments(previousBlock, nextBlock)) {
                     previousBlock.add(nextBlock.getLines());
                     previousBlock.setTextAlignment(TextAlignment.RIGHT);
+                } else {
+                    newBlocks.add(nextBlock);
+                }
+            }
+        }
+        return newBlocks;
+    }
+
+    private static List<TextBlock> detectBulletedParagraphsWithLeftAlignments(List<TextBlock> textBlocks) {
+        List<TextBlock> newBlocks = new ArrayList<>();
+        if (!textBlocks.isEmpty()) {
+            newBlocks.add(textBlocks.get(0));
+        }
+        if (textBlocks.size() > 1) {
+            for (int i = 1; i < textBlocks.size(); i++) {
+                TextBlock previousBlock = newBlocks.get(newBlocks.size() - 1);
+                TextBlock nextBlock = textBlocks.get(i);
+                if (isFirstLineOfBulletedParagraphWithLeftAlignment(previousBlock, nextBlock)) {
+                    previousBlock.add(nextBlock.getLines());
+                    previousBlock.setTextAlignment(TextAlignment.LEFT);
+                    previousBlock.setHasStartLine(true);
                 } else {
                     newBlocks.add(nextBlock);
                 }
@@ -220,7 +250,7 @@ public class ParagraphProcessor {
                 probability > DIFFERENT_LINES_PROBABILITY &&
                 (previousBlock.getLinesNumber() == 1 || previousBlock.getTextAlignment() == null) &&
                 (nextBlock.getLinesNumber() == 1 || nextBlock.getTextAlignment() == null) && 
-                !BulletedParagraphUtils.isBulletedLine(nextBlock.getFirstLine());
+                !BulletedParagraphUtils.isLabeledLine(nextBlock.getFirstLine());
     }
     
     private static boolean isFirstLineOfBlock(TextBlock previousBlock, TextBlock nextBlock, TextAlignment textAlignment,

@@ -216,7 +216,7 @@ public class ListProcessor {
         if (nextLine.getLeftX() <= listLine.getLeftX()) {
             return false;
         }
-        if (BulletedParagraphUtils.isBulletedLine(nextLine)) {
+        if (BulletedParagraphUtils.isLabeledLine(nextLine)) {
             return false;
         }
         if (nextLine.isListLine()) {

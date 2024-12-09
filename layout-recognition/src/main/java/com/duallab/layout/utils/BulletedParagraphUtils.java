@@ -18,7 +18,12 @@ public class BulletedParagraphUtils {
             }
 
     public static boolean isBulletedLine(TextLine textLine) {
-        char character = textLine.getValue().charAt(0);
+        return isLabeledLine(textLine);
+    }
+
+    public static boolean isLabeledLine(TextLine textLine) {
+        String value = textLine.getValue();
+        char character = value.charAt(0);
         return POSSIBLE_LABELS.indexOf(character) != -1;
     }
 }
