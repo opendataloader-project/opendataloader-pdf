@@ -126,12 +126,16 @@ public class LevelProcessor {
         }
 
         public static boolean areSameLevelsInfosIgnoringBoundingBoxes(LevelInfo levelInfo1, LevelInfo levelInfo2) {
-            if (!Objects.equals(levelInfo1.label, levelInfo2.label) && 
-                    (!Objects.equals(levelInfo1.numberingStyle, levelInfo2.numberingStyle) || 
-                            !Objects.equals(levelInfo1.commonPrefix, levelInfo2.commonPrefix))) {
-                return false;
+            if (levelInfo1.isList && levelInfo2.isList) {
+                if (Objects.equals(levelInfo1.numberingStyle, levelInfo2.numberingStyle) &&
+                        Objects.equals(levelInfo1.commonPrefix, levelInfo2.commonPrefix)) {
+                    return true;
+                }
             }
-            return true;
+            if (Objects.equals(levelInfo1.label, levelInfo2.label)) {
+                return true;
+            }
+            return false;
         }
     }
 }
