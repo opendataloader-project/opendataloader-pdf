@@ -116,7 +116,6 @@ public class DocumentProcessor {
         StaticContainers.setKeepLineBreaks(config.isKeepLineBreaks());
         StaticLayoutContainers.setCurrentContentId(1);
         StaticResources.setPassword(config.getPassword());
-
     }
 
     public static void setIDs(List<IObject> contents) {

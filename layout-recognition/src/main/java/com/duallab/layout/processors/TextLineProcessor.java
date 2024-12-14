@@ -9,10 +9,13 @@ package com.duallab.layout.processors;
 
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
+import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ListUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +46,32 @@ public class TextLineProcessor {
                 newContents.add(content);
             }
         }
+        linkTextLinesWithConnectedLineArtBullet(newContents);
         return newContents;
+    }
+    
+    private static void linkTextLinesWithConnectedLineArtBullet(List<IObject> contents) {
+        LineArtChunk lineArtChunk = null;
+        for (IObject content : contents) {
+            if (content instanceof LineArtChunk) {
+                lineArtChunk = (LineArtChunk) content;
+                continue;
+            }
+            if (content instanceof TableBorder) {
+                lineArtChunk = null;
+            }
+            if (content instanceof TextLine && lineArtChunk != null) {
+                TextLine textLine = (TextLine) content;
+                if (isLineConnectedWithLineArt(textLine, lineArtChunk)) {
+                    textLine.setConnectedLineArtLabel(lineArtChunk);
+                }
+                lineArtChunk = null;
+            }
+        }
+    }
+    
+    private static boolean isLineConnectedWithLineArt(TextLine textLine, LineArtChunk lineArt) {
+        return lineArt.getRightX() <= textLine.getLeftX() && lineArt.getBoundingBox().getHeight() <
+                ListUtils.LIST_LABEL_HEIGHT_EPSILON * textLine.getBoundingBox().getHeight();
     }
 }

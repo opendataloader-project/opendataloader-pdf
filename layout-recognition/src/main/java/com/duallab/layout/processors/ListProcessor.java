@@ -40,7 +40,7 @@ public class ListProcessor {
         List<ListInterval> intervalsList = getTextLabelListIntervals(contents);
         for (ListInterval interval : intervalsList) {
             for (ListItemInfo info : interval.getListItemsInfos()) {
-                ((ListItemTextInfo)info).getListItemValue().setListLine(true);
+                ((ListItemTextInfo) info).getListItemValue().setListLine(true);
             }
         }
         for (ListInterval interval : intervalsList) {
