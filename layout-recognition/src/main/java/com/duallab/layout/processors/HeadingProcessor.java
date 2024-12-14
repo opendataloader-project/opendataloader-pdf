@@ -13,6 +13,7 @@ import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.text.TextStyle;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
@@ -25,12 +26,7 @@ public class HeadingProcessor {
     public static void processHeadings(List<IObject> contents) {
         List<SemanticTextNode> textNodes = new LinkedList<>();
         for (IObject content : contents) {
-            if (content instanceof SemanticTextNode) {
-                SemanticTextNode textNode = (SemanticTextNode) content;
-                if (!textNode.isSpaceNode()) {
-                    textNodes.add(textNode);
-                }
-            }
+            processContent(textNodes, content);
         }
         for (int index = 0; index < textNodes.size() - 1; index++) {
             SemanticTextNode textNode = textNodes.get(index);
@@ -41,12 +37,41 @@ public class HeadingProcessor {
                 textNode.setSemanticType(SemanticType.HEADING);
             }
         }
+        setHeadings(contents);
+    }
+    
+    private static void processContent(List<SemanticTextNode> textNodes, IObject content) {
+        if (content instanceof SemanticTextNode) {
+            SemanticTextNode textNode = (SemanticTextNode) content;
+            if (!textNode.isSpaceNode()) {
+                textNodes.add(textNode);
+            }
+        }
+        if (content instanceof TableBorder) {
+            TableBorder table = (TableBorder) content;
+            if (table.isTextBlock()) {
+                List<IObject> contents = table.getCell(0, 0).getContents();
+                for (IObject textBlockContent : contents) {
+                    processContent(textNodes, textBlockContent);
+                }
+            }
+        }
+    }
+    
+    private static void setHeadings(List<IObject> contents) {
         for (int index = 0; index < contents.size(); index++) {
             IObject content = contents.get(index);
             if (content instanceof SemanticTextNode && ((INode)content).getSemanticType() == SemanticType.HEADING) {
                 SemanticHeading heading = new SemanticHeading((SemanticTextNode) content);
                 contents.set(index, heading);
                 StaticLayoutContainers.getHeadings().add(heading);
+            }
+            if (content instanceof TableBorder) {
+                TableBorder table = (TableBorder) content;
+                if (table.isTextBlock()) {
+                    List<IObject> textBlockContents = table.getCell(0, 0).getContents();
+                    setHeadings(textBlockContents);
+                }
             }
         }
     }
