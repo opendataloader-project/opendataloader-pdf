@@ -1,11 +1,12 @@
 package com.duallab.layout.processors;
 
 import com.duallab.layout.utils.BulletedParagraphUtils;
+import com.duallab.layout.utils.levels.*;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
 import org.verapdf.wcag.algorithms.entities.lists.PDFList;
-import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 
 import java.util.*;
 import java.util.logging.Level;
@@ -33,13 +34,19 @@ public class LevelProcessor {
                         } else {
                             index = previousList.getLevel() - startIndex - 1;
                         }
-                    } 
-                    if (index == null) {
-                        levelInfo = new LevelInfo((PDFList) content);
                     }
+                    if (index == null) {
+                        levelInfo = new ListLevelInfo((PDFList) content);
+                    }
+                } else if (content instanceof TableBorder && !((TableBorder)content).isTextBlock()) {
+                    levelInfo = new TableLevelInfo((TableBorder) content);
                 } else if (content instanceof SemanticTextNode) {
                     if (BulletedParagraphUtils.isBulletedParagraph((SemanticTextNode) content)) {
-                        levelInfo = new LevelInfo((SemanticTextNode) content);
+                        if (BulletedParagraphUtils.isBulletedLineArtParagraph((SemanticTextNode) content)) {
+                            levelInfo = new LineArtBulletParagraphLevelInfo((SemanticTextNode) content);
+                        } else {
+                            levelInfo = new TextBulletParagraphLevelInfo((SemanticTextNode) content);
+                        }
                     }
                 }
                 if (levelInfo == null && index == null) {
@@ -76,66 +83,4 @@ public class LevelProcessor {
         return null;
     }
 
-    public static class LevelInfo {
-        private final double left;
-        private final double right;
-        private final String label;
-        private final boolean isList;
-        private final String commonPrefix;
-        private final String numberingStyle;
-        
-        public LevelInfo(double left, double right, String label) {
-            this.left = left;
-            this.right = right;
-            this.label = label;
-            this.isList = false;
-            commonPrefix = null;
-            numberingStyle = null;
-        }
-        
-        public LevelInfo(SemanticTextNode semanticTextNode) {
-            this.left = semanticTextNode.getFirstLine().getLeftX();
-            this.right = semanticTextNode.getRightX();
-            this.label = BulletedParagraphUtils.getLabel(semanticTextNode);
-            this.isList = false;
-            commonPrefix = null;
-            numberingStyle = null;
-        }
-        
-        public LevelInfo(PDFList pdfList) {
-            this.left = pdfList.getFirstListItem().getFirstLine().getLeftX();
-            this.right = pdfList.getRightX();
-            this.label = pdfList.getFirstListItem().getFirstLine().getValue().substring(0, 1);
-            this.isList = true;
-            commonPrefix = pdfList.getCommonPrefix();
-            numberingStyle = pdfList.getNumberingStyle();
-        }
-        
-        public static boolean areSameLevelsInfos(LevelInfo levelInfo1, LevelInfo levelInfo2) {
-            if (!areSameLevelsInfosIgnoringBoundingBoxes(levelInfo1, levelInfo2)) {
-                return false;
-            }
-            if (levelInfo1.right < levelInfo2.left || levelInfo2.right < levelInfo1.left) {
-
-            } else {
-                if (!NodeUtils.areCloseNumbers(levelInfo1.left, levelInfo2.left)) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        public static boolean areSameLevelsInfosIgnoringBoundingBoxes(LevelInfo levelInfo1, LevelInfo levelInfo2) {
-            if (levelInfo1.isList && levelInfo2.isList) {
-                if (Objects.equals(levelInfo1.numberingStyle, levelInfo2.numberingStyle) &&
-                        Objects.equals(levelInfo1.commonPrefix, levelInfo2.commonPrefix)) {
-                    return true;
-                }
-            }
-            if (Objects.equals(levelInfo1.label, levelInfo2.label)) {
-                return true;
-            }
-            return false;
-        }
-    }
 }
