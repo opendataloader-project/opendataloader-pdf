@@ -26,6 +26,8 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.utils.*;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ListProcessor {
 
