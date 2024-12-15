@@ -32,7 +32,7 @@ public class LevelProcessor {
                         if (previousList.getLevel() == null) {
                             LOGGER.log(Level.WARNING, "List without detected level");
                         } else {
-                            index = previousList.getLevel() - startIndex - 1;
+                            index = Integer.getInteger(previousList.getLevel()) - startIndex - 1;
                         }
                     }
                     if (index == null) {
@@ -56,10 +56,10 @@ public class LevelProcessor {
                     index = getLevelInfoIndex(levelInfos, levelInfo);
                 }
                 if (index == null) {
-                    content.setLevel(levelInfos.size() + 1 + startIndex);
+                    content.setLevel(String.valueOf(levelInfos.size() + 1 + startIndex));
                     levelInfos.add(levelInfo);
                 } else {
-                    content.setLevel(index + 1 + startIndex);
+                    content.setLevel(String.valueOf(index + 1 + startIndex));
                     while (levelInfos.size() > index + 1) {
                         levelInfos.pop();
                     }

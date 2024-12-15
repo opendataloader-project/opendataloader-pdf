@@ -22,7 +22,7 @@ public class SerializerUtil {
             jsonGenerator.writeNumberField(JsonName.ID, object.getRecognizedStructureId());
         }
         if (object.getLevel() != null) {
-            jsonGenerator.writeNumberField(JsonName.LEVEL, object.getLevel());
+            jsonGenerator.writeStringField(JsonName.LEVEL, object.getLevel());
         }
         jsonGenerator.writeNumberField(JsonName.PAGE_NUMBER, object.getPageNumber() + 1);
         jsonGenerator.writeArrayFieldStart(JsonName.BOUNDING_BOX);
