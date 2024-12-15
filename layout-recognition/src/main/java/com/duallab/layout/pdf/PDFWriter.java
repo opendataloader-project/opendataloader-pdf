@@ -8,10 +8,17 @@
 package com.duallab.layout.pdf;
 
 import com.duallab.layout.processors.DocumentProcessor;
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.COSString;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.documentinterchange.markedcontent.PDPropertyList;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
+import org.apache.pdfbox.pdmodel.graphics.optionalcontent.PDOptionalContentGroup;
+import org.apache.pdfbox.pdmodel.graphics.optionalcontent.PDOptionalContentProperties;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationSquareCircle;
 import org.verapdf.wcag.algorithms.entities.*;
@@ -31,29 +38,35 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainer
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class PDFWriter {
+
+    private static final Map<PDFLayer, PDOptionalContentGroup> optionalContents = new HashMap<>();
     
     private static final List<List<PDAnnotation>> annotations = new ArrayList<>();
     
     public static void updatePDF(File inputPDF, String password, String outputFolder, List<List<IObject>> contents, 
                                  List<TextChunk> hiddenTextChunks) throws IOException {
         try (PDDocument document = PDDocument.load(inputPDF, password)) {
+            createOptContentsForAnnotations(document);
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 annotations.add(new ArrayList<>());
                 for (IObject content : contents.get(pageNumber)) {
-                    drawContent(content);
+                    drawContent(content, PDFLayer.CONTENT);
                 }
             }
             for (TextChunk textChunk : hiddenTextChunks) {
                 draw(textChunk.getBoundingBox(), getColor(SemanticType.FIGURE),
-                        String.format("Hidden text, value = \"%s\"", textChunk.getValue()), null, null, null);
+                        String.format("Hidden text, value = \"%s\"", textChunk.getValue()), null, null, null, PDFLayer.HIDDEN_TEXT);
             }
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 document.getPage(pageNumber).getAnnotations().addAll(annotations.get(pageNumber));
             }
             annotations.clear();
+            optionalContents.clear();
             document.setAllSecurityToBeRemoved(true);
 
             String outputFileName = outputFolder + File.separator +
@@ -63,23 +76,23 @@ public class PDFWriter {
         }
     }
     
-    private static void drawContent(IObject content) throws IOException {
-        drawContent(content, null);
+    private static void drawContent(IObject content, PDFLayer layer) throws IOException {
+        drawContent(content, layer, null);
     }
 
-    private static void drawContent(IObject content, PDAnnotation linkedAnnot) throws IOException {
-        if (content instanceof LineChunk) {
+    private static void drawContent(IObject content, PDFLayer layer, PDAnnotation linkedAnnot) throws IOException {
+        if ((content instanceof LineChunk)) {
             return;
         }
         PDAnnotation annot = draw(content.getBoundingBox(), getColor(content), getContents(content),
-                content.getRecognizedStructureId(), linkedAnnot, content.getLevel());
+                content.getRecognizedStructureId(), linkedAnnot, content.getLevel(), layer);
         if (content instanceof TableBorder) {
             drawTableCells((TableBorder) content, annot);
         } else if (content instanceof PDFList) {
             drawListItems((PDFList) content, annot);
         } else if (content instanceof SemanticHeaderOrFooter) {
             for (IObject contentItem : ((SemanticHeaderOrFooter)content).getContents()) {
-                drawContent(contentItem, annot);
+                drawContent(contentItem, PDFLayer.HEADER_AND_FOOTER_CONTENT, annot);
             }
         }
     }
@@ -87,7 +100,7 @@ public class PDFWriter {
     private static void drawTableCells(TableBorder table, PDAnnotation annot) throws IOException {
         if (table.isTextBlock()) {
             for (IObject content : table.getCell(0, 0).getContents()) {
-                drawContent(content);
+                drawContent(content, PDFLayer.TEXT_BLOCK_CONTENT);
             }
             return;
         }
@@ -104,9 +117,9 @@ public class PDFWriter {
                     }
                     String cellValue = String.format("Table cell: row number %s, column number %s, row span %s, column span %s, text content \"%s\"",
                             cell.getRowNumber() + 1, cell.getColNumber() + 1, cell.getRowSpan(), cell.getColSpan(), contentValue);
-                    draw(cell.getBoundingBox(), getColor(SemanticType.TABLE), cellValue, null, annot, cell.getLevel());
+                    draw(cell.getBoundingBox(), getColor(SemanticType.TABLE), cellValue, null, annot, cell.getLevel(), PDFLayer.TABLE_CELLS);
                     for (IObject content : cell.getContents()) {
-                        drawContent(content);
+                        drawContent(content, PDFLayer.TABLE_CONTENT);
                     }
                 }
             }
@@ -116,15 +129,15 @@ public class PDFWriter {
     private static void drawListItems(PDFList list, PDAnnotation annot) throws IOException {
         for (ListItem listItem : list.getListItems()) {
             String contentValue = String.format("List item: text content \"%s\"", listItem.toString());
-            draw(listItem.getBoundingBox(), getColor(SemanticType.LIST), contentValue, null, annot, listItem.getLevel());
+            draw(listItem.getBoundingBox(), getColor(SemanticType.LIST), contentValue, null, annot, listItem.getLevel(), PDFLayer.LIST_ITEMS);
             for (IObject content : listItem.getContents()) {
-                drawContent(content);
+                drawContent(content, PDFLayer.LIST_CONTENT);
             }
         }
     }
 
     public static PDAnnotation draw(BoundingBox boundingBox, float[] colorArray,
-                                    String contents, Long id, PDAnnotation linkedAnnot, Integer level) {
+                                    String contents, Long id, PDAnnotation linkedAnnot, String level, PDFLayer layerName) {
         PDAnnotationSquareCircle square = new PDAnnotationSquareCircle(PDAnnotationSquareCircle.SUB_TYPE_SQUARE);
         square.setRectangle(new PDRectangle((float)boundingBox.getLeftX(), (float)boundingBox.getBottomY(),
                 (float)boundingBox.getWidth(), (float)boundingBox.getHeight()));
@@ -136,6 +149,7 @@ public class PDFWriter {
         if (linkedAnnot != null) {
             square.setInReplyTo(linkedAnnot);
         }
+        square.setOptionalContent(optionalContents.get(layerName));
         annotations.get(boundingBox.getPageNumber()).add(square);
         return square;
     }
@@ -228,5 +242,19 @@ public class PDFWriter {
             return new float[]{0.9f, 0.9f, 0.9f};
         }
         return null;
+    }
+    
+    private static void createOptContentsForAnnotations(PDDocument document) {
+        PDDocumentCatalog catalog = document.getDocumentCatalog();
+        PDOptionalContentProperties pdOptionalContentProperties = new PDOptionalContentProperties();
+        catalog.setOCProperties(pdOptionalContentProperties);
+        for (PDFLayer name : PDFLayer.values()) {
+            COSDictionary cosDictionary = new COSDictionary();
+            cosDictionary.setItem(COSName.TYPE, COSName.OCG);
+            cosDictionary.setItem(COSName.NAME, new COSString(name.getValue()));
+            PDOptionalContentGroup optionalContent = (PDOptionalContentGroup)PDPropertyList.create(cosDictionary);
+            pdOptionalContentProperties.addGroup(optionalContent);
+            optionalContents.put(name, optionalContent);
+        }
     }
 }
