@@ -51,7 +51,6 @@ public class PDFWriter {
     public static void updatePDF(File inputPDF, String password, String outputFolder, List<List<IObject>> contents, 
                                  List<TextChunk> hiddenTextChunks) throws IOException {
         try (PDDocument document = PDDocument.load(inputPDF, password)) {
-            createOptContentsForAnnotations(document);
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 annotations.add(new ArrayList<>());
                 for (IObject content : contents.get(pageNumber)) {
@@ -66,7 +65,7 @@ public class PDFWriter {
                 document.getPage(pageNumber).getAnnotations().addAll(annotations.get(pageNumber));
             }
             annotations.clear();
-            optionalContents.clear();
+            createOptContentsForAnnotations(document);
             document.setAllSecurityToBeRemoved(true);
 
             String outputFileName = outputFolder + File.separator +
@@ -149,7 +148,7 @@ public class PDFWriter {
         if (linkedAnnot != null) {
             square.setInReplyTo(linkedAnnot);
         }
-        square.setOptionalContent(optionalContents.get(layerName));
+        square.setOptionalContent(getOptionalContent(layerName));
         annotations.get(boundingBox.getPageNumber()).add(square);
         return square;
     }
@@ -245,16 +244,27 @@ public class PDFWriter {
     }
     
     private static void createOptContentsForAnnotations(PDDocument document) {
+        if (optionalContents.isEmpty()) {
+            return;
+        }
         PDDocumentCatalog catalog = document.getDocumentCatalog();
         PDOptionalContentProperties pdOptionalContentProperties = new PDOptionalContentProperties();
         catalog.setOCProperties(pdOptionalContentProperties);
-        for (PDFLayer name : PDFLayer.values()) {
+        for (PDOptionalContentGroup group : optionalContents.values()) {
+            pdOptionalContentProperties.addGroup(group);
+        }
+        optionalContents.clear();
+    }
+
+    public static PDOptionalContentGroup getOptionalContent(PDFLayer layer) {
+        PDOptionalContentGroup group = optionalContents.get(layer);
+        if (group == null) {
             COSDictionary cosDictionary = new COSDictionary();
             cosDictionary.setItem(COSName.TYPE, COSName.OCG);
-            cosDictionary.setItem(COSName.NAME, new COSString(name.getValue()));
-            PDOptionalContentGroup optionalContent = (PDOptionalContentGroup)PDPropertyList.create(cosDictionary);
-            pdOptionalContentProperties.addGroup(optionalContent);
-            optionalContents.put(name, optionalContent);
+            cosDictionary.setItem(COSName.NAME, new COSString(layer.getValue()));
+            group = (PDOptionalContentGroup)PDPropertyList.create(cosDictionary);
+            optionalContents.put(layer, group);
         }
+        return group;
     }
 }
