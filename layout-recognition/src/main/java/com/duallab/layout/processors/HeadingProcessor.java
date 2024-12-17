@@ -30,6 +30,9 @@ public class HeadingProcessor {
         }
         for (int index = 0; index < textNodes.size() - 1; index++) {
             SemanticTextNode textNode = textNodes.get(index);
+            if (textNode.getSemanticType() == SemanticType.HEADING) {
+                continue;
+            }
             double probability = NodeUtils.headingProbability(textNode,
                     index != 0 ? textNodes.get(index - 1) : null,
                     textNodes.get(index + 1) , textNodes.get(index));
@@ -61,7 +64,7 @@ public class HeadingProcessor {
     private static void setHeadings(List<IObject> contents) {
         for (int index = 0; index < contents.size(); index++) {
             IObject content = contents.get(index);
-            if (content instanceof SemanticTextNode && ((INode)content).getSemanticType() == SemanticType.HEADING) {
+            if (content instanceof SemanticTextNode && ((INode)content).getSemanticType() == SemanticType.HEADING && !(content instanceof SemanticHeading)) {
                 SemanticHeading heading = new SemanticHeading((SemanticTextNode) content);
                 contents.set(index, heading);
                 StaticLayoutContainers.getHeadings().add(heading);
@@ -76,7 +79,7 @@ public class HeadingProcessor {
         }
     }
 
-    public static void detectHeadingsLevels(List<List<IObject>> contents) {
+    public static void detectHeadingsLevels() {
         SortedMap<TextStyle, Set<SemanticHeading>> map = new TreeMap<>();
         List<SemanticHeading> headings = StaticLayoutContainers.getHeadings();
         for (SemanticHeading heading : headings) {

@@ -89,7 +89,6 @@ public class TableBorderProcessor {
         CaptionProcessor.processCaptions(newContents);
         contentsList.set(0, newContents);
         ListProcessor.checkNeighborLists(contentsList);
-        LevelProcessor.detectLevels(contentsList);
         newContents = contentsList.get(0);
         return newContents;
     }

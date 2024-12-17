@@ -74,7 +74,7 @@ public class DocumentProcessor {
         }
         ListProcessor.checkNeighborLists(contents);
         TableBorderProcessor.checkNeighborTables(contents);
-        HeadingProcessor.detectHeadingsLevels(contents);
+        HeadingProcessor.detectHeadingsLevels();
         LevelProcessor.detectLevels(contents);
         File inputPDF = new File(inputPdfName);
         new File(config.getOutputFolder()).mkdirs();

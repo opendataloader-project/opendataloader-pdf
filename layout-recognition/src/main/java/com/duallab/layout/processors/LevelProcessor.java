@@ -7,6 +7,8 @@ import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
 import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 
 import java.util.*;
 import java.util.logging.Level;
@@ -32,14 +34,18 @@ public class LevelProcessor {
                         if (previousList.getLevel() == null) {
                             LOGGER.log(Level.WARNING, "List without detected level");
                         } else {
-                            index = Integer.getInteger(previousList.getLevel()) - startIndex - 1;
+                            index = Integer.parseInt(previousList.getLevel()) - startIndex - 1;
                         }
                     }
                     if (index == null) {
                         levelInfo = new ListLevelInfo((PDFList) content);
                     }
-                } else if (content instanceof TableBorder && !((TableBorder)content).isTextBlock()) {
-                    levelInfo = new TableLevelInfo((TableBorder) content);
+                } else if (content instanceof TableBorder) {
+                    TableBorder table = (TableBorder)content;
+                    setLevelForTable(table);
+                    if (!table.isTextBlock()) {
+                        levelInfo = new TableLevelInfo(table);
+                    }
                 } else if (content instanceof SemanticTextNode) {
                     if (BulletedParagraphUtils.isBulletedParagraph((SemanticTextNode) content)) {
                         if (BulletedParagraphUtils.isBulletedLineArtParagraph((SemanticTextNode) content)) {
@@ -81,6 +87,18 @@ public class LevelProcessor {
             }
         }
         return null;
+    }
+
+    public static void setLevelForTable(TableBorder tableBorder) {
+        for (int rowNumber = 0; rowNumber < tableBorder.getNumberOfRows(); rowNumber++) {
+            TableBorderRow row = tableBorder.getRow(rowNumber);
+            for (int colNumber = 0; colNumber < tableBorder.getNumberOfColumns(); colNumber++) {
+                TableBorderCell tableBorderCell = row.getCell(colNumber);
+                if (tableBorderCell.getRowNumber() == rowNumber && tableBorderCell.getColNumber() == colNumber) {
+                    setLevels(Collections.singletonList(tableBorderCell.getContents()), 0);
+                }
+            }
+        }
     }
 
 }
