@@ -3,6 +3,7 @@ package com.duallab.layout.processors;
 import com.duallab.layout.utils.BulletedParagraphUtils;
 import com.duallab.layout.utils.levels.*;
 import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
 import org.verapdf.wcag.algorithms.entities.lists.PDFList;
@@ -17,6 +18,8 @@ import java.util.logging.Logger;
 public class LevelProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(LevelProcessor.class.getCanonicalName());
+    
+    private static boolean isDocTitleSet = false;
 
     public static void detectLevels(List<List<IObject>> contents) {
         setLevels(contents, 0);
@@ -26,6 +29,10 @@ public class LevelProcessor {
         Stack<LevelInfo> levelInfos = new Stack<>();
         for (List<IObject> pageContents : contents) {
             for (IObject content : pageContents) {
+                if (content instanceof SemanticHeading) {
+                    setLevelForHeading((SemanticHeading)content);
+                    continue;
+                }
                 LevelInfo levelInfo = null;
                 Integer index = null;
                 if (content instanceof PDFList) {
@@ -76,6 +83,16 @@ public class LevelProcessor {
                     }
                 }
             }
+        }
+        isDocTitleSet = false;
+    }
+
+    private static void setLevelForHeading(SemanticHeading heading) {
+        if (heading.getHeadingLevel() == 1 && !isDocTitleSet) {
+            heading.setLevel("Doctitle");
+            isDocTitleSet = true;
+        } else {
+            heading.setLevel("Subtitle");
         }
     }
 
