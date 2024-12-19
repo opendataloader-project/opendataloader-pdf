@@ -46,6 +46,9 @@ public class LevelInfo {
             if (Objects.equals(textBulletParagraphLevelInfo1.getLabel(), textBulletParagraphLevelInfo2.getLabel())) {
                 return true;
             }
+            if (Objects.equals(textBulletParagraphLevelInfo1.getLabelRegex(), textBulletParagraphLevelInfo2.getLabelRegex())) {
+                return true;
+            }
         }
         if (levelInfo1.isLineArtBulletParagraph() && levelInfo2.isLineArtBulletParagraph()) {
             LineArtBulletParagraphLevelInfo lineArtBulletParagraphLevelInfo1 = (LineArtBulletParagraphLevelInfo)levelInfo1;

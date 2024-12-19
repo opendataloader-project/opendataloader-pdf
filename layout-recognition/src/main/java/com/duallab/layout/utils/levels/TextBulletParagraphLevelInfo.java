@@ -5,9 +5,11 @@ import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 
 public class TextBulletParagraphLevelInfo extends LevelInfo {
     private final String label;
+    private final String labelRegex;
 
     public TextBulletParagraphLevelInfo(SemanticTextNode semanticTextNode) {
         super(semanticTextNode.getFirstLine().getLeftX(), semanticTextNode.getRightX());
+        this.labelRegex = BulletedParagraphUtils.getLabelRegex(semanticTextNode);
         this.label = BulletedParagraphUtils.getLabel(semanticTextNode);
     }
     
@@ -18,5 +20,9 @@ public class TextBulletParagraphLevelInfo extends LevelInfo {
 
     public String getLabel() {
         return label;
+    }
+
+    public String getLabelRegex() {
+        return labelRegex;
     }
 }

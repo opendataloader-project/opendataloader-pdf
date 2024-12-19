@@ -157,6 +157,7 @@ public class ListProcessor {
     private static PDFList calculateList(ListInterval interval, int startIndex, int endIndex, List<IObject> pageContents) {
         PDFList list = new PDFList(0L);
         list.setNumberingStyle(interval.getNumberingStyle());
+        list.setCommonPrefix(interval.getCommonPrefix());
         boolean isListSet = false;
         for (int index = startIndex; index <= endIndex; index++) {
             ListItemInfo currentInfo = interval.getListItemsInfos().get(index);

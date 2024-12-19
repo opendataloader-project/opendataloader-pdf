@@ -17,7 +17,7 @@ public class BulletedParagraphUtils {
 
     public static String getLabel(SemanticTextNode semanticTextNode) {
                 return semanticTextNode.getValue().substring(0, 1);
-            }
+    }
 
     public static boolean isBulletedParagraph(SemanticTextNode textNode) {
                 return isBulletedLine(textNode.getFirstLine());
@@ -41,8 +41,6 @@ public class BulletedParagraphUtils {
         }
         for (String regex : BULLET_REGEXES) {
             if (value.matches(regex)) {
-                System.out.println("BULLET");
-                System.out.println(value);
                 return true;
             }
         }
