@@ -8,11 +8,13 @@
 package com.duallab.layout.processors;
 
 import com.duallab.layout.containers.StaticLayoutContainers;
+import com.duallab.layout.utils.BulletedParagraphUtils;
 import org.verapdf.wcag.algorithms.entities.INode;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
+import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.text.TextStyle;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
@@ -22,7 +24,8 @@ import java.util.*;
 public class HeadingProcessor {
 
     private static final double HEADING_PROBABILITY = 0.75;
-
+    private static final double BULLETED_HEADING_PROBABILITY = 0.1;
+    
     public static void processHeadings(List<IObject> contents) {
         List<SemanticTextNode> textNodes = new LinkedList<>();
         for (IObject content : contents) {
@@ -36,6 +39,9 @@ public class HeadingProcessor {
             double probability = NodeUtils.headingProbability(textNode,
                     index != 0 ? textNodes.get(index - 1) : null,
                     textNodes.get(index + 1) , textNodes.get(index));
+            if (BulletedParagraphUtils.isBulletedParagraph(textNode)) {
+                probability += BULLETED_HEADING_PROBABILITY;
+            }
             if (probability > HEADING_PROBABILITY && textNode.getSemanticType() != SemanticType.LIST) {
                 textNode.setSemanticType(SemanticType.HEADING);
             }
@@ -49,8 +55,7 @@ public class HeadingProcessor {
             if (!textNode.isSpaceNode()) {
                 textNodes.add(textNode);
             }
-        }
-        if (content instanceof TableBorder) {
+        } else if (content instanceof TableBorder) {
             TableBorder table = (TableBorder) content;
             if (table.isTextBlock()) {
                 List<IObject> contents = table.getCell(0, 0).getContents();
@@ -58,6 +63,10 @@ public class HeadingProcessor {
                     processContent(textNodes, textBlockContent);
                 }
             }
+        } else if (content instanceof PDFList) {
+            PDFList list = (PDFList) content;
+            SemanticTextNode textNode = new SemanticTextNode();
+            textNode.add(list.getListItems().get(0).getFirstLine());
         }
     }
     

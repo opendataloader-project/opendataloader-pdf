@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class BulletedParagraphUtils {
-    private static final String POSSIBLE_LABELS = "*+-.=‐‑‒–—―•‣․‧※⁃⁎→↳⇒⇨⇾∙■□▢▣▤▥▦▧▨▩▪▬▭▮▯▰▱▲△▴▵▶▷▸▹►▻▼▽▾▿◀◁◂◃◄◅◆◇◈◉◊○◌◍" +
+    private static final String POSSIBLE_LABELS = "∘*+-.=‐‑‒–—―•‣․‧※⁃⁎→↳⇒⇨⇾∙■□▢▣▤▥▦▧▨▩▪▬▭▮▯▰▱▲△▴▵▶▷▸▹►▻▼▽▾▿◀◁◂◃◄◅◆◇◈◉◊○◌◍" +
             "◎●◐◑◒◓◔◕◖◗◘◙◢◣◤◥◦◧◨◩◪◫◬◭◮◯◰◱◲◳◴◵◶◷◸◹◺◻◼◽◾◿★☆☐☑☒☓☛☞♠♡♢♣♤♥♦♧⚪⚫⚬✓✔✕✖✗✘✙✚✛✜✝✞✟✦✧✨❍❏❐❑" +
             "❒❖➔➙➛➜➝➞➟➠➡➢➣➤➥➦➧➨➩➪➭➮➯➱⬛⬜⬝⬞⬟⬠⬡⬢⬣⬤⬥⬦⬧⬨⬩⬪⬫⬬⬭⬮⬯⭐⭑⭒⭓⭔⭕⭖⭗⭘⭙⯀⯁⯂⯃⯄⯅⯆⯇⯈⯌⯍⯎⯏⯐〇" +
             "󰁾󰋪󰋫󰋬󰋭󰋮󰋯󰋰󰋱󰋲󰋳󰋴󰋵󰋶󰋷󰋸󰋹󰋺󰋻󰋼";
@@ -67,6 +67,7 @@ public class BulletedParagraphUtils {
         BULLET_REGEXES.add("^[{]" + KOREAN_NUMBERS_REGEX + "[}].*");
         BULLET_REGEXES.add("^(제\\d+[장조절]).*");
         BULLET_REGEXES.add("^법.(제\\d+조).*");
+        BULLET_REGEXES.add("^[\u0049]\\..*");//"^[Ⅰ-Ⅻ]"
         BULLET_REGEXES.add("^[\u2160-\u216B].*");//"^[Ⅰ-Ⅻ]"
         BULLET_REGEXES.add("^[\u2170-\u217B].*");//"^[ⅰ-ⅻ]"
         BULLET_REGEXES.add("^[\u2460-\u2473].*");//"^[①-⑳]"
