@@ -330,13 +330,23 @@ public class ListProcessor {
                     if (previousList != null) {
                         if (previousList.getNextList() == null && currentList.getPreviousList() == null) {
                             if (isNeighborLists(previousList, currentList, middleContent)) {
-                                PDFList.setListConnected(previousList, currentList);
+                                if (middleContent != null) {
+                                    pageContents.set(middleContent.getIndex(), null);
+                                    addFirstLBodyToList(currentList, middleContent);
+                                }
                                 if (Objects.equals(previousList.getPageNumber(), currentList.getPageNumber()) &&
                                         BoundingBox.areHorizontalOverlapping(previousList.getBoundingBox(), currentList.getBoundingBox())) {
                                     previousList.add(currentList);
                                     pageContents.set(currentList.getIndex(), null);
                                     currentList = null;
+                                } else {
+                                    PDFList.setListConnected(previousList, currentList);
                                 }
+                            }
+                        } else if (Objects.equals(previousList.getNextListId(), currentList.getRecognizedStructureId())) {
+                            if (middleContent != null && isMiddleContentPartOfList(previousList, middleContent, currentList)) {
+                                pageContents.set(middleContent.getIndex(), null);
+                                addFirstLBodyToList(currentList, middleContent);
                             }
                         }
                     }
@@ -379,12 +389,25 @@ public class ListProcessor {
         if (interval.getNumberOfListItems() != textChildrenInfo.size()) {
             return false;
         }
-        if (middleContent != null) {
-            if (middleContent.getLeftX() < currentList.getLeftX()) {
-                return false;
-            }
-            if (!Objects.equals(middleContent.getPageNumber(), currentList.getPageNumber())) {
-                return false;
+        if (middleContent != null && !isMiddleContentPartOfList(previousList, middleContent, currentList)) {
+            return false;
+        }
+        return true;
+    }
+    
+    private static boolean isMiddleContentPartOfList(PDFList previousList, SemanticTextNode middleContent, PDFList currentList) {
+        if (middleContent.getLeftX() < currentList.getLeftX()) {
+            return false;
+        }
+        if (!Objects.equals(middleContent.getPageNumber(), currentList.getPageNumber())) {
+            return false;
+        }
+        for (ListItem listItem : currentList.getListItems()) {
+            if (listItem.getLinesNumber() > 1) {
+                if (!NodeUtils.areCloseNumbers(listItem.getSecondLine().getLeftX(), middleContent.getLeftX())) {
+                    return false;
+                }
+                break;
             }
         }
         return true;
