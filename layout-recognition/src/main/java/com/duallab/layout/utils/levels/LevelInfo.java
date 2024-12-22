@@ -1,5 +1,6 @@
 package com.duallab.layout.utils.levels;
 
+import com.duallab.layout.utils.BulletedParagraphUtils;
 import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
@@ -15,52 +16,51 @@ public class LevelInfo {
     }
 
     public static boolean areSameLevelsInfos(LevelInfo levelInfo1, LevelInfo levelInfo2) {
-        if (!areSameLevelsInfosIgnoringBoundingBoxes(levelInfo1, levelInfo2)) {
-            return false;
-        }
-        if (levelInfo1.right < levelInfo2.left || levelInfo2.right < levelInfo1.left) {
-
-        } else {
-            if (!NodeUtils.areCloseNumbers(levelInfo1.left, levelInfo2.left)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public static boolean areSameLevelsInfosIgnoringBoundingBoxes(LevelInfo levelInfo1, LevelInfo levelInfo2) {
         if (levelInfo1.isTable() || levelInfo2.isTable()) {
             return false;
         }
+        boolean checkBoundingBox = false;
         if (levelInfo1.isList() && levelInfo2.isList()) {
             ListLevelInfo listLevelInfo1 = (ListLevelInfo)levelInfo1;
             ListLevelInfo listLevelInfo2 = (ListLevelInfo)levelInfo2;
             if (Objects.equals(listLevelInfo1.getNumberingStyle(), listLevelInfo2.getNumberingStyle()) &&
                     Objects.equals(listLevelInfo1.getCommonPrefix(), listLevelInfo2.getCommonPrefix())) {
-                return true;
+                checkBoundingBox = true;
             }
-        }
-        if (levelInfo1.isTextBulletParagraph() && levelInfo2.isTextBulletParagraph()) {
+        } else if (levelInfo1.isTextBulletParagraph() && levelInfo2.isTextBulletParagraph()) {
             TextBulletParagraphLevelInfo textBulletParagraphLevelInfo1 = (TextBulletParagraphLevelInfo)levelInfo1;
             TextBulletParagraphLevelInfo textBulletParagraphLevelInfo2 = (TextBulletParagraphLevelInfo)levelInfo2;
             if (Objects.equals(textBulletParagraphLevelInfo1.getLabel(), textBulletParagraphLevelInfo2.getLabel())) {
-                return true;
+                checkBoundingBox = true;
             }
             if (Objects.equals(textBulletParagraphLevelInfo1.getLabelRegex(), textBulletParagraphLevelInfo2.getLabelRegex())) {
-                return true;
+                if (Objects.equals(textBulletParagraphLevelInfo1.getLabelRegex(), BulletedParagraphUtils.KOREAN_CHAPTER_REGEX)) {
+                    return true;
+                }
+                checkBoundingBox = true;
             }
-        }
-        if (levelInfo1.isLineArtBulletParagraph() && levelInfo2.isLineArtBulletParagraph()) {
+        } else if (levelInfo1.isLineArtBulletParagraph() && levelInfo2.isLineArtBulletParagraph()) {
             LineArtBulletParagraphLevelInfo lineArtBulletParagraphLevelInfo1 = (LineArtBulletParagraphLevelInfo)levelInfo1;
             LineArtBulletParagraphLevelInfo lineArtBulletParagraphLevelInfo2 = (LineArtBulletParagraphLevelInfo)levelInfo2;
             LineArtChunk bullet1 = lineArtBulletParagraphLevelInfo1.getBullet();
             LineArtChunk bullet2 = lineArtBulletParagraphLevelInfo2.getBullet();
             if (LineArtChunk.areHaveSameSizes(bullet1, bullet2)) {
-                return true;
+                checkBoundingBox = true;
             }
         }
+        return checkBoundingBox ? checkBoundingBoxes(levelInfo1, levelInfo2) : false;
+    }
 
-        return false;
+    public static boolean checkBoundingBoxes(LevelInfo levelInfo1, LevelInfo levelInfo2) {
+        if (levelInfo1.right < levelInfo2.left || levelInfo2.right < levelInfo1.left) {
+
+        } else {
+            if (!NodeUtils.areCloseNumbers(levelInfo1.left, levelInfo2.left) && 
+                    !NodeUtils.areCloseNumbers(levelInfo1.right, levelInfo2.right)) {
+                return false;
+            }
+        }
+        return true;
     }
     
     public boolean isTable() {

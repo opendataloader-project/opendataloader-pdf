@@ -14,7 +14,8 @@ public class BulletedParagraphUtils {
     private static final Set<String> BULLET_REGEXES = new HashSet<>();
     private static final Set<String> ARABIC_NUMBER_REGEXES = new HashSet<>();
     private static final String KOREAN_NUMBERS_REGEX = "[가나다라마바사아자차카타파하거너더러머버서어저처커터퍼허고노도로모보소오조초코토포호구누두루무부수우주추쿠투푸후그느드르므브스으즈츠크트프흐기니디리미비시이지치키티피히]";
-
+    public static final String KOREAN_CHAPTER_REGEX = "^(제\\d+[장조절]).*";
+    
     public static String getLabel(SemanticTextNode semanticTextNode) {
                 return semanticTextNode.getValue().substring(0, 1);
     }
@@ -65,7 +66,7 @@ public class BulletedParagraphUtils {
         BULLET_REGEXES.add("^<" + KOREAN_NUMBERS_REGEX +">.*");
         BULLET_REGEXES.add("^\\[" + KOREAN_NUMBERS_REGEX + "\\].*");
         BULLET_REGEXES.add("^[{]" + KOREAN_NUMBERS_REGEX + "[}].*");
-        BULLET_REGEXES.add("^(제\\d+[장조절]).*");
+        BULLET_REGEXES.add(KOREAN_CHAPTER_REGEX);
         BULLET_REGEXES.add("^법.(제\\d+조).*");
         BULLET_REGEXES.add("^[\u0049]\\..*");//"^[Ⅰ-Ⅻ]"
         BULLET_REGEXES.add("^[\u2160-\u216B].*");//"^[Ⅰ-Ⅻ]"

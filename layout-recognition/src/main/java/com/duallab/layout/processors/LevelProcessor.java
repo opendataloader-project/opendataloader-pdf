@@ -22,11 +22,11 @@ public class LevelProcessor {
     private static boolean isDocTitleSet = false;
 
     public static void detectLevels(List<List<IObject>> contents) {
-        setLevels(contents, 0);
+        setLevels(contents, new Stack<>());
     }
     
-    private static void setLevels(List<List<IObject>> contents, Integer startIndex) {
-        Stack<LevelInfo> levelInfos = new Stack<>();
+    private static void setLevels(List<List<IObject>> contents, Stack<LevelInfo> levelInfos) {
+        int levelInfosSize = levelInfos.size();
         for (List<IObject> pageContents : contents) {
             for (IObject content : pageContents) {
                 if (content instanceof SemanticHeading) {
@@ -41,7 +41,7 @@ public class LevelProcessor {
                         if (previousList.getLevel() == null) {
                             LOGGER.log(Level.WARNING, "List without detected level");
                         } else {
-                            index = Integer.parseInt(previousList.getLevel()) - startIndex - 1;
+                            index = Integer.parseInt(previousList.getLevel()) - 1;
                         }
                     }
                     if (index == null) {
@@ -69,17 +69,17 @@ public class LevelProcessor {
                     index = getLevelInfoIndex(levelInfos, levelInfo);
                 }
                 if (index == null) {
-                    content.setLevel(String.valueOf(levelInfos.size() + 1 + startIndex));
+                    content.setLevel(String.valueOf(levelInfos.size() + 1));
                     levelInfos.add(levelInfo);
                 } else {
-                    content.setLevel(String.valueOf(index + 1 + startIndex));
-                    while (levelInfos.size() > index + 1) {
+                    content.setLevel(String.valueOf(index + 1));
+                    for (int i = Math.max(index + 1, levelInfosSize); i < levelInfos.size(); i++) {
                         levelInfos.pop();
                     }
                 }
                 if (content instanceof PDFList) {
                     for (ListItem listItem : ((PDFList)content).getListItems()) {
-                        setLevels(Collections.singletonList(listItem.getContents()), startIndex + levelInfos.size());
+                        setLevels(Collections.singletonList(listItem.getContents()), levelInfos);
                     }
                 }
             }
@@ -112,7 +112,7 @@ public class LevelProcessor {
             for (int colNumber = 0; colNumber < tableBorder.getNumberOfColumns(); colNumber++) {
                 TableBorderCell tableBorderCell = row.getCell(colNumber);
                 if (tableBorderCell.getRowNumber() == rowNumber && tableBorderCell.getColNumber() == colNumber) {
-                    setLevels(Collections.singletonList(tableBorderCell.getContents()), 0);
+                    setLevels(Collections.singletonList(tableBorderCell.getContents()), new Stack<>());
                 }
             }
         }
