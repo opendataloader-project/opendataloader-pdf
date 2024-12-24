@@ -138,8 +138,8 @@ public class PDFWriter {
     public static PDAnnotation draw(BoundingBox boundingBox, float[] colorArray,
                                     String contents, Long id, PDAnnotation linkedAnnot, String level, PDFLayer layerName) {
         PDAnnotationSquareCircle square = new PDAnnotationSquareCircle(PDAnnotationSquareCircle.SUB_TYPE_SQUARE);
-        square.setRectangle(new PDRectangle((float)boundingBox.getLeftX(), (float)boundingBox.getBottomY(),
-                (float)boundingBox.getWidth(), (float)boundingBox.getHeight()));
+        square.setRectangle(new PDRectangle(getFloat(boundingBox.getLeftX()), getFloat(boundingBox.getBottomY()),
+                getFloat(boundingBox.getWidth()), getFloat(boundingBox.getHeight())));
         square.setConstantOpacity(0.4f);
         PDColor color = new PDColor(colorArray, PDDeviceRGB.INSTANCE);
         square.setColor(color);
@@ -151,6 +151,17 @@ public class PDFWriter {
         square.setOptionalContent(getOptionalContent(layerName));
         annotations.get(boundingBox.getPageNumber()).add(square);
         return square;
+    }
+    
+    private static float getFloat(double value) {
+        float floatValue = (float) value;
+        if (floatValue == Float.POSITIVE_INFINITY) {
+            return Float.MAX_VALUE;
+        }
+        if (floatValue == Float.NEGATIVE_INFINITY) {
+            return -Float.MAX_VALUE;
+        }
+        return floatValue;
     }
     
     public static String getContents(IObject content) {
