@@ -175,11 +175,10 @@ public class ListProcessor {
                 for (TextLine textLine : textNode.getFirstColumn().getLines()) {
                     listItem.add(textLine);
                 }
-                list.add(listItem);
-                continue;
+            } else {
+                TextLine textLine = (TextLine)object;
+                listItem.add(textLine);
             }
-            TextLine textLine = (TextLine)object;
-            listItem.add(textLine);
             if (index != endIndex) {
                 addContentToListItem(nextIndex, currentInfo, pageContents, listItem);
             } else {
