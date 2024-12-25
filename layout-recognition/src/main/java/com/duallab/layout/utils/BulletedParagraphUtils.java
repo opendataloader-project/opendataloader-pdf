@@ -52,6 +52,16 @@ public class BulletedParagraphUtils {
         return textNode.getFirstLine().getConnectedLineArtLabel() != null;
     }
 
+    public static String getLabelRegex(SemanticTextNode textNode) {
+        String value = textNode.getFirstLine().getValue();
+        for (String regex : BULLET_REGEXES) {
+            if (value.matches(regex)) {
+                return regex;
+            }
+        }
+        return null;
+    }
+    
     static {
         ARABIC_NUMBER_REGEXES.add("^\\d+[ .\\]\\)>].*");
         BULLET_REGEXES.add("^\\(\\d+\\).*");

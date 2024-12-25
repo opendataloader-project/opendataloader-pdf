@@ -47,7 +47,7 @@ public class DocumentProcessor {
 
     public static void processFile(String inputPdfName, Config config) throws IOException {
         preprocessing(inputPdfName, config);
-        calculateDocumentInfo(inputPdfName);
+        calculateDocumentInfo();
         List<TextChunk> hiddenTexts = new ArrayList<>();
         List<List<IObject>> contents = new ArrayList<>();
         for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
@@ -92,6 +92,7 @@ public class DocumentProcessor {
     }
 
     public static void preprocessing(String pdfName, Config config) throws IOException {
+        System.out.println("File name: " + pdfName);
         updateStaticContainers(config);
         PDDocument pdDocument = new PDDocument(pdfName);
         StaticResources.setDocument(pdDocument);
@@ -146,9 +147,8 @@ public class DocumentProcessor {
         return newContents;
     }
 
-    private static void calculateDocumentInfo(String pdfName) {
+    private static void calculateDocumentInfo() {
         PDDocument document = StaticResources.getDocument();
-        System.out.println("File name: " + pdfName);
         System.out.println("Number of pages: " + document.getNumberOfPages());
         COSTrailer trailer = document.getDocument().getTrailer();
         GFCosInfo info = getInfo(trailer);
