@@ -20,6 +20,8 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 import java.util.*;
 
 public class TableBorderProcessor {
+    
+    private static final double LINE_ART_PERCENT = 0.9;
 
     public static List<IObject> processTableBorders(List<IObject> contents, int pageNumber) {
         List<IObject> newContents = new ArrayList<>();
@@ -53,6 +55,10 @@ public class TableBorderProcessor {
             }
             TableBorderCell tableBorderCell = tableBorder.getTableBorderCell(content);
             if (tableBorderCell != null) {
+                if (content instanceof LineArtChunk && 
+                        tableBorderCell.getBoundingBox().getIntersectionPercent(content.getBoundingBox()) > LINE_ART_PERCENT) {
+                    return tableBorder;
+                }
                 tableBorderCell.addContentObject(content);
                 return tableBorder;
             }
