@@ -47,13 +47,30 @@ public class CLIMain {
         Config config = Config.createConfigFromCommandLine(commandLine);
         File file = new File(arguments[0]);
         if (file.isDirectory()) {
-            for (File pdf : file.listFiles()) {
-                DocumentProcessor.processFile(pdf.getAbsolutePath(), config);
-            }
+            processDirectory(file, config);
         } else if (file.isFile()) {
-            DocumentProcessor.processFile(file.getAbsolutePath(), config);
+            processFile(file, config);
         } else {
             LOGGER.log(Level.WARNING, "File or folder " + file.getAbsolutePath() + " not found.");
+        }
+    }
+    
+    private static void processDirectory(File file, Config config) {
+        for (File pdf : file.listFiles()) {
+            if (pdf.isDirectory()) {
+                processDirectory(pdf, config);
+            } else {
+                processFile(pdf, config);
+            }
+        }
+    }
+    
+    private static void processFile(File file, Config config) {
+        try {
+            DocumentProcessor.processFile(file.getAbsolutePath(), config);
+        } catch (Exception exception) {
+            LOGGER.log(Level.SEVERE, "Exception during processing file " + file.getAbsolutePath() + ": " + 
+                    exception.getMessage(), exception);
         }
     }
 
