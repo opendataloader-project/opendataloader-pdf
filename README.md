@@ -2,6 +2,14 @@
 
 Java 8+ runtime environment. 
 
+# Build instructions
+
+Build and install using Maven `mvn clean install` in this order:
+1. duallab-lr-verapdf-parser
+2. duallab-layout-recognition-algs
+3. duallab-lr-verapdf-validation 
+4. duallab-layout-recognition-core
+
 # CLI usage
 
 ```
