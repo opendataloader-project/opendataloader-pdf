@@ -1,0 +1,2477 @@
+{
+  "file name" : "C:\\verapdf-dev\\demo-pdf-structure\\layout-recognition-core\\layout-recognition\\src\\test\\resources\\com\\duallab\\layout\\files\\pdf\\Korean\\202309_KB 한국대표그룹주.pdf",
+  "number of pages" : 1,
+  "author" : "user",
+  "title" : null,
+  "creation date" : "D:20231017091958+09'00'",
+  "modification date" : "D:20231017091958+09'00'",
+  "kids" : [ {
+    "type" : "line",
+    "id" : 43,
+    "page number" : 1,
+    "bounding box" : [ 13.44, 824.74, 490.66, 829.18 ]
+  }, {
+    "type" : "line",
+    "id" : 44,
+    "page number" : 1,
+    "bounding box" : [ 13.44, 782.26, 34.32, 824.86 ]
+  }, {
+    "type" : "line",
+    "id" : 45,
+    "page number" : 1,
+    "bounding box" : [ 476.26, 782.26, 490.66, 824.86 ]
+  }, {
+    "type" : "text block",
+    "id" : 46,
+    "page number" : 1,
+    "bounding box" : [ 33.71, 750.75, 478.06, 788.65 ],
+    "kids" : [ {
+      "type" : "image",
+      "id" : 41,
+      "page number" : 1,
+      "bounding box" : [ 34.56, 785.88, 36.24, 787.8 ]
+    }, {
+      "type" : "image",
+      "id" : 42,
+      "page number" : 1,
+      "bounding box" : [ 33.72, 750.98, 478.07, 788.641 ]
+    } ]
+  }, {
+    "type" : "line",
+    "id" : 47,
+    "page number" : 1,
+    "bounding box" : [ 13.44, 686.98, 34.32, 739.9 ]
+  }, {
+    "type" : "line",
+    "id" : 48,
+    "page number" : 1,
+    "bounding box" : [ 34.2, 686.98, 476.38, 739.9 ]
+  }, {
+    "type" : "line",
+    "id" : 49,
+    "page number" : 1,
+    "bounding box" : [ 476.26, 686.98, 490.66, 739.9 ]
+  }, {
+    "type" : "line",
+    "id" : 50,
+    "page number" : 1,
+    "bounding box" : [ 13.44, 648.55, 34.32, 687.094 ]
+  }, {
+    "type" : "line",
+    "id" : 51,
+    "page number" : 1,
+    "bounding box" : [ 34.2, 648.55, 46.68, 687.094 ]
+  }, {
+    "type" : "table",
+    "id" : 52,
+    "level" : "1",
+    "page number" : 1,
+    "bounding box" : [ 46.55, 648.19, 464.63, 687.46 ],
+    "number of rows" : 4,
+    "number of columns" : 2,
+    "rows" : [ {
+      "type" : "table row",
+      "row number" : 1,
+      "cells" : [ {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 46.55, 677.37, 99.024, 687.46 ],
+        "row number" : 1,
+        "column number" : 1,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 33,
+          "page number" : 1,
+          "bounding box" : [ 50.4, 678.127, 77.743, 687.225 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "펀드규모"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 98.184, 677.37, 464.63, 687.46 ],
+        "row number" : 1,
+        "column number" : 2,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 34,
+          "page number" : 1,
+          "bounding box" : [ 104.54, 678.607, 129.383, 687.705 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "746억원"
+        } ]
+      } ]
+    }, {
+      "type" : "table row",
+      "row number" : 2,
+      "cells" : [ {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 46.55, 667.74, 99.024, 677.51 ],
+        "row number" : 2,
+        "column number" : 1,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 35,
+          "page number" : 1,
+          "bounding box" : [ 50.4, 668.497, 84.575, 677.595 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "매입기준일"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 98.184, 667.74, 464.63, 677.51 ],
+        "row number" : 2,
+        "column number" : 2,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 36,
+          "page number" : 1,
+          "bounding box" : [ 104.54, 669.007, 337.846, 678.105 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "15시30분이전 2영업일 기준가격 적용, 15시30분이후 3영업일 기준가격 적용"
+        } ]
+      } ]
+    }, {
+      "type" : "table row",
+      "row number" : 3,
+      "cells" : [ {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 46.55, 658.14, 99.024, 667.88 ],
+        "row number" : 3,
+        "column number" : 1,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 37,
+          "page number" : 1,
+          "bounding box" : [ 50.4, 658.897, 84.575, 667.995 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "환매기준일"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 98.184, 658.14, 464.63, 667.88 ],
+        "row number" : 3,
+        "column number" : 2,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 38,
+          "page number" : 1,
+          "bounding box" : [ 104.54, 659.377, 401.423, 668.475 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "15시30분이전 2영업일 기준가격 / 4영업일 환매, 15시30분이후 3영업일 기준가격 / 4영업일 환매"
+        } ]
+      } ]
+    }, {
+      "type" : "table row",
+      "row number" : 4,
+      "cells" : [ {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 46.55, 648.19, 99.024, 658.28 ],
+        "row number" : 4,
+        "column number" : 1,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 39,
+          "page number" : 1,
+          "bounding box" : [ 50.408, 649.297, 92.084, 658.395 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "비교지수(BM)"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 98.184, 648.19, 464.63, 658.28 ],
+        "row number" : 4,
+        "column number" : 2,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 40,
+          "page number" : 1,
+          "bounding box" : [ 104.54, 649.777, 160.881, 658.875 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "[KOSPI지수]*100%"
+        } ]
+      } ]
+    } ]
+  }, {
+    "type" : "line",
+    "id" : 53,
+    "page number" : 1,
+    "bounding box" : [ 464.5, 648.55, 476.38, 687.094 ]
+  }, {
+    "type" : "line",
+    "id" : 54,
+    "page number" : 1,
+    "bounding box" : [ 476.26, 648.55, 490.66, 687.094 ]
+  }, {
+    "type" : "line",
+    "id" : 55,
+    "page number" : 1,
+    "bounding box" : [ 13.44, 607.39, 34.32, 648.67 ]
+  }, {
+    "type" : "line",
+    "id" : 56,
+    "page number" : 1,
+    "bounding box" : [ 34.2, 607.39, 476.38, 648.67 ]
+  }, {
+    "type" : "line",
+    "id" : 57,
+    "page number" : 1,
+    "bounding box" : [ 476.26, 607.39, 490.66, 648.67 ]
+  }, {
+    "type" : "line",
+    "id" : 58,
+    "page number" : 1,
+    "bounding box" : [ 13.44, 603.07, 34.32, 607.51 ]
+  }, {
+    "type" : "line",
+    "id" : 59,
+    "page number" : 1,
+    "bounding box" : [ 34.2, 603.07, 46.68, 607.51 ]
+  }, {
+    "type" : "line",
+    "id" : 60,
+    "page number" : 1,
+    "bounding box" : [ 51.12, 603.07, 250.85, 607.51 ]
+  }, {
+    "type" : "line",
+    "id" : 61,
+    "page number" : 1,
+    "bounding box" : [ 250.73, 603.07, 260.69, 607.51 ]
+  }, {
+    "type" : "line",
+    "id" : 62,
+    "page number" : 1,
+    "bounding box" : [ 260.57, 603.07, 265.85, 607.51 ]
+  }, {
+    "type" : "line",
+    "id" : 63,
+    "page number" : 1,
+    "bounding box" : [ 270.29, 603.07, 464.62, 607.51 ]
+  }, {
+    "type" : "line",
+    "id" : 64,
+    "page number" : 1,
+    "bounding box" : [ 464.5, 603.07, 476.38, 607.51 ]
+  }, {
+    "type" : "line",
+    "id" : 65,
+    "page number" : 1,
+    "bounding box" : [ 476.26, 603.07, 490.66, 607.51 ]
+  }, {
+    "type" : "line",
+    "id" : 66,
+    "page number" : 1,
+    "bounding box" : [ 13.44, 395.33, 34.32, 603.19 ]
+  }, {
+    "type" : "line",
+    "id" : 67,
+    "page number" : 1,
+    "bounding box" : [ 34.2, 395.33, 46.68, 603.19 ]
+  }, {
+    "type" : "line",
+    "id" : 68,
+    "page number" : 1,
+    "bounding box" : [ 46.56, 395.33, 250.85, 603.19 ]
+  }, {
+    "type" : "line",
+    "id" : 69,
+    "page number" : 1,
+    "bounding box" : [ 250.73, 395.33, 260.69, 603.19 ]
+  }, {
+    "type" : "line",
+    "id" : 70,
+    "page number" : 1,
+    "bounding box" : [ 260.57, 395.33, 464.62, 603.19 ]
+  }, {
+    "type" : "line",
+    "id" : 71,
+    "page number" : 1,
+    "bounding box" : [ 464.5, 395.33, 476.38, 603.19 ]
+  }, {
+    "type" : "line",
+    "id" : 72,
+    "page number" : 1,
+    "bounding box" : [ 476.26, 395.33, 490.66, 603.19 ]
+  }, {
+    "type" : "line",
+    "id" : 73,
+    "page number" : 1,
+    "bounding box" : [ 13.44, 367.01, 34.32, 395.45 ]
+  }, {
+    "type" : "line",
+    "id" : 74,
+    "page number" : 1,
+    "bounding box" : [ 34.2, 367.01, 476.38, 395.45 ]
+  }, {
+    "type" : "line",
+    "id" : 75,
+    "page number" : 1,
+    "bounding box" : [ 476.26, 367.01, 490.66, 395.45 ]
+  }, {
+    "type" : "line",
+    "id" : 76,
+    "page number" : 1,
+    "bounding box" : [ 13.44, 352.25, 34.32, 367.13 ]
+  }, {
+    "type" : "line",
+    "id" : 77,
+    "page number" : 1,
+    "bounding box" : [ 34.2, 352.25, 46.68, 367.13 ]
+  }, {
+    "type" : "table",
+    "id" : 78,
+    "level" : "2",
+    "page number" : 1,
+    "bounding box" : [ 57.636, 284.384, 215.638, 362.926 ],
+    "number of rows" : 3,
+    "number of columns" : 1,
+    "rows" : [ {
+      "type" : "table row",
+      "row number" : 1,
+      "cells" : [ {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 57.636, 346.801, 215.638, 362.939 ],
+        "row number" : 1,
+        "column number" : 1,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ ]
+      } ]
+    }, {
+      "type" : "table row",
+      "row number" : 2,
+      "cells" : [ {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 57.636, 298.67, 215.638, 347.439 ],
+        "row number" : 2,
+        "column number" : 1,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ ]
+      } ]
+    }, {
+      "type" : "table row",
+      "row number" : 3,
+      "cells" : [ {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 57.636, 284.371, 215.638, 333.348 ],
+        "row number" : 3,
+        "column number" : 1,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ ]
+      } ]
+    } ]
+  }, {
+    "type" : "line",
+    "id" : 79,
+    "page number" : 1,
+    "bounding box" : [ 231.17, 352.25, 241.13, 367.13 ]
+  }, {
+    "type" : "table",
+    "id" : 80,
+    "level" : "3",
+    "page number" : 1,
+    "bounding box" : [ 241.0, 292.46, 464.63, 367.49 ],
+    "number of rows" : 4,
+    "number of columns" : 8,
+    "rows" : [ {
+      "type" : "table row",
+      "row number" : 1,
+      "cells" : [ {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 241.0, 352.24, 270.77, 367.49 ],
+        "row number" : 1,
+        "column number" : 1,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 1,
+          "page number" : 1,
+          "bounding box" : [ 249.29, 355.997, 262.97, 365.095 ],
+          "font" : "맑은 고딕,Bold",
+          "font size" : 6.84,
+          "text color" : "[1.0]",
+          "content" : "구분"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 269.93, 352.24, 298.13, 367.49 ],
+        "row number" : 1,
+        "column number" : 2,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 2,
+          "page number" : 1,
+          "bounding box" : [ 275.57, 355.517, 293.196, 364.615 ],
+          "font" : "맑은 고딕,Bold",
+          "font size" : 6.84,
+          "text color" : "[1.0]",
+          "content" : "1개월"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 297.29, 352.24, 327.43, 367.49 ],
+        "row number" : 1,
+        "column number" : 3,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 3,
+          "page number" : 1,
+          "bounding box" : [ 303.89, 355.997, 321.516, 365.095 ],
+          "font" : "맑은 고딕,Bold",
+          "font size" : 6.84,
+          "text color" : "[1.0]",
+          "content" : "3개월"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 326.59, 352.24, 354.79, 367.49 ],
+        "row number" : 1,
+        "column number" : 4,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 4,
+          "page number" : 1,
+          "bounding box" : [ 332.23, 355.517, 349.856, 364.615 ],
+          "font" : "맑은 고딕,Bold",
+          "font size" : 6.84,
+          "text color" : "[1.0]",
+          "content" : "6개월"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 353.95, 352.24, 382.15, 367.49 ],
+        "row number" : 1,
+        "column number" : 5,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 5,
+          "page number" : 1,
+          "bounding box" : [ 363.07, 355.517, 373.863, 364.615 ],
+          "font" : "맑은 고딕,Bold",
+          "font size" : 6.84,
+          "text color" : "[1.0]",
+          "content" : "1년"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 381.31, 352.24, 409.51, 367.49 ],
+        "row number" : 1,
+        "column number" : 6,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 6,
+          "page number" : 1,
+          "bounding box" : [ 390.43, 355.517, 401.223, 364.615 ],
+          "font" : "맑은 고딕,Bold",
+          "font size" : 6.84,
+          "text color" : "[1.0]",
+          "content" : "3년"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 408.67, 352.24, 436.9, 367.49 ],
+        "row number" : 1,
+        "column number" : 7,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 7,
+          "page number" : 1,
+          "bounding box" : [ 417.82, 355.517, 428.613, 364.615 ],
+          "font" : "맑은 고딕,Bold",
+          "font size" : 6.84,
+          "text color" : "[1.0]",
+          "content" : "5년"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 436.06, 352.24, 464.63, 367.49 ],
+        "row number" : 1,
+        "column number" : 8,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 8,
+          "page number" : 1,
+          "bounding box" : [ 440.62, 355.997, 461.14, 365.095 ],
+          "font" : "맑은 고딕,Bold",
+          "font size" : 6.84,
+          "text color" : "[1.0]",
+          "content" : "설정후"
+        } ]
+      } ]
+    }, {
+      "type" : "table row",
+      "row number" : 2,
+      "cells" : [ {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 241.0, 332.41, 270.77, 352.38 ],
+        "row number" : 2,
+        "column number" : 1,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 9,
+          "page number" : 1,
+          "bounding box" : [ 244.85, 338.687, 267.347, 347.785 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "Class A"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 269.93, 332.41, 298.13, 352.38 ],
+        "row number" : 2,
+        "column number" : 2,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 10,
+          "level" : "1",
+          "page number" : 1,
+          "bounding box" : [ 275.57, 338.207, 290.987, 347.305 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "-2.85"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 297.29, 332.41, 327.43, 352.38 ],
+        "row number" : 2,
+        "column number" : 3,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 11,
+          "level" : "1",
+          "page number" : 1,
+          "bounding box" : [ 303.89, 338.687, 319.307, 347.785 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "-2.24"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 326.59, 332.41, 354.79, 352.38 ],
+        "row number" : 2,
+        "column number" : 4,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 12,
+          "page number" : 1,
+          "bounding box" : [ 333.55, 338.207, 346.159, 347.305 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "0.57"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 353.95, 332.41, 382.15, 352.38 ],
+        "row number" : 2,
+        "column number" : 5,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 13,
+          "page number" : 1,
+          "bounding box" : [ 359.11, 338.207, 375.439, 347.305 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "16.17"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 381.31, 332.41, 409.51, 352.38 ],
+        "row number" : 2,
+        "column number" : 6,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 14,
+          "page number" : 1,
+          "bounding box" : [ 386.47, 338.207, 402.799, 347.305 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "23.80"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 408.67, 332.41, 436.9, 352.38 ],
+        "row number" : 2,
+        "column number" : 7,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 15,
+          "page number" : 1,
+          "bounding box" : [ 413.83, 338.207, 430.159, 347.305 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "25.44"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 436.06, 332.41, 464.63, 352.38 ],
+        "row number" : 2,
+        "column number" : 8,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 16,
+          "page number" : 1,
+          "bounding box" : [ 439.66, 338.687, 459.709, 347.785 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "111.79"
+        } ]
+      } ]
+    }, {
+      "type" : "table row",
+      "row number" : 3,
+      "cells" : [ {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 241.0, 312.61, 270.77, 332.55 ],
+        "row number" : 3,
+        "column number" : 1,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 17,
+          "page number" : 1,
+          "bounding box" : [ 250.97, 318.887, 261.175, 327.985 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "BM"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 269.93, 312.61, 298.13, 332.55 ],
+        "row number" : 3,
+        "column number" : 2,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 18,
+          "level" : "1",
+          "page number" : 1,
+          "bounding box" : [ 275.57, 318.407, 290.987, 327.505 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "-3.57"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 297.29, 312.61, 327.43, 332.55 ],
+        "row number" : 3,
+        "column number" : 3,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 19,
+          "level" : "1",
+          "page number" : 1,
+          "bounding box" : [ 303.89, 318.887, 319.307, 327.985 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "-3.87"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 326.59, 312.61, 354.79, 332.55 ],
+        "row number" : 3,
+        "column number" : 4,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 20,
+          "level" : "1",
+          "page number" : 1,
+          "bounding box" : [ 332.23, 318.407, 347.647, 327.505 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "-0.48"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 353.95, 312.61, 382.15, 332.55 ],
+        "row number" : 3,
+        "column number" : 5,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 21,
+          "page number" : 1,
+          "bounding box" : [ 359.11, 318.407, 375.439, 327.505 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "14.36"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 381.31, 312.61, 409.51, 332.55 ],
+        "row number" : 3,
+        "column number" : 6,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 22,
+          "page number" : 1,
+          "bounding box" : [ 388.27, 318.407, 400.879, 327.505 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "5.89"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 408.67, 312.61, 436.9, 332.55 ],
+        "row number" : 3,
+        "column number" : 7,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 23,
+          "page number" : 1,
+          "bounding box" : [ 415.63, 318.407, 428.239, 327.505 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "5.21"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 436.06, 312.61, 464.63, 332.55 ],
+        "row number" : 3,
+        "column number" : 8,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 24,
+          "page number" : 1,
+          "bounding box" : [ 441.58, 318.887, 457.909, 327.985 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "52.72"
+        } ]
+      } ]
+    }, {
+      "type" : "table row",
+      "row number" : 4,
+      "cells" : [ {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 241.0, 292.46, 270.77, 312.75 ],
+        "row number" : 4,
+        "column number" : 1,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 25,
+          "page number" : 1,
+          "bounding box" : [ 244.13, 299.087, 268.008, 308.185 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "BM대비"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 269.93, 292.46, 298.13, 312.75 ],
+        "row number" : 4,
+        "column number" : 2,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 26,
+          "page number" : 1,
+          "bounding box" : [ 276.89, 298.607, 289.499, 307.705 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "0.72"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 297.29, 292.46, 327.43, 312.75 ],
+        "row number" : 4,
+        "column number" : 3,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 27,
+          "page number" : 1,
+          "bounding box" : [ 305.21, 299.087, 317.819, 308.185 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "1.63"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 326.59, 292.46, 354.79, 312.75 ],
+        "row number" : 4,
+        "column number" : 4,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 28,
+          "page number" : 1,
+          "bounding box" : [ 333.55, 298.607, 346.159, 307.705 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "1.05"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 353.95, 292.46, 382.15, 312.75 ],
+        "row number" : 4,
+        "column number" : 5,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 29,
+          "page number" : 1,
+          "bounding box" : [ 360.91, 298.607, 373.519, 307.705 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "1.81"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 381.31, 292.46, 409.51, 312.75 ],
+        "row number" : 4,
+        "column number" : 6,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 30,
+          "page number" : 1,
+          "bounding box" : [ 386.47, 298.607, 402.799, 307.705 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "17.91"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 408.67, 292.46, 436.9, 312.75 ],
+        "row number" : 4,
+        "column number" : 7,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 31,
+          "page number" : 1,
+          "bounding box" : [ 413.83, 298.607, 430.159, 307.705 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "20.24"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 436.06, 292.46, 464.63, 312.75 ],
+        "row number" : 4,
+        "column number" : 8,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 32,
+          "page number" : 1,
+          "bounding box" : [ 441.58, 299.087, 457.909, 308.185 ],
+          "font" : "맑은 고딕",
+          "font size" : 6.84,
+          "text color" : "[0.0]",
+          "content" : "59.07"
+        } ]
+      } ]
+    } ]
+  }, {
+    "type" : "line",
+    "id" : 81,
+    "page number" : 1,
+    "bounding box" : [ 464.5, 352.25, 476.38, 367.13 ]
+  }, {
+    "type" : "line",
+    "id" : 82,
+    "page number" : 1,
+    "bounding box" : [ 476.26, 352.25, 490.66, 367.13 ]
+  }, {
+    "type" : "line",
+    "id" : 83,
+    "page number" : 1,
+    "bounding box" : [ 13.44, 292.82, 34.32, 352.364 ]
+  }, {
+    "type" : "line",
+    "id" : 84,
+    "page number" : 1,
+    "bounding box" : [ 34.2, 292.82, 46.68, 352.364 ]
+  }, {
+    "type" : "line",
+    "id" : 85,
+    "page number" : 1,
+    "bounding box" : [ 231.17, 292.82, 241.13, 352.364 ]
+  }, {
+    "type" : "line",
+    "id" : 86,
+    "page number" : 1,
+    "bounding box" : [ 464.5, 292.82, 476.38, 352.364 ]
+  }, {
+    "type" : "line",
+    "id" : 87,
+    "page number" : 1,
+    "bounding box" : [ 476.26, 292.82, 490.66, 352.364 ]
+  }, {
+    "type" : "line",
+    "id" : 88,
+    "page number" : 1,
+    "bounding box" : [ 13.44, 270.74, 34.32, 292.94 ]
+  }, {
+    "type" : "line",
+    "id" : 89,
+    "page number" : 1,
+    "bounding box" : [ 34.2, 270.74, 46.68, 292.94 ]
+  }, {
+    "type" : "line",
+    "id" : 90,
+    "page number" : 1,
+    "bounding box" : [ 46.56, 270.74, 231.29, 292.94 ]
+  }, {
+    "type" : "line",
+    "id" : 91,
+    "page number" : 1,
+    "bounding box" : [ 231.17, 270.74, 476.38, 292.94 ]
+  }, {
+    "type" : "line",
+    "id" : 92,
+    "page number" : 1,
+    "bounding box" : [ 476.26, 270.74, 490.66, 292.94 ]
+  }, {
+    "type" : "line",
+    "id" : 93,
+    "page number" : 1,
+    "bounding box" : [ 13.44, 229.1, 34.32, 270.86 ]
+  }, {
+    "type" : "line",
+    "id" : 94,
+    "page number" : 1,
+    "bounding box" : [ 34.2, 229.1, 476.38, 270.86 ]
+  }, {
+    "type" : "line",
+    "id" : 95,
+    "page number" : 1,
+    "bounding box" : [ 476.26, 229.1, 490.66, 270.86 ]
+  }, {
+    "type" : "line",
+    "id" : 96,
+    "page number" : 1,
+    "bounding box" : [ 13.44, 129.96, 34.32, 229.224 ]
+  }, {
+    "type" : "line",
+    "id" : 97,
+    "page number" : 1,
+    "bounding box" : [ 34.2, 129.96, 46.68, 229.224 ]
+  }, {
+    "type" : "line",
+    "id" : 98,
+    "page number" : 1,
+    "bounding box" : [ 46.56, 129.96, 180.62, 229.224 ]
+  }, {
+    "type" : "line",
+    "id" : 99,
+    "page number" : 1,
+    "bounding box" : [ 180.5, 129.96, 186.38, 229.224 ]
+  }, {
+    "type" : "line",
+    "id" : 100,
+    "page number" : 1,
+    "bounding box" : [ 186.26, 129.96, 321.91, 229.224 ]
+  }, {
+    "type" : "line",
+    "id" : 101,
+    "page number" : 1,
+    "bounding box" : [ 321.79, 129.96, 327.07, 229.224 ]
+  }, {
+    "type" : "line",
+    "id" : 102,
+    "page number" : 1,
+    "bounding box" : [ 326.95, 129.96, 464.61, 229.224 ]
+  }, {
+    "type" : "line",
+    "id" : 103,
+    "page number" : 1,
+    "bounding box" : [ 464.5, 129.96, 476.38, 229.224 ]
+  }, {
+    "type" : "line",
+    "id" : 104,
+    "page number" : 1,
+    "bounding box" : [ 476.26, 129.96, 490.66, 229.224 ]
+  }, {
+    "type" : "line",
+    "id" : 105,
+    "page number" : 1,
+    "bounding box" : [ 13.44, 106.8, 34.32, 130.08 ]
+  }, {
+    "type" : "line",
+    "id" : 106,
+    "page number" : 1,
+    "bounding box" : [ 34.2, 106.8, 476.38, 130.08 ]
+  }, {
+    "type" : "line",
+    "id" : 107,
+    "page number" : 1,
+    "bounding box" : [ 476.26, 106.8, 490.66, 130.08 ]
+  }, {
+    "type" : "line",
+    "id" : 108,
+    "page number" : 1,
+    "bounding box" : [ 13.44, 34.68, 490.66, 106.92 ]
+  }, {
+    "type" : "list",
+    "id" : 109,
+    "level" : "4",
+    "page number" : 1,
+    "bounding box" : [ 47.76, 112.153, 199.479, 127.776 ],
+    "numbering style" : "unordered",
+    "number of list items" : 2,
+    "list items" : [ {
+      "type" : "list item",
+      "page number" : 1,
+      "bounding box" : [ 47.76, 120.913, 199.479, 127.776 ],
+      "font" : "맑은 고딕",
+      "font size" : 5.16,
+      "text color" : "[0.396, 0.361, 0.318]",
+      "content" : "※ KB 한국 대표그룹주 증권 모(주식) 기준임. 기준일 : 2023-09-30",
+      "kids" : [ ]
+    }, {
+      "type" : "list item",
+      "page number" : 1,
+      "bounding box" : [ 47.76, 112.153, 110.81, 119.016 ],
+      "font" : "맑은 고딕",
+      "font size" : 5.16,
+      "text color" : "[0.396, 0.361, 0.318]",
+      "content" : "※ 출처 : KB자산운용 StarM",
+      "kids" : [ ]
+    } ]
+  }, {
+    "type" : "paragraph",
+    "id" : 110,
+    "page number" : 1,
+    "bounding box" : [ 324.07, 95.63, 474.862, 103.61 ],
+    "font" : "맑은 고딕",
+    "font size" : 6.0,
+    "text color" : "[0.486, 0.451, 0.396]",
+    "content" : "KB자산운용 준법감시 승인번호 : 투자광고 2023_978(다)"
+  }, {
+    "type" : "paragraph",
+    "id" : 111,
+    "page number" : 1,
+    "bounding box" : [ 52.56, 520.657, 245.009, 602.835 ],
+    "font" : "맑은 고딕",
+    "font size" : 6.84,
+    "text color" : "[0.0]",
+    "content" : "9월 KOSPI 지수는 2,465.07pt를 기록하며 -3.57% 하락 마감했 습니다. 9월 주식시장은 미국 국채 금리 상승으로 고금리 기조 가 지속될 것이라는 전망 속에 보험, 은행 등의 금융주 섹터 및 고배당주가 강세를 보였습니다. 미국 국채 금리 상승으로 국내 주식시장에 대한 변동성 우려가 심화되며 외국인의 순매도세는 지속되었습니다. 수익률 상위 업종은 보험(+11.8%), 통신서비 스(+6.3%), 자동차(+4.5%)이며, 수익률 하위 업종은 IT가전(7.9%), 화학(-7.4%), 조선(-6.2%)\r 등 입니다."
+  }, {
+    "type" : "paragraph",
+    "id" : 112,
+    "page number" : 1,
+    "bounding box" : [ 52.56, 510.217, 53.244, 519.315 ],
+    "font" : "맑은 고딕",
+    "font size" : 6.84,
+    "text color" : "[0.0]",
+    "content" : "\u0000"
+  }, {
+    "type" : "paragraph",
+    "id" : 113,
+    "page number" : 1,
+    "bounding box" : [ 52.56, 405.797, 245.013, 508.855 ],
+    "font" : "맑은 고딕",
+    "font size" : 6.84,
+    "text color" : "[0.0]",
+    "content" : "펀드는 9월 월간 기준 수익률 -2.85%를 기록하며 벤치마크 대 비 +0.72%p 아웃퍼폼했습니다. 펀드 내 기여도 측면에서 수익 률 기여도 상위 업종은 화학(+44bp), 제약(+33bp), 반도체및장 비(+22bp) 업종 등 이며 수익률 기여도 하위 업종은 정유(34bp), 엔터테인먼트(-26bp), 건설및건자재(-6bp) 등 입니다. 수 익률 상위 종목군은 LG에너지솔루션(+39bp), 포스코퓨처엠 (+33bp), 한올바이오파마(+15bp), 삼성전자(+15bp), 알테오젠 (+11bp) 등. 수익률 하위 종목군은 SK이노베이션(-34bp), SKC(18bp), 삼성SDI(-15bp), 와이지엔터테인먼트(-14bp), SK하이닉 스(-13bp) 등 입니다."
+  }, {
+    "type" : "list",
+    "id" : 114,
+    "level" : "4",
+    "page number" : 1,
+    "bounding box" : [ 242.09, 271.198, 456.895, 291.031 ],
+    "numbering style" : "unordered",
+    "number of list items" : 3,
+    "list items" : [ {
+      "type" : "list item",
+      "page number" : 1,
+      "bounding box" : [ 242.09, 285.445, 378.611, 291.031 ],
+      "font" : "맑은 고딕",
+      "font size" : 4.2,
+      "text color" : "[0.396, 0.361, 0.318]",
+      "content" : "※ 세전수익률 / 과거의 수익률이 미래의 수익을 보장하는 것은 아닙니다.",
+      "kids" : [ ]
+    }, {
+      "type" : "list item",
+      "page number" : 1,
+      "bounding box" : [ 242.21, 271.198, 456.895, 277.263 ],
+      "font" : "맑은 고딕",
+      "font size" : 4.56,
+      "text color" : "[0.396, 0.361, 0.318]",
+      "content" : "※ 펀드의 최초 설정일은 2009년 08월 27일로 운용기간이 짧아 수익률이 없는 경우 \"-\"로 표시하였습니다.",
+      "kids" : [ ]
+    }, {
+      "type" : "list item",
+      "page number" : 1,
+      "bounding box" : [ 242.09, 278.485, 352.743, 284.071 ],
+      "font" : "맑은 고딕",
+      "font size" : 4.2,
+      "text color" : "[0.396, 0.361, 0.318]",
+      "content" : "※ 기준일 : 2023년 09월 30일  ※ 출처 : KB자산운용 Star M",
+      "kids" : [ ]
+    } ]
+  }, {
+    "type" : "paragraph",
+    "id" : 115,
+    "page number" : 1,
+    "bounding box" : [ 48.0, 697.447, 249.53, 716.985 ],
+    "font" : "맑은 고딕",
+    "font size" : 6.84,
+    "text color" : "[0.0]",
+    "content" : "대한민국 대표그룹 주식과 글로벌 1등 제품을 보유한 기업 및 글 로벌 기업으로 성장할 가능성이 높은 그룹 주식 등에 투자합니다."
+  }, {
+    "type" : "heading",
+    "id" : 116,
+    "level" : "Subtitle",
+    "page number" : 1,
+    "bounding box" : [ 325.03, 714.735, 413.782, 739.634 ],
+    "heading level" : 2,
+    "font" : "맑은 고딕,Bold",
+    "font size" : 18.72,
+    "text color" : "[0.808, 0.0, 0.051]",
+    "content" : "+120.35%"
+  }, {
+    "type" : "paragraph",
+    "id" : 117,
+    "page number" : 1,
+    "bounding box" : [ 267.17, 510.217, 458.74, 602.835 ],
+    "font" : "맑은 고딕",
+    "font size" : 6.84,
+    "text color" : "[0.0]",
+    "content" : "10월 주식시장은 변동성 완화에도 개인 매도세, 실적 추정치 하향 조정으로 보합권 예상합니다. 미국 국채 상승과 달러화 강세 압력이 점차 완화되면서 하방 압력은 완화될 것으로 전망 합니다. 고금리, 고유가 우려와 더불어 연말 대주주 양도세 회 피 의도의 개인 매도세도 부담으로 작용하고 있습니다. 미국 예산안 협상 이슈가 일단락되면 미국 국채 금리 상승 압박도 해소될 전망입니다. 미국 고용 시장도 견조하지만 점진적으로 둔화되고 있어 금리 변동성이 고점을 통과하면서 지수 반등 트 리거로 작용할 것으로 판단합니다."
+  }, {
+    "type" : "paragraph",
+    "id" : 118,
+    "page number" : 1,
+    "bounding box" : [ 267.17, 405.797, 458.74, 508.855 ],
+    "font" : "맑은 고딕",
+    "font size" : 6.84,
+    "text color" : "[0.0]",
+    "content" : "지수의 하락 리스크보다는 상승 포텐셜이 높은 상황입니다. 밸 류에이션 부담도 12개월 선행 PBR 0.9배 수준으로 내려오면서 역사적 저평가 구간으로 들어온 상황입니다. 수출 개선되는 업 종을 중심으로 긍정적으로 보고 있으나, 3분기 실적 시즌을 앞 두고 이익 컨센서스 하향 조정이 발생하면서 기대치를 낮추고 있어 종목 간 차별화 장세를 전망합니다. 특히, 반도체 업종은 고객사의 재고 감소와 반도체 업체들의 공급축소 효과로 4분기 부터 본격적으로 메모리 가격 턴어라운드 예상되어 여전히 긍 정적으로 보고 있습니다. 또한, 중국 단체 관광 관련 소비주도 계속하여 긍정적으로 보고 있습니다."
+  }, {
+    "type" : "line",
+    "id" : 119,
+    "page number" : 1,
+    "bounding box" : [ 46.56, 607.03, 250.85, 607.87 ]
+  }, {
+    "type" : "line",
+    "id" : 120,
+    "page number" : 1,
+    "bounding box" : [ 46.56, 394.97, 250.85, 395.81 ]
+  }, {
+    "type" : "line",
+    "id" : 121,
+    "page number" : 1,
+    "bounding box" : [ 46.56, 366.65, 231.29, 367.49 ]
+  }, {
+    "type" : "line",
+    "id" : 122,
+    "page number" : 1,
+    "bounding box" : [ 46.56, 228.74, 180.62, 229.58 ]
+  }, {
+    "type" : "line",
+    "id" : 123,
+    "page number" : 1,
+    "bounding box" : [ 186.26, 228.74, 321.91, 229.58 ]
+  }, {
+    "type" : "line",
+    "id" : 124,
+    "page number" : 1,
+    "bounding box" : [ 46.56, 129.6, 180.62, 130.44 ]
+  }, {
+    "type" : "line",
+    "id" : 125,
+    "page number" : 1,
+    "bounding box" : [ 186.26, 129.6, 321.91, 130.44 ]
+  }, {
+    "type" : "line",
+    "id" : 126,
+    "page number" : 1,
+    "bounding box" : [ 260.57, 607.03, 464.62, 607.87 ]
+  }, {
+    "type" : "line",
+    "id" : 127,
+    "page number" : 1,
+    "bounding box" : [ 260.57, 394.97, 464.62, 395.81 ]
+  }, {
+    "type" : "line",
+    "id" : 128,
+    "page number" : 1,
+    "bounding box" : [ 46.56, 270.38, 231.29, 271.22 ]
+  }, {
+    "type" : "line",
+    "id" : 129,
+    "page number" : 1,
+    "bounding box" : [ 326.95, 228.74, 464.61, 229.58 ]
+  }, {
+    "type" : "line",
+    "id" : 130,
+    "page number" : 1,
+    "bounding box" : [ 326.95, 129.6, 464.61, 130.44 ]
+  }, {
+    "type" : "image",
+    "id" : 131,
+    "page number" : 1,
+    "bounding box" : [ 33.474, 54.573, 476.304, 93.293 ]
+  }, {
+    "type" : "image",
+    "id" : 132,
+    "page number" : 1,
+    "bounding box" : [ 21.367, 737.92, 252.857, 748.137 ]
+  }, {
+    "type" : "image",
+    "id" : 133,
+    "page number" : 1,
+    "bounding box" : [ 251.26, 688.08, 481.02, 747.96 ]
+  }, {
+    "type" : "image",
+    "id" : 134,
+    "page number" : 1,
+    "bounding box" : [ 21.549, 107.13, 489.389, 113.647 ]
+  }, {
+    "type" : "image",
+    "id" : 135,
+    "page number" : 1,
+    "bounding box" : [ 21.424, 94.179, 214.354, 107.414 ]
+  }, {
+    "type" : "line",
+    "id" : 136,
+    "page number" : 1,
+    "bounding box" : [ 45.743, 251.47, 51.647, 258.885 ]
+  }, {
+    "type" : "image",
+    "id" : 137,
+    "page number" : 1,
+    "bounding box" : [ 45.743, 251.47, 51.647, 258.885 ]
+  }, {
+    "type" : "paragraph",
+    "id" : 138,
+    "level" : "5",
+    "page number" : 1,
+    "bounding box" : [ 56.088, 249.395, 124.318, 262.961 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 10.2,
+    "text color" : "[0.396, 0.361, 0.318]",
+    "content" : "포트폴리오 현황"
+  }, {
+    "type" : "line",
+    "id" : 139,
+    "page number" : 1,
+    "bounding box" : [ 45.744, 376.32, 51.648, 383.761 ]
+  }, {
+    "type" : "image",
+    "id" : 140,
+    "page number" : 1,
+    "bounding box" : [ 45.744, 376.32, 51.648, 383.761 ]
+  }, {
+    "type" : "paragraph",
+    "id" : 141,
+    "level" : "6",
+    "page number" : 1,
+    "bounding box" : [ 56.088, 374.355, 96.264, 387.921 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 10.2,
+    "text color" : "[0.396, 0.361, 0.318]",
+    "content" : "운용 성과"
+  }, {
+    "type" : "line",
+    "id" : 142,
+    "page number" : 1,
+    "bounding box" : [ 45.768, 629.23, 51.57, 636.645 ]
+  }, {
+    "type" : "image",
+    "id" : 143,
+    "page number" : 1,
+    "bounding box" : [ 45.768, 629.23, 51.57, 636.645 ]
+  }, {
+    "type" : "paragraph",
+    "id" : 144,
+    "level" : "7",
+    "page number" : 1,
+    "bounding box" : [ 56.088, 627.225, 151.268, 640.791 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 10.2,
+    "text color" : "[0.396, 0.361, 0.318]",
+    "content" : "운용 경과 및 운용 계획"
+  }, {
+    "type" : "line",
+    "id" : 145,
+    "page number" : 1,
+    "bounding box" : [ 46.061, 727.55, 51.965, 734.881 ]
+  }, {
+    "type" : "image",
+    "id" : 146,
+    "page number" : 1,
+    "bounding box" : [ 46.061, 727.55, 51.965, 734.881 ]
+  }, {
+    "type" : "paragraph",
+    "id" : 147,
+    "level" : "8",
+    "page number" : 1,
+    "bounding box" : [ 56.4, 725.555, 93.936, 739.121 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 10.2,
+    "text color" : "[0.396, 0.361, 0.318]",
+    "content" : "펀드개요"
+  }, {
+    "type" : "paragraph",
+    "id" : 148,
+    "page number" : 1,
+    "bounding box" : [ 46.68, 612.421, 81.48, 624.359 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 8.976,
+    "text color" : "[0.745, 0.588, 0.392]",
+    "content" : "운용 경과"
+  }, {
+    "type" : "paragraph",
+    "id" : 149,
+    "page number" : 1,
+    "bounding box" : [ 46.68, 234.301, 414.553, 246.239 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 8.976,
+    "text color" : "[0.745, 0.588, 0.392]",
+    "content" : "자산구성현황 업종구성(상위10개) 주요투자종목(상위10개)"
+  }, {
+    "type" : "paragraph",
+    "id" : 150,
+    "page number" : 1,
+    "bounding box" : [ 260.95, 612.421, 295.75, 624.359 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 8.976,
+    "text color" : "[0.745, 0.588, 0.392]",
+    "content" : "운용 계획"
+  }, {
+    "type" : "paragraph",
+    "id" : 151,
+    "page number" : 1,
+    "bounding box" : [ 312.1, 735.282, 413.618, 746.551 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 8.472,
+    "text color" : "[0.745, 0.588, 0.392]",
+    "content" : "2023년 9월 기준 펀드성과"
+  }, {
+    "type" : "heading",
+    "id" : 152,
+    "level" : "Doctitle",
+    "page number" : 1,
+    "bounding box" : [ 337.25, 710.096, 460.494, 729.231 ],
+    "heading level" : 1,
+    "font" : "Arial,Bold",
+    "font size" : 20.4,
+    "text color" : "[0.808, 0.0, 0.051]",
+    "content" : "-2.85% -3.57%"
+  }, {
+    "type" : "paragraph",
+    "id" : 153,
+    "page number" : 1,
+    "bounding box" : [ 415.3, 724.825, 451.151, 733.38 ],
+    "font" : "맑은 고딕",
+    "font size" : 6.432,
+    "text color" : "[0.0]",
+    "content" : "비교지수(BM)"
+  }, {
+    "type" : "image",
+    "id" : 154,
+    "page number" : 1,
+    "bounding box" : [ 20.814, 37.982, 488.934, 53.606 ]
+  }, {
+    "type" : "paragraph",
+    "id" : 155,
+    "level" : "9",
+    "page number" : 1,
+    "bounding box" : [ 47.76, 281.872, 54.498, 286.984 ],
+    "font" : "Calibri",
+    "font size" : 5.112,
+    "text color" : "[0.0]",
+    "content" : "-50"
+  }, {
+    "type" : "paragraph",
+    "id" : 156,
+    "page number" : 1,
+    "bounding box" : [ 51.888, 297.458, 54.468, 302.546 ],
+    "font" : "Calibri",
+    "font size" : 5.088,
+    "text color" : "[0.0]",
+    "content" : "0"
+  }, {
+    "type" : "paragraph",
+    "id" : 157,
+    "page number" : 1,
+    "bounding box" : [ 49.32, 313.052, 54.408, 318.164 ],
+    "font" : "Calibri",
+    "font size" : 5.112,
+    "text color" : "[0.0]",
+    "content" : "50"
+  }, {
+    "type" : "paragraph",
+    "id" : 158,
+    "page number" : 1,
+    "bounding box" : [ 46.728, 328.628, 54.513, 333.716 ],
+    "font" : "Calibri",
+    "font size" : 5.088,
+    "text color" : "[0.0]",
+    "content" : "100"
+  }, {
+    "type" : "paragraph",
+    "id" : 159,
+    "page number" : 1,
+    "bounding box" : [ 46.728, 344.222, 54.524, 349.334 ],
+    "font" : "Calibri",
+    "font size" : 5.112,
+    "text color" : "[0.0]",
+    "content" : "150"
+  }, {
+    "type" : "paragraph",
+    "id" : 160,
+    "page number" : 1,
+    "bounding box" : [ 46.728, 359.808, 54.513, 364.896 ],
+    "font" : "Calibri",
+    "font size" : 5.088,
+    "text color" : "[0.0]",
+    "content" : "200"
+  }, {
+    "type" : "paragraph",
+    "id" : 161,
+    "page number" : 1,
+    "bounding box" : [ 50.808, 275.228, 222.524, 280.316 ],
+    "font" : "Calibri",
+    "font size" : 5.088,
+    "text color" : "[0.0]",
+    "content" : "2009.08 2011.08 2013.08 2015.08 2017.08 2019.08 2021.08 2023.08"
+  }, {
+    "type" : "paragraph",
+    "id" : 162,
+    "page number" : 1,
+    "bounding box" : [ 91.128, 351.253, 139.361, 360.318 ],
+    "font" : "맑은 고딕",
+    "font size" : 6.816,
+    "text color" : "[0.0]",
+    "content" : "펀드 BM"
+  }, {
+    "type" : "line",
+    "id" : 163,
+    "page number" : 1,
+    "bounding box" : [ 46.692, 132.6, 178.692, 227.569 ]
+  }, {
+    "type" : "line",
+    "id" : 164,
+    "page number" : 1,
+    "bounding box" : [ 90.179, 141.85, 166.467, 222.899 ]
+  }, {
+    "type" : "line",
+    "id" : 165,
+    "page number" : 1,
+    "bounding box" : [ 90.179, 147.51, 90.47, 163.217 ]
+  }, {
+    "type" : "line",
+    "id" : 166,
+    "page number" : 1,
+    "bounding box" : [ 90.179, 174.52, 92.077, 190.227 ]
+  }, {
+    "type" : "line",
+    "id" : 167,
+    "page number" : 1,
+    "bounding box" : [ 90.179, 201.54, 138.849, 217.247 ]
+  }, {
+    "type" : "line",
+    "id" : 168,
+    "page number" : 1,
+    "bounding box" : [ 90.179, 141.531, 166.47, 142.169 ]
+  }, {
+    "type" : "line",
+    "id" : 169,
+    "page number" : 1,
+    "bounding box" : [ 89.86, 140.5, 90.498, 141.85 ]
+  }, {
+    "type" : "line",
+    "id" : 170,
+    "page number" : 1,
+    "bounding box" : [ 115.251, 140.5, 115.889, 141.85 ]
+  }, {
+    "type" : "line",
+    "id" : 171,
+    "page number" : 1,
+    "bounding box" : [ 140.751, 140.5, 141.389, 141.85 ]
+  }, {
+    "type" : "line",
+    "id" : 172,
+    "page number" : 1,
+    "bounding box" : [ 166.151, 140.5, 166.789, 141.85 ]
+  }, {
+    "type" : "line",
+    "id" : 173,
+    "page number" : 1,
+    "bounding box" : [ 89.86, 141.85, 90.498, 222.9 ]
+  }, {
+    "type" : "line",
+    "id" : 174,
+    "page number" : 1,
+    "bounding box" : [ 90.179, 141.531, 91.72, 142.169 ]
+  }, {
+    "type" : "line",
+    "id" : 175,
+    "page number" : 1,
+    "bounding box" : [ 90.179, 168.501, 91.72, 169.139 ]
+  }, {
+    "type" : "line",
+    "id" : 176,
+    "page number" : 1,
+    "bounding box" : [ 90.179, 195.531, 91.72, 196.169 ]
+  }, {
+    "type" : "line",
+    "id" : 177,
+    "page number" : 1,
+    "bounding box" : [ 90.179, 222.581, 91.72, 223.219 ]
+  }, {
+    "type" : "image",
+    "id" : 178,
+    "page number" : 1,
+    "bounding box" : [ 46.692, 132.6, 178.692, 227.569 ]
+  }, {
+    "type" : "paragraph",
+    "id" : 179,
+    "page number" : 1,
+    "bounding box" : [ 95.52, 151.27, 103.855, 158.11 ],
+    "font" : "Calibri",
+    "font size" : 6.84,
+    "text color" : "[0.0]",
+    "content" : "1%"
+  }, {
+    "type" : "paragraph",
+    "id" : 180,
+    "page number" : 1,
+    "bounding box" : [ 97.128, 178.29, 105.463, 185.13 ],
+    "font" : "Calibri",
+    "font size" : 6.84,
+    "text color" : "[0.0]",
+    "content" : "4%"
+  }, {
+    "type" : "paragraph",
+    "id" : 181,
+    "page number" : 1,
+    "bounding box" : [ 143.9, 205.31, 155.691, 212.15 ],
+    "font" : "Calibri",
+    "font size" : 6.84,
+    "text color" : "[0.0]",
+    "content" : "96%"
+  }, {
+    "type" : "paragraph",
+    "id" : 182,
+    "page number" : 1,
+    "bounding box" : [ 88.632, 133.882, 169.198, 138.154 ],
+    "font" : "Calibri",
+    "font size" : 4.272,
+    "text color" : "[0.0]",
+    "content" : "0 50 100 150"
+  }, {
+    "type" : "paragraph",
+    "id" : 183,
+    "page number" : 1,
+    "bounding box" : [ 77.232, 152.737, 85.824, 158.42 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 4.272,
+    "text color" : "[0.467, 0.451, 0.424]",
+    "content" : "기타"
+  }, {
+    "type" : "paragraph",
+    "id" : 184,
+    "page number" : 1,
+    "bounding box" : [ 52.968, 179.752, 85.8, 185.466 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 4.296,
+    "text color" : "[0.467, 0.451, 0.424]",
+    "content" : "단기대출 및 예금"
+  }, {
+    "type" : "paragraph",
+    "id" : 185,
+    "page number" : 1,
+    "bounding box" : [ 77.232, 206.782, 85.824, 212.496 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 4.296,
+    "text color" : "[0.467, 0.451, 0.424]",
+    "content" : "주식"
+  }, {
+    "type" : "line",
+    "id" : 186,
+    "page number" : 1,
+    "bounding box" : [ 230.63, 140.91, 307.015, 221.872 ]
+  }, {
+    "type" : "line",
+    "id" : 187,
+    "page number" : 1,
+    "bounding box" : [ 230.63, 142.61, 231.753, 147.317 ]
+  }, {
+    "type" : "line",
+    "id" : 188,
+    "page number" : 1,
+    "bounding box" : [ 230.63, 150.7, 234.808, 155.407 ]
+  }, {
+    "type" : "line",
+    "id" : 189,
+    "page number" : 1,
+    "bounding box" : [ 230.63, 158.8, 235.628, 163.507 ]
+  }, {
+    "type" : "line",
+    "id" : 190,
+    "page number" : 1,
+    "bounding box" : [ 230.63, 166.9, 237.012, 171.607 ]
+  }, {
+    "type" : "line",
+    "id" : 191,
+    "page number" : 1,
+    "bounding box" : [ 230.63, 174.99, 237.547, 179.697 ]
+  }, {
+    "type" : "line",
+    "id" : 192,
+    "page number" : 1,
+    "bounding box" : [ 230.63, 183.09, 240.437, 187.797 ]
+  }, {
+    "type" : "line",
+    "id" : 193,
+    "page number" : 1,
+    "bounding box" : [ 230.63, 191.18, 241.132, 195.887 ]
+  }, {
+    "type" : "line",
+    "id" : 194,
+    "page number" : 1,
+    "bounding box" : [ 230.63, 199.28, 243.312, 203.987 ]
+  }, {
+    "type" : "line",
+    "id" : 195,
+    "page number" : 1,
+    "bounding box" : [ 230.63, 207.38, 245.319, 212.087 ]
+  }, {
+    "type" : "line",
+    "id" : 196,
+    "page number" : 1,
+    "bounding box" : [ 230.63, 215.44, 285.608, 220.234 ]
+  }, {
+    "type" : "line",
+    "id" : 197,
+    "page number" : 1,
+    "bounding box" : [ 230.63, 140.591, 307.01, 141.229 ]
+  }, {
+    "type" : "line",
+    "id" : 198,
+    "page number" : 1,
+    "bounding box" : [ 230.311, 139.56, 230.949, 140.91 ]
+  }, {
+    "type" : "line",
+    "id" : 199,
+    "page number" : 1,
+    "bounding box" : [ 255.811, 139.56, 256.449, 140.91 ]
+  }, {
+    "type" : "line",
+    "id" : 200,
+    "page number" : 1,
+    "bounding box" : [ 281.211, 139.56, 281.849, 140.91 ]
+  }, {
+    "type" : "line",
+    "id" : 201,
+    "page number" : 1,
+    "bounding box" : [ 306.691, 139.56, 307.329, 140.91 ]
+  }, {
+    "type" : "line",
+    "id" : 202,
+    "page number" : 1,
+    "bounding box" : [ 230.311, 140.91, 230.949, 221.87 ]
+  }, {
+    "type" : "line",
+    "id" : 203,
+    "page number" : 1,
+    "bounding box" : [ 230.63, 140.591, 232.17, 141.229 ]
+  }, {
+    "type" : "line",
+    "id" : 204,
+    "page number" : 1,
+    "bounding box" : [ 230.63, 148.711, 232.17, 149.349 ]
+  }, {
+    "type" : "line",
+    "id" : 205,
+    "page number" : 1,
+    "bounding box" : [ 230.63, 156.771, 232.17, 157.409 ]
+  }, {
+    "type" : "line",
+    "id" : 206,
+    "page number" : 1,
+    "bounding box" : [ 230.63, 164.831, 232.17, 165.469 ]
+  }, {
+    "type" : "line",
+    "id" : 207,
+    "page number" : 1,
+    "bounding box" : [ 230.63, 172.991, 232.17, 173.629 ]
+  }, {
+    "type" : "line",
+    "id" : 208,
+    "page number" : 1,
+    "bounding box" : [ 230.63, 181.051, 232.17, 181.689 ]
+  }, {
+    "type" : "line",
+    "id" : 209,
+    "page number" : 1,
+    "bounding box" : [ 230.63, 189.211, 232.17, 189.849 ]
+  }, {
+    "type" : "line",
+    "id" : 210,
+    "page number" : 1,
+    "bounding box" : [ 230.63, 197.271, 232.17, 197.909 ]
+  }, {
+    "type" : "line",
+    "id" : 211,
+    "page number" : 1,
+    "bounding box" : [ 230.63, 205.321, 232.17, 205.959 ]
+  }, {
+    "type" : "line",
+    "id" : 212,
+    "page number" : 1,
+    "bounding box" : [ 230.63, 213.481, 232.17, 214.119 ]
+  }, {
+    "type" : "line",
+    "id" : 213,
+    "page number" : 1,
+    "bounding box" : [ 230.63, 221.551, 232.17, 222.189 ]
+  }, {
+    "type" : "image",
+    "id" : 214,
+    "page number" : 1,
+    "bounding box" : [ 230.311, 139.56, 307.329, 222.189 ]
+  }, {
+    "type" : "paragraph",
+    "id" : 215,
+    "page number" : 1,
+    "bounding box" : [ 236.83, 140.87, 253.908, 147.71 ],
+    "font" : "Calibri",
+    "font size" : 6.84,
+    "text color" : "[0.0]",
+    "content" : "0.88%"
+  }, {
+    "type" : "paragraph",
+    "id" : 216,
+    "page number" : 1,
+    "bounding box" : [ 239.88, 148.96, 256.953, 155.8 ],
+    "font" : "Calibri",
+    "font size" : 6.84,
+    "text color" : "[0.0]",
+    "content" : "3.28%"
+  }, {
+    "type" : "paragraph",
+    "id" : 217,
+    "page number" : 1,
+    "bounding box" : [ 240.72, 157.05, 257.704, 163.89 ],
+    "font" : "Calibri",
+    "font size" : 6.84,
+    "text color" : "[0.0]",
+    "content" : "3.93%"
+  }, {
+    "type" : "paragraph",
+    "id" : 218,
+    "page number" : 1,
+    "bounding box" : [ 242.09, 165.16, 259.168, 172.0 ],
+    "font" : "Calibri",
+    "font size" : 6.84,
+    "text color" : "[0.0]",
+    "content" : "5.01%"
+  }, {
+    "type" : "paragraph",
+    "id" : 219,
+    "page number" : 1,
+    "bounding box" : [ 242.62, 173.25, 259.693, 180.09 ],
+    "font" : "Calibri",
+    "font size" : 6.84,
+    "text color" : "[0.0]",
+    "content" : "5.43%"
+  }, {
+    "type" : "list",
+    "id" : 220,
+    "level" : "10",
+    "page number" : 1,
+    "bounding box" : [ 245.52, 181.346, 263.204, 196.29 ],
+    "numbering style" : "arabic numbers",
+    "number of list items" : 2,
+    "list items" : [ {
+      "type" : "list item",
+      "page number" : 1,
+      "bounding box" : [ 245.52, 181.346, 262.478, 188.162 ],
+      "font" : "Calibri",
+      "font size" : 6.816,
+      "text color" : "[0.0]",
+      "content" : "7.70%",
+      "kids" : [ ]
+    }, {
+      "type" : "list item",
+      "page number" : 1,
+      "bounding box" : [ 246.22, 189.45, 263.204, 196.29 ],
+      "font" : "Calibri",
+      "font size" : 6.84,
+      "text color" : "[0.0]",
+      "content" : "8.25%",
+      "kids" : [ ]
+    } ]
+  }, {
+    "type" : "paragraph",
+    "id" : 221,
+    "page number" : 1,
+    "bounding box" : [ 248.4, 197.54, 265.384, 204.38 ],
+    "font" : "Calibri",
+    "font size" : 6.84,
+    "text color" : "[0.0]",
+    "content" : "9.96%"
+  }, {
+    "type" : "paragraph",
+    "id" : 222,
+    "page number" : 1,
+    "bounding box" : [ 250.39, 205.65, 270.855, 212.49 ],
+    "font" : "Calibri",
+    "font size" : 6.84,
+    "text color" : "[0.0]",
+    "content" : "11.54%"
+  }, {
+    "type" : "paragraph",
+    "id" : 223,
+    "page number" : 1,
+    "bounding box" : [ 290.66, 213.74, 311.207, 220.58 ],
+    "font" : "Calibri",
+    "font size" : 6.84,
+    "text color" : "[0.0]",
+    "content" : "43.17%"
+  }, {
+    "type" : "paragraph",
+    "id" : 224,
+    "page number" : 1,
+    "bounding box" : [ 227.98, 132.952, 310.846, 137.224 ],
+    "font" : "Calibri",
+    "font size" : 4.272,
+    "text color" : "[0.0]",
+    "content" : "0.0 20.0 40.0 60.0"
+  }, {
+    "type" : "paragraph",
+    "id" : 225,
+    "page number" : 1,
+    "bounding box" : [ 209.26, 142.342, 226.348, 148.056 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 4.296,
+    "text color" : "[0.467, 0.451, 0.424]",
+    "content" : "유틸리티"
+  }, {
+    "type" : "paragraph",
+    "id" : 226,
+    "page number" : 1,
+    "bounding box" : [ 204.98, 150.427, 226.46, 156.11 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 4.272,
+    "text color" : "[0.467, 0.451, 0.424]",
+    "content" : "필수소비재"
+  }, {
+    "type" : "paragraph",
+    "id" : 227,
+    "page number" : 1,
+    "bounding box" : [ 213.53, 158.517, 226.346, 164.2 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 4.272,
+    "text color" : "[0.467, 0.451, 0.424]",
+    "content" : "에너지"
+  }, {
+    "type" : "paragraph",
+    "id" : 228,
+    "page number" : 1,
+    "bounding box" : [ 208.39, 166.702, 226.309, 172.416 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 4.296,
+    "text color" : "[0.467, 0.451, 0.424]",
+    "content" : "KOSDAQ"
+  }, {
+    "type" : "paragraph",
+    "id" : 229,
+    "page number" : 1,
+    "bounding box" : [ 217.8, 174.717, 226.344, 180.4 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 4.272,
+    "text color" : "[0.467, 0.451, 0.424]",
+    "content" : "의료"
+  }, {
+    "type" : "paragraph",
+    "id" : 230,
+    "page number" : 1,
+    "bounding box" : [ 217.8, 182.822, 226.344, 188.536 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 4.296,
+    "text color" : "[0.467, 0.451, 0.424]",
+    "content" : "금융"
+  }, {
+    "type" : "paragraph",
+    "id" : 231,
+    "page number" : 1,
+    "bounding box" : [ 217.8, 190.912, 226.344, 196.626 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 4.296,
+    "text color" : "[0.467, 0.451, 0.424]",
+    "content" : "소재"
+  }, {
+    "type" : "paragraph",
+    "id" : 232,
+    "page number" : 1,
+    "bounding box" : [ 213.53, 199.007, 226.346, 204.69 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 4.272,
+    "text color" : "[0.467, 0.451, 0.424]",
+    "content" : "산업재"
+  }, {
+    "type" : "paragraph",
+    "id" : 233,
+    "page number" : 1,
+    "bounding box" : [ 204.98, 207.112, 226.46, 212.826 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 4.296,
+    "text color" : "[0.467, 0.451, 0.424]",
+    "content" : "경기소비재"
+  }, {
+    "type" : "paragraph",
+    "id" : 234,
+    "page number" : 1,
+    "bounding box" : [ 222.5, 215.272, 226.313, 220.986 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 4.296,
+    "text color" : "[0.467, 0.451, 0.424]",
+    "content" : "IT"
+  }, {
+    "type" : "line",
+    "id" : 235,
+    "page number" : 1,
+    "bounding box" : [ 371.29, 141.44, 447.721, 224.718 ]
+  }, {
+    "type" : "line",
+    "id" : 236,
+    "page number" : 1,
+    "bounding box" : [ 371.29, 143.19, 377.498, 148.032 ]
+  }, {
+    "type" : "line",
+    "id" : 237,
+    "page number" : 1,
+    "bounding box" : [ 371.29, 151.51, 378.002, 156.352 ]
+  }, {
+    "type" : "line",
+    "id" : 238,
+    "page number" : 1,
+    "bounding box" : [ 371.29, 159.84, 378.088, 164.682 ]
+  }, {
+    "type" : "line",
+    "id" : 239,
+    "page number" : 1,
+    "bounding box" : [ 371.29, 168.17, 378.629, 173.012 ]
+  }, {
+    "type" : "line",
+    "id" : 240,
+    "page number" : 1,
+    "bounding box" : [ 371.29, 176.5, 379.029, 181.342 ]
+  }, {
+    "type" : "line",
+    "id" : 241,
+    "page number" : 1,
+    "bounding box" : [ 371.29, 184.82, 379.613, 189.662 ]
+  }, {
+    "type" : "line",
+    "id" : 242,
+    "page number" : 1,
+    "bounding box" : [ 371.29, 193.15, 379.826, 197.992 ]
+  }, {
+    "type" : "line",
+    "id" : 243,
+    "page number" : 1,
+    "bounding box" : [ 371.29, 201.48, 380.893, 206.322 ]
+  }, {
+    "type" : "line",
+    "id" : 244,
+    "page number" : 1,
+    "bounding box" : [ 371.29, 209.81, 392.975, 214.652 ]
+  }, {
+    "type" : "line",
+    "id" : 245,
+    "page number" : 1,
+    "bounding box" : [ 371.29, 218.09, 442.58, 222.986 ]
+  }, {
+    "type" : "line",
+    "id" : 246,
+    "page number" : 1,
+    "bounding box" : [ 371.29, 141.121, 447.72, 141.759 ]
+  }, {
+    "type" : "line",
+    "id" : 247,
+    "page number" : 1,
+    "bounding box" : [ 370.971, 140.09, 371.609, 141.44 ]
+  }, {
+    "type" : "line",
+    "id" : 248,
+    "page number" : 1,
+    "bounding box" : [ 386.271, 140.09, 386.909, 141.44 ]
+  }, {
+    "type" : "line",
+    "id" : 249,
+    "page number" : 1,
+    "bounding box" : [ 401.571, 140.09, 402.209, 141.44 ]
+  }, {
+    "type" : "line",
+    "id" : 250,
+    "page number" : 1,
+    "bounding box" : [ 416.871, 140.09, 417.509, 141.44 ]
+  }, {
+    "type" : "line",
+    "id" : 251,
+    "page number" : 1,
+    "bounding box" : [ 432.171, 140.09, 432.809, 141.44 ]
+  }, {
+    "type" : "line",
+    "id" : 252,
+    "page number" : 1,
+    "bounding box" : [ 447.401, 140.09, 448.039, 141.44 ]
+  }, {
+    "type" : "line",
+    "id" : 253,
+    "page number" : 1,
+    "bounding box" : [ 370.971, 141.44, 371.609, 224.72 ]
+  }, {
+    "type" : "line",
+    "id" : 254,
+    "page number" : 1,
+    "bounding box" : [ 371.29, 141.121, 372.84, 141.759 ]
+  }, {
+    "type" : "line",
+    "id" : 255,
+    "page number" : 1,
+    "bounding box" : [ 371.29, 149.431, 372.84, 150.069 ]
+  }, {
+    "type" : "line",
+    "id" : 256,
+    "page number" : 1,
+    "bounding box" : [ 371.29, 157.791, 372.84, 158.429 ]
+  }, {
+    "type" : "line",
+    "id" : 257,
+    "page number" : 1,
+    "bounding box" : [ 371.29, 166.161, 372.84, 166.799 ]
+  }, {
+    "type" : "line",
+    "id" : 258,
+    "page number" : 1,
+    "bounding box" : [ 371.29, 174.421, 372.84, 175.059 ]
+  }, {
+    "type" : "line",
+    "id" : 259,
+    "page number" : 1,
+    "bounding box" : [ 371.29, 182.781, 372.84, 183.419 ]
+  }, {
+    "type" : "line",
+    "id" : 260,
+    "page number" : 1,
+    "bounding box" : [ 371.29, 191.041, 372.84, 191.679 ]
+  }, {
+    "type" : "line",
+    "id" : 261,
+    "page number" : 1,
+    "bounding box" : [ 371.29, 199.411, 372.84, 200.049 ]
+  }, {
+    "type" : "line",
+    "id" : 262,
+    "page number" : 1,
+    "bounding box" : [ 371.29, 207.771, 372.84, 208.409 ]
+  }, {
+    "type" : "line",
+    "id" : 263,
+    "page number" : 1,
+    "bounding box" : [ 371.29, 216.031, 372.84, 216.669 ]
+  }, {
+    "type" : "line",
+    "id" : 264,
+    "page number" : 1,
+    "bounding box" : [ 371.29, 224.401, 372.84, 225.039 ]
+  }, {
+    "type" : "image",
+    "id" : 265,
+    "page number" : 1,
+    "bounding box" : [ 370.971, 140.09, 448.039, 225.039 ]
+  }, {
+    "type" : "paragraph",
+    "id" : 266,
+    "page number" : 1,
+    "bounding box" : [ 382.61, 141.506, 399.568, 148.322 ],
+    "font" : "Calibri",
+    "font size" : 6.816,
+    "text color" : "[0.0]",
+    "content" : "2.03%"
+  }, {
+    "type" : "paragraph",
+    "id" : 267,
+    "page number" : 1,
+    "bounding box" : [ 383.11, 149.836, 400.068, 156.652 ],
+    "font" : "Calibri",
+    "font size" : 6.816,
+    "text color" : "[0.0]",
+    "content" : "2.20%"
+  }, {
+    "type" : "paragraph",
+    "id" : 268,
+    "page number" : 1,
+    "bounding box" : [ 383.21, 158.18, 400.194, 165.02 ],
+    "font" : "Calibri",
+    "font size" : 6.84,
+    "text color" : "[0.0]",
+    "content" : "2.22%"
+  }, {
+    "type" : "paragraph",
+    "id" : 269,
+    "page number" : 1,
+    "bounding box" : [ 383.74, 166.51, 400.818, 173.35 ],
+    "font" : "Calibri",
+    "font size" : 6.84,
+    "text color" : "[0.0]",
+    "content" : "2.40%"
+  }, {
+    "type" : "paragraph",
+    "id" : 270,
+    "page number" : 1,
+    "bounding box" : [ 384.14, 174.83, 401.124, 181.67 ],
+    "font" : "Calibri",
+    "font size" : 6.84,
+    "text color" : "[0.0]",
+    "content" : "2.53%"
+  }, {
+    "type" : "paragraph",
+    "id" : 271,
+    "page number" : 1,
+    "bounding box" : [ 384.72, 183.16, 401.798, 190.0 ],
+    "font" : "Calibri",
+    "font size" : 6.84,
+    "text color" : "[0.0]",
+    "content" : "2.72%"
+  }, {
+    "type" : "list",
+    "id" : 272,
+    "level" : "10",
+    "page number" : 1,
+    "bounding box" : [ 384.94, 191.49, 403.063, 206.66 ],
+    "numbering style" : "arabic numbers",
+    "number of list items" : 2,
+    "list items" : [ {
+      "type" : "list item",
+      "page number" : 1,
+      "bounding box" : [ 384.94, 191.49, 401.924, 198.33 ],
+      "font" : "Calibri",
+      "font size" : 6.84,
+      "text color" : "[0.0]",
+      "content" : "2.79%",
+      "kids" : [ ]
+    }, {
+      "type" : "list item",
+      "page number" : 1,
+      "bounding box" : [ 385.99, 199.82, 403.063, 206.66 ],
+      "font" : "Calibri",
+      "font size" : 6.84,
+      "text color" : "[0.0]",
+      "content" : "3.14%",
+      "kids" : [ ]
+    } ]
+  }, {
+    "type" : "paragraph",
+    "id" : 273,
+    "page number" : 1,
+    "bounding box" : [ 398.09, 208.15, 415.074, 214.99 ],
+    "font" : "Calibri",
+    "font size" : 6.84,
+    "text color" : "[0.0]",
+    "content" : "7.09%"
+  }, {
+    "type" : "paragraph",
+    "id" : 274,
+    "page number" : 1,
+    "bounding box" : [ 437.06, 216.47, 457.618, 223.31 ],
+    "font" : "Calibri",
+    "font size" : 6.84,
+    "text color" : "[0.0]",
+    "content" : "23.30%"
+  }, {
+    "type" : "paragraph",
+    "id" : 275,
+    "page number" : 1,
+    "bounding box" : [ 368.69, 133.472, 451.611, 137.744 ],
+    "font" : "Calibri",
+    "font size" : 4.272,
+    "text color" : "[0.0]",
+    "content" : "0.0 5.0 10.0 15.0 20.0 25.0"
+  }, {
+    "type" : "paragraph",
+    "id" : 276,
+    "page number" : 1,
+    "bounding box" : [ 358.42, 142.982, 367.012, 148.696 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 4.296,
+    "text color" : "[0.467, 0.451, 0.424]",
+    "content" : "기아"
+  }, {
+    "type" : "paragraph",
+    "id" : 277,
+    "page number" : 1,
+    "bounding box" : [ 352.94, 151.312, 367.004, 157.026 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 4.296,
+    "text color" : "[0.467, 0.451, 0.424]",
+    "content" : "KB금융"
+  }, {
+    "type" : "paragraph",
+    "id" : 278,
+    "page number" : 1,
+    "bounding box" : [ 332.81, 159.642, 367.178, 165.356 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 4.296,
+    "text color" : "[0.467, 0.451, 0.424]",
+    "content" : "삼성바이오로직스"
+  }, {
+    "type" : "paragraph",
+    "id" : 279,
+    "page number" : 1,
+    "bounding box" : [ 340.49, 167.972, 367.18, 173.686 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 4.296,
+    "text color" : "[0.467, 0.451, 0.424]",
+    "content" : "SK이노베이션"
+  }, {
+    "type" : "paragraph",
+    "id" : 280,
+    "page number" : 1,
+    "bounding box" : [ 339.74, 176.302, 367.228, 182.016 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 4.296,
+    "text color" : "[0.467, 0.451, 0.424]",
+    "content" : "POSCO홀딩스"
+  }, {
+    "type" : "paragraph",
+    "id" : 281,
+    "page number" : 1,
+    "bounding box" : [ 352.68, 184.702, 367.054, 190.416 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 4.296,
+    "text color" : "[0.467, 0.451, 0.424]",
+    "content" : "NAVER"
+  }, {
+    "type" : "paragraph",
+    "id" : 282,
+    "page number" : 1,
+    "bounding box" : [ 351.5, 192.952, 367.012, 198.666 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 4.296,
+    "text color" : "[0.467, 0.451, 0.424]",
+    "content" : "삼성SDI"
+  }, {
+    "type" : "paragraph",
+    "id" : 283,
+    "page number" : 1,
+    "bounding box" : [ 336.07, 201.282, 367.156, 206.996 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 4.296,
+    "text color" : "[0.467, 0.451, 0.424]",
+    "content" : "LG에너지솔루션"
+  }, {
+    "type" : "paragraph",
+    "id" : 284,
+    "page number" : 1,
+    "bounding box" : [ 344.76, 209.612, 367.058, 215.326 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 4.296,
+    "text color" : "[0.467, 0.451, 0.424]",
+    "content" : "SK하이닉스"
+  }, {
+    "type" : "paragraph",
+    "id" : 285,
+    "page number" : 1,
+    "bounding box" : [ 349.9, 217.942, 366.988, 223.656 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 4.296,
+    "text color" : "[0.467, 0.451, 0.424]",
+    "content" : "삼성전자"
+  }, {
+    "type" : "paragraph",
+    "id" : 286,
+    "page number" : 1,
+    "bounding box" : [ 444.05, 368.187, 461.138, 373.87 ],
+    "font" : "맑은 고딕",
+    "font size" : 4.272,
+    "text color" : "[0.0]",
+    "content" : "(단위: %)"
+  }, {
+    "type" : "image",
+    "id" : 287,
+    "page number" : 1,
+    "bounding box" : [ 21.213, 783.43, 489.333, 824.535 ]
+  }, {
+    "type" : "heading",
+    "id" : 288,
+    "level" : "Subtitle",
+    "page number" : 1,
+    "bounding box" : [ 43.872, 786.917, 249.34, 802.05 ],
+    "heading level" : 3,
+    "font" : "맑은 고딕,Bold",
+    "font size" : 11.016,
+    "text color" : "[0.396, 0.361, 0.318]",
+    "content" : "2023년 9월 KB자산운용 월간운용보고서"
+  }, {
+    "type" : "line",
+    "id" : 289,
+    "page number" : 1,
+    "bounding box" : [ 411.1, 807.55, 476.711, 823.386 ]
+  }, {
+    "type" : "image",
+    "id" : 290,
+    "page number" : 1,
+    "bounding box" : [ 411.1, 807.55, 476.711, 823.386 ]
+  }, {
+    "type" : "paragraph",
+    "id" : 291,
+    "page number" : 1,
+    "bounding box" : [ 419.95, 811.052, 468.028, 822.321 ],
+    "font" : "맑은 고딕,Bold",
+    "font size" : 8.472,
+    "text color" : "[1.0]",
+    "content" : "판매사 사내한"
+  } ]
+}
