@@ -4,11 +4,20 @@ Java 8+ runtime environment.
 
 # Build instructions
 
-Build and install using Maven `mvn clean install` in this order:
+Perform the following steps for each of the following repositories in the specified order:
 1. duallab-lr-verapdf-parser
 2. duallab-layout-recognition-algs
 3. duallab-lr-verapdf-validation 
 4. duallab-layout-recognition-core
+
+Checkout the project using the command
+
+> git checkout <repository url>
+
+Build and install using Maven command
+
+> mvn clean install
+
 
 # CLI usage
 
@@ -102,12 +111,13 @@ Root json node
 
 Common fields of content json nodes
 
-| Field             | Type    | Description                                                                                                                                                                                           |
-|-------------------|---------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| id                | integer | Unique id of content element                                                                                                                                                                          |
-| type              | string  | Type of content element<br/>Possible types: `footer`, `header`, `heading`, `line`, `table`, `table row`, `table cell`, `paragraph`, `list`, `list item`, `image`, `line art`, `caption`, `text block` |
-| page number       | integer | Page number of content element                                                                                                                                                                        |
-| bounding box      | array   | Bounding box of content element                                                                                                                                                                       |
+| Field        | Type    | Description                                                                                                                                                                                           |
+|--------------|---------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| id           | integer | Unique id of content element                                                                                                                                                                          |
+| level        | string  | Level of content element                                                                                                                                                                              |
+| type         | string  | Type of content element<br/>Possible types: `footer`, `header`, `heading`, `line`, `table`, `table row`, `table cell`, `paragraph`, `list`, `list item`, `image`, `line art`, `caption`, `text block` |
+| page number  | integer | Page number of content element                                                                                                                                                                        |
+| bounding box | array   | Bounding box of content element                                                                                                                                                                       |
 
 Specific fields of text content json nodes (`list item`, `caption`, `heading`, `paragraph`)
 
