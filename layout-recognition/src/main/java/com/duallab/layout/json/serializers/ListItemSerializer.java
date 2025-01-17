@@ -29,7 +29,7 @@ public class ListItemSerializer extends StdSerializer<ListItem> {
 		jsonGenerator.writeStartObject();
 		SerializerUtil.writeEssentialInfo(jsonGenerator, item, JsonName.LIST_ITEM_TYPE);
 		jsonGenerator.writeStringField(JsonName.FONT_TYPE, item.getFirstLine().getFirstTextChunk().getFontName());
-		jsonGenerator.writeNumberField(JsonName.FONT_SIZE,  item.getFontSize());
+		jsonGenerator.writePOJOField(JsonName.FONT_SIZE,  item.getFontSize());
 		jsonGenerator.writeStringField(JsonName.TEXT_COLOR, Arrays.toString(
 				item.getFirstLine().getFirstTextChunk().getFontColor()));
 		jsonGenerator.writeStringField(JsonName.CONTENT, item.toString());
