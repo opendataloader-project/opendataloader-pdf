@@ -34,7 +34,6 @@ import org.verapdf.wcag.algorithms.entities.geometry.MultiBoundingBox;
 import org.verapdf.wcag.algorithms.entities.tables.TableBordersCollection;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.LinesPreprocessingConsumer;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
-import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
 import org.verapdf.xmp.containers.StaticXmpCoreContainers;
 
 import java.io.File;
@@ -54,7 +53,9 @@ public class DocumentProcessor {
         List<List<IObject>> contents = new ArrayList<>();
         for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
             List<IObject> pageContents = new ArrayList<>(StaticContainers.getDocument().getArtifacts(pageNumber));
-            trimTextChunksWhiteSpaces(pageContents);
+            TextProcessor.removeSameTextChunks(pageContents);
+            pageContents = DocumentProcessor.removeNullObjectsFromList(pageContents);
+            TextProcessor.trimTextChunksWhiteSpaces(pageContents);
             if (StaticLayoutContainers.isFindHiddenText()) {
                 hiddenTexts.addAll(HiddenTextProcessor.findHiddenText(inputPdfName, pageContents, config.getPassword()));
             }
@@ -239,15 +240,6 @@ public class DocumentProcessor {
                 content.getBoundingBox().getHeight() > 0.1 * pageBoundingBox.getHeight()) ||
                 (content.getBoundingBox().getWidth() > 0.1 * pageBoundingBox.getWidth() &&
                         content.getBoundingBox().getHeight() > 0.5 * pageBoundingBox.getHeight());
-    }
-
-    private static void trimTextChunksWhiteSpaces(List<IObject> contents) {
-        for (int i = 0; i < contents.size(); i++) {
-            IObject object = contents.get(i);
-            if (object instanceof TextChunk) {
-                contents.set(i, ChunksMergeUtils.getTrimTextChunk((TextChunk) object));
-            }
-        }
     }
 
     public static List<IObject> sortContents(List<IObject> contents) {
