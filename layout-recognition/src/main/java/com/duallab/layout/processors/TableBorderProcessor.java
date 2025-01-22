@@ -48,7 +48,7 @@ public class TableBorderProcessor {
         TableBorder tableBorder = StaticContainers.getTableBordersCollection().getTableBorder(content.getBoundingBox());
         if (tableBorder != null) {
             if (content instanceof LineChunk) {
-                return tableBorder;
+                return tableBorder.isOneCellTable() ? null : tableBorder;
             }
             if (content instanceof LineArtChunk && BoundingBox.areSameBoundingBoxes(tableBorder.getBoundingBox(), content.getBoundingBox())) {
                 return tableBorder;
