@@ -69,6 +69,7 @@ public class BulletedParagraphUtils {
         ARABIC_NUMBER_REGEXES.add("^\\[\\d+\\].*");
         ARABIC_NUMBER_REGEXES.add("^{\\d+}.*");
         ARABIC_NUMBER_REGEXES.add("^【\\d+】.*");
+        BULLET_REGEXES.add("^\\d+[.\\)]\\s+.*");
         BULLET_REGEXES.add("^[ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎ][.\\)\\]>].*");
         BULLET_REGEXES.add("^" + KOREAN_NUMBERS_REGEX + "[.)\\]>].*");
         BULLET_REGEXES.add("^" + KOREAN_NUMBERS_REGEX + "(-\\d+).*");
