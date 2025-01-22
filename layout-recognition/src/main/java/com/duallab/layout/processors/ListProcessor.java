@@ -331,7 +331,7 @@ public class ListProcessor {
                             if (isNeighborLists(previousList, currentList, middleContent)) {
                                 if (middleContent != null) {
                                     pageContents.set(middleContent.getIndex(), null);
-                                    addFirstLBodyToList(currentList, middleContent);
+                                    addMiddleContentToList(previousList, currentList, middleContent);
                                 }
                                 if (Objects.equals(previousList.getPageNumber(), currentList.getPageNumber()) &&
                                         BoundingBox.areHorizontalOverlapping(previousList.getBoundingBox(), currentList.getBoundingBox())) {
@@ -345,7 +345,7 @@ public class ListProcessor {
                         } else if (Objects.equals(previousList.getNextListId(), currentList.getRecognizedStructureId())) {
                             if (middleContent != null && isMiddleContentPartOfList(previousList, middleContent, currentList)) {
                                 pageContents.set(middleContent.getIndex(), null);
-                                addFirstLBodyToList(currentList, middleContent);
+                                addMiddleContentToList(previousList, currentList, middleContent);
                             }
                         }
                     }
@@ -368,6 +368,19 @@ public class ListProcessor {
             }
         }
         contents.replaceAll(DocumentProcessor::removeNullObjectsFromList);
+    }
+
+    private static void addMiddleContentToList(PDFList previousList, PDFList currentList, SemanticTextNode middleContent) {
+        ListItem lastListItem = previousList.getLastListItem();
+        if (Objects.equals(lastListItem.getPageNumber(), middleContent.getPageNumber()) && 
+                BoundingBox.areHorizontalOverlapping(lastListItem.getBoundingBox(), middleContent.getBoundingBox())) {
+            for (TextColumn textColumn : middleContent.getColumns()) {
+                lastListItem.add(textColumn.getLines());
+            }
+            previousList.getBoundingBox().union(middleContent.getBoundingBox());
+        } else {
+            addFirstLBodyToList(currentList, middleContent);
+        }
     }
     
     private static void addFirstLBodyToList(PDFList currentList, SemanticTextNode middleContent) {
