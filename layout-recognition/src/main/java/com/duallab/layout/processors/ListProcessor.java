@@ -416,7 +416,8 @@ public class ListProcessor {
         }
         for (ListItem listItem : currentList.getListItems()) {
             if (listItem.getLinesNumber() > 1) {
-                if (!NodeUtils.areCloseNumbers(listItem.getSecondLine().getLeftX(), middleContent.getLeftX())) {
+                double xInterval = getMaxXInterval(Math.max(listItem.getFontSize(), middleContent.getFontSize()));
+                if (!NodeUtils.areCloseNumbers(listItem.getSecondLine().getLeftX(), middleContent.getLeftX(), xInterval)) {
                     return false;
                 }
                 break;
