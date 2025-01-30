@@ -1,12 +1,26 @@
+/*
+ * Copyright 2025 Hancom Inc.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 package com.hancom.opendataloader.pdf.processors;
 
+import com.hancom.opendataloader.pdf.containers.StaticLayoutContainers;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import net.minidev.json.JSONArray;
+import org.verapdf.tools.StaticResources;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
+import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioConsumer;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.*;
 import java.util.logging.Level;
@@ -16,7 +30,29 @@ public class TableTransformerProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(TableTransformerProcessor.class.getCanonicalName());
 
-    public static void runTableTransformerPython(File scriptFolder, File imagesFolder, File wordsFolder, File resultFolder) 
+    public static List<List<IObject>> processTableTransformer(String pdfName, String password, File scriptFolder,
+                                                              File resultFolder,
+                                                              List<List<IObject>> contents) throws IOException {
+        resultFolder.mkdir();
+        String fileName = new File(pdfName).getName();
+        File fileResultFolder = new File(resultFolder + File.separator + fileName.substring(0, fileName.length() - 4));
+        fileResultFolder.mkdir();
+        File imagesFolder = new File(fileResultFolder + File.separator + "images_folder");
+        imagesFolder.mkdir();
+        File wordsFolder = new File(fileResultFolder + File.separator + "words_folder");
+        wordsFolder.mkdir();
+        File tableTransformerResultFolder = new File(fileResultFolder + File.separator + "result_folder");
+        resultFolder.mkdir();
+        prepareInputForTableTransformerPython(pdfName, password, contents, imagesFolder, wordsFolder);
+        try {
+            runTableTransformerPython(scriptFolder, imagesFolder, wordsFolder, tableTransformerResultFolder);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        return parseTableTransformerJSONs(tableTransformerResultFolder);
+    }
+
+    private static void runTableTransformerPython(File scriptFolder, File imagesFolder, File wordsFolder, File resultFolder) 
             throws IOException, InterruptedException {
         ProcessBuilder builder = new ProcessBuilder(
                 "py", "inference.py",
@@ -36,7 +72,7 @@ public class TableTransformerProcessor {
         process.waitFor();
     }
 
-    public static List<IObject> parseTableTransformerJson(File jsonFile, int pageNumber, double dpiScaling) {
+    private static List<IObject> parseTableTransformerJson(File jsonFile, int pageNumber, double dpiScaling) {
         List<IObject> pageContents = new ArrayList<>();
         SortedSet<BoundingBox> tableRowsBBoxes = new TreeSet<>(Comparator.comparing(BoundingBox::getTopY).reversed());
         SortedSet<BoundingBox> tableColumnsBBoxes = new TreeSet<>(Comparator.comparing(BoundingBox::getLeftX));
@@ -52,11 +88,11 @@ public class TableTransformerProcessor {
                 BoundingBox pageBoundingBox = DocumentProcessor.getPageBoundingBox(pageNumber);
                 BoundingBox boundingBox = new BoundingBox(pageNumber, (double) bbox.get(0), (double) bbox.get(1), 
                         (double) bbox.get(2), (double) bbox.get(3));
-                if (label.equals("table row")) {
+                if ("table row".equals(label)) {
                     tableRowsBBoxes.add(transformBBoxFromImageToPDFCoordinates(boundingBox, pageBoundingBox, dpiScaling));
-                } else if (label.equals("table column")) {
+                } else if ("table column".equals(label)) {
                     tableColumnsBBoxes.add(transformBBoxFromImageToPDFCoordinates(boundingBox, pageBoundingBox, dpiScaling));
-                } else if (label.equals("table spanning cell")) {
+                } else if ("table spanning cell".equals(label)) {
                     tableSpanningCellsBBoxes.add(transformBBoxFromImageToPDFCoordinates(boundingBox, pageBoundingBox, dpiScaling));
                 }
             }
@@ -69,6 +105,51 @@ public class TableTransformerProcessor {
 //            pageContents.add(border);
         }
         return pageContents;
+    }
+
+    private static List<List<IObject>> parseTableTransformerJSONs(File resultFolder) {
+        List<List<IObject>> detectedContents = new ArrayList<>();
+        for (int pageNumber = 0; pageNumber < StaticResources.getDocument().getNumberOfPages(); pageNumber++) {
+            List<IObject> pageContents = new ArrayList<>();
+            int jsonIndex = 0;
+            while (true) {
+                File jsonFile = new File(resultFolder + File.separator + "image" + pageNumber + "_" + jsonIndex + "_objects.json");
+                if (jsonFile.exists()) {
+                    pageContents.addAll(parseTableTransformerJson(jsonFile, pageNumber,
+                            StaticLayoutContainers.getContrastRatioConsumer().getDpiScalingForPage(pageNumber)));
+                } else {
+                    break;
+                }
+                jsonIndex++;
+            }
+            detectedContents.add(pageContents);
+        }
+        return detectedContents;
+    }
+
+    private static void prepareInputForTableTransformerPython(String pdfName, String password, List<List<IObject>> contents,
+                                                              File imagesFolder, File wordsFolder) throws IOException {
+        generatePageImages(pdfName, password, imagesFolder);
+        generateJsonWithWords(wordsFolder, contents);
+    }
+
+    private static void generatePageImages(String pdfName, String password, File imagesFolder) throws IOException {
+        try (ContrastRatioConsumer contrastRatioConsumer = new ContrastRatioConsumer(pdfName, password, 1000f)) {
+            StaticLayoutContainers.setContrastRatioConsumer(contrastRatioConsumer);
+            for (int pageNumber = 0; pageNumber < StaticResources.getDocument().getNumberOfPages(); pageNumber++) {
+                BufferedImage image = contrastRatioConsumer.getRenderPage(pageNumber);
+                File imageFile = new File(imagesFolder + File.separator + "image" + pageNumber + ".jpg");
+                ImageIO.write(image, "jpg", imageFile);
+            }
+        }
+    }
+
+    private static void generateJsonWithWords(File wordsFolder, List<List<IObject>> contents) throws FileNotFoundException {
+        for (int pageNumber = 0; pageNumber < StaticResources.getDocument().getNumberOfPages(); pageNumber++) {
+            File wordsFile = new File(wordsFolder + File.separator + "image" + pageNumber + "_words.json");
+            textContentsToJSON(wordsFile, contents.get(pageNumber), DocumentProcessor.getPageBoundingBox(pageNumber), 
+                    StaticLayoutContainers.getContrastRatioConsumer().getDpiScalingForPage(pageNumber));
+        }
     }
 
     public static void textContentsToJSON(File jsonFile, List<? extends IObject> pageContents, BoundingBox pageBoundingBox, 
