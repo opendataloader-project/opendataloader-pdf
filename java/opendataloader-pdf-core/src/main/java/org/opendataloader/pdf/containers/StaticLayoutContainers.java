@@ -8,6 +8,7 @@
 package org.opendataloader.pdf.containers;
 
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
+import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioConsumer;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -16,12 +17,14 @@ public class StaticLayoutContainers {
 
     private static final ThreadLocal<Long> currentContentId = new ThreadLocal<>();
     private static final ThreadLocal<List<SemanticHeading>> headings = new ThreadLocal<>();
+    private static final ThreadLocal<ContrastRatioConsumer> contrastRatioConsumer = new ThreadLocal<>();
     private static final ThreadLocal<Integer> imageIndex = new ThreadLocal<>();
 
     public static void clearContainers() {
         currentContentId.set(1L);
         headings.set(new LinkedList<>());
         imageIndex.set(1);
+        contrastRatioConsumer.set(null);
     }
 
     public static long getCurrentContentId() {
@@ -36,6 +39,14 @@ public class StaticLayoutContainers {
 
     public static void setCurrentContentId(long currentContentId) {
         StaticLayoutContainers.currentContentId.set(currentContentId);
+    }
+
+    public static ContrastRatioConsumer getContrastRatioConsumer() {
+        return contrastRatioConsumer.get();
+    }
+
+    public static void setContrastRatioConsumer(ContrastRatioConsumer contrastRatioConsumer) {
+        StaticLayoutContainers.contrastRatioConsumer.set(contrastRatioConsumer);
     }
 
     public static List<SemanticHeading> getHeadings() {
