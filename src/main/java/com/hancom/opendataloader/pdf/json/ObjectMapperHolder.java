@@ -7,13 +7,13 @@
  */
 package com.hancom.opendataloader.pdf.json;
 
+import com.hancom.opendataloader.pdf.json.serializers.*;
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.hancom.opendataloader.pdf.json.serializers.*;
-import org.verapdf.wcag.algorithms.entities.SemanticCaption;
 import org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
+import org.verapdf.wcag.algorithms.entities.SemanticCaption;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
@@ -27,6 +27,7 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 
 public class ObjectMapperHolder {
     private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper tableTransformerObjectMapper = new ObjectMapper();
 
     static {
 
@@ -79,9 +80,22 @@ public class ObjectMapperHolder {
         //module.addSerializer(SemanticParagraph.class, paragraphSerializer);
 
         objectMapper.registerModule(module);
+
+        SimpleModule tableModule = new SimpleModule("NodeSerializer", new Version(2, 1,
+                3, null, null, null));
+
+        com.hancom.opendataloader.pdf.json.serializers.tabletransformer.TableSerializer tableTransformerSerializer =
+                new com.hancom.opendataloader.pdf.json.serializers.tabletransformer.TableSerializer(TableBorder.class);
+        tableModule.addSerializer(TableBorder.class, tableTransformerSerializer);
+
+        tableTransformerObjectMapper.registerModule(tableModule);
     }
 
     public static ObjectMapper getObjectMapper() {
         return objectMapper;
+    }
+
+    public static ObjectMapper getTableTransformerObjectMapper() {
+        return tableTransformerObjectMapper;
     }
 }
