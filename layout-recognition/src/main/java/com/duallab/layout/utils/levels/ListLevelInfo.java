@@ -5,12 +5,14 @@ import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 public class ListLevelInfo extends LevelInfo {
     private final String commonPrefix;
     private final String numberingStyle;
+    private final double maxFontSize;
 
     public ListLevelInfo(PDFList pdfList) {
         super(pdfList.getFirstListItem().getFirstLine().getLeftX(), pdfList.getRightX());
 //        this.label = pdfList.getFirstListItem().getFirstLine().getValue().substring(0, 1);
         commonPrefix = pdfList.getCommonPrefix();
         numberingStyle = pdfList.getNumberingStyle();
+        this.maxFontSize = pdfList.getFirstListItem().getFontSize();
     }
 
     @Override
@@ -24,5 +26,10 @@ public class ListLevelInfo extends LevelInfo {
 
     public String getNumberingStyle() {
         return numberingStyle;
+    }
+
+    @Override
+    public double getMaxXGap() {
+        return maxFontSize * X_GAP_MULTIPLIER;
     }
 }

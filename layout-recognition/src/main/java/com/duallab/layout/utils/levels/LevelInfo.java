@@ -7,6 +7,9 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 import java.util.Objects;
 
 public class LevelInfo {
+    
+    protected static final double X_GAP_MULTIPLIER = 0.3;
+    
     private final double left;
     private final double right;
 
@@ -55,8 +58,8 @@ public class LevelInfo {
         if (levelInfo1.right < levelInfo2.left || levelInfo2.right < levelInfo1.left) {
 
         } else {
-            if (!NodeUtils.areCloseNumbers(levelInfo1.left, levelInfo2.left) && 
-                    !NodeUtils.areCloseNumbers(levelInfo1.right, levelInfo2.right)) {
+            if (!NodeUtils.areCloseNumbers(levelInfo1.left, levelInfo2.left, getMaxXGap(levelInfo1, levelInfo2)) && 
+                    !NodeUtils.areCloseNumbers(levelInfo1.right, levelInfo2.right, getMaxXGap(levelInfo1, levelInfo2))) {
                 return false;
             }
         }
@@ -77,5 +80,13 @@ public class LevelInfo {
 
     public boolean isTextBulletParagraph() {
         return false;
+    }
+    
+    public double getMaxXGap() {
+        return 0;
+    }
+    
+    public static double getMaxXGap(LevelInfo levelInfo1, LevelInfo levelInfo2) {
+        return Math.max(levelInfo1.getMaxXGap(), levelInfo2.getMaxXGap());
     }
 }

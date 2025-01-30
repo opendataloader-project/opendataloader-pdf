@@ -114,8 +114,8 @@ public class ListProcessor {
                     continue;
                 }
                 ListItemTextInfo listItemTextInfo = createListItemTextInfo(i, line, value);
-                double maxXInterval = getMaxXInterval(line.getFontSize());
-                while (!NodeUtils.areCloseNumbers(leftStack.peek(), line.getLeftX(), maxXInterval) && leftStack.peek() > line.getLeftX()) {
+                double maxXGap = getMaxXGap(line.getFontSize());
+                while (!NodeUtils.areCloseNumbers(leftStack.peek(), line.getLeftX(), maxXGap) && leftStack.peek() > line.getLeftX()) {
                     intervalsList.addAll(ListLabelsUtils.getListItemsIntervals(textChildrenInfoList));
                     if (stack.isEmpty()) {
                         textChildrenInfoList = new ArrayList<>();
@@ -124,7 +124,7 @@ public class ListProcessor {
                     textChildrenInfoList = stack.pop();
                     leftStack.pop();
                 }
-                if (NodeUtils.areCloseNumbers(leftStack.peek(), line.getLeftX(), maxXInterval)) {
+                if (NodeUtils.areCloseNumbers(leftStack.peek(), line.getLeftX(), maxXGap)) {
                     textChildrenInfoList.add(listItemTextInfo);
                 } else if (leftStack.peek() < line.getLeftX()) {
                     leftStack.push(line.getLeftX());
@@ -249,7 +249,7 @@ public class ListProcessor {
         return true;
     }
 
-    private static double getMaxXInterval(double fontSize) {
+    private static double getMaxXGap(double fontSize) {
         return fontSize * LIST_ITEM_X_INTERVAL_RATIO;
     }
 
@@ -416,7 +416,7 @@ public class ListProcessor {
         }
         for (ListItem listItem : currentList.getListItems()) {
             if (listItem.getLinesNumber() > 1) {
-                double xInterval = getMaxXInterval(Math.max(listItem.getFontSize(), middleContent.getFontSize()));
+                double xInterval = getMaxXGap(Math.max(listItem.getFontSize(), middleContent.getFontSize()));
                 if (!NodeUtils.areCloseNumbers(listItem.getSecondLine().getLeftX(), middleContent.getLeftX(), xInterval)) {
                     return false;
                 }
