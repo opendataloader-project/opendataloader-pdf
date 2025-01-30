@@ -1,5 +1,5 @@
 {
-  "file name" : "C:\\verapdf-dev\\demo-pdf-structure\\layout-recognition-core\\layout-recognition\\src\\test\\resources\\com\\duallab\\layout\\files\\pdf\\Korean\\2125318_환경노동위원회_검토보고서.[2125318]탄중법 검토보고서(이수진의원안)_hwp.pdf",
+  "file name" : "2125318_환경노동위원회_검토보고서.[2125318]탄중법 검토보고서(이수진의원안)_hwp.pdf",
   "number of pages" : 14,
   "author" : "User",
   "title" : null,
@@ -7,52 +7,31 @@
   "modification date" : "D:20240604005431+09'00'",
   "kids" : [ {
     "type" : "image",
-    "id" : 379,
+    "id" : 378,
     "page number" : 1,
     "bounding box" : [ 74.84, 703.99, 184.941, 735.755 ]
   }, {
-    "type" : "table",
-    "id" : 380,
-    "level" : "1",
+    "type" : "image",
+    "id" : 379,
     "page number" : 1,
-    "bounding box" : [ 72.141, 705.128, 246.108, 740.61 ],
-    "number of rows" : 1,
-    "number of columns" : 2,
-    "rows" : [ {
-      "type" : "table row",
-      "row number" : 1,
-      "cells" : [ {
-        "type" : "table cell",
-        "page number" : 1,
-        "bounding box" : [ 72.141, 705.128, 118.856, 740.61 ],
-        "row number" : 1,
-        "column number" : 1,
-        "row span" : 1,
-        "column span" : 1,
-        "kids" : [ ]
-      }, {
-        "type" : "table cell",
-        "page number" : 1,
-        "bounding box" : [ 118.436, 705.128, 246.108, 740.61 ],
-        "row number" : 1,
-        "column number" : 2,
-        "row span" : 1,
-        "column span" : 1,
-        "kids" : [ {
-          "type" : "paragraph",
-          "id" : 1,
-          "page number" : 1,
-          "bounding box" : [ 123.053, 709.245, 240.829, 736.815 ],
-          "font" : "H2mjrE",
-          "font size" : 11.987,
-          "text color" : "[0.0]",
-          "content" : "제414 국회(임시회) 제1차 환경노동위원회"
-        } ]
-      } ]
-    } ]
+    "bounding box" : [ 118.496, 705.128, 246.108, 705.728 ]
+  }, {
+    "type" : "paragraph",
+    "id" : 380,
+    "page number" : 1,
+    "bounding box" : [ 123.053, 709.245, 240.829, 736.815 ],
+    "font" : "H2mjrE",
+    "font size" : 11.987,
+    "text color" : "[0.0]",
+    "content" : "제414 국회(임시회) 제1차 환경노동위원회"
+  }, {
+    "type" : "image",
+    "id" : 381,
+    "page number" : 1,
+    "bounding box" : [ 72.141, 705.248, 118.856, 740.61 ]
   }, {
     "type" : "heading",
-    "id" : 381,
+    "id" : 382,
     "level" : "Doctitle",
     "page number" : 1,
     "bounding box" : [ 133.128, 471.156, 461.87, 633.865 ],
@@ -63,17 +42,17 @@
     "content" : "기후위기 대응을 위한 탄소중립ᆞ녹색성장 기본법 일부개정법률안 검 토 보 고"
   }, {
     "type" : "text block",
-    "id" : 382,
+    "id" : 383,
     "page number" : 1,
     "bounding box" : [ 112.02, 351.935, 483.1, 418.942 ],
     "kids" : [ {
       "type" : "text block",
-      "id" : 3,
+      "id" : 2,
       "page number" : 1,
       "bounding box" : [ 113.459, 353.373, 481.661, 417.504 ],
       "kids" : [ {
         "type" : "paragraph",
-        "id" : 2,
+        "id" : 1,
         "page number" : 1,
         "bounding box" : [ 115.018, 364.268, 480.07, 406.822 ],
         "font" : "H2mjrE",
@@ -84,7 +63,8 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 383,
+    "id" : 384,
+    "level" : "1",
     "page number" : 1,
     "bounding box" : [ 259.419, 264.521, 335.578, 282.502 ],
     "font" : "H2mjrE",
@@ -93,7 +73,7 @@
     "content" : "2024. 5."
   }, {
     "type" : "paragraph",
-    "id" : 384,
+    "id" : 385,
     "page number" : 1,
     "bounding box" : [ 201.011, 114.701, 393.653, 172.637 ],
     "font" : "H2mjrE",
@@ -102,17 +82,17 @@
     "content" : "환 경 노 동 위 원 회 수석전문위원 오창석"
   }, {
     "type" : "text block",
-    "id" : 385,
+    "id" : 386,
     "page number" : 2,
     "bounding box" : [ 224.339, 679.297, 370.721, 716.396 ],
     "kids" : [ {
       "type" : "text block",
-      "id" : 5,
+      "id" : 4,
       "page number" : 2,
       "bounding box" : [ 225.419, 680.376, 369.641, 715.318 ],
       "kids" : [ {
         "type" : "paragraph",
-        "id" : 4,
+        "id" : 3,
         "page number" : 2,
         "bounding box" : [ 261.578, 686.92, 332.58, 710.942 ],
         "font" : null,
@@ -123,7 +103,7 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 386,
+    "id" : 387,
     "level" : "2",
     "page number" : 2,
     "bounding box" : [ 70.882, 454.854, 524.07, 631.469 ],
@@ -134,7 +114,7 @@
       "page number" : 2,
       "bounding box" : [ 70.882, 614.639, 524.07, 631.469 ],
       "font" : "Batang",
-      "font size" : 14.024673,
+      "font size" : 14.025,
       "text color" : "[0.0]",
       "content" : "Ⅰ. 제안경위 ·····································································································1",
       "kids" : [ ]
@@ -143,7 +123,7 @@
       "page number" : 2,
       "bounding box" : [ 70.882, 534.807, 524.07, 551.636 ],
       "font" : "Batang",
-      "font size" : 14.024673,
+      "font size" : 14.025,
       "text color" : "[0.0]",
       "content" : "Ⅱ. 제안이유 및 주요내용 ············································································1",
       "kids" : [ ]
@@ -152,14 +132,15 @@
       "page number" : 2,
       "bounding box" : [ 70.882, 454.854, 524.07, 471.684 ],
       "font" : "Batang",
-      "font size" : 14.024673,
+      "font size" : 14.025,
       "text color" : "[0.0]",
       "content" : "Ⅲ. 검토의견 ·····································································································3",
       "kids" : [ ]
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 387,
+    "id" : 388,
+    "level" : "3",
     "page number" : 2,
     "bounding box" : [ 87.313, 414.938, 527.788, 431.767 ],
     "font" : null,
@@ -168,8 +149,8 @@
     "content" : "1. 탄소중립녹색성장위원회 위원 후보 추천 단체 명시 ························· 3"
   }, {
     "type" : "paragraph",
-    "id" : 388,
-    "level" : "3",
+    "id" : 389,
+    "level" : "4",
     "page number" : 2,
     "bounding box" : [ 70.882, 349.01, 524.07, 365.839 ],
     "font" : "Batang",
@@ -178,8 +159,8 @@
     "content" : "※ 참고자료 ······································································································9"
   }, {
     "type" : "list",
-    "id" : 389,
-    "level" : "4",
+    "id" : 390,
+    "level" : "5",
     "page number" : 2,
     "bounding box" : [ 87.433, 275.589, 532.825, 325.803 ],
     "numbering style" : "arabic numbers",
@@ -189,7 +170,7 @@
       "page number" : 2,
       "bounding box" : [ 87.433, 308.973, 532.825, 325.803 ],
       "font" : "Batang",
-      "font size" : 14.024673,
+      "font size" : 14.025,
       "text color" : "[0.0]",
       "content" : "1. 2050 탄소중립위원회 민간위촉위원 구성현황 ···································9",
       "kids" : [ ]
@@ -198,14 +179,14 @@
       "page number" : 2,
       "bounding box" : [ 87.433, 275.589, 524.19, 293.821 ],
       "font" : "Batang",
-      "font size" : 14.024673,
+      "font size" : 14.025,
       "text color" : "[0.0]",
       "content" : "2. 광역 탄소중립‧녹색성장위원회 위원 구성 현황 ······························ 10",
       "kids" : [ ]
     } ]
   }, {
     "type" : "heading",
-    "id" : 390,
+    "id" : 391,
     "level" : "Subtitle",
     "page number" : 3,
     "bounding box" : [ 70.882, 725.135, 165.869, 744.266 ],
@@ -216,7 +197,7 @@
     "content" : "Ⅰ. 제안경위"
   }, {
     "type" : "paragraph",
-    "id" : 391,
+    "id" : 392,
     "page number" : 3,
     "bounding box" : [ 70.882, 606.129, 524.236, 687.208 ],
     "font" : null,
@@ -225,7 +206,7 @@
     "content" : "2023년 11월 9일 이수진 의원이 대표 발의한 기후위기 대응을 위 한 탄소중립ㆍ녹색성장 기본법 일부개정법률안은 2023년 11월 10일 우리 위원회에 회부되었음."
   }, {
     "type" : "heading",
-    "id" : 392,
+    "id" : 393,
     "level" : "Subtitle",
     "page number" : 3,
     "bounding box" : [ 70.882, 542.934, 265.774, 562.065 ],
@@ -236,7 +217,7 @@
     "content" : "Ⅱ. 제안이유 및 주요내용"
   }, {
     "type" : "paragraph",
-    "id" : 393,
+    "id" : 394,
     "page number" : 3,
     "bounding box" : [ 70.882, 391.683, 524.237, 505.007 ],
     "font" : null,
@@ -245,7 +226,7 @@
     "content" : "현행법은 기후위기 대응을 위해 국가 탄소중립 녹색성장 기본계획 (이하 “탄소중립기본계획”이라 함)을 수립ㆍ시행하도록 하고, 탄소중 립기본계획 및 주요 정책 등을 심의ㆍ의결하기 위하여 2050 탄소중립 녹색성장위원회(이하 “탄소중립위원회”라 함)를 두도록 하고 있음."
   }, {
     "type" : "paragraph",
-    "id" : 394,
+    "id" : 395,
     "page number" : 3,
     "bounding box" : [ 70.882, 92.25, 524.237, 366.439 ],
     "font" : null,
@@ -254,12 +235,12 @@
     "content" : "그리고 탄소중립 사회로의 이행과 추진 과정에서 모든 국민의 민주 적 참여를 보장함을 기본원칙으로 보장하고, 탄소중립위원회의 위원 위촉에 있어 아동, 청년, 여성, 노동자, 농어민, 중소상공인, 시민사회 단체 등 다양한 사회계층으로부터 후보를 추천받거나 의견을 들은 후 각 사회계층의 대표성이 반영될 수 있도록 하여야 함을 규정하고 있 음. 또한 지방자치단체의 탄소중립 녹색성장 기본계획 및 주요 정책 등을 심의ㆍ의결하기 위하여 2050 지방탄소중립녹색성장위원회(이하 “지방탄소중립위원회”라 함)를 둘 수 있도록 하고, 지방탄소중립위원 회의 위원 위촉의 경우에도 아동, 청년, 여성, 노동자, 농어민, 중소상"
   }, {
     "type" : "footer",
-    "id" : 395,
+    "id" : 396,
     "page number" : 3,
     "bounding box" : [ 281.967, 42.429, 313.21, 53.457 ],
     "kids" : [ {
       "type" : "paragraph",
-      "id" : 367,
+      "id" : 366,
       "page number" : 3,
       "bounding box" : [ 281.967, 42.429, 313.21, 53.457 ],
       "font" : "Batang",
@@ -269,7 +250,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 396,
+    "id" : 397,
     "page number" : 4,
     "bounding box" : [ 70.882, 694.952, 524.236, 744.026 ],
     "font" : null,
@@ -278,7 +259,7 @@
     "content" : "공인, 시민사회단체 등 다양한 사회계층의 대표성이 반영될 수 있도록 하여야 함을 규정하고 있음."
   }, {
     "type" : "paragraph",
-    "id" : 397,
+    "id" : 398,
     "page number" : 4,
     "bounding box" : [ 70.882, 524.138, 524.237, 669.707 ],
     "font" : null,
@@ -287,7 +268,7 @@
     "content" : "그러나 지난해 윤석열 정부 출범 이후, 이른바 제2기 탄소중립위원 회가 출범했지만, 청년, 여성, 노동자, 농어민, 중소상공인 등 법률에 서 참여를 보장하고 있는 사회계층의 참여가 배제되며 민주적 참여 원칙을 위반한 위원회가 구성되었고, 이 위원회가 탄소중립기본계획을 심의ㆍ의결하며 이에 대한 법률 위반 문제가 제기되고 있음."
   }, {
     "type" : "paragraph",
-    "id" : 398,
+    "id" : 399,
     "page number" : 4,
     "bounding box" : [ 70.882, 321.2, 524.236, 498.894 ],
     "font" : null,
@@ -296,7 +277,7 @@
     "content" : "그런데 「탄소중립기본법」이 모든 국민의 민주적 참여를 보장하고, 다양한 사회계층의 대표성이 반영될 수 있도록 탄소중립위원회 등을 구성하도록 규정하고 있는 것은 탄소중립 사회로의 이행이 국가적 비 전으로서 그 과정에서의 부담과 피해가 일부 계층에 전가되지 않고 모든 국민이 함께 새로운 국가 비전으로 나아갈 수 있도록 하기 위한 목적이라는 점에서 「탄소중립기본법」의 핵심가치라고 할 것임."
   }, {
     "type" : "paragraph",
-    "id" : 399,
+    "id" : 400,
     "page number" : 4,
     "bounding box" : [ 70.882, 150.387, 524.237, 295.836 ],
     "font" : null,
@@ -305,12 +286,12 @@
     "content" : "이에 탄소중립위원회 및 지방탄소중립위원회의 위원을 위촉하는 경 우 다양한 사회계층의 대표성을 반영하여야 함을 더욱 명확히 하고 실질적인 대표성이 반영되도록 관련 규정을 정비함으로써 탄소중립 사회로의 이행이 민주적 참여를 통해 실효적으로 이루어질 수 있도록 하고자 함(안 제15조제5항 등)."
   }, {
     "type" : "footer",
-    "id" : 400,
+    "id" : 401,
     "page number" : 4,
     "bounding box" : [ 281.967, 42.429, 313.21, 53.457 ],
     "kids" : [ {
       "type" : "paragraph",
-      "id" : 368,
+      "id" : 367,
       "page number" : 4,
       "bounding box" : [ 281.967, 42.429, 313.21, 53.457 ],
       "font" : "Batang",
@@ -320,7 +301,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 401,
+    "id" : 402,
     "page number" : 5,
     "bounding box" : [ 70.882, 725.135, 165.509, 744.266 ],
     "font" : null,
@@ -329,7 +310,8 @@
     "content" : "III. 검토의견"
   }, {
     "type" : "paragraph",
-    "id" : 402,
+    "id" : 403,
+    "level" : "3",
     "page number" : 5,
     "bounding box" : [ 85.873, 674.382, 458.991, 692.362 ],
     "font" : null,
@@ -338,7 +320,7 @@
     "content" : "1. 탄소중립녹색성장위원회 위원 후보 추천 단체 명시"
   }, {
     "type" : "paragraph",
-    "id" : 403,
+    "id" : 404,
     "page number" : 5,
     "bounding box" : [ 70.882, 492.253, 524.237, 637.822 ],
     "font" : null,
@@ -347,23 +329,23 @@
     "content" : "개정안은 2050 탄소중립녹색성장위원회 및 2050 지방탄소중립녹색 성장위원회 위원 위촉 시 다양한 사회계층(아동, 청년, 여성, 노동자, 농어민, 중소상공인, 시민사회단체 등)의 대표성이 반영될 수 있도록 후보 추천 단체를 법률에서 명시적으로 규정하려는 것임(안 제15조제 5항 및 제22조제3항)."
   }, {
     "type" : "Caption",
-    "id" : 404,
+    "id" : 405,
     "page number" : 5,
     "bounding box" : [ 221.16, 445.145, 373.897, 461.974 ],
-    "linked content id" : 405,
+    "linked content id" : 406,
     "font" : null,
     "font size" : 14.025,
     "text color" : "[0.0]",
     "content" : "[ 개정안 조문대비표 ]"
   }, {
     "type" : "table",
-    "id" : 405,
+    "id" : 406,
     "level" : "5",
     "page number" : 5,
     "bounding box" : [ 76.339, 106.444, 527.236, 432.667 ],
     "number of rows" : 2,
     "number of columns" : 2,
-    "next table id" : 407,
+    "next table id" : 408,
     "rows" : [ {
       "type" : "table row",
       "row number" : 1,
@@ -377,7 +359,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 6,
+          "id" : 5,
           "page number" : 5,
           "bounding box" : [ 153.48, 410.512, 224.28, 427.36 ],
           "font" : null,
@@ -395,7 +377,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 7,
+          "id" : 6,
           "page number" : 5,
           "bounding box" : [ 371.52, 410.512, 456.96, 427.36 ],
           "font" : null,
@@ -417,7 +399,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 8,
+          "id" : 7,
           "level" : "1",
           "page number" : 5,
           "bounding box" : [ 82.2, 334.192, 296.281, 401.44 ],
@@ -427,7 +409,7 @@
           "content" : "제15조(2050 탄소중립녹색성장 위원회의 설치) ① ∼ ④ (생 략)"
         }, {
           "type" : "paragraph",
-          "id" : 9,
+          "id" : 8,
           "level" : "2",
           "page number" : 5,
           "bounding box" : [ 96.24, 133.792, 296.281, 327.04 ],
@@ -437,42 +419,42 @@
           "content" : "⑤ 제4항제2호에 따라 위원을 위촉할 때에는 아동, 청년, 여 성, 노동자, 농어민, 중소상공 인, 시민사회단체 등 다양한 사회계층으로부터 후보를 추천 받거나 의견을 들은 후 각 사 회계층의 대표성이 반영될 수 있도록 하여야 한다."
         }, {
           "type" : "image",
-          "id" : 10,
+          "id" : 9,
           "page number" : 5,
           "bounding box" : [ 199.093, 285.827, 296.241, 286.427 ]
         }, {
           "type" : "image",
-          "id" : 11,
+          "id" : 10,
           "page number" : 5,
           "bounding box" : [ 96.188, 260.655, 296.241, 261.255 ]
         }, {
           "type" : "image",
-          "id" : 12,
+          "id" : 11,
           "page number" : 5,
           "bounding box" : [ 96.188, 235.482, 296.241, 236.082 ]
         }, {
           "type" : "image",
-          "id" : 13,
+          "id" : 12,
           "page number" : 5,
           "bounding box" : [ 96.188, 210.31, 296.241, 210.91 ]
         }, {
           "type" : "image",
-          "id" : 14,
+          "id" : 13,
           "page number" : 5,
           "bounding box" : [ 96.188, 185.137, 296.241, 185.737 ]
         }, {
           "type" : "image",
-          "id" : 15,
+          "id" : 14,
           "page number" : 5,
           "bounding box" : [ 96.188, 159.965, 296.241, 160.565 ]
         }, {
           "type" : "image",
-          "id" : 16,
+          "id" : 15,
           "page number" : 5,
           "bounding box" : [ 96.188, 134.792, 187.219, 135.392 ]
         }, {
           "type" : "paragraph",
-          "id" : 17,
+          "id" : 16,
           "page number" : 5,
           "bounding box" : [ 96.24, 109.912, 155.775, 126.76 ],
           "font" : null,
@@ -481,7 +463,7 @@
           "content" : "<신 설>"
         }, {
           "type" : "image",
-          "id" : 18,
+          "id" : 17,
           "page number" : 5,
           "bounding box" : [ 96.188, 110.818, 155.796, 111.418 ]
         } ]
@@ -495,7 +477,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 19,
+          "id" : 18,
           "level" : "1",
           "page number" : 5,
           "bounding box" : [ 307.56, 334.192, 521.641, 401.44 ],
@@ -505,7 +487,7 @@
           "content" : "제15조(2050 탄소중립녹색성장 위원회의 설치) ① ∼ ④ (현 행과 같음)"
         }, {
           "type" : "paragraph",
-          "id" : 20,
+          "id" : 19,
           "level" : "2",
           "page number" : 5,
           "bounding box" : [ 321.6, 185.012, 521.655, 325.052 ],
@@ -515,27 +497,28 @@
           "content" : "⑤ --------------------------------------다음 각 호에 해당하는 단체로부터 후보를 추천받아 다양한 사회 계층의 대표성을 반영하여야----."
         }, {
           "type" : "image",
-          "id" : 21,
+          "id" : 20,
           "page number" : 5,
           "bounding box" : [ 492.935, 285.827, 521.48, 286.427 ]
         }, {
           "type" : "image",
-          "id" : 22,
+          "id" : 21,
           "page number" : 5,
           "bounding box" : [ 321.427, 260.655, 521.48, 261.255 ]
         }, {
           "type" : "image",
-          "id" : 23,
+          "id" : 22,
           "page number" : 5,
           "bounding box" : [ 321.427, 235.482, 521.48, 236.082 ]
         }, {
           "type" : "image",
-          "id" : 24,
+          "id" : 23,
           "page number" : 5,
           "bounding box" : [ 321.427, 210.31, 503.969, 210.91 ]
         }, {
           "type" : "paragraph",
-          "id" : 25,
+          "id" : 24,
+          "level" : "3",
           "page number" : 5,
           "bounding box" : [ 321.6, 109.912, 521.64, 126.76 ],
           "font" : null,
@@ -547,12 +530,12 @@
     } ]
   }, {
     "type" : "footer",
-    "id" : 406,
+    "id" : 407,
     "page number" : 5,
     "bounding box" : [ 281.967, 42.429, 313.21, 53.457 ],
     "kids" : [ {
       "type" : "paragraph",
-      "id" : 369,
+      "id" : 368,
       "page number" : 5,
       "bounding box" : [ 281.967, 42.429, 313.21, 53.457 ],
       "font" : "Batang",
@@ -562,14 +545,14 @@
     } ]
   }, {
     "type" : "table",
-    "id" : 407,
+    "id" : 408,
     "level" : "6",
     "page number" : 6,
     "bounding box" : [ 76.339, 110.519, 527.236, 736.415 ],
     "number of rows" : 2,
     "number of columns" : 2,
-    "previous table id" : 405,
-    "next table id" : 409,
+    "previous table id" : 406,
+    "next table id" : 410,
     "rows" : [ {
       "type" : "table row",
       "row number" : 1,
@@ -583,7 +566,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 26,
+          "id" : 25,
           "page number" : 6,
           "bounding box" : [ 153.48, 714.472, 224.28, 731.32 ],
           "font" : null,
@@ -601,7 +584,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 27,
+          "id" : 26,
           "page number" : 6,
           "bounding box" : [ 371.52, 714.472, 456.96, 731.32 ],
           "font" : null,
@@ -623,7 +606,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 28,
+          "id" : 27,
           "page number" : 6,
           "bounding box" : [ 96.24, 614.272, 155.775, 631.12 ],
           "font" : null,
@@ -632,12 +615,12 @@
           "content" : "<신 설>"
         }, {
           "type" : "image",
-          "id" : 29,
+          "id" : 28,
           "page number" : 6,
           "bounding box" : [ 96.188, 614.627, 155.796, 615.227 ]
         }, {
           "type" : "paragraph",
-          "id" : 30,
+          "id" : 29,
           "page number" : 6,
           "bounding box" : [ 96.24, 489.472, 155.775, 506.32 ],
           "font" : null,
@@ -646,12 +629,12 @@
           "content" : "<신 설>"
         }, {
           "type" : "image",
-          "id" : 31,
+          "id" : 30,
           "page number" : 6,
           "bounding box" : [ 96.188, 489.964, 155.796, 490.564 ]
         }, {
           "type" : "paragraph",
-          "id" : 32,
+          "id" : 31,
           "page number" : 6,
           "bounding box" : [ 96.24, 364.672, 155.775, 381.52 ],
           "font" : null,
@@ -660,12 +643,12 @@
           "content" : "<신 설>"
         }, {
           "type" : "image",
-          "id" : 33,
+          "id" : 32,
           "page number" : 6,
           "bounding box" : [ 96.188, 365.42, 155.796, 366.02 ]
         }, {
           "type" : "paragraph",
-          "id" : 34,
+          "id" : 33,
           "page number" : 6,
           "bounding box" : [ 96.24, 113.992, 155.775, 130.84 ],
           "font" : null,
@@ -674,7 +657,7 @@
           "content" : "<신 설>"
         }, {
           "type" : "image",
-          "id" : 35,
+          "id" : 34,
           "page number" : 6,
           "bounding box" : [ 96.188, 114.894, 155.796, 115.494 ]
         } ]
@@ -688,7 +671,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 56,
+          "id" : 55,
           "page number" : 6,
           "bounding box" : [ 332.04, 638.152, 521.641, 705.4 ],
           "font" : null,
@@ -697,22 +680,22 @@
           "content" : "대표할 수 있는 대통령령으로 정하는 요건을 갖춘 전국적 규모의 단체"
         }, {
           "type" : "image",
-          "id" : 57,
+          "id" : 56,
           "page number" : 6,
           "bounding box" : [ 331.862, 688.946, 521.48, 689.546 ]
         }, {
           "type" : "image",
-          "id" : 58,
+          "id" : 57,
           "page number" : 6,
           "bounding box" : [ 331.862, 663.774, 521.48, 664.374 ]
         }, {
           "type" : "image",
-          "id" : 59,
+          "id" : 58,
           "page number" : 6,
           "bounding box" : [ 331.862, 638.601, 408.86, 639.201 ]
         }, {
           "type" : "list",
-          "id" : 60,
+          "id" : 59,
           "level" : "1",
           "page number" : 6,
           "bounding box" : [ 321.6, 113.992, 521.641, 631.12 ],
@@ -728,27 +711,27 @@
             "content" : "2. 「노동조합 및 노동관계조 정법」 제10조제2항에 따른 총연합단체, 전국적 규모의 산업별 연합단체 및 산업별 노동조합",
             "kids" : [ {
               "type" : "image",
-              "id" : 36,
+              "id" : 35,
               "page number" : 6,
               "bounding box" : [ 321.427, 614.627, 521.48, 615.227 ]
             }, {
               "type" : "image",
-              "id" : 37,
+              "id" : 36,
               "page number" : 6,
               "bounding box" : [ 331.862, 589.455, 521.48, 590.055 ]
             }, {
               "type" : "image",
-              "id" : 38,
+              "id" : 37,
               "page number" : 6,
               "bounding box" : [ 331.862, 564.282, 521.48, 564.882 ]
             }, {
               "type" : "image",
-              "id" : 39,
+              "id" : 38,
               "page number" : 6,
               "bounding box" : [ 331.862, 539.11, 521.48, 539.71 ]
             }, {
               "type" : "image",
-              "id" : 40,
+              "id" : 39,
               "page number" : 6,
               "bounding box" : [ 331.862, 513.937, 387.871, 514.537 ]
             } ]
@@ -762,27 +745,27 @@
             "content" : "3. 「농업ㆍ농촌 및 식품산업 기본법」 제3조제4호에 따른 생산자단체 및 「수산업ㆍ어 촌 발전 기본법」제3조제5호 에 따른 생산자단체",
             "kids" : [ {
               "type" : "image",
-              "id" : 41,
+              "id" : 40,
               "page number" : 6,
               "bounding box" : [ 321.427, 489.964, 521.48, 490.564 ]
             }, {
               "type" : "image",
-              "id" : 42,
+              "id" : 41,
               "page number" : 6,
               "bounding box" : [ 331.862, 464.791, 521.48, 465.391 ]
             }, {
               "type" : "image",
-              "id" : 43,
+              "id" : 42,
               "page number" : 6,
               "bounding box" : [ 331.862, 439.619, 521.48, 440.219 ]
             }, {
               "type" : "image",
-              "id" : 44,
+              "id" : 43,
               "page number" : 6,
               "bounding box" : [ 331.862, 414.446, 521.48, 415.046 ]
             }, {
               "type" : "image",
-              "id" : 45,
+              "id" : 44,
               "page number" : 6,
               "bounding box" : [ 331.862, 389.274, 464.87, 389.874 ]
             } ]
@@ -796,52 +779,52 @@
             "content" : "4. 「중소기업기본법」 제2조 에 따른 중소기업, 「중견기 업 성장촉진 및 경쟁력 강화 에 관한 특별법」 제2조제1 호에 따른 중견기업, 「소상 공인기본법」 제2조에 따른 소상공인을 각각 대표할 수 있는 대통령령으로 정하는 요 건을 갖춘 전국적 규모의 단 체",
             "kids" : [ {
               "type" : "image",
-              "id" : 46,
+              "id" : 45,
               "page number" : 6,
               "bounding box" : [ 321.427, 365.42, 521.48, 366.02 ]
             }, {
               "type" : "image",
-              "id" : 47,
+              "id" : 46,
               "page number" : 6,
               "bounding box" : [ 331.862, 340.247, 521.48, 340.847 ]
             }, {
               "type" : "image",
-              "id" : 48,
+              "id" : 47,
               "page number" : 6,
               "bounding box" : [ 331.862, 315.075, 521.48, 315.675 ]
             }, {
               "type" : "image",
-              "id" : 49,
+              "id" : 48,
               "page number" : 6,
               "bounding box" : [ 331.862, 289.903, 521.48, 290.503 ]
             }, {
               "type" : "image",
-              "id" : 50,
+              "id" : 49,
               "page number" : 6,
               "bounding box" : [ 331.862, 264.73, 521.48, 265.33 ]
             }, {
               "type" : "image",
-              "id" : 51,
+              "id" : 50,
               "page number" : 6,
               "bounding box" : [ 331.862, 239.558, 521.48, 240.158 ]
             }, {
               "type" : "image",
-              "id" : 52,
+              "id" : 51,
               "page number" : 6,
               "bounding box" : [ 331.862, 214.385, 521.48, 214.985 ]
             }, {
               "type" : "image",
-              "id" : 53,
+              "id" : 52,
               "page number" : 6,
               "bounding box" : [ 331.862, 189.213, 521.48, 189.813 ]
             }, {
               "type" : "image",
-              "id" : 54,
+              "id" : 53,
               "page number" : 6,
               "bounding box" : [ 331.862, 164.04, 521.48, 164.64 ]
             }, {
               "type" : "image",
-              "id" : 55,
+              "id" : 54,
               "page number" : 6,
               "bounding box" : [ 331.862, 138.868, 345.894, 139.468 ]
             } ]
@@ -860,12 +843,12 @@
     } ]
   }, {
     "type" : "footer",
-    "id" : 408,
+    "id" : 409,
     "page number" : 6,
     "bounding box" : [ 282.12, 41.557, 313.38, 52.597 ],
     "kids" : [ {
       "type" : "paragraph",
-      "id" : 370,
+      "id" : 369,
       "page number" : 6,
       "bounding box" : [ 282.12, 41.557, 313.38, 52.597 ],
       "font" : "Batang",
@@ -875,13 +858,13 @@
     } ]
   }, {
     "type" : "table",
-    "id" : 409,
+    "id" : 410,
     "level" : "7",
     "page number" : 7,
     "bounding box" : [ 76.339, 112.917, 527.236, 736.415 ],
     "number of rows" : 2,
     "number of columns" : 2,
-    "previous table id" : 407,
+    "previous table id" : 408,
     "rows" : [ {
       "type" : "table row",
       "row number" : 1,
@@ -895,7 +878,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 61,
+          "id" : 60,
           "page number" : 7,
           "bounding box" : [ 153.48, 714.472, 224.28, 731.32 ],
           "font" : null,
@@ -913,7 +896,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 62,
+          "id" : 61,
           "page number" : 7,
           "bounding box" : [ 371.52, 714.472, 456.96, 731.32 ],
           "font" : null,
@@ -935,7 +918,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 63,
+          "id" : 62,
           "level" : "1",
           "page number" : 7,
           "bounding box" : [ 96.24, 639.472, 225.839, 656.32 ],
@@ -945,7 +928,7 @@
           "content" : "⑥ ∼ ⑨ (생 략)"
         }, {
           "type" : "paragraph",
-          "id" : 64,
+          "id" : 63,
           "level" : "2",
           "page number" : 7,
           "bounding box" : [ 82.2, 565.072, 296.281, 632.32 ],
@@ -955,7 +938,7 @@
           "content" : "제22조(2050 지방탄소중립녹색 성장위원회의 구성 및 운영 등) ① ㆍ ② (생 략)"
         }, {
           "type" : "paragraph",
-          "id" : 65,
+          "id" : 64,
           "level" : "1",
           "page number" : 7,
           "bounding box" : [ 96.24, 364.672, 296.281, 557.92 ],
@@ -965,37 +948,37 @@
           "content" : "③ 지방위원회의 구성, 운영 및 기능 등 필요한 사항은 조 례로 정한다. 이 경우 위원을 위촉할 때에는 아동, 청년, 여 성, 노동자, 농어민, 중소상공 인, 시민사회단체 등 다양한 사회계층의 대표성이 반영될 수 있도록 하여야 한다."
         }, {
           "type" : "image",
-          "id" : 66,
+          "id" : 65,
           "page number" : 7,
           "bounding box" : [ 199.093, 466.11, 296.241, 466.71 ]
         }, {
           "type" : "image",
-          "id" : 67,
+          "id" : 66,
           "page number" : 7,
           "bounding box" : [ 96.188, 440.937, 296.241, 441.537 ]
         }, {
           "type" : "image",
-          "id" : 68,
+          "id" : 67,
           "page number" : 7,
           "bounding box" : [ 96.188, 415.765, 296.241, 416.365 ]
         }, {
           "type" : "image",
-          "id" : 69,
+          "id" : 68,
           "page number" : 7,
           "bounding box" : [ 96.188, 390.592, 166.231, 391.192 ]
         }, {
           "type" : "image",
-          "id" : 70,
+          "id" : 69,
           "page number" : 7,
           "bounding box" : [ 182.182, 390.592, 296.241, 391.192 ]
         }, {
           "type" : "image",
-          "id" : 71,
+          "id" : 70,
           "page number" : 7,
           "bounding box" : [ 96.188, 365.42, 208.208, 366.02 ]
         }, {
           "type" : "paragraph",
-          "id" : 72,
+          "id" : 71,
           "page number" : 7,
           "bounding box" : [ 96.24, 340.792, 155.775, 357.64 ],
           "font" : null,
@@ -1004,12 +987,12 @@
           "content" : "<신 설>"
         }, {
           "type" : "image",
-          "id" : 73,
+          "id" : 72,
           "page number" : 7,
           "bounding box" : [ 96.188, 341.446, 155.796, 342.046 ]
         }, {
           "type" : "paragraph",
-          "id" : 74,
+          "id" : 73,
           "page number" : 7,
           "bounding box" : [ 96.24, 241.192, 155.775, 258.04 ],
           "font" : null,
@@ -1018,12 +1001,12 @@
           "content" : "<신 설>"
         }, {
           "type" : "image",
-          "id" : 75,
+          "id" : 74,
           "page number" : 7,
           "bounding box" : [ 96.188, 241.955, 155.796, 242.555 ]
         }, {
           "type" : "paragraph",
-          "id" : 76,
+          "id" : 75,
           "page number" : 7,
           "bounding box" : [ 96.24, 116.392, 155.775, 133.24 ],
           "font" : null,
@@ -1032,7 +1015,7 @@
           "content" : "<신 설>"
         }, {
           "type" : "image",
-          "id" : 77,
+          "id" : 76,
           "page number" : 7,
           "bounding box" : [ 96.188, 117.411, 155.796, 118.011 ]
         } ]
@@ -1046,7 +1029,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 87,
+          "id" : 86,
           "level" : "1",
           "page number" : 7,
           "bounding box" : [ 332.04, 663.352, 521.641, 705.4 ],
@@ -1056,17 +1039,17 @@
           "content" : "제2조에 따른 비영리민간단 체"
         }, {
           "type" : "image",
-          "id" : 88,
+          "id" : 87,
           "page number" : 7,
           "bounding box" : [ 331.862, 688.946, 521.48, 689.546 ]
         }, {
           "type" : "image",
-          "id" : 89,
+          "id" : 88,
           "page number" : 7,
           "bounding box" : [ 331.862, 663.774, 345.894, 664.374 ]
         }, {
           "type" : "paragraph",
-          "id" : 90,
+          "id" : 89,
           "level" : "2",
           "page number" : 7,
           "bounding box" : [ 321.6, 639.472, 486.119, 656.32 ],
@@ -1076,7 +1059,7 @@
           "content" : "⑥ ∼ ⑨ (현행과 같음)"
         }, {
           "type" : "paragraph",
-          "id" : 91,
+          "id" : 90,
           "level" : "1",
           "page number" : 7,
           "bounding box" : [ 307.56, 565.072, 521.641, 632.32 ],
@@ -1086,7 +1069,7 @@
           "content" : "제22조(2050 지방탄소중립녹색 성장위원회의 구성 및 운영 등) ① ㆍ ② (현행과 같음)"
         }, {
           "type" : "paragraph",
-          "id" : 92,
+          "id" : 91,
           "level" : "2",
           "page number" : 7,
           "bounding box" : [ 321.6, 389.872, 521.655, 555.932 ],
@@ -1096,27 +1079,27 @@
           "content" : "③ ------------------------------------------------------------. -------------다음 각 호에 해당하는 단체로부터 후보를 추천받아 다양한 사회계층의 대표성을 반영하여야-----."
         }, {
           "type" : "image",
-          "id" : 93,
+          "id" : 92,
           "page number" : 7,
           "bounding box" : [ 435.246, 466.11, 521.48, 466.71 ]
         }, {
           "type" : "image",
-          "id" : 94,
+          "id" : 93,
           "page number" : 7,
           "bounding box" : [ 321.427, 440.937, 521.48, 441.537 ]
         }, {
           "type" : "image",
-          "id" : 95,
+          "id" : 94,
           "page number" : 7,
           "bounding box" : [ 321.427, 415.765, 521.48, 416.365 ]
         }, {
           "type" : "image",
-          "id" : 96,
+          "id" : 95,
           "page number" : 7,
           "bounding box" : [ 321.427, 390.592, 454.436, 391.192 ]
         }, {
           "type" : "list",
-          "id" : 97,
+          "id" : 96,
           "level" : "3",
           "page number" : 7,
           "bounding box" : [ 321.6, 116.392, 521.641, 357.64 ],
@@ -1132,22 +1115,22 @@
             "content" : "1. 아동ㆍ청년ㆍ여성을 각각 대표할 수 있는 대통령령으로 정하는 요건을 갖춘 전국적 규모의 단체",
             "kids" : [ {
               "type" : "image",
-              "id" : 78,
+              "id" : 77,
               "page number" : 7,
               "bounding box" : [ 321.427, 341.446, 521.48, 342.046 ]
             }, {
               "type" : "image",
-              "id" : 79,
+              "id" : 78,
               "page number" : 7,
               "bounding box" : [ 331.862, 316.274, 521.48, 316.874 ]
             }, {
               "type" : "image",
-              "id" : 80,
+              "id" : 79,
               "page number" : 7,
               "bounding box" : [ 331.862, 291.101, 521.48, 291.701 ]
             }, {
               "type" : "image",
-              "id" : 81,
+              "id" : 80,
               "page number" : 7,
               "bounding box" : [ 331.862, 265.929, 408.86, 266.529 ]
             } ]
@@ -1161,27 +1144,27 @@
             "content" : "2. 「노동조합 및 노동관계조 정법」 제10조제2항에 따른 총연합단체, 전국적 규모의 산업별 연합단체 및 산업별 노동조합",
             "kids" : [ {
               "type" : "image",
-              "id" : 82,
+              "id" : 81,
               "page number" : 7,
               "bounding box" : [ 321.427, 241.955, 521.48, 242.555 ]
             }, {
               "type" : "image",
-              "id" : 83,
+              "id" : 82,
               "page number" : 7,
               "bounding box" : [ 331.862, 216.783, 521.48, 217.383 ]
             }, {
               "type" : "image",
-              "id" : 84,
+              "id" : 83,
               "page number" : 7,
               "bounding box" : [ 331.862, 191.61, 521.48, 192.21 ]
             }, {
               "type" : "image",
-              "id" : 85,
+              "id" : 84,
               "page number" : 7,
               "bounding box" : [ 331.862, 166.438, 521.48, 167.038 ]
             }, {
               "type" : "image",
-              "id" : 86,
+              "id" : 85,
               "page number" : 7,
               "bounding box" : [ 331.862, 141.265, 387.871, 141.865 ]
             } ]
@@ -1200,12 +1183,12 @@
     } ]
   }, {
     "type" : "footer",
-    "id" : 410,
+    "id" : 411,
     "page number" : 7,
     "bounding box" : [ 282.12, 41.557, 313.38, 52.597 ],
     "kids" : [ {
       "type" : "paragraph",
-      "id" : 371,
+      "id" : 370,
       "page number" : 7,
       "bounding box" : [ 282.12, 41.557, 313.38, 52.597 ],
       "font" : "Batang",
@@ -1215,18 +1198,13 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 411,
+    "id" : 412,
     "page number" : 8,
     "bounding box" : [ 84.96, 197.032, 524.52, 213.88 ],
     "font" : null,
     "font size" : 14.04,
     "text color" : "[0.0]",
     "content" : "현행법1)은 정부 및 지방자치단체의 탄소중립 사회로의 이행, 녹색"
-  }, {
-    "type" : "line",
-    "id" : 412,
-    "page number" : 8,
-    "bounding box" : [ 70.882, 165.419, 212.646, 165.659 ]
   }, {
     "type" : "image",
     "id" : 413,
@@ -1281,7 +1259,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 98,
+          "id" : 97,
           "page number" : 8,
           "bounding box" : [ 153.48, 714.472, 224.28, 731.32 ],
           "font" : null,
@@ -1299,7 +1277,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 99,
+          "id" : 98,
           "page number" : 8,
           "bounding box" : [ 371.52, 714.472, 456.96, 731.32 ],
           "font" : null,
@@ -1321,7 +1299,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 100,
+          "id" : 99,
           "page number" : 8,
           "bounding box" : [ 96.24, 589.072, 155.775, 605.92 ],
           "font" : null,
@@ -1330,12 +1308,12 @@
           "content" : "<신 설>"
         }, {
           "type" : "image",
-          "id" : 101,
+          "id" : 100,
           "page number" : 8,
           "bounding box" : [ 96.188, 589.455, 155.796, 590.055 ]
         }, {
           "type" : "paragraph",
-          "id" : 102,
+          "id" : 101,
           "page number" : 8,
           "bounding box" : [ 96.24, 338.272, 155.775, 355.12 ],
           "font" : null,
@@ -1344,12 +1322,12 @@
           "content" : "<신 설>"
         }, {
           "type" : "image",
-          "id" : 103,
+          "id" : 102,
           "page number" : 8,
           "bounding box" : [ 96.188, 338.929, 155.796, 339.529 ]
         }, {
           "type" : "paragraph",
-          "id" : 104,
+          "id" : 103,
           "level" : "1",
           "page number" : 8,
           "bounding box" : [ 96.24, 263.872, 176.759, 280.72 ],
@@ -1368,7 +1346,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 115,
+          "id" : 114,
           "page number" : 8,
           "bounding box" : [ 332.04, 612.952, 521.64, 705.4 ],
           "font" : null,
@@ -1377,27 +1355,27 @@
           "content" : "기본법」 제3조제4호에 따른 생산자단체 및 「수산업ㆍ어 촌 발전 기본법」제3조제5호 에 따른 생산자단체"
         }, {
           "type" : "image",
-          "id" : 116,
+          "id" : 115,
           "page number" : 8,
           "bounding box" : [ 331.862, 688.946, 521.48, 689.546 ]
         }, {
           "type" : "image",
-          "id" : 117,
+          "id" : 116,
           "page number" : 8,
           "bounding box" : [ 331.862, 663.774, 521.48, 664.374 ]
         }, {
           "type" : "image",
-          "id" : 118,
+          "id" : 117,
           "page number" : 8,
           "bounding box" : [ 331.862, 638.601, 521.48, 639.201 ]
         }, {
           "type" : "image",
-          "id" : 119,
+          "id" : 118,
           "page number" : 8,
           "bounding box" : [ 331.862, 613.429, 457.914, 614.029 ]
         }, {
           "type" : "list",
-          "id" : 120,
+          "id" : 119,
           "level" : "1",
           "page number" : 8,
           "bounding box" : [ 321.6, 287.872, 521.641, 605.92 ],
@@ -1413,52 +1391,52 @@
             "content" : "4. 「중소기업기본법」 제2조 에 따른 중소기업, 「중견기 업 성장촉진 및 경쟁력 강화 에 관한 특별법」 제2조제1 호에 따른 중견기업, 「소상 공인기본법」 제2조에 따른 소상공인을 각각 대표할 수 있는 대통령령으로 정하는 요 건을 갖춘 전국적 규모의 단 체",
             "kids" : [ {
               "type" : "image",
-              "id" : 105,
+              "id" : 104,
               "page number" : 8,
               "bounding box" : [ 321.427, 589.455, 521.48, 590.055 ]
             }, {
               "type" : "image",
-              "id" : 106,
+              "id" : 105,
               "page number" : 8,
               "bounding box" : [ 331.862, 564.282, 521.48, 564.882 ]
             }, {
               "type" : "image",
-              "id" : 107,
+              "id" : 106,
               "page number" : 8,
               "bounding box" : [ 331.862, 539.11, 521.48, 539.71 ]
             }, {
               "type" : "image",
-              "id" : 108,
+              "id" : 107,
               "page number" : 8,
               "bounding box" : [ 331.862, 513.937, 521.48, 514.537 ]
             }, {
               "type" : "image",
-              "id" : 109,
+              "id" : 108,
               "page number" : 8,
               "bounding box" : [ 331.862, 488.765, 521.48, 489.365 ]
             }, {
               "type" : "image",
-              "id" : 110,
+              "id" : 109,
               "page number" : 8,
               "bounding box" : [ 331.862, 463.593, 521.48, 464.193 ]
             }, {
               "type" : "image",
-              "id" : 111,
+              "id" : 110,
               "page number" : 8,
               "bounding box" : [ 331.862, 438.42, 521.48, 439.02 ]
             }, {
               "type" : "image",
-              "id" : 112,
+              "id" : 111,
               "page number" : 8,
               "bounding box" : [ 331.862, 413.248, 521.48, 413.848 ]
             }, {
               "type" : "image",
-              "id" : 113,
+              "id" : 112,
               "page number" : 8,
               "bounding box" : [ 331.862, 388.075, 521.48, 388.675 ]
             }, {
               "type" : "image",
-              "id" : 114,
+              "id" : 113,
               "page number" : 8,
               "bounding box" : [ 331.862, 362.903, 345.894, 363.503 ]
             } ]
@@ -1474,22 +1452,22 @@
           } ]
         }, {
           "type" : "image",
-          "id" : 121,
+          "id" : 120,
           "page number" : 8,
           "bounding box" : [ 321.427, 338.929, 521.48, 339.529 ]
         }, {
           "type" : "image",
-          "id" : 122,
+          "id" : 121,
           "page number" : 8,
           "bounding box" : [ 331.862, 313.756, 521.48, 314.356 ]
         }, {
           "type" : "image",
-          "id" : 123,
+          "id" : 122,
           "page number" : 8,
           "bounding box" : [ 331.862, 288.584, 373.959, 289.184 ]
         }, {
           "type" : "paragraph",
-          "id" : 124,
+          "id" : 123,
           "level" : "2",
           "page number" : 8,
           "bounding box" : [ 321.6, 263.872, 437.159, 280.72 ],
@@ -1507,7 +1485,7 @@
     "bounding box" : [ 282.12, 41.557, 313.38, 52.597 ],
     "kids" : [ {
       "type" : "paragraph",
-      "id" : 372,
+      "id" : 371,
       "page number" : 8,
       "bounding box" : [ 282.12, 41.557, 313.38, 52.597 ],
       "font" : "Batang",
@@ -1590,7 +1568,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 125,
+          "id" : 124,
           "page number" : 9,
           "bounding box" : [ 206.52, 309.52, 334.561, 339.88 ],
           "font" : null,
@@ -1608,7 +1586,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 126,
+          "id" : 125,
           "page number" : 9,
           "bounding box" : [ 375.6, 309.52, 503.641, 339.88 ],
           "font" : null,
@@ -1630,7 +1608,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 127,
+          "id" : 126,
           "page number" : 9,
           "bounding box" : [ 119.4, 286.48, 143.4, 300.88 ],
           "font" : null,
@@ -1648,7 +1626,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 128,
+          "id" : 127,
           "page number" : 9,
           "bounding box" : [ 257.64, 286.48, 283.92, 300.88 ],
           "font" : "Batang",
@@ -1666,7 +1644,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 129,
+          "id" : 128,
           "page number" : 9,
           "bounding box" : [ 430.32, 286.48, 449.52, 300.88 ],
           "font" : null,
@@ -1688,7 +1666,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 130,
+          "id" : 129,
           "page number" : 9,
           "bounding box" : [ 113.4, 263.2, 149.4, 277.6 ],
           "font" : null,
@@ -1706,7 +1684,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 131,
+          "id" : 130,
           "page number" : 9,
           "bounding box" : [ 261.24, 263.2, 280.44, 277.6 ],
           "font" : null,
@@ -1724,7 +1702,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 132,
+          "id" : 131,
           "level" : "1",
           "page number" : 9,
           "bounding box" : [ 436.2, 263.901, 443.7, 275.901 ],
@@ -1747,7 +1725,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 133,
+          "id" : 132,
           "page number" : 9,
           "bounding box" : [ 119.4, 239.92, 143.4, 254.32 ],
           "font" : null,
@@ -1765,7 +1743,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 134,
+          "id" : 133,
           "page number" : 9,
           "bounding box" : [ 261.24, 239.92, 280.44, 254.32 ],
           "font" : null,
@@ -1783,7 +1761,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 135,
+          "id" : 134,
           "page number" : 9,
           "bounding box" : [ 430.32, 239.92, 449.52, 254.32 ],
           "font" : null,
@@ -1805,7 +1783,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 136,
+          "id" : 135,
           "page number" : 9,
           "bounding box" : [ 107.4, 216.64, 155.4, 231.04 ],
           "font" : null,
@@ -1823,7 +1801,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 137,
+          "id" : 136,
           "page number" : 9,
           "bounding box" : [ 257.64, 216.64, 283.92, 231.04 ],
           "font" : "Batang",
@@ -1841,7 +1819,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 138,
+          "id" : 137,
           "page number" : 9,
           "bounding box" : [ 430.32, 216.64, 449.52, 231.04 ],
           "font" : null,
@@ -1863,7 +1841,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 139,
+          "id" : 138,
           "page number" : 9,
           "bounding box" : [ 119.4, 193.24, 143.4, 207.64 ],
           "font" : null,
@@ -1881,7 +1859,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 140,
+          "id" : 139,
           "page number" : 9,
           "bounding box" : [ 261.24, 193.24, 280.44, 207.64 ],
           "font" : null,
@@ -1899,7 +1877,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 141,
+          "id" : 140,
           "level" : "1",
           "page number" : 9,
           "bounding box" : [ 436.2, 193.941, 443.7, 205.941 ],
@@ -1922,7 +1900,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 142,
+          "id" : 141,
           "page number" : 9,
           "bounding box" : [ 119.4, 169.96, 143.4, 184.36 ],
           "font" : null,
@@ -1940,7 +1918,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 143,
+          "id" : 142,
           "page number" : 9,
           "bounding box" : [ 257.64, 169.96, 283.92, 184.36 ],
           "font" : "Batang",
@@ -1958,7 +1936,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 144,
+          "id" : 143,
           "page number" : 9,
           "bounding box" : [ 430.32, 169.96, 449.52, 184.36 ],
           "font" : null,
@@ -1985,7 +1963,7 @@
     "bounding box" : [ 282.12, 41.557, 313.38, 52.597 ],
     "kids" : [ {
       "type" : "paragraph",
-      "id" : 373,
+      "id" : 372,
       "page number" : 9,
       "bounding box" : [ 282.12, 41.557, 313.38, 52.597 ],
       "font" : "Batang",
@@ -2030,18 +2008,14 @@
     "text color" : "[0.0]",
     "content" : "그러나, 현재 제2기 탄소중립·녹색성장위원회 위원구성 현황을 보면 제1기와 비교 시 청년, 노동, 시민사회 등을 대표하는 위원 위촉이 미 흡한 상황이라는 점을 고려할 필요가 있음."
   }, {
-    "type" : "line",
+    "type" : "image",
     "id" : 431,
     "page number" : 10,
     "bounding box" : [ 70.882, 139.407, 212.646, 139.647 ]
   }, {
-    "type" : "image",
-    "id" : 432,
-    "page number" : 10,
-    "bounding box" : [ 70.882, 139.407, 212.646, 139.647 ]
-  }, {
     "type" : "paragraph",
-    "id" : 433,
+    "id" : 432,
+    "level" : "3",
     "page number" : 10,
     "bounding box" : [ 70.92, 83.608, 524.525, 134.56 ],
     "font" : null,
@@ -2050,12 +2024,12 @@
     "content" : "2) 개정안 제15조제5항 각 호와 개정안 제22조제3항 각 호에 해당하는 단체를 살펴보면 영농조합법인 중 자본금이 1억 원 이상인 법인이 6,835개(국가통계포털, 2021년 기준), 비영리민간단체가 15,115 개(행정안전부 비영리민간단체 등록현황, 2023년 3월 기준)인 점을 고려할 때 개정안에 따른 추천단 체가 과도하게 많아 행정 비효율이 발생할 수 있음."
   }, {
     "type" : "footer",
-    "id" : 434,
+    "id" : 433,
     "page number" : 10,
     "bounding box" : [ 282.12, 41.557, 313.38, 52.597 ],
     "kids" : [ {
       "type" : "paragraph",
-      "id" : 374,
+      "id" : 373,
       "page number" : 10,
       "bounding box" : [ 282.12, 41.557, 313.38, 52.597 ],
       "font" : "Batang",
@@ -2065,8 +2039,8 @@
     } ]
   }, {
     "type" : "table",
-    "id" : 435,
-    "level" : "11",
+    "id" : 434,
+    "level" : "7",
     "page number" : 11,
     "bounding box" : [ 368.022, 668.808, 524.478, 736.415 ],
     "number of rows" : 2,
@@ -2084,7 +2058,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 145,
+          "id" : 144,
           "page number" : 11,
           "bounding box" : [ 411.48, 711.592, 481.44, 728.44 ],
           "font" : null,
@@ -2106,7 +2080,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 146,
+          "id" : 145,
           "page number" : 11,
           "bounding box" : [ 397.8, 678.692, 495.072, 692.732 ],
           "font" : "Batang",
@@ -2118,12 +2092,12 @@
     } ]
   }, {
     "type" : "footer",
-    "id" : 436,
+    "id" : 435,
     "page number" : 11,
     "bounding box" : [ 282.12, 41.557, 313.38, 52.597 ],
     "kids" : [ {
       "type" : "paragraph",
-      "id" : 375,
+      "id" : 374,
       "page number" : 11,
       "bounding box" : [ 282.12, 41.557, 313.38, 52.597 ],
       "font" : "Batang",
@@ -2133,7 +2107,7 @@
     } ]
   }, {
     "type" : "heading",
-    "id" : 437,
+    "id" : 436,
     "level" : "Subtitle",
     "page number" : 12,
     "bounding box" : [ 71.88, 702.88, 173.639, 724.48 ],
@@ -2144,7 +2118,7 @@
     "content" : "※ 참고자료"
   }, {
     "type" : "heading",
-    "id" : 438,
+    "id" : 437,
     "level" : "Subtitle",
     "page number" : 12,
     "bounding box" : [ 85.92, 664.6, 415.32, 682.6 ],
@@ -2155,8 +2129,8 @@
     "content" : "1. 2050 탄소중립위원회 민간위촉위원 구성현황"
   }, {
     "type" : "paragraph",
-    "id" : 439,
-    "level" : "12",
+    "id" : 438,
+    "level" : "4",
     "page number" : 12,
     "bounding box" : [ 459.24, 624.873, 524.4, 638.12 ],
     "font" : "MalgunGothicBold",
@@ -2165,8 +2139,8 @@
     "content" : "※자료: 환경부"
   }, {
     "type" : "list",
-    "id" : 440,
-    "level" : "13",
+    "id" : 439,
+    "level" : "6",
     "page number" : 12,
     "bounding box" : [ 70.92, 333.59, 340.562, 612.931 ],
     "numbering style" : "unordered",
@@ -2181,8 +2155,8 @@
       "content" : "□ 1기 탄중위 : 위원장(1) + 위촉직(78)",
       "kids" : [ {
         "type" : "paragraph",
-        "id" : 378,
-        "level" : "14",
+        "id" : 377,
+        "level" : "4",
         "page number" : 12,
         "bounding box" : [ 372.72, 572.309, 520.56, 585.978 ],
         "font" : "�޸ո���",
@@ -2202,8 +2176,8 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 441,
-    "level" : "12",
+    "id" : 440,
+    "level" : "7",
     "page number" : 12,
     "bounding box" : [ 78.0, 106.72, 382.56, 121.12 ],
     "font" : null,
@@ -2212,8 +2186,8 @@
     "content" : "※ 노동계 대표는 없으나, 한국고용정보원 본부장 선임"
   }, {
     "type" : "table",
-    "id" : 442,
-    "level" : "14",
+    "id" : 441,
+    "level" : "8",
     "page number" : 12,
     "bounding box" : [ 72.201, 377.647, 548.465, 558.29 ],
     "number of rows" : 5,
@@ -2231,7 +2205,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 147,
+          "id" : 146,
           "page number" : 12,
           "bounding box" : [ 94.68, 541.828, 146.52, 559.065 ],
           "font" : "MalgunGothicBold",
@@ -2249,7 +2223,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 148,
+          "id" : 147,
           "page number" : 12,
           "bounding box" : [ 276.36, 541.828, 302.28, 559.065 ],
           "font" : "MalgunGothicBold",
@@ -2267,7 +2241,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 149,
+          "id" : 148,
           "page number" : 12,
           "bounding box" : [ 459.6, 541.828, 498.6, 559.065 ],
           "font" : "MalgunGothicBold",
@@ -2320,7 +2294,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 150,
+          "id" : 149,
           "page number" : 12,
           "bounding box" : [ 94.68, 515.548, 146.641, 532.785 ],
           "font" : "MalgunGothicBold",
@@ -2338,7 +2312,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 151,
+          "id" : 150,
           "page number" : 12,
           "bounding box" : [ 174.0, 505.228, 279.101, 543.225 ],
           "font" : "MalgunGothic",
@@ -2356,7 +2330,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 152,
+          "id" : 151,
           "page number" : 12,
           "bounding box" : [ 414.84, 515.548, 417.665, 532.785 ],
           "font" : "MalgunGothic",
@@ -2378,7 +2352,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 153,
+          "id" : 152,
           "page number" : 12,
           "bounding box" : [ 94.68, 478.948, 146.641, 496.185 ],
           "font" : "MalgunGothicBold",
@@ -2396,7 +2370,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 154,
+          "id" : 153,
           "page number" : 12,
           "bounding box" : [ 174.0, 468.508, 389.62, 506.625 ],
           "font" : "MalgunGothic",
@@ -2414,7 +2388,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 155,
+          "id" : 154,
           "page number" : 12,
           "bounding box" : [ 414.84, 468.508, 543.24, 506.625 ],
           "font" : "MalgunGothic",
@@ -2436,7 +2410,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 156,
+          "id" : 155,
           "page number" : 12,
           "bounding box" : [ 101.16, 415.348, 140.04, 432.585 ],
           "font" : "MalgunGothicBold",
@@ -2454,7 +2428,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 157,
+          "id" : 156,
           "page number" : 12,
           "bounding box" : [ 174.0, 452.788, 257.62, 470.025 ],
           "font" : "MalgunGothic",
@@ -2463,18 +2437,18 @@
           "content" : "· 전문가(44명)"
         }, {
           "type" : "list",
-          "id" : 158,
+          "id" : 157,
           "level" : "1",
           "page number" : 12,
           "bounding box" : [ 174.0, 378.132, 404.28, 448.736 ],
-          "numbering style" : "unknown style",
+          "numbering style" : "unordered",
           "number of list items" : 2,
           "list items" : [ {
             "type" : "list item",
             "page number" : 12,
             "bounding box" : [ 174.0, 414.388, 320.76, 448.736 ],
             "font" : "MalgunGothic",
-            "font size" : 12.959999999999999,
+            "font size" : 12.96,
             "text color" : "[0.0]",
             "content" : "* 학계 22명, 공공기관 22명 · 각계 대표(35명)",
             "kids" : [ ]
@@ -2502,8 +2476,8 @@
     } ]
   }, {
     "type" : "table",
-    "id" : 443,
-    "level" : "15",
+    "id" : 442,
+    "level" : "9",
     "page number" : 12,
     "bounding box" : [ 72.201, 123.524, 542.828, 304.167 ],
     "number of rows" : 5,
@@ -2521,7 +2495,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 159,
+          "id" : 158,
           "page number" : 12,
           "bounding box" : [ 94.68, 287.428, 146.52, 304.665 ],
           "font" : "MalgunGothicBold",
@@ -2539,7 +2513,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 160,
+          "id" : 159,
           "page number" : 12,
           "bounding box" : [ 276.36, 287.428, 302.28, 304.665 ],
           "font" : "MalgunGothicBold",
@@ -2557,7 +2531,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 161,
+          "id" : 160,
           "page number" : 12,
           "bounding box" : [ 456.84, 287.428, 495.72, 304.665 ],
           "font" : "MalgunGothicBold",
@@ -2610,7 +2584,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 162,
+          "id" : 161,
           "page number" : 12,
           "bounding box" : [ 94.68, 261.148, 146.641, 278.385 ],
           "font" : "MalgunGothicBold",
@@ -2628,7 +2602,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 163,
+          "id" : 162,
           "page number" : 12,
           "bounding box" : [ 174.0, 250.828, 279.101, 288.825 ],
           "font" : "MalgunGothic",
@@ -2659,7 +2633,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 164,
+          "id" : 163,
           "page number" : 12,
           "bounding box" : [ 94.68, 224.548, 146.641, 241.785 ],
           "font" : "MalgunGothicBold",
@@ -2677,7 +2651,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 165,
+          "id" : 164,
           "page number" : 12,
           "bounding box" : [ 174.0, 214.228, 307.78, 252.225 ],
           "font" : "MalgunGothic",
@@ -2695,7 +2669,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 166,
+          "id" : 165,
           "page number" : 12,
           "bounding box" : [ 414.84, 224.548, 536.756, 241.785 ],
           "font" : "MalgunGothic",
@@ -2717,7 +2691,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 167,
+          "id" : 166,
           "page number" : 12,
           "bounding box" : [ 101.16, 160.948, 140.04, 178.185 ],
           "font" : "MalgunGothicBold",
@@ -2735,7 +2709,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 168,
+          "id" : 167,
           "page number" : 12,
           "bounding box" : [ 174.0, 198.388, 257.62, 215.625 ],
           "font" : "MalgunGothic",
@@ -2744,18 +2718,18 @@
           "content" : "· 전문가(27명)"
         }, {
           "type" : "list",
-          "id" : 169,
+          "id" : 168,
           "level" : "1",
           "page number" : 12,
           "bounding box" : [ 174.0, 123.732, 367.08, 194.456 ],
-          "numbering style" : "unknown style",
+          "numbering style" : "unordered",
           "number of list items" : 2,
           "list items" : [ {
             "type" : "list item",
             "page number" : 12,
             "bounding box" : [ 174.0, 159.988, 367.08, 194.456 ],
             "font" : "MalgunGothic",
-            "font size" : 12.959999999999999,
+            "font size" : 12.96,
             "text color" : "[0.0]",
             "content" : "* 학계 19명, 공공기관 6명, 로펌 2명 · 각계 대표(6명)",
             "kids" : [ ]
@@ -2783,12 +2757,12 @@
     } ]
   }, {
     "type" : "footer",
-    "id" : 444,
+    "id" : 443,
     "page number" : 12,
     "bounding box" : [ 278.76, 41.557, 316.62, 52.597 ],
     "kids" : [ {
       "type" : "paragraph",
-      "id" : 376,
+      "id" : 375,
       "page number" : 12,
       "bounding box" : [ 278.76, 41.557, 316.62, 52.597 ],
       "font" : "Batang",
@@ -2798,7 +2772,7 @@
     } ]
   }, {
     "type" : "heading",
-    "id" : 445,
+    "id" : 444,
     "level" : "Subtitle",
     "page number" : 13,
     "bounding box" : [ 85.92, 725.59, 422.52, 745.09 ],
@@ -2809,19 +2783,19 @@
     "content" : "2. 광역 탄소중립‧녹색성장위원회 위원 구성 현황"
   }, {
     "type" : "Caption",
-    "id" : 446,
-    "level" : "16",
+    "id" : 445,
+    "level" : "4",
     "page number" : 13,
     "bounding box" : [ 453.48, 686.728, 523.92, 698.68 ],
-    "linked content id" : 447,
+    "linked content id" : 446,
     "font" : null,
     "font size" : 9.96,
     "text color" : "[0.0]",
     "content" : "※자료: 환경부"
   }, {
     "type" : "table",
-    "id" : 447,
-    "level" : "17",
+    "id" : 446,
+    "level" : "7",
     "page number" : 13,
     "bounding box" : [ 72.801, 89.242, 524.718, 667.131 ],
     "number of rows" : 20,
@@ -2839,7 +2813,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 170,
+          "id" : 169,
           "page number" : 13,
           "bounding box" : [ 82.44, 621.972, 104.52, 636.656 ],
           "font" : "MalgunGothicBold",
@@ -2857,7 +2831,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 171,
+          "id" : 170,
           "page number" : 13,
           "bounding box" : [ 121.92, 614.772, 144.0, 643.856 ],
           "font" : "MalgunGothicBold",
@@ -2875,7 +2849,7 @@
         "column span" : 2,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 172,
+          "id" : 171,
           "page number" : 13,
           "bounding box" : [ 181.2, 652.452, 203.16, 667.136 ],
           "font" : "MalgunGothicBold",
@@ -2893,7 +2867,7 @@
         "column span" : 8,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 173,
+          "id" : 172,
           "page number" : 13,
           "bounding box" : [ 356.04, 652.452, 400.08, 667.136 ],
           "font" : "MalgunGothicBold",
@@ -2915,7 +2889,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 174,
+          "id" : 173,
           "page number" : 13,
           "bounding box" : [ 161.4, 614.532, 183.48, 629.216 ],
           "font" : "MalgunGothicBold",
@@ -2933,7 +2907,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 175,
+          "id" : 174,
           "page number" : 13,
           "bounding box" : [ 200.88, 614.532, 222.96, 629.216 ],
           "font" : "MalgunGothicBold",
@@ -2951,7 +2925,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 176,
+          "id" : 175,
           "page number" : 13,
           "bounding box" : [ 241.2, 607.452, 252.24, 636.416 ],
           "font" : "MalgunGothicBold",
@@ -2969,7 +2943,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 177,
+          "id" : 176,
           "page number" : 13,
           "bounding box" : [ 271.2, 593.052, 282.24, 650.696 ],
           "font" : "MalgunGothicBold",
@@ -2987,7 +2961,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 178,
+          "id" : 177,
           "page number" : 13,
           "bounding box" : [ 301.32, 600.252, 312.36, 643.616 ],
           "font" : "MalgunGothicBold",
@@ -3005,7 +2979,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 179,
+          "id" : 178,
           "page number" : 13,
           "bounding box" : [ 331.32, 600.252, 342.36, 643.616 ],
           "font" : "MalgunGothicBold",
@@ -3023,7 +2997,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 180,
+          "id" : 179,
           "page number" : 13,
           "bounding box" : [ 361.44, 607.452, 372.48, 636.416 ],
           "font" : "MalgunGothicBold",
@@ -3041,7 +3015,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 181,
+          "id" : 180,
           "page number" : 13,
           "bounding box" : [ 391.56, 600.252, 402.6, 643.616 ],
           "font" : "MalgunGothicBold",
@@ -3059,7 +3033,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 182,
+          "id" : 181,
           "page number" : 13,
           "bounding box" : [ 419.76, 628.932, 455.641, 643.616 ],
           "font" : "MalgunGothicBold",
@@ -3068,7 +3042,7 @@
           "content" : "시의원,"
         }, {
           "type" : "paragraph",
-          "id" : 183,
+          "id" : 182,
           "page number" : 13,
           "bounding box" : [ 420.0, 600.252, 454.8, 629.216 ],
           "font" : "MalgunGothicBold",
@@ -3086,7 +3060,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 184,
+          "id" : 183,
           "page number" : 13,
           "bounding box" : [ 482.64, 614.532, 504.72, 629.216 ],
           "font" : "MalgunGothicBold",
@@ -3108,7 +3082,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "image",
-          "id" : 185,
+          "id" : 184,
           "page number" : 13,
           "bounding box" : [ 72.801, 589.874, 113.219, 591.793 ]
         } ]
@@ -3122,7 +3096,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "image",
-          "id" : 186,
+          "id" : 185,
           "page number" : 13,
           "bounding box" : [ 113.219, 589.874, 152.558, 591.793 ]
         } ]
@@ -3136,7 +3110,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "image",
-          "id" : 187,
+          "id" : 186,
           "page number" : 13,
           "bounding box" : [ 152.558, 589.874, 192.017, 591.793 ]
         } ]
@@ -3150,7 +3124,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "image",
-          "id" : 188,
+          "id" : 187,
           "page number" : 13,
           "bounding box" : [ 192.017, 589.874, 231.476, 591.793 ]
         } ]
@@ -3164,7 +3138,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "image",
-          "id" : 189,
+          "id" : 188,
           "page number" : 13,
           "bounding box" : [ 231.476, 589.874, 261.579, 591.793 ]
         } ]
@@ -3178,7 +3152,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "image",
-          "id" : 190,
+          "id" : 189,
           "page number" : 13,
           "bounding box" : [ 261.579, 589.874, 291.563, 591.793 ]
         } ]
@@ -3219,7 +3193,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "image",
-          "id" : 191,
+          "id" : 190,
           "page number" : 13,
           "bounding box" : [ 381.755, 589.874, 411.858, 591.793 ]
         } ]
@@ -3233,7 +3207,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "image",
-          "id" : 192,
+          "id" : 191,
           "page number" : 13,
           "bounding box" : [ 411.858, 589.874, 462.591, 591.793 ]
         } ]
@@ -3247,7 +3221,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "image",
-          "id" : 193,
+          "id" : 192,
           "page number" : 13,
           "bounding box" : [ 462.591, 589.874, 523.638, 591.793 ]
         } ]
@@ -3265,7 +3239,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 194,
+          "id" : 193,
           "page number" : 13,
           "bounding box" : [ 82.44, 561.612, 104.52, 576.296 ],
           "font" : "MalgunGothicBold",
@@ -3283,7 +3257,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 195,
+          "id" : 194,
           "page number" : 13,
           "bounding box" : [ 126.96, 561.612, 139.032, 576.296 ],
           "font" : "MalgunGothic",
@@ -3301,7 +3275,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 196,
+          "id" : 195,
           "page number" : 13,
           "bounding box" : [ 166.32, 561.612, 178.511, 576.296 ],
           "font" : "MalgunGothic",
@@ -3319,7 +3293,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 197,
+          "id" : 196,
           "page number" : 13,
           "bounding box" : [ 205.8, 561.612, 217.991, 576.296 ],
           "font" : "MalgunGothic",
@@ -3337,7 +3311,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 198,
+          "id" : 197,
           "page number" : 13,
           "bounding box" : [ 240.6, 561.612, 252.672, 576.296 ],
           "font" : "MalgunGothic",
@@ -3355,7 +3329,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 199,
+          "id" : 198,
           "page number" : 13,
           "bounding box" : [ 273.72, 561.612, 279.792, 576.296 ],
           "font" : "MalgunGothic",
@@ -3391,7 +3365,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 200,
+          "id" : 199,
           "page number" : 13,
           "bounding box" : [ 363.96, 561.612, 370.032, 576.296 ],
           "font" : "MalgunGothic",
@@ -3409,7 +3383,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 201,
+          "id" : 200,
           "page number" : 13,
           "bounding box" : [ 393.96, 561.612, 400.032, 576.296 ],
           "font" : "MalgunGothic",
@@ -3427,7 +3401,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 202,
+          "id" : 201,
           "page number" : 13,
           "bounding box" : [ 420.0, 561.612, 454.796, 576.296 ],
           "font" : "MalgunGothic",
@@ -3445,7 +3419,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 203,
+          "id" : 202,
           "page number" : 13,
           "bounding box" : [ 469.56, 547.332, 517.686, 590.696 ],
           "font" : "MalgunGothic",
@@ -3467,7 +3441,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 204,
+          "id" : 203,
           "page number" : 13,
           "bounding box" : [ 82.44, 525.012, 104.52, 539.696 ],
           "font" : "MalgunGothicBold",
@@ -3485,7 +3459,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 205,
+          "id" : 204,
           "page number" : 13,
           "bounding box" : [ 126.96, 525.012, 139.032, 539.696 ],
           "font" : "MalgunGothic",
@@ -3503,7 +3477,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 206,
+          "id" : 205,
           "page number" : 13,
           "bounding box" : [ 169.44, 525.012, 175.512, 539.696 ],
           "font" : "MalgunGothic",
@@ -3521,7 +3495,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 207,
+          "id" : 206,
           "page number" : 13,
           "bounding box" : [ 205.8, 525.012, 217.991, 539.696 ],
           "font" : "MalgunGothic",
@@ -3539,7 +3513,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 208,
+          "id" : 207,
           "page number" : 13,
           "bounding box" : [ 240.6, 525.012, 252.672, 539.696 ],
           "font" : "MalgunGothic",
@@ -3557,7 +3531,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 209,
+          "id" : 208,
           "page number" : 13,
           "bounding box" : [ 273.72, 525.012, 279.792, 539.696 ],
           "font" : "MalgunGothic",
@@ -3593,7 +3567,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 210,
+          "id" : 209,
           "page number" : 13,
           "bounding box" : [ 363.96, 525.012, 370.032, 539.696 ],
           "font" : "MalgunGothic",
@@ -3611,7 +3585,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 211,
+          "id" : 210,
           "page number" : 13,
           "bounding box" : [ 390.96, 525.012, 403.032, 539.696 ],
           "font" : "MalgunGothic",
@@ -3629,7 +3603,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 212,
+          "id" : 211,
           "page number" : 13,
           "bounding box" : [ 417.24, 517.812, 457.567, 546.776 ],
           "font" : "MalgunGothic",
@@ -3660,7 +3634,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 213,
+          "id" : 212,
           "page number" : 13,
           "bounding box" : [ 82.44, 503.292, 104.52, 517.976 ],
           "font" : "MalgunGothicBold",
@@ -3678,7 +3652,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 214,
+          "id" : 213,
           "page number" : 13,
           "bounding box" : [ 126.96, 503.292, 139.032, 517.976 ],
           "font" : "MalgunGothic",
@@ -3696,7 +3670,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 215,
+          "id" : 214,
           "page number" : 13,
           "bounding box" : [ 169.44, 503.292, 175.512, 517.976 ],
           "font" : "MalgunGothic",
@@ -3714,7 +3688,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 216,
+          "id" : 215,
           "page number" : 13,
           "bounding box" : [ 208.92, 503.292, 214.992, 517.976 ],
           "font" : "MalgunGothic",
@@ -3732,7 +3706,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 217,
+          "id" : 216,
           "page number" : 13,
           "bounding box" : [ 243.6, 503.292, 249.672, 517.976 ],
           "font" : "MalgunGothic",
@@ -3777,7 +3751,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 218,
+          "id" : 217,
           "page number" : 13,
           "bounding box" : [ 363.96, 503.292, 370.032, 517.976 ],
           "font" : "MalgunGothic",
@@ -3795,7 +3769,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 219,
+          "id" : 218,
           "page number" : 13,
           "bounding box" : [ 393.96, 503.292, 400.032, 517.976 ],
           "font" : "MalgunGothic",
@@ -3813,7 +3787,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 220,
+          "id" : 219,
           "page number" : 13,
           "bounding box" : [ 420.0, 503.292, 454.796, 517.976 ],
           "font" : "MalgunGothic",
@@ -3844,7 +3818,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 221,
+          "id" : 220,
           "page number" : 13,
           "bounding box" : [ 82.44, 473.772, 104.52, 488.456 ],
           "font" : "MalgunGothicBold",
@@ -3862,7 +3836,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 222,
+          "id" : 221,
           "page number" : 13,
           "bounding box" : [ 126.96, 473.772, 139.032, 488.456 ],
           "font" : "MalgunGothic",
@@ -3880,7 +3854,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 223,
+          "id" : 222,
           "page number" : 13,
           "bounding box" : [ 169.44, 473.772, 175.512, 488.456 ],
           "font" : "MalgunGothic",
@@ -3898,7 +3872,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 224,
+          "id" : 223,
           "page number" : 13,
           "bounding box" : [ 205.8, 473.772, 217.991, 488.456 ],
           "font" : "MalgunGothic",
@@ -3916,7 +3890,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 225,
+          "id" : 224,
           "page number" : 13,
           "bounding box" : [ 243.6, 473.772, 249.672, 488.456 ],
           "font" : "MalgunGothic",
@@ -3934,7 +3908,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 226,
+          "id" : 225,
           "page number" : 13,
           "bounding box" : [ 273.72, 473.772, 279.792, 488.456 ],
           "font" : "MalgunGothic",
@@ -3979,7 +3953,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 227,
+          "id" : 226,
           "page number" : 13,
           "bounding box" : [ 393.96, 473.772, 400.032, 488.456 ],
           "font" : "MalgunGothic",
@@ -3997,7 +3971,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 228,
+          "id" : 227,
           "page number" : 13,
           "bounding box" : [ 418.8, 466.692, 456.006, 495.656 ],
           "font" : "MalgunGothic",
@@ -4015,7 +3989,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 229,
+          "id" : 228,
           "page number" : 13,
           "bounding box" : [ 468.0, 459.492, 519.356, 502.856 ],
           "font" : "MalgunGothic",
@@ -4037,7 +4011,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 230,
+          "id" : 229,
           "page number" : 13,
           "bounding box" : [ 82.44, 437.532, 104.52, 452.216 ],
           "font" : "MalgunGothicBold",
@@ -4055,7 +4029,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 231,
+          "id" : 230,
           "page number" : 13,
           "bounding box" : [ 126.96, 437.532, 139.032, 452.216 ],
           "font" : "MalgunGothic",
@@ -4073,7 +4047,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 232,
+          "id" : 231,
           "page number" : 13,
           "bounding box" : [ 169.44, 437.532, 175.512, 452.216 ],
           "font" : "MalgunGothic",
@@ -4091,7 +4065,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 233,
+          "id" : 232,
           "page number" : 13,
           "bounding box" : [ 205.8, 437.532, 217.991, 452.216 ],
           "font" : "MalgunGothic",
@@ -4109,7 +4083,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 234,
+          "id" : 233,
           "page number" : 13,
           "bounding box" : [ 240.6, 437.532, 252.672, 452.216 ],
           "font" : "MalgunGothic",
@@ -4127,7 +4101,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 235,
+          "id" : 234,
           "page number" : 13,
           "bounding box" : [ 273.72, 437.532, 279.792, 452.216 ],
           "font" : "MalgunGothic",
@@ -4145,7 +4119,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 236,
+          "id" : 235,
           "page number" : 13,
           "bounding box" : [ 303.72, 437.532, 309.792, 452.216 ],
           "font" : "MalgunGothic",
@@ -4181,7 +4155,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 237,
+          "id" : 236,
           "page number" : 13,
           "bounding box" : [ 390.96, 437.532, 403.032, 452.216 ],
           "font" : "MalgunGothic",
@@ -4199,7 +4173,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 238,
+          "id" : 237,
           "page number" : 13,
           "bounding box" : [ 417.84, 430.332, 456.966, 459.416 ],
           "font" : "MalgunGothic",
@@ -4217,7 +4191,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 239,
+          "id" : 238,
           "page number" : 13,
           "bounding box" : [ 470.76, 430.332, 516.476, 459.416 ],
           "font" : "MalgunGothic",
@@ -4239,7 +4213,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 240,
+          "id" : 239,
           "page number" : 13,
           "bounding box" : [ 82.44, 409.092, 104.52, 423.776 ],
           "font" : "MalgunGothicBold",
@@ -4257,7 +4231,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 241,
+          "id" : 240,
           "page number" : 13,
           "bounding box" : [ 126.96, 409.092, 139.032, 423.776 ],
           "font" : "MalgunGothic",
@@ -4275,7 +4249,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 242,
+          "id" : 241,
           "page number" : 13,
           "bounding box" : [ 169.44, 409.092, 175.512, 423.776 ],
           "font" : "MalgunGothic",
@@ -4293,7 +4267,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 243,
+          "id" : 242,
           "page number" : 13,
           "bounding box" : [ 205.8, 409.092, 217.991, 423.776 ],
           "font" : "MalgunGothic",
@@ -4311,7 +4285,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 244,
+          "id" : 243,
           "page number" : 13,
           "bounding box" : [ 243.6, 409.092, 249.672, 423.776 ],
           "font" : "MalgunGothic",
@@ -4329,7 +4303,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 245,
+          "id" : 244,
           "page number" : 13,
           "bounding box" : [ 273.72, 409.092, 279.792, 423.776 ],
           "font" : "MalgunGothic",
@@ -4374,7 +4348,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 246,
+          "id" : 245,
           "page number" : 13,
           "bounding box" : [ 393.96, 409.092, 400.032, 423.776 ],
           "font" : "MalgunGothic",
@@ -4392,7 +4366,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 247,
+          "id" : 246,
           "page number" : 13,
           "bounding box" : [ 418.8, 402.012, 456.006, 430.976 ],
           "font" : "MalgunGothic",
@@ -4423,7 +4397,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 248,
+          "id" : 247,
           "page number" : 13,
           "bounding box" : [ 82.44, 379.692, 104.52, 394.376 ],
           "font" : "MalgunGothicBold",
@@ -4441,7 +4415,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 249,
+          "id" : 248,
           "page number" : 13,
           "bounding box" : [ 126.96, 379.692, 139.032, 394.376 ],
           "font" : "MalgunGothic",
@@ -4459,7 +4433,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 250,
+          "id" : 249,
           "page number" : 13,
           "bounding box" : [ 169.44, 379.692, 175.512, 394.376 ],
           "font" : "MalgunGothic",
@@ -4477,7 +4451,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 251,
+          "id" : 250,
           "page number" : 13,
           "bounding box" : [ 205.8, 379.692, 217.991, 394.376 ],
           "font" : "MalgunGothic",
@@ -4495,7 +4469,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 252,
+          "id" : 251,
           "page number" : 13,
           "bounding box" : [ 243.6, 379.692, 249.672, 394.376 ],
           "font" : "MalgunGothic",
@@ -4513,7 +4487,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 253,
+          "id" : 252,
           "page number" : 13,
           "bounding box" : [ 273.72, 379.692, 279.792, 394.376 ],
           "font" : "MalgunGothic",
@@ -4540,7 +4514,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 254,
+          "id" : 253,
           "page number" : 13,
           "bounding box" : [ 333.84, 379.692, 339.912, 394.376 ],
           "font" : "MalgunGothic",
@@ -4558,7 +4532,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 255,
+          "id" : 254,
           "page number" : 13,
           "bounding box" : [ 363.96, 379.692, 370.032, 394.376 ],
           "font" : "MalgunGothic",
@@ -4576,7 +4550,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 256,
+          "id" : 255,
           "page number" : 13,
           "bounding box" : [ 393.96, 379.692, 400.032, 394.376 ],
           "font" : "MalgunGothic",
@@ -4594,7 +4568,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 257,
+          "id" : 256,
           "page number" : 13,
           "bounding box" : [ 418.8, 372.612, 456.006, 401.576 ],
           "font" : "MalgunGothic",
@@ -4612,7 +4586,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 258,
+          "id" : 257,
           "page number" : 13,
           "bounding box" : [ 468.0, 379.692, 519.356, 394.376 ],
           "font" : "MalgunGothic",
@@ -4634,7 +4608,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 259,
+          "id" : 258,
           "page number" : 13,
           "bounding box" : [ 82.44, 350.412, 104.52, 365.096 ],
           "font" : "MalgunGothicBold",
@@ -4652,7 +4626,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 260,
+          "id" : 259,
           "page number" : 13,
           "bounding box" : [ 126.96, 350.412, 139.032, 365.096 ],
           "font" : "MalgunGothic",
@@ -4670,7 +4644,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 261,
+          "id" : 260,
           "page number" : 13,
           "bounding box" : [ 169.44, 350.412, 175.512, 365.096 ],
           "font" : "MalgunGothic",
@@ -4688,7 +4662,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 262,
+          "id" : 261,
           "page number" : 13,
           "bounding box" : [ 205.8, 350.412, 217.991, 365.096 ],
           "font" : "MalgunGothic",
@@ -4706,7 +4680,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 263,
+          "id" : 262,
           "page number" : 13,
           "bounding box" : [ 243.6, 350.412, 249.672, 365.096 ],
           "font" : "MalgunGothic",
@@ -4724,7 +4698,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 264,
+          "id" : 263,
           "page number" : 13,
           "bounding box" : [ 273.72, 350.412, 279.792, 365.096 ],
           "font" : "MalgunGothic",
@@ -4760,7 +4734,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 265,
+          "id" : 264,
           "page number" : 13,
           "bounding box" : [ 363.96, 350.412, 370.032, 365.096 ],
           "font" : "MalgunGothic",
@@ -4787,7 +4761,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 266,
+          "id" : 265,
           "page number" : 13,
           "bounding box" : [ 418.8, 343.212, 456.006, 372.176 ],
           "font" : "MalgunGothic",
@@ -4818,7 +4792,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 267,
+          "id" : 266,
           "page number" : 13,
           "bounding box" : [ 82.44, 313.692, 104.52, 328.376 ],
           "font" : "MalgunGothicBold",
@@ -4836,7 +4810,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 268,
+          "id" : 267,
           "page number" : 13,
           "bounding box" : [ 126.96, 313.692, 139.032, 328.376 ],
           "font" : "MalgunGothic",
@@ -4854,7 +4828,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 269,
+          "id" : 268,
           "page number" : 13,
           "bounding box" : [ 166.32, 313.692, 178.511, 328.376 ],
           "font" : "MalgunGothic",
@@ -4872,7 +4846,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 270,
+          "id" : 269,
           "page number" : 13,
           "bounding box" : [ 205.8, 313.692, 217.991, 328.376 ],
           "font" : "MalgunGothic",
@@ -4890,7 +4864,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 271,
+          "id" : 270,
           "page number" : 13,
           "bounding box" : [ 243.6, 313.692, 249.672, 328.376 ],
           "font" : "MalgunGothic",
@@ -4908,7 +4882,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 272,
+          "id" : 271,
           "page number" : 13,
           "bounding box" : [ 273.72, 313.692, 279.792, 328.376 ],
           "font" : "MalgunGothic",
@@ -4953,7 +4927,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 273,
+          "id" : 272,
           "page number" : 13,
           "bounding box" : [ 393.96, 313.692, 400.032, 328.376 ],
           "font" : "MalgunGothic",
@@ -4971,7 +4945,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 274,
+          "id" : 273,
           "page number" : 13,
           "bounding box" : [ 418.8, 306.492, 456.006, 335.456 ],
           "font" : "MalgunGothic",
@@ -4989,7 +4963,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 275,
+          "id" : 274,
           "page number" : 13,
           "bounding box" : [ 472.92, 299.292, 514.327, 342.656 ],
           "font" : "MalgunGothic",
@@ -5011,7 +4985,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 276,
+          "id" : 275,
           "page number" : 13,
           "bounding box" : [ 82.44, 275.652, 104.52, 290.336 ],
           "font" : "MalgunGothicBold",
@@ -5029,7 +5003,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 277,
+          "id" : 276,
           "page number" : 13,
           "bounding box" : [ 126.96, 275.652, 139.032, 290.336 ],
           "font" : "MalgunGothic",
@@ -5047,7 +5021,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 278,
+          "id" : 277,
           "page number" : 13,
           "bounding box" : [ 169.44, 275.652, 175.512, 290.336 ],
           "font" : "MalgunGothic",
@@ -5065,7 +5039,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 279,
+          "id" : 278,
           "page number" : 13,
           "bounding box" : [ 205.8, 275.652, 217.991, 290.336 ],
           "font" : "MalgunGothic",
@@ -5083,7 +5057,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 280,
+          "id" : 279,
           "page number" : 13,
           "bounding box" : [ 243.6, 275.652, 249.672, 290.336 ],
           "font" : "MalgunGothic",
@@ -5101,7 +5075,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 281,
+          "id" : 280,
           "page number" : 13,
           "bounding box" : [ 273.72, 275.652, 279.792, 290.336 ],
           "font" : "MalgunGothic",
@@ -5128,7 +5102,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 282,
+          "id" : 281,
           "page number" : 13,
           "bounding box" : [ 333.84, 275.652, 339.912, 290.336 ],
           "font" : "MalgunGothic",
@@ -5155,7 +5129,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 283,
+          "id" : 282,
           "page number" : 13,
           "bounding box" : [ 393.96, 275.652, 400.032, 290.336 ],
           "font" : "MalgunGothic",
@@ -5173,7 +5147,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 284,
+          "id" : 283,
           "page number" : 13,
           "bounding box" : [ 418.8, 268.572, 456.006, 297.536 ],
           "font" : "MalgunGothic",
@@ -5204,7 +5178,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 285,
+          "id" : 284,
           "page number" : 13,
           "bounding box" : [ 82.44, 245.052, 104.52, 259.736 ],
           "font" : "MalgunGothicBold",
@@ -5222,7 +5196,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 286,
+          "id" : 285,
           "page number" : 13,
           "bounding box" : [ 126.96, 245.052, 139.032, 259.736 ],
           "font" : "MalgunGothic",
@@ -5240,7 +5214,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 287,
+          "id" : 286,
           "page number" : 13,
           "bounding box" : [ 169.44, 245.052, 175.512, 259.736 ],
           "font" : "MalgunGothic",
@@ -5258,7 +5232,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 288,
+          "id" : 287,
           "page number" : 13,
           "bounding box" : [ 205.8, 245.052, 217.991, 259.736 ],
           "font" : "MalgunGothic",
@@ -5276,7 +5250,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 289,
+          "id" : 288,
           "page number" : 13,
           "bounding box" : [ 243.6, 245.052, 249.672, 259.736 ],
           "font" : "MalgunGothic",
@@ -5294,7 +5268,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 290,
+          "id" : 289,
           "page number" : 13,
           "bounding box" : [ 273.72, 245.052, 279.792, 259.736 ],
           "font" : "MalgunGothic",
@@ -5321,7 +5295,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 291,
+          "id" : 290,
           "page number" : 13,
           "bounding box" : [ 333.84, 245.052, 339.912, 259.736 ],
           "font" : "MalgunGothic",
@@ -5348,7 +5322,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 292,
+          "id" : 291,
           "page number" : 13,
           "bounding box" : [ 393.96, 245.052, 400.032, 259.736 ],
           "font" : "MalgunGothic",
@@ -5366,7 +5340,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 293,
+          "id" : 292,
           "page number" : 13,
           "bounding box" : [ 418.8, 237.852, 456.006, 266.936 ],
           "font" : "MalgunGothic",
@@ -5384,7 +5358,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 294,
+          "id" : 293,
           "page number" : 13,
           "bounding box" : [ 472.92, 237.852, 514.327, 266.936 ],
           "font" : "MalgunGothic",
@@ -5406,7 +5380,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 295,
+          "id" : 294,
           "page number" : 13,
           "bounding box" : [ 82.44, 214.452, 104.52, 229.136 ],
           "font" : "MalgunGothicBold",
@@ -5424,7 +5398,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 296,
+          "id" : 295,
           "page number" : 13,
           "bounding box" : [ 126.96, 214.452, 139.032, 229.136 ],
           "font" : "MalgunGothic",
@@ -5442,7 +5416,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 297,
+          "id" : 296,
           "page number" : 13,
           "bounding box" : [ 169.44, 214.452, 175.512, 229.136 ],
           "font" : "MalgunGothic",
@@ -5460,7 +5434,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 298,
+          "id" : 297,
           "page number" : 13,
           "bounding box" : [ 205.8, 214.452, 217.991, 229.136 ],
           "font" : "MalgunGothic",
@@ -5478,7 +5452,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 299,
+          "id" : 298,
           "page number" : 13,
           "bounding box" : [ 243.6, 214.452, 249.672, 229.136 ],
           "font" : "MalgunGothic",
@@ -5496,7 +5470,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 300,
+          "id" : 299,
           "page number" : 13,
           "bounding box" : [ 273.72, 214.452, 279.792, 229.136 ],
           "font" : "MalgunGothic",
@@ -5532,7 +5506,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 301,
+          "id" : 300,
           "page number" : 13,
           "bounding box" : [ 363.96, 214.452, 370.032, 229.136 ],
           "font" : "MalgunGothic",
@@ -5550,7 +5524,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 302,
+          "id" : 301,
           "page number" : 13,
           "bounding box" : [ 393.96, 214.452, 400.032, 229.136 ],
           "font" : "MalgunGothic",
@@ -5568,7 +5542,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 303,
+          "id" : 302,
           "page number" : 13,
           "bounding box" : [ 418.92, 207.252, 455.995, 236.216 ],
           "font" : "MalgunGothic",
@@ -5586,7 +5560,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 304,
+          "id" : 303,
           "page number" : 13,
           "bounding box" : [ 472.92, 207.252, 514.327, 236.216 ],
           "font" : "MalgunGothic",
@@ -5608,7 +5582,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 305,
+          "id" : 304,
           "page number" : 13,
           "bounding box" : [ 82.44, 185.052, 104.52, 199.736 ],
           "font" : "MalgunGothicBold",
@@ -5626,7 +5600,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 306,
+          "id" : 305,
           "page number" : 13,
           "bounding box" : [ 126.96, 185.052, 139.032, 199.736 ],
           "font" : "MalgunGothic",
@@ -5644,7 +5618,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 307,
+          "id" : 306,
           "page number" : 13,
           "bounding box" : [ 169.44, 185.052, 175.512, 199.736 ],
           "font" : "MalgunGothic",
@@ -5662,7 +5636,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 308,
+          "id" : 307,
           "page number" : 13,
           "bounding box" : [ 205.8, 185.052, 217.991, 199.736 ],
           "font" : "MalgunGothic",
@@ -5680,7 +5654,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 309,
+          "id" : 308,
           "page number" : 13,
           "bounding box" : [ 243.6, 185.052, 249.672, 199.736 ],
           "font" : "MalgunGothic",
@@ -5698,7 +5672,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 310,
+          "id" : 309,
           "page number" : 13,
           "bounding box" : [ 273.72, 185.052, 279.792, 199.736 ],
           "font" : "MalgunGothic",
@@ -5725,7 +5699,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 311,
+          "id" : 310,
           "page number" : 13,
           "bounding box" : [ 333.84, 185.052, 339.912, 199.736 ],
           "font" : "MalgunGothic",
@@ -5752,7 +5726,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 312,
+          "id" : 311,
           "page number" : 13,
           "bounding box" : [ 393.96, 185.052, 400.032, 199.736 ],
           "font" : "MalgunGothic",
@@ -5770,7 +5744,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 313,
+          "id" : 312,
           "page number" : 13,
           "bounding box" : [ 420.0, 177.852, 454.796, 206.816 ],
           "font" : "MalgunGothic",
@@ -5788,7 +5762,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 314,
+          "id" : 313,
           "page number" : 13,
           "bounding box" : [ 476.28, 185.052, 510.956, 199.736 ],
           "font" : "MalgunGothic",
@@ -5810,7 +5784,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 315,
+          "id" : 314,
           "page number" : 13,
           "bounding box" : [ 82.44, 163.572, 104.52, 178.256 ],
           "font" : "MalgunGothicBold",
@@ -5828,7 +5802,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 316,
+          "id" : 315,
           "page number" : 13,
           "bounding box" : [ 126.96, 163.572, 139.032, 178.256 ],
           "font" : "MalgunGothic",
@@ -5846,7 +5820,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 317,
+          "id" : 316,
           "page number" : 13,
           "bounding box" : [ 166.32, 163.572, 178.511, 178.256 ],
           "font" : "MalgunGothic",
@@ -5864,7 +5838,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 318,
+          "id" : 317,
           "page number" : 13,
           "bounding box" : [ 205.8, 163.572, 217.991, 178.256 ],
           "font" : "MalgunGothic",
@@ -5882,7 +5856,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 319,
+          "id" : 318,
           "page number" : 13,
           "bounding box" : [ 243.6, 163.572, 249.672, 178.256 ],
           "font" : "MalgunGothic",
@@ -5900,7 +5874,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 320,
+          "id" : 319,
           "page number" : 13,
           "bounding box" : [ 273.72, 163.572, 279.792, 178.256 ],
           "font" : "MalgunGothic",
@@ -5918,7 +5892,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 321,
+          "id" : 320,
           "page number" : 13,
           "bounding box" : [ 303.72, 163.572, 309.792, 178.256 ],
           "font" : "MalgunGothic",
@@ -5945,7 +5919,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 322,
+          "id" : 321,
           "page number" : 13,
           "bounding box" : [ 363.96, 163.572, 370.032, 178.256 ],
           "font" : "MalgunGothic",
@@ -5963,7 +5937,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 323,
+          "id" : 322,
           "page number" : 13,
           "bounding box" : [ 393.96, 163.572, 400.032, 178.256 ],
           "font" : "MalgunGothic",
@@ -5981,7 +5955,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 324,
+          "id" : 323,
           "page number" : 13,
           "bounding box" : [ 420.0, 163.572, 454.796, 178.256 ],
           "font" : "MalgunGothic",
@@ -6012,7 +5986,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 325,
+          "id" : 324,
           "page number" : 13,
           "bounding box" : [ 82.44, 141.852, 104.52, 156.536 ],
           "font" : "MalgunGothicBold",
@@ -6030,7 +6004,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 326,
+          "id" : 325,
           "page number" : 13,
           "bounding box" : [ 126.96, 141.852, 139.032, 156.536 ],
           "font" : "MalgunGothic",
@@ -6048,7 +6022,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 327,
+          "id" : 326,
           "page number" : 13,
           "bounding box" : [ 169.44, 141.852, 175.512, 156.536 ],
           "font" : "MalgunGothic",
@@ -6066,7 +6040,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 328,
+          "id" : 327,
           "page number" : 13,
           "bounding box" : [ 205.8, 141.852, 217.991, 156.536 ],
           "font" : "MalgunGothic",
@@ -6084,7 +6058,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 329,
+          "id" : 328,
           "page number" : 13,
           "bounding box" : [ 243.6, 141.852, 249.672, 156.536 ],
           "font" : "MalgunGothic",
@@ -6102,7 +6076,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 330,
+          "id" : 329,
           "page number" : 13,
           "bounding box" : [ 273.72, 141.852, 279.792, 156.536 ],
           "font" : "MalgunGothic",
@@ -6147,7 +6121,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 331,
+          "id" : 330,
           "page number" : 13,
           "bounding box" : [ 393.96, 141.852, 400.032, 156.536 ],
           "font" : "MalgunGothic",
@@ -6165,7 +6139,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 332,
+          "id" : 331,
           "page number" : 13,
           "bounding box" : [ 420.0, 134.652, 454.796, 163.616 ],
           "font" : "MalgunGothic",
@@ -6183,7 +6157,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 333,
+          "id" : 332,
           "page number" : 13,
           "bounding box" : [ 468.12, 134.652, 519.12, 163.616 ],
           "font" : "MalgunGothic",
@@ -6205,7 +6179,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 334,
+          "id" : 333,
           "page number" : 13,
           "bounding box" : [ 82.44, 112.332, 104.52, 127.016 ],
           "font" : "MalgunGothicBold",
@@ -6223,7 +6197,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 335,
+          "id" : 334,
           "page number" : 13,
           "bounding box" : [ 126.96, 112.332, 139.032, 127.016 ],
           "font" : "MalgunGothic",
@@ -6241,7 +6215,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 336,
+          "id" : 335,
           "page number" : 13,
           "bounding box" : [ 169.44, 112.332, 175.512, 127.016 ],
           "font" : "MalgunGothic",
@@ -6259,7 +6233,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 337,
+          "id" : 336,
           "page number" : 13,
           "bounding box" : [ 205.8, 112.332, 217.991, 127.016 ],
           "font" : "MalgunGothic",
@@ -6277,7 +6251,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 338,
+          "id" : 337,
           "page number" : 13,
           "bounding box" : [ 243.6, 112.332, 249.672, 127.016 ],
           "font" : "MalgunGothic",
@@ -6295,7 +6269,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 339,
+          "id" : 338,
           "page number" : 13,
           "bounding box" : [ 273.72, 112.332, 279.792, 127.016 ],
           "font" : "MalgunGothic",
@@ -6322,7 +6296,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 340,
+          "id" : 339,
           "page number" : 13,
           "bounding box" : [ 333.84, 112.332, 339.912, 127.016 ],
           "font" : "MalgunGothic",
@@ -6340,7 +6314,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 341,
+          "id" : 340,
           "page number" : 13,
           "bounding box" : [ 363.96, 112.332, 370.032, 127.016 ],
           "font" : "MalgunGothic",
@@ -6358,7 +6332,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 342,
+          "id" : 341,
           "page number" : 13,
           "bounding box" : [ 393.96, 112.332, 400.032, 127.016 ],
           "font" : "MalgunGothic",
@@ -6376,7 +6350,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 343,
+          "id" : 342,
           "page number" : 13,
           "bounding box" : [ 418.8, 105.252, 456.006, 134.216 ],
           "font" : "MalgunGothic",
@@ -6394,7 +6368,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 344,
+          "id" : 343,
           "page number" : 13,
           "bounding box" : [ 468.0, 112.332, 519.356, 127.016 ],
           "font" : "MalgunGothic",
@@ -6416,7 +6390,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 345,
+          "id" : 344,
           "page number" : 13,
           "bounding box" : [ 82.44, 89.892, 104.52, 104.576 ],
           "font" : "MalgunGothicBold",
@@ -6434,7 +6408,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 346,
+          "id" : 345,
           "page number" : 13,
           "bounding box" : [ 126.96, 89.892, 139.032, 104.576 ],
           "font" : "MalgunGothic",
@@ -6452,7 +6426,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 347,
+          "id" : 346,
           "page number" : 13,
           "bounding box" : [ 166.32, 89.892, 178.511, 104.576 ],
           "font" : "MalgunGothic",
@@ -6470,7 +6444,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 348,
+          "id" : 347,
           "page number" : 13,
           "bounding box" : [ 205.8, 89.892, 217.991, 104.576 ],
           "font" : "MalgunGothic",
@@ -6488,7 +6462,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 349,
+          "id" : 348,
           "page number" : 13,
           "bounding box" : [ 240.6, 89.892, 252.672, 104.576 ],
           "font" : "MalgunGothic",
@@ -6506,7 +6480,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 350,
+          "id" : 349,
           "page number" : 13,
           "bounding box" : [ 273.72, 89.892, 279.792, 104.576 ],
           "font" : "MalgunGothic",
@@ -6533,7 +6507,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 351,
+          "id" : 350,
           "page number" : 13,
           "bounding box" : [ 333.84, 89.892, 339.912, 104.576 ],
           "font" : "MalgunGothic",
@@ -6551,7 +6525,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 352,
+          "id" : 351,
           "page number" : 13,
           "bounding box" : [ 363.96, 89.892, 370.032, 104.576 ],
           "font" : "MalgunGothic",
@@ -6569,7 +6543,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 353,
+          "id" : 352,
           "page number" : 13,
           "bounding box" : [ 390.96, 89.892, 403.032, 104.576 ],
           "font" : "MalgunGothic",
@@ -6587,7 +6561,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 354,
+          "id" : 353,
           "page number" : 13,
           "bounding box" : [ 420.0, 89.892, 454.796, 104.576 ],
           "font" : "MalgunGothic",
@@ -6605,7 +6579,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 355,
+          "id" : 354,
           "page number" : 13,
           "bounding box" : [ 476.28, 89.892, 510.956, 104.576 ],
           "font" : "MalgunGothic",
@@ -6617,12 +6591,12 @@
     } ]
   }, {
     "type" : "footer",
-    "id" : 448,
+    "id" : 447,
     "page number" : 13,
     "bounding box" : [ 278.76, 41.557, 316.62, 52.597 ],
     "kids" : [ {
       "type" : "paragraph",
-      "id" : 377,
+      "id" : 376,
       "page number" : 13,
       "bounding box" : [ 278.76, 41.557, 316.62, 52.597 ],
       "font" : "Batang",

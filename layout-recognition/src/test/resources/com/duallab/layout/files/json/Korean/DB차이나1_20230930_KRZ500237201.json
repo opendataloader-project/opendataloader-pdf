@@ -1,33 +1,13 @@
 {
-  "file name" : "C:\\verapdf-dev\\demo-pdf-structure\\layout-recognition-core\\layout-recognition\\src\\test\\resources\\com\\duallab\\layout\\files\\pdf\\Korean\\DB차이나1_20230930_KRZ500237201.pdf",
+  "file name" : "DB차이나1_20230930_KRZ500237201.pdf",
   "number of pages" : 1,
   "author" : "User",
   "title" : null,
   "creation date" : "D:20231016162419+09'00'",
   "modification date" : "D:20231016162419+09'00'",
   "kids" : [ {
-    "type" : "line",
-    "id" : 69,
-    "page number" : 1,
-    "bounding box" : [ 68.04, 716.98, 269.57, 726.58 ]
-  }, {
-    "type" : "line",
-    "id" : 70,
-    "page number" : 1,
-    "bounding box" : [ 275.93, 716.98, 527.26, 726.58 ]
-  }, {
-    "type" : "line",
-    "id" : 71,
-    "page number" : 1,
-    "bounding box" : [ 68.04, 698.02, 269.57, 717.1 ]
-  }, {
-    "type" : "line",
-    "id" : 72,
-    "page number" : 1,
-    "bounding box" : [ 275.93, 698.02, 388.03, 717.1 ]
-  }, {
     "type" : "table",
-    "id" : 73,
+    "id" : 68,
     "level" : "1",
     "page number" : 1,
     "bounding box" : [ 394.99, 650.35, 527.5, 707.98 ],
@@ -46,7 +26,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 36,
+          "id" : 35,
           "page number" : 1,
           "bounding box" : [ 420.58, 699.118, 433.349, 706.426 ],
           "font" : "NanumBarunGothicBold",
@@ -64,7 +44,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 37,
+          "id" : 36,
           "page number" : 1,
           "bounding box" : [ 481.54, 699.238, 504.1, 706.546 ],
           "font" : "NanumBarunGothicBold",
@@ -86,7 +66,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 38,
+          "id" : 37,
           "page number" : 1,
           "bounding box" : [ 416.83, 689.374, 436.99, 695.854 ],
           "font" : "NanumBarunGothic",
@@ -104,7 +84,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 39,
+          "id" : 38,
           "page number" : 1,
           "bounding box" : [ 487.06, 690.214, 498.498, 696.694 ],
           "font" : "NanumBarunGothic",
@@ -126,7 +106,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 40,
+          "id" : 39,
           "page number" : 1,
           "bounding box" : [ 421.9, 679.894, 431.98, 686.374 ],
           "font" : "NanumBarunGothic",
@@ -144,7 +124,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 41,
+          "id" : 40,
           "page number" : 1,
           "bounding box" : [ 488.74, 680.734, 496.941, 687.214 ],
           "font" : "NanumBarunGothic",
@@ -166,7 +146,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 42,
+          "id" : 41,
           "page number" : 1,
           "bounding box" : [ 408.91, 670.414, 444.747, 678.79 ],
           "font" : "NanumBarunGothic",
@@ -184,7 +164,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 43,
+          "id" : 42,
           "page number" : 1,
           "bounding box" : [ 488.74, 671.254, 496.941, 677.734 ],
           "font" : "NanumBarunGothic",
@@ -206,7 +186,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 44,
+          "id" : 43,
           "page number" : 1,
           "bounding box" : [ 412.99, 660.904, 440.795, 667.384 ],
           "font" : "NanumBarunGothic",
@@ -224,7 +204,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 45,
+          "id" : 44,
           "page number" : 1,
           "bounding box" : [ 487.06, 661.744, 498.498, 668.224 ],
           "font" : "NanumBarunGothic",
@@ -257,129 +237,8 @@
       } ]
     } ]
   }, {
-    "type" : "text block",
-    "id" : 74,
-    "page number" : 1,
-    "bounding box" : [ 276.228, 653.068, 387.043, 709.381 ],
-    "kids" : [ {
-      "type" : "image",
-      "id" : 1,
-      "page number" : 1,
-      "bounding box" : [ 294.65, 673.95, 371.216, 703.393 ]
-    }, {
-      "type" : "image",
-      "id" : 2,
-      "page number" : 1,
-      "bounding box" : [ 297.753, 672.456, 309.55, 701.083 ]
-    }, {
-      "type" : "paragraph",
-      "id" : 3,
-      "page number" : 1,
-      "bounding box" : [ 338.62, 700.631, 353.362, 707.084 ],
-      "font" : "NanumBarunGothic",
-      "font size" : 5.616,
-      "text color" : "[0.0]",
-      "content" : "15.28"
-    }, {
-      "type" : "paragraph",
-      "id" : 4,
-      "page number" : 1,
-      "bounding box" : [ 362.78, 671.811, 377.522, 678.264 ],
-      "font" : "NanumBarunGothic",
-      "font size" : 5.616,
-      "text color" : "[0.0]",
-      "content" : "49.37"
-    }, {
-      "type" : "paragraph",
-      "id" : 5,
-      "page number" : 1,
-      "bounding box" : [ 285.48, 669.664, 296.98, 676.144 ],
-      "font" : "NanumBarunGothic",
-      "font size" : 5.64,
-      "text color" : "[0.0]",
-      "content" : "3.08"
-    }, {
-      "type" : "paragraph",
-      "id" : 6,
-      "page number" : 1,
-      "bounding box" : [ 282.82, 689.204, 297.586, 695.684 ],
-      "font" : "NanumBarunGothic",
-      "font size" : 5.64,
-      "text color" : "[0.0]",
-      "content" : "15.75"
-    }, {
-      "type" : "paragraph",
-      "id" : 7,
-      "page number" : 1,
-      "bounding box" : [ 286.51, 698.021, 298.056, 704.474 ],
-      "font" : "NanumBarunGothic",
-      "font size" : 5.616,
-      "text color" : "[0.0]",
-      "content" : "4.46"
-    }, {
-      "type" : "image",
-      "id" : 8,
-      "page number" : 1,
-      "bounding box" : [ 285.29, 661.37, 288.188, 664.268 ]
-    }, {
-      "type" : "paragraph",
-      "id" : 9,
-      "level" : "1",
-      "page number" : 1,
-      "bounding box" : [ 289.44, 659.741, 380.334, 666.254 ],
-      "font" : "NanumBarunGothic",
-      "font size" : 5.64,
-      "text color" : "[0.0]",
-      "content" : "H주 HK 레드칩 A주 중국 ADR"
-    }, {
-      "type" : "image",
-      "id" : 10,
-      "page number" : 1,
-      "bounding box" : [ 301.41, 661.37, 304.308, 664.268 ]
-    }, {
-      "type" : "image",
-      "id" : 11,
-      "page number" : 1,
-      "bounding box" : [ 316.04, 661.37, 318.938, 664.268 ]
-    }, {
-      "type" : "image",
-      "id" : 12,
-      "page number" : 1,
-      "bounding box" : [ 338.13, 661.37, 341.028, 664.268 ]
-    }, {
-      "type" : "image",
-      "id" : 13,
-      "page number" : 1,
-      "bounding box" : [ 353.84, 661.37, 356.738, 664.268 ]
-    } ]
-  }, {
-    "type" : "line",
-    "id" : 75,
-    "page number" : 1,
-    "bounding box" : [ 68.04, 641.11, 106.704, 679.174 ]
-  }, {
-    "type" : "line",
-    "id" : 76,
-    "page number" : 1,
-    "bounding box" : [ 68.04, 631.63, 106.704, 641.23 ]
-  }, {
-    "type" : "line",
-    "id" : 77,
-    "page number" : 1,
-    "bounding box" : [ 275.93, 631.63, 388.03, 641.23 ]
-  }, {
-    "type" : "line",
-    "id" : 78,
-    "page number" : 1,
-    "bounding box" : [ 395.35, 631.63, 527.25, 641.23 ]
-  }, {
-    "type" : "line",
-    "id" : 79,
-    "page number" : 1,
-    "bounding box" : [ 68.04, 612.67, 106.704, 631.75 ]
-  }, {
     "type" : "table",
-    "id" : 80,
+    "id" : 69,
     "level" : "2",
     "page number" : 1,
     "bounding box" : [ 275.57, 517.63, 388.27, 622.63 ],
@@ -398,7 +257,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 14,
+          "id" : 1,
           "page number" : 1,
           "bounding box" : [ 302.81, 614.824, 317.93, 621.304 ],
           "font" : "NanumBarunGothicBold",
@@ -416,7 +275,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 15,
+          "id" : 2,
           "page number" : 1,
           "bounding box" : [ 356.35, 614.344, 376.51, 620.824 ],
           "font" : "NanumBarunGothicBold",
@@ -438,7 +297,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 16,
+          "id" : 3,
           "page number" : 1,
           "bounding box" : [ 277.01, 606.362, 322.345, 610.774 ],
           "font" : "NanumBarunGothic",
@@ -456,7 +315,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 17,
+          "id" : 4,
           "page number" : 1,
           "bounding box" : [ 360.67, 604.864, 372.108, 611.344 ],
           "font" : "NanumBarunGothic",
@@ -478,7 +337,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 18,
+          "id" : 5,
           "page number" : 1,
           "bounding box" : [ 277.01, 596.882, 323.021, 601.294 ],
           "font" : "NanumBarunGothic",
@@ -496,7 +355,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 19,
+          "id" : 6,
           "page number" : 1,
           "bounding box" : [ 360.67, 595.384, 372.108, 601.864 ],
           "font" : "NanumBarunGothic",
@@ -518,7 +377,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 20,
+          "id" : 7,
           "page number" : 1,
           "bounding box" : [ 277.01, 587.402, 329.534, 591.814 ],
           "font" : "NanumBarunGothic",
@@ -536,7 +395,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 21,
+          "id" : 8,
           "page number" : 1,
           "bounding box" : [ 362.35, 585.904, 370.551, 592.384 ],
           "font" : "NanumBarunGothic",
@@ -558,7 +417,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 22,
+          "id" : 9,
           "page number" : 1,
           "bounding box" : [ 277.01, 577.922, 334.326, 582.334 ],
           "font" : "NanumBarunGothic",
@@ -576,7 +435,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 23,
+          "id" : 10,
           "page number" : 1,
           "bounding box" : [ 362.35, 576.424, 370.551, 582.904 ],
           "font" : "NanumBarunGothic",
@@ -598,7 +457,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 24,
+          "id" : 11,
           "page number" : 1,
           "bounding box" : [ 277.01, 568.442, 315.329, 572.854 ],
           "font" : "NanumBarunGothic",
@@ -616,7 +475,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 25,
+          "id" : 12,
           "page number" : 1,
           "bounding box" : [ 362.35, 566.944, 370.551, 573.424 ],
           "font" : "NanumBarunGothic",
@@ -638,7 +497,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 26,
+          "id" : 13,
           "page number" : 1,
           "bounding box" : [ 277.01, 558.962, 304.013, 563.374 ],
           "font" : "NanumBarunGothic",
@@ -656,7 +515,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 27,
+          "id" : 14,
           "page number" : 1,
           "bounding box" : [ 362.35, 557.464, 370.551, 563.944 ],
           "font" : "NanumBarunGothic",
@@ -678,7 +537,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 28,
+          "id" : 15,
           "page number" : 1,
           "bounding box" : [ 277.01, 549.482, 316.416, 553.894 ],
           "font" : "NanumBarunGothic",
@@ -696,7 +555,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 29,
+          "id" : 16,
           "page number" : 1,
           "bounding box" : [ 362.35, 547.984, 370.551, 554.464 ],
           "font" : "NanumBarunGothic",
@@ -718,7 +577,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 30,
+          "id" : 17,
           "page number" : 1,
           "bounding box" : [ 277.01, 540.002, 329.418, 544.414 ],
           "font" : "NanumBarunGothic",
@@ -736,7 +595,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 31,
+          "id" : 18,
           "page number" : 1,
           "bounding box" : [ 362.35, 538.504, 370.551, 544.984 ],
           "font" : "NanumBarunGothic",
@@ -758,7 +617,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 32,
+          "id" : 19,
           "page number" : 1,
           "bounding box" : [ 277.01, 530.042, 308.744, 534.454 ],
           "font" : "NanumBarunGothic",
@@ -776,7 +635,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 33,
+          "id" : 20,
           "page number" : 1,
           "bounding box" : [ 362.35, 529.024, 370.551, 535.504 ],
           "font" : "NanumBarunGothic",
@@ -798,7 +657,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 34,
+          "id" : 21,
           "page number" : 1,
           "bounding box" : [ 277.01, 520.562, 297.589, 524.974 ],
           "font" : "NanumBarunGothic",
@@ -816,7 +675,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 35,
+          "id" : 22,
           "page number" : 1,
           "bounding box" : [ 362.35, 519.544, 370.551, 526.024 ],
           "font" : "NanumBarunGothic",
@@ -828,7 +687,7 @@
     } ]
   }, {
     "type" : "table",
-    "id" : 81,
+    "id" : 70,
     "level" : "3",
     "page number" : 1,
     "bounding box" : [ 394.99, 517.63, 527.5, 622.63 ],
@@ -847,7 +706,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 46,
+          "id" : 45,
           "page number" : 1,
           "bounding box" : [ 416.83, 614.344, 436.99, 620.824 ],
           "font" : "NanumBarunGothicBold",
@@ -865,7 +724,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 47,
+          "id" : 46,
           "page number" : 1,
           "bounding box" : [ 482.74, 614.344, 502.9, 620.824 ],
           "font" : "NanumBarunGothicBold",
@@ -887,7 +746,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 48,
+          "id" : 47,
           "page number" : 1,
           "bounding box" : [ 413.59, 604.864, 440.081, 611.344 ],
           "font" : "NanumBarunGothic",
@@ -905,7 +764,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 49,
+          "id" : 48,
           "page number" : 1,
           "bounding box" : [ 487.06, 604.864, 498.498, 611.344 ],
           "font" : "NanumBarunGothic",
@@ -927,7 +786,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 50,
+          "id" : 49,
           "page number" : 1,
           "bounding box" : [ 421.9, 595.384, 431.98, 601.864 ],
           "font" : "NanumBarunGothic",
@@ -945,7 +804,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 51,
+          "id" : 50,
           "page number" : 1,
           "bounding box" : [ 487.06, 595.384, 498.498, 601.864 ],
           "font" : "NanumBarunGothic",
@@ -967,7 +826,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 52,
+          "id" : 51,
           "page number" : 1,
           "bounding box" : [ 421.9, 585.904, 431.98, 592.384 ],
           "font" : "NanumBarunGothic",
@@ -985,7 +844,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 53,
+          "id" : 52,
           "page number" : 1,
           "bounding box" : [ 487.06, 585.904, 498.498, 592.384 ],
           "font" : "NanumBarunGothic",
@@ -1007,7 +866,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 54,
+          "id" : 53,
           "page number" : 1,
           "bounding box" : [ 424.42, 576.424, 429.409, 582.904 ],
           "font" : "NanumBarunGothic",
@@ -1025,7 +884,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 55,
+          "id" : 54,
           "page number" : 1,
           "bounding box" : [ 488.74, 576.424, 496.941, 582.904 ],
           "font" : "NanumBarunGothic",
@@ -1047,7 +906,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 56,
+          "id" : 55,
           "page number" : 1,
           "bounding box" : [ 419.35, 566.944, 434.47, 573.424 ],
           "font" : "NanumBarunGothic",
@@ -1065,7 +924,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 57,
+          "id" : 56,
           "page number" : 1,
           "bounding box" : [ 488.74, 566.944, 496.941, 573.424 ],
           "font" : "NanumBarunGothic",
@@ -1087,7 +946,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 58,
+          "id" : 57,
           "page number" : 1,
           "bounding box" : [ 419.35, 557.464, 434.47, 563.944 ],
           "font" : "NanumBarunGothic",
@@ -1105,7 +964,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 59,
+          "id" : 58,
           "page number" : 1,
           "bounding box" : [ 488.74, 557.464, 496.941, 563.944 ],
           "font" : "NanumBarunGothic",
@@ -1127,7 +986,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 60,
+          "id" : 59,
           "page number" : 1,
           "bounding box" : [ 413.59, 547.984, 440.081, 554.464 ],
           "font" : "NanumBarunGothic",
@@ -1145,7 +1004,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 61,
+          "id" : 60,
           "page number" : 1,
           "bounding box" : [ 488.74, 547.984, 496.941, 554.464 ],
           "font" : "NanumBarunGothic",
@@ -1167,7 +1026,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 62,
+          "id" : 61,
           "page number" : 1,
           "bounding box" : [ 416.83, 538.504, 436.99, 544.984 ],
           "font" : "NanumBarunGothic",
@@ -1185,7 +1044,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 63,
+          "id" : 62,
           "page number" : 1,
           "bounding box" : [ 488.74, 538.504, 496.941, 544.984 ],
           "font" : "NanumBarunGothic",
@@ -1207,7 +1066,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 64,
+          "id" : 63,
           "page number" : 1,
           "bounding box" : [ 416.83, 529.024, 436.99, 535.504 ],
           "font" : "NanumBarunGothic",
@@ -1225,7 +1084,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 65,
+          "id" : 64,
           "page number" : 1,
           "bounding box" : [ 488.74, 529.024, 496.941, 535.504 ],
           "font" : "NanumBarunGothic",
@@ -1247,7 +1106,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 66,
+          "id" : 65,
           "page number" : 1,
           "bounding box" : [ 421.9, 519.544, 431.98, 526.024 ],
           "font" : "NanumBarunGothic",
@@ -1265,7 +1124,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 67,
+          "id" : 66,
           "page number" : 1,
           "bounding box" : [ 488.74, 519.544, 496.941, 526.024 ],
           "font" : "NanumBarunGothic",
@@ -1276,100 +1135,28 @@
       } ]
     } ]
   }, {
-    "type" : "line",
-    "id" : 82,
+    "type" : "heading",
+    "id" : 71,
+    "level" : "Doctitle",
     "page number" : 1,
-    "bounding box" : [ 68.04, 508.39, 106.704, 612.79 ]
-  }, {
-    "type" : "line",
-    "id" : 83,
-    "page number" : 1,
-    "bounding box" : [ 275.93, 480.41, 527.26, 489.53 ]
-  }, {
-    "type" : "line",
-    "id" : 84,
-    "page number" : 1,
-    "bounding box" : [ 275.93, 309.74, 527.26, 319.34 ]
-  }, {
-    "type" : "text block",
-    "id" : 85,
-    "page number" : 1,
-    "bounding box" : [ 69.986, 176.978, 526.861, 206.434 ],
-    "kids" : [ {
-      "type" : "paragraph",
-      "id" : 68,
-      "page number" : 1,
-      "bounding box" : [ 71.76, 182.874, 519.696, 200.3 ],
-      "font" : "NanumBarunGothic",
-      "font size" : 4.2,
-      "text color" : "[0.0]",
-      "content" : "본 자료는 DB자산운용이 작성한 것으로 수익증권 가입을 권유하기 위해 작성된 것이 아닙니다. 본 상품은 예금자보호법에따라 예금보험공사가 보호하지 않으며 판매회사와판매회사의 어떤 관계회사도 그 수익이나 원금을 보장하지 않으며 그러한 의무가 없습니다. 또한 본 상품은 실적배당 상품으로 유가증권 가격의 등락에 따른 손익은 투자자에 귀속되며, 시장 변동에 따라 원금손실이 발생할 수 있습니다. 과거의 실현수익률로 미래의 수익률을 예측하거나 보장할 수 없습니다. 본 자료에 사용된 정보들은 신뢰할 만한 자료에 바탕을 두고 있으나 정확성과 완전함이 보장되지 않으며, 본 자료상의 운용 계획은 시장 상황의 변동이나 운용상의 변화에 따라 달라질 수 있습니다. 본 상품의 내용에 관한 보다 자세한 사항은 신탁계약서 및 투자설명서를반드시 읽어 보시기 바랍니다."
-    } ]
-  }, {
-    "type" : "line",
-    "id" : 86,
-    "page number" : 1,
-    "bounding box" : [ 275.93, 148.08, 344.114, 157.68 ]
-  }, {
-    "type" : "line",
-    "id" : 87,
-    "page number" : 1,
-    "bounding box" : [ 275.93, 138.6, 344.114, 148.2 ]
-  }, {
-    "type" : "line",
-    "id" : 88,
-    "page number" : 1,
-    "bounding box" : [ 275.93, 129.12, 344.114, 138.72 ]
-  }, {
-    "type" : "paragraph",
-    "id" : 89,
-    "level" : "4",
-    "page number" : 1,
-    "bounding box" : [ 69.6, 736.859, 102.312, 744.856 ],
+    "bounding box" : [ 69.6, 736.859, 369.459, 744.856 ],
+    "heading level" : 1,
     "font" : "NanumBarunGothicBold",
     "font size" : 6.96,
     "text color" : "[0.573, 0.816, 0.314]",
-    "content" : "▶ 운용목표"
+    "content" : "▶ 운용목표 ▶ 자산구성현황 (운용펀드 기준)"
   }, {
     "type" : "paragraph",
-    "id" : 90,
-    "level" : "4",
+    "id" : 72,
     "page number" : 1,
-    "bounding box" : [ 277.49, 736.859, 369.459, 744.856 ],
-    "font" : "NanumBarunGothicBold",
-    "font size" : 6.96,
-    "text color" : "[0.573, 0.816, 0.314]",
-    "content" : "▶ 자산구성현황 (운용펀드 기준)"
-  }, {
-    "type" : "paragraph",
-    "id" : 91,
-    "page number" : 1,
-    "bounding box" : [ 69.36, 709.174, 203.282, 725.134 ],
+    "bounding box" : [ 69.36, 708.764, 526.013, 725.134 ],
     "font" : "NanumBarunGothic",
     "font size" : 5.64,
     "text color" : "[0.0]",
-    "content" : "신탁재산의 60%이상을 중국관련 주식에 투자하는 해외투자 펀드로 장기 안정적인 수익 추구를 목표로 함."
+    "content" : "신탁재산의 60%이상을 중국관련 주식에 투자하는 해외투자 펀드로 장기 안정적인 수익 추구를 목표로 함. (단위:%) (단위:%)"
   }, {
     "type" : "paragraph",
-    "id" : 92,
-    "page number" : 1,
-    "bounding box" : [ 370.63, 708.764, 386.783, 713.59 ],
-    "font" : "NanumBarunGothic",
-    "font size" : 4.2,
-    "text color" : "[0.0]",
-    "content" : "(단위:%)"
-  }, {
-    "type" : "paragraph",
-    "id" : 93,
-    "page number" : 1,
-    "bounding box" : [ 509.86, 708.764, 526.013, 713.59 ],
-    "font" : "NanumBarunGothic",
-    "font size" : 4.2,
-    "text color" : "[0.0]",
-    "content" : "(단위:%)"
-  }, {
-    "type" : "paragraph",
-    "id" : 94,
+    "id" : 73,
     "page number" : 1,
     "bounding box" : [ 388.99, 689.804, 393.114, 694.63 ],
     "font" : "NanumBarunGothic",
@@ -1377,182 +1164,36 @@
     "text color" : "[1.0]",
     "content" : "JS"
   }, {
-    "type" : "heading",
-    "id" : 95,
-    "level" : "Doctitle",
-    "page number" : 1,
-    "bounding box" : [ 69.6, 679.979, 102.312, 687.976 ],
-    "heading level" : 1,
-    "font" : "NanumBarunGothicBold",
-    "font size" : 6.96,
-    "text color" : "[0.573, 0.816, 0.314]",
-    "content" : "▶ 펀드개요"
-  }, {
     "type" : "paragraph",
-    "id" : 96,
+    "id" : 74,
+    "level" : "4",
     "page number" : 1,
-    "bounding box" : [ 388.99, 680.324, 394.602, 685.15 ],
-    "font" : "NanumBarunGothic",
-    "font size" : 4.2,
-    "text color" : "[1.0]",
-    "content" : "CH"
-  }, {
-    "type" : "paragraph",
-    "id" : 97,
-    "page number" : 1,
-    "bounding box" : [ 69.36, 671.254, 220.682, 677.734 ],
+    "bounding box" : [ 69.36, 633.304, 431.017, 687.976 ],
     "font" : "NanumBarunGothic",
     "font size" : 5.64,
     "text color" : "[0.0]",
-    "content" : "유        형 증권(주식)형, 개방형, 추가형, 종류형, 해외투자형"
+    "content" : "▶ 펀드개요 CH 유        형 증권(주식)형, 개방형, 추가형, 종류형, 해외투자형 BC 설  정  일 2006.05.08 YD 기준가격 925.56(원) 순 자 산 143.63(억) 주) 기타 : A주 펀드 및 ETF 주) A주 펀드 및 ETF 운용대상 중국주식 60% 이상"
   }, {
     "type" : "paragraph",
-    "id" : 98,
+    "id" : 75,
     "page number" : 1,
-    "bounding box" : [ 388.99, 670.844, 394.32, 675.67 ],
-    "font" : "NanumBarunGothic",
-    "font size" : 4.2,
-    "text color" : "[1.0]",
-    "content" : "BC"
-  }, {
-    "type" : "paragraph",
-    "id" : 99,
-    "page number" : 1,
-    "bounding box" : [ 69.36, 661.744, 137.211, 668.224 ],
+    "bounding box" : [ 69.36, 614.344, 526.013, 630.304 ],
     "font" : "NanumBarunGothic",
     "font size" : 5.64,
     "text color" : "[0.0]",
-    "content" : "설  정  일 2006.05.08"
+    "content" : "채권 40% 이하 (단위:%) (단위:%) 비교지수 FTSE CHINA INDEX (T-1) X 90% + CALL X 10%"
   }, {
     "type" : "paragraph",
-    "id" : 100,
+    "id" : 76,
     "page number" : 1,
-    "bounding box" : [ 388.99, 661.334, 394.492, 666.16 ],
-    "font" : "NanumBarunGothic",
-    "font size" : 4.2,
-    "text color" : "[1.0]",
-    "content" : "YD"
-  }, {
-    "type" : "paragraph",
-    "id" : 101,
-    "page number" : 1,
-    "bounding box" : [ 69.36, 642.784, 135.829, 658.744 ],
+    "bounding box" : [ 69.36, 585.904, 394.398, 611.344 ],
     "font" : "NanumBarunGothic",
     "font size" : 5.64,
     "text color" : "[0.0]",
-    "content" : "기준가격 925.56(원) 순 자 산 143.63(억)"
+    "content" : "환매수수료 없음 1.00 선취수수료 ClassA, A1: 납입금액의 1%(선취) 기타 Class: 없음 2.00 신탁보수 ClassA, A1: 연 1.715% ClassC1*: 연2.465% 3.00"
   }, {
     "type" : "paragraph",
-    "id" : 102,
-    "level" : "5",
-    "page number" : 1,
-    "bounding box" : [ 277.01, 645.374, 322.156, 650.2 ],
-    "font" : "NanumBarunGothic",
-    "font size" : 4.2,
-    "text color" : "[0.0]",
-    "content" : "주) 기타 : A주 펀드 및 ETF"
-  }, {
-    "type" : "paragraph",
-    "id" : 103,
-    "level" : "5",
-    "page number" : 1,
-    "bounding box" : [ 396.43, 645.374, 431.017, 650.2 ],
-    "font" : "NanumBarunGothic",
-    "font size" : 4.2,
-    "text color" : "[0.0]",
-    "content" : "주) A주 펀드 및 ETF"
-  }, {
-    "type" : "heading",
-    "id" : 104,
-    "level" : "Subtitle",
-    "page number" : 1,
-    "bounding box" : [ 69.36, 623.824, 152.253, 639.784 ],
-    "heading level" : 3,
-    "font" : "NanumBarunGothic",
-    "font size" : 5.64,
-    "text color" : "[0.0]",
-    "content" : "운용대상 중국주식 60% 이상 채권 40% 이하"
-  }, {
-    "type" : "paragraph",
-    "id" : 105,
-    "page number" : 1,
-    "bounding box" : [ 370.63, 623.414, 386.783, 628.24 ],
-    "font" : "NanumBarunGothic",
-    "font size" : 4.2,
-    "text color" : "[0.0]",
-    "content" : "(단위:%)"
-  }, {
-    "type" : "paragraph",
-    "id" : 106,
-    "page number" : 1,
-    "bounding box" : [ 509.86, 623.414, 526.013, 628.24 ],
-    "font" : "NanumBarunGothic",
-    "font size" : 4.2,
-    "text color" : "[0.0]",
-    "content" : "(단위:%)"
-  }, {
-    "type" : "heading",
-    "id" : 107,
-    "level" : "Subtitle",
-    "page number" : 1,
-    "bounding box" : [ 69.36, 604.864, 227.434, 620.824 ],
-    "heading level" : 3,
-    "font" : "NanumBarunGothic",
-    "font size" : 5.64,
-    "text color" : "[0.0]",
-    "content" : "비교지수 FTSE CHINA INDEX (T-1) X 90% + CALL X 10% 환매수수료 없음"
-  }, {
-    "type" : "paragraph",
-    "id" : 108,
-    "page number" : 1,
-    "bounding box" : [ 389.71, 606.828, 394.398, 609.448 ],
-    "font" : "NanumBarunGothic",
-    "font size" : 2.28,
-    "text color" : "[1.0]",
-    "content" : "1.00"
-  }, {
-    "type" : "heading",
-    "id" : 109,
-    "level" : "Subtitle",
-    "page number" : 1,
-    "bounding box" : [ 69.36, 595.384, 226.131, 601.864 ],
-    "heading level" : 3,
-    "font" : "NanumBarunGothic",
-    "font size" : 5.64,
-    "text color" : "[0.0]",
-    "content" : "선취수수료 ClassA, A1: 납입금액의 1%(선취) 기타 Class: 없음"
-  }, {
-    "type" : "paragraph",
-    "id" : 110,
-    "page number" : 1,
-    "bounding box" : [ 389.71, 597.348, 394.398, 599.968 ],
-    "font" : "NanumBarunGothic",
-    "font size" : 2.28,
-    "text color" : "[1.0]",
-    "content" : "2.00"
-  }, {
-    "type" : "heading",
-    "id" : 111,
-    "level" : "Subtitle",
-    "page number" : 1,
-    "bounding box" : [ 69.36, 585.904, 214.885, 592.384 ],
-    "heading level" : 3,
-    "font" : "NanumBarunGothic",
-    "font size" : 5.64,
-    "text color" : "[0.0]",
-    "content" : "신탁보수 ClassA, A1: 연 1.715% ClassC1*: 연2.465%"
-  }, {
-    "type" : "paragraph",
-    "id" : 112,
-    "page number" : 1,
-    "bounding box" : [ 389.71, 587.868, 394.398, 590.488 ],
-    "font" : "NanumBarunGothic",
-    "font size" : 2.28,
-    "text color" : "[1.0]",
-    "content" : "3.00"
-  }, {
-    "type" : "paragraph",
-    "id" : 113,
+    "id" : 77,
     "page number" : 1,
     "bounding box" : [ 389.71, 578.388, 394.398, 581.008 ],
     "font" : "NanumBarunGothic",
@@ -1561,67 +1202,25 @@
     "content" : "4.00"
   }, {
     "type" : "paragraph",
-    "id" : 114,
+    "id" : 78,
     "page number" : 1,
-    "bounding box" : [ 389.71, 568.908, 394.398, 571.528 ],
-    "font" : "NanumBarunGothic",
-    "font size" : 2.28,
-    "text color" : "[1.0]",
-    "content" : "5.00"
-  }, {
-    "type" : "heading",
-    "id" : 115,
-    "level" : "Subtitle",
-    "page number" : 1,
-    "bounding box" : [ 69.36, 557.464, 138.14, 563.944 ],
-    "heading level" : 3,
+    "bounding box" : [ 69.36, 547.984, 394.398, 571.528 ],
     "font" : "NanumBarunGothic",
     "font size" : 5.64,
     "text color" : "[0.0]",
-    "content" : "운 용 역 글로벌운용팀"
+    "content" : "5.00 운 용 역 글로벌운용팀 6.00 판매회사 증권사: 대신, DB금융투자, 메리츠, 삼성, 신한금융투자, 7.00"
   }, {
     "type" : "paragraph",
-    "id" : 116,
-    "page number" : 1,
-    "bounding box" : [ 389.71, 559.428, 394.398, 562.048 ],
-    "font" : "NanumBarunGothic",
-    "font size" : 2.28,
-    "text color" : "[1.0]",
-    "content" : "6.00"
-  }, {
-    "type" : "heading",
-    "id" : 117,
-    "level" : "Subtitle",
-    "page number" : 1,
-    "bounding box" : [ 69.36, 547.984, 232.849, 554.464 ],
-    "heading level" : 3,
-    "font" : "NanumBarunGothic",
-    "font size" : 5.64,
-    "text color" : "[0.0]",
-    "content" : "판매회사 증권사: 대신, DB금융투자, 메리츠, 삼성, 신한금융투자,"
-  }, {
-    "type" : "paragraph",
-    "id" : 118,
-    "page number" : 1,
-    "bounding box" : [ 389.71, 549.948, 394.398, 552.568 ],
-    "font" : "NanumBarunGothic",
-    "font size" : 2.28,
-    "text color" : "[1.0]",
-    "content" : "7.00"
-  }, {
-    "type" : "heading",
-    "id" : 119,
-    "level" : "Subtitle",
+    "id" : 79,
     "page number" : 1,
     "bounding box" : [ 107.9, 537.664, 240.733, 544.144 ],
-    "heading level" : 3,
     "font" : "NanumBarunGothic",
     "font size" : 5.64,
     "text color" : "[0.0]",
     "content" : "유진투자, 키움, 하이투자, 한국투자, 한화, 현대, NH, SK 등"
   }, {
     "type" : "paragraph",
-    "id" : 120,
+    "id" : 80,
     "page number" : 1,
     "bounding box" : [ 389.71, 540.468, 394.398, 543.088 ],
     "font" : "NanumBarunGothic",
@@ -1630,69 +1229,18 @@
     "content" : "8.00"
   }, {
     "type" : "heading",
-    "id" : 121,
+    "id" : 81,
     "level" : "Subtitle",
     "page number" : 1,
-    "bounding box" : [ 107.9, 529.024, 180.921, 535.504 ],
+    "bounding box" : [ 69.36, 510.064, 394.475, 535.504 ],
     "heading level" : 3,
     "font" : "NanumBarunGothic",
     "font size" : 5.64,
     "text color" : "[0.0]",
-    "content" : "은행: KEB하나은행, 우리은행 등"
+    "content" : "은행: KEB하나은행, 우리은행 등 9.00 신탁업자 KEB하나은행 10.00 일반사무 하나펀드 서비스 * 자산구성현황은 2023년09월30일 기준으로 작성되었음"
   }, {
     "type" : "paragraph",
-    "id" : 122,
-    "page number" : 1,
-    "bounding box" : [ 389.71, 530.988, 394.398, 533.608 ],
-    "font" : "NanumBarunGothic",
-    "font size" : 2.28,
-    "text color" : "[1.0]",
-    "content" : "9.00"
-  }, {
-    "type" : "heading",
-    "id" : 123,
-    "level" : "Subtitle",
-    "page number" : 1,
-    "bounding box" : [ 69.36, 519.544, 138.356, 526.024 ],
-    "heading level" : 3,
-    "font" : "NanumBarunGothic",
-    "font size" : 5.64,
-    "text color" : "[0.0]",
-    "content" : "신탁업자 KEB하나은행"
-  }, {
-    "type" : "paragraph",
-    "id" : 124,
-    "page number" : 1,
-    "bounding box" : [ 389.71, 521.652, 394.475, 523.72 ],
-    "font" : "NanumBarunGothic",
-    "font size" : 1.8,
-    "text color" : "[1.0]",
-    "content" : "10.00"
-  }, {
-    "type" : "heading",
-    "id" : 125,
-    "level" : "Subtitle",
-    "page number" : 1,
-    "bounding box" : [ 69.36, 510.064, 144.464, 516.544 ],
-    "heading level" : 3,
-    "font" : "NanumBarunGothic",
-    "font size" : 5.64,
-    "text color" : "[0.0]",
-    "content" : "일반사무 하나펀드 서비스"
-  }, {
-    "type" : "heading",
-    "id" : 126,
-    "level" : "Subtitle",
-    "page number" : 1,
-    "bounding box" : [ 277.01, 512.654, 372.669, 517.48 ],
-    "heading level" : 4,
-    "font" : "NanumBarunGothic",
-    "font size" : 4.2,
-    "text color" : "[0.2]",
-    "content" : "* 자산구성현황은 2023년09월30일 기준으로 작성되었음"
-  }, {
-    "type" : "paragraph",
-    "id" : 127,
+    "id" : 82,
     "page number" : 1,
     "bounding box" : [ 389.71, 512.172, 394.475, 514.24 ],
     "font" : "NanumBarunGothic",
@@ -1701,8 +1249,8 @@
     "content" : "11.00"
   }, {
     "type" : "paragraph",
-    "id" : 128,
-    "level" : "6",
+    "id" : 83,
+    "level" : "4",
     "page number" : 1,
     "bounding box" : [ 69.12, 503.174, 211.496, 508.0 ],
     "font" : "NanumBarunGothic",
@@ -1711,27 +1259,17 @@
     "content" : "* Class C1, C-E, C-H는 기간에 따라 판매보수 인하(자세한 내용은 투자설명서 참조)"
   }, {
     "type" : "paragraph",
-    "id" : 129,
+    "id" : 84,
     "level" : "4",
     "page number" : 1,
-    "bounding box" : [ 69.6, 490.329, 102.312, 498.326 ],
+    "bounding box" : [ 69.6, 481.388, 332.029, 498.326 ],
     "font" : "NanumBarunGothicBold",
     "font size" : 6.96,
     "text color" : "[0.573, 0.816, 0.314]",
-    "content" : "▶ 운용성과"
+    "content" : "▶ 운용성과 ▶ 운용경과 및 계획 (단위:%,%p) ■ 운용경과"
   }, {
     "type" : "paragraph",
-    "id" : 130,
-    "level" : "4",
-    "page number" : 1,
-    "bounding box" : [ 244.73, 481.388, 332.029, 498.326 ],
-    "font" : "NanumBarunGothicBold",
-    "font size" : 6.96,
-    "text color" : "[0.573, 0.816, 0.314]",
-    "content" : "▶ 운용경과 및 계획 (단위:%,%p) ■ 운용경과"
-  }, {
-    "type" : "paragraph",
-    "id" : 131,
+    "id" : 85,
     "level" : "4",
     "page number" : 1,
     "bounding box" : [ 69.6, 414.969, 122.58, 422.966 ],
@@ -1741,8 +1279,8 @@
     "content" : "▶ 운용수익률 추이"
   }, {
     "type" : "paragraph",
-    "id" : 132,
-    "level" : "4",
+    "id" : 86,
+    "level" : "5",
     "page number" : 1,
     "bounding box" : [ 278.795, 339.428, 507.348, 346.736 ],
     "font" : "NanumBarunGothic",
@@ -1751,7 +1289,7 @@
     "content" : "- 운용성과: 동기간 중 펀드는 4.91% 하락하여 4.64% 하락한 비교지수를 하회하였습니다."
   }, {
     "type" : "paragraph",
-    "id" : 133,
+    "id" : 87,
     "page number" : 1,
     "bounding box" : [ 278.795, 320.438, 479.255, 327.746 ],
     "font" : "NanumBarunGothic",
@@ -1760,7 +1298,7 @@
     "content" : "홍콩 49.4%, A주 15.8%, 중국 ADR 4.5%, 레드칩3.1%로 구성되어 있습니다."
   }, {
     "type" : "heading",
-    "id" : 134,
+    "id" : 88,
     "level" : "Subtitle",
     "page number" : 1,
     "bounding box" : [ 277.37, 310.838, 307.046, 318.146 ],
@@ -1771,8 +1309,8 @@
     "content" : "■ 운용계획"
   }, {
     "type" : "paragraph",
-    "id" : 135,
-    "level" : "4",
+    "id" : 89,
+    "level" : "5",
     "page number" : 1,
     "bounding box" : [ 277.37, 238.718, 525.944, 309.386 ],
     "font" : "NanumBarunGothic",
@@ -1781,8 +1319,8 @@
     "content" : "- 10월 중국 증시는 대내적으로는 부동산 경기 부진에 따른 불확실성과 미중 간 갈등에 따른 노이즈 로 인해 시장 변동성이 지속될 것으로 전망됩니다. 다만, 길었던 터널의 끝이 조금씩 보이기 시작했다 고 판단됩니다. 중국 내부에서도 춘절 연휴 이후 소비심리와 투자심리 회복에 주식시장이 바닥을 다 지고 반등에 대한 기대감이 형성되고 있는 분위기를 보이고 있습니다. 9월 말에 들어서 중국 첨단산 업 관련 미국의 제재 관련 노이즈가 발생했지만, 지속된 조정으로 밸류에이션 매력과 중국 정부의 AI 와 첨단산업 관련 부양책이 연이어 발표되면서 AI와 반도체 산업으로 다시 투자자들의 관심이 형성되 는 모습이 확인되어 향후 주식시장에 긍정적으로 작용할 것으로 예상됩니다. 10월에도 확실한 시그 널이 확인되기 전까지 보수적인 관점으로 주식시장에 접근하겠지만, 투자심리 개선으로 시장 반등 가능성이 높다고 예상되어 시장을 면밀히 지켜보며 탄력적으로 대응할 계획입니다."
   }, {
     "type" : "paragraph",
-    "id" : 136,
-    "level" : "5",
+    "id" : 90,
+    "level" : "4",
     "page number" : 1,
     "bounding box" : [ 69.12, 431.034, 217.166, 435.86 ],
     "font" : "NanumBarunGothic",
@@ -1791,8 +1329,8 @@
     "content" : "* 비교지수: FTSE CHINA Index in HKD 90% + CALL 10% (2017.04.14일자로 변경)"
   }, {
     "type" : "paragraph",
-    "id" : 137,
-    "level" : "4",
+    "id" : 91,
+    "level" : "5",
     "page number" : 1,
     "bounding box" : [ 277.37, 448.988, 525.881, 480.056 ],
     "font" : "NanumBarunGothic",
@@ -1801,7 +1339,7 @@
     "content" : "- 9월 중국 증시는 부동산 디폴트 리스크 지속, 미중 관계 악화 우려감과 위안화 약세로 인한 외국인 투자자금 이탈 영향에 전월에 이어 하락 마감하였습니다. 8월 주요 실물 경제지표와 수출입 지표가 예상치를 상회하면서 오랜만에 반등에 성공했지만, 부동산 디폴트 리스크 및 경기에 대한 우려감이 9 월에도 지속되며 투자심리 위축이 이어졌습니다. 이와 더불어, 화웨이 메이트 60 프로 출시 이후 반"
   }, {
     "type" : "paragraph",
-    "id" : 138,
+    "id" : 92,
     "page number" : 1,
     "bounding box" : [ 277.37, 425.228, 525.963, 448.376 ],
     "font" : "NanumBarunGothic",
@@ -1810,7 +1348,7 @@
     "content" : "도체 산업을 둘러싼 미중 갈등과 미국 상무부의 중국 기업 추가 제재, 미 연준의 매파적 기조에 위안 화 약세가 지속되면서 외국인 투자자금 이탈이 가속화 되면서 시장에 악재로 작용하였습니다. 중국 춘절 연휴를 앞두고 월말에 들어서 시장 전반적으로 거래량이 급격히 감소하며 마감하는 모습을 보였"
   }, {
     "type" : "paragraph",
-    "id" : 139,
+    "id" : 93,
     "page number" : 1,
     "bounding box" : [ 277.37, 401.468, 525.079, 424.616 ],
     "font" : "NanumBarunGothic",
@@ -1819,7 +1357,7 @@
     "content" : "습니다. 업종별로 보면, 모멘텀이 부재한 가운데 에너지와 헬스케어 섹터를 제외하고 대부분의 섹터 가 약세 마감하였습니다. 한편 홍콩 증시의 경우 부동산 리스크와 미중 갈등 우려에 더욱 민감하게 반 응하며 본토 증시 대비 큰 폭으로 하락하였습니다."
   }, {
     "type" : "paragraph",
-    "id" : 140,
+    "id" : 94,
     "page number" : 1,
     "bounding box" : [ 466.3, 746.038, 525.734, 753.346 ],
     "font" : "NanumBarunGothic",
@@ -1828,7 +1366,7 @@
     "content" : "2023년09월30일 기준"
   }, {
     "type" : "paragraph",
-    "id" : 141,
+    "id" : 95,
     "page number" : 1,
     "bounding box" : [ 382.51, 718.379, 421.458, 726.376 ],
     "font" : "NanumBarunGothicBold",
@@ -1837,26 +1375,17 @@
     "content" : "자산별 구성비"
   }, {
     "type" : "paragraph",
-    "id" : 142,
+    "id" : 96,
     "page number" : 1,
-    "bounding box" : [ 313.63, 633.029, 351.07, 641.026 ],
+    "bounding box" : [ 313.63, 633.029, 480.46, 641.026 ],
     "font" : "NanumBarunGothicBold",
     "font size" : 6.96,
     "text color" : "[0.0]",
-    "content" : "상위보유종목"
+    "content" : "상위보유종목 상위보유업종"
   }, {
     "type" : "paragraph",
-    "id" : 143,
-    "page number" : 1,
-    "bounding box" : [ 443.02, 633.029, 480.46, 641.026 ],
-    "font" : "NanumBarunGothicBold",
-    "font size" : 6.96,
-    "text color" : "[0.0]",
-    "content" : "상위보유업종"
-  }, {
-    "type" : "paragraph",
-    "id" : 144,
-    "level" : "4",
+    "id" : 97,
+    "level" : "5",
     "page number" : 1,
     "bounding box" : [ 278.795, 330.278, 497.731, 337.586 ],
     "font" : "NanumBarunGothic",
@@ -1864,79 +1393,126 @@
     "text color" : "[0.0]",
     "content" : "- 자산배분: 09월 30일 기준 해외주식 편입 비중은 87.9%, 시장별 비율은 H주 15.3%,"
   }, {
-    "type" : "line",
-    "id" : 145,
-    "page number" : 1,
-    "bounding box" : [ 68.04, 678.82, 269.57, 679.54 ]
-  }, {
-    "type" : "line",
-    "id" : 146,
-    "page number" : 1,
-    "bounding box" : [ 275.93, 631.39, 388.03, 632.11 ]
-  }, {
-    "type" : "line",
-    "id" : 147,
-    "page number" : 1,
-    "bounding box" : [ 106.22, 517.87, 106.94, 678.81 ]
-  }, {
-    "type" : "line",
-    "id" : 148,
-    "page number" : 1,
-    "bounding box" : [ 395.35, 631.39, 527.25, 632.11 ]
-  }, {
-    "type" : "line",
-    "id" : 149,
-    "page number" : 1,
-    "bounding box" : [ 68.04, 508.15, 269.57, 508.87 ]
-  }, {
     "type" : "image",
-    "id" : 150,
+    "id" : 98,
     "page number" : 1,
     "bounding box" : [ 68.652, 152.99, 525.502, 177.242 ]
   }, {
     "type" : "image",
-    "id" : 151,
+    "id" : 99,
     "page number" : 1,
     "bounding box" : [ 440.33, 133.44, 523.91, 161.376 ]
   }, {
-    "type" : "table",
-    "id" : 152,
-    "level" : "5",
+    "type" : "text block",
+    "id" : 100,
     "page number" : 1,
-    "bounding box" : [ 92.628, 269.698, 249.88, 401.832 ],
-    "number of rows" : 2,
-    "number of columns" : 1,
-    "rows" : [ {
-      "type" : "table row",
-      "row number" : 1,
-      "cells" : [ {
-        "type" : "table cell",
-        "page number" : 1,
-        "bounding box" : [ 92.613, 277.676, 249.88, 401.843 ],
-        "row number" : 1,
-        "column number" : 1,
-        "row span" : 1,
-        "column span" : 1,
-        "kids" : [ ]
-      } ]
-    }, {
-      "type" : "table row",
-      "row number" : 2,
-      "cells" : [ {
-        "type" : "table cell",
-        "page number" : 1,
-        "bounding box" : [ 92.613, 269.688, 249.88, 387.047 ],
-        "row number" : 2,
-        "column number" : 1,
-        "row span" : 1,
-        "column span" : 1,
-        "kids" : [ ]
-      } ]
+    "bounding box" : [ 69.986, 176.978, 526.861, 206.434 ],
+    "kids" : [ {
+      "type" : "paragraph",
+      "id" : 67,
+      "page number" : 1,
+      "bounding box" : [ 71.76, 182.874, 519.696, 200.3 ],
+      "font" : "NanumBarunGothic",
+      "font size" : 4.2,
+      "text color" : "[0.0]",
+      "content" : "본 자료는 DB자산운용이 작성한 것으로 수익증권 가입을 권유하기 위해 작성된 것이 아닙니다. 본 상품은 예금자보호법에따라 예금보험공사가 보호하지 않으며 판매회사와판매회사의 어떤 관계회사도 그 수익이나 원금을 보장하지 않으며 그러한 의무가 없습니다. 또한 본 상품은 실적배당 상품으로 유가증권 가격의 등락에 따른 손익은 투자자에 귀속되며, 시장 변동에 따라 원금손실이 발생할 수 있습니다. 과거의 실현수익률로 미래의 수익률을 예측하거나 보장할 수 없습니다. 본 자료에 사용된 정보들은 신뢰할 만한 자료에 바탕을 두고 있으나 정확성과 완전함이 보장되지 않으며, 본 자료상의 운용 계획은 시장 상황의 변동이나 운용상의 변화에 따라 달라질 수 있습니다. 본 상품의 내용에 관한 보다 자세한 사항은 신탁계약서 및 투자설명서를반드시 읽어 보시기 바랍니다."
     } ]
   }, {
+    "type" : "text block",
+    "id" : 101,
+    "page number" : 1,
+    "bounding box" : [ 276.228, 653.068, 387.043, 709.381 ],
+    "kids" : [ {
+      "type" : "image",
+      "id" : 23,
+      "page number" : 1,
+      "bounding box" : [ 294.65, 673.95, 371.216, 703.393 ]
+    }, {
+      "type" : "image",
+      "id" : 24,
+      "page number" : 1,
+      "bounding box" : [ 297.753, 672.456, 309.55, 701.083 ]
+    }, {
+      "type" : "paragraph",
+      "id" : 25,
+      "page number" : 1,
+      "bounding box" : [ 338.62, 700.631, 353.362, 707.084 ],
+      "font" : "NanumBarunGothic",
+      "font size" : 5.616,
+      "text color" : "[0.0]",
+      "content" : "15.28"
+    }, {
+      "type" : "paragraph",
+      "id" : 26,
+      "page number" : 1,
+      "bounding box" : [ 285.48, 669.664, 377.522, 678.264 ],
+      "font" : "NanumBarunGothic",
+      "font size" : 5.616,
+      "text color" : "[0.0]",
+      "content" : "49.373.08"
+    }, {
+      "type" : "paragraph",
+      "id" : 27,
+      "page number" : 1,
+      "bounding box" : [ 282.82, 689.204, 297.586, 695.684 ],
+      "font" : "NanumBarunGothic",
+      "font size" : 5.64,
+      "text color" : "[0.0]",
+      "content" : "15.75"
+    }, {
+      "type" : "paragraph",
+      "id" : 28,
+      "page number" : 1,
+      "bounding box" : [ 286.51, 698.021, 298.056, 704.474 ],
+      "font" : "NanumBarunGothic",
+      "font size" : 5.616,
+      "text color" : "[0.0]",
+      "content" : "4.46"
+    }, {
+      "type" : "image",
+      "id" : 29,
+      "page number" : 1,
+      "bounding box" : [ 285.29, 661.37, 288.188, 664.268 ]
+    }, {
+      "type" : "paragraph",
+      "id" : 30,
+      "level" : "1",
+      "page number" : 1,
+      "bounding box" : [ 289.44, 659.741, 380.334, 666.254 ],
+      "font" : "NanumBarunGothic",
+      "font size" : 5.64,
+      "text color" : "[0.0]",
+      "content" : "H주 HK 레드칩 A주 중국 ADR"
+    }, {
+      "type" : "image",
+      "id" : 31,
+      "page number" : 1,
+      "bounding box" : [ 301.41, 661.37, 304.308, 664.268 ]
+    }, {
+      "type" : "image",
+      "id" : 32,
+      "page number" : 1,
+      "bounding box" : [ 316.04, 661.37, 318.938, 664.268 ]
+    }, {
+      "type" : "image",
+      "id" : 33,
+      "page number" : 1,
+      "bounding box" : [ 338.13, 661.37, 341.028, 664.268 ]
+    }, {
+      "type" : "image",
+      "id" : 34,
+      "page number" : 1,
+      "bounding box" : [ 353.84, 661.37, 356.738, 664.268 ]
+    } ]
+  }, {
+    "type" : "image",
+    "id" : 102,
+    "page number" : 1,
+    "bounding box" : [ 70.592, 245.21, 266.682, 409.29 ]
+  }, {
     "type" : "paragraph",
-    "id" : 153,
-    "level" : "4",
+    "id" : 103,
+    "level" : "5",
     "page number" : 1,
     "bounding box" : [ 252.74, 267.223, 265.669, 272.821 ],
     "font" : "NanumBarunGothic",
@@ -1945,7 +1521,7 @@
     "content" : "-50%"
   }, {
     "type" : "paragraph",
-    "id" : 154,
+    "id" : 104,
     "page number" : 1,
     "bounding box" : [ 252.74, 286.043, 259.957, 291.641 ],
     "font" : "NanumBarunGothic",
@@ -1954,7 +1530,7 @@
     "content" : "0%"
   }, {
     "type" : "paragraph",
-    "id" : 155,
+    "id" : 105,
     "page number" : 1,
     "bounding box" : [ 252.74, 304.833, 262.813, 310.431 ],
     "font" : "NanumBarunGothic",
@@ -1963,7 +1539,7 @@
     "content" : "50%"
   }, {
     "type" : "paragraph",
-    "id" : 156,
+    "id" : 106,
     "page number" : 1,
     "bounding box" : [ 252.74, 323.643, 265.669, 329.241 ],
     "font" : "NanumBarunGothic",
@@ -1972,7 +1548,7 @@
     "content" : "100%"
   }, {
     "type" : "paragraph",
-    "id" : 157,
+    "id" : 107,
     "page number" : 1,
     "bounding box" : [ 252.74, 342.443, 265.669, 348.041 ],
     "font" : "NanumBarunGothic",
@@ -1981,7 +1557,7 @@
     "content" : "150%"
   }, {
     "type" : "paragraph",
-    "id" : 158,
+    "id" : 108,
     "page number" : 1,
     "bounding box" : [ 252.74, 361.253, 265.669, 366.851 ],
     "font" : "NanumBarunGothic",
@@ -1990,7 +1566,7 @@
     "content" : "200%"
   }, {
     "type" : "paragraph",
-    "id" : 159,
+    "id" : 109,
     "page number" : 1,
     "bounding box" : [ 252.74, 380.043, 265.669, 385.641 ],
     "font" : "NanumBarunGothic",
@@ -1999,7 +1575,7 @@
     "content" : "250%"
   }, {
     "type" : "paragraph",
-    "id" : 160,
+    "id" : 110,
     "page number" : 1,
     "bounding box" : [ 252.74, 398.863, 265.669, 404.461 ],
     "font" : "NanumBarunGothic",
@@ -2008,8 +1584,8 @@
     "content" : "300%"
   }, {
     "type" : "list",
-    "id" : 161,
-    "level" : "5",
+    "id" : 111,
+    "level" : "6",
     "page number" : 1,
     "bounding box" : [ 76.2, 267.223, 89.129, 280.141 ],
     "numbering style" : "unordered",
@@ -2035,7 +1611,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 162,
+    "id" : 112,
     "page number" : 1,
     "bounding box" : [ 81.912, 281.843, 89.129, 287.441 ],
     "font" : "NanumBarunGothic",
@@ -2044,7 +1620,7 @@
     "content" : "0%"
   }, {
     "type" : "paragraph",
-    "id" : 163,
+    "id" : 113,
     "page number" : 1,
     "bounding box" : [ 79.056, 289.163, 89.129, 294.761 ],
     "font" : "NanumBarunGothic",
@@ -2053,7 +1629,7 @@
     "content" : "30%"
   }, {
     "type" : "paragraph",
-    "id" : 164,
+    "id" : 114,
     "page number" : 1,
     "bounding box" : [ 79.056, 296.483, 89.129, 302.081 ],
     "font" : "NanumBarunGothic",
@@ -2062,7 +1638,7 @@
     "content" : "60%"
   }, {
     "type" : "paragraph",
-    "id" : 165,
+    "id" : 115,
     "page number" : 1,
     "bounding box" : [ 79.056, 303.803, 89.129, 309.401 ],
     "font" : "NanumBarunGothic",
@@ -2071,7 +1647,7 @@
     "content" : "90%"
   }, {
     "type" : "paragraph",
-    "id" : 166,
+    "id" : 116,
     "page number" : 1,
     "bounding box" : [ 76.2, 311.093, 89.129, 316.691 ],
     "font" : "NanumBarunGothic",
@@ -2080,7 +1656,7 @@
     "content" : "120%"
   }, {
     "type" : "paragraph",
-    "id" : 167,
+    "id" : 117,
     "page number" : 1,
     "bounding box" : [ 76.2, 318.413, 89.129, 324.011 ],
     "font" : "NanumBarunGothic",
@@ -2089,7 +1665,7 @@
     "content" : "150%"
   }, {
     "type" : "paragraph",
-    "id" : 168,
+    "id" : 118,
     "page number" : 1,
     "bounding box" : [ 76.2, 325.733, 89.129, 331.331 ],
     "font" : "NanumBarunGothic",
@@ -2098,7 +1674,7 @@
     "content" : "180%"
   }, {
     "type" : "paragraph",
-    "id" : 169,
+    "id" : 119,
     "page number" : 1,
     "bounding box" : [ 76.2, 333.053, 89.129, 338.651 ],
     "font" : "NanumBarunGothic",
@@ -2107,7 +1683,7 @@
     "content" : "210%"
   }, {
     "type" : "paragraph",
-    "id" : 170,
+    "id" : 120,
     "page number" : 1,
     "bounding box" : [ 76.2, 340.353, 89.129, 345.951 ],
     "font" : "NanumBarunGothic",
@@ -2116,7 +1692,7 @@
     "content" : "240%"
   }, {
     "type" : "paragraph",
-    "id" : 171,
+    "id" : 121,
     "page number" : 1,
     "bounding box" : [ 76.2, 347.673, 89.129, 353.271 ],
     "font" : "NanumBarunGothic",
@@ -2125,7 +1701,7 @@
     "content" : "270%"
   }, {
     "type" : "paragraph",
-    "id" : 172,
+    "id" : 122,
     "page number" : 1,
     "bounding box" : [ 76.2, 354.993, 89.129, 360.591 ],
     "font" : "NanumBarunGothic",
@@ -2134,7 +1710,7 @@
     "content" : "300%"
   }, {
     "type" : "paragraph",
-    "id" : 173,
+    "id" : 123,
     "page number" : 1,
     "bounding box" : [ 76.2, 362.283, 89.129, 367.881 ],
     "font" : "NanumBarunGothic",
@@ -2143,7 +1719,7 @@
     "content" : "330%"
   }, {
     "type" : "paragraph",
-    "id" : 174,
+    "id" : 124,
     "page number" : 1,
     "bounding box" : [ 76.2, 369.603, 89.129, 375.201 ],
     "font" : "NanumBarunGothic",
@@ -2152,7 +1728,7 @@
     "content" : "360%"
   }, {
     "type" : "paragraph",
-    "id" : 175,
+    "id" : 125,
     "page number" : 1,
     "bounding box" : [ 76.2, 376.923, 89.129, 382.521 ],
     "font" : "NanumBarunGothic",
@@ -2161,7 +1737,7 @@
     "content" : "390%"
   }, {
     "type" : "paragraph",
-    "id" : 176,
+    "id" : 126,
     "page number" : 1,
     "bounding box" : [ 76.2, 384.243, 89.129, 389.841 ],
     "font" : "NanumBarunGothic",
@@ -2170,7 +1746,7 @@
     "content" : "420%"
   }, {
     "type" : "paragraph",
-    "id" : 177,
+    "id" : 127,
     "page number" : 1,
     "bounding box" : [ 76.2, 391.543, 89.129, 397.141 ],
     "font" : "NanumBarunGothic",
@@ -2179,7 +1755,7 @@
     "content" : "450%"
   }, {
     "type" : "paragraph",
-    "id" : 178,
+    "id" : 128,
     "page number" : 1,
     "bounding box" : [ 76.2, 398.863, 89.129, 404.461 ],
     "font" : "NanumBarunGothic",
@@ -2188,93 +1764,68 @@
     "content" : "480%"
   }, {
     "type" : "image",
-    "id" : 179,
+    "id" : 129,
     "page number" : 1,
     "bounding box" : [ 74.246, 256.868, 93.654, 269.704 ]
   }, {
     "type" : "image",
-    "id" : 180,
+    "id" : 130,
     "page number" : 1,
     "bounding box" : [ 89.068, 256.868, 108.621, 269.704 ]
   }, {
     "type" : "image",
-    "id" : 181,
+    "id" : 131,
     "page number" : 1,
     "bounding box" : [ 103.886, 256.868, 123.441, 269.704 ]
   }, {
     "type" : "image",
-    "id" : 182,
+    "id" : 132,
     "page number" : 1,
     "bounding box" : [ 118.716, 256.868, 138.044, 269.842 ]
   }, {
     "type" : "image",
-    "id" : 183,
+    "id" : 133,
     "page number" : 1,
     "bounding box" : [ 133.536, 256.868, 152.914, 269.782 ]
   }, {
     "type" : "image",
-    "id" : 184,
+    "id" : 134,
     "page number" : 1,
     "bounding box" : [ 148.356, 256.868, 167.005, 269.892 ]
   }, {
     "type" : "image",
-    "id" : 185,
+    "id" : 135,
     "page number" : 1,
     "bounding box" : [ 163.176, 256.868, 182.364, 269.695 ]
   }, {
     "type" : "image",
-    "id" : 186,
+    "id" : 136,
     "page number" : 1,
     "bounding box" : [ 177.996, 256.868, 197.186, 269.695 ]
   }, {
     "type" : "image",
-    "id" : 187,
+    "id" : 137,
     "page number" : 1,
     "bounding box" : [ 192.826, 256.868, 211.842, 269.6 ]
   }, {
     "type" : "image",
-    "id" : 188,
+    "id" : 138,
     "page number" : 1,
     "bounding box" : [ 207.646, 256.868, 226.994, 269.71 ]
   }, {
     "type" : "image",
-    "id" : 189,
+    "id" : 139,
     "page number" : 1,
     "bounding box" : [ 222.466, 256.868, 241.851, 269.782 ]
   }, {
-    "type" : "line",
-    "id" : 190,
-    "page number" : 1,
-    "bounding box" : [ 121.95, 250.68, 135.39, 253.578 ]
-  }, {
-    "type" : "line",
-    "id" : 191,
-    "page number" : 1,
-    "bounding box" : [ 121.25, 249.98, 136.09, 251.38 ]
-  }, {
-    "type" : "line",
-    "id" : 192,
-    "page number" : 1,
-    "bounding box" : [ 121.25, 249.98, 122.65, 254.278 ]
-  }, {
-    "type" : "line",
-    "id" : 193,
-    "page number" : 1,
-    "bounding box" : [ 134.69, 249.98, 136.09, 254.278 ]
-  }, {
-    "type" : "line",
-    "id" : 194,
-    "page number" : 1,
-    "bounding box" : [ 121.25, 252.878, 136.09, 254.278 ]
-  }, {
     "type" : "image",
-    "id" : 195,
+    "id" : 140,
     "page number" : 1,
     "bounding box" : [ 121.25, 249.98, 136.09, 254.278 ]
   }, {
     "type" : "paragraph",
-    "id" : 196,
-    "level" : "6",
+    "id" : 141,
+    "level" : "7",
     "page number" : 1,
     "bounding box" : [ 136.82, 249.044, 216.02, 255.524 ],
     "font" : "NanumBarunGothic",
@@ -2282,29 +1833,19 @@
     "text color" : "[0.0]",
     "content" : "초과 펀드 벤치마크"
   }, {
-    "type" : "line",
-    "id" : 197,
+    "type" : "image",
+    "id" : 142,
     "page number" : 1,
     "bounding box" : [ 150.76, 251.43, 165.6, 252.83 ]
   }, {
     "type" : "image",
-    "id" : 198,
-    "page number" : 1,
-    "bounding box" : [ 150.76, 251.43, 165.6, 252.83 ]
-  }, {
-    "type" : "line",
-    "id" : 199,
-    "page number" : 1,
-    "bounding box" : [ 180.28, 251.43, 195.12, 252.83 ]
-  }, {
-    "type" : "image",
-    "id" : 200,
+    "id" : 143,
     "page number" : 1,
     "bounding box" : [ 180.28, 251.43, 195.12, 252.83 ]
   }, {
     "type" : "paragraph",
-    "id" : 201,
-    "level" : "7",
+    "id" : 144,
+    "level" : "8",
     "page number" : 1,
     "bounding box" : [ 200.45, 772.776, 383.162, 783.96 ],
     "font" : "Dotum",
@@ -2313,12 +1854,12 @@
     "content" : "동부차이나증권투자신탁제1호[주식]"
   }, {
     "type" : "image",
-    "id" : 202,
+    "id" : 145,
     "page number" : 1,
     "bounding box" : [ 69.019, 443.17, 267.739, 481.077 ]
   }, {
     "type" : "paragraph",
-    "id" : 203,
+    "id" : 146,
     "page number" : 1,
     "bounding box" : [ 188.14, 760.95, 409.821, 778.626 ],
     "font" : "NanumBarunGothicBold",
@@ -2327,7 +1868,7 @@
     "content" : "DB차이나증권투자신탁제1호[주식]"
   }, {
     "type" : "paragraph",
-    "id" : 204,
+    "id" : 147,
     "page number" : 1,
     "bounding box" : [ 73.368, 777.239, 145.015, 786.446 ],
     "font" : "Arial-BoldMT",

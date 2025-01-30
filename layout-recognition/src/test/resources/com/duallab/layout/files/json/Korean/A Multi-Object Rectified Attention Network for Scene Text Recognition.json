@@ -1,5 +1,5 @@
 {
-  "file name" : "C:\\verapdf-dev\\demo-pdf-structure\\layout-recognition-core\\layout-recognition\\src\\test\\resources\\com\\duallab\\layout\\files\\pdf\\Korean\\A Multi-Object Rectified Attention Network for Scene Text Recognition.pdf",
+  "file name" : "A Multi-Object Rectified Attention Network for Scene Text Recognition.pdf",
   "number of pages" : 15,
   "author" : "",
   "title" : "",
@@ -7,7 +7,7 @@
   "modification date" : "D:20190111014532Z",
   "kids" : [ {
     "type" : "heading",
-    "id" : 265,
+    "id" : 267,
     "level" : "Doctitle",
     "page number" : 1,
     "bounding box" : [ 130.151, 652.242, 465.077, 688.839 ],
@@ -18,7 +18,7 @@
     "content" : "MORAN: A Multi-Object Rectiﬁed Attention Network for Scene Text Recognition"
   }, {
     "type" : "paragraph",
-    "id" : 266,
+    "id" : 268,
     "page number" : 1,
     "bounding box" : [ 82.271, 567.65, 516.716, 630.323 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -27,7 +27,7 @@
     "content" : "Canjie Luo†, Lianwen Jin∗ † ‡, Zenghui Sun† School of Electronic and Information Engineering, South China University of Technology† SCUT-Zhuhai Institute of Modern Industrial Innovation‡ {canjie.luo, lianwen.jin∗ , sunfreding}@gmail.com, eelwjin@scut.edu.cn∗"
   }, {
     "type" : "paragraph",
-    "id" : 267,
+    "id" : 269,
     "page number" : 1,
     "bounding box" : [ 145.995, 528.628, 190.48, 544.182 ],
     "font" : "NimbusRomNo9L-Medi",
@@ -36,7 +36,7 @@
     "content" : "Abstract"
   }, {
     "type" : "paragraph",
-    "id" : 268,
+    "id" : 270,
     "page number" : 1,
     "bounding box" : [ 50.112, 173.942, 286.362, 512.148 ],
     "font" : "NimbusRomNo9L-ReguItal",
@@ -45,7 +45,7 @@
     "content" : "Irregular text is widely used. However, it is considerably difﬁcult to recognize because of its various shapes and distorted patterns. In this paper, we thus propose a multi-object rectiﬁed attention network (MORAN) for general scene text recognition. The MORAN consists of a multi-object rectiﬁcation network and an attention-based sequence recognition network. The multi-object rectiﬁcation network is designed for rectifying images that contain irregular text. It decreases the difﬁculty of recognition and enables the attention-based sequence recognition network to more easily read irregular text. It is trained in a weak supervision way, thus requiring only images and corresponding text labels. The attentionbased sequence recognition network focuses on target characters and sequentially outputs the predictions. Moreover, to improve the sensitivity of the attentionbased sequence recognition network, a fractional pickup method is proposed for an attention-based decoder in the training phase. With the rectiﬁcation mechanism, the MORAN can read both regular and irregular scene text. Extensive experiments on various benchmarks are conducted, which show that the MORAN achieves state-of-the-art performance. The source code is available1."
   }, {
     "type" : "paragraph",
-    "id" : 269,
+    "id" : 271,
     "page number" : 1,
     "bounding box" : [ 50.112, 129.636, 286.359, 156.766 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -53,18 +53,13 @@
     "text color" : "[0.0]",
     "content" : "Keywords: Scene text recognition, optical character recognition, deep learning."
   }, {
-    "type" : "line",
-    "id" : 270,
-    "page number" : 1,
-    "bounding box" : [ 50.112, 102.435, 144.611, 102.833 ]
-  }, {
     "type" : "image",
-    "id" : 271,
+    "id" : 272,
     "page number" : 1,
     "bounding box" : [ 50.112, 102.435, 144.611, 102.833 ]
   }, {
     "type" : "paragraph",
-    "id" : 272,
+    "id" : 273,
     "page number" : 1,
     "bounding box" : [ 61.934, 78.875, 271.187, 100.68 ],
     "font" : "NimbusMonL-Regu",
@@ -73,22 +68,22 @@
     "content" : "∗Corresponding author 1https://github.com/Canjie-Luo/MORAN_v2"
   }, {
     "type" : "image",
-    "id" : 273,
+    "id" : 274,
     "page number" : 1,
     "bounding box" : [ 315.944, 496.162, 386.808, 538.682 ]
   }, {
     "type" : "image",
-    "id" : 274,
+    "id" : 275,
     "page number" : 1,
     "bounding box" : [ 315.945, 452.648, 386.807, 495.167 ]
   }, {
     "type" : "image",
-    "id" : 275,
+    "id" : 276,
     "page number" : 1,
     "bounding box" : [ 315.945, 409.132, 386.808, 451.652 ]
   }, {
     "type" : "paragraph",
-    "id" : 276,
+    "id" : 277,
     "page number" : 1,
     "bounding box" : [ 343.236, 399.499, 507.138, 410.306 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -97,47 +92,47 @@
     "content" : "(a) (b) (c)"
   }, {
     "type" : "image",
-    "id" : 277,
+    "id" : 278,
     "page number" : 1,
     "bounding box" : [ 392.918, 496.162, 463.783, 538.682 ]
   }, {
     "type" : "image",
-    "id" : 278,
+    "id" : 279,
     "page number" : 1,
     "bounding box" : [ 392.918, 452.646, 463.783, 495.166 ]
   }, {
     "type" : "image",
-    "id" : 279,
+    "id" : 280,
     "page number" : 1,
     "bounding box" : [ 392.918, 409.13, 463.783, 451.65 ]
   }, {
     "type" : "image",
-    "id" : 280,
+    "id" : 281,
     "page number" : 1,
     "bounding box" : [ 469.89, 496.163, 540.76, 538.683 ]
   }, {
     "type" : "image",
-    "id" : 281,
+    "id" : 282,
     "page number" : 1,
     "bounding box" : [ 469.889, 452.647, 540.76, 495.167 ]
   }, {
     "type" : "image",
-    "id" : 282,
+    "id" : 283,
     "page number" : 1,
     "bounding box" : [ 469.89, 409.131, 540.759, 451.652 ]
   }, {
     "type" : "Caption",
-    "id" : 283,
+    "id" : 284,
     "page number" : 1,
     "bounding box" : [ 308.862, 360.946, 545.115, 396.861 ],
-    "linked content id" : 282,
+    "linked content id" : 283,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 9.963,
     "text color" : "[0.0]",
     "content" : "Figure 1. Examples of regular and irregular scene text. (a) Regular text. (b) Slanted and perspective text. (c) Curved text."
   }, {
     "type" : "heading",
-    "id" : 284,
+    "id" : 285,
     "level" : "Subtitle",
     "page number" : 1,
     "bounding box" : [ 308.862, 328.315, 385.698, 343.869 ],
@@ -148,7 +143,7 @@
     "content" : "1. Introduction"
   }, {
     "type" : "paragraph",
-    "id" : 285,
+    "id" : 286,
     "page number" : 1,
     "bounding box" : [ 308.862, 200.233, 545.109, 321.771 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -157,7 +152,7 @@
     "content" : "Scene text recognition is an essential process in computer vision tasks. Many practical applications such as trafﬁc sign reading, product recognition, intelligent inspection, and image searching, beneﬁt from the rich semantic information of scene text. With the development of scene text detection methods [11, 26, 46, 56], scene character recognition has emerged at the forefront of this research topic and is regarded as an open and very challenging research problem [45]."
   }, {
     "type" : "paragraph",
-    "id" : 286,
+    "id" : 287,
     "page number" : 1,
     "bounding box" : [ 308.862, 105.211, 545.109, 199.651 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -166,7 +161,7 @@
     "content" : "Nowadays, regular text recognition methods [3, 33, 41, 45, 50] have achieved notable success. Moreover, methods based on convolutional neural networks [3, 22, 50] have been broadly applied. Integrating recognition models with recurrent neural networks [17, 41, 42] and attention mechanisms [5, 6, 27, 51] yields better performance for these models."
   }, {
     "type" : "paragraph",
-    "id" : 287,
+    "id" : 288,
     "page number" : 1,
     "bounding box" : [ 308.862, 77.935, 545.109, 104.629 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -175,7 +170,7 @@
     "content" : "Nevertheless, most current recognition models remain too unstable to handle multiple disturbances"
   }, {
     "type" : "paragraph",
-    "id" : 288,
+    "id" : 289,
     "page number" : 1,
     "bounding box" : [ 14.04, 232.0, 36.36, 577.52 ],
     "font" : "Times-Roman",
@@ -184,12 +179,12 @@
     "content" : "arXiv:1901.03003v1  [cs.CV]  10 Jan 2019"
   }, {
     "type" : "footer",
-    "id" : 289,
+    "id" : 290,
     "page number" : 1,
     "bounding box" : [ 294.885, 48.047, 300.34, 61.192 ],
     "kids" : [ {
       "type" : "paragraph",
-      "id" : 250,
+      "id" : 252,
       "page number" : 1,
       "bounding box" : [ 294.885, 48.047, 300.34, 61.192 ],
       "font" : "NimbusRomNo9L-Regu",
@@ -199,12 +194,12 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 290,
+    "id" : 291,
     "page number" : 2,
     "bounding box" : [ 50.112, 630.856, 291.038, 721.561 ]
   }, {
     "type" : "paragraph",
-    "id" : 291,
+    "id" : 292,
     "page number" : 2,
     "bounding box" : [ 74.205, 695.251, 101.467, 720.443 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -213,7 +208,7 @@
     "content" : "Input Image"
   }, {
     "type" : "paragraph",
-    "id" : 292,
+    "id" : 293,
     "page number" : 2,
     "bounding box" : [ 158.53, 668.749, 284.072, 720.443 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -222,7 +217,7 @@
     "content" : "Rectiﬁed Image Result JOHNNY"
   }, {
     "type" : "paragraph",
-    "id" : 293,
+    "id" : 294,
     "page number" : 2,
     "bounding box" : [ 117.572, 690.433, 238.216, 703.578 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -231,7 +226,7 @@
     "content" : "MORN ASRN"
   }, {
     "type" : "paragraph",
-    "id" : 294,
+    "id" : 295,
     "page number" : 2,
     "bounding box" : [ 110.344, 635.019, 162.468, 657.801 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -240,7 +235,7 @@
     "content" : "Weak Supervision"
   }, {
     "type" : "paragraph",
-    "id" : 295,
+    "id" : 296,
     "page number" : 2,
     "bounding box" : [ 204.307, 635.019, 256.431, 657.801 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -249,17 +244,17 @@
     "content" : "Text Label Supervision"
   }, {
     "type" : "Caption",
-    "id" : 296,
+    "id" : 297,
     "page number" : 2,
     "bounding box" : [ 50.112, 568.281, 286.365, 628.106 ],
-    "linked content id" : 290,
+    "linked content id" : 291,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 9.963,
     "text color" : "[0.0]",
     "content" : "Figure 2. Overview of the MORAN. The MORAN contains a MORN and an ASRN. The image is rectiﬁed by the MORN and given to the ASRN. The dashed lines show the direction of gradient propagation, indicating that the two sub-networks are jointly trained."
   }, {
     "type" : "paragraph",
-    "id" : 297,
+    "id" : 298,
     "page number" : 2,
     "bounding box" : [ 50.112, 462.27, 286.359, 543.161 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -268,7 +263,7 @@
     "content" : "from the environment. Furthermore, the various shapes and distorted patterns of irregular text cause additional challenges in recognition. As illustrated in Fig. 1, scene text with irregular shapes, such as perspective and curved text, is still very challenging to recognize."
   }, {
     "type" : "paragraph",
-    "id" : 298,
+    "id" : 299,
     "page number" : 2,
     "bounding box" : [ 50.112, 215.906, 286.367, 459.387 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -277,7 +272,7 @@
     "content" : "Reading text is naturally regarded as a multiclassiﬁcation task involving sequence-like objects [41]. Usually, the characters in one text are of the same size. However, characters in different scene texts can vary in size. Therefore, we propose the multiobject rectiﬁed attention network (MORAN), which can read rotated, scaled and stretched characters in different scene texts. The MORAN consists of a multi-object rectiﬁcation network (MORN) to rectify images and an attention-based sequence recognition network (ASRN) to read the text. We separate the difﬁcult recognition task into two parts. First, as one kind of spatial transformer, the MORN rectiﬁes images that contain irregular text. As Fig. 2 shows, after the rectiﬁcation by the MORN, the slanted text becomes more horizontal, tightly-bounded, and easier to read. Second, ASRN takes the rectiﬁed image as input and outputs the predicted word."
   }, {
     "type" : "paragraph",
-    "id" : 299,
+    "id" : 300,
     "page number" : 2,
     "bounding box" : [ 50.112, 77.935, 286.359, 213.023 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -286,7 +281,7 @@
     "content" : "The training of the MORN is guided by the ASRN, which requires only text labels. Without any geometric-level or pixel-level supervision, the MORN is trained in a weak supervision way. To facilitate this manner of network training, we initialize a basic coordinate grid. Every pixel of an image has its own position coordinates. The MORN learns and generates an offset grid based on these coordinates and samples the pixel value accordingly to rectify the image. The rectiﬁed image is then obtained for the ASRN."
   }, {
     "type" : "paragraph",
-    "id" : 300,
+    "id" : 301,
     "page number" : 2,
     "bounding box" : [ 308.862, 543.386, 545.109, 719.121 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -295,7 +290,7 @@
     "content" : "With respect to the ASRN, a decoder with an attention mechanism is more likely to predict the correct words because of the rectiﬁed images. However, Cheng et al. [5] found that existing attention-based methods cannot obtain accurate alignments between feature areas and targets. Therefore, we propose a fractional pickup method to train the ASRN. By adopting several scales of stretch on different parts of the feature maps, the feature areas are changed randomly at every iteration in the training phase. Owing to training with fractional pickup, the ASRN is more robust to the variation of context. Experiments show that the ASRN can accurately focus on objects."
   }, {
     "type" : "paragraph",
-    "id" : 301,
+    "id" : 302,
     "page number" : 2,
     "bounding box" : [ 308.862, 434.992, 545.109, 542.982 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -304,7 +299,7 @@
     "content" : "In addition, we designed a curriculum learning strategy for the training of the MORAN. Because the MORN and ASRN are mutually beneﬁcial in terms of performance, we ﬁrst ﬁx one of them to more efﬁciently optimize the other. Finally, the MORN and ASRN are optimized in an end-to-end fashion to improve performance. In short, the contributions of our research are as follows:"
   }, {
     "type" : "list",
-    "id" : 302,
+    "id" : 303,
     "level" : "1",
     "page number" : 2,
     "bounding box" : [ 319.771, 77.935, 545.109, 426.122 ],
@@ -315,7 +310,7 @@
       "page number" : 2,
       "bounding box" : [ 319.771, 345.231, 545.109, 426.122 ],
       "font" : "CMSY10",
-      "font size" : 10.9091,
+      "font size" : 10.909,
       "text color" : "[0.0]",
       "content" : "• We propose the MORAN framework to recognize irregular scene text. The framework contains a multi-object rectiﬁcation network (MORN) and an attention-based sequence recognition network (ASRN). The image rectiﬁed by the MORN is more readable for the ASRN.",
       "kids" : [ ]
@@ -324,7 +319,7 @@
       "page number" : 2,
       "bounding box" : [ 319.771, 283.231, 545.109, 337.023 ],
       "font" : "CMSY10",
-      "font size" : 10.9091,
+      "font size" : 10.909,
       "text color" : "[0.0]",
       "content" : "• Trained in a weak supervision way, the subnetwork MORN is ﬂexible. It is free of geometric constraints and can rectify images with complicated distortion.",
       "kids" : [ ]
@@ -333,7 +328,7 @@
       "page number" : 2,
       "bounding box" : [ 319.771, 194.132, 545.109, 275.023 ],
       "font" : "CMSY10",
-      "font size" : 10.9091,
+      "font size" : 10.909,
       "text color" : "[0.0]",
       "content" : "• We propose a fractional pickup method for the training of the attention-based decoder in the ASRN. To address noise perturbations, we expand the visual ﬁeld of the MORAN, which further improves the sensitivity of the attentionbased decoder.",
       "kids" : [ ]
@@ -342,19 +337,19 @@
       "page number" : 2,
       "bounding box" : [ 319.771, 77.935, 545.109, 185.925 ],
       "font" : "CMSY10",
-      "font size" : 10.9091,
+      "font size" : 10.909,
       "text color" : "[0.0]",
       "content" : "• We propose a curriculum learning strategy that enables the MORAN to learn efﬁciently. Owing to the training with this strategy, the MORAN outperforms state-of-the-art methods on several standard text recognition benchmarks, including the IIIT5K, SVT, ICDAR2003, ICDAR2013, ICDAR2015, SVT-Perspective, and CUTE80 datasets.",
       "kids" : [ ]
     } ]
   }, {
     "type" : "footer",
-    "id" : 303,
+    "id" : 304,
     "page number" : 2,
     "bounding box" : [ 294.885, 48.047, 300.34, 61.192 ],
     "kids" : [ {
       "type" : "paragraph",
-      "id" : 251,
+      "id" : 253,
       "page number" : 2,
       "bounding box" : [ 294.885, 48.047, 300.34, 61.192 ],
       "font" : "NimbusRomNo9L-Regu",
@@ -364,7 +359,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 304,
+    "id" : 305,
     "page number" : 3,
     "bounding box" : [ 50.112, 665.329, 286.359, 719.121 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -373,7 +368,7 @@
     "content" : "The rest of the paper is organized as follow. Section 2 reviews related work. Section 3 details the proposed method. Experimental results are given in Section 4, and the conclusions are presented in Section 5."
   }, {
     "type" : "heading",
-    "id" : 305,
+    "id" : 306,
     "level" : "Subtitle",
     "page number" : 3,
     "bounding box" : [ 50.112, 639.981, 133.225, 655.535 ],
@@ -384,7 +379,7 @@
     "content" : "2. Related Work"
   }, {
     "type" : "paragraph",
-    "id" : 306,
+    "id" : 307,
     "page number" : 3,
     "bounding box" : [ 50.112, 403.541, 286.359, 633.473 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -393,7 +388,7 @@
     "content" : "In recent years, the recognition of scene text has greatly advanced because of the rapid development of neural networks [14]. Zhu et al. [57] and Ye et al. [53] have provided an overview of the major advances in the ﬁeld of scene text detection and recognition. Based on the sliding window method [48, 49], pattern features extracted by a neural network become dominant with respect to the hand crafted features, such as the connected components [33], strokelet generation [52], histogram of oriented gradients descriptors [10, 44], tree-structured models [43], semi-markov conditional random ﬁelds [40] and generative shape models [30]. For instance, Bissacco [3] applied a network with ﬁve hidden layers for character classiﬁcation. Using convolutional neural networks (CNNs), Jaderberg et al. [21] and Yin et al. [54] proposed respective methods for unconstrained recognition."
   }, {
     "type" : "paragraph",
-    "id" : 307,
+    "id" : 308,
     "page number" : 3,
     "bounding box" : [ 50.112, 267.907, 286.359, 402.995 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -402,7 +397,7 @@
     "content" : "With the widespread application of recurrent neural networks (RNNs) [8, 19], CNN-based methods are combined with RNNs for better learning of context information. As a feature extractor, the CNN obtains the spatial features of images. Then, the RNN learns the context of features. Shi et al. [41] proposed an end-to-end trainable network with both CNNs and RNNs, named CRNN. Guided by the CTC loss [13], the CRNN-based network learns the conditional probability between predictions and sequential labels."
   }, {
     "type" : "paragraph",
-    "id" : 308,
+    "id" : 309,
     "page number" : 3,
     "bounding box" : [ 50.112, 145.823, 286.359, 267.361 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -411,7 +406,7 @@
     "content" : "Furthermore, attention mechanisms [2] focus on informative regions to achieve better performance. Lee et al. [27] proposed a recursive recurrent network with attention modeling for scene text recognition. Yang et al. [51] addressed a two-dimensional attention mechanism. Cheng et al. [5] used the focusing attention network (FAN) to correct shifts in attentional mechanisms and achieved more accurate position predictions."
   }, {
     "type" : "paragraph",
-    "id" : 309,
+    "id" : 310,
     "page number" : 3,
     "bounding box" : [ 50.112, 77.935, 286.359, 145.277 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -420,7 +415,7 @@
     "content" : "Compared with regular text recognition work, irregular text recognition is more difﬁcult. One kind of irregular text recognition method is the bottom-up approach [6, 51], which searches for the position of each character and then connects them. Another is the"
   }, {
     "type" : "paragraph",
-    "id" : 310,
+    "id" : 311,
     "page number" : 3,
     "bounding box" : [ 308.862, 678.878, 545.109, 719.121 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -429,7 +424,7 @@
     "content" : "top-down approach [28, 42]. This type of approach matches the shape of the text, attempts to rectify it, and reduces the degree of recognition difﬁculty."
   }, {
     "type" : "paragraph",
-    "id" : 311,
+    "id" : 312,
     "page number" : 3,
     "bounding box" : [ 308.862, 529.783, 545.109, 678.42 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -438,7 +433,7 @@
     "content" : "In the bottom-up manner, a two-dimensional attention mechanism for irregular text was proposed by Yang et al. [51]. Based on the sliced Wasserstein distance [36], the attention alignment loss is adopted in the training phase, which enables the attention model to accurately extract the character features while ignoring the redundant background information. Cheng et al. [6] proposed an arbitrary-orientation text recognition network, which uses more direct information of the position to instruct the network to identify characters in special locations."
   }, {
     "type" : "paragraph",
-    "id" : 312,
+    "id" : 313,
     "page number" : 3,
     "bounding box" : [ 308.862, 394.237, 545.109, 529.325 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -447,7 +442,7 @@
     "content" : "In the top-down manner, STAR-Net [28] used an afﬁne transformation network that transforms the rotated and differently scaled text into more regular text. Meanwhile, a ResNet [16] is used to extract features and handle more complex background noise. RARE [42] regresses the ﬁducial transformation points on sloped text and even curved text, thereby mapping the corresponding points onto standard positions of the new image. Using thin-plate-spline [4] to back propagate the gradients, RARE is end-to-end optimized."
   }, {
     "type" : "paragraph",
-    "id" : 313,
+    "id" : 314,
     "page number" : 3,
     "bounding box" : [ 308.862, 312.888, 545.109, 393.779 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -456,7 +451,7 @@
     "content" : "Our proposed MORAN model uses the top-down approach. The fractional pickup training method is thus designed to improve the sensitivity of the MORAN to focus on characters. For the training of the MORAN, we propose a curriculum learning strategy for better convergence."
   }, {
     "type" : "heading",
-    "id" : 314,
+    "id" : 315,
     "level" : "Subtitle",
     "page number" : 3,
     "bounding box" : [ 308.862, 287.804, 387.898, 303.358 ],
@@ -467,7 +462,7 @@
     "content" : "3. Methodology"
   }, {
     "type" : "paragraph",
-    "id" : 315,
+    "id" : 316,
     "page number" : 3,
     "bounding box" : [ 308.862, 146.296, 545.109, 281.384 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -476,7 +471,7 @@
     "content" : "The MORAN contains two parts. One is the MORN, which is trained in a weak supervision way to learn the offset of each part of the image. According to the predicted offsets, we apply sampling and obtain a rectiﬁed text image. The other one is ASRN, a CNN-LSTM framework followed by an attention decoder. The proposed fractional pickup further improves attention sensitivity. The curriculum learning strategy guides the MORAN to achieve stateof-the-art performance."
   }, {
     "type" : "heading",
-    "id" : 316,
+    "id" : 317,
     "level" : "Subtitle",
     "page number" : 3,
     "bounding box" : [ 308.862, 123.943, 494.714, 138.201 ],
@@ -487,7 +482,7 @@
     "content" : "3.1. Multi-Object Rectiﬁcation Network"
   }, {
     "type" : "paragraph",
-    "id" : 317,
+    "id" : 318,
     "page number" : 3,
     "bounding box" : [ 308.862, 77.935, 545.109, 118.179 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -496,12 +491,12 @@
     "content" : "Common methods to rectify patterns such as the afﬁne transformation network, are limited by certain geometric constraints. With respect to the afﬁne"
   }, {
     "type" : "footer",
-    "id" : 318,
+    "id" : 319,
     "page number" : 3,
     "bounding box" : [ 294.885, 48.048, 300.34, 61.193 ],
     "kids" : [ {
       "type" : "paragraph",
-      "id" : 252,
+      "id" : 254,
       "page number" : 3,
       "bounding box" : [ 294.885, 48.048, 300.34, 61.193 ],
       "font" : "NimbusRomNo9L-Regu",
@@ -511,22 +506,22 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 319,
+    "id" : 320,
     "page number" : 4,
     "bounding box" : [ 97.371, 578.271, 239.102, 720.002 ]
   }, {
     "type" : "Caption",
-    "id" : 320,
+    "id" : 321,
     "page number" : 4,
     "bounding box" : [ 50.112, 455.92, 286.365, 575.521 ],
-    "linked content id" : 319,
+    "linked content id" : 320,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 9.963,
     "text color" : "[0.0]",
     "content" : "Figure 3. Comparison of the MORN and afﬁne transformation. The MORN is free of geometric constraints. The main direction of rectiﬁcation predicted by the MORN for each character is indicated by a yellow arrow. The offset maps generated by the MORN are visualized as a heat map. The offset values on the boundary between red and blue are zero. The directions of rectiﬁcation on both sides of the boundary are opposite and outward. The depth of the color represents the magnitude of the offset value. The gradual-change in color indicates the smoothness of the rectiﬁcation."
   }, {
     "type" : "paragraph",
-    "id" : 321,
+    "id" : 322,
     "page number" : 4,
     "bounding box" : [ 50.112, 312.267, 286.359, 433.805 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -535,7 +530,7 @@
     "content" : "transformation, it is limited to rotation, scaling, and translation. However, one image may have several kinds of deformations, and the distortion of scene text will thus be complicated. As shown in Fig. 3, the characters in the image become slanted after rectiﬁcation by the afﬁne transformation. The black edges introduce additional noise. Therefore, transformations with geometric constraints can not cover all complicated deformations."
   }, {
     "type" : "paragraph",
-    "id" : 322,
+    "id" : 323,
     "page number" : 4,
     "bounding box" : [ 50.112, 161.228, 286.359, 309.865 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -544,7 +539,7 @@
     "content" : "Another method that is free of geometric constraints, is the deformable convolutional network [9]. Using deformable convolutional kernels, the feature extractor automatically selects informative features. We attempted to combine the recognition network with a deformable convolutional network. However, as a sequence-to-sequence problem, irregular text recognition is more challenging. The network sometimes failed to converge. The best accuracy rate on IIIT5K we achieved was only 78.1%, which is far behind the state-of-the-art result (91.2%)."
   }, {
     "type" : "paragraph",
-    "id" : 323,
+    "id" : 324,
     "page number" : 4,
     "bounding box" : [ 50.112, 77.935, 286.359, 158.826 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -553,7 +548,7 @@
     "content" : "Because the recognition models remain inadequately strong to handle multiple disturbances from various shapes, we consider rectifying images to reduce the difﬁculty of the recognition. As demonstrated in Fig. 4, the MORN architecture rectiﬁes the distorted image. The MORN predicts the offset of each part of"
   }, {
     "type" : "paragraph",
-    "id" : 324,
+    "id" : 325,
     "page number" : 4,
     "bounding box" : [ 308.862, 678.878, 545.109, 719.121 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -562,7 +557,7 @@
     "content" : "the image without any geometric constraint. Based on the predicted offsets, the image is rectiﬁed and becomes easier to recognize."
   }, {
     "type" : "paragraph",
-    "id" : 325,
+    "id" : 326,
     "page number" : 4,
     "bounding box" : [ 308.862, 609.556, 545.109, 676.897 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -571,17 +566,17 @@
     "content" : "Furthermore, the MORN predicts the position offsets but not the categories of characters. The character details for classiﬁcation are not necessary. We hence place a pooling layer before the convolutional layer to avoid noise and reduce the amount of calculation."
   }, {
     "type" : "Caption",
-    "id" : 326,
+    "id" : 327,
     "page number" : 4,
     "bounding box" : [ 356.004, 587.767, 497.971, 599.771 ],
-    "linked content id" : 327,
+    "linked content id" : 328,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 9.963,
     "text color" : "[0.0]",
     "content" : "Table 1. Architecture of the MORN"
   }, {
     "type" : "table",
-    "id" : 327,
+    "id" : 328,
     "level" : "2",
     "page number" : 4,
     "bounding box" : [ 308.862, 407.712, 549.807, 589.43 ],
@@ -1347,7 +1342,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 328,
+    "id" : 329,
     "page number" : 4,
     "bounding box" : [ 325.226, 363.999, 545.112, 404.243 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -1356,7 +1351,7 @@
     "content" : "Here k, s, p are kernel, stride and padding sizes, respectively. For example, k3 represents a 3 × 3 kernel size."
   }, {
     "type" : "paragraph",
-    "id" : 329,
+    "id" : 330,
     "page number" : 4,
     "bounding box" : [ 308.862, 77.935, 545.115, 348.515 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -1365,12 +1360,12 @@
     "content" : "The architecture of the MORN is given in Table1. Each convolutional layer is followed by a batch normalization layer and a ReLU layer except for the last one. The MORN ﬁrst divides the image into several parts and then predicts the offset of each part. With an input size of 32 × 100, the MORN divides the image into 3 × 11 = 33 parts. All the offset values are activated by Tanh(·), resulting in values within the range of (\u00001,1). The offset maps contain two channels, which denote the x-coordinate and y-coordinate respectively. Then, we apply bilinear interpolation to smoothly resize the offset maps to a size of 32 × 100, which is the same size of the input image. After allocating the speciﬁc offset to each pixel, the transformation of the image is smooth. As demonstrated in Fig.3, the color depth gradually changes on both sides of the boundary between the red and blue colors in the heat map, which evidences the smoothness of the rectiﬁcation. There are no indented edges in the rectiﬁed image."
   }, {
     "type" : "footer",
-    "id" : 330,
+    "id" : 331,
     "page number" : 4,
     "bounding box" : [ 294.885, 48.047, 300.34, 61.192 ],
     "kids" : [ {
       "type" : "paragraph",
-      "id" : 253,
+      "id" : 255,
       "page number" : 4,
       "bounding box" : [ 294.885, 48.047, 300.34, 61.192 ],
       "font" : "NimbusRomNo9L-Regu",
@@ -1380,22 +1375,22 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 331,
+    "id" : 332,
     "page number" : 5,
     "bounding box" : [ 56.667, 572.711, 538.567, 720.001 ]
   }, {
     "type" : "Caption",
-    "id" : 332,
+    "id" : 333,
     "page number" : 5,
     "bounding box" : [ 217.169, 556.363, 375.564, 568.367 ],
-    "linked content id" : 331,
+    "linked content id" : 332,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 9.963,
     "text color" : "[0.0]",
     "content" : "Figure 4. Overall structure of MORAN."
   }, {
     "type" : "paragraph",
-    "id" : 333,
+    "id" : 334,
     "page number" : 5,
     "bounding box" : [ 50.112, 360.465, 286.362, 536.201 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -1404,7 +1399,7 @@
     "content" : "Moreover, because every value in the offset maps represents the offset from the original position, we generate a basic grid from the input image to represent the original positions of the pixels. The basic grid is generated by normalizing the coordinate of each pixel to [\u00001,1]. The coordinates of the top-left pixel are (\u00001,\u00001), and those of the bottom-right one are (1,1). Pixels at the same positions on different channels have the same coordinates. Similar to the offset maps, the grid contains two channels, which represent the xcoordinate and y-coordinate, respectively. Then, the basic grid and the resized offset maps are summed as follows,"
   }, {
     "type" : "paragraph",
-    "id" : 334,
+    "id" : 335,
     "page number" : 5,
     "bounding box" : [ 56.554, 336.262, 91.19, 351.005 ],
     "font" : "CMMI10",
@@ -1413,7 +1408,7 @@
     "content" : "offset\u0000"
   }, {
     "type" : "paragraph",
-    "id" : 335,
+    "id" : 336,
     "page number" : 5,
     "bounding box" : [ 89.004, 333.778, 279.921, 347.171 ],
     "font" : "CMMI10",
@@ -1422,7 +1417,7 @@
     "content" : "(c,i,j) = offset(c,i,j) + basic(c,i,j),c = 1,2"
   }, {
     "type" : "paragraph",
-    "id" : 336,
+    "id" : 337,
     "level" : "3",
     "page number" : 5,
     "bounding box" : [ 50.112, 295.277, 286.362, 335.52 ],
@@ -1432,7 +1427,7 @@
     "content" : "(1) where (i,j) is the position of the i-th row and j-th column."
   }, {
     "type" : "paragraph",
-    "id" : 337,
+    "id" : 338,
     "page number" : 5,
     "bounding box" : [ 50.112, 226.933, 286.367, 294.862 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -1441,7 +1436,7 @@
     "content" : "Before sampling, the x-coordinate and y-coordinate on the offset maps are normalized to [0,W] and [0,H], respectively. Here, H × W is the size of the input image. The pixel value of i-th row and j-th column in rectiﬁed image I\u0000 is,"
   }, {
     "type" : "heading",
-    "id" : 338,
+    "id" : 339,
     "level" : "Subtitle",
     "page number" : 5,
     "bounding box" : [ 136.782, 202.938, 144.731, 216.758 ],
@@ -1452,7 +1447,7 @@
     "content" : "I\u0000"
   }, {
     "type" : "paragraph",
-    "id" : 339,
+    "id" : 340,
     "page number" : 5,
     "bounding box" : [ 141.578, 200.503, 286.362, 216.124 ],
     "font" : "CMMI8",
@@ -1461,7 +1456,7 @@
     "content" : "(i,j) = I(i\u0000,j\u0000) (2)"
   }, {
     "type" : "paragraph",
-    "id" : 340,
+    "id" : 341,
     "page number" : 5,
     "bounding box" : [ 124.202, 154.278, 132.99, 194.991 ],
     "font" : "CMEX10",
@@ -1470,7 +1465,7 @@
     "content" : "\u0000"
   }, {
     "type" : "list",
-    "id" : 341,
+    "id" : 342,
     "level" : "4",
     "page number" : 5,
     "bounding box" : [ 134.808, 152.799, 212.396, 189.86 ],
@@ -1481,7 +1476,7 @@
       "page number" : 5,
       "bounding box" : [ 136.167, 172.633, 212.396, 189.86 ],
       "font" : "CMMI10",
-      "font size" : 10.9091,
+      "font size" : 10.909,
       "text color" : "[0.0]",
       "content" : "i\u0000 = offset\u0000 (1,i,j)",
       "kids" : [ ]
@@ -1490,14 +1485,14 @@
       "page number" : 5,
       "bounding box" : [ 134.808, 152.799, 212.396, 170.026 ],
       "font" : "CMMI10",
-      "font size" : 10.9091,
+      "font size" : 10.909,
       "text color" : "[0.0]",
       "content" : "j\u0000 = offset\u0000 (2,i,j)",
       "kids" : [ ]
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 342,
+    "id" : 343,
     "level" : "3",
     "page number" : 5,
     "bounding box" : [ 273.642, 164.849, 286.362, 177.994 ],
@@ -1507,7 +1502,7 @@
     "content" : "(3)"
   }, {
     "type" : "paragraph",
-    "id" : 343,
+    "id" : 344,
     "page number" : 5,
     "bounding box" : [ 50.112, 77.935, 286.367, 146.667 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -1516,7 +1511,7 @@
     "content" : "where I is the input image. Further, i\u0000 is obtained from the ﬁrst channel of the offset maps, whereas j\u0000 is from the second channel. Both i\u0000 and j\u0000 are real values as opposed to integers so rectiﬁed image I\u0000 is sampled from I using bilinear interpolation."
   }, {
     "type" : "paragraph",
-    "id" : 344,
+    "id" : 345,
     "page number" : 5,
     "bounding box" : [ 308.862, 455.31, 545.109, 536.201 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -1525,7 +1520,7 @@
     "content" : "Because Equation (2) is differentiable, the MORN can back-propagate the gradients. The MORN can be trained in a weak supervision way with images and associated text labels only, which means that it does not need pixel-level labeling information about the deformation of the text."
   }, {
     "type" : "paragraph",
-    "id" : 345,
+    "id" : 346,
     "page number" : 5,
     "bounding box" : [ 308.862, 358.607, 545.109, 453.048 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -1534,7 +1529,7 @@
     "content" : "As Fig. 5 shows, the text in the input images is irregular. However, the text in the rectiﬁed images is more readable. Slanted or perspective texts become tightly bound after rectiﬁcation. Furthermore, redundant noise is eliminated by the MORN for the curved texts. The background textures are removed in the rectiﬁed images of Fig. 5 (b)."
   }, {
     "type" : "paragraph",
-    "id" : 346,
+    "id" : 347,
     "page number" : 5,
     "bounding box" : [ 308.862, 153.512, 545.109, 356.345 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -1543,7 +1538,7 @@
     "content" : "The advantages of the MORN are manifold. 1) The rectiﬁed images are more readable owing to the regular shape of the text and the reduced noise. 2) The MORN is more ﬂexible than the afﬁne transformation. It is free of geometric constraints, which enables it to rectify images using complicated transformations. 3) The MORN is more ﬂexible than methods using a speciﬁc number of regressing points. Existing method [42] cannot capture the text shape in details if the width of the image is large. Thus the MORN has no limit with respect to the image size, especially the width of the input image. 4) The MORN does not require extra labelling information of character positions. Therefore, it can be trained in a weak supervision way by using existing training datasets."
   }, {
     "type" : "heading",
-    "id" : 347,
+    "id" : 348,
     "level" : "Subtitle",
     "page number" : 5,
     "bounding box" : [ 308.862, 112.197, 545.114, 140.004 ],
@@ -1554,7 +1549,7 @@
     "content" : "3.2. Attention-based Sequence Recognition Network"
   }, {
     "type" : "paragraph",
-    "id" : 348,
+    "id" : 349,
     "page number" : 5,
     "bounding box" : [ 308.862, 77.935, 545.109, 104.629 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -1563,12 +1558,12 @@
     "content" : "As Fig. 4 shows, the major structure of the ASRN is a CNN-BLSTM framework. We adopt a one-"
   }, {
     "type" : "footer",
-    "id" : 349,
+    "id" : 350,
     "page number" : 5,
     "bounding box" : [ 294.885, 48.047, 300.34, 61.192 ],
     "kids" : [ {
       "type" : "paragraph",
-      "id" : 254,
+      "id" : 256,
       "page number" : 5,
       "bounding box" : [ 294.885, 48.047, 300.34, 61.192 ],
       "font" : "NimbusRomNo9L-Regu",
@@ -1578,27 +1573,27 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 350,
+    "id" : 351,
     "page number" : 6,
     "bounding box" : [ 70.393, 606.619, 268.807, 719.999 ]
   }, {
     "type" : "Caption",
-    "id" : 351,
+    "id" : 352,
     "page number" : 6,
     "bounding box" : [ 131.451, 596.988, 205.02, 607.793 ],
-    "linked content id" : 352,
+    "linked content id" : 353,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 8.966,
     "text color" : "[0.0]",
     "content" : "(a) Perspective texts"
   }, {
     "type" : "image",
-    "id" : 352,
+    "id" : 353,
     "page number" : 6,
     "bounding box" : [ 70.389, 473.228, 268.808, 586.607 ]
   }, {
     "type" : "paragraph",
-    "id" : 353,
+    "id" : 354,
     "page number" : 6,
     "bounding box" : [ 50.112, 377.223, 286.365, 474.401 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -1607,7 +1602,7 @@
     "content" : "(b) curved texts Figure 5. Results of the MORN on challenging image text. The input images are shown on the left and the rectiﬁed images are shown on the right. The heat maps visualize offset maps as well as Fig. 3. (a) Slanted and perspective text. (b) Curved text, which is more challenging for recognition. Removed background textures are indicated by red circles."
   }, {
     "type" : "paragraph",
-    "id" : 354,
+    "id" : 355,
     "page number" : 6,
     "bounding box" : [ 50.112, 247.572, 286.366, 356.126 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -1616,7 +1611,7 @@
     "content" : "dimensional attention mechanism at the top of CRNN. The attention-based decoder, proposed by Bahdanau et al. [2], is used to accurately align the target and label. It is based on an RNN and directly generates the target sequence (y1,y2...,yN). The largest number of steps that the decoder generates is T. The decoder stops processing when it predicts an end-of-sequence token “EOS” [47]. At time step t, output yt is,"
   }, {
     "type" : "paragraph",
-    "id" : 355,
+    "id" : 356,
     "page number" : 6,
     "bounding box" : [ 98.903, 221.661, 286.362, 235.371 ],
     "font" : "CMMI10",
@@ -1625,7 +1620,7 @@
     "content" : "yt = Softmax(Woutst + bout) (4)"
   }, {
     "type" : "paragraph",
-    "id" : 356,
+    "id" : 357,
     "page number" : 6,
     "bounding box" : [ 50.112, 182.201, 286.36, 209.46 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -1634,7 +1629,7 @@
     "content" : "where st is the hidden state at time step t. We update st using GRU [8]. State st is computed as:"
   }, {
     "type" : "paragraph",
-    "id" : 357,
+    "id" : 358,
     "page number" : 6,
     "bounding box" : [ 109.37, 150.673, 286.362, 170.0 ],
     "font" : "CMMI10",
@@ -1643,7 +1638,7 @@
     "content" : "st = GRU(yprev,gt,st\u00001) (5)"
   }, {
     "type" : "paragraph",
-    "id" : 358,
+    "id" : 359,
     "page number" : 6,
     "bounding box" : [ 50.112, 103.846, 286.362, 144.089 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -1652,7 +1647,7 @@
     "content" : "where yprev denotes the embedding vectors of the previous output yt\u00001 and gt represents the glimpse vectors, respectively calculated as,"
   }, {
     "type" : "paragraph",
-    "id" : 359,
+    "id" : 360,
     "page number" : 6,
     "bounding box" : [ 107.968, 71.753, 286.362, 91.08 ],
     "font" : "CMMI10",
@@ -1661,17 +1656,17 @@
     "content" : "yprev = Embedding(yt\u00001) (6)"
   }, {
     "type" : "Caption",
-    "id" : 360,
+    "id" : 361,
     "page number" : 6,
     "bounding box" : [ 357.663, 710.407, 496.313, 722.411 ],
-    "linked content id" : 361,
+    "linked content id" : 362,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 9.963,
     "text color" : "[0.0]",
     "content" : "Table 2. Architecture of the ASRN"
   }, {
     "type" : "table",
-    "id" : 361,
+    "id" : 362,
     "level" : "4",
     "page number" : 6,
     "bounding box" : [ 308.862, 488.509, 549.807, 712.07 ],
@@ -2609,7 +2604,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 362,
+    "id" : 363,
     "page number" : 6,
     "bounding box" : [ 325.226, 431.247, 545.112, 485.039 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -2618,7 +2613,7 @@
     "content" : "Here, k, s, p are kernel, stride and padding sizes, respectively. For example, s2 × 1 represents a 2 × 1 stride size. “BLSTM” stands for bidirectionalLSTM. “GRU” is in attention-based decoder."
   }, {
     "type" : "paragraph",
-    "id" : 363,
+    "id" : 364,
     "page number" : 6,
     "bounding box" : [ 390.495, 390.072, 410.77, 401.884 ],
     "font" : "CMR10",
@@ -2627,7 +2622,7 @@
     "content" : "gt ="
   }, {
     "type" : "paragraph",
-    "id" : 364,
+    "id" : 365,
     "page number" : 6,
     "bounding box" : [ 413.8, 371.774, 429.557, 413.316 ],
     "font" : "CMEX10",
@@ -2636,7 +2631,7 @@
     "content" : "L\u0000"
   }, {
     "type" : "paragraph",
-    "id" : 365,
+    "id" : 366,
     "page number" : 6,
     "bounding box" : [ 414.827, 378.622, 428.531, 386.593 ],
     "font" : "CMR8",
@@ -2645,7 +2640,7 @@
     "content" : "i=1"
   }, {
     "type" : "paragraph",
-    "id" : 366,
+    "id" : 367,
     "page number" : 6,
     "bounding box" : [ 429.557, 390.072, 545.112, 403.782 ],
     "font" : "CMMI10",
@@ -2654,7 +2649,7 @@
     "content" : "(αt,ihi) (7)"
   }, {
     "type" : "paragraph",
-    "id" : 367,
+    "id" : 368,
     "page number" : 6,
     "bounding box" : [ 308.862, 333.685, 545.113, 373.928 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -2663,7 +2658,7 @@
     "content" : "where hi denotes the sequential feature vectors and L is the length of the feature maps. In addition, αt,i is the vector of attention weights as follows,"
   }, {
     "type" : "paragraph",
-    "id" : 368,
+    "id" : 369,
     "page number" : 6,
     "bounding box" : [ 357.321, 298.092, 432.251, 309.904 ],
     "font" : "CMMI10",
@@ -2672,7 +2667,7 @@
     "content" : "αt,i = exp(et,i)/"
   }, {
     "type" : "paragraph",
-    "id" : 369,
+    "id" : 370,
     "page number" : 6,
     "bounding box" : [ 432.25, 279.794, 448.007, 321.336 ],
     "font" : "CMEX10",
@@ -2681,7 +2676,7 @@
     "content" : "L\u0000"
   }, {
     "type" : "paragraph",
-    "id" : 370,
+    "id" : 371,
     "page number" : 6,
     "bounding box" : [ 432.777, 286.641, 447.482, 294.612 ],
     "font" : "CMR8",
@@ -2690,7 +2685,7 @@
     "content" : "j=1"
   }, {
     "type" : "paragraph",
-    "id" : 371,
+    "id" : 372,
     "page number" : 6,
     "bounding box" : [ 448.008, 298.092, 545.112, 311.802 ],
     "font" : "CMMI10",
@@ -2699,7 +2694,7 @@
     "content" : "(exp(et,j)) (8)"
   }, {
     "type" : "paragraph",
-    "id" : 372,
+    "id" : 373,
     "page number" : 6,
     "bounding box" : [ 349.84, 255.534, 545.112, 274.861 ],
     "font" : "CMMI10",
@@ -2708,7 +2703,7 @@
     "content" : "et,i = Tanh(Wsst\u00001 + Whhi + b) (9)"
   }, {
     "type" : "paragraph",
-    "id" : 373,
+    "id" : 374,
     "page number" : 6,
     "bounding box" : [ 308.862, 180.505, 545.115, 254.029 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -2717,7 +2712,7 @@
     "content" : "Here, Wout, bout, Ws, Wh and b are trainable parameters. Note that yprev is embedded from the ground truth of the last step in the training phase, whereas the ASRN only uses the predicted output of the last step as yt\u00001 in the testing phase."
   }, {
     "type" : "paragraph",
-    "id" : 374,
+    "id" : 375,
     "page number" : 6,
     "bounding box" : [ 308.862, 118.762, 545.109, 186.104 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -2726,7 +2721,7 @@
     "content" : "The decoder outputs the predicted word in an unconstrained manner in lexicon-free mode. If lexicons are available, we evaluate the probability distributions for all words and choose the word with the highest probability as the ﬁnal result."
   }, {
     "type" : "paragraph",
-    "id" : 375,
+    "id" : 376,
     "page number" : 6,
     "bounding box" : [ 308.862, 77.935, 545.109, 118.179 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -2735,12 +2730,12 @@
     "content" : "The architecture of the ASRN is given in Table2. Each convolutional layer is followed by a batch normalization layer and a ReLU layer."
   }, {
     "type" : "footer",
-    "id" : 376,
+    "id" : 377,
     "page number" : 6,
     "bounding box" : [ 294.885, 48.047, 300.34, 61.192 ],
     "kids" : [ {
       "type" : "paragraph",
-      "id" : 255,
+      "id" : 257,
       "page number" : 6,
       "bounding box" : [ 294.885, 48.047, 300.34, 61.192 ],
       "font" : "NimbusRomNo9L-Regu",
@@ -2748,11 +2743,6 @@
       "text color" : "[0.0]",
       "content" : "6"
     } ]
-  }, {
-    "type" : "line",
-    "id" : 377,
-    "page number" : 7,
-    "bounding box" : [ 54.851, 719.454, 281.623, 720.0 ]
   }, {
     "type" : "image",
     "id" : 378,
@@ -2763,29 +2753,19 @@
     "id" : 379,
     "level" : "5",
     "page number" : 7,
-    "bounding box" : [ 57.33, 702.84, 279.145, 715.985 ],
+    "bounding box" : [ 57.33, 702.84, 279.145, 719.524 ],
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 10.909,
     "text color" : "[0.0]",
-    "content" : "————————————————————-"
+    "content" : "————————————————————-Without FP With FP"
   }, {
     "type" : "image",
     "id" : 380,
     "page number" : 7,
     "bounding box" : [ 54.853, 621.005, 281.622, 706.045 ]
   }, {
-    "type" : "Caption",
-    "id" : 381,
-    "page number" : 7,
-    "bounding box" : [ 84.333, 706.379, 243.028, 719.524 ],
-    "linked content id" : 380,
-    "font" : "NimbusRomNo9L-Regu",
-    "font size" : 10.909,
-    "text color" : "[0.0]",
-    "content" : "Without FP With FP"
-  }, {
     "type" : "paragraph",
-    "id" : 382,
+    "id" : 381,
     "page number" : 7,
     "bounding box" : [ 100.207, 611.137, 239.942, 624.282 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -2793,23 +2773,24 @@
     "text color" : "[0.0, 0.0, 1.0]",
     "content" : "hotl hotel"
   }, {
-    "type" : "paragraph",
-    "id" : 383,
+    "type" : "Caption",
+    "id" : 382,
     "level" : "5",
     "page number" : 7,
     "bounding box" : [ 57.33, 604.391, 279.145, 617.536 ],
+    "linked content id" : 380,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 10.909,
     "text color" : "[0.0]",
     "content" : "————————————————————-"
   }, {
     "type" : "image",
-    "id" : 384,
+    "id" : 383,
     "page number" : 7,
     "bounding box" : [ 54.85, 522.553, 281.623, 607.589 ]
   }, {
     "type" : "paragraph",
-    "id" : 385,
+    "id" : 384,
     "page number" : 7,
     "bounding box" : [ 100.205, 512.685, 246.005, 525.83 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -2818,23 +2799,23 @@
     "content" : "argeh angels"
   }, {
     "type" : "Caption",
-    "id" : 386,
+    "id" : 385,
     "level" : "5",
     "page number" : 7,
     "bounding box" : [ 57.33, 505.939, 279.145, 519.084 ],
-    "linked content id" : 384,
+    "linked content id" : 383,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 10.909,
     "text color" : "[0.0]",
     "content" : "————————————————————-"
   }, {
     "type" : "image",
-    "id" : 387,
+    "id" : 386,
     "page number" : 7,
     "bounding box" : [ 54.852, 424.103, 281.625, 509.144 ]
   }, {
     "type" : "paragraph",
-    "id" : 388,
+    "id" : 387,
     "page number" : 7,
     "bounding box" : [ 100.206, 414.235, 238.719, 427.38 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -2843,18 +2824,18 @@
     "content" : "easer laser"
   }, {
     "type" : "Caption",
-    "id" : 389,
+    "id" : 388,
     "level" : "5",
     "page number" : 7,
     "bounding box" : [ 50.112, 371.451, 286.361, 420.634 ],
-    "linked content id" : 387,
+    "linked content id" : 386,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 9.963,
     "text color" : "[0.0]",
     "content" : "————————————————————Figure 6. Difference in αt for training with and without fractional pickup. Here αt is visualized as a heat map. We delete the αt corresponding to “EOS”."
   }, {
     "type" : "heading",
-    "id" : 390,
+    "id" : 389,
     "level" : "Subtitle",
     "page number" : 7,
     "bounding box" : [ 50.112, 333.596, 153.619, 347.854 ],
@@ -2865,7 +2846,7 @@
     "content" : "3.3. Fractional Pickup"
   }, {
     "type" : "paragraph",
-    "id" : 391,
+    "id" : 390,
     "page number" : 7,
     "bounding box" : [ 50.112, 258.388, 286.359, 325.73 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -2874,7 +2855,7 @@
     "content" : "The decoder in the ASRN learns the matching relationship between labels and target characters in images. It is a data-driven process. The ability to choose regions that are focus-worthy is enhanced by the feedback of correct alignment."
   }, {
     "type" : "paragraph",
-    "id" : 392,
+    "id" : 391,
     "page number" : 7,
     "bounding box" : [ 50.112, 174.936, 286.359, 255.827 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -2883,7 +2864,7 @@
     "content" : "However, scene text is surrounded by various types of noise. Often, the decoder is likely to be deceived into focusing on ambiguous background regions in practical applications. If the decoder generates an incorrect region of focus, the non-corresponding features are chosen, which can cause a failed prediction."
   }, {
     "type" : "paragraph",
-    "id" : 393,
+    "id" : 392,
     "page number" : 7,
     "bounding box" : [ 50.112, 77.935, 286.359, 172.375 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -2892,7 +2873,7 @@
     "content" : "Some challenging samples for recognition are presented in Fig. 6. In this ﬁgure, the images contain text with shadows and unclear boundaries between characters or complicated backgrounds. Moreover, the focus regions generated by the decoder are narrow, which increases the probability of drifting from the correct regions."
   }, {
     "type" : "paragraph",
-    "id" : 394,
+    "id" : 393,
     "page number" : 7,
     "bounding box" : [ 308.862, 638.23, 545.109, 719.121 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -2901,7 +2882,7 @@
     "content" : "We propose a training method called fractional pickup that fractionally picks up the neighboring features in the training phase. An attention-based decoder trained by fractional pickup method can perceive adjacent characters. The wider ﬁeld of attention contributes to the robustness of the MORAN."
   }, {
     "type" : "paragraph",
-    "id" : 395,
+    "id" : 394,
     "page number" : 7,
     "bounding box" : [ 308.862, 583.328, 545.109, 637.826 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -2910,7 +2891,7 @@
     "content" : "We hence adopt fractional pickup at each time step of the decoder. In other words, a pair of attention weights are selected and modiﬁed at every time step. At time step t, αt,k and αt,k+1 are updated as,"
   }, {
     "type" : "paragraph",
-    "id" : 396,
+    "id" : 395,
     "page number" : 7,
     "bounding box" : [ 350.59, 543.728, 359.378, 584.441 ],
     "font" : "CMEX10",
@@ -2919,7 +2900,7 @@
     "content" : "\u0000"
   }, {
     "type" : "paragraph",
-    "id" : 397,
+    "id" : 396,
     "page number" : 7,
     "bounding box" : [ 372.016, 564.429, 381.387, 578.442 ],
     "font" : "CMMI10",
@@ -2928,7 +2909,7 @@
     "content" : "α,"
   }, {
     "type" : "paragraph",
-    "id" : 398,
+    "id" : 397,
     "page number" : 7,
     "bounding box" : [ 378.995, 556.683, 503.509, 575.611 ],
     "font" : "CMR10",
@@ -2937,7 +2918,7 @@
     "content" : "t,k = βαt,k + (1 \u0000 β)αt,k+1"
   }, {
     "type" : "paragraph",
-    "id" : 399,
+    "id" : 398,
     "page number" : 7,
     "bounding box" : [ 361.196, 545.887, 370.567, 559.9 ],
     "font" : "CMMI10",
@@ -2946,7 +2927,7 @@
     "content" : "α,"
   }, {
     "type" : "paragraph",
-    "id" : 400,
+    "id" : 399,
     "page number" : 7,
     "bounding box" : [ 368.174, 538.141, 503.509, 557.069 ],
     "font" : "CMR10",
@@ -2955,7 +2936,7 @@
     "content" : "t,k+1 = (1 \u0000 β)αt,k + βαt,k+1"
   }, {
     "type" : "paragraph",
-    "id" : 401,
+    "id" : 400,
     "level" : "3",
     "page number" : 7,
     "bounding box" : [ 526.937, 554.299, 545.112, 567.444 ],
@@ -2965,7 +2946,7 @@
     "content" : "(10)"
   }, {
     "type" : "paragraph",
-    "id" : 402,
+    "id" : 401,
     "page number" : 7,
     "bounding box" : [ 308.862, 512.221, 545.108, 538.916 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -2974,7 +2955,7 @@
     "content" : "where decimal β and integer k are randomly generated as,"
   }, {
     "type" : "paragraph",
-    "id" : 403,
+    "id" : 402,
     "page number" : 7,
     "bounding box" : [ 392.611, 498.672, 545.113, 511.817 ],
     "font" : "CMMI10",
@@ -2983,7 +2964,7 @@
     "content" : "β = rand(0,1) (11)"
   }, {
     "type" : "paragraph",
-    "id" : 404,
+    "id" : 403,
     "page number" : 7,
     "bounding box" : [ 308.862, 449.898, 545.113, 494.205 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -2992,7 +2973,7 @@
     "content" : "k = rand[1,T \u0000 1] (12) Here, T is the maximum number of steps of the decoder."
   }, {
     "type" : "paragraph",
-    "id" : 405,
+    "id" : 404,
     "page number" : 7,
     "bounding box" : [ 308.862, 314.406, 545.118, 449.887 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3001,7 +2982,7 @@
     "content" : "Variation of Distribution Fractional pickup adds randomness to αt,k and αt,k+1 in the decoder. This means that, even for the same image, the distribution of αt changes every time step in the training phase. As noted in Equation (7), the glimpse vectors gt grabs the sequential feature vectors hi according to the various distributions of αt, which is equivalent to the changes in feature areas. The randomness of β and k avoids over-ﬁtting and contributes to the robustness of the decoder."
   }, {
     "type" : "paragraph",
-    "id" : 406,
+    "id" : 405,
     "page number" : 7,
     "bounding box" : [ 308.862, 165.365, 545.117, 314.395 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3010,7 +2991,7 @@
     "content" : "Shortcut of Forward Propagation Sequential feature vector hi is the output of the last bidirectionalLSTM in the ASRN. As shown in Fig. 7, for step k + 1 in the bidirectional-LSTM, a shortcut connecting to step k is created by fractional pickup. The shortcut retains some features of the previous step in the training phase, which is the interference to the forget gate in bidirectional-LSTM. Therefore, fractional pickup provides more information about the previous step and increases the robustness for the bidirectional-LSTM in the ASRN."
   }, {
     "type" : "paragraph",
-    "id" : 407,
+    "id" : 406,
     "page number" : 7,
     "bounding box" : [ 308.862, 96.913, 545.118, 165.353 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3019,7 +3000,7 @@
     "content" : "Broader Visual Field Training with fractional pickup disturbs the decoder through the local variation of αt,k and αt,k+1. Note that αt,k and αt,k+1 are neighbors. Without fractional pickup, the error term of sequence feature vector hk is,"
   }, {
     "type" : "paragraph",
-    "id" : 408,
+    "id" : 407,
     "page number" : 7,
     "bounding box" : [ 397.198, 76.323, 545.113, 91.08 ],
     "font" : "CMMI8",
@@ -3028,12 +3009,12 @@
     "content" : "δhk = δgtαt,k (13)"
   }, {
     "type" : "footer",
-    "id" : 409,
+    "id" : 408,
     "page number" : 7,
     "bounding box" : [ 294.885, 48.047, 300.34, 61.192 ],
     "kids" : [ {
       "type" : "paragraph",
-      "id" : 256,
+      "id" : 258,
       "page number" : 7,
       "bounding box" : [ 294.885, 48.047, 300.34, 61.192 ],
       "font" : "NimbusRomNo9L-Regu",
@@ -3043,12 +3024,12 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 410,
+    "id" : 409,
     "page number" : 8,
     "bounding box" : [ 111.544, 630.425, 224.925, 720.872 ]
   }, {
     "type" : "heading",
-    "id" : 411,
+    "id" : 410,
     "level" : "Subtitle",
     "page number" : 8,
     "bounding box" : [ 105.875, 700.497, 115.043, 712.308 ],
@@ -3059,17 +3040,17 @@
     "content" : "hi"
   }, {
     "type" : "Caption",
-    "id" : 412,
+    "id" : 411,
     "page number" : 8,
     "bounding box" : [ 50.112, 603.716, 286.365, 627.675 ],
-    "linked content id" : 410,
+    "linked content id" : 409,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 9.963,
     "text color" : "[0.0]",
     "content" : "Figure 7. Fractional pickup creates a shortcut of forward propagation. The shortcut is drawn as a red arrow."
   }, {
     "type" : "paragraph",
-    "id" : 413,
+    "id" : 412,
     "page number" : 8,
     "bounding box" : [ 50.112, 544.214, 286.365, 584.457 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3078,7 +3059,7 @@
     "content" : "where δgt is the error term of glimpse vector gt. δhk is only relevant to αt,k. However, with fractional pickup, the error item becomes,"
   }, {
     "type" : "paragraph",
-    "id" : 414,
+    "id" : 413,
     "page number" : 8,
     "bounding box" : [ 92.991, 513.652, 286.363, 534.205 ],
     "font" : "CMR10",
@@ -3087,7 +3068,7 @@
     "content" : "δhk = δgt(βαt,k + (1 \u0000 β)αt,k+1) (14)"
   }, {
     "type" : "paragraph",
-    "id" : 415,
+    "id" : 414,
     "page number" : 8,
     "bounding box" : [ 50.112, 430.161, 286.364, 511.052 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3096,7 +3077,7 @@
     "content" : "where αt,k+1 is relevant to hk+1, as noted in Equations (8) and (9), which means δhk is inﬂuenced by the neighbouring features. Owing to the disturbance, back-propagated gradients are able to dynamically optimize the decoder over a broader range of neighbouring regions."
   }, {
     "type" : "paragraph",
-    "id" : 416,
+    "id" : 415,
     "page number" : 8,
     "bounding box" : [ 50.112, 308.218, 286.363, 429.757 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3105,7 +3086,7 @@
     "content" : "The MORAN trained with fractional pickup method generates a smoother αt at each time step. Accordingly, it extracts features not only of the target characters, but also of the foreground and background context. As demonstrated in Fig. 6, the expanded visual ﬁeld enables the MORAN to correctly predict target characters. To the best of our knowledge, this is the ﬁrst attempt to adopt a shortcut in the training of the attention mechanism."
   }, {
     "type" : "heading",
-    "id" : 417,
+    "id" : 416,
     "level" : "Subtitle",
     "page number" : 8,
     "bounding box" : [ 50.112, 286.479, 168.643, 300.737 ],
@@ -3116,7 +3097,7 @@
     "content" : "3.4. Curriculum Training"
   }, {
     "type" : "paragraph",
-    "id" : 418,
+    "id" : 417,
     "page number" : 8,
     "bounding box" : [ 50.112, 145.681, 286.359, 280.769 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3125,7 +3106,7 @@
     "content" : "The MORAN is end-to-end trainable with random initialization. However, end-to-end training consumes considerable time. We found that the MORN and ASRN can hinder each other during training. A MORN cannot be guided to rectify images when the input images have been correctly recognized by the high-performance ASRN. For the same reason, the ASRN will not gain robustness because the training samples have already been rectiﬁed by the MORN. The reasons above lead to inefﬁcient training."
   }, {
     "type" : "paragraph",
-    "id" : 419,
+    "id" : 418,
     "page number" : 8,
     "bounding box" : [ 50.112, 77.935, 286.359, 145.277 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3134,7 +3115,7 @@
     "content" : "Therefore, we propose a curriculum learning strategy to guide each sub-network in MORAN. The strategy is a three-step process. We ﬁrst optimize the MORN and ASRN respectively and then join them together for further end-to-end training. The"
   }, {
     "type" : "paragraph",
-    "id" : 420,
+    "id" : 419,
     "page number" : 8,
     "bounding box" : [ 308.862, 665.329, 545.112, 719.121 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3143,7 +3124,7 @@
     "content" : "difﬁculty of training samples is gradually increased. The training set is denoted as D = {Ii,Yi},i = 1...N. We minimize the negative log-likelihood of conditional probability of D as follows:"
   }, {
     "type" : "paragraph",
-    "id" : 421,
+    "id" : 420,
     "page number" : 8,
     "bounding box" : [ 349.858, 620.72, 395.828, 639.648 ],
     "font" : "CMMI10",
@@ -3152,7 +3133,7 @@
     "content" : "Loss = \u0000"
   }, {
     "type" : "paragraph",
-    "id" : 422,
+    "id" : 421,
     "page number" : 8,
     "bounding box" : [ 397.646, 609.266, 413.403, 650.808 ],
     "font" : "CMEX10",
@@ -3161,7 +3142,7 @@
     "content" : "N\u0000"
   }, {
     "type" : "paragraph",
-    "id" : 423,
+    "id" : 422,
     "page number" : 8,
     "bounding box" : [ 398.673, 616.113, 412.377, 624.084 ],
     "font" : "CMR8",
@@ -3170,7 +3151,7 @@
     "content" : "i=1"
   }, {
     "type" : "paragraph",
-    "id" : 424,
+    "id" : 423,
     "page number" : 8,
     "bounding box" : [ 415.221, 609.266, 430.978, 652.062 ],
     "font" : "CMEX10",
@@ -3179,7 +3160,7 @@
     "content" : "|Yi|\u0000"
   }, {
     "type" : "paragraph",
-    "id" : 425,
+    "id" : 424,
     "page number" : 8,
     "bounding box" : [ 416.161, 616.246, 430.04, 624.217 ],
     "font" : "CMR8",
@@ -3188,7 +3169,7 @@
     "content" : "t=1"
   }, {
     "type" : "paragraph",
-    "id" : 426,
+    "id" : 425,
     "page number" : 8,
     "bounding box" : [ 432.797, 620.72, 545.113, 641.273 ],
     "font" : "CMR10",
@@ -3197,7 +3178,7 @@
     "content" : "log p(Yi,t | Ii;θ) (15)"
   }, {
     "type" : "paragraph",
-    "id" : 427,
+    "id" : 426,
     "page number" : 8,
     "bounding box" : [ 308.862, 584.099, 545.109, 611.358 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3206,7 +3187,7 @@
     "content" : "where Yi,t is the ground truth of the t-th character in Ii. θ denotes the parameters of MORAN."
   }, {
     "type" : "paragraph",
-    "id" : 428,
+    "id" : 427,
     "page number" : 8,
     "bounding box" : [ 308.862, 408.292, 545.116, 584.421 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3215,7 +3196,7 @@
     "content" : "First Stage for ASRN We ﬁrst optimize the ASRN by using regular training samples. The dataset released by Gupta et al. [15] has tightly bounded annotations, which makes it possible to crop a text region with a tightly bounded box. The ASRN is ﬁrst trained with these regular samples. Then, we simply crop every text using a minimum circumscribed horizontal rectangle to obtain irregular training samples. The commonly used datasets released by Jaderberg et al. [20] and Gupta et al. [15] offer abundant irregular training samples. We use them for the following training. Taking advantage of them, we optimize ASRN, which thus achieves higher accuracy."
   }, {
     "type" : "paragraph",
-    "id" : 429,
+    "id" : 428,
     "page number" : 8,
     "bounding box" : [ 308.862, 245.47, 545.109, 408.049 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3224,7 +3205,7 @@
     "content" : "Second Stage for MORN The ASRN trained using regular training samples is chosen to guide the MORN training. This ASRN is not adequately robust for irregular text recognition so it is able to provide informative gradients for the MORN. We ﬁx the parameters of this ASRN, and stack it after the MORN. If the transformation of the MORN does not reduce the difﬁculty of recognition, few meaningful gradients will be provided by the ASRN. The optimization of MORN would not progress. Only the correct transformation that decreases difﬁculty for recognition will give positive feedback to the MORN."
   }, {
     "type" : "paragraph",
-    "id" : 430,
+    "id" : 429,
     "page number" : 8,
     "bounding box" : [ 308.862, 163.943, 545.112, 245.227 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3233,7 +3214,7 @@
     "content" : "Third Stage for End-to-end Optimization After the MORN and ASRN are optimized individually, we connect them for joint training in an end-to-end fashion. Joint training enables MORAN to complete end-to-end optimization and outperform state-of-theart methods."
   }, {
     "type" : "heading",
-    "id" : 431,
+    "id" : 430,
     "level" : "Subtitle",
     "page number" : 8,
     "bounding box" : [ 308.862, 138.326, 385.901, 153.88 ],
@@ -3244,7 +3225,7 @@
     "content" : "4. Experiments"
   }, {
     "type" : "paragraph",
-    "id" : 432,
+    "id" : 431,
     "page number" : 8,
     "bounding box" : [ 308.862, 77.935, 545.109, 131.728 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3253,12 +3234,12 @@
     "content" : "In this section we describe extensive experiments conducted on various benchmarks, including regular and irregular datasets. The performances of all the methods are measured by word accuracy."
   }, {
     "type" : "footer",
-    "id" : 433,
+    "id" : 432,
     "page number" : 8,
     "bounding box" : [ 294.885, 48.047, 300.34, 61.192 ],
     "kids" : [ {
       "type" : "paragraph",
-      "id" : 257,
+      "id" : 259,
       "page number" : 8,
       "bounding box" : [ 294.885, 48.047, 300.34, 61.192 ],
       "font" : "NimbusRomNo9L-Regu",
@@ -3268,7 +3249,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 434,
+    "id" : 433,
     "page number" : 9,
     "bounding box" : [ 50.112, 698.451, 545.114, 722.411 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3277,7 +3258,7 @@
     "content" : "Table 3. Comparison of pooling layers in lexicon-free mode. “No”, “AP” and “MP” respectively indicate no pooling layer, an average-pooling layer and a max-pooling layer at the top of the MORN. The kernel size is 2. “s” represents the stride."
   }, {
     "type" : "table",
-    "id" : 435,
+    "id" : 434,
     "level" : "5",
     "page number" : 9,
     "bounding box" : [ 138.387, 615.607, 456.837, 698.097 ],
@@ -3474,11 +3455,47 @@
           "id" : 97,
           "level" : "1",
           "page number" : 9,
-          "bounding box" : [ 172.881, 617.005, 178.336, 684.347 ],
+          "bounding box" : [ 172.881, 657.653, 178.336, 684.347 ],
           "font" : "NimbusRomNo9L-Regu",
           "font size" : 10.909,
           "text color" : "[0.0]",
-          "content" : "2 1 2 1"
+          "content" : "2"
+        }, {
+          "type" : "list",
+          "id" : 98,
+          "level" : "2",
+          "page number" : 9,
+          "bounding box" : [ 172.881, 630.554, 178.336, 657.248 ],
+          "numbering style" : "arabic numbers",
+          "number of list items" : 2,
+          "list items" : [ {
+            "type" : "list item",
+            "page number" : 9,
+            "bounding box" : [ 172.881, 644.103, 178.336, 657.248 ],
+            "font" : "NimbusRomNo9L-Regu",
+            "font size" : 10.909,
+            "text color" : "[0.0]",
+            "content" : "1",
+            "kids" : [ ]
+          }, {
+            "type" : "list item",
+            "page number" : 9,
+            "bounding box" : [ 172.881, 630.554, 178.336, 643.699 ],
+            "font" : "NimbusRomNo9L-Regu",
+            "font size" : 10.909,
+            "text color" : "[0.0]",
+            "content" : "2",
+            "kids" : [ ]
+          } ]
+        }, {
+          "type" : "paragraph",
+          "id" : 99,
+          "page number" : 9,
+          "bounding box" : [ 172.881, 617.005, 178.336, 630.15 ],
+          "font" : "NimbusRomNo9L-Regu",
+          "font size" : 10.909,
+          "text color" : "[0.0]",
+          "content" : "1"
         } ]
       }, {
         "type" : "table cell",
@@ -3490,7 +3507,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 98,
+          "id" : 100,
           "page number" : 9,
           "bounding box" : [ 196.59, 616.35, 215.681, 684.347 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -3508,7 +3525,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 99,
+          "id" : 101,
           "page number" : 9,
           "bounding box" : [ 234.695, 616.35, 253.786, 684.347 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -3526,7 +3543,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 100,
+          "id" : 102,
           "page number" : 9,
           "bounding box" : [ 268.261, 616.35, 287.352, 684.347 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -3544,7 +3561,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 101,
+          "id" : 103,
           "page number" : 9,
           "bounding box" : [ 302.433, 616.35, 321.524, 684.347 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -3562,7 +3579,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 102,
+          "id" : 104,
           "page number" : 9,
           "bounding box" : [ 340.346, 616.35, 359.437, 684.347 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -3580,7 +3597,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 103,
+          "id" : 105,
           "page number" : 9,
           "bounding box" : [ 387.047, 616.35, 406.138, 684.347 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -3598,7 +3615,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 104,
+          "id" : 106,
           "page number" : 9,
           "bounding box" : [ 430.006, 616.35, 449.097, 684.347 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -3610,17 +3627,17 @@
     } ]
   }, {
     "type" : "Caption",
-    "id" : 436,
+    "id" : 435,
     "page number" : 9,
     "bounding box" : [ 219.989, 594.058, 372.746, 606.062 ],
-    "linked content id" : 437,
+    "linked content id" : 436,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 9.963,
     "text color" : "[0.0]",
     "content" : "Table 4. Performance of the MORAN."
   }, {
     "type" : "table",
-    "id" : 437,
+    "id" : 436,
     "level" : "6",
     "page number" : 9,
     "bounding box" : [ 109.41, 526.382, 485.814, 595.721 ],
@@ -3639,7 +3656,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 105,
+          "id" : 107,
           "page number" : 9,
           "bounding box" : [ 144.58, 582.774, 178.518, 595.919 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -3657,7 +3674,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 106,
+          "id" : 108,
           "page number" : 9,
           "bounding box" : [ 219.666, 582.774, 250.561, 595.919 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -3675,7 +3692,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 107,
+          "id" : 109,
           "page number" : 9,
           "bounding box" : [ 262.914, 582.774, 283.521, 595.919 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -3693,7 +3710,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 108,
+          "id" : 110,
           "page number" : 9,
           "bounding box" : [ 295.875, 582.774, 317.693, 595.919 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -3711,7 +3728,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 109,
+          "id" : 111,
           "page number" : 9,
           "bounding box" : [ 330.047, 582.774, 351.865, 595.919 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -3729,7 +3746,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 110,
+          "id" : 112,
           "page number" : 9,
           "bounding box" : [ 364.218, 582.774, 393.52, 595.919 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -3747,7 +3764,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 111,
+          "id" : 113,
           "page number" : 9,
           "bounding box" : [ 405.874, 582.774, 445.267, 595.919 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -3765,7 +3782,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 112,
+          "id" : 114,
           "page number" : 9,
           "bounding box" : [ 457.62, 582.774, 479.438, 595.919 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -3787,7 +3804,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 113,
+          "id" : 115,
           "page number" : 9,
           "bounding box" : [ 118.677, 568.826, 204.423, 581.971 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -3805,7 +3822,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 114,
+          "id" : 116,
           "page number" : 9,
           "bounding box" : [ 225.568, 568.826, 244.659, 581.971 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -3823,7 +3840,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 115,
+          "id" : 117,
           "page number" : 9,
           "bounding box" : [ 263.672, 568.826, 282.763, 581.971 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -3841,7 +3858,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 116,
+          "id" : 118,
           "page number" : 9,
           "bounding box" : [ 297.238, 568.826, 316.329, 581.971 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -3859,7 +3876,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 117,
+          "id" : 119,
           "page number" : 9,
           "bounding box" : [ 331.41, 568.826, 350.501, 581.971 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -3877,7 +3894,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 118,
+          "id" : 120,
           "page number" : 9,
           "bounding box" : [ 369.324, 568.826, 388.415, 581.971 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -3895,7 +3912,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 119,
+          "id" : 121,
           "page number" : 9,
           "bounding box" : [ 416.024, 568.826, 435.115, 581.971 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -3913,7 +3930,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 120,
+          "id" : 122,
           "page number" : 9,
           "bounding box" : [ 458.983, 568.826, 478.074, 581.971 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -3935,7 +3952,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 121,
+          "id" : 123,
           "page number" : 9,
           "bounding box" : [ 115.786, 527.78, 207.313, 568.023 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -3953,7 +3970,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 122,
+          "id" : 124,
           "page number" : 9,
           "bounding box" : [ 225.568, 527.125, 244.659, 568.023 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -3971,7 +3988,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 123,
+          "id" : 125,
           "page number" : 9,
           "bounding box" : [ 263.672, 527.125, 282.763, 568.023 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -3989,7 +4006,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 124,
+          "id" : 126,
           "page number" : 9,
           "bounding box" : [ 297.238, 527.125, 316.329, 568.023 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -4007,7 +4024,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 125,
+          "id" : 127,
           "page number" : 9,
           "bounding box" : [ 331.41, 527.125, 350.501, 568.023 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -4025,7 +4042,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 126,
+          "id" : 128,
           "page number" : 9,
           "bounding box" : [ 369.324, 527.125, 388.415, 568.023 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -4043,7 +4060,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 127,
+          "id" : 129,
           "page number" : 9,
           "bounding box" : [ 416.024, 527.125, 435.115, 568.023 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -4061,7 +4078,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 128,
+          "id" : 130,
           "page number" : 9,
           "bounding box" : [ 458.983, 527.125, 478.074, 568.023 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -4073,7 +4090,7 @@
     } ]
   }, {
     "type" : "heading",
-    "id" : 438,
+    "id" : 437,
     "level" : "Subtitle",
     "page number" : 9,
     "bounding box" : [ 50.112, 491.76, 108.852, 506.018 ],
@@ -4084,7 +4101,7 @@
     "content" : "4.1. Datasets"
   }, {
     "type" : "paragraph",
-    "id" : 439,
+    "id" : 438,
     "page number" : 9,
     "bounding box" : [ 50.112, 418.368, 286.368, 486.103 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -4093,7 +4110,7 @@
     "content" : "IIIT5K-Words (IIIT5K) [32] contains 3000 cropped word images for testing. Every image has a 50-word lexicon and a 1000-word lexicon. The lexicon consists of a ground truth and some randomly picked words."
   }, {
     "type" : "paragraph",
-    "id" : 440,
+    "id" : 439,
     "page number" : 9,
     "bounding box" : [ 50.112, 350.282, 286.36, 418.016 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -4102,7 +4119,7 @@
     "content" : "Street View Text (SVT) [48] was collected from the Google Street View, consisting of 647 word images. Many images are severely corrupted by noise and blur, or have very low resolutions. Each image is associated with a 50-word lexicon."
   }, {
     "type" : "paragraph",
-    "id" : 441,
+    "id" : 440,
     "page number" : 9,
     "bounding box" : [ 50.112, 227.998, 286.363, 349.93 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -4111,7 +4128,7 @@
     "content" : "ICDAR 2003 (IC03) [31] contains 251 scene images that are labeled with text bounding boxes. For fair comparison, we discarded images that contain nonalphanumeric characters or those have less than three characters, following Wang, Babenko, and Belongie [48]. The ﬁltered dataset contains 867 cropped images. Lexicons comprise of a 50-word lexicon deﬁned by Wang et al. [48] and a “full lexicon”. The latter lexicon combines all lexicon words."
   }, {
     "type" : "paragraph",
-    "id" : 442,
+    "id" : 441,
     "page number" : 9,
     "bounding box" : [ 50.112, 187.01, 286.363, 227.646 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -4120,7 +4137,7 @@
     "content" : "ICDAR 2013 (IC13) [25] inherits most of its samples from IC03. It contains 1015 cropped text images. No lexicon is associated with this dataset."
   }, {
     "type" : "paragraph",
-    "id" : 443,
+    "id" : 442,
     "page number" : 9,
     "bounding box" : [ 50.112, 105.374, 286.362, 186.658 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -4129,7 +4146,7 @@
     "content" : "SVT-Perspective (SVT-P) [35] contains 645 cropped images for testing. Images are selected from side-view angle snapshots in Google Street View. Therefore, most images are perspective distorted. Each image is associated with a 50-word lexicon and a full lexicon."
   }, {
     "type" : "paragraph",
-    "id" : 444,
+    "id" : 443,
     "page number" : 9,
     "bounding box" : [ 50.112, 77.935, 286.368, 105.022 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -4138,7 +4155,7 @@
     "content" : "CUTE80 [37] contains 80 high-resolution images taken in natural scenes. It was speciﬁcally collected"
   }, {
     "type" : "paragraph",
-    "id" : 445,
+    "id" : 444,
     "page number" : 9,
     "bounding box" : [ 308.862, 465.334, 545.109, 505.578 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -4147,7 +4164,7 @@
     "content" : "for evaluating the performance of curved text recognition. It contains 288 cropped natural images for testing. No lexicon is associated with this dataset."
   }, {
     "type" : "paragraph",
-    "id" : 446,
+    "id" : 445,
     "page number" : 9,
     "bounding box" : [ 308.862, 423.416, 545.115, 464.052 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -4156,7 +4173,7 @@
     "content" : "ICDAR 2015 (IC15) [24] contains 2077 cropped images including more than 200 irregular text. No lexicon is associated with this dataset."
   }, {
     "type" : "heading",
-    "id" : 447,
+    "id" : 446,
     "level" : "Subtitle",
     "page number" : 9,
     "bounding box" : [ 308.862, 397.413, 437.925, 411.671 ],
@@ -4167,7 +4184,7 @@
     "content" : "4.2. Implementation Details"
   }, {
     "type" : "paragraph",
-    "id" : 448,
+    "id" : 447,
     "page number" : 9,
     "bounding box" : [ 308.862, 309.542, 545.115, 390.826 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -4176,7 +4193,7 @@
     "content" : "Network: Details about the MORN and the ASRN of MORAN are given in Table1 and Table2 respectively. The number of hidden units of GRU in the decoder is 256. The ASRN outputs 37 classes, including 26 letters, 10 digits and a symbol standing for “EOS”."
   }, {
     "type" : "paragraph",
-    "id" : 449,
+    "id" : 448,
     "page number" : 9,
     "bounding box" : [ 308.862, 77.935, 545.115, 308.26 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -4185,12 +4202,12 @@
     "content" : "Training Model: As stated in Section 3.4, the training of the MORAN is guided by a curriculum learning strategy. The training data consists of 8million synthetic images released by Jaderberg et al. [20] and 6-million synthetic images released by Gupta et al. [15]. No extra data is used. We do not use any geometric-level or pixel-level labels in our experiments. Without any ﬁne-tuning for each speciﬁc dataset, the model is trained using only synthetic text. With ADADELTA [55] optimization method, we set learning rate to 1.0 at the beginning and decreased it to 0.01 in the third stage of the curriculum learning strategy. Following the similar settings in [28], we found that a decreased learning rate contributes to better convergence. The batch size was set to 64. We trained the model for 600,000, 20,000 and 300,000 iterations respectively in three stages of the curriculum"
   }, {
     "type" : "footer",
-    "id" : 450,
+    "id" : 449,
     "page number" : 9,
     "bounding box" : [ 294.885, 48.047, 300.34, 61.192 ],
     "kids" : [ {
       "type" : "paragraph",
-      "id" : 258,
+      "id" : 260,
       "page number" : 9,
       "bounding box" : [ 294.885, 48.047, 300.34, 61.192 ],
       "font" : "NimbusRomNo9L-Regu",
@@ -4200,7 +4217,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 451,
+    "id" : 450,
     "page number" : 10,
     "bounding box" : [ 50.112, 692.427, 286.359, 719.121 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -4209,7 +4226,7 @@
     "content" : "learning strategy. The training totally consumed 30 hours."
   }, {
     "type" : "paragraph",
-    "id" : 452,
+    "id" : 451,
     "page number" : 10,
     "bounding box" : [ 50.112, 584.033, 286.366, 692.416 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -4218,7 +4235,7 @@
     "content" : "Implementation: We implemented our method under the framework of PyTorch [34]. CUDA 8.0 and CuDNN v7 backends are used in our experiments so our model is GPU-accelerated. All the images are resized to 32 × 100. With an NVIDIA GTX1080Ti GPU, the MORAN takes 10.4ms to recognize an image containing ﬁve characters in lexicon-free mode."
   }, {
     "type" : "heading",
-    "id" : 453,
+    "id" : 452,
     "level" : "Subtitle",
     "page number" : 10,
     "bounding box" : [ 50.112, 562.838, 204.216, 577.096 ],
@@ -4229,7 +4246,7 @@
     "content" : "4.3. Performance of the MORAN"
   }, {
     "type" : "paragraph",
-    "id" : 454,
+    "id" : 453,
     "page number" : 10,
     "bounding box" : [ 50.112, 476.237, 286.359, 557.128 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -4238,7 +4255,7 @@
     "content" : "We used a max-pooling layer at the top of the MORN. To evaluate the effectiveness of this technique, a comparison of pooling layers with different conﬁgurations is shown in Table 3. The accuracy is the highest when we use a max-pooling layer with a kernel size of 2 and stride of 1."
   }, {
     "type" : "paragraph",
-    "id" : 455,
+    "id" : 454,
     "page number" : 10,
     "bounding box" : [ 50.112, 300.098, 286.359, 475.833 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -4247,17 +4264,17 @@
     "content" : "Before conducting a comparison with other methods, we list three results with a progressive combination of methods in Table 4. The MORAN trained in an end-to-end manner already achieves very promising performance. In curriculum learning, the ﬁrst experiment is carried out using only an ASRN. Then, a MORN is added to the bottom of the above network to rectify the images. The last result is from the entire MORAN, including the MORN and ASRN trained with the fractional pickup method. The contribution of each part of our method is hence clearly demonstrated. For ICDAR OCR tasks, we report the total edit distance in Table 5."
   }, {
     "type" : "Caption",
-    "id" : 456,
+    "id" : 455,
     "page number" : 10,
     "bounding box" : [ 50.112, 280.248, 282.28, 292.252 ],
-    "linked content id" : 457,
+    "linked content id" : 456,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 9.963,
     "text color" : "[0.0]",
     "content" : "Table 5. Performance of the MORAN (total edit distance)."
   }, {
     "type" : "table",
-    "id" : 457,
+    "id" : 456,
     "level" : "7",
     "page number" : 10,
     "bounding box" : [ 63.476, 210.943, 272.997, 280.283 ],
@@ -4276,7 +4293,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 129,
+          "id" : 131,
           "page number" : 10,
           "bounding box" : [ 98.647, 267.335, 132.585, 280.48 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -4294,7 +4311,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 130,
+          "id" : 132,
           "page number" : 10,
           "bounding box" : [ 173.733, 267.335, 195.551, 280.48 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -4312,7 +4329,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 131,
+          "id" : 133,
           "page number" : 10,
           "bounding box" : [ 207.904, 267.335, 229.722, 280.48 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -4330,7 +4347,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 132,
+          "id" : 134,
           "page number" : 10,
           "bounding box" : [ 243.44, 267.335, 265.258, 280.48 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -4352,7 +4369,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 133,
+          "id" : 135,
           "page number" : 10,
           "bounding box" : [ 72.743, 253.387, 158.489, 266.532 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -4370,7 +4387,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 134,
+          "id" : 136,
           "page number" : 10,
           "bounding box" : [ 175.096, 253.387, 194.187, 266.532 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -4388,7 +4405,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 135,
+          "id" : 137,
           "page number" : 10,
           "bounding box" : [ 209.268, 253.387, 228.359, 266.532 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -4406,7 +4423,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 136,
+          "id" : 138,
           "page number" : 10,
           "bounding box" : [ 242.076, 253.387, 266.621, 266.532 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -4428,7 +4445,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 137,
+          "id" : 139,
           "page number" : 10,
           "bounding box" : [ 69.853, 212.341, 161.38, 252.585 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -4446,7 +4463,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 138,
+          "id" : 140,
           "page number" : 10,
           "bounding box" : [ 175.096, 211.686, 194.187, 252.585 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -4464,7 +4481,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 139,
+          "id" : 141,
           "page number" : 10,
           "bounding box" : [ 209.268, 211.686, 228.359, 252.585 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -4482,7 +4499,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 140,
+          "id" : 142,
           "page number" : 10,
           "bounding box" : [ 242.076, 211.686, 266.621, 252.585 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -4494,7 +4511,7 @@
     } ]
   }, {
     "type" : "heading",
-    "id" : 458,
+    "id" : 457,
     "level" : "Subtitle",
     "page number" : 10,
     "bounding box" : [ 50.112, 178.085, 260.15, 192.343 ],
@@ -4505,7 +4522,7 @@
     "content" : "4.4. Comparisons with Rectiﬁcation Methods"
   }, {
     "type" : "paragraph",
-    "id" : 459,
+    "id" : 458,
     "page number" : 10,
     "bounding box" : [ 50.112, 77.935, 286.362, 172.768 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -4514,7 +4531,7 @@
     "content" : "Afﬁne Transformation: The results using the afﬁne transformation are provided by Liu et al. [28]. For fair comparison, we replace the ASRN by the RNet proposed by Liu et al. [28]. A direct comparison of the results is shown in Table 6. As demonstrated in Fig.3 and described in Section 3.1, afﬁne transformation is limited by the geometric constraints of rotation,"
   }, {
     "type" : "paragraph",
-    "id" : 460,
+    "id" : 459,
     "page number" : 10,
     "bounding box" : [ 308.862, 651.779, 545.109, 719.121 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -4523,17 +4540,17 @@
     "content" : "scaling and translation. However, the distortion of scene text is complicated. The MORAN is more ﬂexible than afﬁne transformation. It is able to predict smooth rectiﬁcation for images free of geometric constraints."
   }, {
     "type" : "Caption",
-    "id" : 461,
+    "id" : 460,
     "page number" : 10,
     "bounding box" : [ 350.206, 627.596, 500.681, 639.6 ],
-    "linked content id" : 462,
+    "linked content id" : 461,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 9.963,
     "text color" : "[0.0]",
     "content" : "Table 6. Comparison with STAR-Net."
   }, {
     "type" : "table",
-    "id" : 462,
+    "id" : 461,
     "level" : "8",
     "page number" : 10,
     "bounding box" : [ 308.862, 585.0, 553.462, 627.241 ],
@@ -4552,7 +4569,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 141,
+          "id" : 143,
           "page number" : 10,
           "bounding box" : [ 329.45, 614.294, 363.388, 627.439 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -4570,7 +4587,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 142,
+          "id" : 144,
           "page number" : 10,
           "bounding box" : [ 389.954, 614.294, 420.849, 627.439 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -4588,7 +4605,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 143,
+          "id" : 145,
           "page number" : 10,
           "bounding box" : [ 427.819, 614.294, 448.426, 627.439 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -4606,7 +4623,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 144,
+          "id" : 146,
           "page number" : 10,
           "bounding box" : [ 457.181, 614.294, 478.999, 627.439 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -4624,7 +4641,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 145,
+          "id" : 147,
           "page number" : 10,
           "bounding box" : [ 486.543, 614.294, 508.361, 627.439 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -4642,7 +4659,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 146,
+          "id" : 148,
           "page number" : 10,
           "bounding box" : [ 516.844, 614.294, 546.146, 627.439 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -4664,7 +4681,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 147,
+          "id" : 149,
           "page number" : 10,
           "bounding box" : [ 316.098, 600.346, 376.742, 613.491 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -4682,7 +4699,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 148,
+          "id" : 150,
           "page number" : 10,
           "bounding box" : [ 393.164, 600.346, 412.255, 613.491 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -4700,7 +4717,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 149,
+          "id" : 151,
           "page number" : 10,
           "bounding box" : [ 427.819, 600.346, 446.91, 613.491 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -4718,7 +4735,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 150,
+          "id" : 152,
           "page number" : 10,
           "bounding box" : [ 457.181, 600.346, 476.272, 613.491 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -4736,7 +4753,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 151,
+          "id" : 153,
           "page number" : 10,
           "bounding box" : [ 486.543, 599.691, 505.634, 613.884 ],
           "font" : "NimbusRomNo9L-Medi",
@@ -4754,7 +4771,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 152,
+          "id" : 154,
           "page number" : 10,
           "bounding box" : [ 521.949, 600.346, 541.04, 613.491 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -4776,7 +4793,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 153,
+          "id" : 155,
           "page number" : 10,
           "bounding box" : [ 335.816, 586.398, 357.023, 599.543 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -4794,7 +4811,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 154,
+          "id" : 156,
           "page number" : 10,
           "bounding box" : [ 393.164, 585.743, 412.255, 599.936 ],
           "font" : "NimbusRomNo9L-Medi",
@@ -4812,7 +4829,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 155,
+          "id" : 157,
           "page number" : 10,
           "bounding box" : [ 427.819, 585.743, 446.91, 599.936 ],
           "font" : "NimbusRomNo9L-Medi",
@@ -4830,7 +4847,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 156,
+          "id" : 158,
           "page number" : 10,
           "bounding box" : [ 457.181, 585.743, 476.272, 599.936 ],
           "font" : "NimbusRomNo9L-Medi",
@@ -4848,7 +4865,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 157,
+          "id" : 159,
           "page number" : 10,
           "bounding box" : [ 486.543, 585.743, 505.634, 599.936 ],
           "font" : "NimbusRomNo9L-Medi",
@@ -4866,7 +4883,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 158,
+          "id" : 160,
           "page number" : 10,
           "bounding box" : [ 521.949, 585.743, 541.04, 599.936 ],
           "font" : "NimbusRomNo9L-Medi",
@@ -4878,7 +4895,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 463,
+    "id" : 462,
     "page number" : 10,
     "bounding box" : [ 308.862, 496.784, 545.11, 564.519 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -4887,7 +4904,7 @@
     "content" : "RARE [42]: The results of RARE given by Shi et al. [42] are in the Table 8 and Table 9. We directly compare the network using exactly the same recognition network as that proposed in RARE. The results are shown in Table 7."
   }, {
     "type" : "paragraph",
-    "id" : 464,
+    "id" : 463,
     "page number" : 10,
     "bounding box" : [ 308.862, 372.054, 545.109, 493.593 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -4896,12 +4913,12 @@
     "content" : "The MORAN has some beneﬁts and drawbacks comparing with RARE. RARE using ﬁducial points can only capture the overall text shape of an input image, whereas the MORAN can rectify every character in an image. As shown in Fig. 8, all the characters in the image rectiﬁed by the MORAN are more normal in appearance than those of RARE. Furthermore, the MORAN without any ﬁducial points is theoretically able to rectify text of inﬁnite length."
   }, {
     "type" : "image",
-    "id" : 465,
+    "id" : 464,
     "page number" : 10,
     "bounding box" : [ 308.862, 215.486, 549.799, 357.214 ]
   }, {
     "type" : "paragraph",
-    "id" : 466,
+    "id" : 465,
     "page number" : 10,
     "bounding box" : [ 477.516, 332.888, 541.149, 346.033 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -4910,7 +4927,7 @@
     "content" : "Predict:stinker"
   }, {
     "type" : "paragraph",
-    "id" : 467,
+    "id" : 466,
     "page number" : 10,
     "bounding box" : [ 489.563, 284.701, 535.676, 297.846 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -4919,7 +4936,7 @@
     "content" : "GT:denver"
   }, {
     "type" : "paragraph",
-    "id" : 468,
+    "id" : 467,
     "page number" : 10,
     "bounding box" : [ 477.516, 236.514, 540.538, 249.659 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -4928,17 +4945,17 @@
     "content" : "Predict:denver"
   }, {
     "type" : "Caption",
-    "id" : 469,
+    "id" : 468,
     "page number" : 10,
     "bounding box" : [ 308.862, 176.821, 545.115, 212.736 ],
-    "linked content id" : 465,
+    "linked content id" : 464,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 9.963,
     "text color" : "[0.0]",
     "content" : "Figure 8. Comparison of the MORAN and RARE. All characters are cropped for further comparison. The recognition results are on the right. “GT” denotes the ground truth."
   }, {
     "type" : "paragraph",
-    "id" : 470,
+    "id" : 469,
     "page number" : 10,
     "bounding box" : [ 308.862, 77.935, 545.109, 158.826 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -4947,12 +4964,12 @@
     "content" : "The training of MORAN is more difﬁcult than that of RARE. We thus designed a curriculum learning strategy to enable the stable convergence of the MORAN. In terms of RARE, although it is end-to-end optimized with special initialization, randomly initialized network may result in failure of convergence."
   }, {
     "type" : "footer",
-    "id" : 471,
+    "id" : 470,
     "page number" : 10,
     "bounding box" : [ 292.157, 48.047, 303.066, 61.192 ],
     "kids" : [ {
       "type" : "paragraph",
-      "id" : 259,
+      "id" : 261,
       "page number" : 10,
       "bounding box" : [ 292.157, 48.047, 303.066, 61.192 ],
       "font" : "NimbusRomNo9L-Regu",
@@ -4962,17 +4979,17 @@
     } ]
   }, {
     "type" : "Caption",
-    "id" : 472,
+    "id" : 471,
     "page number" : 11,
     "bounding box" : [ 228.965, 710.407, 363.769, 722.411 ],
-    "linked content id" : 473,
+    "linked content id" : 472,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 9.963,
     "text color" : "[0.0]",
     "content" : "Table 7. Comparison with RARE."
   }, {
     "type" : "table",
-    "id" : 473,
+    "id" : 472,
     "level" : "9",
     "page number" : 11,
     "bounding box" : [ 142.238, 667.811, 452.987, 710.052 ],
@@ -4991,7 +5008,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 196,
+          "id" : 198,
           "page number" : 11,
           "bounding box" : [ 161.666, 697.105, 195.604, 710.25 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -5009,7 +5026,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 197,
+          "id" : 199,
           "page number" : 11,
           "bounding box" : [ 221.01, 697.105, 251.905, 710.25 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -5027,7 +5044,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 198,
+          "id" : 200,
           "page number" : 11,
           "bounding box" : [ 264.258, 697.105, 284.865, 710.25 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -5045,7 +5062,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 199,
+          "id" : 201,
           "page number" : 11,
           "bounding box" : [ 297.219, 697.105, 319.037, 710.25 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -5063,7 +5080,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 200,
+          "id" : 202,
           "page number" : 11,
           "bounding box" : [ 331.391, 697.105, 353.209, 710.25 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -5081,7 +5098,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 201,
+          "id" : 203,
           "page number" : 11,
           "bounding box" : [ 365.562, 697.105, 394.864, 710.25 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -5099,7 +5116,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 202,
+          "id" : 204,
           "page number" : 11,
           "bounding box" : [ 407.218, 697.105, 446.611, 710.25 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -5121,7 +5138,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 203,
+          "id" : 205,
           "page number" : 11,
           "bounding box" : [ 148.614, 683.157, 208.658, 696.302 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -5139,7 +5156,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 204,
+          "id" : 206,
           "page number" : 11,
           "bounding box" : [ 226.912, 683.157, 246.003, 696.302 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -5157,7 +5174,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 205,
+          "id" : 207,
           "page number" : 11,
           "bounding box" : [ 265.016, 683.157, 284.107, 696.302 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -5175,7 +5192,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 206,
+          "id" : 208,
           "page number" : 11,
           "bounding box" : [ 298.583, 683.157, 317.674, 696.302 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -5193,7 +5210,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 207,
+          "id" : 209,
           "page number" : 11,
           "bounding box" : [ 332.754, 683.157, 351.845, 696.302 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -5211,7 +5228,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 208,
+          "id" : 210,
           "page number" : 11,
           "bounding box" : [ 370.668, 683.157, 389.759, 696.302 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -5229,7 +5246,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 209,
+          "id" : 211,
           "page number" : 11,
           "bounding box" : [ 417.369, 683.157, 436.46, 696.302 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -5251,7 +5268,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 210,
+          "id" : 212,
           "page number" : 11,
           "bounding box" : [ 168.032, 669.209, 189.239, 682.354 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -5269,7 +5286,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 211,
+          "id" : 213,
           "page number" : 11,
           "bounding box" : [ 226.912, 668.554, 246.003, 682.747 ],
           "font" : "NimbusRomNo9L-Medi",
@@ -5287,7 +5304,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 212,
+          "id" : 214,
           "page number" : 11,
           "bounding box" : [ 265.016, 668.554, 284.107, 682.747 ],
           "font" : "NimbusRomNo9L-Medi",
@@ -5305,7 +5322,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 213,
+          "id" : 215,
           "page number" : 11,
           "bounding box" : [ 298.583, 668.554, 317.674, 682.747 ],
           "font" : "NimbusRomNo9L-Medi",
@@ -5323,7 +5340,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 214,
+          "id" : 216,
           "page number" : 11,
           "bounding box" : [ 332.754, 668.554, 351.845, 682.747 ],
           "font" : "NimbusRomNo9L-Medi",
@@ -5341,7 +5358,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 215,
+          "id" : 217,
           "page number" : 11,
           "bounding box" : [ 370.668, 668.554, 389.759, 682.747 ],
           "font" : "NimbusRomNo9L-Medi",
@@ -5359,7 +5376,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 216,
+          "id" : 218,
           "page number" : 11,
           "bounding box" : [ 417.369, 668.554, 436.46, 682.747 ],
           "font" : "NimbusRomNo9L-Medi",
@@ -5371,17 +5388,17 @@
     } ]
   }, {
     "type" : "Caption",
-    "id" : 474,
+    "id" : 473,
     "page number" : 11,
     "bounding box" : [ 50.112, 634.307, 545.114, 658.266 ],
-    "linked content id" : 475,
+    "linked content id" : 474,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 9.963,
     "text color" : "[0.0]",
     "content" : "Table 8. Results on general benchmarks. “50” and “1k” are lexicon sizes. “Full” indicates the combined lexicon of all images in the benchmarks. “None” means lexicon-free."
   }, {
     "type" : "table",
-    "id" : 475,
+    "id" : 474,
     "level" : "10",
     "page number" : 11,
     "bounding box" : [ 91.054, 376.967, 504.17, 635.995 ],
@@ -5400,7 +5417,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 159,
+          "id" : 161,
           "page number" : 11,
           "bounding box" : [ 129.688, 616.273, 163.626, 629.418 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -5418,7 +5435,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 160,
+          "id" : 162,
           "page number" : 11,
           "bounding box" : [ 235.651, 623.048, 266.546, 636.193 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -5436,7 +5453,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 161,
+          "id" : 163,
           "page number" : 11,
           "bounding box" : [ 323.804, 623.048, 344.411, 636.193 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -5454,7 +5471,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 162,
+          "id" : 164,
           "page number" : 11,
           "bounding box" : [ 406.667, 623.048, 428.485, 636.193 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -5472,7 +5489,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 163,
+          "id" : 165,
           "page number" : 11,
           "bounding box" : [ 474.612, 623.048, 496.43, 636.193 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -5494,7 +5511,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 164,
+          "id" : 166,
           "page number" : 11,
           "bounding box" : [ 212.328, 609.498, 293.961, 622.643 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -5512,7 +5529,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 165,
+          "id" : 167,
           "page number" : 11,
           "bounding box" : [ 310.403, 609.498, 361.447, 622.643 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -5530,7 +5547,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 166,
+          "id" : 168,
           "page number" : 11,
           "bounding box" : [ 378.348, 609.498, 460.439, 622.643 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -5548,7 +5565,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 167,
+          "id" : 169,
           "page number" : 11,
           "bounding box" : [ 473.707, 609.498, 497.336, 622.643 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -5570,7 +5587,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 168,
+          "id" : 170,
           "page number" : 11,
           "bounding box" : [ 100.13, 527.805, 193.185, 608.75 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -5579,7 +5596,7 @@
           "content" : "Almaz´an et al [1] Yao et al. [52] R.-Serrano et al. [38] Jaderberg et al. [23] Su and Lu [44] Gordo [12]"
         }, {
           "type" : "list",
-          "id" : 169,
+          "id" : 171,
           "level" : "1",
           "page number" : 11,
           "bounding box" : [ 102.808, 500.706, 190.506, 527.401 ],
@@ -5590,7 +5607,7 @@
             "page number" : 11,
             "bounding box" : [ 102.808, 514.256, 190.506, 527.401 ],
             "font" : "NimbusRomNo9L-Regu",
-            "font size" : 10.9091,
+            "font size" : 10.909,
             "text color" : "[0.0]",
             "content" : "Jaderberg et al. [21]",
             "kids" : [ ]
@@ -5599,14 +5616,14 @@
             "page number" : 11,
             "bounding box" : [ 102.808, 500.706, 190.506, 513.851 ],
             "font" : "NimbusRomNo9L-Regu",
-            "font size" : 10.9091,
+            "font size" : 10.909,
             "text color" : "[0.0]",
             "content" : "Jaderberg et al. [22]",
             "kids" : [ ]
           } ]
         }, {
           "type" : "paragraph",
-          "id" : 170,
+          "id" : 172,
           "page number" : 11,
           "bounding box" : [ 97.43, 419.411, 195.885, 500.302 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -5615,7 +5632,7 @@
           "content" : "Shi, Bai, and Yao [41] Shi et al. [42] Lee and Osindero [27] Liu et al. [28] Yang et al. [51] Yin et al. [54]"
         }, {
           "type" : "list",
-          "id" : 171,
+          "id" : 173,
           "level" : "2",
           "page number" : 11,
           "bounding box" : [ 112.397, 392.313, 180.917, 419.007 ],
@@ -5626,7 +5643,7 @@
             "page number" : 11,
             "bounding box" : [ 112.397, 405.862, 180.917, 419.007 ],
             "font" : "NimbusRomNo9L-Regu",
-            "font size" : 10.9091,
+            "font size" : 10.909,
             "text color" : "[0.0]",
             "content" : "Cheng et al. [5]",
             "kids" : [ ]
@@ -5635,7 +5652,7 @@
             "page number" : 11,
             "bounding box" : [ 112.397, 392.313, 180.917, 405.458 ],
             "font" : "NimbusRomNo9L-Regu",
-            "font size" : 10.9091,
+            "font size" : 10.909,
             "text color" : "[0.0]",
             "content" : "Cheng et al. [6]",
             "kids" : [ ]
@@ -5651,7 +5668,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 172,
+          "id" : 174,
           "page number" : 11,
           "bounding box" : [ 208.237, 568.452, 283.957, 608.696 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -5660,7 +5677,7 @@
           "content" : "91.2 82.1 80.2 69.3 76.1 57.4 -"
         }, {
           "type" : "list",
-          "id" : 173,
+          "id" : 175,
           "level" : "1",
           "page number" : 11,
           "bounding box" : [ 215.967, 541.354, 283.963, 568.048 ],
@@ -5671,7 +5688,7 @@
             "page number" : 11,
             "bounding box" : [ 215.967, 554.903, 283.963, 568.048 ],
             "font" : "NimbusRomNo9L-Regu",
-            "font size" : 10.9091,
+            "font size" : 10.909,
             "text color" : "[0.0]",
             "content" : "- - -",
             "kids" : [ ]
@@ -5680,14 +5697,14 @@
             "page number" : 11,
             "bounding box" : [ 215.967, 541.354, 283.963, 554.499 ],
             "font" : "NimbusRomNo9L-Regu",
-            "font size" : 10.9091,
+            "font size" : 10.909,
             "text color" : "[0.0]",
             "content" : "- - -",
             "kids" : [ ]
           } ]
         }, {
           "type" : "paragraph",
-          "id" : 174,
+          "id" : 176,
           "page number" : 11,
           "bounding box" : [ 208.237, 500.706, 283.957, 540.95 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -5696,7 +5713,7 @@
           "content" : "93.3 86.6 95.5 89.6 97.1 92.7 -"
         }, {
           "type" : "paragraph",
-          "id" : 175,
+          "id" : 177,
           "page number" : 11,
           "bounding box" : [ 208.237, 473.608, 291.692, 500.302 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -5705,7 +5722,7 @@
           "content" : "97.8 95.0 81.2 96.2 93.8 81.9"
         }, {
           "type" : "list",
-          "id" : 176,
+          "id" : 178,
           "level" : "2",
           "page number" : 11,
           "bounding box" : [ 208.237, 446.51, 291.692, 473.204 ],
@@ -5716,7 +5733,7 @@
             "page number" : 11,
             "bounding box" : [ 208.237, 460.059, 291.692, 473.204 ],
             "font" : "NimbusRomNo9L-Regu",
-            "font size" : 10.9091,
+            "font size" : 10.909,
             "text color" : "[0.0]",
             "content" : "96.8 94.4 78.4",
             "kids" : [ ]
@@ -5725,14 +5742,14 @@
             "page number" : 11,
             "bounding box" : [ 208.237, 446.51, 291.692, 459.655 ],
             "font" : "NimbusRomNo9L-Regu",
-            "font size" : 10.9091,
+            "font size" : 10.909,
             "text color" : "[0.0]",
             "content" : "97.7 94.5 83.3",
             "kids" : [ ]
           } ]
         }, {
           "type" : "list",
-          "id" : 177,
+          "id" : 179,
           "level" : "3",
           "page number" : 11,
           "bounding box" : [ 208.237, 419.411, 291.692, 446.106 ],
@@ -5743,7 +5760,7 @@
             "page number" : 11,
             "bounding box" : [ 208.237, 432.961, 283.957, 446.106 ],
             "font" : "NimbusRomNo9L-Regu",
-            "font size" : 10.9091,
+            "font size" : 10.909,
             "text color" : "[0.0]",
             "content" : "97.8 96.1 -",
             "kids" : [ ]
@@ -5752,14 +5769,14 @@
             "page number" : 11,
             "bounding box" : [ 208.237, 419.411, 291.692, 432.556 ],
             "font" : "NimbusRomNo9L-Regu",
-            "font size" : 10.9091,
+            "font size" : 10.909,
             "text color" : "[0.0]",
             "content" : "98.7 96.1 78.2",
             "kids" : [ ]
           } ]
         }, {
           "type" : "list",
-          "id" : 179,
+          "id" : 181,
           "level" : "2",
           "page number" : 11,
           "bounding box" : [ 208.237, 391.658, 291.692, 419.007 ],
@@ -5770,7 +5787,7 @@
             "page number" : 11,
             "bounding box" : [ 208.237, 405.862, 291.692, 419.007 ],
             "font" : "NimbusRomNo9L-Regu",
-            "font size" : 10.9091,
+            "font size" : 10.909,
             "text color" : "[0.0]",
             "content" : "98.9 96.8 83.7",
             "kids" : [ ]
@@ -5779,7 +5796,7 @@
             "page number" : 11,
             "bounding box" : [ 208.237, 391.658, 291.69, 405.851 ],
             "font" : "NimbusRomNo9L-Medi",
-            "font size" : 10.9091,
+            "font size" : 10.909,
             "text color" : "[0.0]",
             "content" : "99.6 98.1 87.0",
             "kids" : [ ]
@@ -5795,7 +5812,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 181,
+          "id" : 183,
           "page number" : 11,
           "bounding box" : [ 306.312, 514.256, 359.177, 608.696 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -5804,23 +5821,23 @@
           "content" : "89.2 75.9 70.0 86.1 83.0 91.8 93.2 71.7"
         }, {
           "type" : "list",
-          "id" : 182,
+          "id" : 184,
           "level" : "1",
           "page number" : 11,
           "bounding box" : [ 306.312, 419.411, 361.905, 513.851 ],
-          "numbering style" : "unknown style",
+          "numbering style" : "arabic numbers",
           "number of list items" : 2,
           "list items" : [ {
             "type" : "list item",
             "page number" : 11,
             "bounding box" : [ 306.312, 486.502, 361.905, 513.851 ],
             "font" : "NimbusRomNo9L-Regu",
-            "font size" : 10.9091,
+            "font size" : 10.909,
             "text color" : "[0.0]",
             "content" : "95.4 80.7* 97.5 82.7",
             "kids" : [ {
               "type" : "list",
-              "id" : 180,
+              "id" : 182,
               "level" : "2",
               "page number" : 11,
               "bounding box" : [ 306.312, 460.059, 359.177, 486.753 ],
@@ -5831,7 +5848,7 @@
                 "page number" : 11,
                 "bounding box" : [ 306.312, 473.608, 359.177, 486.753 ],
                 "font" : "NimbusRomNo9L-Regu",
-                "font size" : 10.9091,
+                "font size" : 10.909,
                 "text color" : "[0.0]",
                 "content" : "95.5 81.9",
                 "kids" : [ ]
@@ -5840,7 +5857,7 @@
                 "page number" : 11,
                 "bounding box" : [ 306.312, 460.059, 359.177, 473.204 ],
                 "font" : "NimbusRomNo9L-Regu",
-                "font size" : 10.9091,
+                "font size" : 10.909,
                 "text color" : "[0.0]",
                 "content" : "96.3 80.7",
                 "kids" : [ ]
@@ -5851,14 +5868,14 @@
             "page number" : 11,
             "bounding box" : [ 306.312, 419.411, 359.177, 459.655 ],
             "font" : "NimbusRomNo9L-Regu",
-            "font size" : 10.9091,
+            "font size" : 10.909,
             "text color" : "[0.0]",
             "content" : "95.5 83.6 95.2 95.1 72.5",
             "kids" : [ ]
           } ]
         }, {
           "type" : "list",
-          "id" : 183,
+          "id" : 185,
           "level" : "2",
           "page number" : 11,
           "bounding box" : [ 306.312, 392.313, 359.177, 419.007 ],
@@ -5869,7 +5886,7 @@
             "page number" : 11,
             "bounding box" : [ 306.312, 405.862, 359.177, 419.007 ],
             "font" : "NimbusRomNo9L-Regu",
-            "font size" : 10.9091,
+            "font size" : 10.909,
             "text color" : "[0.0]",
             "content" : "95.7 82.2",
             "kids" : [ ]
@@ -5878,7 +5895,7 @@
             "page number" : 11,
             "bounding box" : [ 306.312, 392.313, 359.177, 405.458 ],
             "font" : "NimbusRomNo9L-Regu",
-            "font size" : 10.9091,
+            "font size" : 10.909,
             "text color" : "[0.0]",
             "content" : "96.0 82.8",
             "kids" : [ ]
@@ -5894,18 +5911,18 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "list",
-          "id" : 184,
+          "id" : 186,
           "level" : "1",
           "page number" : 11,
           "bounding box" : [ 374.257, 527.805, 450.441, 608.696 ],
-          "numbering style" : "unknown style",
+          "numbering style" : "unordered",
           "number of list items" : 3,
           "list items" : [ {
             "type" : "list item",
             "page number" : 11,
             "bounding box" : [ 374.257, 582.002, 450.441, 608.696 ],
             "font" : "NimbusRomNo9L-Regu",
-            "font size" : 10.9091,
+            "font size" : 10.909,
             "text color" : "[0.0]",
             "content" : "- - 88.5 80.3 -",
             "kids" : [ ]
@@ -5914,7 +5931,7 @@
             "page number" : 11,
             "bounding box" : [ 374.257, 541.354, 450.441, 581.597 ],
             "font" : "NimbusRomNo9L-Regu",
-            "font size" : 10.9091,
+            "font size" : 10.909,
             "text color" : "[0.0]",
             "content" : "- - 96.2 91.5 92.0 82.0 -",
             "kids" : [ ]
@@ -5923,14 +5940,14 @@
             "page number" : 11,
             "bounding box" : [ 381.986, 527.805, 450.441, 540.95 ],
             "font" : "NimbusRomNo9L-Regu",
-            "font size" : 10.9091,
+            "font size" : 10.909,
             "text color" : "[0.0]",
             "content" : "- - -",
             "kids" : [ ]
           } ]
         }, {
           "type" : "list",
-          "id" : 185,
+          "id" : 187,
           "level" : "2",
           "page number" : 11,
           "bounding box" : [ 374.257, 500.051, 460.894, 527.401 ],
@@ -5941,7 +5958,7 @@
             "page number" : 11,
             "bounding box" : [ 374.257, 514.256, 458.17, 527.401 ],
             "font" : "NimbusRomNo9L-Regu",
-            "font size" : 10.9091,
+            "font size" : 10.909,
             "text color" : "[0.0]",
             "content" : "97.8 97.0 89.6",
             "kids" : [ ]
@@ -5950,14 +5967,14 @@
             "page number" : 11,
             "bounding box" : [ 374.257, 500.051, 460.894, 514.244 ],
             "font" : "NimbusRomNo9L-Medi",
-            "font size" : 10.9091,
+            "font size" : 10.909,
             "text color" : "[0.0]",
             "content" : "98.7 98.6 93.1*",
             "kids" : [ ]
           } ]
         }, {
           "type" : "paragraph",
-          "id" : 186,
+          "id" : 188,
           "page number" : 11,
           "bounding box" : [ 374.257, 460.059, 458.17, 500.695 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -5966,7 +5983,7 @@
           "content" : "98.7 98.0 91.9 98.3 96.2 90.1 97.9 97.0 88.7"
         }, {
           "type" : "list",
-          "id" : 187,
+          "id" : 189,
           "level" : "2",
           "page number" : 11,
           "bounding box" : [ 374.257, 432.961, 458.17, 459.655 ],
@@ -5977,7 +5994,7 @@
             "page number" : 11,
             "bounding box" : [ 374.257, 446.51, 458.17, 459.655 ],
             "font" : "NimbusRomNo9L-Regu",
-            "font size" : 10.9091,
+            "font size" : 10.909,
             "text color" : "[0.0]",
             "content" : "96.9 95.3 89.9",
             "kids" : [ ]
@@ -5986,14 +6003,14 @@
             "page number" : 11,
             "bounding box" : [ 374.257, 432.961, 450.435, 446.106 ],
             "font" : "NimbusRomNo9L-Regu",
-            "font size" : 10.9091,
+            "font size" : 10.909,
             "text color" : "[0.0]",
             "content" : "97.7 - -",
             "kids" : [ ]
           } ]
         }, {
           "type" : "list",
-          "id" : 188,
+          "id" : 190,
           "level" : "2",
           "page number" : 11,
           "bounding box" : [ 374.257, 405.862, 458.17, 432.556 ],
@@ -6004,7 +6021,7 @@
             "page number" : 11,
             "bounding box" : [ 374.257, 419.411, 458.17, 432.556 ],
             "font" : "NimbusRomNo9L-Regu",
-            "font size" : 10.9091,
+            "font size" : 10.909,
             "text color" : "[0.0]",
             "content" : "97.6 96.5 81.1",
             "kids" : [ ]
@@ -6013,14 +6030,14 @@
             "page number" : 11,
             "bounding box" : [ 374.257, 405.862, 458.17, 419.007 ],
             "font" : "NimbusRomNo9L-Regu",
-            "font size" : 10.9091,
+            "font size" : 10.909,
             "text color" : "[0.0]",
             "content" : "98.5 96.7 91.5",
             "kids" : [ ]
           } ]
         }, {
           "type" : "list",
-          "id" : 189,
+          "id" : 191,
           "level" : "3",
           "page number" : 11,
           "bounding box" : [ 374.257, 392.313, 458.17, 405.458 ],
@@ -6031,7 +6048,7 @@
             "page number" : 11,
             "bounding box" : [ 374.257, 392.313, 458.17, 405.458 ],
             "font" : "NimbusRomNo9L-Regu",
-            "font size" : 10.9091,
+            "font size" : 10.909,
             "text color" : "[0.0]",
             "content" : "98.5 97.1 91.5",
             "kids" : [ ]
@@ -6047,7 +6064,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 190,
+          "id" : 192,
           "level" : "1",
           "page number" : 11,
           "bounding box" : [ 473.248, 392.313, 497.793, 608.696 ],
@@ -6070,7 +6087,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 191,
+          "id" : 193,
           "page number" : 11,
           "bounding box" : [ 136.053, 378.365, 157.26, 391.51 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -6088,7 +6105,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 192,
+          "id" : 194,
           "page number" : 11,
           "bounding box" : [ 208.237, 377.71, 291.69, 391.903 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -6106,7 +6123,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 193,
+          "id" : 195,
           "page number" : 11,
           "bounding box" : [ 306.312, 377.71, 359.176, 391.903 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -6124,7 +6141,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 194,
+          "id" : 196,
           "page number" : 11,
           "bounding box" : [ 374.257, 377.71, 458.168, 391.903 ],
           "font" : "NimbusRomNo9L-Medi",
@@ -6142,7 +6159,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 195,
+          "id" : 197,
           "page number" : 11,
           "bounding box" : [ 475.976, 377.71, 495.067, 391.903 ],
           "font" : "NimbusRomNo9L-Medi",
@@ -6154,7 +6171,7 @@
     } ]
   }, {
     "type" : "heading",
-    "id" : 476,
+    "id" : 475,
     "level" : "Subtitle",
     "page number" : 11,
     "bounding box" : [ 50.112, 342.346, 219.975, 356.604 ],
@@ -6165,7 +6182,7 @@
     "content" : "4.5. Results on General Benchmarks"
   }, {
     "type" : "paragraph",
-    "id" : 477,
+    "id" : 476,
     "page number" : 11,
     "bounding box" : [ 50.112, 269.082, 286.359, 336.424 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -6174,7 +6191,7 @@
     "content" : "The MORAN was evaluated on general benchmarks in which most of the testing samples are regular text and a small part of them are irregular text. The MORAN was compared with 16 methods and the results are shown in Table 8."
   }, {
     "type" : "paragraph",
-    "id" : 478,
+    "id" : 477,
     "page number" : 11,
     "bounding box" : [ 50.112, 160.477, 286.359, 268.466 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -6183,7 +6200,7 @@
     "content" : "In Table 8, the MORAN outperforms all current state-of-the-art methods in lexicon-free mode. As Jaderberg [22] treated each word as a category and the model cannot predict out-of-vocabulary words, we highlight these results by adding an asterisk. FAN [5] trained with pixel-level supervision is also beyond the scope of consideration. We hence compare the MORAN with the baseline of FAN."
   }, {
     "type" : "heading",
-    "id" : 479,
+    "id" : 478,
     "level" : "Subtitle",
     "page number" : 11,
     "bounding box" : [ 50.112, 137.649, 187.098, 151.907 ],
@@ -6194,7 +6211,7 @@
     "content" : "4.6. Results on Irregular Text"
   }, {
     "type" : "paragraph",
-    "id" : 480,
+    "id" : 479,
     "page number" : 11,
     "bounding box" : [ 50.112, 77.935, 286.359, 131.728 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -6203,7 +6220,7 @@
     "content" : "The MORAN was also evaluated on irregular text datasets to reveal the contribution of the MORN. The results on SVT-Perspective, CUTE80 and IC15 are shown in Table 9. The MORAN is still the best of"
   }, {
     "type" : "paragraph",
-    "id" : 481,
+    "id" : 480,
     "page number" : 11,
     "bounding box" : [ 308.862, 343.018, 362.197, 356.163 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -6212,7 +6229,7 @@
     "content" : "all methods."
   }, {
     "type" : "paragraph",
-    "id" : 482,
+    "id" : 481,
     "page number" : 11,
     "bounding box" : [ 308.862, 260.514, 545.109, 341.405 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -6221,7 +6238,7 @@
     "content" : "For the SVT-Perspective dataset, many samples are low-resolution and perspective. The result of the MORAN with 50-word lexicon is the same as that of the method of Liu et al. [28]. However, the MORAN outperforms all methods in the setting without any lexicon."
   }, {
     "type" : "paragraph",
-    "id" : 483,
+    "id" : 482,
     "page number" : 11,
     "bounding box" : [ 308.862, 178.011, 545.109, 258.902 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -6230,7 +6247,7 @@
     "content" : "In addition to perspective text, the MORAN is able to recognize curved text. Some examples are demonstrated in Fig. 9. The MORAN is able to rectify most curved text in CUTE80 and correctly recognize them. It is hence adequately robust to rectify text with small curve angle."
   }, {
     "type" : "heading",
-    "id" : 484,
+    "id" : 483,
     "level" : "Subtitle",
     "page number" : 11,
     "bounding box" : [ 308.862, 152.195, 452.533, 166.453 ],
@@ -6241,7 +6258,7 @@
     "content" : "4.7. Limitation of the MORAN"
   }, {
     "type" : "paragraph",
-    "id" : 485,
+    "id" : 484,
     "page number" : 11,
     "bounding box" : [ 308.862, 77.935, 545.109, 145.277 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -6250,12 +6267,12 @@
     "content" : "For fair comparisons and good repeatability, we chose the widely used training datasets, which contain only horizontal synthetic text. Therefore, because of complicated background, the MORAN will fail when the curve angle is too large. Such cases are given in the"
   }, {
     "type" : "footer",
-    "id" : 486,
+    "id" : 485,
     "page number" : 11,
     "bounding box" : [ 292.157, 48.047, 303.066, 61.192 ],
     "kids" : [ {
       "type" : "paragraph",
-      "id" : 260,
+      "id" : 262,
       "page number" : 11,
       "bounding box" : [ 292.157, 48.047, 303.066, 61.192 ],
       "font" : "NimbusRomNo9L-Regu",
@@ -6265,17 +6282,17 @@
     } ]
   }, {
     "type" : "Caption",
-    "id" : 487,
+    "id" : 486,
     "page number" : 12,
     "bounding box" : [ 50.112, 698.451, 545.114, 722.411 ],
-    "linked content id" : 488,
+    "linked content id" : 487,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 9.963,
     "text color" : "[0.0]",
     "content" : "Table 9. Results on irregular datasets. “50” is lexicon sizes. “Full” indicates the combined lexicon of all images in the benchmarks. “None” means lexicon-free."
   }, {
     "type" : "table",
-    "id" : 488,
+    "id" : 487,
     "level" : "11",
     "page number" : 12,
     "bounding box" : [ 133.875, 535.956, 461.349, 700.139 ],
@@ -6294,7 +6311,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 217,
+          "id" : 219,
           "page number" : 12,
           "bounding box" : [ 165.118, 680.417, 199.056, 693.562 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -6312,7 +6329,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 218,
+          "id" : 220,
           "page number" : 12,
           "bounding box" : [ 254.206, 687.192, 327.297, 700.337 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -6330,7 +6347,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 219,
+          "id" : 221,
           "page number" : 12,
           "bounding box" : [ 359.143, 687.192, 398.536, 700.337 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -6348,7 +6365,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 220,
+          "id" : 222,
           "page number" : 12,
           "bounding box" : [ 422.804, 687.192, 444.622, 700.337 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -6370,7 +6387,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 221,
+          "id" : 223,
           "page number" : 12,
           "bounding box" : [ 244.995, 673.643, 342.871, 686.788 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -6388,7 +6405,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 222,
+          "id" : 224,
           "page number" : 12,
           "bounding box" : [ 367.025, 673.643, 390.654, 686.788 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -6406,7 +6423,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 223,
+          "id" : 225,
           "page number" : 12,
           "bounding box" : [ 421.899, 673.643, 445.528, 686.788 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -6428,7 +6445,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 224,
+          "id" : 226,
           "page number" : 12,
           "bounding box" : [ 140.251, 578.4, 223.924, 672.84 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -6437,7 +6454,7 @@
           "content" : "ABBYY et al. [48] Mishra et al. [32] Wang et al. [50] Phan et al. [35] Shi et al. [42] Yang et al. [51] Liu et al. [28]"
         }, {
           "type" : "list",
-          "id" : 225,
+          "id" : 227,
           "level" : "1",
           "page number" : 12,
           "bounding box" : [ 147.827, 551.301, 216.347, 577.996 ],
@@ -6448,7 +6465,7 @@
             "page number" : 12,
             "bounding box" : [ 147.827, 564.851, 216.347, 577.996 ],
             "font" : "NimbusRomNo9L-Regu",
-            "font size" : 10.9091,
+            "font size" : 10.909,
             "text color" : "[0.0]",
             "content" : "Cheng et al. [5]",
             "kids" : [ ]
@@ -6457,7 +6474,7 @@
             "page number" : 12,
             "bounding box" : [ 147.827, 551.301, 216.347, 564.446 ],
             "font" : "NimbusRomNo9L-Regu",
-            "font size" : 10.9091,
+            "font size" : 10.909,
             "text color" : "[0.0]",
             "content" : "Cheng et al. [6]",
             "kids" : [ ]
@@ -6473,7 +6490,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 226,
+          "id" : 228,
           "page number" : 12,
           "bounding box" : [ 240.904, 605.498, 340.602, 672.84 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -6482,7 +6499,7 @@
           "content" : "40.5 26.1 45.7 24.7 40.2 32.4 75.6 67.0 91.2 77.4 71.8"
         }, {
           "type" : "list",
-          "id" : 227,
+          "id" : 229,
           "level" : "1",
           "page number" : 12,
           "bounding box" : [ 240.904, 577.745, 340.602, 605.094 ],
@@ -6493,7 +6510,7 @@
             "page number" : 12,
             "bounding box" : [ 240.904, 591.949, 340.602, 605.094 ],
             "font" : "NimbusRomNo9L-Regu",
-            "font size" : 10.9091,
+            "font size" : 10.909,
             "text color" : "[0.0]",
             "content" : "93.0 80.2 75.8",
             "kids" : [ ]
@@ -6502,14 +6519,14 @@
             "page number" : 12,
             "bounding box" : [ 240.904, 577.745, 340.595, 591.938 ],
             "font" : "NimbusRomNo9L-Medi",
-            "font size" : 10.9091,
+            "font size" : 10.909,
             "text color" : "[0.0]",
             "content" : "94.3 83.6 73.5",
             "kids" : [ ]
           } ]
         }, {
           "type" : "paragraph",
-          "id" : 228,
+          "id" : 230,
           "page number" : 12,
           "bounding box" : [ 240.904, 551.301, 340.602, 577.996 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -6527,7 +6544,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 229,
+          "id" : 231,
           "level" : "1",
           "page number" : 12,
           "bounding box" : [ 369.294, 551.301, 388.385, 672.84 ],
@@ -6546,7 +6563,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 230,
+          "id" : 232,
           "level" : "1",
           "page number" : 12,
           "bounding box" : [ 424.168, 551.301, 443.259, 672.84 ],
@@ -6569,7 +6586,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 231,
+          "id" : 233,
           "page number" : 12,
           "bounding box" : [ 171.483, 537.354, 192.69, 550.499 ],
           "font" : "NimbusRomNo9L-Regu",
@@ -6587,7 +6604,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 232,
+          "id" : 234,
           "page number" : 12,
           "bounding box" : [ 240.904, 536.699, 340.602, 550.892 ],
           "font" : "NimbusRomNo9L-Medi",
@@ -6605,7 +6622,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 233,
+          "id" : 235,
           "page number" : 12,
           "bounding box" : [ 369.294, 536.699, 388.385, 550.892 ],
           "font" : "NimbusRomNo9L-Medi",
@@ -6623,7 +6640,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 234,
+          "id" : 236,
           "page number" : 12,
           "bounding box" : [ 424.168, 536.699, 443.259, 550.892 ],
           "font" : "NimbusRomNo9L-Medi",
@@ -6634,33 +6651,28 @@
       } ]
     } ]
   }, {
-    "type" : "line",
-    "id" : 489,
-    "page number" : 12,
-    "bounding box" : [ 50.909, 515.484, 284.767, 516.03 ]
-  }, {
     "type" : "image",
-    "id" : 490,
+    "id" : 488,
     "page number" : 12,
     "bounding box" : [ 50.909, 515.484, 461.349, 549.903 ]
   }, {
     "type" : "image",
-    "id" : 491,
+    "id" : 489,
     "page number" : 12,
     "bounding box" : [ 50.112, 260.903, 291.056, 487.672 ]
   }, {
     "type" : "Caption",
-    "id" : 492,
+    "id" : 490,
     "page number" : 12,
     "bounding box" : [ 62.159, 491.553, 271.457, 514.336 ],
-    "linked content id" : 491,
+    "linked content id" : 489,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 10.909,
     "text color" : "[0.0]",
     "content" : "Input Image Rectiﬁed Images Ground Truth Prediction"
   }, {
     "type" : "paragraph",
-    "id" : 493,
+    "id" : 491,
     "level" : "12",
     "page number" : 12,
     "bounding box" : [ 50.112, 484.325, 284.658, 497.47 ],
@@ -6670,7 +6682,7 @@
     "content" : "—————————————————————–"
   }, {
     "type" : "paragraph",
-    "id" : 494,
+    "id" : 492,
     "page number" : 12,
     "bounding box" : [ 230.82, 460.231, 250.816, 487.832 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -6679,7 +6691,7 @@
     "content" : "west west"
   }, {
     "type" : "paragraph",
-    "id" : 495,
+    "id" : 493,
     "level" : "13",
     "page number" : 12,
     "bounding box" : [ 218.772, 443.365, 273.318, 456.51 ],
@@ -6689,7 +6701,7 @@
     "content" : "—————"
   }, {
     "type" : "paragraph",
-    "id" : 496,
+    "id" : 494,
     "page number" : 12,
     "bounding box" : [ 230.82, 412.042, 258.093, 442.053 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -6698,7 +6710,7 @@
     "content" : "united united"
   }, {
     "type" : "paragraph",
-    "id" : 497,
+    "id" : 495,
     "level" : "13",
     "page number" : 12,
     "bounding box" : [ 218.772, 402.404, 273.318, 415.549 ],
@@ -6708,7 +6720,7 @@
     "content" : "—————"
   }, {
     "type" : "paragraph",
-    "id" : 498,
+    "id" : 496,
     "page number" : 12,
     "bounding box" : [ 230.82, 378.31, 261.715, 403.502 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -6717,7 +6729,7 @@
     "content" : "arsenal arsenal"
   }, {
     "type" : "paragraph",
-    "id" : 499,
+    "id" : 497,
     "level" : "13",
     "page number" : 12,
     "bounding box" : [ 218.772, 366.263, 273.318, 379.408 ],
@@ -6727,7 +6739,7 @@
     "content" : "—————"
   }, {
     "type" : "paragraph",
-    "id" : 500,
+    "id" : 498,
     "page number" : 12,
     "bounding box" : [ 230.82, 342.168, 264.758, 367.36 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -6736,7 +6748,7 @@
     "content" : "football football"
   }, {
     "type" : "paragraph",
-    "id" : 501,
+    "id" : 499,
     "level" : "13",
     "page number" : 12,
     "bounding box" : [ 218.772, 306.027, 273.318, 343.266 ],
@@ -6746,7 +6758,7 @@
     "content" : "————manchester messageid"
   }, {
     "type" : "paragraph",
-    "id" : 502,
+    "id" : 500,
     "level" : "13",
     "page number" : 12,
     "bounding box" : [ 218.772, 267.476, 273.318, 307.125 ],
@@ -6756,7 +6768,7 @@
     "content" : "————briogestone contracers"
   }, {
     "type" : "paragraph",
-    "id" : 503,
+    "id" : 501,
     "level" : "12",
     "page number" : 12,
     "bounding box" : [ 50.112, 253.019, 284.658, 266.164 ],
@@ -6766,7 +6778,7 @@
     "content" : "—————————————————————–"
   }, {
     "type" : "paragraph",
-    "id" : 504,
+    "id" : 502,
     "page number" : 12,
     "bounding box" : [ 50.112, 210.283, 286.365, 258.153 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -6775,7 +6787,7 @@
     "content" : "Figure 9. Effects of different curve angles of scene text. The ﬁrst four rows are text with small curve angles and the last two rows are text with large curve angles. The MORAN can rectify irregular text with small curve angles."
   }, {
     "type" : "paragraph",
-    "id" : 505,
+    "id" : 503,
     "page number" : 12,
     "bounding box" : [ 50.112, 147.08, 286.359, 187.323 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -6784,7 +6796,7 @@
     "content" : "last two rows of Fig. 9. MORAN mistakenly regards the complicated background as foreground. However, such samples are rare in training datasets."
   }, {
     "type" : "paragraph",
-    "id" : 506,
+    "id" : 504,
     "page number" : 12,
     "bounding box" : [ 50.112, 77.935, 286.359, 145.277 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -6793,7 +6805,7 @@
     "content" : "Furthermore, with the existing training datasets and without any data augmentation, the MORAN focuses more on horizontal irregular text. Note that there are many vertical text in IC15. However, the MORAN is not designed for vertical text. Our method was"
   }, {
     "type" : "paragraph",
-    "id" : 507,
+    "id" : 505,
     "page number" : 12,
     "bounding box" : [ 308.862, 488.457, 545.109, 515.151 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -6802,7 +6814,7 @@
     "content" : "proposed for the complicated deformation of text within a cropped horizontal rectangle."
   }, {
     "type" : "paragraph",
-    "id" : 508,
+    "id" : 506,
     "page number" : 12,
     "bounding box" : [ 308.862, 325.815, 545.109, 488.001 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -6811,7 +6823,7 @@
     "content" : "The experiments above are all based on cropped text recognition. A MORAN without a text detector is not an end-to-end scene text recognition system. Actually, in more application scenarios, irregular and multioriented text are challenging both for detection and recognition, which have attracted great interest. For instance, Liu et al. [29] and Ch’ng et al. [7] released complicated datasets. Sain et al. [39] and He et al. [18] proposed methods to improve the performance of multi-oriented text detection. Therefore, scene text recognition still remains a challenging problem waiting for solutions."
   }, {
     "type" : "heading",
-    "id" : 509,
+    "id" : 507,
     "level" : "Subtitle",
     "page number" : 12,
     "bounding box" : [ 308.862, 300.736, 377.951, 316.29 ],
@@ -6822,7 +6834,7 @@
     "content" : "5. Conclusion"
   }, {
     "type" : "paragraph",
-    "id" : 510,
+    "id" : 508,
     "page number" : 12,
     "bounding box" : [ 308.862, 77.935, 545.109, 294.318 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -6831,12 +6843,12 @@
     "content" : "In this paper, we presented a multi-object rectiﬁed attention network (MORAN) for scene text recognition. The proposed framework involves two stages: rectiﬁcation and recognition. First, a multiobject rectiﬁcation network, which is free of geometric constraints and ﬂexible enough to handle complicated deformations, was proposed to transform an image containing irregular text into a more readable one. The rectiﬁed patterns decrease the difﬁculty of recognition. Then, an attention-based sequence recognition network was designed to recognize the rectiﬁed image and outputs the characters in sequence. Moreover, a fractional pickup method was proposed to expand the visual ﬁeld of the attention-based decoder. The attention-based decoder thus obtains more context information and gains robustness. To"
   }, {
     "type" : "footer",
-    "id" : 511,
+    "id" : 509,
     "page number" : 12,
     "bounding box" : [ 292.157, 48.047, 303.066, 61.192 ],
     "kids" : [ {
       "type" : "paragraph",
-      "id" : 261,
+      "id" : 263,
       "page number" : 12,
       "bounding box" : [ 292.157, 48.047, 303.066, 61.192 ],
       "font" : "NimbusRomNo9L-Regu",
@@ -6846,7 +6858,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 512,
+    "id" : 510,
     "page number" : 13,
     "bounding box" : [ 50.112, 597.583, 286.359, 719.121 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -6855,7 +6867,7 @@
     "content" : "efﬁciently train the network, we designed a curriculum learning strategy to respectively strengthen each subnetwork. The proposed MORAN is trained in a weak-supervised way, which requires only images and the corresponding text labels. Experiments on both regular and irregular datasets, including IIIT5K, SVT, ICDAR2003, ICDAR2013, ICDAR2015, SVTPerspective and CUTE80, demonstrate the outstanding performance of the MORAN."
   }, {
     "type" : "paragraph",
-    "id" : 513,
+    "id" : 511,
     "page number" : 13,
     "bounding box" : [ 50.112, 475.288, 286.359, 596.827 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -6864,7 +6876,7 @@
     "content" : "In future, it is worth extending this method to deal with arbitrary-oriented text recognition, which is more challenging due to the wide variety of text and background. Moreover, the improvements in endto-end text recognition performance come not just from the recognition model, but also from detection model. Therefore, ﬁnding a proper and effective way to combine the MORAN with a scene text detector is also a direction worth of study."
   }, {
     "type" : "heading",
-    "id" : 514,
+    "id" : 512,
     "level" : "Subtitle",
     "page number" : 13,
     "bounding box" : [ 50.112, 449.312, 144.295, 464.866 ],
@@ -6875,7 +6887,7 @@
     "content" : "Acknowledgement"
   }, {
     "type" : "paragraph",
-    "id" : 515,
+    "id" : 513,
     "page number" : 13,
     "bounding box" : [ 50.112, 415.9, 286.359, 442.595 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -6884,7 +6896,7 @@
     "content" : "This research was supported by the National Key R&D Program of China (Grant No.:"
   }, {
     "type" : "list",
-    "id" : 516,
+    "id" : 514,
     "level" : "13",
     "page number" : 13,
     "bounding box" : [ 50.112, 388.802, 286.359, 415.496 ],
@@ -6895,7 +6907,7 @@
       "page number" : 13,
       "bounding box" : [ 50.112, 402.351, 286.359, 415.496 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 10.9091,
+      "font size" : 10.909,
       "text color" : "[0.0]",
       "content" : "2016YFB1001405), GD-NSF (Grant No.:",
       "kids" : [ ]
@@ -6904,14 +6916,14 @@
       "page number" : 13,
       "bounding box" : [ 50.112, 388.802, 286.359, 401.947 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 10.9091,
+      "font size" : 10.909,
       "text color" : "[0.0]",
       "content" : "2017A030312006), NSFC (Grant No.: 61472144,",
       "kids" : [ ]
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 517,
+    "id" : 515,
     "page number" : 13,
     "bounding box" : [ 50.112, 348.154, 286.359, 388.398 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -6920,7 +6932,7 @@
     "content" : "61673182), GDSTP (Grant No.: 2015B010101004, 2015B010130003, 2017A030312006), GZSTP (Grant No.: 201607010227)."
   }, {
     "type" : "paragraph",
-    "id" : 518,
+    "id" : 516,
     "page number" : 13,
     "bounding box" : [ 50.112, 322.178, 105.656, 337.732 ],
     "font" : "NimbusRomNo9L-Medi",
@@ -6929,19 +6941,19 @@
     "content" : "References"
   }, {
     "type" : "list",
-    "id" : 519,
+    "id" : 517,
     "level" : "14",
     "page number" : 13,
     "bounding box" : [ 55.093, 78.201, 286.366, 316.229 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 5,
-    "next list id" : 520,
+    "next list id" : 518,
     "list items" : [ {
       "type" : "list item",
       "page number" : 13,
       "bounding box" : [ 55.093, 268.31, 286.364, 316.229 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[1] J. Almaz´an, A. Gordo, A. Forn´es, and E. Valveny. Word spotting and recognition with embedded attributes. IEEE Trans. Pattern Anal. Mach. Intell., 36(12):2552–2566, 2014.",
       "kids" : [ ]
@@ -6950,7 +6962,7 @@
       "page number" : 13,
       "bounding box" : [ 55.093, 229.749, 286.365, 265.663 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[2] D. Bahdanau, K. Cho, and Y. Bengio. Neural machine translation by jointly learning to align and translate. CoRR, abs/1409.0473 (2014).",
       "kids" : [ ]
@@ -6959,7 +6971,7 @@
       "page number" : 13,
       "bounding box" : [ 55.093, 179.233, 286.365, 227.103 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[3] A. Bissacco, M. Cummins, Y. Netzer, and H. Neven. Photoocr: Reading text in uncontrolled conditions. In Proceedings of International Conference on Computer Vision (ICCV), pages 785–792, 2013.",
       "kids" : [ ]
@@ -6968,7 +6980,7 @@
       "page number" : 13,
       "bounding box" : [ 55.093, 140.672, 286.365, 176.587 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[4] F. L. Bookstein. Principal warps: Thin-plate splines and the decomposition of deformations. IEEE Trans. Pattern Anal. Mach. Intell., 11(6):567–585, 1989.",
       "kids" : [ ]
@@ -6977,27 +6989,27 @@
       "page number" : 13,
       "bounding box" : [ 55.093, 78.201, 286.366, 138.026 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[5] Z. Cheng, F. Bai, Y. Xu, G. Zheng, S. Pu, and S. Zhou. Focusing attention: Towards accurate text recognition in natural images. In Proceedings of International Conference on Computer Vision (ICCV), pages 5086– 5094, 2017.",
       "kids" : [ ]
     } ]
   }, {
     "type" : "list",
-    "id" : 520,
+    "id" : 518,
     "level" : "14",
     "page number" : 13,
     "bounding box" : [ 308.862, 78.201, 545.116, 718.246 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 12,
-    "previous list id" : 519,
-    "next list id" : 524,
+    "previous list id" : 517,
+    "next list id" : 522,
     "list items" : [ {
       "type" : "list item",
       "page number" : 13,
       "bounding box" : [ 313.843, 658.421, 545.115, 718.246 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[6] Z. Cheng, Y. Xu, F. Bai, Y. Niu, S. Pu, and S. Zhou. AON: Towards arbitrarily-oriented text recognition. In Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR), pages 5571– 5579, 2018.",
       "kids" : [ ]
@@ -7006,7 +7018,7 @@
       "page number" : 13,
       "bounding box" : [ 313.843, 596.979, 545.115, 656.804 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[7] C. K. Ch’ng and C. S. Chan. Total-text: A comprehensive dataset for scene text detection and recognition. In Proceedings of International Conference on Document Analysis and Recognition (ICDAR), pages 935–942, 2017.",
       "kids" : [ ]
@@ -7015,7 +7027,7 @@
       "page number" : 13,
       "bounding box" : [ 313.843, 511.627, 545.112, 595.412 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[8] K. Cho, B. van Merrienboer, C¸. G¨ulc¸ehre, D. Bahdanau, F. Bougares, H. Schwenk, and Y. Bengio. Learning phrase representations using RNN encoderdecoder for statistical machine translation. In Proceedings of the 2014 Conference on Empirical Methods in Natural Language Processing, (EMNLP), pages 1724–1734, 2014.",
       "kids" : [ ]
@@ -7024,7 +7036,7 @@
       "page number" : 13,
       "bounding box" : [ 313.843, 462.14, 545.115, 510.01 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[9] J. Dai, H. Qi, Y. Xiong, Y. Li, G. Zhang, H. Hu, and Y. Wei. Deformable convolutional networks. In Proceedings of International Conference on Computer Vision (ICCV), pages 764–773, 2017.",
       "kids" : [ ]
@@ -7033,7 +7045,7 @@
       "page number" : 13,
       "bounding box" : [ 308.862, 412.653, 545.115, 460.523 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[10] N. Dalal and B. Triggs. Histograms of oriented gradients for human detection. In Proceedings of Computer Vision and Pattern Recognition (CVPR), pages 886–893, 2005.",
       "kids" : [ ]
@@ -7042,7 +7054,7 @@
       "page number" : 13,
       "bounding box" : [ 308.862, 375.122, 545.116, 411.086 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[11] L. G´omez and D. Karatzas. Textproposals: a textspeciﬁc selective search algorithm for word spotting in the wild. Pattern Recognit., 70:60–74, 2017.",
       "kids" : [ ]
@@ -7051,7 +7063,7 @@
       "page number" : 13,
       "bounding box" : [ 308.862, 325.635, 545.115, 373.504 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[12] A. Gordo. Supervised mid-level features for word image representation. In Proceedings of Computer Vision and Pattern Recognition (CVPR), pages 2956– 2964, 2015.",
       "kids" : [ ]
@@ -7060,7 +7072,7 @@
       "page number" : 13,
       "bounding box" : [ 308.862, 264.193, 545.116, 324.067 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[13] A. Graves, S. Fern´andez, F. Gomez, and J. Schmidhuber. Connectionist temporal classiﬁcation: labelling unsegmented sequence data with recurrent neural networks. In Proceedings of International Conference on Machine Learning (ICML), pages 369–376, 2006.",
       "kids" : [ ]
@@ -7069,7 +7081,7 @@
       "page number" : 13,
       "bounding box" : [ 308.862, 214.706, 545.115, 262.576 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[14] J. Gu, Z. Wang, J. Kuen, L. Ma, A. Shahroudy, B. Shuai, T. Liu, X. Wang, G. Wang, J. Cai, et al. Recent advances in convolutional neural networks. Pattern Recognit., 77:354–377, 2018.",
       "kids" : [ ]
@@ -7078,7 +7090,7 @@
       "page number" : 13,
       "bounding box" : [ 308.862, 165.219, 545.115, 213.089 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[15] A. Gupta, A. Vedaldi, and A. Zisserman. Synthetic data for text localisation in natural images. In Proceedings of Computer Vision and Pattern Recognition (CVPR), pages 2315–2324, 2016.",
       "kids" : [ ]
@@ -7087,7 +7099,7 @@
       "page number" : 13,
       "bounding box" : [ 308.862, 115.732, 545.115, 163.602 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[16] K. He, X. Zhang, S. Ren, and J. Sun. Deep residual learning for image recognition. In Proceedings of Computer Vision and Pattern Recognition (CVPR), pages 770–778, 2016.",
       "kids" : [ ]
@@ -7096,19 +7108,19 @@
       "page number" : 13,
       "bounding box" : [ 308.862, 78.201, 545.115, 114.115 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[17] P. He, W. Huang, Y. Qiao, C. C. Loy, and X. Tang. Reading scene text in deep convolutional sequences. In Proceedings of Association for the Advancement",
       "kids" : [ ]
     } ]
   }, {
     "type" : "footer",
-    "id" : 522,
+    "id" : 520,
     "page number" : 13,
     "bounding box" : [ 292.157, 48.047, 303.066, 61.192 ],
     "kids" : [ {
       "type" : "paragraph",
-      "id" : 262,
+      "id" : 264,
       "page number" : 13,
       "bounding box" : [ 292.157, 48.047, 303.066, 61.192 ],
       "font" : "NimbusRomNo9L-Regu",
@@ -7118,21 +7130,21 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 524,
+    "id" : 522,
     "level" : "14",
     "page number" : 14,
     "bounding box" : [ 50.112, 78.201, 286.367, 718.246 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 12,
-    "previous list id" : 520,
-    "next list id" : 525,
+    "previous list id" : 518,
+    "next list id" : 523,
     "list items" : [ {
       "type" : "list item",
-      "id" : 523,
+      "id" : 521,
       "page number" : 14,
       "bounding box" : [ 72.164, 694.287, 286.367, 718.246 ],
       "font" : "NimbusRomNo9L-ReguItal",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "of Artiﬁcial Intelligence (AAAI), pages 3501–3508, 2016.",
       "kids" : [ ]
@@ -7141,7 +7153,7 @@
       "page number" : 14,
       "bounding box" : [ 50.112, 643.713, 286.365, 691.583 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[18] W. He, X.-Y. Zhang, F. Yin, and C.-L. Liu. Multioriented and multi-lingual scene text detection with direct regression. IEEE Trans. Image Processing, 27(11):5406–5419, 2018.",
       "kids" : [ ]
@@ -7150,7 +7162,7 @@
       "page number" : 14,
       "bounding box" : [ 50.112, 617.05, 286.366, 641.009 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[19] S. Hochreiter and J. Schmidhuber. Long short-term memory. Neural computation, 9(8):1735–1780, 1997.",
       "kids" : [ ]
@@ -7159,7 +7171,7 @@
       "page number" : 14,
       "bounding box" : [ 50.112, 554.521, 286.365, 614.346 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[20] M. Jaderberg, K. Simonyan, A. Vedaldi, and A. Zisserman. Synthetic data and artiﬁcial neural networks for natural scene text recognition. In Proceedings of Advances in Neural Information Processing Deep Learn. Workshop (NIPS-W), 2014.",
       "kids" : [ ]
@@ -7168,7 +7180,7 @@
       "page number" : 14,
       "bounding box" : [ 50.112, 491.992, 286.365, 551.817 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[21] M. Jaderberg, K. Simonyan, A. Vedaldi, and A. Zisserman. Deep structured output learning for unconstrained text recognition. In Proceedings of International Conference on Learning Representations (ICLR), 2015.",
       "kids" : [ ]
@@ -7177,7 +7189,7 @@
       "page number" : 14,
       "bounding box" : [ 50.112, 441.419, 286.365, 489.288 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[22] M. Jaderberg, K. Simonyan, A. Vedaldi, and A. Zisserman. Reading text in the wild with convolutional neural networks. International Journal of Computer Vision, 116(1):1–20, 2016.",
       "kids" : [ ]
@@ -7186,7 +7198,7 @@
       "page number" : 14,
       "bounding box" : [ 50.112, 390.845, 286.365, 438.715 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[23] M. Jaderberg, A. Vedaldi, and A. Zisserman. Deep features for text spotting. In Proceedings of European Conference on Computer Vision (ECCV), pages 512– 528, 2014.",
       "kids" : [ ]
@@ -7195,7 +7207,7 @@
       "page number" : 14,
       "bounding box" : [ 50.112, 304.406, 286.365, 388.141 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[24] D. Karatzas, L. Gomez-Bigorda, A. Nicolaou, S. Ghosh, A. Bagdanov, M. Iwamura, J. Matas, L. Neumann, V. R. Chandrasekhar, S. Lu, et al. ICDAR 2015 competition on robust reading. In Proceedings of International Conference on Document Analysis and Recognition (ICDAR), pages 1156– 1160, 2015.",
       "kids" : [ ]
@@ -7204,7 +7216,7 @@
       "page number" : 14,
       "bounding box" : [ 50.112, 229.922, 286.365, 301.702 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[25] D. Karatzas, F. Shafait, S. Uchida, M. Iwamura, L. G. i Bigorda, S. R. Mestre, J. Mas, D. F. Mota, J. A. Almazan, and L. P. De Las Heras. ICDAR 2013 robust reading competition. In Proceedings of International Conference on Document Analysis and Recognition (ICDAR), pages 1484–1493, 2013.",
       "kids" : [ ]
@@ -7213,7 +7225,7 @@
       "page number" : 14,
       "bounding box" : [ 50.112, 179.348, 286.365, 227.218 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[26] V. Khare, P. Shivakumara, P. Raveendran, and M. Blumenstein. A blind deconvolution model for scene text detection and recognition in video. Pattern Recognit., 54:128–148, 2016.",
       "kids" : [ ]
@@ -7222,7 +7234,7 @@
       "page number" : 14,
       "bounding box" : [ 50.112, 128.775, 286.365, 176.644 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[27] C.-Y. Lee and S. Osindero. Recursive recurrent nets with attention modeling for OCR in the wild. In Proceedings of Computer Vision and Pattern Recognition (CVPR), pages 2231–2239, 2016.",
       "kids" : [ ]
@@ -7231,27 +7243,27 @@
       "page number" : 14,
       "bounding box" : [ 50.112, 78.201, 286.365, 126.07 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[28] W. Liu, C. Chen, K.-Y. K. Wong, Z. Su, and J. Han. STAR-Net: A spatial attention residue network for scene text recognition. In Proceedings of British Machine Vision Conference (BMVC), page 7, 2016.",
       "kids" : [ ]
     } ]
   }, {
     "type" : "list",
-    "id" : 525,
+    "id" : 523,
     "level" : "14",
     "page number" : 14,
     "bounding box" : [ 308.862, 78.201, 545.116, 718.246 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 12,
-    "previous list id" : 524,
-    "next list id" : 527,
+    "previous list id" : 522,
+    "next list id" : 525,
     "list items" : [ {
       "type" : "list item",
       "page number" : 14,
       "bounding box" : [ 308.862, 682.332, 545.115, 718.246 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[29] Y. Liu, L. Jin, S. Zhang, and S. Zhang. Detecting curve text in the wild: New dataset and new solution. CoRR, abs/1712.02170 (2017), 2017.",
       "kids" : [ ]
@@ -7260,7 +7272,7 @@
       "page number" : 14,
       "bounding box" : [ 308.862, 608.934, 545.116, 680.714 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[30] X. Lou, K. Kansky, W. Lehrach, C. Laan, B. Marthi, D. Phoenix, and D. George. Generative shape models: Joint text recognition and segmentation with very little training data. In Proceedings of Advances in Neural Information Processing Systems (NIPS), pages 2793– 2801, 2016.",
       "kids" : [ ]
@@ -7269,7 +7281,7 @@
       "page number" : 14,
       "bounding box" : [ 308.862, 547.492, 545.115, 607.317 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[31] S. M. Lucas, A. Panaretos, L. Sosa, A. Tang, S. Wong, and R. Young. ICDAR 2003 robust reading competitions. In Proceedings of International Conference on Document Analysis and Recognition (ICDAR), pages 682–687, 2003.",
       "kids" : [ ]
@@ -7278,7 +7290,7 @@
       "page number" : 14,
       "bounding box" : [ 308.862, 498.006, 545.115, 545.875 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[32] A. Mishra, K. Alahari, and C. Jawahar. Scene text recognition using higher order language priors. In Proceedings of British Machine Vision Conference (BMVC), pages 1–11, 2012.",
       "kids" : [ ]
@@ -7287,7 +7299,7 @@
       "page number" : 14,
       "bounding box" : [ 308.862, 448.519, 545.115, 496.388 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[33] L. Neumann and J. Matas. Real-time scene text localization and recognition. In Proceedings of Computer Vision and Pattern Recognition (CVPR), pages 3538–3545, 2012.",
       "kids" : [ ]
@@ -7296,7 +7308,7 @@
       "page number" : 14,
       "bounding box" : [ 308.862, 387.077, 545.115, 446.902 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[34] A. Paszke, S. Gross, S. Chintala, G. Chanan, E. Yang, Z. DeVito, Z. Lin, A. Desmaison, L. Antiga, and A. Lerer. Automatic differentiation in pytorch. In Proceedings of Advances in Neural Information Processing Systems Autodiff Workshop (NIPS-W), 2017.",
       "kids" : [ ]
@@ -7305,7 +7317,7 @@
       "page number" : 14,
       "bounding box" : [ 308.862, 337.59, 545.115, 385.46 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[35] T. Quy Phan, P. Shivakumara, S. Tian, and C. Lim Tan. Recognizing text with perspective distortion in natural scenes. In Proceedings of International Conference on Computer Vision (ICCV), pages 569–576, 2013.",
       "kids" : [ ]
@@ -7314,7 +7326,7 @@
       "page number" : 14,
       "bounding box" : [ 308.862, 276.148, 545.114, 336.023 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[36] J. Rabin, G. Peyr´e, J. Delon, and M. Bernot. Wasserstein barycenter and its application to texture mixing. In Proceedings of International Conference on Scale Space and Variational Methods (ICSSVM), pages 435–446, 2011.",
       "kids" : [ ]
@@ -7323,7 +7335,7 @@
       "page number" : 14,
       "bounding box" : [ 308.862, 226.661, 545.115, 274.531 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[37] A. Risnumawan, P. Shivakumara, C. S. Chan, and C. L. Tan. A robust arbitrary text detection system for natural scene images. Expert Systems with Applications, 41(18):8027–8048, 2014.",
       "kids" : [ ]
@@ -7332,7 +7344,7 @@
       "page number" : 14,
       "bounding box" : [ 308.862, 177.174, 545.115, 225.044 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[38] J. A. Rodriguez-Serrano, A. Gordo, and F. Perronnin. Label embedding: A frugal baseline for text recognition. International Journal of Computer Vision, 113(3):193–207, 2015.",
       "kids" : [ ]
@@ -7341,7 +7353,7 @@
       "page number" : 14,
       "bounding box" : [ 308.862, 127.688, 545.115, 175.557 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[39] A. Sain, A. K. Bhunia, P. P. Roy, and U. Pal. Multioriented text detection and veriﬁcation in video frames and scene images. Neurocomputing, 275:1531–1549, 2018.",
       "kids" : [ ]
@@ -7350,19 +7362,19 @@
       "page number" : 14,
       "bounding box" : [ 308.862, 78.201, 545.115, 126.07 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[40] J.-H. Seok and J. H. Kim. Scene text recognition using a hough forest implicit shape model and semimarkov conditional random ﬁelds. Pattern Recognit., 48(11):3584–3599, 2015.",
       "kids" : [ ]
     } ]
   }, {
     "type" : "footer",
-    "id" : 526,
+    "id" : 524,
     "page number" : 14,
     "bounding box" : [ 292.157, 48.047, 303.066, 61.192 ],
     "kids" : [ {
       "type" : "paragraph",
-      "id" : 263,
+      "id" : 265,
       "page number" : 14,
       "bounding box" : [ 292.157, 48.047, 303.066, 61.192 ],
       "font" : "NimbusRomNo9L-Regu",
@@ -7372,20 +7384,20 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 527,
+    "id" : 525,
     "level" : "14",
     "page number" : 15,
     "bounding box" : [ 50.112, 78.201, 286.366, 718.246 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 13,
-    "previous list id" : 525,
-    "next list id" : 528,
+    "previous list id" : 523,
+    "next list id" : 526,
     "list items" : [ {
       "type" : "list item",
       "page number" : 15,
       "bounding box" : [ 50.112, 658.421, 286.365, 718.246 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[41] B. Shi, X. Bai, and C. Yao. An end-to-end trainable neural network for image-based sequence recognition and its application to scene text recognition. IEEE Trans. Pattern Anal. Mach. Intell., 39(11):2298–2304, 2017.",
       "kids" : [ ]
@@ -7394,7 +7406,7 @@
       "page number" : 15,
       "bounding box" : [ 50.112, 607.081, 286.365, 654.95 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[42] B. Shi, X. Wang, P. Lyu, C. Yao, and X. Bai. Robust scene text recognition with automatic rectiﬁcation. In Proceedings of Computer Vision and Pattern Recognition (CVPR), pages 4168–4176, 2016.",
       "kids" : [ ]
@@ -7403,7 +7415,7 @@
       "page number" : 15,
       "bounding box" : [ 50.112, 567.696, 286.365, 603.61 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[43] C. Shi, C. Wang, B. Xiao, S. Gao, and J. Hu. Endto-end scene text recognition using tree-structured models. Pattern Recognit., 47(9):2853–2866, 2014.",
       "kids" : [ ]
@@ -7412,7 +7424,7 @@
       "page number" : 15,
       "bounding box" : [ 50.112, 516.355, 286.365, 564.225 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[44] B. Su and S. Lu. Accurate scene text recognition based on recurrent neural network. In Proceedings of Asian Conference on Computer Vision (ACCV), pages 35– 48, 2014.",
       "kids" : [ ]
@@ -7421,7 +7433,7 @@
       "page number" : 15,
       "bounding box" : [ 50.112, 476.97, 286.365, 512.884 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[45] B. Su and S. Lu. Accurate recognition of words in scenes without character segmentation using recurrent neural network. Pattern Recognit., 63:397–405, 2017.",
       "kids" : [ ]
@@ -7430,7 +7442,7 @@
       "page number" : 15,
       "bounding box" : [ 50.112, 437.584, 286.365, 473.499 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[46] L. Sun, Q. Huo, W. Jia, and K. Chen. A robust approach for text detection from natural scene images. Pattern Recognit., 48(9):2906–2920, 2015.",
       "kids" : [ ]
@@ -7439,7 +7451,7 @@
       "page number" : 15,
       "bounding box" : [ 50.112, 386.244, 286.365, 434.113 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[47] I. Sutskever, O. Vinyals, and Q. V. Le. Sequence to sequence learning with neural networks. In Proceedings of Advances in Neural Information Processing Systems (NIPS), pages 3104–3112, 2014.",
       "kids" : [ ]
@@ -7448,7 +7460,7 @@
       "page number" : 15,
       "bounding box" : [ 50.112, 334.903, 286.365, 382.773 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[48] K. Wang, B. Babenko, and S. Belongie. Endto-end scene text recognition. In Proceedings of International Conference on Computer Vision (ICCV), pages 1457–1464, 2011.",
       "kids" : [ ]
@@ -7457,7 +7469,7 @@
       "page number" : 15,
       "bounding box" : [ 50.112, 295.518, 286.365, 331.432 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[49] K. Wang and S. Belongie. Word spotting in the wild. In Proceedings of European Conference on Computer Vision (ECCV), pages 591–604, 2010.",
       "kids" : [ ]
@@ -7466,7 +7478,7 @@
       "page number" : 15,
       "bounding box" : [ 50.112, 232.222, 286.366, 292.047 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[50] T. Wang, D. J. Wu, A. Coates, and A. Y. Ng. End-to-end text recognition with convolutional neural networks. In Proceedings of International Conference on Pattern Recognition (ICPR), pages 3304–3308, 2012.",
       "kids" : [ ]
@@ -7475,7 +7487,7 @@
       "page number" : 15,
       "bounding box" : [ 50.112, 168.927, 286.365, 228.751 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[51] X. Yang, D. He, Z. Zhou, D. Kifer, and C. L. Giles. Learning to read irregular text with attention mechanisms. In Proceedings of International Joint Conference on Artiﬁcial Intelligence, (IJCAI), pages 3280–3286, 2017.",
       "kids" : [ ]
@@ -7484,7 +7496,7 @@
       "page number" : 15,
       "bounding box" : [ 50.112, 117.586, 286.366, 165.456 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[52] C. Yao, X. Bai, B. Shi, and W. Liu. Strokelets: A learned multi-scale representation for scene text recognition. In Proceedings of Computer Vision and Pattern Recognition (CVPR), pages 4042–4049, 2014.",
       "kids" : [ ]
@@ -7493,26 +7505,26 @@
       "page number" : 15,
       "bounding box" : [ 50.112, 78.201, 286.365, 114.115 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[53] Q. Ye and D. Doermann. Text detection and recognition in imagery: A survey. IEEE Trans. Pattern Anal. Mach. Intell., 37(7):1480–1500, 2015.",
       "kids" : [ ]
     } ]
   }, {
     "type" : "list",
-    "id" : 528,
+    "id" : 526,
     "level" : "14",
     "page number" : 15,
     "bounding box" : [ 308.862, 580.713, 545.115, 718.246 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 4,
-    "previous list id" : 527,
+    "previous list id" : 525,
     "list items" : [ {
       "type" : "list item",
       "page number" : 15,
       "bounding box" : [ 308.862, 682.332, 545.115, 718.246 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[54] F. Yin, Y. Wu, X. Zhang, and C. Liu. Scene text recognition with sliding convolutional character models. CoRR, abs/1709.01727 (2017), 2017.",
       "kids" : [ ]
@@ -7521,7 +7533,7 @@
       "page number" : 15,
       "bounding box" : [ 308.862, 656.429, 545.115, 680.388 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[55] M. D. Zeiler. ADADELTA: an adaptive learning rate method. CoRR, abs/1212.5701 (2012), 2012.",
       "kids" : [ ]
@@ -7530,7 +7542,7 @@
       "page number" : 15,
       "bounding box" : [ 308.862, 618.571, 545.115, 654.485 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[56] A. Zhu, R. Gao, and S. Uchida. Could scene context be beneﬁcial for scene text detection? Pattern Recognit., 58:204–215, 2016.",
       "kids" : [ ]
@@ -7539,19 +7551,19 @@
       "page number" : 15,
       "bounding box" : [ 308.862, 580.713, 545.115, 616.627 ],
       "font" : "NimbusRomNo9L-Regu",
-      "font size" : 9.9626,
+      "font size" : 9.963,
       "text color" : "[0.0]",
       "content" : "[57] Y. Zhu, C. Yao, and X. Bai. Scene text detection and recognition: Recent advances and future trends. Frontiers of Computer Science, 10(1):19–36, 2016.",
       "kids" : [ ]
     } ]
   }, {
     "type" : "footer",
-    "id" : 529,
+    "id" : 527,
     "page number" : 15,
     "bounding box" : [ 292.157, 48.047, 303.066, 61.192 ],
     "kids" : [ {
       "type" : "paragraph",
-      "id" : 264,
+      "id" : 266,
       "page number" : 15,
       "bounding box" : [ 292.157, 48.047, 303.066, 61.192 ],
       "font" : "NimbusRomNo9L-Regu",

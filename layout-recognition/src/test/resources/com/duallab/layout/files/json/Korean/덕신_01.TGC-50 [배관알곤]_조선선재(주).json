@@ -1,5 +1,5 @@
 {
-  "file name" : "C:\\verapdf-dev\\demo-pdf-structure\\layout-recognition-core\\layout-recognition\\src\\test\\resources\\com\\duallab\\layout\\files\\pdf\\Korean\\덕신_01.TGC-50 [배관알곤]_조선선재(주).pdf",
+  "file name" : "덕신_01.TGC-50 [배관알곤]_조선선재(주).pdf",
   "number of pages" : 16,
   "author" : "조선선재",
   "title" : " ",
@@ -7,7 +7,7 @@
   "modification date" : "D:20220221141122+09'00'",
   "kids" : [ {
     "type" : "header",
-    "id" : 473,
+    "id" : 463,
     "page number" : 1,
     "bounding box" : [ 47.16, 714.7, 551.98, 799.32 ],
     "kids" : [ {
@@ -156,13 +156,8 @@
       } ]
     } ]
   }, {
-    "type" : "line",
-    "id" : 474,
-    "page number" : 1,
-    "bounding box" : [ 47.25, 705.945, 552.4, 709.195 ]
-  }, {
     "type" : "list",
-    "id" : 475,
+    "id" : 464,
     "level" : "1",
     "page number" : 1,
     "bounding box" : [ 61.92, 563.609, 457.852, 665.097 ],
@@ -213,13 +208,8 @@
           "kids" : [ ]
         } ]
       }, {
-        "type" : "line",
-        "id" : 397,
-        "page number" : 1,
-        "bounding box" : [ 156.74, 578.14, 245.324, 578.62 ]
-      }, {
         "type" : "image",
-        "id" : 398,
+        "id" : 397,
         "page number" : 1,
         "bounding box" : [ 156.74, 578.14, 245.324, 578.62 ]
       } ]
@@ -235,7 +225,7 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 476,
+    "id" : 465,
     "level" : "2",
     "page number" : 1,
     "bounding box" : [ 71.304, 504.539, 485.83, 560.273 ],
@@ -279,28 +269,18 @@
       "kids" : [ ]
     } ]
   }, {
-    "type" : "line",
-    "id" : 477,
+    "type" : "image",
+    "id" : 466,
     "page number" : 1,
     "bounding box" : [ 46.44, 470.35, 551.14, 488.11 ]
   }, {
     "type" : "image",
-    "id" : 478,
-    "page number" : 1,
-    "bounding box" : [ 46.44, 470.35, 551.14, 488.11 ]
-  }, {
-    "type" : "line",
-    "id" : 479,
-    "page number" : 1,
-    "bounding box" : [ 47.88, 472.15, 549.82, 488.11 ]
-  }, {
-    "type" : "image",
-    "id" : 480,
+    "id" : 467,
     "page number" : 1,
     "bounding box" : [ 47.88, 472.15, 549.82, 488.11 ]
   }, {
     "type" : "heading",
-    "id" : 481,
+    "id" : 468,
     "level" : "Subtitle",
     "page number" : 1,
     "bounding box" : [ 52.92, 472.51, 140.664, 486.31 ],
@@ -311,8 +291,8 @@
     "content" : "2. 유해성·위험성"
   }, {
     "type" : "list",
-    "id" : 482,
-    "level" : "3",
+    "id" : 469,
+    "level" : "1",
     "page number" : 1,
     "bounding box" : [ 61.2, 339.159, 251.45, 453.953 ],
     "numbering style" : "korean letters",
@@ -338,8 +318,8 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 483,
-    "level" : "4",
+    "id" : 470,
+    "level" : "2",
     "page number" : 1,
     "bounding box" : [ 71.304, 254.919, 144.5, 335.853 ],
     "numbering style" : "unordered",
@@ -354,12 +334,12 @@
       "content" : "○ 그림문자",
       "kids" : [ {
         "type" : "image",
-        "id" : 399,
+        "id" : 398,
         "page number" : 1,
         "bounding box" : [ 87.85, 268.07, 143.3, 322.82 ]
       }, {
         "type" : "image",
-        "id" : 400,
+        "id" : 399,
         "page number" : 1,
         "bounding box" : [ 143.36, 267.623, 198.879, 322.761 ]
       } ]
@@ -375,8 +355,8 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 484,
-    "level" : "5",
+    "id" : 471,
+    "level" : "3",
     "page number" : 1,
     "bounding box" : [ 47.88, 240.159, 125.66, 251.613 ],
     "font" : "NanumGothic",
@@ -385,8 +365,8 @@
     "content" : "○ 유해·위험 문구"
   }, {
     "type" : "list",
-    "id" : 485,
-    "level" : "6",
+    "id" : 472,
+    "level" : "4",
     "page number" : 1,
     "bounding box" : [ 81.264, 166.329, 449.008, 236.853 ],
     "numbering style" : "unordered",
@@ -439,8 +419,8 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 486,
-    "level" : "7",
+    "id" : 473,
+    "level" : "5",
     "page number" : 1,
     "bounding box" : [ 71.304, 151.569, 146.18, 163.023 ],
     "font" : "NanumGothic",
@@ -449,8 +429,8 @@
     "content" : "○ 예방조치 문구"
   }, {
     "type" : "paragraph",
-    "id" : 487,
-    "level" : "8",
+    "id" : 474,
+    "level" : "6",
     "page number" : 1,
     "bounding box" : [ 80.664, 136.809, 107.664, 148.263 ],
     "font" : "NanumGothic",
@@ -459,8 +439,8 @@
     "content" : "- 예방"
   }, {
     "type" : "list",
-    "id" : 488,
-    "level" : "9",
+    "id" : 475,
+    "level" : "7",
     "page number" : 1,
     "bounding box" : [ 94.464, 107.289, 416.128, 133.503 ],
     "numbering style" : "arabic numbers",
@@ -486,8 +466,8 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 489,
-    "level" : "9",
+    "id" : 476,
+    "level" : "7",
     "page number" : 1,
     "bounding box" : [ 94.464, 77.773, 256.988, 103.987 ],
     "numbering style" : "arabic numbers",
@@ -513,7 +493,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 490,
+    "id" : 477,
     "page number" : 1,
     "bounding box" : [ 94.464, 48.253, 386.368, 74.467 ],
     "font" : "NanumGothic",
@@ -521,28 +501,19 @@
     "text color" : "[0.0]",
     "content" : "P264 취급 후에는 취급 부위를 철저히 씻으시오. P270 이 제품을 사용할 때에는 먹거나, 마시거나 흡연하지 마시오."
   }, {
-    "type" : "line",
-    "id" : 491,
+    "type" : "image",
+    "id" : 478,
     "page number" : 1,
     "bounding box" : [ 46.44, 681.82, 549.82, 701.62 ]
   }, {
     "type" : "image",
-    "id" : 492,
-    "page number" : 1,
-    "bounding box" : [ 46.44, 681.82, 549.82, 701.62 ]
-  }, {
-    "type" : "line",
-    "id" : 493,
-    "page number" : 1,
-    "bounding box" : [ 47.88, 684.58, 548.38, 701.62 ]
-  }, {
-    "type" : "image",
-    "id" : 494,
+    "id" : 479,
     "page number" : 1,
     "bounding box" : [ 47.88, 684.58, 548.38, 701.62 ]
   }, {
     "type" : "paragraph",
-    "id" : 495,
+    "id" : 480,
+    "level" : "8",
     "page number" : 1,
     "bounding box" : [ 52.92, 685.18, 221.78, 698.98 ],
     "font" : "NanumGothic",
@@ -551,7 +522,7 @@
     "content" : "1. 화학제품과 회사에 관한 정보"
   }, {
     "type" : "header",
-    "id" : 496,
+    "id" : 481,
     "page number" : 2,
     "bounding box" : [ 47.16, 714.7, 551.98, 799.32 ],
     "kids" : [ {
@@ -700,13 +671,8 @@
       } ]
     } ]
   }, {
-    "type" : "line",
-    "id" : 497,
-    "page number" : 2,
-    "bounding box" : [ 47.25, 705.945, 552.4, 709.195 ]
-  }, {
     "type" : "paragraph",
-    "id" : 498,
+    "id" : 482,
     "page number" : 2,
     "bounding box" : [ 94.464, 653.969, 364.648, 694.943 ],
     "font" : "NanumGothic",
@@ -715,8 +681,8 @@
     "content" : "P272 작업장 밖으로 오염된 의복을 반출하지 마시오. P280 보호장갑·보호의·보안경·안면보호구를 착용하시오. P284 환기가 잘 되지 않는 경우 호흡기 보호구를 착용하시오."
   }, {
     "type" : "paragraph",
-    "id" : 499,
-    "level" : "8",
+    "id" : 483,
+    "level" : "6",
     "page number" : 2,
     "bounding box" : [ 80.664, 506.339, 521.398, 650.663 ],
     "font" : "NanumGothic",
@@ -725,8 +691,8 @@
     "content" : "- 대응 P302+P352 피부에 묻으면 다량의 물로 씻으시오. P304+P340 흡입하면 신선한 공기가 있는 곳으로 옮기고 호흡하기 쉬운 자세로 안정을 취하시오. P308+P311 노출 또는 노출이 우려되면, 의료기관(의사)의 진찰을 받으시오. P308+P313 노출되거나 노출이 우려되면 의학적인 조치·조언을 구하시오. P314 불편함을 느끼면 의학적인 조치·조언을 구하시오. P321 응급 처치를 하시오. P333+P313 피부자극성 또는 홍반이 나타나면 의학적인 조치·조언을 구하시오. P342+P311 호흡기 증상이 나타나면 의료기관(의사)의 진찰을 받으시오. P362+P364 오염된 의복은 벗고 다시 사용 전 세척하시오."
   }, {
     "type" : "list",
-    "id" : 500,
-    "level" : "9",
+    "id" : 484,
+    "level" : "8",
     "page number" : 2,
     "bounding box" : [ 85.464, 447.299, 395.248, 503.033 ],
     "numbering style" : "unordered",
@@ -752,8 +718,8 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 501,
-    "level" : "10",
+    "id" : 485,
+    "level" : "9",
     "page number" : 2,
     "bounding box" : [ 61.92, 417.779, 342.176, 429.233 ],
     "font" : "NanumGothic",
@@ -762,8 +728,8 @@
     "content" : "다. 유해성·위험성 분류기준에 포함되지 않는 기타 유해성·위험성"
   }, {
     "type" : "list",
-    "id" : 502,
-    "level" : "11",
+    "id" : 486,
+    "level" : "8",
     "page number" : 2,
     "bounding box" : [ 85.344, 388.259, 405.568, 414.473 ],
     "numbering style" : "unordered",
@@ -788,34 +754,24 @@
       "kids" : [ ]
     } ]
   }, {
-    "type" : "line",
-    "id" : 503,
+    "type" : "image",
+    "id" : 487,
     "page number" : 2,
     "bounding box" : [ 46.44, 348.29, 551.14, 368.09 ]
   }, {
     "type" : "image",
-    "id" : 504,
-    "page number" : 2,
-    "bounding box" : [ 46.44, 348.29, 551.14, 368.09 ]
-  }, {
-    "type" : "line",
-    "id" : 505,
-    "page number" : 2,
-    "bounding box" : [ 47.88, 352.13, 549.82, 368.09 ]
-  }, {
-    "type" : "image",
-    "id" : 506,
+    "id" : 488,
     "page number" : 2,
     "bounding box" : [ 47.88, 352.13, 549.82, 368.09 ]
   }, {
     "type" : "list",
-    "id" : 507,
-    "level" : "12",
+    "id" : 489,
+    "level" : "9",
     "page number" : 2,
     "bounding box" : [ 52.92, 352.49, 210.5, 366.29 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 1,
-    "next list id" : 518,
+    "next list id" : 497,
     "list items" : [ {
       "type" : "list item",
       "page number" : 2,
@@ -828,8 +784,8 @@
     } ]
   }, {
     "type" : "table",
-    "id" : 508,
-    "level" : "13",
+    "id" : 490,
+    "level" : "10",
     "page number" : 2,
     "bounding box" : [ 47.64, 207.77, 540.7, 348.29 ],
     "number of rows" : 8,
@@ -1685,8 +1641,8 @@
     } ]
   }, {
     "type" : "table",
-    "id" : 509,
-    "level" : "14",
+    "id" : 491,
+    "level" : "11",
     "page number" : 2,
     "bounding box" : [ 47.64, 56.784, 540.7, 197.33 ],
     "number of rows" : 8,
@@ -2542,7 +2498,7 @@
     } ]
   }, {
     "type" : "header",
-    "id" : 510,
+    "id" : 492,
     "page number" : 3,
     "bounding box" : [ 47.16, 714.7, 551.98, 799.32 ],
     "kids" : [ {
@@ -2691,14 +2647,9 @@
       } ]
     } ]
   }, {
-    "type" : "line",
-    "id" : 511,
-    "page number" : 3,
-    "bounding box" : [ 47.25, 705.945, 552.4, 709.195 ]
-  }, {
     "type" : "table",
-    "id" : 512,
-    "level" : "15",
+    "id" : 493,
+    "level" : "12",
     "page number" : 3,
     "bounding box" : [ 47.64, 556.03, 378.91, 696.58 ],
     "number of rows" : 8,
@@ -3260,8 +3211,8 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 513,
-    "level" : "16",
+    "id" : 494,
+    "level" : "13",
     "page number" : 3,
     "bounding box" : [ 57.24, 528.179, 467.488, 554.393 ],
     "font" : "NanumGothic",
@@ -3269,35 +3220,25 @@
     "text color" : "[0.0]",
     "content" : "※ 본 제품에 함유되어 있는 니켈 및 크롬은 금속 상태로 존재 함(특별관리대상물질이 아님). 그러나 용접 중 모재와의 화학적 반응에 의하여 니켈이 불용성 화합물로 나타날 수도 있음."
   }, {
-    "type" : "line",
-    "id" : 514,
+    "type" : "image",
+    "id" : 495,
     "page number" : 3,
     "bounding box" : [ 46.44, 491.95, 551.14, 511.75 ]
   }, {
     "type" : "image",
-    "id" : 515,
-    "page number" : 3,
-    "bounding box" : [ 46.44, 491.95, 551.14, 511.75 ]
-  }, {
-    "type" : "line",
-    "id" : 516,
-    "page number" : 3,
-    "bounding box" : [ 47.88, 495.79, 549.82, 511.75 ]
-  }, {
-    "type" : "image",
-    "id" : 517,
+    "id" : 496,
     "page number" : 3,
     "bounding box" : [ 47.88, 495.79, 549.82, 511.75 ]
   }, {
     "type" : "list",
-    "id" : 518,
-    "level" : "12",
+    "id" : 497,
+    "level" : "9",
     "page number" : 3,
     "bounding box" : [ 52.92, 496.15, 142.82, 509.95 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 1,
-    "previous list id" : 507,
-    "next list id" : 531,
+    "previous list id" : 489,
+    "next list id" : 507,
     "list items" : [ {
       "type" : "list item",
       "page number" : 3,
@@ -3310,8 +3251,8 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 519,
-    "level" : "15",
+    "id" : 498,
+    "level" : "1",
     "page number" : 3,
     "bounding box" : [ 61.92, 95.053, 255.89, 475.553 ],
     "numbering style" : "korean letters",
@@ -3326,8 +3267,8 @@
       "content" : "가. 눈에 들어갔을 때",
       "kids" : [ {
         "type" : "list",
-        "id" : 401,
-        "level" : "4",
+        "id" : 400,
+        "level" : "2",
         "page number" : 3,
         "bounding box" : [ 71.304, 434.579, 458.128, 460.793 ],
         "numbering style" : "unordered",
@@ -3362,8 +3303,8 @@
       "content" : "나. 피부에 접촉했을 때",
       "kids" : [ {
         "type" : "list",
-        "id" : 402,
-        "level" : "4",
+        "id" : 401,
+        "level" : "2",
         "page number" : 3,
         "bounding box" : [ 71.304, 345.999, 476.878, 416.513 ],
         "numbering style" : "unordered",
@@ -3425,8 +3366,8 @@
       "content" : "다. 흡입했을 때",
       "kids" : [ {
         "type" : "list",
-        "id" : 403,
-        "level" : "4",
+        "id" : 402,
+        "level" : "2",
         "page number" : 3,
         "bounding box" : [ 71.304, 257.439, 501.94, 327.933 ],
         "numbering style" : "unordered",
@@ -3479,8 +3420,8 @@
       "content" : "라. 먹었을 때",
       "kids" : [ {
         "type" : "list",
-        "id" : 404,
-        "level" : "4",
+        "id" : 403,
+        "level" : "2",
         "page number" : 3,
         "bounding box" : [ 71.304, 183.639, 506.59, 239.373 ],
         "numbering style" : "unordered",
@@ -3524,8 +3465,8 @@
       "content" : "마. 급성 및 지연성의 가장 중요한 증상/영향",
       "kids" : [ {
         "type" : "list",
-        "id" : 405,
-        "level" : "4",
+        "id" : 404,
+        "level" : "2",
         "page number" : 3,
         "bounding box" : [ 71.304, 109.809, 515.62, 165.543 ],
         "numbering style" : "unordered",
@@ -3562,13 +3503,13 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 520,
-    "level" : "4",
+    "id" : 499,
+    "level" : "2",
     "page number" : 3,
     "bounding box" : [ 71.304, 80.293, 225.74, 91.747 ],
     "numbering style" : "unordered",
     "number of list items" : 1,
-    "next list id" : 525,
+    "next list id" : 503,
     "list items" : [ {
       "type" : "list item",
       "page number" : 3,
@@ -3581,13 +3522,13 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 521,
-    "level" : "10",
+    "id" : 500,
+    "level" : "5",
     "page number" : 3,
     "bounding box" : [ 85.344, 50.773, 519.58, 76.987 ],
     "numbering style" : "unordered",
     "number of list items" : 1,
-    "next list id" : 524,
+    "next list id" : 502,
     "list items" : [ {
       "type" : "list item",
       "page number" : 3,
@@ -3600,7 +3541,7 @@
     } ]
   }, {
     "type" : "header",
-    "id" : 522,
+    "id" : 501,
     "page number" : 4,
     "bounding box" : [ 47.16, 714.7, 551.98, 799.32 ],
     "kids" : [ {
@@ -3749,19 +3690,14 @@
       } ]
     } ]
   }, {
-    "type" : "line",
-    "id" : 523,
-    "page number" : 4,
-    "bounding box" : [ 47.25, 705.945, 552.4, 709.195 ]
-  }, {
     "type" : "list",
-    "id" : 524,
-    "level" : "10",
+    "id" : 502,
+    "level" : "5",
     "page number" : 4,
     "bounding box" : [ 85.344, 668.729, 461.728, 694.943 ],
     "numbering style" : "unordered",
     "number of list items" : 2,
-    "previous list id" : 521,
+    "previous list id" : 500,
     "list items" : [ {
       "type" : "list item",
       "page number" : 4,
@@ -3783,13 +3719,13 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 525,
-    "level" : "4",
+    "id" : 503,
+    "level" : "2",
     "page number" : 4,
     "bounding box" : [ 71.304, 653.969, 160.22, 665.423 ],
     "numbering style" : "unordered",
     "number of list items" : 1,
-    "previous list id" : 520,
+    "previous list id" : 499,
     "list items" : [ {
       "type" : "list item",
       "page number" : 4,
@@ -3802,8 +3738,8 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 526,
-    "level" : "8",
+    "id" : 504,
+    "level" : "4",
     "page number" : 4,
     "bounding box" : [ 85.344, 624.449, 508.558, 650.663 ],
     "numbering style" : "unordered",
@@ -3828,35 +3764,25 @@
       "kids" : [ ]
     } ]
   }, {
-    "type" : "line",
-    "id" : 527,
+    "type" : "image",
+    "id" : 505,
     "page number" : 4,
     "bounding box" : [ 46.44, 590.26, 551.14, 608.02 ]
   }, {
     "type" : "image",
-    "id" : 528,
-    "page number" : 4,
-    "bounding box" : [ 46.44, 590.26, 551.14, 608.02 ]
-  }, {
-    "type" : "line",
-    "id" : 529,
-    "page number" : 4,
-    "bounding box" : [ 47.88, 592.06, 549.82, 608.02 ]
-  }, {
-    "type" : "image",
-    "id" : 530,
+    "id" : 506,
     "page number" : 4,
     "bounding box" : [ 47.88, 592.06, 549.82, 608.02 ]
   }, {
     "type" : "list",
-    "id" : 531,
-    "level" : "12",
+    "id" : 507,
+    "level" : "9",
     "page number" : 4,
     "bounding box" : [ 52.92, 255.41, 199.22, 606.22 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 3,
-    "previous list id" : 518,
-    "next list id" : 539,
+    "previous list id" : 497,
+    "next list id" : 512,
     "list items" : [ {
       "type" : "list item",
       "page number" : 4,
@@ -3868,7 +3794,7 @@
       "kids" : [ {
         "type" : "list",
         "id" : 445,
-        "level" : "9",
+        "level" : "1",
         "page number" : 4,
         "bounding box" : [ 61.92, 459.059, 252.17, 573.863 ],
         "numbering style" : "korean letters",
@@ -3883,8 +3809,8 @@
           "content" : "가. 적절한 (및 부적절한) 소화제",
           "kids" : [ {
             "type" : "list",
-            "id" : 406,
-            "level" : "4",
+            "id" : 405,
+            "level" : "2",
             "page number" : 4,
             "bounding box" : [ 71.304, 518.099, 345.432, 559.073 ],
             "numbering style" : "unordered",
@@ -3928,8 +3854,8 @@
           "content" : "나. 화학물질로부터 생기는 특정 유해성",
           "kids" : [ {
             "type" : "list",
-            "id" : 407,
-            "level" : "4",
+            "id" : 406,
+            "level" : "2",
             "page number" : 4,
             "bounding box" : [ 71.304, 473.819, 217.748, 500.033 ],
             "numbering style" : "unordered",
@@ -3967,7 +3893,7 @@
       }, {
         "type" : "list",
         "id" : 446,
-        "level" : "4",
+        "level" : "2",
         "page number" : 4,
         "bounding box" : [ 71.304, 414.779, 509.62, 455.753 ],
         "numbering style" : "unordered",
@@ -3992,23 +3918,13 @@
           "kids" : [ ]
         } ]
       }, {
-        "type" : "line",
+        "type" : "image",
         "id" : 447,
         "page number" : 4,
         "bounding box" : [ 46.44, 376.99, 544.06, 398.35 ]
       }, {
         "type" : "image",
         "id" : 448,
-        "page number" : 4,
-        "bounding box" : [ 46.44, 376.99, 544.06, 398.35 ]
-      }, {
-        "type" : "line",
-        "id" : 449,
-        "page number" : 4,
-        "bounding box" : [ 47.88, 379.75, 542.74, 395.71 ]
-      }, {
-        "type" : "image",
-        "id" : 450,
         "page number" : 4,
         "bounding box" : [ 47.88, 379.75, 542.74, 395.71 ]
       } ]
@@ -4022,8 +3938,8 @@
       "content" : "6. 누출사고시 대처방법",
       "kids" : [ {
         "type" : "list",
-        "id" : 451,
-        "level" : "9",
+        "id" : 449,
+        "level" : "1",
         "page number" : 4,
         "bounding box" : [ 61.92, 290.079, 317.348, 360.573 ],
         "numbering style" : "korean letters",
@@ -4031,12 +3947,22 @@
         "list items" : [ {
           "type" : "list item",
           "page number" : 4,
-          "bounding box" : [ 61.92, 334.359, 306.668, 360.573 ],
+          "bounding box" : [ 61.92, 349.119, 306.668, 360.573 ],
           "font" : "NanumGothic",
           "font size" : 9.96,
           "text color" : "[0.0]",
-          "content" : "가. 인체를 보호하기 위해 필요한 조치 사항 및 보호구 : 8. 다. 항목에 제시된 개인 보호구를 착용할 것.",
-          "kids" : [ ]
+          "content" : "가. 인체를 보호하기 위해 필요한 조치 사항 및 보호구 :",
+          "kids" : [ {
+            "type" : "paragraph",
+            "id" : 407,
+            "level" : "5",
+            "page number" : 4,
+            "bounding box" : [ 80.664, 334.359, 287.588, 345.813 ],
+            "font" : "NanumGothic",
+            "font size" : 9.96,
+            "text color" : "[0.0]",
+            "content" : "8. 다. 항목에 제시된 개인 보호구를 착용할 것."
+          } ]
         }, {
           "type" : "list item",
           "page number" : 4,
@@ -4057,23 +3983,13 @@
           "kids" : [ ]
         } ]
       }, {
-        "type" : "line",
-        "id" : 452,
+        "type" : "image",
+        "id" : 450,
         "page number" : 4,
         "bounding box" : [ 46.44, 252.41, 551.14, 273.65 ]
       }, {
         "type" : "image",
-        "id" : 453,
-        "page number" : 4,
-        "bounding box" : [ 46.44, 252.41, 551.14, 273.65 ]
-      }, {
-        "type" : "line",
-        "id" : 454,
-        "page number" : 4,
-        "bounding box" : [ 47.88, 255.05, 549.82, 271.01 ]
-      }, {
-        "type" : "image",
-        "id" : 455,
+        "id" : 451,
         "page number" : 4,
         "bounding box" : [ 47.88, 255.05, 549.82, 271.01 ]
       } ]
@@ -4089,8 +4005,8 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 532,
-    "level" : "9",
+    "id" : 508,
+    "level" : "1",
     "page number" : 4,
     "bounding box" : [ 61.92, 106.449, 448.288, 236.013 ],
     "numbering style" : "korean letters",
@@ -4116,7 +4032,7 @@
     } ]
   }, {
     "type" : "header",
-    "id" : 533,
+    "id" : 509,
     "page number" : 5,
     "bounding box" : [ 47.16, 714.7, 551.98, 799.32 ],
     "kids" : [ {
@@ -4265,40 +4181,25 @@
       } ]
     } ]
   }, {
-    "type" : "line",
-    "id" : 534,
-    "page number" : 5,
-    "bounding box" : [ 47.25, 705.945, 552.4, 709.195 ]
-  }, {
-    "type" : "line",
-    "id" : 535,
+    "type" : "image",
+    "id" : 510,
     "page number" : 5,
     "bounding box" : [ 46.44, 675.34, 551.14, 696.58 ]
   }, {
     "type" : "image",
-    "id" : 536,
-    "page number" : 5,
-    "bounding box" : [ 46.44, 675.34, 551.14, 696.58 ]
-  }, {
-    "type" : "line",
-    "id" : 537,
-    "page number" : 5,
-    "bounding box" : [ 47.88, 677.98, 549.82, 693.94 ]
-  }, {
-    "type" : "image",
-    "id" : 538,
+    "id" : 511,
     "page number" : 5,
     "bounding box" : [ 47.88, 677.98, 549.82, 693.94 ]
   }, {
     "type" : "list",
-    "id" : 539,
-    "level" : "12",
+    "id" : 512,
+    "level" : "9",
     "page number" : 5,
     "bounding box" : [ 52.92, 131.78, 193.58, 692.14 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 2,
-    "previous list id" : 531,
-    "next list id" : 548,
+    "previous list id" : 507,
+    "next list id" : 518,
     "list items" : [ {
       "type" : "list item",
       "page number" : 5,
@@ -4309,8 +4210,8 @@
       "content" : "8. 노출방지 및 개인보호구",
       "kids" : [ {
         "type" : "list",
-        "id" : 456,
-        "level" : "9",
+        "id" : 452,
+        "level" : "1",
         "page number" : 5,
         "bounding box" : [ 61.92, 314.079, 269.212, 658.943 ],
         "numbering style" : "korean letters",
@@ -4326,7 +4227,7 @@
           "kids" : [ {
             "type" : "table",
             "id" : 412,
-            "level" : "10",
+            "level" : "4",
             "page number" : 5,
             "bounding box" : [ 54.24, 400.99, 544.9, 645.82 ],
             "number of rows" : 9,
@@ -5321,7 +5222,7 @@
           "kids" : [ {
             "type" : "list",
             "id" : 413,
-            "level" : "11",
+            "level" : "5",
             "page number" : 5,
             "bounding box" : [ 76.104, 343.599, 210.188, 384.593 ],
             "numbering style" : "unordered",
@@ -5337,7 +5238,7 @@
               "kids" : [ {
                 "type" : "paragraph",
                 "id" : 408,
-                "level" : "12",
+                "level" : "6",
                 "page number" : 5,
                 "bounding box" : [ 85.464, 358.359, 330.77, 369.813 ],
                 "font" : "NanumGothic",
@@ -5358,7 +5259,7 @@
           }, {
             "type" : "paragraph",
             "id" : 414,
-            "level" : "12",
+            "level" : "6",
             "page number" : 5,
             "bounding box" : [ 85.464, 328.839, 438.448, 340.293 ],
             "font" : "NanumGothic",
@@ -5378,7 +5279,7 @@
         } ]
       }, {
         "type" : "list",
-        "id" : 457,
+        "id" : 453,
         "level" : "2",
         "page number" : 5,
         "bounding box" : [ 71.424, 195.999, 136.94, 310.773 ],
@@ -5395,7 +5296,7 @@
           "kids" : [ {
             "type" : "list",
             "id" : 409,
-            "level" : "11",
+            "level" : "5",
             "page number" : 5,
             "bounding box" : [ 76.944, 269.799, 302.468, 296.013 ],
             "numbering style" : "unordered",
@@ -5431,7 +5332,7 @@
           "kids" : [ {
             "type" : "paragraph",
             "id" : 410,
-            "level" : "12",
+            "level" : "6",
             "page number" : 5,
             "bounding box" : [ 76.104, 240.279, 452.728, 251.733 ],
             "font" : "NanumGothic",
@@ -5450,7 +5351,7 @@
           "kids" : [ {
             "type" : "paragraph",
             "id" : 411,
-            "level" : "12",
+            "level" : "6",
             "page number" : 5,
             "bounding box" : [ 76.104, 210.759, 312.068, 222.213 ],
             "font" : "NanumGothic",
@@ -5470,8 +5371,8 @@
         } ]
       }, {
         "type" : "list",
-        "id" : 458,
-        "level" : "13",
+        "id" : 454,
+        "level" : "5",
         "page number" : 5,
         "bounding box" : [ 76.104, 166.449, 499.318, 192.693 ],
         "numbering style" : "unordered",
@@ -5496,23 +5397,13 @@
           "kids" : [ ]
         } ]
       }, {
-        "type" : "line",
-        "id" : 459,
+        "type" : "image",
+        "id" : 455,
         "page number" : 5,
         "bounding box" : [ 46.44, 128.78, 551.14, 150.02 ]
       }, {
         "type" : "image",
-        "id" : 460,
-        "page number" : 5,
-        "bounding box" : [ 46.44, 128.78, 551.14, 150.02 ]
-      }, {
-        "type" : "line",
-        "id" : 461,
-        "page number" : 5,
-        "bounding box" : [ 47.88, 131.42, 549.82, 147.38 ]
-      }, {
-        "type" : "image",
-        "id" : 462,
+        "id" : 456,
         "page number" : 5,
         "bounding box" : [ 47.88, 131.42, 549.82, 147.38 ]
       } ]
@@ -5528,13 +5419,13 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 540,
-    "level" : "3",
+    "id" : 513,
+    "level" : "1",
     "page number" : 5,
     "bounding box" : [ 62.04, 47.653, 253.628, 114.303 ],
     "numbering style" : "korean letters",
     "number of list items" : 6,
-    "next list id" : 543,
+    "next list id" : 515,
     "list items" : [ {
       "type" : "list item",
       "page number" : 5,
@@ -5592,7 +5483,7 @@
     } ]
   }, {
     "type" : "header",
-    "id" : 541,
+    "id" : 514,
     "page number" : 6,
     "bounding box" : [ 47.16, 714.7, 551.98, 799.32 ],
     "kids" : [ {
@@ -5741,19 +5632,14 @@
       } ]
     } ]
   }, {
-    "type" : "line",
-    "id" : 542,
-    "page number" : 6,
-    "bounding box" : [ 47.25, 705.945, 552.4, 709.195 ]
-  }, {
     "type" : "list",
-    "id" : 543,
-    "level" : "3",
+    "id" : 515,
+    "level" : "1",
     "page number" : 6,
     "bounding box" : [ 62.04, 552.899, 280.748, 696.863 ],
     "numbering style" : "korean letters",
     "number of list items" : 13,
-    "previous list id" : 540,
+    "previous list id" : 513,
     "list items" : [ {
       "type" : "list item",
       "page number" : 6,
@@ -5873,35 +5759,25 @@
       "kids" : [ ]
     } ]
   }, {
-    "type" : "line",
-    "id" : 544,
+    "type" : "image",
+    "id" : 516,
     "page number" : 6,
     "bounding box" : [ 46.44, 520.75, 551.14, 541.99 ]
   }, {
     "type" : "image",
-    "id" : 545,
-    "page number" : 6,
-    "bounding box" : [ 46.44, 520.75, 551.14, 541.99 ]
-  }, {
-    "type" : "line",
-    "id" : 546,
-    "page number" : 6,
-    "bounding box" : [ 47.88, 523.39, 549.82, 539.35 ]
-  }, {
-    "type" : "image",
-    "id" : 547,
+    "id" : 517,
     "page number" : 6,
     "bounding box" : [ 47.88, 523.39, 549.82, 539.35 ]
   }, {
     "type" : "list",
-    "id" : 548,
-    "level" : "12",
+    "id" : 518,
+    "level" : "9",
     "page number" : 6,
     "bounding box" : [ 52.92, 384.43, 167.06, 537.55 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 2,
-    "previous list id" : 539,
-    "next list id" : 595,
+    "previous list id" : 512,
+    "next list id" : 556,
     "list items" : [ {
       "type" : "list item",
       "page number" : 6,
@@ -5912,8 +5788,8 @@
       "content" : "10. 안정성 및 반응성",
       "kids" : [ {
         "type" : "list",
-        "id" : 463,
-        "level" : "6",
+        "id" : 457,
+        "level" : "1",
         "page number" : 6,
         "bounding box" : [ 61.92, 419.099, 325.628, 504.353 ],
         "numbering style" : "korean letters",
@@ -5956,23 +5832,13 @@
           "kids" : [ ]
         } ]
       }, {
-        "type" : "line",
-        "id" : 464,
+        "type" : "image",
+        "id" : 458,
         "page number" : 6,
         "bounding box" : [ 46.44, 381.43, 551.14, 402.67 ]
       }, {
         "type" : "image",
-        "id" : 465,
-        "page number" : 6,
-        "bounding box" : [ 46.44, 381.43, 551.14, 402.67 ]
-      }, {
-        "type" : "line",
-        "id" : 466,
-        "page number" : 6,
-        "bounding box" : [ 47.88, 384.07, 549.82, 400.03 ]
-      }, {
-        "type" : "image",
-        "id" : 467,
+        "id" : 459,
         "page number" : 6,
         "bounding box" : [ 47.88, 384.07, 549.82, 400.03 ]
       } ]
@@ -5988,8 +5854,8 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 549,
-    "level" : "6",
+    "id" : 519,
+    "level" : "1",
     "page number" : 6,
     "bounding box" : [ 61.92, 294.519, 242.81, 365.013 ],
     "numbering style" : "korean letters",
@@ -6005,7 +5871,7 @@
       "kids" : [ {
         "type" : "list",
         "id" : 429,
-        "level" : "4",
+        "level" : "2",
         "page number" : 6,
         "bounding box" : [ 71.304, 309.279, 450.07, 350.253 ],
         "numbering style" : "unordered",
@@ -6051,8 +5917,8 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 550,
-    "level" : "7",
+    "id" : 520,
+    "level" : "3",
     "page number" : 6,
     "bounding box" : [ 66.72, 279.759, 93.746, 291.213 ],
     "font" : "NanumGothic",
@@ -6061,13 +5927,13 @@
     "content" : "가) 철"
   }, {
     "type" : "list",
-    "id" : 551,
-    "level" : "8",
+    "id" : 521,
+    "level" : "4",
     "page number" : 6,
     "bounding box" : [ 67.824, 132.129, 515.125, 276.453 ],
     "numbering style" : "unordered",
     "number of list items" : 6,
-    "next list id" : 556,
+    "next list id" : 525,
     "list items" : [ {
       "type" : "list item",
       "page number" : 6,
@@ -6079,7 +5945,7 @@
       "kids" : [ {
         "type" : "list",
         "id" : 416,
-        "level" : "9",
+        "level" : "5",
         "page number" : 6,
         "bounding box" : [ 77.304, 220.719, 466.059, 261.693 ],
         "numbering style" : "unordered",
@@ -6133,7 +5999,7 @@
       "kids" : [ {
         "type" : "paragraph",
         "id" : 417,
-        "level" : "5",
+        "level" : "6",
         "page number" : 6,
         "bounding box" : [ 199.46, 176.409, 264.919, 187.863 ],
         "font" : "NanumGothic",
@@ -6171,13 +6037,13 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 552,
-    "level" : "9",
+    "id" : 522,
+    "level" : "5",
     "page number" : 6,
     "bounding box" : [ 77.304, 58.333, 200.9, 128.823 ],
     "numbering style" : "unordered",
     "number of list items" : 5,
-    "next list id" : 555,
+    "next list id" : 524,
     "list items" : [ {
       "type" : "list item",
       "page number" : 6,
@@ -6226,7 +6092,7 @@
     } ]
   }, {
     "type" : "header",
-    "id" : 553,
+    "id" : 523,
     "page number" : 7,
     "bounding box" : [ 47.16, 714.7, 551.98, 799.32 ],
     "kids" : [ {
@@ -6375,19 +6241,14 @@
       } ]
     } ]
   }, {
-    "type" : "line",
-    "id" : 554,
-    "page number" : 7,
-    "bounding box" : [ 47.25, 705.945, 552.4, 709.195 ]
-  }, {
     "type" : "list",
-    "id" : 555,
-    "level" : "9",
+    "id" : 524,
+    "level" : "5",
     "page number" : 7,
     "bounding box" : [ 77.304, 668.729, 164.54, 694.943 ],
     "numbering style" : "unordered",
     "number of list items" : 2,
-    "previous list id" : 552,
+    "previous list id" : 522,
     "list items" : [ {
       "type" : "list item",
       "page number" : 7,
@@ -6409,13 +6270,13 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 556,
-    "level" : "8",
+    "id" : 525,
+    "level" : "4",
     "page number" : 7,
     "bounding box" : [ 67.944, 107.769, 551.38, 665.423 ],
     "numbering style" : "unordered",
     "number of list items" : 6,
-    "previous list id" : 551,
+    "previous list id" : 521,
     "list items" : [ {
       "type" : "list item",
       "page number" : 7,
@@ -6445,7 +6306,7 @@
       "kids" : [ {
         "type" : "paragraph",
         "id" : 418,
-        "level" : "9",
+        "level" : "5",
         "page number" : 7,
         "bounding box" : [ 97.944, 196.359, 163.369, 207.813 ],
         "font" : "NanumGothic",
@@ -6483,8 +6344,8 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 557,
-    "level" : "7",
+    "id" : 526,
+    "level" : "3",
     "page number" : 7,
     "bounding box" : [ 66.72, 93.013, 103.104, 104.467 ],
     "font" : "NanumGothic",
@@ -6493,13 +6354,13 @@
     "content" : "나) 망간"
   }, {
     "type" : "list",
-    "id" : 558,
-    "level" : "8",
+    "id" : 527,
+    "level" : "4",
     "page number" : 7,
     "bounding box" : [ 67.944, 78.253, 119.424, 89.707 ],
     "numbering style" : "unordered",
     "number of list items" : 1,
-    "next list id" : 563,
+    "next list id" : 531,
     "list items" : [ {
       "type" : "list item",
       "page number" : 7,
@@ -6512,13 +6373,13 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 559,
-    "level" : "9",
+    "id" : 528,
+    "level" : "2",
     "page number" : 7,
     "bounding box" : [ 72.624, 48.733, 518.409, 74.947 ],
     "numbering style" : "unordered",
     "number of list items" : 2,
-    "next list id" : 562,
+    "next list id" : 530,
     "list items" : [ {
       "type" : "list item",
       "page number" : 7,
@@ -6540,7 +6401,7 @@
     } ]
   }, {
     "type" : "header",
-    "id" : 560,
+    "id" : 529,
     "page number" : 8,
     "bounding box" : [ 47.16, 714.7, 551.98, 799.32 ],
     "kids" : [ {
@@ -6689,19 +6550,14 @@
       } ]
     } ]
   }, {
-    "type" : "line",
-    "id" : 561,
-    "page number" : 8,
-    "bounding box" : [ 47.25, 705.945, 552.4, 709.195 ]
-  }, {
     "type" : "list",
-    "id" : 562,
-    "level" : "9",
+    "id" : 530,
+    "level" : "2",
     "page number" : 8,
     "bounding box" : [ 72.624, 683.489, 494.259, 694.943 ],
     "numbering style" : "unordered",
     "number of list items" : 1,
-    "previous list id" : 559,
+    "previous list id" : 528,
     "list items" : [ {
       "type" : "list item",
       "page number" : 8,
@@ -6714,14 +6570,14 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 563,
-    "level" : "8",
+    "id" : 531,
+    "level" : "4",
     "page number" : 8,
     "bounding box" : [ 67.944, 48.733, 549.82, 680.183 ],
     "numbering style" : "unordered",
     "number of list items" : 10,
-    "previous list id" : 558,
-    "next list id" : 567,
+    "previous list id" : 527,
+    "next list id" : 534,
     "list items" : [ {
       "type" : "list item",
       "page number" : 8,
@@ -6769,7 +6625,7 @@
       "kids" : [ {
         "type" : "list",
         "id" : 419,
-        "level" : "9",
+        "level" : "3",
         "page number" : 8,
         "bounding box" : [ 77.304, 491.579, 200.9, 591.623 ],
         "numbering style" : "unordered",
@@ -6887,7 +6743,7 @@
     } ]
   }, {
     "type" : "header",
-    "id" : 565,
+    "id" : 533,
     "page number" : 9,
     "bounding box" : [ 47.16, 714.7, 551.98, 799.32 ],
     "kids" : [ {
@@ -7036,19 +6892,14 @@
       } ]
     } ]
   }, {
-    "type" : "line",
-    "id" : 566,
-    "page number" : 9,
-    "bounding box" : [ 47.25, 705.945, 552.4, 709.195 ]
-  }, {
     "type" : "list",
-    "id" : 567,
-    "level" : "8",
+    "id" : 534,
+    "level" : "4",
     "page number" : 9,
     "bounding box" : [ 67.944, 683.489, 206.66, 694.943 ],
     "numbering style" : "unordered",
     "number of list items" : 1,
-    "previous list id" : 563,
+    "previous list id" : 531,
     "list items" : [ {
       "type" : "list item",
       "page number" : 9,
@@ -7061,11 +6912,11 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 568,
-    "level" : "9",
+    "id" : 535,
+    "level" : "4",
     "page number" : 9,
     "bounding box" : [ 66.72, 255.399, 112.464, 680.183 ],
-    "numbering style" : "unknown style",
+    "numbering style" : "korean letters",
     "number of list items" : 2,
     "list items" : [ {
       "type" : "list item",
@@ -7077,8 +6928,8 @@
       "content" : "다) 실리콘",
       "kids" : [ {
         "type" : "list",
-        "id" : 564,
-        "level" : "8",
+        "id" : 532,
+        "level" : "5",
         "page number" : 9,
         "bounding box" : [ 67.944, 270.159, 550.569, 665.423 ],
         "numbering style" : "unordered",
@@ -7094,7 +6945,7 @@
           "kids" : [ {
             "type" : "list",
             "id" : 420,
-            "level" : "10",
+            "level" : "3",
             "page number" : 9,
             "bounding box" : [ 77.304, 609.689, 349.617, 650.663 ],
             "numbering style" : "unordered",
@@ -7184,7 +7035,7 @@
           "kids" : [ {
             "type" : "list",
             "id" : 422,
-            "level" : "10",
+            "level" : "3",
             "page number" : 9,
             "bounding box" : [ 77.304, 388.259, 200.9, 488.273 ],
             "numbering style" : "unordered",
@@ -7322,13 +7173,13 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 569,
-    "level" : "8",
+    "id" : 536,
+    "level" : "5",
     "page number" : 9,
     "bounding box" : [ 67.944, 78.253, 542.899, 252.093 ],
     "numbering style" : "unordered",
     "number of list items" : 6,
-    "next list id" : 574,
+    "next list id" : 540,
     "list items" : [ {
       "type" : "list item",
       "page number" : 9,
@@ -7340,7 +7191,7 @@
       "kids" : [ {
         "type" : "list",
         "id" : 423,
-        "level" : "10",
+        "level" : "3",
         "page number" : 9,
         "bounding box" : [ 77.304, 181.599, 487.357, 237.333 ],
         "numbering style" : "unordered",
@@ -7356,7 +7207,7 @@
           "kids" : [ {
             "type" : "paragraph",
             "id" : 415,
-            "level" : "11",
+            "level" : "6",
             "page number" : 9,
             "bounding box" : [ 114.98, 211.119, 180.409, 222.573 ],
             "font" : "NanumGothic",
@@ -7432,13 +7283,13 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 570,
-    "level" : "10",
+    "id" : 537,
+    "level" : "3",
     "page number" : 9,
     "bounding box" : [ 77.304, 48.733, 200.9, 74.947 ],
     "numbering style" : "unordered",
     "number of list items" : 2,
-    "next list id" : 573,
+    "next list id" : 539,
     "list items" : [ {
       "type" : "list item",
       "page number" : 9,
@@ -7460,7 +7311,7 @@
     } ]
   }, {
     "type" : "header",
-    "id" : 571,
+    "id" : 538,
     "page number" : 10,
     "bounding box" : [ 47.16, 714.7, 551.98, 799.32 ],
     "kids" : [ {
@@ -7609,19 +7460,14 @@
       } ]
     } ]
   }, {
-    "type" : "line",
-    "id" : 572,
-    "page number" : 10,
-    "bounding box" : [ 47.25, 705.945, 552.4, 709.195 ]
-  }, {
     "type" : "list",
-    "id" : 573,
-    "level" : "10",
+    "id" : 539,
+    "level" : "3",
     "page number" : 10,
     "bounding box" : [ 77.304, 624.449, 164.54, 694.943 ],
     "numbering style" : "unordered",
     "number of list items" : 5,
-    "previous list id" : 570,
+    "previous list id" : 537,
     "list items" : [ {
       "type" : "list item",
       "page number" : 10,
@@ -7670,14 +7516,14 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 574,
-    "level" : "8",
+    "id" : 540,
+    "level" : "5",
     "page number" : 10,
     "bounding box" : [ 67.944, 48.733, 552.0, 621.143 ],
     "numbering style" : "unordered",
     "number of list items" : 4,
-    "previous list id" : 569,
-    "next list id" : 579,
+    "previous list id" : 536,
+    "next list id" : 544,
     "list items" : [ {
       "type" : "list item",
       "page number" : 10,
@@ -7717,7 +7563,7 @@
     } ]
   }, {
     "type" : "header",
-    "id" : 576,
+    "id" : 542,
     "page number" : 11,
     "bounding box" : [ 47.16, 714.7, 551.98, 799.32 ],
     "kids" : [ {
@@ -7866,22 +7712,17 @@
       } ]
     } ]
   }, {
-    "type" : "line",
-    "id" : 577,
-    "page number" : 11,
-    "bounding box" : [ 47.25, 705.945, 552.4, 709.195 ]
-  }, {
     "type" : "list",
-    "id" : 579,
-    "level" : "8",
+    "id" : 544,
+    "level" : "5",
     "page number" : 11,
     "bounding box" : [ 67.944, 550.619, 551.38, 694.943 ],
     "numbering style" : "unordered",
     "number of list items" : 3,
-    "previous list id" : 574,
+    "previous list id" : 540,
     "list items" : [ {
       "type" : "list item",
-      "id" : 578,
+      "id" : 543,
       "page number" : 11,
       "bounding box" : [ 143.18, 580.169, 551.38, 694.943 ],
       "font" : "NanumGothic",
@@ -7910,11 +7751,11 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 580,
-    "level" : "9",
+    "id" : 545,
+    "level" : "4",
     "page number" : 11,
     "bounding box" : [ 66.72, 93.013, 121.824, 547.313 ],
-    "numbering style" : "unknown style",
+    "numbering style" : "korean letters",
     "number of list items" : 2,
     "list items" : [ {
       "type" : "list item",
@@ -7926,8 +7767,8 @@
       "content" : "마) 니켈",
       "kids" : [ {
         "type" : "list",
-        "id" : 575,
-        "level" : "8",
+        "id" : 541,
+        "level" : "5",
         "page number" : 11,
         "bounding box" : [ 67.824, 107.769, 551.876, 532.553 ],
         "numbering style" : "unordered",
@@ -7943,7 +7784,7 @@
           "kids" : [ {
             "type" : "list",
             "id" : 424,
-            "level" : "10",
+            "level" : "3",
             "page number" : 11,
             "bounding box" : [ 77.304, 476.819, 320.424, 517.793 ],
             "numbering style" : "unordered",
@@ -7988,7 +7829,7 @@
           "kids" : [ {
             "type" : "paragraph",
             "id" : 425,
-            "level" : "5",
+            "level" : "6",
             "page number" : 11,
             "bounding box" : [ 199.46, 447.299, 264.919, 458.753 ],
             "font" : "NanumGothic",
@@ -8034,7 +7875,7 @@
           "kids" : [ {
             "type" : "list",
             "id" : 426,
-            "level" : "10",
+            "level" : "3",
             "page number" : 11,
             "bounding box" : [ 77.304, 270.159, 278.33, 370.173 ],
             "numbering style" : "unordered",
@@ -8115,7 +7956,7 @@
           "kids" : [ {
             "type" : "paragraph",
             "id" : 427,
-            "level" : "5",
+            "level" : "7",
             "page number" : 11,
             "bounding box" : [ 171.38, 240.639, 230.355, 252.093 ],
             "font" : "NanumGothic",
@@ -8182,13 +8023,13 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 581,
-    "level" : "8",
+    "id" : 546,
+    "level" : "5",
     "page number" : 11,
     "bounding box" : [ 67.944, 78.253, 119.424, 89.707 ],
     "numbering style" : "unordered",
     "number of list items" : 1,
-    "next list id" : 586,
+    "next list id" : 550,
     "list items" : [ {
       "type" : "list item",
       "page number" : 11,
@@ -8201,13 +8042,13 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 582,
-    "level" : "10",
+    "id" : 547,
+    "level" : "3",
     "page number" : 11,
     "bounding box" : [ 77.304, 48.733, 481.706, 74.947 ],
     "numbering style" : "unordered",
     "number of list items" : 1,
-    "next list id" : 585,
+    "next list id" : 549,
     "list items" : [ {
       "type" : "list item",
       "page number" : 11,
@@ -8220,7 +8061,7 @@
     } ]
   }, {
     "type" : "header",
-    "id" : 583,
+    "id" : 548,
     "page number" : 12,
     "bounding box" : [ 47.16, 714.7, 551.98, 799.32 ],
     "kids" : [ {
@@ -8369,19 +8210,14 @@
       } ]
     } ]
   }, {
-    "type" : "line",
-    "id" : 584,
-    "page number" : 12,
-    "bounding box" : [ 47.25, 705.945, 552.4, 709.195 ]
-  }, {
     "type" : "list",
-    "id" : 585,
-    "level" : "10",
+    "id" : 549,
+    "level" : "3",
     "page number" : 12,
     "bounding box" : [ 77.304, 639.209, 449.173, 694.943 ],
     "numbering style" : "unordered",
     "number of list items" : 2,
-    "previous list id" : 582,
+    "previous list id" : 547,
     "list items" : [ {
       "type" : "list item",
       "page number" : 12,
@@ -8403,13 +8239,13 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 586,
-    "level" : "8",
+    "id" : 550,
+    "level" : "5",
     "page number" : 12,
     "bounding box" : [ 67.944, 78.253, 550.793, 635.903 ],
     "numbering style" : "unordered",
     "number of list items" : 11,
-    "previous list id" : 581,
+    "previous list id" : 546,
     "list items" : [ {
       "type" : "list item",
       "page number" : 12,
@@ -8457,7 +8293,7 @@
       "kids" : [ {
         "type" : "list",
         "id" : 428,
-        "level" : "10",
+        "level" : "3",
         "page number" : 12,
         "bounding box" : [ 77.304, 388.259, 200.9, 488.273 ],
         "numbering style" : "unordered",
@@ -8584,7 +8420,7 @@
     } ]
   }, {
     "type" : "header",
-    "id" : 589,
+    "id" : 553,
     "page number" : 13,
     "bounding box" : [ 47.16, 714.7, 551.98, 799.32 ],
     "kids" : [ {
@@ -8733,40 +8569,25 @@
       } ]
     } ]
   }, {
-    "type" : "line",
-    "id" : 590,
-    "page number" : 13,
-    "bounding box" : [ 47.25, 705.945, 552.4, 709.195 ]
-  }, {
-    "type" : "line",
-    "id" : 591,
+    "type" : "image",
+    "id" : 554,
     "page number" : 13,
     "bounding box" : [ 46.44, 675.34, 551.14, 696.58 ]
   }, {
     "type" : "image",
-    "id" : 592,
-    "page number" : 13,
-    "bounding box" : [ 46.44, 675.34, 551.14, 696.58 ]
-  }, {
-    "type" : "line",
-    "id" : 593,
-    "page number" : 13,
-    "bounding box" : [ 47.88, 677.98, 549.82, 693.94 ]
-  }, {
-    "type" : "image",
-    "id" : 594,
+    "id" : 555,
     "page number" : 13,
     "bounding box" : [ 47.88, 677.98, 549.82, 693.94 ]
   }, {
     "type" : "list",
-    "id" : 595,
-    "level" : "12",
+    "id" : 556,
+    "level" : "9",
     "page number" : 13,
     "bounding box" : [ 52.92, 678.34, 178.34, 692.14 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 1,
-    "previous list id" : 548,
-    "next list id" : 613,
+    "previous list id" : 518,
+    "next list id" : 571,
     "list items" : [ {
       "type" : "list item",
       "page number" : 13,
@@ -8779,13 +8600,13 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 596,
-    "level" : "11",
+    "id" : 557,
+    "level" : "1",
     "page number" : 13,
     "bounding box" : [ 61.44, 175.089, 154.34, 658.943 ],
     "numbering style" : "korean letters",
     "number of list items" : 2,
-    "next list id" : 606,
+    "next list id" : 566,
     "list items" : [ {
       "type" : "list item",
       "page number" : 13,
@@ -8797,10 +8618,10 @@
       "kids" : [ {
         "type" : "list",
         "id" : 436,
-        "level" : "12",
+        "level" : "3",
         "page number" : 13,
         "bounding box" : [ 67.704, 573.689, 104.064, 644.183 ],
-        "numbering style" : "unknown style",
+        "numbering style" : "korean letters",
         "number of list items" : 2,
         "list items" : [ {
           "type" : "list item",
@@ -8813,7 +8634,7 @@
           "kids" : [ {
             "type" : "list",
             "id" : 432,
-            "level" : "8",
+            "level" : "4",
             "page number" : 13,
             "bounding box" : [ 67.944, 588.449, 439.299, 629.423 ],
             "numbering style" : "unordered",
@@ -8860,7 +8681,7 @@
       }, {
         "type" : "list",
         "id" : 437,
-        "level" : "8",
+        "level" : "4",
         "page number" : 13,
         "bounding box" : [ 67.944, 499.859, 539.858, 570.383 ],
         "numbering style" : "unordered",
@@ -8896,7 +8717,7 @@
       }, {
         "type" : "paragraph",
         "id" : 438,
-        "level" : "12",
+        "level" : "5",
         "page number" : 13,
         "bounding box" : [ 114.98, 485.099, 180.409, 496.553 ],
         "font" : "NanumGothic",
@@ -8906,10 +8727,10 @@
       }, {
         "type" : "list",
         "id" : 439,
-        "level" : "13",
+        "level" : "3",
         "page number" : 13,
         "bounding box" : [ 66.12, 293.199, 122.784, 481.793 ],
-        "numbering style" : "unknown style",
+        "numbering style" : "korean letters",
         "number of list items" : 4,
         "list items" : [ {
           "type" : "list item",
@@ -8922,7 +8743,7 @@
           "kids" : [ {
             "type" : "list",
             "id" : 433,
-            "level" : "8",
+            "level" : "4",
             "page number" : 13,
             "bounding box" : [ 67.944, 426.059, 159.86, 467.033 ],
             "numbering style" : "unordered",
@@ -8967,7 +8788,7 @@
           "kids" : [ {
             "type" : "list",
             "id" : 434,
-            "level" : "8",
+            "level" : "4",
             "page number" : 13,
             "bounding box" : [ 67.944, 366.999, 429.947, 407.993 ],
             "numbering style" : "unordered",
@@ -9012,7 +8833,7 @@
           "kids" : [ {
             "type" : "list",
             "id" : 435,
-            "level" : "8",
+            "level" : "4",
             "page number" : 13,
             "bounding box" : [ 67.944, 307.959, 392.495, 348.933 ],
             "numbering style" : "unordered",
@@ -9059,7 +8880,7 @@
       }, {
         "type" : "list",
         "id" : 440,
-        "level" : "8",
+        "level" : "4",
         "page number" : 13,
         "bounding box" : [ 67.944, 204.639, 487.801, 289.893 ],
         "numbering style" : "unordered",
@@ -9105,11 +8926,11 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 597,
-    "level" : "9",
+    "id" : 558,
+    "level" : "3",
     "page number" : 13,
     "bounding box" : [ 66.12, 71.773, 111.864, 171.783 ],
-    "numbering style" : "unknown style",
+    "numbering style" : "korean letters",
     "number of list items" : 3,
     "list items" : [ {
       "type" : "list item",
@@ -9121,8 +8942,8 @@
       "content" : "가) 철",
       "kids" : [ {
         "type" : "list",
-        "id" : 587,
-        "level" : "11",
+        "id" : 551,
+        "level" : "4",
         "page number" : 13,
         "bounding box" : [ 66.72, 130.809, 158.66, 157.023 ],
         "numbering style" : "unordered",
@@ -9157,8 +8978,8 @@
       "content" : "나) 망간",
       "kids" : [ {
         "type" : "list",
-        "id" : 588,
-        "level" : "11",
+        "id" : 552,
+        "level" : "4",
         "page number" : 13,
         "bounding box" : [ 66.72, 86.533, 158.66, 112.743 ],
         "numbering style" : "unordered",
@@ -9195,13 +9016,13 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 598,
-    "level" : "8",
+    "id" : 559,
+    "level" : "4",
     "page number" : 13,
     "bounding box" : [ 67.944, 57.013, 372.219, 68.467 ],
     "numbering style" : "unordered",
     "number of list items" : 1,
-    "next list id" : 601,
+    "next list id" : 561,
     "list items" : [ {
       "type" : "list item",
       "page number" : 13,
@@ -9214,7 +9035,7 @@
     } ]
   }, {
     "type" : "header",
-    "id" : 599,
+    "id" : 560,
     "page number" : 14,
     "bounding box" : [ 47.16, 714.7, 551.98, 799.32 ],
     "kids" : [ {
@@ -9363,19 +9184,14 @@
       } ]
     } ]
   }, {
-    "type" : "line",
-    "id" : 600,
-    "page number" : 14,
-    "bounding box" : [ 47.25, 705.945, 552.4, 709.195 ]
-  }, {
     "type" : "list",
-    "id" : 601,
-    "level" : "8",
+    "id" : 561,
+    "level" : "4",
     "page number" : 14,
     "bounding box" : [ 67.944, 683.489, 159.86, 694.943 ],
     "numbering style" : "unordered",
     "number of list items" : 1,
-    "previous list id" : 598,
+    "previous list id" : 559,
     "list items" : [ {
       "type" : "list item",
       "page number" : 14,
@@ -9388,8 +9204,8 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 602,
-    "level" : "7",
+    "id" : 562,
+    "level" : "5",
     "page number" : 14,
     "bounding box" : [ 66.72, 668.729, 103.104, 680.183 ],
     "font" : "NanumGothic",
@@ -9398,8 +9214,8 @@
     "content" : "라) 구리"
   }, {
     "type" : "list",
-    "id" : 603,
-    "level" : "8",
+    "id" : 563,
+    "level" : "4",
     "page number" : 14,
     "bounding box" : [ 67.944, 639.209, 223.865, 665.423 ],
     "numbering style" : "unordered",
@@ -9425,8 +9241,8 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 604,
-    "level" : "9",
+    "id" : 564,
+    "level" : "3",
     "page number" : 14,
     "bounding box" : [ 66.72, 580.169, 122.784, 635.903 ],
     "numbering style" : "korean letters",
@@ -9442,7 +9258,7 @@
       "kids" : [ {
         "type" : "list",
         "id" : 430,
-        "level" : "10",
+        "level" : "2",
         "page number" : 14,
         "bounding box" : [ 70.824, 594.929, 163.34, 621.143 ],
         "numbering style" : "unordered",
@@ -9479,8 +9295,8 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 605,
-    "level" : "11",
+    "id" : 565,
+    "level" : "2",
     "page number" : 14,
     "bounding box" : [ 72.864, 550.619, 164.78, 576.863 ],
     "numbering style" : "unordered",
@@ -9506,13 +9322,13 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 606,
-    "level" : "11",
+    "id" : 566,
+    "level" : "1",
     "page number" : 14,
     "bounding box" : [ 61.44, 432.539, 372.339, 532.553 ],
     "numbering style" : "korean letters",
     "number of list items" : 3,
-    "previous list id" : 596,
+    "previous list id" : 557,
     "list items" : [ {
       "type" : "list item",
       "page number" : 14,
@@ -9524,7 +9340,7 @@
       "kids" : [ {
         "type" : "list",
         "id" : 441,
-        "level" : "11",
+        "level" : "2",
         "page number" : 14,
         "bounding box" : [ 71.064, 462.059, 411.939, 517.793 ],
         "numbering style" : "unordered",
@@ -9579,8 +9395,8 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 607,
-    "level" : "12",
+    "id" : 567,
+    "level" : "3",
     "page number" : 14,
     "bounding box" : [ 86.784, 343.959, 538.074, 429.233 ],
     "numbering style" : "unordered",
@@ -9606,7 +9422,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 608,
+    "id" : 568,
     "page number" : 14,
     "bounding box" : [ 143.18, 299.679, 548.275, 340.653 ],
     "font" : "NanumGothic",
@@ -9614,35 +9430,25 @@
     "text color" : "[0.263]",
     "content" : "TG 218, 유사물질 CAS No.10102-40-6 조류:Dunaliella tertiolecta, NOEC, 72h, =938 mg/L, ISO 10253, 유사물질 CAS No.1010240-6 ※출처 : ECHA"
   }, {
-    "type" : "line",
-    "id" : 609,
+    "type" : "image",
+    "id" : 569,
     "page number" : 14,
     "bounding box" : [ 46.44, 262.01, 551.14, 283.25 ]
   }, {
     "type" : "image",
-    "id" : 610,
-    "page number" : 14,
-    "bounding box" : [ 46.44, 262.01, 551.14, 283.25 ]
-  }, {
-    "type" : "line",
-    "id" : 611,
-    "page number" : 14,
-    "bounding box" : [ 47.88, 264.65, 549.82, 280.61 ]
-  }, {
-    "type" : "image",
-    "id" : 612,
+    "id" : 570,
     "page number" : 14,
     "bounding box" : [ 47.88, 264.65, 549.82, 280.61 ]
   }, {
     "type" : "list",
-    "id" : 613,
-    "level" : "12",
+    "id" : 571,
+    "level" : "9",
     "page number" : 14,
     "bounding box" : [ 52.92, 192.05, 178.34, 278.81 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 2,
-    "previous list id" : 595,
-    "next list id" : 622,
+    "previous list id" : 556,
+    "next list id" : 577,
     "list items" : [ {
       "type" : "list item",
       "page number" : 14,
@@ -9653,8 +9459,8 @@
       "content" : "13. 폐기시 주의사항",
       "kids" : [ {
         "type" : "list",
-        "id" : 468,
-        "level" : "6",
+        "id" : 460,
+        "level" : "1",
         "page number" : 14,
         "bounding box" : [ 61.92, 219.399, 473.518, 245.613 ],
         "numbering style" : "korean letters",
@@ -9679,23 +9485,13 @@
           "kids" : [ ]
         } ]
       }, {
-        "type" : "line",
-        "id" : 469,
+        "type" : "image",
+        "id" : 461,
         "page number" : 14,
         "bounding box" : [ 46.44, 189.05, 551.14, 210.29 ]
       }, {
         "type" : "image",
-        "id" : 470,
-        "page number" : 14,
-        "bounding box" : [ 46.44, 189.05, 551.14, 210.29 ]
-      }, {
-        "type" : "line",
-        "id" : 471,
-        "page number" : 14,
-        "bounding box" : [ 47.88, 191.69, 549.82, 207.65 ]
-      }, {
-        "type" : "image",
-        "id" : 472,
+        "id" : 462,
         "page number" : 14,
         "bounding box" : [ 47.88, 191.69, 549.82, 207.65 ]
       } ]
@@ -9711,8 +9507,8 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 614,
-    "level" : "6",
+    "id" : 572,
+    "level" : "1",
     "page number" : 14,
     "bounding box" : [ 61.92, 87.373, 434.71, 172.623 ],
     "numbering style" : "korean letters",
@@ -9774,8 +9570,8 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 615,
-    "level" : "4",
+    "id" : 573,
+    "level" : "2",
     "page number" : 14,
     "bounding box" : [ 71.304, 57.853, 217.748, 84.067 ],
     "numbering style" : "unordered",
@@ -9801,7 +9597,7 @@
     } ]
   }, {
     "type" : "header",
-    "id" : 616,
+    "id" : 574,
     "page number" : 15,
     "bounding box" : [ 47.16, 714.7, 551.98, 799.32 ],
     "kids" : [ {
@@ -9950,40 +9746,25 @@
       } ]
     } ]
   }, {
-    "type" : "line",
-    "id" : 617,
-    "page number" : 15,
-    "bounding box" : [ 47.25, 705.945, 552.4, 709.195 ]
-  }, {
-    "type" : "line",
-    "id" : 618,
+    "type" : "image",
+    "id" : 575,
     "page number" : 15,
     "bounding box" : [ 46.44, 675.34, 551.14, 696.58 ]
   }, {
     "type" : "image",
-    "id" : 619,
-    "page number" : 15,
-    "bounding box" : [ 46.44, 675.34, 551.14, 696.58 ]
-  }, {
-    "type" : "line",
-    "id" : 620,
-    "page number" : 15,
-    "bounding box" : [ 47.88, 677.98, 549.82, 693.94 ]
-  }, {
-    "type" : "image",
-    "id" : 621,
+    "id" : 576,
     "page number" : 15,
     "bounding box" : [ 47.88, 677.98, 549.82, 693.94 ]
   }, {
     "type" : "list",
-    "id" : 622,
-    "level" : "12",
+    "id" : 577,
+    "level" : "9",
     "page number" : 15,
     "bounding box" : [ 52.92, 678.34, 150.14, 692.14 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 1,
-    "previous list id" : 613,
-    "next list id" : 633,
+    "previous list id" : 571,
+    "next list id" : 585,
     "list items" : [ {
       "type" : "list item",
       "page number" : 15,
@@ -9996,19 +9777,19 @@
     } ]
   }, {
     "type" : "Caption",
-    "id" : 623,
-    "level" : "7",
+    "id" : 578,
+    "level" : "3",
     "page number" : 15,
     "bounding box" : [ 62.88, 647.489, 202.58, 658.943 ],
-    "linked content id" : 624,
+    "linked content id" : 579,
     "font" : "NanumGothic",
     "font size" : 9.96,
     "text color" : "[0.0]",
     "content" : "가. 산업안전보건법에 의한 규제"
   }, {
     "type" : "table",
-    "id" : 624,
-    "level" : "8",
+    "id" : 579,
+    "level" : "4",
     "page number" : 15,
     "bounding box" : [ 54.24, 353.57, 547.3, 645.82 ],
     "number of rows" : 7,
@@ -10530,8 +10311,8 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 625,
-    "level" : "9",
+    "id" : 580,
+    "level" : "5",
     "page number" : 15,
     "bounding box" : [ 66.72, 127.329, 384.688, 351.813 ],
     "numbering style" : "korean letters",
@@ -10556,7 +10337,7 @@
       "kids" : [ {
         "type" : "table",
         "id" : 442,
-        "level" : "10",
+        "level" : "6",
         "page number" : 15,
         "bounding box" : [ 54.24, 254.81, 547.42, 323.93 ],
         "number of rows" : 4,
@@ -10860,7 +10641,7 @@
       "kids" : [ {
         "type" : "table",
         "id" : 443,
-        "level" : "11",
+        "level" : "7",
         "page number" : 15,
         "bounding box" : [ 54.24, 140.54, 546.82, 239.93 ],
         "number of rows" : 6,
@@ -11317,8 +11098,8 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 626,
-    "level" : "12",
+    "id" : 581,
+    "level" : "8",
     "page number" : 15,
     "bounding box" : [ 84.144, 83.053, 458.011, 124.023 ],
     "numbering style" : "unordered",
@@ -11353,7 +11134,7 @@
     } ]
   }, {
     "type" : "header",
-    "id" : 627,
+    "id" : 582,
     "page number" : 16,
     "bounding box" : [ 47.16, 714.7, 551.98, 799.32 ],
     "kids" : [ {
@@ -11502,39 +11283,24 @@
       } ]
     } ]
   }, {
-    "type" : "line",
-    "id" : 628,
-    "page number" : 16,
-    "bounding box" : [ 47.25, 705.945, 552.4, 709.195 ]
-  }, {
-    "type" : "line",
-    "id" : 629,
+    "type" : "image",
+    "id" : 583,
     "page number" : 16,
     "bounding box" : [ 46.44, 675.34, 551.14, 696.58 ]
   }, {
     "type" : "image",
-    "id" : 630,
-    "page number" : 16,
-    "bounding box" : [ 46.44, 675.34, 551.14, 696.58 ]
-  }, {
-    "type" : "line",
-    "id" : 631,
-    "page number" : 16,
-    "bounding box" : [ 47.88, 677.98, 549.82, 693.94 ]
-  }, {
-    "type" : "image",
-    "id" : 632,
+    "id" : 584,
     "page number" : 16,
     "bounding box" : [ 47.88, 677.98, 549.82, 693.94 ]
   }, {
     "type" : "list",
-    "id" : 633,
-    "level" : "12",
+    "id" : 585,
+    "level" : "9",
     "page number" : 16,
     "bounding box" : [ 52.92, 678.34, 167.06, 692.14 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 1,
-    "previous list id" : 622,
+    "previous list id" : 577,
     "list items" : [ {
       "type" : "list item",
       "page number" : 16,
@@ -11547,8 +11313,8 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 634,
-    "level" : "6",
+    "id" : 586,
+    "level" : "1",
     "page number" : 16,
     "bounding box" : [ 61.92, 455.579, 242.572, 658.943 ],
     "numbering style" : "korean letters",
@@ -11564,7 +11330,7 @@
       "kids" : [ {
         "type" : "list",
         "id" : 444,
-        "level" : "4",
+        "level" : "2",
         "page number" : 16,
         "bounding box" : [ 71.304, 485.099, 473.395, 644.183 ],
         "numbering style" : "unordered",
@@ -11691,8 +11457,8 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 635,
-    "level" : "4",
+    "id" : 587,
+    "level" : "2",
     "page number" : 16,
     "bounding box" : [ 71.304, 426.059, 248.932, 452.273 ],
     "numbering style" : "unordered",
