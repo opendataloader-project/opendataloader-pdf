@@ -134,7 +134,7 @@ public class TableTransformerProcessor {
     }
 
     private static void generatePageImages(String pdfName, String password, File imagesFolder) throws IOException {
-        try (ContrastRatioConsumer contrastRatioConsumer = new ContrastRatioConsumer(pdfName, password, 1000f)) {
+        try (ContrastRatioConsumer contrastRatioConsumer = new ContrastRatioConsumer(pdfName, password, true, 1000f)) {
             StaticLayoutContainers.setContrastRatioConsumer(contrastRatioConsumer);
             for (int pageNumber = 0; pageNumber < StaticResources.getDocument().getNumberOfPages(); pageNumber++) {
                 BufferedImage image = contrastRatioConsumer.getRenderPage(pageNumber);
