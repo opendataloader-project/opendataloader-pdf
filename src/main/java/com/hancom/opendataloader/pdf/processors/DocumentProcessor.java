@@ -13,6 +13,7 @@ import com.hancom.opendataloader.pdf.markdown.MarkdownGenerator;
 import com.hancom.opendataloader.pdf.markdown.MarkdownGeneratorFactory;
 import com.hancom.opendataloader.pdf.pdf.PDFWriter;
 import com.hancom.opendataloader.pdf.utils.Config;
+import org.codehaus.plexus.util.FileUtils;
 import org.verapdf.as.ASAtom;
 import org.verapdf.containers.StaticCoreContainers;
 import org.verapdf.cos.COSDictionary;
@@ -32,12 +33,16 @@ import org.verapdf.wcag.algorithms.entities.content.LineChunk;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.geometry.MultiBoundingBox;
 import org.verapdf.wcag.algorithms.entities.tables.TableBordersCollection;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.LinesPreprocessingConsumer;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 import org.verapdf.xmp.containers.StaticXmpCoreContainers;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -59,12 +64,20 @@ public class DocumentProcessor {
             TextProcessor.trimTextChunksWhiteSpaces(pageContents);
             pageContents = HiddenTextProcessor.findHiddenText(inputPdfName, pageContents, config.getPassword());
             processBackgrounds(pageNumber, pageContents);
+            contents.add(pageContents);
+        }
+        // This is called after text is processed in case we need to provide them to TATR
+        addTablesFromTATR(inputPdfName, config, contents);
+
+        for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
+            List<IObject> pageContents = contents.get(pageNumber);
             pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber);
             pageContents = pageContents.stream().filter(x -> !(x instanceof LineChunk)).collect(Collectors.toList());
             pageContents = TextLineProcessor.processTextLines(pageContents);
             pageContents = SpecialTableProcessor.detectSpecialTables(pageContents);
-            contents.add(pageContents);
+            contents.set(pageNumber, pageContents);
         }
+
         HeaderFooterProcessor.processHeadersAndFooters(contents);
         ListProcessor.processLists(contents, false);
         for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
@@ -93,6 +106,48 @@ public class DocumentProcessor {
                 markdownGenerator.writeToMarkdown(contents);
             }
         }
+    }
+
+    private static void addTablesFromTATR(String inputPdfName, Config config, List<List<IObject>> contents) {
+        List<List<TableBorder>> tatrTables = callTATR(inputPdfName, config, contents);
+        if (tatrTables != null) {
+            TableBordersCollection javaCollection = StaticContainers.getTableBordersCollection();
+            List<SortedSet<TableBorder>> javaBorders = javaCollection.getTableBorders();
+            Iterator<SortedSet<TableBorder>> javaI = javaBorders.iterator();
+            Iterator<List<TableBorder>> pythonI = tatrTables.iterator();
+            while (pythonI.hasNext()) {
+                List<TableBorder> pythonList = pythonI.next();
+                SortedSet<TableBorder> javaSet = javaI.next();
+                for (TableBorder border : pythonList) {
+                    // Add tables from TATR that Java failed to detect
+                    if (javaCollection.getTableBorder(border.getBoundingBox()) == null) {
+                        javaSet.add(border);
+                    }
+                }
+            }
+        }
+    }
+
+    private static List<List<TableBorder>> callTATR(String inputPdfName, Config config, List<List<IObject>> contents) {
+        File tempDir = null;
+        List<List<TableBorder>> tables = null;
+        try {
+            Path scriptFolder = Paths.get(config.getTatrFolder());
+            tempDir = Files.createTempDirectory(scriptFolder, "out-java").toFile();
+            tables = TableTransformerProcessor.processTableTransformer(
+                    inputPdfName, config.getPassword(), scriptFolder.toFile(), config.getPythonExecutable(),
+                    tempDir, contents);
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Failed to process document using TATR: " + e.getMessage());
+        }
+        if (tempDir != null) {
+            try {
+                FileUtils.deleteDirectory(tempDir);
+            } catch (IOException e) {
+                LOGGER.log(Level.WARNING, "Failed to clean up temp data of TATR: " + e.getMessage());
+            }
+        }
+        return tables;
     }
 
     public static void preprocessing(String pdfName, Config config) throws IOException {

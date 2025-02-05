@@ -33,6 +33,12 @@ public class CLIOptions {
     public static final String FOLDER_OPTION = "f";
     private static final String FOLDER_LONG_OPTION = "folder";
 
+    public static final String PYTHON_OPTION = "py";
+    private static final String PYTHON_LONG_OPTION = "python";
+
+    public static final String TATR_OPTION = "tatr";
+    private static final String TATR_LONG_OPTION = "tatrpath";
+
     public static Options defineOptions() {
         Options options = new Options();
         Option findHiddenText = new Option(HIDDEN_TEXT_OPTION, HIDDEN_TEXT_LONG_OPTION, false, "Find hidden text");
@@ -59,6 +65,12 @@ public class CLIOptions {
         Option folder = new Option(FOLDER_OPTION, FOLDER_LONG_OPTION, true, "Specify output folder (default the folder of the input PDF)");
         folder.setRequired(false);
         options.addOption(folder);
+        Option python = new Option(PYTHON_OPTION, PYTHON_LONG_OPTION, true, "Python executable to use");
+        python.setRequired(false);
+        options.addOption(python);
+        Option tatr = new Option(TATR_OPTION, TATR_LONG_OPTION, true, "Path to TATR repository");
+        tatr.setRequired(true);
+        options.addOption(tatr);
         return options;
     }
 }

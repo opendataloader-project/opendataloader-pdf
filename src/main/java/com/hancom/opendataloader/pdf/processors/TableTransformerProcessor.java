@@ -30,9 +30,13 @@ public class TableTransformerProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(TableTransformerProcessor.class.getCanonicalName());
 
-    public static List<List<IObject>> processTableTransformer(String pdfName, String password, File scriptFolder,
-                                                              File resultFolder,
-                                                              List<List<IObject>> contents) throws IOException {
+    // This options causes TATR to generate cell bboxes based on provided words instead of rows and columns
+    // It will cause cell bboxes to be a lot smaller then in Java
+    // We need to decide if we want to use words generation or not
+    private static final boolean TATR_USES_WORDS = false;
+
+    public static List<List<TableBorder>> processTableTransformer(String pdfName, String password, File scriptFolder,
+            String pythonPath, File resultFolder, List<List<IObject>> contents) throws IOException {
         resultFolder.mkdir();
         String fileName = new File(pdfName).getName();
         File fileResultFolder = new File(resultFolder + File.separator + fileName.substring(0, fileName.length() - 4));
@@ -40,38 +44,44 @@ public class TableTransformerProcessor {
         File imagesFolder = new File(fileResultFolder + File.separator + "images_folder");
         imagesFolder.mkdir();
         File wordsFolder = new File(fileResultFolder + File.separator + "words_folder");
-        wordsFolder.mkdir();
+        if (TATR_USES_WORDS) {
+            wordsFolder.mkdir();
+        }
         File tableTransformerResultFolder = new File(fileResultFolder + File.separator + "result_folder");
         resultFolder.mkdir();
         prepareInputForTableTransformerPython(pdfName, password, contents, imagesFolder, wordsFolder);
         try {
-            runTableTransformerPython(scriptFolder, imagesFolder, wordsFolder, tableTransformerResultFolder);
+            runTableTransformerPython(scriptFolder, pythonPath, imagesFolder, wordsFolder, tableTransformerResultFolder);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
         return parseTableTransformerJSONs(tableTransformerResultFolder);
     }
 
-    private static void runTableTransformerPython(File scriptFolder, File imagesFolder, File wordsFolder, File resultFolder) 
-            throws IOException, InterruptedException {
+    private static void runTableTransformerPython(File scriptFolder, String executable, File imagesFolder, File wordsFolder,
+            File resultFolder) throws IOException, InterruptedException {
+
         ProcessBuilder builder = new ProcessBuilder(
-                "py", "inference.py",
+                executable, "inference.py",
                 "--mode", "extract",
-//                "--detection_model_path", "./pubtables1m_detection_detr_r18.pth", 
                 "--detection_device", "cpu",
-//                "--structure_model_path", "./TATR-v1.1-All-msft.pth", 
-                "--words_dir", wordsFolder.getAbsolutePath(),
                 "--structure_device", "cpu",
                 "--image_dir", imagesFolder.getAbsolutePath(),
                 "--out_dir", resultFolder.getAbsolutePath(),
-                "-zp", "-ol", "--crop_padding", "25");
+                "-lo");
+        if (TATR_USES_WORDS) {
+            builder.command().add("--words_dir");
+            builder.command().add(wordsFolder.getAbsolutePath());
+        }
         builder.directory(scriptFolder);
         builder.redirectOutput(new File("python_output.txt"));
         builder.redirectError(new File("python_error.txt"));
         Process process = builder.start();
         process.waitFor();
     }
-
+    
+    // This is the original parsing method designed for _objects.json isntead of _cells.json
+    /*
     private static List<IObject> parseTableTransformerJson(File jsonFile, int pageNumber, double dpiScaling) {
         List<IObject> pageContents = new ArrayList<>();
         SortedSet<BoundingBox> tableRowsBBoxes = new TreeSet<>(Comparator.comparing(BoundingBox::getTopY).reversed());
@@ -106,14 +116,33 @@ public class TableTransformerProcessor {
         }
         return pageContents;
     }
+     */
 
-    private static List<List<IObject>> parseTableTransformerJSONs(File resultFolder) {
-        List<List<IObject>> detectedContents = new ArrayList<>();
+    private static List<TableBorder> parseTableTransformerJson(File jsonFile, int pageNumber, double dpiScaling) {
+        List<TableBorder> pageContents = new ArrayList<>();
+        try {
+            BoundingBox pageBoundingBox = DocumentProcessor.getPageBoundingBox(pageNumber);
+            TableBorderJsonBuilder builder = new TableBorderJsonBuilder(jsonFile, pageBoundingBox, dpiScaling, pageNumber);
+            TableBorder border = builder.build();
+
+            if (border == null) {
+                LOGGER.log(Level.WARNING, "Failed to build table object from JSON representation");
+            } else {
+                pageContents.add(border);
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Exception during table transformer json parsing");
+        }
+        return pageContents;
+    }
+
+    private static List<List<TableBorder>> parseTableTransformerJSONs(File resultFolder) {
+        List<List<TableBorder>> detectedContents = new ArrayList<>();
         for (int pageNumber = 0; pageNumber < StaticResources.getDocument().getNumberOfPages(); pageNumber++) {
-            List<IObject> pageContents = new ArrayList<>();
+            List<TableBorder> pageContents = new ArrayList<>();
             int jsonIndex = 0;
             while (true) {
-                File jsonFile = new File(resultFolder + File.separator + "image" + pageNumber + "_" + jsonIndex + "_objects.json");
+                File jsonFile = new File(resultFolder + File.separator + "image" + pageNumber + "_" + jsonIndex + "_cells.json");
                 if (jsonFile.exists()) {
                     pageContents.addAll(parseTableTransformerJson(jsonFile, pageNumber,
                             StaticLayoutContainers.getContrastRatioConsumer().getDpiScalingForPage(pageNumber)));
@@ -130,7 +159,9 @@ public class TableTransformerProcessor {
     private static void prepareInputForTableTransformerPython(String pdfName, String password, List<List<IObject>> contents,
                                                               File imagesFolder, File wordsFolder) throws IOException {
         generatePageImages(pdfName, password, imagesFolder);
-        generateJsonWithWords(wordsFolder, contents);
+        if (TATR_USES_WORDS) {
+            generateJsonWithWords(wordsFolder, contents);
+        }
     }
 
     private static void generatePageImages(String pdfName, String password, File imagesFolder) throws IOException {
@@ -177,19 +208,18 @@ public class TableTransformerProcessor {
     }
 
     public static BoundingBox transformBBoxFromPDFToImageCoordinates(BoundingBox boundingBox, 
-                                                                     BoundingBox pageBoundingBox, double dpiScaling) {
+            BoundingBox pageBoundingBox, double dpiScaling) {
         return new BoundingBox(boundingBox.getPageNumber(), boundingBox.getLeftX() * dpiScaling,
                 (pageBoundingBox.getHeight() - boundingBox.getTopY()) * dpiScaling,
                 boundingBox.getRightX() * dpiScaling,
                 (pageBoundingBox.getHeight() - boundingBox.getBottomY()) * dpiScaling);
     }
-
-    private static BoundingBox transformBBoxFromImageToPDFCoordinates(BoundingBox boundingBox, 
-                                                                      BoundingBox pageBoundingBox, double dpiScaling) {
+    
+    public static BoundingBox transformBBoxFromImageToPDFCoordinates(BoundingBox boundingBox, 
+            BoundingBox pageBoundingBox, double dpiScaling) {
         return new BoundingBox(boundingBox.getPageNumber(), boundingBox.getLeftX() / dpiScaling, 
                 pageBoundingBox.getHeight() - boundingBox.getTopY() / dpiScaling, 
                 boundingBox.getRightX() / dpiScaling, 
                 pageBoundingBox.getHeight() - boundingBox.getBottomY() / dpiScaling);
     }
-
 }

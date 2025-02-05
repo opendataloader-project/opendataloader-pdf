@@ -22,6 +22,8 @@ public class Config {
     private boolean useHTMLInMarkdown = false;
     private boolean addImageToMarkdown = false;
     private String outputFolder;
+    private String pythonExecutable;
+    private String tatrFolder;
 
     public static Config createConfigFromCommandLine(CommandLine commandLine) {
         Config config = new Config();
@@ -53,6 +55,14 @@ public class Config {
             File file = new File(argument);
             file = new File(file.getAbsolutePath());
             config.setOutputFolder(file.isDirectory() ? file.getAbsolutePath() : file.getParent());
+        }
+        if (commandLine.hasOption(CLIOptions.PYTHON_OPTION)) {
+            config.setPythonExecutable(commandLine.getOptionValue(CLIOptions.PYTHON_OPTION));
+        } else {
+            config.setPythonExecutable("python");
+        }
+        if (commandLine.hasOption((CLIOptions.TATR_OPTION))) {
+            config.setTatrFolder(commandLine.getOptionValue(CLIOptions.TATR_OPTION));
         }
         return config;
     }
@@ -127,5 +137,21 @@ public class Config {
 
     public void setOutputFolder(String outputFolder) {
         this.outputFolder = outputFolder;
+    }
+
+    public String getPythonExecutable() {
+        return pythonExecutable;
+    }
+
+    public void setPythonExecutable(String pythonExecutable) {
+        this.pythonExecutable = pythonExecutable;
+    }
+
+    public String getTatrFolder() {
+        return tatrFolder;
+    }
+
+    public void setTatrFolder(String tatrFolder) {
+        this.tatrFolder = tatrFolder;
     }
 }
