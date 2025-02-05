@@ -51,5 +51,6 @@ public class JsonName {
     public static final String MODIFICATION_DATE = "modification date";
     public static final String ROWS = "rows";
     public static final String CELLS = "cells";
+    public static final String BBOX = "bbox";
     public static final String NUMBERING_STYLE = "numbering style";
 }
