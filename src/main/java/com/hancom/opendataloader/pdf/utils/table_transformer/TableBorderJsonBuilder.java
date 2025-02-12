@@ -1,6 +1,9 @@
-package com.hancom.opendataloader.pdf.processors;
+package com.hancom.opendataloader.pdf.utils.table_transformer;
 
+
+import com.hancom.opendataloader.pdf.processors.TableTransformerProcessor;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
+import org.verapdf.wcag.algorithms.entities.geometry.MultiBoundingBox;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
@@ -14,8 +17,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -34,10 +35,10 @@ public class TableBorderJsonBuilder {
     }
 
     private TableOfCells tableOfCells;
-    private List<Double> xCoordinates;
-    private List<Double> xWidths;
-    private List<Double> yCoordinates;
-    private List<Double> yWidths;
+//    private List<Double> xCoordinates;
+//    private List<Double> xWidths;
+//    private List<Double> yCoordinates;
+//    private List<Double> yWidths;
     private TableBorderRow[] rows;
     private int numRows;
     private int numCols;
@@ -95,7 +96,7 @@ public class TableBorderJsonBuilder {
             // We could check this by looking at column_nums of cells that belong to this row
             rows[r] = new TableBorderRow(r, numCols, StaticContainers.getNextID());
             // TODO: every row needs bounding box from _objects.json
-            rows[r].setBoundingBox(new BoundingBox(pageNumber, 0, 0, 0, 0));
+//            rows[r].setBoundingBox(new BoundingBox(pageNumber, 0, 0, 0, 0));
         }
 
         for (CellData cell : tableOfCells.objects) {
@@ -121,26 +122,37 @@ public class TableBorderJsonBuilder {
             }
         }
 
-        // TATR does not provide info about border width
-        xWidths = Collections.nCopies(numCols + 1, 0.0);
-        yWidths = Collections.nCopies(numRows + 1, 0.0);
-
-        // TODO: coordinates should be based on column and row bboxes from _objects.json
-        double colWidth = tableBoundingBox.getWidth() / numCols;
-        double rowHeight = tableBoundingBox.getHeight() / numRows;
-        double tableLeft = tableBoundingBox.getLeftX();
-        double tableTop = tableBoundingBox.getTopY();
-
-        xCoordinates = new ArrayList<>();
-        for (int i = 0; i < numCols; i++) {
-            xCoordinates.add(tableLeft + i * colWidth);
+        for (int rowNumber = 0; rowNumber < numRows; rowNumber++) {
+            BoundingBox multiBoundingBox = new MultiBoundingBox();
+            for (int colNumber = 0; colNumber < numCols; colNumber++) {
+                if (rows[rowNumber].getCell(colNumber).getColNumber() == colNumber &&
+                        rows[rowNumber].getCell(colNumber).getRowNumber() == rowNumber) {
+                    multiBoundingBox.union(rows[rowNumber].getCell(colNumber).getBoundingBox());
+                }
+            }
+            rows[rowNumber].setBoundingBox(multiBoundingBox);
         }
-        xCoordinates.add(tableLeft + numCols * colWidth);
-        yCoordinates = new ArrayList<>();
-        for (int i = 0; i < numRows; i++) {
-            yCoordinates.add(tableTop - i * rowHeight);
-        }
-        yCoordinates.add(tableTop - numCols * rowHeight);
+
+//        // TATR does not provide info about border width
+//        xWidths = Collections.nCopies(numCols + 1, 0.0);
+//        yWidths = Collections.nCopies(numRows + 1, 0.0);
+//
+//        // TODO: coordinates should be based on column and row bboxes from _objects.json
+//        double colWidth = tableBoundingBox.getWidth() / numCols;
+//        double rowHeight = tableBoundingBox.getHeight() / numRows;
+//        double tableLeft = tableBoundingBox.getLeftX();
+//        double tableTop = tableBoundingBox.getTopY();
+
+//        xCoordinates = new ArrayList<>();
+//        for (int i = 0; i < numCols; i++) {
+//            xCoordinates.add(tableLeft + i * colWidth);
+//        }
+//        xCoordinates.add(tableLeft + numCols * colWidth);
+//        yCoordinates = new ArrayList<>();
+//        for (int i = 0; i < numRows; i++) {
+//            yCoordinates.add(tableTop - i * rowHeight);
+//        }
+//        yCoordinates.add(tableTop - numRows * rowHeight);
     }
 
     public TableBorder build() {
@@ -149,10 +161,10 @@ public class TableBorderJsonBuilder {
         }
         return new TableBorder(
                 tableBoundingBox,
-                xCoordinates,
-                xWidths,
-                yCoordinates,
-                yWidths,
+//                xCoordinates,
+//                xWidths,
+//                yCoordinates,
+//                yWidths,
                 rows,
                 numRows,
                 numCols

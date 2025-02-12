@@ -8,6 +8,7 @@
 package com.hancom.opendataloader.pdf.processors;
 
 import com.hancom.opendataloader.pdf.containers.StaticLayoutContainers;
+import com.hancom.opendataloader.pdf.utils.table_transformer.TableBorderJsonBuilder;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
@@ -31,7 +32,7 @@ public class TableTransformerProcessor {
     private static final Logger LOGGER = Logger.getLogger(TableTransformerProcessor.class.getCanonicalName());
 
     // This options causes TATR to generate cell bboxes based on provided words instead of rows and columns
-    // It will cause cell bboxes to be a lot smaller then in Java
+    // It will cause cell bboxes to be a lot smaller than in Java
     // We need to decide if we want to use words generation or not
     private static final boolean TATR_USES_WORDS = false;
 
