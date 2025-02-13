@@ -76,15 +76,15 @@ public class TableBorderJsonBuilder {
         int maxRow = 0;
         int maxCol = 0;
         for (CellData cell : tableOfCells.objects) {
-            for (Integer rowNum : cell.row_nums) {
-                if (rowNum > maxRow) {
-                    maxRow = rowNum;
-                }
+            cell.row_nums.sort(Integer::compareTo);
+            cell.column_nums.sort(Integer::compareTo);
+            Integer rowNum = cell.row_nums.get(cell.row_nums.size() - 1);
+            if (rowNum > maxRow) {
+                maxRow = rowNum;
             }
-            for (Integer colNum : cell.column_nums) {
-                if (colNum > maxCol) {
-                    maxCol = colNum;
-                }
+            Integer colNum = cell.column_nums.get(cell.column_nums.size() - 1);
+            if (colNum > maxCol) {
+                maxCol = colNum;
             }
         }
         numRows = maxRow + 1;

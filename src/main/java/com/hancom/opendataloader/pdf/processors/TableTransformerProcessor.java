@@ -9,10 +9,6 @@ package com.hancom.opendataloader.pdf.processors;
 
 import com.hancom.opendataloader.pdf.containers.StaticLayoutContainers;
 import com.hancom.opendataloader.pdf.utils.table_transformer.TableBorderJsonBuilder;
-import com.jayway.jsonpath.Configuration;
-import com.jayway.jsonpath.DocumentContext;
-import com.jayway.jsonpath.JsonPath;
-import net.minidev.json.JSONArray;
 import org.verapdf.tools.StaticResources;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
@@ -129,10 +125,12 @@ public class TableTransformerProcessor {
             if (border == null) {
                 LOGGER.log(Level.WARNING, "Failed to build table object from JSON representation");
             } else {
-                pageContents.add(border);
+                if (border.getNumberOfColumns() > 1 && border.getNumberOfRows() > 1) {
+                    pageContents.add(border);
+                }
             }
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Exception during table transformer json parsing");
+            LOGGER.log(Level.WARNING, "Exception during table transformer json parsing on page " + (pageNumber + 1));
         }
         return pageContents;
     }
