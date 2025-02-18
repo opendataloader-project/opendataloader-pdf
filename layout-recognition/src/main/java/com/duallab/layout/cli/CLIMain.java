@@ -25,9 +25,9 @@ public class CLIMain {
     private static final String HELP = "[options] <INPUT FILE OR FOLDER>\n Options:";
     
     public static void main(String[] args) throws IOException {
-        if (!checkCurrentDate()) {
-            return;
-        }
+//        if (!checkCurrentDate()) {
+//            return;
+//        }
         Options options = CLIOptions.defineOptions();
         HelpFormatter formatter = new HelpFormatter();
         CommandLine commandLine;
@@ -76,7 +76,7 @@ public class CLIMain {
 
     private static boolean checkCurrentDate() {
         Date currentDate = new Date();
-        Date lockDate = new Date(2025, Calendar.MARCH, 1);
+        Date lockDate = new Date(2025 - 1900, Calendar.MARCH, 1);
         if (currentDate.after(lockDate)) {
             LOGGER.log(Level.WARNING, "Trial version expired March 1, 2025");
             return false;
