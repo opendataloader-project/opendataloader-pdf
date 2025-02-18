@@ -17,8 +17,8 @@ import org.verapdf.tools.StaticResources;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
-import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioConsumer;
 
+import java.io.File;
 import java.io.IOException;
 
 import static com.hancom.opendataloader.pdf.processors.TableTransformerProcessor.transformBBoxFromPDFToImageCoordinates;
@@ -35,7 +35,7 @@ public class TableSerializer extends StdSerializer<TableBorder> {
 		BoundingBox pageBoundingBox = DocumentProcessor.getPageBoundingBox(table.getPageNumber());
 		double dpiScaling = StaticLayoutContainers.getContrastRatioConsumer().getDpiScalingForPage(table.getPageNumber());
 		jsonGenerator.writeStartObject();
-		String fileName = StaticResources.getDocument().getDocument().getFileName();
+		String fileName = new File(StaticResources.getDocument().getDocument().getFileName()).getName();
 		jsonGenerator.writeStringField("image_name",  fileName.substring(0, fileName.length() - 4) + "_page_" + table.getPageNumber() + ".jpg");
 		writeBoundingBox(jsonGenerator, "table_bbox", table.getBoundingBox(), pageBoundingBox, dpiScaling);
 		jsonGenerator.writeFieldName("image_size");
