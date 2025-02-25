@@ -104,7 +104,7 @@
           "type" : "image",
           "id" : 39,
           "page number" : 1,
-          "bounding box" : [ 113.57, 190.75, 120.74, 197.16 ]
+          "bounding box" : [ 113.57, 190.75, 120.59, 197.16 ]
         }, {
           "type" : "image",
           "id" : 40,
@@ -1165,7 +1165,7 @@
     "type" : "image",
     "id" : 218,
     "page number" : 1,
-    "bounding box" : [ 218.74, 712.26, 282.36, 725.66 ]
+    "bounding box" : [ 218.74, 712.26, 281.374, 725.66 ]
   }, {
     "type" : "image",
     "id" : 219,
@@ -1175,7 +1175,7 @@
     "type" : "image",
     "id" : 220,
     "page number" : 1,
-    "bounding box" : [ 282.52, 712.4, 326.27, 725.8 ]
+    "bounding box" : [ 282.52, 712.4, 325.364, 725.78 ]
   }, {
     "type" : "image",
     "id" : 221,
@@ -1185,7 +1185,7 @@
     "type" : "image",
     "id" : 222,
     "page number" : 1,
-    "bounding box" : [ 26.654, 208.937, 47.53, 220.38 ]
+    "bounding box" : [ 26.654, 208.84, 47.41, 218.27 ]
   }, {
     "type" : "image",
     "id" : 223,
@@ -1195,22 +1195,22 @@
     "type" : "image",
     "id" : 224,
     "page number" : 1,
-    "bounding box" : [ 26.654, 599.507, 47.53, 610.95 ]
+    "bounding box" : [ 26.654, 599.41, 47.41, 608.84 ]
   }, {
     "type" : "image",
     "id" : 225,
     "page number" : 1,
-    "bounding box" : [ 48.381, 597.55, 90.53, 611.13 ]
+    "bounding box" : [ 48.381, 597.55, 89.263, 610.95 ]
   }, {
     "type" : "image",
     "id" : 226,
     "page number" : 1,
-    "bounding box" : [ 288.38, 598.42, 339.02, 610.99 ]
+    "bounding box" : [ 288.38, 599.71, 339.02, 610.99 ]
   }, {
     "type" : "image",
     "id" : 227,
     "page number" : 1,
-    "bounding box" : [ 338.33, 598.31, 360.96, 611.88 ]
+    "bounding box" : [ 338.96, 598.31, 359.7, 611.7 ]
   }, {
     "type" : "paragraph",
     "id" : 228,
@@ -1234,17 +1234,17 @@
     "type" : "image",
     "id" : 231,
     "page number" : 1,
-    "bounding box" : [ 50.397, 386.95, 90.004, 398.43 ]
+    "bounding box" : [ 51.676, 386.99, 90.004, 398.32 ]
   }, {
     "type" : "image",
     "id" : 232,
     "page number" : 1,
-    "bounding box" : [ 91.387, 386.95, 116.35, 398.43 ]
+    "bounding box" : [ 91.387, 388.95, 115.745, 398.16 ]
   }, {
     "type" : "image",
     "id" : 233,
     "page number" : 1,
-    "bounding box" : [ 115.21, 386.95, 145.85, 398.43 ]
+    "bounding box" : [ 116.71, 387.1, 145.85, 398.13 ]
   }, {
     "type" : "image",
     "id" : 234,
@@ -1254,12 +1254,12 @@
     "type" : "image",
     "id" : 235,
     "page number" : 1,
-    "bounding box" : [ 163.68, 386.99, 196.03, 398.32 ]
+    "bounding box" : [ 164.96, 386.99, 195.72, 398.32 ]
   }, {
     "type" : "image",
     "id" : 236,
     "page number" : 1,
-    "bounding box" : [ 196.12, 388.18, 235.72, 398.08 ]
+    "bounding box" : [ 196.12, 388.45, 235.44, 398.08 ]
   }, {
     "type" : "image",
     "id" : 237,
@@ -1269,7 +1269,7 @@
     "type" : "image",
     "id" : 238,
     "page number" : 1,
-    "bounding box" : [ 34.746, 376.15, 65.92, 387.63 ]
+    "bounding box" : [ 34.746, 376.38, 65.92, 387.49 ]
   }, {
     "type" : "image",
     "id" : 239,
@@ -1284,7 +1284,7 @@
     "type" : "image",
     "id" : 241,
     "page number" : 1,
-    "bounding box" : [ 97.627, 376.15, 114.78, 387.36 ]
+    "bounding box" : [ 97.627, 378.464, 114.46, 387.36 ]
   }, {
     "type" : "image",
     "id" : 242,
@@ -1294,7 +1294,7 @@
     "type" : "image",
     "id" : 243,
     "page number" : 1,
-    "bounding box" : [ 130.23, 376.15, 154.96, 387.63 ]
+    "bounding box" : [ 130.23, 377.65, 154.68, 387.07 ]
   }, {
     "type" : "image",
     "id" : 244,
@@ -1304,12 +1304,12 @@
     "type" : "image",
     "id" : 245,
     "page number" : 1,
-    "bounding box" : [ 171.84, 376.15, 197.97, 387.63 ]
+    "bounding box" : [ 171.84, 376.27, 197.417, 387.63 ]
   }, {
     "type" : "image",
     "id" : 246,
     "page number" : 1,
-    "bounding box" : [ 196.88, 376.15, 227.33, 387.63 ]
+    "bounding box" : [ 196.88, 377.65, 227.33, 387.46 ]
   }, {
     "type" : "image",
     "id" : 247,
@@ -1319,12 +1319,12 @@
     "type" : "image",
     "id" : 248,
     "page number" : 1,
-    "bounding box" : [ 34.557, 365.35, 45.424, 376.56 ]
+    "bounding box" : [ 34.883, 367.664, 45.098, 376.56 ]
   }, {
     "type" : "image",
     "id" : 249,
     "page number" : 1,
-    "bounding box" : [ 44.528, 365.35, 77.688, 376.83 ]
+    "bounding box" : [ 44.528, 365.46, 77.023, 376.67 ]
   }, {
     "type" : "image",
     "id" : 250,
@@ -1339,7 +1339,7 @@
     "type" : "image",
     "id" : 252,
     "page number" : 1,
-    "bounding box" : [ 33.597, 354.55, 51.326, 366.15 ]
+    "bounding box" : [ 34.028, 356.295, 53.553, 364.81 ]
   }, {
     "type" : "image",
     "id" : 253,
@@ -1349,7 +1349,7 @@
     "type" : "image",
     "id" : 254,
     "page number" : 1,
-    "bounding box" : [ 53.516, 354.55, 109.65, 366.03 ]
+    "bounding box" : [ 53.516, 356.05, 109.65, 365.44 ]
   }, {
     "type" : "image",
     "id" : 255,
@@ -1359,7 +1359,7 @@
     "type" : "image",
     "id" : 256,
     "page number" : 1,
-    "bounding box" : [ 294.79, 332.4, 335.65, 341.99 ]
+    "bounding box" : [ 295.56, 332.63, 334.56, 341.99 ]
   }, {
     "type" : "image",
     "id" : 257,
@@ -1369,17 +1369,17 @@
     "type" : "image",
     "id" : 258,
     "page number" : 1,
-    "bounding box" : [ 358.79, 331.13, 399.714, 342.61 ]
+    "bounding box" : [ 358.79, 331.2, 399.714, 342.35 ]
   }, {
     "type" : "image",
     "id" : 259,
     "page number" : 1,
-    "bounding box" : [ 398.69, 331.2, 424.19, 342.61 ]
+    "bounding box" : [ 398.69, 331.2, 424.733, 342.02 ]
   }, {
     "type" : "image",
     "id" : 260,
     "page number" : 1,
-    "bounding box" : [ 423.31, 331.39, 431.97, 342.43 ]
+    "bounding box" : [ 423.31, 332.63, 433.912, 341.28 ]
   }, {
     "type" : "image",
     "id" : 261,
@@ -1389,12 +1389,12 @@
     "type" : "image",
     "id" : 262,
     "page number" : 1,
-    "bounding box" : [ 438.18, 332.47, 449.05, 341.82 ]
+    "bounding box" : [ 438.51, 333.562, 448.71, 341.24 ]
   }, {
     "type" : "image",
     "id" : 263,
     "page number" : 1,
-    "bounding box" : [ 447.67, 331.39, 456.33, 342.43 ]
+    "bounding box" : [ 447.67, 332.63, 458.272, 341.28 ]
   }, {
     "type" : "image",
     "id" : 264,
@@ -1404,12 +1404,12 @@
     "type" : "image",
     "id" : 265,
     "page number" : 1,
-    "bounding box" : [ 459.44, 331.19, 468.72, 342.61 ]
+    "bounding box" : [ 459.44, 331.19, 468.962, 340.952 ]
   }, {
     "type" : "image",
     "id" : 266,
     "page number" : 1,
-    "bounding box" : [ 468.31, 331.39, 476.97, 342.43 ]
+    "bounding box" : [ 468.31, 332.63, 478.912, 341.28 ]
   }, {
     "type" : "image",
     "id" : 267,
@@ -1419,7 +1419,7 @@
     "type" : "image",
     "id" : 268,
     "page number" : 1,
-    "bounding box" : [ 479.58, 331.39, 496.0, 342.52 ]
+    "bounding box" : [ 479.58, 332.63, 497.976, 342.04 ]
   }, {
     "type" : "image",
     "id" : 269,
@@ -1434,7 +1434,7 @@
     "type" : "image",
     "id" : 271,
     "page number" : 1,
-    "bounding box" : [ 352.54, 321.83, 370.81, 331.46 ]
+    "bounding box" : [ 352.54, 321.83, 370.39, 331.46 ]
   }, {
     "type" : "image",
     "id" : 272,
@@ -1444,7 +1444,7 @@
     "type" : "image",
     "id" : 273,
     "page number" : 1,
-    "bounding box" : [ 375.31, 320.41, 398.853, 331.81 ]
+    "bounding box" : [ 375.31, 320.41, 398.853, 331.7 ]
   }, {
     "type" : "image",
     "id" : 274,
@@ -1454,7 +1454,7 @@
     "type" : "image",
     "id" : 275,
     "page number" : 1,
-    "bounding box" : [ 416.39, 320.33, 441.34, 331.81 ]
+    "bounding box" : [ 416.39, 321.62, 441.082, 330.638 ]
   }, {
     "type" : "image",
     "id" : 276,
@@ -1464,7 +1464,7 @@
     "type" : "image",
     "id" : 277,
     "page number" : 1,
-    "bounding box" : [ 474.79, 320.33, 507.59, 331.81 ]
+    "bounding box" : [ 474.96, 320.55, 506.927, 331.08 ]
   }, {
     "type" : "image",
     "id" : 278,
@@ -1479,7 +1479,7 @@
     "type" : "image",
     "id" : 280,
     "page number" : 1,
-    "bounding box" : [ 294.06, 309.53, 311.79, 321.12 ]
+    "bounding box" : [ 294.49, 311.265, 314.016, 319.79 ]
   }, {
     "type" : "image",
     "id" : 281,
@@ -1489,12 +1489,12 @@
     "type" : "image",
     "id" : 282,
     "page number" : 1,
-    "bounding box" : [ 313.5, 309.57, 346.21, 320.9 ]
+    "bounding box" : [ 314.78, 309.57, 345.91, 320.9 ]
   }, {
     "type" : "image",
     "id" : 283,
     "page number" : 1,
-    "bounding box" : [ 346.06, 311.03, 364.33, 320.66 ]
+    "bounding box" : [ 346.06, 311.03, 363.91, 320.66 ]
   }, {
     "type" : "image",
     "id" : 284,
@@ -1504,7 +1504,7 @@
     "type" : "image",
     "id" : 285,
     "page number" : 1,
-    "bounding box" : [ 364.02, 309.53, 420.15, 321.01 ]
+    "bounding box" : [ 364.02, 311.03, 420.15, 320.42 ]
   }, {
     "type" : "table",
     "id" : 286,
@@ -2615,7 +2615,7 @@
           "type" : "image",
           "id" : 90,
           "page number" : 1,
-          "bounding box" : [ 340.395, 360.825, 363.065, 368.785 ]
+          "bounding box" : [ 340.395, 360.825, 364.263, 368.785 ]
         }, {
           "type" : "image",
           "id" : 91,
@@ -2785,7 +2785,7 @@
     "type" : "image",
     "id" : 309,
     "page number" : 2,
-    "bounding box" : [ 339.65, 87.056, 353.3, 95.36 ]
+    "bounding box" : [ 340.138, 87.056, 353.3, 95.36 ]
   }, {
     "type" : "image",
     "id" : 310,
@@ -3000,7 +3000,7 @@
     "type" : "image",
     "id" : 352,
     "page number" : 2,
-    "bounding box" : [ 293.78, 67.029, 314.07, 75.611 ]
+    "bounding box" : [ 293.78, 67.029, 313.85, 75.611 ]
   }, {
     "type" : "image",
     "id" : 353,
@@ -3165,7 +3165,7 @@
     "type" : "image",
     "id" : 385,
     "page number" : 2,
-    "bounding box" : [ 394.51, 56.845, 415.66, 65.531 ]
+    "bounding box" : [ 394.51, 56.845, 415.45, 65.531 ]
   }, {
     "type" : "image",
     "id" : 386,
@@ -3425,7 +3425,7 @@
     "type" : "image",
     "id" : 437,
     "page number" : 2,
-    "bounding box" : [ 373.27, 36.925, 394.3, 45.611 ]
+    "bounding box" : [ 373.27, 36.925, 394.09, 45.611 ]
   }, {
     "type" : "image",
     "id" : 438,
@@ -3450,7 +3450,7 @@
     "type" : "image",
     "id" : 442,
     "page number" : 2,
-    "bounding box" : [ 482.42, 37.029, 502.71, 45.611 ]
+    "bounding box" : [ 482.42, 37.029, 502.49, 45.611 ]
   }, {
     "type" : "image",
     "id" : 443,
@@ -3535,7 +3535,7 @@
     "type" : "image",
     "id" : 459,
     "page number" : 2,
-    "bounding box" : [ 284.67, 26.845, 305.31, 35.531 ]
+    "bounding box" : [ 284.67, 26.845, 305.09, 35.531 ]
   }, {
     "type" : "image",
     "id" : 460,
@@ -3850,12 +3850,12 @@
     "type" : "image",
     "id" : 522,
     "page number" : 2,
-    "bounding box" : [ 27.254, 691.866, 48.13, 703.31 ]
+    "bounding box" : [ 27.254, 691.77, 48.01, 701.2 ]
   }, {
     "type" : "image",
     "id" : 523,
     "page number" : 2,
-    "bounding box" : [ 48.981, 689.91, 91.13, 703.48 ]
+    "bounding box" : [ 48.981, 689.91, 89.863, 703.31 ]
   }, {
     "type" : "image",
     "id" : 524,
@@ -3865,7 +3865,7 @@
     "type" : "image",
     "id" : 525,
     "page number" : 2,
-    "bounding box" : [ 102.14, 689.91, 143.12, 703.46 ]
+    "bounding box" : [ 102.14, 689.91, 143.12, 703.14 ]
   }, {
     "type" : "image",
     "id" : 526,

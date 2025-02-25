@@ -222,12 +222,11 @@
     "text color" : "[0.0, 0.0, 0.0]",
     "content" : "(54) 묜릅왘 릅칭 위욐 머쀜에 삽욅댘는 왴미지 개체 내에 포푨댜 개외 윕보를 식별푠 수 욈는 위욐 단말 욥치 묏 그 동욑 묩뮕"
   }, {
-    "type" : "heading",
+    "type" : "paragraph",
     "id" : 121,
-    "level" : "Doctitle",
+    "level" : "1",
     "page number" : 1,
     "bounding box" : [ 65.862, 495.03, 118.57, 504.99 ],
-    "heading level" : 1,
     "font" : "BatangChe",
     "font size" : 10.311,
     "text color" : "[1.0, 0.0, 0.5]",
@@ -244,7 +243,7 @@
   }, {
     "type" : "heading",
     "id" : 123,
-    "level" : "Subtitle",
+    "level" : "Doctitle",
     "page number" : 1,
     "bounding box" : [ 65.862, 435.51, 133.14, 445.47 ],
     "heading level" : 1,
@@ -486,12 +485,10 @@
     "text color" : "[0.0, 0.0, 0.0]",
     "content" : "를 포푨푘는 위욐 단말 욥치."
   }, {
-    "type" : "heading",
+    "type" : "paragraph",
     "id" : 147,
-    "level" : "Subtitle",
     "page number" : 3,
     "bounding box" : [ 64.218, 389.944, 99.918, 398.944 ],
-    "heading level" : 3,
     "font" : "BatangChe",
     "font size" : 9.0,
     "text color" : "[0.0, 0.0, 0.0]",
@@ -533,12 +530,10 @@
     "text color" : "[0.0, 0.0, 0.0]",
     "content" : "를 뉔 포푨푘는 위욐 단말 욥치."
   }, {
-    "type" : "heading",
+    "type" : "paragraph",
     "id" : 152,
-    "level" : "Subtitle",
     "page number" : 3,
     "bounding box" : [ 64.227, 228.553, 99.927, 237.553 ],
-    "heading level" : 3,
     "font" : "BatangChe",
     "font size" : 9.0,
     "text color" : "[0.0, 0.0, 0.0]",
@@ -691,12 +686,10 @@
     "text color" : "[0.0, 0.0, 0.0]",
     "content" : "를 뉔 포푨푘는 위욐 단말 욥치."
   }, {
-    "type" : "heading",
+    "type" : "paragraph",
     "id" : 168,
-    "level" : "Subtitle",
     "page number" : 4,
     "bounding box" : [ 64.231, 252.677, 99.931, 261.677 ],
-    "heading level" : 3,
     "font" : "BatangChe",
     "font size" : 9.0,
     "text color" : "[0.0, 0.0, 0.0]",
@@ -729,12 +722,10 @@
     "text color" : "[0.0, 0.0, 0.0]",
     "content" : "를 뉔 포푨푘는 위욐 단말 욥치."
   }, {
-    "type" : "heading",
+    "type" : "paragraph",
     "id" : 172,
-    "level" : "Subtitle",
     "page number" : 4,
     "bounding box" : [ 64.238, 125.604, 99.938, 134.604 ],
-    "heading level" : 3,
     "font" : "BatangChe",
     "font size" : 9.0,
     "text color" : "[0.0, 0.0, 0.0]",
@@ -842,12 +833,10 @@
     "text color" : "[0.0, 0.0, 0.0]",
     "content" : "를 포푨푘는 위욐 단말 욥치왘 동욑 묩뮕."
   }, {
-    "type" : "heading",
+    "type" : "paragraph",
     "id" : 183,
-    "level" : "Subtitle",
     "page number" : 5,
     "bounding box" : [ 64.215, 521.221, 99.915, 530.221 ],
-    "heading level" : 3,
     "font" : "BatangChe",
     "font size" : 9.0,
     "text color" : "[0.0, 0.0, 0.0]",
@@ -889,12 +878,10 @@
     "text color" : "[0.0, 0.0, 0.0]",
     "content" : "를 뉔 포푨푘는 위욐 단말 욥치왘 동욑 묩뮕."
   }, {
-    "type" : "heading",
+    "type" : "paragraph",
     "id" : 188,
-    "level" : "Subtitle",
     "page number" : 5,
     "bounding box" : [ 64.223, 373.989, 99.923, 382.989 ],
-    "heading level" : 3,
     "font" : "BatangChe",
     "font size" : 9.0,
     "text color" : "[0.0, 0.0, 0.0]",
@@ -1002,12 +989,10 @@
     "text color" : "[0.0, 0.0, 0.0]",
     "content" : "를 포푨푘는 위욐 단말 욥치왘 동욑 묩뮕."
   }, {
-    "type" : "heading",
+    "type" : "paragraph",
     "id" : 199,
-    "level" : "Subtitle",
     "page number" : 6,
     "bounding box" : [ 64.203, 715.129, 99.903, 724.129 ],
-    "heading level" : 3,
     "font" : "BatangChe",
     "font size" : 9.0,
     "text color" : "[0.0, 0.0, 0.0]",
@@ -1076,12 +1061,10 @@
     "text color" : "[0.0, 0.0, 0.0]",
     "content" : "를 뉔 포푨푘는 위욐 단말 욥치왘 동욑 묩뮕."
   }, {
-    "type" : "heading",
+    "type" : "paragraph",
     "id" : 207,
-    "level" : "Subtitle",
     "page number" : 6,
     "bounding box" : [ 64.222, 394.148, 104.482, 403.148 ],
-    "heading level" : 3,
     "font" : "BatangChe",
     "font size" : 9.0,
     "text color" : "[0.0, 0.0, 0.0]",
@@ -1114,12 +1097,10 @@
     "text color" : "[0.0, 0.0, 0.0]",
     "content" : "를 뉔 포푨푘는 위욐 단말 욥치왘 동욑 묩뮕."
   }, {
-    "type" : "heading",
+    "type" : "paragraph",
     "id" : 211,
-    "level" : "Subtitle",
     "page number" : 6,
     "bounding box" : [ 64.229, 267.075, 104.489, 276.075 ],
-    "heading level" : 3,
     "font" : "BatangChe",
     "font size" : 9.0,
     "text color" : "[0.0, 0.0, 0.0]",
@@ -1134,12 +1115,10 @@
     "text color" : "[0.0, 0.0, 0.0]",
     "content" : "윜6푭 내지 윜10푭 접 어느 표 푭왘 묩뮕완 컴퓨퀰앀왘 결푩완 통푴 실풉시키괰 옄표 컴퓨퀰 퐄띜그램완 괰띝표 컴퓨퀰 툐독 가능 괰띝 매체."
   }, {
-    "type" : "heading",
+    "type" : "paragraph",
     "id" : 213,
-    "level" : "Subtitle",
     "page number" : 6,
     "bounding box" : [ 64.232, 208.638, 104.492, 217.638 ],
-    "heading level" : 3,
     "font" : "BatangChe",
     "font size" : 9.0,
     "text color" : "[0.0, 0.0, 0.0]",

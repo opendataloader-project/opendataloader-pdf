@@ -1228,12 +1228,10 @@
     "text color" : "[1.0]",
     "content" : "8.00"
   }, {
-    "type" : "heading",
+    "type" : "paragraph",
     "id" : 81,
-    "level" : "Subtitle",
     "page number" : 1,
     "bounding box" : [ 69.36, 510.064, 394.475, 535.504 ],
-    "heading level" : 3,
     "font" : "NanumBarunGothic",
     "font size" : 5.64,
     "text color" : "[0.0]",
@@ -1297,12 +1295,11 @@
     "text color" : "[0.0]",
     "content" : "홍콩 49.4%, A주 15.8%, 중국 ADR 4.5%, 레드칩3.1%로 구성되어 있습니다."
   }, {
-    "type" : "heading",
+    "type" : "paragraph",
     "id" : 88,
-    "level" : "Subtitle",
+    "level" : "5",
     "page number" : 1,
     "bounding box" : [ 277.37, 310.838, 307.046, 318.146 ],
-    "heading level" : 2,
     "font" : "NanumBarunGothicBold",
     "font size" : 6.36,
     "text color" : "[0.0]",

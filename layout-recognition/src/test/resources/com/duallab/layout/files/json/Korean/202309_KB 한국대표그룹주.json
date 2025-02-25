@@ -891,10 +891,10 @@
   }, {
     "type" : "heading",
     "id" : 52,
-    "level" : "Subtitle",
+    "level" : "Doctitle",
     "page number" : 1,
     "bounding box" : [ 325.03, 714.735, 413.782, 739.634 ],
-    "heading level" : 2,
+    "heading level" : 1,
     "font" : "맑은 고딕,Bold",
     "font size" : 18.72,
     "text color" : "[0.808, 0.0, 0.051]",
@@ -1039,12 +1039,11 @@
     "text color" : "[0.745, 0.588, 0.392]",
     "content" : "2023년 9월 기준 펀드성과"
   }, {
-    "type" : "heading",
+    "type" : "paragraph",
     "id" : 72,
-    "level" : "Doctitle",
+    "level" : "8",
     "page number" : 1,
     "bounding box" : [ 337.25, 710.096, 460.494, 729.231 ],
-    "heading level" : 1,
     "font" : "Arial,Bold",
     "font size" : 20.4,
     "text color" : "[0.808, 0.0, 0.051]",
@@ -1657,12 +1656,10 @@
     "page number" : 1,
     "bounding box" : [ 21.213, 783.43, 489.333, 824.535 ]
   }, {
-    "type" : "heading",
+    "type" : "paragraph",
     "id" : 139,
-    "level" : "Subtitle",
     "page number" : 1,
     "bounding box" : [ 43.872, 786.917, 249.34, 802.05 ],
-    "heading level" : 3,
     "font" : "맑은 고딕,Bold",
     "font size" : 11.016,
     "text color" : "[0.396, 0.361, 0.318]",
