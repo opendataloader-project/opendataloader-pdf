@@ -241,12 +241,10 @@
     "text color" : "[0.0, 0.0, 0.0]",
     "content" : "본 묜릅와 위욐 머쀜에 삽욅댘는 왴미지 개체 내에 포푨댜 개외 윕보를 식별푠 수 욈는 위욐 단말 욥치 묏 그 동 욑 묩뮕완 윜시푨옼띜쉨, 위욐 머쀜에 삽욅댘는 왴미지 개체 내에 포푨댜 개외 윕보가 옠천댘는 것완 묩지푠 수 욈다."
   }, {
-    "type" : "heading",
+    "type" : "paragraph",
     "id" : 123,
-    "level" : "Doctitle",
     "page number" : 1,
     "bounding box" : [ 65.862, 435.51, 133.14, 445.47 ],
-    "heading level" : 1,
     "font" : "BatangChe",
     "font size" : 10.311,
     "text color" : "[1.0, 0.0, 0.5]",
