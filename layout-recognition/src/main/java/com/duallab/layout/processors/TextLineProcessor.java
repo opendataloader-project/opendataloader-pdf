@@ -27,6 +27,7 @@ public class TextLineProcessor {
     public static List<IObject> processTextLines(List<IObject> contents) {
         List<IObject> newContents = new ArrayList<>();
         TextLine previousLine = new TextLine(new TextChunk(""));
+        boolean isSeparateLine = false;
         for (IObject content : contents) {
             if (content instanceof TextChunk) {
                 TextChunk textChunk = (TextChunk)content;
@@ -35,14 +36,19 @@ public class TextLineProcessor {
                 }
                 TextLine currentLine = new TextLine(textChunk);
                 double oneLineProbability = ChunksMergeUtils.countOneLineProbability(new SemanticTextNode(), previousLine, currentLine);
-                if (oneLineProbability > ONE_LINE_PROBABILITY) {
-                    previousLine.add(currentLine);
-                } else {
+                isSeparateLine |= (oneLineProbability < ONE_LINE_PROBABILITY);
+                if (isSeparateLine) {
                     previousLine.setBoundingBox(new BoundingBox(previousLine.getBoundingBox()));
                     previousLine = currentLine;
                     newContents.add(previousLine);
+                } else {
+                    previousLine.add(currentLine);
                 }
+                isSeparateLine = false;
             } else {
+                if (content instanceof TableBorder) {
+                    isSeparateLine = true;
+                }
                 newContents.add(content);
             }
         }
