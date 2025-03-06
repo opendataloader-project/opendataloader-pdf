@@ -7,15 +7,15 @@
  */
 package com.duallab.layout.processors;
 
-import org.verapdf.wcag.algorithms.entities.IObject;
-import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
-import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
-import org.verapdf.wcag.algorithms.entities.content.TextChunk;
-import org.verapdf.wcag.algorithms.entities.content.TextLine;
-import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
-import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
-import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
-import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ListUtils;
+import com.duallab.wcag.algorithms.entities.IObject;
+import com.duallab.wcag.algorithms.entities.SemanticTextNode;
+import com.duallab.wcag.algorithms.entities.content.LineArtChunk;
+import com.duallab.wcag.algorithms.entities.content.TextChunk;
+import com.duallab.wcag.algorithms.entities.content.TextLine;
+import com.duallab.wcag.algorithms.entities.geometry.BoundingBox;
+import com.duallab.wcag.algorithms.entities.tables.tableBorders.TableBorder;
+import com.duallab.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
+import com.duallab.wcag.algorithms.semanticalgorithms.utils.ListUtils;
 
 import java.util.ArrayList;
 import java.util.List;

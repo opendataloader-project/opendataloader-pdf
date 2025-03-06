@@ -9,15 +9,15 @@ package com.duallab.layout.processors;
 
 import com.duallab.layout.containers.StaticLayoutContainers;
 import com.duallab.layout.utils.BulletedParagraphUtils;
-import org.verapdf.wcag.algorithms.entities.INode;
-import org.verapdf.wcag.algorithms.entities.IObject;
-import org.verapdf.wcag.algorithms.entities.SemanticHeading;
-import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
-import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
-import org.verapdf.wcag.algorithms.entities.lists.PDFList;
-import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
-import org.verapdf.wcag.algorithms.entities.text.TextStyle;
-import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
+import com.duallab.wcag.algorithms.entities.INode;
+import com.duallab.wcag.algorithms.entities.IObject;
+import com.duallab.wcag.algorithms.entities.SemanticHeading;
+import com.duallab.wcag.algorithms.entities.SemanticTextNode;
+import com.duallab.wcag.algorithms.entities.enums.SemanticType;
+import com.duallab.wcag.algorithms.entities.lists.PDFList;
+import com.duallab.wcag.algorithms.entities.tables.tableBorders.TableBorder;
+import com.duallab.wcag.algorithms.entities.text.TextStyle;
+import com.duallab.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
 import java.util.*;
 

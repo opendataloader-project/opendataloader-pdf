@@ -8,12 +8,14 @@
 package com.duallab.layout.processors;
 
 import com.duallab.layout.utils.BulletedParagraphUtils;
-import org.verapdf.wcag.algorithms.entities.IObject;
-import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
-import org.verapdf.wcag.algorithms.entities.content.*;
-import org.verapdf.wcag.algorithms.entities.enums.TextAlignment;
-import org.verapdf.wcag.algorithms.semanticalgorithms.utils.CaptionUtils;
-import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
+import com.duallab.wcag.algorithms.entities.IObject;
+import com.duallab.wcag.algorithms.entities.SemanticParagraph;
+import com.duallab.wcag.algorithms.entities.content.TextBlock;
+import com.duallab.wcag.algorithms.entities.content.TextColumn;
+import com.duallab.wcag.algorithms.entities.content.TextLine;
+import com.duallab.wcag.algorithms.entities.enums.TextAlignment;
+import com.duallab.wcag.algorithms.semanticalgorithms.utils.CaptionUtils;
+import com.duallab.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
 
 import java.util.ArrayList;
 import java.util.Iterator;

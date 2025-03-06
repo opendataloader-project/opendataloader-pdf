@@ -1,6 +1,6 @@
 package com.duallab.layout.utils.levels;
 
-import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
+import com.duallab.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 
 public class TableLevelInfo extends LevelInfo {
     public TableLevelInfo(TableBorder table) {

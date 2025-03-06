@@ -7,15 +7,15 @@
  */
 package com.duallab.layout.processors;
 
-import org.verapdf.wcag.algorithms.entities.IObject;
-import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
-import org.verapdf.wcag.algorithms.entities.content.LineChunk;
-import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
-import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
-import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
-import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
-import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
-import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
+import com.duallab.wcag.algorithms.entities.IObject;
+import com.duallab.wcag.algorithms.entities.content.LineArtChunk;
+import com.duallab.wcag.algorithms.entities.content.LineChunk;
+import com.duallab.wcag.algorithms.entities.geometry.BoundingBox;
+import com.duallab.wcag.algorithms.entities.tables.tableBorders.TableBorder;
+import com.duallab.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
+import com.duallab.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
+import com.duallab.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
+import com.duallab.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
 import java.util.*;
 

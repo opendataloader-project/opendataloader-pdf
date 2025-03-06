@@ -8,6 +8,7 @@
 package com.duallab.layout.pdf;
 
 import com.duallab.layout.processors.DocumentProcessor;
+import com.duallab.wcag.algorithms.entities.*;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSString;
@@ -21,19 +22,18 @@ import org.apache.pdfbox.pdmodel.graphics.optionalcontent.PDOptionalContentGroup
 import org.apache.pdfbox.pdmodel.graphics.optionalcontent.PDOptionalContentProperties;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationSquareCircle;
-import org.verapdf.wcag.algorithms.entities.*;
-import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
-import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
-import org.verapdf.wcag.algorithms.entities.content.LineChunk;
-import org.verapdf.wcag.algorithms.entities.content.TextChunk;
-import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
-import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
-import org.verapdf.wcag.algorithms.entities.lists.ListItem;
-import org.verapdf.wcag.algorithms.entities.lists.PDFList;
-import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
-import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
-import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
-import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
+import com.duallab.wcag.algorithms.entities.content.ImageChunk;
+import com.duallab.wcag.algorithms.entities.content.LineArtChunk;
+import com.duallab.wcag.algorithms.entities.content.LineChunk;
+import com.duallab.wcag.algorithms.entities.content.TextChunk;
+import com.duallab.wcag.algorithms.entities.enums.SemanticType;
+import com.duallab.wcag.algorithms.entities.geometry.BoundingBox;
+import com.duallab.wcag.algorithms.entities.lists.ListItem;
+import com.duallab.wcag.algorithms.entities.lists.PDFList;
+import com.duallab.wcag.algorithms.entities.tables.tableBorders.TableBorder;
+import com.duallab.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
+import com.duallab.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
+import com.duallab.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
 import java.io.File;
 import java.io.IOException;

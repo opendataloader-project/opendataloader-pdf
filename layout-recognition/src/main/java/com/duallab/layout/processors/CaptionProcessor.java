@@ -7,13 +7,13 @@
  */
 package com.duallab.layout.processors;
 
-import org.verapdf.wcag.algorithms.entities.IObject;
-import org.verapdf.wcag.algorithms.entities.SemanticCaption;
-import org.verapdf.wcag.algorithms.entities.SemanticFigure;
-import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
-import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
-import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
-import org.verapdf.wcag.algorithms.semanticalgorithms.utils.CaptionUtils;
+import com.duallab.wcag.algorithms.entities.IObject;
+import com.duallab.wcag.algorithms.entities.SemanticCaption;
+import com.duallab.wcag.algorithms.entities.SemanticFigure;
+import com.duallab.wcag.algorithms.entities.SemanticTextNode;
+import com.duallab.wcag.algorithms.entities.content.ImageChunk;
+import com.duallab.wcag.algorithms.entities.tables.tableBorders.TableBorder;
+import com.duallab.wcag.algorithms.semanticalgorithms.utils.CaptionUtils;
 
 import java.util.List;
 

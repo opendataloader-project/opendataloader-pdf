@@ -19,8 +19,8 @@ import org.verapdf.cos.COSTrailer;
 import org.verapdf.gf.model.impl.cos.GFCosInfo;
 import org.verapdf.pd.PDDocument;
 import org.verapdf.tools.StaticResources;
-import org.verapdf.wcag.algorithms.entities.IObject;
-import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
+import com.duallab.wcag.algorithms.entities.IObject;
+import com.duallab.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
 import java.io.File;
 import java.io.IOException;

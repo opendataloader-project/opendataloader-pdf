@@ -1,9 +1,9 @@
 package com.duallab.layout.processors;
 
-import org.verapdf.wcag.algorithms.entities.IObject;
-import org.verapdf.wcag.algorithms.entities.content.TextChunk;
-import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
-import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
+import com.duallab.wcag.algorithms.entities.IObject;
+import com.duallab.wcag.algorithms.entities.content.TextChunk;
+import com.duallab.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
+import com.duallab.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
 import java.util.Comparator;
 import java.util.List;

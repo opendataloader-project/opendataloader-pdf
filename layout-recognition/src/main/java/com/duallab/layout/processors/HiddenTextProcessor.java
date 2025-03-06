@@ -7,9 +7,9 @@
  */
 package com.duallab.layout.processors;
 
-import org.verapdf.wcag.algorithms.entities.IObject;
-import org.verapdf.wcag.algorithms.entities.content.TextChunk;
-import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioConsumer;
+import com.duallab.wcag.algorithms.entities.IObject;
+import com.duallab.wcag.algorithms.entities.content.TextChunk;
+import com.duallab.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioConsumer;
 
 import java.io.IOException;
 import java.util.LinkedList;

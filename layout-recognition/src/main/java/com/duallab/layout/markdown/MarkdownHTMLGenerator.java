@@ -8,14 +8,14 @@
 package com.duallab.layout.markdown;
 
 import com.duallab.layout.utils.Config;
-import org.verapdf.wcag.algorithms.entities.IObject;
-import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
-import org.verapdf.wcag.algorithms.entities.lists.ListItem;
-import org.verapdf.wcag.algorithms.entities.lists.PDFList;
-import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
-import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
-import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
-import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
+import com.duallab.wcag.algorithms.entities.IObject;
+import com.duallab.wcag.algorithms.entities.SemanticParagraph;
+import com.duallab.wcag.algorithms.entities.lists.ListItem;
+import com.duallab.wcag.algorithms.entities.lists.PDFList;
+import com.duallab.wcag.algorithms.entities.tables.tableBorders.TableBorder;
+import com.duallab.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
+import com.duallab.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
+import com.duallab.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
 import java.io.File;
 import java.io.IOException;

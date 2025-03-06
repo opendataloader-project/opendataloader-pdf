@@ -1,7 +1,7 @@
 package com.duallab.layout.utils.levels;
 
-import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
-import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
+import com.duallab.wcag.algorithms.entities.SemanticTextNode;
+import com.duallab.wcag.algorithms.entities.content.LineArtChunk;
 
 public class LineArtBulletParagraphLevelInfo extends LevelInfo {
     private final LineArtChunk bullet;

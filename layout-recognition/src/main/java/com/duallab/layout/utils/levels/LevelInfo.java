@@ -1,8 +1,8 @@
 package com.duallab.layout.utils.levels;
 
 import com.duallab.layout.utils.BulletedParagraphUtils;
-import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
-import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
+import com.duallab.wcag.algorithms.entities.content.LineArtChunk;
+import com.duallab.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
 import java.util.Objects;
 

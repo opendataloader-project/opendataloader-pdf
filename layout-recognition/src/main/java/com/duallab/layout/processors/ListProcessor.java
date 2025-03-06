@@ -8,20 +8,22 @@
 package com.duallab.layout.processors;
 
 import com.duallab.layout.utils.BulletedParagraphUtils;
-import org.verapdf.wcag.algorithms.entities.INode;
-import org.verapdf.wcag.algorithms.entities.IObject;
-import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
-import org.verapdf.wcag.algorithms.entities.content.*;
-import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
-import org.verapdf.wcag.algorithms.entities.enums.TextAlignment;
-import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
-import org.verapdf.wcag.algorithms.entities.lists.ListInterval;
-import org.verapdf.wcag.algorithms.entities.lists.ListItem;
-import org.verapdf.wcag.algorithms.entities.lists.PDFList;
-import org.verapdf.wcag.algorithms.entities.lists.info.ListItemInfo;
-import org.verapdf.wcag.algorithms.entities.lists.info.ListItemTextInfo;
-import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
-import org.verapdf.wcag.algorithms.semanticalgorithms.utils.*;
+import com.duallab.wcag.algorithms.entities.INode;
+import com.duallab.wcag.algorithms.entities.IObject;
+import com.duallab.wcag.algorithms.entities.SemanticTextNode;
+import com.duallab.wcag.algorithms.entities.content.*;
+import com.duallab.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
+import com.duallab.wcag.algorithms.semanticalgorithms.utils.ListLabelsUtils;
+import com.duallab.wcag.algorithms.semanticalgorithms.utils.ListUtils;
+import com.duallab.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
+import com.duallab.wcag.algorithms.entities.enums.SemanticType;
+import com.duallab.wcag.algorithms.entities.enums.TextAlignment;
+import com.duallab.wcag.algorithms.entities.geometry.BoundingBox;
+import com.duallab.wcag.algorithms.entities.lists.ListInterval;
+import com.duallab.wcag.algorithms.entities.lists.ListItem;
+import com.duallab.wcag.algorithms.entities.lists.PDFList;
+import com.duallab.wcag.algorithms.entities.lists.info.ListItemInfo;
+import com.duallab.wcag.algorithms.entities.lists.info.ListItemTextInfo;
 
 import java.util.*;
 import java.util.logging.Level;
