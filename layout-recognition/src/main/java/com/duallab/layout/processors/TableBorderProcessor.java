@@ -10,11 +10,13 @@ package com.duallab.layout.processors;
 import com.duallab.wcag.algorithms.entities.IObject;
 import com.duallab.wcag.algorithms.entities.content.LineArtChunk;
 import com.duallab.wcag.algorithms.entities.content.LineChunk;
+import com.duallab.wcag.algorithms.entities.content.TextChunk;
 import com.duallab.wcag.algorithms.entities.geometry.BoundingBox;
 import com.duallab.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import com.duallab.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import com.duallab.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import com.duallab.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
+import com.duallab.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
 import com.duallab.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
 import java.util.*;
@@ -54,13 +56,26 @@ public class TableBorderProcessor {
             if (content instanceof LineArtChunk && BoundingBox.areSameBoundingBoxes(tableBorder.getBoundingBox(), content.getBoundingBox())) {
                 return tableBorder;
             }
-            TableBorderCell tableBorderCell = tableBorder.getTableBorderCell(content);
-            if (tableBorderCell != null) {
-                if (content instanceof LineArtChunk && 
-                        tableBorderCell.getBoundingBox().getIntersectionPercent(content.getBoundingBox()) > LINE_ART_PERCENT) {
-                    return tableBorder;
+            Set<TableBorderCell> tableBorderCells = tableBorder.getTableBorderCells(content);
+            if (!tableBorderCells.isEmpty()) {
+                if (tableBorderCells.size() > 1 && content instanceof TextChunk) {
+                    TextChunk textChunk = (TextChunk) content;
+                    for (TableBorderCell tableBorderCell : tableBorderCells) {
+                        TextChunk currentTextChunk = getTextChunkPartForTableCell(textChunk, tableBorderCell);
+                        if (currentTextChunk != null && currentTextChunk.isEmpty()) {
+                            tableBorderCell.addContentObject(currentTextChunk);
+                        }
+                    }
+                } else {
+                    for (TableBorderCell tableBorderCell : tableBorderCells) {
+                        if (content instanceof LineArtChunk &&
+                                tableBorderCell.getBoundingBox().getIntersectionPercent(content.getBoundingBox()) > LINE_ART_PERCENT) {
+                            return tableBorder;
+                        }
+                        tableBorderCell.addContentObject(content);
+                        break;
+                    }  
                 }
-                tableBorderCell.addContentObject(content);
                 return tableBorder;
             }
             if (content instanceof LineArtChunk) {
@@ -136,5 +151,12 @@ public class TableBorderProcessor {
         }
         previousTable.setNextTable(currentTable);
         currentTable.setPreviousTable(previousTable);
+    }
+
+    public static TextChunk getTextChunkPartForTableCell(TextChunk textChunk, TableBorderCell cell) {
+        Integer start = textChunk.getSymbolStartIndexByCoordinate(cell.getLeftX());
+        Integer end = textChunk.getSymbolEndIndexByCoordinate(cell.getRightX());
+        TextChunk result = TextChunk.getTextChunk(textChunk, start, end);
+        return ChunksMergeUtils.getTrimTextChunk(result);
     }
 }
