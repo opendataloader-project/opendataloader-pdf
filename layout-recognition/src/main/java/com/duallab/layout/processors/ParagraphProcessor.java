@@ -39,6 +39,7 @@ public class ParagraphProcessor {
         blocks = detectParagraphsWithLeftAlignments(blocks);
         blocks = detectFirstLinesOfParagraphWithLeftAlignments(blocks);
         blocks = detectBulletedParagraphsWithLeftAlignments(blocks);
+        blocks = detectParagraphsWithCenterAlignments(blocks);
         blocks = detectParagraphsWithRightAlignments(blocks);
         blocks = processOtherLines(blocks);
         return getContentsWithDetectedParagraphs(contents, blocks);
@@ -76,7 +77,26 @@ public class ParagraphProcessor {
                 if (textAlignment == TextAlignment.JUSTIFY && probability > DIFFERENT_LINES_PROBABILITY) {
                     previousBlock.add(nextBlock.getLines());
                     previousBlock.setTextAlignment(TextAlignment.JUSTIFY);
-                } else if (textAlignment == TextAlignment.CENTER && probability > DIFFERENT_LINES_PROBABILITY) {
+                } else {
+                    newBlocks.add(nextBlock);
+                }
+            }
+        }
+        return newBlocks;
+    }
+
+    private static List<TextBlock> detectParagraphsWithCenterAlignments(List<TextBlock> textBlocks) {
+        List<TextBlock> newBlocks = new ArrayList<>();
+        if (!textBlocks.isEmpty()) {
+            newBlocks.add(textBlocks.get(0));
+        }
+        if (textBlocks.size() > 1) {
+            for (int i = 1; i < textBlocks.size(); i++) {
+                TextBlock previousBlock = newBlocks.get(newBlocks.size() - 1);
+                TextBlock nextBlock = textBlocks.get(i);
+                TextAlignment textAlignment = ChunksMergeUtils.getAlignment(previousBlock.getLastLine(), nextBlock.getFirstLine());
+                double probability = getDifferentLinesProbability(previousBlock, nextBlock);
+                if (textAlignment == TextAlignment.CENTER && probability > DIFFERENT_LINES_PROBABILITY) {
                     previousBlock.add(nextBlock.getLines());
                     previousBlock.setTextAlignment(TextAlignment.CENTER);
                 } else {
