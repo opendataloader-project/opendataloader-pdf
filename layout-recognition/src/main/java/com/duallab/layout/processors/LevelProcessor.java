@@ -55,10 +55,20 @@ public class LevelProcessor {
                         levelInfo = new ListLevelInfo((PDFList) content);
                     }
                 } else if (content instanceof TableBorder) {
-                    TableBorder table = (TableBorder)content;
-                    setLevelForTable(table);
-                    if (!table.isTextBlock()) {
-                        levelInfo = new TableLevelInfo(table);
+                    TableBorder previousTable = ((TableBorder) content).getPreviousTable();
+                    if (previousTable != null) {
+                        if (previousTable.getLevel() == null) {
+                            LOGGER.log(Level.WARNING, "Table without detected level");
+                        } else {
+                            index = Integer.parseInt(previousTable.getLevel()) - 1;
+                        }
+                    }
+                    if (index == null) {
+                        TableBorder table = (TableBorder)content;
+                        setLevelForTable(table);
+                        if (!table.isTextBlock()) {
+                            levelInfo = new TableLevelInfo(table);
+                        }
                     }
                 } else if (content instanceof SemanticTextNode) {
                     if (BulletedParagraphUtils.isBulletedParagraph((SemanticTextNode) content)) {

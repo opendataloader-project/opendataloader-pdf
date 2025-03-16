@@ -22,6 +22,7 @@ import java.util.*;
 public class TableBorderProcessor {
     
     private static final double LINE_ART_PERCENT = 0.9;
+    private static final double NEIGHBOUR_TABLE_EPSILON = 0.2;
 
     public static List<IObject> processTableBorders(List<IObject> contents, int pageNumber) {
         List<IObject> newContents = new ArrayList<>();
@@ -120,19 +121,16 @@ public class TableBorderProcessor {
     }
 
     public static void checkNeighborTables(TableBorder previousTable, TableBorder currentTable) {
-        if (Objects.equals(previousTable.getPageNumber(), currentTable.getPageNumber())) {
-            return;
-        }
         if (currentTable.getNumberOfColumns() != previousTable.getNumberOfColumns()) {
             return;
         }
-        if (!NodeUtils.areCloseNumbers(currentTable.getWidth(), previousTable.getWidth())) {
+        if (!NodeUtils.areCloseNumbers(currentTable.getWidth(), previousTable.getWidth(), NEIGHBOUR_TABLE_EPSILON)) {
             return;
         }
         for (int columnNumber = 0; columnNumber < previousTable.getNumberOfColumns(); columnNumber++) {
             TableBorderCell cell1 = previousTable.getCell(0, columnNumber);
             TableBorderCell cell2 = currentTable.getCell(0, columnNumber);
-            if (!NodeUtils.areCloseNumbers(cell1.getWidth(), cell2.getWidth())) {
+            if (!NodeUtils.areCloseNumbers(cell1.getWidth(), cell2.getWidth(), NEIGHBOUR_TABLE_EPSILON)) {
                 return;
             }
         }
