@@ -8,6 +8,7 @@
 package com.duallab.layout.processors;
 
 import com.duallab.wcag.algorithms.entities.IObject;
+import com.duallab.wcag.algorithms.entities.content.ImageChunk;
 import com.duallab.wcag.algorithms.entities.content.TextChunk;
 import com.duallab.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
 import com.duallab.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
@@ -20,6 +21,11 @@ import java.util.stream.Collectors;
 public class TextProcessor {
     
     private static final double MIN_TEXT_INTERSECTION_PERCENT = 0.5;
+    private static final double MAX_TOP_DECORATION_IMAGE_EPSILON = 0.3;
+    private static final double MAX_BOTTOM_DECORATION_IMAGE_EPSILON = 0.1;
+    private static final double MAX_LEFT_DECORATION_IMAGE_EPSILON = 0.1;
+    private static final double MAX_RIGHT_DECORATION_IMAGE_EPSILON = 1.5;
+
 
     public static void trimTextChunksWhiteSpaces(List<IObject> contents) {
         for (int i = 0; i < contents.size(); i++) {
@@ -51,5 +57,25 @@ public class TextProcessor {
                 NodeUtils.areCloseNumbers(firstTextChunk.getWidth(), secondTextChunk.getWidth()) &&
                 NodeUtils.areCloseNumbers(firstTextChunk.getHeight(), secondTextChunk.getHeight()) &&
                 firstTextChunk.getBoundingBox().getIntersectionPercent(secondTextChunk.getBoundingBox()) > MIN_TEXT_INTERSECTION_PERCENT;
+    }
+
+    public static void removeTextDecorationImages(List<IObject> contents) {
+        TextChunk lastTextChunk = null;
+        for (int index = 0;  index < contents.size(); index++) {
+            IObject object = contents.get(index);
+            if (object instanceof TextChunk) {
+                lastTextChunk = (TextChunk) object;
+            } else if (object instanceof ImageChunk && lastTextChunk != null && 
+                    isTextChunkDecorationImage((ImageChunk)object, lastTextChunk)) {
+                contents.set(index, null);
+            }
+        }
+    }
+
+    public static boolean isTextChunkDecorationImage(ImageChunk imageChunk, TextChunk textChunk) {
+        return NodeUtils.areCloseNumbers(imageChunk.getTopY(), textChunk.getTopY(), MAX_TOP_DECORATION_IMAGE_EPSILON * textChunk.getHeight()) && 
+                NodeUtils.areCloseNumbers(imageChunk.getBottomY(), textChunk.getBottomY(), MAX_BOTTOM_DECORATION_IMAGE_EPSILON * textChunk.getHeight()) &&
+                (NodeUtils.areCloseNumbers(imageChunk.getLeftX(), textChunk.getLeftX(), MAX_LEFT_DECORATION_IMAGE_EPSILON * textChunk.getHeight()) || imageChunk.getLeftX() > textChunk.getLeftX()) &&
+                (NodeUtils.areCloseNumbers(imageChunk.getRightX(), textChunk.getRightX(), MAX_RIGHT_DECORATION_IMAGE_EPSILON * textChunk.getHeight()) || imageChunk.getRightX() < textChunk.getRightX());
     }
 }

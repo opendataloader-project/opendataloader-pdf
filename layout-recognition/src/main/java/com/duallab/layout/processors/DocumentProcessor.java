@@ -55,6 +55,8 @@ public class DocumentProcessor {
             List<IObject> pageContents = new ArrayList<>(StaticContainers.getDocument().getArtifacts(pageNumber));
             TextProcessor.removeSameTextChunks(pageContents);
             pageContents = DocumentProcessor.removeNullObjectsFromList(pageContents);
+            TextProcessor.removeTextDecorationImages(pageContents);
+            pageContents = DocumentProcessor.removeNullObjectsFromList(pageContents);
             TextProcessor.trimTextChunksWhiteSpaces(pageContents);
             if (StaticLayoutContainers.isFindHiddenText()) {
                 hiddenTexts.addAll(HiddenTextProcessor.findHiddenText(inputPdfName, pageContents, config.getPassword()));
