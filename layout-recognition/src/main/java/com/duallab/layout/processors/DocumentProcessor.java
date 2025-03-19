@@ -65,6 +65,7 @@ public class DocumentProcessor {
             pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber);
             pageContents = pageContents.stream().filter(x -> !(x instanceof LineChunk)).collect(Collectors.toList());
             pageContents = TextLineProcessor.processTextLines(pageContents);
+            pageContents = SpecialTableProcessor.detectSpecialTables(pageContents);
             contents.add(pageContents);
         }
         HeaderFooterProcessor.processHeadersAndFooters(contents);
