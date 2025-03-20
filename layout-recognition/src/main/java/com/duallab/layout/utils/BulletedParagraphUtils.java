@@ -70,22 +70,23 @@ public class BulletedParagraphUtils {
     }
     
     static {
-        ARABIC_NUMBER_REGEXES.add("^\\d+[ .\\]\\)>].*");
+        ARABIC_NUMBER_REGEXES.add("^\\d+[ \\.\\]\\)>].*");
         BULLET_REGEXES.add("^\\(\\d+\\).*");
         ARABIC_NUMBER_REGEXES.add("^<\\d+>.*");
         ARABIC_NUMBER_REGEXES.add("^\\[\\d+\\].*");
         ARABIC_NUMBER_REGEXES.add("^{\\d+}.*");
         ARABIC_NUMBER_REGEXES.add("^【\\d+】.*");
-        BULLET_REGEXES.add("^\\d+[.\\)]\\s+.*");
-        BULLET_REGEXES.add("^[ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎ][.\\)\\]>].*");
-        BULLET_REGEXES.add("^" + KOREAN_NUMBERS_REGEX + "[.)\\]>].*");
+        BULLET_REGEXES.add("^\\d+[\\.\\)]\\s+.*");
+        BULLET_REGEXES.add("^[ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎ][\\.\\)\\]>].*");
+        BULLET_REGEXES.add("^" + KOREAN_NUMBERS_REGEX + "\\..+");
+        BULLET_REGEXES.add("^" + KOREAN_NUMBERS_REGEX + "[)\\]>].*");
         BULLET_REGEXES.add("^" + KOREAN_NUMBERS_REGEX + "(-\\d+).*");
         BULLET_REGEXES.add("^\\(" + KOREAN_NUMBERS_REGEX + "\\).*");
         BULLET_REGEXES.add("^<" + KOREAN_NUMBERS_REGEX +">.*");
         BULLET_REGEXES.add("^\\[" + KOREAN_NUMBERS_REGEX + "\\].*");
         BULLET_REGEXES.add("^[{]" + KOREAN_NUMBERS_REGEX + "[}].*");
         BULLET_REGEXES.add(KOREAN_CHAPTER_REGEX);
-        BULLET_REGEXES.add("^법.(제\\d+조).*");
+        BULLET_REGEXES.add("^법\\.(제\\d+조).*");
         BULLET_REGEXES.add("^[\u0049]\\..*");//"^[Ⅰ-Ⅻ]"
         BULLET_REGEXES.add("^[\u2160-\u216B].*");//"^[Ⅰ-Ⅻ]"
         BULLET_REGEXES.add("^[\u2170-\u217B].*");//"^[ⅰ-ⅻ]"

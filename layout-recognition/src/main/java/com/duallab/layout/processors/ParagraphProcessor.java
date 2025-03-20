@@ -38,6 +38,7 @@ public class ParagraphProcessor {
         blocks = detectFirstAndLastLinesOfParagraphsWithJustifyAlignments(blocks);
         blocks = detectParagraphsWithLeftAlignments(blocks);
         blocks = detectFirstLinesOfParagraphWithLeftAlignments(blocks);
+        blocks = detectTwoLinesParagraphs(blocks);
         blocks = detectBulletedParagraphsWithLeftAlignments(blocks);
         blocks = detectParagraphsWithCenterAlignments(blocks);
         blocks = detectParagraphsWithRightAlignments(blocks);
@@ -196,8 +197,39 @@ public class ParagraphProcessor {
         double probability = getDifferentLinesProbability(previousBlock, nextBlock);
         return previousBlock.getLinesNumber() == 1 && previousBlock.getLastLine().getLeftX() > nextBlock.getFirstLine().getLeftX() &&
                 CaptionUtils.areOverlapping(previousBlock.getLastLine(), nextBlock.getFirstLine().getBoundingBox()) &&
-                nextBlock.getTextAlignment() == TextAlignment.LEFT && !nextBlock.isHasStartLine() && probability > DIFFERENT_LINES_PROBABILITY;
+                nextBlock.getTextAlignment() == TextAlignment.LEFT && !nextBlock.isHasStartLine() && 
+                probability > DIFFERENT_LINES_PROBABILITY && !BulletedParagraphUtils.isLabeledLine(nextBlock.getFirstLine());
     }
+
+    private static List<TextBlock> detectTwoLinesParagraphs(List<TextBlock> textBlocks) {
+        List<TextBlock> newBlocks = new ArrayList<>();
+        if (!textBlocks.isEmpty()) {
+            newBlocks.add(textBlocks.get(0));
+        }
+        if (textBlocks.size() > 1) {
+            for (int i = 1; i < textBlocks.size(); i++) {
+                TextBlock previousBlock = newBlocks.get(newBlocks.size() - 1);
+                TextBlock nextBlock = textBlocks.get(i);
+                if (isTwoLinesParagraph(previousBlock, nextBlock)) {
+                    previousBlock.add(nextBlock.getLines());
+                    previousBlock.setTextAlignment(TextAlignment.LEFT);
+                    previousBlock.setHasStartLine(true);
+                    previousBlock.setHasEndLine(true);
+                } else {
+                    newBlocks.add(nextBlock);
+                }
+            }
+        }
+        return newBlocks;
+    }
+
+    private static boolean isTwoLinesParagraph(TextBlock previousBlock, TextBlock nextBlock) {
+        double probability = getDifferentLinesProbability(previousBlock, nextBlock);
+        return previousBlock.getLinesNumber() == 1 && nextBlock.getLinesNumber() == 1 && 
+                previousBlock.getLastLine().getLeftX() > nextBlock.getFirstLine().getLeftX() &&
+                previousBlock.getLastLine().getRightX() > nextBlock.getFirstLine().getRightX() &&
+                probability > DIFFERENT_LINES_PROBABILITY && !BulletedParagraphUtils.isLabeledLine(nextBlock.getFirstLine());
+    }    
 
     private static boolean isFirstLineOfBulletedParagraphWithLeftAlignment(TextBlock previousBlock, TextBlock nextBlock) {
         double probability = getDifferentLinesProbability(previousBlock, nextBlock);
