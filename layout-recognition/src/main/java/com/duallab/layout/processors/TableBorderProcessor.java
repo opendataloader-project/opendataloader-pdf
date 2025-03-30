@@ -119,7 +119,7 @@ public class TableBorderProcessor {
         TableBorder previousTable = null;
         for (List<IObject> iObjects : contents) {
             for (IObject content : iObjects) {
-                if (content instanceof TableBorder) {
+                if (content instanceof TableBorder && !((TableBorder)content).isTextBlock()) {
                     TableBorder currentTable = (TableBorder) content;
                     if (previousTable != null) {
                         checkNeighborTables(previousTable, currentTable);
