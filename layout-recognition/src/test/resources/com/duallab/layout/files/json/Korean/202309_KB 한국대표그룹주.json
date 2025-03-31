@@ -19,7 +19,7 @@
       "cells" : [ {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 46.55, 677.37, 99.024, 687.46 ],
+        "bounding box" : [ 46.975, 677.44, 98.604, 686.975 ],
         "row number" : 1,
         "column number" : 1,
         "row span" : 1,
@@ -37,7 +37,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 98.184, 677.37, 464.63, 687.46 ],
+        "bounding box" : [ 98.604, 677.44, 464.205, 686.975 ],
         "row number" : 1,
         "column number" : 2,
         "row span" : 1,
@@ -59,7 +59,7 @@
       "cells" : [ {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 46.55, 667.74, 99.024, 677.51 ],
+        "bounding box" : [ 46.975, 667.81, 98.604, 677.44 ],
         "row number" : 2,
         "column number" : 1,
         "row span" : 1,
@@ -77,7 +77,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 98.184, 667.74, 464.63, 677.51 ],
+        "bounding box" : [ 98.604, 667.81, 464.205, 677.44 ],
         "row number" : 2,
         "column number" : 2,
         "row span" : 1,
@@ -99,7 +99,7 @@
       "cells" : [ {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 46.55, 658.14, 99.024, 667.88 ],
+        "bounding box" : [ 46.975, 658.21, 98.604, 667.81 ],
         "row number" : 3,
         "column number" : 1,
         "row span" : 1,
@@ -117,7 +117,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 98.184, 658.14, 464.63, 667.88 ],
+        "bounding box" : [ 98.604, 658.21, 464.205, 667.81 ],
         "row number" : 3,
         "column number" : 2,
         "row span" : 1,
@@ -139,7 +139,7 @@
       "cells" : [ {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 46.55, 648.19, 99.024, 658.28 ],
+        "bounding box" : [ 46.975, 648.675, 98.604, 658.21 ],
         "row number" : 4,
         "column number" : 1,
         "row span" : 1,
@@ -157,7 +157,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 98.184, 648.19, 464.63, 658.28 ],
+        "bounding box" : [ 98.604, 648.675, 464.205, 658.21 ],
         "row number" : 4,
         "column number" : 2,
         "row span" : 1,
@@ -188,7 +188,7 @@
       "cells" : [ {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 241.0, 352.24, 270.77, 367.49 ],
+        "bounding box" : [ 241.425, 352.31, 270.35, 367.005 ],
         "row number" : 1,
         "column number" : 1,
         "row span" : 1,
@@ -206,7 +206,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 269.93, 352.24, 298.13, 367.49 ],
+        "bounding box" : [ 270.35, 352.31, 297.71, 367.005 ],
         "row number" : 1,
         "column number" : 2,
         "row span" : 1,
@@ -224,7 +224,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 297.29, 352.24, 327.43, 367.49 ],
+        "bounding box" : [ 297.71, 352.31, 327.01, 367.005 ],
         "row number" : 1,
         "column number" : 3,
         "row span" : 1,
@@ -242,7 +242,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 326.59, 352.24, 354.79, 367.49 ],
+        "bounding box" : [ 327.01, 352.31, 354.37, 367.005 ],
         "row number" : 1,
         "column number" : 4,
         "row span" : 1,
@@ -260,7 +260,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 353.95, 352.24, 382.15, 367.49 ],
+        "bounding box" : [ 354.37, 352.31, 381.73, 367.005 ],
         "row number" : 1,
         "column number" : 5,
         "row span" : 1,
@@ -278,7 +278,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 381.31, 352.24, 409.51, 367.49 ],
+        "bounding box" : [ 381.73, 352.31, 409.09, 367.005 ],
         "row number" : 1,
         "column number" : 6,
         "row span" : 1,
@@ -296,7 +296,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 408.67, 352.24, 436.9, 367.49 ],
+        "bounding box" : [ 409.09, 352.31, 436.48, 367.005 ],
         "row number" : 1,
         "column number" : 7,
         "row span" : 1,
@@ -314,7 +314,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 436.06, 352.24, 464.63, 367.49 ],
+        "bounding box" : [ 436.48, 352.31, 464.205, 367.005 ],
         "row number" : 1,
         "column number" : 8,
         "row span" : 1,
@@ -336,7 +336,7 @@
       "cells" : [ {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 241.0, 332.41, 270.77, 352.38 ],
+        "bounding box" : [ 241.425, 332.48, 270.35, 352.31 ],
         "row number" : 2,
         "column number" : 1,
         "row span" : 1,
@@ -354,7 +354,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 269.93, 332.41, 298.13, 352.38 ],
+        "bounding box" : [ 270.35, 332.48, 297.71, 352.31 ],
         "row number" : 2,
         "column number" : 2,
         "row span" : 1,
@@ -373,7 +373,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 297.29, 332.41, 327.43, 352.38 ],
+        "bounding box" : [ 297.71, 332.48, 327.01, 352.31 ],
         "row number" : 2,
         "column number" : 3,
         "row span" : 1,
@@ -392,7 +392,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 326.59, 332.41, 354.79, 352.38 ],
+        "bounding box" : [ 327.01, 332.48, 354.37, 352.31 ],
         "row number" : 2,
         "column number" : 4,
         "row span" : 1,
@@ -410,7 +410,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 353.95, 332.41, 382.15, 352.38 ],
+        "bounding box" : [ 354.37, 332.48, 381.73, 352.31 ],
         "row number" : 2,
         "column number" : 5,
         "row span" : 1,
@@ -428,7 +428,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 381.31, 332.41, 409.51, 352.38 ],
+        "bounding box" : [ 381.73, 332.48, 409.09, 352.31 ],
         "row number" : 2,
         "column number" : 6,
         "row span" : 1,
@@ -446,7 +446,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 408.67, 332.41, 436.9, 352.38 ],
+        "bounding box" : [ 409.09, 332.48, 436.48, 352.31 ],
         "row number" : 2,
         "column number" : 7,
         "row span" : 1,
@@ -464,7 +464,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 436.06, 332.41, 464.63, 352.38 ],
+        "bounding box" : [ 436.48, 332.48, 464.205, 352.31 ],
         "row number" : 2,
         "column number" : 8,
         "row span" : 1,
@@ -486,7 +486,7 @@
       "cells" : [ {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 241.0, 312.61, 270.77, 332.55 ],
+        "bounding box" : [ 241.425, 312.68, 270.35, 332.48 ],
         "row number" : 3,
         "column number" : 1,
         "row span" : 1,
@@ -504,7 +504,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 269.93, 312.61, 298.13, 332.55 ],
+        "bounding box" : [ 270.35, 312.68, 297.71, 332.48 ],
         "row number" : 3,
         "column number" : 2,
         "row span" : 1,
@@ -523,7 +523,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 297.29, 312.61, 327.43, 332.55 ],
+        "bounding box" : [ 297.71, 312.68, 327.01, 332.48 ],
         "row number" : 3,
         "column number" : 3,
         "row span" : 1,
@@ -542,7 +542,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 326.59, 312.61, 354.79, 332.55 ],
+        "bounding box" : [ 327.01, 312.68, 354.37, 332.48 ],
         "row number" : 3,
         "column number" : 4,
         "row span" : 1,
@@ -561,7 +561,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 353.95, 312.61, 382.15, 332.55 ],
+        "bounding box" : [ 354.37, 312.68, 381.73, 332.48 ],
         "row number" : 3,
         "column number" : 5,
         "row span" : 1,
@@ -579,7 +579,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 381.31, 312.61, 409.51, 332.55 ],
+        "bounding box" : [ 381.73, 312.68, 409.09, 332.48 ],
         "row number" : 3,
         "column number" : 6,
         "row span" : 1,
@@ -597,7 +597,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 408.67, 312.61, 436.9, 332.55 ],
+        "bounding box" : [ 409.09, 312.68, 436.48, 332.48 ],
         "row number" : 3,
         "column number" : 7,
         "row span" : 1,
@@ -615,7 +615,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 436.06, 312.61, 464.63, 332.55 ],
+        "bounding box" : [ 436.48, 312.68, 464.205, 332.48 ],
         "row number" : 3,
         "column number" : 8,
         "row span" : 1,
@@ -637,7 +637,7 @@
       "cells" : [ {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 241.0, 292.46, 270.77, 312.75 ],
+        "bounding box" : [ 241.425, 292.945, 270.35, 312.68 ],
         "row number" : 4,
         "column number" : 1,
         "row span" : 1,
@@ -655,7 +655,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 269.93, 292.46, 298.13, 312.75 ],
+        "bounding box" : [ 270.35, 292.945, 297.71, 312.68 ],
         "row number" : 4,
         "column number" : 2,
         "row span" : 1,
@@ -673,7 +673,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 297.29, 292.46, 327.43, 312.75 ],
+        "bounding box" : [ 297.71, 292.945, 327.01, 312.68 ],
         "row number" : 4,
         "column number" : 3,
         "row span" : 1,
@@ -691,7 +691,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 326.59, 292.46, 354.79, 312.75 ],
+        "bounding box" : [ 327.01, 292.945, 354.37, 312.68 ],
         "row number" : 4,
         "column number" : 4,
         "row span" : 1,
@@ -709,7 +709,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 353.95, 292.46, 382.15, 312.75 ],
+        "bounding box" : [ 354.37, 292.945, 381.73, 312.68 ],
         "row number" : 4,
         "column number" : 5,
         "row span" : 1,
@@ -727,7 +727,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 381.31, 292.46, 409.51, 312.75 ],
+        "bounding box" : [ 381.73, 292.945, 409.09, 312.68 ],
         "row number" : 4,
         "column number" : 6,
         "row span" : 1,
@@ -745,7 +745,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 408.67, 292.46, 436.9, 312.75 ],
+        "bounding box" : [ 409.09, 292.945, 436.48, 312.68 ],
         "row number" : 4,
         "column number" : 7,
         "row span" : 1,
@@ -763,7 +763,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 436.06, 292.46, 464.63, 312.75 ],
+        "bounding box" : [ 436.48, 292.945, 464.205, 312.68 ],
         "row number" : 4,
         "column number" : 8,
         "row span" : 1,
@@ -1274,9 +1274,9 @@
     "id" : 100,
     "level" : "10",
     "page number" : 1,
-    "bounding box" : [ 245.52, 181.346, 263.204, 196.29 ],
+    "bounding box" : [ 245.52, 181.346, 265.384, 204.38 ],
     "numbering style" : "arabic numbers",
-    "number of list items" : 2,
+    "number of list items" : 3,
     "list items" : [ {
       "type" : "list item",
       "page number" : 1,
@@ -1295,19 +1295,19 @@
       "text color" : "[0.0]",
       "content" : "8.25%",
       "kids" : [ ]
+    }, {
+      "type" : "list item",
+      "page number" : 1,
+      "bounding box" : [ 248.4, 197.54, 265.384, 204.38 ],
+      "font" : "Calibri",
+      "font size" : 6.84,
+      "text color" : "[0.0]",
+      "content" : "9.96%",
+      "kids" : [ ]
     } ]
   }, {
     "type" : "paragraph",
     "id" : 101,
-    "page number" : 1,
-    "bounding box" : [ 248.4, 197.54, 265.384, 204.38 ],
-    "font" : "Calibri",
-    "font size" : 6.84,
-    "text color" : "[0.0]",
-    "content" : "9.96%"
-  }, {
-    "type" : "paragraph",
-    "id" : 102,
     "page number" : 1,
     "bounding box" : [ 250.39, 205.65, 270.855, 212.49 ],
     "font" : "Calibri",
@@ -1316,7 +1316,7 @@
     "content" : "11.54%"
   }, {
     "type" : "paragraph",
-    "id" : 103,
+    "id" : 102,
     "page number" : 1,
     "bounding box" : [ 290.66, 213.74, 311.207, 220.58 ],
     "font" : "Calibri",
@@ -1325,7 +1325,7 @@
     "content" : "43.17%"
   }, {
     "type" : "paragraph",
-    "id" : 104,
+    "id" : 103,
     "page number" : 1,
     "bounding box" : [ 227.98, 132.952, 310.846, 137.224 ],
     "font" : "Calibri",
@@ -1334,7 +1334,7 @@
     "content" : "0.0 20.0 40.0 60.0"
   }, {
     "type" : "paragraph",
-    "id" : 105,
+    "id" : 104,
     "page number" : 1,
     "bounding box" : [ 209.26, 142.342, 226.348, 148.056 ],
     "font" : "맑은 고딕,Bold",
@@ -1343,7 +1343,7 @@
     "content" : "유틸리티"
   }, {
     "type" : "paragraph",
-    "id" : 106,
+    "id" : 105,
     "page number" : 1,
     "bounding box" : [ 204.98, 150.427, 226.46, 156.11 ],
     "font" : "맑은 고딕,Bold",
@@ -1352,7 +1352,7 @@
     "content" : "필수소비재"
   }, {
     "type" : "paragraph",
-    "id" : 107,
+    "id" : 106,
     "page number" : 1,
     "bounding box" : [ 213.53, 158.517, 226.346, 164.2 ],
     "font" : "맑은 고딕,Bold",
@@ -1361,7 +1361,7 @@
     "content" : "에너지"
   }, {
     "type" : "paragraph",
-    "id" : 108,
+    "id" : 107,
     "page number" : 1,
     "bounding box" : [ 208.39, 166.702, 226.309, 172.416 ],
     "font" : "맑은 고딕,Bold",
@@ -1370,7 +1370,7 @@
     "content" : "KOSDAQ"
   }, {
     "type" : "paragraph",
-    "id" : 109,
+    "id" : 108,
     "page number" : 1,
     "bounding box" : [ 217.8, 174.717, 226.344, 180.4 ],
     "font" : "맑은 고딕,Bold",
@@ -1379,7 +1379,7 @@
     "content" : "의료"
   }, {
     "type" : "paragraph",
-    "id" : 110,
+    "id" : 109,
     "page number" : 1,
     "bounding box" : [ 217.8, 182.822, 226.344, 188.536 ],
     "font" : "맑은 고딕,Bold",
@@ -1388,7 +1388,7 @@
     "content" : "금융"
   }, {
     "type" : "paragraph",
-    "id" : 111,
+    "id" : 110,
     "page number" : 1,
     "bounding box" : [ 217.8, 190.912, 226.344, 196.626 ],
     "font" : "맑은 고딕,Bold",
@@ -1397,7 +1397,7 @@
     "content" : "소재"
   }, {
     "type" : "paragraph",
-    "id" : 112,
+    "id" : 111,
     "page number" : 1,
     "bounding box" : [ 213.53, 199.007, 226.346, 204.69 ],
     "font" : "맑은 고딕,Bold",
@@ -1406,7 +1406,7 @@
     "content" : "산업재"
   }, {
     "type" : "paragraph",
-    "id" : 113,
+    "id" : 112,
     "page number" : 1,
     "bounding box" : [ 204.98, 207.112, 226.46, 212.826 ],
     "font" : "맑은 고딕,Bold",
@@ -1415,7 +1415,7 @@
     "content" : "경기소비재"
   }, {
     "type" : "paragraph",
-    "id" : 114,
+    "id" : 113,
     "page number" : 1,
     "bounding box" : [ 222.5, 215.272, 226.313, 220.986 ],
     "font" : "맑은 고딕,Bold",
@@ -1424,12 +1424,12 @@
     "content" : "IT"
   }, {
     "type" : "image",
-    "id" : 115,
+    "id" : 114,
     "page number" : 1,
     "bounding box" : [ 370.971, 140.09, 448.039, 225.039 ]
   }, {
     "type" : "paragraph",
-    "id" : 116,
+    "id" : 115,
     "page number" : 1,
     "bounding box" : [ 382.61, 141.506, 399.568, 148.322 ],
     "font" : "Calibri",
@@ -1438,7 +1438,7 @@
     "content" : "2.03%"
   }, {
     "type" : "paragraph",
-    "id" : 117,
+    "id" : 116,
     "page number" : 1,
     "bounding box" : [ 383.11, 149.836, 400.068, 156.652 ],
     "font" : "Calibri",
@@ -1447,7 +1447,7 @@
     "content" : "2.20%"
   }, {
     "type" : "paragraph",
-    "id" : 118,
+    "id" : 117,
     "page number" : 1,
     "bounding box" : [ 383.21, 158.18, 400.194, 165.02 ],
     "font" : "Calibri",
@@ -1456,7 +1456,7 @@
     "content" : "2.22%"
   }, {
     "type" : "paragraph",
-    "id" : 119,
+    "id" : 118,
     "page number" : 1,
     "bounding box" : [ 383.74, 166.51, 400.818, 173.35 ],
     "font" : "Calibri",
@@ -1465,7 +1465,7 @@
     "content" : "2.40%"
   }, {
     "type" : "paragraph",
-    "id" : 120,
+    "id" : 119,
     "page number" : 1,
     "bounding box" : [ 384.14, 174.83, 401.124, 181.67 ],
     "font" : "Calibri",
@@ -1474,7 +1474,7 @@
     "content" : "2.53%"
   }, {
     "type" : "paragraph",
-    "id" : 121,
+    "id" : 120,
     "page number" : 1,
     "bounding box" : [ 384.72, 183.16, 401.798, 190.0 ],
     "font" : "Calibri",
@@ -1483,7 +1483,7 @@
     "content" : "2.72%"
   }, {
     "type" : "list",
-    "id" : 122,
+    "id" : 121,
     "level" : "10",
     "page number" : 1,
     "bounding box" : [ 384.94, 191.49, 403.063, 206.66 ],
@@ -1510,7 +1510,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 123,
+    "id" : 122,
     "page number" : 1,
     "bounding box" : [ 398.09, 208.15, 415.074, 214.99 ],
     "font" : "Calibri",
@@ -1519,7 +1519,7 @@
     "content" : "7.09%"
   }, {
     "type" : "paragraph",
-    "id" : 124,
+    "id" : 123,
     "page number" : 1,
     "bounding box" : [ 437.06, 216.47, 457.618, 223.31 ],
     "font" : "Calibri",
@@ -1528,7 +1528,7 @@
     "content" : "23.30%"
   }, {
     "type" : "paragraph",
-    "id" : 125,
+    "id" : 124,
     "page number" : 1,
     "bounding box" : [ 368.69, 133.472, 451.611, 137.744 ],
     "font" : "Calibri",
@@ -1537,7 +1537,7 @@
     "content" : "0.0 5.0 10.0 15.0 20.0 25.0"
   }, {
     "type" : "paragraph",
-    "id" : 126,
+    "id" : 125,
     "page number" : 1,
     "bounding box" : [ 358.42, 142.982, 367.012, 148.696 ],
     "font" : "맑은 고딕,Bold",
@@ -1546,7 +1546,7 @@
     "content" : "기아"
   }, {
     "type" : "paragraph",
-    "id" : 127,
+    "id" : 126,
     "page number" : 1,
     "bounding box" : [ 352.94, 151.312, 367.004, 157.026 ],
     "font" : "맑은 고딕,Bold",
@@ -1555,7 +1555,7 @@
     "content" : "KB금융"
   }, {
     "type" : "paragraph",
-    "id" : 128,
+    "id" : 127,
     "page number" : 1,
     "bounding box" : [ 332.81, 159.642, 367.178, 165.356 ],
     "font" : "맑은 고딕,Bold",
@@ -1564,7 +1564,7 @@
     "content" : "삼성바이오로직스"
   }, {
     "type" : "paragraph",
-    "id" : 129,
+    "id" : 128,
     "page number" : 1,
     "bounding box" : [ 340.49, 167.972, 367.18, 173.686 ],
     "font" : "맑은 고딕,Bold",
@@ -1573,7 +1573,7 @@
     "content" : "SK이노베이션"
   }, {
     "type" : "paragraph",
-    "id" : 130,
+    "id" : 129,
     "page number" : 1,
     "bounding box" : [ 339.74, 176.302, 367.228, 182.016 ],
     "font" : "맑은 고딕,Bold",
@@ -1582,7 +1582,7 @@
     "content" : "POSCO홀딩스"
   }, {
     "type" : "paragraph",
-    "id" : 131,
+    "id" : 130,
     "page number" : 1,
     "bounding box" : [ 352.68, 184.702, 367.054, 190.416 ],
     "font" : "맑은 고딕,Bold",
@@ -1591,7 +1591,7 @@
     "content" : "NAVER"
   }, {
     "type" : "paragraph",
-    "id" : 132,
+    "id" : 131,
     "page number" : 1,
     "bounding box" : [ 351.5, 192.952, 367.012, 198.666 ],
     "font" : "맑은 고딕,Bold",
@@ -1600,7 +1600,7 @@
     "content" : "삼성SDI"
   }, {
     "type" : "paragraph",
-    "id" : 133,
+    "id" : 132,
     "page number" : 1,
     "bounding box" : [ 336.07, 201.282, 367.156, 206.996 ],
     "font" : "맑은 고딕,Bold",
@@ -1609,7 +1609,7 @@
     "content" : "LG에너지솔루션"
   }, {
     "type" : "paragraph",
-    "id" : 134,
+    "id" : 133,
     "page number" : 1,
     "bounding box" : [ 344.76, 209.612, 367.058, 215.326 ],
     "font" : "맑은 고딕,Bold",
@@ -1618,7 +1618,7 @@
     "content" : "SK하이닉스"
   }, {
     "type" : "paragraph",
-    "id" : 135,
+    "id" : 134,
     "page number" : 1,
     "bounding box" : [ 349.9, 217.942, 366.988, 223.656 ],
     "font" : "맑은 고딕,Bold",
@@ -1627,7 +1627,7 @@
     "content" : "삼성전자"
   }, {
     "type" : "text block",
-    "id" : 136,
+    "id" : 135,
     "page number" : 1,
     "bounding box" : [ 33.71, 750.75, 478.06, 788.65 ],
     "kids" : [ {
@@ -1643,7 +1643,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 137,
+    "id" : 136,
     "page number" : 1,
     "bounding box" : [ 444.05, 368.187, 461.138, 373.87 ],
     "font" : "맑은 고딕",
@@ -1652,12 +1652,12 @@
     "content" : "(단위: %)"
   }, {
     "type" : "image",
-    "id" : 138,
+    "id" : 137,
     "page number" : 1,
     "bounding box" : [ 21.213, 783.43, 489.333, 824.535 ]
   }, {
     "type" : "paragraph",
-    "id" : 139,
+    "id" : 138,
     "page number" : 1,
     "bounding box" : [ 43.872, 786.917, 249.34, 802.05 ],
     "font" : "맑은 고딕,Bold",
@@ -1666,12 +1666,12 @@
     "content" : "2023년 9월 KB자산운용 월간운용보고서"
   }, {
     "type" : "image",
-    "id" : 140,
+    "id" : 139,
     "page number" : 1,
     "bounding box" : [ 411.1, 807.55, 476.711, 823.386 ]
   }, {
     "type" : "paragraph",
-    "id" : 141,
+    "id" : 140,
     "page number" : 1,
     "bounding box" : [ 419.95, 811.052, 468.028, 822.321 ],
     "font" : "맑은 고딕,Bold",

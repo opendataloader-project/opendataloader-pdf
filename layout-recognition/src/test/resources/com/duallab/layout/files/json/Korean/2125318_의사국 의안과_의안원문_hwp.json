@@ -69,7 +69,7 @@
       "cells" : [ {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 72.141, 609.953, 129.111, 652.866 ],
+        "bounding box" : [ 72.351, 610.223, 128.931, 652.596 ],
         "row number" : 1,
         "column number" : 1,
         "row span" : 1,
@@ -87,7 +87,7 @@
       }, {
         "type" : "table cell",
         "page number" : 1,
-        "bounding box" : [ 128.751, 609.953, 198.613, 652.866 ],
+        "bounding box" : [ 128.931, 610.223, 198.403, 652.596 ],
         "row number" : 1,
         "column number" : 2,
         "row span" : 1,
@@ -469,7 +469,7 @@
       "cells" : [ {
         "type" : "table cell",
         "page number" : 7,
-        "bounding box" : [ 72.141, 684.271, 297.74, 712.441 ],
+        "bounding box" : [ 72.351, 684.451, 297.56, 712.171 ],
         "row number" : 1,
         "column number" : 1,
         "row span" : 1,
@@ -487,7 +487,7 @@
       }, {
         "type" : "table cell",
         "page number" : 7,
-        "bounding box" : [ 297.38, 684.271, 523.039, 712.441 ],
+        "bounding box" : [ 297.56, 684.451, 522.829, 712.171 ],
         "row number" : 1,
         "column number" : 2,
         "row span" : 1,
@@ -509,7 +509,7 @@
       "cells" : [ {
         "type" : "table cell",
         "page number" : 7,
-        "bounding box" : [ 72.141, 107.882, 297.74, 684.631 ],
+        "bounding box" : [ 72.351, 108.062, 297.56, 684.451 ],
         "row number" : 2,
         "column number" : 1,
         "row span" : 1,
@@ -615,7 +615,7 @@
       }, {
         "type" : "table cell",
         "page number" : 7,
-        "bounding box" : [ 297.38, 107.882, 523.039, 684.631 ],
+        "bounding box" : [ 297.56, 108.062, 522.829, 684.451 ],
         "row number" : 2,
         "column number" : 2,
         "row span" : 1,
@@ -821,57 +821,57 @@
       "content" : "<신 설> 4. 「중소기업기본법」 제2조 에 따른 중소기업, 「중견기 업 성장촉진 및 경쟁력 강화 에 관한 특별법」 제2조제1 호에 따른 중견기업, 「소상 공인기본법」 제2조에 따른 소상공인을 각각 대표할 수 있는 대통령령으로 정하는 요 건을 갖춘 전국적 규모의 단 체",
       "kids" : [ {
         "type" : "image",
-        "id" : 56,
+        "id" : 84,
         "page number" : 8,
         "bounding box" : [ 91.991, 685.47, 151.598, 686.07 ]
       }, {
         "type" : "image",
-        "id" : 57,
+        "id" : 85,
         "page number" : 8,
         "bounding box" : [ 317.229, 685.47, 517.162, 686.07 ]
       }, {
         "type" : "image",
-        "id" : 58,
+        "id" : 86,
         "page number" : 8,
         "bounding box" : [ 327.544, 660.297, 517.162, 660.897 ]
       }, {
         "type" : "image",
-        "id" : 59,
+        "id" : 87,
         "page number" : 8,
         "bounding box" : [ 327.544, 635.125, 517.162, 635.725 ]
       }, {
         "type" : "image",
-        "id" : 60,
+        "id" : 88,
         "page number" : 8,
         "bounding box" : [ 327.544, 609.952, 517.162, 610.552 ]
       }, {
         "type" : "image",
-        "id" : 61,
+        "id" : 89,
         "page number" : 8,
         "bounding box" : [ 327.544, 584.78, 517.162, 585.38 ]
       }, {
         "type" : "image",
-        "id" : 62,
+        "id" : 90,
         "page number" : 8,
         "bounding box" : [ 327.544, 559.607, 517.162, 560.207 ]
       }, {
         "type" : "image",
-        "id" : 63,
+        "id" : 91,
         "page number" : 8,
         "bounding box" : [ 327.544, 534.435, 517.162, 535.035 ]
       }, {
         "type" : "image",
-        "id" : 64,
+        "id" : 92,
         "page number" : 8,
         "bounding box" : [ 327.544, 509.263, 517.162, 509.863 ]
       }, {
         "type" : "image",
-        "id" : 65,
+        "id" : 93,
         "page number" : 8,
         "bounding box" : [ 327.544, 484.09, 517.162, 484.69 ]
       }, {
         "type" : "image",
-        "id" : 66,
+        "id" : 94,
         "page number" : 8,
         "bounding box" : [ 327.544, 458.918, 341.696, 459.518 ]
       } ]
@@ -946,15 +946,24 @@
     "text color" : "[0.0]",
     "content" : "제22조(2050 지방탄소중립녹색 성장위원회의 구성 및 운영 등) ① ㆍ ② (현행과 같음)"
   }, {
-    "type" : "paragraph",
+    "type" : "list",
     "id" : 140,
     "level" : "3",
     "page number" : 8,
     "bounding box" : [ 91.99, 111.309, 291.922, 279.174 ],
-    "font" : null,
-    "font size" : 14.025,
-    "text color" : "[0.0]",
-    "content" : "③ 지방위원회의 구성, 운영 및 기능 등 필요한 사항은 조 례로 정한다. 이 경우 위원을 위촉할 때에는 아동, 청년, 여 성, 노동자, 농어민, 중소상공 인, 시민사회단체 등 다양한 사회계층의 대표성이 반영될"
+    "numbering style" : "circled arabic numbers",
+    "number of list items" : 1,
+    "next list id" : 160,
+    "list items" : [ {
+      "type" : "list item",
+      "page number" : 8,
+      "bounding box" : [ 91.99, 111.309, 291.922, 279.174 ],
+      "font" : "Batang",
+      "font size" : 14.025,
+      "text color" : "[0.0]",
+      "content" : "③ 지방위원회의 구성, 운영 및 기능 등 필요한 사항은 조 례로 정한다. 이 경우 위원을 위촉할 때에는 아동, 청년, 여 성, 노동자, 농어민, 중소상공 인, 시민사회단체 등 다양한 사회계층의 대표성이 반영될",
+      "kids" : [ ]
+    } ]
   }, {
     "type" : "image",
     "id" : 141,
@@ -1042,27 +1051,27 @@
       "content" : "<신 설> 1. 아동ㆍ청년ㆍ여성을 각각 대표할 수 있는 대통령령으로 정하는 요건을 갖춘 전국적 규모의 단체",
       "kids" : [ {
         "type" : "image",
-        "id" : 67,
+        "id" : 56,
         "page number" : 9,
         "bounding box" : [ 91.991, 710.642, 151.598, 711.242 ]
       }, {
         "type" : "image",
-        "id" : 68,
+        "id" : 57,
         "page number" : 9,
         "bounding box" : [ 317.229, 710.642, 517.162, 711.242 ]
       }, {
         "type" : "image",
-        "id" : 69,
+        "id" : 58,
         "page number" : 9,
         "bounding box" : [ 327.544, 685.47, 517.162, 686.07 ]
       }, {
         "type" : "image",
-        "id" : 70,
+        "id" : 59,
         "page number" : 9,
         "bounding box" : [ 327.544, 660.297, 517.162, 660.897 ]
       }, {
         "type" : "image",
-        "id" : 71,
+        "id" : 60,
         "page number" : 9,
         "bounding box" : [ 327.544, 635.125, 404.662, 635.725 ]
       } ]
@@ -1076,32 +1085,32 @@
       "content" : "<신 설> 2. 「노동조합 및 노동관계조 정법」 제10조제2항에 따른 총연합단체, 전국적 규모의 산업별 연합단체 및 산업별 노동조합",
       "kids" : [ {
         "type" : "image",
-        "id" : 72,
+        "id" : 61,
         "page number" : 9,
         "bounding box" : [ 91.991, 611.151, 151.598, 611.751 ]
       }, {
         "type" : "image",
-        "id" : 73,
+        "id" : 62,
         "page number" : 9,
         "bounding box" : [ 317.229, 611.151, 517.162, 611.751 ]
       }, {
         "type" : "image",
-        "id" : 74,
+        "id" : 63,
         "page number" : 9,
         "bounding box" : [ 327.544, 585.979, 517.162, 586.579 ]
       }, {
         "type" : "image",
-        "id" : 75,
+        "id" : 64,
         "page number" : 9,
         "bounding box" : [ 327.544, 560.806, 517.162, 561.406 ]
       }, {
         "type" : "image",
-        "id" : 76,
+        "id" : 65,
         "page number" : 9,
         "bounding box" : [ 327.544, 535.634, 517.162, 536.234 ]
       }, {
         "type" : "image",
-        "id" : 77,
+        "id" : 66,
         "page number" : 9,
         "bounding box" : [ 327.544, 510.461, 383.674, 511.061 ]
       } ]
@@ -1115,32 +1124,32 @@
       "content" : "<신 설> 3. 「농업ㆍ농촌 및 식품산업 기본법」 제3조제4호에 따른 생산자단체 및 「수산업ㆍ어 촌 발전 기본법」제3조제5호 에 따른 생산자단체",
       "kids" : [ {
         "type" : "image",
-        "id" : 78,
+        "id" : 67,
         "page number" : 9,
         "bounding box" : [ 91.991, 486.488, 151.598, 487.088 ]
       }, {
         "type" : "image",
-        "id" : 79,
+        "id" : 68,
         "page number" : 9,
         "bounding box" : [ 317.229, 486.488, 517.162, 487.088 ]
       }, {
         "type" : "image",
-        "id" : 80,
+        "id" : 69,
         "page number" : 9,
         "bounding box" : [ 327.544, 461.315, 517.162, 461.915 ]
       }, {
         "type" : "image",
-        "id" : 81,
+        "id" : 70,
         "page number" : 9,
         "bounding box" : [ 327.544, 436.143, 517.162, 436.743 ]
       }, {
         "type" : "image",
-        "id" : 82,
+        "id" : 71,
         "page number" : 9,
         "bounding box" : [ 327.544, 410.97, 517.162, 411.57 ]
       }, {
         "type" : "image",
-        "id" : 83,
+        "id" : 72,
         "page number" : 9,
         "bounding box" : [ 327.544, 385.798, 453.596, 386.398 ]
       } ]
@@ -1154,57 +1163,57 @@
       "content" : "<신 설> 4. 「중소기업기본법」 제2조 에 따른 중소기업, 「중견기 업 성장촉진 및 경쟁력 강화 에 관한 특별법」 제2조제1 호에 따른 중견기업, 「소상 공인기본법」 제2조에 따른 소상공인을 각각 대표할 수 있는 대통령령으로 정하는 요 건을 갖춘 전국적 규모의 단 체",
       "kids" : [ {
         "type" : "image",
-        "id" : 84,
+        "id" : 73,
         "page number" : 9,
         "bounding box" : [ 91.991, 361.944, 151.598, 362.544 ]
       }, {
         "type" : "image",
-        "id" : 85,
+        "id" : 74,
         "page number" : 9,
         "bounding box" : [ 317.229, 361.944, 517.162, 362.544 ]
       }, {
         "type" : "image",
-        "id" : 86,
+        "id" : 75,
         "page number" : 9,
         "bounding box" : [ 327.544, 336.771, 517.162, 337.371 ]
       }, {
         "type" : "image",
-        "id" : 87,
+        "id" : 76,
         "page number" : 9,
         "bounding box" : [ 327.544, 311.599, 517.162, 312.199 ]
       }, {
         "type" : "image",
-        "id" : 88,
+        "id" : 77,
         "page number" : 9,
         "bounding box" : [ 327.544, 286.426, 517.162, 287.026 ]
       }, {
         "type" : "image",
-        "id" : 89,
+        "id" : 78,
         "page number" : 9,
         "bounding box" : [ 327.544, 261.254, 517.162, 261.854 ]
       }, {
         "type" : "image",
-        "id" : 90,
+        "id" : 79,
         "page number" : 9,
         "bounding box" : [ 327.544, 236.081, 517.162, 236.681 ]
       }, {
         "type" : "image",
-        "id" : 91,
+        "id" : 80,
         "page number" : 9,
         "bounding box" : [ 327.544, 210.909, 517.162, 211.509 ]
       }, {
         "type" : "image",
-        "id" : 92,
+        "id" : 81,
         "page number" : 9,
         "bounding box" : [ 327.544, 185.736, 517.162, 186.336 ]
       }, {
         "type" : "image",
-        "id" : 93,
+        "id" : 82,
         "page number" : 9,
         "bounding box" : [ 327.544, 160.564, 517.162, 161.164 ]
       }, {
         "type" : "image",
-        "id" : 94,
+        "id" : 83,
         "page number" : 9,
         "bounding box" : [ 327.544, 135.392, 341.696, 135.992 ]
       } ]
@@ -1273,15 +1282,24 @@
     "page number" : 10,
     "bounding box" : [ 327.544, 709.324, 369.641, 709.924 ]
   }, {
-    "type" : "paragraph",
+    "type" : "list",
     "id" : 160,
     "level" : "3",
     "page number" : 10,
     "bounding box" : [ 91.99, 685.242, 432.725, 702.072 ],
-    "font" : null,
-    "font size" : 14.025,
-    "text color" : "[0.0]",
-    "content" : "④ (생 략) ④ (현행과 같음)"
+    "numbering style" : "circled arabic numbers",
+    "number of list items" : 1,
+    "previous list id" : 140,
+    "list items" : [ {
+      "type" : "list item",
+      "page number" : 10,
+      "bounding box" : [ 91.99, 685.242, 432.725, 702.072 ],
+      "font" : "Batang",
+      "font size" : 14.025,
+      "text color" : "[0.0]",
+      "content" : "④ (생 략) ④ (현행과 같음)",
+      "kids" : [ ]
+    } ]
   }, {
     "type" : "image",
     "id" : 161,

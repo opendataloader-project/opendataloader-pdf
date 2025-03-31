@@ -7,17 +7,17 @@
   "modification date" : "D:20240604005431+09'00'",
   "kids" : [ {
     "type" : "image",
-    "id" : 383,
+    "id" : 384,
     "page number" : 1,
     "bounding box" : [ 74.84, 703.99, 184.941, 735.755 ]
   }, {
     "type" : "image",
-    "id" : 384,
+    "id" : 385,
     "page number" : 1,
     "bounding box" : [ 118.496, 705.128, 246.108, 705.728 ]
   }, {
     "type" : "paragraph",
-    "id" : 385,
+    "id" : 386,
     "page number" : 1,
     "bounding box" : [ 123.053, 709.245, 240.829, 736.815 ],
     "font" : "H2mjrE",
@@ -26,12 +26,12 @@
     "content" : "제414 국회(임시회) 제1차 환경노동위원회"
   }, {
     "type" : "image",
-    "id" : 386,
+    "id" : 387,
     "page number" : 1,
     "bounding box" : [ 72.141, 705.248, 118.856, 740.61 ]
   }, {
     "type" : "heading",
-    "id" : 387,
+    "id" : 388,
     "level" : "Doctitle",
     "page number" : 1,
     "bounding box" : [ 133.128, 471.156, 461.87, 633.865 ],
@@ -42,7 +42,7 @@
     "content" : "기후위기 대응을 위한 탄소중립ᆞ녹색성장 기본법 일부개정법률안 검 토 보 고"
   }, {
     "type" : "text block",
-    "id" : 388,
+    "id" : 389,
     "page number" : 1,
     "bounding box" : [ 112.02, 351.935, 483.1, 418.942 ],
     "kids" : [ {
@@ -63,7 +63,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 389,
+    "id" : 390,
     "level" : "1",
     "page number" : 1,
     "bounding box" : [ 259.419, 264.521, 335.578, 282.502 ],
@@ -73,7 +73,7 @@
     "content" : "2024. 5."
   }, {
     "type" : "paragraph",
-    "id" : 390,
+    "id" : 391,
     "page number" : 1,
     "bounding box" : [ 201.011, 114.701, 393.653, 172.637 ],
     "font" : "H2mjrE",
@@ -82,7 +82,7 @@
     "content" : "환 경 노 동 위 원 회 수석전문위원 오창석"
   }, {
     "type" : "text block",
-    "id" : 391,
+    "id" : 392,
     "page number" : 2,
     "bounding box" : [ 224.339, 679.297, 370.721, 716.396 ],
     "kids" : [ {
@@ -103,7 +103,7 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 392,
+    "id" : 393,
     "level" : "2",
     "page number" : 2,
     "bounding box" : [ 70.882, 454.854, 524.07, 631.469 ],
@@ -139,7 +139,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 393,
+    "id" : 394,
     "level" : "3",
     "page number" : 2,
     "bounding box" : [ 87.313, 414.938, 527.788, 431.767 ],
@@ -149,7 +149,7 @@
     "content" : "1. 탄소중립녹색성장위원회 위원 후보 추천 단체 명시 ························· 3"
   }, {
     "type" : "paragraph",
-    "id" : 394,
+    "id" : 395,
     "level" : "4",
     "page number" : 2,
     "bounding box" : [ 70.882, 349.01, 524.07, 365.839 ],
@@ -159,7 +159,7 @@
     "content" : "※ 참고자료 ······································································································9"
   }, {
     "type" : "list",
-    "id" : 395,
+    "id" : 396,
     "level" : "5",
     "page number" : 2,
     "bounding box" : [ 87.433, 275.589, 532.825, 325.803 ],
@@ -185,37 +185,44 @@
       "kids" : [ ]
     } ]
   }, {
-    "type" : "paragraph",
-    "id" : 396,
-    "level" : "6",
-    "page number" : 3,
-    "bounding box" : [ 70.882, 725.135, 165.869, 744.266 ],
-    "font" : null,
-    "font size" : 15.943,
-    "text color" : "[0.0]",
-    "content" : "Ⅰ. 제안경위"
-  }, {
-    "type" : "paragraph",
+    "type" : "list",
     "id" : 397,
+    "level" : "2",
     "page number" : 3,
-    "bounding box" : [ 70.882, 606.129, 524.236, 687.208 ],
-    "font" : null,
-    "font size" : 14.025,
-    "text color" : "[0.0]",
-    "content" : "2023년 11월 9일 이수진 의원이 대표 발의한 기후위기 대응을 위 한 탄소중립ㆍ녹색성장 기본법 일부개정법률안은 2023년 11월 10일 우리 위원회에 회부되었음."
+    "bounding box" : [ 70.882, 542.934, 265.774, 744.266 ],
+    "numbering style" : "roman numbers in upper case",
+    "number of list items" : 2,
+    "list items" : [ {
+      "type" : "list item",
+      "page number" : 3,
+      "bounding box" : [ 70.882, 725.135, 165.869, 744.266 ],
+      "font" : "Batang",
+      "font size" : 15.943,
+      "text color" : "[0.0]",
+      "content" : "Ⅰ. 제안경위",
+      "kids" : [ {
+        "type" : "paragraph",
+        "id" : 383,
+        "page number" : 3,
+        "bounding box" : [ 70.882, 606.129, 524.236, 687.208 ],
+        "font" : null,
+        "font size" : 14.025,
+        "text color" : "[0.0]",
+        "content" : "2023년 11월 9일 이수진 의원이 대표 발의한 기후위기 대응을 위 한 탄소중립ㆍ녹색성장 기본법 일부개정법률안은 2023년 11월 10일 우리 위원회에 회부되었음."
+      } ]
+    }, {
+      "type" : "list item",
+      "page number" : 3,
+      "bounding box" : [ 70.882, 542.934, 265.774, 562.065 ],
+      "font" : "Batang",
+      "font size" : 15.943,
+      "text color" : "[0.0]",
+      "content" : "Ⅱ. 제안이유 및 주요내용",
+      "kids" : [ ]
+    } ]
   }, {
     "type" : "paragraph",
     "id" : 398,
-    "level" : "6",
-    "page number" : 3,
-    "bounding box" : [ 70.882, 542.934, 265.774, 562.065 ],
-    "font" : null,
-    "font size" : 15.943,
-    "text color" : "[0.0]",
-    "content" : "Ⅱ. 제안이유 및 주요내용"
-  }, {
-    "type" : "paragraph",
-    "id" : 399,
     "page number" : 3,
     "bounding box" : [ 70.882, 391.683, 524.237, 505.007 ],
     "font" : null,
@@ -224,7 +231,7 @@
     "content" : "현행법은 기후위기 대응을 위해 국가 탄소중립 녹색성장 기본계획 (이하 “탄소중립기본계획”이라 함)을 수립ㆍ시행하도록 하고, 탄소중 립기본계획 및 주요 정책 등을 심의ㆍ의결하기 위하여 2050 탄소중립 녹색성장위원회(이하 “탄소중립위원회”라 함)를 두도록 하고 있음."
   }, {
     "type" : "paragraph",
-    "id" : 400,
+    "id" : 399,
     "page number" : 3,
     "bounding box" : [ 70.882, 92.25, 524.237, 366.439 ],
     "font" : null,
@@ -233,7 +240,7 @@
     "content" : "그리고 탄소중립 사회로의 이행과 추진 과정에서 모든 국민의 민주 적 참여를 보장함을 기본원칙으로 보장하고, 탄소중립위원회의 위원 위촉에 있어 아동, 청년, 여성, 노동자, 농어민, 중소상공인, 시민사회 단체 등 다양한 사회계층으로부터 후보를 추천받거나 의견을 들은 후 각 사회계층의 대표성이 반영될 수 있도록 하여야 함을 규정하고 있 음. 또한 지방자치단체의 탄소중립 녹색성장 기본계획 및 주요 정책 등을 심의ㆍ의결하기 위하여 2050 지방탄소중립녹색성장위원회(이하 “지방탄소중립위원회”라 함)를 둘 수 있도록 하고, 지방탄소중립위원 회의 위원 위촉의 경우에도 아동, 청년, 여성, 노동자, 농어민, 중소상"
   }, {
     "type" : "footer",
-    "id" : 401,
+    "id" : 400,
     "page number" : 3,
     "bounding box" : [ 281.967, 42.429, 313.21, 53.457 ],
     "kids" : [ {
@@ -248,7 +255,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 402,
+    "id" : 401,
     "page number" : 4,
     "bounding box" : [ 70.882, 694.952, 524.236, 744.026 ],
     "font" : null,
@@ -257,7 +264,7 @@
     "content" : "공인, 시민사회단체 등 다양한 사회계층의 대표성이 반영될 수 있도록 하여야 함을 규정하고 있음."
   }, {
     "type" : "paragraph",
-    "id" : 403,
+    "id" : 402,
     "page number" : 4,
     "bounding box" : [ 70.882, 524.138, 524.237, 669.707 ],
     "font" : null,
@@ -266,7 +273,7 @@
     "content" : "그러나 지난해 윤석열 정부 출범 이후, 이른바 제2기 탄소중립위원 회가 출범했지만, 청년, 여성, 노동자, 농어민, 중소상공인 등 법률에 서 참여를 보장하고 있는 사회계층의 참여가 배제되며 민주적 참여 원칙을 위반한 위원회가 구성되었고, 이 위원회가 탄소중립기본계획을 심의ㆍ의결하며 이에 대한 법률 위반 문제가 제기되고 있음."
   }, {
     "type" : "paragraph",
-    "id" : 404,
+    "id" : 403,
     "page number" : 4,
     "bounding box" : [ 70.882, 321.2, 524.236, 498.894 ],
     "font" : null,
@@ -275,7 +282,7 @@
     "content" : "그런데 「탄소중립기본법」이 모든 국민의 민주적 참여를 보장하고, 다양한 사회계층의 대표성이 반영될 수 있도록 탄소중립위원회 등을 구성하도록 규정하고 있는 것은 탄소중립 사회로의 이행이 국가적 비 전으로서 그 과정에서의 부담과 피해가 일부 계층에 전가되지 않고 모든 국민이 함께 새로운 국가 비전으로 나아갈 수 있도록 하기 위한 목적이라는 점에서 「탄소중립기본법」의 핵심가치라고 할 것임."
   }, {
     "type" : "paragraph",
-    "id" : 405,
+    "id" : 404,
     "page number" : 4,
     "bounding box" : [ 70.882, 150.387, 524.237, 295.836 ],
     "font" : null,
@@ -284,7 +291,7 @@
     "content" : "이에 탄소중립위원회 및 지방탄소중립위원회의 위원을 위촉하는 경 우 다양한 사회계층의 대표성을 반영하여야 함을 더욱 명확히 하고 실질적인 대표성이 반영되도록 관련 규정을 정비함으로써 탄소중립 사회로의 이행이 민주적 참여를 통해 실효적으로 이루어질 수 있도록 하고자 함(안 제15조제5항 등)."
   }, {
     "type" : "footer",
-    "id" : 406,
+    "id" : 405,
     "page number" : 4,
     "bounding box" : [ 281.967, 42.429, 313.21, 53.457 ],
     "kids" : [ {
@@ -299,7 +306,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 407,
+    "id" : 406,
     "page number" : 5,
     "bounding box" : [ 70.882, 725.135, 165.509, 744.266 ],
     "font" : null,
@@ -308,7 +315,7 @@
     "content" : "III. 검토의견"
   }, {
     "type" : "paragraph",
-    "id" : 408,
+    "id" : 407,
     "level" : "3",
     "page number" : 5,
     "bounding box" : [ 85.873, 674.382, 458.991, 692.362 ],
@@ -318,7 +325,7 @@
     "content" : "1. 탄소중립녹색성장위원회 위원 후보 추천 단체 명시"
   }, {
     "type" : "paragraph",
-    "id" : 409,
+    "id" : 408,
     "page number" : 5,
     "bounding box" : [ 70.882, 492.253, 524.237, 637.822 ],
     "font" : null,
@@ -327,23 +334,23 @@
     "content" : "개정안은 2050 탄소중립녹색성장위원회 및 2050 지방탄소중립녹색 성장위원회 위원 위촉 시 다양한 사회계층(아동, 청년, 여성, 노동자, 농어민, 중소상공인, 시민사회단체 등)의 대표성이 반영될 수 있도록 후보 추천 단체를 법률에서 명시적으로 규정하려는 것임(안 제15조제 5항 및 제22조제3항)."
   }, {
     "type" : "Caption",
-    "id" : 410,
+    "id" : 409,
     "page number" : 5,
     "bounding box" : [ 221.16, 445.145, 373.897, 461.974 ],
-    "linked content id" : 411,
+    "linked content id" : 410,
     "font" : null,
     "font size" : 14.025,
     "text color" : "[0.0]",
     "content" : "[ 개정안 조문대비표 ]"
   }, {
     "type" : "table",
-    "id" : 411,
-    "level" : "5",
+    "id" : 410,
+    "level" : "4",
     "page number" : 5,
     "bounding box" : [ 76.339, 106.444, 527.236, 432.667 ],
     "number of rows" : 2,
     "number of columns" : 2,
-    "next table id" : 413,
+    "next table id" : 412,
     "rows" : [ {
       "type" : "table row",
       "row number" : 1,
@@ -528,7 +535,7 @@
     } ]
   }, {
     "type" : "footer",
-    "id" : 412,
+    "id" : 411,
     "page number" : 5,
     "bounding box" : [ 281.967, 42.429, 313.21, 53.457 ],
     "kids" : [ {
@@ -543,14 +550,14 @@
     } ]
   }, {
     "type" : "table",
-    "id" : 413,
-    "level" : "5",
+    "id" : 412,
+    "level" : "4",
     "page number" : 6,
     "bounding box" : [ 76.339, 110.519, 527.236, 736.415 ],
     "number of rows" : 2,
     "number of columns" : 2,
-    "previous table id" : 411,
-    "next table id" : 415,
+    "previous table id" : 410,
+    "next table id" : 414,
     "rows" : [ {
       "type" : "table row",
       "row number" : 1,
@@ -840,7 +847,7 @@
     } ]
   }, {
     "type" : "footer",
-    "id" : 414,
+    "id" : 413,
     "page number" : 6,
     "bounding box" : [ 282.12, 41.557, 313.38, 52.597 ],
     "kids" : [ {
@@ -855,13 +862,13 @@
     } ]
   }, {
     "type" : "table",
-    "id" : 415,
-    "level" : "5",
+    "id" : 414,
+    "level" : "4",
     "page number" : 7,
     "bounding box" : [ 76.339, 112.917, 527.236, 736.415 ],
     "number of rows" : 2,
     "number of columns" : 2,
-    "previous table id" : 413,
+    "previous table id" : 412,
     "rows" : [ {
       "type" : "table row",
       "row number" : 1,
@@ -1172,7 +1179,7 @@
     } ]
   }, {
     "type" : "footer",
-    "id" : 416,
+    "id" : 415,
     "page number" : 7,
     "bounding box" : [ 282.12, 41.557, 313.38, 52.597 ],
     "kids" : [ {
@@ -1187,7 +1194,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 417,
+    "id" : 416,
     "page number" : 8,
     "bounding box" : [ 84.96, 197.032, 524.52, 213.88 ],
     "font" : null,
@@ -1196,30 +1203,31 @@
     "content" : "현행법1)은 정부 및 지방자치단체의 탄소중립 사회로의 이행, 녹색"
   }, {
     "type" : "image",
-    "id" : 418,
+    "id" : 417,
     "page number" : 8,
     "bounding box" : [ 70.882, 165.419, 212.646, 165.659 ]
   }, {
+    "type" : "list",
+    "id" : 418,
+    "level" : "5",
+    "page number" : 8,
+    "bounding box" : [ 70.92, 122.608, 524.406, 161.297 ],
+    "numbering style" : "arabic numbers",
+    "number of list items" : 1,
+    "next list id" : 435,
+    "list items" : [ {
+      "type" : "list item",
+      "page number" : 8,
+      "bounding box" : [ 70.92, 122.608, 524.406, 161.297 ],
+      "font" : "Batang",
+      "font size" : 9.96,
+      "text color" : "[0.0]",
+      "content" : "1)｢기후위기 대응을 위한 탄소중립‧녹색성장 기본법｣ 제15조(2050 탄소중립녹색성장위원회의 설치) ① 정부의 탄소중립 사회로의 이행과 녹색성장의 추진을 위한 주요 정책 및 계획과 그 시행에 관한 사항을 심의ㆍ의결하기 위하여 대통령 소속으로 2050 탄소중립녹색성장위원회를 둔다.",
+      "kids" : [ ]
+    } ]
+  }, {
     "type" : "paragraph",
     "id" : 419,
-    "page number" : 8,
-    "bounding box" : [ 70.92, 148.349, 524.406, 161.297 ],
-    "font" : null,
-    "font size" : 9.96,
-    "text color" : "[0.0]",
-    "content" : "1)｢기후위기 대응을 위한 탄소중립‧녹색성장 기본법｣ 제15조(2050 탄소중립녹색성장위원회의 설치) ①"
-  }, {
-    "type" : "paragraph",
-    "id" : 420,
-    "page number" : 8,
-    "bounding box" : [ 79.2, 122.608, 524.383, 147.52 ],
-    "font" : null,
-    "font size" : 9.96,
-    "text color" : "[0.0]",
-    "content" : "정부의 탄소중립 사회로의 이행과 녹색성장의 추진을 위한 주요 정책 및 계획과 그 시행에 관한 사항을 심의ㆍ의결하기 위하여 대통령 소속으로 2050 탄소중립녹색성장위원회를 둔다."
-  }, {
-    "type" : "paragraph",
-    "id" : 421,
     "level" : "6",
     "page number" : 8,
     "bounding box" : [ 79.92, 83.608, 524.383, 121.6 ],
@@ -1229,7 +1237,7 @@
     "content" : "제22조(2050 지방탄소중립녹색성장위원회의 구성 및 운영 등) ① 지방자치단체의 탄소중립 사회로의 이행과 녹색성장의 추진을 위한 주요 정책 및 계획과 그 시행에 관한 사항을 심의ㆍ의결하기 위하여 지방 자치단체별로 2050 지방탄소중립녹색성장위원회를 둘 수 있다."
   }, {
     "type" : "table",
-    "id" : 422,
+    "id" : 420,
     "level" : "7",
     "page number" : 8,
     "bounding box" : [ 76.339, 259.995, 527.236, 736.415 ],
@@ -1469,7 +1477,7 @@
     } ]
   }, {
     "type" : "footer",
-    "id" : 423,
+    "id" : 421,
     "page number" : 8,
     "bounding box" : [ 282.12, 41.557, 313.38, 52.597 ],
     "kids" : [ {
@@ -1484,7 +1492,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 424,
+    "id" : 422,
     "page number" : 9,
     "bounding box" : [ 70.92, 662.211, 524.521, 743.92 ],
     "font" : null,
@@ -1493,7 +1501,7 @@
     "content" : "성장의 추진을 위한 주요 정책 및 계획과 그 시행에 관한 사항을 심 의‧의결하기 위해 2050 탄소중립‧녹색성장위원회 및 2050 지방탄소중 립‧녹색성장위원회를 두고 있으며,"
   }, {
     "type" : "paragraph",
-    "id" : 425,
+    "id" : 423,
     "page number" : 9,
     "bounding box" : [ 70.92, 523.792, 524.521, 637.24 ],
     "font" : null,
@@ -1502,7 +1510,7 @@
     "content" : "기후과학, 온실가스 감축 등의 분야에 관한 학식과 경험이 풍부한 사람 중에서 대통령이 위촉하는 위원의 경우, 아동, 청년, 여성 등 다 양한 사회계층으로부터 추천을 받거나 의견을 들은 후 각 사회계층의 대표성이 반영될 수 있도록 하고 있음."
   }, {
     "type" : "paragraph",
-    "id" : 426,
+    "id" : 424,
     "page number" : 9,
     "bounding box" : [ 70.92, 385.072, 524.52, 499.503 ],
     "font" : null,
@@ -1511,7 +1519,7 @@
     "content" : "그러나 제2기 2050 탄소중립‧녹색성장위원회의 경우 농업계, 노동 계 등을 대표하는 위원이 없고, 시민사회와 여성의 비중이 제1기 205 0 탄소중립‧녹색성장위원회에 비해 감소한 것으로 나타나는 등 사회계 층의 대표성이 약화되었다는 지적이 제기되고 있음(참고자료1)."
   }, {
     "type" : "paragraph",
-    "id" : 427,
+    "id" : 425,
     "page number" : 9,
     "bounding box" : [ 70.92, 154.408, 123.943, 166.36 ],
     "font" : null,
@@ -1520,7 +1528,7 @@
     "content" : "자료: 환경부"
   }, {
     "type" : "paragraph",
-    "id" : 428,
+    "id" : 426,
     "page number" : 9,
     "bounding box" : [ 84.96, 105.771, 524.526, 124.023 ],
     "font" : null,
@@ -1529,7 +1537,7 @@
     "content" : "또한, 2050 지방탄소중립‧녹색성장위원회의 경우 노동계, 농업계,"
   }, {
     "type" : "table",
-    "id" : 429,
+    "id" : 427,
     "level" : "8",
     "page number" : 9,
     "bounding box" : [ 76.399, 165.479, 524.478, 344.443 ],
@@ -1937,17 +1945,17 @@
     } ]
   }, {
     "type" : "Caption",
-    "id" : 430,
+    "id" : 428,
     "page number" : 9,
     "bounding box" : [ 91.8, 351.051, 509.22, 369.303 ],
-    "linked content id" : 429,
+    "linked content id" : 427,
     "font" : null,
     "font size" : 14.04,
     "text color" : "[0.0]",
     "content" : "[ 제1기 및 제2기 2050 탄소중립‧녹색성장위원회 위원 비교 ]"
   }, {
     "type" : "footer",
-    "id" : 431,
+    "id" : 429,
     "page number" : 9,
     "bounding box" : [ 282.12, 41.557, 313.38, 52.597 ],
     "kids" : [ {
@@ -1962,7 +1970,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 432,
+    "id" : 430,
     "page number" : 10,
     "bounding box" : [ 70.92, 662.632, 524.52, 744.903 ],
     "font" : null,
@@ -1971,7 +1979,7 @@
     "content" : "청년 등이 포함되지 않은 채 탄소중립‧녹색성장위원회가 구성된 광역 지방자치단체가 있어, 다양한 사회계층이 참여하지 못하고 있다는 비 판이 제기되고 있는 상황임(참고자료2)."
   }, {
     "type" : "paragraph",
-    "id" : 433,
+    "id" : 431,
     "page number" : 10,
     "bounding box" : [ 70.92, 491.632, 524.521, 638.223 ],
     "font" : null,
@@ -1980,7 +1988,7 @@
     "content" : "이에 개정안은 2050 탄소중립‧녹색성장위원회 및 2050 지방탄소중 립‧녹색성장위원회 위원 위촉 시 총연합단체(노동조합, 중소기업, 농업 등 생산자단체, 비영리단체) 등의 추천을 받도록 하여 다양한 사회계 층의 대표성이 실질적으로 반영될 수 있도록 법적 근거를 마련하려는 것으로 그 취지는 타당한 방향으로 보임."
   }, {
     "type" : "paragraph",
-    "id" : 434,
+    "id" : 432,
     "page number" : 10,
     "bounding box" : [ 70.92, 352.792, 524.521, 466.24 ],
     "font" : null,
@@ -1989,7 +1997,7 @@
     "content" : "다만, 2050탄소중립·녹색성장위원회는 법률에 명시된 단체에서 추천 한 후보자 중에서만 위원을 위촉할 경우 위원회의 위촉권이 제한되고, 배제 단체와의 역차별 문제, 추천단체 수 증가에 따른 행정비효율 문 제2) 등이 발생할 수 있다는 의견을 제출하였음."
   }, {
     "type" : "paragraph",
-    "id" : 435,
+    "id" : 433,
     "page number" : 10,
     "bounding box" : [ 70.92, 256.192, 524.52, 337.48 ],
     "font" : null,
@@ -1998,22 +2006,31 @@
     "content" : "그러나, 현재 제2기 탄소중립·녹색성장위원회 위원구성 현황을 보면 제1기와 비교 시 청년, 노동, 시민사회 등을 대표하는 위원 위촉이 미 흡한 상황이라는 점을 고려할 필요가 있음."
   }, {
     "type" : "image",
-    "id" : 436,
+    "id" : 434,
     "page number" : 10,
     "bounding box" : [ 70.882, 139.407, 212.646, 139.647 ]
   }, {
-    "type" : "paragraph",
-    "id" : 437,
-    "level" : "3",
+    "type" : "list",
+    "id" : 435,
+    "level" : "5",
     "page number" : 10,
     "bounding box" : [ 70.92, 83.608, 524.525, 134.56 ],
-    "font" : null,
-    "font size" : 9.96,
-    "text color" : "[0.0]",
-    "content" : "2) 개정안 제15조제5항 각 호와 개정안 제22조제3항 각 호에 해당하는 단체를 살펴보면 영농조합법인 중 자본금이 1억 원 이상인 법인이 6,835개(국가통계포털, 2021년 기준), 비영리민간단체가 15,115 개(행정안전부 비영리민간단체 등록현황, 2023년 3월 기준)인 점을 고려할 때 개정안에 따른 추천단 체가 과도하게 많아 행정 비효율이 발생할 수 있음."
+    "numbering style" : "arabic numbers",
+    "number of list items" : 1,
+    "previous list id" : 418,
+    "list items" : [ {
+      "type" : "list item",
+      "page number" : 10,
+      "bounding box" : [ 70.92, 83.608, 524.525, 134.56 ],
+      "font" : "Batang",
+      "font size" : 9.96,
+      "text color" : "[0.0]",
+      "content" : "2) 개정안 제15조제5항 각 호와 개정안 제22조제3항 각 호에 해당하는 단체를 살펴보면 영농조합법인 중 자본금이 1억 원 이상인 법인이 6,835개(국가통계포털, 2021년 기준), 비영리민간단체가 15,115 개(행정안전부 비영리민간단체 등록현황, 2023년 3월 기준)인 점을 고려할 때 개정안에 따른 추천단 체가 과도하게 많아 행정 비효율이 발생할 수 있음.",
+      "kids" : [ ]
+    } ]
   }, {
     "type" : "footer",
-    "id" : 438,
+    "id" : 436,
     "page number" : 10,
     "bounding box" : [ 282.12, 41.557, 313.38, 52.597 ],
     "kids" : [ {
@@ -2028,8 +2045,8 @@
     } ]
   }, {
     "type" : "table",
-    "id" : 439,
-    "level" : "6",
+    "id" : 437,
+    "level" : "7",
     "page number" : 11,
     "bounding box" : [ 368.022, 668.808, 524.478, 736.415 ],
     "number of rows" : 2,
@@ -2081,7 +2098,7 @@
     } ]
   }, {
     "type" : "footer",
-    "id" : 440,
+    "id" : 438,
     "page number" : 11,
     "bounding box" : [ 282.12, 41.557, 313.38, 52.597 ],
     "kids" : [ {
@@ -2096,8 +2113,8 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 441,
-    "level" : "4",
+    "id" : 439,
+    "level" : "8",
     "page number" : 12,
     "bounding box" : [ 71.88, 702.88, 173.639, 724.48 ],
     "font" : null,
@@ -2106,7 +2123,7 @@
     "content" : "※ 참고자료"
   }, {
     "type" : "paragraph",
-    "id" : 442,
+    "id" : 440,
     "level" : "3",
     "page number" : 12,
     "bounding box" : [ 85.92, 664.6, 415.32, 682.6 ],
@@ -2116,8 +2133,8 @@
     "content" : "1. 2050 탄소중립위원회 민간위촉위원 구성현황"
   }, {
     "type" : "paragraph",
-    "id" : 443,
-    "level" : "4",
+    "id" : 441,
+    "level" : "6",
     "page number" : 12,
     "bounding box" : [ 459.24, 624.873, 524.4, 638.12 ],
     "font" : "MalgunGothicBold",
@@ -2126,8 +2143,8 @@
     "content" : "※자료: 환경부"
   }, {
     "type" : "list",
-    "id" : 444,
-    "level" : "5",
+    "id" : 442,
+    "level" : "7",
     "page number" : 12,
     "bounding box" : [ 70.92, 333.59, 340.562, 612.931 ],
     "numbering style" : "unordered",
@@ -2143,7 +2160,7 @@
       "kids" : [ {
         "type" : "paragraph",
         "id" : 382,
-        "level" : "4",
+        "level" : "6",
         "page number" : 12,
         "bounding box" : [ 372.72, 572.309, 520.56, 585.978 ],
         "font" : "�޸ո���",
@@ -2163,7 +2180,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 445,
+    "id" : 443,
     "level" : "6",
     "page number" : 12,
     "bounding box" : [ 78.0, 106.72, 382.56, 121.12 ],
@@ -2173,7 +2190,7 @@
     "content" : "※ 노동계 대표는 없으나, 한국고용정보원 본부장 선임"
   }, {
     "type" : "table",
-    "id" : 446,
+    "id" : 444,
     "level" : "7",
     "page number" : 12,
     "bounding box" : [ 72.201, 377.647, 548.465, 558.29 ],
@@ -2403,7 +2420,7 @@
           "level" : "1",
           "page number" : 12,
           "bounding box" : [ 174.0, 378.132, 404.28, 448.736 ],
-          "numbering style" : "unordered",
+          "numbering style" : "unknown style",
           "number of list items" : 2,
           "list items" : [ {
             "type" : "list item",
@@ -2438,7 +2455,7 @@
     } ]
   }, {
     "type" : "table",
-    "id" : 447,
+    "id" : 445,
     "level" : "8",
     "page number" : 12,
     "bounding box" : [ 72.201, 123.524, 542.828, 304.167 ],
@@ -2659,7 +2676,7 @@
           "level" : "1",
           "page number" : 12,
           "bounding box" : [ 174.0, 123.732, 367.08, 194.456 ],
-          "numbering style" : "unordered",
+          "numbering style" : "unknown style",
           "number of list items" : 2,
           "list items" : [ {
             "type" : "list item",
@@ -2694,7 +2711,7 @@
     } ]
   }, {
     "type" : "footer",
-    "id" : 448,
+    "id" : 446,
     "page number" : 12,
     "bounding box" : [ 278.76, 41.557, 316.62, 52.597 ],
     "kids" : [ {
@@ -2709,7 +2726,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 449,
+    "id" : 447,
     "level" : "3",
     "page number" : 13,
     "bounding box" : [ 85.92, 725.59, 422.52, 745.09 ],
@@ -2719,19 +2736,19 @@
     "content" : "2. 광역 탄소중립‧녹색성장위원회 위원 구성 현황"
   }, {
     "type" : "Caption",
-    "id" : 450,
-    "level" : "4",
+    "id" : 448,
+    "level" : "6",
     "page number" : 13,
     "bounding box" : [ 453.48, 686.728, 523.92, 698.68 ],
-    "linked content id" : 451,
+    "linked content id" : 449,
     "font" : null,
     "font size" : 9.96,
     "text color" : "[0.0]",
     "content" : "※자료: 환경부"
   }, {
     "type" : "table",
-    "id" : 451,
-    "level" : "5",
+    "id" : 449,
+    "level" : "7",
     "page number" : 13,
     "bounding box" : [ 72.801, 89.242, 524.718, 667.131 ],
     "number of rows" : 19,
@@ -6420,7 +6437,7 @@
     } ]
   }, {
     "type" : "footer",
-    "id" : 452,
+    "id" : 450,
     "page number" : 13,
     "bounding box" : [ 278.76, 41.557, 316.62, 52.597 ],
     "kids" : [ {

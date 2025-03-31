@@ -7,7 +7,7 @@
   "modification date" : "D:20240604005406+09'00'",
   "kids" : [ {
     "type" : "paragraph",
-    "id" : 499,
+    "id" : 514,
     "page number" : 1,
     "bounding box" : [ 360.285, 774.793, 545.371, 784.382 ],
     "font" : "Batang",
@@ -16,12 +16,12 @@
     "content" : "제414회-환경노동제1차(2024년5월7일) 1"
   }, {
     "type" : "image",
-    "id" : 500,
+    "id" : 515,
     "page number" : 1,
     "bounding box" : [ 49.533, 768.839, 545.347, 769.918 ]
   }, {
     "type" : "paragraph",
-    "id" : 501,
+    "id" : 516,
     "page number" : 1,
     "bounding box" : [ 63.36, 690.328, 155.88, 727.12 ],
     "font" : null,
@@ -30,7 +30,7 @@
     "content" : "제414회국회 (임시회)"
   }, {
     "type" : "heading",
-    "id" : 502,
+    "id" : 517,
     "level" : "Doctitle",
     "page number" : 1,
     "bounding box" : [ 192.72, 707.608, 528.96, 731.658 ],
@@ -41,7 +41,7 @@
     "content" : "환경노동위원회회의록 제 1 호"
   }, {
     "type" : "paragraph",
-    "id" : 503,
+    "id" : 518,
     "page number" : 1,
     "bounding box" : [ 420.96, 659.08, 525.84, 677.08 ],
     "font" : null,
@@ -50,7 +50,7 @@
     "content" : "국 회 사 무 처"
   }, {
     "type" : "paragraph",
-    "id" : 504,
+    "id" : 519,
     "page number" : 1,
     "bounding box" : [ 53.76, 610.648, 200.638, 644.32 ],
     "font" : null,
@@ -59,7 +59,7 @@
     "content" : "일 시 2024년5월7일(화) 장 소 환경노동위원회회의실"
   }, {
     "type" : "paragraph",
-    "id" : 505,
+    "id" : 520,
     "page number" : 1,
     "bounding box" : [ 74.76, 582.208, 116.759, 594.88 ],
     "font" : null,
@@ -68,13 +68,13 @@
     "content" : "의사일정"
   }, {
     "type" : "list",
-    "id" : 506,
+    "id" : 521,
     "level" : "1",
     "page number" : 1,
     "bounding box" : [ 53.76, 54.928, 539.531, 577.6 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 28,
-    "next list id" : 511,
+    "next list id" : 525,
     "list items" : [ {
       "type" : "list item",
       "page number" : 1,
@@ -330,12 +330,12 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 508,
+    "id" : 522,
     "page number" : 1,
     "bounding box" : [ 52.292, 603.18, 540.429, 651.128 ]
   }, {
     "type" : "header",
-    "id" : 509,
+    "id" : 523,
     "page number" : 2,
     "bounding box" : [ 49.56, 774.721, 234.669, 784.321 ],
     "kids" : [ {
@@ -350,19 +350,19 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 510,
+    "id" : 524,
     "page number" : 2,
     "bounding box" : [ 49.533, 768.839, 545.347, 769.918 ]
   }, {
     "type" : "list",
-    "id" : 511,
+    "id" : 525,
     "level" : "1",
     "page number" : 2,
     "bounding box" : [ 53.76, 53.531, 539.532, 751.84 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 40,
-    "previous list id" : 506,
-    "next list id" : 515,
+    "previous list id" : 521,
+    "next list id" : 529,
     "list items" : [ {
       "type" : "list item",
       "page number" : 2,
@@ -726,7 +726,7 @@
     } ]
   }, {
     "type" : "header",
-    "id" : 512,
+    "id" : 526,
     "page number" : 3,
     "bounding box" : [ 360.48, 774.721, 545.666, 784.321 ],
     "kids" : [ {
@@ -741,21 +741,21 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 513,
+    "id" : 527,
     "page number" : 3,
     "bounding box" : [ 49.533, 768.839, 545.347, 769.918 ]
   }, {
     "type" : "list",
-    "id" : 515,
+    "id" : 529,
     "level" : "1",
     "page number" : 3,
     "bounding box" : [ 53.76, 308.848, 539.159, 750.345 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 27,
-    "previous list id" : 511,
+    "previous list id" : 525,
     "list items" : [ {
       "type" : "list item",
-      "id" : 514,
+      "id" : 528,
       "page number" : 3,
       "bounding box" : [ 71.4, 739.785, 119.05, 750.345 ],
       "font" : "Batang",
@@ -1000,7 +1000,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 516,
+    "id" : 530,
     "page number" : 3,
     "bounding box" : [ 74.76, 281.728, 132.48, 294.4 ],
     "font" : null,
@@ -1009,13 +1009,13 @@
     "content" : "상정된 안건"
   }, {
     "type" : "list",
-    "id" : 517,
+    "id" : 531,
     "level" : "1",
     "page number" : 3,
     "bounding box" : [ 53.76, 57.328, 546.643, 277.24 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 11,
-    "next list id" : 522,
+    "next list id" : 535,
     "list items" : [ {
       "type" : "list item",
       "page number" : 3,
@@ -1062,7 +1062,7 @@
       "content" : "5. 기후위기 대응을 위한 탄소중립ㆍ녹색성장 기본법 일부개정법률안(이소영 의원 대표발의)(의안번호",
       "kids" : [ {
         "type" : "paragraph",
-        "id" : 489,
+        "id" : 504,
         "level" : "2",
         "page number" : 3,
         "bounding box" : [ 70.92, 185.385, 536.323, 195.945 ],
@@ -1081,7 +1081,7 @@
       "content" : "6. 기후위기 대응을 위한 탄소중립ㆍ녹색성장 기본법 일부개정법률안(이수진 의원 대표발의)(의안번호",
       "kids" : [ {
         "type" : "paragraph",
-        "id" : 490,
+        "id" : 505,
         "level" : "2",
         "page number" : 3,
         "bounding box" : [ 70.92, 153.585, 536.323, 164.145 ],
@@ -1100,7 +1100,7 @@
       "content" : "7. 낙동강수계 물관리 및 주민지원 등에 관한 법률 일부개정법률안(이헌승 의원 대표발의)(의안번호",
       "kids" : [ {
         "type" : "paragraph",
-        "id" : 491,
+        "id" : 506,
         "level" : "2",
         "page number" : 3,
         "bounding box" : [ 72.0, 121.665, 536.323, 132.225 ],
@@ -1148,12 +1148,12 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 519,
+    "id" : 532,
     "page number" : 3,
     "bounding box" : [ 52.292, 303.028, 540.429, 303.508 ]
   }, {
     "type" : "header",
-    "id" : 520,
+    "id" : 533,
     "page number" : 4,
     "bounding box" : [ 49.56, 774.721, 234.669, 784.321 ],
     "kids" : [ {
@@ -1168,19 +1168,19 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 521,
+    "id" : 534,
     "page number" : 4,
     "bounding box" : [ 49.533, 768.839, 545.347, 769.918 ]
   }, {
     "type" : "list",
-    "id" : 522,
+    "id" : 535,
     "level" : "1",
     "page number" : 4,
     "bounding box" : [ 53.76, 53.848, 546.643, 751.84 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 41,
-    "previous list id" : 517,
-    "next list id" : 525,
+    "previous list id" : 531,
+    "next list id" : 538,
     "list items" : [ {
       "type" : "list item",
       "page number" : 4,
@@ -1200,7 +1200,7 @@
       "content" : "13. 댐건설ㆍ관리 및 주변지역지원 등에 관한 법률 일부개정법률안(이종배 의원 대표발의)(의안번호",
       "kids" : [ {
         "type" : "paragraph",
-        "id" : 492,
+        "id" : 507,
         "level" : "2",
         "page number" : 4,
         "bounding box" : [ 72.6, 707.985, 536.323, 718.545 ],
@@ -1300,7 +1300,7 @@
       "content" : "23. 영산강ㆍ섬진강수계 물관리 및 주민지원 등에 관한 법률 일부개정법률안(소병철 의원 대표발의)(의안번호",
       "kids" : [ {
         "type" : "paragraph",
-        "id" : 493,
+        "id" : 508,
         "level" : "2",
         "page number" : 4,
         "bounding box" : [ 69.96, 532.665, 536.323, 543.225 ],
@@ -1573,7 +1573,7 @@
     } ]
   }, {
     "type" : "header",
-    "id" : 523,
+    "id" : 536,
     "page number" : 5,
     "bounding box" : [ 360.48, 774.721, 545.666, 784.321 ],
     "kids" : [ {
@@ -1588,18 +1588,18 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 524,
+    "id" : 537,
     "page number" : 5,
     "bounding box" : [ 49.533, 768.839, 545.347, 769.918 ]
   }, {
     "type" : "list",
-    "id" : 525,
+    "id" : 538,
     "level" : "1",
     "page number" : 5,
     "bounding box" : [ 53.76, 53.848, 546.643, 751.84 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 39,
-    "previous list id" : 522,
+    "previous list id" : 535,
     "list items" : [ {
       "type" : "list item",
       "page number" : 5,
@@ -1718,7 +1718,7 @@
       "content" : "65. 남녀고용평등과 일ㆍ가정 양립 지원에 관한 법률 일부개정법률안(윤호중 의원 대표발의)(의안번호",
       "kids" : [ {
         "type" : "paragraph",
-        "id" : 494,
+        "id" : 509,
         "level" : "2",
         "page number" : 5,
         "bounding box" : [ 71.4, 532.665, 536.323, 543.225 ],
@@ -1737,7 +1737,7 @@
       "content" : "66. 남녀고용평등과 일ㆍ가정 양립 지원에 관한 법률 일부개정법률안(정태호 의원 대표발의)(의안번호",
       "kids" : [ {
         "type" : "paragraph",
-        "id" : 495,
+        "id" : 510,
         "level" : "2",
         "page number" : 5,
         "bounding box" : [ 71.4, 500.745, 536.323, 511.305 ],
@@ -1756,7 +1756,7 @@
       "content" : "67. 남녀고용평등과 일ㆍ가정 양립 지원에 관한 법률 일부개정법률안(용혜인 의원 대표발의)(의안번호",
       "kids" : [ {
         "type" : "paragraph",
-        "id" : 496,
+        "id" : 511,
         "level" : "2",
         "page number" : 5,
         "bounding box" : [ 71.4, 468.825, 536.323, 479.385 ],
@@ -1775,7 +1775,7 @@
       "content" : "68. 남녀고용평등과 일ㆍ가정 양립 지원에 관한 법률 일부개정법률안(이성만 의원 대표발의)(의안번호",
       "kids" : [ {
         "type" : "paragraph",
-        "id" : 497,
+        "id" : 512,
         "level" : "2",
         "page number" : 5,
         "bounding box" : [ 71.4, 437.025, 536.323, 447.585 ],
@@ -1794,7 +1794,7 @@
       "content" : "69. 남녀고용평등과 일ㆍ가정 양립 지원에 관한 법률 일부개정법률안(조정훈 의원 대표발의)(의안번호",
       "kids" : [ {
         "type" : "paragraph",
-        "id" : 498,
+        "id" : 513,
         "level" : "2",
         "page number" : 5,
         "bounding box" : [ 71.4, 405.105, 536.323, 415.665 ],
@@ -2004,7 +2004,7 @@
     } ]
   }, {
     "type" : "header",
-    "id" : 526,
+    "id" : 539,
     "page number" : 6,
     "bounding box" : [ 49.56, 774.721, 234.669, 784.321 ],
     "kids" : [ {
@@ -2019,12 +2019,12 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 527,
+    "id" : 540,
     "page number" : 6,
     "bounding box" : [ 49.533, 768.839, 545.347, 769.918 ]
   }, {
     "type" : "paragraph",
-    "id" : 528,
+    "id" : 541,
     "page number" : 6,
     "bounding box" : [ 196.2, 681.688, 276.251, 694.36 ],
     "font" : null,
@@ -2033,7 +2033,7 @@
     "content" : "(10시14분 개의)"
   }, {
     "type" : "paragraph",
-    "id" : 529,
+    "id" : 542,
     "level" : "3",
     "page number" : 6,
     "bounding box" : [ 49.56, 649.768, 286.32, 679.139 ],
@@ -2043,7 +2043,7 @@
     "content" : "◯위원장 박정 의석을 정돈하여 주시기 바랍니 다."
   }, {
     "type" : "paragraph",
-    "id" : 530,
+    "id" : 543,
     "page number" : 6,
     "bounding box" : [ 49.56, 617.968, 286.243, 646.48 ],
     "font" : null,
@@ -2052,7 +2052,7 @@
     "content" : "성원이 되었으므로 제414회 국회(임시회) 제1 차 환경노동위원회를 개회하겠습니다."
   }, {
     "type" : "paragraph",
-    "id" : 531,
+    "id" : 544,
     "page number" : 6,
     "bounding box" : [ 49.56, 586.048, 286.32, 614.68 ],
     "font" : null,
@@ -2061,7 +2061,7 @@
     "content" : "보고사항은 단말기를 참고하여 주시기 바랍니 다."
   }, {
     "type" : "paragraph",
-    "id" : 532,
+    "id" : 545,
     "page number" : 6,
     "bounding box" : [ 163.56, 570.088, 276.251, 582.76 ],
     "font" : null,
@@ -2070,7 +2070,7 @@
     "content" : "(보고사항은 끝에 실음)"
   }, {
     "type" : "paragraph",
-    "id" : 533,
+    "id" : 546,
     "page number" : 6,
     "bounding box" : [ 49.56, 538.168, 286.32, 566.8 ],
     "font" : null,
@@ -2079,7 +2079,7 @@
     "content" : "의사일정에 들어가기에 앞서 우리 위원회로 보 임해 오신 위원님을 소개해 드리겠습니다."
   }, {
     "type" : "paragraph",
-    "id" : 534,
+    "id" : 547,
     "page number" : 6,
     "bounding box" : [ 49.56, 474.448, 286.32, 535.0 ],
     "font" : null,
@@ -2088,7 +2088,7 @@
     "content" : "2024년 1월 31일 자로 녹색정의당의 양경규 위원님께서 우리 위원회로 보임하셨고 4월 30일 자로 국민의힘 김형동 위원님께서 사임하시고 조 수진 위원님께서 우리 위원회로 오셨습니다."
   }, {
     "type" : "paragraph",
-    "id" : 535,
+    "id" : 548,
     "page number" : 6,
     "bounding box" : [ 60.0, 458.488, 272.713, 471.16 ],
     "font" : null,
@@ -2097,7 +2097,7 @@
     "content" : "먼저 양경규 위원님 인사말씀 부탁드립니다."
   }, {
     "type" : "paragraph",
-    "id" : 536,
+    "id" : 549,
     "level" : "3",
     "page number" : 6,
     "bounding box" : [ 49.56, 426.688, 286.319, 455.939 ],
@@ -2107,7 +2107,7 @@
     "content" : "◯양경규 위원 선배 위원님 여러분 감사드립니 다."
   }, {
     "type" : "paragraph",
-    "id" : 537,
+    "id" : 550,
     "page number" : 6,
     "bounding box" : [ 49.56, 362.848, 286.32, 423.4 ],
     "font" : null,
@@ -2116,7 +2116,7 @@
     "content" : "너무 짧은 기간이어서 여러분들을 일일이 찾아 뵙고 인사드리지 못해서 죄송하고요. 함께하고 계신 많은 분들께도 덩달아 인사를 드리도록 하 겠습니다."
   }, {
     "type" : "paragraph",
-    "id" : 538,
+    "id" : 551,
     "page number" : 6,
     "bounding box" : [ 49.56, 331.048, 286.32, 359.56 ],
     "font" : null,
@@ -2125,7 +2125,7 @@
     "content" : "짧은 기간이지만 노동자를 위한 입법을, 남은 기간에 최선을 다하도록 노력하겠습니다."
   }, {
     "type" : "paragraph",
-    "id" : 539,
+    "id" : 552,
     "page number" : 6,
     "bounding box" : [ 60.0, 315.088, 115.513, 327.76 ],
     "font" : null,
@@ -2134,7 +2134,7 @@
     "content" : "고맙습니다."
   }, {
     "type" : "paragraph",
-    "id" : 540,
+    "id" : 553,
     "level" : "3",
     "page number" : 6,
     "bounding box" : [ 49.56, 298.811, 183.313, 312.539 ],
@@ -2144,7 +2144,7 @@
     "content" : "◯위원장 박정 감사합니다."
   }, {
     "type" : "paragraph",
-    "id" : 541,
+    "id" : 554,
     "page number" : 6,
     "bounding box" : [ 49.56, 267.208, 286.32, 295.84 ],
     "font" : null,
@@ -2153,7 +2153,7 @@
     "content" : "회의 진행에 앞서 위원장으로서 한 말씀 드리 겠습니다."
   }, {
     "type" : "paragraph",
-    "id" : 542,
+    "id" : 555,
     "page number" : 6,
     "bounding box" : [ 49.56, 155.608, 286.32, 263.92 ],
     "font" : null,
@@ -2162,7 +2162,7 @@
     "content" : "4월 총선 이후 첫 회의입니다. 그리고 21대 환 노위도 5월 29일이면 끝이 납니다. 그동안 우리 위원회를 파행 없이 운영하기 위해 여야 의견을 최대한 충분히 듣고 회의를 진행했다고 자부합니 다. 그런데 오늘 보시는 바와 같이 국민의힘 위 원님들이 회의에 참석하지 않았습니다. 정부 측 도 참석하지 않았습니다."
   }, {
     "type" : "paragraph",
-    "id" : 543,
+    "id" : 556,
     "page number" : 6,
     "bounding box" : [ 49.56, 59.968, 286.32, 152.44 ],
     "font" : null,
@@ -2171,7 +2171,7 @@
     "content" : "지난 5월 2일 본회의장에서 국민의힘 간사도 오늘 회의에 대해 합의를 했던 사안입니다. 그런 데 갑자기 채 상병 특검법이 통과되면서 국민의 힘이 일방적으로 회의 불가를 통보해 왔습니다. 그러면서 정부 부처에도 참석하지 말 것을 종용 했습니다."
   }, {
     "type" : "paragraph",
-    "id" : 544,
+    "id" : 557,
     "page number" : 6,
     "bounding box" : [ 60.0, 44.128, 286.32, 56.8 ],
     "font" : null,
@@ -2180,7 +2180,7 @@
     "content" : "채 상병 특검이 실시되면 지구 환경이 심각하"
   }, {
     "type" : "paragraph",
-    "id" : 545,
+    "id" : 558,
     "page number" : 6,
     "bounding box" : [ 308.88, 633.808, 545.64, 694.36 ],
     "font" : null,
@@ -2189,7 +2189,7 @@
     "content" : "게 파괴라도 당하는 것입니까? 아니면 노동자 삶 이 끝없이 추락하는 것입니까? 도대체 채 상병 특검과 환노위가 무슨 관계라고 정상적인 의사진 행을 저지하는지 도무지 이해가 가지 않습니다."
   }, {
     "type" : "paragraph",
-    "id" : 546,
+    "id" : 559,
     "page number" : 6,
     "bounding box" : [ 308.88, 474.448, 545.64, 630.64 ],
     "font" : null,
@@ -2198,7 +2198,7 @@
     "content" : "오늘 회의는 엄청난 일을 하겠다고 개최된 회 의가 아닙니다. 21대 국회 역할을 다하자는 뜻으 로 마지막으로 법안을 상정하고 심의하자는 의미 에서 개최된 회의입니다. 그런데 국민의힘은 심 지어 정부 측 참석까지 막았고 정부는 군말 없이 그 명령에 따랐습니다. 정부는 가라면 가고 오라 면 오는 여당의 시녀입니까? 국회가 공식회의를 개최하는데 여당 명령 때문에 회의 참석을 안 하 는 그 오만방자한 생각은 도대체 어디에서 나온 것입니까?"
   }, {
     "type" : "paragraph",
-    "id" : 547,
+    "id" : 560,
     "page number" : 6,
     "bounding box" : [ 308.88, 315.088, 545.64, 471.16 ],
     "font" : null,
@@ -2207,7 +2207,7 @@
     "content" : "지난 5월 5일 어린이날 서울 강남에서 40대 노동자가 기계에 끼어 사망하는 사고가 발생했습 니다. 정부가 여당의 시녀임을 자처할 때 우리 노동자들은 산업현장에서 쓰러지고 있습니다. 이 엄중한 시기에 정부는 여당이 가라면 가는 것이 아니라 여당을 끌고 이 자리에 참석하는 의로움 을 발휘했어야 합니다. 이 정부와 여당은 아직도 자신들이 총선에서 참패했는지 모르는 것 같아 안타깝습니다. 정부와 여당에 깊은 우려를 표합 니다."
   }, {
     "type" : "paragraph",
-    "id" : 548,
+    "id" : 561,
     "page number" : 6,
     "bounding box" : [ 308.88, 283.168, 545.64, 311.8 ],
     "font" : null,
@@ -2216,7 +2216,7 @@
     "content" : "오늘 이 사태와 관계해서 정부와 여당에 심심 한 사과를 요청하며 제 발언을 마무리하겠습니다."
   }, {
     "type" : "paragraph",
-    "id" : 549,
+    "id" : 562,
     "page number" : 6,
     "bounding box" : [ 308.88, 251.248, 545.64, 279.88 ],
     "font" : null,
@@ -2225,7 +2225,7 @@
     "content" : "그러면 오늘 회의 진행 순서에 대해 간략히 말 씀드리겠습니다."
   }, {
     "type" : "paragraph",
-    "id" : 550,
+    "id" : 563,
     "page number" : 6,
     "bounding box" : [ 308.88, 171.568, 545.64, 248.08 ],
     "font" : null,
@@ -2234,7 +2234,7 @@
     "content" : "오늘 회의는 먼저 2023년도 국정감사 결과보 고서를 채택한 다음 우리 위원회에 회부된 법률 안을 상정하여 이에 대한 제안설명과 검토보고를 듣고 소위에 회부한 후 법률안에 대한 대체토론 을 실시하는 순서로 진행하겠습니다."
   }, {
     "type" : "paragraph",
-    "id" : 551,
+    "id" : 564,
     "page number" : 6,
     "bounding box" : [ 308.88, 123.808, 545.64, 168.28 ],
     "font" : null,
@@ -2242,38 +2242,44 @@
     "text color" : "[0.0]",
     "content" : "오늘은 의결사항이 있으므로 위원님들께서는 의결할 시점에는 가급적 이석을 자제하고 자리를 지켜 주시기 바랍니다."
   }, {
-    "type" : "paragraph",
-    "id" : 552,
-    "level" : "3",
+    "type" : "list",
+    "id" : 565,
+    "level" : "4",
     "page number" : 6,
-    "bounding box" : [ 308.88, 91.888, 545.64, 121.259 ],
-    "font" : null,
-    "font size" : 10.56,
-    "text color" : "[0.0]",
-    "content" : "◯이수진(비) 위원 위원장님, 의사진행발언 있습 니다."
-  }, {
-    "type" : "paragraph",
-    "id" : 553,
-    "level" : "3",
-    "page number" : 6,
-    "bounding box" : [ 308.88, 59.968, 545.64, 89.339 ],
-    "font" : null,
-    "font size" : 10.56,
-    "text color" : "[0.0]",
-    "content" : "◯위원장 박정 이수진 간사님 의사진행발언해 주세요."
-  }, {
-    "type" : "paragraph",
-    "id" : 554,
-    "level" : "3",
-    "page number" : 6,
-    "bounding box" : [ 308.88, 43.811, 545.64, 57.539 ],
-    "font" : null,
-    "font size" : 10.56,
-    "text color" : "[0.0]",
-    "content" : "◯이수진(비) 위원 우리 환경노동위원회의 박정"
+    "bounding box" : [ 308.88, 43.811, 545.64, 121.259 ],
+    "numbering style" : "unordered",
+    "number of list items" : 3,
+    "list items" : [ {
+      "type" : "list item",
+      "page number" : 6,
+      "bounding box" : [ 308.88, 91.888, 545.64, 121.259 ],
+      "font" : "HCRBatang-Bold",
+      "font size" : 10.56,
+      "text color" : "[0.0]",
+      "content" : "◯이수진(비) 위원 위원장님, 의사진행발언 있습 니다.",
+      "kids" : [ ]
+    }, {
+      "type" : "list item",
+      "page number" : 6,
+      "bounding box" : [ 308.88, 59.968, 545.64, 89.339 ],
+      "font" : "HCRBatang-Bold",
+      "font size" : 10.56,
+      "text color" : "[0.0]",
+      "content" : "◯위원장 박정 이수진 간사님 의사진행발언해 주세요.",
+      "kids" : [ ]
+    }, {
+      "type" : "list item",
+      "page number" : 6,
+      "bounding box" : [ 308.88, 43.811, 545.64, 57.539 ],
+      "font" : "HCRBatang-Bold",
+      "font size" : 10.56,
+      "text color" : "[0.0]",
+      "content" : "◯이수진(비) 위원 우리 환경노동위원회의 박정",
+      "kids" : [ ]
+    } ]
   }, {
     "type" : "list",
-    "id" : 555,
+    "id" : 566,
     "level" : "1",
     "page number" : 6,
     "bounding box" : [ 53.76, 707.368, 541.363, 751.84 ],
@@ -2309,12 +2315,12 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 556,
+    "id" : 567,
     "page number" : 6,
     "bounding box" : [ 52.292, 700.814, 540.429, 701.892 ]
   }, {
     "type" : "header",
-    "id" : 557,
+    "id" : 568,
     "page number" : 7,
     "bounding box" : [ 360.48, 774.721, 545.666, 784.321 ],
     "kids" : [ {
@@ -2329,12 +2335,12 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 558,
+    "id" : 569,
     "page number" : 7,
     "bounding box" : [ 49.533, 768.839, 545.347, 769.918 ]
   }, {
     "type" : "paragraph",
-    "id" : 559,
+    "id" : 570,
     "page number" : 7,
     "bounding box" : [ 49.56, 681.088, 286.32, 757.6 ],
     "font" : null,
@@ -2343,7 +2349,7 @@
     "content" : "위원장님 말씀 잘 들었습니다. 평상시 환경노동 위원회를 여야 불협 없이 잘 진행되도록 많이 애 써 주셨고 리더십을 발휘해 주셨습니다. 저 또한 오늘 이 중요한 자리에 정부, 여당이 불참한 것 에 대해서 유감의 뜻을 표합니다."
   }, {
     "type" : "paragraph",
-    "id" : 560,
+    "id" : 571,
     "page number" : 7,
     "bounding box" : [ 49.56, 553.648, 286.32, 677.8 ],
     "font" : null,
@@ -2352,7 +2358,7 @@
     "content" : "윤석열 정권 들어서 매년 신년사에서 3대 개 혁을 언급하며 노동개혁을 이야기했습니다. 매년 경제성장 그리고 일자리 창출을 얘기하면서 노사 법치주의도 언급했습니다. 그러나 모두 아시듯 대통령이 신년사 서두에서 시작했던 ‘존경하는 국민 여러분! ’ ‘사랑하는 국민 여러분! ’ 이 ‘존경’ 과 ‘사랑’ 여기 어디에서도 노동은 찾아볼 수 없 었습니다."
   }, {
     "type" : "paragraph",
-    "id" : 561,
+    "id" : 572,
     "page number" : 7,
     "bounding box" : [ 49.56, 442.048, 286.32, 550.36 ],
     "font" : null,
@@ -2361,7 +2367,7 @@
     "content" : "21대 국회 4년 동안 국회에서 약 2만 6000건 이상의 법안이 다뤄졌습니다. 그러나 법안 처리 는 36% 남짓에 불과했고 그 외 다수는 처리되지 못했습니다. 문제는 시민의 삶과 밀접한 고용․노 동과 보건․복지 법안 대부분이 계류됐습니다. 17 개 상임위 중 환경노동위원회의 계류 법안이 전 체 4위를 차지합니다."
   }, {
     "type" : "paragraph",
-    "id" : 562,
+    "id" : 573,
     "page number" : 7,
     "bounding box" : [ 49.56, 330.448, 286.32, 439.499 ],
     "font" : null,
@@ -2370,7 +2376,7 @@
     "content" : "법사위의 체계․자구 심사 관계없이 잡혀 있는 법안들도 있습니다. 대표적으로 노조법 2․3조는 대통령의 거부권 행사로 가로막혔습니다. 제가 발의한 근로자의 날을 노동절로 변경하는 법안과 과로사를 예방하기 위한 법률 또한 국민의힘은 물론 고용노동부의 소극적 행정으로 제대로 논의 조차 되지 않았습니다."
   }, {
     "type" : "paragraph",
-    "id" : 563,
+    "id" : 574,
     "page number" : 7,
     "bounding box" : [ 49.56, 234.808, 286.32, 327.16 ],
     "font" : null,
@@ -2379,7 +2385,7 @@
     "content" : "윤석열 정부는 또 어땠습니까? 실업급여 축소 나 장시간 노동 방조, 노조의 회계공시제 같은, 노조를 억압하고 줄 세우기에 열을 올리며 추진 했습니다. 최근에는 국민과 노동자를 위한 정책 은 없이 생색만 내고 허울뿐인 육아휴직, 육아기 근로시간 단축만 강조하고 있습니다."
   }, {
     "type" : "paragraph",
-    "id" : 564,
+    "id" : 575,
     "page number" : 7,
     "bounding box" : [ 49.56, 91.288, 286.32, 231.52 ],
     "font" : null,
@@ -2388,7 +2394,7 @@
     "content" : "과거를 되짚어 볼까요? 윤석열 정권 들어서 코 로나19를 겪으면서 제도 도입 필요성을 인식했 던 아프면 쉴 권리를 위한 상병수당 시범사업은 구멍 투성이고 특수고용, 플랫폼노동, 프리랜서 등 취약 노동자를 위한 전국민고용보험은 소리 없이 정책에서 사라졌습니다. 이 또한 모두 우리 사회가 차별이 아닌 평등으로 나아가야 할 기준 이라고 봅니다. 세계인권선언문에서도 강조되듯 대표적인 사회적 기본권입니다."
   }, {
     "type" : "paragraph",
-    "id" : 565,
+    "id" : 576,
     "page number" : 7,
     "bounding box" : [ 49.56, 43.528, 286.32, 88.12 ],
     "font" : null,
@@ -2397,7 +2403,7 @@
     "content" : "아직도 산적한 노동 현안이 적지 않고 21대 국회에서 반드시 처리해야 될 과제도 있습니다. 무엇보다 모든 일하는 사람이 헌법에서 보장된"
   }, {
     "type" : "paragraph",
-    "id" : 566,
+    "id" : 577,
     "page number" : 7,
     "bounding box" : [ 308.88, 697.048, 545.639, 757.6 ],
     "font" : null,
@@ -2406,7 +2412,7 @@
     "content" : "노동기본권을 보장받아야 합니다. 우리 사회는 사업장 규모와 고용형태, 연령, 성별, 노동시간, 장애 유무 등에 따라 구조적인 차별이 존재합니 다."
   }, {
     "type" : "paragraph",
-    "id" : 567,
+    "id" : 578,
     "page number" : 7,
     "bounding box" : [ 308.88, 601.408, 545.64, 694.499 ],
     "font" : null,
@@ -2415,7 +2421,7 @@
     "content" : "국가는 합리적 사유를 이유로 법․제도의 사각 지대를 여지까지 방치하고 있습니다. 5인 미만 사업장부터 초단시간 노동자는 물론 65세 이상 고령 및 장애인 노동자 모두 근기법이나 최저임 금, 사회보험 등 법령의 예외 적용을 받고 있습 니다."
   }, {
     "type" : "paragraph",
-    "id" : 568,
+    "id" : 579,
     "page number" : 7,
     "bounding box" : [ 308.88, 473.848, 545.64, 598.12 ],
     "font" : null,
@@ -2424,7 +2430,7 @@
     "content" : "윤석열 정권 2년 최저임금 업종 구간 차등화 추진이 대표적입니다. 작년부터 한편의 영화 시 나리오가 펼쳐지고 있습니다. 현 정부의 노동 정 책을 뒷받침하듯 이데올로기적인 국가기구들이 작동되고 있습니다. 한국은행은 보고서에서 돌봄 노동 최저임금 차등의 필요성을 언급했고 국민의 힘이 장악한 서울시의회는 국회에 건의안을 발의 했으니 말입니다."
   }, {
     "type" : "paragraph",
-    "id" : 569,
+    "id" : 580,
     "page number" : 7,
     "bounding box" : [ 308.88, 362.368, 545.64, 470.68 ],
     "font" : null,
@@ -2433,7 +2439,7 @@
     "content" : "양대 노총도 언급했듯 소위 최저임금 차등화는 ILO의 고용 및 직업상의 차별에 관한 협약 위반 소지는 물론 국가인권위원회법 평등권 침해의 차 별행위 금지를 만든 그 취지와도 부합되지 않습 니다. 적어도 우리 사회가 더 나은 진전을 위해 서는 국제노동기구의 협약과 권고, 가이드라인이 우리의 지향점이어야 합니다."
   }, {
     "type" : "paragraph",
-    "id" : 570,
+    "id" : 581,
     "page number" : 7,
     "bounding box" : [ 308.88, 298.528, 545.64, 359.08 ],
     "font" : null,
@@ -2442,7 +2448,7 @@
     "content" : "반면 지난 2년 윤석열 정부의 노동개혁은 어 땠습니까? 우리 사회 안팎의 사회적 소수자나 특 정 집단을 배제했고 편견과 왜곡, 차별을 넘어 혐오의 정치였습니다."
   }, {
     "type" : "paragraph",
-    "id" : 571,
+    "id" : 582,
     "page number" : 7,
     "bounding box" : [ 319.44, 282.568, 411.775, 295.24 ],
     "font" : null,
@@ -2451,7 +2457,7 @@
     "content" : "존경하는 위원장님!"
   }, {
     "type" : "paragraph",
-    "id" : 572,
+    "id" : 583,
     "page number" : 7,
     "bounding box" : [ 308.88, 218.848, 545.64, 279.4 ],
     "font" : null,
@@ -2460,7 +2466,7 @@
     "content" : "국민과 민생 특히 노동 약자를 위한 입법을 논 의해야 될 우리 국회 환경노동위원회가 여당의 윤석열 정권 눈치에 제대로 된 법안조차 논의 못 하고 시간을 보낸 적이 적지 않습니다."
   }, {
     "type" : "paragraph",
-    "id" : 573,
+    "id" : 584,
     "page number" : 7,
     "bounding box" : [ 308.88, 123.208, 545.64, 215.56 ],
     "font" : null,
@@ -2469,7 +2475,7 @@
     "content" : "더불어민주당은 동일가치노동 동일임금 법제 화, 주 4.5일제 도입 등 노동시간 단축을 통한 과로사회 탈출법, 포괄임금제 전면금지 입법, 폭 염․혹한 등 기후위기에 따른 노동자 보호법 등이 입법되어야 한다고 우리 21대 국회에서 국민의 힘과 정부를 설득해 왔습니다."
   }, {
     "type" : "paragraph",
-    "id" : 574,
+    "id" : 585,
     "page number" : 7,
     "bounding box" : [ 308.88, 59.488, 545.64, 119.92 ],
     "font" : null,
@@ -2478,7 +2484,7 @@
     "content" : "노동부는 주요 현안이 발생하면 제대로 된 답 변도 없고, 근로시간 개편 당시에는 보고서조차 여러 사유를 들어 제출하지 않았다가 뒤늦게 제 출했던 것도 있습니다."
   }, {
     "type" : "paragraph",
-    "id" : 575,
+    "id" : 586,
     "page number" : 7,
     "bounding box" : [ 319.44, 43.528, 545.64, 56.2 ],
     "font" : null,
@@ -2487,7 +2493,7 @@
     "content" : "국회의 존재 이유가 정권의 실정을 바로잡으라"
   }, {
     "type" : "header",
-    "id" : 576,
+    "id" : 587,
     "page number" : 8,
     "bounding box" : [ 49.56, 774.721, 234.669, 784.321 ],
     "kids" : [ {
@@ -2502,12 +2508,12 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 577,
+    "id" : 588,
     "page number" : 8,
     "bounding box" : [ 49.533, 768.839, 545.347, 769.918 ]
   }, {
     "type" : "paragraph",
-    "id" : 578,
+    "id" : 589,
     "page number" : 8,
     "bounding box" : [ 49.56, 649.288, 286.32, 757.6 ],
     "font" : null,
@@ -2516,7 +2522,7 @@
     "content" : "는 것 아니겠습니까? 국민께서 던지는 질문에 대한 답을 할 수 있도록 해 주시기 바랍니다. 정부 부 처에서 책임 있는 답변을 하도록 요청해 주십시 오. 그게 국회 환경노동위원회의 책무입니다. 당 장 국회 환노위에서 정부 책임자가 국민의 질문 에 답변하게끔 조처를 취해 주시기를 다시 한번 당부드립니다."
   }, {
     "type" : "paragraph",
-    "id" : 579,
+    "id" : 590,
     "page number" : 8,
     "bounding box" : [ 60.0, 633.328, 115.513, 646.0 ],
     "font" : null,
@@ -2525,7 +2531,7 @@
     "content" : "이상입니다."
   }, {
     "type" : "paragraph",
-    "id" : 580,
+    "id" : 591,
     "level" : "3",
     "page number" : 8,
     "bounding box" : [ 49.56, 617.051, 204.313, 630.779 ],
@@ -2535,18 +2541,18 @@
     "content" : "◯위원장 박정 수고하셨습니다."
   }, {
     "type" : "image",
-    "id" : 581,
+    "id" : 592,
     "page number" : 8,
     "bounding box" : [ 49.533, 603.6, 286.046, 603.96 ]
   }, {
     "type" : "list",
-    "id" : 582,
+    "id" : 593,
     "level" : "4",
     "page number" : 8,
     "bounding box" : [ 60.12, 43.528, 286.56, 598.12 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 14,
-    "next list id" : 584,
+    "next list id" : 594,
     "list items" : [ {
       "type" : "list item",
       "page number" : 8,
@@ -2676,14 +2682,14 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 584,
+    "id" : 594,
     "level" : "4",
     "page number" : 8,
     "bounding box" : [ 319.44, 43.528, 545.881, 757.6 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 19,
-    "previous list id" : 582,
-    "next list id" : 587,
+    "previous list id" : 593,
+    "next list id" : 597,
     "list items" : [ {
       "type" : "list item",
       "page number" : 8,
@@ -2858,7 +2864,7 @@
     } ]
   }, {
     "type" : "header",
-    "id" : 585,
+    "id" : 595,
     "page number" : 9,
     "bounding box" : [ 360.48, 774.721, 545.666, 784.321 ],
     "kids" : [ {
@@ -2873,19 +2879,19 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 586,
+    "id" : 596,
     "page number" : 9,
     "bounding box" : [ 49.533, 768.839, 545.347, 769.918 ]
   }, {
     "type" : "list",
-    "id" : 587,
+    "id" : 597,
     "level" : "4",
     "page number" : 9,
     "bounding box" : [ 60.12, 43.528, 286.56, 757.6 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 21,
-    "previous list id" : 584,
-    "next list id" : 589,
+    "previous list id" : 594,
+    "next list id" : 599,
     "list items" : [ {
       "type" : "list item",
       "page number" : 9,
@@ -3078,17 +3084,17 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 589,
+    "id" : 599,
     "level" : "4",
     "page number" : 9,
     "bounding box" : [ 319.44, 43.528, 545.882, 757.6 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 20,
-    "previous list id" : 587,
-    "next list id" : 593,
+    "previous list id" : 597,
+    "next list id" : 603,
     "list items" : [ {
       "type" : "list item",
-      "id" : 588,
+      "id" : 598,
       "page number" : 9,
       "bounding box" : [ 336.72, 744.928, 460.45, 757.6 ],
       "font" : null,
@@ -3270,7 +3276,7 @@
     } ]
   }, {
     "type" : "header",
-    "id" : 590,
+    "id" : 600,
     "page number" : 10,
     "bounding box" : [ 49.56, 774.721, 240.069, 784.321 ],
     "kids" : [ {
@@ -3285,21 +3291,21 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 591,
+    "id" : 601,
     "page number" : 10,
     "bounding box" : [ 49.533, 768.839, 545.347, 769.918 ]
   }, {
     "type" : "list",
-    "id" : 593,
+    "id" : 603,
     "level" : "4",
     "page number" : 10,
     "bounding box" : [ 60.12, 59.488, 286.56, 757.6 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 22,
-    "previous list id" : 589,
+    "previous list id" : 599,
     "list items" : [ {
       "type" : "list item",
-      "id" : 592,
+      "id" : 602,
       "page number" : 10,
       "bounding box" : [ 76.56, 744.928, 286.33, 757.6 ],
       "font" : "Batang",
@@ -3499,7 +3505,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 594,
+    "id" : 604,
     "page number" : 10,
     "bounding box" : [ 222.36, 43.528, 276.251, 56.2 ],
     "font" : "Batang",
@@ -3508,7 +3514,7 @@
     "content" : "(10시25분)"
   }, {
     "type" : "paragraph",
-    "id" : 595,
+    "id" : 605,
     "level" : "3",
     "page number" : 10,
     "bounding box" : [ 308.88, 697.048, 545.64, 758.339 ],
@@ -3518,7 +3524,7 @@
     "content" : "◯위원장 박정 그러면 의사일정 제1항 2023년 도 국정감사 결과보고서 채택의 건과 의사일정 제2항부터 제94항까지 이상 93건의 법률안을 일 괄하여 상정합니다."
   }, {
     "type" : "paragraph",
-    "id" : 596,
+    "id" : 606,
     "page number" : 10,
     "bounding box" : [ 308.88, 665.128, 545.64, 693.76 ],
     "font" : null,
@@ -3527,7 +3533,7 @@
     "content" : "각 안건의 내용은 배부해 드린 유인물과 단말 기를 참고하여 주시기 바랍니다."
   }, {
     "type" : "paragraph",
-    "id" : 597,
+    "id" : 607,
     "page number" : 10,
     "bounding box" : [ 308.88, 617.368, 545.64, 661.96 ],
     "font" : null,
@@ -3536,7 +3542,7 @@
     "content" : "그러면 먼저 의사일정 제1항 2023년도 국정감 사 결과보고서 채택의 건부터 의결하도록 하겠습 니다."
   }, {
     "type" : "paragraph",
-    "id" : 598,
+    "id" : 608,
     "page number" : 10,
     "bounding box" : [ 308.88, 537.688, 545.64, 614.08 ],
     "font" : null,
@@ -3545,7 +3551,7 @@
     "content" : "위원님들께 배부해 드린 보고서는 우리 위원회 소관기관에 대하여 2023년도 국정감사에서 지적 된 사항을 전문위원실에서 정리한 후 의원실의 회람을 거친 자료입니다. 보고서에 대해 의견 있 으신 위원님 계시면 말씀해 주시기 바랍니다."
   }, {
     "type" : "paragraph",
-    "id" : 599,
+    "id" : 609,
     "page number" : 10,
     "bounding box" : [ 319.44, 505.451, 468.491, 534.4 ],
     "font" : null,
@@ -3554,7 +3560,7 @@
     "content" : "없으십니까? (｢없습니다｣ 하는 위원 있음)"
   }, {
     "type" : "paragraph",
-    "id" : 600,
+    "id" : 610,
     "page number" : 10,
     "bounding box" : [ 308.88, 442.048, 545.64, 502.48 ],
     "font" : null,
@@ -3563,7 +3569,7 @@
     "content" : "더 이상 의견이 없으면 배부해 드린 보고서를 2023년도 환경노동위원회 국정감사 결과보고서 로 채택하고자 하는데 위원님 여러분 이의 없습 니까?"
   }, {
     "type" : "paragraph",
-    "id" : 601,
+    "id" : 611,
     "page number" : 10,
     "bounding box" : [ 319.44, 394.168, 545.639, 439.499 ],
     "font" : null,
@@ -3572,7 +3578,7 @@
     "content" : "(｢예｣ 하는 위원 있음) 이의가 없으므로 가결되었음을 선포합니다. 국정감사 결과보고서의 자구 수정은 위원장에"
   }, {
     "type" : "paragraph",
-    "id" : 602,
+    "id" : 612,
     "page number" : 10,
     "bounding box" : [ 308.88, 378.208, 442.993, 390.88 ],
     "font" : null,
@@ -3581,7 +3587,7 @@
     "content" : "게 위임해 주시기 바랍니다."
   }, {
     "type" : "paragraph",
-    "id" : 603,
+    "id" : 613,
     "page number" : 10,
     "bounding box" : [ 308.88, 346.408, 545.64, 375.04 ],
     "font" : null,
@@ -3590,7 +3596,7 @@
     "content" : "다음으로 상정된 법률안에 대한 제안설명과 검 토보고를 듣도록 하겠습니다."
   }, {
     "type" : "paragraph",
-    "id" : 604,
+    "id" : 614,
     "page number" : 10,
     "bounding box" : [ 308.88, 266.728, 545.683, 343.12 ],
     "font" : null,
@@ -3599,7 +3605,7 @@
     "content" : "먼저 양경규 의원님 나오셔서 의사일정 제60 항 근로기준법 일부개정법률안과 의사일정 제64 항 기간제 및 단시간근로자 보호 등에 관한 법률 일부개정법률안에 대하여 제안설명해 주시기 바 랍니다."
   }, {
     "type" : "paragraph",
-    "id" : 605,
+    "id" : 615,
     "level" : "3",
     "page number" : 10,
     "bounding box" : [ 308.88, 234.808, 545.639, 264.179 ],
@@ -3609,7 +3615,7 @@
     "content" : "◯양경규 의원 박정 환경노동위원회 위원장님 그리고 환경노동위원회 위원님 여러분!"
   }, {
     "type" : "paragraph",
-    "id" : 606,
+    "id" : 616,
     "page number" : 10,
     "bounding box" : [ 319.44, 218.848, 469.153, 231.52 ],
     "font" : null,
@@ -3618,7 +3624,7 @@
     "content" : "정의당 국회의원 양경규입니다."
   }, {
     "type" : "paragraph",
-    "id" : 607,
+    "id" : 617,
     "page number" : 10,
     "bounding box" : [ 308.88, 155.128, 545.64, 215.56 ],
     "font" : null,
@@ -3627,7 +3633,7 @@
     "content" : "본 의원이 대표발의한 대규모유통업 불법파견 방지법 패키지 법안 중 하나인 근로기준법 일부 개정법률안 제안설명의 기회를 주신 것을 감사드 립니다."
   }, {
     "type" : "paragraph",
-    "id" : 608,
+    "id" : 618,
     "page number" : 10,
     "bounding box" : [ 308.88, 43.528, 545.64, 151.84 ],
     "font" : null,
@@ -3636,7 +3642,7 @@
     "content" : "대규모유통업 판매사원 대부분은 인력공급업체 소속으로 대규모유통업자 사업장에서 납품된 상 품 판매업무를 하고 있습니다. 대규모유통업법 제12조는 대규모유통업자가 납품업자에게 직원 을 받아 사용하는 것을 원칙적으로 금지하고 있 지만 단서조항을 통해 납품업자가 자신이 고용한 직원 파견을 요청하는 경우는 허용하고 있습니"
   }, {
     "type" : "header",
-    "id" : 609,
+    "id" : 619,
     "page number" : 11,
     "bounding box" : [ 355.08, 774.721, 545.666, 784.321 ],
     "kids" : [ {
@@ -3651,12 +3657,12 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 610,
+    "id" : 620,
     "page number" : 11,
     "bounding box" : [ 49.533, 768.839, 545.347, 769.918 ]
   }, {
     "type" : "paragraph",
-    "id" : 611,
+    "id" : 621,
     "level" : "4",
     "page number" : 11,
     "bounding box" : [ 49.56, 697.048, 286.32, 757.6 ],
@@ -3666,7 +3672,7 @@
     "content" : "다. 문제는 외형상 공정한 거래행위를 갖추고 있 는 것으로 보이지만 실질은 파견에 대한 규제를 피하고자 도급의 형태를 취하고 있는 위장도급으 로 볼 수 있는 경우가 대부분입니다."
   }, {
     "type" : "paragraph",
-    "id" : 612,
+    "id" : 622,
     "page number" : 11,
     "bounding box" : [ 49.56, 537.688, 286.32, 693.76 ],
     "font" : null,
@@ -3675,7 +3681,7 @@
     "content" : "대표적인 사례가 롯데하이마트 불법파견 사건 이었습니다. 지난 2018년 국회 국정감사에서 정 의당은 롯데하이마트가 삼성․LG 등 납품업자로 부터 인력공급업체 소속 판매사원 3846명을 불 법적으로 공급받아 사용하고 있는 것을 밝혔습니 다. 이에 대해 고용부는 ‘문제가 없다’ 이렇게 이 야기하고 있습니다. 근로감독 청원에 대해 납품 업체 판매사원의 간접고용 존재를 제대로 조사하 지 않은 채 ‘파견법 위반 혐의가 없다’라고 판정 하고 있습니다."
   }, {
     "type" : "paragraph",
-    "id" : 613,
+    "id" : 623,
     "page number" : 11,
     "bounding box" : [ 49.56, 426.088, 286.32, 534.4 ],
     "font" : null,
@@ -3684,7 +3690,7 @@
     "content" : "고용노동행정개혁위원회는 이것을 전통적인 파 견관계가 아니라 이마트․납품업체․용역업체․판촉 사원의 변형적인 4자관계라고 하면서 이를 불법 파견으로 보지 않았습니다. 당시 고용노동부에 과거 3년간 근로감독 청원 사건에 대한 전수조 사를 권고했지만 그 이후 진척된 사항도 전혀 없 습니다."
   }, {
     "type" : "paragraph",
-    "id" : 614,
+    "id" : 624,
     "page number" : 11,
     "bounding box" : [ 49.56, 330.448, 286.32, 422.8 ],
     "font" : null,
@@ -3693,7 +3699,7 @@
     "content" : "간접고용으로 심각하게 왜곡된 유통업계 노동 시장 심각합니다. 대규모유통업자와 납품업자는 고용 책임을 털어 버리고 인력공급업체는 중간 착취로 이익을 얻고 있습니다. 노동자는 저임금, 장시간 노동, 고용불안 등 노동인권 사각지대로 내몰리고 있습니다."
   }, {
     "type" : "paragraph",
-    "id" : 615,
+    "id" : 625,
     "page number" : 11,
     "bounding box" : [ 49.56, 202.888, 286.32, 327.16 ],
     "font" : null,
@@ -3702,7 +3708,7 @@
     "content" : "이에 저는 대규모유통업자가 원칙적으로 납품 업자나 매장임차인으로부터 인력을 전출받을 수 없는 것으로 용어를 변경하여 근로자파견법의 적 법․위법 여부에 대한 혼란을 막고 또한 매장임차 인에 한하여 대규모유통업자에게 종업원을 전출 할 수 있도록 하며 추가로 전출 종업원에 대해 매장임차인과 대규모유통업자를 근로기준법상 사 용자로 간주하는 개정안을 발의하고자 합니다."
   }, {
     "type" : "paragraph",
-    "id" : 616,
+    "id" : 626,
     "page number" : 11,
     "bounding box" : [ 49.56, 155.128, 286.32, 199.6 ],
     "font" : null,
@@ -3711,7 +3717,7 @@
     "content" : "다음으로 기간제 및 단시간근로자 보호 등에 관한 법률 일부개정법률안을 설명드리도록 하겠 습니다."
   }, {
     "type" : "paragraph",
-    "id" : 617,
+    "id" : 627,
     "page number" : 11,
     "bounding box" : [ 49.56, 43.528, 286.32, 151.84 ],
     "font" : null,
@@ -3720,7 +3726,7 @@
     "content" : "고용노동부에 따르면 2023년 고용형태공시제 300인 이상 기업에서 직접 고용하고 있는 소속 노동자 중 기간의 정함이 없는 노동자는 74.3%, 기간제노동자는 25.7% 약 4분의 1을 차지하는 것으로 나타났습니다. 이로 인해서 고용불안과 노동권이 매우 취약한 상태입니다. 기간제노동자 는 노동조건을 대등결정의 원칙에 따라서 협상할"
   }, {
     "type" : "paragraph",
-    "id" : 618,
+    "id" : 628,
     "page number" : 11,
     "bounding box" : [ 308.88, 744.928, 416.833, 757.6 ],
     "font" : null,
@@ -3729,7 +3735,7 @@
     "content" : "수가 없기 때문입니다."
   }, {
     "type" : "paragraph",
-    "id" : 619,
+    "id" : 629,
     "page number" : 11,
     "bounding box" : [ 308.88, 649.288, 545.64, 741.64 ],
     "font" : null,
@@ -3738,7 +3744,7 @@
     "content" : "현행 기간제법은 기간제노동 사유 자체를 묻지 않고 있습니다. 계속 노동한 총기간에 관한 상한 선만을 규정하고 있을 뿐입니다. 이러다 보니 쪼 개기계약을 통해서 초단기계약이 횡행하고 있고 이로 인해서 심각한 노동권의 침해가 계속 발생 하고 있습니다."
   }, {
     "type" : "paragraph",
-    "id" : 620,
+    "id" : 630,
     "page number" : 11,
     "bounding box" : [ 308.88, 489.808, 545.64, 646.0 ],
     "font" : null,
@@ -3747,7 +3753,7 @@
     "content" : "그나마 법원 판례를 통해 갱신기대권이라고 하 는 것이 있습니다마는 이는 매우 보수적인 해석 을 하고 있기 때문에 이것이 강제적으로 적용되 기가 쉽지 않은 조건입니다. 물론 최근 대법원은 갱신기대권의 범위를 확장하는 판결들을 하고 있 습니다. 그럼에도 갱신기대권은 근로기준법상 명 문 규정이 없고 근로기준법 23조 1항에 기대어 정당한 이유 없는 해고의 하나로 해석하고 있을 뿐입니다. 신뢰․기대 등의 개념으로 갱신기대권을 적용할 수가 없습니다."
   }, {
     "type" : "paragraph",
-    "id" : 621,
+    "id" : 631,
     "page number" : 11,
     "bounding box" : [ 308.88, 410.128, 545.64, 486.52 ],
     "font" : null,
@@ -3756,7 +3762,7 @@
     "content" : "이에 저는 초단기계약 방지법을 통해 기간제노 동자의 근로계약 갱신청구권을 명시하고자 합니 다. 정당한 이유가 있는 경우가 아니면 사용자가 근로계약 갱신청구권을 거부할 수 없도록 함으로 써 기간제노동자의 고용을 안정시키고자 합니다."
   }, {
     "type" : "paragraph",
-    "id" : 622,
+    "id" : 632,
     "page number" : 11,
     "bounding box" : [ 308.88, 378.208, 545.639, 406.84 ],
     "font" : null,
@@ -3765,7 +3771,7 @@
     "content" : "존경하는 위원장님 그리고 위원님 여러분들께 당부를 드립니다."
   }, {
     "type" : "paragraph",
-    "id" : 623,
+    "id" : 633,
     "page number" : 11,
     "bounding box" : [ 308.88, 314.488, 545.64, 375.04 ],
     "font" : null,
@@ -3774,7 +3780,7 @@
     "content" : "오늘 발의한 대규모유통업 불법파견 방지법과 기간제 및 단시간근로자 보호 등에 관한 법률 일 부개정법률안에 대한 위원님 여러분들의 각별한 관심과 성원을 부탁드리겠습니다."
   }, {
     "type" : "paragraph",
-    "id" : 624,
+    "id" : 634,
     "page number" : 11,
     "bounding box" : [ 319.44, 298.528, 374.833, 311.2 ],
     "font" : null,
@@ -3783,7 +3789,7 @@
     "content" : "고맙습니다."
   }, {
     "type" : "paragraph",
-    "id" : 625,
+    "id" : 635,
     "level" : "3",
     "page number" : 11,
     "bounding box" : [ 308.88, 282.251, 536.953, 295.979 ],
@@ -3793,7 +3799,7 @@
     "content" : "◯위원장 박정 양경규 의원님 수고하셨습니다."
   }, {
     "type" : "paragraph",
-    "id" : 626,
+    "id" : 636,
     "page number" : 11,
     "bounding box" : [ 308.88, 250.768, 545.64, 279.4 ],
     "font" : null,
@@ -3802,7 +3808,7 @@
     "content" : "나머지 법률안에 대한 제안설명은 단말기의 자 료를 참조하여 주시기 바랍니다."
   }, {
     "type" : "paragraph",
-    "id" : 627,
+    "id" : 637,
     "page number" : 11,
     "bounding box" : [ 401.88, 234.808, 535.571, 247.48 ],
     "font" : null,
@@ -3811,7 +3817,7 @@
     "content" : "(제안설명서는 부록에 실음)"
   }, {
     "type" : "paragraph",
-    "id" : 628,
+    "id" : 638,
     "page number" : 11,
     "bounding box" : [ 308.88, 186.928, 545.64, 231.52 ],
     "font" : null,
@@ -3820,7 +3826,7 @@
     "content" : "다음은 검토보고를 듣는 순서입니다만 효율적 인 회의 진행을 위해 검토보고는 서면으로 대체 하겠습니다."
   }, {
     "type" : "paragraph",
-    "id" : 629,
+    "id" : 639,
     "page number" : 11,
     "bounding box" : [ 381.0, 171.088, 535.571, 183.76 ],
     "font" : null,
@@ -3829,7 +3835,7 @@
     "content" : "(검토보고서는 부록으로 보존함)"
   }, {
     "type" : "paragraph",
-    "id" : 630,
+    "id" : 640,
     "page number" : 11,
     "bounding box" : [ 308.88, 107.248, 545.64, 167.8 ],
     "font" : null,
@@ -3838,7 +3844,7 @@
     "content" : "다음은 대체토론 순서입니다만 효율적인 회의 진행을 위하여 대체토론 종결을 전제로 상정된 법률안을 각각 환경법안심사소위원회와 고용노동 법안심사소위원회에 회부하겠습니다."
   }, {
     "type" : "paragraph",
-    "id" : 631,
+    "id" : 641,
     "page number" : 11,
     "bounding box" : [ 308.88, 43.528, 545.64, 103.96 ],
     "font" : null,
@@ -3847,7 +3853,7 @@
     "content" : "그러면 보다 심도 있는 심사를 위하여 의사일 정 제2항부터 제39항까지의 법률안은 환경법안 심사소위원회로, 의사일정 제40항부터 제94항까 지의 법률안은 고용노동법안심사소위원회로 각각"
   }, {
     "type" : "header",
-    "id" : 632,
+    "id" : 642,
     "page number" : 12,
     "bounding box" : [ 49.56, 774.721, 240.069, 784.321 ],
     "kids" : [ {
@@ -3862,12 +3868,12 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 633,
+    "id" : 643,
     "page number" : 12,
     "bounding box" : [ 49.533, 768.839, 545.347, 769.918 ]
   }, {
     "type" : "paragraph",
-    "id" : 634,
+    "id" : 644,
     "page number" : 12,
     "bounding box" : [ 49.56, 728.968, 286.32, 757.6 ],
     "font" : null,
@@ -3876,7 +3882,7 @@
     "content" : "회부하고자 하는데 위원님 여러분 이의 없으십니 까?"
   }, {
     "type" : "paragraph",
-    "id" : 635,
+    "id" : 645,
     "page number" : 12,
     "bounding box" : [ 60.0, 681.088, 286.32, 726.419 ],
     "font" : null,
@@ -3885,7 +3891,7 @@
     "content" : "(｢예｣ 하는 위원 있음) 가결되었음을 선포합니다. 각 소위 위원장님을 비롯한 소위 위원 여러분"
   }, {
     "type" : "paragraph",
-    "id" : 636,
+    "id" : 646,
     "page number" : 12,
     "bounding box" : [ 49.56, 665.128, 215.113, 677.8 ],
     "font" : null,
@@ -3894,7 +3900,7 @@
     "content" : "께서는 수고하여 주시기 바랍니다."
   }, {
     "type" : "paragraph",
-    "id" : 637,
+    "id" : 647,
     "page number" : 12,
     "bounding box" : [ 49.56, 601.408, 286.32, 661.96 ],
     "font" : null,
@@ -3903,7 +3909,7 @@
     "content" : "다음은 오늘 상정된 법률안에 대한 대체토론 시간입니다만 부처 장관들의 불출석으로 대체토 론이 진행되기 어렵다는 점 양해의 말씀 드립니 다."
   }, {
     "type" : "paragraph",
-    "id" : 638,
+    "id" : 648,
     "page number" : 12,
     "bounding box" : [ 49.56, 569.488, 286.32, 598.12 ],
     "font" : null,
@@ -3912,7 +3918,7 @@
     "content" : "이와 관련해서 발언하실 위원님 있으시면 거수 해 주시기 바랍니다."
   }, {
     "type" : "paragraph",
-    "id" : 639,
+    "id" : 649,
     "page number" : 12,
     "bounding box" : [ 60.0, 553.648, 204.553, 566.32 ],
     "font" : null,
@@ -3921,7 +3927,7 @@
     "content" : "노웅래 위원님 말씀해 주세요."
   }, {
     "type" : "paragraph",
-    "id" : 640,
+    "id" : 650,
     "level" : "3",
     "page number" : 12,
     "bounding box" : [ 49.56, 521.728, 246.193, 551.099 ],
@@ -3931,7 +3937,7 @@
     "content" : "◯노웅래 위원 의사진행발언하겠습니다. 더불어민주당 노웅래 위원입니다."
   }, {
     "type" : "paragraph",
-    "id" : 641,
+    "id" : 651,
     "page number" : 12,
     "bounding box" : [ 49.56, 426.088, 286.32, 518.44 ],
     "font" : null,
@@ -3940,7 +3946,7 @@
     "content" : "오늘 21대 국회의 마지막 회의가 될 것 같은 데 여당이라는 국민의힘 위원들 그리고 장관을 비롯한 정부 부처가 불참하게 된 것을 굉장히 유 감스럽게 생각하고 21대 국회가 일하지 않는 국 회임을 다시 한번, 그 현주소를 오늘 보여 주는 단적인 모습이라고 생각합니다."
   }, {
     "type" : "paragraph",
-    "id" : 642,
+    "id" : 652,
     "page number" : 12,
     "bounding box" : [ 49.56, 362.368, 286.32, 422.8 ],
     "font" : null,
@@ -3949,7 +3955,7 @@
     "content" : "그동안 우리 위원님들을 비롯해서 박정 위원장 님 그리고 새로 오신 양경규 위원님, 오신 것 환 영하는데 며칠밖에 못 해서 굉장히 아쉽다는 말 씀을 드립니다."
   }, {
     "type" : "paragraph",
-    "id" : 643,
+    "id" : 653,
     "page number" : 12,
     "bounding box" : [ 49.56, 314.488, 286.32, 359.08 ],
     "font" : null,
@@ -3958,7 +3964,7 @@
     "content" : "저는 22대 국회에서 가까이 보지 못할 수도 있고 발언할 기회가 없을 수도 있어서 한마디 마 무리하고자 합니다."
   }, {
     "type" : "paragraph",
-    "id" : 644,
+    "id" : 654,
     "page number" : 12,
     "bounding box" : [ 49.56, 171.088, 286.32, 311.2 ],
     "font" : null,
@@ -3967,7 +3973,7 @@
     "content" : "오늘 이 자리는 분명히 정쟁 사안이 아닌데도 불구하고, 우리 국회가 마지막 마무리 작업을 하 면서 민생법을 처리하기 위한 상임위인데도 불구 하고 지금 여당은 물론이고 장관을 비롯한 정부 부처가 불참하는 이러한 현실인 것입니다. 장관 을 비롯한 정부 부처가 참여하지 않은 것은 명백 하게 국회법 위반이고 국회를 무시하고 부정하는 것이라 아니할 수 없습니다. 저는 이것은 좌시해 서는 안 된다고 봅니다."
   }, {
     "type" : "paragraph",
-    "id" : 645,
+    "id" : 655,
     "page number" : 12,
     "bounding box" : [ 49.56, 91.288, 286.32, 167.8 ],
     "font" : null,
@@ -3976,7 +3982,7 @@
     "content" : "그동안 윤석열 정부 들어와서 시행령 통치라 그래서 입법을 시행령으로 대체해서 법을 무시했 고 더군다나 입법만 하면 대통령이 거부권을 행 사해서 사실상 삼권분립도 무너져 내린 게 오늘 의 국회 현실입니다."
   }, {
     "type" : "paragraph",
-    "id" : 646,
+    "id" : 656,
     "page number" : 12,
     "bounding box" : [ 49.56, 43.528, 286.32, 88.12 ],
     "font" : null,
@@ -3985,7 +3991,7 @@
     "content" : "그래서 이번에는 이것 그대로 좌시해서는 안 되기 때문에, 정쟁 사안도 아닌 민생입법 처리하 자는 이 국회 마지막 날 참여하지 않은 정부 부"
   }, {
     "type" : "paragraph",
-    "id" : 647,
+    "id" : 657,
     "page number" : 12,
     "bounding box" : [ 308.88, 681.088, 545.64, 757.6 ],
     "font" : null,
@@ -3994,7 +4000,7 @@
     "content" : "처 관계자에 대해서는, 노동부장관과 그리고 환 경부장관에 대해서는 늦은 감은 있으나 해임촉구 결의안을 우리가 채택해서 본때를 보여야 된다고 봅니다. 그래서 저는 해임촉구결의안이 채택되기 를 요청합니다."
   }, {
     "type" : "paragraph",
-    "id" : 648,
+    "id" : 658,
     "page number" : 12,
     "bounding box" : [ 319.44, 665.128, 374.833, 677.8 ],
     "font" : null,
@@ -4002,28 +4008,35 @@
     "text color" : "[0.0]",
     "content" : "이상입니다."
   }, {
-    "type" : "paragraph",
-    "id" : 649,
-    "level" : "3",
+    "type" : "list",
+    "id" : 659,
+    "level" : "4",
     "page number" : 12,
-    "bounding box" : [ 308.88, 633.328, 545.64, 662.699 ],
-    "font" : null,
-    "font size" : 10.56,
-    "text color" : "[0.0]",
-    "content" : "◯위원장 박정 다음은 이학영 위원께서 발언하 시겠습니다."
+    "bounding box" : [ 308.88, 521.728, 545.64, 662.699 ],
+    "numbering style" : "unordered",
+    "number of list items" : 2,
+    "list items" : [ {
+      "type" : "list item",
+      "page number" : 12,
+      "bounding box" : [ 308.88, 633.328, 545.64, 662.699 ],
+      "font" : "HCRBatang-Bold",
+      "font size" : 10.56,
+      "text color" : "[0.0]",
+      "content" : "◯위원장 박정 다음은 이학영 위원께서 발언하 시겠습니다.",
+      "kids" : [ ]
+    }, {
+      "type" : "list item",
+      "page number" : 12,
+      "bounding box" : [ 308.88, 521.728, 545.64, 630.779 ],
+      "font" : "HCRBatang-Bold",
+      "font size" : 10.56,
+      "text color" : "[0.0]",
+      "content" : "◯이학영 위원 오늘 아무래도 21대 마지막 환 노위 위원회가 될 것 같은데 참 안타깝습니다. 오늘 이렇게 의원님들께서 열심히 법안을 내주셨 고 또 우리가 빠르게 심의하면 5월 달 안에도 법안을 통과시킬 수 있을 텐데 이렇게 해태하는 정부 참 무능하고 비열하기 짝이 없다고 생각합 니다.",
+      "kids" : [ ]
+    } ]
   }, {
     "type" : "paragraph",
-    "id" : 650,
-    "level" : "3",
-    "page number" : 12,
-    "bounding box" : [ 308.88, 521.728, 545.64, 630.779 ],
-    "font" : null,
-    "font size" : 10.56,
-    "text color" : "[0.0]",
-    "content" : "◯이학영 위원 오늘 아무래도 21대 마지막 환 노위 위원회가 될 것 같은데 참 안타깝습니다. 오늘 이렇게 의원님들께서 열심히 법안을 내주셨 고 또 우리가 빠르게 심의하면 5월 달 안에도 법안을 통과시킬 수 있을 텐데 이렇게 해태하는 정부 참 무능하고 비열하기 짝이 없다고 생각합 니다."
-  }, {
-    "type" : "paragraph",
-    "id" : 651,
+    "id" : 660,
     "page number" : 12,
     "bounding box" : [ 308.88, 410.128, 545.64, 518.44 ],
     "font" : null,
@@ -4032,7 +4045,7 @@
     "content" : "제가 오늘 2개의 법안을 냈는데, 토양 오염과 하천의 방사능 오염을 환노위가 법률적으로도 체 크할 수 있게 법률을 제안했는데, 후쿠시마 오염 수 이래 국민들의 불안이 지금 잠재해 있거든요. 그래서 정부 부처 어느 한 곳에서 확실하게 방사 능 오염들을 정기적으로 추적하고 검사할 수 있 도록 해야 된다고 봅니다."
   }, {
     "type" : "paragraph",
-    "id" : 652,
+    "id" : 661,
     "page number" : 12,
     "bounding box" : [ 308.88, 330.448, 545.64, 406.84 ],
     "font" : null,
@@ -4041,7 +4054,7 @@
     "content" : "오늘 아마 환경부에서 이것 보고 있을 텐데 각 성하시고 이 법이 꼭 통과되도록 이 정부가 끝까 지 각오를 해야 된다고 저는 믿고 다음 대 환노 위에서도 꼭 이 법이 통과될 수 있도록 국회가 노력하겠다는 말씀 드립니다."
   }, {
     "type" : "paragraph",
-    "id" : 653,
+    "id" : 662,
     "page number" : 12,
     "bounding box" : [ 319.44, 314.488, 374.833, 327.16 ],
     "font" : null,
@@ -4049,28 +4062,35 @@
     "text color" : "[0.0]",
     "content" : "이상입니다."
   }, {
-    "type" : "paragraph",
-    "id" : 654,
-    "level" : "3",
+    "type" : "list",
+    "id" : 663,
+    "level" : "4",
     "page number" : 12,
-    "bounding box" : [ 308.88, 282.568, 545.639, 311.939 ],
-    "font" : null,
-    "font size" : 10.56,
-    "text color" : "[0.0]",
-    "content" : "◯위원장 박정 양경규 위원께서 발언하시겠습니 다."
+    "bounding box" : [ 308.88, 218.848, 545.64, 311.939 ],
+    "numbering style" : "unordered",
+    "number of list items" : 2,
+    "list items" : [ {
+      "type" : "list item",
+      "page number" : 12,
+      "bounding box" : [ 308.88, 282.568, 545.639, 311.939 ],
+      "font" : "HCRBatang-Bold",
+      "font size" : 10.56,
+      "text color" : "[0.0]",
+      "content" : "◯위원장 박정 양경규 위원께서 발언하시겠습니 다.",
+      "kids" : [ ]
+    }, {
+      "type" : "list item",
+      "page number" : 12,
+      "bounding box" : [ 308.88, 218.848, 545.64, 280.139 ],
+      "font" : "HCRBatang-Bold",
+      "font size" : 10.56,
+      "text color" : "[0.0]",
+      "content" : "◯양경규 위원 개인적으로도 임기가 끝나지만 한 달 정도가 지나면 정의당이 원외가 되기 때문 에 제가 오늘 상임위에서 한 말씀을 드리는 것이 맞을 것 같습니다.",
+      "kids" : [ ]
+    } ]
   }, {
     "type" : "paragraph",
-    "id" : 655,
-    "level" : "3",
-    "page number" : 12,
-    "bounding box" : [ 308.88, 218.848, 545.64, 280.139 ],
-    "font" : null,
-    "font size" : 10.56,
-    "text color" : "[0.0]",
-    "content" : "◯양경규 위원 개인적으로도 임기가 끝나지만 한 달 정도가 지나면 정의당이 원외가 되기 때문 에 제가 오늘 상임위에서 한 말씀을 드리는 것이 맞을 것 같습니다."
-  }, {
-    "type" : "paragraph",
-    "id" : 656,
+    "id" : 664,
     "page number" : 12,
     "bounding box" : [ 308.88, 171.088, 545.64, 215.56 ],
     "font" : null,
@@ -4079,7 +4099,7 @@
     "content" : "지난 4년 동안 전임이었던 이은주 위원과 또 짧은 기간이지만 반갑게 맞아 주신 위원님 여러 분께 진심으로 감사의 말씀을 드립니다."
   }, {
     "type" : "paragraph",
-    "id" : 657,
+    "id" : 665,
     "page number" : 12,
     "bounding box" : [ 308.88, 43.528, 545.64, 167.8 ],
     "font" : null,
@@ -4088,7 +4108,7 @@
     "content" : "매우 유감스럽습니다. 첫 번째 회의에 참석했 음에도 불구하고 국민의힘 위원들이 하나도 자리 에 하지 않고 어쩌다 보니 제가 민주당 위원들을 마주 보고 앉은 한 사람이 돼 버리고 말았는데 요. 저는 남은 기간이 충분하다고 보고 있고 원 대가 9일 날 선출이 되면 국민의힘도 새로운 관 점에서 이번 21대 국회가 책임을 다할 수 있도 록 노력해야 된다고 보고 있습니다."
   }, {
     "type" : "header",
-    "id" : 658,
+    "id" : 666,
     "page number" : 13,
     "bounding box" : [ 355.08, 774.721, 545.666, 784.321 ],
     "kids" : [ {
@@ -4103,12 +4123,12 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 659,
+    "id" : 667,
     "page number" : 13,
     "bounding box" : [ 49.533, 768.839, 545.347, 769.918 ]
   }, {
     "type" : "paragraph",
-    "id" : 660,
+    "id" : 668,
     "page number" : 13,
     "bounding box" : [ 49.56, 681.088, 286.32, 757.6 ],
     "font" : null,
@@ -4117,7 +4137,7 @@
     "content" : "정부 부처나 윤석열 정부가 노동권이나 환경 문제에 대해서 지나치게 무심했고 어떤 의미에서 보면 거의 반노동적이고 반환경적인 정책으로 일 관해 왔음을 오늘 이 자리에서 저는 분명하게 말 씀을 드리고 싶습니다."
   }, {
     "type" : "paragraph",
-    "id" : 661,
+    "id" : 669,
     "page number" : 13,
     "bounding box" : [ 49.56, 537.688, 286.32, 677.8 ],
     "font" : null,
@@ -4126,7 +4146,7 @@
     "content" : "그럼에도 불구하고 남은 기간 동안 최선을 다 해서 현재 계류 중인 법안들 그리고 오늘 상정된 법안들까지 최선을 다해서 처리할 수 있도록 노 력을 해야 되고 양당 간사, 특별히 이수진 간사 님께서 국민의힘 간사와 많은 역할을 해 주셨으 면 좋겠고 또 환경노동위원회 위원장님께서도 좋 은 리더십을 발휘해서 최선을 다해서 의안이 통 과될 수 있도록 마지막까지 노력을 해 주셨으면 좋겠다는 말씀을 꼭 드리고 싶습니다."
   }, {
     "type" : "paragraph",
-    "id" : 662,
+    "id" : 670,
     "page number" : 13,
     "bounding box" : [ 49.56, 489.808, 286.32, 534.4 ],
     "font" : null,
@@ -4135,7 +4155,7 @@
     "content" : "정의당이 비록 원외가 되지만 노동권과 환경 문제에 관해서 앞으로도 최선을 다해서 노력을 하도록 하겠습니다."
   }, {
     "type" : "paragraph",
-    "id" : 663,
+    "id" : 671,
     "page number" : 13,
     "bounding box" : [ 49.56, 458.008, 286.32, 486.52 ],
     "font" : null,
@@ -4144,7 +4164,7 @@
     "content" : "그동안 함께해 주신 민주당 위원님들께 진심으 로 감사의 말씀을 드립니다."
   }, {
     "type" : "paragraph",
-    "id" : 664,
+    "id" : 672,
     "page number" : 13,
     "bounding box" : [ 60.0, 442.048, 115.513, 454.72 ],
     "font" : null,
@@ -4152,37 +4172,44 @@
     "text color" : "[0.0]",
     "content" : "고맙습니다."
   }, {
-    "type" : "paragraph",
-    "id" : 665,
-    "level" : "3",
+    "type" : "list",
+    "id" : 673,
+    "level" : "4",
     "page number" : 13,
-    "bounding box" : [ 49.56, 410.128, 267.433, 439.499 ],
+    "bounding box" : [ 49.56, 378.208, 286.32, 439.499 ],
+    "numbering style" : "unordered",
+    "number of list items" : 2,
+    "list items" : [ {
+      "type" : "list item",
+      "page number" : 13,
+      "bounding box" : [ 49.56, 410.128, 267.433, 439.499 ],
+      "font" : "HCRBatang-Bold",
+      "font size" : 10.56,
+      "text color" : "[0.0]",
+      "content" : "◯위원장 박정 수고하셨습니다. 다음은 전용기 위원께서 발언하시겠습니다.",
+      "kids" : [ ]
+    }, {
+      "type" : "list item",
+      "page number" : 13,
+      "bounding box" : [ 49.56, 378.208, 286.32, 407.579 ],
+      "font" : "HCRBatang-Bold",
+      "font size" : 10.56,
+      "text color" : "[0.0]",
+      "content" : "◯전용기 위원 짧게 하겠습니다. 윤석열 정부가 출범하고 나서 ‘일하기 싫어하",
+      "kids" : [ ]
+    } ]
+  }, {
+    "type" : "paragraph",
+    "id" : 674,
+    "page number" : 13,
+    "bounding box" : [ 49.56, 298.528, 286.32, 375.04 ],
     "font" : null,
     "font size" : 10.56,
     "text color" : "[0.0]",
-    "content" : "◯위원장 박정 수고하셨습니다. 다음은 전용기 위원께서 발언하시겠습니다."
+    "content" : "는 정부는 처음 봤다’라는 표현을 자주 썼습니 다. 그러나 21대 국회 거의 마지막이 돼 가는 이 런 달까지도 이렇게 윤석열 정부가 보이콧을 일 삼는 것은 굉장히 유감스럽다는 말씀 드리겠습니 다."
   }, {
     "type" : "paragraph",
-    "id" : 666,
-    "level" : "3",
-    "page number" : 13,
-    "bounding box" : [ 49.56, 393.851, 209.473, 407.579 ],
-    "font" : null,
-    "font size" : 10.56,
-    "text color" : "[0.0]",
-    "content" : "◯전용기 위원 짧게 하겠습니다."
-  }, {
-    "type" : "paragraph",
-    "id" : 667,
-    "page number" : 13,
-    "bounding box" : [ 49.56, 298.528, 286.32, 390.88 ],
-    "font" : null,
-    "font size" : 10.56,
-    "text color" : "[0.0]",
-    "content" : "윤석열 정부가 출범하고 나서 ‘일하기 싫어하 는 정부는 처음 봤다’라는 표현을 자주 썼습니 다. 그러나 21대 국회 거의 마지막이 돼 가는 이 런 달까지도 이렇게 윤석열 정부가 보이콧을 일 삼는 것은 굉장히 유감스럽다는 말씀 드리겠습니 다."
-  }, {
-    "type" : "paragraph",
-    "id" : 668,
+    "id" : 675,
     "page number" : 13,
     "bounding box" : [ 49.56, 234.808, 286.32, 295.24 ],
     "font" : null,
@@ -4191,7 +4218,7 @@
     "content" : "거기에 더불어서 국민의힘 위원님들께서 회의 불가 통보를 했다는 이야기를 들었습니다. 끝까 지 굉장히 실망스러운 모습을 보여 주고 있는 것 같습니다."
   }, {
     "type" : "paragraph",
-    "id" : 669,
+    "id" : 676,
     "page number" : 13,
     "bounding box" : [ 49.56, 139.168, 286.32, 231.52 ],
     "font" : null,
@@ -4200,7 +4227,7 @@
     "content" : "오늘 환경 분야와 고용노동 분야의 법률안 94 건이 상정이 되었습니다. 심지어 기후위기 대응 과 관련된 법률안까지 상정이 되었는데 이 법안 이 결국 21대에는 폐기가 될 수밖에 없는 그런 상황에 놓인 것 같아서 너무나도 화가 나고 더욱 유감스럽다는 말씀을 드리고 싶습니다."
   }, {
     "type" : "paragraph",
-    "id" : 670,
+    "id" : 677,
     "page number" : 13,
     "bounding box" : [ 49.56, 43.528, 286.32, 135.88 ],
     "font" : null,
@@ -4209,7 +4236,7 @@
     "content" : "국회는 헌법상 국민을 대표하는 기관입니다. 정부 관료들은 국가 공동체 문제에 대해서 국민 의 대표자의 목소리를 듣고 같이 논의해서 법률 을 실현할 의무가 있습니다. 지금이라도 정부 여 당은 조속히 소위를 열 수 있게끔 만들어 주셔서 21대 국회가 유종의 미를 거둘 수 있도록 만들"
   }, {
     "type" : "paragraph",
-    "id" : 671,
+    "id" : 678,
     "page number" : 13,
     "bounding box" : [ 308.88, 728.968, 545.64, 757.6 ],
     "font" : null,
@@ -4218,7 +4245,7 @@
     "content" : "어 주실 것을 강력히 촉구한다는 말씀으로 마치 겠습니다."
   }, {
     "type" : "paragraph",
-    "id" : 672,
+    "id" : 679,
     "page number" : 13,
     "bounding box" : [ 319.44, 713.008, 374.833, 725.68 ],
     "font" : null,
@@ -4226,37 +4253,71 @@
     "text color" : "[0.0]",
     "content" : "감사합니다."
   }, {
-    "type" : "paragraph",
-    "id" : 673,
-    "level" : "3",
+    "type" : "list",
+    "id" : 680,
+    "level" : "4",
     "page number" : 13,
-    "bounding box" : [ 308.88, 681.088, 505.873, 710.459 ],
+    "bounding box" : [ 308.88, 617.368, 545.64, 710.459 ],
+    "numbering style" : "unordered",
+    "number of list items" : 2,
+    "list items" : [ {
+      "type" : "list item",
+      "page number" : 13,
+      "bounding box" : [ 308.88, 681.088, 505.873, 710.459 ],
+      "font" : "HCRBatang-Bold",
+      "font size" : 10.56,
+      "text color" : "[0.0]",
+      "content" : "◯위원장 박정 수고하셨습니다. 진성준 위원께서 발언해 주시겠습니다.",
+      "kids" : [ ]
+    }, {
+      "type" : "list item",
+      "page number" : 13,
+      "bounding box" : [ 308.88, 617.368, 545.64, 678.539 ],
+      "font" : "HCRBatang-Bold",
+      "font size" : 10.56,
+      "text color" : "[0.0]",
+      "content" : "◯진성준 위원 제가 낸 법안도 오늘 상정되었는 데 그 법안은 지난해 9월 달에 발의한 것입니다. 지난해 9월에 발의한 법안이 여태 단 한 번도 상정된 적이 없다가 21대 국회 임기가 저물어",
+      "kids" : [ ]
+    } ]
+  }, {
+    "type" : "list",
+    "id" : 681,
+    "level" : "5",
+    "page number" : 13,
+    "bounding box" : [ 308.88, 569.488, 545.64, 614.08 ],
+    "numbering style" : "korean letters",
+    "number of list items" : 2,
+    "list items" : [ {
+      "type" : "list item",
+      "page number" : 13,
+      "bounding box" : [ 308.88, 601.408, 545.639, 614.08 ],
+      "font" : null,
+      "font size" : 10.56,
+      "text color" : "[0.0]",
+      "content" : "가는 이 시기에야 비로소 상정된다는 건 정말로",
+      "kids" : [ ]
+    }, {
+      "type" : "list item",
+      "page number" : 13,
+      "bounding box" : [ 308.88, 569.488, 545.64, 598.12 ],
+      "font" : null,
+      "font size" : 10.56,
+      "text color" : "[0.0]",
+      "content" : "저는 유감스럽습니다. 모든 법안을 다 통과시키지는 못한다 하더라도",
+      "kids" : [ ]
+    } ]
+  }, {
+    "type" : "paragraph",
+    "id" : 682,
+    "page number" : 13,
+    "bounding box" : [ 308.88, 489.808, 545.64, 566.32 ],
     "font" : null,
     "font size" : 10.56,
     "text color" : "[0.0]",
-    "content" : "◯위원장 박정 수고하셨습니다. 진성준 위원께서 발언해 주시겠습니다."
+    "content" : "적어도 제출된 법안, 발의된 법안을 한 번은 심 의를 해 주는 것이 도리 아니겠습니까. 그런데 단 한 번도 심사조차 하지 않고 그냥 임기 만료 로 무더기로 폐기돼 버린다고 하면 이처럼 무책 임한 일이 어디 있겠습니까."
   }, {
     "type" : "paragraph",
-    "id" : 674,
-    "level" : "3",
-    "page number" : 13,
-    "bounding box" : [ 308.88, 585.448, 545.64, 678.539 ],
-    "font" : null,
-    "font size" : 10.56,
-    "text color" : "[0.0]",
-    "content" : "◯진성준 위원 제가 낸 법안도 오늘 상정되었는 데 그 법안은 지난해 9월 달에 발의한 것입니다. 지난해 9월에 발의한 법안이 여태 단 한 번도 상정된 적이 없다가 21대 국회 임기가 저물어 가는 이 시기에야 비로소 상정된다는 건 정말로 저는 유감스럽습니다."
-  }, {
-    "type" : "paragraph",
-    "id" : 675,
-    "page number" : 13,
-    "bounding box" : [ 308.88, 489.808, 545.64, 582.16 ],
-    "font" : null,
-    "font size" : 10.56,
-    "text color" : "[0.0]",
-    "content" : "모든 법안을 다 통과시키지는 못한다 하더라도 적어도 제출된 법안, 발의된 법안을 한 번은 심 의를 해 주는 것이 도리 아니겠습니까. 그런데 단 한 번도 심사조차 하지 않고 그냥 임기 만료 로 무더기로 폐기돼 버린다고 하면 이처럼 무책 임한 일이 어디 있겠습니까."
-  }, {
-    "type" : "paragraph",
-    "id" : 676,
+    "id" : 683,
     "page number" : 13,
     "bounding box" : [ 308.88, 410.128, 545.64, 486.52 ],
     "font" : null,
@@ -4265,7 +4326,7 @@
     "content" : "환경노동위원회는 여야 간의 무슨 정치적 쟁점 이 될 만한 사안을 다루는 게 아니고 그야말로 국리민복을 위해서 법안들을 심사하고 다루는 것 이 의안의 거의 전부라고 해도 과언이 아니지 않 습니까."
   }, {
     "type" : "paragraph",
-    "id" : 677,
+    "id" : 684,
     "page number" : 13,
     "bounding box" : [ 308.88, 234.808, 545.64, 406.84 ],
     "font" : null,
@@ -4274,7 +4335,7 @@
     "content" : "오늘 비록 정부가 출석하지 못해서 대체토론 등을 진행하기 어렵긴 합니다마는 기왕에 이 법 안들을 전부 소관 소위원회에 다 회부를 했으니 비록 국민의힘 위원들이 그 회의에 참석하지 않 는다 하더라도 정부를 불러서 꼼꼼하게 심사하 고 여러 가지 형편상 이번 대에 처리되기 어려 운 것은 그대로 폐기하더라도 무엇 하나라도 좀 처리를 할 수 있도록 마지막까지 최선을 다했으 면 좋겠다 그런 생각을 합니다. 여야 간에 정치 적으로 쟁점이 형성될 만한 법안들이 아니지 않 습니까."
   }, {
     "type" : "paragraph",
-    "id" : 678,
+    "id" : 685,
     "page number" : 13,
     "bounding box" : [ 308.88, 123.208, 545.64, 231.52 ],
     "font" : null,
@@ -4283,7 +4344,7 @@
     "content" : "그래서 임기가 비록 얼마 남지는 않았습니다마 는 마지막까지 최선을 다했으면 좋겠고 금후에는 어쨌든 국회에 발의된 법안은 최소한 상정해서 심사는 다 한 번씩 한다는 원칙을 모든 상임위원 회와 또 국회가 수립해서 그렇게 심사를 해 나갔 으면 좋겠다 하는 바람을 다시 한번 강력하게 말 씀 올립니다."
   }, {
     "type" : "paragraph",
-    "id" : 679,
+    "id" : 686,
     "level" : "3",
     "page number" : 13,
     "bounding box" : [ 308.88, 59.488, 545.64, 120.659 ],
@@ -4293,7 +4354,7 @@
     "content" : "◯위원장 박정 더 이상 발언하실 위원님들이 안 계신 것 같아서…… 노웅래 위원께서 말씀하신 장관 해임촉구안에 대해서는 좀 더 면밀히 검토 해서 말씀을 드리도록 하겠습니다."
   }, {
     "type" : "paragraph",
-    "id" : 680,
+    "id" : 687,
     "page number" : 13,
     "bounding box" : [ 319.44, 43.528, 545.64, 56.2 ],
     "font" : null,
@@ -4302,7 +4363,7 @@
     "content" : "그리고 존경하는 이학영 위원님 또 전용기 위"
   }, {
     "type" : "header",
-    "id" : 681,
+    "id" : 688,
     "page number" : 14,
     "bounding box" : [ 49.56, 774.721, 240.069, 784.321 ],
     "kids" : [ {
@@ -4317,12 +4378,12 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 682,
+    "id" : 689,
     "page number" : 14,
     "bounding box" : [ 49.533, 768.839, 545.347, 769.918 ]
   }, {
     "type" : "paragraph",
-    "id" : 683,
+    "id" : 690,
     "page number" : 14,
     "bounding box" : [ 49.56, 665.128, 286.32, 757.6 ],
     "font" : null,
@@ -4331,7 +4392,7 @@
     "content" : "원님, 양경규 위원님 또 진성준 위원님까지 모 두, 마지막 회의라기보다는 아직 시간이 있기 때 문에 소위를 열어서 좀 더 법안들을 심의하고 그 리고 의결이 가능한 것들은 의결을 하는 형태로 해서 국회의원들의 의무를 다하자 이런 말씀 잘 들었습니다."
   }, {
     "type" : "paragraph",
-    "id" : 684,
+    "id" : 691,
     "page number" : 14,
     "bounding box" : [ 49.56, 617.368, 286.32, 661.96 ],
     "font" : null,
@@ -4340,7 +4401,7 @@
     "content" : "이수진 간사님, 임이자 간사님하고 말씀하셔서 앞으로 소위 개최에 대한 것들을 협의해 주시기 바랍니다."
   }, {
     "type" : "paragraph",
-    "id" : 685,
+    "id" : 692,
     "page number" : 14,
     "bounding box" : [ 49.56, 553.648, 286.32, 614.08 ],
     "font" : null,
@@ -4348,28 +4409,35 @@
     "text color" : "[0.0]",
     "content" : "그리고 진성준 위원님께서는 민주당의 정책위 의장님이시기 때문에 앞으로 이런 방향에 대한 것들을 민주당에서 전체 다 공유할 수 있도록 해 주시면 고맙겠습니다."
   }, {
-    "type" : "paragraph",
-    "id" : 686,
-    "level" : "3",
+    "type" : "list",
+    "id" : 693,
+    "level" : "4",
     "page number" : 14,
-    "bounding box" : [ 49.56, 537.371, 141.433, 551.099 ],
-    "font" : null,
-    "font size" : 10.56,
-    "text color" : "[0.0]",
-    "content" : "◯진성준 위원 예."
+    "bounding box" : [ 49.56, 505.768, 286.319, 551.099 ],
+    "numbering style" : "unordered",
+    "number of list items" : 2,
+    "list items" : [ {
+      "type" : "list item",
+      "page number" : 14,
+      "bounding box" : [ 49.56, 537.371, 141.433, 551.099 ],
+      "font" : "HCRBatang-Bold",
+      "font size" : 10.56,
+      "text color" : "[0.0]",
+      "content" : "◯진성준 위원 예.",
+      "kids" : [ ]
+    }, {
+      "type" : "list item",
+      "page number" : 14,
+      "bounding box" : [ 49.56, 505.768, 286.319, 535.139 ],
+      "font" : "HCRBatang-Bold",
+      "font size" : 10.56,
+      "text color" : "[0.0]",
+      "content" : "◯위원장 박정 더 이상 의견 주실 위원님들이 안 계시기 때문에 오늘 회의를 마치겠습니다.",
+      "kids" : [ ]
+    } ]
   }, {
     "type" : "paragraph",
-    "id" : 687,
-    "level" : "3",
-    "page number" : 14,
-    "bounding box" : [ 49.56, 505.768, 286.319, 535.139 ],
-    "font" : null,
-    "font size" : 10.56,
-    "text color" : "[0.0]",
-    "content" : "◯위원장 박정 더 이상 의견 주실 위원님들이 안 계시기 때문에 오늘 회의를 마치겠습니다."
-  }, {
-    "type" : "paragraph",
-    "id" : 688,
+    "id" : 694,
     "page number" : 14,
     "bounding box" : [ 60.0, 489.808, 286.32, 502.48 ],
     "font" : null,
@@ -4378,8 +4446,8 @@
     "content" : "이수진 위원님으로부터 서면질의가 있었습니"
   }, {
     "type" : "paragraph",
-    "id" : 689,
-    "level" : "4",
+    "id" : 695,
+    "level" : "5",
     "page number" : 14,
     "bounding box" : [ 49.56, 458.008, 286.32, 486.52 ],
     "font" : null,
@@ -4388,7 +4456,7 @@
     "content" : "다. 각 기관에서는 성실하게 답변해 주시기 바랍 니다."
   }, {
     "type" : "paragraph",
-    "id" : 690,
+    "id" : 696,
     "page number" : 14,
     "bounding box" : [ 49.56, 426.088, 286.32, 454.72 ],
     "font" : null,
@@ -4397,7 +4465,7 @@
     "content" : "서면질의와 답변 내용은 회의록에 게재토록 하 겠습니다."
   }, {
     "type" : "paragraph",
-    "id" : 691,
+    "id" : 697,
     "page number" : 14,
     "bounding box" : [ 49.56, 362.368, 286.32, 422.8 ],
     "font" : null,
@@ -4406,7 +4474,7 @@
     "content" : "위원님 여러분 수고 많으셨습니다. 그리고 회 의 준비에 애써 주신 위원회 직원 및 보좌진 여 러분도 수고하셨습니다. 산회를 선포합니다."
   }, {
     "type" : "paragraph",
-    "id" : 692,
+    "id" : 698,
     "page number" : 14,
     "bounding box" : [ 196.2, 346.408, 276.251, 359.08 ],
     "font" : null,
@@ -4415,50 +4483,39 @@
     "content" : "(10시45분 산회)"
   }, {
     "type" : "image",
-    "id" : 693,
+    "id" : 699,
     "page number" : 14,
     "bounding box" : [ 49.533, 332.936, 286.046, 333.296 ]
   }, {
-    "type" : "paragraph",
-    "id" : 694,
-    "level" : "3",
+    "type" : "list",
+    "id" : 700,
+    "level" : "4",
     "page number" : 14,
-    "bounding box" : [ 49.56, 314.171, 137.52, 327.899 ],
-    "font" : null,
-    "font size" : 10.56,
-    "text color" : "[0.0]",
-    "content" : "◯출석 위원(10인)"
+    "bounding box" : [ 49.56, 218.848, 277.079, 327.899 ],
+    "numbering style" : "unordered",
+    "number of list items" : 2,
+    "list items" : [ {
+      "type" : "list item",
+      "page number" : 14,
+      "bounding box" : [ 49.56, 266.728, 277.079, 327.899 ],
+      "font" : "HCRBatang-Bold",
+      "font size" : 10.56,
+      "text color" : "[0.0]",
+      "content" : "◯출석 위원(10인) 김 영 진 노 웅 래 박 정 양 경 규 우 원 식 윤 건 영 이수진(비) 이 학 영 전 용 기 진 성 준",
+      "kids" : [ ]
+    }, {
+      "type" : "list item",
+      "page number" : 14,
+      "bounding box" : [ 49.56, 218.848, 151.56, 264.179 ],
+      "font" : "HCRBatang-Bold",
+      "font size" : 10.56,
+      "text color" : "[0.0]",
+      "content" : "◯출석 전문위원 수 석 전 문 위 원 전 문 위 원",
+      "kids" : [ ]
+    } ]
   }, {
     "type" : "paragraph",
-    "id" : 695,
-    "page number" : 14,
-    "bounding box" : [ 59.52, 266.728, 277.079, 311.2 ],
-    "font" : null,
-    "font size" : 10.56,
-    "text color" : "[0.0]",
-    "content" : "김 영 진 노 웅 래 박 정 양 경 규 우 원 식 윤 건 영 이수진(비) 이 학 영 전 용 기 진 성 준"
-  }, {
-    "type" : "paragraph",
-    "id" : 696,
-    "level" : "3",
-    "page number" : 14,
-    "bounding box" : [ 49.56, 250.451, 127.919, 264.179 ],
-    "font" : null,
-    "font size" : 10.56,
-    "text color" : "[0.0]",
-    "content" : "◯출석 전문위원"
-  }, {
-    "type" : "paragraph",
-    "id" : 697,
-    "page number" : 14,
-    "bounding box" : [ 60.84, 218.848, 151.56, 247.48 ],
-    "font" : null,
-    "font size" : 10.56,
-    "text color" : "[0.0]",
-    "content" : "수 석 전 문 위 원 전 문 위 원"
-  }, {
-    "type" : "paragraph",
-    "id" : 698,
+    "id" : 701,
     "page number" : 14,
     "bounding box" : [ 204.24, 218.848, 276.481, 247.48 ],
     "font" : null,
@@ -4467,7 +4524,7 @@
     "content" : "오 창 석 임 재 금"
   }, {
     "type" : "paragraph",
-    "id" : 699,
+    "id" : 702,
     "page number" : 14,
     "bounding box" : [ 44.52, 202.888, 107.52, 215.56 ],
     "font" : null,
@@ -4475,156 +4532,163 @@
     "text color" : "[0.0]",
     "content" : "【보고사항】"
   }, {
-    "type" : "paragraph",
-    "id" : 700,
-    "level" : "3",
-    "page number" : 14,
-    "bounding box" : [ 49.56, 186.611, 106.92, 200.339 ],
-    "font" : null,
-    "font size" : 10.56,
-    "text color" : "[0.0]",
-    "content" : "◯위원 선임"
-  }, {
-    "type" : "table",
-    "id" : 701,
+    "type" : "list",
+    "id" : 703,
     "level" : "4",
     "page number" : 14,
-    "bounding box" : [ 50.793, 144.262, 282.088, 184.418 ],
-    "number of rows" : 2,
-    "number of columns" : 3,
-    "rows" : [ {
-      "type" : "table row",
-      "row number" : 1,
-      "cells" : [ {
-        "type" : "table cell",
+    "bounding box" : [ 49.56, 125.531, 106.92, 200.339 ],
+    "numbering style" : "unordered",
+    "number of list items" : 2,
+    "next list id" : 812,
+    "list items" : [ {
+      "type" : "list item",
+      "page number" : 14,
+      "bounding box" : [ 49.56, 186.611, 106.92, 200.339 ],
+      "font" : "HCRBatang-Bold",
+      "font size" : 10.56,
+      "text color" : "[0.0]",
+      "content" : "◯위원 선임",
+      "kids" : [ {
+        "type" : "table",
+        "id" : 503,
+        "level" : "5",
         "page number" : 14,
-        "bounding box" : [ 51.003, 170.933, 110.94, 184.148 ],
-        "row number" : 1,
-        "column number" : 1,
-        "row span" : 1,
-        "column span" : 1,
-        "kids" : [ {
-          "type" : "paragraph",
-          "id" : 27,
-          "page number" : 14,
-          "bounding box" : [ 65.28, 170.968, 96.72, 183.64 ],
-          "font" : null,
-          "font size" : 10.56,
-          "text color" : "[0.0]",
-          "content" : "위원명"
-        } ]
-      }, {
-        "type" : "table cell",
-        "page number" : 14,
-        "bounding box" : [ 110.94, 170.933, 216.244, 184.148 ],
-        "row number" : 1,
-        "column number" : 2,
-        "row span" : 1,
-        "column span" : 1,
-        "kids" : [ {
-          "type" : "paragraph",
-          "id" : 28,
-          "page number" : 14,
-          "bounding box" : [ 142.68, 170.968, 184.68, 183.64 ],
-          "font" : null,
-          "font size" : 10.56,
-          "text color" : "[0.0]",
-          "content" : "교섭단체"
-        } ]
-      }, {
-        "type" : "table cell",
-        "page number" : 14,
-        "bounding box" : [ 216.244, 170.933, 281.878, 184.148 ],
-        "row number" : 1,
-        "column number" : 3,
-        "row span" : 1,
-        "column span" : 1,
-        "kids" : [ {
-          "type" : "paragraph",
-          "id" : 29,
-          "page number" : 14,
-          "bounding box" : [ 233.4, 170.968, 264.96, 183.64 ],
-          "font" : null,
-          "font size" : 10.56,
-          "text color" : "[0.0]",
-          "content" : "연월일"
+        "bounding box" : [ 50.793, 144.262, 282.088, 184.418 ],
+        "number of rows" : 2,
+        "number of columns" : 3,
+        "rows" : [ {
+          "type" : "table row",
+          "row number" : 1,
+          "cells" : [ {
+            "type" : "table cell",
+            "page number" : 14,
+            "bounding box" : [ 51.003, 170.933, 110.94, 184.148 ],
+            "row number" : 1,
+            "column number" : 1,
+            "row span" : 1,
+            "column span" : 1,
+            "kids" : [ {
+              "type" : "paragraph",
+              "id" : 27,
+              "page number" : 14,
+              "bounding box" : [ 65.28, 170.968, 96.72, 183.64 ],
+              "font" : null,
+              "font size" : 10.56,
+              "text color" : "[0.0]",
+              "content" : "위원명"
+            } ]
+          }, {
+            "type" : "table cell",
+            "page number" : 14,
+            "bounding box" : [ 110.94, 170.933, 216.244, 184.148 ],
+            "row number" : 1,
+            "column number" : 2,
+            "row span" : 1,
+            "column span" : 1,
+            "kids" : [ {
+              "type" : "paragraph",
+              "id" : 28,
+              "page number" : 14,
+              "bounding box" : [ 142.68, 170.968, 184.68, 183.64 ],
+              "font" : null,
+              "font size" : 10.56,
+              "text color" : "[0.0]",
+              "content" : "교섭단체"
+            } ]
+          }, {
+            "type" : "table cell",
+            "page number" : 14,
+            "bounding box" : [ 216.244, 170.933, 281.878, 184.148 ],
+            "row number" : 1,
+            "column number" : 3,
+            "row span" : 1,
+            "column span" : 1,
+            "kids" : [ {
+              "type" : "paragraph",
+              "id" : 29,
+              "page number" : 14,
+              "bounding box" : [ 233.4, 170.968, 264.96, 183.64 ],
+              "font" : null,
+              "font size" : 10.56,
+              "text color" : "[0.0]",
+              "content" : "연월일"
+            } ]
+          } ]
+        }, {
+          "type" : "table row",
+          "row number" : 2,
+          "cells" : [ {
+            "type" : "table cell",
+            "page number" : 14,
+            "bounding box" : [ 51.003, 144.532, 110.94, 170.933 ],
+            "row number" : 2,
+            "column number" : 1,
+            "row span" : 1,
+            "column span" : 1,
+            "kids" : [ {
+              "type" : "paragraph",
+              "id" : 30,
+              "page number" : 14,
+              "bounding box" : [ 65.28, 151.168, 96.719, 163.84 ],
+              "font" : null,
+              "font size" : 10.56,
+              "text color" : "[0.0]",
+              "content" : "양경규"
+            } ]
+          }, {
+            "type" : "table cell",
+            "page number" : 14,
+            "bounding box" : [ 110.94, 144.532, 216.244, 170.933 ],
+            "row number" : 2,
+            "column number" : 2,
+            "row span" : 1,
+            "column span" : 1,
+            "kids" : [ {
+              "type" : "paragraph",
+              "id" : 31,
+              "page number" : 14,
+              "bounding box" : [ 118.8, 144.568, 208.56, 170.32 ],
+              "font" : null,
+              "font size" : 10.56,
+              "text color" : "[0.0]",
+              "content" : "어느 교섭단체에도 속하지 아니하는 의원"
+            } ]
+          }, {
+            "type" : "table cell",
+            "page number" : 14,
+            "bounding box" : [ 216.244, 144.532, 281.878, 170.933 ],
+            "row number" : 2,
+            "column number" : 3,
+            "row span" : 1,
+            "column span" : 1,
+            "kids" : [ {
+              "type" : "paragraph",
+              "id" : 32,
+              "level" : "1",
+              "page number" : 14,
+              "bounding box" : [ 221.4, 151.785, 276.913, 162.345 ],
+              "font" : "Batang",
+              "font size" : 10.56,
+              "text color" : "[0.0]",
+              "content" : "2024. 1. 31."
+            } ]
+          } ]
         } ]
       } ]
     }, {
-      "type" : "table row",
-      "row number" : 2,
-      "cells" : [ {
-        "type" : "table cell",
-        "page number" : 14,
-        "bounding box" : [ 51.003, 144.532, 110.94, 170.933 ],
-        "row number" : 2,
-        "column number" : 1,
-        "row span" : 1,
-        "column span" : 1,
-        "kids" : [ {
-          "type" : "paragraph",
-          "id" : 30,
-          "page number" : 14,
-          "bounding box" : [ 65.28, 151.168, 96.719, 163.84 ],
-          "font" : null,
-          "font size" : 10.56,
-          "text color" : "[0.0]",
-          "content" : "양경규"
-        } ]
-      }, {
-        "type" : "table cell",
-        "page number" : 14,
-        "bounding box" : [ 110.94, 144.532, 216.244, 170.933 ],
-        "row number" : 2,
-        "column number" : 2,
-        "row span" : 1,
-        "column span" : 1,
-        "kids" : [ {
-          "type" : "paragraph",
-          "id" : 31,
-          "page number" : 14,
-          "bounding box" : [ 118.8, 144.568, 208.56, 170.32 ],
-          "font" : null,
-          "font size" : 10.56,
-          "text color" : "[0.0]",
-          "content" : "어느 교섭단체에도 속하지 아니하는 의원"
-        } ]
-      }, {
-        "type" : "table cell",
-        "page number" : 14,
-        "bounding box" : [ 216.244, 144.532, 281.878, 170.933 ],
-        "row number" : 2,
-        "column number" : 3,
-        "row span" : 1,
-        "column span" : 1,
-        "kids" : [ {
-          "type" : "paragraph",
-          "id" : 32,
-          "level" : "1",
-          "page number" : 14,
-          "bounding box" : [ 221.4, 151.785, 276.913, 162.345 ],
-          "font" : "Batang",
-          "font size" : 10.56,
-          "text color" : "[0.0]",
-          "content" : "2024. 1. 31."
-        } ]
-      } ]
+      "type" : "list item",
+      "page number" : 14,
+      "bounding box" : [ 49.56, 125.531, 106.92, 139.259 ],
+      "font" : "HCRBatang-Bold",
+      "font size" : 10.56,
+      "text color" : "[0.0]",
+      "content" : "◯위원 개선",
+      "kids" : [ ]
     } ]
   }, {
-    "type" : "Caption",
-    "id" : 702,
-    "level" : "3",
-    "page number" : 14,
-    "bounding box" : [ 49.56, 125.531, 106.92, 139.259 ],
-    "linked content id" : 703,
-    "font" : null,
-    "font size" : 10.56,
-    "text color" : "[0.0]",
-    "content" : "◯위원 개선"
-  }, {
     "type" : "table",
-    "id" : 703,
-    "level" : "4",
+    "id" : 704,
+    "level" : "6",
     "page number" : 14,
     "bounding box" : [ 50.793, 58.316, 282.088, 123.285 ],
     "number of rows" : 4,
@@ -4921,8 +4985,8 @@
     } ]
   }, {
     "type" : "table",
-    "id" : 704,
-    "level" : "5",
+    "id" : 705,
+    "level" : "7",
     "page number" : 14,
     "bounding box" : [ 309.973, 578.787, 541.269, 754.755 ],
     "number of rows" : 6,
@@ -5405,18 +5469,18 @@
     } ]
   }, {
     "type" : "Caption",
-    "id" : 705,
+    "id" : 706,
     "level" : "3",
     "page number" : 14,
     "bounding box" : [ 308.88, 544.888, 449.998, 574.259 ],
-    "linked content id" : 704,
+    "linked content id" : 705,
     "font" : null,
     "font size" : 10.56,
     "text color" : "[0.0]",
     "content" : "◯의안 회부 직업안정법 일부개정법률안"
   }, {
     "type" : "paragraph",
-    "id" : 706,
+    "id" : 707,
     "page number" : 14,
     "bounding box" : [ 328.92, 528.928, 458.891, 541.6 ],
     "font" : "Batang",
@@ -5425,7 +5489,7 @@
     "content" : "(2023. 12. 22. 정부 제출)"
   }, {
     "type" : "paragraph",
-    "id" : 707,
+    "id" : 708,
     "page number" : 14,
     "bounding box" : [ 318.96, 481.168, 545.64, 525.64 ],
     "font" : null,
@@ -5434,7 +5498,7 @@
     "content" : "12월 26일 회부됨 남녀고용평등과 일․가정 양립 지원에 관한 법률 일부개정법률안(조정훈 의원 대표발의)"
   }, {
     "type" : "paragraph",
-    "id" : 708,
+    "id" : 709,
     "page number" : 14,
     "bounding box" : [ 328.92, 432.971, 545.64, 478.619 ],
     "font" : null,
@@ -5443,7 +5507,7 @@
     "content" : "(2023. 12. 26. 조정훈․이종성․김예지․태영호․윤 창현․유상범․이인선․박형수․홍석준․전주혜․박 수영․홍문표 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 709,
+    "id" : 710,
     "page number" : 14,
     "bounding box" : [ 318.96, 401.488, 545.64, 430.0 ],
     "font" : null,
@@ -5452,7 +5516,7 @@
     "content" : "화학물질의 등록 및 평가 등에 관한 법률 일부 개정법률안(이주환 의원 대표발의)"
   }, {
     "type" : "paragraph",
-    "id" : 710,
+    "id" : 711,
     "page number" : 14,
     "bounding box" : [ 328.92, 353.608, 545.64, 398.939 ],
     "font" : null,
@@ -5461,7 +5525,7 @@
     "content" : "(2023. 12. 26. 이주환․김성원․최영희․전봉민․김 학용․백종헌․구자근․김용판․이인선․정운천․이 헌승 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 711,
+    "id" : 712,
     "page number" : 14,
     "bounding box" : [ 318.96, 321.688, 545.64, 350.32 ],
     "font" : null,
@@ -5470,7 +5534,7 @@
     "content" : "폐기물관리법 일부개정법률안(이주환 의원 대표 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 712,
+    "id" : 713,
     "page number" : 14,
     "bounding box" : [ 328.92, 273.928, 545.64, 319.259 ],
     "font" : null,
@@ -5479,7 +5543,7 @@
     "content" : "(2023. 12. 26. 이주환․김성원․최영희․전봉민․김 학용․백종헌․구자근․김용판․이인선․정운천․이 헌승 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 713,
+    "id" : 714,
     "page number" : 14,
     "bounding box" : [ 318.96, 242.008, 545.64, 270.64 ],
     "font" : null,
@@ -5488,7 +5552,7 @@
     "content" : "산업안전보건법 일부개정법률안(이주환 의원 대표 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 714,
+    "id" : 715,
     "page number" : 14,
     "bounding box" : [ 328.92, 194.248, 545.64, 239.459 ],
     "font" : null,
@@ -5497,7 +5561,7 @@
     "content" : "(2023. 12. 26. 이주환․김성원․최영희․전봉민․김 학용․백종헌․구자근․김용판․이인선․정운천․이 헌승 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 715,
+    "id" : 716,
     "page number" : 14,
     "bounding box" : [ 318.96, 162.328, 545.641, 190.96 ],
     "font" : null,
@@ -5506,7 +5570,7 @@
     "content" : "자원의 절약과 재활용촉진에 관한 법률 일부개정 법률안(이주환 의원 대표발의)"
   }, {
     "type" : "paragraph",
-    "id" : 716,
+    "id" : 717,
     "page number" : 14,
     "bounding box" : [ 328.92, 114.568, 545.64, 159.779 ],
     "font" : null,
@@ -5515,7 +5579,7 @@
     "content" : "(2023. 12. 26. 이주환․김성원․최영희․전봉민․김 학용․백종헌․구자근․김용판․이인선․정운천․이 헌승 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 717,
+    "id" : 718,
     "page number" : 14,
     "bounding box" : [ 318.96, 82.648, 543.491, 111.28 ],
     "font" : null,
@@ -5524,7 +5588,7 @@
     "content" : "이상 5건 12월 27일 회부됨 근로기준법 일부개정법률안(김영주 의원 대표발의)"
   }, {
     "type" : "paragraph",
-    "id" : 718,
+    "id" : 719,
     "page number" : 14,
     "bounding box" : [ 328.92, 50.411, 545.64, 80.099 ],
     "font" : null,
@@ -5533,7 +5597,7 @@
     "content" : "(2023. 12. 28. 김영주․강민정․김주영․박대수․송 옥주․윤건영․이용우․이정문․전재수․허숙정 의"
   }, {
     "type" : "header",
-    "id" : 719,
+    "id" : 720,
     "page number" : 15,
     "bounding box" : [ 355.08, 774.721, 545.666, 784.321 ],
     "kids" : [ {
@@ -5548,12 +5612,12 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 720,
+    "id" : 721,
     "page number" : 15,
     "bounding box" : [ 49.533, 768.839, 545.347, 769.918 ]
   }, {
     "type" : "paragraph",
-    "id" : 721,
+    "id" : 722,
     "page number" : 15,
     "bounding box" : [ 59.52, 728.968, 284.171, 757.6 ],
     "font" : null,
@@ -5562,7 +5626,7 @@
     "content" : "원 발의) 직업안정법 일부개정법률안(윤미향 의원 대표발의)"
   }, {
     "type" : "paragraph",
-    "id" : 722,
+    "id" : 723,
     "page number" : 15,
     "bounding box" : [ 69.6, 681.088, 286.32, 726.419 ],
     "font" : null,
@@ -5571,7 +5635,7 @@
     "content" : "(2023. 12. 28. 윤미향․양정숙․소병훈․정성호․송 옥주․위성곤․신정훈․어기구․정태호․김승남․강 성희 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 723,
+    "id" : 724,
     "page number" : 15,
     "bounding box" : [ 59.52, 633.328, 286.32, 677.8 ],
     "font" : null,
@@ -5580,7 +5644,7 @@
     "content" : "이상 2건 12월 29일 회부됨 임금채권보장법 일부개정법률안(윤미향 의원 대표 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 724,
+    "id" : 725,
     "page number" : 15,
     "bounding box" : [ 69.6, 585.448, 286.32, 630.779 ],
     "font" : null,
@@ -5589,7 +5653,7 @@
     "content" : "(2023. 12. 29. 윤미향․송옥주․신정훈․허영․김 의겸․양정숙․전용기․김남국․김두관․김승남 의 원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 725,
+    "id" : 726,
     "page number" : 15,
     "bounding box" : [ 59.52, 553.648, 286.32, 582.16 ],
     "font" : null,
@@ -5598,7 +5662,7 @@
     "content" : "산업재해보상보험법 일부개정법률안(윤미향 의원 대표발의)"
   }, {
     "type" : "paragraph",
-    "id" : 726,
+    "id" : 727,
     "page number" : 15,
     "bounding box" : [ 69.6, 505.768, 286.32, 551.099 ],
     "font" : null,
@@ -5607,7 +5671,7 @@
     "content" : "(2023. 12. 29. 윤미향․송옥주․신정훈․허영․김 의겸․양정숙․전용기․김남국․김두관․김승남 의 원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 727,
+    "id" : 728,
     "page number" : 15,
     "bounding box" : [ 59.52, 473.848, 286.319, 502.48 ],
     "font" : null,
@@ -5616,7 +5680,7 @@
     "content" : "외국인근로자의 고용 등에 관한 법률 일부개정 법률안(윤미향 의원 대표발의)"
   }, {
     "type" : "paragraph",
-    "id" : 728,
+    "id" : 729,
     "page number" : 15,
     "bounding box" : [ 69.6, 426.088, 286.32, 471.419 ],
     "font" : null,
@@ -5625,7 +5689,7 @@
     "content" : "(2023. 12. 29. 윤미향․송옥주․신정훈․허영․김 의겸․전용기․김남국․김두관․김승남․강성희 의 원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 729,
+    "id" : 730,
     "page number" : 15,
     "bounding box" : [ 59.52, 410.128, 284.171, 422.8 ],
     "font" : null,
@@ -5634,7 +5698,7 @@
     "content" : "근로기준법 일부개정법률안(윤미향 의원 대표발의)"
   }, {
     "type" : "paragraph",
-    "id" : 730,
+    "id" : 731,
     "page number" : 15,
     "bounding box" : [ 69.6, 362.368, 286.32, 407.579 ],
     "font" : null,
@@ -5643,7 +5707,7 @@
     "content" : "(2023. 12. 29. 윤미향․송옥주․허영․김의겸․전 용기․강성희․김종민․강민정․홍기원․윤영찬․강 은미 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 731,
+    "id" : 732,
     "page number" : 15,
     "bounding box" : [ 59.52, 330.448, 286.321, 359.08 ],
     "font" : null,
@@ -5652,7 +5716,7 @@
     "content" : "가사근로자의 고용개선 등에 관한 법률 일부개정 법률안(윤미향 의원 대표발의)"
   }, {
     "type" : "paragraph",
-    "id" : 732,
+    "id" : 733,
     "page number" : 15,
     "bounding box" : [ 69.6, 282.568, 286.32, 327.899 ],
     "font" : null,
@@ -5661,7 +5725,7 @@
     "content" : "(2023. 12. 29. 윤미향․송옥주․허영․김의겸․전 용기․강성희․김종민․홍기원․강민정․윤영찬․강 은미 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 733,
+    "id" : 734,
     "page number" : 15,
     "bounding box" : [ 59.52, 250.768, 286.32, 279.4 ],
     "font" : null,
@@ -5670,7 +5734,7 @@
     "content" : "기간제 및 단시간근로자 보호 등에 관한 법률 일부개정법률안(윤미향 의원 대표발의)"
   }, {
     "type" : "paragraph",
-    "id" : 734,
+    "id" : 735,
     "page number" : 15,
     "bounding box" : [ 69.6, 202.888, 286.32, 248.219 ],
     "font" : null,
@@ -5679,7 +5743,7 @@
     "content" : "(2023. 12. 29. 윤미향․송옥주․허영․김의겸․전 용기․강성희․김종민․홍기원․강민정․윤영찬․강 은미 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 735,
+    "id" : 736,
     "page number" : 15,
     "bounding box" : [ 59.52, 186.928, 284.171, 199.6 ],
     "font" : null,
@@ -5688,7 +5752,7 @@
     "content" : "최저임금법 일부개정법률안(윤미향 의원 대표발의)"
   }, {
     "type" : "paragraph",
-    "id" : 736,
+    "id" : 737,
     "page number" : 15,
     "bounding box" : [ 69.6, 139.168, 286.32, 184.499 ],
     "font" : null,
@@ -5697,7 +5761,7 @@
     "content" : "(2023. 12. 29. 윤미향․송옥주․허영․김의겸․전 용기․강성희․김종민․홍기원․강민정․윤영찬․강 은미 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 737,
+    "id" : 738,
     "page number" : 15,
     "bounding box" : [ 59.52, 91.288, 286.321, 135.88 ],
     "font" : null,
@@ -5706,7 +5770,7 @@
     "content" : "이상 7건 2024년 1월 2일 회부됨 노사관계 발전 지원에 관한 법률 일부개정법률안 (이은주 의원 대표발의)"
   }, {
     "type" : "paragraph",
-    "id" : 738,
+    "id" : 739,
     "page number" : 15,
     "bounding box" : [ 69.6, 59.171, 286.32, 88.859 ],
     "font" : null,
@@ -5715,8 +5779,8 @@
     "content" : "(2024. 1. 3. 이은주․장혜영․배진교․강은미․심상 정․류호정․박홍근․김종민․강민정․박정․이수진"
   }, {
     "type" : "paragraph",
-    "id" : 739,
-    "level" : "5",
+    "id" : 740,
+    "level" : "6",
     "page number" : 15,
     "bounding box" : [ 69.6, 43.211, 286.32, 56.939 ],
     "font" : null,
@@ -5725,7 +5789,7 @@
     "content" : "(비)․노웅래․박용진․김원이․양정숙․기동민 의원"
   }, {
     "type" : "paragraph",
-    "id" : 740,
+    "id" : 741,
     "page number" : 15,
     "bounding box" : [ 318.96, 713.008, 545.64, 757.6 ],
     "font" : null,
@@ -5734,7 +5798,7 @@
     "content" : "발의) 대기환경보전법 일부개정법률안(이은주 의원 대표 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 741,
+    "id" : 742,
     "page number" : 15,
     "bounding box" : [ 328.92, 664.811, 545.64, 710.459 ],
     "font" : null,
@@ -5743,7 +5807,7 @@
     "content" : "(2024. 1. 3. 이은주․장혜영․심상정․강은미․배진 교․류호정․김종민․강민정․이수진(비)․박용진․양정 숙․기동민 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 742,
+    "id" : 743,
     "page number" : 15,
     "bounding box" : [ 318.96, 633.328, 541.691, 661.96 ],
     "font" : null,
@@ -5752,7 +5816,7 @@
     "content" : "이상 2건 1월 4일 회부됨 수도법 일부개정법률안(이주환 의원 대표발의)"
   }, {
     "type" : "paragraph",
-    "id" : 743,
+    "id" : 744,
     "page number" : 15,
     "bounding box" : [ 328.92, 585.448, 545.64, 630.779 ],
     "font" : null,
@@ -5761,7 +5825,7 @@
     "content" : "(2024. 1. 4. 이주환․전봉민․박대수․정동만․지성 호․김용판․김형동․권명호․백종헌․안병길․구자 근 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 744,
+    "id" : 745,
     "page number" : 15,
     "bounding box" : [ 318.96, 537.688, 545.64, 582.16 ],
     "font" : null,
@@ -5770,7 +5834,7 @@
     "content" : "1월 5일 회부됨 폐기물관리법 일부개정법률안(이주환 의원 대표 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 745,
+    "id" : 746,
     "page number" : 15,
     "bounding box" : [ 328.92, 489.808, 545.64, 535.139 ],
     "font" : null,
@@ -5779,7 +5843,7 @@
     "content" : "(2024. 1. 8. 이주환․백종헌․김학용․권명호․안병 길․박대수․정동만․김성원․김용판․이헌승․전봉 민 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 746,
+    "id" : 747,
     "page number" : 15,
     "bounding box" : [ 318.96, 458.008, 545.64, 486.52 ],
     "font" : null,
@@ -5788,7 +5852,7 @@
     "content" : "대기환경보전법 일부개정법률안(이주환 의원 대표 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 747,
+    "id" : 748,
     "page number" : 15,
     "bounding box" : [ 328.92, 410.128, 545.64, 455.459 ],
     "font" : null,
@@ -5797,7 +5861,7 @@
     "content" : "(2024. 1. 8. 이주환․김성원․김용판․백종헌․김학 용․이헌승․전봉민․황보승희․구자근․정운천 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 748,
+    "id" : 749,
     "page number" : 15,
     "bounding box" : [ 318.96, 394.168, 543.491, 406.84 ],
     "font" : null,
@@ -5806,7 +5870,7 @@
     "content" : "고용보험법 일부개정법률안(이주환 의원 대표발의)"
   }, {
     "type" : "paragraph",
-    "id" : 749,
+    "id" : 750,
     "page number" : 15,
     "bounding box" : [ 328.92, 346.408, 545.64, 391.619 ],
     "font" : null,
@@ -5815,7 +5879,7 @@
     "content" : "(2024. 1. 8. 이주환․김학용․백종헌․권명호․안병 길․박대수․정동만․김성원․김용판․이헌승․전봉 민 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 750,
+    "id" : 751,
     "page number" : 15,
     "bounding box" : [ 318.96, 298.528, 545.64, 343.12 ],
     "font" : null,
@@ -5824,7 +5888,7 @@
     "content" : "이상 3건 1월 9일 회부됨 산업안전보건법 일부개정법률안(이주환 의원 대표 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 751,
+    "id" : 752,
     "page number" : 15,
     "bounding box" : [ 328.92, 250.768, 545.64, 295.979 ],
     "font" : null,
@@ -5833,7 +5897,7 @@
     "content" : "(2024. 1. 9. 이주환․박성중․김희곤․김학용․백종 헌․김용판․전봉민․박대수․지성호․이헌승․유경 준 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 752,
+    "id" : 753,
     "page number" : 15,
     "bounding box" : [ 318.96, 218.848, 543.491, 247.48 ],
     "font" : null,
@@ -5842,7 +5906,7 @@
     "content" : "1월 10일 회부됨 근로기준법 일부개정법률안(엄태영 의원 대표발의)"
   }, {
     "type" : "paragraph",
-    "id" : 753,
+    "id" : 754,
     "page number" : 15,
     "bounding box" : [ 328.92, 170.771, 545.64, 216.299 ],
     "font" : null,
@@ -5851,7 +5915,7 @@
     "content" : "(2024. 1. 17. 엄태영․이만희․이명수․박형수․김학 용․홍문표․지성호․한무경․노용호․황보승희․하 태경․이용 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 754,
+    "id" : 755,
     "page number" : 15,
     "bounding box" : [ 318.96, 139.168, 545.64, 167.8 ],
     "font" : null,
@@ -5860,7 +5924,7 @@
     "content" : "환경영향평가법 일부개정법률안(이주환 의원 대표 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 755,
+    "id" : 756,
     "page number" : 15,
     "bounding box" : [ 328.92, 91.288, 545.64, 136.619 ],
     "font" : null,
@@ -5869,7 +5933,7 @@
     "content" : "(2024. 1. 17. 이주환․김용판․김학용․황보승희․정운 천․김성원․류성걸․백종헌․구자근․전봉민 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 756,
+    "id" : 757,
     "page number" : 15,
     "bounding box" : [ 318.96, 43.528, 545.641, 88.12 ],
     "font" : null,
@@ -5878,7 +5942,7 @@
     "content" : "이상 2건 1월 18일 회부됨 물의 재이용 촉진 및 지원에 관한 법률 일부개정 법률안(이정문 의원 대표발의)"
   }, {
     "type" : "header",
-    "id" : 757,
+    "id" : 758,
     "page number" : 16,
     "bounding box" : [ 49.56, 774.721, 240.069, 784.321 ],
     "kids" : [ {
@@ -5893,12 +5957,12 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 758,
+    "id" : 759,
     "page number" : 16,
     "bounding box" : [ 49.533, 768.839, 545.347, 769.918 ]
   }, {
     "type" : "paragraph",
-    "id" : 759,
+    "id" : 760,
     "page number" : 16,
     "bounding box" : [ 69.6, 713.008, 286.32, 758.339 ],
     "font" : null,
@@ -5907,7 +5971,7 @@
     "content" : "(2024. 1. 22. 이정문․김철민․임호선․민형배․서영 석․기동민․이동주․장철민․안민석․박상혁 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 760,
+    "id" : 761,
     "page number" : 16,
     "bounding box" : [ 59.52, 681.088, 286.32, 710.459 ],
     "font" : null,
@@ -5916,7 +5980,7 @@
     "content" : "댐건설․관리 및 주변지역지원 등에 관한 법률 일부개정법률안(이종배 의원 대표발의)"
   }, {
     "type" : "paragraph",
-    "id" : 761,
+    "id" : 762,
     "page number" : 16,
     "bounding box" : [ 69.6, 633.328, 286.32, 678.539 ],
     "font" : null,
@@ -5925,7 +5989,7 @@
     "content" : "(2024. 1. 22. 이종배․하영제․이양수․김승수․태영 호․강대식․정운천․홍문표․성일종․김성원․박대 수 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 762,
+    "id" : 763,
     "page number" : 16,
     "bounding box" : [ 59.52, 601.408, 284.171, 630.04 ],
     "font" : null,
@@ -5934,7 +5998,7 @@
     "content" : "이상 2건 1월 23일 회부됨 근로기준법 일부개정법률안(김정호 의원 대표발의)"
   }, {
     "type" : "paragraph",
-    "id" : 763,
+    "id" : 764,
     "page number" : 16,
     "bounding box" : [ 69.6, 553.648, 286.32, 598.859 ],
     "font" : null,
@@ -5943,7 +6007,7 @@
     "content" : "(2024. 2. 6. 김정호․김성환․김윤덕․김홍걸․어기 구․윤영찬․윤후덕․임종성․정성호․허종식 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 764,
+    "id" : 765,
     "page number" : 16,
     "bounding box" : [ 59.52, 505.768, 286.32, 550.36 ],
     "font" : null,
@@ -5952,7 +6016,7 @@
     "content" : "2월 7일 회부됨 근로복지기본법 일부개정법률안(신현영 의원 대표 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 765,
+    "id" : 766,
     "page number" : 16,
     "bounding box" : [ 69.6, 458.008, 286.32, 503.219 ],
     "font" : null,
@@ -5961,7 +6025,7 @@
     "content" : "(2024. 2. 8. 신현영․이소영․김민철․김정호․이수 진․이학영․윤미향․정태호․이상헌․허숙정․고영 인 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 766,
+    "id" : 767,
     "page number" : 16,
     "bounding box" : [ 59.52, 410.128, 286.32, 454.72 ],
     "font" : null,
@@ -5970,7 +6034,7 @@
     "content" : "2월 13일 회부됨 가축분뇨의 관리 및 이용에 관한 법률 일부개정 법률안(송기헌 의원 대표발의)"
   }, {
     "type" : "paragraph",
-    "id" : 767,
+    "id" : 768,
     "page number" : 16,
     "bounding box" : [ 69.6, 362.368, 286.32, 407.579 ],
     "font" : null,
@@ -5979,7 +6043,7 @@
     "content" : "(2024. 2. 13. 송기헌․김철민․허영․강준현․조승 래․정성호․백혜련․박광온․김영배․강훈식․민병 덕 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 768,
+    "id" : 769,
     "page number" : 16,
     "bounding box" : [ 59.52, 346.408, 284.171, 359.08 ],
     "font" : null,
@@ -5988,7 +6052,7 @@
     "content" : "악취방지법 일부개정법률안(송기헌 의원 대표발의)"
   }, {
     "type" : "paragraph",
-    "id" : 769,
+    "id" : 770,
     "page number" : 16,
     "bounding box" : [ 69.6, 298.528, 286.32, 343.859 ],
     "font" : null,
@@ -5997,7 +6061,7 @@
     "content" : "(2024. 2. 13. 송기헌․김철민․허영․강준현․조승 래․정성호․박광온․김영배․백혜련․강훈식․민병 덕 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 770,
+    "id" : 771,
     "page number" : 16,
     "bounding box" : [ 59.52, 266.728, 282.371, 295.24 ],
     "font" : null,
@@ -6006,7 +6070,7 @@
     "content" : "이상 2건 2월 14일 회부됨 하천법 일부개정법률안(김승수 의원 대표발의)"
   }, {
     "type" : "paragraph",
-    "id" : 771,
+    "id" : 772,
     "page number" : 16,
     "bounding box" : [ 69.6, 218.848, 286.32, 264.179 ],
     "font" : null,
@@ -6015,7 +6079,7 @@
     "content" : "(2024. 2. 23. 김승수․이주환․임이자․한무경․김상 훈․권명호․박대수․임병헌․김석기․조명희․지성 호 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 772,
+    "id" : 773,
     "page number" : 16,
     "bounding box" : [ 59.52, 171.088, 286.32, 215.56 ],
     "font" : null,
@@ -6024,7 +6088,7 @@
     "content" : "2월 26일 회부됨 미세먼지 저감 및 관리에 관한 특별법 일부개정 법률안(김도읍 의원 대표발의)"
   }, {
     "type" : "paragraph",
-    "id" : 773,
+    "id" : 774,
     "page number" : 16,
     "bounding box" : [ 69.6, 123.208, 286.32, 168.539 ],
     "font" : null,
@@ -6033,7 +6097,7 @@
     "content" : "(2024. 2. 29. 김도읍․박진․장동혁․황보승희․권명 호․윤한홍․하영제․김은희․권영세․유경준 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 774,
+    "id" : 775,
     "page number" : 16,
     "bounding box" : [ 59.52, 75.448, 286.32, 119.92 ],
     "font" : null,
@@ -6042,7 +6106,7 @@
     "content" : "3월 4일 회부됨 기간제 및 단시간근로자 보호 등에 관한 법률 일부개정법률안(양경규 의원 대표발의)"
   }, {
     "type" : "paragraph",
-    "id" : 775,
+    "id" : 776,
     "page number" : 16,
     "bounding box" : [ 69.6, 43.211, 286.32, 72.899 ],
     "font" : null,
@@ -6051,7 +6115,7 @@
     "content" : "(2024. 3. 27. 양경규․윤미향․강성희․장혜영․강은 미․배진교․박용진․이자스민․심상정․김주영 의원"
   }, {
     "type" : "paragraph",
-    "id" : 776,
+    "id" : 777,
     "page number" : 16,
     "bounding box" : [ 318.96, 728.968, 543.491, 757.6 ],
     "font" : null,
@@ -6060,7 +6124,7 @@
     "content" : "발의) 근로기준법 일부개정법률안(양경규 의원 대표발의)"
   }, {
     "type" : "paragraph",
-    "id" : 777,
+    "id" : 778,
     "page number" : 16,
     "bounding box" : [ 328.92, 681.088, 545.64, 726.419 ],
     "font" : null,
@@ -6069,7 +6133,7 @@
     "content" : "(2024. 3. 27. 양경규․윤미향․강성희․장혜영․강은 미․배진교․박용진․이자스민․심상정․김주영 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 778,
+    "id" : 779,
     "page number" : 16,
     "bounding box" : [ 338.88, 665.128, 468.72, 677.8 ],
     "font" : null,
@@ -6078,7 +6142,7 @@
     "content" : "이상 2건 3월 28일 회부됨"
   }, {
     "type" : "paragraph",
-    "id" : 779,
+    "id" : 780,
     "level" : "3",
     "page number" : 16,
     "bounding box" : [ 308.88, 617.368, 545.64, 662.699 ],
@@ -6088,7 +6152,7 @@
     "content" : "◯관련의안 회부 국가기간 전력망 설비 확충 특별법안(김회재 의원 대표발의)"
   }, {
     "type" : "paragraph",
-    "id" : 780,
+    "id" : 781,
     "page number" : 16,
     "bounding box" : [ 328.92, 569.488, 545.64, 614.819 ],
     "font" : null,
@@ -6097,7 +6161,7 @@
     "content" : "(2023. 12. 22. 김회재․박영순․신정훈․김승남․소 병철․이동주․이상헌․이개호․이병훈․서동용․김 경만 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 781,
+    "id" : 782,
     "page number" : 16,
     "bounding box" : [ 338.88, 537.688, 545.64, 566.32 ],
     "font" : null,
@@ -6106,7 +6170,7 @@
     "content" : "12월 26일 의견제시기간을 소관위원회의 심사 의결일 전일까지로 정하여 회부됨"
   }, {
     "type" : "paragraph",
-    "id" : 782,
+    "id" : 783,
     "page number" : 16,
     "bounding box" : [ 318.96, 505.451, 545.572, 535.139 ],
     "font" : null,
@@ -6115,7 +6179,7 @@
     "content" : "남해안권 관광산업 발전 특별법안(서삼석 의원․ 양향자 의원․최형두 의원 대표발의)"
   }, {
     "type" : "paragraph",
-    "id" : 783,
+    "id" : 784,
     "page number" : 16,
     "bounding box" : [ 328.92, 458.008, 545.64, 503.219 ],
     "font" : null,
@@ -6124,7 +6188,7 @@
     "content" : "(2024. 1. 12. 서삼석․양향자․최형두․윤한홍․김예 지․김성원․강기윤․김태호․한무경․정동만․이달 곤 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 784,
+    "id" : 785,
     "page number" : 16,
     "bounding box" : [ 338.88, 426.088, 545.64, 454.72 ],
     "font" : null,
@@ -6133,7 +6197,7 @@
     "content" : "1월 15일 의견제시기간을 소관위원회의 심사의 결일 전일까지로 정하여 회부됨"
   }, {
     "type" : "paragraph",
-    "id" : 785,
+    "id" : 786,
     "page number" : 16,
     "bounding box" : [ 318.96, 394.168, 545.64, 422.8 ],
     "font" : null,
@@ -6142,7 +6206,7 @@
     "content" : "국가기간 전력설비 확충 특별법안(송갑석 의원 대표발의)"
   }, {
     "type" : "paragraph",
-    "id" : 786,
+    "id" : 787,
     "page number" : 16,
     "bounding box" : [ 328.92, 346.408, 545.64, 391.619 ],
     "font" : null,
@@ -6151,7 +6215,7 @@
     "content" : "(2024. 1. 17. 송갑석․조오섭․민형배․이병훈․이용 빈․윤영덕․이성만․오영환․이개호․강훈식․윤후 덕 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 787,
+    "id" : 788,
     "page number" : 16,
     "bounding box" : [ 338.88, 314.488, 545.64, 343.12 ],
     "font" : null,
@@ -6160,7 +6224,7 @@
     "content" : "1월 18일 의견제시기간을 소관위원회의 심사의 결일 전일까지로 정하여 회부됨"
   }, {
     "type" : "paragraph",
-    "id" : 788,
+    "id" : 789,
     "page number" : 16,
     "bounding box" : [ 318.96, 282.568, 545.64, 311.2 ],
     "font" : null,
@@ -6169,7 +6233,7 @@
     "content" : "부산 글로벌허브도시 조성에 관한 특별법안(전봉민 의원 대표발의)"
   }, {
     "type" : "paragraph",
-    "id" : 789,
+    "id" : 790,
     "page number" : 16,
     "bounding box" : [ 328.92, 218.531, 545.64, 280.139 ],
     "font" : null,
@@ -6178,7 +6242,7 @@
     "content" : "(2024. 1. 25. 전봉민․서병수․이주환․이헌승․안병 길․김희곤․박수영․장제원․정동만․김도읍․조경 태․김미애․백종헌․윤재옥․하태경․박재호․전재수․ 황보승희․최인호 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 790,
+    "id" : 791,
     "page number" : 16,
     "bounding box" : [ 338.88, 186.928, 545.64, 215.56 ],
     "font" : null,
@@ -6187,7 +6251,7 @@
     "content" : "1월 26일 의견제시기간을 소관위원회의 심사 의결일 전일까지로 정하여 회부됨"
   }, {
     "type" : "paragraph",
-    "id" : 791,
+    "id" : 792,
     "page number" : 16,
     "bounding box" : [ 318.96, 155.128, 545.64, 183.76 ],
     "font" : null,
@@ -6196,7 +6260,7 @@
     "content" : "해오름산업벨트 지원에 관한 특별법안(이채익 의원 대표발의)"
   }, {
     "type" : "paragraph",
-    "id" : 792,
+    "id" : 793,
     "page number" : 16,
     "bounding box" : [ 328.92, 107.248, 545.64, 152.579 ],
     "font" : null,
@@ -6205,7 +6269,7 @@
     "content" : "(2024. 1. 29. 이채익․이상헌․박성민․김석기․권명 호․서범수․金炳旭․김기현․김정재․우신구․정경 희 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 793,
+    "id" : 794,
     "page number" : 16,
     "bounding box" : [ 338.88, 75.448, 545.64, 103.96 ],
     "font" : null,
@@ -6214,7 +6278,7 @@
     "content" : "1월 30일 의견제시기간을 소관위원회의 심사 의결일 전일까지로 정하여 회부됨"
   }, {
     "type" : "paragraph",
-    "id" : 794,
+    "id" : 795,
     "page number" : 16,
     "bounding box" : [ 318.96, 43.528, 545.64, 72.16 ],
     "font" : null,
@@ -6223,7 +6287,7 @@
     "content" : "메가시티 지원에 관한 특별법안(송갑석 의원 대표 발의)"
   }, {
     "type" : "header",
-    "id" : 795,
+    "id" : 796,
     "page number" : 17,
     "bounding box" : [ 355.08, 774.721, 545.666, 784.321 ],
     "kids" : [ {
@@ -6238,12 +6302,12 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 796,
+    "id" : 797,
     "page number" : 17,
     "bounding box" : [ 49.533, 768.839, 545.347, 769.918 ]
   }, {
     "type" : "paragraph",
-    "id" : 797,
+    "id" : 798,
     "page number" : 17,
     "bounding box" : [ 69.6, 681.088, 286.32, 758.339 ],
     "font" : null,
@@ -6252,7 +6316,7 @@
     "content" : "(2024. 2. 7. 송갑석ㆍ이형석ㆍ신정훈․조오섭․ 소병철ㆍ김회재․민형배ㆍ김영배ㆍ윤재갑․강훈 식ㆍ주철현ㆍ김승남․이개호ㆍ이용빈ㆍ서동용․ 오영환ㆍ이원택ㆍ윤영덕․이병훈ㆍ홍성국ㆍ송 기헌 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 798,
+    "id" : 799,
     "page number" : 17,
     "bounding box" : [ 79.56, 649.288, 286.32, 677.8 ],
     "font" : null,
@@ -6261,7 +6325,7 @@
     "content" : "2월 8일 의견제시기간을 소관위원회의 심사의 결일 전일까지로 정하여 회부됨"
   }, {
     "type" : "paragraph",
-    "id" : 799,
+    "id" : 800,
     "page number" : 17,
     "bounding box" : [ 59.52, 617.368, 286.32, 646.0 ],
     "font" : null,
@@ -6270,7 +6334,7 @@
     "content" : "인천 글로벌경제거점도시 조성에 관한 특별법안 (김교흥 의원 대표발의)"
   }, {
     "type" : "paragraph",
-    "id" : 800,
+    "id" : 801,
     "page number" : 17,
     "bounding box" : [ 69.6, 569.488, 286.32, 614.819 ],
     "font" : null,
@@ -6279,7 +6343,7 @@
     "content" : "(2024. 2. 23. 김교흥․이성만․정일영․유동수․허숙 정․허종식․이동주․배진교․박찬대․신동근 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 801,
+    "id" : 802,
     "page number" : 17,
     "bounding box" : [ 79.56, 537.688, 286.32, 566.32 ],
     "font" : null,
@@ -6288,7 +6352,7 @@
     "content" : "2월 26일 의견제시기간을 소관위원회의 심사 의결일 전일까지로 정하여 회부됨"
   }, {
     "type" : "paragraph",
-    "id" : 802,
+    "id" : 803,
     "page number" : 17,
     "bounding box" : [ 59.52, 505.768, 286.32, 534.4 ],
     "font" : null,
@@ -6297,7 +6361,7 @@
     "content" : "대규모유통업에서의 거래 공정화에 관한 법률 일부개정법률안(양경규 의원 대표발의)"
   }, {
     "type" : "paragraph",
-    "id" : 803,
+    "id" : 804,
     "page number" : 17,
     "bounding box" : [ 69.6, 458.008, 286.32, 503.219 ],
     "font" : null,
@@ -6306,7 +6370,7 @@
     "content" : "(2024. 3. 27. 양경규․윤미향․강성희․장혜영․강은 미․배진교․박용진․이자스민․심상정․김주영 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 804,
+    "id" : 805,
     "page number" : 17,
     "bounding box" : [ 79.56, 426.088, 286.32, 454.72 ],
     "font" : null,
@@ -6315,7 +6379,7 @@
     "content" : "3월 28일 의견제시기간을 소관위원회의 심사 의결일 전일까지로 정하여 회부됨"
   }, {
     "type" : "paragraph",
-    "id" : 805,
+    "id" : 806,
     "page number" : 17,
     "bounding box" : [ 59.52, 394.168, 286.32, 422.8 ],
     "font" : null,
@@ -6324,7 +6388,7 @@
     "content" : "행정수도 완성을 위한 특별법안(정진석 의원 대표 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 806,
+    "id" : 807,
     "page number" : 17,
     "bounding box" : [ 69.6, 346.408, 286.32, 391.619 ],
     "font" : null,
@@ -6333,7 +6397,7 @@
     "content" : "(2024. 3. 28. 정진석․이명수․유상범․金炳旭․지성 호․최형두․구자근․정동만․김은희․태영호 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 807,
+    "id" : 808,
     "page number" : 17,
     "bounding box" : [ 79.56, 314.488, 286.32, 343.12 ],
     "font" : null,
@@ -6342,7 +6406,7 @@
     "content" : "3월 29일 의견제시기간을 소관위원회의 심사 의결일 전일까지로 정하여 회부됨"
   }, {
     "type" : "paragraph",
-    "id" : 808,
+    "id" : 809,
     "page number" : 17,
     "bounding box" : [ 59.52, 282.568, 286.32, 311.2 ],
     "font" : null,
@@ -6351,7 +6415,7 @@
     "content" : "법령에 따른 의무교육에 관한 특례법안(강민정 의원 대표발의)"
   }, {
     "type" : "paragraph",
-    "id" : 809,
+    "id" : 810,
     "page number" : 17,
     "bounding box" : [ 69.6, 234.808, 286.32, 280.139 ],
     "font" : null,
@@ -6360,7 +6424,7 @@
     "content" : "(2024. 4. 18. 강민정․윤영덕․민병덕․서동용․이탄 희․양이원영․김영호․도종환․장경태․문정복․민형 배 의원 발의)"
   }, {
     "type" : "paragraph",
-    "id" : 810,
+    "id" : 811,
     "page number" : 17,
     "bounding box" : [ 79.56, 202.888, 286.32, 231.52 ],
     "font" : null,
@@ -6368,18 +6432,28 @@
     "text color" : "[0.0]",
     "content" : "4월 19일 의견제시기간을 소관위원회의 심사 의결일 전일까지로 정하여 회부됨"
   }, {
-    "type" : "paragraph",
-    "id" : 811,
-    "level" : "3",
+    "type" : "list",
+    "id" : 812,
+    "level" : "4",
     "page number" : 17,
     "bounding box" : [ 49.56, 155.128, 286.32, 200.339 ],
-    "font" : null,
-    "font size" : 10.56,
-    "text color" : "[0.0]",
-    "content" : "◯결정서 송부 구 산업재해보상보험법 제37조 제1항 등 위헌 소원"
+    "numbering style" : "unordered",
+    "number of list items" : 1,
+    "previous list id" : 703,
+    "next list id" : 838,
+    "list items" : [ {
+      "type" : "list item",
+      "page number" : 17,
+      "bounding box" : [ 49.56, 155.128, 286.32, 200.339 ],
+      "font" : "HCRBatang-Bold",
+      "font size" : 10.56,
+      "text color" : "[0.0]",
+      "content" : "◯결정서 송부 구 산업재해보상보험법 제37조 제1항 등 위헌 소원",
+      "kids" : [ ]
+    } ]
   }, {
     "type" : "paragraph",
-    "id" : 812,
+    "id" : 813,
     "page number" : 17,
     "bounding box" : [ 69.6, 139.168, 166.811, 151.84 ],
     "font" : "Batang",
@@ -6388,7 +6462,7 @@
     "content" : "(2024. 1. 25. 선고)"
   }, {
     "type" : "paragraph",
-    "id" : 813,
+    "id" : 814,
     "page number" : 17,
     "bounding box" : [ 79.56, 107.248, 286.32, 135.88 ],
     "font" : null,
@@ -6397,7 +6471,7 @@
     "content" : "2월 5일 헌법재판소장으로부터 헌법소원심판 결정 통지가 있어 송부됨"
   }, {
     "type" : "paragraph",
-    "id" : 814,
+    "id" : 815,
     "page number" : 17,
     "bounding box" : [ 59.52, 59.488, 286.319, 103.96 ],
     "font" : null,
@@ -6406,7 +6480,7 @@
     "content" : "최저임금법 제8조 제1항 등 위헌확인 고용보험 및 산업재해보상보험의 보험료징수 등에 관한 법률 제33조 제1항 등 위헌확인"
   }, {
     "type" : "paragraph",
-    "id" : 815,
+    "id" : 816,
     "page number" : 17,
     "bounding box" : [ 69.6, 43.528, 214.931, 56.2 ],
     "font" : "Batang",
@@ -6415,7 +6489,7 @@
     "content" : "(이상 2건 2024. 2. 28. 선고)"
   }, {
     "type" : "paragraph",
-    "id" : 816,
+    "id" : 817,
     "page number" : 17,
     "bounding box" : [ 338.88, 728.968, 545.64, 757.6 ],
     "font" : null,
@@ -6424,7 +6498,7 @@
     "content" : "3월 7일 헌법재판소장으로부터 위 2건에 대한 헌법소원심판결정 통지가 있어 송부됨"
   }, {
     "type" : "paragraph",
-    "id" : 817,
+    "id" : 818,
     "page number" : 17,
     "bounding box" : [ 318.96, 713.008, 545.64, 725.68 ],
     "font" : null,
@@ -6433,8 +6507,8 @@
     "content" : "교원의 노동조합 설립 및 운영 등에 관한 법률"
   }, {
     "type" : "paragraph",
-    "id" : 818,
-    "level" : "4",
+    "id" : 819,
+    "level" : "5",
     "page number" : 17,
     "bounding box" : [ 318.96, 665.128, 545.64, 709.72 ],
     "font" : null,
@@ -6443,7 +6517,7 @@
     "content" : "제5조 제3항 등 위헌확인 공무원의 노동조합 설립 및 운영 등에 관한 법 률 제7조 제3항 등 위헌확인"
   }, {
     "type" : "paragraph",
-    "id" : 819,
+    "id" : 820,
     "page number" : 17,
     "bounding box" : [ 328.92, 649.288, 474.251, 661.96 ],
     "font" : "Batang",
@@ -6452,7 +6526,7 @@
     "content" : "(이상 2건 2024. 3. 28. 선고)"
   }, {
     "type" : "paragraph",
-    "id" : 820,
+    "id" : 821,
     "page number" : 17,
     "bounding box" : [ 338.88, 617.368, 545.64, 646.0 ],
     "font" : null,
@@ -6461,7 +6535,7 @@
     "content" : "4월 13일 헌법재판소장으로부터 위 2건에 대한 헌법소원심판결정 통지가 있어 송부됨"
   }, {
     "type" : "paragraph",
-    "id" : 821,
+    "id" : 822,
     "page number" : 17,
     "bounding box" : [ 318.96, 585.448, 545.64, 614.08 ],
     "font" : null,
@@ -6470,7 +6544,7 @@
     "content" : "공무원의 노동조합 설립 및 운영 등에 관한 법 률 제6조 제1항 제2호 위헌제청"
   }, {
     "type" : "paragraph",
-    "id" : 822,
+    "id" : 823,
     "page number" : 17,
     "bounding box" : [ 328.92, 569.488, 426.131, 582.16 ],
     "font" : "Batang",
@@ -6479,7 +6553,7 @@
     "content" : "(2024. 2. 28. 선고)"
   }, {
     "type" : "paragraph",
-    "id" : 823,
+    "id" : 824,
     "page number" : 17,
     "bounding box" : [ 338.88, 537.688, 545.64, 566.32 ],
     "font" : null,
@@ -6488,19 +6562,19 @@
     "content" : "3월 7일 헌법재판소장으로부터 위헌법률심판결 정 통지가 있어 송부됨"
   }, {
     "type" : "Caption",
-    "id" : 824,
+    "id" : 825,
     "level" : "3",
     "page number" : 17,
     "bounding box" : [ 308.88, 521.411, 387.24, 535.139 ],
-    "linked content id" : 825,
+    "linked content id" : 826,
     "font" : null,
     "font size" : 10.56,
     "text color" : "[0.0]",
     "content" : "◯행정입법 제출"
   }, {
     "type" : "table",
-    "id" : 825,
-    "level" : "4",
+    "id" : 826,
+    "level" : "5",
     "page number" : 17,
     "bounding box" : [ 309.973, 469.946, 543.428, 518.733 ],
     "number of rows" : 3,
@@ -7003,7 +7077,7 @@
     } ]
   }, {
     "type" : "header",
-    "id" : 826,
+    "id" : 827,
     "page number" : 18,
     "bounding box" : [ 49.56, 774.721, 240.069, 784.321 ],
     "kids" : [ {
@@ -7018,18 +7092,18 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 827,
+    "id" : 828,
     "page number" : 18,
     "bounding box" : [ 49.533, 768.839, 545.347, 769.918 ]
   }, {
     "type" : "table",
-    "id" : 828,
-    "level" : "5",
+    "id" : 829,
+    "level" : "6",
     "page number" : 18,
     "bounding box" : [ 50.793, 98.352, 282.688, 754.755 ],
     "number of rows" : 13,
     "number of columns" : 5,
-    "next table id" : 829,
+    "next table id" : 830,
     "rows" : [ {
       "type" : "table row",
       "row number" : 1,
@@ -8265,14 +8339,14 @@
     } ]
   }, {
     "type" : "table",
-    "id" : 829,
-    "level" : "5",
+    "id" : 830,
+    "level" : "6",
     "page number" : 18,
     "bounding box" : [ 309.973, 62.991, 541.869, 754.755 ],
     "number of rows" : 16,
     "number of columns" : 5,
-    "previous table id" : 828,
-    "next table id" : 832,
+    "previous table id" : 829,
+    "next table id" : 833,
     "rows" : [ {
       "type" : "table row",
       "row number" : 1,
@@ -9780,7 +9854,7 @@
     } ]
   }, {
     "type" : "header",
-    "id" : 830,
+    "id" : 831,
     "page number" : 19,
     "bounding box" : [ 355.08, 774.721, 545.666, 784.321 ],
     "kids" : [ {
@@ -9795,19 +9869,19 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 831,
+    "id" : 832,
     "page number" : 19,
     "bounding box" : [ 49.533, 768.839, 545.347, 769.918 ]
   }, {
     "type" : "table",
-    "id" : 832,
-    "level" : "5",
+    "id" : 833,
+    "level" : "6",
     "page number" : 19,
     "bounding box" : [ 50.793, 17.561, 282.688, 754.755 ],
     "number of rows" : 18,
     "number of columns" : 5,
-    "previous table id" : 829,
-    "next table id" : 833,
+    "previous table id" : 830,
+    "next table id" : 834,
     "rows" : [ {
       "type" : "table row",
       "row number" : 1,
@@ -11503,14 +11577,14 @@
     } ]
   }, {
     "type" : "table",
-    "id" : 833,
-    "level" : "5",
+    "id" : 834,
+    "level" : "6",
     "page number" : 19,
     "bounding box" : [ 309.973, 17.561, 541.869, 754.755 ],
     "number of rows" : 18,
     "number of columns" : 5,
-    "previous table id" : 832,
-    "next table id" : 836,
+    "previous table id" : 833,
+    "next table id" : 837,
     "rows" : [ {
       "type" : "table row",
       "row number" : 1,
@@ -13206,7 +13280,7 @@
     } ]
   }, {
     "type" : "header",
-    "id" : 834,
+    "id" : 835,
     "page number" : 20,
     "bounding box" : [ 49.56, 774.721, 240.069, 784.321 ],
     "kids" : [ {
@@ -13221,18 +13295,18 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 835,
+    "id" : 836,
     "page number" : 20,
     "bounding box" : [ 49.533, 768.839, 545.347, 769.918 ]
   }, {
     "type" : "table",
-    "id" : 836,
-    "level" : "5",
+    "id" : 837,
+    "level" : "6",
     "page number" : 20,
     "bounding box" : [ 50.793, 542.466, 282.688, 754.755 ],
     "number of rows" : 5,
     "number of columns" : 5,
-    "previous table id" : 833,
+    "previous table id" : 834,
     "rows" : [ {
       "type" : "table row",
       "row number" : 1,
@@ -13705,37 +13779,99 @@
       } ]
     } ]
   }, {
-    "type" : "Caption",
-    "id" : 837,
-    "level" : "3",
-    "page number" : 20,
-    "bounding box" : [ 49.56, 492.568, 286.32, 537.779 ],
-    "linked content id" : 836,
-    "font" : null,
-    "font size" : 10.56,
-    "text color" : "[0.0]",
-    "content" : "◯보고서 제출 2023년도 제4차 고용보험기금 운용계획 변경 명세서"
-  }, {
-    "type" : "paragraph",
+    "type" : "list",
     "id" : 838,
+    "level" : "4",
     "page number" : 20,
-    "bounding box" : [ 59.52, 460.648, 226.331, 489.28 ],
-    "font" : null,
-    "font size" : 10.56,
-    "text color" : "[0.0]",
-    "content" : "(2023. 1. 4. 고용노동부장관 제출) 예비타당성조사 결과 요약보고서"
-  }, {
-    "type" : "paragraph",
-    "id" : 839,
-    "page number" : 20,
-    "bounding box" : [ 59.52, 365.008, 278.039, 457.36 ],
-    "font" : null,
-    "font size" : 10.56,
-    "text color" : "[0.0]",
-    "content" : "(2023. 12. 26. 기획재정부장관 제출) 2024년도 예산 및 2023년도 예산 변경(7차) (2023. 12. 27. 한국환경산업기술원장 제출) 2023년도 근로복지진흥기금 자체 전용명세서 (2024. 1. 4. 근로복지공단이사장 제출) 2023년 행정기관 소관 위원회 활동내역"
+    "bounding box" : [ 49.56, 524.051, 117.48, 537.779 ],
+    "numbering style" : "unordered",
+    "number of list items" : 1,
+    "previous list id" : 812,
+    "list items" : [ {
+      "type" : "list item",
+      "page number" : 20,
+      "bounding box" : [ 49.56, 524.051, 117.48, 537.779 ],
+      "font" : "HCRBatang-Bold",
+      "font size" : 10.56,
+      "text color" : "[0.0]",
+      "content" : "◯보고서 제출",
+      "kids" : [ ]
+    } ]
   }, {
     "type" : "list",
+    "id" : 839,
+    "level" : "1",
+    "page number" : 20,
+    "bounding box" : [ 59.52, 492.568, 286.32, 521.2 ],
+    "numbering style" : "arabic numbers",
+    "number of list items" : 1,
+    "list items" : [ {
+      "type" : "list item",
+      "page number" : 20,
+      "bounding box" : [ 59.52, 492.568, 286.32, 521.2 ],
+      "font" : "Dotum",
+      "font size" : 10.56,
+      "text color" : "[0.0]",
+      "content" : "2023년도 제4차 고용보험기금 운용계획 변경 명세서",
+      "kids" : [ {
+        "type" : "paragraph",
+        "id" : 501,
+        "page number" : 20,
+        "bounding box" : [ 59.52, 460.648, 226.331, 489.28 ],
+        "font" : null,
+        "font size" : 10.56,
+        "text color" : "[0.0]",
+        "content" : "(2023. 1. 4. 고용노동부장관 제출) 예비타당성조사 결과 요약보고서"
+      }, {
+        "type" : "list",
+        "id" : 502,
+        "level" : "4",
+        "page number" : 20,
+        "bounding box" : [ 69.6, 412.888, 266.771, 457.36 ],
+        "numbering style" : "arabic numbers",
+        "number of list items" : 2,
+        "list items" : [ {
+          "type" : "list item",
+          "page number" : 20,
+          "bounding box" : [ 69.6, 444.688, 237.851, 457.36 ],
+          "font" : "Batang",
+          "font size" : 10.56,
+          "text color" : "[0.0]",
+          "content" : "(2023. 12. 26. 기획재정부장관 제출)",
+          "kids" : [ {
+            "type" : "paragraph",
+            "id" : 500,
+            "page number" : 20,
+            "bounding box" : [ 59.52, 428.728, 272.16, 441.4 ],
+            "font" : null,
+            "font size" : 10.56,
+            "text color" : "[0.0]",
+            "content" : "2024년도 예산 및 2023년도 예산 변경(7차)"
+          } ]
+        }, {
+          "type" : "list item",
+          "page number" : 20,
+          "bounding box" : [ 69.6, 412.888, 266.771, 425.56 ],
+          "font" : "Batang",
+          "font size" : 10.56,
+          "text color" : "[0.0]",
+          "content" : "(2023. 12. 27. 한국환경산업기술원장 제출)",
+          "kids" : [ ]
+        } ]
+      } ]
+    } ]
+  }, {
+    "type" : "paragraph",
     "id" : 840,
+    "page number" : 20,
+    "bounding box" : [ 59.52, 365.008, 278.039, 409.6 ],
+    "font" : null,
+    "font size" : 10.56,
+    "text color" : "[0.0]",
+    "content" : "2023년도 근로복지진흥기금 자체 전용명세서 (2024. 1. 4. 근로복지공단이사장 제출) 2023년 행정기관 소관 위원회 활동내역"
+  }, {
+    "type" : "list",
+    "id" : 841,
     "level" : "1",
     "page number" : 20,
     "bounding box" : [ 59.52, 301.288, 272.64, 362.459 ],
@@ -13762,7 +13898,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 841,
+    "id" : 842,
     "page number" : 20,
     "bounding box" : [ 59.52, 285.011, 192.84, 298.739 ],
     "font" : null,
@@ -13771,74 +13907,110 @@
     "content" : "2023년 4분기 이․전용 현황"
   }, {
     "type" : "list",
-    "id" : 842,
+    "id" : 843,
     "level" : "3",
     "page number" : 20,
-    "bounding box" : [ 59.52, 205.648, 286.317, 282.04 ],
+    "bounding box" : [ 69.6, 221.608, 232.091, 282.04 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 2,
     "list items" : [ {
       "type" : "list item",
       "page number" : 20,
-      "bounding box" : [ 59.52, 237.448, 286.317, 282.04 ],
+      "bounding box" : [ 69.6, 269.368, 232.091, 282.04 ],
       "font" : "Batang",
       "font size" : 10.56,
       "text color" : "[0.0]",
-      "content" : "(2024. 1. 19. 고용노동부장관 제출) 2023년도 4분기 산업재해보상보험및예방기금 운용계획 변경내역",
-      "kids" : [ ]
+      "content" : "(2024. 1. 19. 고용노동부장관 제출)",
+      "kids" : [ {
+        "type" : "paragraph",
+        "id" : 499,
+        "page number" : 20,
+        "bounding box" : [ 59.52, 237.448, 286.317, 266.08 ],
+        "font" : null,
+        "font size" : 10.56,
+        "text color" : "[0.0]",
+        "content" : "2023년도 4분기 산업재해보상보험및예방기금 운용계획 변경내역"
+      } ]
     }, {
       "type" : "list item",
       "page number" : 20,
-      "bounding box" : [ 59.52, 205.648, 226.331, 234.28 ],
+      "bounding box" : [ 69.6, 221.608, 226.331, 234.28 ],
       "font" : "Batang",
       "font size" : 10.56,
       "text color" : "[0.0]",
-      "content" : "(2024. 2. 5. 고용노동부장관 제출) 2023년도 연간감사보고서",
+      "content" : "(2024. 2. 5. 고용노동부장관 제출)",
       "kids" : [ ]
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 843,
-    "page number" : 20,
-    "bounding box" : [ 59.52, 173.728, 280.801, 202.36 ],
-    "font" : null,
-    "font size" : 10.56,
-    "text color" : "[0.0]",
-    "content" : "(2024. 2. 26. 한국장애인고용공단이사장 제출) 2023년도 안전보건공단 감사결과 종합 보고서"
-  }, {
-    "type" : "paragraph",
     "id" : 844,
     "page number" : 20,
-    "bounding box" : [ 59.52, 141.808, 286.211, 170.44 ],
+    "bounding box" : [ 59.52, 157.768, 286.211, 218.32 ],
     "font" : null,
     "font size" : 10.56,
     "text color" : "[0.0]",
-    "content" : "(2024. 2. 26. 한국산업안전보건공단이사장 제출) 2023년도 연간 감사결과"
+    "content" : "2023년도 연간감사보고서 (2024. 2. 26. 한국장애인고용공단이사장 제출) 2023년도 안전보건공단 감사결과 종합 보고서 (2024. 2. 26. 한국산업안전보건공단이사장 제출)"
   }, {
     "type" : "list",
     "id" : 845,
-    "level" : "3",
+    "level" : "1",
     "page number" : 20,
-    "bounding box" : [ 59.52, 46.168, 286.32, 138.64 ],
+    "bounding box" : [ 59.52, 46.168, 286.32, 154.48 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 2,
     "list items" : [ {
       "type" : "list item",
       "page number" : 20,
-      "bounding box" : [ 59.52, 94.048, 286.32, 138.64 ],
-      "font" : "Batang",
+      "bounding box" : [ 59.52, 141.808, 178.439, 154.48 ],
+      "font" : "Dotum",
       "font size" : 10.56,
       "text color" : "[0.0]",
-      "content" : "(2024. 2. 28. 한국수자원공사사장 제출) 공공기관 청년고용의무제 이행 현황 및 조치 결과",
-      "kids" : [ ]
+      "content" : "2023년도 연간 감사결과",
+      "kids" : [ {
+        "type" : "list",
+        "id" : 498,
+        "level" : "3",
+        "page number" : 20,
+        "bounding box" : [ 69.6, 78.088, 251.411, 138.64 ],
+        "numbering style" : "arabic numbers",
+        "number of list items" : 2,
+        "list items" : [ {
+          "type" : "list item",
+          "page number" : 20,
+          "bounding box" : [ 69.6, 125.968, 251.411, 138.64 ],
+          "font" : "Batang",
+          "font size" : 10.56,
+          "text color" : "[0.0]",
+          "content" : "(2024. 2. 28. 한국수자원공사사장 제출)",
+          "kids" : [ {
+            "type" : "paragraph",
+            "id" : 497,
+            "page number" : 20,
+            "bounding box" : [ 59.52, 94.048, 286.32, 122.68 ],
+            "font" : null,
+            "font size" : 10.56,
+            "text color" : "[0.0]",
+            "content" : "공공기관 청년고용의무제 이행 현황 및 조치 결과"
+          } ]
+        }, {
+          "type" : "list item",
+          "page number" : 20,
+          "bounding box" : [ 69.6, 78.088, 226.331, 90.76 ],
+          "font" : "Batang",
+          "font size" : 10.56,
+          "text color" : "[0.0]",
+          "content" : "(2024. 3. 4. 고용노동부장관 제출)",
+          "kids" : [ ]
+        } ]
+      } ]
     }, {
       "type" : "list item",
       "page number" : 20,
-      "bounding box" : [ 59.52, 46.168, 286.32, 90.76 ],
-      "font" : "Batang",
+      "bounding box" : [ 59.52, 46.168, 286.32, 74.8 ],
+      "font" : "Dotum",
       "font size" : 10.56,
       "text color" : "[0.0]",
-      "content" : "(2024. 3. 4. 고용노동부장관 제출) 2024년도 한국환경산업기술원 예산 변경(1차) 보고",
+      "content" : "2024년도 한국환경산업기술원 예산 변경(1차) 보고",
       "kids" : [ ]
     } ]
   }, {
@@ -13855,7 +14027,7 @@
     "id" : 847,
     "level" : "4",
     "page number" : 20,
-    "bounding box" : [ 318.96, 696.731, 545.64, 741.64 ],
+    "bounding box" : [ 318.96, 681.088, 545.64, 741.64 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 2,
     "list items" : [ {
@@ -13870,97 +14042,142 @@
     }, {
       "type" : "list item",
       "page number" : 20,
-      "bounding box" : [ 318.96, 696.731, 545.64, 710.459 ],
+      "bounding box" : [ 318.96, 681.088, 545.64, 710.459 ],
       "font" : "Dotum",
       "font size" : 10.56,
       "text color" : "[0.0]",
-      "content" : "2024년 영산강․섬진강수계관리기금 운용계획",
+      "content" : "2024년 영산강․섬진강수계관리기금 운용계획 변경 명세서",
       "kids" : [ ]
     } ]
   }, {
-    "type" : "paragraph",
+    "type" : "list",
     "id" : 848,
+    "level" : "5",
     "page number" : 20,
-    "bounding box" : [ 318.96, 681.088, 376.081, 693.76 ],
-    "font" : null,
-    "font size" : 10.56,
-    "text color" : "[0.0]",
-    "content" : "변경 명세서"
+    "bounding box" : [ 328.92, 664.811, 544.811, 678.539 ],
+    "numbering style" : "arabic numbers",
+    "number of list items" : 1,
+    "list items" : [ {
+      "type" : "list item",
+      "page number" : 20,
+      "bounding box" : [ 328.92, 664.811, 544.811, 678.539 ],
+      "font" : "Batang",
+      "font size" : 10.56,
+      "text color" : "[0.0]",
+      "content" : "(2024. 3. 29. 영산강․섬진강수계관리위원장 제출)",
+      "kids" : [ {
+        "type" : "list",
+        "id" : 496,
+        "level" : "4",
+        "page number" : 20,
+        "bounding box" : [ 318.96, 569.171, 467.64, 661.96 ],
+        "numbering style" : "arabic numbers",
+        "number of list items" : 2,
+        "list items" : [ {
+          "type" : "list item",
+          "page number" : 20,
+          "bounding box" : [ 318.96, 649.288, 467.64, 661.96 ],
+          "font" : "Dotum",
+          "font size" : 10.56,
+          "text color" : "[0.0]",
+          "content" : "2023년도 환경부 자체평가결과",
+          "kids" : [ {
+            "type" : "paragraph",
+            "id" : 494,
+            "page number" : 20,
+            "bounding box" : [ 318.96, 601.408, 545.64, 646.0 ],
+            "font" : null,
+            "font size" : 10.56,
+            "text color" : "[0.0]",
+            "content" : "(2024. 3. 30. 환경부장관 제출) 근로복지진흥기금 자산운용지침(완전위탁형) 개정 결과"
+          }, {
+            "type" : "paragraph",
+            "id" : 495,
+            "page number" : 20,
+            "bounding box" : [ 328.92, 585.448, 510.731, 598.12 ],
+            "font" : null,
+            "font size" : 10.56,
+            "text color" : "[0.0]",
+            "content" : "(2024. 3. 30. 근로복지공단이사장 제출)"
+          } ]
+        }, {
+          "type" : "list item",
+          "page number" : 20,
+          "bounding box" : [ 318.96, 569.171, 450.84, 582.899 ],
+          "font" : "Dotum",
+          "font size" : 10.56,
+          "text color" : "[0.0]",
+          "content" : "2024년 1분기 이․전용 현황",
+          "kids" : [ ]
+        } ]
+      } ]
+    } ]
   }, {
     "type" : "list",
     "id" : 849,
-    "level" : "5",
+    "level" : "4",
     "page number" : 20,
-    "bounding box" : [ 318.96, 601.408, 545.64, 678.539 ],
+    "bounding box" : [ 318.96, 426.088, 535.811, 566.32 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 2,
     "list items" : [ {
       "type" : "list item",
       "page number" : 20,
-      "bounding box" : [ 318.96, 649.288, 544.811, 678.539 ],
-      "font" : "Batang",
+      "bounding box" : [ 318.96, 537.688, 535.811, 566.32 ],
+      "font" : "Dotum",
       "font size" : 10.56,
       "text color" : "[0.0]",
-      "content" : "(2024. 3. 29. 영산강․섬진강수계관리위원장 제출) 2023년도 환경부 자체평가결과",
-      "kids" : [ ]
+      "content" : "2023년도 고용노동부 자체평가 결과보고서 (이상 2건 2024. 4. 13. 고용노동부장관 제출)",
+      "kids" : [ {
+        "type" : "paragraph",
+        "id" : 491,
+        "page number" : 20,
+        "bounding box" : [ 318.96, 521.411, 513.84, 535.139 ],
+        "font" : null,
+        "font size" : 10.56,
+        "text color" : "[0.0]",
+        "content" : "영산강․섬진강수계관리기금 자산운용지침"
+      }, {
+        "type" : "paragraph",
+        "id" : 492,
+        "page number" : 20,
+        "bounding box" : [ 318.96, 473.848, 545.64, 519.179 ],
+        "font" : null,
+        "font size" : 10.56,
+        "text color" : "[0.0]",
+        "content" : "(2024. 4. 13. 영산강․섬진강수계관리위원장 제출) 화학물질․제품 관련 중대재해 예방조치 및 지원 현황"
+      }, {
+        "type" : "paragraph",
+        "id" : 493,
+        "page number" : 20,
+        "bounding box" : [ 328.92, 458.008, 472.211, 470.68 ],
+        "font" : null,
+        "font size" : 10.56,
+        "text color" : "[0.0]",
+        "content" : "(2024. 4. 13. 환경부장관 제출)"
+      } ]
     }, {
       "type" : "list item",
       "page number" : 20,
-      "bounding box" : [ 318.96, 601.408, 545.64, 646.0 ],
-      "font" : "Batang",
+      "bounding box" : [ 318.96, 426.088, 520.32, 454.72 ],
+      "font" : "Dotum",
       "font size" : 10.56,
       "text color" : "[0.0]",
-      "content" : "(2024. 3. 30. 환경부장관 제출) 근로복지진흥기금 자산운용지침(완전위탁형) 개정 결과",
+      "content" : "2024년 1분기 기상청 세출예산 전용 결과 (2024. 4. 13. 기상청장 제출)",
       "kids" : [ ]
     } ]
   }, {
     "type" : "paragraph",
     "id" : 850,
     "page number" : 20,
-    "bounding box" : [ 318.96, 553.648, 524.64, 598.12 ],
+    "bounding box" : [ 318.96, 394.168, 545.641, 422.8 ],
     "font" : null,
     "font size" : 10.56,
     "text color" : "[0.0]",
-    "content" : "(2024. 3. 30. 근로복지공단이사장 제출) 2024년 1분기 이․전용 현황 2023년도 고용노동부 자체평가 결과보고서"
-  }, {
-    "type" : "paragraph",
-    "id" : 851,
-    "page number" : 20,
-    "bounding box" : [ 318.96, 521.411, 535.811, 550.36 ],
-    "font" : null,
-    "font size" : 10.56,
-    "text color" : "[0.0]",
-    "content" : "(이상 2건 2024. 4. 13. 고용노동부장관 제출) 영산강․섬진강수계관리기금 자산운용지침"
-  }, {
-    "type" : "paragraph",
-    "id" : 852,
-    "page number" : 20,
-    "bounding box" : [ 318.96, 473.848, 545.64, 519.179 ],
-    "font" : null,
-    "font size" : 10.56,
-    "text color" : "[0.0]",
-    "content" : "(2024. 4. 13. 영산강․섬진강수계관리위원장 제출) 화학물질․제품 관련 중대재해 예방조치 및 지원 현황"
-  }, {
-    "type" : "paragraph",
-    "id" : 853,
-    "page number" : 20,
-    "bounding box" : [ 318.96, 442.048, 520.32, 470.68 ],
-    "font" : null,
-    "font size" : 10.56,
-    "text color" : "[0.0]",
-    "content" : "(2024. 4. 13. 환경부장관 제출) 2024년 1분기 기상청 세출예산 전용 결과"
-  }, {
-    "type" : "paragraph",
-    "id" : 854,
-    "page number" : 20,
-    "bounding box" : [ 318.96, 394.168, 545.641, 438.76 ],
-    "font" : null,
-    "font size" : 10.56,
-    "text color" : "[0.0]",
-    "content" : "(2024. 4. 13. 기상청장 제출) 2024년도 1분기 산업재해보상보험및예방기금 운용계획 변경내역"
+    "content" : "2024년도 1분기 산업재해보상보험및예방기금 운용계획 변경내역"
   }, {
     "type" : "list",
-    "id" : 855,
+    "id" : 851,
     "level" : "1",
     "page number" : 20,
     "bounding box" : [ 318.96, 330.448, 539.52, 390.88 ],
@@ -13987,7 +14204,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 856,
+    "id" : 852,
     "page number" : 20,
     "bounding box" : [ 318.96, 314.171, 518.16, 327.899 ],
     "font" : null,
@@ -13996,48 +14213,75 @@
     "content" : "2024년도 1분기 세출예산 이․전용 내역서"
   }, {
     "type" : "list",
-    "id" : 857,
-    "level" : "4",
+    "id" : 853,
+    "level" : "3",
     "page number" : 20,
-    "bounding box" : [ 318.96, 218.848, 545.641, 311.2 ],
+    "bounding box" : [ 328.92, 250.768, 491.531, 311.2 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 2,
     "list items" : [ {
       "type" : "list item",
       "page number" : 20,
-      "bounding box" : [ 318.96, 266.728, 545.641, 311.2 ],
+      "bounding box" : [ 328.92, 298.528, 472.211, 311.2 ],
       "font" : "Batang",
       "font size" : 10.56,
       "text color" : "[0.0]",
-      "content" : "(2024. 4. 21. 환경부장관 제출) 2024년도 1분기 기금운용계획 변경내역(고용보 험기금)",
-      "kids" : [ ]
+      "content" : "(2024. 4. 21. 환경부장관 제출)",
+      "kids" : [ {
+        "type" : "paragraph",
+        "id" : 490,
+        "page number" : 20,
+        "bounding box" : [ 318.96, 266.728, 545.641, 295.24 ],
+        "font" : null,
+        "font size" : 10.56,
+        "text color" : "[0.0]",
+        "content" : "2024년도 1분기 기금운용계획 변경내역(고용보 험기금)"
+      } ]
     }, {
       "type" : "list item",
       "page number" : 20,
-      "bounding box" : [ 318.96, 218.848, 545.641, 263.44 ],
+      "bounding box" : [ 328.92, 250.768, 491.531, 263.44 ],
       "font" : "Batang",
       "font size" : 10.56,
       "text color" : "[0.0]",
-      "content" : "(2024. 4. 22. 고용노동부장관 제출) 2024년도 1/4분기 근로복지진흥기금운용계획 변경내역",
+      "content" : "(2024. 4. 22. 고용노동부장관 제출)",
       "kids" : [ ]
     } ]
   }, {
-    "type" : "list",
-    "id" : 858,
-    "level" : "3",
+    "type" : "paragraph",
+    "id" : 854,
     "page number" : 20,
-    "bounding box" : [ 318.96, 171.088, 510.731, 215.56 ],
+    "bounding box" : [ 318.96, 218.848, 545.641, 247.48 ],
+    "font" : null,
+    "font size" : 10.56,
+    "text color" : "[0.0]",
+    "content" : "2024년도 1/4분기 근로복지진흥기금운용계획 변경내역"
+  }, {
+    "type" : "list",
+    "id" : 855,
+    "level" : "4",
+    "page number" : 20,
+    "bounding box" : [ 328.92, 171.088, 510.731, 215.56 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 2,
     "list items" : [ {
       "type" : "list item",
       "page number" : 20,
-      "bounding box" : [ 318.96, 186.928, 510.731, 215.56 ],
+      "bounding box" : [ 328.92, 202.888, 510.731, 215.56 ],
       "font" : "Batang",
       "font size" : 10.56,
       "text color" : "[0.0]",
-      "content" : "(2024. 4. 25. 근로복지공단이사장 제출) 2024년도 환경부 성과관리시행계획",
-      "kids" : [ ]
+      "content" : "(2024. 4. 25. 근로복지공단이사장 제출)",
+      "kids" : [ {
+        "type" : "paragraph",
+        "id" : 489,
+        "page number" : 20,
+        "bounding box" : [ 318.96, 186.928, 488.4, 199.6 ],
+        "font" : null,
+        "font size" : 10.56,
+        "text color" : "[0.0]",
+        "content" : "2024년도 환경부 성과관리시행계획"
+      } ]
     }, {
       "type" : "list item",
       "page number" : 20,
@@ -14050,19 +14294,19 @@
     } ]
   }, {
     "type" : "Caption",
-    "id" : 859,
-    "level" : "4",
+    "id" : 856,
+    "level" : "5",
     "page number" : 20,
     "bounding box" : [ 308.88, 139.168, 412.44, 168.539 ],
-    "linked content id" : 860,
+    "linked content id" : 857,
     "font" : null,
     "font size" : 10.56,
     "text color" : "[0.0]",
     "content" : "◯통지 국회의원 궐원 통지"
   }, {
     "type" : "table",
-    "id" : 860,
-    "level" : "5",
+    "id" : 857,
+    "level" : "6",
     "page number" : 20,
     "bounding box" : [ 309.973, 103.986, 538.51, 136.591 ],
     "number of rows" : 2,

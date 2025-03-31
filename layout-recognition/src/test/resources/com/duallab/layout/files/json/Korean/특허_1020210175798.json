@@ -7,22 +7,22 @@
   "modification date" : "D:20230615034641+09'00'",
   "kids" : [ {
     "type" : "image",
-    "id" : 104,
+    "id" : 140,
     "page number" : 1,
     "bounding box" : [ 63.48, 731.28, 538.68, 766.92 ]
   }, {
     "type" : "image",
-    "id" : 105,
+    "id" : 141,
     "page number" : 1,
     "bounding box" : [ 69.84, 732.72, 100.32, 763.2 ]
   }, {
     "type" : "image",
-    "id" : 106,
+    "id" : 142,
     "page number" : 1,
     "bounding box" : [ 116.28, 731.28, 301.08, 731.76 ]
   }, {
     "type" : "paragraph",
-    "id" : 107,
+    "id" : 143,
     "level" : "1",
     "page number" : 1,
     "bounding box" : [ 119.04, 750.085, 268.2, 763.045 ],
@@ -32,7 +32,7 @@
     "content" : "(19) 눀표민걭특허청(KR)"
   }, {
     "type" : "paragraph",
-    "id" : 108,
+    "id" : 144,
     "level" : "1",
     "page number" : 1,
     "bounding box" : [ 119.041, 735.206, 248.761, 748.166 ],
@@ -42,12 +42,12 @@
     "content" : "(12) 공개특허공보(A)"
   }, {
     "type" : "image",
-    "id" : 109,
+    "id" : 145,
     "page number" : 1,
     "bounding box" : [ 301.08, 731.28, 538.68, 731.76 ]
   }, {
     "type" : "paragraph",
-    "id" : 110,
+    "id" : 146,
     "level" : "1",
     "page number" : 1,
     "bounding box" : [ 303.84, 750.63, 459.06, 760.59 ],
@@ -57,7 +57,7 @@
     "content" : "(11) 공개뮈픸 10-2023-0087131"
   }, {
     "type" : "paragraph",
-    "id" : 111,
+    "id" : 147,
     "level" : "1",
     "page number" : 1,
     "bounding box" : [ 303.841, 736.231, 454.201, 746.191 ],
@@ -67,10 +67,10 @@
     "content" : "(43) 공개왼욐 2023끄06월16왼"
   }, {
     "type" : "list",
-    "id" : 112,
+    "id" : 148,
     "level" : "2",
     "page number" : 1,
-    "bounding box" : [ 66.241, 631.006, 285.06, 726.528 ],
+    "bounding box" : [ 66.241, 643.366, 285.06, 726.528 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 2,
     "list items" : [ {
@@ -83,7 +83,7 @@
       "content" : "(51) 걭윜특허버류(Int. Cl.) G06V 30/146 (2022.01) G06F 16/53 (2019.01) G06F 21/31 (2013.01) G06F 21/46 (2013.01)",
       "kids" : [ {
         "type" : "list",
-        "id" : 102,
+        "id" : 139,
         "level" : "3",
         "page number" : 1,
         "bounding box" : [ 88.699, 668.086, 275.94, 689.446 ],
@@ -112,16 +112,25 @@
     }, {
       "type" : "list item",
       "page number" : 1,
-      "bounding box" : [ 66.241, 631.006, 189.3, 664.727 ],
+      "bounding box" : [ 66.241, 643.366, 189.3, 664.727 ],
       "font" : "BatangChe",
       "font size" : 9.317,
       "text color" : "[0.0, 0.0, 0.0]",
-      "content" : "(52) CPC특허버류 G06V 30/1478 (2023.01) G06F 16/53 (2019.01)",
+      "content" : "(52) CPC특허버류 G06V 30/1478 (2023.01)",
       "kids" : [ ]
     } ]
   }, {
+    "type" : "paragraph",
+    "id" : 149,
+    "page number" : 1,
+    "bounding box" : [ 88.699, 631.006, 180.18, 640.006 ],
+    "font" : "BatangChe",
+    "font size" : 9.317,
+    "text color" : "[0.0, 0.0, 0.0]",
+    "content" : "G06F 16/53 (2019.01)"
+  }, {
     "type" : "list",
-    "id" : 113,
+    "id" : 150,
     "level" : "2",
     "page number" : 1,
     "bounding box" : [ 66.241, 593.089, 224.821, 628.727 ],
@@ -148,34 +157,52 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 114,
+    "id" : 151,
     "level" : "2",
     "page number" : 1,
-    "bounding box" : [ 308.283, 592.499, 535.452, 727.609 ],
+    "bounding box" : [ 308.283, 654.294, 423.124, 727.609 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 2,
     "list items" : [ {
       "type" : "list item",
       "page number" : 1,
-      "bounding box" : [ 308.283, 681.172, 531.185, 727.609 ],
+      "bounding box" : [ 308.283, 705.29, 423.124, 727.609 ],
       "font" : "BatangChe",
       "font size" : 9.0,
       "text color" : "[0.0, 0.0, 0.0]",
-      "content" : "(71) 천원외 주식햌사 표관과컴퓨퀰 경괰도 쀱남시 버당걬 눀압툐걐띜644뮈괸 49, 10 층(삼평동, 표컴타워)",
-      "kids" : [ ]
+      "content" : "(71) 천원외 주식햌사 표관과컴퓨퀰",
+      "kids" : [ {
+        "type" : "paragraph",
+        "id" : 138,
+        "page number" : 1,
+        "bounding box" : [ 329.645, 681.172, 531.185, 700.731 ],
+        "font" : "BatangChe",
+        "font size" : 9.0,
+        "text color" : "[0.0, 0.0, 0.0]",
+        "content" : "경괰도 쀱남시 버당걬 눀압툐걐띜644뮈괸 49, 10 층(삼평동, 표컴타워)"
+      } ]
     }, {
       "type" : "list item",
       "page number" : 1,
-      "bounding box" : [ 308.287, 592.499, 535.452, 676.613 ],
+      "bounding box" : [ 308.287, 654.294, 357.847, 676.613 ],
       "font" : "BatangChe",
       "font size" : 9.0,
       "text color" : "[0.0, 0.0, 0.0]",
-      "content" : "(72) 묜릅욐 안치연 경괰도 쀱남시 버당걬 눀압툐걐띜644뮈괸 49 표컴 타워 10층 윕우쀝 경괰도 쀱남시 버당걬 눀압툐걐띜644뮈괸 49 표컴 타워 10층",
+      "content" : "(72) 묜릅욐 안치연",
       "kids" : [ ]
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 115,
+    "id" : 152,
+    "page number" : 1,
+    "bounding box" : [ 329.649, 592.499, 535.452, 649.735 ],
+    "font" : "BatangChe",
+    "font size" : 9.0,
+    "text color" : "[0.0, 0.0, 0.0]",
+    "content" : "경괰도 쀱남시 버당걬 눀압툐걐띜644뮈괸 49 표컴 타워 10층 윕우쀝 경괰도 쀱남시 버당걬 눀압툐걐띜644뮈괸 49 표컴 타워 10층"
+  }, {
+    "type" : "paragraph",
+    "id" : 153,
     "page number" : 1,
     "bounding box" : [ 329.299, 578.926, 389.97, 587.926 ],
     "font" : "BatangChe",
@@ -184,7 +211,7 @@
     "content" : "(뒷르에 계삍)"
   }, {
     "type" : "paragraph",
-    "id" : 116,
+    "id" : 154,
     "level" : "1",
     "page number" : 1,
     "bounding box" : [ 308.28, 565.366, 357.84, 574.366 ],
@@ -194,7 +221,7 @@
     "content" : "(74) 눀리외"
   }, {
     "type" : "paragraph",
-    "id" : 117,
+    "id" : 155,
     "page number" : 1,
     "bounding box" : [ 66.24, 539.326, 356.401, 561.047 ],
     "font" : "BatangChe",
@@ -203,17 +230,17 @@
     "content" : "굀햨쀱 위체 청걬푭 수 : 찝 12 푭"
   }, {
     "type" : "image",
-    "id" : 118,
+    "id" : 156,
     "page number" : 1,
     "bounding box" : [ 63.48, 535.2, 296.64, 535.68 ]
   }, {
     "type" : "image",
-    "id" : 119,
+    "id" : 157,
     "page number" : 1,
     "bounding box" : [ 63.48, 509.88, 538.68, 535.68 ]
   }, {
     "type" : "paragraph",
-    "id" : 120,
+    "id" : 158,
     "level" : "2",
     "page number" : 1,
     "bounding box" : [ 66.24, 513.167, 526.2, 532.486 ],
@@ -223,7 +250,7 @@
     "content" : "(54) 묜릅왘 릅칭 위욐 머쀜에 삽욅댘는 왴미지 개체 내에 포푨댜 개외 윕보를 식별푠 수 욈는 위욐 단말 욥치 묏 그 동욑 묩뮕"
   }, {
     "type" : "paragraph",
-    "id" : 121,
+    "id" : 159,
     "level" : "1",
     "page number" : 1,
     "bounding box" : [ 65.862, 495.03, 118.57, 504.99 ],
@@ -233,7 +260,7 @@
     "content" : "(57) 얔 약"
   }, {
     "type" : "paragraph",
-    "id" : 122,
+    "id" : 160,
     "page number" : 1,
     "bounding box" : [ 66.24, 451.728, 537.481, 485.446 ],
     "font" : "BatangChe",
@@ -242,7 +269,7 @@
     "content" : "본 묜릅와 위욐 머쀜에 삽욅댘는 왴미지 개체 내에 포푨댜 개외 윕보를 식별푠 수 욈는 위욐 단말 욥치 묏 그 동 욑 묩뮕완 윜시푨옼띜쉨, 위욐 머쀜에 삽욅댘는 왴미지 개체 내에 포푨댜 개외 윕보가 옠천댘는 것완 묩지푠 수 욈다."
   }, {
     "type" : "paragraph",
-    "id" : 123,
+    "id" : 161,
     "page number" : 1,
     "bounding box" : [ 65.862, 435.51, 133.14, 445.47 ],
     "font" : "BatangChe",
@@ -251,12 +278,12 @@
     "content" : "눀 퍜 도 - 도1"
   }, {
     "type" : "image",
-    "id" : 124,
+    "id" : 162,
     "page number" : 1,
     "bounding box" : [ 213.24, 228.36, 388.68, 423.84 ]
   }, {
     "type" : "paragraph",
-    "id" : 125,
+    "id" : 163,
     "page number" : 1,
     "bounding box" : [ 356.218, 777.68, 532.14, 807.51 ],
     "font" : "GulimChe",
@@ -265,17 +292,17 @@
     "content" : "공개특허 10-2023-0087131 공개특허 10-2023-0087131"
   }, {
     "type" : "image",
-    "id" : 126,
+    "id" : 164,
     "page number" : 1,
     "bounding box" : [ 383.07, 790.42, 535.32, 821.92 ]
   }, {
     "type" : "image",
-    "id" : 127,
+    "id" : 165,
     "page number" : 1,
     "bounding box" : [ 473.32, 762.92, 548.32, 837.92 ]
   }, {
     "type" : "footer",
-    "id" : 128,
+    "id" : 166,
     "page number" : 1,
     "bounding box" : [ 285.407, 30.306, 310.129, 40.247 ],
     "kids" : [ {
@@ -290,7 +317,7 @@
     } ]
   }, {
     "type" : "header",
-    "id" : 129,
+    "id" : 167,
     "page number" : 2,
     "bounding box" : [ 411.242, 797.552, 532.142, 807.512 ],
     "kids" : [ {
@@ -305,12 +332,12 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 130,
+    "id" : 168,
     "page number" : 2,
     "bounding box" : [ 63.48, 644.88, 301.08, 645.36 ]
   }, {
     "type" : "paragraph",
-    "id" : 131,
+    "id" : 169,
     "level" : "2",
     "page number" : 2,
     "bounding box" : [ 66.24, 769.486, 138.36, 778.486 ],
@@ -320,7 +347,7 @@
     "content" : "(52) CPC특허버류"
   }, {
     "type" : "heading",
-    "id" : 132,
+    "id" : 170,
     "level" : "Subtitle",
     "page number" : 2,
     "bounding box" : [ 88.699, 732.406, 189.3, 766.126 ],
@@ -331,7 +358,7 @@
     "content" : "G06F 21/31 (2013.01) G06F 21/46 (2013.01) G06F 21/6245 (2013.01)"
   }, {
     "type" : "list",
-    "id" : 133,
+    "id" : 171,
     "level" : "3",
     "page number" : 2,
     "bounding box" : [ 88.699, 707.686, 189.3, 729.046 ],
@@ -358,7 +385,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 134,
+    "id" : 172,
     "level" : "2",
     "page number" : 2,
     "bounding box" : [ 66.241, 658.97, 293.403, 705.407 ],
@@ -368,12 +395,12 @@
     "content" : "(72) 묜릅욐 굀프릅 경괰도 쀱남시 버당걬 눀압툐걐띜644뮈괸 49 표컴 타워 10층"
   }, {
     "type" : "image",
-    "id" : 135,
+    "id" : 173,
     "page number" : 2,
     "bounding box" : [ 301.08, 644.88, 538.68, 645.36 ]
   }, {
     "type" : "paragraph",
-    "id" : 136,
+    "id" : 174,
     "page number" : 2,
     "bounding box" : [ 325.2, 746.448, 531.001, 779.566 ],
     "font" : "BatangChe",
@@ -382,7 +409,7 @@
     "content" : "왴상오 경괰도 쀱남시 버당걬 눀압툐걐띜644뮈괸 49 표컴 타워 10층"
   }, {
     "type" : "footer",
-    "id" : 137,
+    "id" : 175,
     "page number" : 2,
     "bounding box" : [ 285.407, 30.306, 310.129, 40.247 ],
     "kids" : [ {
@@ -397,7 +424,7 @@
     } ]
   }, {
     "type" : "header",
-    "id" : 138,
+    "id" : 176,
     "page number" : 3,
     "bounding box" : [ 411.276, 797.586, 532.176, 807.546 ],
     "kids" : [ {
@@ -412,7 +439,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 139,
+    "id" : 177,
     "page number" : 3,
     "bounding box" : [ 63.822, 740.31, 106.21, 750.27 ],
     "font" : "BatangChe",
@@ -421,133 +448,180 @@
     "content" : "릅 쀸 쀜"
   }, {
     "type" : "paragraph",
-    "id" : 140,
+    "id" : 178,
     "page number" : 3,
-    "bounding box" : [ 63.822, 696.766, 105.97, 724.95 ],
+    "bounding box" : [ 63.822, 714.99, 105.97, 724.95 ],
     "font" : "BatangChe",
     "font size" : 10.311,
     "text color" : "[1.0, 0.0, 0.5]",
-    "content" : "청걬뮔옄 청걬푭 1"
+    "content" : "청걬뮔옄"
+  }, {
+    "type" : "list",
+    "id" : 179,
+    "level" : "3",
+    "page number" : 3,
+    "bounding box" : [ 64.2, 389.944, 492.541, 705.766 ],
+    "numbering style" : "arabic numbers",
+    "number of list items" : 2,
+    "next list id" : 190,
+    "list items" : [ {
+      "type" : "list item",
+      "page number" : 3,
+      "bounding box" : [ 64.2, 674.567, 492.541, 705.766 ],
+      "font" : "BatangChe",
+      "font size" : 9.0,
+      "text color" : "[0.0, 0.0, 0.0]",
+      "content" : "청걬푭 1 위욐 머쀜에 삽욅댘는 왴미지 개체 내에 포푨댜 개외 윕보를 식별푠 수 욈는 위욐 단말 욥치에 욈어쀜,",
+      "kids" : [ {
+        "type" : "paragraph",
+        "id" : 111,
+        "page number" : 3,
+        "bounding box" : [ 64.202, 640.249, 532.082, 663.408 ],
+        "font" : "BatangChe",
+        "font size" : 9.0,
+        "text color" : "[0.0, 0.0, 0.0]",
+        "content" : "개외 윕보왘 퍜괰 픕식에 눀왑댘는 것옼띜 사위 쀤윕댜 쀜띜 다른 복수왘 윕규 퍜프식(regular expression)들왴 윀욥댘어 욈는 윕규 퍜프식 윀욥벀;"
+      }, {
+        "type" : "paragraph",
+        "id" : 112,
+        "page number" : 3,
+        "bounding box" : [ 64.204, 591.772, 532.085, 629.09 ],
+        "font" : "BatangChe",
+        "font size" : 9.0,
+        "text color" : "[0.0, 0.0, 0.0]",
+        "content" : "사얩욐에 왘푴, 위욐 머쀜왘 윜1 지윐에 윜1 왴미지 개체를 삽욅푠 것완 지시푘는 왴미지 삽욅 릅뜹왴 외가댘르, 사위 쀤윕댜 큍스트 외식 릨뉸완 괰찈띜, 상괰 윜1 왴미지 개체에 눀표 큍스트 외식완 수풉푘여 상괰 윜1 왴미지 개체에 포푨댘어 욈는 큍스트를 첔천푘는 큍스트 첔천벀;"
+      }, {
+        "type" : "paragraph",
+        "id" : 113,
+        "page number" : 3,
+        "bounding box" : [ 64.207, 543.295, 532.088, 580.613 ],
+        "font" : "BatangChe",
+        "font size" : 9.0,
+        "text color" : "[0.0, 0.0, 0.0]",
+        "content" : "상괰 윜1 왴미지 개체에 포푨댘어 욈는 큍스트가 첔천댘르, 상괰 첔천댜 큍스트 접, 상괰 윕규 퍜프식 윀욥벀에 윀욥댘어 욈는 상괰 복수왘 윕규 퍜프식들에 눀왑댘는 퍜괰 픕식완 갖는 머욐열왴 이재푘는지 여벀를 핕외푘는 머욐열 핕외벀;"
+      }, {
+        "type" : "paragraph",
+        "id" : 114,
+        "page number" : 3,
+        "bounding box" : [ 64.21, 480.659, 532.15, 532.136 ],
+        "font" : "BatangChe",
+        "font size" : 9.0,
+        "text color" : "[0.0, 0.0, 0.0]",
+        "content" : "상괰 첔천댜 큍스트 접 상괰 복수왘 윕규 퍜프식들에 눀왑댘는 퍜괰 픕식완 갖는 머욐열띜, 윁어도 푘나왘 윜1 머욐열왴 이재푘는 것옼띜 핕외댘르, 상괰 사얩욐에 눀푴, 상괰 윜1 왴미지 개체에 개외 윕보가 포푨댘어 욈왌 에도 번걬푘고 상괰 위욐 머쀜에 상괰 윜1 왴미지 개체를 삽욅푠지 여벀를 질왘푘는 질왘 륔시지를 생쀱푘여 핔 르 상에 퍜시푘는 질왘 륔시지 퍜시벀; 묏"
+      }, {
+        "type" : "paragraph",
+        "id" : 115,
+        "page number" : 3,
+        "bounding box" : [ 64.214, 432.182, 532.095, 469.5 ],
+        "font" : "BatangChe",
+        "font size" : 9.0,
+        "text color" : "[0.0, 0.0, 0.0]",
+        "content" : "상괰 질왘 륔시지에 눀왑푘여, 상괰 사얩욐에 왘푴, 상괰 위욐 머쀜에 상괰 윜1 왴미지 개체를 삽욅푠 것완 지 시푘는 챜입 왴미지 삽욅 릅뜹왴 외가댘르, 상괰 위욐 머쀜왘 상괰 윜1 지윐에 상괰 윜1 왴미지 개체를 삽욅푘 는 왴미지 삽욅벀"
+      }, {
+        "type" : "paragraph",
+        "id" : 116,
+        "page number" : 3,
+        "bounding box" : [ 64.217, 412.023, 184.877, 421.023 ],
+        "font" : "BatangChe",
+        "font size" : 9.0,
+        "text color" : "[0.0, 0.0, 0.0]",
+        "content" : "를 포푨푘는 위욐 단말 욥치."
+      } ]
+    }, {
+      "type" : "list item",
+      "page number" : 3,
+      "bounding box" : [ 64.218, 389.944, 99.918, 398.944 ],
+      "font" : "BatangChe",
+      "font size" : 9.0,
+      "text color" : "[0.0, 0.0, 0.0]",
+      "content" : "청걬푭 2",
+      "kids" : [ {
+        "type" : "list",
+        "id" : 117,
+        "level" : "4",
+        "page number" : 3,
+        "bounding box" : [ 64.219, 186.195, 175.709, 376.745 ],
+        "numbering style" : "arabic numbers",
+        "number of list items" : 2,
+        "next list id" : 118,
+        "list items" : [ {
+          "type" : "list item",
+          "page number" : 3,
+          "bounding box" : [ 64.219, 367.745, 131.599, 376.745 ],
+          "font" : "BatangChe",
+          "font size" : 9.0,
+          "text color" : "[0.0, 0.0, 0.0]",
+          "content" : "윜1푭에 욈어쀜,",
+          "kids" : [ {
+            "type" : "paragraph",
+            "id" : 107,
+            "page number" : 3,
+            "bounding box" : [ 64.22, 319.268, 532.101, 356.586 ],
+            "font" : "BatangChe",
+            "font size" : 9.0,
+            "text color" : "[0.0, 0.0, 0.0]",
+            "content" : "상괰 위욐 머쀜왘 상괰 윜1 지윐에 상괰 윜1 왴미지 개체가 삽욅댜 왴후, 상괰 사얩욐에 왘푴, 상괰 윜1 왴미지 개체에 눀표 마스킹(masking) 처리 릅뜹왴 외가댘르, 상괰 윜1 왴미지 개체앀 동왼표 크괰왘 뉔미(dummy) 왴미 지를 생쀱푘는 뉔미 왴미지 생쀱벀; 묏"
+          }, {
+            "type" : "paragraph",
+            "id" : 108,
+            "page number" : 3,
+            "bounding box" : [ 64.223, 270.791, 532.104, 308.109 ],
+            "font" : "BatangChe",
+            "font size" : 9.0,
+            "text color" : "[0.0, 0.0, 0.0]",
+            "content" : "상괰 뉔미 왴미지가 생쀱댘르, 상괰 위욐 머쀜왘 상괰 윜1 지윐에 삽욅댘어 욈는 상괰 윜1 왴미지 개체왘 상옄 뜈왴어(layer) 상에, 상괰 뉔미 왴미지를 겹쳐쀜 퍜시푨옼띜쉨, 상괰 윜1 왴미지 개체를 마스킹 처리푘는 마스 킹 처리벀"
+          }, {
+            "type" : "paragraph",
+            "id" : 109,
+            "page number" : 3,
+            "bounding box" : [ 64.226, 250.632, 198.326, 259.632 ],
+            "font" : "BatangChe",
+            "font size" : 9.0,
+            "text color" : "[0.0, 0.0, 0.0]",
+            "content" : "를 뉔 포푨푘는 위욐 단말 욥치."
+          }, {
+            "type" : "paragraph",
+            "id" : 110,
+            "page number" : 3,
+            "bounding box" : [ 64.227, 228.553, 99.927, 237.553 ],
+            "font" : "BatangChe",
+            "font size" : 9.0,
+            "text color" : "[0.0, 0.0, 0.0]",
+            "content" : "청걬푭 3"
+          } ]
+        }, {
+          "type" : "list item",
+          "page number" : 3,
+          "bounding box" : [ 64.228, 186.195, 175.709, 215.354 ],
+          "font" : "BatangChe",
+          "font size" : 9.0,
+          "text color" : "[0.0, 0.0, 0.0]",
+          "content" : "윜2푭에 욈어쀜, 상괰 뉔미 왴미지 생쀱벀는",
+          "kids" : [ ]
+        } ]
+      } ]
+    } ]
   }, {
     "type" : "paragraph",
-    "id" : 141,
+    "id" : 180,
     "page number" : 3,
-    "bounding box" : [ 64.201, 640.249, 532.082, 683.567 ],
+    "bounding box" : [ 64.23, 151.877, 532.11, 175.036 ],
     "font" : "BatangChe",
     "font size" : 9.0,
     "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "위욐 머쀜에 삽욅댘는 왴미지 개체 내에 포푨댜 개외 윕보를 식별푠 수 욈는 위욐 단말 욥치에 욈어쀜, 개외 윕보왘 퍜괰 픕식에 눀왑댘는 것옼띜 사위 쀤윕댜 쀜띜 다른 복수왘 윕규 퍜프식(regular expression)들왴 윀욥댘어 욈는 윕규 퍜프식 윀욥벀;"
+    "content" : "'1'과 '0'왘 쀱버들띜 걬쀱댜, 사위 쀤윕댜 n(n와 2 왴상왘 욐연수욄) x n 크괰왘 외좝 풉뜬왴 윀욥댘어 욈는 외좝 풉뜬 윀욥벀;"
   }, {
     "type" : "paragraph",
-    "id" : 142,
+    "id" : 181,
     "page number" : 3,
-    "bounding box" : [ 64.204, 591.772, 532.085, 629.09 ],
+    "bounding box" : [ 64.232, 117.559, 532.172, 140.718 ],
     "font" : "BatangChe",
     "font size" : 9.0,
     "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "사얩욐에 왘푴, 위욐 머쀜왘 윜1 지윐에 윜1 왴미지 개체를 삽욅푠 것완 지시푘는 왴미지 삽욅 릅뜹왴 외가댘르, 사위 쀤윕댜 큍스트 외식 릨뉸완 괰찈띜, 상괰 윜1 왴미지 개체에 눀표 큍스트 외식완 수풉푘여 상괰 윜1 왴미지 개체에 포푨댘어 욈는 큍스트를 첔천푘는 큍스트 첔천벀;"
+    "content" : "'1'왘 쀱버에 눀왑댘는 것옼띜 사위 지윕댜 윜1 참읰 왴미지앀, '0'왘 쀱버에 눀왑댘는 것옼띜 사위 지윕댜 윜2 참읰 왴미지가 윀욥댘어 욈는 참읰 왴미지 윀욥벀;"
   }, {
     "type" : "paragraph",
-    "id" : 143,
-    "page number" : 3,
-    "bounding box" : [ 64.207, 543.295, 532.088, 580.613 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "상괰 윜1 왴미지 개체에 포푨댘어 욈는 큍스트가 첔천댘르, 상괰 첔천댜 큍스트 접, 상괰 윕규 퍜프식 윀욥벀에 윀욥댘어 욈는 상괰 복수왘 윕규 퍜프식들에 눀왑댘는 퍜괰 픕식완 갖는 머욐열왴 이재푘는지 여벀를 핕외푘는 머욐열 핕외벀;"
-  }, {
-    "type" : "paragraph",
-    "id" : 144,
-    "page number" : 3,
-    "bounding box" : [ 64.21, 480.659, 532.15, 532.136 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "상괰 첔천댜 큍스트 접 상괰 복수왘 윕규 퍜프식들에 눀왑댘는 퍜괰 픕식완 갖는 머욐열띜, 윁어도 푘나왘 윜1 머욐열왴 이재푘는 것옼띜 핕외댘르, 상괰 사얩욐에 눀푴, 상괰 윜1 왴미지 개체에 개외 윕보가 포푨댘어 욈왌 에도 번걬푘고 상괰 위욐 머쀜에 상괰 윜1 왴미지 개체를 삽욅푠지 여벀를 질왘푘는 질왘 륔시지를 생쀱푘여 핔 르 상에 퍜시푘는 질왘 륔시지 퍜시벀; 묏"
-  }, {
-    "type" : "paragraph",
-    "id" : 145,
-    "page number" : 3,
-    "bounding box" : [ 64.214, 432.182, 532.095, 469.5 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "상괰 질왘 륔시지에 눀왑푘여, 상괰 사얩욐에 왘푴, 상괰 위욐 머쀜에 상괰 윜1 왴미지 개체를 삽욅푠 것완 지 시푘는 챜입 왴미지 삽욅 릅뜹왴 외가댘르, 상괰 위욐 머쀜왘 상괰 윜1 지윐에 상괰 윜1 왴미지 개체를 삽욅푘 는 왴미지 삽욅벀"
-  }, {
-    "type" : "paragraph",
-    "id" : 146,
-    "page number" : 3,
-    "bounding box" : [ 64.217, 412.023, 184.877, 421.023 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "를 포푨푘는 위욐 단말 욥치."
-  }, {
-    "type" : "paragraph",
-    "id" : 147,
-    "page number" : 3,
-    "bounding box" : [ 64.218, 389.944, 99.918, 398.944 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "청걬푭 2"
-  }, {
-    "type" : "paragraph",
-    "id" : 148,
-    "page number" : 3,
-    "bounding box" : [ 64.219, 367.745, 131.599, 376.745 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "윜1푭에 욈어쀜,"
-  }, {
-    "type" : "paragraph",
-    "id" : 149,
-    "page number" : 3,
-    "bounding box" : [ 64.22, 319.268, 532.101, 356.586 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "상괰 위욐 머쀜왘 상괰 윜1 지윐에 상괰 윜1 왴미지 개체가 삽욅댜 왴후, 상괰 사얩욐에 왘푴, 상괰 윜1 왴미지 개체에 눀표 마스킹(masking) 처리 릅뜹왴 외가댘르, 상괰 윜1 왴미지 개체앀 동왼표 크괰왘 뉔미(dummy) 왴미 지를 생쀱푘는 뉔미 왴미지 생쀱벀; 묏"
-  }, {
-    "type" : "paragraph",
-    "id" : 150,
-    "page number" : 3,
-    "bounding box" : [ 64.223, 270.791, 532.104, 308.109 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "상괰 뉔미 왴미지가 생쀱댘르, 상괰 위욐 머쀜왘 상괰 윜1 지윐에 삽욅댘어 욈는 상괰 윜1 왴미지 개체왘 상옄 뜈왴어(layer) 상에, 상괰 뉔미 왴미지를 겹쳐쀜 퍜시푨옼띜쉨, 상괰 윜1 왴미지 개체를 마스킹 처리푘는 마스 킹 처리벀"
-  }, {
-    "type" : "paragraph",
-    "id" : 151,
-    "page number" : 3,
-    "bounding box" : [ 64.226, 250.632, 198.326, 259.632 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "를 뉔 포푨푘는 위욐 단말 욥치."
-  }, {
-    "type" : "paragraph",
-    "id" : 152,
-    "page number" : 3,
-    "bounding box" : [ 64.227, 228.553, 99.927, 237.553 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "청걬푭 3"
-  }, {
-    "type" : "paragraph",
-    "id" : 153,
-    "page number" : 3,
-    "bounding box" : [ 64.228, 117.559, 532.172, 215.354 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "윜2푭에 욈어쀜, 상괰 뉔미 왴미지 생쀱벀는 '1'과 '0'왘 쀱버들띜 걬쀱댜, 사위 쀤윕댜 n(n와 2 왴상왘 욐연수욄) x n 크괰왘 외좝 풉뜬왴 윀욥댘어 욈는 외좝 풉뜬 윀욥벀; '1'왘 쀱버에 눀왑댘는 것옼띜 사위 지윕댜 윜1 참읰 왴미지앀, '0'왘 쀱버에 눀왑댘는 것옼띜 사위 지윕댜 윜2 참읰 왴미지가 윀욥댘어 욈는 참읰 왴미지 윀욥벀;"
-  }, {
-    "type" : "paragraph",
-    "id" : 154,
+    "id" : 182,
     "page number" : 3,
     "bounding box" : [ 64.234, 69.082, 532.115, 106.4 ],
     "font" : "BatangChe",
@@ -556,7 +630,7 @@
     "content" : "상괰 위욐 머쀜왘 상괰 윜1 지윐에 상괰 윜1 왴미지 개체가 삽욅댜 왴후, 상괰 사얩욐에 왘푴, 상괰 윜1 왴미지 개체에 눀표 마스킹 처리 릅뜹왴 외가댘르, 상괰 사얩욐에 눀푴, 마스킹 푴윜를 옄표 비묀뮈픸를 쀤윕푠 것완 얔청푘는 비묀뮈픸 쀤윕 얔청 륔시지를 핔르 상에 퍜시푘는 비묀뮈픸 쀤윕 얔청벀;"
   }, {
     "type" : "footer",
-    "id" : 155,
+    "id" : 183,
     "page number" : 3,
     "bounding box" : [ 285.407, 30.306, 310.129, 40.247 ],
     "kids" : [ {
@@ -571,7 +645,7 @@
     } ]
   }, {
     "type" : "header",
-    "id" : 156,
+    "id" : 184,
     "page number" : 4,
     "bounding box" : [ 411.282, 797.591, 532.182, 807.551 ],
     "kids" : [ {
@@ -586,7 +660,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 157,
+    "id" : 185,
     "page number" : 4,
     "bounding box" : [ 64.2, 727.009, 532.142, 778.486 ],
     "font" : "BatangChe",
@@ -595,7 +669,7 @@
     "content" : "상괰 비묀뮈픸 쀤윕 얔청 륔시지에 눀왑푘여, 상괰 사얩욐에 왘푴 윜1 비묀뮈픸가 쀤윕댘르, 상괰 윜1 비묀뮈픸 에 눀푴 n완 윜수띜 푘는 릨듈띜(modulo) 연산완 수풉푨옼띜쉨, 윜1 연산 값 x를 산천표 후, 상괰 외좝 풉뜬 윀 욥벀에 윀욥댘어 욈는 상괰 외좝 풉뜬띜벀퀰, x+1뮈째 열에 옄치푘는 윜1 열뮡퀰앀, x+1뮈째 풉에 옄치푘는 윜1 풉뮡퀰를 첔천푘는 뮡퀰 첔천벀;"
   }, {
     "type" : "paragraph",
-    "id" : 158,
+    "id" : 186,
     "page number" : 4,
     "bounding box" : [ 64.204, 692.691, 532.084, 715.85 ],
     "font" : "BatangChe",
@@ -604,7 +678,7 @@
     "content" : "상괰 윜1 열뮡퀰앀 상괰 윜1 풉뮡퀰가 첔천댘르, 상괰 윜1 열뮡퀰앀 상괰 윜1 풉뮡퀰를 풉뜬 곱푘여 n x n 크괰 왘 연산 풉뜬완 생쀱푘는 연산 풉뜬 생쀱벀; 묏"
   }, {
     "type" : "paragraph",
-    "id" : 159,
+    "id" : 187,
     "page number" : 4,
     "bounding box" : [ 64.206, 672.532, 531.906, 681.532 ],
     "font" : "BatangChe",
@@ -613,7 +687,7 @@
     "content" : "상괰 연산 풉뜬왴 생쀱댘르, 상괰 윜1 왴미지 개체앀 동왼표 크괰왘 왴미지 씁역완 n x n개띜 버푠푨옼띜쉨, n"
   }, {
     "type" : "paragraph",
-    "id" : 160,
+    "id" : 188,
     "page number" : 4,
     "bounding box" : [ 64.207, 630.055, 532.089, 667.373 ],
     "font" : "BatangChe",
@@ -622,115 +696,145 @@
     "content" : "x n개왘 버푠 씁역들완 생쀱표 후, 상괰 n x n개왘 버푠 씁역들 접, 상괰 연산 풉뜬에쀜 '1'왘 쀱버왴 옄치푘는 지윐과 눀왑댘는 지윐에 옄치푘는 버푠 씁역 각각에 상괰 윜1 참읰 왴미지를 삽욅푘고, 상괰 연산 풉뜬에쀜 ' 0'왘 쀱버왴 옄치푘는 지윐과 눀왑댘는 지윐에 옄치푘는 버푠 씁역 각각에 상괰 윜2 참읰 왴미지를 삽욅푨옼띜"
   }, {
     "type" : "paragraph",
-    "id" : 161,
+    "id" : 189,
     "page number" : 4,
-    "bounding box" : [ 64.21, 551.459, 309.85, 624.896 ],
+    "bounding box" : [ 64.21, 595.737, 309.85, 624.896 ],
     "font" : "BatangChe",
     "font size" : 9.0,
     "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "쉨, 상괰 뉔미 왴미지를 생쀱푘는 뉔미 왴미지 생쀱 처리벀 를 포푨푘는 위욐 단말 욥치. 청걬푭 4 윜3푭에 욈어쀜,"
+    "content" : "쉨, 상괰 뉔미 왴미지를 생쀱푘는 뉔미 왴미지 생쀱 처리벀 를 포푨푘는 위욐 단말 욥치."
   }, {
-    "type" : "paragraph",
-    "id" : 162,
+    "type" : "list",
+    "id" : 190,
+    "level" : "3",
     "page number" : 4,
-    "bounding box" : [ 64.214, 502.982, 532.095, 540.3 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "상괰 마스킹 처리벀에 왘푴, 상괰 윜1 왴미지 개체가 마스킹 처리댜 왴후, 상괰 사얩욐에 왘푴, 상괰 윜1 왴미 지 개체에 눀표 마스킹 푴윜 릅뜹왴 외가댘르, 상괰 사얩욐에 눀푴, 마스킹 푴윜를 옄표 비묀뮈픸를 욅뜥푠 것 완 얔청푘는 비묀뮈픸 욅뜥 얔청 륔시지를 핔르 상에 퍜시푘는 비묀뮈픸 욅뜥 얔청벀;"
+    "bounding box" : [ 64.212, 125.604, 131.612, 582.658 ],
+    "numbering style" : "arabic numbers",
+    "number of list items" : 3,
+    "previous list id" : 179,
+    "next list id" : 201,
+    "list items" : [ {
+      "type" : "list item",
+      "page number" : 4,
+      "bounding box" : [ 64.212, 573.658, 99.912, 582.658 ],
+      "font" : "BatangChe",
+      "font size" : 9.0,
+      "text color" : "[0.0, 0.0, 0.0]",
+      "content" : "청걬푭 4",
+      "kids" : [ {
+        "type" : "list",
+        "id" : 118,
+        "level" : "4",
+        "page number" : 4,
+        "bounding box" : [ 64.213, 551.459, 131.593, 560.459 ],
+        "numbering style" : "arabic numbers",
+        "number of list items" : 1,
+        "previous list id" : 117,
+        "list items" : [ {
+          "type" : "list item",
+          "page number" : 4,
+          "bounding box" : [ 64.213, 551.459, 131.593, 560.459 ],
+          "font" : "BatangChe",
+          "font size" : 9.0,
+          "text color" : "[0.0, 0.0, 0.0]",
+          "content" : "윜3푭에 욈어쀜,",
+          "kids" : [ ]
+        } ]
+      }, {
+        "type" : "paragraph",
+        "id" : 119,
+        "page number" : 4,
+        "bounding box" : [ 64.214, 502.982, 532.095, 540.3 ],
+        "font" : "BatangChe",
+        "font size" : 9.0,
+        "text color" : "[0.0, 0.0, 0.0]",
+        "content" : "상괰 마스킹 처리벀에 왘푴, 상괰 윜1 왴미지 개체가 마스킹 처리댜 왴후, 상괰 사얩욐에 왘푴, 상괰 윜1 왴미 지 개체에 눀표 마스킹 푴윜 릅뜹왴 외가댘르, 상괰 사얩욐에 눀푴, 마스킹 푴윜를 옄표 비묀뮈픸를 욅뜥푠 것 완 얔청푘는 비묀뮈픸 욅뜥 얔청 륔시지를 핔르 상에 퍜시푘는 비묀뮈픸 욅뜥 얔청벀;"
+      }, {
+        "type" : "paragraph",
+        "id" : 120,
+        "page number" : 4,
+        "bounding box" : [ 64.217, 440.346, 532.099, 491.823 ],
+        "font" : "BatangChe",
+        "font size" : 9.0,
+        "text color" : "[0.0, 0.0, 0.0]",
+        "content" : "상괰 비묀뮈픸 욅뜥 얔청 륔시지에 눀왑푘여, 상괰 사얩욐에 왘푴, 상괰 윜1 비묀뮈픸가 욅뜥댘르, 상괰 윜1 비 묀뮈픸에 눀푴 n완 윜수띜 푘는 릨듈띜 연산완 수풉푨옼띜쉨, 상괰 윜1 연산 값 x를 산천표 후, 상괰 외좝 풉뜬 윀욥벀에 윀욥댘어 욈는 상괰 외좝 풉뜬띜벀퀰, x+1뮈째 열에 옄치푘는 상괰 윜1 열뮡퀰앀, x+1뮈째 풉에 옄치 푘는 상괰 윜1 풉뮡퀰를 재첔천푘는 뮡퀰 재첔천벀;"
+      }, {
+        "type" : "paragraph",
+        "id" : 121,
+        "page number" : 4,
+        "bounding box" : [ 64.221, 406.028, 532.101, 429.187 ],
+        "font" : "BatangChe",
+        "font size" : 9.0,
+        "text color" : "[0.0, 0.0, 0.0]",
+        "content" : "상괰 윜1 열뮡퀰앀 상괰 윜1 풉뮡퀰가 재첔천댘르, 상괰 윜1 열뮡퀰앀 상괰 윜1 풉뮡퀰를 풉뜬 곱푘여 n x n 크 괰왘 상괰 연산 풉뜬완 재생쀱푘는 연산 풉뜬 재생쀱벀;"
+      }, {
+        "type" : "paragraph",
+        "id" : 122,
+        "page number" : 4,
+        "bounding box" : [ 64.223, 343.392, 532.105, 394.869 ],
+        "font" : "BatangChe",
+        "font size" : 9.0,
+        "text color" : "[0.0, 0.0, 0.0]",
+        "content" : "상괰 연산 풉뜬왴 재생쀱댘르, 상괰 뉔미 왴미지를 n x n개띜 버푠푨옼띜쉨, n x n개왘 뉔미 버푠 씁역들완 생 쀱표 후, 상괰 n x n개왘 뉔미 버푠 씁역들 접, 상괰 윜1 참읰 왴미지가 삽욅댘어 욈는 뉔미 버푠 씁역 각각에 눀푴 '1'왘 쀱버완 푠당푘고, 상괰 윜2 참읰 왴미지가 삽욅댘어 욈는 뉔미 버푠 씁역 각각에 눀푴 '0'왘 쀱버완 푠당푨옼띜쉨, '1'과 '0'왘 쀱버들띜 걬쀱댜 n x n 크괰왘 뉔미 풉뜬완 생쀱푘는 뉔미 풉뜬 생쀱벀; 묏"
+      }, {
+        "type" : "paragraph",
+        "id" : 123,
+        "page number" : 4,
+        "bounding box" : [ 64.227, 294.915, 532.108, 332.233 ],
+        "font" : "BatangChe",
+        "font size" : 9.0,
+        "text color" : "[0.0, 0.0, 0.0]",
+        "content" : "상괰 뉔미 풉뜬왴 생쀱댘르, 상괰 뉔미 풉뜬완 상괰 연산 풉뜬과 비걐푘여, 상괰 뉔미 풉뜬왴 상괰 연산 풉뜬과 왼치푘는 것옼띜 핕외댘르, 상괰 윜1 왴미지 개체왘 상옄 뜈왴어 상에 겹쳐쀜 퍜시댘고 욈는 상괰 뉔미 왴미지 를 윜거푨옼띜쉨, 상괰 윜1 왴미지 개체에 윁얩댘어 욈는 마스킹완 푴윜푘는 마스킹 푴윜벀"
+      }, {
+        "type" : "paragraph",
+        "id" : 124,
+        "page number" : 4,
+        "bounding box" : [ 64.23, 274.756, 198.33, 283.756 ],
+        "font" : "BatangChe",
+        "font size" : 9.0,
+        "text color" : "[0.0, 0.0, 0.0]",
+        "content" : "를 뉔 포푨푘는 위욐 단말 욥치."
+      } ]
+    }, {
+      "type" : "list item",
+      "page number" : 4,
+      "bounding box" : [ 64.231, 230.478, 131.612, 261.677 ],
+      "font" : "BatangChe",
+      "font size" : 9.0,
+      "text color" : "[0.0, 0.0, 0.0]",
+      "content" : "청걬푭 5 윜2푭에 욈어쀜,",
+      "kids" : [ {
+        "type" : "paragraph",
+        "id" : 125,
+        "page number" : 4,
+        "bounding box" : [ 64.233, 167.842, 532.115, 219.319 ],
+        "font" : "BatangChe",
+        "font size" : 9.0,
+        "text color" : "[0.0, 0.0, 0.0]",
+        "content" : "상괰 마스킹 처리벀에 왘푴, 상괰 윜1 왴미지 개체가 마스킹 처리댜 왴후, 상괰 사얩욐에 왘푴, 상괰 위욐 단말 욥치에 연결댜 욅뜥 욥치왘 포외퀰가 상괰 뉔미 왴미지 상에 픸뮄(hover)댘르, 상괰 윜1 왴미지 개체왘 푴상도 를 사위 쀤윕댜 비온띜 낮처 쀬뀤왼(thumbnail) 왴미지를 생쀱푘여, 상괰 포외퀰가 픸뮄댜 지윐왘 외윑 지윐에 상괰 쀬뀤왼 왴미지를 퍜시푘는 쀬뀤왼 퍜시벀"
+      }, {
+        "type" : "paragraph",
+        "id" : 126,
+        "page number" : 4,
+        "bounding box" : [ 64.237, 147.683, 198.337, 156.683 ],
+        "font" : "BatangChe",
+        "font size" : 9.0,
+        "text color" : "[0.0, 0.0, 0.0]",
+        "content" : "를 뉔 포푨푘는 위욐 단말 욥치."
+      } ]
+    }, {
+      "type" : "list item",
+      "page number" : 4,
+      "bounding box" : [ 64.238, 125.604, 99.938, 134.604 ],
+      "font" : "BatangChe",
+      "font size" : 9.0,
+      "text color" : "[0.0, 0.0, 0.0]",
+      "content" : "청걬푭 6",
+      "kids" : [ ]
+    } ]
   }, {
     "type" : "paragraph",
-    "id" : 163,
-    "page number" : 4,
-    "bounding box" : [ 64.217, 440.346, 532.099, 491.823 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "상괰 비묀뮈픸 욅뜥 얔청 륔시지에 눀왑푘여, 상괰 사얩욐에 왘푴, 상괰 윜1 비묀뮈픸가 욅뜥댘르, 상괰 윜1 비 묀뮈픸에 눀푴 n완 윜수띜 푘는 릨듈띜 연산완 수풉푨옼띜쉨, 상괰 윜1 연산 값 x를 산천표 후, 상괰 외좝 풉뜬 윀욥벀에 윀욥댘어 욈는 상괰 외좝 풉뜬띜벀퀰, x+1뮈째 열에 옄치푘는 상괰 윜1 열뮡퀰앀, x+1뮈째 풉에 옄치 푘는 상괰 윜1 풉뮡퀰를 재첔천푘는 뮡퀰 재첔천벀;"
-  }, {
-    "type" : "paragraph",
-    "id" : 164,
-    "page number" : 4,
-    "bounding box" : [ 64.221, 406.028, 532.101, 429.187 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "상괰 윜1 열뮡퀰앀 상괰 윜1 풉뮡퀰가 재첔천댘르, 상괰 윜1 열뮡퀰앀 상괰 윜1 풉뮡퀰를 풉뜬 곱푘여 n x n 크 괰왘 상괰 연산 풉뜬완 재생쀱푘는 연산 풉뜬 재생쀱벀;"
-  }, {
-    "type" : "paragraph",
-    "id" : 165,
-    "page number" : 4,
-    "bounding box" : [ 64.223, 343.392, 532.105, 394.869 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "상괰 연산 풉뜬왴 재생쀱댘르, 상괰 뉔미 왴미지를 n x n개띜 버푠푨옼띜쉨, n x n개왘 뉔미 버푠 씁역들완 생 쀱표 후, 상괰 n x n개왘 뉔미 버푠 씁역들 접, 상괰 윜1 참읰 왴미지가 삽욅댘어 욈는 뉔미 버푠 씁역 각각에 눀푴 '1'왘 쀱버완 푠당푘고, 상괰 윜2 참읰 왴미지가 삽욅댘어 욈는 뉔미 버푠 씁역 각각에 눀푴 '0'왘 쀱버완 푠당푨옼띜쉨, '1'과 '0'왘 쀱버들띜 걬쀱댜 n x n 크괰왘 뉔미 풉뜬완 생쀱푘는 뉔미 풉뜬 생쀱벀; 묏"
-  }, {
-    "type" : "paragraph",
-    "id" : 166,
-    "page number" : 4,
-    "bounding box" : [ 64.227, 294.915, 532.108, 332.233 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "상괰 뉔미 풉뜬왴 생쀱댘르, 상괰 뉔미 풉뜬완 상괰 연산 풉뜬과 비걐푘여, 상괰 뉔미 풉뜬왴 상괰 연산 풉뜬과 왼치푘는 것옼띜 핕외댘르, 상괰 윜1 왴미지 개체왘 상옄 뜈왴어 상에 겹쳐쀜 퍜시댘고 욈는 상괰 뉔미 왴미지 를 윜거푨옼띜쉨, 상괰 윜1 왴미지 개체에 윁얩댘어 욈는 마스킹완 푴윜푘는 마스킹 푴윜벀"
-  }, {
-    "type" : "paragraph",
-    "id" : 167,
-    "page number" : 4,
-    "bounding box" : [ 64.23, 274.756, 198.33, 283.756 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "를 뉔 포푨푘는 위욐 단말 욥치."
-  }, {
-    "type" : "paragraph",
-    "id" : 168,
-    "page number" : 4,
-    "bounding box" : [ 64.231, 252.677, 99.931, 261.677 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "청걬푭 5"
-  }, {
-    "type" : "paragraph",
-    "id" : 169,
-    "page number" : 4,
-    "bounding box" : [ 64.232, 230.478, 131.612, 239.478 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "윜2푭에 욈어쀜,"
-  }, {
-    "type" : "paragraph",
-    "id" : 170,
-    "page number" : 4,
-    "bounding box" : [ 64.233, 167.842, 532.115, 219.319 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "상괰 마스킹 처리벀에 왘푴, 상괰 윜1 왴미지 개체가 마스킹 처리댜 왴후, 상괰 사얩욐에 왘푴, 상괰 위욐 단말 욥치에 연결댜 욅뜥 욥치왘 포외퀰가 상괰 뉔미 왴미지 상에 픸뮄(hover)댘르, 상괰 윜1 왴미지 개체왘 푴상도 를 사위 쀤윕댜 비온띜 낮처 쀬뀤왼(thumbnail) 왴미지를 생쀱푘여, 상괰 포외퀰가 픸뮄댜 지윐왘 외윑 지윐에 상괰 쀬뀤왼 왴미지를 퍜시푘는 쀬뀤왼 퍜시벀"
-  }, {
-    "type" : "paragraph",
-    "id" : 171,
-    "page number" : 4,
-    "bounding box" : [ 64.237, 147.683, 198.337, 156.683 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "를 뉔 포푨푘는 위욐 단말 욥치."
-  }, {
-    "type" : "paragraph",
-    "id" : 172,
-    "page number" : 4,
-    "bounding box" : [ 64.238, 125.604, 99.938, 134.604 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "청걬푭 6"
-  }, {
-    "type" : "paragraph",
-    "id" : 173,
+    "id" : 191,
     "page number" : 4,
     "bounding box" : [ 64.239, 89.246, 532.119, 112.405 ],
     "font" : "BatangChe",
@@ -739,7 +843,7 @@
     "content" : "위욐 머쀜에 삽욅댘는 왴미지 개체 내에 포푨댜 개외 윕보를 식별푠 수 욈는 위욐 단말 욥치왘 동욑 묩뮕에 욈 어쀜,"
   }, {
     "type" : "paragraph",
-    "id" : 174,
+    "id" : 192,
     "page number" : 4,
     "bounding box" : [ 64.241, 69.087, 532.121, 78.087 ],
     "font" : "BatangChe",
@@ -748,7 +852,7 @@
     "content" : "개외 윕보왘 퍜괰 픕식에 눀왑댘는 것옼띜 사위 쀤윕댜 쀜띜 다른 복수왘 윕규 퍜프식(regular expression)들왴"
   }, {
     "type" : "footer",
-    "id" : 175,
+    "id" : 193,
     "page number" : 4,
     "bounding box" : [ 285.407, 30.306, 310.129, 40.247 ],
     "kids" : [ {
@@ -763,7 +867,7 @@
     } ]
   }, {
     "type" : "header",
-    "id" : 176,
+    "id" : 194,
     "page number" : 5,
     "bounding box" : [ 411.282, 797.591, 532.182, 807.551 ],
     "kids" : [ {
@@ -778,7 +882,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 177,
+    "id" : 195,
     "page number" : 5,
     "bounding box" : [ 64.2, 771.526, 282.78, 780.526 ],
     "font" : "BatangChe",
@@ -787,7 +891,7 @@
     "content" : "윀욥댘어 욈는 윕규 퍜프식 윀욥벀를 옠지푘는 단계;"
   }, {
     "type" : "paragraph",
-    "id" : 178,
+    "id" : 196,
     "page number" : 5,
     "bounding box" : [ 64.201, 723.049, 532.082, 760.367 ],
     "font" : "BatangChe",
@@ -796,7 +900,7 @@
     "content" : "사얩욐에 왘푴, 위욐 머쀜왘 윜1 지윐에 윜1 왴미지 개체를 삽욅푠 것완 지시푘는 왴미지 삽욅 릅뜹왴 외가댘르, 사위 쀤윕댜 큍스트 외식 릨뉸완 괰찈띜, 상괰 윜1 왴미지 개체에 눀표 큍스트 외식완 수풉푘여 상괰 윜1 왴미지 개체에 포푨댘어 욈는 큍스트를 첔천푘는 단계;"
   }, {
     "type" : "paragraph",
-    "id" : 179,
+    "id" : 197,
     "page number" : 5,
     "bounding box" : [ 64.204, 674.572, 532.085, 711.89 ],
     "font" : "BatangChe",
@@ -805,7 +909,7 @@
     "content" : "상괰 윜1 왴미지 개체에 포푨댘어 욈는 큍스트가 첔천댘르, 상괰 첔천댜 큍스트 접, 상괰 윕규 퍜프식 윀욥벀에 윀욥댘어 욈는 상괰 복수왘 윕규 퍜프식들에 눀왑댘는 퍜괰 픕식완 갖는 머욐열왴 이재푘는지 여벀를 핕외푘는 단계;"
   }, {
     "type" : "paragraph",
-    "id" : 180,
+    "id" : 198,
     "page number" : 5,
     "bounding box" : [ 64.207, 611.936, 532.147, 663.413 ],
     "font" : "BatangChe",
@@ -814,7 +918,7 @@
     "content" : "상괰 첔천댜 큍스트 접 상괰 복수왘 윕규 퍜프식들에 눀왑댘는 퍜괰 픕식완 갖는 머욐열띜, 윁어도 푘나왘 윜1 머욐열왴 이재푘는 것옼띜 핕외댘르, 상괰 사얩욐에 눀푴, 상괰 윜1 왴미지 개체에 개외 윕보가 포푨댘어 욈왌 에도 번걬푘고 상괰 위욐 머쀜에 상괰 윜1 왴미지 개체를 삽욅푠지 여벀를 질왘푘는 질왘 륔시지를 생쀱푘여 핔 르 상에 퍜시푘는 단계; 묏"
   }, {
     "type" : "paragraph",
-    "id" : 181,
+    "id" : 199,
     "page number" : 5,
     "bounding box" : [ 64.211, 563.459, 532.092, 600.777 ],
     "font" : "BatangChe",
@@ -823,7 +927,7 @@
     "content" : "상괰 질왘 륔시지에 눀왑푘여, 상괰 사얩욐에 왘푴, 상괰 위욐 머쀜에 상괰 윜1 왴미지 개체를 삽욅푠 것완 지 시푘는 챜입 왴미지 삽욅 릅뜹왴 외가댘르, 상괰 위욐 머쀜왘 상괰 윜1 지윐에 상괰 윜1 왴미지 개체를 삽욅푘 는 단계"
   }, {
     "type" : "paragraph",
-    "id" : 182,
+    "id" : 200,
     "page number" : 5,
     "bounding box" : [ 64.214, 543.3, 238.394, 552.3 ],
     "font" : "BatangChe",
@@ -831,71 +935,110 @@
     "text color" : "[0.0, 0.0, 0.0]",
     "content" : "를 포푨푘는 위욐 단말 욥치왘 동욑 묩뮕."
   }, {
-    "type" : "paragraph",
-    "id" : 183,
+    "type" : "list",
+    "id" : 201,
+    "level" : "3",
     "page number" : 5,
     "bounding box" : [ 64.215, 521.221, 99.915, 530.221 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "청걬푭 7"
+    "numbering style" : "arabic numbers",
+    "number of list items" : 1,
+    "previous list id" : 190,
+    "next list id" : 213,
+    "list items" : [ {
+      "type" : "list item",
+      "page number" : 5,
+      "bounding box" : [ 64.215, 521.221, 99.915, 530.221 ],
+      "font" : "BatangChe",
+      "font size" : 9.0,
+      "text color" : "[0.0, 0.0, 0.0]",
+      "content" : "청걬푭 7",
+      "kids" : [ {
+        "type" : "list",
+        "id" : 127,
+        "level" : "4",
+        "page number" : 5,
+        "bounding box" : [ 64.216, 331.631, 215.785, 508.022 ],
+        "numbering style" : "arabic numbers",
+        "number of list items" : 2,
+        "next list id" : 128,
+        "list items" : [ {
+          "type" : "list item",
+          "page number" : 5,
+          "bounding box" : [ 64.216, 499.022, 131.596, 508.022 ],
+          "font" : "BatangChe",
+          "font size" : 9.0,
+          "text color" : "[0.0, 0.0, 0.0]",
+          "content" : "윜6푭에 욈어쀜,",
+          "kids" : [ {
+            "type" : "paragraph",
+            "id" : 103,
+            "page number" : 5,
+            "bounding box" : [ 64.217, 450.545, 532.098, 487.863 ],
+            "font" : "BatangChe",
+            "font size" : 9.0,
+            "text color" : "[0.0, 0.0, 0.0]",
+            "content" : "상괰 위욐 머쀜왘 상괰 윜1 지윐에 상괰 윜1 왴미지 개체가 삽욅댜 왴후, 상괰 사얩욐에 왘푴, 상괰 윜1 왴미지 개체에 눀표 마스킹(masking) 처리 릅뜹왴 외가댘르, 상괰 윜1 왴미지 개체앀 동왼표 크괰왘 뉔미(dummy) 왴미 지를 생쀱푘는 단계; 묏"
+          }, {
+            "type" : "paragraph",
+            "id" : 104,
+            "page number" : 5,
+            "bounding box" : [ 64.22, 416.227, 532.1, 439.386 ],
+            "font" : "BatangChe",
+            "font size" : 9.0,
+            "text color" : "[0.0, 0.0, 0.0]",
+            "content" : "상괰 뉔미 왴미지가 생쀱댘르, 상괰 위욐 머쀜왘 상괰 윜1 지윐에 삽욅댘어 욈는 상괰 윜1 왴미지 개체왘 상옄 뜈왴어(layer) 상에, 상괰 뉔미 왴미지를 겹쳐쀜 퍜시푨옼띜쉨, 상괰 윜1 왴미지 개체를 마스킹 처리푘는 단계"
+          }, {
+            "type" : "paragraph",
+            "id" : 105,
+            "page number" : 5,
+            "bounding box" : [ 64.222, 396.068, 251.842, 405.068 ],
+            "font" : "BatangChe",
+            "font size" : 9.0,
+            "text color" : "[0.0, 0.0, 0.0]",
+            "content" : "를 뉔 포푨푘는 위욐 단말 욥치왘 동욑 묩뮕."
+          }, {
+            "type" : "paragraph",
+            "id" : 106,
+            "page number" : 5,
+            "bounding box" : [ 64.223, 373.989, 99.923, 382.989 ],
+            "font" : "BatangChe",
+            "font size" : 9.0,
+            "text color" : "[0.0, 0.0, 0.0]",
+            "content" : "청걬푭 8"
+          } ]
+        }, {
+          "type" : "list item",
+          "page number" : 5,
+          "bounding box" : [ 64.224, 331.631, 215.785, 360.79 ],
+          "font" : "BatangChe",
+          "font size" : 9.0,
+          "text color" : "[0.0, 0.0, 0.0]",
+          "content" : "윜7푭에 욈어쀜, 상괰 뉔미 왴미지를 생쀱푘는 단계는",
+          "kids" : [ ]
+        } ]
+      } ]
+    } ]
   }, {
     "type" : "paragraph",
-    "id" : 184,
+    "id" : 202,
     "page number" : 5,
-    "bounding box" : [ 64.216, 499.022, 131.596, 508.022 ],
+    "bounding box" : [ 64.226, 297.313, 532.106, 320.472 ],
     "font" : "BatangChe",
     "font size" : 9.0,
     "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "윜6푭에 욈어쀜,"
+    "content" : "'1'과 '0'왘 쀱버들띜 걬쀱댜, 사위 쀤윕댜 n(n와 2 왴상왘 욐연수욄) x n 크괰왘 외좝 풉뜬왴 윀욥댘어 욈는 외좝 풉뜬 윀욥벀를 옠지푘는 단계;"
   }, {
     "type" : "paragraph",
-    "id" : 185,
+    "id" : 203,
     "page number" : 5,
-    "bounding box" : [ 64.217, 450.545, 532.098, 487.863 ],
+    "bounding box" : [ 64.228, 262.995, 532.168, 286.154 ],
     "font" : "BatangChe",
     "font size" : 9.0,
     "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "상괰 위욐 머쀜왘 상괰 윜1 지윐에 상괰 윜1 왴미지 개체가 삽욅댜 왴후, 상괰 사얩욐에 왘푴, 상괰 윜1 왴미지 개체에 눀표 마스킹(masking) 처리 릅뜹왴 외가댘르, 상괰 윜1 왴미지 개체앀 동왼표 크괰왘 뉔미(dummy) 왴미 지를 생쀱푘는 단계; 묏"
+    "content" : "'1'왘 쀱버에 눀왑댘는 것옼띜 사위 지윕댜 윜1 참읰 왴미지앀, '0'왘 쀱버에 눀왑댘는 것옼띜 사위 지윕댜 윜2 참읰 왴미지가 윀욥댘어 욈는 참읰 왴미지 윀욥벀를 옠지푘는 단계;"
   }, {
     "type" : "paragraph",
-    "id" : 186,
-    "page number" : 5,
-    "bounding box" : [ 64.22, 416.227, 532.1, 439.386 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "상괰 뉔미 왴미지가 생쀱댘르, 상괰 위욐 머쀜왘 상괰 윜1 지윐에 삽욅댘어 욈는 상괰 윜1 왴미지 개체왘 상옄 뜈왴어(layer) 상에, 상괰 뉔미 왴미지를 겹쳐쀜 퍜시푨옼띜쉨, 상괰 윜1 왴미지 개체를 마스킹 처리푘는 단계"
-  }, {
-    "type" : "paragraph",
-    "id" : 187,
-    "page number" : 5,
-    "bounding box" : [ 64.222, 396.068, 251.842, 405.068 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "를 뉔 포푨푘는 위욐 단말 욥치왘 동욑 묩뮕."
-  }, {
-    "type" : "paragraph",
-    "id" : 188,
-    "page number" : 5,
-    "bounding box" : [ 64.223, 373.989, 99.923, 382.989 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "청걬푭 8"
-  }, {
-    "type" : "paragraph",
-    "id" : 189,
-    "page number" : 5,
-    "bounding box" : [ 64.224, 262.995, 532.168, 360.79 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "윜7푭에 욈어쀜, 상괰 뉔미 왴미지를 생쀱푘는 단계는 '1'과 '0'왘 쀱버들띜 걬쀱댜, 사위 쀤윕댜 n(n와 2 왴상왘 욐연수욄) x n 크괰왘 외좝 풉뜬왴 윀욥댘어 욈는 외좝 풉뜬 윀욥벀를 옠지푘는 단계; '1'왘 쀱버에 눀왑댘는 것옼띜 사위 지윕댜 윜1 참읰 왴미지앀, '0'왘 쀱버에 눀왑댘는 것옼띜 사위 지윕댜 윜2 참읰 왴미지가 윀욥댘어 욈는 참읰 왴미지 윀욥벀를 옠지푘는 단계;"
-  }, {
-    "type" : "paragraph",
-    "id" : 190,
+    "id" : 204,
     "page number" : 5,
     "bounding box" : [ 64.23, 214.518, 532.111, 251.836 ],
     "font" : "BatangChe",
@@ -904,7 +1047,7 @@
     "content" : "상괰 위욐 머쀜왘 상괰 윜1 지윐에 상괰 윜1 왴미지 개체가 삽욅댜 왴후, 상괰 사얩욐에 왘푴, 상괰 윜1 왴미지 개체에 눀표 마스킹 처리 릅뜹왴 외가댘르, 상괰 사얩욐에 눀푴, 마스킹 푴윜를 옄표 비묀뮈픸를 쀤윕푠 것완 얔청푘는 비묀뮈픸 쀤윕 얔청 륔시지를 핔르 상에 퍜시푘는 단계;"
   }, {
     "type" : "paragraph",
-    "id" : 191,
+    "id" : 205,
     "page number" : 5,
     "bounding box" : [ 64.233, 151.882, 532.175, 203.359 ],
     "font" : "BatangChe",
@@ -913,7 +1056,7 @@
     "content" : "상괰 비묀뮈픸 쀤윕 얔청 륔시지에 눀왑푘여, 상괰 사얩욐에 왘푴 윜1 비묀뮈픸가 쀤윕댘르, 상괰 윜1 비묀뮈픸 에 눀푴 n완 윜수띜 푘는 릨듈띜(modulo) 연산완 수풉푨옼띜쉨, 윜1 연산 값 x를 산천표 후, 상괰 외좝 풉뜬 윀 욥벀에 윀욥댘어 욈는 상괰 외좝 풉뜬띜벀퀰, x+1뮈째 열에 옄치푘는 윜1 열뮡퀰앀, x+1뮈째 풉에 옄치푘는 윜1 풉뮡퀰를 첔천푘는 단계;"
   }, {
     "type" : "paragraph",
-    "id" : 192,
+    "id" : 206,
     "page number" : 5,
     "bounding box" : [ 64.237, 117.564, 532.117, 140.723 ],
     "font" : "BatangChe",
@@ -922,7 +1065,7 @@
     "content" : "상괰 윜1 열뮡퀰앀 상괰 윜1 풉뮡퀰가 첔천댘르, 상괰 윜1 열뮡퀰앀 상괰 윜1 풉뮡퀰를 풉뜬 곱푘여 n x n 크괰 왘 연산 풉뜬완 생쀱푘는 단계; 묏"
   }, {
     "type" : "paragraph",
-    "id" : 193,
+    "id" : 207,
     "page number" : 5,
     "bounding box" : [ 64.239, 97.405, 531.939, 106.405 ],
     "font" : "BatangChe",
@@ -931,7 +1074,7 @@
     "content" : "상괰 연산 풉뜬왴 생쀱댘르, 상괰 윜1 왴미지 개체앀 동왼표 크괰왘 왴미지 씁역완 n x n개띜 버푠푨옼띜쉨, n"
   }, {
     "type" : "paragraph",
-    "id" : 194,
+    "id" : 208,
     "page number" : 5,
     "bounding box" : [ 64.24, 69.087, 532.12, 92.246 ],
     "font" : "BatangChe",
@@ -940,7 +1083,7 @@
     "content" : "x n개왘 버푠 씁역들완 생쀱표 후, 상괰 n x n개왘 버푠 씁역들 접, 상괰 연산 풉뜬에쀜 '1'왘 쀱버왴 옄치푘는 지윐과 눀왑댘는 지윐에 옄치푘는 버푠 씁역 각각에 상괰 윜1 참읰 왴미지를 삽욅푘고, 상괰 연산 풉뜬에쀜 '"
   }, {
     "type" : "footer",
-    "id" : 195,
+    "id" : 209,
     "page number" : 5,
     "bounding box" : [ 285.407, 30.306, 310.129, 40.247 ],
     "kids" : [ {
@@ -955,7 +1098,7 @@
     } ]
   }, {
     "type" : "header",
-    "id" : 196,
+    "id" : 210,
     "page number" : 6,
     "bounding box" : [ 411.241, 797.551, 532.141, 807.511 ],
     "kids" : [ {
@@ -970,7 +1113,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 197,
+    "id" : 211,
     "page number" : 6,
     "bounding box" : [ 64.2, 757.367, 532.08, 780.526 ],
     "font" : "BatangChe",
@@ -979,7 +1122,7 @@
     "content" : "0'왘 쀱버왴 옄치푘는 지윐과 눀왑댘는 지윐에 옄치푘는 버푠 씁역 각각에 상괰 윜2 참읰 왴미지를 삽욅푨옼띜 쉨, 상괰 뉔미 왴미지를 생쀱푘는 단계"
   }, {
     "type" : "paragraph",
-    "id" : 198,
+    "id" : 212,
     "page number" : 6,
     "bounding box" : [ 64.202, 737.208, 238.382, 746.208 ],
     "font" : "BatangChe",
@@ -987,140 +1130,151 @@
     "text color" : "[0.0, 0.0, 0.0]",
     "content" : "를 포푨푘는 위욐 단말 욥치왘 동욑 묩뮕."
   }, {
-    "type" : "paragraph",
-    "id" : 199,
-    "page number" : 6,
-    "bounding box" : [ 64.203, 715.129, 99.903, 724.129 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "청걬푭 9"
-  }, {
-    "type" : "paragraph",
-    "id" : 200,
-    "page number" : 6,
-    "bounding box" : [ 64.204, 692.93, 131.584, 701.93 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "윜8푭에 욈어쀜,"
-  }, {
-    "type" : "paragraph",
-    "id" : 201,
-    "page number" : 6,
-    "bounding box" : [ 64.205, 644.453, 532.086, 681.771 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "상괰 윜1 왴미지 개체가 마스킹 처리댜 왴후, 상괰 사얩욐에 왘푴, 상괰 윜1 왴미지 개체에 눀표 마스킹 푴윜 릅뜹왴 외가댘르, 상괰 사얩욐에 눀푴, 마스킹 푴윜를 옄표 비묀뮈픸를 욅뜥푠 것완 얔청푘는 비묀뮈픸 욅뜥 얔 청 륔시지를 핔르 상에 퍜시푘는 단계;"
-  }, {
-    "type" : "paragraph",
-    "id" : 202,
-    "page number" : 6,
-    "bounding box" : [ 64.208, 581.817, 532.09, 633.294 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "상괰 비묀뮈픸 욅뜥 얔청 륔시지에 눀왑푘여, 상괰 사얩욐에 왘푴, 상괰 윜1 비묀뮈픸가 욅뜥댘르, 상괰 윜1 비 묀뮈픸에 눀푴 n완 윜수띜 푘는 릨듈띜 연산완 수풉푨옼띜쉨, 상괰 윜1 연산 값 x를 산천표 후, 상괰 외좝 풉뜬 윀욥벀에 윀욥댘어 욈는 상괰 외좝 풉뜬띜벀퀰, x+1뮈째 열에 옄치푘는 상괰 윜1 열뮡퀰앀, x+1뮈째 풉에 옄치 푘는 상괰 윜1 풉뮡퀰를 재첔천푘는 단계;"
-  }, {
-    "type" : "paragraph",
-    "id" : 203,
-    "page number" : 6,
-    "bounding box" : [ 64.212, 547.499, 532.092, 570.658 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "상괰 윜1 열뮡퀰앀 상괰 윜1 풉뮡퀰가 재첔천댘르, 상괰 윜1 열뮡퀰앀 상괰 윜1 풉뮡퀰를 풉뜬 곱푘여 n x n 크 괰왘 상괰 연산 풉뜬완 재생쀱푘는 단계;"
-  }, {
-    "type" : "paragraph",
-    "id" : 204,
-    "page number" : 6,
-    "bounding box" : [ 64.214, 484.863, 532.096, 536.34 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "상괰 연산 풉뜬왴 재생쀱댘르, 상괰 뉔미 왴미지를 n x n개띜 버푠푨옼띜쉨, n x n개왘 뉔미 버푠 씁역들완 생 쀱표 후, 상괰 n x n개왘 뉔미 버푠 씁역들 접, 상괰 윜1 참읰 왴미지가 삽욅댘어 욈는 뉔미 버푠 씁역 각각에 눀푴 '1'왘 쀱버완 푠당푘고, 상괰 윜2 참읰 왴미지가 삽욅댘어 욈는 뉔미 버푠 씁역 각각에 눀푴 '0'왘 쀱버완 푠당푨옼띜쉨, '1'과 '0'왘 쀱버들띜 걬쀱댜 n x n 크괰왘 뉔미 풉뜬완 생쀱푘는 단계; 묏"
-  }, {
-    "type" : "paragraph",
-    "id" : 205,
-    "page number" : 6,
-    "bounding box" : [ 64.218, 436.386, 532.099, 473.704 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "상괰 뉔미 풉뜬왴 생쀱댘르, 상괰 뉔미 풉뜬완 상괰 연산 풉뜬과 비걐푘여, 상괰 뉔미 풉뜬왴 상괰 연산 풉뜬과 왼치푘는 것옼띜 핕외댘르, 상괰 윜1 왴미지 개체왘 상옄 뜈왴어 상에 겹쳐쀜 퍜시댘고 욈는 상괰 뉔미 왴미지 를 윜거푨옼띜쉨, 상괰 윜1 왴미지 개체에 윁얩댘어 욈는 마스킹완 푴윜푘는 단계"
-  }, {
-    "type" : "paragraph",
-    "id" : 206,
-    "page number" : 6,
-    "bounding box" : [ 64.221, 416.227, 251.841, 425.227 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "를 뉔 포푨푘는 위욐 단말 욥치왘 동욑 묩뮕."
-  }, {
-    "type" : "paragraph",
-    "id" : 207,
-    "page number" : 6,
-    "bounding box" : [ 64.222, 394.148, 104.482, 403.148 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "청걬푭 10"
-  }, {
-    "type" : "paragraph",
-    "id" : 208,
-    "page number" : 6,
-    "bounding box" : [ 64.223, 371.949, 131.603, 380.949 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "윜8푭에 욈어쀜,"
-  }, {
-    "type" : "paragraph",
-    "id" : 209,
-    "page number" : 6,
-    "bounding box" : [ 64.224, 309.313, 532.106, 360.79 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "상괰 윜1 왴미지 개체가 마스킹 처리댜 왴후, 상괰 사얩욐에 왘푴, 상괰 위욐 단말 욥치에 연결댜 욅뜥 욥치왘 포외퀰가 상괰 뉔미 왴미지 상에 픸뮄(hover)댘르, 상괰 윜1 왴미지 개체왘 푴상도를 사위 쀤윕댜 비온띜 낮처 쀬뀤왼(thumbnail) 왴미지를 생쀱푘여, 상괰 포외퀰가 픸뮄댜 지윐왘 외윑 지윐에 상괰 쀬뀤왼 왴미지를 퍜시푘 는 단계"
-  }, {
-    "type" : "paragraph",
-    "id" : 210,
-    "page number" : 6,
-    "bounding box" : [ 64.228, 289.154, 251.848, 298.154 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "를 뉔 포푨푘는 위욐 단말 욥치왘 동욑 묩뮕."
-  }, {
-    "type" : "paragraph",
-    "id" : 211,
-    "page number" : 6,
-    "bounding box" : [ 64.229, 267.075, 104.489, 276.075 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "청걬푭 11"
-  }, {
-    "type" : "paragraph",
-    "id" : 212,
-    "page number" : 6,
-    "bounding box" : [ 64.23, 230.717, 532.11, 253.876 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "윜6푭 내지 윜10푭 접 어느 표 푭왘 묩뮕완 컴퓨퀰앀왘 결푩완 통푴 실풉시키괰 옄표 컴퓨퀰 퐄띜그램완 괰띝표 컴퓨퀰 툐독 가능 괰띝 매체."
-  }, {
-    "type" : "paragraph",
+    "type" : "list",
     "id" : 213,
+    "level" : "3",
     "page number" : 6,
-    "bounding box" : [ 64.232, 208.638, 104.492, 217.638 ],
-    "font" : "BatangChe",
-    "font size" : 9.0,
-    "text color" : "[0.0, 0.0, 0.0]",
-    "content" : "청걬푭 12"
+    "bounding box" : [ 64.203, 208.638, 131.603, 724.129 ],
+    "numbering style" : "arabic numbers",
+    "number of list items" : 4,
+    "previous list id" : 201,
+    "list items" : [ {
+      "type" : "list item",
+      "page number" : 6,
+      "bounding box" : [ 64.203, 715.129, 99.903, 724.129 ],
+      "font" : "BatangChe",
+      "font size" : 9.0,
+      "text color" : "[0.0, 0.0, 0.0]",
+      "content" : "청걬푭 9",
+      "kids" : [ {
+        "type" : "list",
+        "id" : 128,
+        "level" : "4",
+        "page number" : 6,
+        "bounding box" : [ 64.204, 692.93, 131.584, 701.93 ],
+        "numbering style" : "arabic numbers",
+        "number of list items" : 1,
+        "previous list id" : 127,
+        "list items" : [ {
+          "type" : "list item",
+          "page number" : 6,
+          "bounding box" : [ 64.204, 692.93, 131.584, 701.93 ],
+          "font" : "BatangChe",
+          "font size" : 9.0,
+          "text color" : "[0.0, 0.0, 0.0]",
+          "content" : "윜8푭에 욈어쀜,",
+          "kids" : [ ]
+        } ]
+      }, {
+        "type" : "paragraph",
+        "id" : 129,
+        "page number" : 6,
+        "bounding box" : [ 64.205, 644.453, 532.086, 681.771 ],
+        "font" : "BatangChe",
+        "font size" : 9.0,
+        "text color" : "[0.0, 0.0, 0.0]",
+        "content" : "상괰 윜1 왴미지 개체가 마스킹 처리댜 왴후, 상괰 사얩욐에 왘푴, 상괰 윜1 왴미지 개체에 눀표 마스킹 푴윜 릅뜹왴 외가댘르, 상괰 사얩욐에 눀푴, 마스킹 푴윜를 옄표 비묀뮈픸를 욅뜥푠 것완 얔청푘는 비묀뮈픸 욅뜥 얔 청 륔시지를 핔르 상에 퍜시푘는 단계;"
+      }, {
+        "type" : "paragraph",
+        "id" : 130,
+        "page number" : 6,
+        "bounding box" : [ 64.208, 581.817, 532.09, 633.294 ],
+        "font" : "BatangChe",
+        "font size" : 9.0,
+        "text color" : "[0.0, 0.0, 0.0]",
+        "content" : "상괰 비묀뮈픸 욅뜥 얔청 륔시지에 눀왑푘여, 상괰 사얩욐에 왘푴, 상괰 윜1 비묀뮈픸가 욅뜥댘르, 상괰 윜1 비 묀뮈픸에 눀푴 n완 윜수띜 푘는 릨듈띜 연산완 수풉푨옼띜쉨, 상괰 윜1 연산 값 x를 산천표 후, 상괰 외좝 풉뜬 윀욥벀에 윀욥댘어 욈는 상괰 외좝 풉뜬띜벀퀰, x+1뮈째 열에 옄치푘는 상괰 윜1 열뮡퀰앀, x+1뮈째 풉에 옄치 푘는 상괰 윜1 풉뮡퀰를 재첔천푘는 단계;"
+      }, {
+        "type" : "paragraph",
+        "id" : 131,
+        "page number" : 6,
+        "bounding box" : [ 64.212, 547.499, 532.092, 570.658 ],
+        "font" : "BatangChe",
+        "font size" : 9.0,
+        "text color" : "[0.0, 0.0, 0.0]",
+        "content" : "상괰 윜1 열뮡퀰앀 상괰 윜1 풉뮡퀰가 재첔천댘르, 상괰 윜1 열뮡퀰앀 상괰 윜1 풉뮡퀰를 풉뜬 곱푘여 n x n 크 괰왘 상괰 연산 풉뜬완 재생쀱푘는 단계;"
+      }, {
+        "type" : "paragraph",
+        "id" : 132,
+        "page number" : 6,
+        "bounding box" : [ 64.214, 484.863, 532.096, 536.34 ],
+        "font" : "BatangChe",
+        "font size" : 9.0,
+        "text color" : "[0.0, 0.0, 0.0]",
+        "content" : "상괰 연산 풉뜬왴 재생쀱댘르, 상괰 뉔미 왴미지를 n x n개띜 버푠푨옼띜쉨, n x n개왘 뉔미 버푠 씁역들완 생 쀱표 후, 상괰 n x n개왘 뉔미 버푠 씁역들 접, 상괰 윜1 참읰 왴미지가 삽욅댘어 욈는 뉔미 버푠 씁역 각각에 눀푴 '1'왘 쀱버완 푠당푘고, 상괰 윜2 참읰 왴미지가 삽욅댘어 욈는 뉔미 버푠 씁역 각각에 눀푴 '0'왘 쀱버완 푠당푨옼띜쉨, '1'과 '0'왘 쀱버들띜 걬쀱댜 n x n 크괰왘 뉔미 풉뜬완 생쀱푘는 단계; 묏"
+      }, {
+        "type" : "paragraph",
+        "id" : 133,
+        "page number" : 6,
+        "bounding box" : [ 64.218, 436.386, 532.099, 473.704 ],
+        "font" : "BatangChe",
+        "font size" : 9.0,
+        "text color" : "[0.0, 0.0, 0.0]",
+        "content" : "상괰 뉔미 풉뜬왴 생쀱댘르, 상괰 뉔미 풉뜬완 상괰 연산 풉뜬과 비걐푘여, 상괰 뉔미 풉뜬왴 상괰 연산 풉뜬과 왼치푘는 것옼띜 핕외댘르, 상괰 윜1 왴미지 개체왘 상옄 뜈왴어 상에 겹쳐쀜 퍜시댘고 욈는 상괰 뉔미 왴미지 를 윜거푨옼띜쉨, 상괰 윜1 왴미지 개체에 윁얩댘어 욈는 마스킹완 푴윜푘는 단계"
+      }, {
+        "type" : "paragraph",
+        "id" : 134,
+        "page number" : 6,
+        "bounding box" : [ 64.221, 416.227, 251.841, 425.227 ],
+        "font" : "BatangChe",
+        "font size" : 9.0,
+        "text color" : "[0.0, 0.0, 0.0]",
+        "content" : "를 뉔 포푨푘는 위욐 단말 욥치왘 동욑 묩뮕."
+      } ]
+    }, {
+      "type" : "list item",
+      "page number" : 6,
+      "bounding box" : [ 64.222, 371.949, 131.603, 403.148 ],
+      "font" : "BatangChe",
+      "font size" : 9.0,
+      "text color" : "[0.0, 0.0, 0.0]",
+      "content" : "청걬푭 10 윜8푭에 욈어쀜,",
+      "kids" : [ {
+        "type" : "paragraph",
+        "id" : 135,
+        "page number" : 6,
+        "bounding box" : [ 64.224, 309.313, 532.106, 360.79 ],
+        "font" : "BatangChe",
+        "font size" : 9.0,
+        "text color" : "[0.0, 0.0, 0.0]",
+        "content" : "상괰 윜1 왴미지 개체가 마스킹 처리댜 왴후, 상괰 사얩욐에 왘푴, 상괰 위욐 단말 욥치에 연결댜 욅뜥 욥치왘 포외퀰가 상괰 뉔미 왴미지 상에 픸뮄(hover)댘르, 상괰 윜1 왴미지 개체왘 푴상도를 사위 쀤윕댜 비온띜 낮처 쀬뀤왼(thumbnail) 왴미지를 생쀱푘여, 상괰 포외퀰가 픸뮄댜 지윐왘 외윑 지윐에 상괰 쀬뀤왼 왴미지를 퍜시푘 는 단계"
+      }, {
+        "type" : "paragraph",
+        "id" : 136,
+        "page number" : 6,
+        "bounding box" : [ 64.228, 289.154, 251.848, 298.154 ],
+        "font" : "BatangChe",
+        "font size" : 9.0,
+        "text color" : "[0.0, 0.0, 0.0]",
+        "content" : "를 뉔 포푨푘는 위욐 단말 욥치왘 동욑 묩뮕."
+      } ]
+    }, {
+      "type" : "list item",
+      "page number" : 6,
+      "bounding box" : [ 64.229, 267.075, 104.489, 276.075 ],
+      "font" : "BatangChe",
+      "font size" : 9.0,
+      "text color" : "[0.0, 0.0, 0.0]",
+      "content" : "청걬푭 11",
+      "kids" : [ {
+        "type" : "paragraph",
+        "id" : 137,
+        "page number" : 6,
+        "bounding box" : [ 64.23, 230.717, 532.11, 253.876 ],
+        "font" : "BatangChe",
+        "font size" : 9.0,
+        "text color" : "[0.0, 0.0, 0.0]",
+        "content" : "윜6푭 내지 윜10푭 접 어느 표 푭왘 묩뮕완 컴퓨퀰앀왘 결푩완 통푴 실풉시키괰 옄표 컴퓨퀰 퐄띜그램완 괰띝표 컴퓨퀰 툐독 가능 괰띝 매체."
+      } ]
+    }, {
+      "type" : "list item",
+      "page number" : 6,
+      "bounding box" : [ 64.232, 208.638, 104.492, 217.638 ],
+      "font" : "BatangChe",
+      "font size" : 9.0,
+      "text color" : "[0.0, 0.0, 0.0]",
+      "content" : "청걬푭 12",
+      "kids" : [ ]
+    } ]
   }, {
     "type" : "paragraph",
     "id" : 214,
@@ -3158,7 +3312,7 @@
       "content" : "도르2",
       "kids" : [ {
         "type" : "image",
-        "id" : 103,
+        "id" : 102,
         "page number" : 17,
         "bounding box" : [ 64.2, 375.6, 400.68, 745.08 ]
       } ]
