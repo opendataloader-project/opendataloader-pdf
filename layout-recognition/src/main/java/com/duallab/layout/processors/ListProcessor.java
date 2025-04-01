@@ -134,6 +134,7 @@ public class ListProcessor {
         boolean shouldHaveSameLeft = false;
         boolean shouldHaveSameLeftDifference = false;
         boolean isUnordered = true;
+        boolean isSequential = false;
         Double previousLeftDifference = null;
         for (int index = listIntervals.size() - 1; index >= 0; index--) {
             TextListInterval interval = listIntervals.get(index);
@@ -143,13 +144,14 @@ public class ListProcessor {
             boolean haveSameLeft = NodeUtils.areCloseNumbers(leftDifference, 0, maxXGap);
             if (NodeUtils.areCloseNumbers(leftDifference, 0, 4 * maxXGap) && 
                     ListLabelsUtils.isTwoListItemsOfOneList(interval, listItemTextInfo,
-                    !haveSameLeft, isUnordered)) {
+                            isSequential || !haveSameLeft, isUnordered)) {
                 listIntervals.add(interval);
                 isSingle = false;
                 break;
             }
             if (shouldHaveSameLeftDifference && !NodeUtils.areCloseNumbers(previousLeftDifference, leftDifference)) {
-                break;
+                isSequential = true;
+//                break;
             }
             if (leftDifference > maxXGap) {
                 isUnordered = false;
@@ -166,12 +168,21 @@ public class ListProcessor {
                     !NumberingStyleNames.UNORDERED.equals(interval.getNumberingStyle())) {
                 isUnordered = false;
             }
+            if (index == listIntervals.size() - 1 && isOneParagraph(preivousListItemTextInfo.getListItemValue(),
+                    listItemTextInfo.getListItemValue())) {
+                break;
+            }
         }
         if (isSingle) {
             TextListInterval listInterval = new TextListInterval();
             listInterval.getListItemsInfos().add(listItemTextInfo);
             listIntervals.add(listInterval);
         }
+    }
+    
+    private static boolean isOneParagraph(TextLine line1, TextLine line2) {
+        return TextAlignment.JUSTIFY == ChunksMergeUtils.getAlignment(line1,
+                line2) && ChunksMergeUtils.mergeLeadingProbability(line1, line2) > ParagraphProcessor.DIFFERENT_LINES_PROBABILITY;
     }
     
     private static ListItemTextInfo createListItemTextInfo(int i, TextLine line, String value) {

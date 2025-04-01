@@ -24,7 +24,7 @@ import java.util.Objects;
 
 public class ParagraphProcessor {
 
-    private static final double DIFFERENT_LINES_PROBABILITY = 0.75;
+    public static final double DIFFERENT_LINES_PROBABILITY = 0.75;
 
     public static List<IObject> processParagraphs(List<IObject> contents) {
         DocumentProcessor.setIndexesForContentsList(contents);
