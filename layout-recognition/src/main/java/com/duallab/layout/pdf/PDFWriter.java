@@ -48,18 +48,13 @@ public class PDFWriter {
     
     private static final List<List<PDAnnotation>> annotations = new ArrayList<>();
     
-    public static void updatePDF(File inputPDF, String password, String outputFolder, List<List<IObject>> contents, 
-                                 List<TextChunk> hiddenTextChunks) throws IOException {
+    public static void updatePDF(File inputPDF, String password, String outputFolder, List<List<IObject>> contents) throws IOException {
         try (PDDocument document = PDDocument.load(inputPDF, password)) {
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 annotations.add(new ArrayList<>());
                 for (IObject content : contents.get(pageNumber)) {
                     drawContent(content, PDFLayer.CONTENT);
                 }
-            }
-            for (TextChunk textChunk : hiddenTextChunks) {
-                draw(textChunk.getBoundingBox(), getColor(SemanticType.FIGURE),
-                        String.format("Hidden text, value = \"%s\"", textChunk.getValue()), null, null, null, PDFLayer.HIDDEN_TEXT);
             }
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 document.getPage(pageNumber).getAnnotations().addAll(annotations.get(pageNumber));

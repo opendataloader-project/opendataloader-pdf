@@ -38,5 +38,8 @@ public class SerializerUtil {
         jsonGenerator.writePOJOField(JsonName.FONT_SIZE, textNode.getFontSize());
         jsonGenerator.writeStringField(JsonName.TEXT_COLOR, Arrays.toString(textNode.getTextColor()));
         jsonGenerator.writeStringField(JsonName.CONTENT, textNode.getValue());
+        if (textNode.isHiddenText()) {
+            jsonGenerator.writeBooleanField(JsonName.HIDDEN_TEXT, true);
+        }
     }
 }

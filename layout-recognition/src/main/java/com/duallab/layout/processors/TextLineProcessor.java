@@ -36,7 +36,7 @@ public class TextLineProcessor {
                 }
                 TextLine currentLine = new TextLine(textChunk);
                 double oneLineProbability = ChunksMergeUtils.countOneLineProbability(new SemanticTextNode(), previousLine, currentLine);
-                isSeparateLine |= (oneLineProbability < ONE_LINE_PROBABILITY);
+                isSeparateLine |= (oneLineProbability < ONE_LINE_PROBABILITY) || previousLine.isHiddenText() != currentLine.isHiddenText();
                 if (isSeparateLine) {
                     previousLine.setBoundingBox(new BoundingBox(previousLine.getBoundingBox()));
                     previousLine = currentLine;

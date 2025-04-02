@@ -28,7 +28,6 @@ import com.duallab.wcag.algorithms.entities.IObject;
 import com.duallab.wcag.algorithms.entities.SemanticTextNode;
 import com.duallab.wcag.algorithms.entities.content.LineArtChunk;
 import com.duallab.wcag.algorithms.entities.content.LineChunk;
-import com.duallab.wcag.algorithms.entities.content.TextChunk;
 import com.duallab.wcag.algorithms.entities.geometry.BoundingBox;
 import com.duallab.wcag.algorithms.entities.geometry.MultiBoundingBox;
 import com.duallab.wcag.algorithms.entities.tables.TableBordersCollection;
@@ -49,7 +48,6 @@ public class DocumentProcessor {
     public static void processFile(String inputPdfName, Config config) throws IOException {
         preprocessing(inputPdfName, config);
         calculateDocumentInfo();
-        List<TextChunk> hiddenTexts = new ArrayList<>();
         List<List<IObject>> contents = new ArrayList<>();
         for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
             List<IObject> pageContents = new ArrayList<>(StaticContainers.getDocument().getArtifacts(pageNumber));
@@ -58,9 +56,7 @@ public class DocumentProcessor {
             TextProcessor.removeTextDecorationImages(pageContents);
             pageContents = DocumentProcessor.removeNullObjectsFromList(pageContents);
             TextProcessor.trimTextChunksWhiteSpaces(pageContents);
-            if (StaticLayoutContainers.isFindHiddenText()) {
-                hiddenTexts.addAll(HiddenTextProcessor.findHiddenText(inputPdfName, pageContents, config.getPassword()));
-            }
+            pageContents = HiddenTextProcessor.findHiddenText(inputPdfName, pageContents, config.getPassword());
             processBackgrounds(pageNumber, pageContents);
             pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber);
             pageContents = pageContents.stream().filter(x -> !(x instanceof LineChunk)).collect(Collectors.toList());
@@ -86,7 +82,7 @@ public class DocumentProcessor {
         File inputPDF = new File(inputPdfName);
         new File(config.getOutputFolder()).mkdirs();
         if (config.isGeneratePDF()) {
-            PDFWriter.updatePDF(inputPDF, config.getPassword(), config.getOutputFolder(), contents, hiddenTexts);
+            PDFWriter.updatePDF(inputPDF, config.getPassword(), config.getOutputFolder(), contents);
         }
         if (config.isGenerateJSON()) {
             JsonWriter.writeToJson(inputPDF, config.getOutputFolder(), contents);

@@ -328,10 +328,14 @@ public class ParagraphProcessor {
         textParagraph.getLastColumn().getBlocks().add(textBlock);
         textParagraph.getBoundingBox().union(textBlock.getBoundingBox());
         textParagraph.setCorrectSemanticScore(1.0);
+        textParagraph.setHiddenText(textBlock.isHiddenText());
         return textParagraph;
     }
 
     private static double getDifferentLinesProbability(TextBlock previousBlock, TextBlock nextBlock) {
+        if (previousBlock.isHiddenText() != nextBlock.isHiddenText()) {
+            return 0;
+        }
         if (previousBlock.getLinesNumber() == 1 && nextBlock.getLinesNumber() == 1) {
             return ChunksMergeUtils.mergeLeadingProbability(previousBlock.getLastLine(), nextBlock.getFirstLine());
         }

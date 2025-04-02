@@ -110,7 +110,7 @@ public class ListProcessor {
                 }
                 TextLine line = (TextLine) content;
                 String value = line.getValue();
-                if (value.isEmpty()) {
+                if (value.isEmpty() || line.isHiddenText()) {
                     continue;
                 }
                 ListItemTextInfo listItemTextInfo = createListItemTextInfo(i, line, value);

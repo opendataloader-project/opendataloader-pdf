@@ -7,6 +7,7 @@
  */
 package com.duallab.layout.processors;
 
+import com.duallab.layout.containers.StaticLayoutContainers;
 import com.duallab.wcag.algorithms.entities.IObject;
 import com.duallab.wcag.algorithms.entities.content.TextChunk;
 import com.duallab.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioConsumer;
@@ -18,20 +19,25 @@ import java.util.List;
 public class HiddenTextProcessor {
 
     private static final double MIN_CONTRAST_RATIO = 1.2d;
-    
-    public static List<TextChunk> findHiddenText(String pdfName, List<IObject> contents, String password) throws IOException {
-        List<TextChunk> textChunks = new LinkedList<>();
+
+    public static List<IObject> findHiddenText(String pdfName, List<IObject> contents, String password) throws IOException {
+        List<IObject> result = new LinkedList<>();
         try (ContrastRatioConsumer contrastRatioConsumer = new ContrastRatioConsumer(pdfName, password)) {
             for (IObject content : contents) {
                 if (content instanceof TextChunk) {
                     TextChunk textChunk = (TextChunk)content;
                     contrastRatioConsumer.calculateContrastRatio(textChunk);
                     if (textChunk.getContrastRatio() < MIN_CONTRAST_RATIO) {
-                        textChunks.add(textChunk);
+                        if (StaticLayoutContainers.isFindHiddenText()) {
+                            textChunk.setHiddenText(true);
+                        } else {
+                            continue;
+                        }
                     }
                 }
+                result.add(content);
             }
         }
-        return textChunks;
+        return result;
     }
 }

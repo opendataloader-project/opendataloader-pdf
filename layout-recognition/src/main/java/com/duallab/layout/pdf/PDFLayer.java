@@ -14,7 +14,6 @@ public enum PDFLayer {
     TABLE_CONTENT("table content"), 
     LIST_CONTENT("list content"),
     TEXT_BLOCK_CONTENT("text blocks content"),
-    HIDDEN_TEXT("hidden text"),
     HEADER_AND_FOOTER_CONTENT("header and footer content");
     
     private final String value;
