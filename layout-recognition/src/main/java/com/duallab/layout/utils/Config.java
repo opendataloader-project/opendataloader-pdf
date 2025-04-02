@@ -46,9 +46,6 @@ public class Config {
         if (commandLine.hasOption(CLIOptions.MARKDOWN_IMAGE_OPTION)) {
             config.setAddImageToMarkdown(true);
         }
-        if (commandLine.hasOption(CLIOptions.MARKDOWN_IMAGE_OPTION)) {
-            config.setAddImageToMarkdown(true);
-        }
         if (commandLine.hasOption(CLIOptions.FOLDER_OPTION)) {
             config.setOutputFolder(commandLine.getOptionValue(CLIOptions.FOLDER_OPTION));
         } else {
@@ -77,7 +74,7 @@ public class Config {
     }
 
     public boolean isGenerateMarkdown() {
-        return isGenerateMarkdown;
+        return isGenerateMarkdown || isAddImageToMarkdown() || isUseHTMLInMarkdown();
     }
 
     public void setGenerateMarkdown(boolean generateMarkdown) {
