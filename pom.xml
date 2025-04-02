@@ -19,11 +19,14 @@
     <packaging>pom</packaging>
     <modules>
         <module>layout-recognition</module>
+        <module>veraPDF-parser</module>
+        <module>veraPDF-validation</module>
+        <module>veraPDF-wcag-algs</module>
     </modules>
 
     <properties>
-        <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
