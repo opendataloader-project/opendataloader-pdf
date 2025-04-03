@@ -18037,6 +18037,11 @@
           "font size" : 12.96,
           "text color" : "[0.0]",
           "content" : "작성항목"
+        }, {
+          "type" : "image",
+          "id" : 680,
+          "page number" : 37,
+          "bounding box" : [ 79.997, 712.8, 215.044, 714.239 ]
         } ]
       }, {
         "type" : "table cell",
@@ -18048,13 +18053,18 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 680,
+          "id" : 681,
           "page number" : 37,
           "bounding box" : [ 311.4, 717.448, 402.9, 733.0 ],
           "font" : null,
           "font size" : 12.96,
           "text color" : "[0.0]",
           "content" : "작성방법(예시)"
+        }, {
+          "type" : "image",
+          "id" : 682,
+          "page number" : 37,
+          "bounding box" : [ 215.044, 712.8, 498.932, 714.239 ]
         } ]
       }, {
         "type" : "table cell",
@@ -18066,7 +18076,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 681,
+          "id" : 683,
           "page number" : 37,
           "bounding box" : [ 504.6, 717.448, 531.12, 733.0 ],
           "font" : null,
@@ -18075,7 +18085,7 @@
           "content" : "비고"
         }, {
           "type" : "image",
-          "id" : 682,
+          "id" : 684,
           "page number" : 37,
           "bounding box" : [ 498.932, 712.8, 537.311, 714.239 ]
         } ]
@@ -18092,13 +18102,8 @@
         "row span" : 1,
         "column span" : 1,
         "kids" : [ {
-          "type" : "image",
-          "id" : 683,
-          "page number" : 37,
-          "bounding box" : [ 79.997, 712.8, 215.044, 714.239 ]
-        }, {
           "type" : "paragraph",
-          "id" : 684,
+          "id" : 685,
           "level" : "1",
           "page number" : 37,
           "bounding box" : [ 83.4, 698.992, 153.48, 712.24 ],
@@ -18116,11 +18121,6 @@
         "row span" : 1,
         "column span" : 1,
         "kids" : [ {
-          "type" : "image",
-          "id" : 685,
-          "page number" : 37,
-          "bounding box" : [ 215.044, 712.8, 498.932, 714.239 ]
-        }, {
           "type" : "paragraph",
           "id" : 686,
           "page number" : 37,
@@ -19836,6 +19836,11 @@
           "font size" : 9.96,
           "text color" : "[0.0]",
           "content" : "부문"
+        }, {
+          "type" : "image",
+          "id" : 760,
+          "page number" : 44,
+          "bounding box" : [ 82.396, 608.394, 146.321, 609.833 ]
         } ]
       }, {
         "type" : "table cell",
@@ -19847,13 +19852,18 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 760,
+          "id" : 761,
           "page number" : 44,
           "bounding box" : [ 167.52, 619.113, 207.48, 632.36 ],
           "font" : "MalgunGothicBold",
           "font size" : 9.96,
           "text color" : "[0.0]",
           "content" : "평가항목"
+        }, {
+          "type" : "image",
+          "id" : 762,
+          "page number" : 44,
+          "bounding box" : [ 146.321, 608.394, 228.477, 609.833 ]
         } ]
       }, {
         "type" : "table cell",
@@ -19865,7 +19875,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 761,
+          "id" : 763,
           "page number" : 44,
           "bounding box" : [ 343.2, 619.113, 383.16, 632.36 ],
           "font" : "MalgunGothicBold",
@@ -19874,7 +19884,7 @@
           "content" : "평가기준"
         }, {
           "type" : "image",
-          "id" : 762,
+          "id" : 764,
           "page number" : 44,
           "bounding box" : [ 228.477, 608.394, 497.492, 609.833 ]
         } ]
@@ -19888,7 +19898,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 763,
+          "id" : 765,
           "page number" : 44,
           "bounding box" : [ 506.76, 624.633, 526.68, 637.88 ],
           "font" : "MalgunGothicBold",
@@ -19897,7 +19907,7 @@
           "content" : "배점"
         }, {
           "type" : "paragraph",
-          "id" : 764,
+          "id" : 766,
           "level" : "1",
           "page number" : 44,
           "bounding box" : [ 510.96, 613.593, 523.036, 626.84 ],
@@ -19907,7 +19917,7 @@
           "content" : "(5)"
         }, {
           "type" : "image",
-          "id" : 765,
+          "id" : 767,
           "page number" : 44,
           "bounding box" : [ 497.492, 608.394, 535.632, 609.833 ]
         } ]
@@ -19924,13 +19934,8 @@
         "row span" : 1,
         "column span" : 1,
         "kids" : [ {
-          "type" : "image",
-          "id" : 766,
-          "page number" : 44,
-          "bounding box" : [ 82.396, 608.394, 146.321, 609.833 ]
-        }, {
           "type" : "paragraph",
-          "id" : 767,
+          "id" : 768,
           "page number" : 44,
           "bounding box" : [ 94.56, 592.353, 134.52, 605.6 ],
           "font" : "MalgunGothic",
@@ -19947,11 +19952,6 @@
         "row span" : 1,
         "column span" : 1,
         "kids" : [ {
-          "type" : "image",
-          "id" : 768,
-          "page number" : 44,
-          "bounding box" : [ 146.321, 608.394, 228.477, 609.833 ]
-        }, {
           "type" : "paragraph",
           "id" : 769,
           "page number" : 44,
@@ -20130,11 +20130,6 @@
             "font size" : 9.96,
             "text color" : "[0.0]",
             "content" : "기업신용평가등급"
-          }, {
-            "type" : "image",
-            "id" : 734,
-            "page number" : 44,
-            "bounding box" : [ 324.306, 500.273, 457.554, 500.752 ]
           } ]
         } ]
       }, {
@@ -20150,12 +20145,12 @@
           "column span" : 1,
           "kids" : [ {
             "type" : "image",
-            "id" : 735,
+            "id" : 734,
             "page number" : 44,
             "bounding box" : [ 98.227, 500.273, 230.756, 500.752 ]
           }, {
             "type" : "paragraph",
-            "id" : 736,
+            "id" : 735,
             "page number" : 44,
             "bounding box" : [ 107.88, 473.313, 220.639, 499.64 ],
             "font" : "MalgunGothic",
@@ -20173,12 +20168,12 @@
           "column span" : 1,
           "kids" : [ {
             "type" : "image",
-            "id" : 737,
+            "id" : 736,
             "page number" : 44,
             "bounding box" : [ 230.756, 500.273, 324.306, 500.752 ]
           }, {
             "type" : "paragraph",
-            "id" : 738,
+            "id" : 737,
             "page number" : 44,
             "bounding box" : [ 243.96, 473.313, 311.358, 499.64 ],
             "font" : "MalgunGothic",
@@ -20195,6 +20190,11 @@
           "row span" : 1,
           "column span" : 1,
           "kids" : [ {
+            "type" : "image",
+            "id" : 738,
+            "page number" : 44,
+            "bounding box" : [ 324.306, 500.273, 457.554, 500.752 ]
+          }, {
             "type" : "paragraph",
             "id" : 739,
             "page number" : 44,
@@ -28783,11 +28783,6 @@
           "font size" : 9.96,
           "text color" : "[0.0]",
           "content" : "구 분"
-        }, {
-          "type" : "image",
-          "id" : 1063,
-          "page number" : 63,
-          "bounding box" : [ 74.48, 514.417, 163.352, 515.856 ]
         } ]
       }, {
         "type" : "table cell",
@@ -28799,7 +28794,7 @@
         "column span" : 1,
         "kids" : [ {
           "type" : "paragraph",
-          "id" : 1064,
+          "id" : 1063,
           "page number" : 63,
           "bounding box" : [ 318.96, 518.59, 373.92, 528.55 ],
           "font" : "Dotum",
@@ -28820,6 +28815,11 @@
         "row span" : 1,
         "column span" : 1,
         "kids" : [ {
+          "type" : "image",
+          "id" : 1064,
+          "page number" : 63,
+          "bounding box" : [ 74.48, 514.417, 163.352, 515.856 ]
+        }, {
           "type" : "paragraph",
           "id" : 1065,
           "page number" : 63,
