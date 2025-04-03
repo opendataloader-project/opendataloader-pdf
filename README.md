@@ -99,93 +99,93 @@ import java.io.IOException;
 
 Root json node
 
-| Field             | Type    | Description                        |
-|-------------------|---------|------------------------------------|
-| file name         | string  | Name of processed pdf file         |
-| number of pages   | integer | Number of pages in pdf file        |
-| author            | string  | Author of pdf file                 |
-| title             | string  | Title of pdf file                  |
-| creation date     | string  | Creation date of pdf file          |
-| modification date | string  | Modification date of pdf file      |
-| kids              | array   | Array of detected content elements |
+| Field             | Type    | Optional | Description                        |
+|-------------------|---------|----------|------------------------------------|
+| file name         | string  | no       | Name of processed pdf file         |
+| number of pages   | integer | no       | Number of pages in pdf file        |
+| author            | string  | no       | Author of pdf file                 |
+| title             | string  | no       | Title of pdf file                  |
+| creation date     | string  | no       | Creation date of pdf file          |
+| modification date | string  | no       | Modification date of pdf file      |
+| kids              | array   | no       | Array of detected content elements |
 
 Common fields of content json nodes
 
-| Field        | Type    | Description                                                                                                                                                                                           |
-|--------------|---------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| id           | integer | Unique id of content element                                                                                                                                                                          |
-| level        | string  | Level of content element                                                                                                                                                                              |
-| type         | string  | Type of content element<br/>Possible types: `footer`, `header`, `heading`, `line`, `table`, `table row`, `table cell`, `paragraph`, `list`, `list item`, `image`, `line art`, `caption`, `text block` |
-| page number  | integer | Page number of content element                                                                                                                                                                        |
-| bounding box | array   | Bounding box of content element                                                                                                                                                                       |
+| Field        | Type    | Optional | Description                                                                                                                                                                                           |
+|--------------|---------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| id           | integer | yes      | Unique id of content element                                                                                                                                                                          |
+| level        | string  | yes      | Level of content element                                                                                                                                                                              |
+| type         | string  | no       | Type of content element<br/>Possible types: `footer`, `header`, `heading`, `line`, `table`, `table row`, `table cell`, `paragraph`, `list`, `list item`, `image`, `line art`, `caption`, `text block` |
+| page number  | integer | no       | Page number of content element                                                                                                                                                                        |
+| bounding box | array   | no       | Bounding box of content element                                                                                                                                                                       |
 
-Specific fields of text content json nodes (`list item`, `caption`, `heading`, `paragraph`)
+Specific fields of text content json nodes (`caption`, `heading`, `paragraph`)
 
-| Field             | Type   | Description       |
-|-------------------|--------|-------------------|
-| font              | string | Font name of text |
-| font size         | double | Font size of text |
-| text color        | array  | Color of text     |
-| content           | string | Text value        |
+| Field             | Type   | Optional | Description       |
+|-------------------|--------|----------|-------------------|
+| font              | string | no       | Font name of text |
+| font size         | double | no       | Font size of text |
+| text color        | array  | no       | Color of text     |
+| content           | string | no       | Text value        |
 
 Specific fields of `table` json nodes
 
-| Field             | Type     | Description                    |
-|-------------------|----------|--------------------------------|
-| number of rows    | integer  | Number of table rows           |
-| number of columns | integer  | Number of table columns        |
-| rows              | array    | Array of table rows            |
-| previous table id | integer  | Id of previous connected table |
-| next table id     | integer  | Id of next connected table     |
+| Field             | Type     | Optional | Description                    |
+|-------------------|----------|----------|--------------------------------|
+| number of rows    | integer  | no       | Number of table rows           |
+| number of columns | integer  | no       | Number of table columns        |
+| rows              | array    | no       | Array of table rows            |
+| previous table id | integer  | yes      | Id of previous connected table |
+| next table id     | integer  | yes      | Id of next connected table     |
 
 Specific fields of `table row` json nodes
 
-| Field      | Type    | Description          |
-|------------|---------|----------------------|
-| row number | integer | Number of table row  |
-| cells      | array   | Array of table cells |
+| Field      | Type    | Optional | Description          |
+|------------|---------|----------|----------------------|
+| row number | integer | no       | Number of table row  |
+| cells      | array   | no       | Array of table cells |
 
 Specific fields of `table cell` json nodes
 
-| Field         | Type    | Description                          |
-|---------------|---------|--------------------------------------|
-| row number    | integer | Row number of table cell             |
-| column number | integer | Column number of table cell          |
-| row span      | integer | Row span of table cell               |
-| column span   | integer | Column span of table cell            |
-| kids          | array   | Array of table cell content elements |
+| Field         | Type    | Optional | Description                          |
+|---------------|---------|----------|--------------------------------------|
+| row number    | integer | no       | Row number of table cell             |
+| column number | integer | no       | Column number of table cell          |
+| row span      | integer | no       | Row span of table cell               |
+| column span   | integer | no       | Column span of table cell            |
+| kids          | array   | no       | Array of table cell content elements |
 
 Specific fields of `heading` json nodes
 
-| Field         | Type    | Description              |
-|---------------|---------|--------------------------|
-| heading level | integer | Heading level of heading |
+| Field         | Type    | Optional | Description              |
+|---------------|---------|----------|--------------------------|
+| heading level | integer | no       | Heading level of heading |
 
 Specific fields of `list` json nodes
 
-| Field                | Type    | Description                         |
-|----------------------|---------|-------------------------------------|
-| number of list items | integer | Number of list items                |
-| numbering style      | string  | Numbering style of this list        |
-| previous list id     | integer | Id of previous connected list       |
-| next list id         | integer | Id of next connected list           |
-| list items           | array   | Array of list item content elements |
+| Field                | Type    | Optional | Description                         |
+|----------------------|---------|----------|-------------------------------------|
+| number of list items | integer | no       | Number of list items                |
+| numbering style      | string  | no       | Numbering style of this list        |
+| previous list id     | integer | yes      | Id of previous connected list       |
+| next list id         | integer | yes      | Id of next connected list           |
+| list items           | array   | no       | Array of list item content elements |
 
 Specific fields of `list item` json nodes
 
-| Field  | Type   | Description                         |
-|--------|--------|-------------------------------------|
-| kids   | array  | Array of list item content elements |
+| Field  | Type   | Optional | Description                         |
+|--------|--------|----------|-------------------------------------|
+| kids   | array  | no       | Array of list item content elements |
 
 
 Specific fields of `header` and `footer` json nodes
 
-| Field  | Type   | Description                             |
-|--------|--------|-----------------------------------------|
-| kids   | array  | Array of header/footer content elements |
+| Field  | Type   | Optional | Description                             |
+|--------|--------|----------|-----------------------------------------|
+| kids   | array  | no       | Array of header/footer content elements |
 
 Specific fields of `text block` json nodes
 
-| Field  | Type   | Description                          |
-|--------|--------|--------------------------------------|
-| kids   | array  | Array of text block content elements |
+| Field  | Type   | Optional | Description                          |
+|--------|--------|----------|--------------------------------------|
+| kids   | array  | no       | Array of text block content elements |
