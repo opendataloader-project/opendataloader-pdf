@@ -19,9 +19,6 @@
     <packaging>pom</packaging>
     <modules>
         <module>layout-recognition</module>
-        <module>veraPDF-parser</module>
-        <module>veraPDF-validation</module>
-        <module>veraPDF-wcag-algs</module>
     </modules>
 
     <properties>
