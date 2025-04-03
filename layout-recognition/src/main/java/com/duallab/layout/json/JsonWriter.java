@@ -63,7 +63,7 @@ public class JsonWriter {
                         object.getDirectBase() : COSDictionary.construct().get()));
         generator.writeStringField(JsonName.AUTHOR, info.getAuthor() != null ? info.getAuthor() : info.getXMPCreator());
         generator.writeStringField(JsonName.TITLE, info.getTitle() != null ? info.getTitle() : info.getXMPTitle());
-    generator.writeStringField(JsonName.CREATION_DATE, info.getCreationDate() != null ?
+        generator.writeStringField(JsonName.CREATION_DATE, info.getCreationDate() != null ?
                 info.getCreationDate() : info.getXMPCreateDate());
         generator.writeStringField(JsonName.MODIFICATION_DATE, info.getModDate() != null ?
                 info.getModDate() : info.getXMPModifyDate());

@@ -62,7 +62,7 @@ public class TableBorderProcessor {
                     TextChunk textChunk = (TextChunk) content;
                     for (TableBorderCell tableBorderCell : tableBorderCells) {
                         TextChunk currentTextChunk = getTextChunkPartForTableCell(textChunk, tableBorderCell);
-                        if (currentTextChunk != null && currentTextChunk.isEmpty()) {
+                        if (currentTextChunk != null && !currentTextChunk.isEmpty()) {
                             tableBorderCell.addContentObject(currentTextChunk);
                         }
                     }
@@ -155,7 +155,13 @@ public class TableBorderProcessor {
 
     public static TextChunk getTextChunkPartForTableCell(TextChunk textChunk, TableBorderCell cell) {
         Integer start = textChunk.getSymbolStartIndexByCoordinate(cell.getLeftX());
+        if (start == null) {
+            return null;
+        }
         Integer end = textChunk.getSymbolEndIndexByCoordinate(cell.getRightX());
+        if (end == null) {
+            return null;
+        }
         TextChunk result = TextChunk.getTextChunk(textChunk, start, end);
         return ChunksMergeUtils.getTrimTextChunk(result);
     }
