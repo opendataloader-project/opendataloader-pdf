@@ -9,6 +9,9 @@ package com.hancom.opendataloader.pdf.processors;
 
 import com.hancom.opendataloader.pdf.containers.StaticLayoutContainers;
 import com.hancom.opendataloader.pdf.utils.table_transformer.TableBorderJsonBuilder;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.verapdf.tools.StaticResources;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
@@ -175,7 +178,7 @@ public class TableTransformerProcessor {
         }
     }
 
-    private static void generateJsonWithWords(File wordsFolder, List<List<IObject>> contents) throws FileNotFoundException {
+    private static void generateJsonWithWords(File wordsFolder, List<List<IObject>> contents) throws FileNotFoundException, JsonProcessingException {
         for (int pageNumber = 0; pageNumber < StaticResources.getDocument().getNumberOfPages(); pageNumber++) {
             File wordsFile = new File(wordsFolder + File.separator + "image" + pageNumber + "_words.json");
             textContentsToJSON(wordsFile, contents.get(pageNumber), DocumentProcessor.getPageBoundingBox(pageNumber), 
@@ -184,24 +187,29 @@ public class TableTransformerProcessor {
     }
 
     public static void textContentsToJSON(File jsonFile, List<? extends IObject> pageContents, BoundingBox pageBoundingBox, 
-                                          double dpiScaling) throws FileNotFoundException {
+                                          double dpiScaling) throws FileNotFoundException, JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
         int spanNumber = 0;
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("[");
+        stringBuilder.append('[');
         for (IObject content : pageContents) {
             if (content instanceof TextChunk) {
                 BoundingBox scaledBoundingBox = transformBBoxFromPDFToImageCoordinates(content.getBoundingBox(), 
                         pageBoundingBox, dpiScaling);
-                stringBuilder.append(String.format("{\"bbox\":[%s, %s, %s, %s], \"text\":\"%s\", \"span_num\":%s},",
+                ObjectNode json = mapper.createObjectNode()
+                        .put("bbox", String.format("[%s, %s, %s, %s]",
                                 scaledBoundingBox.getLeftX(), scaledBoundingBox.getBottomY(),
-                                scaledBoundingBox.getRightX(), scaledBoundingBox.getTopY(),
-                        Normalizer.normalize(((TextChunk) content).getValue(), Normalizer.Form.NFC), spanNumber++));
+                                scaledBoundingBox.getRightX(), scaledBoundingBox.getTopY()))
+                        .put("text", Normalizer.normalize(((TextChunk) content).getValue(), Normalizer.Form.NFC))
+                        .put("span_num", spanNumber++);
+                stringBuilder.append(mapper.writeValueAsString(json));
+                stringBuilder.append(',');
             }
         }
         if (stringBuilder.length() > 1) {
             stringBuilder.deleteCharAt(stringBuilder.length() - 1);
         }
-        stringBuilder.append("]");
+        stringBuilder.append(']');
         try (PrintWriter out = new PrintWriter(jsonFile)) {
             out.println(stringBuilder);
         }
