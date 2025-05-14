@@ -1,0 +1,70 @@
+name: Build Open PDF Dataloader
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up JDK 11
+      uses: actions/setup-java@v4
+      with:
+        java-version: "11"
+        distribution: "temurin"
+
+    - name: Build duallab-lr-verapdf-parser
+      run: |
+        cd duallab-lr-verapdf-parser
+        mvn clean install
+        cd ..
+
+    - name: Build duallab-layout-recognition-algs
+      run: |
+        cd duallab-layout-recognition-algs
+        mvn clean install
+        cd ..
+
+    - name: Build duallab-lr-verapdf-validation
+      run: |
+        cd duallab-lr-verapdf-validation
+        mvn clean install
+        cd ..
+
+    - name: Build duallab-layout-recognition-core
+      run: |
+        cd duallab-layout-recognition-core
+        mvn clean install
+        cd ..
+
+    - name: Get tag version
+      id: version
+      run: |
+        VERSION=${GITHUB_REF_NAME#v}  # "v1.2" → "1.2"
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+    - name: Rename JAR file with version
+      id: jar
+      run: |
+        ORIG_JAR=duallab-layout-recognition-core/layout-recognition/target/layout-recognition-1.2.jar
+        VERSION=${{ steps.version.outputs.version }}
+        NEW_JAR="layout-recognition-${VERSION}.jar"
+        cp "$ORIG_JAR" "$NEW_JAR"
+        echo "jar_path=$NEW_JAR" >> $GITHUB_OUTPUT
+
+    - name: Create GitHub Release and Upload JAR
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ github.ref_name }}
+        name: open-pdf-dataloader ${{ steps.version.outputs.version }}
+        files: ${{ steps.jar.outputs.jar_path }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
