@@ -36,8 +36,8 @@ public class CLIOptions {
     public static final String PYTHON_OPTION = "py";
     private static final String PYTHON_LONG_OPTION = "python";
 
-    public static final String TATR_OPTION = "tatr";
-    private static final String TATR_LONG_OPTION = "tatrpath";
+//    public static final String TATR_OPTION = "tatr";
+//    private static final String TATR_LONG_OPTION = "tatrpath";
 
     public static Options defineOptions() {
         Options options = new Options();
@@ -68,9 +68,9 @@ public class CLIOptions {
         Option python = new Option(PYTHON_OPTION, PYTHON_LONG_OPTION, true, "Python executable to use");
         python.setRequired(false);
         options.addOption(python);
-        Option tatr = new Option(TATR_OPTION, TATR_LONG_OPTION, true, "Path to TATR repository");
-        tatr.setRequired(true);
-        options.addOption(tatr);
+//        Option tatr = new Option(TATR_OPTION, TATR_LONG_OPTION, true, "Path to TATR repository");
+//        tatr.setRequired(true);
+//        options.addOption(tatr);
         return options;
     }
 }

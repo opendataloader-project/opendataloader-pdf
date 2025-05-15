@@ -50,6 +50,18 @@ public class TableBorderProcessor {
         return newContents;
     }
 
+    public static List<TableBorder> processTableBorders(List<IObject> contents) {
+        List<TableBorder> processedTableBorders = new LinkedList<>();
+        for (IObject content : contents) {
+            TableBorder tableBorder = addContentToTableBorder(content);
+            if (tableBorder != null && !processedTableBorders.contains(tableBorder)) {
+                processedTableBorders.add(tableBorder);
+            }
+        }
+        return processedTableBorders;
+    }
+
+
     private static TableBorder addContentToTableBorder(IObject content) {
         TableBorder tableBorder = StaticContainers.getTableBordersCollection().getTableBorder(content.getBoundingBox());
         if (tableBorder != null) {

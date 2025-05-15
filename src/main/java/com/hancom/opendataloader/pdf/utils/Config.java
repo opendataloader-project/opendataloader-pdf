@@ -61,9 +61,9 @@ public class Config {
         } else {
             config.setPythonExecutable("python");
         }
-        if (commandLine.hasOption((CLIOptions.TATR_OPTION))) {
-            config.setTatrFolder(commandLine.getOptionValue(CLIOptions.TATR_OPTION));
-        }
+//        if (commandLine.hasOption((CLIOptions.TATR_OPTION))) {
+//            config.setTatrFolder(commandLine.getOptionValue(CLIOptions.TATR_OPTION));
+//        }
         return config;
     }
 
