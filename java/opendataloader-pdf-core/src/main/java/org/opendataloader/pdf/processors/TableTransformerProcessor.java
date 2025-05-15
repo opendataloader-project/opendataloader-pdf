@@ -22,7 +22,12 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioCon
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.text.Normalizer;
+import java.time.Duration;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -52,34 +57,45 @@ public class TableTransformerProcessor {
         resultFolder.mkdir();
         prepareInputForTableTransformerPython(pdfName, password, contents, imagesFolder, wordsFolder);
         try {
-            runTableTransformerPython(scriptFolder, pythonPath, imagesFolder, wordsFolder, tableTransformerResultFolder);
+            runTableTransformerPython(imagesFolder, wordsFolder, tableTransformerResultFolder);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
         return parseTableTransformerJSONs(tableTransformerResultFolder);
     }
 
-    private static void runTableTransformerPython(File scriptFolder, String executable, File imagesFolder, File wordsFolder,
-            File resultFolder) throws IOException, InterruptedException {
-
-        ProcessBuilder builder = new ProcessBuilder(
-                executable, "inference.py",
-                "--mode", "extract",
-                "--detection_device", "cpu",
-                "--structure_device", "cpu",
-                "--image_dir", imagesFolder.getAbsolutePath(),
-                "--out_dir", resultFolder.getAbsolutePath(),
-                "-lo");
-        if (TATR_USES_WORDS) {
-            builder.command().add("--words_dir");
-            builder.command().add(wordsFolder.getAbsolutePath());
-        }
-        builder.directory(scriptFolder);
-        builder.redirectOutput(new File("python_output.txt"));
-        builder.redirectError(new File("python_error.txt"));
-        Process process = builder.start();
-        process.waitFor();
+    private static boolean isHealth() throws IOException, InterruptedException {
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://127.0.0.1:8000/health"))
+                .timeout(Duration.ofMinutes(5))
+                .GET()
+                .build();
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        return response.statusCode() == 200;
     }
+
+//    private static void runTableTransformerPython(File scriptFolder, String executable, File imagesFolder, File wordsFolder,
+//            File resultFolder) throws IOException, InterruptedException {
+//
+//        ProcessBuilder builder = new ProcessBuilder(
+//                executable, "inference.py",
+//                "--mode", "extract",
+//                "--detection_device", "cpu",
+//                "--structure_device", "cpu",
+//                "--image_dir", imagesFolder.getAbsolutePath(),
+//                "--out_dir", resultFolder.getAbsolutePath(),
+//                "-lo");
+//        if (TATR_USES_WORDS) {
+//            builder.command().add("--words_dir");
+//            builder.command().add(wordsFolder.getAbsolutePath());
+//        }
+//        builder.directory(scriptFolder);
+//        builder.redirectOutput(new File("python_output.txt"));
+//        builder.redirectError(new File("python_error.txt"));
+//        Process process = builder.start();
+//        process.waitFor();
+//    }
     
     // This is the original parsing method designed for _objects.json isntead of _cells.json
     /*
