@@ -125,6 +125,10 @@ public class DocumentProcessor {
 
     private static void addTablesFromTATR(String inputPdfName, Config config, List<List<IObject>> contents) {
         List<List<TableBorder>> tatrTables = callTATR(inputPdfName, config, contents);
+        addTablesFromTATR(tatrTables);
+    }
+
+    private static void addTablesFromTATR(List<List<TableBorder>> tatrTables) {
         if (tatrTables != null) {
             TableBordersCollection javaCollection = StaticContainers.getTableBordersCollection();
             List<SortedSet<TableBorder>> javaBorders = javaCollection.getTableBorders();
@@ -143,11 +147,11 @@ public class DocumentProcessor {
         }
     }
 
-    private static List<List<TableBorder>> callTATR(String inputPdfName, Config config, List<List<IObject>> contents) {
+    public static List<List<TableBorder>> callTATR(String inputPdfName, Config config, List<List<IObject>> contents) {
         File tempDir = null;
         List<List<TableBorder>> tables = null;
         try {
-            Path scriptFolder = Paths.get(config.getTatrFolder());
+            Path scriptFolder = Paths.get("");
             tempDir = Files.createTempDirectory(scriptFolder, "out-java").toFile();
             tables = TableTransformerProcessor.processTableTransformer(
                     inputPdfName, config.getPassword(), scriptFolder.toFile(), config.getPythonExecutable(),
