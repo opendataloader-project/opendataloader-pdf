@@ -61,7 +61,11 @@ public class CLIMain {
 
     private static void processFile(File file, Config config) {
         try {
-            DocumentProcessor.processFile(file.getAbsolutePath(), config);
+            if (DocumentProcessor.generateTableResults) {
+                DocumentProcessor.generateTableResults(file, config);
+            } else {
+                DocumentProcessor.processFile(file.getAbsolutePath(), config);
+            }
         } catch (Exception exception) {
             LOGGER.log(Level.SEVERE, "Exception during processing file " + file.getAbsolutePath() + ": " +
                     exception.getMessage(), exception);
