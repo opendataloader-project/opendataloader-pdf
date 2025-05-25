@@ -16,6 +16,10 @@ import org.opendataloader.pdf.html.HtmlGeneratorFactory;
 import org.opendataloader.pdf.pdf.PDFWriter;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.text.TextGenerator;
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import org.codehaus.plexus.util.FileUtils;
 import org.verapdf.as.ASAtom;
 import org.verapdf.containers.StaticCoreContainers;
@@ -35,10 +39,13 @@ import org.verapdf.wcag.algorithms.entities.content.LineChunk;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.tables.TableBordersCollection;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
+import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioConsumer;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.LinesPreprocessingConsumer;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 import org.verapdf.xmp.containers.StaticXmpCoreContainers;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -51,6 +58,10 @@ import java.util.logging.Logger;
 
 public class DocumentProcessor {
     private static final Logger LOGGER = Logger.getLogger(DocumentProcessor.class.getCanonicalName());
+
+    public static final boolean generateTableResults = true;
+    public static TimeHelper timeHelper;
+
     public static void processFile(String inputPdfName, Config config) throws IOException {
         preprocessing(inputPdfName, config);
         calculateDocumentInfo();
@@ -123,6 +134,59 @@ public class DocumentProcessor {
         }
     }
 
+    public static void generateTableResults(File file, Config config) throws IOException {
+        timeHelper = new TimeHelper();
+        preprocessing(file.getAbsolutePath(), config);
+        List<List<IObject>> contents = new ArrayList<>();
+        for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
+            List<IObject> pageContents = new ArrayList<>(StaticContainers.getDocument().getArtifacts(pageNumber));
+            TextProcessor.removeSameTextChunks(pageContents);
+            pageContents = DocumentProcessor.removeNullObjectsFromList(pageContents);
+            TextProcessor.trimTextChunksWhiteSpaces(pageContents);
+            contents.add(pageContents);
+        }
+
+        DocumentProcessor.timeHelper.start();
+        List<List<TableBorder>> javaTables = new ArrayList<>();
+        for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
+            javaTables.add(TableBorderProcessor.processTableBorders(contents.get(pageNumber)));
+        }
+        DocumentProcessor.timeHelper.endJava();
+        DocumentProcessor.timeHelper.endJavaAndPython();
+        serializeResults(file, new File("java"), javaTables);
+
+
+        StaticContainers.getTableBordersCollection().clearContentsOfTable();
+        DocumentProcessor.timeHelper.start();
+        List<List<TableBorder>> tatrTables = callTATR(file.getAbsolutePath(), config, contents);
+        DocumentProcessor.timeHelper.endPython();
+        addTablesFromTATR(tatrTables);
+        DocumentProcessor.timeHelper.endJavaAndPython();
+
+        List<List<TableBorder>> pythonAndJavaTables = new ArrayList<>();
+        DocumentProcessor.timeHelper.start();
+        for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
+            pythonAndJavaTables.add(TableBorderProcessor.processTableBorders(contents.get(pageNumber)));
+        }
+        DocumentProcessor.timeHelper.endJavaAndPython();
+        serializeResults(file, new File("java_tatr"), pythonAndJavaTables);
+
+        StaticContainers.getTableBordersCollection().clear();
+        DocumentProcessor.timeHelper.start();
+        addTablesFromTATR(tatrTables);
+        DocumentProcessor.timeHelper.endPython();
+        StaticContainers.getTableBordersCollection().clearContentsOfTable();
+
+        List<List<TableBorder>> pythonTables = new ArrayList<>();
+        DocumentProcessor.timeHelper.start();
+        for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
+            pythonTables.add(TableBorderProcessor.processTableBorders(contents.get(pageNumber)));
+        }
+        DocumentProcessor.timeHelper.endPython();
+        serializeResults(file, new File("tatr"), pythonTables);
+        DocumentProcessor.timeHelper.print(file);
+    }
+
     private static void addTablesFromTATR(String inputPdfName, Config config, List<List<IObject>> contents) {
         List<List<TableBorder>> tatrTables = callTATR(inputPdfName, config, contents);
         addTablesFromTATR(tatrTables);
@@ -191,9 +255,12 @@ public class DocumentProcessor {
         StaticStorages.setIsIgnoreMCIDs(!StaticLayoutContainers.isUseStructTree());
         StaticStorages.setIsAddSpacesBetweenTextPieces(true);
         document.parseChunks();
+        DocumentProcessor.timeHelper.start();
         LinesPreprocessingConsumer linesPreprocessingConsumer = new LinesPreprocessingConsumer();
         linesPreprocessingConsumer.findTableBorders();
         StaticContainers.setTableBordersCollection(new TableBordersCollection(linesPreprocessingConsumer.getTableBorders()));
+        DocumentProcessor.timeHelper.endJava();
+        DocumentProcessor.timeHelper.endJavaAndPython();
     }
 
     private static void updateStaticContainers(Config config) {
@@ -297,5 +364,54 @@ public class DocumentProcessor {
             return 0;
         });
         return sortedContents;
+    }
+
+    public static void serializeResults(File file, File folder, List<List<TableBorder>> tableBorders) {
+        String fileName = file.getName().substring(0, file.getName().length() - 4);
+        folder.mkdir();
+        String imagesFolder = folder + File.separator + "images";
+        new File(imagesFolder).mkdir();
+        String wordsFolder = folder + File.separator + "words";
+        new File(wordsFolder).mkdir();
+        String structuresFolder = folder + File.separator + "structures";
+        new File(structuresFolder).mkdir();
+        try (ContrastRatioConsumer contrastRatioConsumer = new ContrastRatioConsumer(file.getAbsolutePath(), null/*password*/, true, 1000f)) {
+            StaticLayoutContainers.setContrastRatioConsumer(contrastRatioConsumer);
+            for (int pageNumber = 0; pageNumber < StaticResources.getDocument().getNumberOfPages(); pageNumber++) {
+                List<TableBorder> pageTableBorders = tableBorders.get(pageNumber);
+                int tableIndex = 0;
+                for (IObject object : pageTableBorders) {
+                    if (!(object instanceof TableBorder)) {
+                        continue;
+                    }
+                    TableBorder tableBorder = (TableBorder) object;
+                    if (tableBorder.isOneCellTable()) {
+                        continue;
+                    }
+                    if (tableIndex == 0) {
+                        BufferedImage image = contrastRatioConsumer.getRenderPage(pageNumber);
+                        File imageFile = new File(imagesFolder + File.separator + fileName + "_page_" + pageNumber + ".jpg");
+                        ImageIO.write(image, "jpg", imageFile);
+                    }
+                    String jsonFileName = structuresFolder + File.separator + fileName + "_page_" + pageNumber + "_table_" + tableIndex + "_objects.json";
+                    JsonFactory jsonFactory = new JsonFactory();
+                    try (JsonGenerator jsonGenerator = jsonFactory.createGenerator(new File(jsonFileName), JsonEncoding.UTF8)
+                            .setPrettyPrinter(new DefaultPrettyPrinter())
+                            .setCodec(ObjectMapperHolder.getTableTransformerObjectMapper())) {
+                        jsonGenerator.writePOJO(tableBorder);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    File wordsFile = new File(wordsFolder + File.separator + fileName + "_page_" + pageNumber + "_table_" + tableIndex + "_words.json");
+                    TableTransformerProcessor.textContentsToJSON(wordsFile,
+                            TableTransformerProcessor.getTextChunksForTableBorder(tableBorder),
+                            DocumentProcessor.getPageBoundingBox(pageNumber),
+                            StaticLayoutContainers.getContrastRatioConsumer().getDpiScalingForPage(pageNumber));
+                    tableIndex++;
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

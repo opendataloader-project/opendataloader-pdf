@@ -11,12 +11,15 @@ import com.hancom.opendataloader.pdf.containers.StaticLayoutContainers;
 import com.hancom.opendataloader.pdf.utils.table_transformer.TableBorderJsonBuilder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.verapdf.tools.StaticResources;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioConsumer;
 
 import javax.imageio.ImageIO;
@@ -135,6 +138,34 @@ public class TableTransformerProcessor {
     }
      */
 
+    public static void runTableTransformerPython(File imagesFolder, File wordsFolder,
+                                                 File resultFolder) throws IOException, InterruptedException {
+        if (!isHealth()) {
+            LOGGER.log(Level.WARNING, "Table transformer server not available");
+            return;
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        ArrayNode array = mapper.createArrayNode();
+        for (int pageNumber = 0; pageNumber < StaticResources.getDocument().getNumberOfPages(); pageNumber++) {
+            array.add(mapper.createObjectNode()
+//                .put("words", wordsFolder.getAbsolutePath())
+                    .put("image", imagesFolder.getAbsolutePath() + File.separator + "image" + pageNumber + ".jpg"));
+        }
+        ObjectNode json = mapper.createObjectNode()
+                .put("output_dir", resultFolder.getAbsolutePath())
+                .put("objects_json", true)
+                .put("cells_json", true)
+                .set("files", array);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://127.0.0.1:8000/extract"))
+                .timeout(Duration.ofMinutes(5))
+                .POST(HttpRequest.BodyPublishers.ofString(json.toString()))
+                .build();
+        HttpClient client = HttpClient.newHttpClient();
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+    }
+
     private static List<TableBorder> parseTableTransformerJson(File jsonFile, int pageNumber, double dpiScaling) {
         List<TableBorder> pageContents = new ArrayList<>();
         try {
@@ -245,5 +276,23 @@ public class TableTransformerProcessor {
                 pageBoundingBox.getHeight() - boundingBox.getTopY() / dpiScaling, 
                 boundingBox.getRightX() / dpiScaling, 
                 pageBoundingBox.getHeight() - boundingBox.getBottomY() / dpiScaling);
+    }
+
+    public static List<TextChunk> getTextChunksForTableBorder(TableBorder table) {
+        List<TextChunk> textChunks = new ArrayList<>();
+        for (int rowNumber = 0; rowNumber < table.getNumberOfRows(); rowNumber++) {
+            TableBorderRow row = table.getRow(rowNumber);
+            for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
+                TableBorderCell cell = row.getCell(colNumber);
+                if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
+                    for (IObject content : cell.getContents()) {
+                        if (content instanceof TextChunk) {
+                            textChunks.add((TextChunk) content);
+                        }
+                    }
+                }
+            }
+        }
+        return textChunks;
     }
 }
