@@ -110,6 +110,10 @@
                     <groupId>org.verapdf</groupId>
                     <artifactId>feature-reporting</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
