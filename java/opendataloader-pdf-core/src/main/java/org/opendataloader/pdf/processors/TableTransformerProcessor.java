@@ -29,6 +29,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpClient.Version;
 import java.text.Normalizer;
 import java.time.Duration;
 import java.util.*;
@@ -159,7 +160,9 @@ public class TableTransformerProcessor {
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://127.0.0.1:8000/extract"))
+                .version(Version.HTTP_1_1)
                 .timeout(Duration.ofMinutes(5))
+                .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(json.toString()))
                 .build();
         HttpClient client = HttpClient.newHttpClient();
