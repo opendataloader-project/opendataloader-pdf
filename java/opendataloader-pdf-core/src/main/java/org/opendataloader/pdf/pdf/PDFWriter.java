@@ -23,6 +23,7 @@ import org.apache.pdfbox.pdmodel.graphics.optionalcontent.PDOptionalContentPrope
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationSquare;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationSquareCircle;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDBorderStyleDictionary;
 import org.verapdf.wcag.algorithms.entities.*;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
@@ -118,7 +119,7 @@ public class PDFWriter {
                     }
                     String cellValue = String.format("Table cell: row number %s, column number %s, row span %s, column span %s, text content \"%s\"",
                             cell.getRowNumber() + 1, cell.getColNumber() + 1, cell.getRowSpan(), cell.getColSpan(), contentValue);
-                    draw(cell.getBoundingBox(), getColor(SemanticType.TABLE), cellValue, null, annot, cell.getLevel(), PDFLayer.TABLE_CELLS);
+                    draw(cell.getBoundingBox(), getColor(SemanticType.TABLE), cellValue, null, null, cell.getLevel(), PDFLayer.TABLE_CELLS);
                     for (IObject content : cell.getContents()) {
                         drawContent(content, PDFLayer.TABLE_CONTENT);
                     }
@@ -161,7 +162,18 @@ public class PDFWriter {
                 getFloat(movedBoundingBox.getWidth()), getFloat(movedBoundingBox.getHeight())));
         square.setConstantOpacity(0.4f);
         PDColor color = new PDColor(colorArray, PDDeviceRGB.INSTANCE);
-        square.setColor(color);
+        if (layerName == PDFLayer.TABLE_CELLS) {
+            PDBorderStyleDictionary borderDict = new PDBorderStyleDictionary();
+            borderDict.setStyle(PDBorderStyleDictionary.STYLE_SOLID);
+            borderDict.setWidth(1.0f);
+            square.setBorderStyle(borderDict);
+            PDColor darkerColor = new PDColor(new float[] {0f, 0f, 0f }, PDDeviceRGB.INSTANCE);
+            square.setColor(darkerColor);
+        }
+        else
+        {
+            square.setColor(color);
+        }
         square.setInteriorColor(color);
         square.setContents((id != null ? "id = " + id + ", " : "") + (level != null ? "level = " + level + ", " : "") + contents);
         if (linkedAnnot != null) {
