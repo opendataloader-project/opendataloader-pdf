@@ -84,7 +84,7 @@
 
                                     <options>
                                         <option>-dontwarn</option>
-                                        <option>-keep class com.duallab.layout.cli.CLIMain, !com.duallab.** { *; }</option>
+                                        <option>-keep class com.hancom.layout.cli.CLIMain, !com.duallab.** { *; }</option>
                                         <option>-keepclassmembers enum * {
                                             public static **[] values();
                                             public static ** valueOf(java.lang.String);
