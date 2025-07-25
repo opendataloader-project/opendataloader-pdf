@@ -7,7 +7,7 @@
  */
 package com.duallab.layout.utils.levels;
 
-import com.duallab.wcag.algorithms.entities.lists.PDFList;
+import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 
 public class ListLevelInfo extends LevelInfo {
     private final String commonPrefix;

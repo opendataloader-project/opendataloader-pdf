@@ -7,11 +7,11 @@
  */
 package com.duallab.layout.processors;
 
-import com.duallab.wcag.algorithms.entities.IObject;
-import com.duallab.wcag.algorithms.entities.content.ImageChunk;
-import com.duallab.wcag.algorithms.entities.content.TextChunk;
-import com.duallab.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
-import com.duallab.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
+import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
+import org.verapdf.wcag.algorithms.entities.content.TextChunk;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
 import java.util.Comparator;
 import java.util.List;

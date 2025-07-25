@@ -7,14 +7,14 @@
  */
 package com.duallab.layout.processors;
 
-import com.duallab.wcag.algorithms.entities.IObject;
-import com.duallab.wcag.algorithms.entities.SemanticFigure;
-import com.duallab.wcag.algorithms.entities.SemanticTextNode;
-import com.duallab.wcag.algorithms.entities.content.ImageChunk;
-import com.duallab.wcag.algorithms.entities.content.TextChunk;
-import com.duallab.wcag.algorithms.entities.lists.PDFList;
-import com.duallab.wcag.algorithms.entities.tables.TableToken;
-import com.duallab.wcag.algorithms.semanticalgorithms.consumers.ClusterTableConsumer;
+import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.SemanticFigure;
+import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
+import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
+import org.verapdf.wcag.algorithms.entities.content.TextChunk;
+import org.verapdf.wcag.algorithms.entities.lists.PDFList;
+import org.verapdf.wcag.algorithms.entities.tables.TableToken;
+import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ClusterTableConsumer;
 
 import java.util.List;
 

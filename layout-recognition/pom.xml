@@ -22,8 +22,29 @@
     <artifactId>layout-recognition</artifactId>
 
     <properties>
-        <verapdf.version>1.27.0-SNAPSHOT</verapdf.version>
+        <verapdf.version>[1.29.0,1.30.0-RC)</verapdf.version>
     </properties>
+
+    <repositories>
+        <repository>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <id>vera-dev</id>
+            <name>Vera development</name>
+            <url>https://artifactory.openpreservation.org/artifactory/vera-dev</url>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>vera-dev</id>
+            <name>Vera development</name>
+            <url>https://artifactory.openpreservation.org/artifactory/vera-dev</url>
+        </pluginRepository>
+    </pluginRepositories>
 
     <profiles>
         <profile>
@@ -81,21 +102,20 @@
     <dependencies>
 
         <dependency>
-            <groupId>org.apache.pdfbox</groupId>
-            <artifactId>pdfbox</artifactId>
-            <version>[2.0.0,2.1.0)</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.verapdf</groupId>
-            <artifactId>lr-validation-model</artifactId>
+            <artifactId>validation-model</artifactId>
             <version>${verapdf.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.verapdf</groupId>
-                    <artifactId>lr-feature-reporting</artifactId>
+                    <artifactId>feature-reporting</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.verapdf</groupId>
+            <artifactId>wcag-validation</artifactId>
+            <version>${verapdf.version}</version>
         </dependency>
 
         <dependency>

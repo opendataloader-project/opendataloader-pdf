@@ -8,7 +8,7 @@
 package com.duallab.layout.utils.levels;
 
 import com.duallab.layout.utils.BulletedParagraphUtils;
-import com.duallab.wcag.algorithms.entities.SemanticTextNode;
+import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 
 public class TextBulletParagraphLevelInfo extends LevelInfo {
     private final String label;

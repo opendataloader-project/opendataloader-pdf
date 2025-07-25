@@ -9,8 +9,8 @@ package com.duallab.layout.json.serializers;
 
 import com.duallab.layout.json.JsonName;
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.duallab.wcag.algorithms.entities.IObject;
-import com.duallab.wcag.algorithms.entities.SemanticTextNode;
+import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 
 import java.io.IOException;
 import java.util.Arrays;

@@ -1,11 +1,11 @@
 package com.duallab.layout.processors;
 
-import com.duallab.wcag.algorithms.entities.IObject;
-import com.duallab.wcag.algorithms.entities.content.TextLine;
-import com.duallab.wcag.algorithms.entities.geometry.BoundingBox;
-import com.duallab.wcag.algorithms.entities.tables.tableBorders.TableBorder;
-import com.duallab.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
-import com.duallab.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
+import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.content.TextLine;
+import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 
 import java.util.ArrayList;
 import java.util.List;

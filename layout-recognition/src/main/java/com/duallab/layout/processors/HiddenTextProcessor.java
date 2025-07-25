@@ -8,9 +8,9 @@
 package com.duallab.layout.processors;
 
 import com.duallab.layout.containers.StaticLayoutContainers;
-import com.duallab.wcag.algorithms.entities.IObject;
-import com.duallab.wcag.algorithms.entities.content.TextChunk;
-import com.duallab.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioConsumer;
+import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.content.TextChunk;
+import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioConsumer;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -22,7 +22,7 @@ public class HiddenTextProcessor {
 
     public static List<IObject> findHiddenText(String pdfName, List<IObject> contents, String password) throws IOException {
         List<IObject> result = new LinkedList<>();
-        try (ContrastRatioConsumer contrastRatioConsumer = new ContrastRatioConsumer(pdfName, password)) {
+        try (ContrastRatioConsumer contrastRatioConsumer = new ContrastRatioConsumer(pdfName, password, false, null)) {
             for (IObject content : contents) {
                 if (content instanceof TextChunk) {
                     TextChunk textChunk = (TextChunk)content;

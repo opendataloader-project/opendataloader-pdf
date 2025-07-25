@@ -9,19 +9,19 @@ package com.duallab.layout.markdown;
 
 import com.duallab.layout.containers.StaticLayoutContainers;
 import com.duallab.layout.utils.Config;
-import com.duallab.wcag.algorithms.entities.IObject;
-import com.duallab.wcag.algorithms.entities.SemanticHeading;
-import com.duallab.wcag.algorithms.entities.SemanticParagraph;
-import com.duallab.wcag.algorithms.entities.SemanticTextNode;
-import com.duallab.wcag.algorithms.entities.content.ImageChunk;
-import com.duallab.wcag.algorithms.entities.geometry.BoundingBox;
-import com.duallab.wcag.algorithms.entities.lists.ListItem;
-import com.duallab.wcag.algorithms.entities.lists.PDFList;
-import com.duallab.wcag.algorithms.entities.tables.tableBorders.TableBorder;
-import com.duallab.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
-import com.duallab.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
-import com.duallab.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioConsumer;
-import com.duallab.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
+import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.SemanticHeading;
+import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
+import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
+import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
+import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
+import org.verapdf.wcag.algorithms.entities.lists.ListItem;
+import org.verapdf.wcag.algorithms.entities.lists.PDFList;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
+import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioConsumer;
+import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -97,7 +97,7 @@ public class MarkdownGenerator implements Closeable {
         int currentImageIndex = StaticLayoutContainers.incrementImageIndex();
         if (currentImageIndex == 1) {
             new File(imageDirectoryName).mkdirs();
-            contrastRatioConsumer = new ContrastRatioConsumer(this.pdfFileName, password);
+            contrastRatioConsumer = new ContrastRatioConsumer(this.pdfFileName, password, false, null);
         }
 
         String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, imageDirectoryName, File.separator, currentImageIndex);

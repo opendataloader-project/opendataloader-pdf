@@ -10,7 +10,7 @@ package com.duallab.layout.json.serializers;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.duallab.wcag.algorithms.entities.SemanticTextNode;
+import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 
 import java.io.IOException;
 

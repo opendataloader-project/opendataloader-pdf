@@ -7,8 +7,8 @@
  */
 package com.duallab.layout.utils;
 
-import com.duallab.wcag.algorithms.entities.SemanticTextNode;
-import com.duallab.wcag.algorithms.entities.content.TextLine;
+import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
+import org.verapdf.wcag.algorithms.entities.content.TextLine;
 
 import java.util.HashSet;
 import java.util.Set;
