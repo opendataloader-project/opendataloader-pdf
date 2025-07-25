@@ -19,31 +19,10 @@ jobs:
           java-version: "11"
           distribution: "temurin"
 
-      - name: Clone and build duallab-lr-verapdf-parser
+      - name: Build and test open-pdf-dataloader
         run: |
-          git clone https://github.com/open-dataloader-project/duallab-lr-verapdf-parser.git
-          cd duallab-lr-verapdf-parser
-          mvn clean install
-          cd ..
-
-      - name: Clone and build duallab-layout-recognition-algs
-        run: |
-          git clone https://github.com/open-dataloader-project/duallab-layout-recognition-algs.git
-          cd duallab-layout-recognition-algs
-          mvn clean install
-          cd ..
-
-      - name: Clone and build duallab-lr-verapdf-validation
-        run: |
-          git clone https://github.com/open-dataloader-project/duallab-lr-verapdf-validation.git
-          cd duallab-lr-verapdf-validation
-          mvn clean install
-          cd ..
-
-      - name: Build and test duallab-layout-recognition-core
-        run: |
-          git clone https://github.com/open-dataloader-project/duallab-layout-recognition-core.git
-          cd duallab-layout-recognition-core
+          git clone https://github.com/open-dataloader-project/open-pdf-dataloader.git
+          cd open-pdf-dataloader
           mvn clean install
           cd ..
 
@@ -56,9 +35,9 @@ jobs:
       - name: Rename JAR file with version
         id: jar
         run: |
-          ORIG_JAR=duallab-layout-recognition-core/layout-recognition/target/layout-recognition-core-1.2.jar
+          ORIG_JAR=open-pdf-dataloader/layout-recognition/target/layout-recognition-1.2.jar
           VERSION=${{ steps.version.outputs.version }}
-          NEW_JAR="layout-recognition-core-${VERSION}.jar"
+          NEW_JAR="open-pdf-dataloader-${VERSION}.jar"
           cp "$ORIG_JAR" "$NEW_JAR"
           echo "jar_path=$NEW_JAR" >> $GITHUB_OUTPUT
 
