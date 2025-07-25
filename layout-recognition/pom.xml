@@ -14,7 +14,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.duallab</groupId>
-        <artifactId>layout-recognition-core</artifactId>
+        <artifactId>open-pdf-dataloader</artifactId>
         <version>1.2</version>
     </parent>
 
