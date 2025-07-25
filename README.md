@@ -1,25 +1,30 @@
-# Prerequisites
+# open-pdf-dataloader
 
-Java 8+ runtime environment. 
+- ⚡ The world's Fastest PDF data loader for AI.
+- 🧠 Advanced PDF understanding including page layout, level, reading order, table structure and more.
+- ↪️ Various export formats and options, including Markdown, HTML, and JSON.
 
-# Build instructions
+## Quick Start
 
-Perform the following steps for each of the following repositories in the specified order:
-1. duallab-lr-verapdf-parser
-2. duallab-layout-recognition-algs
-3. duallab-lr-verapdf-validation 
-4. duallab-layout-recognition-core
+### Prerequisites
 
-Checkout the project using the command
+Java 8+ runtime environment.
 
-> git checkout <repository url>
+### Build instructions
+
+Perform the following steps for the module +layout-recognition:
 
 Build and install using Maven command
 
 > mvn clean install
 
+If the build is successful, the resulting `jar` file will be created in the path below.
 
-# CLI usage
+```
+open-pdf-dataloader/layout-recognition/target
+```
+
+### CLI usage
 
 ```
 java -jar ... [options] <INPUT FILE OR FOLDER>
@@ -34,6 +39,7 @@ The option `--keeplinebreaks` to preserve the original line breaks text content 
 The option `--html` enables use of HTML in Markdown, which may improve Markdown preview in processors that support HTML tags. The option `--addimagetomarkdown` enables inclusion of image references into the output Markdown. The images are extracted from PDF as individual files and stored in a subfolder next to the Markdown output. 
 
 The complete set of options:
+
 ```
 Options:
 -f,--folder <arg>          Specify output folder (default the folder of the input PDF)
@@ -46,7 +52,7 @@ Options:
 -pdf,--pdf                 Generates pdf output
 ```
 
-# Java code integration
+## Java code integration
 
 To integrate Layout recognition API into Java code, one can follow the sample code below.
 
@@ -95,7 +101,7 @@ import java.io.IOException;
         }
 ```
 
-# Schema of the JSON output
+## Schema of the JSON output
 
 Root json node
 
@@ -177,7 +183,6 @@ Specific fields of `list item` json nodes
 |--------|--------|----------|-------------------------------------|
 | kids   | array  | no       | Array of list item content elements |
 
-
 Specific fields of `header` and `footer` json nodes
 
 | Field  | Type   | Optional | Description                             |
@@ -189,3 +194,7 @@ Specific fields of `text block` json nodes
 | Field  | Type   | Optional | Description                          |
 |--------|--------|----------|--------------------------------------|
 | kids   | array  | no       | Array of text block content elements |
+
+## Contributing
+
+Please read [CONTRIBUTING.md](https://github.com/open-dataloader-project/open-pdf-dataloader/blob/develop/CONTRIBUTING.md) for details.
