@@ -46,59 +46,6 @@
         </pluginRepository>
     </pluginRepositories>
 
-    <profiles>
-        <profile>
-            <id>obfuscation</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>com.github.wvengen</groupId>
-                        <artifactId>proguard-maven-plugin</artifactId>
-                        <version>2.6.1</version>
-                        <executions>
-                            <execution>
-                                <id>obfuscation-packaging</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>proguard</goal>
-                                </goals>
-                                <configuration>
-                                    <obfuscate>true</obfuscate>
-                                    <attach>true</attach>
-                                    <appendClassifier>false</appendClassifier>
-                                    <addMavenDescriptor>true</addMavenDescriptor>
-                                    <injar>${project.build.finalName}.jar</injar>
-                                    <injarNotExistsSkip>true</injarNotExistsSkip>
-                                    <libs>
-<!--                                        <lib>${java.home}/lib/rt.jar</lib>-->
-<!--                                        <lib>${java.home}/lib/jsse.jar</lib>-->
-<!--                                        <lib>${java.home}/lib/jce.jar</lib>-->
-                                        <lib>${java.home}/jmods</lib>
-                                    </libs>
-                                    <archive>
-                                        <manifest>
-                                            <mainClass>CLIMain</mainClass>
-                                            <packageName>com.duallab.layout.cli</packageName>
-                                        </manifest>
-                                    </archive>
-
-                                    <options>
-                                        <option>-dontwarn</option>
-                                        <option>-keep class com.hancom.layout.cli.CLIMain, !com.duallab.** { *; }</option>
-                                        <option>-keepclassmembers enum * {
-                                            public static **[] values();
-                                            public static ** valueOf(java.lang.String);
-                                            }</option>
-                                    </options>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
-    
     <dependencies>
 
         <dependency>
