@@ -26,3 +26,7 @@ hs_err_pid*
 # Maven artefacts
 **/pom.xml.versionsBackup
 /target/
+
+# Temporary files
+temp/
+tmp/
