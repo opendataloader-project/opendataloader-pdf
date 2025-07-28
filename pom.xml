@@ -13,19 +13,72 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.duallab</groupId>
+    <groupId>com.hancom</groupId>
     <artifactId>open-pdf-dataloader</artifactId>
     <version>1.2</version>
-    <packaging>pom</packaging>
-    <modules>
-        <module>layout-recognition</module>
-    </modules>
+    <packaging>jar</packaging>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <verapdf.version>[1.29.0,1.30.0-RC)</verapdf.version>
     </properties>
+
+    <repositories>
+        <repository>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <id>vera-dev</id>
+            <name>Vera development</name>
+            <url>https://artifactory.openpreservation.org/artifactory/vera-dev</url>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>vera-dev</id>
+            <name>Vera development</name>
+            <url>https://artifactory.openpreservation.org/artifactory/vera-dev</url>
+        </pluginRepository>
+    </pluginRepositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.verapdf</groupId>
+            <artifactId>validation-model</artifactId>
+            <version>${verapdf.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.verapdf</groupId>
+                    <artifactId>feature-reporting</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.verapdf</groupId>
+            <artifactId>wcag-validation</artifactId>
+            <version>${verapdf.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.6.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-cli</groupId>
+            <artifactId>commons-cli</artifactId>
+            <version>1.4</version>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>
@@ -41,7 +94,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.duallab.layout.cli.CLIMain</mainClass>
+                            <mainClass>com.hancom.opendataloader.pdf.cli.CLIMain</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
