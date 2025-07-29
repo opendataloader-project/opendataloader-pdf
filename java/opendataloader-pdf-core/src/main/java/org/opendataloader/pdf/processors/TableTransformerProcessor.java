@@ -19,6 +19,7 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioCon
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.text.Normalizer;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -193,8 +194,8 @@ public class TableTransformerProcessor {
                         pageBoundingBox, dpiScaling);
                 stringBuilder.append(String.format("{\"bbox\":[%s, %s, %s, %s], \"text\":\"%s\", \"span_num\":%s},",
                                 scaledBoundingBox.getLeftX(), scaledBoundingBox.getBottomY(),
-                                scaledBoundingBox.getRightX(), scaledBoundingBox.getTopY(), 
-                        ((TextChunk) content).getValue(), spanNumber++));
+                                scaledBoundingBox.getRightX(), scaledBoundingBox.getTopY(),
+                        Normalizer.normalize(((TextChunk) content).getValue(), Normalizer.Form.NFC), spanNumber++));
             }
         }
         if (stringBuilder.length() > 1) {
