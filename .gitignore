@@ -1,0 +1,32 @@
+*.class
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+**/target/**
+/.idea/**
+*.iml
+
+# Ignore Mac DS_Store files
+.DS_Store
+
+# Eclipse artefacts
+**/.project
+**/.settings
+**/.classpath
+**/bin
+
+# Maven artefacts
+**/pom.xml.versionsBackup
+/target/
+
+# Temporary files
+temp/
+tmp/

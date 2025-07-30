@@ -1,0 +1,60 @@
+name: Build Open PDF Dataloader
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "11"
+          cache: "maven"
+
+      - name: Extract version from tag
+        id: tag
+        run: |
+          VERSION="${GITHUB_REF##refs/tags/v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Set version in pom.xml
+        run: mvn versions:set -DnewVersion=${{ steps.tag.outputs.version }}
+
+      - name: Build and Test
+        run: mvn clean package
+
+      - name: Find JAR file name
+        id: jarinfo
+        run: |
+          JAR_NAME=$(basename target/*.jar)
+          echo "jar_name=$JAR_NAME" >> $GITHUB_OUTPUT
+          echo "base_name=${JAR_NAME%.jar}" >> $GITHUB_OUTPUT
+
+      - name: Zip output
+        run: |
+          mkdir dist
+          cp target/${{ steps.jarinfo.outputs.jar_name }} dist/
+          cd dist
+          zip ${{ steps.jarinfo.outputs.base_name }}.zip ${{ steps.jarinfo.outputs.jar_name }}
+
+      - name: Create GitHub Release and upload artifact
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Release v${{ steps.tag.outputs.version }}"
+          tag_name: "v${{ steps.tag.outputs.version }}"
+          files: dist/${{ steps.jarinfo.outputs.base_name }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
