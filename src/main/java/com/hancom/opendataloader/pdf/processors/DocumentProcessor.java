@@ -59,11 +59,15 @@ public class DocumentProcessor {
             TextProcessor.trimTextChunksWhiteSpaces(pageContents);
             pageContents = HiddenTextProcessor.findHiddenText(inputPdfName, pageContents, config.getPassword());
             processBackgrounds(pageNumber, pageContents);
-            pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber);
+            contents.add(pageContents);
+        }
+        OCRProcessor.process(inputPdfName, config.getPassword(), contents);
+        for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
+            List<IObject> pageContents = TableBorderProcessor.processTableBorders(contents.get(pageNumber), pageNumber);
             pageContents = pageContents.stream().filter(x -> !(x instanceof LineChunk)).collect(Collectors.toList());
             pageContents = TextLineProcessor.processTextLines(pageContents);
             pageContents = SpecialTableProcessor.detectSpecialTables(pageContents);
-            contents.add(pageContents);
+            contents.set(pageNumber, pageContents);
         }
         HeaderFooterProcessor.processHeadersAndFooters(contents);
         ListProcessor.processLists(contents, false);
