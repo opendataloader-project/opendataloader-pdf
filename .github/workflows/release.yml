@@ -36,25 +36,10 @@ jobs:
       - name: Build and Test
         run: mvn clean package
 
-      - name: Find JAR file name
-        id: jarinfo
-        run: |
-          JAR_NAME=$(basename target/*.jar)
-          echo "jar_name=$JAR_NAME" >> $GITHUB_OUTPUT
-          echo "base_name=${JAR_NAME%.jar}" >> $GITHUB_OUTPUT
-
-      - name: Zip output
-        run: |
-          mkdir dist
-          cp target/${{ steps.jarinfo.outputs.jar_name }} dist/
-          cd dist
-          zip ${{ steps.jarinfo.outputs.base_name }}.zip ${{ steps.jarinfo.outputs.jar_name }}
-
-      - name: Create GitHub Release and upload artifact
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           name: "Release v${{ steps.tag.outputs.version }}"
           tag_name: "v${{ steps.tag.outputs.version }}"
-          files: dist/${{ steps.jarinfo.outputs.base_name }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
