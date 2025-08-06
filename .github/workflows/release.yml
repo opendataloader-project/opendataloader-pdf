@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -25,18 +26,21 @@ jobs:
           cache: "maven"
 
       - name: Extract version from tag
+        if: github.event_name == 'push'
         id: tag
         run: |
           VERSION="${GITHUB_REF##refs/tags/v}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Set version in pom.xml
+        if: github.event_name == 'push'
         run: mvn versions:set -DnewVersion=${{ steps.tag.outputs.version }}
 
       - name: Build and Test
         run: mvn clean package
 
       - name: Create GitHub Release
+        if: github.event_name == 'push'
         uses: softprops/action-gh-release@v2
         with:
           name: "Release v${{ steps.tag.outputs.version }}"
