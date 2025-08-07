@@ -1,31 +1,42 @@
-# open-pdf-dataloader
+# Open PDF Data Loader
 
-A Fast, Accurate and Secure PDF Extraction Engine — Built for AI Understanding
+A Fast, Accurate and Secure PDF Extraction Engine — Built for AI Understanding.
 
-Open PDF Dataloader is a high-performance document parsing engine that combines the speed of rule-based processing,
-the accuracy of structured extraction, and the security of local execution 
-— making it the perfect foundation for AI-driven document workflows.
+Hancom PDF Data Loader is a high-performance document parsing engine that simplifies document processing, 
+combining the speed of rule-based processing, the accuracy of structured extraction, and the security of local execution. 
+It's the perfect foundation for AI-driven document workflows and seamless integrations with the generative AI ecosystem.
 
-## Key Features
+<br>
 
-- ⚡ Fast – Efficient batch processing for thousands of documents
-- ✅ Accurate – Extracts text, tables, images, and layout with high precision
-- 🔐 Secure – Runs fully offline, ideal for sensitive or regulated environments
-- 🧠 AI-Ready – Structured outputs in Markdown or JSON, optimized for LLMs
-- 🔧 Customizable – Rule sets can be adapted for domain-specific structures
-- 🧬 AI Add-on Compatible – Seamlessly upgrade to AI-powered modules when needed
+## 🌟 Key Features
+- ⚡ Fast – Efficient batch processing for thousands of documents.
+- ✅ Accurate – Extracts text, tables, images, and layout with high precision.
+- 🔐 Secure – Runs fully offline, making it ideal for sensitive or regulated environments.
+- 🧠 AI-Ready – Provides structured outputs in Markdown or JSON, optimized for LLMs.
+- 🔧 Customizable – Rule sets can be adapted for domain-specific structures.
+- 🧬 AI Add-on Compatible – Seamlessly upgrade to AI-powered modules when needed.
 
-## Quick Start
+<br>
 
-### Prerequisites
+## 🚀 Upcoming 
+Below are the planned features for an early September open-source release.
+- Table AI Prototypes
+- OCR AI Prototypes
 
-Java 8+ runtime environment.
+<br>
 
-### Build instructions
+<br>
 
-Build and install using Maven command
+## ▶️ Installation
+To get started with Hancom PDF Data Loader, 
+you need a Java 8+ runtime environment.
 
-> mvn clean install
+
+### Build instructions 
+Build and install using Maven command:
+```
+mvn clean install
+```
 
 If the build is successful, the resulting `jar` file will be created in the path below.
 
@@ -33,25 +44,27 @@ If the build is successful, the resulting `jar` file will be created in the path
 open-pdf-dataloader/target
 ```
 
+<br>
+
+## 💻 Getting Started
 ### CLI usage
 
 ```
 java -jar ... [options] <INPUT FILE OR FOLDER>
 ```
 
-This generates a JSON file with layout recognition results in the specified output folder. Additionally, annotated PDF
-with recognized structures and Markdown file are generated if options `--pdf` and `--markdown` are specified.
+This generates a JSON file with layout recognition results in the specified output folder. 
+Additionally, annotated PDF with recognized structures and Markdown file are generated if options `--pdf` and `--markdown` are specified.
 
-By default all line breaks and hyphenation characters are removed, the Markdown does not include any images and does not
-use any HTML.
+By default all line breaks and hyphenation characters are removed, the Markdown does not include any images and does not use any HTML.
 
 The option `--keeplinebreaks` to preserve the original line breaks text content in JSON and Markdown output.
 
-The option `--html` enables use of HTML in Markdown, which may improve Markdown preview in processors that support HTML
-tags. The option `--addimagetomarkdown` enables inclusion of image references into the output Markdown. The images are
-extracted from PDF as individual files and stored in a subfolder next to the Markdown output.
+The option `--html`` enables use of HTML in Markdown, which may improve Markdown preview in processors that support HTML tags. 
+The option `--addimagetomarkdown` enables inclusion of image references into the output Markdown. 
+The images are extracted from PDF as individual files and stored in a subfolder next to the Markdown output.
 
-The complete set of options:
+### Available options:
 
 ```
 Options:
@@ -65,7 +78,7 @@ Options:
 -pdf,--pdf                 Generates pdf output
 ```
 
-## Java code integration
+### Java code integration
 
 To integrate Layout recognition API into Java code, one can follow the sample code below.
 
@@ -119,7 +132,7 @@ public class Sample {
 }
 ```
 
-## Schema of the JSON output
+### Schema of the JSON output
 
 Root json node
 
@@ -213,8 +226,43 @@ Specific fields of `text block` json nodes
 |-------|-------|----------|--------------------------------------|
 | kids  | array | no       | Array of text block content elements |
 
-## Contributing
 
-Please
-read [CONTRIBUTING.md](https://github.com/hancom-open-dataloader/open-pdf-dataloader/blob/develop/CONTRIBUTING.md) for
-details.
+<br><br>
+
+## 🤝 Contributing
+We believe that great software is built together.<br>
+Your contributions are vital to the success of this project.<br>
+Please read [CONTRIBUTING.md](https://github.com/hancom-open-dataloader/open-pdf-dataloader/blob/develop/CONTRIBUTING.md) for details on how to contribute.
+
+<br>
+
+## 💖 Community & Support 
+Have questions or need a little help? We're here for you!🤗
+- [GitHub Discussions](https://github.com/hancom-open-dataloader/open-pdf-dataloader/discussions): For Q&A and general chats. Let's talk! 🗣️
+- [GitHub Issues](https://github.com/hancom-open-dataloader/open-pdf-dataloader/issues): Found a bug? 🐛 Please report it here so we can fix it.
+
+<br>
+
+## 🧡 About Hancom 
+Hancom Inc. is a global IT company providing innovative solutions based on decades of expertise in document processing technology. 
+We are dedicated to actively participating in the open-source ecosystem to create a better world through technology.
+
+<br>
+
+## ✨ Our Branding and Trademarks 
+We love our brand and want to protect it! 
+This project may contain trademarks, logos, or brand names for our products and services. 
+To ensure everyone is on the same page, please remember these simple rules:
+
+- **Authorized Use**: You're welcome to use our logos and trademarks, but you must follow our official brand guidelines.
+- **No Confusion**: When you use our trademarks in a modified version of this project, it should never cause confusion or imply that Hancom officially sponsors or endorses your version.
+- **Third-Party Brands**: Any use of trademarks or logos from other companies must follow that company’s specific policies.
+
+<br>
+## 📚 Our Other Open Source Projects
+Hancom is committed to fostering the developer ecosystem through various open-source initiatives. 
+Check out our other projects and join our community!
+
+- [hwpx-owpml-model](https://www.google.com/search?q=https://github.com/Hancom/hwpx-owpml-model): An OXML-based filter model for handling the HWPX file format.
+- [metatag-ex](https://www.google.com/search?q=https://github.com/Hancom/metatag-ex): A tool that extracts metadata tags from HWPX files and saves them as JSON.
+- [dvc](https://www.google.com/search?q=https://github.com/Hancom/dvc): A validation check tool for verifying the integrity of HWPX files.
