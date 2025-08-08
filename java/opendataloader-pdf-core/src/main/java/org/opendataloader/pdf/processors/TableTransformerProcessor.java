@@ -46,7 +46,7 @@ public class TableTransformerProcessor {
     private static final boolean TATR_USES_WORDS = false;
 
     public static List<List<TableBorder>> processTableTransformer(String pdfName, String password, File scriptFolder,
-            String pythonPath, File resultFolder, List<List<IObject>> contents) throws IOException {
+            String pythonPath, File resultFolder, List<List<IObject>> contents, List<Integer> pageNumbers) throws IOException {
         resultFolder.mkdir();
         String fileName = new File(pdfName).getName();
         File fileResultFolder = new File(resultFolder + File.separator + fileName.substring(0, fileName.length() - 4));
@@ -59,13 +59,13 @@ public class TableTransformerProcessor {
         }
         File tableTransformerResultFolder = new File(fileResultFolder + File.separator + "result_folder");
         resultFolder.mkdir();
-        prepareInputForTableTransformerPython(pdfName, password, contents, imagesFolder, wordsFolder);
+        prepareInputForTableTransformerPython(pdfName, password, contents, imagesFolder, wordsFolder, pageNumbers);
         try {
-            runTableTransformerPython(imagesFolder, wordsFolder, tableTransformerResultFolder);
+            runTableTransformerPython(imagesFolder, wordsFolder, tableTransformerResultFolder, pageNumbers);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        return parseTableTransformerJSONs(tableTransformerResultFolder);
+        return parseTableTransformerJSONs(tableTransformerResultFolder, pageNumbers);
     }
 
     private static boolean isHealth() throws IOException, InterruptedException {
@@ -140,14 +140,14 @@ public class TableTransformerProcessor {
      */
 
     public static void runTableTransformerPython(File imagesFolder, File wordsFolder,
-                                                 File resultFolder) throws IOException, InterruptedException {
+                                                 File resultFolder, List<Integer> pageNumbers) throws IOException, InterruptedException {
         if (!isHealth()) {
             LOGGER.log(Level.WARNING, "Table transformer server not available");
             return;
         }
         ObjectMapper mapper = new ObjectMapper();
         ArrayNode array = mapper.createArrayNode();
-        for (int pageNumber = 0; pageNumber < StaticResources.getDocument().getNumberOfPages(); pageNumber++) {
+        for (int pageNumber : pageNumbers) {
             array.add(mapper.createObjectNode()
 //                .put("words", wordsFolder.getAbsolutePath())
                     .put("image", imagesFolder.getAbsolutePath() + File.separator + "image" + pageNumber + ".jpg"));
@@ -189,9 +189,9 @@ public class TableTransformerProcessor {
         return pageContents;
     }
 
-    private static List<List<TableBorder>> parseTableTransformerJSONs(File resultFolder) {
+    private static List<List<TableBorder>> parseTableTransformerJSONs(File resultFolder, List<Integer> pageNumbers) {
         List<List<TableBorder>> detectedContents = new ArrayList<>();
-        for (int pageNumber = 0; pageNumber < StaticResources.getDocument().getNumberOfPages(); pageNumber++) {
+        for (int pageNumber : pageNumbers) {
             List<TableBorder> pageContents = new ArrayList<>();
             int jsonIndex = 0;
             while (true) {
@@ -210,17 +210,17 @@ public class TableTransformerProcessor {
     }
 
     private static void prepareInputForTableTransformerPython(String pdfName, String password, List<List<IObject>> contents,
-                                                              File imagesFolder, File wordsFolder) throws IOException {
-        generatePageImages(pdfName, password, imagesFolder);
+                                                              File imagesFolder, File wordsFolder, List<Integer> pageNumbers) throws IOException {
+        generatePageImages(pdfName, password, imagesFolder, pageNumbers);
         if (TATR_USES_WORDS) {
-            generateJsonWithWords(wordsFolder, contents);
+            generateJsonWithWords(wordsFolder, contents, pageNumbers);
         }
     }
 
-    private static void generatePageImages(String pdfName, String password, File imagesFolder) throws IOException {
+    private static void generatePageImages(String pdfName, String password, File imagesFolder, List<Integer> pageNumbers) throws IOException {
         try (ContrastRatioConsumer contrastRatioConsumer = new ContrastRatioConsumer(pdfName, password, true, 1000f)) {
             StaticLayoutContainers.setContrastRatioConsumer(contrastRatioConsumer);
-            for (int pageNumber = 0; pageNumber < StaticResources.getDocument().getNumberOfPages(); pageNumber++) {
+            for (int pageNumber : pageNumbers) {
                 BufferedImage image = contrastRatioConsumer.getRenderPage(pageNumber);
                 File imageFile = new File(imagesFolder + File.separator + "image" + pageNumber + ".jpg");
                 ImageIO.write(image, "jpg", imageFile);
@@ -228,8 +228,8 @@ public class TableTransformerProcessor {
         }
     }
 
-    private static void generateJsonWithWords(File wordsFolder, List<List<IObject>> contents) throws FileNotFoundException, JsonProcessingException {
-        for (int pageNumber = 0; pageNumber < StaticResources.getDocument().getNumberOfPages(); pageNumber++) {
+    private static void generateJsonWithWords(File wordsFolder, List<List<IObject>> contents, List<Integer> pageNumbers) throws FileNotFoundException, JsonProcessingException {
+        for (int pageNumber : pageNumbers) {
             File wordsFile = new File(wordsFolder + File.separator + "image" + pageNumber + "_words.json");
             textContentsToJSON(wordsFile, contents.get(pageNumber), DocumentProcessor.getPageBoundingBox(pageNumber), 
                     StaticLayoutContainers.getContrastRatioConsumer().getDpiScalingForPage(pageNumber));
