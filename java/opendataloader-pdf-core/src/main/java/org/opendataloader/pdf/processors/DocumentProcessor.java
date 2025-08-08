@@ -36,12 +36,14 @@ import org.verapdf.tools.StaticResources;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.LineChunk;
+import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.tables.TableBordersCollection;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioConsumer;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.LinesPreprocessingConsumer;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 import org.verapdf.xmp.containers.StaticXmpCoreContainers;
 
 import javax.imageio.ImageIO;
@@ -60,7 +62,7 @@ public class DocumentProcessor {
     private static final Logger LOGGER = Logger.getLogger(DocumentProcessor.class.getCanonicalName());
 
     public static final boolean generateTableResults = true;
-    public static TimeHelper timeHelper;
+    public static TimeHelper timeHelper = new TimeHelper();
 
     public static void processFile(String inputPdfName, Config config) throws IOException {
         preprocessing(inputPdfName, config);
@@ -188,8 +190,35 @@ public class DocumentProcessor {
     }
 
     private static void addTablesFromTATR(String inputPdfName, Config config, List<List<IObject>> contents) {
-        List<List<TableBorder>> tatrTables = callTATR(inputPdfName, config, contents);
-        addTablesFromTATR(tatrTables);
+        List<Integer> pageNumbers = getPageNumberForTATR(contents);
+        if (!pageNumbers.isEmpty()) {
+            List<List<TableBorder>> tatrTables = callTATR(inputPdfName, config, contents, pageNumbers);
+            addTablesFromTATR(tatrTables);
+        }
+    }
+    
+    private static List<Integer> getPageNumberForTATR(List<List<IObject>> contents) {
+        List<Integer> pageNumbers = new ArrayList<>();
+        for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
+//            List<IObject> pageContents = contents.get(pageNumber);
+            TextChunk previousTextChunk = null;
+            for (IObject content : contents.get(pageNumber)) {
+                if (content instanceof TextChunk) {
+                    TextChunk currentTextChunk = (TextChunk) content;
+                    if (previousTextChunk != null) {
+                        if (previousTextChunk.getTopY() < currentTextChunk.getBottomY() || 
+                                (NodeUtils.areCloseNumbers(previousTextChunk.getBaseLine(), currentTextChunk.getBaseLine(), currentTextChunk.getHeight() * 0.1) &&
+                                        currentTextChunk.getLeftX() - previousTextChunk.getRightX() > currentTextChunk.getHeight() * 3)) {
+                            pageNumbers.add(pageNumber);
+                            break;
+                        }
+                    }
+                    previousTextChunk = currentTextChunk;
+                }
+            }
+        }
+        System.out.println("TEST " + ((double)pageNumbers.size() / StaticContainers.getDocument().getNumberOfPages()));
+        return pageNumbers;
     }
 
     private static void addTablesFromTATR(List<List<TableBorder>> tatrTables) {
@@ -212,6 +241,15 @@ public class DocumentProcessor {
     }
 
     public static List<List<TableBorder>> callTATR(String inputPdfName, Config config, List<List<IObject>> contents) {
+        List<Integer> pageNumbers = new ArrayList<>();
+        for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
+            pageNumbers.add(pageNumber);            
+        }
+        return callTATR(inputPdfName, config, contents, pageNumbers);
+    }
+
+    public static List<List<TableBorder>> callTATR(String inputPdfName, Config config, List<List<IObject>> contents, 
+                                                   List<Integer> pageNumbers) {
         File tempDir = null;
         List<List<TableBorder>> tables = null;
         try {
@@ -219,7 +257,7 @@ public class DocumentProcessor {
             tempDir = Files.createTempDirectory(scriptFolder, "out-java").toFile();
             tables = TableTransformerProcessor.processTableTransformer(
                     inputPdfName, config.getPassword(), scriptFolder.toFile(), config.getPythonExecutable(),
-                    tempDir, contents);
+                    tempDir, contents, pageNumbers);
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Failed to process document using TATR: " + e.getMessage());
         }
