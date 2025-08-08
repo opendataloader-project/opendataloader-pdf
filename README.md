@@ -241,11 +241,6 @@ Have questions or need a little help? We're here for you!🤗
 - [GitHub Discussions](https://github.com/hancom-open-dataloader/open-pdf-dataloader/discussions): For Q&A and general chats. Let's talk! 🗣️
 - [GitHub Issues](https://github.com/hancom-open-dataloader/open-pdf-dataloader/issues): Found a bug? 🐛 Please report it here so we can fix it.
 
-<br>
-
-## 🧡 About Hancom 
-Hancom Inc. is a global IT company providing innovative solutions based on decades of expertise in document processing technology. 
-We are dedicated to actively participating in the open-source ecosystem to create a better world through technology.
 
 <br>
 
@@ -258,11 +253,3 @@ To ensure everyone is on the same page, please remember these simple rules:
 - **No Confusion**: When you use our trademarks in a modified version of this project, it should never cause confusion or imply that Hancom officially sponsors or endorses your version.
 - **Third-Party Brands**: Any use of trademarks or logos from other companies must follow that company’s specific policies.
 
-<br>
-## 📚 Our Other Open Source Projects
-Hancom is committed to fostering the developer ecosystem through various open-source initiatives. 
-Check out our other projects and join our community!
-
-- [hwpx-owpml-model](https://www.google.com/search?q=https://github.com/Hancom/hwpx-owpml-model): An OXML-based filter model for handling the HWPX file format.
-- [metatag-ex](https://www.google.com/search?q=https://github.com/Hancom/metatag-ex): A tool that extracts metadata tags from HWPX files and saves them as JSON.
-- [dvc](https://www.google.com/search?q=https://github.com/Hancom/dvc): A validation check tool for verifying the integrity of HWPX files.
