@@ -1,8 +1,8 @@
-# Open PDF Data Loader
+# OpenDataLoader PDF
 
 A Fast, Accurate and Secure PDF Extraction Engine — Built for AI Understanding.
 
-Hancom PDF Data Loader is a high-performance document parsing engine that simplifies document processing, 
+Hancom OpenDataLoader PDF is a high-performance document parsing engine that simplifies document processing, 
 combining the speed of rule-based processing, the accuracy of structured extraction, and the security of local execution. 
 It's the perfect foundation for AI-driven document workflows and seamless integrations with the generative AI ecosystem.
 
@@ -41,7 +41,7 @@ mvn clean install
 If the build is successful, the resulting `jar` file will be created in the path below.
 
 ```
-open-pdf-dataloader/target
+opendataloader-pdf/target
 ```
 
 <br>
@@ -232,14 +232,14 @@ Specific fields of `text block` json nodes
 ## 🤝 Contributing
 We believe that great software is built together.<br>
 Your contributions are vital to the success of this project.<br>
-Please read [CONTRIBUTING.md](https://github.com/hancom-open-dataloader/open-pdf-dataloader/blob/develop/CONTRIBUTING.md) for details on how to contribute.
+Please read [CONTRIBUTING.md](https://github.com/hancom-inc/opendataloader-pdf/blob/main/CONTRIBUTING.md) for details on how to contribute.
 
 <br>
 
 ## 💖 Community & Support 
 Have questions or need a little help? We're here for you!🤗
-- [GitHub Discussions](https://github.com/hancom-open-dataloader/open-pdf-dataloader/discussions): For Q&A and general chats. Let's talk! 🗣️
-- [GitHub Issues](https://github.com/hancom-open-dataloader/open-pdf-dataloader/issues): Found a bug? 🐛 Please report it here so we can fix it.
+- [GitHub Discussions](https://github.com/hancom-inc/opendataloader-pdf/discussions): For Q&A and general chats. Let's talk! 🗣️
+- [GitHub Issues](https://github.com/hancom-inc/opendataloader-pdf/issues): Found a bug? 🐛 Please report it here so we can fix it.
 
 
 <br>

@@ -1,4 +1,4 @@
-name: Build Open PDF Dataloader
+name: Build OpenDataLoader-PDF
 
 on:
   push:
