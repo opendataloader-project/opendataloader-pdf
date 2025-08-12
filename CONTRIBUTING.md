@@ -23,7 +23,7 @@ We appreciate various kinds of contributions, including but not limited to:
 If you have questions:
 
 1. Check the [README](./README.md) and
-   existing [issues](https://github.com/open-dataloader-project/open-pdf-dataloader/issues) first.
+   existing [issues](https://github.com/hancom-inc/opendataloader-pdf/issues) first.
 2. If your question hasn't been addressed, open a new issue using the `Question` label.
 
 ---
