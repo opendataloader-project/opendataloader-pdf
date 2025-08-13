@@ -1,7 +1,8 @@
-# OpenDataLoader PDF
-
+# OpenDataLoader PDF 
+![Pre-release](https://img.shields.io/badge/Pre--release-FFA500?style=for-the-badge&logo=github)
+<p></p>
 A Fast, Accurate and Secure PDF Extraction Engine — Built for AI Understanding.
-
+<p></p>
 Hancom OpenDataLoader PDF is a high-performance document parsing engine that simplifies document processing, 
 combining the speed of rule-based processing, the accuracy of structured extraction, and the security of local execution. 
 It's the perfect foundation for AI-driven document workflows and seamless integrations with the generative AI ecosystem.
