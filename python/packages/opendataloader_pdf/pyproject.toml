@@ -1,0 +1,39 @@
+[project]
+name = "opendataloader-pdf"
+version = "0.1.0"
+authors = [
+  { name="Hancom Inc.", email="opendataloader@hancom.com" },
+]
+description = "A Python wrapper for OpenDataLoader PDF processing, with bundled Java runtime."
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
+    "Operating System :: OS Independent",
+]
+keywords = ["pdf", "opendataloader", "java", "wrapper", "ai"]
+
+[project.urls]
+"Homepage" = "https://github.com/hancom-open-dataloader/opendataloader-pdf"
+"Bug Tracker" = "https://github.com/hancom-open-dataloader/opendataloader-pdf/issues"
+
+[project.dependencies]
+JPype1 = ">=1.4.0"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build_backends.standard"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/opendataloader_pdf"]
+
+[tool.hatch.build.hooks.custom]
+path = "build_hook.py"
+
+[tool.hatch.version]
+scheme = "from-file"
+path = "../../../VERSION"
+
+[tool.hatch.metadata.hooks.custom]
+path = "metadata_hook.py"

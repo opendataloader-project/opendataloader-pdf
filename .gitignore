@@ -30,3 +30,19 @@ hs_err_pid*
 # Temporary files
 temp/
 tmp/
+
+# Python specific
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+.Python/
+.hatch/ # Hatch managed environments and cache
+venv/   # Generic virtual environment folder
+.venv/  # Generic virtual environment folder
+python/packages/opendataloader_pdf/dist/ # Python distribution outputs
+python/packages/opendataloader_pdf/build/ # Python build cache
+
+# OS specific (Windows)
+Thumbs.db
+Desktop.ini
