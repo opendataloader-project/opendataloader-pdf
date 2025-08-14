@@ -1,0 +1,47 @@
+# .github/workflows/release-java.yml
+
+name: Release Java to Maven Central
+
+on: 
+  push:
+    tags:
+      - 'java-v*' # Trigger on tags like java-v1.0.0
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 11
+      uses: actions/setup-java@v4
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Set project version
+      run: python build-scripts/set_version.py
+
+    - name: Build Java project
+      run: mvn -B clean install -f java/pom.xml
+
+    - name: Publish to Maven Central (if tag is for release)
+      # This step requires proper Maven Central credentials and GPG setup
+      # For snapshot releases, you might push to a snapshot repository
+      # For full release, you'd use the release profile and sign artifacts
+      run: |
+        echo "Skipping actual Maven Central publish for now. Add your deploy command here."
+        # mvn --batch-mode deploy -f java/pom.xml -P release -DskipTests -Dmaven.test.skip=true \
+        #   -DperformRelease=true -DaltDeploymentRepository=ossrh::default::https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/
+      env:
+        # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # For GitHub Packages Maven
+        # OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+        # OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+        # GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        # GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}

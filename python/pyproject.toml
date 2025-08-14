@@ -1,0 +1,2125 @@
+[project]
+name = "opendataloader-pdf-workspace"
+version = "0.1.0"
+
+[tool.hatch.version]
+scheme = "from-file"
+path = "../../VERSION"
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+    "/packages",
+]
+
+[tool.hatch.build.targets.wheel]
+exclude = [
+    "/packages",
+]
+
+[tool.hatch.envs.default]
+features = ["dev"]
+
+[tool.hatch.envs.default.scripts]
+install-packages = "hatch env run pip install -e packages/opendataloader_pdf"
+
+[tool.hatch.envs.default.dependencies]
+# Add any workspace-wide development dependencies here
+
+[tool.hatch.envs.test]
+features = ["test"]
+
+[tool.hatch.envs.test.scripts]
+run = "pytest {args}"
+
+[tool.hatch.envs.test.dependencies]
+pytest = "*"
+
+[tool.hatch.envs.lint]
+features = ["lint"]
+
+[tool.hatch.envs.lint.scripts]
+run = "ruff check {args}"
+
+[tool.hatch.envs.lint.dependencies]
+ruff = "*"
+
+[tool.hatch.envs.format]
+features = ["format"]
+
+[tool.hatch.envs.format.scripts]
+run = "ruff format {args}"
+
+[tool.hatch.envs.format.dependencies]
+ruff = "*"
+
+[tool.hatch.envs.typecheck]
+features = ["typecheck"]
+
+[tool.hatch.envs.typecheck.scripts]
+run = "mypy {args}"
+
+[tool.hatch.envs.typecheck.dependencies]
+mypy = "*"
+
+[tool.hatch.envs.docs]
+features = ["docs"]
+
+[tool.hatch.envs.docs.scripts]
+run = "mkdocs serve"
+
+[tool.hatch.envs.docs.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.build]
+features = ["build"]
+
+[tool.hatch.envs.build.scripts]
+run = "python -m build"
+
+[tool.hatch.envs.build.dependencies]
+build = "*"
+
+[tool.hatch.envs.publish]
+features = ["publish"]
+
+[tool.hatch.envs.publish.scripts]
+run = "twine upload dist/*"
+
+[tool.hatch.envs.publish.dependencies]
+twine = "*"
+
+[tool.hatch.envs.release]
+features = ["release"]
+
+[tool.hatch.envs.release.scripts]
+run = "hatch build && hatch publish"
+
+[tool.hatch.envs.release.dependencies]
+# Add any release-specific dependencies here
+
+[tool.hatch.envs.dev]
+features = ["dev"]
+
+[tool.hatch.envs.dev.scripts]
+run = "hatch env run install-packages"
+
+[tool.hatch.envs.dev.dependencies]
+# Add any development-specific dependencies here
+
+[tool.hatch.envs.ci]
+features = ["ci"]
+
+[tool.hatch.envs.ci.scripts]
+run = "hatch env run install-packages && hatch env run test && hatch env run lint && hatch env run typecheck"
+
+[tool.hatch.envs.ci.dependencies]
+# Add any CI-specific dependencies here
+
+[tool.hatch.envs.local]
+features = ["local"]
+
+[tool.hatch.envs.local.scripts]
+run = "hatch env run install-packages"
+
+[tool.hatch.envs.local.dependencies]
+# Add any local development-specific dependencies here
+
+[tool.hatch.envs.prod]
+features = ["prod"]
+
+[tool.hatch.envs.prod.scripts]
+run = "hatch env run install-packages"
+
+[tool.hatch.envs.prod.dependencies]
+# Add any production-specific dependencies here
+
+[tool.hatch.envs.docs-build]
+features = ["docs-build"]
+
+[tool.hatch.envs.docs-build.scripts]
+run = "mkdocs build"
+
+[tool.hatch.envs.docs-build.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-deploy]
+features = ["docs-deploy"]
+
+[tool.hatch.envs.docs-deploy.scripts]
+run = "mkdocs gh-deploy"
+
+[tool.hatch.envs.docs-deploy.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-serve]
+features = ["docs-serve"]
+
+[tool.hatch.envs.docs-serve.scripts]
+run = "mkdocs serve"
+
+[tool.hatch.envs.docs-serve.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-clean]
+features = ["docs-clean"]
+
+[tool.hatch.envs.docs-clean.scripts]
+run = "mkdocs clean"
+
+[tool.hatch.envs.docs-clean.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-new]
+features = ["docs-new"]
+
+[tool.hatch.envs.docs-new.scripts]
+run = "mkdocs new {args}"
+
+[tool.hatch.envs.docs-new.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-help]
+features = ["docs-help"]
+
+[tool.hatch.envs.docs-help.scripts]
+run = "mkdocs help"
+
+[tool.hatch.envs.docs-help.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-version]
+features = ["docs-version"]
+
+[tool.hatch.envs.docs-version.scripts]
+run = "mkdocs --version"
+
+[tool.hatch.envs.docs-version.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-list]
+features = ["docs-list"]
+
+[tool.hatch.envs.docs-list.scripts]
+run = "mkdocs list"
+
+[tool.hatch.envs.docs-list.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-gh-deploy]
+features = ["docs-gh-deploy"]
+
+[tool.hatch.envs.docs-gh-deploy.scripts]
+run = "mkdocs gh-deploy"
+
+[tool.hatch.envs.docs-gh-deploy.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean]
+features = ["docs-build-clean"]
+
+[tool.hatch.envs.docs-build-clean.scripts]
+run = "mkdocs build --clean"
+
+[tool.hatch.envs.docs-build-clean.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-strict]
+features = ["docs-build-strict"]
+
+[tool.hatch.envs.docs-build-strict.scripts]
+run = "mkdocs build --strict"
+
+[tool.hatch.envs.docs-build-strict.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-verbose]
+features = ["docs-build-verbose"]
+
+[tool.hatch.envs.docs-build-verbose.scripts]
+run = "mkdocs build --verbose"
+
+[tool.hatch.envs.docs-build-verbose.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-quiet]
+features = ["docs-build-quiet"]
+
+[tool.hatch.envs.docs-build-quiet.scripts]
+run = "mkdocs build --quiet"
+
+[tool.hatch.envs.docs-build-quiet.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-theme]
+features = ["docs-build-theme"]
+
+[tool.hatch.envs.docs-build-theme.scripts]
+run = "mkdocs build --theme {args}"
+
+[tool.hatch.envs.docs-build-theme.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-config-file]
+features = ["docs-build-config-file"]
+
+[tool.hatch.envs.docs-build-config-file.scripts]
+run = "mkdocs build --config-file {args}"
+
+[tool.hatch.envs.docs-build-config-file.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-site-dir]
+features = ["docs-build-site-dir"]
+
+[tool.hatch.envs.docs-build-site-dir.scripts]
+run = "mkdocs build --site-dir {args}"
+
+[tool.hatch.envs.docs-build-site-dir.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-use-directory-urls]
+features = ["docs-build-use-directory-urls"]
+
+[tool.hatch.envs.docs-build-use-directory-urls.scripts]
+run = "mkdocs build --use-directory-urls {args}"
+
+[tool.hatch.envs.docs-build-use-directory-urls.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-no-directory-urls]
+features = ["docs-build-no-directory-urls"]
+
+[tool.hatch.envs.docs-build-no-directory-urls.scripts]
+run = "mkdocs build --no-directory-urls {args}"
+
+[tool.hatch.envs.docs-build-no-directory-urls.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-dev-addr]
+features = ["docs-build-dev-addr"]
+
+[tool.hatch.envs.docs-build-dev-addr.scripts]
+run = "mkdocs build --dev-addr {args}"
+
+[tool.hatch.envs.docs-build-dev-addr.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-livereload]
+features = ["docs-build-livereload"]
+
+[tool.hatch.envs.docs-build-livereload.scripts]
+run = "mkdocs build --livereload {args}"
+
+[tool.hatch.envs.docs-build-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-no-livereload]
+features = ["docs-build-no-livereload"]
+
+[tool.hatch.envs.docs-build-no-livereload.scripts]
+run = "mkdocs build --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-dirty]
+features = ["docs-build-dirty"]
+
+[tool.hatch.envs.docs-build-dirty.scripts]
+run = "mkdocs build --dirty {args}"
+
+[tool.hatch.envs.docs-build-dirty.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-dirty]
+features = ["docs-build-clean-dirty"]
+
+[tool.hatch.envs.docs-build-clean-dirty.scripts]
+run = "mkdocs build --clean --dirty {args}"
+
+[tool.hatch.envs.docs-build-clean-dirty.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-strict-dirty]
+features = ["docs-build-strict-dirty"]
+
+[tool.hatch.envs.docs-build-strict-dirty.scripts]
+run = "mkdocs build --strict --dirty {args}"
+
+[tool.hatch.envs.docs-build-strict-dirty.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-verbose-dirty]
+features = ["docs-build-verbose-dirty"]
+
+[tool.hatch.envs.docs-build-verbose-dirty.scripts]
+run = "mkdocs build --verbose --dirty {args}"
+
+[tool.hatch.envs.docs-build-verbose-dirty.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-quiet-dirty]
+features = ["docs-build-quiet-dirty"]
+
+[tool.hatch.envs.docs-build-quiet-dirty.scripts]
+run = "mkdocs build --quiet --dirty {args}"
+
+[tool.hatch.envs.docs-build-quiet-dirty.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-theme-dirty]
+features = ["docs-build-theme-dirty"]
+
+[tool.hatch.envs.docs-build-theme-dirty.scripts]
+run = "mkdocs build --theme {args} --dirty"
+
+[tool.hatch.envs.docs-build-theme-dirty.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-config-file-dirty]
+features = ["docs-build-config-file-dirty"]
+
+[tool.hatch.envs.docs-build-config-file-dirty.scripts]
+run = "mkdocs build --config-file {args} --dirty"
+
+[tool.hatch.envs.docs-build-config-file-dirty.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-site-dir-dirty]
+features = ["docs-build-site-dir-dirty"]
+
+[tool.hatch.envs.docs-build-site-dir-dirty.scripts]
+run = "mkdocs build --site-dir {args} --dirty"
+
+[tool.hatch.envs.docs-build-site-dir-dirty.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-use-directory-urls-dirty]
+features = ["docs-build-use-directory-urls-dirty"]
+
+[tool.hatch.envs.docs-build-use-directory-urls-dirty.scripts]
+run = "mkdocs build --use-directory-urls {args} --dirty"
+
+[tool.hatch.envs.docs-build-use-directory-urls-dirty.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-no-directory-urls-dirty]
+features = ["docs-build-no-directory-urls-dirty"]
+
+[tool.hatch.envs.docs-build-no-directory-urls-dirty.scripts]
+run = "mkdocs build --no-directory-urls {args} --dirty"
+
+[tool.hatch.envs.docs-build-no-directory-urls-dirty.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-dev-addr-dirty]
+features = ["docs-build-dev-addr-dirty"]
+
+[tool.hatch.envs.docs-build-dev-addr-dirty.scripts]
+run = "mkdocs build --dev-addr {args} --dirty"
+
+[tool.hatch.envs.docs-build-dev-addr-dirty.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-livereload-dirty]
+features = ["docs-build-livereload-dirty"]
+
+[tool.hatch.envs.docs-build-livereload-dirty.scripts]
+run = "mkdocs build --livereload {args} --dirty"
+
+[tool.hatch.envs.docs-build-livereload-dirty.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-no-livereload-dirty]
+features = ["docs-build-no-livereload-dirty"]
+
+[tool.hatch.envs.docs-build-no-livereload-dirty.scripts]
+run = "mkdocs build --no-livereload {args} --dirty"
+
+[tool.hatch.envs.docs-build-no-livereload-dirty.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict]
+features = ["docs-build-clean-strict"]
+
+[tool.hatch.envs.docs-build-clean-strict.scripts]
+run = "mkdocs build --clean --strict {args}"
+
+[tool.hatch.envs.docs-build-clean-strict.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-verbose]
+features = ["docs-build-clean-verbose"]
+
+[tool.hatch.envs.docs-build-clean-verbose.scripts]
+run = "mkdocs build --clean --verbose {args}"
+
+[tool.hatch.envs.docs-build-clean-verbose.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-quiet]
+features = ["docs-build-clean-quiet"]
+
+[tool.hatch.envs.docs-build-clean-quiet.scripts]
+run = "mkdocs build --clean --quiet {args}"
+
+[tool.hatch.envs.docs-build-clean-quiet.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-theme]
+features = ["docs-build-clean-theme"]
+
+[tool.hatch.envs.docs-build-clean-theme.scripts]
+run = "mkdocs build --clean --theme {args}"
+
+[tool.hatch.envs.docs-build-clean-theme.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-config-file]
+features = ["docs-build-clean-config-file"]
+
+[tool.hatch.envs.docs-build-clean-config-file.scripts]
+run = "mkdocs build --clean --config-file {args}"
+
+[tool.hatch.envs.docs-build-clean-config-file.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-site-dir]
+features = ["docs-build-clean-site-dir"]
+
+[tool.hatch.envs.docs-build-clean-site-dir.scripts]
+run = "mkdocs build --clean --site-dir {args}"
+
+[tool.hatch.envs.docs-build-clean-site-dir.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-use-directory-urls]
+features = ["docs-build-clean-use-directory-urls"]
+
+[tool.hatch.envs.docs-build-clean-use-directory-urls.scripts]
+run = "mkdocs build --clean --use-directory-urls {args}"
+
+[tool.hatch.envs.docs-build-clean-use-directory-urls.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-no-directory-urls]
+features = ["docs-build-clean-no-directory-urls"]
+
+[tool.hatch.envs.docs-build-clean-no-directory-urls.scripts]
+run = "mkdocs build --clean --no-directory-urls {args}"
+
+[tool.hatch.envs.docs-build-clean-no-directory-urls.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-dev-addr]
+features = ["docs-build-clean-dev-addr"]
+
+[tool.hatch.envs.docs-build-clean-dev-addr.scripts]
+run = "mkdocs build --clean --dev-addr {args}"
+
+[tool.hatch.envs.docs-build-clean-dev-addr.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-livereload]
+features = ["docs-build-clean-livereload"]
+
+[tool.hatch.envs.docs-build-clean-livereload.scripts]
+run = "mkdocs build --clean --livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-no-livereload]
+features = ["docs-build-clean-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-no-livereload.scripts]
+run = "mkdocs build --clean --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-dirty-strict]
+features = ["docs-build-clean-dirty-strict"]
+
+[tool.hatch.envs.docs-build-clean-dirty-strict.scripts]
+run = "mkdocs build --clean --dirty --strict {args}"
+
+[tool.hatch.envs.docs-build-clean-dirty-strict.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-dirty-verbose]
+features = ["docs-build-clean-dirty-verbose"]
+
+[tool.hatch.envs.docs-build-clean-dirty-verbose.scripts]
+run = "mkdocs build --clean --dirty --verbose {args}"
+
+[tool.hatch.envs.docs-build-clean-dirty-verbose.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-dirty-quiet]
+features = ["docs-build-clean-dirty-quiet"]
+
+[tool.hatch.envs.docs-build-clean-dirty-quiet.scripts]
+run = "mkdocs build --clean --dirty --quiet {args}"
+
+[tool.hatch.envs.docs-build-clean-dirty-quiet.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-dirty-theme]
+features = ["docs-build-clean-dirty-theme"]
+
+[tool.hatch.envs.docs-build-clean-dirty-theme.scripts]
+run = "mkdocs build --clean --dirty --theme {args}"
+
+[tool.hatch.envs.docs-build-clean-dirty-theme.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-dirty-config-file]
+features = ["docs-build-clean-dirty-config-file"]
+
+[tool.hatch.envs.docs-build-clean-dirty-config-file.scripts]
+run = "mkdocs build --clean --dirty --config-file {args}"
+
+[tool.hatch.envs.docs-build-clean-dirty-config-file.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-dirty-site-dir]
+features = ["docs-build-clean-dirty-site-dir"]
+
+[tool.hatch.envs.docs-build-clean-dirty-site-dir.scripts]
+run = "mkdocs build --clean --dirty --site-dir {args}"
+
+[tool.hatch.envs.docs-build-clean-dirty-site-dir.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-dirty-use-directory-urls]
+features = ["docs-build-clean-dirty-use-directory-urls"]
+
+[tool.hatch.envs.docs-build-clean-dirty-use-directory-urls.scripts]
+run = "mkdocs build --clean --dirty --use-directory-urls {args}"
+
+[tool.hatch.envs.docs-build-clean-dirty-use-directory-urls.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-dirty-no-directory-urls]
+features = ["docs-build-clean-dirty-no-directory-urls"]
+
+[tool.hatch.envs.docs-build-clean-dirty-no-directory-urls.scripts]
+run = "mkdocs build --clean --dirty --no-directory-urls {args}"
+
+[tool.hatch.envs.docs-build-clean-dirty-no-directory-urls.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-dirty-dev-addr]
+features = ["docs-build-clean-dirty-dev-addr"]
+
+[tool.hatch.envs.docs-build-clean-dirty-dev-addr.scripts]
+run = "mkdocs build --clean --dirty --dev-addr {args}"
+
+[tool.hatch.envs.docs-build-clean-dirty-dev-addr.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-dirty-livereload]
+features = ["docs-build-clean-dirty-livereload"]
+
+[tool.hatch.envs.docs-build-clean-dirty-livereload.scripts]
+run = "mkdocs build --clean --dirty --livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-dirty-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-dirty-no-livereload]
+features = ["docs-build-clean-dirty-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-dirty-no-livereload.scripts]
+run = "mkdocs build --clean --dirty --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-dirty-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose]
+features = ["docs-build-clean-strict-verbose"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose.scripts]
+run = "mkdocs build --clean --strict --verbose {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-quiet]
+features = ["docs-build-clean-strict-quiet"]
+
+[tool.hatch.envs.docs-build-clean-strict-quiet.scripts]
+run = "mkdocs build --clean --strict --quiet {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-quiet.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-theme]
+features = ["docs-build-clean-strict-theme"]
+
+[tool.hatch.envs.docs-build-clean-strict-theme.scripts]
+run = "mkdocs build --clean --strict --theme {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-theme.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-config-file]
+features = ["docs-build-clean-strict-config-file"]
+
+[tool.hatch.envs.docs-build-clean-strict-config-file.scripts]
+run = "mkdocs build --clean --strict --config-file {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-config-file.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-site-dir]
+features = ["docs-build-clean-strict-site-dir"]
+
+[tool.hatch.envs.docs-build-clean-strict-site-dir.scripts]
+run = "mkdocs build --clean --strict --site-dir {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-site-dir.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-use-directory-urls]
+features = ["docs-build-clean-strict-use-directory-urls"]
+
+[tool.hatch.envs.docs-build-clean-strict-use-directory-urls.scripts]
+run = "mkdocs build --clean --strict --use-directory-urls {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-use-directory-urls.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-no-directory-urls]
+features = ["docs-build-clean-strict-no-directory-urls"]
+
+[tool.hatch.envs.docs-build-clean-strict-no-directory-urls.scripts]
+run = "mkdocs build --clean --strict --no-directory-urls {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-no-directory-urls.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-dev-addr]
+features = ["docs-build-clean-strict-dev-addr"]
+
+[tool.hatch.envs.docs-build-clean-strict-dev-addr.scripts]
+run = "mkdocs build --clean --strict --dev-addr {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-dev-addr.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-livereload]
+features = ["docs-build-clean-strict-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-livereload.scripts]
+run = "mkdocs build --clean --strict --livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-no-livereload]
+features = ["docs-build-clean-strict-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-no-livereload.scripts]
+run = "mkdocs build --clean --strict --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-dirty-verbose]
+features = ["docs-build-clean-strict-dirty-verbose"]
+
+[tool.hatch.envs.docs-build-clean-strict-dirty-verbose.scripts]
+run = "mkdocs build --clean --strict --dirty --verbose {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-dirty-verbose.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-dirty-quiet]
+features = ["docs-build-clean-strict-dirty-quiet"]
+
+[tool.hatch.envs.docs-build-clean-strict-dirty-quiet.scripts]
+run = "mkdocs build --clean --strict --dirty --quiet {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-dirty-quiet.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-dirty-theme]
+features = ["docs-build-clean-strict-dirty-theme"]
+
+[tool.hatch.envs.docs-build-clean-strict-dirty-theme.scripts]
+run = "mkdocs build --clean --strict --dirty --theme {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-dirty-theme.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-dirty-config-file]
+features = ["docs-build-clean-strict-dirty-config-file"]
+
+[tool.hatch.envs.docs-build-clean-strict-dirty-config-file.scripts]
+run = "mkdocs build --clean --strict --dirty --config-file {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-dirty-config-file.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-dirty-site-dir]
+features = ["docs-build-clean-strict-dirty-site-dir"]
+
+[tool.hatch.envs.docs-build-clean-strict-dirty-site-dir.scripts]
+run = "mkdocs build --clean --strict --dirty --site-dir {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-dirty-site-dir.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-dirty-use-directory-urls]
+features = ["docs-build-clean-strict-dirty-use-directory-urls"]
+
+[tool.hatch.envs.docs-build-clean-strict-dirty-use-directory-urls.scripts]
+run = "mkdocs build --clean --strict --dirty --use-directory-urls {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-dirty-use-directory-urls.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-dirty-no-directory-urls]
+features = ["docs-build-clean-strict-dirty-no-directory-urls"]
+
+[tool.hatch.envs.docs-build-clean-strict-dirty-no-directory-urls.scripts]
+run = "mkdocs build --clean --strict --dirty --no-directory-urls {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-dirty-no-directory-urls.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-dirty-dev-addr]
+features = ["docs-build-clean-strict-dirty-dev-addr"]
+
+[tool.hatch.envs.docs-build-clean-strict-dirty-dev-addr.scripts]
+run = "mkdocs build --clean --strict --dirty --dev-addr {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-dirty-dev-addr.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-dirty-livereload]
+features = ["docs-build-clean-strict-dirty-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-dirty-livereload.scripts]
+run = "mkdocs build --clean --strict --dirty --livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-dirty-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-dirty-no-livereload]
+features = ["docs-build-clean-strict-dirty-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-dirty-no-livereload.scripts]
+run = "mkdocs build --clean --strict --dirty --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-dirty-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-quiet]
+features = ["docs-build-clean-strict-verbose-quiet"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-quiet.scripts]
+run = "mkdocs build --clean --strict --verbose --quiet {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-quiet.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-theme]
+features = ["docs-build-clean-strict-verbose-theme"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-theme.scripts]
+run = "mkdocs build --clean --strict --verbose --theme {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-theme.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-config-file]
+features = ["docs-build-clean-strict-verbose-config-file"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-config-file.scripts]
+run = "mkdocs build --clean --strict --verbose --config-file {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-config-file.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-site-dir]
+features = ["docs-build-clean-strict-verbose-site-dir"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-site-dir.scripts]
+run = "mkdocs build --clean --strict --verbose --site-dir {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-site-dir.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-use-directory-urls]
+features = ["docs-build-clean-strict-verbose-use-directory-urls"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-use-directory-urls.scripts]
+run = "mkdocs build --clean --strict --verbose --use-directory-urls {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-use-directory-urls.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-no-directory-urls]
+features = ["docs-build-clean-strict-verbose-no-directory-urls"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-no-directory-urls.scripts]
+run = "mkdocs build --clean --strict --verbose --no-directory-urls {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-no-directory-urls.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dev-addr]
+features = ["docs-build-clean-strict-verbose-dev-addr"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dev-addr.scripts]
+run = "mkdocs build --clean --strict --verbose --dev-addr {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dev-addr.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-livereload]
+features = ["docs-build-clean-strict-verbose-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-no-livereload]
+features = ["docs-build-clean-strict-verbose-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet]
+features = ["docs-build-clean-strict-verbose-dirty-quiet"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-theme]
+features = ["docs-build-clean-strict-verbose-dirty-theme"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-theme.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --theme {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-theme.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-config-file]
+features = ["docs-build-clean-strict-verbose-dirty-config-file"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-config-file.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --config-file {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-config-file.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-site-dir]
+features = ["docs-build-clean-strict-verbose-dirty-site-dir"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-site-dir.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --site-dir {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-site-dir.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-use-directory-urls]
+features = ["docs-build-clean-strict-verbose-dirty-use-directory-urls"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-use-directory-urls.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --use-directory-urls {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-use-directory-urls.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-no-directory-urls]
+features = ["docs-build-clean-strict-verbose-dirty-no-directory-urls"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-no-directory-urls.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --no-directory-urls {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-no-directory-urls.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-dev-addr]
+features = ["docs-build-clean-strict-verbose-dirty-dev-addr"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-dev-addr.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --dev-addr {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-dev-addr.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-config-file"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --config-file {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-site-dir"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --site-dir {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --use-directory-urls {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --no-directory-urls {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-dev-addr]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-dev-addr"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-dev-addr.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --dev-addr {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-dev-addr.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-config-file"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --config-file {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-site-dir]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-site-dir"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-site-dir.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --site-dir {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-site-dir.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-use-directory-urls]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-use-directory-urls"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-use-directory-urls.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --use-directory-urls {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-use-directory-urls.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-no-directory-urls]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-no-directory-urls"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-no-directory-urls.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --no-directory-urls {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-no-directory-urls.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-dev-addr]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-dev-addr"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-dev-addr.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --dev-addr {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-dev-addr.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-site-dir]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-config-file-site-dir"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-site-dir.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --config-file {args} --site-dir {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-site-dir.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-use-directory-urls]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-config-file-use-directory-urls"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-use-directory-urls.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --config-file {args} --use-directory-urls {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-use-directory-urls.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-no-directory-urls]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-config-file-no-directory-urls"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-no-directory-urls.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --config-file {args} --no-directory-urls {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-no-directory-urls.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-dev-addr]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-config-file-dev-addr"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-dev-addr.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --config-file {args} --dev-addr {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-dev-addr.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-config-file-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --config-file {args} --livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-config-file-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --config-file {args} --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-use-directory-urls]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-site-dir-use-directory-urls"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-use-directory-urls.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --site-dir {args} --use-directory-urls {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-use-directory-urls.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-no-directory-urls]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-site-dir-no-directory-urls"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-no-directory-urls.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --site-dir {args} --no-directory-urls {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-no-directory-urls.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-dev-addr]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-site-dir-dev-addr"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-dev-addr.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --site-dir {args} --dev-addr {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-dev-addr.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-site-dir-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --site-dir {args} --livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-site-dir-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --site-dir {args} --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --use-directory-urls {args} --dev-addr {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --use-directory-urls {args} --livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --use-directory-urls {args} --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --no-directory-urls {args} --dev-addr {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --no-directory-urls {args} --livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --no-directory-urls {args} --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-dev-addr-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-dev-addr-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-dev-addr-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --dev-addr {args} --livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-dev-addr-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-dev-addr-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-dev-addr-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-dev-addr-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --dev-addr {args} --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-dev-addr-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-livereload-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-livereload-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-livereload-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --livereload {args} --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-livereload-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --config-file {args} --site-dir {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-use-directory-urls]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-use-directory-urls"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-use-directory-urls.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --config-file {args} --use-directory-urls {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-use-directory-urls.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-no-directory-urls]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-no-directory-urls"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-no-directory-urls.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --config-file {args} --no-directory-urls {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-no-directory-urls.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-dev-addr]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-dev-addr"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-dev-addr.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --config-file {args} --dev-addr {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-dev-addr.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --config-file {args} --livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --config-file {args} --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-use-directory-urls-dev-addr]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-site-dir-use-directory-urls-dev-addr"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-use-directory-urls-dev-addr.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --site-dir {args} --use-directory-urls {args} --dev-addr {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-use-directory-urls-dev-addr.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-use-directory-urls-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-site-dir-use-directory-urls-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-use-directory-urls-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --site-dir {args} --use-directory-urls {args} --livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-use-directory-urls-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-use-directory-urls-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-site-dir-use-directory-urls-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-use-directory-urls-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --site-dir {args} --use-directory-urls {args} --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-use-directory-urls-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-no-directory-urls-dev-addr]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-site-dir-no-directory-urls-dev-addr"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-no-directory-urls-dev-addr.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --site-dir {args} --no-directory-urls {args} --dev-addr {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-no-directory-urls-dev-addr.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-no-directory-urls-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-site-dir-no-directory-urls-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-no-directory-urls-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --site-dir {args} --no-directory-urls {args} --livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-no-directory-urls-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-no-directory-urls-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-site-dir-no-directory-urls-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-no-directory-urls-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --site-dir {args} --no-directory-urls {args} --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-site-dir-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-dev-addr-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-dev-addr-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-dev-addr-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --dev-addr {args} --livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-dev-addr-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-dev-addr-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-dev-addr-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-dev-addr-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --dev-addr {args} --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-dev-addr-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-livereload-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-livereload-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-livereload-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --livereload {args} --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-livereload-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --config-file {args} --site-dir {args} --use-directory-urls {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --config-file {args} --site-dir {args} --no-directory-urls {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-dev-addr]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-dev-addr"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-dev-addr.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --config-file {args} --site-dir {args} --dev-addr {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-dev-addr.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --config-file {args} --site-dir {args} --livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --config-file {args} --site-dir {args} --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-use-directory-urls-dev-addr]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-use-directory-urls-dev-addr"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-use-directory-urls-dev-addr.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --use-directory-urls {args} --dev-addr {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-use-directory-urls-dev-addr.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-use-directory-urls-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-use-directory-urls-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-use-directory-urls-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --use-directory-urls {args} --livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-use-directory-urls-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-use-directory-urls-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-use-directory-urls-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-use-directory-urls-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --use-directory-urls {args} --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-use-directory-urls-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-no-directory-urls-dev-addr]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-no-directory-urls-dev-addr"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-no-directory-urls-dev-addr.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --no-directory-urls {args} --dev-addr {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-no-directory-urls-dev-addr.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-no-directory-urls-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-no-directory-urls-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-no-directory-urls-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --no-directory-urls {args} --livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-no-directory-urls-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-no-directory-urls-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-no-directory-urls-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-no-directory-urls-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --no-directory-urls {args} --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-no-directory-urls-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-site-dir-use-directory-urls-dev-addr]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-config-file-site-dir-use-directory-urls-dev-addr"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-site-dir-use-directory-urls-dev-addr.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --config-file {args} --site-dir {args} --use-directory-urls {args} --dev-addr {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-site-dir-use-directory-urls-dev-addr.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-site-dir-use-directory-urls-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-config-file-site-dir-use-directory-urls-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-site-dir-use-directory-urls-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --config-file {args} --site-dir {args} --use-directory-urls {args} --livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-site-dir-use-directory-urls-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-site-dir-use-directory-urls-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-config-file-site-dir-use-directory-urls-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-site-dir-use-directory-urls-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --config-file {args} --site-dir {args} --use-directory-urls {args} --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-site-dir-use-directory-urls-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-site-dir-no-directory-urls-dev-addr]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-config-file-site-dir-no-directory-urls-dev-addr"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-site-dir-no-directory-urls-dev-addr.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --config-file {args} --site-dir {args} --no-directory-urls {args} --dev-addr {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-site-dir-no-directory-urls-dev-addr.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-site-dir-no-directory-urls-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-config-file-site-dir-no-directory-urls-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-site-dir-no-directory-urls-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --config-file {args} --site-dir {args} --no-directory-urls {args} --livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-site-dir-no-directory-urls-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-site-dir-no-directory-urls-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-config-file-site-dir-no-directory-urls-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-site-dir-no-directory-urls-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --config-file {args} --site-dir {args} --no-directory-urls {args} --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-config-file-site-dir-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --use-directory-urls {args} --dev-addr {args} --livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --use-directory-urls {args} --dev-addr {args} --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-livereload-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-livereload-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-livereload-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --use-directory-urls {args} --livereload {args} --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-livereload-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --no-directory-urls {args} --dev-addr {args} --livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --no-directory-urls {args} --dev-addr {args} --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-livereload-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-livereload-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-livereload-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --no-directory-urls {args} --livereload {args} --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-livereload-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-dev-addr]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-dev-addr"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-dev-addr.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --config-file {args} --site-dir {args} --use-directory-urls {args} --dev-addr {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-dev-addr.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --config-file {args} --site-dir {args} --use-directory-urls {args} --livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --config-file {args} --site-dir {args} --use-directory-urls {args} --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-dev-addr]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-dev-addr"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-dev-addr.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --config-file {args} --site-dir {args} --no-directory-urls {args} --dev-addr {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-dev-addr.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --config-file {args} --site-dir {args} --no-directory-urls {args} --livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --config-file {args} --site-dir {args} --no-directory-urls {args} --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --use-directory-urls {args} --dev-addr {args} --livereload {args} --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --no-directory-urls {args} --dev-addr {args} --livereload {args} --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-dev-addr-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-dev-addr-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-dev-addr-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --config-file {args} --site-dir {args} --use-directory-urls {args} --dev-addr {args} --livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-dev-addr-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-dev-addr-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-dev-addr-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-dev-addr-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --config-file {args} --site-dir {args} --use-directory-urls {args} --dev-addr {args} --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-dev-addr-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-livereload-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-livereload-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-livereload-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --config-file {args} --site-dir {args} --use-directory-urls {args} --livereload {args} --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-livereload-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-dev-addr-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-dev-addr-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-dev-addr-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --config-file {args} --site-dir {args} --no-directory-urls {args} --dev-addr {args} --livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-dev-addr-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-dev-addr-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-dev-addr-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-dev-addr-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --config-file {args} --site-dir {args} --no-directory-urls {args} --dev-addr {args} --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-dev-addr-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-livereload-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-livereload-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-livereload-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --config-file {args} --site-dir {args} --no-directory-urls {args} --livereload {args} --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-livereload-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload-no-livereload-theme]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload-no-livereload-theme"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload-no-livereload-theme.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --use-directory-urls {args} --dev-addr {args} --livereload {args} --no-livereload {args} --theme {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload-no-livereload-theme.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload-no-livereload-config-file]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload-no-livereload-config-file"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload-no-livereload-config-file.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --use-directory-urls {args} --dev-addr {args} --livereload {args} --no-livereload {args} --config-file {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload-no-livereload-config-file.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload-no-livereload-site-dir]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload-no-livereload-site-dir"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload-no-livereload-site-dir.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --use-directory-urls {args} --dev-addr {args} --livereload {args} --no-livereload {args} --site-dir {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload-no-livereload-site-dir.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload-no-livereload-theme]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload-no-livereload-theme"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload-no-livereload-theme.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --no-directory-urls {args} --dev-addr {args} --livereload {args} --no-livereload {args} --theme {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload-no-livereload-theme.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload-no-livereload-config-file]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload-no-livereload-config-file"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload-no-livereload-config-file.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --no-directory-urls {args} --dev-addr {args} --livereload {args} --no-livereload {args} --config-file {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload-no-livereload-config-file.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload-no-livereload-site-dir]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload-no-livereload-site-dir"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload-no-livereload-site-dir.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --no-directory-urls {args} --dev-addr {args} --livereload {args} --no-livereload {args} --site-dir {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload-no-livereload-site-dir.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-dev-addr-livereload-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-dev-addr-livereload-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-dev-addr-livereload-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --config-file {args} --site-dir {args} --use-directory-urls {args} --dev-addr {args} --livereload {args} --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-dev-addr-livereload-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-dev-addr-livereload-no-livereload]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-dev-addr-livereload-no-livereload"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-dev-addr-livereload-no-livereload.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --config-file {args} --site-dir {args} --no-directory-urls {args} --dev-addr {args} --livereload {args} --no-livereload {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-dev-addr-livereload-no-livereload.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload-no-livereload-theme-config-file]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload-no-livereload-theme-config-file"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload-no-livereload-theme-config-file.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --use-directory-urls {args} --dev-addr {args} --livereload {args} --no-livereload {args} --theme {args} --config-file {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload-no-livereload-theme-config-file.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload-no-livereload-theme-site-dir]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload-no-livereload-theme-site-dir"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload-no-livereload-theme-site-dir.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --use-directory-urls {args} --dev-addr {args} --livereload {args} --no-livereload {args} --theme {args} --site-dir {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload-no-livereload-theme-site-dir.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload-no-livereload-theme-config-file]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload-no-livereload-theme-config-file"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload-no-livereload-theme-config-file.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --no-directory-urls {args} --dev-addr {args} --livereload {args} --no-livereload {args} --theme {args} --config-file {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload-no-livereload-theme-config-file.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload-no-livereload-theme-site-dir]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload-no-livereload-theme-site-dir"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload-no-livereload-theme-site-dir.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --no-directory-urls {args} --dev-addr {args} --livereload {args} --no-livereload {args} --theme {args} --site-dir {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload-no-livereload-theme-site-dir.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-dev-addr-livereload-no-livereload-theme-config-file]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-dev-addr-livereload-no-livereload-theme-config-file"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-dev-addr-livereload-no-livereload-theme-config-file.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --config-file {args} --site-dir {args} --use-directory-urls {args} --dev-addr {args} --livereload {args} --no-livereload {args} --config-file {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-dev-addr-livereload-no-livereload-theme-config-file.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-dev-addr-livereload-no-livereload-theme-site-dir]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-dev-addr-livereload-no-livereload-theme-site-dir"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-dev-addr-livereload-no-livereload-theme-site-dir.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --config-file {args} --site-dir {args} --use-directory-urls {args} --dev-addr {args} --livereload {args} --no-livereload {args} --site-dir {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-use-directory-urls-dev-addr-livereload-no-livereload-theme-site-dir.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-dev-addr-livereload-no-livereload-theme-config-file]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-dev-addr-livereload-no-livereload-theme-config-file"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-dev-addr-livereload-no-livereload-theme-config-file.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --config-file {args} --site-dir {args} --no-directory-urls {args} --dev-addr {args} --livereload {args} --no-livereload {args} --config-file {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-dev-addr-livereload-no-livereload-theme-config-file.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-dev-addr-livereload-no-livereload-theme-site-dir]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-dev-addr-livereload-no-livereload-theme-site-dir"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-dev-addr-livereload-no-livereload-theme-site-dir.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --theme {args} --config-file {args} --site-dir {args} --no-directory-urls {args} --dev-addr {args} --livereload {args} --no-livereload {args} --site-dir {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-theme-config-file-site-dir-no-directory-urls-dev-addr-livereload-no-livereload-theme-site-dir.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload-no-livereload-theme-config-file-site-dir]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload-no-livereload-theme-config-file-site-dir"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload-no-livereload-theme-config-file-site-dir.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --use-directory-urls {args} --dev-addr {args} --livereload {args} --no-livereload {args} --theme {args} --config-file {args} --site-dir {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-use-directory-urls-dev-addr-livereload-no-livereload-theme-config-file-site-dir.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload-no-livereload-theme-config-file-site-dir]
+features = ["docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload-no-livereload-theme-config-file-site-dir"]
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload-no-livereload-theme-config-file-site-dir.scripts]
+run = "mkdocs build --clean --strict --verbose --dirty --quiet --no-directory-urls {args} --dev-addr {args} --livereload {args} --no-livereload {args} --theme {args} --config-file {args} --site-dir {args}"
+
+[tool.hatch.envs.docs-build-clean-strict-verbose-dirty-quiet-no-directory-urls-dev-addr-livereload-no-livereload-theme-config-file-site-dir.dependencies]
+mkdocs = "*"
+mkdocs-material = "*"
