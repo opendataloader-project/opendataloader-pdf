@@ -21,6 +21,7 @@ public class Config {
     private boolean isGenerateJSON = true;
     private boolean useHTMLInMarkdown = false;
     private boolean addImageToMarkdown = false;
+    private String ocrLanguages = "eng";
     private String outputFolder;
 
     public static Config createConfigFromCommandLine(CommandLine commandLine) {
@@ -45,6 +46,9 @@ public class Config {
         }
         if (commandLine.hasOption(CLIOptions.MARKDOWN_IMAGE_OPTION)) {
             config.setAddImageToMarkdown(true);
+        }
+        if (commandLine.hasOption(CLIOptions.OCR_LANGUAGES_LONG_OPTION)) {
+            config.setOcrLanguages(commandLine.getOptionValue(CLIOptions.OCR_LANGUAGES_LONG_OPTION));
         }
         if (commandLine.hasOption(CLIOptions.FOLDER_OPTION)) {
             config.setOutputFolder(commandLine.getOptionValue(CLIOptions.FOLDER_OPTION));
@@ -127,5 +131,13 @@ public class Config {
 
     public void setOutputFolder(String outputFolder) {
         this.outputFolder = outputFolder;
+    }
+
+    public String getOcrLanguages() {
+        return ocrLanguages;
+    }
+
+    public void setOcrLanguages(String ocrLanguages) {
+        this.ocrLanguages = ocrLanguages;
     }
 }

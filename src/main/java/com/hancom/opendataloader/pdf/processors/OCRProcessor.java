@@ -18,7 +18,6 @@ import org.verapdf.tools.StaticResources;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +27,7 @@ public class OCRProcessor {
     private static Tesseract tesseract = null;
     private static File tessDataFolder = null;
 
-    public static void process(String pdfName, String password, List<List<IObject>> contents) throws IOException {
+    public static void process(String pdfName, String password, List<List<IObject>> contents, String ocrLanguages) throws IOException {
         try (ContrastRatioConsumer contrastRatioConsumer = new ContrastRatioConsumer(pdfName, password, true, 2000f)) {
             for (int pageNumber = 0; pageNumber < StaticResources.getDocument().getNumberOfPages(); pageNumber++) {
                 List<IObject> pageContents = contents.get(pageNumber);
@@ -39,7 +38,7 @@ public class OCRProcessor {
                 BoundingBox pageBoundingBox = DocumentProcessor.getPageBoundingBox(pageNumber);
                 BufferedImage image = contrastRatioConsumer.getRenderPage(pageNumber);
                 double dpiScaling = contrastRatioConsumer.getDpiScalingForPage(pageNumber);
-                List<Word> words = processTesseract(image);
+                List<Word> words = processTesseract(image, ocrLanguages);
                 for (Word word : words) {
                     pageContents.add(createTextChunkFromWord(word, pageBoundingBox, dpiScaling));
                 }
@@ -68,7 +67,7 @@ public class OCRProcessor {
         return textChunk;
     }
     
-    private static void createTesseract() throws IOException {
+    private static void createTesseract(String ocrLanguages) throws IOException {
         tesseract = new Tesseract();
         tessDataFolder = Files.createTempDirectory("tessdata").toFile();
         String[] languages = {"eng.traineddata", "kor.traineddata", "chi_tra.traineddata"};
@@ -80,7 +79,7 @@ public class OCRProcessor {
         }
         tesseract.setDatapath(tessDataFolder.getAbsolutePath());
 
-        tesseract.setLanguage("eng+kor");
+        tesseract.setLanguage(ocrLanguages);//"eng+kor"
         tesseract.setVariable("wordrec_max_space_width", "15");
     }
 
@@ -91,9 +90,9 @@ public class OCRProcessor {
         }
     }
 
-    private static List<Word> processTesseract(BufferedImage image) throws TesseractException, IOException {
+    private static List<Word> processTesseract(BufferedImage image, String ocrLanguages) throws TesseractException, IOException {
         if (tesseract == null) {
-            createTesseract();
+            createTesseract(ocrLanguages);
         }
         List<Word> words = tesseract.getWords(image, ITessAPI.TessPageIteratorLevel.RIL_SYMBOL);
         return words;

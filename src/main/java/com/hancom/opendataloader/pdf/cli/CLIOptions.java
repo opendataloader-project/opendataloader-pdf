@@ -32,6 +32,7 @@ public class CLIOptions {
 
     public static final String FOLDER_OPTION = "f";
     private static final String FOLDER_LONG_OPTION = "folder";
+    public static final String OCR_LANGUAGES_LONG_OPTION = "ocrlanguages";
 
     public static Options defineOptions() {
         Options options = new Options();
@@ -59,6 +60,9 @@ public class CLIOptions {
         Option folder = new Option(FOLDER_OPTION, FOLDER_LONG_OPTION, true, "Specify output folder (default the folder of the input PDF)");
         folder.setRequired(false);
         options.addOption(folder);
+        Option ocrLanguages = new Option(OCR_LANGUAGES_LONG_OPTION, OCR_LANGUAGES_LONG_OPTION, true, "Specify languages for ocr");
+        ocrLanguages.setRequired(false);
+        options.addOption(ocrLanguages);
         return options;
     }
 }

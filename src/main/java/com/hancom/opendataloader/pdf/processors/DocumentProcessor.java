@@ -61,7 +61,7 @@ public class DocumentProcessor {
             processBackgrounds(pageNumber, pageContents);
             contents.add(pageContents);
         }
-        OCRProcessor.process(inputPdfName, config.getPassword(), contents);
+        OCRProcessor.process(inputPdfName, config.getPassword(), contents, config.getOcrLanguages());
         for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
             List<IObject> pageContents = TableBorderProcessor.processTableBorders(contents.get(pageNumber), pageNumber);
             pageContents = pageContents.stream().filter(x -> !(x instanceof LineChunk)).collect(Collectors.toList());
