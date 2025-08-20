@@ -7,3 +7,8 @@ class CustomMetadataHook(MetadataHookInterface):
         # This hook runs before metadata generation.
         # You can modify project metadata here if needed.
         pass
+
+    def update(self, metadata):
+        # Currently, this hook does not modify metadata.
+        # Returning metadata as-is for clarity.
+        return metadata

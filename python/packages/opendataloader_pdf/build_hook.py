@@ -104,7 +104,7 @@ class CustomBuildHook(BuildHookInterface):
         
         print("CustomBuildHook initialize finished.")
 
-    def finalize(self, version: str, build_data: dict) -> None:
+    def finalize(self, version: str, build_data: dict, artifact: str) -> None:
         # This hook runs after the build but before the wheel is finalized.
         # You can perform any final adjustments here.
         print("Running CustomBuildHook finalize...")
