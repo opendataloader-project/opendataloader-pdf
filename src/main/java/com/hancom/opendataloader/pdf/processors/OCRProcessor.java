@@ -7,6 +7,7 @@
  */
 package com.hancom.opendataloader.pdf.processors;
 
+import com.hancom.opendataloader.pdf.utils.ResourceLoader;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
@@ -18,7 +19,6 @@ import org.verapdf.tools.StaticResources;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,8 +45,6 @@ public class OCRProcessor {
             }
         } catch (TesseractException e) {
             throw new RuntimeException(e);
-        } finally {
-            endTesseract();
         }
     }
     
@@ -67,27 +65,12 @@ public class OCRProcessor {
         return textChunk;
     }
     
-    private static void createTesseract(String ocrLanguages) throws IOException {
+    private static void createTesseract(String ocrLanguages) {
         tesseract = new Tesseract();
-        tessDataFolder = Files.createTempDirectory("tessdata").toFile();
-        String[] languages = {"eng.traineddata", "kor.traineddata", "chi_tra.traineddata"};
-        for (String langFile : languages) {
-            try (InputStream is = OCRProcessor.class.getResourceAsStream("/tessdata/" + langFile)) {
-                File outFile = new File(tessDataFolder, langFile);
-                Files.copy(is, outFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-            }
-        }
+        tessDataFolder = ResourceLoader.loadResource("tessdata");
         tesseract.setDatapath(tessDataFolder.getAbsolutePath());
-
         tesseract.setLanguage(ocrLanguages);//"eng+kor"
         tesseract.setVariable("wordrec_max_space_width", "15");
-    }
-
-    private static void endTesseract() {
-        tesseract = null;
-        if (tessDataFolder != null) {
-            tessDataFolder.delete();
-        }
     }
 
     private static List<Word> processTesseract(BufferedImage image, String ocrLanguages) throws TesseractException, IOException {
