@@ -254,3 +254,16 @@ To ensure everyone is on the same page, please remember these simple rules:
 - **No Confusion**: When you use our trademarks in a modified version of this project, it should never cause confusion or imply that Hancom officially sponsors or endorses your version.
 - **Third-Party Brands**: Any use of trademarks or logos from other companies must follow that company’s specific policies.
 
+
+<br>
+
+## ⚖️ License
+
+This project is licensed under the [Mozilla Public License 2.0](https://www.mozilla.org/MPL/2.0/).
+
+For the full license text, see [LICENSE](LICENSE).
+
+For information on third-party libraries and components, see:
+- [THIRD_PARTY_LICENSES](./THIRD_PARTY/THIRD_PARTY_LICENSES.md)
+- [THIRD_PARTY_NOTICES](./THIRD_PARTY/THIRD_PARTY_NOTICES.md)
+- [licenses/](./THIRD_PARTY/licenses/)
