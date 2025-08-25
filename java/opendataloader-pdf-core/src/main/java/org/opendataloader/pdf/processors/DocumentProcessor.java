@@ -200,25 +200,38 @@ public class DocumentProcessor {
     private static List<Integer> getPageNumberForTATR(List<List<IObject>> contents) {
         List<Integer> pageNumbers = new ArrayList<>();
         for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
-//            List<IObject> pageContents = contents.get(pageNumber);
             TextChunk previousTextChunk = null;
             for (IObject content : contents.get(pageNumber)) {
                 if (content instanceof TextChunk) {
                     TextChunk currentTextChunk = (TextChunk) content;
-                    if (previousTextChunk != null) {
-                        if (previousTextChunk.getTopY() < currentTextChunk.getBottomY() || 
-                                (NodeUtils.areCloseNumbers(previousTextChunk.getBaseLine(), currentTextChunk.getBaseLine(), currentTextChunk.getHeight() * 0.1) &&
-                                        currentTextChunk.getLeftX() - previousTextChunk.getRightX() > currentTextChunk.getHeight() * 3)) {
-                            pageNumbers.add(pageNumber);
-                            break;
-                        }
+                    if (currentTextChunk.isWhiteSpaceChunk()) {
+                        continue;
+                    }
+                    if (previousTextChunk != null && areSuspiciousTextChunks(previousTextChunk, currentTextChunk)) {
+                        pageNumbers.add(pageNumber);
+                        break;
                     }
                     previousTextChunk = currentTextChunk;
                 }
             }
         }
-        System.out.println("TEST " + ((double)pageNumbers.size() / StaticContainers.getDocument().getNumberOfPages()));
+        System.out.println("Percent of pages for tatr " + String.format("%.2f", 
+                ((double)pageNumbers.size() / StaticContainers.getDocument().getNumberOfPages()) * 100)
+                 + "%");
         return pageNumbers;
+    }
+    
+    private static boolean areSuspiciousTextChunks(TextChunk previousTextChunk, TextChunk currentTextChunk) {
+        if (previousTextChunk.getTopY() < currentTextChunk.getBottomY()) {
+            return true;
+        }
+        if (NodeUtils.areCloseNumbers(previousTextChunk.getBaseLine(), currentTextChunk.getBaseLine(), 
+                currentTextChunk.getHeight() * 0.1)) {
+            if (currentTextChunk.getLeftX() - previousTextChunk.getRightX() > currentTextChunk.getHeight() * 3) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static void addTablesFromTATR(List<List<TableBorder>> tatrTables) {
