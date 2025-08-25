@@ -33,7 +33,27 @@ If the build is successful, the resulting `jar` file will be created in the path
 open-pdf-dataloader/target
 ```
 
+### Install script
+
+Build and install using `install_tatr.bat` script.
+
+Prerequisites for using this script:
+
+* Git
+* Java 8+
+* Maven v3+
+
+This script download and build `table_transformer` branch of repo 
+[opendataloader-pdf](https://github.com/opendataloader-project/opendataloader-pdf),
+and also download [open-pdf-dataloader-tatr](https://github.com/opendataloader-project/open-pdf-dataloader-tatr).
+
+> install_tatr.bar
+
 ### CLI usage
+
+Run script `inference-http.py` from [open-pdf-dataloader-tatr](https://github.com/opendataloader-project/open-pdf-dataloader-tatr)
+(see [instructions](https://github.com/opendataloader-project/open-pdf-dataloader-tatr/blob/main/INFERENCE-HTTP.md#running-from-the-command-line)),
+then
 
 ```
 java -jar ... [options] <INPUT FILE OR FOLDER>
