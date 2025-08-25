@@ -33,6 +33,38 @@ If the build is successful, the resulting `jar` file will be created in the path
 open-pdf-dataloader/target
 ```
 
+### Install script
+
+Build and install using `install_ocr.bat` script.
+
+Prerequisites for using this script:
+
+* Git
+* Java 8+
+* Maven v3+
+* cURL
+
+This script download and build `tesseract_ocr` branch of repo 
+[opendataloader-pdf](https://github.com/opendataloader-project/opendataloader-pdf), and also download language data 
+files for OCR Tesseract library from https://github.com/tesseract-ocr/tessdata/raw/main/. 
+By default, only english language is downloaded:
+
+> install_ocr.bar
+
+It is possible to download other languages by specifying language codes (space-separated):
+
+> install_ocr.bat eng rus spa
+
+Common Language Codes:
+- eng - English
+- kor - Korean
+- rus - Russian
+- spa - Spanish
+- deu - German
+- fra - French 
+- chi_sim - Simplified Chinese 
+- jpn - Japanese
+
 ### CLI usage
 
 ```
@@ -63,6 +95,7 @@ Options:
 -markdown,--markdown       Generates markdown output
 -p,--password <arg>        Specifies password
 -pdf,--pdf                 Generates pdf output
+--ocrlanguages             Specifies `plus-separated` language codes for OCR Tesseract library (eng by default)
 ```
 
 ## Java code integration
@@ -108,6 +141,9 @@ public class Sample {
 
         //find hidden text
         config.setFindHiddenText(true);
+
+        //specify `plus-separated` languages for OCR Tesseract library
+        config.setOcrLanguages("eng+kor");
 
         try {
             //process pdf file
