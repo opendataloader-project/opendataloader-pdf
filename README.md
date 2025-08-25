@@ -190,6 +190,28 @@ Then run:
 opendataloader-pdf path/to/document.pdf path/to/folder -o path/to/output -f json html pdf markdown
 ```
 
+### Install script
+
+Build and install using `install_tatr.bat` script.
+
+Prerequisites for using this script:
+
+* Git
+* Java 8+
+* Maven v3+
+
+This script download and build `table_transformer` branch of repo
+[opendataloader-pdf](https://github.com/opendataloader-project/opendataloader-pdf),
+and also download [open-pdf-dataloader-tatr](https://github.com/opendataloader-project/open-pdf-dataloader-tatr).
+
+> install_tatr.bar
+
+### CLI usage
+
+Run script `inference-http.py` from [open-pdf-dataloader-tatr](https://github.com/opendataloader-project/open-pdf-dataloader-tatr)
+(see [instructions](https://github.com/opendataloader-project/open-pdf-dataloader-tatr/blob/main/INFERENCE-HTTP.md#running-from-the-command-line)),
+then
+
 #### Available options
 
 ```
