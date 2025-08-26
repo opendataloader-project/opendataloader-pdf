@@ -1,5 +1,6 @@
 # OpenDataLoader PDF 
 ![Pre-release](https://img.shields.io/badge/Pre--release-FFA500?style=for-the-badge&logo=github)
+
 <p></p>
 A Fast, Accurate and Secure PDF Extraction Engine — Built for AI Understanding.
 <p></p>
