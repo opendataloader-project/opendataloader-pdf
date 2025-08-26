@@ -95,9 +95,9 @@
                 <groupId>com.mycila</groupId>
                 <artifactId>license-maven-plugin</artifactId>
                 <configuration>
-                    <header>../license/template/license.txt</header>
+                    <header>../LICENSE_TEMPLATE/license.txt</header>
                     <excludes>
-                        <exclude>license/template/**</exclude>
+                        <exclude>LICENSE_TEMPLATE/**</exclude>
                     </excludes>
                 </configuration>
                 <executions>
