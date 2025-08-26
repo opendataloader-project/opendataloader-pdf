@@ -29,7 +29,7 @@ Below are the planned features for an early September open-source release.
 <br>
 
 ## ▶️ Installation
-To get started with Hancom PDF Data Loader, 
+To get started with OpenDataLoader-PDF, 
 you need a Java 8+ runtime environment.
 
 
