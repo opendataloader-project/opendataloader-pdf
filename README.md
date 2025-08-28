@@ -8,7 +8,7 @@ OpenDataLoader-PDF is a high-performance document parsing engine that simplifies
 combining the speed of rule-based processing, the accuracy of structured extraction, and the security of local execution. 
 It's the perfect foundation for AI-driven document workflows and seamless integrations with the generative AI ecosystem.
 
-<br>
+
 
 ## 🌟 Key Features
 - ⚡ Fast – Efficient batch processing for thousands of documents.
@@ -18,35 +18,30 @@ It's the perfect foundation for AI-driven document workflows and seamless integr
 - 🔧 Customizable – Rule sets can be adapted for domain-specific structures.
 - 🧬 AI Add-on Compatible – Seamlessly upgrade to AI-powered modules when needed.
 
-<br>
+
 
 ## 🚀 Upcoming 
 Below are the planned features for an early September open-source release.
 - Table AI Prototypes
 - OCR AI Prototypes
 
-<br>
 
-<br>
 
 ## ▶️ Installation
 To get started with OpenDataLoader-PDF, 
 you need a Java 8+ runtime environment.
 
 
-### Build instructions 
-Build and install using Maven command:
+### Build instructions
+Clone the repository, navigate into the project directory, and build it with the following commands:
+
 ```
+git clone https://github.com/opendataloader-project/opendataloader-pdf.git
+cd opendataloader-pdf/java
 mvn clean install
 ```
 
-If the build is successful, the resulting `jar` file will be created in the path below.
 
-```
-opendataloader-pdf/target
-```
-
-<br>
 
 ## 💻 Getting Started
 ### CLI usage
@@ -229,14 +224,12 @@ Specific fields of `text block` json nodes
 | kids  | array | no       | Array of text block content elements |
 
 
-<br><br>
 
 ## 🤝 Contributing
 We believe that great software is built together.<br>
 Your contributions are vital to the success of this project.<br>
 Please read [CONTRIBUTING.md](https://github.com/hancom-inc/opendataloader-pdf/blob/main/CONTRIBUTING.md) for details on how to contribute.
 
-<br>
 
 ## 💖 Community & Support 
 Have questions or need a little help? We're here for you!🤗
@@ -244,7 +237,6 @@ Have questions or need a little help? We're here for you!🤗
 - [GitHub Issues](https://github.com/hancom-inc/opendataloader-pdf/issues): Found a bug? 🐛 Please report it here so we can fix it.
 
 
-<br>
 
 ## ✨ Our Branding and Trademarks 
 We love our brand and want to protect it! 
@@ -255,8 +247,6 @@ To ensure everyone is on the same page, please remember these simple rules:
 - **No Confusion**: When you use our trademarks in a modified version of this project, it should never cause confusion or imply that Hancom officially sponsors or endorses your version.
 - **Third-Party Brands**: Any use of trademarks or logos from other companies must follow that company’s specific policies.
 
-
-<br>
 
 ## ⚖️ License
 
