@@ -1,48 +1,58 @@
 *.class
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
-
-# Package Files #
-*.jar
-*.war
-*.ear
-
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
-**/target/**
-/.idea/**
-*.iml
-
-# Ignore Mac DS_Store files
+# OS specific files
 .DS_Store
-
-# Eclipse artefacts
-**/.project
-**/.settings
-**/.classpath
-**/bin
-
-# Maven artefacts
-**/pom.xml.versionsBackup
-/target/
-
-# Temporary files
-temp/
-tmp/
-
-# Python specific
-__pycache__/
-*.pyc
-*.pyd
-*.pyo
-.Python/
-.hatch/ # Hatch managed environments and cache
-venv/   # Generic virtual environment folder
-.venv/  # Generic virtual environment folder
-python/packages/opendataloader_pdf/dist/ # Python distribution outputs
-python/packages/opendataloader_pdf/build/ # Python build cache
-
-# OS specific (Windows)
 Thumbs.db
-Desktop.ini
+
+# IDE / Editor files
+**/.idea/
+**/.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Java (Maven & Gradle)
+**/target/
+**/build/
+**/.gradle/
+**/*.jar
+**/*.war
+**/*.ear
+**/dependency-reduced-pom.xml
+
+# Logs
+*.log
+logs/
+**/logs/
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+
+# Node.js
+**/node_modules/
+**/.next/
+**/.turbo/
+**/dist/
+**/.cache/
+
+# Python
+**/__pycache__/
+**/*.py[cod]
+*.pyo
+*.pyd
+*.so
+**/.venv/
+**/.env
+**/.env.*
+*.egg-info/
+**/.eggs/
+**/.mypy_cache/
+**/.pytest_cache/
+**/.coverage
+**/htmlcov/
+
+# Temporary / Generated
+**/tmp/
+**/temp/
+*.swp
+*.swo
