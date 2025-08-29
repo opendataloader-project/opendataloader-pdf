@@ -38,7 +38,7 @@ public class CLIMain {
         }
 
         String[] arguments = commandLine.getArgs();
-        Config config = Config.createConfigFromCommandLine(commandLine);
+        Config config = createConfigFromCommandLine(commandLine);
         File file = new File(arguments[0]);
         if (file.isDirectory()) {
             processDirectory(file, config);
@@ -66,5 +66,39 @@ public class CLIMain {
             LOGGER.log(Level.SEVERE, "Exception during processing file " + file.getAbsolutePath() + ": " +
                     exception.getMessage(), exception);
         }
+    }
+
+    private static Config createConfigFromCommandLine(CommandLine commandLine) {
+        Config config = new Config();
+        if (commandLine.hasOption(CLIOptions.PASSWORD_OPTION)) {
+            config.setPassword(commandLine.getOptionValue(CLIOptions.PASSWORD_OPTION));
+        }
+        if (commandLine.hasOption(CLIOptions.HIDDEN_TEXT_OPTION)) {
+            config.setFindHiddenText(true);
+        }
+        if (commandLine.hasOption(CLIOptions.KEEP_LINE_BREAKS_OPTION)) {
+            config.setKeepLineBreaks(true);
+        }
+        if (commandLine.hasOption(CLIOptions.PDF_REPORT_OPTION)) {
+            config.setGeneratePDF(true);
+        }
+        if (commandLine.hasOption(CLIOptions.MARKDOWN_REPORT_OPTION)) {
+            config.setGenerateMarkdown(true);
+        }
+        if (commandLine.hasOption(CLIOptions.HTML_OPTION)) {
+            config.setUseHTMLInMarkdown(true);
+        }
+        if (commandLine.hasOption(CLIOptions.MARKDOWN_IMAGE_OPTION)) {
+            config.setAddImageToMarkdown(true);
+        }
+        if (commandLine.hasOption(CLIOptions.FOLDER_OPTION)) {
+            config.setOutputFolder(commandLine.getOptionValue(CLIOptions.FOLDER_OPTION));
+        } else {
+            String argument = commandLine.getArgs()[0];
+            File file = new File(argument);
+            file = new File(file.getAbsolutePath());
+            config.setOutputFolder(file.isDirectory() ? file.getAbsolutePath() : file.getParent());
+        }
+        return config;
     }
 }
