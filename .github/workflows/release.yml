@@ -1,0 +1,66 @@
+name: Release and Publish
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 8
+        uses: actions/setup-java@v4
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+          cache: 'maven'
+
+    #   - name: Create Maven settings.xml
+    #     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    #     run: |
+    #       mkdir -p ~/.m2
+    #       echo "<settings><servers><server><id>ossrh</id><username>${{ secrets.OSSRH_USERNAME }}</username><password>${{ secrets.OSSRH_PASSWORD }}</password></server></servers></settings>" > ~/.m2/settings.xml
+
+    #   - name: Import GPG key
+    #     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    #     run: |
+    #       echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+    #       echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --passphrase-fd 0 --pinentry-mode loopback --import-ownertrust
+
+      - name: Set Project Version from Tag
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        run: |
+          NEW_VERSION=$(echo ${{ github.ref_name }} | sed 's/^v//')
+          echo "Setting project version to $NEW_VERSION"
+          mvn versions:set -DnewVersion=$NEW_VERSION -DgenerateBackupPoms=false -f java/pom.xml
+
+      - name: Build with Maven
+        run: mvn -B clean install -f java/pom.xml
+
+    #   - name: Deploy to Maven Central
+    #     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    #     run: mvn -B deploy -f java/pom.xml -s ~/.m2/settings.xml -Dgpg.passphrase=${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Create GitHub Release
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          body: |
+            # Release ${{ github.ref_name }}
+
+            Changes in this release:
+
+            (Add release notes here)
+          files: java/opendataloader-pdf-cli/target/opendataloader-pdf-cli-*.jar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
