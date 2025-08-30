@@ -48,7 +48,11 @@
                 <groupId>com.mycila</groupId>
                 <artifactId>license-maven-plugin</artifactId>
                 <configuration>
-                    <header>../../LICENSE_TEMPLATE/license.txt</header>
+                    <licenseSets>
+                        <licenseSet>
+                            <header>../../LICENSE_TEMPLATE/license.txt</header>
+                        </licenseSet>
+                    </licenseSets>
                 </configuration>
             </plugin>
             <plugin>
@@ -71,9 +75,30 @@
                                 <filter>
                                     <artifact>*:*</artifact>
                                     <excludes>
+                                        <exclude>module-info.class</exclude>
                                         <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.DSA</exclude>
                                         <exclude>META-INF/*.RSA</exclude>
+                                        <exclude>META-INF/maven/org.jacoco/*</exclude>
+                                        <exclude>about.html</exclude>
+                                        <!-- Additional exclusions for common overlaps -->
+                                        <exclude>META-INF/MANIFEST.MF</exclude>
+                                        <exclude>META-INF/plexus/components.xml</exclude>
+                                        <exclude>META-INF/LICENSE</exclude>
+                                        <exclude>META-INF/NOTICE</exclude>
+                                        <exclude>META-INF/LICENSE.txt</exclude>
+                                        <exclude>META-INF/NOTICE.txt</exclude>
+                                        <exclude>META-INF/DEPENDENCIES</exclude>
+                                        <exclude>META-INF/services/javax.imageio.spi.ImageWriterSpi</exclude>
+                                        <exclude>META-INF/services/javax.imageio.spi.ImageReaderSpi</exclude>
+                                        <exclude>META-INF/versions/9/module-info.class</exclude>
+                                    </excludes>
+                                </filter>
+                                <!-- Exclude jacoco-maven-plugin entirely if it's being shaded -->
+                                <filter>
+                                    <artifact>org.jacoco:jacoco-maven-plugin</artifact>
+                                    <excludes>
+                                        <exclude>**</exclude>
                                     </excludes>
                                 </filter>
                             </filters>
