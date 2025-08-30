@@ -27,8 +27,9 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.Closeable;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.logging.Level;
@@ -37,7 +38,7 @@ import java.util.logging.Logger;
 public class MarkdownGenerator implements Closeable {
 
     protected static final Logger LOGGER = Logger.getLogger(MarkdownGenerator.class.getCanonicalName());
-    protected final FileWriter markdownWriter;
+    protected final OutputStreamWriter markdownWriter;
     protected final String pdfFileName;
     protected final String imageDirectoryName;
     protected ContrastRatioConsumer contrastRatioConsumer;
@@ -51,7 +52,7 @@ public class MarkdownGenerator implements Closeable {
         this.markdownFileName = outputFolder + File.separator + cutPdfFileName.substring(0, cutPdfFileName.length() - 3) + "md";
         this.imageDirectoryName = outputFolder + File.separator + cutPdfFileName.substring(0, cutPdfFileName.length() - 4) + "_images";
         this.pdfFileName = inputPdf.getAbsolutePath();
-        this.markdownWriter = new FileWriter(markdownFileName, StandardCharsets.UTF_8);
+        this.markdownWriter = new OutputStreamWriter(new FileOutputStream(markdownFileName), StandardCharsets.UTF_8);
         this.isImageSupported = config.isAddImageToMarkdown();
         this.password = config.getPassword();
     }
