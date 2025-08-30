@@ -1,4 +1,4 @@
-name: Release and Publish
+name: Release
 
 on:
   push:
@@ -23,17 +23,17 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-    #   - name: Create Maven settings.xml
-    #     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-    #     run: |
-    #       mkdir -p ~/.m2
-    #       echo "<settings><servers><server><id>ossrh</id><username>${{ secrets.OSSRH_USERNAME }}</username><password>${{ secrets.OSSRH_PASSWORD }}</password></server></servers></settings>" > ~/.m2/settings.xml
+      - name: Create Maven settings.xml
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        run: |
+          mkdir -p ~/.m2
+          echo "<settings><servers><server><id>ossrh</id><username>${{ secrets.OSSRH_USERNAME }}</username><password>${{ secrets.OSSRH_PASSWORD }}</password></server></servers></settings>" > ~/.m2/settings.xml
 
-    #   - name: Import GPG key
-    #     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-    #     run: |
-    #       echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
-    #       echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --passphrase-fd 0 --pinentry-mode loopback --import-ownertrust
+      - name: Import GPG key
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        run: |
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+          echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --passphrase-fd 0 --pinentry-mode loopback --import-ownertrust
 
       - name: Set Project Version from Tag
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
@@ -45,9 +45,9 @@ jobs:
       - name: Build with Maven
         run: mvn -B clean install -f java/pom.xml
 
-    #   - name: Deploy to Maven Central
-    #     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-    #     run: mvn -B deploy -f java/pom.xml -s ~/.m2/settings.xml -Dgpg.passphrase=${{ secrets.GPG_PASSPHRASE }}
+      - name: Deploy to Maven Central
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        run: mvn -B deploy -f java/pom.xml -s ~/.m2/settings.xml -Dgpg.passphrase=${{ secrets.GPG_PASSPHRASE }}
 
       - name: Create GitHub Release
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
