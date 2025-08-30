@@ -31,15 +31,15 @@
 
     <developers>
         <developer>
-            <name>OpenDataLoader Project</name>
+            <name>opendataloader-project</name>
             <email>open.dataloader@hancom.com</email>
-            <organization>OpenDataLoader Project</organization>
+            <organization>opendataloader-project</organization>
             <organizationUrl>https://github.com/opendataloader-project</organizationUrl>
         </developer>
     </developers>
 
     <scm>
-        <connection>scm:git:git://github.com/opendataloader-project/opendataloader-pdf.git</connection>
+        <connection>scm:git:https://github.com/opendataloader-project/opendataloader-pdf.git</connection>
         <developerConnection>scm:git:ssh://github.com:opendataloader-project/opendataloader-pdf.git</developerConnection>
         <url>https://github.com/opendataloader-project/opendataloader-pdf/tree/main</url>
     </scm>

@@ -26,6 +26,10 @@
     <name>OpenDataLoader PDF CLI</name>
     <description>CLI for OpenDataLoader PDF processing</description>
 
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>io.github.opendataloader-project</groupId>
