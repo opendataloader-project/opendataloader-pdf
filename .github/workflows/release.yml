@@ -27,27 +27,50 @@ jobs:
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         run: |
           mkdir -p ~/.m2
-          echo "<settings><servers><server><id>ossrh</id><username>${{ secrets.OSSRH_USERNAME }}</username><password>${{ secrets.OSSRH_PASSWORD }}</password></server></servers></settings>" > ~/.m2/settings.xml
+          cat <<EOF > ~/.m2/settings.xml
+          <settings>
+            <servers>
+              <server>
+                <id>ossrh</id>
+                <username>${{ secrets.OSSRH_USERNAME }}</username>
+                <password>${{ secrets.OSSRH_PASSWORD }}</password>
+              </server>
+            </servers>
+            <profiles>
+              <profile>
+                <id>gpg</id>
+                <properties>
+                  <gpg.executable>gpg</gpg.executable>
+                  <gpg.passphrase>${{ secrets.GPG_PASSPHRASE }}</gpg.passphrase>
+                </properties>
+              </profile>
+            </profiles>
+          </settings>
+          EOF
 
       - name: Import GPG key
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-        run: |
-          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
-          echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --passphrase-fd 0 --pinentry-mode loopback --import-ownertrust
+        run: echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+        env:
+          GPG_TTY: $(tty)
 
       - name: Set Project Version from Tag
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         run: |
-          NEW_VERSION=$(echo ${{ github.ref_name }} | sed 's/^v//')
+          NEW_VERSION=$(echo "${GITHUB_REF_NAME}" | sed 's/^v//')
           echo "Setting project version to $NEW_VERSION"
           mvn versions:set -DnewVersion=$NEW_VERSION -DgenerateBackupPoms=false -f java/pom.xml
 
       - name: Build with Maven
-        run: mvn -B clean install -f java/pom.xml
+        run: mvn -B clean verify -f java/pom.xml
 
       - name: Deploy to Maven Central
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-        run: mvn -B deploy -f java/pom.xml -s ~/.m2/settings.xml -Dgpg.passphrase=${{ secrets.GPG_PASSPHRASE }}
+        run: mvn -B deploy -P release -f java/pom.xml -s ~/.m2/settings.xml
+        env:
+          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Create GitHub Release
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
