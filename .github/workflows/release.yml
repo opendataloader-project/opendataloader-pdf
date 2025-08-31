@@ -72,6 +72,6 @@ jobs:
 
               (Add release notes here)
             files: |
-              java/opendataloader-pdf-cli/target/opendataloader-pdf-cli-${{ github.ref_name }}.zip
+              java/opendataloader-pdf-cli/target/opendataloader-pdf-cli-$VERSION.zip
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
