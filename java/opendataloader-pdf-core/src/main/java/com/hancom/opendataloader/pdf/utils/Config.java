@@ -7,11 +7,6 @@
  */
 package com.hancom.opendataloader.pdf.utils;
 
-import com.hancom.opendataloader.pdf.cli.CLIOptions;
-import org.apache.commons.cli.CommandLine;
-
-import java.io.File;
-
 public class Config {
     private String password;
     private boolean findHiddenText = false;
@@ -22,40 +17,6 @@ public class Config {
     private boolean useHTMLInMarkdown = false;
     private boolean addImageToMarkdown = false;
     private String outputFolder;
-
-    public static Config createConfigFromCommandLine(CommandLine commandLine) {
-        Config config = new Config();
-        if (commandLine.hasOption(CLIOptions.PASSWORD_OPTION)) {
-            config.setPassword(commandLine.getOptionValue(CLIOptions.PASSWORD_OPTION));
-        }
-        if (commandLine.hasOption(CLIOptions.HIDDEN_TEXT_OPTION)) {
-            config.setFindHiddenText(true);
-        }
-        if (commandLine.hasOption(CLIOptions.KEEP_LINE_BREAKS_OPTION)) {
-            config.setKeepLineBreaks(true);
-        }
-        if (commandLine.hasOption(CLIOptions.PDF_REPORT_OPTION)) {
-            config.setGeneratePDF(true);
-        }
-        if (commandLine.hasOption(CLIOptions.MARKDOWN_REPORT_OPTION)) {
-            config.setGenerateMarkdown(true);
-        }
-        if (commandLine.hasOption(CLIOptions.HTML_OPTION)) {
-            config.setUseHTMLInMarkdown(true);
-        }
-        if (commandLine.hasOption(CLIOptions.MARKDOWN_IMAGE_OPTION)) {
-            config.setAddImageToMarkdown(true);
-        }
-        if (commandLine.hasOption(CLIOptions.FOLDER_OPTION)) {
-            config.setOutputFolder(commandLine.getOptionValue(CLIOptions.FOLDER_OPTION));
-        } else {
-            String argument = commandLine.getArgs()[0];
-            File file = new File(argument);
-            file = new File(file.getAbsolutePath());
-            config.setOutputFolder(file.isDirectory() ? file.getAbsolutePath() : file.getParent());
-        }
-        return config;
-    }
 
     public String getPassword() {
         return password;

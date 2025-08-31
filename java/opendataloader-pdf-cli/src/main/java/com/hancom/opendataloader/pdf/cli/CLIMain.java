@@ -38,7 +38,7 @@ public class CLIMain {
         }
 
         String[] arguments = commandLine.getArgs();
-        Config config = Config.createConfigFromCommandLine(commandLine);
+        Config config = CLIOptions.createConfigFromCommandLine(commandLine);
         File file = new File(arguments[0]);
         if (file.isDirectory()) {
             processDirectory(file, config);
@@ -64,7 +64,7 @@ public class CLIMain {
             DocumentProcessor.processFile(file.getAbsolutePath(), config);
         } catch (Exception exception) {
             LOGGER.log(Level.SEVERE, "Exception during processing file " + file.getAbsolutePath() + ": " +
-                    exception.getMessage(), exception);
+                exception.getMessage(), exception);
         }
     }
 }
