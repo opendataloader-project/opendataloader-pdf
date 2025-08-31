@@ -2,12 +2,13 @@
 
 ![Pre-release](https://img.shields.io/badge/Pre--release-FFA500&logo=github)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.opendataloader-project/opendataloader-pdf-core.svg)](https://search.maven.org/artifact/io.github.opendataloader-project/opendataloader-pdf-core)
+[![GHCR Version](https://img.shields.io/badge/ghcr.io%2Fopendataloader--project%2Fopendataloader--pdf--cli-latest-blue)](https://github.com/opendataloader-project/opendataloader-pdf/pkgs/container/opendataloader-pdf-cli)
 
-<p></p>
 A Fast, Accurate and Secure PDF Extraction Engine — Built for AI Understanding.
-<p></p>
+
 OpenDataLoader-PDF is a high-performance document parsing engine that simplifies document processing, 
 combining the speed of rule-based processing, the accuracy of structured extraction, and the security of local execution. 
+
 It's the perfect foundation for AI-driven document workflows and seamless integrations with the generative AI ecosystem.
 
 <br>
