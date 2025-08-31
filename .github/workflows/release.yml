@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      packages: write
 
     steps:
       - name: Checkout code
@@ -34,9 +35,29 @@ jobs:
           NEW_VERSION=$(echo "${GITHUB_REF_NAME}" | sed 's/^v//')
           echo "Setting project version to $NEW_VERSION"
           mvn versions:set -DnewVersion=$NEW_VERSION -DgenerateBackupPoms=false -f java/pom.xml
+          echo "VERSION=$NEW_VERSION" >> $GITHUB_ENV
 
       - name: Build All Modules
         run: mvn -B clean package -f java/pom.xml
+
+      - name: Log in to GitHub Container Registry
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        uses: docker/build-push-action@v5
+        with:
+          context: ./java/opendataloader-pdf-cli
+          file: ./java/opendataloader-pdf-cli/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/opendataloader-pdf-cli:${{ env.VERSION }}
+            ghcr.io/${{ github.repository_owner }}/opendataloader-pdf-cli:latest
 
       - name: Deploy to Maven Central
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
