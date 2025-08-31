@@ -27,7 +27,7 @@ public class IntegrationTest {
 
     static Stream<Arguments> integrationTestParams() {
         return Stream.of(
-                Arguments.of("2408.00029v1.pdf")
+                Arguments.of("2408.02509v1.pdf")
         );
     }
 

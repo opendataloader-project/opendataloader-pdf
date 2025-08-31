@@ -9,108 +9,52 @@
 
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.hancom</groupId>
+    <groupId>io.github.opendataloader-project</groupId>
     <artifactId>opendataloader-pdf-parent</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>OpenDataLoader PDF Parent</name>
-    <description>Parent POM for OpenDataLoader PDF modules</description>
+    <name>OpenDataLoader PDF</name>
+    <description>OpenDataLoader PDF</description>
+    <url>https://github.com/opendataloader-project/opendataloader-pdf</url>
+
+    <licenses>
+        <license>
+            <name>Mozilla Public License, Version 2.0</name>
+            <url>https://www.mozilla.org/en-US/MPL/2.0/</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>opendataloader-project</name>
+            <email>open.dataloader@hancom.com</email>
+            <organization>opendataloader-project</organization>
+            <organizationUrl>https://github.com/opendataloader-project</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/opendataloader-project/opendataloader-pdf.git</connection>
+        <developerConnection>scm:git:ssh://github.com:opendataloader-project/opendataloader-pdf.git</developerConnection>
+        <url>https://github.com/opendataloader-project/opendataloader-pdf/tree/main</url>
+    </scm>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <verapdf.version>[1.29.0,1.30.0-RC)</verapdf.version>
-        <junit.version>5.6.2</junit.version>
-        <commons-cli.version>1.4</commons-cli.version>
     </properties>
 
     <modules>
         <module>opendataloader-pdf-core</module>
-        <module>opendataloader-pdf-runtime</module>
+        <module>opendataloader-pdf-cli</module>
     </modules>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.verapdf</groupId>
-                <artifactId>validation-model</artifactId>
-                <version>${verapdf.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.verapdf</groupId>
-                        <artifactId>feature-reporting</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.jacoco</groupId>
-                        <artifactId>jacoco-maven-plugin</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.verapdf</groupId>
-                <artifactId>wcag-validation</artifactId>
-                <version>${verapdf.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter</artifactId>
-                <version>${junit.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>commons-cli</groupId>
-                <artifactId>commons-cli</artifactId>
-                <version>${commons-cli.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
-    <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.13.0</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-shade-plugin</artifactId>
-                    <version>3.5.1</version>
-                </plugin>
-                <plugin>
-                    <groupId>com.mycila</groupId>
-                    <artifactId>license-maven-plugin</artifactId>
-                    <version>4.3</version>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-        <plugins>
-            <plugin>
-                <groupId>com.mycila</groupId>
-                <artifactId>license-maven-plugin</artifactId>
-                <configuration>
-                    <header>../LICENSE_TEMPLATE/license.txt</header>
-                    <excludes>
-                        <exclude>LICENSE_TEMPLATE/**</exclude>
-                    </excludes>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>format</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 
     <repositories>
         <repository>
@@ -132,5 +76,59 @@
             <url>https://artifactory.openpreservation.org/artifactory/vera-dev</url>
         </pluginRepository>
     </pluginRepositories>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.13.0</version>
+                    <configuration>
+                        <source>${maven.compiler.source}</source>
+                        <target>${maven.compiler.target}</target>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>3.1.2</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>license-header</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.mycila</groupId>
+                        <artifactId>license-maven-plugin</artifactId>
+                        <configuration>
+                            <header>${project.basedir}/../LICENSE_TEMPLATE/license.txt</header>
+                            <includes>
+                                <include>**/*.java</include>
+                                <include>pom.xml</include>
+                            </includes>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>format</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>

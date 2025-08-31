@@ -1,0 +1,77 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: 'maven'
+          server-id: central
+          server-username: MAVEN_CENTRAL_USERNAME
+          server-password: MAVEN_CENTRAL_PASSWORD
+          gpg-private-key: ${{ secrets.MAVEN_GPG_KEY }}
+          gpg-passphrase: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+
+      - name: Set Project Version from Tag
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        run: |
+          NEW_VERSION=$(echo "${GITHUB_REF_NAME}" | sed 's/^v//')
+          echo "Setting project version to $NEW_VERSION"
+          mvn versions:set -DnewVersion=$NEW_VERSION -DgenerateBackupPoms=false -f java/pom.xml
+
+      - name: Build All Modules
+        run: mvn -B clean package -f java/pom.xml
+
+      - name: Deploy to Maven Central
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        run: mvn -B -pl opendataloader-pdf-core deploy -f java/pom.xml
+        env:
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          MAVEN_GPG_KEY: ${{ secrets.MAVEN_GPG_KEY }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+
+      - name: Package CLI as ZIP
+        run: |
+            cd java/opendataloader-pdf-cli/target
+            VERSION=${GITHUB_REF_NAME#v}
+            JAR_FILE=$(ls *.jar)
+            mkdir -p release
+            cp "$JAR_FILE" release/
+            cp ../README.md release/
+            cd release
+            zip "../opendataloader-pdf-cli-$VERSION.zip" *
+            cd ../..
+
+      - name: Create GitHub Release
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
+        with:
+            tag_name: ${{ github.ref_name }}
+            name: Release ${{ github.ref_name }}
+            body: |
+              # Release ${{ github.ref_name }}
+
+              Changes in this release:
+
+              (Add release notes here)
+            files: |
+              java/opendataloader-pdf-cli/target/opendataloader-pdf-cli-${{ github.ref_name }}.zip
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
