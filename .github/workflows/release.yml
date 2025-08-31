@@ -71,13 +71,12 @@ jobs:
       - name: Package CLI as ZIP
         run: |
             cd java/opendataloader-pdf-cli/target
-            VERSION=${GITHUB_REF_NAME#v}
             JAR_FILE=$(ls *.jar)
             mkdir -p release
             cp "$JAR_FILE" release/
             cp ../README.md release/
             cd release
-            zip "../opendataloader-pdf-cli-$VERSION.zip" *
+            zip "../opendataloader-pdf-cli-${{ env.VERSION }}.zip" *
             cd ../..
 
       - name: Create GitHub Release
@@ -87,12 +86,12 @@ jobs:
             tag_name: ${{ github.ref_name }}
             name: Release ${{ github.ref_name }}
             body: |
-              # Release ${{ github.ref_name }}
+              ## What’s Changed
 
               Changes in this release:
 
               (Add release notes here)
             files: |
-              java/opendataloader-pdf-cli/target/opendataloader-pdf-cli-$VERSION.zip
+              java/opendataloader-pdf-cli/target/opendataloader-pdf-cli-${{ env.VERSION }}.zip
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
