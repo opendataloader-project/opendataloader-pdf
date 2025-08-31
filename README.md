@@ -1,5 +1,7 @@
-# OpenDataLoader PDF 
-![Pre-release](https://img.shields.io/badge/Pre--release-FFA500?style=for-the-badge&logo=github)
+# OpenDataLoader PDF
+
+![Pre-release](https://img.shields.io/badge/Pre--release-FFA500&logo=github)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.opendataloader-project/opendataloader-pdf-core.svg)](https://search.maven.org/artifact/io.github.opendataloader-project/opendataloader-pdf-core)
 
 <p></p>
 A Fast, Accurate and Secure PDF Extraction Engine — Built for AI Understanding.
