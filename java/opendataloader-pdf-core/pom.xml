@@ -107,6 +107,13 @@
                 <version>1.6.0</version>
                 <configuration>
                     <updatePomFile>true</updatePomFile>
+                    <pomElements>
+                        <name />
+                        <description />
+                        <url />
+                        <scm />
+                        <developers />
+                    </pomElements>
                 </configuration>
                 <executions>
                     <execution>
