@@ -3,6 +3,7 @@
 ![Pre-release](https://img.shields.io/badge/Pre--release-FFA500&logo=github)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.opendataloader-project/opendataloader-pdf-core.svg)](https://search.maven.org/artifact/io.github.opendataloader-project/opendataloader-pdf-core)
 [![GHCR Version](https://ghcr-badge.egpl.dev/opendataloader-project/opendataloader-pdf-cli/latest_tag?trim=major&label=docker-image)](https://github.com/opendataloader-project/opendataloader-pdf/pkgs/container/opendataloader-pdf-cli)
+<a href="https://cla-assistant.io/opendataloader-project/opendataloader-pdf"><img src="https://cla-assistant.io/readme/badge/opendataloader-project/opendataloader-pdf" alt="CLA assistant" /></a>
 
 A Fast, Accurate and Secure PDF Extraction Engine — Built for AI Understanding.
 
