@@ -37,6 +37,10 @@ jobs:
           mvn versions:set -DnewVersion=$NEW_VERSION -DgenerateBackupPoms=false -f java/pom.xml
           echo "VERSION=$NEW_VERSION" >> $GITHUB_ENV
 
+      - name: Set Default Version for non-tag pushes
+        if: env.VERSION == ''
+        run: echo "VERSION=0.0.0-SNAPSHOT" >> $GITHUB_ENV
+
       - name: Build All Modules
         run: mvn -B clean package -f java/pom.xml
 
@@ -71,9 +75,8 @@ jobs:
       - name: Package CLI as ZIP
         run: |
             cd java/opendataloader-pdf-cli/target
-            JAR_FILE=$(ls *.jar)
             mkdir -p release
-            cp "$JAR_FILE" release/
+            cp "opendataloader-pdf-cli-${{ env.VERSION }}.jar" release/
             cp ../README.md release/
             cd release
             zip "../opendataloader-pdf-cli-${{ env.VERSION }}.zip" *
