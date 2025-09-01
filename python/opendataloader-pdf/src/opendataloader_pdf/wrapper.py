@@ -1,6 +1,7 @@
 import subprocess
 import sys
 import importlib_resources
+import locale
 from pathlib import Path
 
 # The consistent name of the JAR file bundled with the package
@@ -79,7 +80,7 @@ def run(
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
                     text=True,
-                    encoding="utf-8",
+                    encoding=locale.getpreferredencoding(False),
                 )
 
                 output_lines = []
@@ -103,7 +104,7 @@ def run(
                     capture_output=True,
                     text=True,
                     check=True,
-                    encoding="utf-8",
+                    encoding=locale.getpreferredencoding(False),
                 )
                 return result.stdout
 
