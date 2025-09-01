@@ -2,7 +2,7 @@
 
 ![Pre-release](https://img.shields.io/badge/Pre--release-FFA500&logo=github)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.opendataloader-project/opendataloader-pdf-core.svg)](https://search.maven.org/artifact/io.github.opendataloader-project/opendataloader-pdf-core)
-[![GHCR Version](https://img.shields.io/badge/ghcr.io%2Fopendataloader--project%2Fopendataloader--pdf--cli-latest-blue)](https://github.com/opendataloader-project/opendataloader-pdf/pkgs/container/opendataloader-pdf-cli)
+[![GHCR Version](https://ghcr-badge.egpl.dev/opendataloader-project/opendataloader-pdf-cli/latest_tag?trim=major&label=docker-image)](https://github.com/opendataloader-project/opendataloader-pdf/pkgs/container/opendataloader-pdf-cli)
 
 A Fast, Accurate and Secure PDF Extraction Engine — Built for AI Understanding.
 
