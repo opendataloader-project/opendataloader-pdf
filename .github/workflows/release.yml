@@ -12,6 +12,7 @@ jobs:
     permissions:
       contents: write
       packages: write
+      id-token: write
 
     steps:
       - name: Checkout code
@@ -29,20 +30,41 @@ jobs:
           gpg-private-key: ${{ secrets.MAVEN_GPG_KEY }}
           gpg-passphrase: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
 
-      - name: Set Project Version from Tag
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+      - name: Initialize VERSION
         run: |
-          NEW_VERSION=$(echo "${GITHUB_REF_NAME}" | sed 's/^v//')
-          echo "Setting project version to $NEW_VERSION"
-          mvn versions:set -DnewVersion=$NEW_VERSION -DgenerateBackupPoms=false -f java/pom.xml
-          echo "VERSION=$NEW_VERSION" >> $GITHUB_ENV
-
-      - name: Set Default Version for non-tag pushes
-        if: env.VERSION == ''
-        run: echo "VERSION=0.0.0-SNAPSHOT" >> $GITHUB_ENV
+            if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+              echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
+            else
+              echo "VERSION=0.0.0" >> $GITHUB_ENV
+            fi
 
       - name: Build All Modules
         run: mvn -B clean package -f java/pom.xml
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Python build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine setuptools wheel
+
+      - name: Update version in setup.py for Python package
+        run: |
+          sed -i "s/version=\"0.0.0\"/version=\"${{ env.VERSION }}\"/" setup.py
+        working-directory: ./python/opendataloader-pdf
+
+      - name: Build Python package
+        run: python -m build --wheel
+        working-directory: ./python/opendataloader-pdf
+
+      - name: Publish Python package to PyPI
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: ./python/opendataloader-pdf/dist
 
       - name: Log in to GitHub Container Registry
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
