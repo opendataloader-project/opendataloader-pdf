@@ -1,0 +1,12 @@
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Ignore JAR file
+*.jar
+
+# License files
+LICENSE
+NOTICE.md
+THIRD_PARTY/
