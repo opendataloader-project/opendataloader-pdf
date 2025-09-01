@@ -18,13 +18,15 @@ pip install opendataloader-pdf
 
 Here is a basic example of how to use:
 
+If you don’t specify an output_folder, the output data will be saved in the same directory as the input document.
+
 ```python
 import opendataloader_pdf
 
-opendataloader_pdf.run("path/to/document.pdf", to_markdown=True)
-
-# If you don’t specify an output_folder,
-# the output data will be saved in the same directory as the input document.
+opendataloader_pdf.run("path/to/document.pdf",
+    # output_folder="path/to/output",
+    to_markdown=True
+)
 ```
 
 ## Function: `run()`
