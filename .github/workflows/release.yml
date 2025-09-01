@@ -38,8 +38,20 @@ jobs:
               echo "VERSION=0.0.0" >> $GITHUB_ENV
             fi
 
+      - name: Update Maven version
+        run: mvn versions:set -DnewVersion=${{ env.VERSION }} -DgenerateBackupPoms=false -f java/pom.xml
+
       - name: Build All Modules
         run: mvn -B clean package -f java/pom.xml
+
+      - name: Deploy to Maven Central
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        run: mvn -B -pl opendataloader-pdf-core deploy -f java/pom.xml
+        env:
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          MAVEN_GPG_KEY: ${{ secrets.MAVEN_GPG_KEY }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -84,15 +96,6 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository_owner }}/opendataloader-pdf-cli:${{ env.VERSION }}
             ghcr.io/${{ github.repository_owner }}/opendataloader-pdf-cli:latest
-
-      - name: Deploy to Maven Central
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-        run: mvn -B -pl opendataloader-pdf-core deploy -f java/pom.xml
-        env:
-          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
-          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
-          MAVEN_GPG_KEY: ${{ secrets.MAVEN_GPG_KEY }}
-          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
 
       - name: Package CLI as ZIP
         run: |
