@@ -39,7 +39,7 @@ public class MarkdownHTMLGenerator extends MarkdownGenerator {
             paragraphValue = paragraphValue.replace(MarkdownSyntax.LINE_BREAK, MarkdownSyntax.HTML_LINE_BREAK_TAG);
         }
 
-        markdownWriter.write(paragraphValue);
+        markdownWriter.write(getCorrectMarkdownString(paragraphValue));
     }
 
     @Override
@@ -81,7 +81,7 @@ public class MarkdownHTMLGenerator extends MarkdownGenerator {
         markdownWriter.write(MarkdownSyntax.HTML_UNORDERED_LIST_TAG);
         for (ListItem item : list.getListItems()) {
             markdownWriter.write(MarkdownSyntax.HTML_LIST_ITEM_TAG);
-            markdownWriter.write(item.toString());
+            markdownWriter.write(getCorrectMarkdownString(item.toString()));
             for (IObject object : item.getContents()) {
                 write(object);
             }
@@ -103,6 +103,6 @@ public class MarkdownHTMLGenerator extends MarkdownGenerator {
             cellTag.append(" rowspan=\"").append(rowSpan).append("\"");
         }
         cellTag.append(">");
-        markdownWriter.write(cellTag.toString());
+        markdownWriter.write(getCorrectMarkdownString(cellTag.toString()));
     }
 }

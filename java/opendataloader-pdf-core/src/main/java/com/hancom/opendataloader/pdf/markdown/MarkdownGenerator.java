@@ -107,7 +107,7 @@ public class MarkdownGenerator implements Closeable {
         boolean isFileCreated = createImageFile(image, fileName);
         if (isFileCreated) {
             String imageString = String.format(MarkdownSyntax.IMAGE_FORMAT, "image " + currentImageIndex, fileName);
-            markdownWriter.write(imageString);
+            markdownWriter.write(getCorrectMarkdownString(imageString));
         }
     }
 
@@ -132,7 +132,7 @@ public class MarkdownGenerator implements Closeable {
     protected void writeList(PDFList list) throws IOException {
         markdownWriter.write(MarkdownSyntax.LINE_BREAK);
         for (ListItem item : list.getListItems()) {
-            markdownWriter.write(item.toString());
+            markdownWriter.write(getCorrectMarkdownString(item.toString()));
             for (IObject object : item.getContents()) {
                 write(object);
             }
@@ -142,7 +142,7 @@ public class MarkdownGenerator implements Closeable {
     }
 
     protected void writeSemanticTextNode(SemanticTextNode textNode) throws IOException {
-        markdownWriter.write(textNode.getValue());
+        markdownWriter.write(getCorrectMarkdownString(textNode.getValue()));
     }
 
     protected void writeTable(TableBorder table) throws IOException {
@@ -180,7 +180,7 @@ public class MarkdownGenerator implements Closeable {
             value = value.replace(MarkdownSyntax.LINE_BREAK, MarkdownSyntax.SPACE);
         }
 
-        markdownWriter.write(value);
+        markdownWriter.write(getCorrectMarkdownString(value));
     }
 
     protected void writeHeading(SemanticHeading heading) throws IOException {
@@ -190,7 +190,7 @@ public class MarkdownGenerator implements Closeable {
         }
 
         markdownWriter.write(MarkdownSyntax.SPACE);
-        markdownWriter.write(heading.getValue());
+        markdownWriter.write(getCorrectMarkdownString(heading.getValue()));
     }
 
     protected void enterTable() {
@@ -205,6 +205,13 @@ public class MarkdownGenerator implements Closeable {
 
     protected boolean isInsideTable() {
         return tableNesting > 0;
+    }
+
+    protected String getCorrectMarkdownString(String value) {
+        if (value != null) {
+            return value.replace("\u0000", "\uFFFD");
+        }
+        return null;
     }
 
 
