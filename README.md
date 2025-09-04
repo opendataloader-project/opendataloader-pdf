@@ -69,7 +69,8 @@ import opendataloader_pdf
 opendataloader_pdf.run(
     input_path="path/to/document.pdf",
     output_folder="path/to/output",
-    to_markdown=True
+    generate_markdown=True,
+    generate_annotated_pdf=True
 )
 ```
 
@@ -82,8 +83,8 @@ The main function to process PDFs.
 | `input_path`            | `str`  | ✅ Yes    | —            | Path to the input PDF file or folder.                           |
 | `output_folder`         | `str`  | No       | input folder | Path to the output folder.                                      |
 | `password`              | `str`  | No       | `None`       | Password for the PDF file.                                      |
-| `to_markdown`           | `bool` | No       | `False`      | If `True`, generates a Markdown output file.                    |
-| `to_annotated_pdf`      | `bool` | No       | `False`      | If `True`, generates an annotated PDF output file.              |
+| `generate_markdown`     | `bool` | No       | `False`      | If `True`, generates a Markdown output file.                    |
+| `generate_annotated_pdf`| `bool` | No       | `False`      | If `True`, generates an annotated PDF output file.              |
 | `keep_line_breaks`      | `bool` | No       | `False`      | If `True`, keeps line breaks in the output.                     |
 | `find_hidden_text`      | `bool` | No       | `False`      | If `True`, finds hidden text in the PDF.                        |
 | `html_in_markdown`      | `bool` | No       | `False`      | If `True`, uses HTML in the Markdown output.                    |
