@@ -12,8 +12,8 @@ def run(
     input_path: str,
     output_folder: str = None,
     password: str = None,
-    to_markdown: bool = False,
-    to_annotated_pdf: bool = False,
+    generate_markdown: bool = False,
+    generate_annotated_pdf: bool = False,
     keep_line_breaks: bool = False,
     find_hidden_text: bool = False,
     html_in_markdown: bool = False,
@@ -27,8 +27,8 @@ def run(
         input_path: Path to the input PDF file or folder.
         output_folder: Path to the output folder. Defaults to the input folder.
         password: Password for the PDF file.
-        to_markdown: If True, generates a Markdown output file.
-        to_annotated_pdf: If True, generates an annotated PDF output file.
+        generate_markdown: If True, generates a Markdown output file.
+        generate_annotated_pdf: If True, generates an annotated PDF output file.
         keep_line_breaks: If True, keeps line breaks in the output.
         find_hidden_text: If True, finds hidden text in the PDF.
         html_in_markdown: If True, uses HTML in the Markdown output.
@@ -50,9 +50,9 @@ def run(
         args.extend(["--folder", output_folder])
     if password:
         args.extend(["--password", password])
-    if to_markdown:
+    if generate_markdown:
         args.append("--markdown")
-    if to_annotated_pdf:
+    if generate_annotated_pdf:
         args.append("--pdf")
     if keep_line_breaks:
         args.append("--keeplinebreaks")
