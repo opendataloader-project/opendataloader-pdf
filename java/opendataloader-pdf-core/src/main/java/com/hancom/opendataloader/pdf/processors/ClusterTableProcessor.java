@@ -12,10 +12,13 @@ import org.verapdf.wcag.algorithms.entities.SemanticFigure;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
+import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
+import org.verapdf.wcag.algorithms.entities.geometry.MultiBoundingBox;
 import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 import org.verapdf.wcag.algorithms.entities.tables.TableToken;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ClusterTableConsumer;
 
+import java.util.LinkedList;
 import java.util.List;
 
 public class ClusterTableProcessor {
@@ -33,7 +36,7 @@ public class ClusterTableProcessor {
         }
         clusterTableConsumer.processEnd();
         for (PDFList list : clusterTableConsumer.getLists()) {
-            DocumentProcessor.replaceContentsToResult(contents, list);
+            replaceContentsToResult(contents, list);
         }
 //        for (Table table : clusterTableConsumer.getTables()) {
 //            replaceContentsToResult(contents, table);
@@ -56,7 +59,7 @@ public class ClusterTableProcessor {
 ////                SemanticFigure semanticFigure = new SemanticFigure((ImageChunk) chunk);
 ////                clusterTableConsumer.accept(new TableToken((ImageChunk)chunk, semanticFigure), semanticFigure);
 ////            }
-//            
+//
 //        }
 //        //        if (recognitionArea.isValid()) {
 ////            List<INode> restNodes = new ArrayList<>(recognize());
@@ -69,4 +72,38 @@ public class ClusterTableProcessor {
 //        clusterTableConsumer.processEnd();
 //        System.out.println("test");
 //    }
+
+    public static void replaceContentsToResult(List<IObject> contents, IObject result) {
+        List<IObject> replacedContents = new LinkedList<>();
+        Integer index = null;
+        int i = 0;
+        for (IObject content : contents) {
+            if (contains(result.getBoundingBox(), content.getBoundingBox())) {
+//            if (content.getBoundingBox().getIntersectionPercent(result.getBoundingBox()) > 0.5) {
+                replacedContents.add(content);
+                if (index == null) {
+                    index = i;
+                }
+            }
+            i++;
+        }
+        if (index == null) {
+            return;
+        }
+        contents.set(index, result);
+        contents.removeAll(replacedContents);
+    }
+
+    public static boolean contains(BoundingBox box, BoundingBox box2) {
+        if (box instanceof MultiBoundingBox) {
+            for (BoundingBox b : ((MultiBoundingBox) box).getBoundingBoxes()) {
+                if (b.contains(box2, 0.6, 0.6)) {
+                    return true;
+                }
+            }
+        } else {
+            return box.contains(box2, 0.6, 0.6);
+        }
+        return false;
+    }
 }

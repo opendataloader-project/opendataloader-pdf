@@ -125,7 +125,7 @@ public class LevelProcessor {
         return null;
     }
 
-    public static void setLevelForTable(TableBorder tableBorder) {
+    private static void setLevelForTable(TableBorder tableBorder) {
         for (int rowNumber = 0; rowNumber < tableBorder.getNumberOfRows(); rowNumber++) {
             TableBorderRow row = tableBorder.getRow(rowNumber);
             for (int colNumber = 0; colNumber < tableBorder.getNumberOfColumns(); colNumber++) {

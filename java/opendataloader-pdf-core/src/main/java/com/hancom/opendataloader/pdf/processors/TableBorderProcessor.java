@@ -100,7 +100,7 @@ public class TableBorderProcessor {
         }
     }
 
-    public static List<IObject> processTableCellContent(List<IObject> contents, int pageNumber) {
+    private static List<IObject> processTableCellContent(List<IObject> contents, int pageNumber) {
         List<IObject> newContents = TableBorderProcessor.processTableBorders(contents, pageNumber);
         newContents = TextLineProcessor.processTextLines(newContents);
         List<List<IObject>> contentsList = new ArrayList<>(1);
@@ -138,7 +138,7 @@ public class TableBorderProcessor {
         }
     }
 
-    public static void checkNeighborTables(TableBorder previousTable, TableBorder currentTable) {
+    private static void checkNeighborTables(TableBorder previousTable, TableBorder currentTable) {
         if (currentTable.getNumberOfColumns() != previousTable.getNumberOfColumns()) {
             return;
         }
@@ -156,7 +156,7 @@ public class TableBorderProcessor {
         currentTable.setPreviousTable(previousTable);
     }
 
-    public static TextChunk getTextChunkPartForTableCell(TextChunk textChunk, TableBorderCell cell) {
+    private static TextChunk getTextChunkPartForTableCell(TextChunk textChunk, TableBorderCell cell) {
         Integer start = textChunk.getSymbolStartIndexByCoordinate(cell.getLeftX());
         if (start == null) {
             return null;
