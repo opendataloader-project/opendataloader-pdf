@@ -6,94 +6,122 @@
 [![PyPI version](https://img.shields.io/pypi/v/opendataloader-pdf.svg)](https://pypi.org/project/opendataloader-pdf/)
 [![Python Version](https://img.shields.io/pypi/pyversions/opendataloader-pdf.svg)](https://pypi.org/project/opendataloader-pdf/)
 [![GHCR Version](https://ghcr-badge.egpl.dev/opendataloader-project/opendataloader-pdf-cli/latest_tag?trim=major&label=docker-image)](https://github.com/opendataloader-project/opendataloader-pdf/pkgs/container/opendataloader-pdf-cli)
-<a href="https://cla-assistant.io/opendataloader-project/opendataloader-pdf"><img src="https://cla-assistant.io/readme/badge/opendataloader-project/opendataloader-pdf" alt="CLA assistant" /></a>
+[![CLA assistant](https://cla-assistant.io/readme/badge/opendataloader-project/opendataloader-pdf)](https://cla-assistant.io/opendataloader-project/opendataloader-pdf)
 
-A Fast, Accurate and Secure PDF Extraction Engine — Built for AI Understanding.
-
-OpenDataLoader-PDF is a high-performance document parsing engine that simplifies document processing, 
-combining the speed of rule-based processing, the accuracy of structured extraction, and the security of local execution. 
-
-It's the perfect foundation for AI-driven document workflows and seamless integrations with the generative AI ecosystem.
-
-<br>
+OpenDataLoader PDF converts PDFs into JSON, Markdown or Html — ready to feed into modern AI stacks (LLMs, vector search, and RAG).
+It reconstructs document layout (headings, lists, tables, and reading order) so the content is easier to chunk, index, and query.
+Powered by fast, heuristic, rule-based inference, it runs entirely on your local machine and delivers high-throughput processing for large document sets.
+AI-safety is enabled by default and automatically filters likely prompt-injection content embedded in PDFs to reduce downstream risk.
 
 ## 🌟 Key Features
-- ⚡ Fast – Efficient batch processing for thousands of documents.
-- ✅ Accurate – Extracts text, tables, images, and layout with high precision.
-- 🔐 Secure – Runs fully offline, making it ideal for sensitive or regulated environments.
-- 🧠 AI-Ready – Provides structured outputs in Markdown or JSON, optimized for LLMs.
-- 🔧 Customizable – Rule sets can be adapted for domain-specific structures.
-- 🧬 AI Add-on Compatible – Seamlessly upgrade to AI-powered modules when needed.
 
-<br>
+- 🧾 **Rich, structured output** — JSON, Markdown or Html
+- 🧩 **Layout reconstruction** — headings, lists, tables, images, reading order
+- 🔒 **Local-first privacy** — runs fully on your machine
+- ⚡ **Fast & lightweight** — rule-based heuristic, high-throughput, no GPU
+- 🛡️ **AI-safety by default** — auto-filters likely prompt-injection content
+- 🆓 **Open source for business** — free for commercial use; Java/Python/Docker
+- 🖍️ **Annotated PDF visualization** — see detected structures overlaid on the original
 
-## 🚀 Upcoming 
-Below are the planned features for an early September open-source release.
-- Table AI Prototypes
-- OCR AI Prototypes
+![Annotated PDF Example](https://raw.githubusercontent.com/opendataloader-project/opendataloader-pdf/main/resources/example_annotated_pdf.png)
 
-<br>
+## 🚀 Upcoming Features
 
-<br>
+- 🖨️ **OCR for scanned PDFs** — image-only pages → selectable text
+- 🧠 **Table AI option** — higher accuracy for borderless/merged cells
+- 📊 **Layout benchmarks** — public datasets & metrics; regular reports
+- 🛡️ **AI-Safety red-team** — adversarial datasets & metrics; regular reports
 
-## ▶️ Installation
-To get started with OpenDataLoader-PDF, 
-you need a Java 8+ runtime environment.
+## Prerequisites
 
+- Java 11 or higher must be installed and available in your system's PATH.
+- Python 3.8+
 
-### Build instructions 
-Build and install using Maven command:
-```
-mvn clean install
-```
+## Python
 
-If the build is successful, the resulting `jar` file will be created in the path below.
+### Installation
 
-```
-opendataloader-pdf/target
+```sh
+pip install opendataloader-pdf
 ```
 
-<br>
+### Usage
 
-## 💻 Getting Started
-### CLI usage
+- input_path can be either the path to a single document or the path to a folder.
+- If you don’t specify an output_folder, the output data will be saved in the same directory as the input document.
 
+```python
+import opendataloader_pdf
+
+opendataloader_pdf.run(
+    input_path="path/to/document.pdf",
+    output_folder="path/to/output",
+    to_markdown=True
+)
 ```
-java -jar ... [options] <INPUT FILE OR FOLDER>
+
+### Function: run()
+
+The main function to process PDFs.
+
+| Parameter               | Type   | Required | Default      | Description                                                     |
+| ----------------------- | ------ | -------- | ------------ | --------------------------------------------------------------- |
+| `input_path`            | `str`  | ✅ Yes    | —            | Path to the input PDF file or folder.                           |
+| `output_folder`         | `str`  | No       | input folder | Path to the output folder.                                      |
+| `password`              | `str`  | No       | `None`       | Password for the PDF file.                                      |
+| `to_markdown`           | `bool` | No       | `False`      | If `True`, generates a Markdown output file.                    |
+| `to_annotated_pdf`      | `bool` | No       | `False`      | If `True`, generates an annotated PDF output file.              |
+| `keep_line_breaks`      | `bool` | No       | `False`      | If `True`, keeps line breaks in the output.                     |
+| `find_hidden_text`      | `bool` | No       | `False`      | If `True`, finds hidden text in the PDF.                        |
+| `html_in_markdown`      | `bool` | No       | `False`      | If `True`, uses HTML in the Markdown output.                    |
+| `add_image_to_markdown` | `bool` | No       | `False`      | If `True`, adds images to the Markdown output.                  |
+| `debug`                 | `bool` | No       | `False`      | If `True`, prints CLI messages to the console during execution. |
+
+<br/>
+
+## Java
+
+### Dependency
+
+To include OpenDataLoader PDF in your Maven project, add the dependency below to your `pom.xml` file.
+
+```xml
+    <dependency>
+        <groupId>io.github.opendataloader-project</groupId>
+        <artifactId>opendataloader-pdf-core</artifactId>
+        <version>0.0.9</version>
+    </dependency>
+
+    <repositories>
+        <repository>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <id>vera-dev</id>
+            <name>Vera development</name>
+            <url>https://artifactory.openpreservation.org/artifactory/vera-dev</url>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>vera-dev</id>
+            <name>Vera development</name>
+            <url>https://artifactory.openpreservation.org/artifactory/vera-dev</url>
+        </pluginRepository>
+    </pluginRepositories>
 ```
 
-This generates a JSON file with layout recognition results in the specified output folder. 
-Additionally, annotated PDF with recognized structures and Markdown file are generated if options `--pdf` and `--markdown` are specified.
-
-By default all line breaks and hyphenation characters are removed, the Markdown does not include any images and does not use any HTML.
-
-The option `--keeplinebreaks` to preserve the original line breaks text content in JSON and Markdown output.
-
-The option `--html`` enables use of HTML in Markdown, which may improve Markdown preview in processors that support HTML tags. 
-The option `--addimagetomarkdown` enables inclusion of image references into the output Markdown. 
-The images are extracted from PDF as individual files and stored in a subfolder next to the Markdown output.
-
-### Available options:
-
-```
-Options:
--f,--folder <arg>          Specify output folder (default the folder of the input PDF)
--klb,--keeplinebreaks      Keep line breaks
--ht,--findhiddentext       Find hidden text
--html,--htmlinmarkdown     Use html in markdown
--im,--addimagetomarkdown   Add images to markdown
--markdown,--markdown       Generates markdown output
--p,--password <arg>        Specifies password
--pdf,--pdf                 Generates pdf output
-```
 
 ### Java code integration
 
 To integrate Layout recognition API into Java code, one can follow the sample code below.
 
 ```java
-import com.hancom.opendataloader.utils.Config;
-import com.hancom.opendataloader.DocumentProcessor;
+import com.hancom.opendataloader.pdf.processors.DocumentProcessor;
+import com.hancom.opendataloader.pdf.utils.Config;
 
 import java.io.IOException;
 
@@ -139,6 +167,67 @@ public class Sample {
         }
     }
 }
+```
+
+<br/>
+
+## Docker
+
+```sh
+# Download sample PDF
+curl -L -o 1901.03003.pdf https://arxiv.org/pdf/1901.03003
+
+# Run OpenDataLoader PDF in Docker container
+docker run --rm -v "$PWD":/work ghcr.io/opendataloader-project/opendataloader-pdf-cli:latest /work/1901.03003.pdf --markdown --pdf
+```
+
+<br/>
+
+## Developing with OpenDataLoader PDF
+
+### Build
+
+Build and package using Maven command:
+
+```sh
+mvn clean package -f java/pom.xml
+```
+
+If the build is successful, the resulting `jar` file will be created in the path below.
+
+```sh
+java/opendataloader-pdf-cli/target
+```
+
+### CLI usage
+
+```sh
+java -jar ... [options] <INPUT FILE OR FOLDER>
+```
+
+This generates a JSON file with layout recognition results in the specified output folder. 
+Additionally, annotated PDF with recognized structures and Markdown file are generated if options `--pdf` and `--markdown` are specified.
+
+By default all line breaks and hyphenation characters are removed, the Markdown does not include any images and does not use any HTML.
+
+The option `--keeplinebreaks` to preserve the original line breaks text content in JSON and Markdown output.
+
+The option `--html`` enables use of HTML in Markdown, which may improve Markdown preview in processors that support HTML tags. 
+The option `--addimagetomarkdown` enables inclusion of image references into the output Markdown. 
+The images are extracted from PDF as individual files and stored in a subfolder next to the Markdown output.
+
+#### Available options:
+
+```
+Options:
+-f,--folder <arg>          Specify output folder (default the folder of the input PDF)
+-klb,--keeplinebreaks      Keep line breaks
+-ht,--findhiddentext       Find hidden text
+-html,--htmlinmarkdown     Use html in markdown
+-im,--addimagetomarkdown   Add images to markdown
+-markdown,--markdown       Generates markdown output
+-p,--password <arg>        Specifies password
+-pdf,--pdf                 Generates pdf output
 ```
 
 ### Schema of the JSON output
@@ -236,34 +325,31 @@ Specific fields of `text block` json nodes
 | kids  | array | no       | Array of text block content elements |
 
 
-<br><br>
-
 ## 🤝 Contributing
-We believe that great software is built together.<br>
-Your contributions are vital to the success of this project.<br>
+
+We believe that great software is built together.
+
+Your contributions are vital to the success of this project.
+
 Please read [CONTRIBUTING.md](https://github.com/hancom-inc/opendataloader-pdf/blob/main/CONTRIBUTING.md) for details on how to contribute.
 
-<br>
-
-## 💖 Community & Support 
+## 💖 Community & Support
 Have questions or need a little help? We're here for you!🤗
+
 - [GitHub Discussions](https://github.com/hancom-inc/opendataloader-pdf/discussions): For Q&A and general chats. Let's talk! 🗣️
 - [GitHub Issues](https://github.com/hancom-inc/opendataloader-pdf/issues): Found a bug? 🐛 Please report it here so we can fix it.
 
-
-<br>
-
 ## ✨ Our Branding and Trademarks 
-We love our brand and want to protect it! 
-This project may contain trademarks, logos, or brand names for our products and services. 
+
+We love our brand and want to protect it!
+
+This project may contain trademarks, logos, or brand names for our products and services.
+
 To ensure everyone is on the same page, please remember these simple rules:
 
 - **Authorized Use**: You're welcome to use our logos and trademarks, but you must follow our official brand guidelines.
 - **No Confusion**: When you use our trademarks in a modified version of this project, it should never cause confusion or imply that Hancom officially sponsors or endorses your version.
 - **Third-Party Brands**: Any use of trademarks or logos from other companies must follow that company’s specific policies.
-
-
-<br>
 
 ## ⚖️ License
 
