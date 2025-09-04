@@ -172,40 +172,6 @@ public class DocumentProcessor {
         return new GFCosInfo((COSDictionary) (object != null && object.getType() == COSObjType.COS_DICT ? object.getDirectBase() : COSDictionary.construct().get()));
     }
 
-    public static void replaceContentsToResult(List<IObject> contents, IObject result) {
-        List<IObject> replacedContents = new LinkedList<>();
-        Integer index = null;
-        int i = 0;
-        for (IObject content : contents) {
-            if (contains(result.getBoundingBox(), content.getBoundingBox())) {
-//            if (content.getBoundingBox().getIntersectionPercent(result.getBoundingBox()) > 0.5) {
-                replacedContents.add(content);
-                if (index == null) {
-                    index = i;
-                }
-            }
-            i++;
-        }
-        if (index == null) {
-            return;
-        }
-        contents.set(index, result);
-        contents.removeAll(replacedContents);
-    }
-
-    public static boolean contains(BoundingBox box, BoundingBox box2) {
-        if (box instanceof MultiBoundingBox) {
-            for (BoundingBox b : ((MultiBoundingBox) box).getBoundingBoxes()) {
-                if (b.contains(box2, 0.6, 0.6)) {
-                    return true;
-                }
-            }
-        } else {
-            return box.contains(box2, 0.6, 0.6);
-        }
-        return false;
-    }
-
     public static String getContentsValueForTextNode(SemanticTextNode textNode) {
         return String.format("%s: font %s, text size %.2f, text color %s, text content \"%s\"",
                 textNode.getSemanticType().getValue(), textNode.getFontName(),
@@ -233,7 +199,11 @@ public class DocumentProcessor {
     }
 
     public static BoundingBox getPageBoundingBox(int pageNumber) {
-        double[] cropBox = StaticResources.getDocument().getPage(pageNumber).getCropBox();
+        PDDocument document = StaticResources.getDocument();
+        if (document == null) {
+            return null;
+        }
+        double[] cropBox = document.getPage(pageNumber).getCropBox();
         if (cropBox == null) {
             return null;
         }

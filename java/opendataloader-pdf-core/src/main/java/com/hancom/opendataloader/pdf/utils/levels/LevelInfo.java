@@ -43,7 +43,7 @@ public class LevelInfo {
             if (Objects.equals(textBulletParagraphLevelInfo1.getLabel(), textBulletParagraphLevelInfo2.getLabel())) {
                 checkBoundingBox = true;
             }
-            if (Objects.equals(textBulletParagraphLevelInfo1.getLabelRegex(), textBulletParagraphLevelInfo2.getLabelRegex())) {
+            if (textBulletParagraphLevelInfo1.getLabelRegex() != null && Objects.equals(textBulletParagraphLevelInfo1.getLabelRegex(), textBulletParagraphLevelInfo2.getLabelRegex())) {
                 if (Objects.equals(textBulletParagraphLevelInfo1.getLabelRegex(), BulletedParagraphUtils.KOREAN_CHAPTER_REGEX)) {
                     return true;
                 }
