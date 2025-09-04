@@ -220,7 +220,7 @@ java/opendataloader-pdf-cli/target
 ### CLI usage
 
 ```sh
-java -jar ... [options] <INPUT FILE OR FOLDER>
+java -jar opendataloader-pdf-cli-<VERSION>.jar [options] <INPUT FILE OR FOLDER>
 ```
 
 This generates a JSON file with layout recognition results in the specified output folder. 
