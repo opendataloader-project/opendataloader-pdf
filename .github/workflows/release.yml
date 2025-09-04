@@ -69,7 +69,9 @@ jobs:
         working-directory: ./python/opendataloader-pdf
 
       - name: Build Python package
-        run: python -m build --wheel
+        run: |
+          cp ../../README.md .
+          python -m build --wheel
         working-directory: ./python/opendataloader-pdf
 
       - name: Publish Python package to PyPI
