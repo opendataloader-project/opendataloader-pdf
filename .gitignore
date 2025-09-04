@@ -19,6 +19,7 @@ Thumbs.db
 **/*.war
 **/*.ear
 **/dependency-reduced-pom.xml
+**/.flattened-pom.xml
 
 # Logs
 *.log
