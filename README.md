@@ -12,7 +12,7 @@
 
 **Safe, Open, High-Performance — OpenDataLoader PDF for AI**
 
-OpenDataLoader PDF converts PDFs into JSON, Markdown or Html — ready to feed into modern AI stacks (LLMs, vector search, and RAG).
+OpenDataLoader-PDF converts PDFs into JSON, Markdown or Html — ready to feed into modern AI stacks (LLMs, vector search, and RAG).
 
 It reconstructs document layout (headings, lists, tables, and reading order) so the content is easier to chunk, index, and query.
 Powered by fast, heuristic, rule-based inference, it runs entirely on your local machine and delivers high-throughput processing for large document sets.
@@ -22,13 +22,13 @@ AI-safety is enabled by default and automatically filters likely prompt-injectio
 
 ## 🌟 Key Features
 
-- 🧾 **Rich, structured output** — JSON, Markdown or Html
-- 🧩 **Layout reconstruction** — headings, lists, tables, images, reading order
-- 🔒 **Local-first privacy** — runs fully on your machine
-- ⚡ **Fast & lightweight** — rule-based heuristic, high-throughput, no GPU
-- 🛡️ **AI-safety by default** — auto-filters likely prompt-injection content
-- 🆓 **Open source for business** — free for commercial use; Java/Python/Docker
-- 🖍️ **Annotated PDF visualization** — see detected structures overlaid on the original
+- 🧾 **Rich, Structured Output** — JSON, Markdown or Html
+- 🧩 **Layout Reconstruction** — Headings, Lists, Tables, Images, Reading Order
+- 🔒 **Local-First Privacy** — Runs fully on your machine
+- ⚡ **Fast & Lightweight** — Rule-Based Heuristic, High-Throughput, No GPU
+- 🛡️ **AI-Safety** — Auto-Filters likely prompt-injection content
+- 🆓 **Open-Source** — Free for commercial use
+- 🖍️ **Annotated PDF Visualization** — See detected structures overlaid on the original
 
 ![Annotated PDF Example](https://raw.githubusercontent.com/opendataloader-project/opendataloader-pdf/main/resources/example_annotated_pdf.png)
 
@@ -186,11 +186,15 @@ public class Sample {
 
 ## Docker
 
-```sh
-# Download sample PDF
-curl -L -o 1901.03003.pdf https://arxiv.org/pdf/1901.03003
+Download sample PDF
 
-# Run OpenDataLoader PDF in Docker container
+```sh
+curl -L -o 1901.03003.pdf https://arxiv.org/pdf/1901.03003
+```
+
+Run opendataloader-pdf in Docker container
+
+```
 docker run --rm -v "$PWD":/work ghcr.io/opendataloader-project/opendataloader-pdf-cli:latest /work/1901.03003.pdf --markdown --pdf
 ```
 
