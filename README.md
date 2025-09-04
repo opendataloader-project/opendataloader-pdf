@@ -8,10 +8,14 @@
 [![GHCR Version](https://ghcr-badge.egpl.dev/opendataloader-project/opendataloader-pdf-cli/latest_tag?trim=major&label=docker-image)](https://github.com/opendataloader-project/opendataloader-pdf/pkgs/container/opendataloader-pdf-cli)
 [![CLA assistant](https://cla-assistant.io/readme/badge/opendataloader-project/opendataloader-pdf)](https://cla-assistant.io/opendataloader-project/opendataloader-pdf)
 
+<br/>
+
 OpenDataLoader PDF converts PDFs into JSON, Markdown or Html — ready to feed into modern AI stacks (LLMs, vector search, and RAG).
 It reconstructs document layout (headings, lists, tables, and reading order) so the content is easier to chunk, index, and query.
 Powered by fast, heuristic, rule-based inference, it runs entirely on your local machine and delivers high-throughput processing for large document sets.
 AI-safety is enabled by default and automatically filters likely prompt-injection content embedded in PDFs to reduce downstream risk.
+
+<br/>
 
 ## 🌟 Key Features
 
@@ -25,6 +29,8 @@ AI-safety is enabled by default and automatically filters likely prompt-injectio
 
 ![Annotated PDF Example](https://raw.githubusercontent.com/opendataloader-project/opendataloader-pdf/main/resources/example_annotated_pdf.png)
 
+<br/>
+
 ## 🚀 Upcoming Features
 
 - 🖨️ **OCR for scanned PDFs** — image-only pages → selectable text
@@ -32,10 +38,14 @@ AI-safety is enabled by default and automatically filters likely prompt-injectio
 - 📊 **Layout benchmarks** — public datasets & metrics; regular reports
 - 🛡️ **AI-Safety red-team** — adversarial datasets & metrics; regular reports
 
+<br/>
+
 ## Prerequisites
 
 - Java 11 or higher must be installed and available in your system's PATH.
 - Python 3.8+
+
+<br/>
 
 ## Python
 
