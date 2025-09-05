@@ -3,6 +3,7 @@ name: Test & Coverage (JaCoCo -> Codecov)
 on:
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build-test-coverage:
