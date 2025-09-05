@@ -2,10 +2,12 @@
 
 ![Pre-release](https://img.shields.io/badge/Pre--release-FFA500&logo=github)
 [![License](https://img.shields.io/pypi/l/opendataloader-pdf.svg)](https://pypi.org/project/opendataloader-pdf/)
+![Java](https://img.shields.io/badge/Java-11+-blue.svg)
+![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.opendataloader-project/opendataloader-pdf-core.svg)](https://search.maven.org/artifact/io.github.opendataloader-project/opendataloader-pdf-core)
 [![PyPI version](https://img.shields.io/pypi/v/opendataloader-pdf.svg)](https://pypi.org/project/opendataloader-pdf/)
-[![Python Version](https://img.shields.io/pypi/pyversions/opendataloader-pdf.svg)](https://pypi.org/project/opendataloader-pdf/)
 [![GHCR Version](https://ghcr-badge.egpl.dev/opendataloader-project/opendataloader-pdf-cli/latest_tag?trim=major&label=docker-image)](https://github.com/opendataloader-project/opendataloader-pdf/pkgs/container/opendataloader-pdf-cli)
+[![Coverage](https://codecov.io/gh/opendataloader-project/opendataloader-pdf/branch/main/graph/badge.svg)](https://app.codecov.io/gh/opendataloader-project/opendataloader-pdf)
 [![CLA assistant](https://cla-assistant.io/readme/badge/opendataloader-project/opendataloader-pdf)](https://cla-assistant.io/opendataloader-project/opendataloader-pdf)
 
 <br/>
