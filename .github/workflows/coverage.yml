@@ -1,8 +1,6 @@
 name: Test & Coverage (JaCoCo -> Codecov)
 
 on:
-  push:
-    branches: [ main ]
   pull_request:
     branches: [ main ]
 
