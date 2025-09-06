@@ -11,6 +11,8 @@ import com.hancom.opendataloader.pdf.containers.StaticLayoutContainers;
 import com.hancom.opendataloader.pdf.json.JsonWriter;
 import com.hancom.opendataloader.pdf.markdown.MarkdownGenerator;
 import com.hancom.opendataloader.pdf.markdown.MarkdownGeneratorFactory;
+import com.hancom.opendataloader.pdf.html.HtmlGenerator;
+import com.hancom.opendataloader.pdf.html.HtmlGeneratorFactory;
 import com.hancom.opendataloader.pdf.pdf.PDFWriter;
 import com.hancom.opendataloader.pdf.utils.Config;
 import org.verapdf.as.ASAtom;
@@ -91,6 +93,11 @@ public class DocumentProcessor {
         if (config.isGenerateMarkdown()) {
             try (MarkdownGenerator markdownGenerator = MarkdownGeneratorFactory.getMarkdownGenerator(inputPDF, config.getOutputFolder(), config)) {
                 markdownGenerator.writeToMarkdown(contents);
+            }
+        }
+        if (config.isGenerateHtml()) {
+            try (HtmlGenerator htmlGenerator = HtmlGeneratorFactory.getHtmlGenerator(inputPDF, config.getOutputFolder(), config)) {
+                htmlGenerator.writeToHtml(contents);
             }
         }
     }

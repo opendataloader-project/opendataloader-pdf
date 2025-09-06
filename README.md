@@ -72,7 +72,8 @@ opendataloader_pdf.run(
     input_path="path/to/document.pdf",
     output_folder="path/to/output",
     generate_markdown=True,
-    generate_annotated_pdf=True
+    generate_html=True,
+    generate_annotated_pdf=True,
 )
 ```
 
@@ -86,6 +87,7 @@ The main function to process PDFs.
 | `output_folder`         | `str`  | No       | input folder | Path to the output folder.                                      |
 | `password`              | `str`  | No       | `None`       | Password for the PDF file.                                      |
 | `generate_markdown`     | `bool` | No       | `False`      | If `True`, generates a Markdown output file.                    |
+| `generate_html`         | `bool` | No       | `False`      | If `True`, generates an HTML output file.                       |
 | `generate_annotated_pdf`| `bool` | No       | `False`      | If `True`, generates an annotated PDF output file.              |
 | `keep_line_breaks`      | `bool` | No       | `False`      | If `True`, keeps line breaks in the output.                     |
 | `find_hidden_text`      | `bool` | No       | `False`      | If `True`, finds hidden text in the PDF.                        |
@@ -160,6 +162,9 @@ public class Sample {
         //generate markdown output file
         config.setGenerateMarkdown(true);
 
+        //generate html output file
+        config.setGenerateHtml(true);
+
         //enable html in markdown output file
         config.setUseHTMLInMarkdown(true);
 
@@ -198,7 +203,7 @@ curl -L -o 1901.03003.pdf https://arxiv.org/pdf/1901.03003
 Run opendataloader-pdf in Docker container
 
 ```
-docker run --rm -v "$PWD":/work ghcr.io/opendataloader-project/opendataloader-pdf-cli:latest /work/1901.03003.pdf --markdown --pdf
+docker run --rm -v "$PWD":/work ghcr.io/opendataloader-project/opendataloader-pdf-cli:latest /work/1901.03003.pdf --markdown --html --pdf
 ```
 
 <br/>
@@ -226,13 +231,13 @@ java -jar opendataloader-pdf-cli-<VERSION>.jar [options] <INPUT FILE OR FOLDER>
 ```
 
 This generates a JSON file with layout recognition results in the specified output folder. 
-Additionally, annotated PDF with recognized structures and Markdown file are generated if options `--pdf` and `--markdown` are specified.
+Additionally, annotated PDF with recognized structures, Markdown and Html are generated if options `--pdf`, `--markdown` and `--html` are specified.
 
 By default all line breaks and hyphenation characters are removed, the Markdown does not include any images and does not use any HTML.
 
 The option `--keeplinebreaks` to preserve the original line breaks text content in JSON and Markdown output.
 
-The option `--html`` enables use of HTML in Markdown, which may improve Markdown preview in processors that support HTML tags. 
+The option `--htmlinmarkdown` enables use of HTML in Markdown, which may improve Markdown preview in processors that support HTML tags. 
 The option `--addimagetomarkdown` enables inclusion of image references into the output Markdown. 
 The images are extracted from PDF as individual files and stored in a subfolder next to the Markdown output.
 
@@ -243,9 +248,10 @@ Options:
 -f,--folder <arg>          Specify output folder (default the folder of the input PDF)
 -klb,--keeplinebreaks      Keep line breaks
 -ht,--findhiddentext       Find hidden text
--html,--htmlinmarkdown     Use html in markdown
+-htmlmd,--htmlinmarkdown   Use html in markdown
 -im,--addimagetomarkdown   Add images to markdown
 -markdown,--markdown       Generates markdown output
+-html,--html               Generates html output
 -p,--password <arg>        Specifies password
 -pdf,--pdf                 Generates pdf output
 ```

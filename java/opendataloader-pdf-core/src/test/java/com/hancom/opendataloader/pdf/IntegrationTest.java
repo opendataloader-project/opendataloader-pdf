@@ -36,6 +36,8 @@ public class IntegrationTest {
     public void test(String fileName) throws IOException {
         File folder = new File(this.getClass().getResource("files/pdf/arxiv").getFile());
         Config config = new Config();
+        config.setGenerateMarkdown(true);
+        config.setGenerateHtml(true);
         config.setOutputFolder("temp");
         File pdf = new File(folder.getAbsolutePath() + "/" + fileName);
         DocumentProcessor.processFile(pdf.getAbsolutePath(), config);

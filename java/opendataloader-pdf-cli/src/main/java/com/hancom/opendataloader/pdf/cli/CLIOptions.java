@@ -22,14 +22,15 @@ public class CLIOptions {
     public static final String PASSWORD_OPTION = "p";
     private static final String PASSWORD_LONG_OPTION = "password";
 
-    public static final String HTML_OPTION = "html";
-    private static final String HTML_LONG_OPTION = "htmlinmarkdown";
+    public static final String HTML_IN_MARKDOWN_OPTION = "htmlmd";
+    private static final String HTML_IN_MARKDOWN_LONG_OPTION = "htmlinmarkdown";
 
     public static final String KEEP_LINE_BREAKS_OPTION = "klb";
     private static final String KEEP_LINE_BREAKS_LONG_OPTION = "keeplinebreaks";
 
     public static final String PDF_REPORT_OPTION = "pdf";
     public static final String MARKDOWN_REPORT_OPTION = "markdown";
+    public static final String HTML_REPORT_OPTION = "html";
 
     public static final String MARKDOWN_IMAGE_OPTION = "im";
     private static final String MARKDOWN_IMAGE_LONG_OPTION = "addimagetomarkdown";
@@ -45,9 +46,9 @@ public class CLIOptions {
         Option password = new Option(PASSWORD_OPTION, PASSWORD_LONG_OPTION, true, "Specifies password");
         password.setRequired(false);
         options.addOption(password);
-        Option html = new Option(HTML_OPTION, HTML_LONG_OPTION, false, "Use html in markdown");
-        html.setRequired(false);
-        options.addOption(html);
+        Option htmlInMarkdown = new Option(HTML_IN_MARKDOWN_OPTION, HTML_IN_MARKDOWN_LONG_OPTION, false, "Use html in markdown");
+        htmlInMarkdown.setRequired(false);
+        options.addOption(htmlInMarkdown);
         Option keepLineBreaks = new Option(KEEP_LINE_BREAKS_OPTION, KEEP_LINE_BREAKS_LONG_OPTION, false, "keep line breaks");
         keepLineBreaks.setRequired(false);
         options.addOption(keepLineBreaks);
@@ -57,6 +58,9 @@ public class CLIOptions {
         Option markdownOutput = new Option(MARKDOWN_REPORT_OPTION, MARKDOWN_REPORT_OPTION, false, "Generates markdown output");
         markdownOutput.setRequired(false);
         options.addOption(markdownOutput);
+        Option generateHtml = new Option(HTML_REPORT_OPTION, HTML_REPORT_OPTION, false, "Generates html output");
+        generateHtml.setRequired(false);
+        options.addOption(generateHtml);
         Option imageSupport = new Option(MARKDOWN_IMAGE_OPTION, MARKDOWN_IMAGE_LONG_OPTION, false, "Add images to markdown");
         imageSupport.setRequired(false);
         options.addOption(imageSupport);
@@ -83,7 +87,10 @@ public class CLIOptions {
         if (commandLine.hasOption(CLIOptions.MARKDOWN_REPORT_OPTION)) {
             config.setGenerateMarkdown(true);
         }
-        if (commandLine.hasOption(CLIOptions.HTML_OPTION)) {
+        if (commandLine.hasOption(CLIOptions.HTML_REPORT_OPTION)) {
+            config.setGenerateHtml(true);
+        }
+        if (commandLine.hasOption(CLIOptions.HTML_IN_MARKDOWN_OPTION)) {
             config.setUseHTMLInMarkdown(true);
         }
         if (commandLine.hasOption(CLIOptions.MARKDOWN_IMAGE_OPTION)) {

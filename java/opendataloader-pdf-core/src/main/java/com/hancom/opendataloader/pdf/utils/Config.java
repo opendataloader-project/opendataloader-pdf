@@ -11,6 +11,7 @@ public class Config {
     private String password;
     private boolean findHiddenText = false;
     private boolean isGenerateMarkdown = false;
+    private boolean isGenerateHtml = false;
     private boolean isGeneratePDF = false;
     private boolean keepLineBreaks = false;
     private boolean isGenerateJSON = true;
@@ -40,6 +41,14 @@ public class Config {
 
     public void setGenerateMarkdown(boolean generateMarkdown) {
         isGenerateMarkdown = generateMarkdown;
+    }
+
+    public boolean isGenerateHtml() {
+        return isGenerateHtml;
+    }
+
+    public void setGenerateHtml(boolean generateHtml) {
+        isGenerateHtml = generateHtml;
     }
 
     public boolean isGeneratePDF() {
