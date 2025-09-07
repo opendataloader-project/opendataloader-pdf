@@ -119,6 +119,7 @@ public class HtmlGenerator implements Closeable {
             htmlWriter.write(imageString);
             htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
         }
+        //add alt image
     }
 
     protected boolean createImageFile(ImageChunk image, String fileName) {
@@ -176,15 +177,16 @@ public class HtmlGenerator implements Closeable {
             for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
                 TableBorderCell cell = row.getCell(colNumber);
                 if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
-                    writeCellTag(cell, rowNumber == 0);
+                    boolean isHeader = rowNumber == 0;
+                    writeCellTag(cell, isHeader);
                     List<IObject> contents = cell.getContents();
                     if (!contents.isEmpty()) {
                         for (IObject contentItem : contents) {
                             this.write(contentItem);
                         }
                     }
-                    if (rowNumber == 0) {
-                        htmlWriter.write("</th>");
+                    if (isHeader) {
+                        htmlWriter.write(HtmlSyntax.HTML_TABLE_HEADER_CLOSE_TAG);
                     } else {
                         htmlWriter.write(HtmlSyntax.HTML_TABLE_CELL_CLOSE_TAG);
                     }
