@@ -7,7 +7,7 @@
  */
 package com.hancom.opendataloader.pdf.markdown;
 
-import com.hancom.opendataloader.pdf.utils.Config;
+import com.hancom.opendataloader.pdf.api.Config;
 
 import java.io.File;
 import java.io.IOException;

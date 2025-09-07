@@ -14,7 +14,7 @@ import com.hancom.opendataloader.pdf.markdown.MarkdownGeneratorFactory;
 import com.hancom.opendataloader.pdf.html.HtmlGenerator;
 import com.hancom.opendataloader.pdf.html.HtmlGeneratorFactory;
 import com.hancom.opendataloader.pdf.pdf.PDFWriter;
-import com.hancom.opendataloader.pdf.utils.Config;
+import com.hancom.opendataloader.pdf.api.Config;
 import org.verapdf.as.ASAtom;
 import org.verapdf.containers.StaticCoreContainers;
 import org.verapdf.cos.COSDictionary;

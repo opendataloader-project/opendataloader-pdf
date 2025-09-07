@@ -7,8 +7,8 @@
  */
 package com.hancom.opendataloader.pdf.cli;
 
-import com.hancom.opendataloader.pdf.processors.DocumentProcessor;
-import com.hancom.opendataloader.pdf.utils.Config;
+import com.hancom.opendataloader.pdf.api.Config;
+import com.hancom.opendataloader.pdf.api.OpenDataLoaderPDF;
 import org.apache.commons.cli.*;
 
 import java.io.File;
@@ -61,7 +61,7 @@ public class CLIMain {
 
     private static void processFile(File file, Config config) {
         try {
-            DocumentProcessor.processFile(file.getAbsolutePath(), config);
+            OpenDataLoaderPDF.processFile(file.getAbsolutePath(), config);
         } catch (Exception exception) {
             LOGGER.log(Level.SEVERE, "Exception during processing file " + file.getAbsolutePath() + ": " +
                 exception.getMessage(), exception);

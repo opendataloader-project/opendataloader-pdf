@@ -103,11 +103,13 @@ The main function to process PDFs.
 
 To include OpenDataLoader PDF in your Maven project, add the dependency below to your `pom.xml` file.
 
+Check for the latest version on [Maven Central](https://search.maven.org/artifact/io.github.opendataloader-project/opendataloader-pdf-core).
+
 ```xml
     <dependency>
         <groupId>io.github.opendataloader-project</groupId>
         <artifactId>opendataloader-pdf-core</artifactId>
-        <version>0.0.9</version>
+        <version>0.0.12</version>
     </dependency>
 
     <repositories>
@@ -138,8 +140,8 @@ To include OpenDataLoader PDF in your Maven project, add the dependency below to
 To integrate Layout recognition API into Java code, one can follow the sample code below.
 
 ```java
-import com.hancom.opendataloader.pdf.processors.DocumentProcessor;
-import com.hancom.opendataloader.pdf.utils.Config;
+import com.hancom.opendataloader.pdf.api.Config;
+import com.hancom.opendataloader.pdf.api.OpenDataLoaderPDF;
 
 import java.io.IOException;
 
@@ -182,13 +184,17 @@ public class Sample {
 
         try {
             //process pdf file
-            DocumentProcessor.processFile("input.pdf",config);
+            OpenDataLoaderPDF.processFile("input.pdf", config);
         } catch (Exception exception) {
             //exception during processing
         }
     }
 }
 ```
+
+### API Documentation
+
+The full API documentation is available at [javadoc](https://javadoc.io/doc/io.github.opendataloader-project/opendataloader-pdf-core/latest/)
 
 <br/>
 
