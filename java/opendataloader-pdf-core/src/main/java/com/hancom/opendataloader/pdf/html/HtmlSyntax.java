@@ -16,6 +16,8 @@ public class HtmlSyntax {
     public static final String HTML_TABLE_ROW_CLOSE_TAG = "</tr>";
     public static final String HTML_TABLE_CELL_TAG = "<td>";
     public static final String HTML_TABLE_CELL_CLOSE_TAG = "</td>";
+    public static final String HTML_TABLE_HEADER_TAG = "<th>";
+    public static final String HTML_TABLE_HEADER_CLOSE_TAG = "</th>";
     public static final String HTML_ORDERED_LIST_TAG = "<ol>";
     public static final String HTML_ORDERED_LIST_CLOSE_TAG = "</ol>";
     public static final String HTML_UNORDERED_LIST_TAG = "<ul>";
