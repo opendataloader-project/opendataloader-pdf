@@ -8,7 +8,7 @@
 package com.hancom.opendataloader.pdf.markdown;
 
 import com.hancom.opendataloader.pdf.containers.StaticLayoutContainers;
-import com.hancom.opendataloader.pdf.utils.Config;
+import com.hancom.opendataloader.pdf.api.Config;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;

@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.hancom.opendataloader.pdf.processors.DocumentProcessor;
-import com.hancom.opendataloader.pdf.utils.Config;
+import com.hancom.opendataloader.pdf.api.Config;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
