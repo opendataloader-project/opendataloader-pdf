@@ -29,10 +29,8 @@ import org.verapdf.pd.PDDocument;
 import org.verapdf.tools.StaticResources;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
-import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
 import org.verapdf.wcag.algorithms.entities.content.LineChunk;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
-import org.verapdf.wcag.algorithms.entities.geometry.MultiBoundingBox;
 import org.verapdf.wcag.algorithms.entities.tables.TableBordersCollection;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.LinesPreprocessingConsumer;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
@@ -41,26 +39,16 @@ import org.verapdf.xmp.containers.StaticXmpCoreContainers;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class DocumentProcessor {
-    private static final Logger LOGGER = Logger.getLogger(DocumentProcessor.class.getCanonicalName());
-
     public static void processFile(String inputPdfName, Config config) throws IOException {
         preprocessing(inputPdfName, config);
         calculateDocumentInfo();
         List<List<IObject>> contents = new ArrayList<>();
         for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
-            List<IObject> pageContents = new ArrayList<>(StaticContainers.getDocument().getArtifacts(pageNumber));
-            TextProcessor.removeSameTextChunks(pageContents);
-            pageContents = DocumentProcessor.removeNullObjectsFromList(pageContents);
-            TextProcessor.removeTextDecorationImages(pageContents);
-            pageContents = DocumentProcessor.removeNullObjectsFromList(pageContents);
-            TextProcessor.trimTextChunksWhiteSpaces(pageContents);
-            pageContents = HiddenTextProcessor.findHiddenText(inputPdfName, pageContents, config.getPassword());
-            processBackgrounds(pageNumber, pageContents);
+            List<IObject> pageContents = ContentFilterProcessor.getFilteredContents(inputPdfName,
+                StaticContainers.getDocument().getArtifacts(pageNumber), pageNumber, config);
             pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber);
             pageContents = pageContents.stream().filter(x -> !(x instanceof LineChunk)).collect(Collectors.toList());
             pageContents = TextLineProcessor.processTextLines(pageContents);
@@ -186,25 +174,6 @@ public class DocumentProcessor {
                 textNode.getValue().length() > 15 ? textNode.getValue().substring(0, 15) + "..." : textNode.getValue());
     }
 
-    public static void processBackgrounds(int pageNumber, List<IObject> contents) {
-        BoundingBox pageBoundingBox = getPageBoundingBox(pageNumber);
-        if (pageBoundingBox == null) {
-            return;
-        }
-        Set<LineArtChunk> backgrounds = new HashSet<>();
-        for (IObject content : contents) {
-            if (content instanceof LineArtChunk) {
-                if (isBackground(content, pageBoundingBox)) {
-                    backgrounds.add((LineArtChunk) content);
-                }
-            }
-        }
-        if (!backgrounds.isEmpty()) {
-            LOGGER.log(Level.WARNING, "Detected background on page " + pageNumber);
-            contents.removeAll(backgrounds);
-        }
-    }
-
     public static BoundingBox getPageBoundingBox(int pageNumber) {
         PDDocument document = StaticResources.getDocument();
         if (document == null) {
@@ -215,13 +184,6 @@ public class DocumentProcessor {
             return null;
         }
         return new BoundingBox(pageNumber, cropBox);
-    }
-
-    private static boolean isBackground(IObject content, BoundingBox pageBoundingBox) {
-        return (content.getBoundingBox().getWidth() > 0.5 * pageBoundingBox.getWidth() &&
-                content.getBoundingBox().getHeight() > 0.1 * pageBoundingBox.getHeight()) ||
-                (content.getBoundingBox().getWidth() > 0.1 * pageBoundingBox.getWidth() &&
-                        content.getBoundingBox().getHeight() > 0.5 * pageBoundingBox.getHeight());
     }
 
     public static List<IObject> sortContents(List<IObject> contents) {
