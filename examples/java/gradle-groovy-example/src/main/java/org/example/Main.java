@@ -1,7 +1,7 @@
 package org.example;
 
-import com.hancom.opendataloader.pdf.processors.DocumentProcessor;
-import com.hancom.opendataloader.pdf.utils.Config;
+import com.hancom.opendataloader.pdf.api.Config;
+import com.hancom.opendataloader.pdf.api.OpenDataLoaderPDF;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,8 +9,12 @@ import java.nio.file.Paths;
 
 public class Main {
     public static void main(String[] args) {
-        // 이 예제는 opendataloader-pdf-core 라이브러리를 사용하여 PDF 파일을 처리하는 방법을 보여줍니다.
-        // 프로젝트 루트에 있는 샘플 PDF 파일을 사용합니다.
+        // This example shows how to process a PDF file using the opendataloader-pdf-core library.
+        // It uses a sample PDF file located in the project root.
+        // The PDF file path can be changed as needed.
+
+        // Set the relative path to the input PDF file based on the project's root directory.
+        // Since this class is run from the 'examples/java/gradle-groovy-example' directory, we need to move up to the parent directory.
         String pdfFilePath = Paths.get("..", "..", "..", "samples", "pdf", "2408.02509v1.pdf").toString();
         File pdfFile = new File(pdfFilePath);
 
@@ -19,8 +23,8 @@ public class Main {
             System.exit(1);
         }
 
-        // 출력 디렉토리를 'build/output' 폴더로 설정합니다.
-        File outputDir = new File("build/output");
+        // Set the output directory to the 'build' folder for Gradle.
+        File outputDir = new File("build");
         if (!outputDir.exists()) {
             outputDir.mkdirs();
         }
@@ -28,15 +32,17 @@ public class Main {
         try {
             System.out.println("Processing PDF file: " + pdfFile.getAbsolutePath());
 
-            // 라이브러리 설정을 구성합니다.
+            // Configure the library settings.
             Config config = new Config();
+            // Set the output folder to the 'build' directory.
             config.setOutputFolder(outputDir.getAbsolutePath());
+            // Set to generate JSON, Markdown, and annotated PDF results.
             config.setGenerateJSON(true);
             config.setGenerateMarkdown(true);
             config.setGeneratePDF(true);
 
-            // DocumentProcessor를 사용하여 PDF 파일을 처리합니다.
-            DocumentProcessor.processFile(pdfFile.getAbsolutePath(), config);
+            // Process the PDF file using OpenDataLoaderPDF.
+            OpenDataLoaderPDF.processFile(pdfFile.getAbsolutePath(), config);
 
             System.out.println("Processing finished successfully.");
             System.out.println("Check the output files in: " + outputDir.getAbsolutePath());

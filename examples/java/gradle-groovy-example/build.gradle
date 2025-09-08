@@ -1,0 +1,34 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+application {
+    mainClass = 'org.example.Main'
+}
+
+group = 'org.example'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    maven {
+        url 'https://artifactory.openpreservation.org/artifactory/vera-dev'
+    }
+}
+
+dependencies {
+    implementation('io.github.opendataloader-project:opendataloader-pdf-core:0.0.12') {
+        exclude group: 'org.jacoco', module: 'jacoco-maven-plugin'
+    }
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}

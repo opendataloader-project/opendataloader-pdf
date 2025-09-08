@@ -1,14 +1,14 @@
 package org.example
 
-import com.hancom.opendataloader.pdf.processors.DocumentProcessor
-import com.hancom.opendataloader.pdf.utils.Config
+import com.hancom.opendataloader.pdf.api.Config
+import com.hancom.opendataloader.pdf.api.OpenDataLoaderPDF
 import java.io.File
 import java.nio.file.Paths
 import kotlin.system.exitProcess
 
 fun main() {
-    // 이 예제는 opendataloader-pdf-core 라이브러리를 사용하여 PDF 파일을 처리하는 방법을 보여줍니다.
-    // 프로젝트 루트에 있는 샘플 PDF 파일을 사용합니다.
+    // This example shows how to process a PDF file using the opendataloader-pdf-core library.
+    // It uses a sample PDF file located in the project root.
     val pdfFilePath = Paths.get("..", "..", "..", "samples", "pdf", "2408.02509v1.pdf").toString()
     val pdfFile = File(pdfFilePath)
 
@@ -17,7 +17,7 @@ fun main() {
         exitProcess(1)
     }
 
-    // 출력 디렉토리를 'build/output' 폴더로 설정합니다.
+    // Set the output directory to the 'build/output' folder.
     val outputDir = File("build/output")
     if (!outputDir.exists()) {
         outputDir.mkdirs()
@@ -26,16 +26,16 @@ fun main() {
     try {
         println("Processing PDF file: ${pdfFile.absolutePath}")
 
-        // 라이브러리 설정을 구성합니다.
+        // Configure the library settings.
         val config = Config().apply {
             outputFolder = outputDir.absolutePath
-            isGenerateJSON = true
-            isGenerateMarkdown = true
-            isGeneratePDF = true
+            setGenerateJSON(true)
+            setGenerateMarkdown(true)
+            setGeneratePDF(true)
         }
 
-        // DocumentProcessor를 사용하여 PDF 파일을 처리합니다.
-        DocumentProcessor.processFile(pdfFile.absolutePath, config)
+        // Process the PDF file using OpenDataLoaderPDF.
+        OpenDataLoaderPDF.processFile(pdfFile.absolutePath, config)
 
         println("Processing finished successfully.")
         println("Check the output files in: ${outputDir.absolutePath}")
