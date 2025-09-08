@@ -21,6 +21,7 @@ public class Config {
     private boolean isGenerateJSON = true;
     private boolean useHTMLInMarkdown = false;
     private boolean addImageToMarkdown = false;
+    private String replaceInvalidChars = " ";
     private String outputFolder;
 
     /**
@@ -213,5 +214,23 @@ public class Config {
      */
     public void setOutputFolder(String outputFolder) {
         this.outputFolder = outputFolder;
+    }
+
+    /**
+     * Gets the character, that replaces invalid or unrecognized characters (e.g., �, \u0000).
+     *
+     * @return The specified replacement character.
+     */
+    public String getReplaceInvalidChars() {
+        return replaceInvalidChars;
+    }
+
+    /**
+     * Sets the character, that replaces invalid or unrecognized characters (e.g., �, \u0000).
+     *
+     * @param replaceInvalidChars The specified replacement character.
+     */
+    public void setReplaceInvalidChars(String replaceInvalidChars) {
+        this.replaceInvalidChars = replaceInvalidChars;
     }
 }

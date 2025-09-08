@@ -7,6 +7,7 @@
  */
 package com.hancom.opendataloader.pdf.processors;
 
+import org.verapdf.gf.model.factory.chunks.ChunkParser;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
@@ -26,6 +27,19 @@ public class TextProcessor {
     private static final double MAX_LEFT_DECORATION_IMAGE_EPSILON = 0.1;
     private static final double MAX_RIGHT_DECORATION_IMAGE_EPSILON = 1.5;
 
+    public static void replaceUndefinedCharacters(List<IObject> contents, String replacementCharacterString) {
+        if (ChunkParser.REPLACEMENT_CHARACTER_STRING.equals(replacementCharacterString)) {
+            return;
+        }
+        for (IObject object : contents) {
+            if (object instanceof TextChunk) {
+                TextChunk textChunk = ((TextChunk) object);
+                if (textChunk.getValue().contains(ChunkParser.REPLACEMENT_CHARACTER_STRING)) {
+                    textChunk.setValue(textChunk.getValue().replaceAll(ChunkParser.REPLACEMENT_CHARACTER_STRING, replacementCharacterString));
+                }
+            }
+        }
+    }
 
     public static void trimTextChunksWhiteSpaces(List<IObject> contents) {
         for (int i = 0; i < contents.size(); i++) {

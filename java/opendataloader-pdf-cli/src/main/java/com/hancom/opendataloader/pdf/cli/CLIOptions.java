@@ -37,6 +37,7 @@ public class CLIOptions {
 
     public static final String FOLDER_OPTION = "f";
     private static final String FOLDER_LONG_OPTION = "folder";
+    private static final String REPLACE_INVALID_CHARS_LONG_OPTION = "replace-invalid-chars";
 
     public static Options defineOptions() {
         Options options = new Options();
@@ -67,6 +68,9 @@ public class CLIOptions {
         Option folder = new Option(FOLDER_OPTION, FOLDER_LONG_OPTION, true, "Specify output folder (default the folder of the input PDF)");
         folder.setRequired(false);
         options.addOption(folder);
+        Option replaceInvalidChars = new Option(null, REPLACE_INVALID_CHARS_LONG_OPTION, true, "Replaces invalid or unrecognized characters (e.g., �, \\u0000) with the specified character (whitespace is used, if this parameter not specified)");
+        replaceInvalidChars.setRequired(false);
+        options.addOption(replaceInvalidChars);
         return options;
     }
 
@@ -95,6 +99,9 @@ public class CLIOptions {
         }
         if (commandLine.hasOption(CLIOptions.MARKDOWN_IMAGE_OPTION)) {
             config.setAddImageToMarkdown(true);
+        }
+        if (commandLine.hasOption(CLIOptions.REPLACE_INVALID_CHARS_LONG_OPTION)) {
+            config.setReplaceInvalidChars(commandLine.getOptionValue(CLIOptions.REPLACE_INVALID_CHARS_LONG_OPTION));
         }
         if (commandLine.hasOption(CLIOptions.FOLDER_OPTION)) {
             config.setOutputFolder(commandLine.getOptionValue(CLIOptions.FOLDER_OPTION));
