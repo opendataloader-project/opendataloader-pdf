@@ -45,7 +45,7 @@ This sample shows how to use the library in a standard Java project built with M
 
 ## 2. Gradle (Groovy DSL) Example
 
-This sample uses Gradle with the traditional Groovy DSL for its build script (`build.gradle`). The example is pre-configured to process a sample PDF file included in this repository.
+This sample uses Gradle with the traditional Groovy DSL for its build script (`build.gradle`). The example is configured to use the `opendataloader-pdf-core` library to process a sample PDF file from the `samples/pdf` directory and save the results.
 
 ### Instructions
 
@@ -56,7 +56,7 @@ This sample uses Gradle with the traditional Groovy DSL for its build script (`b
     ```
 
 2.  **Build and Run the Application:**
-    Run the application using the Gradle Wrapper. This single command will build and run the project.
+    Run the application using the Gradle Wrapper. This single command will download dependencies, compile the code, and execute the main method.
 
     **On Linux/macOS:**
     ```shell
@@ -68,13 +68,13 @@ This sample uses Gradle with the traditional Groovy DSL for its build script (`b
     ```
 
 3.  **Verify the Output:**
-    After the command finishes, you will see success messages in your console. The output files will be generated in the `gradle-groovy-example/build/output` directory.
+    After the command finishes, you will see success messages in your console. The output files (JSON, Markdown, and an annotated PDF) will be generated in the `gradle-groovy-example/build` directory.
 
 ---
 
 ## 3. Gradle (Kotlin DSL) Example
 
-This sample uses Gradle with the modern Kotlin DSL for its build script (`build.gradle.kts`). The example is pre-configured to process a sample PDF file included in this repository.
+This sample uses Gradle with the modern Kotlin DSL for its build script (`build.gradle.kts`). The example is configured to use the `opendataloader-pdf-core` library to process a sample PDF file from the `samples/pdf` directory and save the results.
 
 ### Instructions
 
@@ -85,7 +85,7 @@ This sample uses Gradle with the modern Kotlin DSL for its build script (`build.
     ```
 
 2.  **Build and Run the Application:**
-    Run the application using the Gradle Wrapper.
+    Run the application using the Gradle Wrapper. This single command will download dependencies, compile the code, and execute the main method.
 
     **On Linux/macOS:**
     ```shell
@@ -97,4 +97,4 @@ This sample uses Gradle with the modern Kotlin DSL for its build script (`build.
     ```
 
 3.  **Verify the Output:**
-    After the command finishes, you will see success messages in your console. The output files will be generated in the `gradle-kotlin-example/build/output` directory.
+    After the command finishes, you will see success messages in your console. The output files (JSON, Markdown, and an annotated PDF) will be generated in the `gradle-kotlin-example/build` directory.
