@@ -57,7 +57,7 @@ AI-safety is enabled by default and automatically filters likely prompt-injectio
 ### Installation
 
 ```sh
-pip install opendataloader-pdf
+pip install -U opendataloader-pdf importlib_resources
 ```
 
 ### Usage
