@@ -8,6 +8,8 @@ on:
 jobs:
   build-test-coverage:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout
