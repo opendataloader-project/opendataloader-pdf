@@ -20,32 +20,38 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.stream.Stream;
 
 public class IntegrationTest {
 
     static Stream<Arguments> integrationTestParams() {
         return Stream.of(
-                Arguments.of("2408.02509v1.pdf")
+                Arguments.of("1901.03003.pdf")
         );
     }
 
     @ParameterizedTest(name = "{index}: ({0}) => {0}")
     @MethodSource("integrationTestParams")
     public void test(String fileName) throws IOException {
-        File folder = new File(this.getClass().getResource("files/pdf/arxiv").getFile());
+        Path pdfPath = Paths.get("../../resources", fileName);
+        Path jsonPath = Paths.get("../../resources", fileName.replace(".pdf", ".json"));
+        File pdfFile = pdfPath.toFile();
+        File jsonFile = jsonPath.toFile();
+
         Config config = new Config();
         config.setGenerateMarkdown(true);
         config.setGenerateHtml(true);
-        config.setOutputFolder("temp");
-        File pdf = new File(folder.getAbsolutePath() + "/" + fileName);
-        DocumentProcessor.processFile(pdf.getAbsolutePath(), config);
-        File resultJson = new File("temp/" + pdf.getName().replace(".pdf", ".json"));
-        InputStream jsonFileInputStream = IntegrationTest.class.getResourceAsStream("files/json/arxiv/" +
-                pdf.getName().replace(".pdf", ".json"));
+        config.setGeneratePDF(true);
+        config.setOutputFolder("../../resources/temp");
+        DocumentProcessor.processFile(pdfFile.getAbsolutePath(), config);
+
+        Path resultPath = Paths.get("../../resources/temp", fileName.replace(".pdf", ".json"));
+        File resultJson = resultPath.toFile();
+
         ObjectMapper mapper = new ObjectMapper();
-        JsonNode tree1 = mapper.readTree(jsonFileInputStream);
+        JsonNode tree1 = mapper.readTree(new FileInputStream(jsonFile));
         JsonNode tree2 = mapper.readTree(new FileInputStream(resultJson));
         checkJsonNodes(tree1, tree2);
     }
