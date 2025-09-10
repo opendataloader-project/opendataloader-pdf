@@ -38,7 +38,7 @@ public class JsonWriter {
         String jsonFileName = outputFolder + File.separator + inputPDF.getName().substring(0, inputPDF.getName().length() - 3) + "json";
         try (JsonGenerator jsonGenerator = getJsonGenerator(jsonFileName)) {
             jsonGenerator.writeStartObject();
-            writeDocumentInfo(jsonGenerator, inputPDF.getAbsolutePath());
+            writeDocumentInfo(jsonGenerator, inputPDF.getName());
             jsonGenerator.writeArrayFieldStart(JsonName.KIDS);
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 for (IObject content : contents.get(pageNumber)) {
