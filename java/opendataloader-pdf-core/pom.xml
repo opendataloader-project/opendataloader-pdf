@@ -179,10 +179,6 @@
                         </goals>
                     </execution>
                 </executions>
-                <configuration>
-                    <sourcepath>${project.build.sourceDirectory}</sourcepath>
-                    <subpackages>com.hancom.opendataloader.pdf.api</subpackages>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
