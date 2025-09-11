@@ -12,7 +12,7 @@
 
 <br/>
 
-**Safe, Open, High-Performance — OpenDataLoader PDF for AI**
+**Safe, Open, High-Performance — PDF for AI**
 
 OpenDataLoader-PDF converts PDFs into JSON, Markdown or Html — ready to feed into modern AI stacks (LLMs, vector search, and RAG).
 
@@ -29,19 +29,21 @@ AI-safety is enabled by default and automatically filters likely prompt-injectio
 - 🔒 **Local-First Privacy** — Runs fully on your machine
 - ⚡ **Fast & Lightweight** — Rule-Based Heuristic, High-Throughput, No GPU
 - 🛡️ **AI-Safety** — Auto-Filters likely prompt-injection content
-- 🆓 **Open-Source** — Free for commercial use
+- 👐 **Open-Source** — Free for commercial use
 - 🖍️ **Annotated PDF Visualization** — See detected structures overlaid on the original
 
-![Annotated PDF Example](https://raw.githubusercontent.com/opendataloader-project/opendataloader-pdf/main/resources/example_annotated_pdf.png)
+[Download Annotated PDF Sample](https://raw.githubusercontent.com/opendataloader-project/opendataloader-pdf/main/resources/1901.03003_annotated.pdf)
+
+![Annotated PDF Preview](https://raw.githubusercontent.com/opendataloader-project/opendataloader-pdf/main/resources/example_annotated_pdf.png)
 
 <br/>
 
 ## 🚀 Upcoming Features
 
-- 🖨️ **OCR for scanned PDFs** — image-only pages → selectable text
-- 🧠 **Table AI option** — higher accuracy for borderless/merged cells
-- 📊 **Layout benchmarks** — public datasets & metrics; regular reports
-- 🛡️ **AI-Safety red-team** — adversarial datasets & metrics; regular reports
+- 🖨️ **OCR for scanned PDFs** — Extract data from image-only pages
+- 🧠 **Table AI option** — Higher accuracy for tables with borderless or merged cells
+- ⚡ **Performance Benchmarks** — Transparent evaluations with open datasets and metrics, reported regularly
+- 🛡️ **AI Red Teaming** — Transparent adversarial benchmarks with datasets and metrics, reported regularly
 
 <br/>
 
