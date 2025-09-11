@@ -22,21 +22,21 @@ public class CLIOptions {
     public static final String PASSWORD_OPTION = "p";
     private static final String PASSWORD_LONG_OPTION = "password";
 
-    public static final String HTML_IN_MARKDOWN_OPTION = "htmlmd";
-    private static final String HTML_IN_MARKDOWN_LONG_OPTION = "htmlinmarkdown";
+    public static final String FOLDER_OPTION = "o";
+    private static final String FOLDER_LONG_OPTION = "output-dir";
 
-    public static final String KEEP_LINE_BREAKS_OPTION = "klb";
-    private static final String KEEP_LINE_BREAKS_LONG_OPTION = "keeplinebreaks";
+    private static final String HTML_IN_MARKDOWN_LONG_OPTION = "markdown-with-html";
 
-    public static final String PDF_REPORT_OPTION = "pdf";
-    public static final String MARKDOWN_REPORT_OPTION = "markdown";
-    public static final String HTML_REPORT_OPTION = "html";
+    private static final String KEEP_LINE_BREAKS_LONG_OPTION = "keep-line-breaks";
 
-    public static final String MARKDOWN_IMAGE_OPTION = "im";
-    private static final String MARKDOWN_IMAGE_LONG_OPTION = "addimagetomarkdown";
+    public static final String PDF_REPORT_LONG_OPTION = "pdf";
 
-    public static final String FOLDER_OPTION = "f";
-    private static final String FOLDER_LONG_OPTION = "folder";
+    public static final String MARKDOWN_REPORT_LONG_OPTION = "markdown";
+
+    public static final String HTML_REPORT_LONG_OPTION = "html";
+
+    private static final String MARKDOWN_IMAGE_LONG_OPTION = "markdown-with-images";
+
     private static final String REPLACE_INVALID_CHARS_LONG_OPTION = "replace-invalid-chars";
 
     public static Options defineOptions() {
@@ -44,28 +44,28 @@ public class CLIOptions {
         Option findHiddenText = new Option(HIDDEN_TEXT_OPTION, HIDDEN_TEXT_LONG_OPTION, false, "Find hidden text");
         findHiddenText.setRequired(false);
         options.addOption(findHiddenText);
-        Option password = new Option(PASSWORD_OPTION, PASSWORD_LONG_OPTION, true, "Specifies password");
+        Option password = new Option(PASSWORD_OPTION, PASSWORD_LONG_OPTION, true, "Specifies the password for an encrypted PDF");
         password.setRequired(false);
         options.addOption(password);
-        Option htmlInMarkdown = new Option(HTML_IN_MARKDOWN_OPTION, HTML_IN_MARKDOWN_LONG_OPTION, false, "Use html in markdown");
+        Option htmlInMarkdown = new Option(null, HTML_IN_MARKDOWN_LONG_OPTION, false, "Sets the data extraction output format to Markdown with rendering complex elements like tables as HTML for better structure");
         htmlInMarkdown.setRequired(false);
         options.addOption(htmlInMarkdown);
-        Option keepLineBreaks = new Option(KEEP_LINE_BREAKS_OPTION, KEEP_LINE_BREAKS_LONG_OPTION, false, "keep line breaks");
+        Option keepLineBreaks = new Option(null, KEEP_LINE_BREAKS_LONG_OPTION, false, "Preserves original line breaks in the extracted text");
         keepLineBreaks.setRequired(false);
         options.addOption(keepLineBreaks);
-        Option pdfOutput = new Option(PDF_REPORT_OPTION, PDF_REPORT_OPTION, false, "Generates pdf output");
+        Option pdfOutput = new Option(null, PDF_REPORT_LONG_OPTION, false, "Generates a new PDF file where the extracted layout data is visualized as annotations");
         pdfOutput.setRequired(false);
         options.addOption(pdfOutput);
-        Option markdownOutput = new Option(MARKDOWN_REPORT_OPTION, MARKDOWN_REPORT_OPTION, false, "Generates markdown output");
+        Option markdownOutput = new Option(null, MARKDOWN_REPORT_LONG_OPTION, false, "Sets the data extraction output format to Markdown");
         markdownOutput.setRequired(false);
         options.addOption(markdownOutput);
-        Option generateHtml = new Option(HTML_REPORT_OPTION, HTML_REPORT_OPTION, false, "Generates html output");
+        Option generateHtml = new Option(null, HTML_REPORT_LONG_OPTION, false, "Sets the data extraction output format to HTML");
         generateHtml.setRequired(false);
         options.addOption(generateHtml);
-        Option imageSupport = new Option(MARKDOWN_IMAGE_OPTION, MARKDOWN_IMAGE_LONG_OPTION, false, "Add images to markdown");
+        Option imageSupport = new Option(null, MARKDOWN_IMAGE_LONG_OPTION, false, "Sets the data extraction output format to Markdown with extracting images from the PDF and includes them as links");
         imageSupport.setRequired(false);
         options.addOption(imageSupport);
-        Option folder = new Option(FOLDER_OPTION, FOLDER_LONG_OPTION, true, "Specify output folder (default the folder of the input PDF)");
+        Option folder = new Option(FOLDER_OPTION, FOLDER_LONG_OPTION, true, "Specifies the output directory for generated files (default the folder of the input PDF)");
         folder.setRequired(false);
         options.addOption(folder);
         Option replaceInvalidChars = new Option(null, REPLACE_INVALID_CHARS_LONG_OPTION, true, "Replaces invalid or unrecognized characters (e.g., �, \\u0000) with the specified character (whitespace is used, if this parameter not specified)");
@@ -82,22 +82,22 @@ public class CLIOptions {
         if (commandLine.hasOption(CLIOptions.HIDDEN_TEXT_OPTION)) {
             config.setFindHiddenText(true);
         }
-        if (commandLine.hasOption(CLIOptions.KEEP_LINE_BREAKS_OPTION)) {
+        if (commandLine.hasOption(CLIOptions.KEEP_LINE_BREAKS_LONG_OPTION)) {
             config.setKeepLineBreaks(true);
         }
-        if (commandLine.hasOption(CLIOptions.PDF_REPORT_OPTION)) {
+        if (commandLine.hasOption(CLIOptions.PDF_REPORT_LONG_OPTION)) {
             config.setGeneratePDF(true);
         }
-        if (commandLine.hasOption(CLIOptions.MARKDOWN_REPORT_OPTION)) {
+        if (commandLine.hasOption(CLIOptions.MARKDOWN_REPORT_LONG_OPTION)) {
             config.setGenerateMarkdown(true);
         }
-        if (commandLine.hasOption(CLIOptions.HTML_REPORT_OPTION)) {
+        if (commandLine.hasOption(CLIOptions.HTML_REPORT_LONG_OPTION)) {
             config.setGenerateHtml(true);
         }
-        if (commandLine.hasOption(CLIOptions.HTML_IN_MARKDOWN_OPTION)) {
+        if (commandLine.hasOption(CLIOptions.HTML_IN_MARKDOWN_LONG_OPTION)) {
             config.setUseHTMLInMarkdown(true);
         }
-        if (commandLine.hasOption(CLIOptions.MARKDOWN_IMAGE_OPTION)) {
+        if (commandLine.hasOption(CLIOptions.MARKDOWN_IMAGE_LONG_OPTION)) {
             config.setAddImageToMarkdown(true);
         }
         if (commandLine.hasOption(CLIOptions.REPLACE_INVALID_CHARS_LONG_OPTION)) {

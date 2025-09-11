@@ -12,6 +12,7 @@ def run(
     input_path: str,
     output_folder: str = None,
     password: str = None,
+    replace_invalid_chars: str = None,
     generate_markdown: bool = False,
     generate_html: bool = False,
     generate_annotated_pdf: bool = False,
@@ -28,6 +29,7 @@ def run(
         input_path: Path to the input PDF file or folder.
         output_folder: Path to the output folder. Defaults to the input folder.
         password: Password for the PDF file.
+        replace_invalid_chars: Character to replace invalid or unrecognized characters (e.g., �, \u0000) with.
         generate_markdown: If True, generates a Markdown output file.
         generate_html: If True, generates an HTML output file.
         generate_annotated_pdf: If True, generates an annotated PDF output file.
@@ -49,9 +51,11 @@ def run(
 
     args = []
     if output_folder:
-        args.extend(["--folder", output_folder])
+        args.extend(["--output-dir", output_folder])
     if password:
         args.extend(["--password", password])
+    if replace_invalid_chars:
+        args.extend(["--replace-invalid-chars", replace_invalid_chars])
     if generate_markdown:
         args.append("--markdown")
     if generate_html:
@@ -59,13 +63,13 @@ def run(
     if generate_annotated_pdf:
         args.append("--pdf")
     if keep_line_breaks:
-        args.append("--keeplinebreaks")
+        args.append("--keep-line-breaks")
     if find_hidden_text:
         args.append("--findhiddentext")
     if html_in_markdown:
-        args.append("--htmlinmarkdown")
+        args.append("--markdown-with-html")
     if add_image_to_markdown:
-        args.append("--addimagetomarkdown")
+        args.append("--markdown-with-images")
 
     args.append(input_path)
 
