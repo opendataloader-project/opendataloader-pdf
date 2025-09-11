@@ -79,4 +79,7 @@ setup(
         ],
     },
     cmdclass={"build_py": CustomBuildPy},
+    install_requires=[
+        'importlib_resources; python_version < "3.9"',
+    ],
 )
