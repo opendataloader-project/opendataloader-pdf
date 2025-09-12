@@ -29,7 +29,9 @@ public class ContentFilterProcessor {
         TextProcessor.replaceUndefinedCharacters(pageContents, config.getReplaceInvalidChars());
         pageContents = HiddenTextProcessor.findHiddenText(inputPdfName, pageContents, config.getPassword());
         processBackgrounds(pageNumber, pageContents);
-        filterOutOfPageContents(pageNumber, pageContents);
+        if (config.getFilterConfig().isFilterOutOfPage()) {
+            filterOutOfPageContents(pageNumber, pageContents);
+        }
         pageContents = DocumentProcessor.removeNullObjectsFromList(pageContents);
         return pageContents;
     }

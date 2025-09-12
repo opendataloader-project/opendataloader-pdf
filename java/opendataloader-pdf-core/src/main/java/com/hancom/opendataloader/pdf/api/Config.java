@@ -13,7 +13,6 @@ package com.hancom.opendataloader.pdf.api;
  */
 public class Config {
     private String password;
-    private boolean findHiddenText = false;
     private boolean isGenerateMarkdown = false;
     private boolean isGenerateHtml = false;
     private boolean isGeneratePDF = false;
@@ -23,6 +22,16 @@ public class Config {
     private boolean addImageToMarkdown = false;
     private String replaceInvalidChars = " ";
     private String outputFolder;
+    private final FilterConfig filterConfig = new FilterConfig();
+
+    /**
+     * Gets the filter config.
+     *
+     * @return The FilterConfig.
+     */
+    public FilterConfig getFilterConfig() {
+        return filterConfig;
+    }
 
     /**
      * Default constructor initializing the configuration with default values.
@@ -46,24 +55,6 @@ public class Config {
      */
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    /**
-     * Checks if the processor should attempt to find and extract hidden text.
-     *
-     * @return true if hidden text extraction is enabled, false otherwise.
-     */
-    public boolean isFindHiddenText() {
-        return findHiddenText;
-    }
-
-    /**
-     * Enables or disables the extraction of hidden text.
-     *
-     * @param findHiddenText true to enable, false to disable.
-     */
-    public void setFindHiddenText(boolean findHiddenText) {
-        this.findHiddenText = findHiddenText;
     }
 
     /**
