@@ -117,10 +117,6 @@ jobs:
             name: Release ${{ github.ref_name }}
             prerelease: true
             generate_release_notes: true
-            body: |
-              ## What’s Changed
-
-              Changes in this release:
             files: |
               java/opendataloader-pdf-cli/target/opendataloader-pdf-cli-${{ env.VERSION }}.zip
         env:
