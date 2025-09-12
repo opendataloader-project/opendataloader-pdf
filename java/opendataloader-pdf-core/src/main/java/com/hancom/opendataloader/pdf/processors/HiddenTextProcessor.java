@@ -28,7 +28,7 @@ public class HiddenTextProcessor {
                     TextChunk textChunk = (TextChunk) content;
                     contrastRatioConsumer.calculateContrastRatio(textChunk);
                     if (textChunk.getContrastRatio() < MIN_CONTRAST_RATIO) {
-                        if (StaticLayoutContainers.isFindHiddenText()) {
+                        if (!StaticLayoutContainers.getFilterHiddenText()) {
                             textChunk.setHiddenText(true);
                         } else {
                             continue;
