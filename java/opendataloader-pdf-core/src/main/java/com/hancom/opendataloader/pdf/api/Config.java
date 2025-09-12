@@ -12,8 +12,57 @@ package com.hancom.opendataloader.pdf.api;
  * Use this class to specify output formats, text processing options, and other settings.
  */
 public class Config {
+
+    public static class FilterConfig {
+        private boolean filterHiddenText;
+        private boolean filterOutOfPage;
+
+        /**
+         * Constructor initializing the configuration of filter.
+         */
+        public FilterConfig(boolean filterHiddenText, boolean filterOutOfPage) {
+            this.filterHiddenText = filterHiddenText;
+            this.filterOutOfPage = filterOutOfPage;
+        }
+
+        /**
+         * Enables or disables filter of hidden text.
+         *
+         * @param filterHiddenText true to enable filter, false to disable.
+         */
+        public void setFilterHiddenText(boolean filterHiddenText) {
+            this.filterHiddenText = filterHiddenText;
+        }
+
+        /**
+         * Checks if the processor should attempt to find and extract hidden text.
+         *
+         * @return true if hidden text is filtered, false otherwise.
+         */
+        public boolean isFilterHiddenText() {
+            return filterHiddenText;
+        }
+
+        /**
+         * Enables or disables checking content that exceeds MediaBox or CropBox.
+         *
+         * @param filterOutOfPage true to enable, false to disable.
+         */
+        public void setFilterOutOfPage(boolean filterOutOfPage) {
+            this.filterOutOfPage = filterOutOfPage;
+        }
+
+        /**
+         * Checks if the processor should filter out of page content.
+         *
+         * @return true if filter is enabled, false otherwise.
+         */
+        public boolean isFilterOutOfPage() {
+            return filterOutOfPage;
+        }
+    }
+
     private String password;
-    private boolean findHiddenText = false;
     private boolean isGenerateMarkdown = false;
     private boolean isGenerateHtml = false;
     private boolean isGeneratePDF = false;
@@ -21,9 +70,18 @@ public class Config {
     private boolean isGenerateJSON = true;
     private boolean useHTMLInMarkdown = false;
     private boolean addImageToMarkdown = false;
-    private boolean offPage = false;
     private String replaceInvalidChars = " ";
     private String outputFolder;
+    private final FilterConfig filterConfig = new FilterConfig(true, true);
+
+    /**
+     * Gets the filter config.
+     *
+     * @return The FilterConfig.
+     */
+    public FilterConfig getFilterConfig() {
+        return filterConfig;
+    }
 
     /**
      * Default constructor initializing the configuration with default values.
@@ -47,24 +105,6 @@ public class Config {
      */
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    /**
-     * Checks if the processor should attempt to find and extract hidden text.
-     *
-     * @return true if hidden text extraction is enabled, false otherwise.
-     */
-    public boolean isFindHiddenText() {
-        return findHiddenText;
-    }
-
-    /**
-     * Enables or disables the extraction of hidden text.
-     *
-     * @param findHiddenText true to enable, false to disable.
-     */
-    public void setFindHiddenText(boolean findHiddenText) {
-        this.findHiddenText = findHiddenText;
     }
 
     /**
@@ -233,23 +273,5 @@ public class Config {
      */
     public void setReplaceInvalidChars(String replaceInvalidChars) {
         this.replaceInvalidChars = replaceInvalidChars;
-    }
-
-    /**
-     * Check if text/shape bbox exceeds MediaBox or CropBox.
-     *
-     * @return true if text/shape bbox exceeds MediaBox or CropBox.
-     */
-    public boolean isOffPage() {
-        return offPage;
-    }
-
-    /**
-     * Enables or disables checking content that
-     *
-     * @param offPage true to enable, false to disable.
-     */
-    public void setOffPage(boolean offPage) {
-        this.offPage = offPage;
     }
 }
