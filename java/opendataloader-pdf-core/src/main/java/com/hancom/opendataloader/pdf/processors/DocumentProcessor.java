@@ -117,7 +117,7 @@ public class DocumentProcessor {
         org.verapdf.gf.model.impl.containers.StaticContainers.clearAllContainers();
         StaticCoreContainers.clearAllContainers();
         StaticXmpCoreContainers.clearAllContainers();
-        StaticLayoutContainers.setFindHiddenText(config.isFindHiddenText());
+        StaticLayoutContainers.setFilterHiddenText(config.getFilterConfig().isFilterHiddenText());
         StaticContainers.setKeepLineBreaks(config.isKeepLineBreaks());
         StaticLayoutContainers.setCurrentContentId(1);
         StaticResources.setPassword(config.getPassword());

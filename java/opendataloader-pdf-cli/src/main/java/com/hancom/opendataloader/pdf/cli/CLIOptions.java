@@ -92,14 +92,14 @@ public class CLIOptions {
             if (!arguments.isEmpty()) {
                 if (arguments.contains(CONTENT_SAFETY_OFF_ALL_ARGUMENT)) {
                     //setting all the arguments
-                    config.setFindHiddenText(true);
-                    config.setOffPage(true);
+                    config.getFilterConfig().setFilterHiddenText(false);
+                    config.getFilterConfig().setFilterOutOfPage(false);
                 } else {
                     if (arguments.contains(CONTENT_SAFETY_OFF_HIDDEN_TEXT_ARGUMENT)) {
-                        config.setFindHiddenText(true);
+                        config.getFilterConfig().setFilterHiddenText(false);
                     }
                     if (arguments.contains(CONTENT_SAFETY_OFF_OFF_PAGE_ARGUMENT)) {
-                        config.setOffPage(true);
+                        config.getFilterConfig().setFilterOutOfPage(false);
                     }
                 }
             }
