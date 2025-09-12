@@ -83,20 +83,20 @@ opendataloader_pdf.run(
 
 The main function to process PDFs.
 
-| Parameter               | Type   | Required | Default      | Description                                                                 |
-| ----------------------- | ------ | -------- |--------------|-----------------------------------------------------------------------------|
-| `input_path`            | `str`  | ✅ Yes    | —            | Path to the input PDF file or folder.                                       |
-| `output_folder`         | `str`  | No       | input folder | Path to the output folder.                                                  |
-| `password`              | `str`  | No       | `None`       | Password for the PDF file.                                                  |
-| `replace_invalid_chars` | `str`  | No       | `" "`       | Character to replace invalid or unrecognized characters (e.g., �, \u0000)   |
-| `generate_markdown`     | `bool` | No       | `False`      | If `True`, generates a Markdown output file.                                |
-| `generate_html`         | `bool` | No       | `False`      | If `True`, generates an HTML output file.                                   |
-| `generate_annotated_pdf`| `bool` | No       | `False`      | If `True`, generates an annotated PDF output file.                          |
-| `keep_line_breaks`      | `bool` | No       | `False`      | If `True`, keeps line breaks in the output.                                 |
-| `find_hidden_text`      | `bool` | No       | `False`      | If `True`, finds hidden text in the PDF.                                    |
-| `html_in_markdown`      | `bool` | No       | `False`      | If `True`, uses HTML in the Markdown output.                                |
-| `add_image_to_markdown` | `bool` | No       | `False`      | If `True`, adds images to the Markdown output.                              |
-| `debug`                 | `bool` | No       | `False`      | If `True`, prints CLI messages to the console during execution.             |
+| Parameter                | Type   | Required | Default      | Description                                                                                                                         |
+|--------------------------| ------ | -------- |--------------|-------------------------------------------------------------------------------------------------------------------------------------|
+| `input_path`             | `str`  | ✅ Yes    | —            | Path to the input PDF file or folder.                                                                                               |
+| `output_folder`          | `str`  | No       | input folder | Path to the output folder.                                                                                                          |
+| `password`               | `str`  | No       | `None`       | Password for the PDF file.                                                                                                          |
+| `replace_invalid_chars`  | `str`  | No       | `" "`       | Character to replace invalid or unrecognized characters (e.g., �, \u0000)                                                           |
+| `content_safety_off`     | `str`  | No       | `None`       | Disables one or more content safety filters. Accepts a comma-separated list of filter names. Arguments: all, hidden-text, off-page. |
+| `generate_markdown`      | `bool` | No       | `False`      | If `True`, generates a Markdown output file.                                                                                        |
+| `generate_html`          | `bool` | No       | `False`      | If `True`, generates an HTML output file.                                                                                           |
+| `generate_annotated_pdf` | `bool` | No       | `False`      | If `True`, generates an annotated PDF output file.                                                                                  |
+| `keep_line_breaks`       | `bool` | No       | `False`      | If `True`, keeps line breaks in the output.                                                                                         |
+| `html_in_markdown`       | `bool` | No       | `False`      | If `True`, uses HTML in the Markdown output.                                                                                        |
+| `add_image_to_markdown`  | `bool` | No       | `False`      | If `True`, adds images to the Markdown output.                                                                                      |
+| `debug`                  | `bool` | No       | `False`      | If `True`, prints CLI messages to the console during execution.                                                                     |
 
 <br/>
 
@@ -329,7 +329,7 @@ Additionally, annotated PDF with recognized structures, Markdown and Html are ge
 By default all line breaks and hyphenation characters are removed, the Markdown does not include any images and does not use any HTML.
 
 The option `--keep-line-breaks` to preserve the original line breaks text content in JSON and Markdown output.
-
+The option `--content-safety-off` disables one or more content safety filters. Accepts a comma-separated list of filter names.
 The option `--markdown-with-html` enables use of HTML in Markdown, which may improve Markdown preview in processors that support HTML tags. 
 The option `--markdown-with-images` enables inclusion of image references into the output Markdown. 
 The option `--replace-invalid-chars` replaces invalid or unrecognized characters (e.g., �, \u0000) with the specified character.
@@ -341,7 +341,7 @@ The images are extracted from PDF as individual files and stored in a subfolder 
 Options:
 -o,--output-dir <arg>           Specifies the output directory for generated files
 --keep-line-breaks              Preserves original line breaks in the extracted text
--ht,--findhiddentext            Find hidden text
+--content-safety-off <arg>      Disables one or more content safety filters. Accepts a comma-separated list of filter names. Arguments: all, hidden-text, off-page
 --markdown-with-html            Sets the data extraction output format to Markdown with rendering complex elements like tables as HTML for better structure
 --markdown-with-images          Sets the data extraction output format to Markdown with extracting images from the PDF and includes them as links
 --markdown                      Sets the data extraction output format to Markdown

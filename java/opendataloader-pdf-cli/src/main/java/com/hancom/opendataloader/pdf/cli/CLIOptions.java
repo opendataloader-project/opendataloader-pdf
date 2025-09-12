@@ -13,11 +13,16 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class CLIOptions {
 
-    public static final String HIDDEN_TEXT_OPTION = "ht";
-    private static final String HIDDEN_TEXT_LONG_OPTION = "findhiddentext";
+    private static final String CONTENT_SAFETY_OFF_LONG_OPTION = "content-safety-off";
+    private static final String CONTENT_SAFETY_OFF_ALL_ARGUMENT = "all";
+    private static final String CONTENT_SAFETY_OFF_HIDDEN_TEXT_ARGUMENT = "hidden-text";
+    private static final String CONTENT_SAFETY_OFF_OFF_PAGE_ARGUMENT = "off-page";
 
     public static final String PASSWORD_OPTION = "p";
     private static final String PASSWORD_LONG_OPTION = "password";
@@ -41,9 +46,9 @@ public class CLIOptions {
 
     public static Options defineOptions() {
         Options options = new Options();
-        Option findHiddenText = new Option(HIDDEN_TEXT_OPTION, HIDDEN_TEXT_LONG_OPTION, false, "Find hidden text");
-        findHiddenText.setRequired(false);
-        options.addOption(findHiddenText);
+        Option contentSafetyOff = new Option(null, CONTENT_SAFETY_OFF_LONG_OPTION, true, "Disables one or more content safety filters. Accepts a comma-separated list of filter names. Arguments: all, hidden-text, off-page");
+        contentSafetyOff.setRequired(false);
+        options.addOption(contentSafetyOff);
         Option password = new Option(PASSWORD_OPTION, PASSWORD_LONG_OPTION, true, "Specifies the password for an encrypted PDF");
         password.setRequired(false);
         options.addOption(password);
@@ -79,8 +84,25 @@ public class CLIOptions {
         if (commandLine.hasOption(CLIOptions.PASSWORD_OPTION)) {
             config.setPassword(commandLine.getOptionValue(CLIOptions.PASSWORD_OPTION));
         }
-        if (commandLine.hasOption(CLIOptions.HIDDEN_TEXT_OPTION)) {
-            config.setFindHiddenText(true);
+        if (commandLine.hasOption(CLIOptions.CONTENT_SAFETY_OFF_LONG_OPTION)) {
+            String[] argumentString = commandLine.getOptionValues(CLIOptions.CONTENT_SAFETY_OFF_LONG_OPTION);
+            Set<String> arguments = Arrays.stream(String.join(",", argumentString).split(","))
+                .map(String::trim)
+                .collect(Collectors.toSet());
+            if (!arguments.isEmpty()) {
+                if (arguments.contains(CONTENT_SAFETY_OFF_ALL_ARGUMENT)) {
+                    //setting all the arguments
+                    config.setFindHiddenText(true);
+                    config.setOffPage(true);
+                } else {
+                    if (arguments.contains(CONTENT_SAFETY_OFF_HIDDEN_TEXT_ARGUMENT)) {
+                        config.setFindHiddenText(true);
+                    }
+                    if (arguments.contains(CONTENT_SAFETY_OFF_OFF_PAGE_ARGUMENT)) {
+                        config.setOffPage(true);
+                    }
+                }
+            }
         }
         if (commandLine.hasOption(CLIOptions.KEEP_LINE_BREAKS_LONG_OPTION)) {
             config.setKeepLineBreaks(true);
