@@ -29,7 +29,7 @@ public class ContentFilterProcessor {
         TextProcessor.replaceUndefinedCharacters(pageContents, config.getReplaceInvalidChars());
         pageContents = HiddenTextProcessor.findHiddenText(inputPdfName, pageContents, config.getPassword());
         processBackgrounds(pageNumber, pageContents);
-        filterOutOfPageContents(pageNumber, pageContents);
+        filterOutOfPageContents(pageNumber, pageContents, config.isOffPage());
         pageContents = DocumentProcessor.removeNullObjectsFromList(pageContents);
         return pageContents;
     }
@@ -60,9 +60,9 @@ public class ContentFilterProcessor {
                 content.getBoundingBox().getHeight() > 0.5 * pageBoundingBox.getHeight());
     }
 
-    private static void filterOutOfPageContents(int pageNumber, List<IObject> contents) {
+    private static void filterOutOfPageContents(int pageNumber, List<IObject> contents, boolean offPage) {
         BoundingBox pageBoundingBox = DocumentProcessor.getPageBoundingBox(pageNumber);
-        if (pageBoundingBox == null) {
+        if (offPage || pageBoundingBox == null) {
             return;
         }
         for (int index = 0; index < contents.size(); index++) {
