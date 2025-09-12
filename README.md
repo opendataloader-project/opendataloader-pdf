@@ -1,7 +1,7 @@
 # OpenDataLoader PDF
 
 ![Pre-release](https://img.shields.io/badge/Pre--release-FFA500&logo=github)
-[![License](https://img.shields.io/pypi/l/opendataloader-pdf.svg)](https://pypi.org/project/opendataloader-pdf/)
+[![License](https://img.shields.io/pypi/l/opendataloader-pdf.svg)](https://github.com/opendataloader-project/opendataloader-pdf/blob/main/LICENSE)
 ![Java](https://img.shields.io/badge/Java-11+-blue.svg)
 ![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.opendataloader-project/opendataloader-pdf-core.svg)](https://search.maven.org/artifact/io.github.opendataloader-project/opendataloader-pdf-core)
