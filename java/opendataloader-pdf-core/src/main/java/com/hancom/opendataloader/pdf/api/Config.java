@@ -21,6 +21,7 @@ public class Config {
     private boolean isGenerateJSON = true;
     private boolean useHTMLInMarkdown = false;
     private boolean addImageToMarkdown = false;
+    private boolean offPage = false;
     private String replaceInvalidChars = " ";
     private String outputFolder;
 
@@ -232,5 +233,23 @@ public class Config {
      */
     public void setReplaceInvalidChars(String replaceInvalidChars) {
         this.replaceInvalidChars = replaceInvalidChars;
+    }
+
+    /**
+     * Check if text/shape bbox exceeds MediaBox or CropBox.
+     *
+     * @return true if text/shape bbox exceeds MediaBox or CropBox.
+     */
+    public boolean isOffPage() {
+        return offPage;
+    }
+
+    /**
+     * Enables or disables checking content that
+     *
+     * @param offPage true to enable, false to disable.
+     */
+    public void setOffPage(boolean offPage) {
+        this.offPage = offPage;
     }
 }

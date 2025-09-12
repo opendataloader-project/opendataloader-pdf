@@ -17,7 +17,7 @@ def run(
     generate_html: bool = False,
     generate_annotated_pdf: bool = False,
     keep_line_breaks: bool = False,
-    find_hidden_text: bool = False,
+    content_safety_off: str = None,
     html_in_markdown: bool = False,
     add_image_to_markdown: bool = False,
     debug: bool = False,
@@ -64,8 +64,8 @@ def run(
         args.append("--pdf")
     if keep_line_breaks:
         args.append("--keep-line-breaks")
-    if find_hidden_text:
-        args.append("--findhiddentext")
+    if content_safety_off:
+        args.append(["--content-safety-off", content_safety_off])
     if html_in_markdown:
         args.append("--markdown-with-html")
     if add_image_to_markdown:
