@@ -24,12 +24,11 @@ AI-safety is enabled by default and automatically filters likely prompt-injectio
 
 ## 🌟 Key Features
 
+- 🛡️ **AI-Safety** — Auto-Filters likely prompt-injection content - [Learn more about AI-Safety](https://raw.githubusercontent.com/opendataloader-project/opendataloader-pdf/main/docs/AI_SAFETY.md)
+- 🔒 **Local-First Privacy** — Runs fully on your machine
 - 🧾 **Rich, Structured Output** — JSON, Markdown or Html
 - 🧩 **Layout Reconstruction** — Headings, Lists, Tables, Images, Reading Order
-- 🔒 **Local-First Privacy** — Runs fully on your machine
 - ⚡ **Fast & Lightweight** — Rule-Based Heuristic, High-Throughput, No GPU
-- 🛡️ **AI-Safety** — Auto-Filters likely prompt-injection content
-- 👐 **Open-Source** — Free for commercial use
 - 🖍️ **Annotated PDF Visualization** — See detected structures overlaid on the original
 
 [Download Annotated PDF Sample](https://raw.githubusercontent.com/opendataloader-project/opendataloader-pdf/main/resources/1901.03003_annotated.pdf)
