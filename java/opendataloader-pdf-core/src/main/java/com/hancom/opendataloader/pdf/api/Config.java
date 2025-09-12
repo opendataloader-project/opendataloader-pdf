@@ -12,56 +12,6 @@ package com.hancom.opendataloader.pdf.api;
  * Use this class to specify output formats, text processing options, and other settings.
  */
 public class Config {
-
-    public static class FilterConfig {
-        private boolean filterHiddenText;
-        private boolean filterOutOfPage;
-
-        /**
-         * Constructor initializing the configuration of filter.
-         */
-        public FilterConfig(boolean filterHiddenText, boolean filterOutOfPage) {
-            this.filterHiddenText = filterHiddenText;
-            this.filterOutOfPage = filterOutOfPage;
-        }
-
-        /**
-         * Enables or disables filter of hidden text.
-         *
-         * @param filterHiddenText true to enable filter, false to disable.
-         */
-        public void setFilterHiddenText(boolean filterHiddenText) {
-            this.filterHiddenText = filterHiddenText;
-        }
-
-        /**
-         * Checks if the processor should attempt to find and extract hidden text.
-         *
-         * @return true if hidden text is filtered, false otherwise.
-         */
-        public boolean isFilterHiddenText() {
-            return filterHiddenText;
-        }
-
-        /**
-         * Enables or disables checking content that exceeds MediaBox or CropBox.
-         *
-         * @param filterOutOfPage true to enable, false to disable.
-         */
-        public void setFilterOutOfPage(boolean filterOutOfPage) {
-            this.filterOutOfPage = filterOutOfPage;
-        }
-
-        /**
-         * Checks if the processor should filter out of page content.
-         *
-         * @return true if filter is enabled, false otherwise.
-         */
-        public boolean isFilterOutOfPage() {
-            return filterOutOfPage;
-        }
-    }
-
     private String password;
     private boolean isGenerateMarkdown = false;
     private boolean isGenerateHtml = false;
@@ -72,7 +22,7 @@ public class Config {
     private boolean addImageToMarkdown = false;
     private String replaceInvalidChars = " ";
     private String outputFolder;
-    private final FilterConfig filterConfig = new FilterConfig(true, true);
+    private final FilterConfig filterConfig = new FilterConfig();
 
     /**
      * Gets the filter config.
