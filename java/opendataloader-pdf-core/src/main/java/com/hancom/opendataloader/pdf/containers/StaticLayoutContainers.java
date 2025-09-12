@@ -40,7 +40,7 @@ public class StaticLayoutContainers {
         StaticLayoutContainers.currentContentId.set(currentContentId);
     }
 
-    public static boolean getFilterHiddenText() {
+    public static boolean isFilterHiddenText() {
         return filterHiddenText.get();
     }
 
