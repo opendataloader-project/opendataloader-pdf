@@ -140,50 +140,71 @@ public class DocumentProcessor {
             javaTables.add(TableBorderProcessor.processTableBorders(contents.get(pageNumber)));
         }
         DocumentProcessor.timeHelper.endJava();
-        DocumentProcessor.timeHelper.endJavaAndPython();
         serializeResults(file, new File("java"), javaTables);
 
-        
         StaticContainers.getTableBordersCollection().clearContentsOfTable();
-        DocumentProcessor.timeHelper.start();
-        List<List<TableBorder>> tatrTables = callTATR(file.getAbsolutePath(), config, contents);
-        DocumentProcessor.timeHelper.endPython();
-        addTablesFromTATR(tatrTables);
-        DocumentProcessor.timeHelper.endJavaAndPython();
 
-        List<List<TableBorder>> pythonAndJavaTables = new ArrayList<>();
         DocumentProcessor.timeHelper.start();
+        List<Integer> pageNumbers = getPageNumbersForTATR(contents);
+        DocumentProcessor.timeHelper.endJavaAndFilteredPython();
+        List<Integer> otherPageNumbers = new ArrayList<>();
         for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
-            pythonAndJavaTables.add(TableBorderProcessor.processTableBorders(contents.get(pageNumber)));
+            if (!pageNumbers.contains(pageNumber)) {
+                otherPageNumbers.add(pageNumber);
+            }
         }
-        DocumentProcessor.timeHelper.endJavaAndPython();
-        serializeResults(file, new File("java_tatr"), pythonAndJavaTables);
         
-        StaticContainers.getTableBordersCollection().clear();
-        DocumentProcessor.timeHelper.start();
-        addTablesFromTATR(tatrTables);
-        DocumentProcessor.timeHelper.endPython();
+        if (!pageNumbers.isEmpty()) {
+            DocumentProcessor.timeHelper.start();
+            List<List<TableBorder>> filterTatrAndJavaTables = new ArrayList<>();
+            addTablesFromTATR(callTATR(file.getAbsolutePath(), config, contents, pageNumbers));
+            DocumentProcessor.timeHelper.endJavaAndPython();
+            for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
+                filterTatrAndJavaTables.add(TableBorderProcessor.processTableBorders(contents.get(pageNumber)));
+            }
+            DocumentProcessor.timeHelper.endJavaAndFilteredPython();
+            serializeResults(file, new File("java_and_filtered_tatr"), filterTatrAndJavaTables);
+        }
+        
         StaticContainers.getTableBordersCollection().clearContentsOfTable();
-        
-        List<List<TableBorder>> pythonTables = new ArrayList<>();
-        DocumentProcessor.timeHelper.start();
-        for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
-            pythonTables.add(TableBorderProcessor.processTableBorders(contents.get(pageNumber)));
+
+        if (!pageNumbers.isEmpty()) {
+            DocumentProcessor.timeHelper.start();
+            List<List<TableBorder>> tatrAndJavaTables = new ArrayList<>();
+            addTablesFromTATR(callTATR(file.getAbsolutePath(), config, contents, otherPageNumbers));
+            for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
+                tatrAndJavaTables.add(TableBorderProcessor.processTableBorders(contents.get(pageNumber)));
+            }
+            DocumentProcessor.timeHelper.endJavaAndPython();
+            serializeResults(file, new File("java_and_tatr"), tatrAndJavaTables);
         }
-        DocumentProcessor.timeHelper.endPython();
-        serializeResults(file, new File("tatr"), pythonTables);
+        
+//        StaticContainers.getTableBordersCollection().clear();
+//        DocumentProcessor.timeHelper.start();
+//        addTablesFromTATR(tatrTables);
+//        DocumentProcessor.timeHelper.endPython();
+//        StaticContainers.getTableBordersCollection().clearContentsOfTable();
+        
+//        List<List<TableBorder>> pythonTables = new ArrayList<>();
+//        DocumentProcessor.timeHelper.start();
+//        for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
+//            pythonTables.add(TableBorderProcessor.processTableBorders(contents.get(pageNumber)));
+//        }
+//        DocumentProcessor.timeHelper.endPython();
+//        serializeResults(file, new File("tatr"), pythonTables);
+        
         DocumentProcessor.timeHelper.print(file);
     }
 
     private static void addTablesFromTATR(String inputPdfName, Config config, List<List<IObject>> contents) {
-        List<Integer> pageNumbers = getPageNumberForTATR(contents);
+        List<Integer> pageNumbers = getPageNumbersForTATR(contents);
         if (!pageNumbers.isEmpty()) {
             List<List<TableBorder>> tatrTables = callTATR(inputPdfName, config, contents, pageNumbers);
             addTablesFromTATR(tatrTables);
         }
     }
     
-    private static List<Integer> getPageNumberForTATR(List<List<IObject>> contents) {
+    private static List<Integer> getPageNumbersForTATR(List<List<IObject>> contents) {
         List<Integer> pageNumbers = new ArrayList<>();
         for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
             TextChunk previousTextChunk = null;
@@ -291,6 +312,7 @@ public class DocumentProcessor {
         StaticContainers.setTableBordersCollection(new TableBordersCollection(linesPreprocessingConsumer.getTableBorders()));
         DocumentProcessor.timeHelper.endJava();
         DocumentProcessor.timeHelper.endJavaAndPython();
+        DocumentProcessor.timeHelper.endJavaAndFilteredPython();
     }
 
     private static void updateStaticContainers(Config config) {
