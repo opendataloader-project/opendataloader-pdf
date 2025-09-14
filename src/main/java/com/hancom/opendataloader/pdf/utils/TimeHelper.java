@@ -18,6 +18,7 @@ public class TimeHelper {
     long javaTime = 0;
     long pythonTime = 0;
     long javaAndPythonTime = 0;
+    long javaAndFilteredPythonTime = 0;
     long startTime;
     
     public TimeHelper() {
@@ -36,13 +37,18 @@ public class TimeHelper {
         javaAndPythonTime += System.nanoTime() - startTime;
     }
 
+    public void endJavaAndFilteredPython() {
+        javaAndFilteredPythonTime += System.nanoTime() - startTime;
+    }
+
     public void endPython() {
         pythonTime += System.nanoTime() - startTime;
     }
 
     public void print(File file) {
         LOGGER.log(Level.WARNING, file.getAbsolutePath() + " java " + javaTime / 1_000_000_000.0 / StaticContainers.getDocument().getNumberOfPages());
-        LOGGER.log(Level.WARNING, file.getAbsolutePath() + " python " + pythonTime / 1_000_000_000.0 / StaticContainers.getDocument().getNumberOfPages());
+//        LOGGER.log(Level.WARNING, file.getAbsolutePath() + " python " + pythonTime / 1_000_000_000.0 / StaticContainers.getDocument().getNumberOfPages());
         LOGGER.log(Level.WARNING, file.getAbsolutePath() + " java+python " + javaAndPythonTime / 1_000_000_000.0 / StaticContainers.getDocument().getNumberOfPages());
+        LOGGER.log(Level.WARNING, file.getAbsolutePath() + " java+filtered python " + javaAndFilteredPythonTime / 1_000_000_000.0 / StaticContainers.getDocument().getNumberOfPages());
     }
 }
