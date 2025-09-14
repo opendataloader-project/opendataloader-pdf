@@ -171,7 +171,8 @@ public class DocumentProcessor {
         if (!pageNumbers.isEmpty()) {
             DocumentProcessor.timeHelper.start();
             List<List<TableBorder>> filterTatrAndJavaTables = new ArrayList<>();
-            addTablesFromTATR(callTATR(file.getAbsolutePath(), config, contents, pageNumbers));
+            List<List<TableBorder>> tatrTables = callTATR(file.getAbsolutePath(), config, contents, pageNumbers);
+            addTablesFromTATR(tatrTables);
             DocumentProcessor.timeHelper.endJavaAndPython();
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 filterTatrAndJavaTables.add(TableBorderProcessor.processTableBorders(contents.get(pageNumber)));
@@ -182,15 +183,22 @@ public class DocumentProcessor {
 
         StaticContainers.getTableBordersCollection().clearContentsOfTable();
 
-        if (!pageNumbers.isEmpty()) {
+        if (!otherPageNumbers.isEmpty()) {
             DocumentProcessor.timeHelper.start();
             List<List<TableBorder>> tatrAndJavaTables = new ArrayList<>();
-            addTablesFromTATR(callTATR(file.getAbsolutePath(), config, contents, otherPageNumbers));
+            List<List<TableBorder>> filterTatrTables = callTATR(file.getAbsolutePath(), config, contents, otherPageNumbers);
+            addTablesFromTATR(filterTatrTables);
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 tatrAndJavaTables.add(TableBorderProcessor.processTableBorders(contents.get(pageNumber)));
             }
             DocumentProcessor.timeHelper.endJavaAndPython();
             serializeResults(file, new File("java_and_tatr"), tatrAndJavaTables);
+            for (int index = 0; index < filterTatrTables.size(); index++) {
+                List<TableBorder> tables = filterTatrTables.get(index);
+                if (!tables.isEmpty()) {
+                    LOGGER.log(Level.WARNING, String.format("Page %s contains tables from tatr, but we filter this page", otherPageNumbers.get(index) + 1));
+                }
+            }
         }
 
 //        StaticContainers.getTableBordersCollection().clear();
@@ -463,10 +471,10 @@ public class DocumentProcessor {
                     }
                     if (tableIndex == 0) {
                         BufferedImage image = contrastRatioConsumer.getRenderPage(pageNumber);
-                        File imageFile = new File(imagesFolder + File.separator + fileName + "_page_" + pageNumber + ".jpg");
+                        File imageFile = new File(imagesFolder + File.separator + fileName + "_page_" + (pageNumber + 1) + ".jpg");
                         ImageIO.write(image, "jpg", imageFile);
                     }
-                    String jsonFileName = structuresFolder + File.separator + fileName + "_page_" + pageNumber + "_table_" + tableIndex + "_objects.json";
+                    String jsonFileName = structuresFolder + File.separator + fileName + "_page_" + (pageNumber + 1) + "_table_" + tableIndex + "_objects.json";
                     JsonFactory jsonFactory = new JsonFactory();
                     try (JsonGenerator jsonGenerator = jsonFactory.createGenerator(new File(jsonFileName), JsonEncoding.UTF8)
                             .setPrettyPrinter(new DefaultPrettyPrinter())
@@ -475,7 +483,7 @@ public class DocumentProcessor {
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
-                    File wordsFile = new File(wordsFolder + File.separator + fileName + "_page_" + pageNumber + "_table_" + tableIndex + "_words.json");
+                    File wordsFile = new File(wordsFolder + File.separator + fileName + "_page_" + (pageNumber + 1) + "_table_" + tableIndex + "_words.json");
                     TableTransformerProcessor.textContentsToJSON(wordsFile,
                             TableTransformerProcessor.getTextChunksForTableBorder(tableBorder),
                             DocumentProcessor.getPageBoundingBox(pageNumber),
