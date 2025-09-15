@@ -39,14 +39,17 @@ jobs:
             fi
 
       - name: Update Maven version
-        run: mvn versions:set -DnewVersion=${{ env.VERSION }} -DgenerateBackupPoms=false -f java/pom.xml
+        run: mvn versions:set -DnewVersion=${{ env.VERSION }} -DgenerateBackupPoms=false
+        working-directory: ./java
 
       - name: Build All Modules
-        run: mvn -B clean package -f java/pom.xml
+        run: mvn -B clean package -P release
+        working-directory: ./java
 
       - name: Deploy to Maven Central
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-        run: mvn -B -pl opendataloader-pdf-core deploy -f java/pom.xml
+        run: mvn -B -pl opendataloader-pdf-core deploy -P release
+        working-directory: ./java
         env:
           MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
