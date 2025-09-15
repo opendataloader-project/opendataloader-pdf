@@ -160,7 +160,7 @@ The main function to process PDFs.
 | `outputFolder`          | `string`  | `undefined`   | Path to the output folder. If not set, output is saved next to the input.   |
 | `password`              | `string`  | `undefined`   | Password for the PDF file.                                                  |
 | `replaceInvalidChars`   | `string`  | `" "`         | Character to replace invalid or unrecognized characters (e.g., , \u0000).  |
-| `content_safety_off`     | `string`  | `undefined`   | Disables one or more content safety filters. Accepts a comma-separated list of filter names. Arguments: all, hidden-text, off-page. |
+| `contentSafetyOff`     | `string`  | `undefined`   | Disables one or more content safety filters. Accepts a comma-separated list of filter names. Arguments: all, hidden-text, off-page. |
 | `generateMarkdown`      | `boolean` | `false`       | If `true`, generates a Markdown output file.                                |
 | `generateHtml`          | `boolean` | `false`       | If `true`, generates an HTML output file.                                   |
 | `generateAnnotatedPdf`  | `boolean` | `false`       | If `true`, generates an annotated PDF output file.                          |
