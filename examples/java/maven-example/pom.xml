@@ -16,7 +16,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.github.opendataloader-project</groupId>
+            <groupId>org.opendataloader</groupId>
             <artifactId>opendataloader-pdf-core</artifactId>
             <version>0.0.16</version>
         </dependency>
