@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/pypi/l/opendataloader-pdf.svg)](https://github.com/opendataloader-project/opendataloader-pdf/blob/main/LICENSE)
 ![Java](https://img.shields.io/badge/Java-11+-blue.svg)
 ![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.opendataloader-project/opendataloader-pdf-core.svg)](https://search.maven.org/artifact/io.github.opendataloader-project/opendataloader-pdf-core)
+[![Maven Central](https://img.shields.io/maven-central/v/org.opendataloader/opendataloader-pdf-core.svg)](https://search.maven.org/artifact/org.opendataloader/opendataloader-pdf-core)
 [![PyPI version](https://img.shields.io/pypi/v/opendataloader-pdf.svg)](https://pypi.org/project/opendataloader-pdf/)
 [![npm version](https://img.shields.io/npm/v/@opendataloader/pdf.svg)](https://www.npmjs.com/package/@opendataloader/pdf)
 [![GHCR Version](https://ghcr-badge.egpl.dev/opendataloader-project/opendataloader-pdf-cli/latest_tag?trim=major&label=docker-image)](https://github.com/opendataloader-project/opendataloader-pdf/pkgs/container/opendataloader-pdf-cli)
@@ -179,7 +179,7 @@ For various example templates, including Gradle and Maven, please refer to https
 
 To include OpenDataLoader PDF in your Maven project, add the dependency below to your `pom.xml` file.
 
-Check for the latest version on [Maven Central](https://search.maven.org/artifact/io.github.opendataloader-project/opendataloader-pdf-core).
+Check for the latest version on [Maven Central](https://search.maven.org/artifact/org.opendataloader/opendataloader-pdf-core).
 
 ```xml
 <project>
@@ -187,7 +187,7 @@ Check for the latest version on [Maven Central](https://search.maven.org/artifac
 
     <dependencies>
         <dependency>
-            <groupId>io.github.opendataloader-project</groupId>
+            <groupId>org.opendataloader</groupId>
             <artifactId>opendataloader-pdf-core</artifactId>
             <version>0.0.15</version>
         </dependency>
@@ -249,7 +249,7 @@ public class Sample {
 
 ### API Documentation
 
-The full API documentation is available at [javadoc](https://javadoc.io/doc/io.github.opendataloader-project/opendataloader-pdf-core/latest/)
+The full API documentation is available at [javadoc](https://javadoc.io/doc/org.opendataloader/opendataloader-pdf-core/latest/)
 
 <br/>
 

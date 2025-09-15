@@ -14,13 +14,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>io.github.opendataloader-project</groupId>
+        <groupId>org.opendataloader</groupId>
         <artifactId>opendataloader-pdf-parent</artifactId>
         <version>0.0.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <groupId>io.github.opendataloader-project</groupId>
+    <groupId>org.opendataloader</groupId>
     <artifactId>opendataloader-pdf-cli</artifactId>
     <version>0.0.0</version>
     <packaging>jar</packaging>
@@ -53,7 +53,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.github.opendataloader-project</groupId>
+            <groupId>org.opendataloader</groupId>
             <artifactId>opendataloader-pdf-core</artifactId>
             <version>${project.version}</version>
         </dependency>
