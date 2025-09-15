@@ -23,6 +23,7 @@ public class CLIOptions {
     private static final String CONTENT_SAFETY_OFF_ALL_ARGUMENT = "all";
     private static final String CONTENT_SAFETY_OFF_HIDDEN_TEXT_ARGUMENT = "hidden-text";
     private static final String CONTENT_SAFETY_OFF_OFF_PAGE_ARGUMENT = "off-page";
+    private static final String CONTENT_SAFETY_OFF_TINY_TEXT_ARGUMENT = "tiny";
 
     public static final String PASSWORD_OPTION = "p";
     private static final String PASSWORD_LONG_OPTION = "password";
@@ -46,7 +47,7 @@ public class CLIOptions {
 
     public static Options defineOptions() {
         Options options = new Options();
-        Option contentSafetyOff = new Option(null, CONTENT_SAFETY_OFF_LONG_OPTION, true, "Disables one or more content safety filters. Accepts a comma-separated list of filter names. Arguments: all, hidden-text, off-page");
+        Option contentSafetyOff = new Option(null, CONTENT_SAFETY_OFF_LONG_OPTION, true, "Disables one or more content safety filters. Accepts a comma-separated list of filter names. Arguments: all, hidden-text, off-page, tiny");
         contentSafetyOff.setRequired(false);
         options.addOption(contentSafetyOff);
         Option password = new Option(PASSWORD_OPTION, PASSWORD_LONG_OPTION, true, "Specifies the password for an encrypted PDF");
@@ -94,12 +95,16 @@ public class CLIOptions {
                     //setting all the arguments
                     config.getFilterConfig().setFilterHiddenText(false);
                     config.getFilterConfig().setFilterOutOfPage(false);
+                    config.getFilterConfig().setFilterOutTinyText(false);
                 } else {
                     if (arguments.contains(CONTENT_SAFETY_OFF_HIDDEN_TEXT_ARGUMENT)) {
                         config.getFilterConfig().setFilterHiddenText(false);
                     }
                     if (arguments.contains(CONTENT_SAFETY_OFF_OFF_PAGE_ARGUMENT)) {
                         config.getFilterConfig().setFilterOutOfPage(false);
+                    }
+                    if (arguments.contains(CONTENT_SAFETY_OFF_TINY_TEXT_ARGUMENT)) {
+                        config.getFilterConfig().setFilterOutTinyText(false);
                     }
                 }
             }
