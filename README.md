@@ -160,11 +160,11 @@ The main function to process PDFs.
 | `outputFolder`          | `string`  | `undefined`   | Path to the output folder. If not set, output is saved next to the input.   |
 | `password`              | `string`  | `undefined`   | Password for the PDF file.                                                  |
 | `replaceInvalidChars`   | `string`  | `" "`         | Character to replace invalid or unrecognized characters (e.g., , \u0000).  |
+| `content_safety_off`     | `string`  | `undefined`   | Disables one or more content safety filters. Accepts a comma-separated list of filter names. Arguments: all, hidden-text, off-page. |
 | `generateMarkdown`      | `boolean` | `false`       | If `true`, generates a Markdown output file.                                |
 | `generateHtml`          | `boolean` | `false`       | If `true`, generates an HTML output file.                                   |
 | `generateAnnotatedPdf`  | `boolean` | `false`       | If `true`, generates an annotated PDF output file.                          |
 | `keepLineBreaks`        | `boolean` | `false`       | If `true`, keeps line breaks in the output.                                 |
-| `findHiddenText`        | `boolean` | `false`       | If `true`, finds hidden text in the PDF.                                    |
 | `htmlInMarkdown`        | `boolean` | `false`       | If `true`, uses HTML in the Markdown output.                                |
 | `addImageToMarkdown`    | `boolean` | `false`       | If `true`, adds images to the Markdown output.                              |
 | `debug`                 | `boolean` | `false`       | If `true`, prints CLI messages to the console during execution.             |
@@ -189,7 +189,7 @@ Check for the latest version on [Maven Central](https://search.maven.org/artifac
         <dependency>
             <groupId>io.github.opendataloader-project</groupId>
             <artifactId>opendataloader-pdf-core</artifactId>
-            <version>0.0.12</version>
+            <version>0.0.15</version>
         </dependency>
     </dependencies>
 
@@ -232,46 +232,14 @@ import java.io.IOException;
 public class Sample {
 
     public static void main(String[] args) {
-        //create default config
         Config config = new Config();
-
-        //set output folder relative to the input PDF
-        //if the output folder is not set, the current folder of the input PDF is used
-        config.setOutputFolder("output");
-
-        //generating pdf output file
+        config.setOutputFolder("path/to/output");
         config.setGeneratePDF(true);
-
-        //set password of input pdf file
-        config.setPassword("password");
-
-        //generate markdown output file
         config.setGenerateMarkdown(true);
-
-        //generate html output file
         config.setGenerateHtml(true);
 
-        //enable html in markdown output file
-        config.setUseHTMLInMarkdown(true);
-
-        //add images to markdown output file
-        config.setAddImageToMarkdown(true);
-
-        //disable json output file
-        config.setGenerateJSON(false);
-
-        //keep line breaks
-        config.setKeepLineBreaks(true);
-
-        //find hidden text
-        config.setFindHiddenText(true);
-        
-        //replace invalid chars with specified character
-        config.setReplaceInvalidChars("character");
-
         try {
-            //process pdf file
-            OpenDataLoaderPDF.processFile("input.pdf", config);
+            OpenDataLoaderPDF.processFile("path/to/document.pdf", config);
         } catch (Exception exception) {
             //exception during processing
         }
