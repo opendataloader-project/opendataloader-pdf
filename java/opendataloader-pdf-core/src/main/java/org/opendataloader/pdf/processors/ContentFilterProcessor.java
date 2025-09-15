@@ -33,7 +33,7 @@ public class ContentFilterProcessor {
             filterOutOfPageContents(pageNumber, pageContents);
         }
         pageContents = DocumentProcessor.removeNullObjectsFromList(pageContents);
-        if (config.getFilterConfig().isFilterOutTinyText()) {
+        if (config.getFilterConfig().isFilterTinyText()) {
             TextProcessor.filterTinyText(pageContents);
         }
         pageContents = DocumentProcessor.removeNullObjectsFromList(pageContents);

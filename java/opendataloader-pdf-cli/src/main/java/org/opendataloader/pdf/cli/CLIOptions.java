@@ -95,7 +95,7 @@ public class CLIOptions {
                     //setting all the arguments
                     config.getFilterConfig().setFilterHiddenText(false);
                     config.getFilterConfig().setFilterOutOfPage(false);
-                    config.getFilterConfig().setFilterOutTinyText(false);
+                    config.getFilterConfig().setFilterTinyText(false);
                 } else {
                     if (arguments.contains(CONTENT_SAFETY_OFF_HIDDEN_TEXT_ARGUMENT)) {
                         config.getFilterConfig().setFilterHiddenText(false);
@@ -104,7 +104,7 @@ public class CLIOptions {
                         config.getFilterConfig().setFilterOutOfPage(false);
                     }
                     if (arguments.contains(CONTENT_SAFETY_OFF_TINY_TEXT_ARGUMENT)) {
-                        config.getFilterConfig().setFilterOutTinyText(false);
+                        config.getFilterConfig().setFilterTinyText(false);
                     }
                 }
             }

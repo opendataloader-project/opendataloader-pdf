@@ -43,11 +43,12 @@ public class TextProcessor {
     }
 
     public static void filterTinyText(List<IObject> contents) {
-        for (IObject object : contents) {
+        for (int i = 0; i < contents.size(); i++) {
+            IObject object = contents.get(i);
             if (object instanceof TextChunk) {
                 TextChunk textChunk = ((TextChunk) object);
                 if (textChunk.getBoundingBox().getHeight() <= TEXT_MIN_FONT_SIZE) {
-                    contents.set(object.getIndex(), null);
+                    contents.set(i, null);
                 }
             }
         }

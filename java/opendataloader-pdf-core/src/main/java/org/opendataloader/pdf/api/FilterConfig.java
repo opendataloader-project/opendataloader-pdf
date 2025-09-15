@@ -3,7 +3,7 @@ package org.opendataloader.pdf.api;
 public class FilterConfig {
     private boolean filterHiddenText = true;
     private boolean filterOutOfPage = true;
-    private boolean filterOutTinyText = true;
+    private boolean filterTinyText = true;
 
     /**
      * Constructor initializing the configuration of filter.
@@ -51,16 +51,16 @@ public class FilterConfig {
      *
      * @return true if filter is enabled, false otherwise.
      */
-    public boolean isFilterOutTinyText() {
-        return filterOutTinyText;
+    public boolean isFilterTinyText() {
+        return filterTinyText;
     }
 
     /**
      * Enables or disables filter of tiny text.
      *
-     * @param filterOutTinyText true to enable filter, false to disable.
+     * @param filterTinyText true to enable filter, false to disable.
      */
-    public void setFilterOutTinyText(boolean filterOutTinyText) {
-        this.filterOutTinyText = filterOutTinyText;
+    public void setFilterTinyText(boolean filterTinyText) {
+        this.filterTinyText = filterTinyText;
     }
 }
