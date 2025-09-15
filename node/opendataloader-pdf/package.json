@@ -1,0 +1,63 @@
+{
+  "name": "@opendataloader/pdf",
+  "version": "0.0.0",
+  "description": "A Node.js wrapper for the opendataloader-pdf Java CLI.",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "setup": "node ./scripts/setup.cjs",
+    "build": "pnpm run setup && tsup",
+    "test": "vitest",
+    "format": "prettier --write \"**/*.{ts,js,json,md}\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/opendataloader-project/opendataloader-pdf.git"
+  },
+  "keywords": [
+    "pdf",
+    "markdown",
+    "html",
+    "convert",
+    "pdf-convert",
+    "pdf-parser",
+    "pdf-parsing",
+    "pdf-to-json",
+    "pdf-to-markdown",
+    "pdf-to-html"
+  ],
+  "author": "opendataloader-project",
+  "license": "MPL-2.0",
+  "bugs": {
+    "url": "https://github.com/opendataloader-project/opendataloader-pdf/issues"
+  },
+  "homepage": "https://github.com/opendataloader-project/opendataloader-pdf#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/glob": "^8.1.0",
+    "@types/node": "^24.3.3",
+    "glob": "^11.0.3",
+    "prettier": "^3.6.2",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  },
+  "files": [
+    "dist",
+    "lib",
+    "LICENSE",
+    "NOTICE.md",
+    "README.md",
+    "THIRD_PARTY"
+  ]
+}
