@@ -33,6 +33,10 @@ public class ContentFilterProcessor {
             filterOutOfPageContents(pageNumber, pageContents);
         }
         pageContents = DocumentProcessor.removeNullObjectsFromList(pageContents);
+        if (config.getFilterConfig().isFilterTinyText()) {
+            TextProcessor.filterTinyText(pageContents);
+        }
+        pageContents = DocumentProcessor.removeNullObjectsFromList(pageContents);
         return pageContents;
     }
 
@@ -69,7 +73,7 @@ public class ContentFilterProcessor {
         }
         for (int index = 0; index < contents.size(); index++) {
             IObject object = contents.get(index);
-            if (pageBoundingBox.notOverlaps(object.getBoundingBox())) {
+            if (object != null && pageBoundingBox.notOverlaps(object.getBoundingBox())) {
                 contents.set(index, null);
             }
         }
