@@ -224,8 +224,8 @@ Check for the latest version on [Maven Central](https://search.maven.org/artifac
 To integrate Layout recognition API into Java code, one can follow the sample code below.
 
 ```java
-import com.hancom.opendataloader.pdf.api.Config;
-import com.hancom.opendataloader.pdf.api.OpenDataLoaderPDF;
+import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.api.OpenDataLoaderPDF;
 
 import java.io.IOException;
 

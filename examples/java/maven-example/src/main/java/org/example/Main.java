@@ -1,7 +1,7 @@
 package org.example;
 
-import com.hancom.opendataloader.pdf.api.Config;
-import com.hancom.opendataloader.pdf.api.OpenDataLoaderPDF;
+import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.api.OpenDataLoaderPDF;
 
 import java.io.File;
 import java.io.IOException;
