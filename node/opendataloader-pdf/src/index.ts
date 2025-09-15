@@ -16,7 +16,7 @@ export interface RunOptions {
   generateHtml?: boolean;
   generateAnnotatedPdf?: boolean;
   keepLineBreaks?: boolean;
-  findHiddenText?: boolean;
+  contentSafetyOff?: string;
   htmlInMarkdown?: boolean;
   addImageToMarkdown?: boolean;
   debug?: boolean;
@@ -50,8 +50,8 @@ export function run(inputPath: string, options: RunOptions = {}): Promise<string
     if (options.keepLineBreaks) {
       args.push('--keep-line-breaks');
     }
-    if (options.findHiddenText) {
-      args.push('--findhiddentext');
+    if (options.contentSafetyOff) {
+      args.push('--content-safety-off', options.contentSafetyOff);
     }
     if (options.htmlInMarkdown) {
       args.push('--markdown-with-html');
