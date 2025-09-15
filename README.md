@@ -71,8 +71,8 @@ pip install -U opendataloader-pdf
 import opendataloader_pdf
 
 opendataloader_pdf.run(
-    input_path="path-to-document.pdf",
-    output_folder="path-to-output",
+    input_path="path/to/document.pdf",
+    output_folder="path/to/output",
     generate_markdown=True,
     generate_html=True,
     generate_annotated_pdf=True,
@@ -124,8 +124,8 @@ import { run } from '@opendataloader/pdf';
 
 async function main() {
   try {
-    const output = await run('path-to-document.pdf', {
-      outputFolder: 'path-to-output',
+    const output = await run('path/to/document.pdf', {
+      outputFolder: 'path/to/output',
       generateMarkdown: true,
       generateHtml: true,
       generateAnnotatedPdf: true,
@@ -189,7 +189,7 @@ Check for the latest version on [Maven Central](https://search.maven.org/artifac
         <dependency>
             <groupId>org.opendataloader</groupId>
             <artifactId>opendataloader-pdf-core</artifactId>
-            <version>0.0.15</version>
+            <version>0.0.16</version>
         </dependency>
     </dependencies>
 
@@ -273,10 +273,10 @@ docker run --rm -v "$PWD":/work ghcr.io/opendataloader-project/opendataloader-pd
 
 ### Build
 
-Build and package using Maven command:
+Build and install using Maven command:
 
 ```sh
-mvn clean package -f java/pom.xml
+mvn clean install -f java/pom.xml
 ```
 
 If the build is successful, the resulting `jar` file will be created in the path below.
