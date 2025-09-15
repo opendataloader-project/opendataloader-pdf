@@ -80,6 +80,36 @@ jobs:
         with:
           packages-dir: ./python/opendataloader-pdf/dist
 
+      - name: Set up Node.js and pnpm
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install Node.js dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: ./node/opendataloader-pdf
+
+      - name: Update version in package.json for Node package
+        run: pnpm version ${{ env.VERSION }} --no-git-tag-version --allow-same-version
+        working-directory: ./node/opendataloader-pdf
+
+      - name: Build Node package
+        run: pnpm run build
+        working-directory: ./node/opendataloader-pdf
+
+      - name: Publish Node package to npm
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        run: pnpm publish --no-git-checks
+        working-directory: ./node/opendataloader-pdf
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Log in to GitHub Container Registry
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         uses: docker/login-action@v3
