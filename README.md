@@ -6,6 +6,7 @@
 ![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.opendataloader-project/opendataloader-pdf-core.svg)](https://search.maven.org/artifact/io.github.opendataloader-project/opendataloader-pdf-core)
 [![PyPI version](https://img.shields.io/pypi/v/opendataloader-pdf.svg)](https://pypi.org/project/opendataloader-pdf/)
+[![npm version](https://img.shields.io/npm/v/@opendataloader/pdf.svg)](https://www.npmjs.com/package/@opendataloader/pdf)
 [![GHCR Version](https://ghcr-badge.egpl.dev/opendataloader-project/opendataloader-pdf-cli/latest_tag?trim=major&label=docker-image)](https://github.com/opendataloader-project/opendataloader-pdf/pkgs/container/opendataloader-pdf-cli)
 [![Coverage](https://codecov.io/gh/opendataloader-project/opendataloader-pdf/branch/main/graph/badge.svg)](https://app.codecov.io/gh/opendataloader-project/opendataloader-pdf)
 [![CLA assistant](https://cla-assistant.io/readme/badge/opendataloader-project/opendataloader-pdf)](https://cla-assistant.io/opendataloader-project/opendataloader-pdf)
@@ -70,8 +71,8 @@ pip install -U opendataloader-pdf
 import opendataloader_pdf
 
 opendataloader_pdf.run(
-    input_path="path/to/document.pdf",
-    output_folder="path/to/output",
+    input_path="path-to-document.pdf",
+    output_folder="path-to-output",
     generate_markdown=True,
     generate_html=True,
     generate_annotated_pdf=True,
@@ -87,7 +88,7 @@ The main function to process PDFs.
 | `input_path`            | `str`  | ✅ Yes    | —            | Path to the input PDF file or folder.                                       |
 | `output_folder`         | `str`  | No       | input folder | Path to the output folder.                                                  |
 | `password`              | `str`  | No       | `None`       | Password for the PDF file.                                                  |
-| `replace_invalid_chars` | `str`  | No       | `None`       | Character to replace invalid or unrecognized characters (e.g., �, \u0000)   |
+| `replace_invalid_chars` | `str`  | No       | `" "`       | Character to replace invalid or unrecognized characters (e.g., �, \u0000)   |
 | `generate_markdown`     | `bool` | No       | `False`      | If `True`, generates a Markdown output file.                                |
 | `generate_html`         | `bool` | No       | `False`      | If `True`, generates an HTML output file.                                   |
 | `generate_annotated_pdf`| `bool` | No       | `False`      | If `True`, generates an annotated PDF output file.                          |
@@ -99,7 +100,80 @@ The main function to process PDFs.
 
 <br/>
 
+## Node.js / NPM
+
+**Note:** This package is a wrapper around a Java CLI and is intended for use in a Node.js backend environment. It cannot be used in a browser-based frontend.
+
+### Prerequisites
+
+- Java 11 or higher must be installed and available in your system's PATH.
+
+### Installation
+
+```sh
+npm install @opendataloader/pdf
+```
+
+### Usage
+
+- `inputPath` can be either the path to a single document or the path to a folder.
+- If you don’t specify an `outputFolder`, the output data will be saved in the same directory as the input document.
+
+```typescript
+import { run } from '@opendataloader/pdf';
+
+async function main() {
+  try {
+    const output = await run('path-to-document.pdf', {
+      outputFolder: 'path-to-output',
+      generateMarkdown: true,
+      generateHtml: true,
+      generateAnnotatedPdf: true,
+      debug: true,
+    });
+    console.log('PDF processing complete.', output);
+  } catch (error) {
+    console.error('Error processing PDF:', error);
+  }
+}
+
+main();
+```
+
+### Function: run()
+
+`run(inputPath: string, options?: RunOptions): Promise<string>`
+
+The main function to process PDFs.
+
+**Parameters**
+
+| Parameter   | Type     | Required | Description                           |
+| ----------- | -------- | -------- | ------------------------------------- |
+| `inputPath` | `string` | ✅ Yes    | Path to the input PDF file or folder. |
+| `options`   | `RunOptions` | No       | Configuration options for the run.    |
+
+**RunOptions**
+
+| Property                | Type      | Default       | Description                                                                 |
+| ----------------------- | --------- | ------------- | --------------------------------------------------------------------------- |
+| `outputFolder`          | `string`  | `undefined`   | Path to the output folder. If not set, output is saved next to the input.   |
+| `password`              | `string`  | `undefined`   | Password for the PDF file.                                                  |
+| `replaceInvalidChars`   | `string`  | `" "`         | Character to replace invalid or unrecognized characters (e.g., , \u0000).  |
+| `generateMarkdown`      | `boolean` | `false`       | If `true`, generates a Markdown output file.                                |
+| `generateHtml`          | `boolean` | `false`       | If `true`, generates an HTML output file.                                   |
+| `generateAnnotatedPdf`  | `boolean` | `false`       | If `true`, generates an annotated PDF output file.                          |
+| `keepLineBreaks`        | `boolean` | `false`       | If `true`, keeps line breaks in the output.                                 |
+| `findHiddenText`        | `boolean` | `false`       | If `true`, finds hidden text in the PDF.                                    |
+| `htmlInMarkdown`        | `boolean` | `false`       | If `true`, uses HTML in the Markdown output.                                |
+| `addImageToMarkdown`    | `boolean` | `false`       | If `true`, adds images to the Markdown output.                              |
+| `debug`                 | `boolean` | `false`       | If `true`, prints CLI messages to the console during execution.             |
+
+<br/>
+
 ## Java
+
+For various example templates, including Gradle and Maven, please refer to https://github.com/opendataloader-project/opendataloader-pdf/tree/main/examples/java.
 
 ### Dependency
 
@@ -108,11 +182,16 @@ To include OpenDataLoader PDF in your Maven project, add the dependency below to
 Check for the latest version on [Maven Central](https://search.maven.org/artifact/io.github.opendataloader-project/opendataloader-pdf-core).
 
 ```xml
-    <dependency>
-        <groupId>io.github.opendataloader-project</groupId>
-        <artifactId>opendataloader-pdf-core</artifactId>
-        <version>0.0.12</version>
-    </dependency>
+<project>
+    <!-- other configurations... -->
+
+    <dependencies>
+        <dependency>
+            <groupId>io.github.opendataloader-project</groupId>
+            <artifactId>opendataloader-pdf-core</artifactId>
+            <version>0.0.12</version>
+        </dependency>
+    </dependencies>
 
     <repositories>
         <repository>
@@ -134,6 +213,9 @@ Check for the latest version on [Maven Central](https://search.maven.org/artifac
             <url>https://artifactory.openpreservation.org/artifactory/vera-dev</url>
         </pluginRepository>
     </pluginRepositories>
+
+    <!-- other configurations... -->
+</project>
 ```
 
 
