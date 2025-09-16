@@ -71,6 +71,12 @@
             <groupId>org.verapdf</groupId>
             <artifactId>wcag-validation</artifactId>
             <version>${verapdf.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -107,6 +113,7 @@
                 <version>1.6.0</version>
                 <configuration>
                     <updatePomFile>true</updatePomFile>
+                    <flattenMode>oss</flattenMode>
                     <pomElements>
                         <name />
                         <description />
