@@ -189,7 +189,7 @@ Check for the latest version on [Maven Central](https://search.maven.org/artifac
         <dependency>
             <groupId>org.opendataloader</groupId>
             <artifactId>opendataloader-pdf-core</artifactId>
-            <version>0.0.16</version>
+            <version>1.0.0</version>
         </dependency>
     </dependencies>
 

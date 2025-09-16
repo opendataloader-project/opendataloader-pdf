@@ -1,10 +1,11 @@
-package org.example
+package org.example.gradlekt
 
 import org.opendataloader.pdf.api.Config
 import org.opendataloader.pdf.api.OpenDataLoaderPDF
 import java.io.File
 import java.io.IOException
 import java.nio.file.Paths
+import kotlin.system.exitProcess
 
 fun main() {
     // This example shows how to process a PDF file using the opendataloader-pdf-core library.
@@ -34,9 +35,9 @@ fun main() {
         // Set the output folder to the 'build' directory.
         config.outputFolder = outputDir.absolutePath
         // Set to generate JSON, Markdown, and annotated PDF results.
-        config.setGenerateJSON(true)
-        config.setGenerateMarkdown(true)
-        config.setGeneratePDF(true)
+        config.isGenerateJSON = true
+        config.isGenerateMarkdown = true
+        config.isGeneratePDF = true
 
         // Process the PDF file using OpenDataLoaderPDF.
         OpenDataLoaderPDF.processFile(pdfFile.absolutePath, config)
@@ -46,6 +47,6 @@ fun main() {
 
     } catch (e: IOException) {
         e.printStackTrace()
-        System.exit(1)
+        exitProcess(1)
     }
 }
