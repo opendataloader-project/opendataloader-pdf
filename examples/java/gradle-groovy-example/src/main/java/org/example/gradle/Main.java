@@ -1,4 +1,4 @@
-package org.example;
+package org.example.gradle;
 
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.api.OpenDataLoaderPDF;
@@ -14,7 +14,7 @@ public class Main {
         // The PDF file path can be changed as needed.
 
         // Set the relative path to the input PDF file based on the project's root directory.
-        // Since this class is run from the 'examples/java/maven-example' directory, we need to move up to the parent directory.
+        // Since this class is run from the 'examples/java/gradle-groovy-example' directory, we need to move up to the parent directory.
         String pdfFilePath = Paths.get("..", "..", "..", "samples", "pdf", "2408.02509v1.pdf").toString();
         File pdfFile = new File(pdfFilePath);
 
@@ -23,8 +23,8 @@ public class Main {
             System.exit(1);
         }
 
-        // Set the output directory to the 'target' folder.
-        File outputDir = new File("target");
+        // Set the output directory to the 'build' folder for Gradle.
+        File outputDir = new File("build");
         if (!outputDir.exists()) {
             outputDir.mkdirs();
         }
@@ -34,7 +34,7 @@ public class Main {
 
             // Configure the library settings.
             Config config = new Config();
-            // Set the output folder to the 'target' directory.
+            // Set the output folder to the 'build' directory.
             config.setOutputFolder(outputDir.getAbsolutePath());
             // Set to generate JSON, Markdown, and annotated PDF results.
             config.setGenerateJSON(true);
