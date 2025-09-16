@@ -148,7 +148,6 @@ jobs:
         with:
             tag_name: ${{ github.ref_name }}
             name: Release ${{ github.ref_name }}
-            prerelease: true
             generate_release_notes: true
             files: |
               java/opendataloader-pdf-cli/target/opendataloader-pdf-cli-${{ env.VERSION }}.zip
