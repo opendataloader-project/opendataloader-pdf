@@ -4,7 +4,7 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.example</groupId>
+    <groupId>org.example.maven</groupId>
     <artifactId>maven-example</artifactId>
     <version>1.0-SNAPSHOT</version>
 
@@ -18,7 +18,7 @@
         <dependency>
             <groupId>org.opendataloader</groupId>
             <artifactId>opendataloader-pdf-core</artifactId>
-            <version>0.0.16</version>
+            <version>1.0.0</version>
         </dependency>
     </dependencies>
 
@@ -29,7 +29,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
                 <configuration>
-                    <mainClass>org.example.Main</mainClass>
+                    <mainClass>org.example.maven.Main</mainClass>
                 </configuration>
             </plugin>
         </plugins>

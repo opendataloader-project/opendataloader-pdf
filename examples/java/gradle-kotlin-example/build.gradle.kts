@@ -6,10 +6,10 @@ plugins {
 }
 
 application {
-    mainClass.set("org.example.MainKt")
+    mainClass.set("org.example.gradlekt.MainKt")
 }
 
-group = "org.example"
+group = "org.example.gradlekt"
 version = "1.0-SNAPSHOT"
 
 repositories {
@@ -18,9 +18,7 @@ repositories {
 }
 
 dependencies {
-    implementation("org.opendataloader:opendataloader-pdf-core:0.0.16") {
-        exclude(group = "org.jacoco", module = "jacoco-maven-plugin")
-    }
+    implementation("org.opendataloader:opendataloader-pdf-core:1.0.0")
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 }
