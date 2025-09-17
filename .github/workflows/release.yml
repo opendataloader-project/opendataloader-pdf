@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -15,10 +15,21 @@ jobs:
       id-token: write
 
     steps:
+      # =================================================================
+      # 1. SETUP
+      # =================================================================
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up JDK 11
+      - name: Initialize VERSION
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
+          else
+            echo "VERSION=0.0.0" >> $GITHUB_ENV
+          fi
+
+      - name: Set up Java
         uses: actions/setup-java@v4
         with:
           java-version: '11'
@@ -30,64 +41,10 @@ jobs:
           gpg-private-key: ${{ secrets.MAVEN_GPG_KEY }}
           gpg-passphrase: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
 
-      - name: Initialize VERSION
-        run: |
-            if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
-              echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
-            else
-              echo "VERSION=0.0.0" >> $GITHUB_ENV
-            fi
-
-      - name: Update Maven version
-        run: mvn versions:set -DnewVersion=${{ env.VERSION }} -DgenerateBackupPoms=false
-        working-directory: ./java
-
-      - name: Build All Modules
-        run: mvn -B clean package -P release
-        working-directory: ./java
-
-      - name: Deploy to Maven Central
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-        run: mvn -B -pl opendataloader-pdf-core deploy -P release
-        working-directory: ./java
-        env:
-          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
-          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
-          MAVEN_GPG_KEY: ${{ secrets.MAVEN_GPG_KEY }}
-          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-
-      - name: Install Python build dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install build twine setuptools wheel
-
-      - name: Update version in setup.py for Python package
-        run: |
-          sed -i "s/version=\"0.0.0\"/version=\"${{ env.VERSION }}\"/" setup.py
-        working-directory: ./python/opendataloader-pdf
-
-      - name: Build Python package
-        run: |
-          cp ../../README.md .
-          python -m build --wheel
-        working-directory: ./python/opendataloader-pdf
-
-      - name: Install Python package for testing
-        run: pip install ./python/opendataloader-pdf/dist/opendataloader_pdf-*.whl
-
-      - name: Run Python tests
-        run: python -m unittest discover -s ./python/opendataloader-pdf/test
-
-      - name: Publish Python package to PyPI
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: ./python/opendataloader-pdf/dist
 
       - name: Set up Node.js and pnpm
         uses: actions/setup-node@v4
@@ -100,25 +57,63 @@ jobs:
         with:
           version: 9
 
-      - name: Install Node.js dependencies
-        run: pnpm install --frozen-lockfile
+      # =================================================================
+      # 2. BUILD & TEST
+      # =================================================================
+      - name: '[Java] Build and test'
+        run: |
+          mvn versions:set -DnewVersion=${{ env.VERSION }} -DgenerateBackupPoms=false
+          mvn -B clean package -P release
+        working-directory: ./java
+
+      - name: '[Python] Build and test'
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine setuptools wheel
+          sed -i "s/version=\"0.0.0\"/version=\"${{ env.VERSION }}\"/"; setup.py
+          cp ../../README.md .
+          python -m build --wheel
+          pip install ./dist/opendataloader_pdf-*.whl
+          python -m unittest discover -s ../test
+        working-directory: ./python/opendataloader-pdf
+
+      - name: '[Node.js] Build and test'
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm version ${{ env.VERSION }} --no-git-tag-version --allow-same-version
+          pnpm run build
+          pnpm test
         working-directory: ./node/opendataloader-pdf
 
-      - name: Update version in package.json for Node package
-        run: pnpm version ${{ env.VERSION }} --no-git-tag-version --allow-same-version
-        working-directory: ./node/opendataloader-pdf
+      # =================================================================
+      # 3. DEPLOY (only on tag push)
+      # =================================================================
+      - name: '[Java] Deploy to Maven Central'
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        run: mvn -B -pl opendataloader-pdf-core deploy -P release
+        working-directory: ./java
+        env:
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          MAVEN_GPG_KEY: ${{ secrets.MAVEN_GPG_KEY }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
 
-      - name: Build Node package
-        run: pnpm run build
-        working-directory: ./node/opendataloader-pdf
+      - name: '[Python] Publish to PyPI'
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: ./python/opendataloader-pdf/dist
 
-      - name: Publish Node package to npm
+      - name: '[Node.js] Publish to npm'
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         run: pnpm publish --no-git-checks
         working-directory: ./node/opendataloader-pdf
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      # =================================================================
+      # 4. GITHUB & DOCKER RELEASE (only on tag push)
+      # =================================================================
       - name: Log in to GitHub Container Registry
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         uses: docker/login-action@v3
@@ -139,14 +134,15 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/opendataloader-pdf-cli:latest
 
       - name: Package CLI as ZIP
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         run: |
-            cd java/opendataloader-pdf-cli/target
-            mkdir -p release
-            cp "opendataloader-pdf-cli-${{ env.VERSION }}.jar" release/
-            cp ../README.md release/
-            cd release
-            zip "../opendataloader-pdf-cli-${{ env.VERSION }}.zip" *
-            cd ../..
+          cd java/opendataloader-pdf-cli/target
+          mkdir -p release
+          cp "opendataloader-pdf-cli-${{ env.VERSION }}.jar" release/
+          cp ../README.md release/
+          cd release
+          zip "../opendataloader-pdf-cli-${{ env.VERSION }}.zip" *
+          cd ../..
 
       - name: Create GitHub Release
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
@@ -158,4 +154,4 @@ jobs:
             files: |
               java/opendataloader-pdf-cli/target/opendataloader-pdf-cli-${{ env.VERSION }}.zip
         env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
