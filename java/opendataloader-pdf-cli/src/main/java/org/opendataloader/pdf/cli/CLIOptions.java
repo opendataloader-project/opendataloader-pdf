@@ -24,6 +24,7 @@ public class CLIOptions {
     private static final String CONTENT_SAFETY_OFF_HIDDEN_TEXT_ARGUMENT = "hidden-text";
     private static final String CONTENT_SAFETY_OFF_OFF_PAGE_ARGUMENT = "off-page";
     private static final String CONTENT_SAFETY_OFF_TINY_TEXT_ARGUMENT = "tiny";
+    private static final String CONTENT_SAFETY_OFF_HIDDEN_OCG_ARGUMENT = "hidden-ocg";
 
     public static final String PASSWORD_OPTION = "p";
     private static final String PASSWORD_LONG_OPTION = "password";
@@ -47,7 +48,7 @@ public class CLIOptions {
 
     public static Options defineOptions() {
         Options options = new Options();
-        Option contentSafetyOff = new Option(null, CONTENT_SAFETY_OFF_LONG_OPTION, true, "Disables one or more content safety filters. Accepts a comma-separated list of filter names. Arguments: all, hidden-text, off-page, tiny");
+        Option contentSafetyOff = new Option(null, CONTENT_SAFETY_OFF_LONG_OPTION, true, "Disables one or more content safety filters. Accepts a comma-separated list of filter names. Arguments: all, hidden-text, off-page, tiny, hidden-ocg");
         contentSafetyOff.setRequired(false);
         options.addOption(contentSafetyOff);
         Option password = new Option(PASSWORD_OPTION, PASSWORD_LONG_OPTION, true, "Specifies the password for an encrypted PDF");
@@ -96,6 +97,7 @@ public class CLIOptions {
                     config.getFilterConfig().setFilterHiddenText(false);
                     config.getFilterConfig().setFilterOutOfPage(false);
                     config.getFilterConfig().setFilterTinyText(false);
+                    config.getFilterConfig().setFilterHiddenOCG(false);
                 } else {
                     if (arguments.contains(CONTENT_SAFETY_OFF_HIDDEN_TEXT_ARGUMENT)) {
                         config.getFilterConfig().setFilterHiddenText(false);
@@ -105,6 +107,9 @@ public class CLIOptions {
                     }
                     if (arguments.contains(CONTENT_SAFETY_OFF_TINY_TEXT_ARGUMENT)) {
                         config.getFilterConfig().setFilterTinyText(false);
+                    }
+                    if (arguments.contains(CONTENT_SAFETY_OFF_HIDDEN_OCG_ARGUMENT)) {
+                        config.getFilterConfig().setFilterHiddenOCG(false);
                     }
                 }
             }

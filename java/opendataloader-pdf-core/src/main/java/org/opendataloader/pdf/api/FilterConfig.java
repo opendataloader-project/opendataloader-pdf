@@ -4,6 +4,7 @@ public class FilterConfig {
     private boolean filterHiddenText = true;
     private boolean filterOutOfPage = true;
     private boolean filterTinyText = true;
+    private boolean filterHiddenOCG = true;
 
     /**
      * Constructor initializing the configuration of filter.
@@ -62,5 +63,23 @@ public class FilterConfig {
      */
     public void setFilterTinyText(boolean filterTinyText) {
         this.filterTinyText = filterTinyText;
+    }
+
+    /**
+     * Checks if the processor should filter out hidden OCGs.
+     *
+     * @return true if filter is enabled, false otherwise.
+     */
+    public boolean isFilterHiddenOCG() {
+        return filterHiddenOCG;
+    }
+
+    /**
+     * Enables or disables filter of hidden OCGs.
+     *
+     * @param filterHiddenOCG true to enable filter, false to disable.
+     */
+    public void setFilterHiddenOCG(boolean filterHiddenOCG) {
+        this.filterHiddenOCG = filterHiddenOCG;
     }
 }

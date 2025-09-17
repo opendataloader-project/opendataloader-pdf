@@ -6,25 +6,31 @@
 java -jar ... [options] <INPUT FILE OR FOLDER>
 ```
 
-This generates a JSON file with layout recognition results in the specified output folder. Additionally, annotated PDF with recognized structures and Markdown file are generated if options `--pdf` and `--markdown` are specified.
+This generates a JSON file with layout recognition results in the specified output folder.
+Additionally, annotated PDF with recognized structures, Markdown and Html are generated if options `--pdf`, `--markdown` and `--html` are specified.
 
 By default all line breaks and hyphenation characters are removed, the Markdown does not include any images and does not use any HTML.
 
-The option `--keeplinebreaks` to preserve the original line breaks text content in JSON and Markdown output.
-
-The option `--html` enables use of HTML in Markdown, which may improve Markdown preview in processors that support HTML tags. The option `--addimagetomarkdown` enables inclusion of image references into the output Markdown. The images are extracted from PDF as individual files and stored in a subfolder next to the Markdown output. 
+The option `--keep-line-breaks` to preserve the original line breaks text content in JSON and Markdown output.
+The option `--content-safety-off` disables one or more content safety filters. Accepts a comma-separated list of filter names.
+The option `--markdown-with-html` enables use of HTML in Markdown, which may improve Markdown preview in processors that support HTML tags.
+The option `--markdown-with-images` enables inclusion of image references into the output Markdown.
+The option `--replace-invalid-chars` replaces invalid or unrecognized characters (e.g., �, \u0000) with the specified character.
+The images are extracted from PDF as individual files and stored in a subfolder next to the Markdown output.
 
 The complete set of options:
 ```
 Options:
--f,--folder <arg>          Specify output folder (default the folder of the input PDF)
--klb,--keeplinebreaks      Keep line breaks
--ht,--findhiddentext       Find hidden text
--html,--htmlinmarkdown     Use html in markdown
--im,--addimagetomarkdown   Add images to markdown
--markdown,--markdown       Generates markdown output
--p,--password <arg>        Specifies password
--pdf,--pdf                 Generates pdf output
+-o,--output-dir <arg>           Specifies the output directory for generated files
+--keep-line-breaks              Preserves original line breaks in the extracted text
+--content-safety-off <arg>      Disables one or more content safety filters. Accepts a comma-separated list of filter names. Arguments: all, hidden-text, off-page, tiny, hidden-ocg
+--markdown-with-html            Sets the data extraction output format to Markdown with rendering complex elements like tables as HTML for better structure
+--markdown-with-images          Sets the data extraction output format to Markdown with extracting images from the PDF and includes them as links
+--markdown                      Sets the data extraction output format to Markdown
+--html                          Sets the data extraction output format to HTML
+-p,--password <arg>             Specifies the password for an encrypted PDF
+--pdf                           Generates a new PDF file where the extracted layout data is visualized as annotations
+--replace-invalid-chars <arg>   Replaces invalid or unrecognized characters (e.g., �, \u0000) with the specified character
 ```
 
 ---
