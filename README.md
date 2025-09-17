@@ -3,7 +3,7 @@
 
 [![License](https://img.shields.io/pypi/l/opendataloader-pdf.svg)](https://github.com/opendataloader-project/opendataloader-pdf/blob/main/LICENSE)
 ![Java](https://img.shields.io/badge/Java-11+-blue.svg)
-![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
+![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)
 [![Maven Central](https://img.shields.io/maven-central/v/org.opendataloader/opendataloader-pdf-core.svg)](https://search.maven.org/artifact/org.opendataloader/opendataloader-pdf-core)
 [![PyPI version](https://img.shields.io/pypi/v/opendataloader-pdf.svg)](https://pypi.org/project/opendataloader-pdf/)
 [![npm version](https://img.shields.io/npm/v/@opendataloader/pdf.svg)](https://www.npmjs.com/package/@opendataloader/pdf)
@@ -50,7 +50,7 @@ AI-safety is enabled by default and automatically filters likely prompt-injectio
 ## Prerequisites
 
 - Java 11 or higher must be installed and available in your system's PATH.
-- Python 3.8+
+- Python 3.9+
 
 <br/>
 

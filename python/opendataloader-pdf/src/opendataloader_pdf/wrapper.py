@@ -1,6 +1,6 @@
 import subprocess
 import sys
-import importlib_resources
+import importlib.resources as importlib_resources
 import locale
 from pathlib import Path
 from typing import List
