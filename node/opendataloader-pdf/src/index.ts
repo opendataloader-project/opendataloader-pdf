@@ -8,6 +8,15 @@ const __dirname = path.dirname(__filename);
 
 const JAR_NAME = 'opendataloader-pdf-cli.jar';
 
+function getRedactedCommandString(command: string, commandArgs: string[]): string {
+  const commandArgsForLogging = [...commandArgs];
+  const passwordIndex = commandArgsForLogging.indexOf('--password');
+  if (passwordIndex > -1 && passwordIndex + 1 < commandArgsForLogging.length) {
+    commandArgsForLogging[passwordIndex + 1] = '[REDACTED]';
+  }
+  return `${command} ${commandArgsForLogging.join(' ')}`;
+}
+
 export interface RunOptions {
   outputFolder?: string;
   password?: string;
@@ -74,7 +83,7 @@ export function run(inputPath: string, options: RunOptions = {}): Promise<string
     const commandArgs = ['-jar', jarPath, ...args];
 
     if (options.debug) {
-      console.error(`Running command: ${command} ${commandArgs.join(' ')}`);
+      console.error(`Running command: ${getRedactedCommandString(command, commandArgs)}`);
     }
 
     const javaProcess = spawn(command, commandArgs);

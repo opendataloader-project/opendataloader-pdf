@@ -3,9 +3,22 @@ import sys
 import importlib_resources
 import locale
 from pathlib import Path
+from typing import List
 
 # The consistent name of the JAR file bundled with the package
 _JAR_NAME = "opendataloader-pdf-cli.jar"
+
+
+def _get_redacted_command_string(command: List[str]) -> str:
+    """Redacts the password from a command list for safe logging."""
+    command_for_logging = list(command)
+    try:
+        password_index = command_for_logging.index("--password")
+        if password_index + 1 < len(command_for_logging):
+            command_for_logging[password_index + 1] = "[REDACTED]"
+    except ValueError:
+        pass  # '--password' not in command
+    return " ".join(command_for_logging)
 
 
 def run(
@@ -29,12 +42,11 @@ def run(
         input_path: Path to the input PDF file or folder.
         output_folder: Path to the output folder. Defaults to the input folder.
         password: Password for the PDF file.
-        replace_invalid_chars: Character to replace invalid or unrecognized characters (e.g., �, \u0000) with.
+        replace_invalid_chars: Character to replace invalid or unrecognized characters (e.g., , \u0000) with.
         generate_markdown: If True, generates a Markdown output file.
         generate_html: If True, generates an HTML output file.
         generate_annotated_pdf: If True, generates an annotated PDF output file.
         keep_line_breaks: If True, keeps line breaks in the output.
-        find_hidden_text: If True, finds hidden text in the PDF.
         html_in_markdown: If True, uses HTML in the Markdown output.
         add_image_to_markdown: If True, adds images to the Markdown output.
         debug: If True, prints all messages from the CLI to the console during execution.
@@ -82,7 +94,7 @@ def run(
             command = ["java", "-jar", str(jar_path)] + args
 
             if debug:
-                print(f"Running command: {' '.join(command)}", file=sys.stderr)
+                print(f"Running command: {_get_redacted_command_string(command)}", file=sys.stderr)
                 process = subprocess.Popen(
                     command,
                     stdout=subprocess.PIPE,
