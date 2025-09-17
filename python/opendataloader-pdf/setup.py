@@ -67,7 +67,7 @@ setup(
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent",
     ],
-    python_requires=">=3.7",
+    python_requires=">=3.9, <4.0",
     package_dir={"": "src"},
     packages=find_packages(where="src"),
     package_data={
@@ -79,7 +79,4 @@ setup(
         ],
     },
     cmdclass={"build_py": CustomBuildPy},
-    install_requires=[
-        'importlib_resources; python_version < "3.9"',
-    ],
 )
