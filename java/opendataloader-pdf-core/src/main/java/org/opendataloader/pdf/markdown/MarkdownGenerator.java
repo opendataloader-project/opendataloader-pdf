@@ -92,7 +92,7 @@ public class MarkdownGenerator implements Closeable {
         }
 
         if (!isInsideTable()) {
-            markdownWriter.write(MarkdownSyntax.LINE_BREAK);
+            markdownWriter.write(MarkdownSyntax.DOUBLE_LINE_BREAK);
         }
     }
 
@@ -134,6 +134,7 @@ public class MarkdownGenerator implements Closeable {
         for (ListItem item : list.getListItems()) {
             markdownWriter.write(getCorrectMarkdownString(item.toString()));
             for (IObject object : item.getContents()) {
+                markdownWriter.write(MarkdownSyntax.LINE_BREAK);
                 write(object);
             }
 
