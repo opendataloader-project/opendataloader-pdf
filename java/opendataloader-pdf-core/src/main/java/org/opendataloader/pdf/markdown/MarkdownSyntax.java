@@ -10,8 +10,10 @@ package org.opendataloader.pdf.markdown;
 public class MarkdownSyntax {
     public static final String TABLE_COLUMN_SEPARATOR = "|";
     public static final String TABLE_HEADER_SEPARATOR = "---";
+    public static final String DOUBLE_LINE_BREAK = "\n\n";
     public static final String LINE_BREAK = "\n";
     public static final String SPACE = " ";
+    public static final String INDENT = "  ";
     public static final String HEADING_LEVEL = "#";
     public static final String IMAGE_FILE_NAME_FORMAT = "%s%simageFile%d.png";
     public static final String IMAGE_FORMAT = "![%s](%s)";
