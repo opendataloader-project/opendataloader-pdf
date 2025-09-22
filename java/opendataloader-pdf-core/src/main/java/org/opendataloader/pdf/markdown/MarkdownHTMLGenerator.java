@@ -36,17 +36,19 @@ public class MarkdownHTMLGenerator extends MarkdownGenerator {
             for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
                 TableBorderCell cell = row.getCell(colNumber);
                 if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
-                    markdownWriter.write(MarkdownSyntax.INDENT);
-                    markdownWriter.write(MarkdownSyntax.INDENT);
-                    writeCellTag(cell);
+                    boolean isHeader = rowNumber == 0;
+                    writeCellTag(cell, isHeader);
                     List<IObject> contents = cell.getContents();
                     if (!contents.isEmpty()) {
                         for (IObject contentItem : contents) {
                             this.write(contentItem);
                         }
                     }
-
-                    markdownWriter.write(MarkdownSyntax.HTML_TABLE_CELL_CLOSE_TAG);
+                    if (isHeader) {
+                        markdownWriter.write(MarkdownSyntax.HTML_TABLE_HEADER_CLOSE_TAG);
+                    } else {
+                        markdownWriter.write(MarkdownSyntax.HTML_TABLE_CELL_CLOSE_TAG);
+                    }
                     markdownWriter.write(MarkdownSyntax.LINE_BREAK);
                 }
             }
@@ -61,8 +63,11 @@ public class MarkdownHTMLGenerator extends MarkdownGenerator {
         leaveTable();
     }
 
-    private void writeCellTag(TableBorderCell cell) throws IOException {
-        StringBuilder cellTag = new StringBuilder("<td");
+    private void writeCellTag(TableBorderCell cell, boolean isHeader) throws IOException {
+        markdownWriter.write(MarkdownSyntax.INDENT);
+        markdownWriter.write(MarkdownSyntax.INDENT);
+        String tag = isHeader ? "<th" : "<td";
+        StringBuilder cellTag = new StringBuilder(tag);
         int colSpan = cell.getColSpan();
         if (colSpan != 1) {
             cellTag.append(" colspan=\"").append(colSpan).append("\"");
