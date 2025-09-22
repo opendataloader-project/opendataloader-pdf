@@ -7,8 +7,8 @@
  */
 package org.opendataloader.pdf.markdown;
 
-import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
@@ -60,7 +60,11 @@ public class MarkdownGenerator implements Closeable {
         try {
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 for (IObject content : contents.get(pageNumber)) {
+                    if (!isSupportedContent(content)) {
+                        continue;
+                    }
                     this.write(content);
+                    writeContentsSeparator();
                 }
             }
 
@@ -70,13 +74,21 @@ public class MarkdownGenerator implements Closeable {
         }
     }
 
+    protected boolean isSupportedContent(IObject content) {
+        return content instanceof SemanticTextNode || // Heading, Paragraph etc...
+            content instanceof TableBorder ||
+            content instanceof PDFList ||
+            (content instanceof ImageChunk && isImageSupported);
+    }
+
+    protected void writeContentsSeparator() throws IOException {
+        writeLineBreak();
+        writeLineBreak();
+    }
+
     protected void write(IObject object) throws IOException {
         if (object instanceof ImageChunk) {
-            if (isImageSupported) {
-                writeImage((ImageChunk) object);
-            } else {
-                return;
-            }
+            writeImage((ImageChunk) object);
         } else if (object instanceof SemanticHeading) {
             writeHeading((SemanticHeading) object);
         } else if (object instanceof SemanticParagraph) {
@@ -87,12 +99,6 @@ public class MarkdownGenerator implements Closeable {
             writeTable((TableBorder) object);
         } else if (object instanceof PDFList) {
             writeList((PDFList) object);
-        } else {
-            return;
-        }
-
-        if (!isInsideTable()) {
-            markdownWriter.write(MarkdownSyntax.DOUBLE_LINE_BREAK);
         }
     }
 
@@ -126,19 +132,22 @@ public class MarkdownGenerator implements Closeable {
             LOGGER.log(Level.WARNING, "Unable to create image files: " + e.getMessage());
             return false;
         }
-
     }
 
     protected void writeList(PDFList list) throws IOException {
-        markdownWriter.write(MarkdownSyntax.LINE_BREAK);
         for (ListItem item : list.getListItems()) {
-            markdownWriter.write(getCorrectMarkdownString(item.toString()));
-            for (IObject object : item.getContents()) {
-                markdownWriter.write(MarkdownSyntax.LINE_BREAK);
-                write(object);
+            if (!isInsideTable()) {
+                markdownWriter.write(MarkdownSyntax.LIST_ITEM);
+                markdownWriter.write(MarkdownSyntax.SPACE);
             }
+            markdownWriter.write(getCorrectMarkdownString(item.toString()));
+            writeLineBreak();
 
-            markdownWriter.write(MarkdownSyntax.LINE_BREAK);
+            List<IObject> itemContents = item.getContents();
+            if (!itemContents.isEmpty()) {
+                writeLineBreak();
+                writeContents(itemContents);
+            }
         }
     }
 
@@ -148,18 +157,14 @@ public class MarkdownGenerator implements Closeable {
 
     protected void writeTable(TableBorder table) throws IOException {
         enterTable();
-        markdownWriter.write(MarkdownSyntax.LINE_BREAK);
         for (TableBorderRow row : table.getRows()) {
             markdownWriter.write(MarkdownSyntax.TABLE_COLUMN_SEPARATOR);
             for (TableBorderCell cell : row.getCells()) {
-                for (IObject object : cell.getContents()) {
-                    this.write(object);
-                }
-
+                List<IObject> cellContents = cell.getContents();
+                writeContents(cellContents);
                 markdownWriter.write(MarkdownSyntax.TABLE_COLUMN_SEPARATOR);
             }
-
-            markdownWriter.write(MarkdownSyntax.LINE_BREAK);
+            writeLineBreak();
             //Due to markdown syntax we have to separate column headers
             if (row.getRowNumber() == 0) {
                 markdownWriter.write(MarkdownSyntax.TABLE_COLUMN_SEPARATOR);
@@ -167,18 +172,31 @@ public class MarkdownGenerator implements Closeable {
                     markdownWriter.write(MarkdownSyntax.TABLE_HEADER_SEPARATOR);
                     markdownWriter.write(MarkdownSyntax.TABLE_COLUMN_SEPARATOR);
                 }
-
-                markdownWriter.write(MarkdownSyntax.LINE_BREAK);
+                writeLineBreak();
             }
         }
-
         leaveTable();
+    }
+
+    protected void writeContents(List<IObject> contents) throws IOException {
+        for (int i = 0; i < contents.size(); i++) {
+            IObject content = contents.get(i);
+            if (!isSupportedContent(content)) {
+                continue;
+            }
+            this.write(content);
+
+            boolean isLastContent = i == contents.size() - 1;
+            if (!isLastContent) {
+                writeContentsSeparator();
+            }
+        }
     }
 
     protected void writeParagraph(SemanticParagraph textNode) throws IOException {
         String value = textNode.getValue();
         if (isInsideTable() && StaticContainers.isKeepLineBreaks()) {
-            value = value.replace(MarkdownSyntax.LINE_BREAK, MarkdownSyntax.SPACE);
+            value = value.replace(MarkdownSyntax.LINE_BREAK, getLineBreak());
         }
 
         markdownWriter.write(getCorrectMarkdownString(value));
@@ -208,13 +226,24 @@ public class MarkdownGenerator implements Closeable {
         return tableNesting > 0;
     }
 
+    protected String getLineBreak() {
+        if (isInsideTable()) {
+            return MarkdownSyntax.HTML_LINE_BREAK_TAG;
+        } else {
+            return MarkdownSyntax.LINE_BREAK;
+        }
+    }
+
+    protected void writeLineBreak() throws IOException {
+        markdownWriter.write(getLineBreak());
+    }
+
     protected String getCorrectMarkdownString(String value) {
         if (value != null) {
-            return value.replace("\u0000", "\uFFFD");
+            return value.replace("\u0000", " ");
         }
         return null;
     }
-
 
     @Override
     public void close() throws IOException {

@@ -37,18 +37,12 @@ public class MarkdownHTMLGenerator extends MarkdownGenerator {
                 TableBorderCell cell = row.getCell(colNumber);
                 if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
                     boolean isHeader = rowNumber == 0;
-                    writeCellTag(cell, isHeader);
-                    List<IObject> contents = cell.getContents();
-                    if (!contents.isEmpty()) {
-                        for (IObject contentItem : contents) {
-                            this.write(contentItem);
-                        }
-                    }
-                    if (isHeader) {
-                        markdownWriter.write(MarkdownSyntax.HTML_TABLE_HEADER_CLOSE_TAG);
-                    } else {
-                        markdownWriter.write(MarkdownSyntax.HTML_TABLE_CELL_CLOSE_TAG);
-                    }
+                    writeCellTagBegin(cell, isHeader);
+
+                    List<IObject> cellContents = cell.getContents();
+                    writeContents(cellContents);
+
+                    writeCellTagEnd(isHeader);
                     markdownWriter.write(MarkdownSyntax.LINE_BREAK);
                 }
             }
@@ -63,7 +57,7 @@ public class MarkdownHTMLGenerator extends MarkdownGenerator {
         leaveTable();
     }
 
-    private void writeCellTag(TableBorderCell cell, boolean isHeader) throws IOException {
+    private void writeCellTagBegin(TableBorderCell cell, boolean isHeader) throws IOException {
         markdownWriter.write(MarkdownSyntax.INDENT);
         markdownWriter.write(MarkdownSyntax.INDENT);
         String tag = isHeader ? "<th" : "<td";
@@ -79,5 +73,13 @@ public class MarkdownHTMLGenerator extends MarkdownGenerator {
         }
         cellTag.append(">");
         markdownWriter.write(getCorrectMarkdownString(cellTag.toString()));
+    }
+
+    private void writeCellTagEnd(boolean isHeader) throws IOException {
+        if (isHeader) {
+            markdownWriter.write(MarkdownSyntax.HTML_TABLE_HEADER_CLOSE_TAG);
+        } else {
+            markdownWriter.write(MarkdownSyntax.HTML_TABLE_CELL_CLOSE_TAG);
+        }
     }
 }
