@@ -96,6 +96,7 @@ The main function to process PDFs.
 | `keep_line_breaks`       | `bool` | No       | `False`      | If `True`, keeps line breaks in the output.                                                                                                 |
 | `html_in_markdown`       | `bool` | No       | `False`      | If `True`, uses HTML in the Markdown output.                                                                                                |
 | `add_image_to_markdown`  | `bool` | No       | `False`      | If `True`, adds images to the Markdown output.                                                                                              |
+| `no_json`                | `bool` | No       | `False`      | If `True`, disables the JSON output.                                                                                                        |
 | `debug`                  | `bool` | No       | `False`      | If `True`, prints CLI messages to the console during execution.                                                                             |
 
 <br/>
@@ -167,6 +168,7 @@ The main function to process PDFs.
 | `keepLineBreaks`        | `boolean` | `false`       | If `true`, keeps line breaks in the output.                                                                                                           |
 | `htmlInMarkdown`        | `boolean` | `false`       | If `true`, uses HTML in the Markdown output.                                                                                                          |
 | `addImageToMarkdown`    | `boolean` | `false`       | If `true`, adds images to the Markdown output.                                                                                                        |
+| `noJson`                | `boolean` | `false`       | If `true`, disables the JSON output.                                                                                                                  |
 | `debug`                 | `boolean` | `false`       | If `true`, prints CLI messages to the console during execution.                                                                                       |
 
 <br/>
@@ -314,6 +316,7 @@ Options:
 --markdown-with-images          Sets the data extraction output format to Markdown with extracting images from the PDF and includes them as links
 --markdown                      Sets the data extraction output format to Markdown
 --html                          Sets the data extraction output format to HTML
+--no-json                       Disables the JSON output format
 -p,--password <arg>             Specifies the password for an encrypted PDF
 --pdf                           Generates a new PDF file where the extracted layout data is visualized as annotations
 --replace-invalid-chars <arg>   Replaces invalid or unrecognized characters (e.g., �, \u0000) with the specified character
