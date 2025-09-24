@@ -44,6 +44,8 @@ public class CLIOptions {
 
     private static final String MARKDOWN_IMAGE_LONG_OPTION = "markdown-with-images";
 
+    public static final String NO_JSON_REPORT_LONG_OPTION = "no-json";
+
     private static final String REPLACE_INVALID_CHARS_LONG_OPTION = "replace-invalid-chars";
 
     public static Options defineOptions() {
@@ -72,6 +74,9 @@ public class CLIOptions {
         Option imageSupport = new Option(null, MARKDOWN_IMAGE_LONG_OPTION, false, "Sets the data extraction output format to Markdown with extracting images from the PDF and includes them as links");
         imageSupport.setRequired(false);
         options.addOption(imageSupport);
+        Option noJson = new Option(null, NO_JSON_REPORT_LONG_OPTION, false, "Disables the JSON output format.");
+        noJson.setRequired(false);
+        options.addOption(noJson);
         Option folder = new Option(FOLDER_OPTION, FOLDER_LONG_OPTION, true, "Specifies the output directory for generated files (default the folder of the input PDF)");
         folder.setRequired(false);
         options.addOption(folder);
@@ -131,6 +136,9 @@ public class CLIOptions {
         }
         if (commandLine.hasOption(CLIOptions.MARKDOWN_IMAGE_LONG_OPTION)) {
             config.setAddImageToMarkdown(true);
+        }
+        if (commandLine.hasOption(CLIOptions.NO_JSON_REPORT_LONG_OPTION)) {
+            config.setGenerateJSON(false);
         }
         if (commandLine.hasOption(CLIOptions.REPLACE_INVALID_CHARS_LONG_OPTION)) {
             config.setReplaceInvalidChars(commandLine.getOptionValue(CLIOptions.REPLACE_INVALID_CHARS_LONG_OPTION));

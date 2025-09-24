@@ -28,6 +28,7 @@ export interface RunOptions {
   contentSafetyOff?: string;
   htmlInMarkdown?: boolean;
   addImageToMarkdown?: boolean;
+  noJson?: boolean;
   debug?: boolean;
 }
 
@@ -67,6 +68,9 @@ export function run(inputPath: string, options: RunOptions = {}): Promise<string
     }
     if (options.addImageToMarkdown) {
       args.push('--markdown-with-images');
+    }
+    if (options.noJson) {
+      args.push('--no-json');
     }
 
     args.push(inputPath);

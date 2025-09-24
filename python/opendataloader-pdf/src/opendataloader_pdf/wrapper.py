@@ -33,6 +33,7 @@ def run(
     content_safety_off: str = None,
     html_in_markdown: bool = False,
     add_image_to_markdown: bool = False,
+    no_json: bool = False,
     debug: bool = False,
 ):
     """
@@ -49,6 +50,7 @@ def run(
         keep_line_breaks: If True, keeps line breaks in the output.
         html_in_markdown: If True, uses HTML in the Markdown output.
         add_image_to_markdown: If True, adds images to the Markdown output.
+        no_json: If True, disable the JSON output.
         debug: If True, prints all messages from the CLI to the console during execution.
 
     Returns:
@@ -82,6 +84,8 @@ def run(
         args.append("--markdown-with-html")
     if add_image_to_markdown:
         args.append("--markdown-with-images")
+    if no_json:
+        args.append("--no-json")
 
     args.append(input_path)
 
@@ -94,7 +98,10 @@ def run(
             command = ["java", "-jar", str(jar_path)] + args
 
             if debug:
-                print(f"Running command: {_get_redacted_command_string(command)}", file=sys.stderr)
+                print(
+                    f"Running command: {_get_redacted_command_string(command)}",
+                    file=sys.stderr,
+                )
                 process = subprocess.Popen(
                     command,
                     stdout=subprocess.PIPE,
