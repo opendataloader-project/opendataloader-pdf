@@ -40,11 +40,18 @@ AI-safety is enabled by default and automatically filters likely prompt-injectio
 
 ## 🚀 Upcoming Features
 
-- 🖨️ **OCR for scanned PDFs** — Extract data from image-only pages
-- 🧠 **Table AI option** — Higher accuracy for tables with borderless or merged cells
-- ⚡ **Performance Benchmarks** — Transparent evaluations with open datasets and metrics, reported regularly
-- 🛡️ **AI Red Teaming** — Transparent adversarial benchmarks with datasets and metrics, reported regularly
+**Scheduled for November**
+- 📄 **Tagged PDF** — Develop advanced data extraction technology based on Tagged PDF, in November
+- ⚡ **Performance Improvement** — Enhance the inference skill for greater accuracy and speed. 
+- 📊 **Benchmarks & Datasets** — Publish transparent evaluations using open datasets and standardized metrics. 
+- 🎯 **Metrics** — Publish the calculation methods to transparently share benchmark results.
+- 🛡️ **AI Red Teaming** — Transparent adversarial benchmarks with datasets and metrics, then reported regularly.
+  
+<br/>
 
+**Scheduled for December**
+- 🖨️ **OCR for scanned PDFs** — Extract data from image-only pages. 
+- 🧠 **Table AI option** — Higher accuracy for tables with borderless or merged cells. 
 <br/>
 
 ## Prerequisites
