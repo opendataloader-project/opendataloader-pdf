@@ -6,6 +6,9 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "type": "module",
+  "bin": {
+    "opendataloader-pdf": "./dist/cli.js"
+  },
   "exports": {
     ".": {
       "import": "./dist/index.js",
