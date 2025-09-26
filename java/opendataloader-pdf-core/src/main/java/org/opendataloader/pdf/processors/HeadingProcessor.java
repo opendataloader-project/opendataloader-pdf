@@ -9,6 +9,7 @@ package org.opendataloader.pdf.processors;
 
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.utils.BulletedParagraphUtils;
+import org.opendataloader.pdf.utils.TextNodeStatistics;
 import org.verapdf.wcag.algorithms.entities.INode;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
@@ -20,25 +21,31 @@ import org.verapdf.wcag.algorithms.entities.text.TextStyle;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
 import java.util.*;
+import java.util.logging.Logger;
 
 public class HeadingProcessor {
-
     private static final double HEADING_PROBABILITY = 0.75;
     private static final double BULLETED_HEADING_PROBABILITY = 0.1;
 
     public static void processHeadings(List<IObject> contents) {
+        TextNodeStatistics textNodeStatistics = new TextNodeStatistics();
         List<SemanticTextNode> textNodes = new LinkedList<>();
         for (IObject content : contents) {
-            processContent(textNodes, content);
+            processContent(textNodes, content, textNodeStatistics);
         }
+
         for (int index = 0; index < textNodes.size() - 1; index++) {
             SemanticTextNode textNode = textNodes.get(index);
             if (textNode.getSemanticType() == SemanticType.HEADING) {
                 continue;
             }
             double probability = NodeUtils.headingProbability(textNode,
-                    index != 0 ? textNodes.get(index - 1) : null,
-                    textNodes.get(index + 1), textNodes.get(index));
+                index != 0 ? textNodes.get(index - 1) : null,
+                textNodes.get(index + 1), textNodes.get(index));
+
+            probability += textNodeStatistics.fontSizeRarityBoost(textNode);
+            probability += textNodeStatistics.fontWeightRarityBoost(textNode);
+
             if (BulletedParagraphUtils.isBulletedParagraph(textNode)) {
                 probability += BULLETED_HEADING_PROBABILITY;
             }
@@ -49,18 +56,19 @@ public class HeadingProcessor {
         setHeadings(contents);
     }
 
-    private static void processContent(List<SemanticTextNode> textNodes, IObject content) {
+    private static void processContent(List<SemanticTextNode> textNodes, IObject content, TextNodeStatistics textNodeStatistics) {
         if (content instanceof SemanticTextNode) {
             SemanticTextNode textNode = (SemanticTextNode) content;
             if (!textNode.isSpaceNode()) {
                 textNodes.add(textNode);
+                textNodeStatistics.addTextNode(textNode);
             }
         } else if (content instanceof TableBorder) {
             TableBorder table = (TableBorder) content;
             if (table.isTextBlock()) {
                 List<IObject> contents = table.getCell(0, 0).getContents();
                 for (IObject textBlockContent : contents) {
-                    processContent(textNodes, textBlockContent);
+                    processContent(textNodes, textBlockContent, textNodeStatistics);
                 }
             }
         } else if (content instanceof PDFList) {
