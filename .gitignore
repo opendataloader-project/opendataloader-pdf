@@ -14,6 +14,7 @@ Thumbs.db
 # Java (Maven & Gradle)
 **/target/
 **/build/
+**/bin/
 **/.gradle/
 **/*.jar
 **/*.war
