@@ -9,7 +9,7 @@
 
 <p>Canjie Luo†, Lianwen Jin∗ † ‡, Zenghui Sun† School of Electronic and Information Engineering, South China University of Technology† SCUT-Zhuhai Institute of Modern Industrial Innovation‡ {canjie.luo, lianwen.jin∗ , sunfreding}@gmail.com, eelwjin@scut.edu.cn∗</p>
 
-<p>Abstract</p>
+<h2>Abstract</h2>
 
 <p>Irregular text is widely used. However, it is considerably difﬁcult to recognize because of its various shapes and distorted patterns. In this paper, we thus propose a multi-object rectiﬁed attention network (MORAN) for general scene text recognition. The MORAN consists of a multi-object rectiﬁcation network and an attention-based sequence recognition network. The multi-object rectiﬁcation network is designed for rectifying images that contain irregular text. It decreases the difﬁculty of recognition and enables the attention-based sequence recognition network to more easily read irregular text. It is trained in a weak supervision way, thus requiring only images and corresponding text labels. The attentionbased sequence recognition network focuses on target characters and sequentially outputs the predictions. Moreover, to improve the sensitivity of the attentionbased sequence recognition network, a fractional pickup method is proposed for an attention-based decoder in the training phase. With the rectiﬁcation mechanism, the MORAN can read both regular and irregular scene text. Extensive experiments on various benchmarks are conducted, which show that the MORAN achieves state-of-the-art performance. The source code is available1.</p>
 
@@ -108,7 +108,7 @@
 
 <p>The MORAN contains two parts. One is the MORN, which is trained in a weak supervision way to learn the offset of each part of the image. According to the predicted offsets, we apply sampling and obtain a rectiﬁed text image. The other one is ASRN, a CNN-LSTM framework followed by an attention decoder. The proposed fractional pickup further improves attention sensitivity. The curriculum learning strategy guides the MORAN to achieve stateof-the-art performance.</p>
 
-<p>3.1. Multi-Object Rectiﬁcation Network</p>
+<h3>3.1. Multi-Object Rectiﬁcation Network</h3>
 
 <p>Common methods to rectify patterns such as the afﬁne transformation network, are limited by certain geometric constraints. With respect to the afﬁne</p>
 
@@ -267,7 +267,7 @@
 
 <p>The advantages of the MORN are manifold. 1) The rectiﬁed images are more readable owing to the regular shape of the text and the reduced noise. 2) The MORN is more ﬂexible than the afﬁne transformation. It is free of geometric constraints, which enables it to rectify images using complicated transformations. 3) The MORN is more ﬂexible than methods using a speciﬁc number of regressing points. Existing method [42] cannot capture the text shape in details if the width of the image is large. Thus the MORN has no limit with respect to the image size, especially the width of the input image. 4) The MORN does not require extra labelling information of character positions. Therefore, it can be trained in a weak supervision way by using existing training datasets.</p>
 
-<p>3.2. Attention-based Sequence Recognition Network</p>
+<h3>3.2. Attention-based Sequence Recognition Network</h3>
 
 <p>As Fig. 4 shows, the major structure of the ASRN is a CNN-BLSTM framework. We adopt a one-</p>
 
@@ -285,11 +285,11 @@
 
 <p>dimensional attention mechanism at the top of CRNN. The attention-based decoder, proposed by Bahdanau et al. [2], is used to accurately align the target and label. It is based on an RNN and directly generates the target sequence (y1,y2...,yN). The largest number of steps that the decoder generates is T. The decoder stops processing when it predicts an end-of-sequence token “EOS” [47]. At time step t, output yt is,</p>
 
-<p>yt = Softmax(Woutst + bout) (4)</p>
+<h4>yt = Softmax(Woutst + bout) (4)</h4>
 
 <p>where st is the hidden state at time step t. We update st using GRU [8]. State st is computed as:</p>
 
-<p>st = GRU(yprev,gt,st 1) (5)</p>
+<h4>st = GRU(yprev,gt,st 1) (5)</h4>
 
 <p>where yprev denotes the embedding vectors of the previous output yt 1 and gt represents the glimpse vectors, respectively calculated as,</p>
 
@@ -695,7 +695,7 @@
 
 <p>ICDAR 2015 (IC15) [24] contains 2077 cropped images including more than 200 irregular text. No lexicon is associated with this dataset.</p>
 
-<p>4.2. Implementation Details</p>
+<h3>4.2. Implementation Details</h3>
 
 <p>Network: Details about the MORN and the ASRN of MORAN are given in Table1 and Table2 respectively. The number of hidden units of GRU in the decoder is 256. The ASRN outputs 37 classes, including 26 letters, 10 digits and a symbol standing for “EOS”.</p>
 
@@ -995,7 +995,7 @@
 
 <p>In addition to perspective text, the MORAN is able to recognize curved text. Some examples are demonstrated in Fig. 9. The MORAN is able to rectify most curved text in CUTE80 and correctly recognize them. It is hence adequately robust to rectify text with small curve angle.</p>
 
-<p>4.7. Limitation of the MORAN</p>
+<h3>4.7. Limitation of the MORAN</h3>
 
 <p>For fair comparisons and good repeatability, we chose the widely used training datasets, which contain only horizontal synthetic text. Therefore, because of complicated background, the MORAN will fail when the curve angle is too large. Such cases are given in the</p>
 

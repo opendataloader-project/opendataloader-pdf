@@ -26,10 +26,12 @@
     "text color" : "[0.0]",
     "content" : "Canjie Luo†, Lianwen Jin∗ † ‡, Zenghui Sun† School of Electronic and Information Engineering, South China University of Technology† SCUT-Zhuhai Institute of Modern Industrial Innovation‡ {canjie.luo, lianwen.jin∗ , sunfreding}@gmail.com, eelwjin@scut.edu.cn∗"
   }, {
-    "type" : "paragraph",
+    "type" : "heading",
     "id" : 647,
+    "level" : "Subtitle",
     "page number" : 1,
     "bounding box" : [ 145.995, 528.628, 190.48, 544.182 ],
+    "heading level" : 2,
     "font" : "NimbusRomNo9L-Medi",
     "font size" : 11.955,
     "text color" : "[0.0]",
@@ -487,10 +489,12 @@
     "text color" : "[0.0]",
     "content" : "The MORAN contains two parts. One is the MORN, which is trained in a weak supervision way to learn the offset of each part of the image. According to the predicted offsets, we apply sampling and obtain a rectiﬁed text image. The other one is ASRN, a CNN-LSTM framework followed by an attention decoder. The proposed fractional pickup further improves attention sensitivity. The curriculum learning strategy guides the MORAN to achieve stateof-the-art performance."
   }, {
-    "type" : "paragraph",
+    "type" : "heading",
     "id" : 695,
+    "level" : "Subtitle",
     "page number" : 3,
     "bounding box" : [ 308.862, 123.943, 494.714, 138.201 ],
+    "heading level" : 3,
     "font" : "NimbusRomNo9L-Medi",
     "font size" : 10.959,
     "text color" : "[0.0]",
@@ -1716,10 +1720,12 @@
     "text color" : "[0.0]",
     "content" : "The advantages of the MORN are manifold. 1) The rectiﬁed images are more readable owing to the regular shape of the text and the reduced noise. 2) The MORN is more ﬂexible than the afﬁne transformation. It is free of geometric constraints, which enables it to rectify images using complicated transformations. 3) The MORN is more ﬂexible than methods using a speciﬁc number of regressing points. Existing method [42] cannot capture the text shape in details if the width of the image is large. Thus the MORN has no limit with respect to the image size, especially the width of the input image. 4) The MORN does not require extra labelling information of character positions. Therefore, it can be trained in a weak supervision way by using existing training datasets."
   }, {
-    "type" : "paragraph",
+    "type" : "heading",
     "id" : 723,
+    "level" : "Subtitle",
     "page number" : 5,
     "bounding box" : [ 308.862, 112.197, 545.114, 140.004 ],
+    "heading level" : 3,
     "font" : "NimbusRomNo9L-Medi",
     "font size" : 10.959,
     "text color" : "[0.0]",
@@ -1806,10 +1812,12 @@
     "text color" : "[0.0]",
     "content" : "dimensional attention mechanism at the top of CRNN. The attention-based decoder, proposed by Bahdanau et al. [2], is used to accurately align the target and label. It is based on an RNN and directly generates the target sequence (y1,y2...,yN). The largest number of steps that the decoder generates is T. The decoder stops processing when it predicts an end-of-sequence token “EOS” [47]. At time step t, output yt is,"
   }, {
-    "type" : "paragraph",
+    "type" : "heading",
     "id" : 732,
+    "level" : "Subtitle",
     "page number" : 6,
     "bounding box" : [ 98.903, 221.661, 286.362, 235.371 ],
+    "heading level" : 4,
     "font" : "CMMI10",
     "font size" : 10.909,
     "text color" : "[0.0]",
@@ -1824,10 +1832,12 @@
     "text color" : "[0.0]",
     "content" : "where st is the hidden state at time step t. We update st using GRU [8]. State st is computed as:"
   }, {
-    "type" : "paragraph",
+    "type" : "heading",
     "id" : 734,
+    "level" : "Subtitle",
     "page number" : 6,
     "bounding box" : [ 109.37, 156.291, 286.362, 170.0 ],
+    "heading level" : 4,
     "font" : "CMMI10",
     "font size" : 10.909,
     "text color" : "[0.0]",
@@ -5134,10 +5144,12 @@
     "text color" : "[0.0]",
     "content" : "ICDAR 2015 (IC15) [24] contains 2077 cropped images including more than 200 irregular text. No lexicon is associated with this dataset."
   }, {
-    "type" : "paragraph",
+    "type" : "heading",
     "id" : 821,
+    "level" : "Subtitle",
     "page number" : 9,
     "bounding box" : [ 308.862, 397.413, 437.925, 411.671 ],
+    "heading level" : 3,
     "font" : "NimbusRomNo9L-Medi",
     "font size" : 10.959,
     "text color" : "[0.0]",
@@ -7980,10 +7992,12 @@
     "text color" : "[0.0]",
     "content" : "In addition to perspective text, the MORAN is able to recognize curved text. Some examples are demonstrated in Fig. 9. The MORAN is able to rectify most curved text in CUTE80 and correctly recognize them. It is hence adequately robust to rectify text with small curve angle."
   }, {
-    "type" : "paragraph",
+    "type" : "heading",
     "id" : 850,
+    "level" : "Subtitle",
     "page number" : 11,
     "bounding box" : [ 308.862, 152.195, 452.533, 166.453 ],
+    "heading level" : 3,
     "font" : "NimbusRomNo9L-Medi",
     "font size" : 10.959,
     "text color" : "[0.0]",
