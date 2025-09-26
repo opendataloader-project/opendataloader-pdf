@@ -3,22 +3,9 @@ import sys
 import importlib.resources as importlib_resources
 import locale
 from pathlib import Path
-from typing import List
 
 # The consistent name of the JAR file bundled with the package
 _JAR_NAME = "opendataloader-pdf-cli.jar"
-
-
-def _get_redacted_command_string(command: List[str]) -> str:
-    """Redacts the password from a command list for safe logging."""
-    command_for_logging = list(command)
-    try:
-        password_index = command_for_logging.index("--password")
-        if password_index + 1 < len(command_for_logging):
-            command_for_logging[password_index + 1] = "[REDACTED]"
-    except ValueError:
-        pass  # '--password' not in command
-    return " ".join(command_for_logging)
 
 
 def run(
@@ -70,6 +57,8 @@ def run(
         args.extend(["--password", password])
     if replace_invalid_chars:
         args.extend(["--replace-invalid-chars", replace_invalid_chars])
+    if content_safety_off:
+        args.extend(["--content-safety-off", content_safety_off])
     if generate_markdown:
         args.append("--markdown")
     if generate_html:
@@ -78,8 +67,6 @@ def run(
         args.append("--pdf")
     if keep_line_breaks:
         args.append("--keep-line-breaks")
-    if content_safety_off:
-        args.append(["--content-safety-off", content_safety_off])
     if html_in_markdown:
         args.append("--markdown-with-html")
     if add_image_to_markdown:
@@ -98,10 +85,6 @@ def run(
             command = ["java", "-jar", str(jar_path)] + args
 
             if debug:
-                print(
-                    f"Running command: {_get_redacted_command_string(command)}",
-                    file=sys.stderr,
-                )
                 process = subprocess.Popen(
                     command,
                     stdout=subprocess.PIPE,
