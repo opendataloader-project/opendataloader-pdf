@@ -255,10 +255,15 @@ public class PDFWriter {
             return;
         }
         PDDocumentCatalog catalog = document.getDocumentCatalog();
-        PDOptionalContentProperties pdOptionalContentProperties = new PDOptionalContentProperties();
-        catalog.setOCProperties(pdOptionalContentProperties);
+        PDOptionalContentProperties oldOCProperties = catalog.getOCProperties();
+        if (oldOCProperties == null) {
+            oldOCProperties = new PDOptionalContentProperties();
+            catalog.setOCProperties(oldOCProperties);
+        }
+
         for (PDOptionalContentGroup group : optionalContents.values()) {
-            pdOptionalContentProperties.addGroup(group);
+            oldOCProperties.addGroup(group);
+            oldOCProperties.setGroupEnabled(group, true);
         }
         optionalContents.clear();
     }
