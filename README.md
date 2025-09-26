@@ -159,6 +159,24 @@ async function main() {
 main();
 ```
 
+If you want to run it via CLI, you can use the following command:
+
+```bash
+npx @opendataloader/pdf path/to/document.pdf -o path/to/output --markdown --html --pdf
+```
+
+or you can install it globally:
+
+```bash
+npm install -g @opendataloader/pdf
+```
+
+then run:
+
+```bash
+opendataloader-pdf path/to/document.pdf -o path/to/output --markdown --html --pdf
+```
+
 ### Function: run()
 
 `run(inputPath: string, options?: RunOptions): Promise<string>`
