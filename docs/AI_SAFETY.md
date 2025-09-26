@@ -97,8 +97,8 @@ The following filters are available to defend against specific prompt injection 
 | `all` | Enables all available safety filters (default behavior). | ✅ Supported |
 | `hidden-text` | Defends against invisible text (e.g., transparent, background-matching, low-contrast, or rendered with invisible strokes). | ✅ Supported |
 | `off-page` | Defends against text and objects placed outside the visible page area. | ✅ Supported |
-| `tiny` | Defends against text with an extremely small font size (e.g., 0-1pt). | 🕖 In Progress |
-| `hidden-ocg` | Defends against content hidden in Optional Content Groups (OCG layers) set to an "off" state. | 🕖 In Progress |
+| `tiny` | Defends against text with an extremely small font size (e.g., 0-1pt). | ✅ Supported |
+| `hidden-ocg` | Defends against content hidden in Optional Content Groups (OCG layers) set to an "off" state. | ✅ Supported |
 | `patterns` | Defends against text encoded in repeating visual patterns or shapes. | 🚀 Upcoming |
 | `malicious-font` | Defends against manipulated font `cmap` tables where visual glyphs do not match the underlying text. | 🚀 Upcoming |
 | `noised-figure` | Defends against prompts hidden in image noise via steganography. | 🚀 Upcoming |
