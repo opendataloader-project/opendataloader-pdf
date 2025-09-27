@@ -6,7 +6,8 @@ build/
 # Ignore JAR file
 *.jar
 
-# License files
+# Docs
+README.md
 LICENSE
 NOTICE.md
 THIRD_PARTY/

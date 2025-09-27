@@ -87,7 +87,14 @@ opendataloader_pdf.run(
     generate_markdown=True,
     generate_html=True,
     generate_annotated_pdf=True,
+    debug=True,
 )
+```
+
+- If you want to run it via CLI, you can use the following command:
+
+```sh
+opendataloader-pdf path/to/document.pdf --markdown --html --pdf
 ```
 
 ### Function: run()
