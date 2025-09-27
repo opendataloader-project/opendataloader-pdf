@@ -78,5 +78,10 @@ setup(
             "THIRD_PARTY/**",
         ],
     },
+    entry_points={
+        "console_scripts": [
+            "opendataloader-pdf=opendataloader_pdf.wrapper:main",
+        ]
+    },
     cmdclass={"build_py": CustomBuildPy},
 )
