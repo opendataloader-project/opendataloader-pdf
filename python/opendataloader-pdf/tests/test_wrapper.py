@@ -4,6 +4,7 @@ import shutil
 from pathlib import Path
 from opendataloader_pdf import run
 
+
 class TestWrapper(unittest.TestCase):
     def setUp(self):
         # Create a temporary directory
@@ -21,7 +22,9 @@ class TestWrapper(unittest.TestCase):
 
     def test_run_generates_markdown(self):
         # Ensure input file exists
-        self.assertTrue(self.input_pdf.exists(), f"Input PDF not found at {self.input_pdf}")
+        self.assertTrue(
+            self.input_pdf.exists(), f"Input PDF not found at {self.input_pdf}"
+        )
 
         # Run the wrapper to generate markdown
         run(
@@ -36,9 +39,10 @@ class TestWrapper(unittest.TestCase):
             expected_output.exists(),
             f"Expected output file not found at {expected_output}",
         )
-        
+
         # Check if the output file has content
         self.assertGreater(expected_output.stat().st_size, 0, "Output file is empty")
+
 
 if __name__ == "__main__":
     unittest.main()
