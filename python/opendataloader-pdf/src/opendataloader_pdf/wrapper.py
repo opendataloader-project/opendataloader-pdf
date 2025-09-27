@@ -1,3 +1,4 @@
+import argparse
 import subprocess
 import sys
 import importlib.resources as importlib_resources
@@ -135,3 +136,84 @@ def run(
         if e.stdout:
             print(f"Stdout: {e.stdout}", file=sys.stderr)
         raise e
+
+
+def main(argv=None) -> int:
+    """CLI entry point for running the wrapper from the command line."""
+    parser = argparse.ArgumentParser(
+        description="Run the opendataloader-pdf CLI using the bundled JAR."
+    )
+    parser.add_argument("input_path", help="Path to the input PDF file or directory.")
+    parser.add_argument(
+        "-o",
+        "--output-dir",
+        dest="output_folder",
+        help="Directory where outputs are written.",
+    )
+    parser.add_argument("-p", "--password", help="Password for encrypted PDFs.")
+    parser.add_argument(
+        "--replace-invalid-chars",
+        help="Replacement character for invalid or unrecognized characters.",
+    )
+    parser.add_argument(
+        "--content-safety-off",
+        help="Disable content safety filtering (expects the desired mode).",
+    )
+    parser.add_argument(
+        "--markdown",
+        dest="generate_markdown",
+        action="store_true",
+        help="Generate Markdown output.",
+    )
+    parser.add_argument(
+        "--html",
+        dest="generate_html",
+        action="store_true",
+        help="Generate HTML output.",
+    )
+    parser.add_argument(
+        "--pdf",
+        dest="generate_annotated_pdf",
+        action="store_true",
+        help="Generate annotated PDF output.",
+    )
+    parser.add_argument(
+        "--keep-line-breaks",
+        action="store_true",
+        help="Preserve line breaks in text output.",
+    )
+    parser.add_argument(
+        "--markdown-with-html",
+        dest="html_in_markdown",
+        action="store_true",
+        help="Allow raw HTML within Markdown output.",
+    )
+    parser.add_argument(
+        "--markdown-with-images",
+        dest="add_image_to_markdown",
+        action="store_true",
+        help="Embed images in Markdown output.",
+    )
+    parser.add_argument(
+        "--no-json",
+        action="store_true",
+        help="Disable JSON output generation.",
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Stream CLI logs directly to stdout.",
+    )
+    args = parser.parse_args(argv)
+
+    try:
+        run(**vars(args))
+    except FileNotFoundError as err:
+        print(err, file=sys.stderr)
+        return 1
+    except subprocess.CalledProcessError as err:
+        return err.returncode or 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

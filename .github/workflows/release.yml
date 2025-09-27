@@ -68,13 +68,8 @@ jobs:
 
       - name: '[Python] Build and test'
         run: |
-          python -m pip install --upgrade pip
-          pip install build twine setuptools wheel
           sed -i "s/version=\"0.0.0\"/version=\"${{ env.VERSION }}\"/" setup.py
-          cp ../../README.md .
-          python -m build --wheel
-          pip install ./dist/opendataloader_pdf-*.whl
-          python -m unittest discover -s test
+          chmod +x build.sh && ./build.sh
         working-directory: ./python/opendataloader-pdf
 
       - name: '[Node.js] Build and test'
