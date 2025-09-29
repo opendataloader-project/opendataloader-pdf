@@ -5,11 +5,11 @@
 <title>1901.03003.pdf</title>
 </head>
 <body>
-<h1>MORAN: A Multi-Object Rectiﬁed Attention Network for Scene Text Recognition</h1>
+<h2>MORAN: A Multi-Object Rectiﬁed Attention Network for Scene Text Recognition</h2>
 
 <p>Canjie Luo†, Lianwen Jin∗ † ‡, Zenghui Sun† School of Electronic and Information Engineering, South China University of Technology† SCUT-Zhuhai Institute of Modern Industrial Innovation‡ {canjie.luo, lianwen.jin∗ , sunfreding}@gmail.com, eelwjin@scut.edu.cn∗</p>
 
-<h2>Abstract</h2>
+<h3>Abstract</h3>
 
 <p>Irregular text is widely used. However, it is considerably difﬁcult to recognize because of its various shapes and distorted patterns. In this paper, we thus propose a multi-object rectiﬁed attention network (MORAN) for general scene text recognition. The MORAN consists of a multi-object rectiﬁcation network and an attention-based sequence recognition network. The multi-object rectiﬁcation network is designed for rectifying images that contain irregular text. It decreases the difﬁculty of recognition and enables the attention-based sequence recognition network to more easily read irregular text. It is trained in a weak supervision way, thus requiring only images and corresponding text labels. The attentionbased sequence recognition network focuses on target characters and sequentially outputs the predictions. Moreover, to improve the sensitivity of the attentionbased sequence recognition network, a fractional pickup method is proposed for an attention-based decoder in the training phase. With the rectiﬁcation mechanism, the MORAN can read both regular and irregular scene text. Extensive experiments on various benchmarks are conducted, which show that the MORAN achieves state-of-the-art performance. The source code is available1.</p>
 
@@ -39,7 +39,7 @@
 
 <figcaption>Figure 1. Examples of regular and irregular scene text. (a) Regular text. (b) Slanted and perspective text. (c) Curved text.</figcaption>
 
-<h2>1. Introduction</h2>
+<h3>1. Introduction</h3>
 
 <p>Scene text recognition is an essential process in computer vision tasks. Many practical applications such as trafﬁc sign reading, product recognition, intelligent inspection, and image searching, beneﬁt from the rich semantic information of scene text. With the development of scene text detection methods [11, 26, 46, 56], scene character recognition has emerged at the forefront of this research topic and is regarded as an open and very challenging research problem [45].</p>
 
@@ -47,7 +47,7 @@
 
 <p>Nevertheless, most current recognition models remain too unstable to handle multiple disturbances</p>
 
-<p>arXiv:1901.03003v1  [cs.CV]  10 Jan 2019</p>
+<h1>arXiv:1901.03003v1  [cs.CV]  10 Jan 2019</h1>
 
 <img src="1901.03003_figures/figure10.png" alt="figure10">
 
@@ -104,11 +104,11 @@
 
 <p>Our proposed MORAN model uses the top-down approach. The fractional pickup training method is thus designed to improve the sensitivity of the MORAN to focus on characters. For the training of the MORAN, we propose a curriculum learning strategy for better convergence.</p>
 
-<h2>3. Methodology</h2>
+<h3>3. Methodology</h3>
 
 <p>The MORAN contains two parts. One is the MORN, which is trained in a weak supervision way to learn the offset of each part of the image. According to the predicted offsets, we apply sampling and obtain a rectiﬁed text image. The other one is ASRN, a CNN-LSTM framework followed by an attention decoder. The proposed fractional pickup further improves attention sensitivity. The curriculum learning strategy guides the MORAN to achieve stateof-the-art performance.</p>
 
-<h3>3.1. Multi-Object Rectiﬁcation Network</h3>
+<h4>3.1. Multi-Object Rectiﬁcation Network</h4>
 
 <p>Common methods to rectify patterns such as the afﬁne transformation network, are limited by certain geometric constraints. With respect to the afﬁne</p>
 
@@ -132,107 +132,107 @@
 
 <table border="1">
 <tr>
-<th><p>Type</p>
+<th><h6>Type</h6>
 </th>
-<th><p>Conﬁgurations</p>
+<th><h6>Conﬁgurations</h6>
 </th>
-<th><p>Size</p>
+<th><h6>Size</h6>
 </th>
 </tr>
 <tr>
-<td><p>Input</p>
+<td><h6>Input</h6>
 </td>
-<td><p>-</p>
+<td><h6>-</h6>
 </td>
-<td><p>1×32×100</p>
-</td>
-</tr>
-<tr>
-<td><p>MaxPooling</p>
-</td>
-<td><p>k2, s2</p>
-</td>
-<td><p>1×16×50</p>
+<td><h6>1×32×100</h6>
 </td>
 </tr>
 <tr>
-<td><p>Convolution</p>
+<td><h6>MaxPooling</h6>
 </td>
-<td><p>maps:64, k3, s1, p1</p>
+<td><h6>k2, s2</h6>
 </td>
-<td><p>64×16×50</p>
-</td>
-</tr>
-<tr>
-<td><p>MaxPooling</p>
-</td>
-<td><p>k2, s2</p>
-</td>
-<td><p>64×8×25</p>
+<td><h6>1×16×50</h6>
 </td>
 </tr>
 <tr>
-<td><p>Convolution</p>
+<td><h6>Convolution</h6>
 </td>
-<td><p>maps:128, k3, s1, p1</p>
+<td><h6>maps:64, k3, s1, p1</h6>
 </td>
-<td><p>128×8×25</p>
-</td>
-</tr>
-<tr>
-<td><p>MaxPooling</p>
-</td>
-<td><p>k2, s2</p>
-</td>
-<td><p>128×4×12</p>
+<td><h6>64×16×50</h6>
 </td>
 </tr>
 <tr>
-<td><p>Convolution</p>
+<td><h6>MaxPooling</h6>
 </td>
-<td><p>maps:64, k3, s1, p1</p>
+<td><h6>k2, s2</h6>
 </td>
-<td><p>64×4×12</p>
-</td>
-</tr>
-<tr>
-<td><p>Convolution</p>
-</td>
-<td><p>maps:16, k3, s1, p1</p>
-</td>
-<td><p>16×4×12</p>
+<td><h6>64×8×25</h6>
 </td>
 </tr>
 <tr>
-<td><p>Convolution</p>
+<td><h6>Convolution</h6>
 </td>
-<td><p>maps:2, k3, s1, p1</p>
+<td><h6>maps:128, k3, s1, p1</h6>
 </td>
-<td><p>2×4×12</p>
-</td>
-</tr>
-<tr>
-<td><p>MaxPooling</p>
-</td>
-<td><p>k2, s1</p>
-</td>
-<td><p>2×3×11</p>
+<td><h6>128×8×25</h6>
 </td>
 </tr>
 <tr>
-<td><p>Tanh</p>
+<td><h6>MaxPooling</h6>
 </td>
-<td><p>-</p>
+<td><h6>k2, s2</h6>
 </td>
-<td><p>2×3×11</p>
+<td><h6>128×4×12</h6>
 </td>
 </tr>
 <tr>
-<td><p>Resize</p>
+<td><h6>Convolution</h6>
 </td>
-<td><p>-</p>
+<td><h6>maps:64, k3, s1, p1</h6>
 </td>
-<td><p>2×32×100</p>
+<td><h6>64×4×12</h6>
+</td>
+</tr>
+<tr>
+<td><h6>Convolution</h6>
+</td>
+<td><h6>maps:16, k3, s1, p1</h6>
+</td>
+<td><h6>16×4×12</h6>
+</td>
+</tr>
+<tr>
+<td><h6>Convolution</h6>
+</td>
+<td><h6>maps:2, k3, s1, p1</h6>
+</td>
+<td><h6>2×4×12</h6>
+</td>
+</tr>
+<tr>
+<td><h6>MaxPooling</h6>
+</td>
+<td><h6>k2, s1</h6>
+</td>
+<td><h6>2×3×11</h6>
+</td>
+</tr>
+<tr>
+<td><h6>Tanh</h6>
+</td>
+<td><h6>-</h6>
+</td>
+<td><h6>2×3×11</h6>
+</td>
+</tr>
+<tr>
+<td><h6>Resize</h6>
+</td>
+<td><h6>-</h6>
+</td>
+<td><h6>2×32×100</h6>
 </td>
 </tr>
 </table>
@@ -267,7 +267,7 @@
 
 <p>The advantages of the MORN are manifold. 1) The rectiﬁed images are more readable owing to the regular shape of the text and the reduced noise. 2) The MORN is more ﬂexible than the afﬁne transformation. It is free of geometric constraints, which enables it to rectify images using complicated transformations. 3) The MORN is more ﬂexible than methods using a speciﬁc number of regressing points. Existing method [42] cannot capture the text shape in details if the width of the image is large. Thus the MORN has no limit with respect to the image size, especially the width of the input image. 4) The MORN does not require extra labelling information of character positions. Therefore, it can be trained in a weak supervision way by using existing training datasets.</p>
 
-<h3>3.2. Attention-based Sequence Recognition Network</h3>
+<h4>3.2. Attention-based Sequence Recognition Network</h4>
 
 <p>As Fig. 4 shows, the major structure of the ASRN is a CNN-BLSTM framework. We adopt a one-</p>
 
@@ -285,11 +285,11 @@
 
 <p>dimensional attention mechanism at the top of CRNN. The attention-based decoder, proposed by Bahdanau et al. [2], is used to accurately align the target and label. It is based on an RNN and directly generates the target sequence (y1,y2...,yN). The largest number of steps that the decoder generates is T. The decoder stops processing when it predicts an end-of-sequence token “EOS” [47]. At time step t, output yt is,</p>
 
-<h4>yt = Softmax(Woutst + bout) (4)</h4>
+<h6>yt = Softmax(Woutst + bout) (4)</h6>
 
 <p>where st is the hidden state at time step t. We update st using GRU [8]. State st is computed as:</p>
 
-<h4>st = GRU(yprev,gt,st 1) (5)</h4>
+<h6>st = GRU(yprev,gt,st 1) (5)</h6>
 
 <p>where yprev denotes the embedding vectors of the previous output yt 1 and gt represents the glimpse vectors, respectively calculated as,</p>
 
@@ -299,131 +299,131 @@
 
 <table border="1">
 <tr>
-<th><p>Type</p>
+<th><h6>Type</h6>
 </th>
-<th><p>Conﬁgurations</p>
+<th><h6>Conﬁgurations</h6>
 </th>
-<th><p>Size</p>
+<th><h6>Size</h6>
 </th>
 </tr>
 <tr>
-<td><p>Input</p>
+<td><h6>Input</h6>
 </td>
-<td><p>-</p>
+<td><h6>-</h6>
 </td>
-<td><p>1×32×100</p>
-</td>
-</tr>
-<tr>
-<td><p>Convolution</p>
-</td>
-<td><p>maps:64, k3, s1, p1</p>
-</td>
-<td><p>64×32×100</p>
+<td><h6>1×32×100</h6>
 </td>
 </tr>
 <tr>
-<td><p>MaxPooling</p>
+<td><h6>Convolution</h6>
 </td>
-<td><p>k2, s2</p>
+<td><h6>maps:64, k3, s1, p1</h6>
 </td>
-<td><p>64×16×50</p>
-</td>
-</tr>
-<tr>
-<td><p>Convolution</p>
-</td>
-<td><p>maps:128, k3, s1, p1</p>
-</td>
-<td><p>128×16×50</p>
+<td><h6>64×32×100</h6>
 </td>
 </tr>
 <tr>
-<td><p>MaxPooling</p>
+<td><h6>MaxPooling</h6>
 </td>
-<td><p>k2, s2</p>
+<td><h6>k2, s2</h6>
 </td>
-<td><p>128×8×25</p>
-</td>
-</tr>
-<tr>
-<td><p>Convolution</p>
-</td>
-<td><p>maps:256, k3, s1, p1</p>
-</td>
-<td><p>256×8×25</p>
+<td><h6>64×16×50</h6>
 </td>
 </tr>
 <tr>
-<td><p>Convolution</p>
+<td><h6>Convolution</h6>
 </td>
-<td><p>maps:256, k3, s1, p1</p>
+<td><h6>maps:128, k3, s1, p1</h6>
 </td>
-<td><p>256×8×25</p>
-</td>
-</tr>
-<tr>
-<td><p>MaxPooling</p>
-</td>
-<td><p>k2, s2x1, p0x1</p>
-</td>
-<td><p>256×4×26</p>
+<td><h6>128×16×50</h6>
 </td>
 </tr>
 <tr>
-<td><p>Convolution</p>
+<td><h6>MaxPooling</h6>
 </td>
-<td><p>maps:512, k3, s1, p1</p>
+<td><h6>k2, s2</h6>
 </td>
-<td><p>512×4×26</p>
-</td>
-</tr>
-<tr>
-<td><p>Convolution</p>
-</td>
-<td><p>maps:512, k3, s1, p1</p>
-</td>
-<td><p>512×4×26</p>
+<td><h6>128×8×25</h6>
 </td>
 </tr>
 <tr>
-<td><p>MaxPooling</p>
+<td><h6>Convolution</h6>
 </td>
-<td><p>k2, s2x1, p0x1</p>
+<td><h6>maps:256, k3, s1, p1</h6>
 </td>
-<td><p>512×2×27</p>
-</td>
-</tr>
-<tr>
-<td><p>Convolution</p>
-</td>
-<td><p>maps:512, k2, s1</p>
-</td>
-<td><p>512×1×26</p>
+<td><h6>256×8×25</h6>
 </td>
 </tr>
 <tr>
-<td><p>BLSTM</p>
+<td><h6>Convolution</h6>
 </td>
-<td><p>hidden unit:256</p>
+<td><h6>maps:256, k3, s1, p1</h6>
 </td>
-<td><p>256×1×26</p>
-</td>
-</tr>
-<tr>
-<td><p>BLSTM</p>
-</td>
-<td><p>hidden unit:256</p>
-</td>
-<td><p>256×1×26</p>
+<td><h6>256×8×25</h6>
 </td>
 </tr>
 <tr>
-<td><p>GRU</p>
+<td><h6>MaxPooling</h6>
 </td>
-<td><p>hidden unit:256</p>
+<td><h6>k2, s2x1, p0x1</h6>
 </td>
-<td><p>256×1×26</p>
+<td><h6>256×4×26</h6>
+</td>
+</tr>
+<tr>
+<td><h6>Convolution</h6>
+</td>
+<td><h6>maps:512, k3, s1, p1</h6>
+</td>
+<td><h6>512×4×26</h6>
+</td>
+</tr>
+<tr>
+<td><h6>Convolution</h6>
+</td>
+<td><h6>maps:512, k3, s1, p1</h6>
+</td>
+<td><h6>512×4×26</h6>
+</td>
+</tr>
+<tr>
+<td><h6>MaxPooling</h6>
+</td>
+<td><h6>k2, s2x1, p0x1</h6>
+</td>
+<td><h6>512×2×27</h6>
+</td>
+</tr>
+<tr>
+<td><h6>Convolution</h6>
+</td>
+<td><h6>maps:512, k2, s1</h6>
+</td>
+<td><h6>512×1×26</h6>
+</td>
+</tr>
+<tr>
+<td><h6>BLSTM</h6>
+</td>
+<td><h6>hidden unit:256</h6>
+</td>
+<td><h6>256×1×26</h6>
+</td>
+</tr>
+<tr>
+<td><h6>BLSTM</h6>
+</td>
+<td><h6>hidden unit:256</h6>
+</td>
+<td><h6>256×1×26</h6>
+</td>
+</tr>
+<tr>
+<td><h6>GRU</h6>
+</td>
+<td><h6>hidden unit:256</h6>
+</td>
+<td><h6>256×1×26</h6>
 </td>
 </tr>
 </table>
@@ -518,7 +518,7 @@
 
 <img src="1901.03003_figures/figure18.png" alt="figure18">
 
-<p>hi</p>
+<h6>hi</h6>
 
 <ul>
 <li><p>Figure 7. Fractional pickup creates a shortcut of forward propagation. The shortcut is drawn as a red arrow.</p></li>
@@ -526,7 +526,7 @@
 
 <p>where δgt is the error term of glimpse vector gt. δhk is only relevant to αt,k. However, with fractional pickup, the error item becomes,</p>
 
-<p>δhk = δgt(βαt,k + (1 β)αt,k+1) (14)</p>
+<h6>δhk = δgt(βαt,k + (1 β)αt,k+1) (14)</h6>
 
 <p>where αt,k+1 is relevant to hk+1, as noted in Equations (8) and (9), which means δhk is inﬂuenced by the neighbouring features. Owing to the disturbance, back-propagated gradients are able to dynamically optimize the decoder over a broader range of neighbouring regions.</p>
 
@@ -562,7 +562,7 @@
 
 <p>Third Stage for End-to-end Optimization After the MORN and ASRN are optimized individually, we connect them for joint training in an end-to-end fashion. Joint training enables MORAN to complete end-to-end optimization and outperform state-of-theart methods.</p>
 
-<h2>4. Experiments</h2>
+<h3>4. Experiments</h3>
 
 <p>In this section we describe extensive experiments conducted on various benchmarks, including regular and irregular datasets. The performances of all the methods are measured by word accuracy.</p>
 
@@ -571,21 +571,21 @@
 <table border="1">
 <tr>
 <th></th>
-<th><p>s</p>
+<th><h6>s</h6>
 </th>
-<th><p>IIIT5K</p>
+<th><h6>IIIT5K</h6>
 </th>
-<th><p>SVT</p>
+<th><h6>SVT</h6>
 </th>
-<th><p>IC03</p>
+<th><h6>IC03</h6>
 </th>
-<th><p>IC13</p>
+<th><h6>IC13</h6>
 </th>
-<th><p>SVT-P</p>
+<th><h6>SVT-P</h6>
 </th>
-<th><p>CUTE80</p>
+<th><h6>CUTE80</h6>
 </th>
-<th><p>IC15</p>
+<th><h6>IC15</h6>
 </th>
 </tr>
 <tr>
@@ -620,57 +620,57 @@
 
 <table border="1">
 <tr>
-<th><p>Method</p>
+<th><h6>Method</h6>
 </th>
-<th><p>IIIT5K</p>
+<th><h6>IIIT5K</h6>
 </th>
-<th><p>SVT</p>
+<th><h6>SVT</h6>
 </th>
-<th><p>IC03</p>
+<th><h6>IC03</h6>
 </th>
-<th><p>IC13</p>
+<th><h6>IC13</h6>
 </th>
-<th><p>SVT-P</p>
+<th><h6>SVT-P</h6>
 </th>
-<th><p>CUTE80</p>
+<th><h6>CUTE80</h6>
 </th>
-<th><p>IC15</p>
+<th><h6>IC15</h6>
 </th>
 </tr>
 <tr>
-<td><p>End-to-end training</p>
+<td><h6>End-to-end training</h6>
 </td>
-<td><p>89.9</p>
+<td><h6>89.9</h6>
 </td>
-<td><p>84.1</p>
+<td><h6>84.1</h6>
 </td>
-<td><p>92.5</p>
+<td><h6>92.5</h6>
 </td>
-<td><p>90.0</p>
+<td><h6>90.0</h6>
 </td>
-<td><p>76.1</p>
+<td><h6>76.1</h6>
 </td>
-<td><p>77.1</p>
+<td><h6>77.1</h6>
 </td>
-<td><p>68.8</p>
+<td><h6>68.8</h6>
 </td>
 </tr>
 <tr>
-<td><p>Only ASRN MORAN without FP MORAN with FP</p>
+<td><h6>Only ASRN MORAN without FP MORAN with FP</h6>
 </td>
-<td><p>84.2 89.7 91.2</p>
+<td><h6>84.2 89.7 91.2</h6>
 </td>
-<td><p>82.2 87.3 88.3</p>
+<td><h6>82.2 87.3 88.3</h6>
 </td>
-<td><p>91.0 94.5 95.0</p>
+<td><h6>91.0 94.5 95.0</h6>
 </td>
-<td><p>90.1 91.5 92.4</p>
+<td><h6>90.1 91.5 92.4</h6>
 </td>
-<td><p>71.0 75.5 76.1</p>
+<td><h6>71.0 75.5 76.1</h6>
 </td>
-<td><p>64.6 77.1 77.4</p>
+<td><h6>64.6 77.1 77.4</h6>
 </td>
-<td><p>65.6 68.6 68.8</p>
+<td><h6>65.6 68.6 68.8</h6>
 </td>
 </tr>
 </table>
@@ -695,7 +695,7 @@
 
 <p>ICDAR 2015 (IC15) [24] contains 2077 cropped images including more than 200 irregular text. No lexicon is associated with this dataset.</p>
 
-<h3>4.2. Implementation Details</h3>
+<h4>4.2. Implementation Details</h4>
 
 <p>Network: Details about the MORN and the ASRN of MORAN are given in Table1 and Table2 respectively. The number of hidden units of GRU in the decoder is 256. The ASRN outputs 37 classes, including 26 letters, 10 digits and a symbol standing for “EOS”.</p>
 
@@ -712,33 +712,33 @@
 
 <table border="1">
 <tr>
-<th><p>Method</p>
+<th><h6>Method</h6>
 </th>
-<th><p>IC03</p>
+<th><h6>IC03</h6>
 </th>
-<th><p>IC13</p>
+<th><h6>IC13</h6>
 </th>
-<th><p>IC15</p>
+<th><h6>IC15</h6>
 </th>
 </tr>
 <tr>
-<td><p>End-to-end training</p>
+<td><h6>End-to-end training</h6>
 </td>
-<td><p>29.1</p>
+<td><h6>29.1</h6>
 </td>
-<td><p>57.7</p>
+<td><h6>57.7</h6>
 </td>
-<td><p>368.8</p>
+<td><h6>368.8</h6>
 </td>
 </tr>
 <tr>
-<td><p>Only ASRN MORAN without FP MORAN with FP</p>
+<td><h6>Only ASRN MORAN without FP MORAN with FP</h6>
 </td>
-<td><p>33.8 22.7 19.8</p>
+<td><h6>33.8 22.7 19.8</h6>
 </td>
-<td><p>69.1 45.3 42.0</p>
+<td><h6>69.1 45.3 42.0</h6>
 </td>
-<td><p>376.8 345.2 334.0</p>
+<td><h6>376.8 345.2 334.0</h6>
 </td>
 </tr>
 </table>
@@ -757,45 +757,45 @@
 
 <table border="1">
 <tr>
-<th><p>Method</p>
+<th><h6>Method</h6>
 </th>
-<th><p>IIIT5K</p>
+<th><h6>IIIT5K</h6>
 </th>
-<th><p>SVT</p>
+<th><h6>SVT</h6>
 </th>
-<th><p>IC03</p>
+<th><h6>IC03</h6>
 </th>
-<th><p>IC13</p>
+<th><h6>IC13</h6>
 </th>
-<th><p>SVT-P</p>
+<th><h6>SVT-P</h6>
 </th>
 </tr>
 <tr>
-<td><p>Liu et al. [28]</p>
+<td><h6>Liu et al. [28]</h6>
 </td>
-<td><p>83.3</p>
+<td><h6>83.3</h6>
 </td>
-<td><p>83.6</p>
+<td><h6>83.6</h6>
 </td>
-<td><p>89.9</p>
+<td><h6>89.9</h6>
 </td>
-<td><p>89.1</p>
+<td><h5>89.1</h5>
 </td>
-<td><p>73.5</p>
+<td><h6>73.5</h6>
 </td>
 </tr>
 <tr>
-<td><p>Ours</p>
+<td><h6>Ours</h6>
 </td>
-<td><p>87.5</p>
+<td><h5>87.5</h5>
 </td>
-<td><p>83.9</p>
+<td><h5>83.9</h5>
 </td>
-<td><p>92.5</p>
+<td><h5>92.5</h5>
 </td>
-<td><p>89.1</p>
+<td><h5>89.1</h5>
 </td>
-<td><p>74.6</p>
+<td><h5>74.6</h5>
 </td>
 </tr>
 </table>
@@ -820,51 +820,51 @@
 
 <table border="1">
 <tr>
-<th><p>Method</p>
+<th><h6>Method</h6>
 </th>
-<th><p>IIIT5K</p>
+<th><h6>IIIT5K</h6>
 </th>
-<th><p>SVT</p>
+<th><h6>SVT</h6>
 </th>
-<th><p>IC03</p>
+<th><h6>IC03</h6>
 </th>
-<th><p>IC13</p>
+<th><h6>IC13</h6>
 </th>
-<th><p>SVT-P</p>
+<th><h6>SVT-P</h6>
 </th>
-<th><p>CUTE80</p>
+<th><h6>CUTE80</h6>
 </th>
 </tr>
 <tr>
-<td><p>Shi et al. [42]</p>
+<td><h6>Shi et al. [42]</h6>
 </td>
-<td><p>81.9</p>
+<td><h6>81.9</h6>
 </td>
-<td><p>81.9</p>
+<td><h6>81.9</h6>
 </td>
-<td><p>90.1</p>
+<td><h6>90.1</h6>
 </td>
-<td><p>88.6</p>
+<td><h6>88.6</h6>
 </td>
-<td><p>71.8</p>
+<td><h6>71.8</h6>
 </td>
-<td><p>59.2</p>
+<td><h6>59.2</h6>
 </td>
 </tr>
 <tr>
-<td><p>Ours</p>
+<td><h6>Ours</h6>
 </td>
-<td><p>87.9</p>
+<td><h5>87.9</h5>
 </td>
-<td><p>83.9</p>
+<td><h5>83.9</h5>
 </td>
-<td><p>92.7</p>
+<td><h5>92.7</h5>
 </td>
-<td><p>90.0</p>
+<td><h5>90.0</h5>
 </td>
-<td><p>73.2</p>
+<td><h5>73.2</h5>
 </td>
-<td><p>72.6</p>
+<td><h5>72.6</h5>
 </td>
 </tr>
 </table>
@@ -875,25 +875,25 @@
 
 <table border="1">
 <tr>
-<th rowspan="2"><p>Method</p>
+<th rowspan="2"><h6>Method</h6>
 </th>
-<th><p>IIIT5K</p>
+<th><h6>IIIT5K</h6>
 </th>
-<th><p>SVT</p>
+<th><h6>SVT</h6>
 </th>
-<th><p>IC03</p>
+<th><h6>IC03</h6>
 </th>
-<th><p>IC13</p>
+<th><h6>IC13</h6>
 </th>
 </tr>
 <tr>
-<td><p>50 1k None</p>
+<td><h6>50 1k None</h6>
 </td>
-<td><p>50 None</p>
+<td><h6>50 None</h6>
 </td>
-<td><p>50 Full None</p>
+<td><h6>50 Full None</h6>
 </td>
-<td><p>None</p>
+<td><h6>None</h6>
 </td>
 </tr>
 <tr>
@@ -965,15 +965,15 @@
 </td>
 </tr>
 <tr>
-<td><p>Ours</p>
+<td><h6>Ours</h6>
 </td>
-<td><p>97.9 96.2 91.2</p>
+<td><h6>97.9 96.2 91.2</h6>
 </td>
-<td><p>96.6 88.3</p>
+<td><h5>96.6 88.3</h5>
 </td>
-<td><p>98.7 97.8 95.0</p>
+<td><h5>98.7 97.8 95.0</h5>
 </td>
-<td><p>92.4</p>
+<td><h5>92.4</h5>
 </td>
 </tr>
 </table>
@@ -995,7 +995,7 @@
 
 <p>In addition to perspective text, the MORAN is able to recognize curved text. Some examples are demonstrated in Fig. 9. The MORAN is able to rectify most curved text in CUTE80 and correctly recognize them. It is hence adequately robust to rectify text with small curve angle.</p>
 
-<h3>4.7. Limitation of the MORAN</h3>
+<h4>4.7. Limitation of the MORAN</h4>
 
 <p>For fair comparisons and good repeatability, we chose the widely used training datasets, which contain only horizontal synthetic text. Therefore, because of complicated background, the MORAN will fail when the curve angle is too large. Such cases are given in the</p>
 
@@ -1005,21 +1005,21 @@
 
 <table border="1">
 <tr>
-<th rowspan="2"><p>Method</p>
+<th rowspan="2"><h6>Method</h6>
 </th>
-<th><p>SVT-Perspective</p>
+<th><h6>SVT-Perspective</h6>
 </th>
-<th><p>CUTE80</p>
+<th><h6>CUTE80</h6>
 </th>
-<th><p>IC15</p>
+<th><h6>IC15</h6>
 </th>
 </tr>
 <tr>
-<td><p>50 Full None</p>
+<td><h6>50 Full None</h6>
 </td>
-<td><p>None</p>
+<td><h6>None</h6>
 </td>
-<td><p>None</p>
+<td><h6>None</h6>
 </td>
 </tr>
 <tr>
@@ -1049,13 +1049,13 @@
 </td>
 </tr>
 <tr>
-<td><p>Ours</p>
+<td><h6>Ours</h6>
 </td>
-<td><p>94.3 86.7 76.1</p>
+<td><h5>94.3 86.7 76.1</h5>
 </td>
-<td><p>77.4</p>
+<td><h5>77.4</h5>
 </td>
-<td><p>68.8</p>
+<td><h5>68.8</h5>
 </td>
 </tr>
 </table>
@@ -1096,7 +1096,7 @@
 
 <p>The experiments above are all based on cropped text recognition. A MORAN without a text detector is not an end-to-end scene text recognition system. Actually, in more application scenarios, irregular and multioriented text are challenging both for detection and recognition, which have attracted great interest. For instance, Liu et al. [29] and Ch’ng et al. [7] released complicated datasets. Sain et al. [39] and He et al. [18] proposed methods to improve the performance of multi-oriented text detection. Therefore, scene text recognition still remains a challenging problem waiting for solutions.</p>
 
-<h2>5. Conclusion</h2>
+<h3>5. Conclusion</h3>
 
 <p>In this paper, we presented a multi-object rectiﬁed attention network (MORAN) for scene text recognition. The proposed framework involves two stages: rectiﬁcation and recognition. First, a multiobject rectiﬁcation network, which is free of geometric constraints and ﬂexible enough to handle complicated deformations, was proposed to transform an image containing irregular text into a more readable one. The rectiﬁed patterns decrease the difﬁculty of recognition. Then, an attention-based sequence recognition network was designed to recognize the rectiﬁed image and outputs the characters in sequence. Moreover, a fractional pickup method was proposed to expand the visual ﬁeld of the attention-based decoder. The attention-based decoder thus obtains more context information and gains robustness. To</p>
 
@@ -1104,11 +1104,11 @@
 
 <p>In future, it is worth extending this method to deal with arbitrary-oriented text recognition, which is more challenging due to the wide variety of text and background. Moreover, the improvements in endto-end text recognition performance come not just from the recognition model, but also from detection model. Therefore, ﬁnding a proper and effective way to combine the MORAN with a scene text detector is also a direction worth of study.</p>
 
-<h2>Acknowledgement</h2>
+<h3>Acknowledgement</h3>
 
 <p>This research was supported by the National Key R&D Program of China (Grant No.: 2016YFB1001405), GD-NSF (Grant No.: 2017A030312006), NSFC (Grant No.: 61472144, 61673182), GDSTP (Grant No.: 2015B010101004, 2015B010130003, 2017A030312006), GZSTP (Grant No.: 201607010227).</p>
 
-<p>References</p>
+<h3>References</h3>
 
 <ul>
 <li><p>[1] J. Almaz´an, A. Gordo, A. Forn´es, and E. Valveny. Word spotting and recognition with embedded attributes. IEEE Trans. Pattern Anal. Mach. Intell., 36(12):2552–2566, 2014.</p></li>

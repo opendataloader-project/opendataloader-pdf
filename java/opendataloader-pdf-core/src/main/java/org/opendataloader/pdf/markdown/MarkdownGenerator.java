@@ -164,7 +164,7 @@ public class MarkdownGenerator implements Closeable {
                 writeContents(cellContents);
                 markdownWriter.write(MarkdownSyntax.TABLE_COLUMN_SEPARATOR);
             }
-            writeLineBreak();
+            markdownWriter.write(MarkdownSyntax.LINE_BREAK);
             //Due to markdown syntax we have to separate column headers
             if (row.getRowNumber() == 0) {
                 markdownWriter.write(MarkdownSyntax.TABLE_COLUMN_SEPARATOR);
@@ -172,7 +172,7 @@ public class MarkdownGenerator implements Closeable {
                     markdownWriter.write(MarkdownSyntax.TABLE_HEADER_SEPARATOR);
                     markdownWriter.write(MarkdownSyntax.TABLE_COLUMN_SEPARATOR);
                 }
-                writeLineBreak();
+                markdownWriter.write(MarkdownSyntax.LINE_BREAK);
             }
         }
         leaveTable();
@@ -203,12 +203,13 @@ public class MarkdownGenerator implements Closeable {
     }
 
     protected void writeHeading(SemanticHeading heading) throws IOException {
-        int headingLevel = heading.getHeadingLevel();
-        for (int i = 0; i < headingLevel; i++) {
-            markdownWriter.write(MarkdownSyntax.HEADING_LEVEL);
+        if (!isInsideTable()) {
+            int headingLevel = heading.getHeadingLevel();
+            for (int i = 0; i < headingLevel; i++) {
+                markdownWriter.write(MarkdownSyntax.HEADING_LEVEL);
+            }
+            markdownWriter.write(MarkdownSyntax.SPACE);
         }
-
-        markdownWriter.write(MarkdownSyntax.SPACE);
         markdownWriter.write(getCorrectMarkdownString(heading.getValue()));
     }
 
