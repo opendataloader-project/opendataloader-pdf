@@ -9,10 +9,10 @@ public class TextNodeStatisticsConfig {
     public double fontSizeDominantMin = 10.0;
     public double fontSizeDominantMax = 13.0;
     public double fontSizeHeadingMax = 32.0;
-    public double fontSizeRarityBoost = 0.42;
+    public double fontSizeRarityBoost = 0.5;
 
     public double fontWeightDominantMin = 395.0;
     public double fontWeightDominantMax = 405.0;
     public double fontWeightHeadingMax = 900.0;
-    public double fontWeightRarityBoost = 0.2;
+    public double fontWeightRarityBoost = 0.3;
 }
