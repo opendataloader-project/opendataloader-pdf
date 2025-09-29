@@ -4,7 +4,7 @@
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
     <option name="MAIN_CLASS_NAME" value="org.opendataloader.pdf.cli.CLIMain" />
     <module name="opendataloader-pdf-cli" />
-    <option name="PROGRAM_PARAMETERS" value="../samples/pdf -o temp --markdown-with-html --html" />
+    <option name="PROGRAM_PARAMETERS" value="../resources/1901.03003.pdf --markdown --html --pdf" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>
