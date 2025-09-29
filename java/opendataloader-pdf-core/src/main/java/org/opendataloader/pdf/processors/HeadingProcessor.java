@@ -21,7 +21,6 @@ import org.verapdf.wcag.algorithms.entities.text.TextStyle;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
 import java.util.*;
-import java.util.logging.Logger;
 
 public class HeadingProcessor {
     private static final double HEADING_PROBABILITY = 0.75;
@@ -34,14 +33,15 @@ public class HeadingProcessor {
             processContent(textNodes, content, textNodeStatistics);
         }
 
-        for (int index = 0; index < textNodes.size() - 1; index++) {
+        int textNodesCount = textNodes.size();
+        for (int index = 0; index < textNodesCount; index++) {
             SemanticTextNode textNode = textNodes.get(index);
             if (textNode.getSemanticType() == SemanticType.HEADING) {
                 continue;
             }
-            double probability = NodeUtils.headingProbability(textNode,
-                index != 0 ? textNodes.get(index - 1) : null,
-                textNodes.get(index + 1), textNodes.get(index));
+            SemanticTextNode prevNode = index != 0 ? textNodes.get(index - 1) : null;
+            SemanticTextNode nextNode = index + 1 < textNodesCount ? textNodes.get(index + 1) : null;
+            double probability = NodeUtils.headingProbability(textNode, prevNode, nextNode, textNode);
 
             probability += textNodeStatistics.fontSizeRarityBoost(textNode);
             probability += textNodeStatistics.fontWeightRarityBoost(textNode);
