@@ -7,44 +7,28 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ModeWeightStatistics {
+    private final double scoreMax;
+    private final double scoreMin;
+    private final double modeMin;
+    private final double modeMax;
     private final Map<Double, Long> countMap = new HashMap<>();
     private List<Map.Entry<Double, Long>> sorted = new ArrayList<>();
+    private List<Double> higherScores = new ArrayList<>();
+    private boolean isInitHigherScores = false;
+
+    public ModeWeightStatistics(double scoreMin, double scoreMax, double modeMin, double modeMax) {
+        this.scoreMin = scoreMin;
+        this.scoreMax = scoreMax;
+        this.modeMin = modeMin;
+        this.modeMax = modeMax;
+    }
 
     public void addScore(double score) {
         countMap.merge(score, 1L, Long::sum);
     }
 
-    public void sortByFrequency() {
-        sorted = new ArrayList<>(countMap.entrySet());
-        sorted.sort((a, b) -> Long.compare(b.getValue(), a.getValue()));
-    }
-
-    public double getMode(double modeMin, double modeMax) {
-        if (sorted.isEmpty()) {
-            sortByFrequency();
-        }
-        for (Map.Entry<Double, Long> entry : sorted) {
-            double value = entry.getKey();
-            if (value >= modeMin && value <= modeMax) {
-                return value;
-            }
-        }
-        return 0.0;
-    }
-
-    public double getBoost(double score, double scoreMax, double modeMin, double modeMax) {
-        if (sorted.isEmpty()) {
-            sortByFrequency();
-        }
-        double mode = getMode(modeMin, modeMax);
-        if (score <= mode || score > scoreMax) {
-            return 0.0;
-        }
-        List<Double> higherScores = sorted.stream()
-            .map(Map.Entry::getKey)
-            .filter(s -> s > mode && s <= scoreMax)
-            .sorted()
-            .collect(Collectors.toList());
+    public double getBoost(double score) {
+        initHigherScores();
         int n = higherScores.size();
         if (n == 0) {
             return 0.0;
@@ -55,5 +39,37 @@ public class ModeWeightStatistics {
             }
         }
         return 0.0;
+    }
+
+    public void sortByFrequency() {
+        sorted = new ArrayList<>(countMap.entrySet());
+        sorted.sort((a, b) -> Long.compare(b.getValue(), a.getValue()));
+    }
+
+    public double getMode() {
+        for (Map.Entry<Double, Long> entry : sorted) {
+            double value = entry.getKey();
+            if (value >= modeMin && value <= modeMax) {
+                return value;
+            }
+        }
+        return 0.0;
+    }
+
+    private void initHigherScores() {
+        if (isInitHigherScores) {
+            return;
+        }
+
+        sortByFrequency();
+        double mode = getMode();
+
+        higherScores = sorted.stream()
+            .map(Map.Entry::getKey)
+            .filter(s -> s > mode && s >= scoreMin && s <= scoreMax)
+            .sorted()
+            .collect(Collectors.toList());
+
+        isInitHigherScores = true;
     }
 }
