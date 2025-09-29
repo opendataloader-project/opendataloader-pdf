@@ -16,6 +16,7 @@ import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.enums.TextAlignment;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.CaptionUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -302,6 +303,9 @@ public class ParagraphProcessor {
     }
 
     private static boolean isOneParagraph(TextBlock previousBlock, TextBlock nextBlock) {
+        if (!areCloseStyle(previousBlock, nextBlock)) {
+            return false;
+        }
         double probability = getDifferentLinesProbability(previousBlock, nextBlock);
         return CaptionUtils.areOverlapping(previousBlock.getLastLine(), nextBlock.getFirstLine().getBoundingBox()) &&
                 probability > DIFFERENT_LINES_PROBABILITY &&
@@ -347,5 +351,11 @@ public class ParagraphProcessor {
 
         }
         return 0;
+    }
+
+    private static boolean areCloseStyle(TextBlock previousBlock, TextBlock nextBlock) {
+        return NodeUtils.areCloseNumbers(previousBlock.getFontSize(), nextBlock.getFontSize(), 1e-1) &&
+            NodeUtils.areCloseNumbers(previousBlock.getFirstLine().getFirstTextChunk().getFontWeight(),
+                nextBlock.getFirstLine().getFirstTextChunk().getFontWeight(), 1e-1);
     }
 }

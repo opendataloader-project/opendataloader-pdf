@@ -63,29 +63,38 @@
     "type" : "paragraph",
     "id" : 651,
     "page number" : 1,
-    "bounding box" : [ 61.934, 78.875, 271.187, 100.68 ],
+    "bounding box" : [ 61.934, 89.653, 144.698, 100.68 ],
+    "font" : "NimbusRomNo9L-Regu",
+    "font size" : 8.966,
+    "text color" : "[0.0]",
+    "content" : "∗Corresponding author"
+  }, {
+    "type" : "paragraph",
+    "id" : 652,
+    "page number" : 1,
+    "bounding box" : [ 62.765, 78.875, 271.187, 90.332 ],
     "font" : "NimbusMonL-Regu",
     "font size" : 8.966,
     "text color" : "[0.0]",
-    "content" : "∗Corresponding author 1https://github.com/Canjie-Luo/MORAN_v2"
-  }, {
-    "type" : "image",
-    "id" : 652,
-    "page number" : 1,
-    "bounding box" : [ 315.944, 496.162, 386.808, 538.682 ]
+    "content" : "1https://github.com/Canjie-Luo/MORAN_v2"
   }, {
     "type" : "image",
     "id" : 653,
     "page number" : 1,
-    "bounding box" : [ 315.945, 452.648, 386.807, 495.167 ]
+    "bounding box" : [ 315.944, 496.162, 386.808, 538.682 ]
   }, {
     "type" : "image",
     "id" : 654,
     "page number" : 1,
+    "bounding box" : [ 315.945, 452.648, 386.807, 495.167 ]
+  }, {
+    "type" : "image",
+    "id" : 655,
+    "page number" : 1,
     "bounding box" : [ 315.945, 409.132, 386.808, 451.652 ]
   }, {
     "type" : "paragraph",
-    "id" : 655,
+    "id" : 656,
     "page number" : 1,
     "bounding box" : [ 343.236, 399.499, 507.138, 410.306 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -94,47 +103,47 @@
     "content" : "(a) (b) (c)"
   }, {
     "type" : "image",
-    "id" : 656,
+    "id" : 657,
     "page number" : 1,
     "bounding box" : [ 392.918, 496.162, 463.783, 538.682 ]
   }, {
     "type" : "image",
-    "id" : 657,
+    "id" : 658,
     "page number" : 1,
     "bounding box" : [ 392.918, 452.646, 463.783, 495.166 ]
   }, {
     "type" : "image",
-    "id" : 658,
+    "id" : 659,
     "page number" : 1,
     "bounding box" : [ 392.918, 409.13, 463.783, 451.65 ]
   }, {
     "type" : "image",
-    "id" : 659,
+    "id" : 660,
     "page number" : 1,
     "bounding box" : [ 469.89, 496.163, 540.76, 538.683 ]
   }, {
     "type" : "image",
-    "id" : 660,
+    "id" : 661,
     "page number" : 1,
     "bounding box" : [ 469.889, 452.647, 540.76, 495.167 ]
   }, {
     "type" : "image",
-    "id" : 661,
+    "id" : 662,
     "page number" : 1,
     "bounding box" : [ 469.89, 409.131, 540.759, 451.652 ]
   }, {
     "type" : "caption",
-    "id" : 662,
+    "id" : 663,
     "page number" : 1,
     "bounding box" : [ 308.862, 360.946, 545.115, 396.861 ],
-    "linked content id" : 661,
+    "linked content id" : 662,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 9.963,
     "text color" : "[0.0]",
     "content" : "Figure 1. Examples of regular and irregular scene text. (a) Regular text. (b) Slanted and perspective text. (c) Curved text."
   }, {
     "type" : "heading",
-    "id" : 663,
+    "id" : 664,
     "level" : "Subtitle",
     "page number" : 1,
     "bounding box" : [ 308.862, 328.315, 385.698, 343.869 ],
@@ -145,7 +154,7 @@
     "content" : "1. Introduction"
   }, {
     "type" : "paragraph",
-    "id" : 664,
+    "id" : 665,
     "page number" : 1,
     "bounding box" : [ 308.862, 200.233, 545.109, 321.771 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -154,7 +163,7 @@
     "content" : "Scene text recognition is an essential process in computer vision tasks. Many practical applications such as trafﬁc sign reading, product recognition, intelligent inspection, and image searching, beneﬁt from the rich semantic information of scene text. With the development of scene text detection methods [11, 26, 46, 56], scene character recognition has emerged at the forefront of this research topic and is regarded as an open and very challenging research problem [45]."
   }, {
     "type" : "paragraph",
-    "id" : 665,
+    "id" : 666,
     "page number" : 1,
     "bounding box" : [ 308.862, 105.211, 545.109, 199.651 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -163,7 +172,7 @@
     "content" : "Nowadays, regular text recognition methods [3, 33, 41, 45, 50] have achieved notable success. Moreover, methods based on convolutional neural networks [3, 22, 50] have been broadly applied. Integrating recognition models with recurrent neural networks [17, 41, 42] and attention mechanisms [5, 6, 27, 51] yields better performance for these models."
   }, {
     "type" : "paragraph",
-    "id" : 666,
+    "id" : 667,
     "page number" : 1,
     "bounding box" : [ 308.862, 77.935, 545.109, 104.629 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -172,7 +181,7 @@
     "content" : "Nevertheless, most current recognition models remain too unstable to handle multiple disturbances"
   }, {
     "type" : "heading",
-    "id" : 667,
+    "id" : 668,
     "level" : "Doctitle",
     "page number" : 1,
     "bounding box" : [ 14.04, 232.0, 36.36, 577.52 ],
@@ -183,7 +192,7 @@
     "content" : "arXiv:1901.03003v1  [cs.CV]  10 Jan 2019"
   }, {
     "type" : "footer",
-    "id" : 668,
+    "id" : 669,
     "page number" : 1,
     "bounding box" : [ 294.885, 48.047, 300.34, 61.192 ],
     "kids" : [ {
@@ -199,12 +208,12 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 669,
+    "id" : 670,
     "page number" : 2,
     "bounding box" : [ 50.112, 630.856, 291.038, 721.561 ]
   }, {
     "type" : "paragraph",
-    "id" : 670,
+    "id" : 671,
     "page number" : 2,
     "bounding box" : [ 74.205, 695.251, 101.467, 720.443 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -213,7 +222,7 @@
     "content" : "Input Image"
   }, {
     "type" : "paragraph",
-    "id" : 671,
+    "id" : 672,
     "page number" : 2,
     "bounding box" : [ 158.53, 668.749, 284.072, 720.443 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -222,7 +231,7 @@
     "content" : "Rectiﬁed Image Result JOHNNY"
   }, {
     "type" : "paragraph",
-    "id" : 672,
+    "id" : 673,
     "page number" : 2,
     "bounding box" : [ 117.572, 690.433, 238.216, 703.578 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -231,7 +240,7 @@
     "content" : "MORN ASRN"
   }, {
     "type" : "paragraph",
-    "id" : 673,
+    "id" : 674,
     "page number" : 2,
     "bounding box" : [ 110.344, 635.019, 162.468, 657.801 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -240,7 +249,7 @@
     "content" : "Weak Supervision"
   }, {
     "type" : "paragraph",
-    "id" : 674,
+    "id" : 675,
     "page number" : 2,
     "bounding box" : [ 204.307, 635.019, 256.431, 657.801 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -249,13 +258,13 @@
     "content" : "Text Label Supervision"
   }, {
     "type" : "list",
-    "id" : 675,
+    "id" : 676,
     "level" : "1",
     "page number" : 2,
     "bounding box" : [ 50.112, 568.281, 286.365, 628.106 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 1,
-    "next list id" : 699,
+    "next list id" : 700,
     "list items" : [ {
       "type" : "list item",
       "page number" : 2,
@@ -268,7 +277,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 676,
+    "id" : 677,
     "page number" : 2,
     "bounding box" : [ 50.112, 462.27, 286.359, 543.161 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -277,7 +286,7 @@
     "content" : "from the environment. Furthermore, the various shapes and distorted patterns of irregular text cause additional challenges in recognition. As illustrated in Fig. 1, scene text with irregular shapes, such as perspective and curved text, is still very challenging to recognize."
   }, {
     "type" : "paragraph",
-    "id" : 677,
+    "id" : 678,
     "page number" : 2,
     "bounding box" : [ 50.112, 215.906, 286.367, 459.387 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -286,7 +295,7 @@
     "content" : "Reading text is naturally regarded as a multiclassiﬁcation task involving sequence-like objects [41]. Usually, the characters in one text are of the same size. However, characters in different scene texts can vary in size. Therefore, we propose the multiobject rectiﬁed attention network (MORAN), which can read rotated, scaled and stretched characters in different scene texts. The MORAN consists of a multi-object rectiﬁcation network (MORN) to rectify images and an attention-based sequence recognition network (ASRN) to read the text. We separate the difﬁcult recognition task into two parts. First, as one kind of spatial transformer, the MORN rectiﬁes images that contain irregular text. As Fig. 2 shows, after the rectiﬁcation by the MORN, the slanted text becomes more horizontal, tightly-bounded, and easier to read. Second, ASRN takes the rectiﬁed image as input and outputs the predicted word."
   }, {
     "type" : "paragraph",
-    "id" : 678,
+    "id" : 679,
     "page number" : 2,
     "bounding box" : [ 50.112, 77.935, 286.359, 213.023 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -295,7 +304,7 @@
     "content" : "The training of the MORN is guided by the ASRN, which requires only text labels. Without any geometric-level or pixel-level supervision, the MORN is trained in a weak supervision way. To facilitate this manner of network training, we initialize a basic coordinate grid. Every pixel of an image has its own position coordinates. The MORN learns and generates an offset grid based on these coordinates and samples the pixel value accordingly to rectify the image. The rectiﬁed image is then obtained for the ASRN."
   }, {
     "type" : "paragraph",
-    "id" : 679,
+    "id" : 680,
     "page number" : 2,
     "bounding box" : [ 308.862, 543.386, 545.109, 719.121 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -304,7 +313,7 @@
     "content" : "With respect to the ASRN, a decoder with an attention mechanism is more likely to predict the correct words because of the rectiﬁed images. However, Cheng et al. [5] found that existing attention-based methods cannot obtain accurate alignments between feature areas and targets. Therefore, we propose a fractional pickup method to train the ASRN. By adopting several scales of stretch on different parts of the feature maps, the feature areas are changed randomly at every iteration in the training phase. Owing to training with fractional pickup, the ASRN is more robust to the variation of context. Experiments show that the ASRN can accurately focus on objects."
   }, {
     "type" : "paragraph",
-    "id" : 680,
+    "id" : 681,
     "page number" : 2,
     "bounding box" : [ 308.862, 434.992, 545.109, 542.982 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -313,7 +322,7 @@
     "content" : "In addition, we designed a curriculum learning strategy for the training of the MORAN. Because the MORN and ASRN are mutually beneﬁcial in terms of performance, we ﬁrst ﬁx one of them to more efﬁciently optimize the other. Finally, the MORN and ASRN are optimized in an end-to-end fashion to improve performance. In short, the contributions of our research are as follows:"
   }, {
     "type" : "list",
-    "id" : 681,
+    "id" : 682,
     "level" : "2",
     "page number" : 2,
     "bounding box" : [ 319.771, 77.935, 545.109, 426.122 ],
@@ -358,7 +367,7 @@
     } ]
   }, {
     "type" : "footer",
-    "id" : 682,
+    "id" : 683,
     "page number" : 2,
     "bounding box" : [ 294.885, 48.047, 300.34, 61.192 ],
     "kids" : [ {
@@ -374,7 +383,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 683,
+    "id" : 684,
     "page number" : 3,
     "bounding box" : [ 50.112, 665.329, 286.359, 719.121 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -383,13 +392,13 @@
     "content" : "The rest of the paper is organized as follow. Section 2 reviews related work. Section 3 details the proposed method. Experimental results are given in Section 4, and the conclusions are presented in Section 5."
   }, {
     "type" : "list",
-    "id" : 684,
+    "id" : 685,
     "level" : "3",
     "page number" : 3,
     "bounding box" : [ 50.112, 639.981, 133.225, 655.535 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 1,
-    "next list id" : 766,
+    "next list id" : 767,
     "list items" : [ {
       "type" : "list item",
       "page number" : 3,
@@ -402,7 +411,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 685,
+    "id" : 686,
     "page number" : 3,
     "bounding box" : [ 50.112, 403.541, 286.359, 633.473 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -411,7 +420,7 @@
     "content" : "In recent years, the recognition of scene text has greatly advanced because of the rapid development of neural networks [14]. Zhu et al. [57] and Ye et al. [53] have provided an overview of the major advances in the ﬁeld of scene text detection and recognition. Based on the sliding window method [48, 49], pattern features extracted by a neural network become dominant with respect to the hand crafted features, such as the connected components [33], strokelet generation [52], histogram of oriented gradients descriptors [10, 44], tree-structured models [43], semi-markov conditional random ﬁelds [40] and generative shape models [30]. For instance, Bissacco [3] applied a network with ﬁve hidden layers for character classiﬁcation. Using convolutional neural networks (CNNs), Jaderberg et al. [21] and Yin et al. [54] proposed respective methods for unconstrained recognition."
   }, {
     "type" : "paragraph",
-    "id" : 686,
+    "id" : 687,
     "page number" : 3,
     "bounding box" : [ 50.112, 267.907, 286.359, 402.995 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -420,7 +429,7 @@
     "content" : "With the widespread application of recurrent neural networks (RNNs) [8, 19], CNN-based methods are combined with RNNs for better learning of context information. As a feature extractor, the CNN obtains the spatial features of images. Then, the RNN learns the context of features. Shi et al. [41] proposed an end-to-end trainable network with both CNNs and RNNs, named CRNN. Guided by the CTC loss [13], the CRNN-based network learns the conditional probability between predictions and sequential labels."
   }, {
     "type" : "paragraph",
-    "id" : 687,
+    "id" : 688,
     "page number" : 3,
     "bounding box" : [ 50.112, 145.823, 286.359, 267.361 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -429,7 +438,7 @@
     "content" : "Furthermore, attention mechanisms [2] focus on informative regions to achieve better performance. Lee et al. [27] proposed a recursive recurrent network with attention modeling for scene text recognition. Yang et al. [51] addressed a two-dimensional attention mechanism. Cheng et al. [5] used the focusing attention network (FAN) to correct shifts in attentional mechanisms and achieved more accurate position predictions."
   }, {
     "type" : "paragraph",
-    "id" : 688,
+    "id" : 689,
     "page number" : 3,
     "bounding box" : [ 50.112, 77.935, 286.359, 145.277 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -438,7 +447,7 @@
     "content" : "Compared with regular text recognition work, irregular text recognition is more difﬁcult. One kind of irregular text recognition method is the bottom-up approach [6, 51], which searches for the position of each character and then connects them. Another is the"
   }, {
     "type" : "paragraph",
-    "id" : 689,
+    "id" : 690,
     "page number" : 3,
     "bounding box" : [ 308.862, 678.878, 545.109, 719.121 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -447,7 +456,7 @@
     "content" : "top-down approach [28, 42]. This type of approach matches the shape of the text, attempts to rectify it, and reduces the degree of recognition difﬁculty."
   }, {
     "type" : "paragraph",
-    "id" : 690,
+    "id" : 691,
     "page number" : 3,
     "bounding box" : [ 308.862, 529.783, 545.109, 678.42 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -456,7 +465,7 @@
     "content" : "In the bottom-up manner, a two-dimensional attention mechanism for irregular text was proposed by Yang et al. [51]. Based on the sliced Wasserstein distance [36], the attention alignment loss is adopted in the training phase, which enables the attention model to accurately extract the character features while ignoring the redundant background information. Cheng et al. [6] proposed an arbitrary-orientation text recognition network, which uses more direct information of the position to instruct the network to identify characters in special locations."
   }, {
     "type" : "paragraph",
-    "id" : 691,
+    "id" : 692,
     "page number" : 3,
     "bounding box" : [ 308.862, 394.237, 545.109, 529.325 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -465,7 +474,7 @@
     "content" : "In the top-down manner, STAR-Net [28] used an afﬁne transformation network that transforms the rotated and differently scaled text into more regular text. Meanwhile, a ResNet [16] is used to extract features and handle more complex background noise. RARE [42] regresses the ﬁducial transformation points on sloped text and even curved text, thereby mapping the corresponding points onto standard positions of the new image. Using thin-plate-spline [4] to back propagate the gradients, RARE is end-to-end optimized."
   }, {
     "type" : "paragraph",
-    "id" : 692,
+    "id" : 693,
     "page number" : 3,
     "bounding box" : [ 308.862, 312.888, 545.109, 393.779 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -474,7 +483,7 @@
     "content" : "Our proposed MORAN model uses the top-down approach. The fractional pickup training method is thus designed to improve the sensitivity of the MORAN to focus on characters. For the training of the MORAN, we propose a curriculum learning strategy for better convergence."
   }, {
     "type" : "heading",
-    "id" : 693,
+    "id" : 694,
     "level" : "Subtitle",
     "page number" : 3,
     "bounding box" : [ 308.862, 287.804, 387.898, 303.358 ],
@@ -485,7 +494,7 @@
     "content" : "3. Methodology"
   }, {
     "type" : "paragraph",
-    "id" : 694,
+    "id" : 695,
     "page number" : 3,
     "bounding box" : [ 308.862, 146.296, 545.109, 281.384 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -494,7 +503,7 @@
     "content" : "The MORAN contains two parts. One is the MORN, which is trained in a weak supervision way to learn the offset of each part of the image. According to the predicted offsets, we apply sampling and obtain a rectiﬁed text image. The other one is ASRN, a CNN-LSTM framework followed by an attention decoder. The proposed fractional pickup further improves attention sensitivity. The curriculum learning strategy guides the MORAN to achieve stateof-the-art performance."
   }, {
     "type" : "heading",
-    "id" : 695,
+    "id" : 696,
     "level" : "Subtitle",
     "page number" : 3,
     "bounding box" : [ 308.862, 123.943, 494.714, 138.201 ],
@@ -505,7 +514,7 @@
     "content" : "3.1. Multi-Object Rectiﬁcation Network"
   }, {
     "type" : "paragraph",
-    "id" : 696,
+    "id" : 697,
     "page number" : 3,
     "bounding box" : [ 308.862, 77.935, 545.109, 118.179 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -514,7 +523,7 @@
     "content" : "Common methods to rectify patterns such as the afﬁne transformation network, are limited by certain geometric constraints. With respect to the afﬁne"
   }, {
     "type" : "footer",
-    "id" : 697,
+    "id" : 698,
     "page number" : 3,
     "bounding box" : [ 294.885, 48.048, 300.34, 61.193 ],
     "kids" : [ {
@@ -530,19 +539,19 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 698,
+    "id" : 699,
     "page number" : 4,
     "bounding box" : [ 97.371, 578.271, 239.102, 720.002 ]
   }, {
     "type" : "list",
-    "id" : 699,
+    "id" : 700,
     "level" : "1",
     "page number" : 4,
     "bounding box" : [ 50.112, 455.92, 286.365, 575.521 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 1,
-    "previous list id" : 675,
-    "next list id" : 812,
+    "previous list id" : 676,
+    "next list id" : 813,
     "list items" : [ {
       "type" : "list item",
       "page number" : 4,
@@ -555,7 +564,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 700,
+    "id" : 701,
     "page number" : 4,
     "bounding box" : [ 50.112, 312.267, 286.359, 433.805 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -564,7 +573,7 @@
     "content" : "transformation, it is limited to rotation, scaling, and translation. However, one image may have several kinds of deformations, and the distortion of scene text will thus be complicated. As shown in Fig. 3, the characters in the image become slanted after rectiﬁcation by the afﬁne transformation. The black edges introduce additional noise. Therefore, transformations with geometric constraints can not cover all complicated deformations."
   }, {
     "type" : "paragraph",
-    "id" : 701,
+    "id" : 702,
     "page number" : 4,
     "bounding box" : [ 50.112, 161.228, 286.359, 309.865 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -573,7 +582,7 @@
     "content" : "Another method that is free of geometric constraints, is the deformable convolutional network [9]. Using deformable convolutional kernels, the feature extractor automatically selects informative features. We attempted to combine the recognition network with a deformable convolutional network. However, as a sequence-to-sequence problem, irregular text recognition is more challenging. The network sometimes failed to converge. The best accuracy rate on IIIT5K we achieved was only 78.1%, which is far behind the state-of-the-art result (91.2%)."
   }, {
     "type" : "paragraph",
-    "id" : 702,
+    "id" : 703,
     "page number" : 4,
     "bounding box" : [ 50.112, 77.935, 286.359, 158.826 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -582,7 +591,7 @@
     "content" : "Because the recognition models remain inadequately strong to handle multiple disturbances from various shapes, we consider rectifying images to reduce the difﬁculty of the recognition. As demonstrated in Fig. 4, the MORN architecture rectiﬁes the distorted image. The MORN predicts the offset of each part of"
   }, {
     "type" : "paragraph",
-    "id" : 703,
+    "id" : 704,
     "page number" : 4,
     "bounding box" : [ 308.862, 678.878, 545.109, 719.121 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -591,7 +600,7 @@
     "content" : "the image without any geometric constraint. Based on the predicted offsets, the image is rectiﬁed and becomes easier to recognize."
   }, {
     "type" : "paragraph",
-    "id" : 704,
+    "id" : 705,
     "page number" : 4,
     "bounding box" : [ 308.862, 609.556, 545.109, 676.897 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -600,17 +609,17 @@
     "content" : "Furthermore, the MORN predicts the position offsets but not the categories of characters. The character details for classiﬁcation are not necessary. We hence place a pooling layer before the convolutional layer to avoid noise and reduce the amount of calculation."
   }, {
     "type" : "caption",
-    "id" : 705,
+    "id" : 706,
     "page number" : 4,
     "bounding box" : [ 356.004, 587.767, 497.971, 599.771 ],
-    "linked content id" : 706,
+    "linked content id" : 707,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 9.963,
     "text color" : "[0.0]",
     "content" : "Table 1. Architecture of the MORN"
   }, {
     "type" : "table",
-    "id" : 706,
+    "id" : 707,
     "level" : "3",
     "page number" : 4,
     "bounding box" : [ 308.862, 407.712, 549.807, 589.43 ],
@@ -1641,7 +1650,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 707,
+    "id" : 708,
     "page number" : 4,
     "bounding box" : [ 325.226, 363.999, 545.112, 404.243 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -1650,7 +1659,7 @@
     "content" : "Here k, s, p are kernel, stride and padding sizes, respectively. For example, k3 represents a 3 × 3 kernel size."
   }, {
     "type" : "paragraph",
-    "id" : 708,
+    "id" : 709,
     "page number" : 4,
     "bounding box" : [ 308.862, 77.935, 545.115, 348.515 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -1659,7 +1668,7 @@
     "content" : "The architecture of the MORN is given in Table1. Each convolutional layer is followed by a batch normalization layer and a ReLU layer except for the last one. The MORN ﬁrst divides the image into several parts and then predicts the offset of each part. With an input size of 32 × 100, the MORN divides the image into 3 × 11 = 33 parts. All the offset values are activated by Tanh(·), resulting in values within the range of ( 1,1). The offset maps contain two channels, which denote the x-coordinate and y-coordinate respectively. Then, we apply bilinear interpolation to smoothly resize the offset maps to a size of 32 × 100, which is the same size of the input image. After allocating the speciﬁc offset to each pixel, the transformation of the image is smooth. As demonstrated in Fig.3, the color depth gradually changes on both sides of the boundary between the red and blue colors in the heat map, which evidences the smoothness of the rectiﬁcation. There are no indented edges in the rectiﬁed image."
   }, {
     "type" : "footer",
-    "id" : 709,
+    "id" : 710,
     "page number" : 4,
     "bounding box" : [ 294.885, 48.047, 300.34, 61.192 ],
     "kids" : [ {
@@ -1675,22 +1684,22 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 710,
+    "id" : 711,
     "page number" : 5,
     "bounding box" : [ 56.667, 572.711, 538.567, 720.001 ]
   }, {
     "type" : "caption",
-    "id" : 711,
+    "id" : 712,
     "page number" : 5,
     "bounding box" : [ 217.169, 556.363, 375.564, 568.367 ],
-    "linked content id" : 710,
+    "linked content id" : 711,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 9.963,
     "text color" : "[0.0]",
     "content" : "Figure 4. Overall structure of MORAN."
   }, {
     "type" : "paragraph",
-    "id" : 712,
+    "id" : 713,
     "page number" : 5,
     "bounding box" : [ 50.112, 360.465, 286.362, 536.201 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -1699,7 +1708,7 @@
     "content" : "Moreover, because every value in the offset maps represents the offset from the original position, we generate a basic grid from the input image to represent the original positions of the pixels. The basic grid is generated by normalizing the coordinate of each pixel to [ 1,1]. The coordinates of the top-left pixel are ( 1, 1), and those of the bottom-right one are (1,1). Pixels at the same positions on different channels have the same coordinates. Similar to the offset maps, the grid contains two channels, which represent the xcoordinate and y-coordinate, respectively. Then, the basic grid and the resized offset maps are summed as follows,"
   }, {
     "type" : "paragraph",
-    "id" : 713,
+    "id" : 714,
     "page number" : 5,
     "bounding box" : [ 56.554, 333.778, 279.921, 347.171 ],
     "font" : "CMMI10",
@@ -1708,7 +1717,7 @@
     "content" : "offset(c,i,j) = offset(c,i,j) + basic(c,i,j),c = 1,2"
   }, {
     "type" : "paragraph",
-    "id" : 714,
+    "id" : 715,
     "level" : "4",
     "page number" : 5,
     "bounding box" : [ 50.112, 295.277, 286.362, 335.52 ],
@@ -1718,7 +1727,7 @@
     "content" : "(1) where (i,j) is the position of the i-th row and j-th column."
   }, {
     "type" : "paragraph",
-    "id" : 715,
+    "id" : 716,
     "page number" : 5,
     "bounding box" : [ 50.112, 227.52, 286.367, 294.862 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -1727,7 +1736,7 @@
     "content" : "Before sampling, the x-coordinate and y-coordinate on the offset maps are normalized to [0,W] and [0,H], respectively. Here, H × W is the size of the input image. The pixel value of i-th row and j-th column in rectiﬁed image I is,"
   }, {
     "type" : "paragraph",
-    "id" : 716,
+    "id" : 717,
     "page number" : 5,
     "bounding box" : [ 136.782, 200.503, 286.362, 216.124 ],
     "font" : "CMMI8",
@@ -1736,7 +1745,7 @@
     "content" : "I(i,j) = I(i ,j ) (2)"
   }, {
     "type" : "paragraph",
-    "id" : 717,
+    "id" : 718,
     "page number" : 5,
     "bounding box" : [ 134.808, 152.799, 212.396, 186.027 ],
     "font" : "CMMI10",
@@ -1745,7 +1754,7 @@
     "content" : "i = offset(1,i,j) j = offset(2,i,j)"
   }, {
     "type" : "paragraph",
-    "id" : 718,
+    "id" : 719,
     "level" : "4",
     "page number" : 5,
     "bounding box" : [ 273.642, 164.849, 286.362, 177.994 ],
@@ -1755,7 +1764,7 @@
     "content" : "(3)"
   }, {
     "type" : "paragraph",
-    "id" : 719,
+    "id" : 720,
     "page number" : 5,
     "bounding box" : [ 50.112, 77.935, 286.367, 145.277 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -1764,7 +1773,7 @@
     "content" : "where I is the input image. Further, i is obtained from the ﬁrst channel of the offset maps, whereas j is from the second channel. Both i and j are real values as opposed to integers so rectiﬁed image I is sampled from I using bilinear interpolation."
   }, {
     "type" : "paragraph",
-    "id" : 720,
+    "id" : 721,
     "page number" : 5,
     "bounding box" : [ 308.862, 455.31, 545.109, 536.201 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -1773,7 +1782,7 @@
     "content" : "Because Equation (2) is differentiable, the MORN can back-propagate the gradients. The MORN can be trained in a weak supervision way with images and associated text labels only, which means that it does not need pixel-level labeling information about the deformation of the text."
   }, {
     "type" : "paragraph",
-    "id" : 721,
+    "id" : 722,
     "page number" : 5,
     "bounding box" : [ 308.862, 358.607, 545.109, 453.048 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -1782,7 +1791,7 @@
     "content" : "As Fig. 5 shows, the text in the input images is irregular. However, the text in the rectiﬁed images is more readable. Slanted or perspective texts become tightly bound after rectiﬁcation. Furthermore, redundant noise is eliminated by the MORN for the curved texts. The background textures are removed in the rectiﬁed images of Fig. 5 (b)."
   }, {
     "type" : "paragraph",
-    "id" : 722,
+    "id" : 723,
     "page number" : 5,
     "bounding box" : [ 308.862, 153.512, 545.109, 356.345 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -1791,7 +1800,7 @@
     "content" : "The advantages of the MORN are manifold. 1) The rectiﬁed images are more readable owing to the regular shape of the text and the reduced noise. 2) The MORN is more ﬂexible than the afﬁne transformation. It is free of geometric constraints, which enables it to rectify images using complicated transformations. 3) The MORN is more ﬂexible than methods using a speciﬁc number of regressing points. Existing method [42] cannot capture the text shape in details if the width of the image is large. Thus the MORN has no limit with respect to the image size, especially the width of the input image. 4) The MORN does not require extra labelling information of character positions. Therefore, it can be trained in a weak supervision way by using existing training datasets."
   }, {
     "type" : "heading",
-    "id" : 723,
+    "id" : 724,
     "level" : "Subtitle",
     "page number" : 5,
     "bounding box" : [ 308.862, 112.197, 545.114, 140.004 ],
@@ -1802,7 +1811,7 @@
     "content" : "3.2. Attention-based Sequence Recognition Network"
   }, {
     "type" : "paragraph",
-    "id" : 724,
+    "id" : 725,
     "page number" : 5,
     "bounding box" : [ 308.862, 77.935, 545.109, 104.629 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -1811,7 +1820,7 @@
     "content" : "As Fig. 4 shows, the major structure of the ASRN is a CNN-BLSTM framework. We adopt a one-"
   }, {
     "type" : "footer",
-    "id" : 725,
+    "id" : 726,
     "page number" : 5,
     "bounding box" : [ 294.885, 48.047, 300.34, 61.192 ],
     "kids" : [ {
@@ -1827,27 +1836,27 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 726,
+    "id" : 727,
     "page number" : 6,
     "bounding box" : [ 70.393, 606.619, 268.807, 719.999 ]
   }, {
     "type" : "caption",
-    "id" : 727,
+    "id" : 728,
     "page number" : 6,
     "bounding box" : [ 131.451, 596.988, 205.02, 607.793 ],
-    "linked content id" : 728,
+    "linked content id" : 729,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 8.966,
     "text color" : "[0.0]",
     "content" : "(a) Perspective texts"
   }, {
     "type" : "image",
-    "id" : 728,
+    "id" : 729,
     "page number" : 6,
     "bounding box" : [ 70.389, 473.228, 268.808, 586.607 ]
   }, {
     "type" : "paragraph",
-    "id" : 729,
+    "id" : 730,
     "page number" : 6,
     "bounding box" : [ 139.556, 463.596, 196.914, 474.401 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -1856,13 +1865,13 @@
     "content" : "(b) curved texts"
   }, {
     "type" : "list",
-    "id" : 730,
+    "id" : 731,
     "level" : "1",
     "page number" : 6,
     "bounding box" : [ 50.112, 377.223, 286.365, 460.958 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 1,
-    "next list id" : 765,
+    "next list id" : 766,
     "list items" : [ {
       "type" : "list item",
       "page number" : 6,
@@ -1875,7 +1884,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 731,
+    "id" : 732,
     "page number" : 6,
     "bounding box" : [ 50.112, 247.572, 286.366, 356.126 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -1884,7 +1893,7 @@
     "content" : "dimensional attention mechanism at the top of CRNN. The attention-based decoder, proposed by Bahdanau et al. [2], is used to accurately align the target and label. It is based on an RNN and directly generates the target sequence (y1,y2...,yN). The largest number of steps that the decoder generates is T. The decoder stops processing when it predicts an end-of-sequence token “EOS” [47]. At time step t, output yt is,"
   }, {
     "type" : "heading",
-    "id" : 732,
+    "id" : 733,
     "level" : "Subtitle",
     "page number" : 6,
     "bounding box" : [ 98.903, 221.661, 286.362, 235.371 ],
@@ -1895,7 +1904,7 @@
     "content" : "yt = Softmax(Woutst + bout) (4)"
   }, {
     "type" : "paragraph",
-    "id" : 733,
+    "id" : 734,
     "page number" : 6,
     "bounding box" : [ 50.112, 182.201, 286.36, 209.46 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -1904,7 +1913,7 @@
     "content" : "where st is the hidden state at time step t. We update st using GRU [8]. State st is computed as:"
   }, {
     "type" : "heading",
-    "id" : 734,
+    "id" : 735,
     "level" : "Subtitle",
     "page number" : 6,
     "bounding box" : [ 109.37, 156.291, 286.362, 170.0 ],
@@ -1915,7 +1924,7 @@
     "content" : "st = GRU(yprev,gt,st 1) (5)"
   }, {
     "type" : "paragraph",
-    "id" : 735,
+    "id" : 736,
     "page number" : 6,
     "bounding box" : [ 50.112, 103.846, 286.362, 144.089 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -1924,7 +1933,7 @@
     "content" : "where yprev denotes the embedding vectors of the previous output yt 1 and gt represents the glimpse vectors, respectively calculated as,"
   }, {
     "type" : "paragraph",
-    "id" : 736,
+    "id" : 737,
     "page number" : 6,
     "bounding box" : [ 107.968, 77.371, 286.362, 91.08 ],
     "font" : "CMMI10",
@@ -1933,17 +1942,17 @@
     "content" : "yprev = Embedding(yt 1) (6)"
   }, {
     "type" : "caption",
-    "id" : 737,
+    "id" : 738,
     "page number" : 6,
     "bounding box" : [ 357.663, 710.407, 496.313, 722.411 ],
-    "linked content id" : 738,
+    "linked content id" : 739,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 9.963,
     "text color" : "[0.0]",
     "content" : "Table 2. Architecture of the ASRN"
   }, {
     "type" : "table",
-    "id" : 738,
+    "id" : 739,
     "level" : "3",
     "page number" : 6,
     "bounding box" : [ 308.862, 488.509, 549.807, 712.07 ],
@@ -3211,7 +3220,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 739,
+    "id" : 740,
     "page number" : 6,
     "bounding box" : [ 325.226, 431.247, 545.112, 485.039 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3220,7 +3229,7 @@
     "content" : "Here, k, s, p are kernel, stride and padding sizes, respectively. For example, s2 × 1 represents a 2 × 1 stride size. “BLSTM” stands for bidirectionalLSTM. “GRU” is in attention-based decoder."
   }, {
     "type" : "paragraph",
-    "id" : 740,
+    "id" : 741,
     "page number" : 6,
     "bounding box" : [ 390.495, 390.072, 410.77, 401.884 ],
     "font" : "CMR10",
@@ -3229,7 +3238,7 @@
     "content" : "gt ="
   }, {
     "type" : "paragraph",
-    "id" : 741,
+    "id" : 742,
     "page number" : 6,
     "bounding box" : [ 418.799, 405.345, 424.558, 413.316 ],
     "font" : "CMMI8",
@@ -3238,7 +3247,7 @@
     "content" : "L"
   }, {
     "type" : "paragraph",
-    "id" : 742,
+    "id" : 743,
     "page number" : 6,
     "bounding box" : [ 414.827, 378.622, 428.531, 386.593 ],
     "font" : "CMR8",
@@ -3247,7 +3256,7 @@
     "content" : "i=1"
   }, {
     "type" : "paragraph",
-    "id" : 743,
+    "id" : 744,
     "page number" : 6,
     "bounding box" : [ 429.557, 390.072, 545.112, 403.782 ],
     "font" : "CMMI10",
@@ -3256,7 +3265,7 @@
     "content" : "(αt,ihi) (7)"
   }, {
     "type" : "paragraph",
-    "id" : 744,
+    "id" : 745,
     "page number" : 6,
     "bounding box" : [ 308.862, 333.685, 545.113, 373.928 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3265,7 +3274,7 @@
     "content" : "where hi denotes the sequential feature vectors and L is the length of the feature maps. In addition, αt,i is the vector of attention weights as follows,"
   }, {
     "type" : "paragraph",
-    "id" : 745,
+    "id" : 746,
     "page number" : 6,
     "bounding box" : [ 357.321, 298.092, 432.251, 309.904 ],
     "font" : "CMMI10",
@@ -3274,7 +3283,7 @@
     "content" : "αt,i = exp(et,i)/"
   }, {
     "type" : "paragraph",
-    "id" : 746,
+    "id" : 747,
     "page number" : 6,
     "bounding box" : [ 437.25, 313.365, 443.009, 321.336 ],
     "font" : "CMMI8",
@@ -3283,7 +3292,7 @@
     "content" : "L"
   }, {
     "type" : "paragraph",
-    "id" : 747,
+    "id" : 748,
     "page number" : 6,
     "bounding box" : [ 432.777, 286.641, 447.482, 294.612 ],
     "font" : "CMR8",
@@ -3292,7 +3301,7 @@
     "content" : "j=1"
   }, {
     "type" : "paragraph",
-    "id" : 748,
+    "id" : 749,
     "page number" : 6,
     "bounding box" : [ 448.008, 298.092, 545.112, 311.802 ],
     "font" : "CMMI10",
@@ -3301,7 +3310,7 @@
     "content" : "(exp(et,j)) (8)"
   }, {
     "type" : "paragraph",
-    "id" : 749,
+    "id" : 750,
     "page number" : 6,
     "bounding box" : [ 349.84, 261.011, 545.112, 274.861 ],
     "font" : "CMMI10",
@@ -3310,7 +3319,7 @@
     "content" : "et,i = Tanh(Wsst 1 + Whhi + b) (9)"
   }, {
     "type" : "paragraph",
-    "id" : 750,
+    "id" : 751,
     "page number" : 6,
     "bounding box" : [ 308.862, 186.123, 545.115, 254.029 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3319,7 +3328,7 @@
     "content" : "Here, Wout, bout, Ws, Wh and b are trainable parameters. Note that yprev is embedded from the ground truth of the last step in the training phase, whereas the ASRN only uses the predicted output of the last step as yt 1 in the testing phase."
   }, {
     "type" : "paragraph",
-    "id" : 751,
+    "id" : 752,
     "page number" : 6,
     "bounding box" : [ 308.862, 118.762, 545.109, 186.104 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3328,7 +3337,7 @@
     "content" : "The decoder outputs the predicted word in an unconstrained manner in lexicon-free mode. If lexicons are available, we evaluate the probability distributions for all words and choose the word with the highest probability as the ﬁnal result."
   }, {
     "type" : "paragraph",
-    "id" : 752,
+    "id" : 753,
     "page number" : 6,
     "bounding box" : [ 308.862, 77.935, 545.109, 118.179 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3337,7 +3346,7 @@
     "content" : "The architecture of the ASRN is given in Table2. Each convolutional layer is followed by a batch normalization layer and a ReLU layer."
   }, {
     "type" : "footer",
-    "id" : 753,
+    "id" : 754,
     "page number" : 6,
     "bounding box" : [ 294.885, 48.047, 300.34, 61.192 ],
     "kids" : [ {
@@ -3353,12 +3362,12 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 754,
+    "id" : 755,
     "page number" : 7,
     "bounding box" : [ 54.851, 719.454, 281.623, 720.0 ]
   }, {
     "type" : "paragraph",
-    "id" : 755,
+    "id" : 756,
     "level" : "4",
     "page number" : 7,
     "bounding box" : [ 57.33, 702.84, 279.145, 719.524 ],
@@ -3368,12 +3377,12 @@
     "content" : "————————————————————-Without FP With FP"
   }, {
     "type" : "image",
-    "id" : 756,
+    "id" : 757,
     "page number" : 7,
     "bounding box" : [ 54.853, 621.005, 281.622, 706.045 ]
   }, {
     "type" : "paragraph",
-    "id" : 757,
+    "id" : 758,
     "page number" : 7,
     "bounding box" : [ 100.207, 611.137, 239.942, 624.282 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3382,23 +3391,23 @@
     "content" : "hotl hotel"
   }, {
     "type" : "caption",
-    "id" : 758,
+    "id" : 759,
     "level" : "4",
     "page number" : 7,
     "bounding box" : [ 57.33, 604.391, 279.145, 617.536 ],
-    "linked content id" : 756,
+    "linked content id" : 757,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 10.909,
     "text color" : "[0.0]",
     "content" : "————————————————————-"
   }, {
     "type" : "image",
-    "id" : 759,
+    "id" : 760,
     "page number" : 7,
     "bounding box" : [ 54.85, 522.553, 281.623, 607.589 ]
   }, {
     "type" : "paragraph",
-    "id" : 760,
+    "id" : 761,
     "page number" : 7,
     "bounding box" : [ 100.205, 512.685, 246.005, 525.83 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3407,23 +3416,23 @@
     "content" : "argeh angels"
   }, {
     "type" : "caption",
-    "id" : 761,
+    "id" : 762,
     "level" : "4",
     "page number" : 7,
     "bounding box" : [ 57.33, 505.939, 279.145, 519.084 ],
-    "linked content id" : 759,
+    "linked content id" : 760,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 10.909,
     "text color" : "[0.0]",
     "content" : "————————————————————-"
   }, {
     "type" : "image",
-    "id" : 762,
+    "id" : 763,
     "page number" : 7,
     "bounding box" : [ 54.852, 424.103, 281.625, 509.144 ]
   }, {
     "type" : "paragraph",
-    "id" : 763,
+    "id" : 764,
     "page number" : 7,
     "bounding box" : [ 100.206, 414.235, 238.719, 427.38 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3432,25 +3441,25 @@
     "content" : "easer laser"
   }, {
     "type" : "caption",
-    "id" : 764,
+    "id" : 765,
     "level" : "4",
     "page number" : 7,
     "bounding box" : [ 57.33, 407.489, 279.145, 420.634 ],
-    "linked content id" : 762,
+    "linked content id" : 763,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 10.909,
     "text color" : "[0.0]",
     "content" : "————————————————————-"
   }, {
     "type" : "list",
-    "id" : 765,
+    "id" : 766,
     "level" : "1",
     "page number" : 7,
     "bounding box" : [ 50.112, 371.451, 286.361, 407.803 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 1,
-    "previous list id" : 730,
-    "next list id" : 786,
+    "previous list id" : 731,
+    "next list id" : 787,
     "list items" : [ {
       "type" : "list item",
       "page number" : 7,
@@ -3463,14 +3472,14 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 766,
+    "id" : 767,
     "level" : "3",
     "page number" : 7,
     "bounding box" : [ 50.112, 333.596, 153.619, 347.854 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 1,
-    "previous list id" : 684,
-    "next list id" : 791,
+    "previous list id" : 685,
+    "next list id" : 792,
     "list items" : [ {
       "type" : "list item",
       "page number" : 7,
@@ -3483,7 +3492,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 767,
+    "id" : 768,
     "page number" : 7,
     "bounding box" : [ 50.112, 258.388, 286.359, 325.73 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3492,7 +3501,7 @@
     "content" : "The decoder in the ASRN learns the matching relationship between labels and target characters in images. It is a data-driven process. The ability to choose regions that are focus-worthy is enhanced by the feedback of correct alignment."
   }, {
     "type" : "paragraph",
-    "id" : 768,
+    "id" : 769,
     "page number" : 7,
     "bounding box" : [ 50.112, 174.936, 286.359, 255.827 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3501,7 +3510,7 @@
     "content" : "However, scene text is surrounded by various types of noise. Often, the decoder is likely to be deceived into focusing on ambiguous background regions in practical applications. If the decoder generates an incorrect region of focus, the non-corresponding features are chosen, which can cause a failed prediction."
   }, {
     "type" : "paragraph",
-    "id" : 769,
+    "id" : 770,
     "page number" : 7,
     "bounding box" : [ 50.112, 77.935, 286.359, 172.375 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3510,7 +3519,7 @@
     "content" : "Some challenging samples for recognition are presented in Fig. 6. In this ﬁgure, the images contain text with shadows and unclear boundaries between characters or complicated backgrounds. Moreover, the focus regions generated by the decoder are narrow, which increases the probability of drifting from the correct regions."
   }, {
     "type" : "paragraph",
-    "id" : 770,
+    "id" : 771,
     "page number" : 7,
     "bounding box" : [ 308.862, 638.23, 545.109, 719.121 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3519,7 +3528,7 @@
     "content" : "We propose a training method called fractional pickup that fractionally picks up the neighboring features in the training phase. An attention-based decoder trained by fractional pickup method can perceive adjacent characters. The wider ﬁeld of attention contributes to the robustness of the MORAN."
   }, {
     "type" : "paragraph",
-    "id" : 771,
+    "id" : 772,
     "page number" : 7,
     "bounding box" : [ 308.862, 583.328, 545.109, 637.826 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3528,7 +3537,7 @@
     "content" : "We hence adopt fractional pickup at each time step of the decoder. In other words, a pair of attention weights are selected and modiﬁed at every time step. At time step t, αt,k and αt,k+1 are updated as,"
   }, {
     "type" : "paragraph",
-    "id" : 772,
+    "id" : 773,
     "page number" : 7,
     "bounding box" : [ 372.016, 564.429, 381.387, 578.442 ],
     "font" : "CMMI10",
@@ -3537,7 +3546,7 @@
     "content" : "α,"
   }, {
     "type" : "paragraph",
-    "id" : 773,
+    "id" : 774,
     "page number" : 7,
     "bounding box" : [ 361.196, 545.887, 503.509, 575.338 ],
     "font" : "CMMI10",
@@ -3546,7 +3555,7 @@
     "content" : "t,k = βαt,k + (1 β)αt,k+1 α,"
   }, {
     "type" : "paragraph",
-    "id" : 774,
+    "id" : 775,
     "page number" : 7,
     "bounding box" : [ 368.174, 543.099, 503.509, 556.796 ],
     "font" : "CMR10",
@@ -3555,7 +3564,7 @@
     "content" : "t,k+1 = (1 β)αt,k + βαt,k+1"
   }, {
     "type" : "paragraph",
-    "id" : 775,
+    "id" : 776,
     "level" : "3",
     "page number" : 7,
     "bounding box" : [ 526.937, 554.299, 545.112, 567.444 ],
@@ -3565,7 +3574,7 @@
     "content" : "(10)"
   }, {
     "type" : "paragraph",
-    "id" : 776,
+    "id" : 777,
     "page number" : 7,
     "bounding box" : [ 308.862, 512.221, 545.108, 538.916 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3574,7 +3583,7 @@
     "content" : "where decimal β and integer k are randomly generated as,"
   }, {
     "type" : "paragraph",
-    "id" : 777,
+    "id" : 778,
     "page number" : 7,
     "bounding box" : [ 392.611, 498.672, 545.113, 511.817 ],
     "font" : "CMMI10",
@@ -3583,7 +3592,7 @@
     "content" : "β = rand(0,1) (11)"
   }, {
     "type" : "paragraph",
-    "id" : 778,
+    "id" : 779,
     "page number" : 7,
     "bounding box" : [ 308.862, 449.898, 545.113, 494.205 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3592,7 +3601,7 @@
     "content" : "k = rand[1,T 1] (12) Here, T is the maximum number of steps of the decoder."
   }, {
     "type" : "paragraph",
-    "id" : 779,
+    "id" : 780,
     "page number" : 7,
     "bounding box" : [ 308.862, 314.406, 545.118, 449.887 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3601,7 +3610,7 @@
     "content" : "Variation of Distribution Fractional pickup adds randomness to αt,k and αt,k+1 in the decoder. This means that, even for the same image, the distribution of αt changes every time step in the training phase. As noted in Equation (7), the glimpse vectors gt grabs the sequential feature vectors hi according to the various distributions of αt, which is equivalent to the changes in feature areas. The randomness of β and k avoids over-ﬁtting and contributes to the robustness of the decoder."
   }, {
     "type" : "paragraph",
-    "id" : 780,
+    "id" : 781,
     "page number" : 7,
     "bounding box" : [ 308.862, 165.365, 545.117, 314.395 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3610,7 +3619,7 @@
     "content" : "Shortcut of Forward Propagation Sequential feature vector hi is the output of the last bidirectionalLSTM in the ASRN. As shown in Fig. 7, for step k + 1 in the bidirectional-LSTM, a shortcut connecting to step k is created by fractional pickup. The shortcut retains some features of the previous step in the training phase, which is the interference to the forget gate in bidirectional-LSTM. Therefore, fractional pickup provides more information about the previous step and increases the robustness for the bidirectional-LSTM in the ASRN."
   }, {
     "type" : "paragraph",
-    "id" : 781,
+    "id" : 782,
     "page number" : 7,
     "bounding box" : [ 308.862, 96.913, 545.118, 165.353 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3619,7 +3628,7 @@
     "content" : "Broader Visual Field Training with fractional pickup disturbs the decoder through the local variation of αt,k and αt,k+1. Note that αt,k and αt,k+1 are neighbors. Without fractional pickup, the error term of sequence feature vector hk is,"
   }, {
     "type" : "paragraph",
-    "id" : 782,
+    "id" : 783,
     "page number" : 7,
     "bounding box" : [ 397.198, 76.323, 545.113, 91.08 ],
     "font" : "CMMI8",
@@ -3628,7 +3637,7 @@
     "content" : "δhk = δgtαt,k (13)"
   }, {
     "type" : "footer",
-    "id" : 783,
+    "id" : 784,
     "page number" : 7,
     "bounding box" : [ 294.885, 48.047, 300.34, 61.192 ],
     "kids" : [ {
@@ -3644,12 +3653,12 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 784,
+    "id" : 785,
     "page number" : 8,
     "bounding box" : [ 111.544, 630.425, 224.925, 720.872 ]
   }, {
     "type" : "heading",
-    "id" : 785,
+    "id" : 786,
     "level" : "Subtitle",
     "page number" : 8,
     "bounding box" : [ 105.875, 700.497, 115.043, 712.308 ],
@@ -3660,13 +3669,13 @@
     "content" : "hi"
   }, {
     "type" : "list",
-    "id" : 786,
+    "id" : 787,
     "level" : "1",
     "page number" : 8,
     "bounding box" : [ 50.112, 603.716, 286.365, 627.675 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 1,
-    "previous list id" : 765,
+    "previous list id" : 766,
     "list items" : [ {
       "type" : "list item",
       "page number" : 8,
@@ -3679,7 +3688,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 787,
+    "id" : 788,
     "page number" : 8,
     "bounding box" : [ 50.112, 544.214, 286.365, 584.457 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3688,7 +3697,7 @@
     "content" : "where δgt is the error term of glimpse vector gt. δhk is only relevant to αt,k. However, with fractional pickup, the error item becomes,"
   }, {
     "type" : "heading",
-    "id" : 788,
+    "id" : 789,
     "level" : "Subtitle",
     "page number" : 8,
     "bounding box" : [ 92.991, 519.448, 286.363, 534.205 ],
@@ -3699,7 +3708,7 @@
     "content" : "δhk = δgt(βαt,k + (1 β)αt,k+1) (14)"
   }, {
     "type" : "paragraph",
-    "id" : 789,
+    "id" : 790,
     "page number" : 8,
     "bounding box" : [ 50.112, 430.161, 286.364, 511.052 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3708,7 +3717,7 @@
     "content" : "where αt,k+1 is relevant to hk+1, as noted in Equations (8) and (9), which means δhk is inﬂuenced by the neighbouring features. Owing to the disturbance, back-propagated gradients are able to dynamically optimize the decoder over a broader range of neighbouring regions."
   }, {
     "type" : "paragraph",
-    "id" : 790,
+    "id" : 791,
     "page number" : 8,
     "bounding box" : [ 50.112, 308.218, 286.363, 429.757 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3717,13 +3726,13 @@
     "content" : "The MORAN trained with fractional pickup method generates a smoother αt at each time step. Accordingly, it extracts features not only of the target characters, but also of the foreground and background context. As demonstrated in Fig. 6, the expanded visual ﬁeld enables the MORAN to correctly predict target characters. To the best of our knowledge, this is the ﬁrst attempt to adopt a shortcut in the training of the attention mechanism."
   }, {
     "type" : "list",
-    "id" : 791,
+    "id" : 792,
     "level" : "3",
     "page number" : 8,
     "bounding box" : [ 50.112, 286.479, 168.643, 300.737 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 1,
-    "previous list id" : 766,
+    "previous list id" : 767,
     "list items" : [ {
       "type" : "list item",
       "page number" : 8,
@@ -3736,7 +3745,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 792,
+    "id" : 793,
     "page number" : 8,
     "bounding box" : [ 50.112, 145.681, 286.359, 280.769 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3745,7 +3754,7 @@
     "content" : "The MORAN is end-to-end trainable with random initialization. However, end-to-end training consumes considerable time. We found that the MORN and ASRN can hinder each other during training. A MORN cannot be guided to rectify images when the input images have been correctly recognized by the high-performance ASRN. For the same reason, the ASRN will not gain robustness because the training samples have already been rectiﬁed by the MORN. The reasons above lead to inefﬁcient training."
   }, {
     "type" : "paragraph",
-    "id" : 793,
+    "id" : 794,
     "page number" : 8,
     "bounding box" : [ 50.112, 77.935, 286.359, 145.277 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3754,7 +3763,7 @@
     "content" : "Therefore, we propose a curriculum learning strategy to guide each sub-network in MORAN. The strategy is a three-step process. We ﬁrst optimize the MORN and ASRN respectively and then join them together for further end-to-end training. The"
   }, {
     "type" : "paragraph",
-    "id" : 794,
+    "id" : 795,
     "page number" : 8,
     "bounding box" : [ 308.862, 665.329, 545.112, 719.121 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3763,7 +3772,7 @@
     "content" : "difﬁculty of training samples is gradually increased. The training set is denoted as D = {Ii,Yi},i = 1...N. We minimize the negative log-likelihood of conditional probability of D as follows:"
   }, {
     "type" : "paragraph",
-    "id" : 795,
+    "id" : 796,
     "page number" : 8,
     "bounding box" : [ 349.858, 628.466, 384.312, 639.375 ],
     "font" : "CMMI10",
@@ -3772,7 +3781,7 @@
     "content" : "Loss ="
   }, {
     "type" : "paragraph",
-    "id" : 796,
+    "id" : 797,
     "page number" : 8,
     "bounding box" : [ 401.739, 642.837, 408.46, 650.808 ],
     "font" : "CMMI8",
@@ -3781,7 +3790,7 @@
     "content" : "N"
   }, {
     "type" : "paragraph",
-    "id" : 797,
+    "id" : 798,
     "page number" : 8,
     "bounding box" : [ 398.673, 616.113, 412.377, 624.084 ],
     "font" : "CMR8",
@@ -3790,7 +3799,7 @@
     "content" : "i=1"
   }, {
     "type" : "paragraph",
-    "id" : 798,
+    "id" : 799,
     "page number" : 8,
     "bounding box" : [ 416.713, 638.242, 429.487, 652.062 ],
     "font" : "CMMI8",
@@ -3799,7 +3808,7 @@
     "content" : "|Yi|"
   }, {
     "type" : "paragraph",
-    "id" : 799,
+    "id" : 800,
     "page number" : 8,
     "bounding box" : [ 416.161, 616.246, 430.04, 624.217 ],
     "font" : "CMR8",
@@ -3808,7 +3817,7 @@
     "content" : "t=1"
   }, {
     "type" : "paragraph",
-    "id" : 800,
+    "id" : 801,
     "page number" : 8,
     "bounding box" : [ 432.797, 620.72, 545.113, 641.273 ],
     "font" : "CMR10",
@@ -3817,7 +3826,7 @@
     "content" : "log p(Yi,t | Ii;θ) (15)"
   }, {
     "type" : "paragraph",
-    "id" : 801,
+    "id" : 802,
     "page number" : 8,
     "bounding box" : [ 308.862, 584.099, 545.109, 611.358 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3826,7 +3835,7 @@
     "content" : "where Yi,t is the ground truth of the t-th character in Ii. θ denotes the parameters of MORAN."
   }, {
     "type" : "paragraph",
-    "id" : 802,
+    "id" : 803,
     "page number" : 8,
     "bounding box" : [ 308.862, 408.292, 545.116, 584.421 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3835,7 +3844,7 @@
     "content" : "First Stage for ASRN We ﬁrst optimize the ASRN by using regular training samples. The dataset released by Gupta et al. [15] has tightly bounded annotations, which makes it possible to crop a text region with a tightly bounded box. The ASRN is ﬁrst trained with these regular samples. Then, we simply crop every text using a minimum circumscribed horizontal rectangle to obtain irregular training samples. The commonly used datasets released by Jaderberg et al. [20] and Gupta et al. [15] offer abundant irregular training samples. We use them for the following training. Taking advantage of them, we optimize ASRN, which thus achieves higher accuracy."
   }, {
     "type" : "paragraph",
-    "id" : 803,
+    "id" : 804,
     "page number" : 8,
     "bounding box" : [ 308.862, 245.47, 545.109, 408.049 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3844,7 +3853,7 @@
     "content" : "Second Stage for MORN The ASRN trained using regular training samples is chosen to guide the MORN training. This ASRN is not adequately robust for irregular text recognition so it is able to provide informative gradients for the MORN. We ﬁx the parameters of this ASRN, and stack it after the MORN. If the transformation of the MORN does not reduce the difﬁculty of recognition, few meaningful gradients will be provided by the ASRN. The optimization of MORN would not progress. Only the correct transformation that decreases difﬁculty for recognition will give positive feedback to the MORN."
   }, {
     "type" : "paragraph",
-    "id" : 804,
+    "id" : 805,
     "page number" : 8,
     "bounding box" : [ 308.862, 163.943, 545.112, 245.227 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3853,7 +3862,7 @@
     "content" : "Third Stage for End-to-end Optimization After the MORN and ASRN are optimized individually, we connect them for joint training in an end-to-end fashion. Joint training enables MORAN to complete end-to-end optimization and outperform state-of-theart methods."
   }, {
     "type" : "heading",
-    "id" : 805,
+    "id" : 806,
     "level" : "Subtitle",
     "page number" : 8,
     "bounding box" : [ 308.862, 138.326, 385.901, 153.88 ],
@@ -3864,7 +3873,7 @@
     "content" : "4. Experiments"
   }, {
     "type" : "paragraph",
-    "id" : 806,
+    "id" : 807,
     "page number" : 8,
     "bounding box" : [ 308.862, 77.935, 545.109, 131.728 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3873,7 +3882,7 @@
     "content" : "In this section we describe extensive experiments conducted on various benchmarks, including regular and irregular datasets. The performances of all the methods are measured by word accuracy."
   }, {
     "type" : "footer",
-    "id" : 807,
+    "id" : 808,
     "page number" : 8,
     "bounding box" : [ 294.885, 48.047, 300.34, 61.192 ],
     "kids" : [ {
@@ -3889,7 +3898,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 808,
+    "id" : 809,
     "page number" : 9,
     "bounding box" : [ 50.112, 698.451, 545.114, 722.411 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -3898,7 +3907,7 @@
     "content" : "Table 3. Comparison of pooling layers in lexicon-free mode. “No”, “AP” and “MP” respectively indicate no pooling layer, an average-pooling layer and a max-pooling layer at the top of the MORN. The kernel size is 2. “s” represents the stride."
   }, {
     "type" : "table",
-    "id" : 809,
+    "id" : 810,
     "level" : "3",
     "page number" : 9,
     "bounding box" : [ 138.387, 615.607, 456.837, 698.097 ],
@@ -4557,17 +4566,17 @@
     } ]
   }, {
     "type" : "caption",
-    "id" : 810,
+    "id" : 811,
     "page number" : 9,
     "bounding box" : [ 219.989, 594.058, 372.746, 606.062 ],
-    "linked content id" : 811,
+    "linked content id" : 812,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 9.963,
     "text color" : "[0.0]",
     "content" : "Table 4. Performance of the MORAN."
   }, {
     "type" : "table",
-    "id" : 811,
+    "id" : 812,
     "level" : "4",
     "page number" : 9,
     "bounding box" : [ 109.41, 526.382, 485.814, 595.721 ],
@@ -5263,13 +5272,13 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 812,
+    "id" : 813,
     "level" : "1",
     "page number" : 9,
     "bounding box" : [ 50.112, 491.76, 108.852, 506.018 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 1,
-    "previous list id" : 699,
+    "previous list id" : 700,
     "list items" : [ {
       "type" : "list item",
       "page number" : 9,
@@ -5282,7 +5291,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 813,
+    "id" : 814,
     "page number" : 9,
     "bounding box" : [ 50.112, 418.368, 286.368, 486.103 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -5291,7 +5300,7 @@
     "content" : "IIIT5K-Words (IIIT5K) [32] contains 3000 cropped word images for testing. Every image has a 50-word lexicon and a 1000-word lexicon. The lexicon consists of a ground truth and some randomly picked words."
   }, {
     "type" : "paragraph",
-    "id" : 814,
+    "id" : 815,
     "page number" : 9,
     "bounding box" : [ 50.112, 350.282, 286.36, 418.016 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -5300,7 +5309,7 @@
     "content" : "Street View Text (SVT) [48] was collected from the Google Street View, consisting of 647 word images. Many images are severely corrupted by noise and blur, or have very low resolutions. Each image is associated with a 50-word lexicon."
   }, {
     "type" : "paragraph",
-    "id" : 815,
+    "id" : 816,
     "page number" : 9,
     "bounding box" : [ 50.112, 227.998, 286.363, 349.93 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -5309,7 +5318,7 @@
     "content" : "ICDAR 2003 (IC03) [31] contains 251 scene images that are labeled with text bounding boxes. For fair comparison, we discarded images that contain nonalphanumeric characters or those have less than three characters, following Wang, Babenko, and Belongie [48]. The ﬁltered dataset contains 867 cropped images. Lexicons comprise of a 50-word lexicon deﬁned by Wang et al. [48] and a “full lexicon”. The latter lexicon combines all lexicon words."
   }, {
     "type" : "paragraph",
-    "id" : 816,
+    "id" : 817,
     "page number" : 9,
     "bounding box" : [ 50.112, 187.01, 286.363, 227.646 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -5318,7 +5327,7 @@
     "content" : "ICDAR 2013 (IC13) [25] inherits most of its samples from IC03. It contains 1015 cropped text images. No lexicon is associated with this dataset."
   }, {
     "type" : "paragraph",
-    "id" : 817,
+    "id" : 818,
     "page number" : 9,
     "bounding box" : [ 50.112, 105.374, 286.362, 186.658 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -5327,7 +5336,7 @@
     "content" : "SVT-Perspective (SVT-P) [35] contains 645 cropped images for testing. Images are selected from side-view angle snapshots in Google Street View. Therefore, most images are perspective distorted. Each image is associated with a 50-word lexicon and a full lexicon."
   }, {
     "type" : "paragraph",
-    "id" : 818,
+    "id" : 819,
     "page number" : 9,
     "bounding box" : [ 50.112, 77.935, 286.368, 105.022 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -5336,7 +5345,7 @@
     "content" : "CUTE80 [37] contains 80 high-resolution images taken in natural scenes. It was speciﬁcally collected"
   }, {
     "type" : "paragraph",
-    "id" : 819,
+    "id" : 820,
     "page number" : 9,
     "bounding box" : [ 308.862, 465.334, 545.109, 505.578 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -5345,7 +5354,7 @@
     "content" : "for evaluating the performance of curved text recognition. It contains 288 cropped natural images for testing. No lexicon is associated with this dataset."
   }, {
     "type" : "paragraph",
-    "id" : 820,
+    "id" : 821,
     "page number" : 9,
     "bounding box" : [ 308.862, 423.416, 545.115, 464.052 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -5354,7 +5363,7 @@
     "content" : "ICDAR 2015 (IC15) [24] contains 2077 cropped images including more than 200 irregular text. No lexicon is associated with this dataset."
   }, {
     "type" : "heading",
-    "id" : 821,
+    "id" : 822,
     "level" : "Subtitle",
     "page number" : 9,
     "bounding box" : [ 308.862, 397.413, 437.925, 411.671 ],
@@ -5365,7 +5374,7 @@
     "content" : "4.2. Implementation Details"
   }, {
     "type" : "paragraph",
-    "id" : 822,
+    "id" : 823,
     "page number" : 9,
     "bounding box" : [ 308.862, 309.542, 545.115, 390.826 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -5374,7 +5383,7 @@
     "content" : "Network: Details about the MORN and the ASRN of MORAN are given in Table1 and Table2 respectively. The number of hidden units of GRU in the decoder is 256. The ASRN outputs 37 classes, including 26 letters, 10 digits and a symbol standing for “EOS”."
   }, {
     "type" : "paragraph",
-    "id" : 823,
+    "id" : 824,
     "page number" : 9,
     "bounding box" : [ 308.862, 77.935, 545.115, 308.26 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -5383,7 +5392,7 @@
     "content" : "Training Model: As stated in Section 3.4, the training of the MORAN is guided by a curriculum learning strategy. The training data consists of 8million synthetic images released by Jaderberg et al. [20] and 6-million synthetic images released by Gupta et al. [15]. No extra data is used. We do not use any geometric-level or pixel-level labels in our experiments. Without any ﬁne-tuning for each speciﬁc dataset, the model is trained using only synthetic text. With ADADELTA [55] optimization method, we set learning rate to 1.0 at the beginning and decreased it to 0.01 in the third stage of the curriculum learning strategy. Following the similar settings in [28], we found that a decreased learning rate contributes to better convergence. The batch size was set to 64. We trained the model for 600,000, 20,000 and 300,000 iterations respectively in three stages of the curriculum"
   }, {
     "type" : "footer",
-    "id" : 824,
+    "id" : 825,
     "page number" : 9,
     "bounding box" : [ 294.885, 48.047, 300.34, 61.192 ],
     "kids" : [ {
@@ -5399,7 +5408,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 825,
+    "id" : 826,
     "page number" : 10,
     "bounding box" : [ 50.112, 692.427, 286.359, 719.121 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -5408,7 +5417,7 @@
     "content" : "learning strategy. The training totally consumed 30 hours."
   }, {
     "type" : "paragraph",
-    "id" : 826,
+    "id" : 827,
     "page number" : 10,
     "bounding box" : [ 50.112, 584.033, 286.366, 692.416 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -5417,13 +5426,13 @@
     "content" : "Implementation: We implemented our method under the framework of PyTorch [34]. CUDA 8.0 and CuDNN v7 backends are used in our experiments so our model is GPU-accelerated. All the images are resized to 32 × 100. With an NVIDIA GTX1080Ti GPU, the MORAN takes 10.4ms to recognize an image containing ﬁve characters in lexicon-free mode."
   }, {
     "type" : "list",
-    "id" : 827,
+    "id" : 828,
     "level" : "3",
     "page number" : 10,
     "bounding box" : [ 50.112, 178.085, 260.15, 577.096 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 2,
-    "next list id" : 845,
+    "next list id" : 846,
     "list items" : [ {
       "type" : "list item",
       "page number" : 10,
@@ -5823,7 +5832,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 828,
+    "id" : 829,
     "page number" : 10,
     "bounding box" : [ 50.112, 77.935, 286.362, 172.768 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -5832,7 +5841,7 @@
     "content" : "Afﬁne Transformation: The results using the afﬁne transformation are provided by Liu et al. [28]. For fair comparison, we replace the ASRN by the RNet proposed by Liu et al. [28]. A direct comparison of the results is shown in Table 6. As demonstrated in Fig.3 and described in Section 3.1, afﬁne transformation is limited by the geometric constraints of rotation,"
   }, {
     "type" : "paragraph",
-    "id" : 829,
+    "id" : 830,
     "page number" : 10,
     "bounding box" : [ 308.862, 651.779, 545.109, 719.121 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -5841,17 +5850,17 @@
     "content" : "scaling and translation. However, the distortion of scene text is complicated. The MORAN is more ﬂexible than afﬁne transformation. It is able to predict smooth rectiﬁcation for images free of geometric constraints."
   }, {
     "type" : "caption",
-    "id" : 830,
+    "id" : 831,
     "page number" : 10,
     "bounding box" : [ 350.206, 627.596, 500.681, 639.6 ],
-    "linked content id" : 831,
+    "linked content id" : 832,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 9.963,
     "text color" : "[0.0]",
     "content" : "Table 6. Comparison with STAR-Net."
   }, {
     "type" : "table",
-    "id" : 831,
+    "id" : 832,
     "level" : "5",
     "page number" : 10,
     "bounding box" : [ 308.862, 585.0, 553.462, 627.241 ],
@@ -6307,7 +6316,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 832,
+    "id" : 833,
     "page number" : 10,
     "bounding box" : [ 308.862, 496.784, 545.11, 564.519 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -6316,7 +6325,7 @@
     "content" : "RARE [42]: The results of RARE given by Shi et al. [42] are in the Table 8 and Table 9. We directly compare the network using exactly the same recognition network as that proposed in RARE. The results are shown in Table 7."
   }, {
     "type" : "paragraph",
-    "id" : 833,
+    "id" : 834,
     "page number" : 10,
     "bounding box" : [ 308.862, 372.054, 545.109, 493.593 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -6325,12 +6334,12 @@
     "content" : "The MORAN has some beneﬁts and drawbacks comparing with RARE. RARE using ﬁducial points can only capture the overall text shape of an input image, whereas the MORAN can rectify every character in an image. As shown in Fig. 8, all the characters in the image rectiﬁed by the MORAN are more normal in appearance than those of RARE. Furthermore, the MORAN without any ﬁducial points is theoretically able to rectify text of inﬁnite length."
   }, {
     "type" : "image",
-    "id" : 834,
+    "id" : 835,
     "page number" : 10,
     "bounding box" : [ 308.862, 215.486, 549.799, 357.214 ]
   }, {
     "type" : "paragraph",
-    "id" : 835,
+    "id" : 836,
     "page number" : 10,
     "bounding box" : [ 477.516, 332.888, 541.149, 346.033 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -6339,7 +6348,7 @@
     "content" : "Predict:stinker"
   }, {
     "type" : "paragraph",
-    "id" : 836,
+    "id" : 837,
     "page number" : 10,
     "bounding box" : [ 489.563, 284.701, 535.676, 297.846 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -6348,7 +6357,7 @@
     "content" : "GT:denver"
   }, {
     "type" : "paragraph",
-    "id" : 837,
+    "id" : 838,
     "page number" : 10,
     "bounding box" : [ 477.516, 236.514, 540.538, 249.659 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -6357,17 +6366,17 @@
     "content" : "Predict:denver"
   }, {
     "type" : "caption",
-    "id" : 838,
+    "id" : 839,
     "page number" : 10,
     "bounding box" : [ 308.862, 176.821, 545.115, 212.736 ],
-    "linked content id" : 834,
+    "linked content id" : 835,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 9.963,
     "text color" : "[0.0]",
     "content" : "Figure 8. Comparison of the MORAN and RARE. All characters are cropped for further comparison. The recognition results are on the right. “GT” denotes the ground truth."
   }, {
     "type" : "paragraph",
-    "id" : 839,
+    "id" : 840,
     "page number" : 10,
     "bounding box" : [ 308.862, 77.935, 545.109, 158.826 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -6376,7 +6385,7 @@
     "content" : "The training of MORAN is more difﬁcult than that of RARE. We thus designed a curriculum learning strategy to enable the stable convergence of the MORAN. In terms of RARE, although it is end-to-end optimized with special initialization, randomly initialized network may result in failure of convergence."
   }, {
     "type" : "footer",
-    "id" : 840,
+    "id" : 841,
     "page number" : 10,
     "bounding box" : [ 292.157, 48.047, 303.066, 61.192 ],
     "kids" : [ {
@@ -6392,17 +6401,17 @@
     } ]
   }, {
     "type" : "caption",
-    "id" : 841,
+    "id" : 842,
     "page number" : 11,
     "bounding box" : [ 228.965, 710.407, 363.769, 722.411 ],
-    "linked content id" : 842,
+    "linked content id" : 843,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 9.963,
     "text color" : "[0.0]",
     "content" : "Table 7. Comparison with RARE."
   }, {
     "type" : "table",
-    "id" : 842,
+    "id" : 843,
     "level" : "6",
     "page number" : 11,
     "bounding box" : [ 142.238, 667.811, 452.987, 710.052 ],
@@ -6933,13 +6942,13 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 843,
+    "id" : 844,
     "level" : "7",
     "page number" : 11,
     "bounding box" : [ 50.112, 634.307, 545.114, 658.266 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 1,
-    "next list id" : 853,
+    "next list id" : 854,
     "list items" : [ {
       "type" : "list item",
       "page number" : 11,
@@ -6952,7 +6961,7 @@
     } ]
   }, {
     "type" : "table",
-    "id" : 844,
+    "id" : 845,
     "level" : "8",
     "page number" : 11,
     "bounding box" : [ 91.054, 376.967, 504.17, 635.995 ],
@@ -8225,13 +8234,13 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 845,
+    "id" : 846,
     "level" : "3",
     "page number" : 11,
     "bounding box" : [ 50.112, 137.649, 219.975, 356.604 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 2,
-    "previous list id" : 827,
+    "previous list id" : 828,
     "list items" : [ {
       "type" : "list item",
       "page number" : 11,
@@ -8271,7 +8280,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 846,
+    "id" : 847,
     "page number" : 11,
     "bounding box" : [ 50.112, 77.935, 286.359, 131.728 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -8280,7 +8289,7 @@
     "content" : "The MORAN was also evaluated on irregular text datasets to reveal the contribution of the MORN. The results on SVT-Perspective, CUTE80 and IC15 are shown in Table 9. The MORAN is still the best of"
   }, {
     "type" : "paragraph",
-    "id" : 847,
+    "id" : 848,
     "page number" : 11,
     "bounding box" : [ 308.862, 343.018, 362.197, 356.163 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -8289,7 +8298,7 @@
     "content" : "all methods."
   }, {
     "type" : "paragraph",
-    "id" : 848,
+    "id" : 849,
     "page number" : 11,
     "bounding box" : [ 308.862, 260.514, 545.109, 341.405 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -8298,7 +8307,7 @@
     "content" : "For the SVT-Perspective dataset, many samples are low-resolution and perspective. The result of the MORAN with 50-word lexicon is the same as that of the method of Liu et al. [28]. However, the MORAN outperforms all methods in the setting without any lexicon."
   }, {
     "type" : "paragraph",
-    "id" : 849,
+    "id" : 850,
     "page number" : 11,
     "bounding box" : [ 308.862, 178.011, 545.109, 258.902 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -8307,7 +8316,7 @@
     "content" : "In addition to perspective text, the MORAN is able to recognize curved text. Some examples are demonstrated in Fig. 9. The MORAN is able to rectify most curved text in CUTE80 and correctly recognize them. It is hence adequately robust to rectify text with small curve angle."
   }, {
     "type" : "heading",
-    "id" : 850,
+    "id" : 851,
     "level" : "Subtitle",
     "page number" : 11,
     "bounding box" : [ 308.862, 152.195, 452.533, 166.453 ],
@@ -8318,7 +8327,7 @@
     "content" : "4.7. Limitation of the MORAN"
   }, {
     "type" : "paragraph",
-    "id" : 851,
+    "id" : 852,
     "page number" : 11,
     "bounding box" : [ 308.862, 77.935, 545.109, 145.277 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -8327,7 +8336,7 @@
     "content" : "For fair comparisons and good repeatability, we chose the widely used training datasets, which contain only horizontal synthetic text. Therefore, because of complicated background, the MORAN will fail when the curve angle is too large. Such cases are given in the"
   }, {
     "type" : "footer",
-    "id" : 852,
+    "id" : 853,
     "page number" : 11,
     "bounding box" : [ 292.157, 48.047, 303.066, 61.192 ],
     "kids" : [ {
@@ -8343,13 +8352,13 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 853,
+    "id" : 854,
     "level" : "7",
     "page number" : 12,
     "bounding box" : [ 50.112, 698.451, 545.114, 722.411 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 1,
-    "previous list id" : 843,
+    "previous list id" : 844,
     "list items" : [ {
       "type" : "list item",
       "page number" : 12,
@@ -8362,7 +8371,7 @@
     } ]
   }, {
     "type" : "table",
-    "id" : 854,
+    "id" : 855,
     "level" : "6",
     "page number" : 12,
     "bounding box" : [ 133.875, 535.956, 461.349, 700.139 ],
@@ -9032,27 +9041,27 @@
     } ]
   }, {
     "type" : "image",
-    "id" : 855,
+    "id" : 856,
     "page number" : 12,
     "bounding box" : [ 50.909, 515.484, 461.349, 549.903 ]
   }, {
     "type" : "image",
-    "id" : 856,
+    "id" : 857,
     "page number" : 12,
     "bounding box" : [ 50.112, 260.903, 291.056, 487.672 ]
   }, {
     "type" : "caption",
-    "id" : 857,
+    "id" : 858,
     "page number" : 12,
     "bounding box" : [ 62.159, 491.553, 271.457, 514.336 ],
-    "linked content id" : 856,
+    "linked content id" : 857,
     "font" : "NimbusRomNo9L-Regu",
     "font size" : 10.909,
     "text color" : "[0.0]",
     "content" : "Input Image Rectiﬁed Images Ground Truth Prediction"
   }, {
     "type" : "paragraph",
-    "id" : 858,
+    "id" : 859,
     "level" : "7",
     "page number" : 12,
     "bounding box" : [ 50.112, 484.325, 284.658, 497.47 ],
@@ -9062,7 +9071,7 @@
     "content" : "—————————————————————–"
   }, {
     "type" : "paragraph",
-    "id" : 859,
+    "id" : 860,
     "page number" : 12,
     "bounding box" : [ 230.82, 460.231, 250.816, 487.832 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -9071,7 +9080,7 @@
     "content" : "west west"
   }, {
     "type" : "paragraph",
-    "id" : 860,
+    "id" : 861,
     "level" : "8",
     "page number" : 12,
     "bounding box" : [ 218.772, 443.365, 273.318, 456.51 ],
@@ -9081,7 +9090,7 @@
     "content" : "—————"
   }, {
     "type" : "paragraph",
-    "id" : 861,
+    "id" : 862,
     "page number" : 12,
     "bounding box" : [ 230.82, 412.042, 258.093, 442.053 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -9090,7 +9099,7 @@
     "content" : "united united"
   }, {
     "type" : "paragraph",
-    "id" : 862,
+    "id" : 863,
     "level" : "8",
     "page number" : 12,
     "bounding box" : [ 218.772, 402.404, 273.318, 415.549 ],
@@ -9100,7 +9109,7 @@
     "content" : "—————"
   }, {
     "type" : "paragraph",
-    "id" : 863,
+    "id" : 864,
     "page number" : 12,
     "bounding box" : [ 230.82, 378.31, 261.715, 403.502 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -9109,7 +9118,7 @@
     "content" : "arsenal arsenal"
   }, {
     "type" : "paragraph",
-    "id" : 864,
+    "id" : 865,
     "level" : "8",
     "page number" : 12,
     "bounding box" : [ 218.772, 366.263, 273.318, 379.408 ],
@@ -9119,7 +9128,7 @@
     "content" : "—————"
   }, {
     "type" : "paragraph",
-    "id" : 865,
+    "id" : 866,
     "page number" : 12,
     "bounding box" : [ 230.82, 342.168, 264.758, 367.36 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -9128,7 +9137,7 @@
     "content" : "football football"
   }, {
     "type" : "paragraph",
-    "id" : 866,
+    "id" : 867,
     "level" : "8",
     "page number" : 12,
     "bounding box" : [ 218.772, 306.027, 273.318, 343.266 ],
@@ -9138,7 +9147,7 @@
     "content" : "————manchester messageid"
   }, {
     "type" : "paragraph",
-    "id" : 867,
+    "id" : 868,
     "level" : "8",
     "page number" : 12,
     "bounding box" : [ 218.772, 267.476, 273.318, 307.125 ],
@@ -9148,7 +9157,7 @@
     "content" : "————briogestone contracers"
   }, {
     "type" : "paragraph",
-    "id" : 868,
+    "id" : 869,
     "level" : "7",
     "page number" : 12,
     "bounding box" : [ 50.112, 253.019, 284.658, 266.164 ],
@@ -9158,7 +9167,7 @@
     "content" : "—————————————————————–"
   }, {
     "type" : "paragraph",
-    "id" : 869,
+    "id" : 870,
     "page number" : 12,
     "bounding box" : [ 50.112, 210.283, 286.365, 258.153 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -9167,7 +9176,7 @@
     "content" : "Figure 9. Effects of different curve angles of scene text. The ﬁrst four rows are text with small curve angles and the last two rows are text with large curve angles. The MORAN can rectify irregular text with small curve angles."
   }, {
     "type" : "paragraph",
-    "id" : 870,
+    "id" : 871,
     "page number" : 12,
     "bounding box" : [ 50.112, 147.08, 286.359, 187.323 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -9176,7 +9185,7 @@
     "content" : "last two rows of Fig. 9. MORAN mistakenly regards the complicated background as foreground. However, such samples are rare in training datasets."
   }, {
     "type" : "paragraph",
-    "id" : 871,
+    "id" : 872,
     "page number" : 12,
     "bounding box" : [ 50.112, 77.935, 286.359, 145.277 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -9185,7 +9194,7 @@
     "content" : "Furthermore, with the existing training datasets and without any data augmentation, the MORAN focuses more on horizontal irregular text. Note that there are many vertical text in IC15. However, the MORAN is not designed for vertical text. Our method was"
   }, {
     "type" : "paragraph",
-    "id" : 872,
+    "id" : 873,
     "page number" : 12,
     "bounding box" : [ 308.862, 488.457, 545.109, 515.151 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -9194,7 +9203,7 @@
     "content" : "proposed for the complicated deformation of text within a cropped horizontal rectangle."
   }, {
     "type" : "paragraph",
-    "id" : 873,
+    "id" : 874,
     "page number" : 12,
     "bounding box" : [ 308.862, 325.815, 545.109, 488.001 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -9203,7 +9212,7 @@
     "content" : "The experiments above are all based on cropped text recognition. A MORAN without a text detector is not an end-to-end scene text recognition system. Actually, in more application scenarios, irregular and multioriented text are challenging both for detection and recognition, which have attracted great interest. For instance, Liu et al. [29] and Ch’ng et al. [7] released complicated datasets. Sain et al. [39] and He et al. [18] proposed methods to improve the performance of multi-oriented text detection. Therefore, scene text recognition still remains a challenging problem waiting for solutions."
   }, {
     "type" : "heading",
-    "id" : 874,
+    "id" : 875,
     "level" : "Subtitle",
     "page number" : 12,
     "bounding box" : [ 308.862, 300.736, 377.951, 316.29 ],
@@ -9214,7 +9223,7 @@
     "content" : "5. Conclusion"
   }, {
     "type" : "paragraph",
-    "id" : 875,
+    "id" : 876,
     "page number" : 12,
     "bounding box" : [ 308.862, 77.935, 545.109, 294.318 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -9223,7 +9232,7 @@
     "content" : "In this paper, we presented a multi-object rectiﬁed attention network (MORAN) for scene text recognition. The proposed framework involves two stages: rectiﬁcation and recognition. First, a multiobject rectiﬁcation network, which is free of geometric constraints and ﬂexible enough to handle complicated deformations, was proposed to transform an image containing irregular text into a more readable one. The rectiﬁed patterns decrease the difﬁculty of recognition. Then, an attention-based sequence recognition network was designed to recognize the rectiﬁed image and outputs the characters in sequence. Moreover, a fractional pickup method was proposed to expand the visual ﬁeld of the attention-based decoder. The attention-based decoder thus obtains more context information and gains robustness. To"
   }, {
     "type" : "footer",
-    "id" : 876,
+    "id" : 877,
     "page number" : 12,
     "bounding box" : [ 292.157, 48.047, 303.066, 61.192 ],
     "kids" : [ {
@@ -9239,7 +9248,7 @@
     } ]
   }, {
     "type" : "paragraph",
-    "id" : 877,
+    "id" : 878,
     "page number" : 13,
     "bounding box" : [ 50.112, 597.583, 286.359, 719.121 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -9248,7 +9257,7 @@
     "content" : "efﬁciently train the network, we designed a curriculum learning strategy to respectively strengthen each subnetwork. The proposed MORAN is trained in a weak-supervised way, which requires only images and the corresponding text labels. Experiments on both regular and irregular datasets, including IIIT5K, SVT, ICDAR2003, ICDAR2013, ICDAR2015, SVTPerspective and CUTE80, demonstrate the outstanding performance of the MORAN."
   }, {
     "type" : "paragraph",
-    "id" : 878,
+    "id" : 879,
     "page number" : 13,
     "bounding box" : [ 50.112, 475.288, 286.359, 596.827 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -9257,7 +9266,7 @@
     "content" : "In future, it is worth extending this method to deal with arbitrary-oriented text recognition, which is more challenging due to the wide variety of text and background. Moreover, the improvements in endto-end text recognition performance come not just from the recognition model, but also from detection model. Therefore, ﬁnding a proper and effective way to combine the MORAN with a scene text detector is also a direction worth of study."
   }, {
     "type" : "heading",
-    "id" : 879,
+    "id" : 880,
     "level" : "Subtitle",
     "page number" : 13,
     "bounding box" : [ 50.112, 449.312, 144.295, 464.866 ],
@@ -9268,7 +9277,7 @@
     "content" : "Acknowledgement"
   }, {
     "type" : "paragraph",
-    "id" : 880,
+    "id" : 881,
     "page number" : 13,
     "bounding box" : [ 50.112, 348.154, 286.359, 442.595 ],
     "font" : "NimbusRomNo9L-Regu",
@@ -9277,7 +9286,7 @@
     "content" : "This research was supported by the National Key R&D Program of China (Grant No.: 2016YFB1001405), GD-NSF (Grant No.: 2017A030312006), NSFC (Grant No.: 61472144, 61673182), GDSTP (Grant No.: 2015B010101004, 2015B010130003, 2017A030312006), GZSTP (Grant No.: 201607010227)."
   }, {
     "type" : "heading",
-    "id" : 881,
+    "id" : 882,
     "level" : "Subtitle",
     "page number" : 13,
     "bounding box" : [ 50.112, 322.178, 105.656, 337.732 ],
@@ -9288,13 +9297,13 @@
     "content" : "References"
   }, {
     "type" : "list",
-    "id" : 882,
+    "id" : 883,
     "level" : "8",
     "page number" : 13,
     "bounding box" : [ 55.093, 78.201, 286.366, 316.229 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 5,
-    "next list id" : 883,
+    "next list id" : 884,
     "list items" : [ {
       "type" : "list item",
       "page number" : 13,
@@ -9343,14 +9352,14 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 883,
+    "id" : 884,
     "level" : "8",
     "page number" : 13,
     "bounding box" : [ 308.862, 78.201, 545.116, 718.246 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 12,
-    "previous list id" : 882,
-    "next list id" : 886,
+    "previous list id" : 883,
+    "next list id" : 887,
     "list items" : [ {
       "type" : "list item",
       "page number" : 13,
@@ -9462,7 +9471,7 @@
     } ]
   }, {
     "type" : "footer",
-    "id" : 884,
+    "id" : 885,
     "page number" : 13,
     "bounding box" : [ 292.157, 48.047, 303.066, 61.192 ],
     "kids" : [ {
@@ -9478,17 +9487,17 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 886,
+    "id" : 887,
     "level" : "8",
     "page number" : 14,
     "bounding box" : [ 50.112, 78.201, 286.367, 718.246 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 12,
-    "previous list id" : 883,
-    "next list id" : 887,
+    "previous list id" : 884,
+    "next list id" : 888,
     "list items" : [ {
       "type" : "list item",
-      "id" : 885,
+      "id" : 886,
       "page number" : 14,
       "bounding box" : [ 72.164, 694.287, 286.367, 718.246 ],
       "font" : "NimbusRomNo9L-ReguItal",
@@ -9598,14 +9607,14 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 887,
+    "id" : 888,
     "level" : "8",
     "page number" : 14,
     "bounding box" : [ 308.862, 78.201, 545.116, 718.246 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 12,
-    "previous list id" : 886,
-    "next list id" : 889,
+    "previous list id" : 887,
+    "next list id" : 890,
     "list items" : [ {
       "type" : "list item",
       "page number" : 14,
@@ -9717,7 +9726,7 @@
     } ]
   }, {
     "type" : "footer",
-    "id" : 888,
+    "id" : 889,
     "page number" : 14,
     "bounding box" : [ 292.157, 48.047, 303.066, 61.192 ],
     "kids" : [ {
@@ -9733,14 +9742,14 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 889,
+    "id" : 890,
     "level" : "8",
     "page number" : 15,
     "bounding box" : [ 50.112, 78.201, 286.366, 718.246 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 13,
-    "previous list id" : 887,
-    "next list id" : 890,
+    "previous list id" : 888,
+    "next list id" : 891,
     "list items" : [ {
       "type" : "list item",
       "page number" : 15,
@@ -9861,13 +9870,13 @@
     } ]
   }, {
     "type" : "list",
-    "id" : 890,
+    "id" : 891,
     "level" : "8",
     "page number" : 15,
     "bounding box" : [ 308.862, 580.713, 545.115, 718.246 ],
     "numbering style" : "arabic numbers",
     "number of list items" : 4,
-    "previous list id" : 889,
+    "previous list id" : 890,
     "list items" : [ {
       "type" : "list item",
       "page number" : 15,
@@ -9907,7 +9916,7 @@
     } ]
   }, {
     "type" : "footer",
-    "id" : 891,
+    "id" : 892,
     "page number" : 15,
     "bounding box" : [ 292.157, 48.047, 303.066, 61.192 ],
     "kids" : [ {
