@@ -7,15 +7,15 @@
  */
 package org.opendataloader.pdf.cli;
 
-import org.opendataloader.pdf.api.Config;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.opendataloader.pdf.api.Config;
 
 import java.io.File;
-import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.Locale;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class CLIOptions {
 
@@ -25,12 +25,17 @@ public class CLIOptions {
     private static final String CONTENT_SAFETY_OFF_OFF_PAGE_ARGUMENT = "off-page";
     private static final String CONTENT_SAFETY_OFF_TINY_TEXT_ARGUMENT = "tiny";
     private static final String CONTENT_SAFETY_OFF_HIDDEN_OCG_ARGUMENT = "hidden-ocg";
+    private static final String CONTENT_SAFETY_OFF_SUPPORTED_LIST = "all, hidden-text, off-page, tiny, hidden-ocg";
 
     public static final String PASSWORD_OPTION = "p";
     private static final String PASSWORD_LONG_OPTION = "password";
 
     public static final String FOLDER_OPTION = "o";
     private static final String FOLDER_LONG_OPTION = "output-dir";
+
+    public static final String FORMAT_OPTION = "f";
+    private static final String FORMAT_LONG_OPTION = "format";
+    private static final String FORMAT_SUPPORTED_LIST = "json, text, html, pdf, markdown, markdown-with-html, markdown-with-images";
 
     private static final String HTML_IN_MARKDOWN_LONG_OPTION = "markdown-with-html";
 
@@ -52,6 +57,7 @@ public class CLIOptions {
         Options options = new Options();
         Option contentSafetyOff = new Option(null, CONTENT_SAFETY_OFF_LONG_OPTION, true, "Disables one or more content safety filters. Accepts a comma-separated list of filter names. Arguments: all, hidden-text, off-page, tiny, hidden-ocg");
         contentSafetyOff.setRequired(false);
+        contentSafetyOff.setArgs(Option.UNLIMITED_VALUES);
         options.addOption(contentSafetyOff);
         Option password = new Option(PASSWORD_OPTION, PASSWORD_LONG_OPTION, true, "Specifies the password for an encrypted PDF");
         password.setRequired(false);
@@ -59,6 +65,10 @@ public class CLIOptions {
         Option htmlInMarkdown = new Option(null, HTML_IN_MARKDOWN_LONG_OPTION, false, "Sets the data extraction output format to Markdown with rendering complex elements like tables as HTML for better structure");
         htmlInMarkdown.setRequired(false);
         options.addOption(htmlInMarkdown);
+        Option format = new Option(FORMAT_OPTION, FORMAT_LONG_OPTION, true, String.format("Comma-separated list of output formats to generate. Supported values: %s", FORMAT_SUPPORTED_LIST));
+        format.setRequired(false);
+        format.setArgs(Option.UNLIMITED_VALUES);
+        options.addOption(format);
         Option keepLineBreaks = new Option(null, KEEP_LINE_BREAKS_LONG_OPTION, false, "Preserves original line breaks in the extracted text");
         keepLineBreaks.setRequired(false);
         options.addOption(keepLineBreaks);
@@ -90,34 +100,6 @@ public class CLIOptions {
         Config config = new Config();
         if (commandLine.hasOption(CLIOptions.PASSWORD_OPTION)) {
             config.setPassword(commandLine.getOptionValue(CLIOptions.PASSWORD_OPTION));
-        }
-        if (commandLine.hasOption(CLIOptions.CONTENT_SAFETY_OFF_LONG_OPTION)) {
-            String[] argumentString = commandLine.getOptionValues(CLIOptions.CONTENT_SAFETY_OFF_LONG_OPTION);
-            Set<String> arguments = Arrays.stream(String.join(",", argumentString).split(","))
-                .map(String::trim)
-                .collect(Collectors.toSet());
-            if (!arguments.isEmpty()) {
-                if (arguments.contains(CONTENT_SAFETY_OFF_ALL_ARGUMENT)) {
-                    //setting all the arguments
-                    config.getFilterConfig().setFilterHiddenText(false);
-                    config.getFilterConfig().setFilterOutOfPage(false);
-                    config.getFilterConfig().setFilterTinyText(false);
-                    config.getFilterConfig().setFilterHiddenOCG(false);
-                } else {
-                    if (arguments.contains(CONTENT_SAFETY_OFF_HIDDEN_TEXT_ARGUMENT)) {
-                        config.getFilterConfig().setFilterHiddenText(false);
-                    }
-                    if (arguments.contains(CONTENT_SAFETY_OFF_OFF_PAGE_ARGUMENT)) {
-                        config.getFilterConfig().setFilterOutOfPage(false);
-                    }
-                    if (arguments.contains(CONTENT_SAFETY_OFF_TINY_TEXT_ARGUMENT)) {
-                        config.getFilterConfig().setFilterTinyText(false);
-                    }
-                    if (arguments.contains(CONTENT_SAFETY_OFF_HIDDEN_OCG_ARGUMENT)) {
-                        config.getFilterConfig().setFilterHiddenOCG(false);
-                    }
-                }
-            }
         }
         if (commandLine.hasOption(CLIOptions.KEEP_LINE_BREAKS_LONG_OPTION)) {
             config.setKeepLineBreaks(true);
@@ -151,6 +133,113 @@ public class CLIOptions {
             file = new File(file.getAbsolutePath());
             config.setOutputFolder(file.isDirectory() ? file.getAbsolutePath() : file.getParent());
         }
+        applyContentSafetyOption(config, commandLine);
+        applyFormatOption(config, commandLine);
         return config;
     }
+
+    private static void applyContentSafetyOption(Config config, CommandLine commandLine) {
+        if (!commandLine.hasOption(CONTENT_SAFETY_OFF_LONG_OPTION)) {
+            return;
+        }
+
+        String[] optionValues = commandLine.getOptionValues(CONTENT_SAFETY_OFF_LONG_OPTION);
+        if (optionValues == null || optionValues.length == 0) {
+            throw new IllegalArgumentException(String.format("Option --content-safety-off requires at least one value. Supported values: %s", CONTENT_SAFETY_OFF_SUPPORTED_LIST));
+        }
+
+        Set<String> values = parseOptionValues(optionValues);
+        if (values.isEmpty()) {
+            throw new IllegalArgumentException(String.format("Option --content-safety-off requires at least one value. Supported values: %s", CONTENT_SAFETY_OFF_SUPPORTED_LIST));
+        }
+
+        for (String value : values) {
+            switch (value) {
+                case CONTENT_SAFETY_OFF_HIDDEN_TEXT_ARGUMENT:
+                    config.getFilterConfig().setFilterHiddenText(false);
+                    break;
+                case CONTENT_SAFETY_OFF_OFF_PAGE_ARGUMENT:
+                    config.getFilterConfig().setFilterOutOfPage(false);
+                    break;
+                case CONTENT_SAFETY_OFF_TINY_TEXT_ARGUMENT:
+                    config.getFilterConfig().setFilterTinyText(false);
+                    break;
+                case CONTENT_SAFETY_OFF_HIDDEN_OCG_ARGUMENT:
+                    config.getFilterConfig().setFilterHiddenOCG(false);
+                    break;
+                case CONTENT_SAFETY_OFF_ALL_ARGUMENT:
+                    config.getFilterConfig().setFilterHiddenText(false);
+                    config.getFilterConfig().setFilterOutOfPage(false);
+                    config.getFilterConfig().setFilterTinyText(false);
+                    config.getFilterConfig().setFilterHiddenOCG(false);
+                    break;
+                default:
+                    throw new IllegalArgumentException(String.format("Unsupported value '%s'. Supported values: %s", value, CONTENT_SAFETY_OFF_SUPPORTED_LIST));
+            }
+        }
+    }
+
+    private static void applyFormatOption(Config config, CommandLine commandLine) {
+        if (!commandLine.hasOption(FORMAT_OPTION)) {
+            return;
+        }
+
+        String[] optionValues = commandLine.getOptionValues(FORMAT_OPTION);
+        if (optionValues == null || optionValues.length == 0) {
+            throw new IllegalArgumentException(String.format("Option --format requires at least one value. Supported values: %s", FORMAT_SUPPORTED_LIST));
+        }
+
+        Set<String> values = parseOptionValues(optionValues);
+        if (values.isEmpty()) {
+            throw new IllegalArgumentException(String.format("Option --format requires at least one value. Supported values: %s", FORMAT_SUPPORTED_LIST));
+        }
+
+        config.setGenerateJSON(false);
+
+        for (String value : values) {
+            switch (value) {
+                case "json":
+                    config.setGenerateJSON(true);
+                    break;
+                case "html":
+                    config.setGenerateHtml(true);
+                    break;
+                case "text":
+                    config.setGenerateText(true);
+                    break;
+                case "pdf":
+                    config.setGeneratePDF(true);
+                    break;
+                case "markdown":
+                    config.setGenerateMarkdown(true);
+                    break;
+                case "markdown-with-html":
+                    config.setUseHTMLInMarkdown(true);
+                    break;
+                case "markdown-with-images":
+                    config.setAddImageToMarkdown(true);
+                    break;
+                default:
+                    throw new IllegalArgumentException(String.format("Unsupported format '%s'. Supported values: %s", value, FORMAT_SUPPORTED_LIST));
+            }
+        }
+    }
+
+    private static Set<String> parseOptionValues(String[] optionValues) {
+        Set<String> values = new LinkedHashSet<>();
+        for (String rawValue : optionValues) {
+            if (rawValue == null) {
+                continue;
+            }
+            String[] splitValues = rawValue.split(",");
+            for (String candidate : splitValues) {
+                String format = candidate.trim().toLowerCase(Locale.ROOT);
+                if (!format.isEmpty()) {
+                    values.add(format);
+                }
+            }
+        }
+        return values;
+    }
 }
+

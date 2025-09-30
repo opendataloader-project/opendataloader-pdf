@@ -39,7 +39,14 @@ public class CLIMain {
         }
 
         String[] arguments = commandLine.getArgs();
-        Config config = CLIOptions.createConfigFromCommandLine(commandLine);
+        Config config;
+        try {
+            config = CLIOptions.createConfigFromCommandLine(commandLine);
+        } catch (IllegalArgumentException exception) {
+            System.out.println(exception.getMessage());
+            formatter.printHelp(HELP, options);
+            return;
+        }
         for (String argument : arguments) {
             processPath(new File(argument), config);
         }
