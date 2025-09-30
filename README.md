@@ -75,47 +75,42 @@ pip install -U opendataloader-pdf
 
 ### Usage
 
-- input_path can be either the path to a single document or the path to a folder.
-- If you don’t specify an output_folder, the output data will be saved in the same directory as the input document.
+input_path can be either the path to a single document or the path to a folder.
 
 ```python
 import opendataloader_pdf
 
-opendataloader_pdf.run(
-    input_path="path/to/document.pdf",
-    output_folder="path/to/output",
-    generate_markdown=True,
-    generate_html=True,
-    generate_annotated_pdf=True,
-    debug=True,
+opendataloader_pdf.convert(
+    input_path=["path/to/document.pdf", "path/to/folder"],
+    output_dir="path/to/output",
+    format=["json", "html", "pdf", "markdown"]
 )
 ```
 
-- If you want to run it via CLI, you can use the following command:
+If you want to run it via CLI, you can use the following command on the terminal:
 
-```sh
-opendataloader-pdf path/to/document.pdf --markdown --html --pdf
+```bash
+opendataloader-pdf path/to/document.pdf path/to/folder -o path/to/output -f json html pdf markdown
 ```
 
-### Function: run()
+### Function: convert()
 
 The main function to process PDFs.
 
-| Parameter                | Type   | Required | Default      | Description                                                                                                                                 |
-|--------------------------| ------ | -------- |--------------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| `input_path`             | `str`  | ✅ Yes    | —            | Path to the input PDF file or folder.                                                                                                       |
-| `output_folder`          | `str`  | No       | input folder | Path to the output folder.                                                                                                                  |
-| `password`               | `str`  | No       | `None`       | Password for the PDF file.                                                                                                                  |
-| `replace_invalid_chars`  | `str`  | No       | `" "`       | Character to replace invalid or unrecognized characters (e.g., �, \u0000)                                                                   |
-| `content_safety_off`     | `str`  | No       | `None`       | Disables one or more content safety filters. Accepts a comma-separated list of filter names. Arguments: all, hidden-text, off-page, tiny, hidden-ocg. |
-| `generate_markdown`      | `bool` | No       | `False`      | If `True`, generates a Markdown output file.                                                                                                |
-| `generate_html`          | `bool` | No       | `False`      | If `True`, generates an HTML output file.                                                                                                   |
-| `generate_annotated_pdf` | `bool` | No       | `False`      | If `True`, generates an annotated PDF output file.                                                                                          |
-| `keep_line_breaks`       | `bool` | No       | `False`      | If `True`, keeps line breaks in the output.                                                                                                 |
-| `html_in_markdown`       | `bool` | No       | `False`      | If `True`, uses HTML in the Markdown output.                                                                                                |
-| `add_image_to_markdown`  | `bool` | No       | `False`      | If `True`, adds images to the Markdown output.                                                                                              |
-| `no_json`                | `bool` | No       | `False`      | If `True`, disables the JSON output.                                                                                                        |
-| `debug`                  | `bool` | No       | `False`      | If `True`, prints CLI messages to the console during execution.                                                                             |
+| Parameter                | Type           | Required | Default      | Description                                                                                                                                 |
+|--------------------------|----------------| -------- |--------------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| `input_path`             | `List[str]`     | ✅ Yes    | —            | One or more PDF file paths or directories to process.                                                                                       |
+| `output_dir`             | `Optional[str]` | No       | input folder | Directory where outputs are written.                                                                                                       |
+| `password`               | `Optional[str]` | No       | `None`       | Password used for encrypted PDFs.                                                                                                           |
+| `format`                 | `Optional[List[str]]` | No | `None`       | Output formats to generate (e.g. `"json"`, `"html"`, `"pdf"`, `"text"`, `"markdown"`, `"markdown-with-html"`, `"markdown-with-images"`).                                                             |
+| `quiet`                  | `bool`          | No       | `False`      | Suppresses CLI logging output when `True`.                                                                                                  |
+| `content_safety_off`     | `Optional[List[str]]` | No | `None`       | List of content safety filters to disable (e.g. `"all"`, `"hidden-text"`, `"off-page"`, `"tiny"`, `"hidden-ocg"`).                      |
+| `keep_line_breaks`       | `bool`          | No       | `False`      | Preserves line breaks in text output when `True`.                                                                                           |
+| `replace_invalid_chars`  | `Optional[str]` | No       | `None`       | Replacement character for invalid or unrecognized characters (e.g., �, `\u0000`).                                                           |
+
+### Function: run()
+
+Deprecated.
 
 <br/>
 
