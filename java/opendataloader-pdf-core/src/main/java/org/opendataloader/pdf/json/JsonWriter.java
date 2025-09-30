@@ -25,8 +25,11 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainer
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class JsonWriter {
+    private static final Logger LOGGER = Logger.getLogger(JsonWriter.class.getCanonicalName());
     private static JsonGenerator getJsonGenerator(String fileName) throws IOException {
         JsonFactory jsonFactory = new JsonFactory();
         return jsonFactory.createGenerator(new File(fileName), JsonEncoding.UTF8)
@@ -49,7 +52,7 @@ public class JsonWriter {
             jsonGenerator.writeEndArray();
             jsonGenerator.writeEndObject();
         }
-        System.out.println("Created " + jsonFileName);
+        LOGGER.log(Level.INFO, "Created {0}", jsonFileName);
     }
 
     private static void writeDocumentInfo(JsonGenerator generator, String pdfName) throws IOException {
