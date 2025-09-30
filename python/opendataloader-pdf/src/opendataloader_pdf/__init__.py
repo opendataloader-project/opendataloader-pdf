@@ -1,3 +1,3 @@
-from .wrapper import run
+from .wrapper import run, convert
 
-__all__ = ["run"]
+__all__ = ["run", "convert"]
