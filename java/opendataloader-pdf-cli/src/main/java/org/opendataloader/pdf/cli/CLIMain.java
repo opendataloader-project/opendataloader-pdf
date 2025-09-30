@@ -12,6 +12,7 @@ import org.opendataloader.pdf.api.OpenDataLoaderPDF;
 import org.apache.commons.cli.*;
 
 import java.io.File;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -19,7 +20,7 @@ public class CLIMain {
 
     private static final Logger LOGGER = Logger.getLogger(CLIMain.class.getCanonicalName());
 
-    private static final String HELP = "[options] <INPUT FILE OR FOLDER>\n Options:";
+    private static final String HELP = "[options] <INPUT FILE OR FOLDER>...\n Options:";
 
     public static void main(String[] args) {
         Options options = CLIOptions.defineOptions();
@@ -39,32 +40,52 @@ public class CLIMain {
 
         String[] arguments = commandLine.getArgs();
         Config config = CLIOptions.createConfigFromCommandLine(commandLine);
-        File file = new File(arguments[0]);
+        for (String argument : arguments) {
+            processPath(new File(argument), config);
+        }
+    }
+
+    private static void processPath(File file, Config config) {
+        if (!file.exists()) {
+            LOGGER.log(Level.WARNING, "File or folder " + file.getAbsolutePath() + " not found.");
+            return;
+        }
         if (file.isDirectory()) {
             processDirectory(file, config);
         } else if (file.isFile()) {
             processFile(file, config);
-        } else {
-            LOGGER.log(Level.WARNING, "File or folder " + file.getAbsolutePath() + " not found.");
         }
     }
 
     private static void processDirectory(File file, Config config) {
-        for (File pdf : file.listFiles()) {
-            if (pdf.isDirectory()) {
-                processDirectory(pdf, config);
-            } else {
-                processFile(pdf, config);
-            }
+        File[] children = file.listFiles();
+        if (children == null) {
+            LOGGER.log(Level.WARNING, "Unable to read folder " + file.getAbsolutePath());
+            return;
+        }
+        for (File child : children) {
+            processPath(child, config);
         }
     }
 
     private static void processFile(File file, Config config) {
+        if (!isPdfFile(file)) {
+            LOGGER.log(Level.FINE, "Skipping non-PDF file " + file.getAbsolutePath());
+            return;
+        }
         try {
             OpenDataLoaderPDF.processFile(file.getAbsolutePath(), config);
         } catch (Exception exception) {
             LOGGER.log(Level.SEVERE, "Exception during processing file " + file.getAbsolutePath() + ": " +
                 exception.getMessage(), exception);
         }
+    }
+
+    private static boolean isPdfFile(File file) {
+        if (!file.isFile()) {
+            return false;
+        }
+        String name = file.getName();
+        return name.toLowerCase(Locale.ROOT).endsWith(".pdf");
     }
 }
