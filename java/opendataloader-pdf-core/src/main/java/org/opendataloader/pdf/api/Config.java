@@ -18,6 +18,7 @@ public class Config {
     private boolean isGeneratePDF = false;
     private boolean keepLineBreaks = false;
     private boolean isGenerateJSON = true;
+    private boolean isGenerateText = false;
     private boolean useHTMLInMarkdown = false;
     private boolean addImageToMarkdown = false;
     private String replaceInvalidChars = " ";
@@ -148,6 +149,24 @@ public class Config {
      */
     public void setGenerateJSON(boolean generateJSON) {
         isGenerateJSON = generateJSON;
+    }
+
+    /**
+     * Checks if plain text output generation is enabled.
+     *
+     * @return true if plain text output should be generated, false otherwise.
+     */
+    public boolean isGenerateText() {
+        return isGenerateText;
+    }
+
+    /**
+     * Enables or disables plain text output generation.
+     *
+     * @param generateText true to enable, false to disable.
+     */
+    public void setGenerateText(boolean generateText) {
+        isGenerateText = generateText;
     }
 
     /**

@@ -19,18 +19,26 @@ The option `--replace-invalid-chars` replaces invalid or unrecognized characters
 The images are extracted from PDF as individual files and stored in a subfolder next to the Markdown output.
 
 The complete set of options:
+
 ```
 Options:
 -o,--output-dir <arg>           Specifies the output directory for generated files
+-p,--password <arg>             Specifies the password for an encrypted PDF
+-f,--format <arg>               List of output formats to generate (json, text, html, pdf, markdown, markdown-with-html, markdown-with-images). Default: json
+--content-safety-off <arg>      Disables one or more content safety filters. Accepts a list of filter names. Arguments: all, hidden-text, off-page, tiny, hidden-ocg
 --keep-line-breaks              Preserves original line breaks in the extracted text
---content-safety-off <arg>      Disables one or more content safety filters. Accepts a comma-separated list of filter names. Arguments: all, hidden-text, off-page, tiny, hidden-ocg
+--replace-invalid-chars <arg>   Replaces invalid or unrecognized characters (e.g., �, \u0000) with the specified character
+```
+
+The legacy options (for backward compatibility):
+
+```
+--no-json                       Disables the JSON output format
+--html                          Sets the data extraction output format to HTML
+--pdf                           Generates a new PDF file where the extracted layout data is visualized as annotations
+--markdown                      Sets the data extraction output format to Markdown
 --markdown-with-html            Sets the data extraction output format to Markdown with rendering complex elements like tables as HTML for better structure
 --markdown-with-images          Sets the data extraction output format to Markdown with extracting images from the PDF and includes them as links
---markdown                      Sets the data extraction output format to Markdown
---html                          Sets the data extraction output format to HTML
--p,--password <arg>             Specifies the password for an encrypted PDF
---pdf                           Generates a new PDF file where the extracted layout data is visualized as annotations
---replace-invalid-chars <arg>   Replaces invalid or unrecognized characters (e.g., �, \u0000) with the specified character
 ```
 
 ---
