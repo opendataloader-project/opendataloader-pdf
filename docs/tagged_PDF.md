@@ -19,20 +19,20 @@ This challenge presents a unique opportunity for innovation. Hancom and Dual Lab
 
 | Organization | Role |
 | :---- | :---- |
-| PDF Association | Define the Tagged PDF Validation standard for accessibility and AI. |
-| Dual Lab | Develop a VeraPDF-based validator to check if PDFs adhere to the new standard. |
+| PDF Association | Define Well-Tagged PDF specification and Tagged PDF Best practice guide aimed for accessibility and reuse in other workflows including AI. |
+| Dual Lab | Develop a veraPDF-based validator to verify if PDFs comply with existing and future standards and recommendations. |
 | Hancom | Build OpenDataLoader-PDF's extraction engine to effectively use the validated tags. |
 
 # **3\. Our Vision: Leading the Tagged PDF Revolution**
 
-Our vision is to not only be the first to develop a robust Tagged PDF data extraction tool but also to actively contribute to the global standards that govern it. By working with the PDF Association, we aim to ensure the reliability and integrity of Tagged PDF, turning it into a powerful and trustworthy asset for the entire AI ecosystem.
+Our vision is to not only be the first to develop a robust Tagged PDF data extraction tool for AI reuse but also to actively contribute to the global standards that govern it. By working with the PDF Association, we aim to ensure the reliability and integrity of Tagged PDF, turning it into a powerful and trustworthy asset for the entire AI ecosystem.
 
 ## **3.1. Available Tagged PDF Filters**
 
 | Filter Name | Defense Purpose | Status |
 | :---- | :---- | :---- |
 | tagged | Defends against flaws in existing tags and ensures the integrity of the document’s logical structure. | 🕖 In progress |
-| tag-validation | A new engine module that validates Tagged PDFs based on the upcoming PDF Association standard. | 🕖 In progress |
+| tag-validation | A new engine module that validates Tagged PDFs against recommendations of PDF Association. | 🕖 In progress |
 | extraction-logic | Develops new extraction methods that prioritize Tagged PDF structure over visual cues for enhanced accuracy. | 🕖 In progress |
 
 ## **3.2. Real-World Scenarios**
