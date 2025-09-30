@@ -68,7 +68,7 @@ public class MarkdownGenerator implements Closeable {
                 }
             }
 
-            System.out.println("Created " + markdownFileName);
+            LOGGER.log(Level.INFO, "Created {0}", markdownFileName);
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Unable to create markdown output: " + e.getMessage());
         }

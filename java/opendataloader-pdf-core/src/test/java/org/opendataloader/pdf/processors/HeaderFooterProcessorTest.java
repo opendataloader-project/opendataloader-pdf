@@ -48,9 +48,10 @@ public class HeaderFooterProcessorTest {
         contents.add(page1Contents);
         contents.add(page2Contents);
         HeaderFooterProcessor.processHeadersAndFooters((contents));
+
         Assertions.assertEquals(3, contents.get(0).size());
         Assertions.assertEquals(3, contents.get(1).size());
-        System.out.println(contents.get(0).get(0).getClass());
+
         Assertions.assertTrue(contents.get(0).get(0) instanceof SemanticHeaderOrFooter);
         Assertions.assertEquals(SemanticType.HEADER, ((SemanticHeaderOrFooter) contents.get(0).get(0)).getSemanticType());
         Assertions.assertTrue(contents.get(1).get(0) instanceof SemanticHeaderOrFooter);

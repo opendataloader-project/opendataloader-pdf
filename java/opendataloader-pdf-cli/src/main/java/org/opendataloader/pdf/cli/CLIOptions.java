@@ -37,6 +37,9 @@ public class CLIOptions {
     private static final String FORMAT_LONG_OPTION = "format";
     private static final String FORMAT_SUPPORTED_LIST = "json, text, html, pdf, markdown, markdown-with-html, markdown-with-images";
 
+    public static final String QUIET_OPTION = "q";
+    private static final String QUIET_LONG_OPTION = "quiet";
+
     private static final String HTML_IN_MARKDOWN_LONG_OPTION = "markdown-with-html";
 
     private static final String KEEP_LINE_BREAKS_LONG_OPTION = "keep-line-breaks";
@@ -69,6 +72,9 @@ public class CLIOptions {
         format.setRequired(false);
         format.setArgs(Option.UNLIMITED_VALUES);
         options.addOption(format);
+        Option quiet = new Option(QUIET_OPTION, QUIET_LONG_OPTION, false, "Suppresses console logging output");
+        quiet.setRequired(false);
+        options.addOption(quiet);
         Option keepLineBreaks = new Option(null, KEEP_LINE_BREAKS_LONG_OPTION, false, "Preserves original line breaks in the extracted text");
         keepLineBreaks.setRequired(false);
         options.addOption(keepLineBreaks);
@@ -241,5 +247,5 @@ public class CLIOptions {
         }
         return values;
     }
-}
 
+}

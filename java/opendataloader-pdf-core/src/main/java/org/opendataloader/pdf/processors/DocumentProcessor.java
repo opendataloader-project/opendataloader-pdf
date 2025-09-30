@@ -41,8 +41,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class DocumentProcessor {
+    private static final Logger LOGGER = Logger.getLogger(DocumentProcessor.class.getCanonicalName());
     public static void processFile(String inputPdfName, Config config) throws IOException {
         preprocessing(inputPdfName, config);
         calculateDocumentInfo();
@@ -97,7 +100,7 @@ public class DocumentProcessor {
     }
 
     public static void preprocessing(String pdfName, Config config) throws IOException {
-        System.out.println("File name: " + pdfName);
+        LOGGER.log(Level.INFO, () -> "File name: " + pdfName);
         updateStaticContainers(config);
         PDDocument pdDocument = new PDDocument(pdfName);
         StaticResources.setDocument(pdDocument);
@@ -160,13 +163,13 @@ public class DocumentProcessor {
 
     private static void calculateDocumentInfo() {
         PDDocument document = StaticResources.getDocument();
-        System.out.println("Number of pages: " + document.getNumberOfPages());
+        LOGGER.log(Level.INFO, () -> "Number of pages: " + document.getNumberOfPages());
         COSTrailer trailer = document.getDocument().getTrailer();
         GFCosInfo info = getInfo(trailer);
-        System.out.println("Author: " + (info.getAuthor() != null ? info.getAuthor() : info.getXMPCreator()));
-        System.out.println("Title: " + (info.getTitle() != null ? info.getTitle() : info.getXMPTitle()));
-        System.out.println("Creation date: " + (info.getCreationDate() != null ? info.getCreationDate() : info.getXMPCreateDate()));
-        System.out.println("Modification date: " + (info.getModDate() != null ? info.getModDate() : info.getXMPModifyDate()));
+        LOGGER.log(Level.INFO, () -> "Author: " + (info.getAuthor() != null ? info.getAuthor() : info.getXMPCreator()));
+        LOGGER.log(Level.INFO, () -> "Title: " + (info.getTitle() != null ? info.getTitle() : info.getXMPTitle()));
+        LOGGER.log(Level.INFO, () -> "Creation date: " + (info.getCreationDate() != null ? info.getCreationDate() : info.getXMPCreateDate()));
+        LOGGER.log(Level.INFO, () -> "Modification date: " + (info.getModDate() != null ? info.getModDate() : info.getXMPModifyDate()));
     }
 
     private static GFCosInfo getInfo(COSTrailer trailer) {

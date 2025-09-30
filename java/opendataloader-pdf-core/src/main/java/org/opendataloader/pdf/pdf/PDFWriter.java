@@ -42,12 +42,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class PDFWriter {
 
     private static final Map<PDFLayer, PDOptionalContentGroup> optionalContents = new HashMap<>();
 
     private static final List<List<PDAnnotation>> annotations = new ArrayList<>();
+    private static final Logger LOGGER = Logger.getLogger(PDFWriter.class.getCanonicalName());
 
     public static void updatePDF(File inputPDF, String password, String outputFolder, List<List<IObject>> contents) throws IOException {
         try (PDDocument document = Loader.loadPDF(inputPDF, password)) {
@@ -67,7 +70,7 @@ public class PDFWriter {
             String outputFileName = outputFolder + File.separator +
                     inputPDF.getName().substring(0, inputPDF.getName().length() - 4) + "_annotated.pdf";
             document.save(outputFileName);
-            System.out.println("Created " + outputFileName);
+            LOGGER.log(Level.INFO, "Created {0}", outputFileName);
         }
     }
 

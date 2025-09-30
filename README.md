@@ -348,6 +348,7 @@ Options:
 -o,--output-dir <arg>           Specifies the output directory for generated files
 -p,--password <arg>             Specifies the password for an encrypted PDF
 -f,--format <arg>               List of output formats to generate (json, text, html, pdf, markdown, markdown-with-html, markdown-with-images). Default: json
+-q,--quiet                      Suppresses console logging output
 --content-safety-off <arg>      Disables one or more content safety filters. Accepts a list of filter names. Arguments: all, hidden-text, off-page, tiny, hidden-ocg
 --keep-line-breaks              Preserves original line breaks in the extracted text
 --replace-invalid-chars <arg>   Replaces invalid or unrecognized characters (e.g., �, \u0000) with the specified character

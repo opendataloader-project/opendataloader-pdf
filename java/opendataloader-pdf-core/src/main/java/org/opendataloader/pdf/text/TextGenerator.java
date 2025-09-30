@@ -56,7 +56,7 @@ public class TextGenerator implements Closeable {
                     textWriter.write(lineSeparator);
                 }
             }
-            System.out.println("Created " + textFileName);
+            LOGGER.log(Level.INFO, "Created {0}", textFileName);
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Unable to create text output: " + e.getMessage());
         }
