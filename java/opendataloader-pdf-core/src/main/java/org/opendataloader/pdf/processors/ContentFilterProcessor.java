@@ -25,18 +25,19 @@ public class ContentFilterProcessor {
         pageContents = DocumentProcessor.removeNullObjectsFromList(pageContents);
         TextProcessor.removeTextDecorationImages(pageContents);
         pageContents = DocumentProcessor.removeNullObjectsFromList(pageContents);
-        TextProcessor.trimTextChunksWhiteSpaces(pageContents);
-        TextProcessor.replaceUndefinedCharacters(pageContents, config.getReplaceInvalidChars());
-        pageContents = HiddenTextProcessor.findHiddenText(inputPdfName, pageContents, config.getPassword());
-        processBackgrounds(pageNumber, pageContents);
-        if (config.getFilterConfig().isFilterOutOfPage()) {
-            filterOutOfPageContents(pageNumber, pageContents);
-        }
-        pageContents = DocumentProcessor.removeNullObjectsFromList(pageContents);
         if (config.getFilterConfig().isFilterTinyText()) {
             TextProcessor.filterTinyText(pageContents);
+            pageContents = DocumentProcessor.removeNullObjectsFromList(pageContents);
         }
-        pageContents = DocumentProcessor.removeNullObjectsFromList(pageContents);
+        if (config.getFilterConfig().isFilterOutOfPage()) {
+            filterOutOfPageContents(pageNumber, pageContents);
+            pageContents = DocumentProcessor.removeNullObjectsFromList(pageContents);
+        }
+        TextProcessor.trimTextChunksWhiteSpaces(pageContents);
+        pageContents = HiddenTextProcessor.findHiddenText(inputPdfName, pageContents,
+            config.getFilterConfig().isFilterHiddenText(), config.getPassword());
+        TextProcessor.replaceUndefinedCharacters(pageContents, config.getReplaceInvalidChars());
+        processBackgrounds(pageNumber, pageContents);
         return pageContents;
     }
 

@@ -26,7 +26,7 @@ public class TextProcessor {
     private static final double MAX_BOTTOM_DECORATION_IMAGE_EPSILON = 0.1;
     private static final double MAX_LEFT_DECORATION_IMAGE_EPSILON = 0.1;
     private static final double MAX_RIGHT_DECORATION_IMAGE_EPSILON = 1.5;
-    private static final double TEXT_MIN_FONT_SIZE = 1;
+    private static final double TEXT_MIN_HEIGHT = 1;
 
     public static void replaceUndefinedCharacters(List<IObject> contents, String replacementCharacterString) {
         if (ChunkParser.REPLACEMENT_CHARACTER_STRING.equals(replacementCharacterString)) {
@@ -47,7 +47,7 @@ public class TextProcessor {
             IObject object = contents.get(i);
             if (object instanceof TextChunk) {
                 TextChunk textChunk = ((TextChunk) object);
-                if (textChunk.getBoundingBox().getHeight() <= TEXT_MIN_FONT_SIZE) {
+                if (textChunk.getBoundingBox().getHeight() <= TEXT_MIN_HEIGHT) {
                     contents.set(i, null);
                 }
             }

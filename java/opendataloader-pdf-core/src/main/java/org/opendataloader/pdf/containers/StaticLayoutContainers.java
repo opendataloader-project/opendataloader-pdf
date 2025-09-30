@@ -15,13 +15,11 @@ import java.util.List;
 public class StaticLayoutContainers {
 
     private static final ThreadLocal<Long> currentContentId = new ThreadLocal<>();
-    private static final ThreadLocal<Boolean> filterHiddenText = new ThreadLocal<>();
     private static final ThreadLocal<List<SemanticHeading>> headings = new ThreadLocal<>();
     private static final ThreadLocal<Integer> imageIndex = new ThreadLocal<>();
 
     public static void clearContainers() {
         currentContentId.set(1L);
-        filterHiddenText.set(true);
         headings.set(new LinkedList<>());
         imageIndex.set(1);
     }
@@ -38,14 +36,6 @@ public class StaticLayoutContainers {
 
     public static void setCurrentContentId(long currentContentId) {
         StaticLayoutContainers.currentContentId.set(currentContentId);
-    }
-
-    public static boolean isFilterHiddenText() {
-        return filterHiddenText.get();
-    }
-
-    public static void setFilterHiddenText(boolean filterHiddenText) {
-        StaticLayoutContainers.filterHiddenText.set(filterHiddenText);
     }
 
     public static List<SemanticHeading> getHeadings() {
