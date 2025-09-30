@@ -15,6 +15,7 @@ import org.opendataloader.pdf.html.HtmlGenerator;
 import org.opendataloader.pdf.html.HtmlGeneratorFactory;
 import org.opendataloader.pdf.pdf.PDFWriter;
 import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.text.TextGenerator;
 import org.verapdf.as.ASAtom;
 import org.verapdf.containers.StaticCoreContainers;
 import org.verapdf.cos.COSDictionary;
@@ -86,6 +87,11 @@ public class DocumentProcessor {
         if (config.isGenerateHtml()) {
             try (HtmlGenerator htmlGenerator = HtmlGeneratorFactory.getHtmlGenerator(inputPDF, config.getOutputFolder(), config)) {
                 htmlGenerator.writeToHtml(contents);
+            }
+        }
+        if (config.isGenerateText()) {
+            try (TextGenerator textGenerator = new TextGenerator(inputPDF, config.getOutputFolder())) {
+                textGenerator.writeToText(contents);
             }
         }
     }
