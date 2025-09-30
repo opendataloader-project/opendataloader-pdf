@@ -7,12 +7,13 @@
  */
 package org.opendataloader.pdf.cli;
 
+import org.apache.commons.cli.*;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.api.OpenDataLoaderPDF;
-import org.apache.commons.cli.*;
 
 import java.io.File;
 import java.util.Locale;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,16 +41,31 @@ public class CLIMain {
 
         String[] arguments = commandLine.getArgs();
         Config config;
+        boolean quiet;
         try {
             config = CLIOptions.createConfigFromCommandLine(commandLine);
+            quiet = commandLine.hasOption(CLIOptions.QUIET_OPTION) || commandLine.hasOption("quiet");
         } catch (IllegalArgumentException exception) {
             System.out.println(exception.getMessage());
             formatter.printHelp(HELP, options);
             return;
         }
+        configureLogging(quiet);
         for (String argument : arguments) {
             processPath(new File(argument), config);
         }
+    }
+
+    private static void configureLogging(boolean quiet) {
+        if (!quiet) {
+            return;
+        }
+        Logger rootLogger = Logger.getLogger("");
+        rootLogger.setLevel(Level.OFF);
+        for (Handler handler : rootLogger.getHandlers()) {
+            handler.setLevel(Level.OFF);
+        }
+        LOGGER.setLevel(Level.OFF);
     }
 
     private static void processPath(File file, Config config) {

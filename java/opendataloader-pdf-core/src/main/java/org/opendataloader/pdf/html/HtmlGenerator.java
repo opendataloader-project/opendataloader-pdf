@@ -38,6 +38,7 @@ import java.util.logging.Logger;
 public class HtmlGenerator implements Closeable {
 
     protected static final Logger LOGGER = Logger.getLogger(HtmlGenerator.class.getCanonicalName());
+
     protected final FileWriter htmlWriter;
     protected final String pdfFileName;
     protected final Path pdfFilePath;
@@ -74,7 +75,7 @@ public class HtmlGenerator implements Closeable {
             }
 
             htmlWriter.write("\n</body>\n</html>");
-            System.out.println("Created " + htmlFilePath.toString());
+            LOGGER.log(Level.INFO, "Created {0}", htmlFilePath);
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Unable to create html output: " + e.getMessage());
         }
