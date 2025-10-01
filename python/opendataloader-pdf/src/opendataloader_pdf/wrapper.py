@@ -2,6 +2,7 @@ import argparse
 import subprocess
 import sys
 import importlib.resources as resources
+import locale
 from pathlib import Path
 from typing import List, Optional
 
@@ -136,7 +137,7 @@ def run_jar(args: List[str], quiet: bool = False) -> str:
                     capture_output=True,
                     text=True,
                     check=True,
-                    encoding="utf-8",
+                    encoding=locale.getpreferredencoding(False),
                 )
                 return result.stdout
 
@@ -146,7 +147,7 @@ def run_jar(args: List[str], quiet: bool = False) -> str:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
-                encoding="utf-8",
+                encoding=locale.getpreferredencoding(False),
             ) as process:
                 output_lines: List[str] = []
                 for line in process.stdout:
