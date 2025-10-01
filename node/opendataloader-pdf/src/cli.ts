@@ -1,148 +1,149 @@
 #!/usr/bin/env node
-import { run, RunOptions } from './index.js';
+import { Command, CommanderError } from 'commander';
+import { convert, ConvertOptions } from './index.js';
 
-interface ParsedArgs {
-  inputPath?: string;
-  options: RunOptions;
-  showHelp: boolean;
+interface CliOptions {
+  outputDir?: string;
+  password?: string;
+  format?: string[];
+  quiet?: boolean;
+  contentSafetyOff?: string[];
+  keepLineBreaks?: boolean;
+  replaceInvalidChars?: string;
 }
 
-function printHelp(): void {
-  console.log(`Usage: opendataloader-pdf [options] <input>`);
-  console.log('');
-  console.log('Options:');
-  console.log('  -o, --output-dir <path>      Directory where outputs are written');
-  console.log('  -p, --password <password>    Password for encrypted PDFs');
-  console.log('  --replace-invalid-chars <c>  Replacement character for invalid characters');
-  console.log('  --content-safety-off <mode>  Disable content safety filtering (provide mode)');
-  console.log('  --markdown                   Generate Markdown output');
-  console.log('  --html                       Generate HTML output');
-  console.log('  --pdf                        Generate annotated PDF output');
-  console.log('  --keep-line-breaks           Preserve line breaks in text output');
-  console.log('  --markdown-with-html         Allow raw HTML within Markdown output');
-  console.log('  --markdown-with-images       Embed images in Markdown output');
-  console.log('  --no-json                    Disable JSON output generation');
-  console.log('  --debug                      Stream CLI logs directly to stdout/stderr');
-  console.log('  -h, --help                   Show this message and exit');
+const VALID_FORMATS = new Set([
+  'json',
+  'text',
+  'html',
+  'pdf',
+  'markdown',
+  'markdown-with-html',
+  'markdown-with-images',
+]);
+
+const VALID_CONTENT_SAFETY_MODES = new Set([
+  'all',
+  'hidden-text',
+  'off-page',
+  'tiny',
+  'hidden-ocg',
+]);
+
+function createProgram(): Command {
+  const program = new Command();
+
+  program
+    .name('opendataloader-pdf')
+    .usage('[options] <input...>')
+    .description('Convert PDFs using the OpenDataLoader CLI.')
+    .showHelpAfterError("Use '--help' to see available options.")
+    .showSuggestionAfterError(false)
+    .argument('<input...>', 'Input files or directories to convert')
+    .option('-o, --output-dir <path>', 'Directory where outputs are written')
+    .option('-p, --password <password>', 'Password for encrypted PDFs')
+    .option(
+      '-f, --format <value...>',
+      'Output formats to generate (json, text, html, pdf, markdown, markdown-with-html, markdown-with-images)',
+    )
+    .option('-q, --quiet', 'Suppress CLI logging output')
+    .option('--content-safety-off <mode...>', 'Disable one or more content safety filters')
+    .option('--keep-line-breaks', 'Preserve line breaks in text output')
+    .option('--replace-invalid-chars <c>', 'Replacement character for invalid characters');
+
+  program.configureOutput({
+    writeErr: (str) => {
+      console.error(str.trimEnd());
+    },
+    outputError: (str, write) => {
+      write(str);
+    },
+  });
+
+  return program;
 }
 
-function parseArgs(argv: string[]): ParsedArgs {
-  const options: RunOptions = {};
-  let inputPath: string | undefined;
-  let showHelp = false;
+function buildConvertOptions(options: CliOptions): ConvertOptions {
+  const convertOptions: ConvertOptions = {};
 
-  const readValue = (currentIndex: number, option: string): { value: string; nextIndex: number } => {
-    const nextValue = argv[currentIndex + 1];
-    if (!nextValue || nextValue.startsWith('-')) {
-      throw new Error(`Option ${option} requires a value.`);
-    }
-    return { value: nextValue, nextIndex: currentIndex + 1 };
-  };
-
-  for (let i = 0; i < argv.length; i += 1) {
-    const arg = argv[i];
-
-    switch (arg) {
-      case '--help':
-      case '-h':
-        showHelp = true;
-        i = argv.length; // exit loop
-        break;
-      case '--output-dir':
-      case '-o': {
-        const { value, nextIndex } = readValue(i, arg);
-        options.outputFolder = value;
-        i = nextIndex;
-        break;
-      }
-      case '--password':
-      case '-p': {
-        const { value, nextIndex } = readValue(i, arg);
-        options.password = value;
-        i = nextIndex;
-        break;
-      }
-      case '--replace-invalid-chars': {
-        const { value, nextIndex } = readValue(i, arg);
-        options.replaceInvalidChars = value;
-        i = nextIndex;
-        break;
-      }
-      case '--content-safety-off': {
-        const { value, nextIndex } = readValue(i, arg);
-        options.contentSafetyOff = value;
-        i = nextIndex;
-        break;
-      }
-      case '--markdown':
-        options.generateMarkdown = true;
-        break;
-      case '--html':
-        options.generateHtml = true;
-        break;
-      case '--pdf':
-        options.generateAnnotatedPdf = true;
-        break;
-      case '--keep-line-breaks':
-        options.keepLineBreaks = true;
-        break;
-      case '--markdown-with-html':
-        options.htmlInMarkdown = true;
-        break;
-      case '--markdown-with-images':
-        options.addImageToMarkdown = true;
-        break;
-      case '--no-json':
-        options.noJson = true;
-        break;
-      case '--debug':
-        options.debug = true;
-        break;
-      default:
-        if (arg.startsWith('-')) {
-          throw new Error(`Unknown option: ${arg}`);
-        }
-
-        if (inputPath) {
-          throw new Error('Multiple input paths provided. Only one input path is allowed.');
-        }
-        inputPath = arg;
-    }
+  if (options.outputDir) {
+    convertOptions.outputDir = options.outputDir;
+  }
+  if (options.password) {
+    convertOptions.password = options.password;
+  }
+  if (options.format && options.format.length > 0) {
+    convertOptions.format = options.format;
+  }
+  if (options.quiet) {
+    convertOptions.quiet = true;
+  }
+  if (options.contentSafetyOff && options.contentSafetyOff.length > 0) {
+    convertOptions.contentSafetyOff = options.contentSafetyOff;
+  }
+  if (options.keepLineBreaks) {
+    convertOptions.keepLineBreaks = true;
+  }
+  if (options.replaceInvalidChars) {
+    convertOptions.replaceInvalidChars = options.replaceInvalidChars;
   }
 
-  return { inputPath, options, showHelp };
+  return convertOptions;
 }
 
 async function main(): Promise<number> {
-  let parsed: ParsedArgs;
+  const program = createProgram();
+
+  program.exitOverride();
 
   try {
-    parsed = parseArgs(process.argv.slice(2));
+    program.parse(process.argv);
   } catch (err) {
+    if (err instanceof CommanderError) {
+      if (err.code === 'commander.helpDisplayed') {
+        return 0;
+      }
+      return err.exitCode ?? 1;
+    }
+
     const message = err instanceof Error ? err.message : String(err);
     console.error(message);
     console.error("Use '--help' to see available options.");
     return 1;
   }
 
-  if (parsed.showHelp) {
-    printHelp();
-    return 0;
+  const cliOptions = program.opts<CliOptions>();
+  const inputPaths = program.args;
+
+  if (cliOptions.format) {
+    for (const value of cliOptions.format) {
+      if (!VALID_FORMATS.has(value)) {
+        console.error(`Invalid format '${value}'. See '--help' for allowed values.`);
+        console.error("Use '--help' to see available options.");
+        return 1;
+      }
+    }
   }
 
-  if (!parsed.inputPath) {
-    console.error('Missing required input path.');
-    console.error("Use '--help' to see usage information.");
-    return 1;
+  if (cliOptions.contentSafetyOff) {
+    for (const value of cliOptions.contentSafetyOff) {
+      if (!VALID_CONTENT_SAFETY_MODES.has(value)) {
+        console.error(`Invalid content safety mode '${value}'. See '--help' for allowed values.`);
+        console.error("Use '--help' to see available options.");
+        return 1;
+      }
+    }
   }
+
+  const convertOptions = buildConvertOptions(cliOptions);
 
   try {
-    const output = await run(parsed.inputPath, parsed.options);
-    if (output && !parsed.options.debug) {
+    const output = await convert(inputPaths, convertOptions);
+    if (output && !convertOptions.quiet) {
       process.stdout.write(output);
-    }
-    if (output && !output.endsWith('\n') && !parsed.options.debug) {
-      process.stdout.write('\n');
+      if (!output.endsWith('\n')) {
+        process.stdout.write('\n');
+      }
     }
     return 0;
   } catch (err) {

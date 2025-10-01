@@ -46,6 +46,9 @@
   "publishConfig": {
     "access": "public"
   },
+  "dependencies": {
+    "commander": "^14.0.1"
+  },
   "devDependencies": {
     "@types/glob": "^8.1.0",
     "@types/node": "^24.3.3",

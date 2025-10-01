@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { run } from '../src/index';
+import { run, convert } from '../src/index';
 import * as path from 'path';
 import * as fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -22,9 +22,9 @@ describe('opendataloader-pdf', () => {
 
   afterAll(() => {
     // Clean up after tests
-    // if (fs.existsSync(tempDir)) {
-    //   fs.rmSync(tempDir, { recursive: true, force: true });
-    // }
+    if (fs.existsSync(tempDir)) {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
   });
 
   it('should process PDF and generate markdown output', async () => {
@@ -45,4 +45,23 @@ describe('opendataloader-pdf', () => {
     expect(fs.existsSync(path.join(tempDir, '1901.03003.html'))).toBe(true);
     expect(fs.existsSync(path.join(tempDir, '1901.03003_annotated.pdf'))).toBe(true);
   }, 30000); // 30 second timeout for this test
+
+  it('should convert PDF with explicit formats using quiet mode', async () => {
+    const convertDir = path.join(tempDir, 'convert');
+    if (fs.existsSync(convertDir)) {
+      fs.rmSync(convertDir, { recursive: true, force: true });
+    }
+    fs.mkdirSync(convertDir);
+
+    await convert([inputPdf], {
+      outputDir: convertDir,
+      format: ['json', 'text', 'html', 'pdf', 'markdown']
+    });
+
+    expect(fs.existsSync(path.join(convertDir, '1901.03003.json'))).toBe(true);
+    expect(fs.existsSync(path.join(convertDir, '1901.03003.txt'))).toBe(true);
+    expect(fs.existsSync(path.join(convertDir, '1901.03003.html'))).toBe(true);
+    expect(fs.existsSync(path.join(convertDir, '1901.03003.md'))).toBe(true);
+    expect(fs.existsSync(path.join(convertDir, '1901.03003_annotated.pdf'))).toBe(true);
+  }, 30000);
 });

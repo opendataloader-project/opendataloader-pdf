@@ -130,22 +130,18 @@ npm install @opendataloader/pdf
 
 ### Usage
 
-- `inputPath` can be either the path to a single document or the path to a folder.
-- If you don’t specify an `outputFolder`, the output data will be saved in the same directory as the input document.
+`inputPath` can be either the path to a single document or the path to a folder.
 
 ```typescript
-import { run } from '@opendataloader/pdf';
+import { convert } from '@opendataloader/pdf';
 
 async function main() {
   try {
-    const output = await run('path/to/document.pdf', {
-      outputFolder: 'path/to/output',
-      generateMarkdown: true,
-      generateHtml: true,
-      generateAnnotatedPdf: true,
-      debug: true,
+    await convert(['path/to/document.pdf', 'path/to/folder'], {
+      outputDir: 'path/to/output',
+      format: ['json', 'html', 'pdf', 'markdown'],
     });
-    console.log('PDF processing complete.', output);
+    console.log('convert() complete');
   } catch (error) {
     console.error('Error processing PDF:', error);
   }
@@ -153,54 +149,57 @@ async function main() {
 
 main();
 ```
+### Function: convert()
 
-If you want to run it via CLI, you can use the following command:
+`convert(inputPaths: string[], options?: ConvertOptions): Promise<string>`
+
+Multi-input helper matching the Python wrapper.
+
+| Property                        | Type       | Default     | Description                                                                                                                         |
+| --------------------------------| ---------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `inputPaths`                    | `string[]` | —           | One or more file paths or directories to process.                                                                                   |
+| `options.outputDir`             | `string`   | `undefined` | Directory where outputs are written.                                                                                                |
+| `options.password`              | `string`   | `undefined` | Password for encrypted PDFs.                                                                                                        |
+| `options.format`                | `string[]` | `undefined` | Output formats (any combination of `json`, `text`, `html`, `pdf`, `markdown`, `markdown-with-html`, `markdown-with-images`).        |
+| `options.quiet`                 | `boolean`  | `false`     | Suppress CLI logging output and prevent streaming.                                                                                  |
+| `options.contentSafetyOff`      | `string[]` | `undefined` | Disable one or more content safety filters (`all`, `hidden-text`, `off-page`, `tiny`, `hidden-ocg`).                                |
+| `options.keepLineBreaks`        | `boolean`  | `false`     | Preserve line breaks in text output.                                                                                                |
+| `options.replaceInvalidChars`   | `string`   | `undefined` | Replacement character for invalid or unrecognized characters.                                                                       |
+
+### Function: run()
+
+Deprecated.
+
+### CLI
 
 ```bash
-npx @opendataloader/pdf path/to/document.pdf -o path/to/output --markdown --html --pdf
+npx @opendataloader/pdf path/to/document.pdf path/to/folder -o path/to/output -f json html pdf markdown
 ```
 
-or you can install it globally:
+Or install globally:
 
 ```bash
 npm install -g @opendataloader/pdf
 ```
 
-then run:
+Then run:
 
 ```bash
-opendataloader-pdf path/to/document.pdf -o path/to/output --markdown --html --pdf
+opendataloader-pdf path/to/document.pdf path/to/folder -o path/to/output -f json html pdf markdown
 ```
 
-### Function: run()
+#### Available options
 
-`run(inputPath: string, options?: RunOptions): Promise<string>`
-
-The main function to process PDFs.
-
-**Parameters**
-
-| Parameter   | Type     | Required | Description                           |
-| ----------- | -------- | -------- | ------------------------------------- |
-| `inputPath` | `string` | ✅ Yes    | Path to the input PDF file or folder. |
-| `options`   | `RunOptions` | No       | Configuration options for the run.    |
-
-**RunOptions**
-
-| Property                | Type      | Default       | Description                                                                                                                                           |
-| ----------------------- | --------- | ------------- |-------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `outputFolder`          | `string`  | `undefined`   | Path to the output folder. If not set, output is saved next to the input.                                                                             |
-| `password`              | `string`  | `undefined`   | Password for the PDF file.                                                                                                                            |
-| `replaceInvalidChars`   | `string`  | `" "`         | Character to replace invalid or unrecognized characters (e.g., , \u0000).                                                                             |
-| `contentSafetyOff`     | `string`  | `undefined`   | Disables one or more content safety filters. Accepts a comma-separated list of filter names. Arguments: all, hidden-text, off-page, tiny, hidden-ocg. |
-| `generateMarkdown`      | `boolean` | `false`       | If `true`, generates a Markdown output file.                                                                                                          |
-| `generateHtml`          | `boolean` | `false`       | If `true`, generates an HTML output file.                                                                                                             |
-| `generateAnnotatedPdf`  | `boolean` | `false`       | If `true`, generates an annotated PDF output file.                                                                                                    |
-| `keepLineBreaks`        | `boolean` | `false`       | If `true`, keeps line breaks in the output.                                                                                                           |
-| `htmlInMarkdown`        | `boolean` | `false`       | If `true`, uses HTML in the Markdown output.                                                                                                          |
-| `addImageToMarkdown`    | `boolean` | `false`       | If `true`, adds images to the Markdown output.                                                                                                        |
-| `noJson`                | `boolean` | `false`       | If `true`, disables the JSON output.                                                                                                                  |
-| `debug`                 | `boolean` | `false`       | If `true`, prints CLI messages to the console during execution.                                                                                       |
+```
+  -o, --output-dir <path>             Directory where outputs are written
+  -p, --password <password>           Password for encrypted PDFs
+  -f, --format <value...>             Output formats to generate (json, text, html, pdf, markdown, markdown-with-html, markdown-with-images)
+  -q, --quiet                         Suppress CLI logging output
+      --content-safety-off <mode...>  Disable one or more content safety filters (all, hidden-text, off-page, tiny, hidden-ocg)
+      --keep-line-breaks              Preserve line breaks in text output
+      --replace-invalid-chars <c>     Replacement character for invalid or unrecognized characters
+  -h, --help                          Show usage information
+```
 
 <br/>
 
