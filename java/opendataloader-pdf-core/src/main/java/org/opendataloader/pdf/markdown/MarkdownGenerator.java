@@ -152,7 +152,12 @@ public class MarkdownGenerator implements Closeable {
     }
 
     protected void writeSemanticTextNode(SemanticTextNode textNode) throws IOException {
-        markdownWriter.write(getCorrectMarkdownString(textNode.getValue()));
+        String value = textNode.getValue();
+        if (isInsideTable() && StaticContainers.isKeepLineBreaks()) {
+            value = value.replace(MarkdownSyntax.LINE_BREAK, getLineBreak());
+        }
+
+        markdownWriter.write(getCorrectMarkdownString(value));
     }
 
     protected void writeTable(TableBorder table) throws IOException {
@@ -194,12 +199,7 @@ public class MarkdownGenerator implements Closeable {
     }
 
     protected void writeParagraph(SemanticParagraph textNode) throws IOException {
-        String value = textNode.getValue();
-        if (isInsideTable() && StaticContainers.isKeepLineBreaks()) {
-            value = value.replace(MarkdownSyntax.LINE_BREAK, getLineBreak());
-        }
-
-        markdownWriter.write(getCorrectMarkdownString(value));
+        writeSemanticTextNode(textNode);
     }
 
     protected void writeHeading(SemanticHeading heading) throws IOException {
@@ -210,7 +210,7 @@ public class MarkdownGenerator implements Closeable {
             }
             markdownWriter.write(MarkdownSyntax.SPACE);
         }
-        markdownWriter.write(getCorrectMarkdownString(heading.getValue()));
+        writeSemanticTextNode(heading);
     }
 
     protected void enterTable() {
