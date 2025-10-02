@@ -10,7 +10,6 @@ jobs:
     steps:
       - uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.OWNER_PAT }}
           script: |
             github.rest.issues.createComment({
               issue_number: context.issue.number,
