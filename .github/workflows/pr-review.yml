@@ -1,4 +1,4 @@
-name: PR Review Bot
+name: PR Review
 
 on:
   pull_request:
