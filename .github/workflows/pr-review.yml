@@ -1,13 +1,13 @@
-on:
-  pull_request_target:
-    types: [opened, synchronize]
+name: PR Review Bot
 
-permissions:
-  issues: write
-  pull-requests: read
+on:
+  pull_request:
+    types: [opened, synchronize]
 
 jobs:
   comment:
+    permissions:
+      issues: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/github-script@v7
