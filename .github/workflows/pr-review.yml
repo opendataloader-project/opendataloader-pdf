@@ -6,6 +6,7 @@ on:
 
 jobs:
   comment:
+    if: github.event.pull_request.head.repo.fork == false
     permissions:
       issues: write
     runs-on: ubuntu-latest
