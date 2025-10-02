@@ -63,18 +63,6 @@ public class HeadingProcessor {
                 textNodes.add(textNode);
                 textNodeStatistics.addTextNode(textNode);
             }
-        } else if (content instanceof TableBorder) {
-            TableBorder table = (TableBorder) content;
-            if (table.isTextBlock()) {
-                List<IObject> contents = table.getCell(0, 0).getContents();
-                for (IObject textBlockContent : contents) {
-                    processContent(textNodes, textBlockContent, textNodeStatistics);
-                }
-            }
-        } else if (content instanceof PDFList) {
-            PDFList list = (PDFList) content;
-            SemanticTextNode textNode = new SemanticTextNode();
-            textNode.add(list.getListItems().get(0).getFirstLine());
         }
     }
 
