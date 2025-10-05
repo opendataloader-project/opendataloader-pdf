@@ -2,9 +2,10 @@ git clone https://github.com/opendataloader-project/opendataloader-pdf.git
 cd opendataloader-pdf
 git checkout table_transformer
 git pull origin table_transformer
-:: cd java
-mvn clean install -DskipTests
+cd java
+mvn clean package -DskipTests
 cd ..
-move opendataloader-pdf\target\open-pdf-dataloader-0.0.1.jar .
+cd ..
+move opendataloader-pdf\java\opendataloader-pdf-cli\target\opendataloader-pdf-cli-0.0.0.jar .
 
 git clone https://github.com/opendataloader-project/open-pdf-dataloader-tatr.git

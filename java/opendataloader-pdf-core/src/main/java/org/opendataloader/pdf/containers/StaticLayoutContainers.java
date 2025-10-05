@@ -23,7 +23,8 @@ public class StaticLayoutContainers {
     private static final ThreadLocal<List<SemanticHeading>> headings = new ThreadLocal<>();
     private static final ThreadLocal<Integer> imageIndex = new ThreadLocal<>();
     private static final ThreadLocal<Boolean> isUseStructTree = new ThreadLocal<>();
-    private static final ThreadLocal<ContrastRatioConsumer>  contrastRatioConsumer = new ThreadLocal<>();
+    private static final ThreadLocal<ContrastRatioConsumer> contrastRatioConsumer = new ThreadLocal<>();
+    private static final ThreadLocal<ContrastRatioConsumer> contrastRatioConsumerTatr = new ThreadLocal<>();
     private static final ThreadLocal<Boolean> isContrastRatioConsumerFailedToCreate =  new ThreadLocal<>();
 
     public static void clearContainers() {
@@ -32,6 +33,7 @@ public class StaticLayoutContainers {
         imageIndex.set(1);
         isUseStructTree.set(false);
         contrastRatioConsumer.remove();
+        contrastRatioConsumerTatr.remove();
         isContrastRatioConsumerFailedToCreate.set(false);
     }
 
@@ -47,6 +49,14 @@ public class StaticLayoutContainers {
 
     public static void setCurrentContentId(long currentContentId) {
         StaticLayoutContainers.currentContentId.set(currentContentId);
+    }
+
+    public static ContrastRatioConsumer getContrastRatioConsumer() {
+        return contrastRatioConsumerTatr.get();
+    }
+
+    public static void setContrastRatioConsumer(ContrastRatioConsumer contrastRatioConsumerTatr) {
+        StaticLayoutContainers.contrastRatioConsumerTatr.set(contrastRatioConsumerTatr);
     }
 
     public static ContrastRatioConsumer getContrastRatioConsumer(String sourcePdfPath, String password, boolean enableAntialias, Float imagePixelSize) {

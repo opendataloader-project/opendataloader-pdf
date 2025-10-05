@@ -8,6 +8,7 @@
 package org.opendataloader.pdf.json;
 
 import org.opendataloader.pdf.json.serializers.*;
+import org.opendataloader.pdf.json.serializers.tabletransformer.TableSerializer;
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -84,8 +85,7 @@ public class ObjectMapperHolder {
         SimpleModule tableModule = new SimpleModule("NodeSerializer", new Version(2, 1,
                 3, null, null, null));
 
-        com.hancom.opendataloader.pdf.json.serializers.tabletransformer.TableSerializer tableTransformerSerializer =
-                new com.hancom.opendataloader.pdf.json.serializers.tabletransformer.TableSerializer(TableBorder.class);
+        TableSerializer tableTransformerSerializer = new TableSerializer(TableBorder.class);
         tableModule.addSerializer(TableBorder.class, tableTransformerSerializer);
 
         tableTransformerObjectMapper.registerModule(tableModule);

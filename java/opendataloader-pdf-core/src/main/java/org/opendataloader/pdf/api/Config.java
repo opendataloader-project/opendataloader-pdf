@@ -24,6 +24,8 @@ public class Config {
     private boolean addImageToMarkdown = false;
     private String replaceInvalidChars = " ";
     private String outputFolder;
+    private String pythonExecutable;
+    private String tatrFolder;
     private final FilterConfig filterConfig = new FilterConfig();
 
     /**
@@ -251,5 +253,21 @@ public class Config {
 
     public void setUseStructTree(boolean useStructTree) {
         this.useStructTree = useStructTree;
+    }
+
+    public String getPythonExecutable() {
+        return pythonExecutable;
+    }
+
+    public void setPythonExecutable(String pythonExecutable) {
+        this.pythonExecutable = pythonExecutable;
+    }
+
+    public String getTatrFolder() {
+        return tatrFolder;
+    }
+
+    public void setTatrFolder(String tatrFolder) {
+        this.tatrFolder = tatrFolder;
     }
 }

@@ -204,7 +204,7 @@ This script download and build `table_transformer` branch of repo
 [opendataloader-pdf](https://github.com/opendataloader-project/opendataloader-pdf),
 and also download [open-pdf-dataloader-tatr](https://github.com/opendataloader-project/open-pdf-dataloader-tatr).
 
-> install_tatr.bar
+> install_tatr.bat
 
 ### CLI usage
 

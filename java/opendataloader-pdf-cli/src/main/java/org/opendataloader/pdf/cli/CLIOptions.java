@@ -59,6 +59,12 @@ public class CLIOptions {
 
     private static final String USE_STRUCT_TREE_LONG_OPTION = "use-struct-tree";
 
+    public static final String PYTHON_OPTION = "py";
+    private static final String PYTHON_LONG_OPTION = "python";
+
+//    public static final String TATR_OPTION = "tatr";
+//    private static final String TATR_LONG_OPTION = "tatrpath";
+
     public static Options defineOptions() {
         Options options = new Options();
         Option contentSafetyOff = new Option(null, CONTENT_SAFETY_OFF_LONG_OPTION, true, "Disables one or more content safety filters. Accepts a comma-separated list of filter names. Arguments: all, hidden-text, off-page, tiny, hidden-ocg");
@@ -105,6 +111,12 @@ public class CLIOptions {
         Option useStructTree = new Option(null, USE_STRUCT_TREE_LONG_OPTION, false, "Enable processing structure tree (disabled by default)");
         useStructTree.setRequired(false);
         options.addOption(useStructTree);
+        Option python = new Option(PYTHON_OPTION, PYTHON_LONG_OPTION, true, "Python executable to use");
+        python.setRequired(false);
+        options.addOption(python);
+//        Option tatr = new Option(TATR_OPTION, TATR_LONG_OPTION, true, "Path to TATR repository");
+//        tatr.setRequired(true);
+//        options.addOption(tatr);
         return options;
     }
 
@@ -157,7 +169,7 @@ public class CLIOptions {
         if (!commandLine.hasOption(CONTENT_SAFETY_OFF_LONG_OPTION)) {
             return;
         }
-        
+
 
         String[] optionValues = commandLine.getOptionValues(CONTENT_SAFETY_OFF_LONG_OPTION);
         if (optionValues == null || optionValues.length == 0) {
