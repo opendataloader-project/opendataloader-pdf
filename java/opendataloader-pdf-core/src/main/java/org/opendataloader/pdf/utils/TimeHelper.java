@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.hancom.opendataloader.pdf.utils;
+package org.opendataloader.pdf.utils;
 
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
@@ -20,15 +20,15 @@ public class TimeHelper {
     long javaAndPythonTime = 0;
     long javaAndFilteredPythonTime = 0;
     long startTime;
-    
+
     public TimeHelper() {
-        
+
     }
-    
+
     public void start() {
         startTime = System.nanoTime();
     }
-    
+
     public void endJava() {
         javaTime += System.nanoTime() - startTime;
     }

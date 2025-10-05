@@ -5,22 +5,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.hancom.opendataloader.pdf.utils.table_transformer;
+package org.opendataloader.pdf.utils.table_transformer;
 
 
-import com.hancom.opendataloader.pdf.processors.TableTransformerProcessor;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.opendataloader.pdf.markdown.MarkdownGenerator;
+import org.opendataloader.pdf.processors.TableTransformerProcessor;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.geometry.MultiBoundingBox;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
-
-import com.hancom.opendataloader.pdf.markdown.MarkdownGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,7 +33,7 @@ public class TableBorderJsonBuilder {
         public double[] table_bbox; // [xmin, ymin, xmax, ymax]
         public List<CellData> objects;
     }
-    
+
     private static class CellData {
         public double[] bbox; // [xmin, ymin, xmax, ymax]
         public List<Integer> column_nums;

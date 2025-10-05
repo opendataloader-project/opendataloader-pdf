@@ -13,6 +13,7 @@ package org.opendataloader.pdf.api;
  */
 public class Config {
     private String password;
+    private boolean findHiddenText = false;
     private boolean isGenerateMarkdown = false;
     private boolean isGenerateHtml = false;
     private boolean isGeneratePDF = false;
@@ -23,6 +24,8 @@ public class Config {
     private boolean addImageToMarkdown = false;
     private String replaceInvalidChars = " ";
     private String outputFolder;
+    private String pythonExecutable;
+    private String tatrFolder;
     private final FilterConfig filterConfig = new FilterConfig();
 
     /**
@@ -56,6 +59,14 @@ public class Config {
      */
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public boolean isFindHiddenText() {
+        return findHiddenText;
+    }
+
+    public void setFindHiddenText(boolean findHiddenText) {
+        this.findHiddenText = findHiddenText;
     }
 
     /**
@@ -242,5 +253,21 @@ public class Config {
      */
     public void setReplaceInvalidChars(String replaceInvalidChars) {
         this.replaceInvalidChars = replaceInvalidChars;
+    }
+
+    public String getPythonExecutable() {
+        return pythonExecutable;
+    }
+
+    public void setPythonExecutable(String pythonExecutable) {
+        this.pythonExecutable = pythonExecutable;
+    }
+
+    public String getTatrFolder() {
+        return tatrFolder;
+    }
+
+    public void setTatrFolder(String tatrFolder) {
+        this.tatrFolder = tatrFolder;
     }
 }

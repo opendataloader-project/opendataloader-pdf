@@ -56,6 +56,12 @@ public class CLIOptions {
 
     private static final String REPLACE_INVALID_CHARS_LONG_OPTION = "replace-invalid-chars";
 
+    public static final String PYTHON_OPTION = "py";
+    private static final String PYTHON_LONG_OPTION = "python";
+
+//    public static final String TATR_OPTION = "tatr";
+//    private static final String TATR_LONG_OPTION = "tatrpath";
+
     public static Options defineOptions() {
         Options options = new Options();
         Option contentSafetyOff = new Option(null, CONTENT_SAFETY_OFF_LONG_OPTION, true, "Disables one or more content safety filters. Accepts a comma-separated list of filter names. Arguments: all, hidden-text, off-page, tiny, hidden-ocg");
@@ -99,6 +105,12 @@ public class CLIOptions {
         Option replaceInvalidChars = new Option(null, REPLACE_INVALID_CHARS_LONG_OPTION, true, "Replaces invalid or unrecognized characters (e.g., �, \\u0000) with the specified character (whitespace is used, if this parameter not specified)");
         replaceInvalidChars.setRequired(false);
         options.addOption(replaceInvalidChars);
+        Option python = new Option(PYTHON_OPTION, PYTHON_LONG_OPTION, true, "Python executable to use");
+        python.setRequired(false);
+        options.addOption(python);
+//        Option tatr = new Option(TATR_OPTION, TATR_LONG_OPTION, true, "Path to TATR repository");
+//        tatr.setRequired(true);
+//        options.addOption(tatr);
         return options;
     }
 

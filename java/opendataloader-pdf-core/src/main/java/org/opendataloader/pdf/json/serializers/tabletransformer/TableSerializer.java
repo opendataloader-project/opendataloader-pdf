@@ -5,11 +5,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.hancom.opendataloader.pdf.json.serializers.tabletransformer;
+package org.opendataloader.pdf.json.serializers.tabletransformer;
 
-import com.hancom.opendataloader.pdf.containers.StaticLayoutContainers;
-import com.hancom.opendataloader.pdf.json.JsonName;
-import com.hancom.opendataloader.pdf.processors.DocumentProcessor;
+import org.opendataloader.pdf.containers.StaticLayoutContainers;
+import org.opendataloader.pdf.json.JsonName;
+import org.opendataloader.pdf.processors.DocumentProcessor;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
@@ -21,7 +21,7 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import java.io.File;
 import java.io.IOException;
 
-import static com.hancom.opendataloader.pdf.processors.TableTransformerProcessor.transformBBoxFromPDFToImageCoordinates;
+import static org.opendataloader.pdf.processors.TableTransformerProcessor.transformBBoxFromPDFToImageCoordinates;
 
 public class TableSerializer extends StdSerializer<TableBorder> {
 
@@ -72,7 +72,7 @@ public class TableSerializer extends StdSerializer<TableBorder> {
 		jsonGenerator.writeEndArray();
 	}
 
-	private void writeObject(JsonGenerator jsonGenerator, String label, BoundingBox boundingBox, 
+	private void writeObject(JsonGenerator jsonGenerator, String label, BoundingBox boundingBox,
 							 BoundingBox pageBoundingBox, double dpiScaling) throws IOException {
 		jsonGenerator.writeStartObject();
 		jsonGenerator.writeStringField("label", label);
@@ -80,7 +80,7 @@ public class TableSerializer extends StdSerializer<TableBorder> {
 		jsonGenerator.writeEndObject();
 	}
 
-	private void writeBoundingBox(JsonGenerator jsonGenerator, String fieldName, BoundingBox boundingBox, 
+	private void writeBoundingBox(JsonGenerator jsonGenerator, String fieldName, BoundingBox boundingBox,
 								  BoundingBox pageBoundingBox, double dpiScaling) throws IOException {
 		BoundingBox imageBoundingBox = transformBBoxFromPDFToImageCoordinates(boundingBox, pageBoundingBox, dpiScaling);
 		jsonGenerator.writeArrayFieldStart(fieldName);

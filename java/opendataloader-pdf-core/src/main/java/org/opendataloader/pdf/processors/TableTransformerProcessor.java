@@ -5,15 +5,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.hancom.opendataloader.pdf.processors;
+package org.opendataloader.pdf.processors;
 
-import com.hancom.opendataloader.pdf.containers.StaticLayoutContainers;
-import com.hancom.opendataloader.pdf.utils.table_transformer.TableBorderJsonBuilder;
+import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.verapdf.tools.StaticResources;
+import org.opendataloader.pdf.utils.table_transformer.TableBorderJsonBuilder;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
@@ -100,7 +99,7 @@ public class TableTransformerProcessor {
 //        Process process = builder.start();
 //        process.waitFor();
 //    }
-    
+
     // This is the original parsing method designed for _objects.json isntead of _cells.json
     /*
     private static List<IObject> parseTableTransformerJson(File jsonFile, int pageNumber, double dpiScaling) {
@@ -117,7 +116,7 @@ public class TableTransformerProcessor {
                 JSONArray bbox = (JSONArray) map.get("bbox");
                 String label = (String) map.get("label");
                 BoundingBox pageBoundingBox = DocumentProcessor.getPageBoundingBox(pageNumber);
-                BoundingBox boundingBox = new BoundingBox(pageNumber, (double) bbox.get(0), (double) bbox.get(1), 
+                BoundingBox boundingBox = new BoundingBox(pageNumber, (double) bbox.get(0), (double) bbox.get(1),
                         (double) bbox.get(2), (double) bbox.get(3));
                 if ("table row".equals(label)) {
                     tableRowsBBoxes.add(transformBBoxFromImageToPDFCoordinates(boundingBox, pageBoundingBox, dpiScaling));
@@ -231,12 +230,12 @@ public class TableTransformerProcessor {
     private static void generateJsonWithWords(File wordsFolder, List<List<IObject>> contents, List<Integer> pageNumbers) throws FileNotFoundException, JsonProcessingException {
         for (int pageNumber : pageNumbers) {
             File wordsFile = new File(wordsFolder + File.separator + "image" + pageNumber + "_words.json");
-            textContentsToJSON(wordsFile, contents.get(pageNumber), DocumentProcessor.getPageBoundingBox(pageNumber), 
+            textContentsToJSON(wordsFile, contents.get(pageNumber), DocumentProcessor.getPageBoundingBox(pageNumber),
                     StaticLayoutContainers.getContrastRatioConsumer().getDpiScalingForPage(pageNumber));
         }
     }
 
-    public static void textContentsToJSON(File jsonFile, List<? extends IObject> pageContents, BoundingBox pageBoundingBox, 
+    public static void textContentsToJSON(File jsonFile, List<? extends IObject> pageContents, BoundingBox pageBoundingBox,
                                           double dpiScaling) throws FileNotFoundException, JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         int spanNumber = 0;
@@ -244,7 +243,7 @@ public class TableTransformerProcessor {
         stringBuilder.append('[');
         for (IObject content : pageContents) {
             if (content instanceof TextChunk) {
-                BoundingBox scaledBoundingBox = transformBBoxFromPDFToImageCoordinates(content.getBoundingBox(), 
+                BoundingBox scaledBoundingBox = transformBBoxFromPDFToImageCoordinates(content.getBoundingBox(),
                         pageBoundingBox, dpiScaling);
                 ObjectNode json = mapper.createObjectNode()
                         .put("bbox", String.format("[%s, %s, %s, %s]",
@@ -265,19 +264,19 @@ public class TableTransformerProcessor {
         }
     }
 
-    public static BoundingBox transformBBoxFromPDFToImageCoordinates(BoundingBox boundingBox, 
+    public static BoundingBox transformBBoxFromPDFToImageCoordinates(BoundingBox boundingBox,
             BoundingBox pageBoundingBox, double dpiScaling) {
         return new BoundingBox(boundingBox.getPageNumber(), boundingBox.getLeftX() * dpiScaling,
                 (pageBoundingBox.getHeight() - boundingBox.getTopY()) * dpiScaling,
                 boundingBox.getRightX() * dpiScaling,
                 (pageBoundingBox.getHeight() - boundingBox.getBottomY()) * dpiScaling);
     }
-    
-    public static BoundingBox transformBBoxFromImageToPDFCoordinates(BoundingBox boundingBox, 
+
+    public static BoundingBox transformBBoxFromImageToPDFCoordinates(BoundingBox boundingBox,
             BoundingBox pageBoundingBox, double dpiScaling) {
-        return new BoundingBox(boundingBox.getPageNumber(), boundingBox.getLeftX() / dpiScaling, 
-                pageBoundingBox.getHeight() - boundingBox.getTopY() / dpiScaling, 
-                boundingBox.getRightX() / dpiScaling, 
+        return new BoundingBox(boundingBox.getPageNumber(), boundingBox.getLeftX() / dpiScaling,
+                pageBoundingBox.getHeight() - boundingBox.getTopY() / dpiScaling,
+                boundingBox.getRightX() / dpiScaling,
                 pageBoundingBox.getHeight() - boundingBox.getBottomY() / dpiScaling);
     }
 
