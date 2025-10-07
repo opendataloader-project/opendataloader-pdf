@@ -25,7 +25,9 @@ public class CaptionSerializer extends StdSerializer<SemanticCaption> {
             throws IOException {
         jsonGenerator.writeStartObject();
         SerializerUtil.writeEssentialInfo(jsonGenerator, caption, "caption");
-        jsonGenerator.writeNumberField("linked content id", caption.getLinkedContentId());
+        if (caption.getLinkedContentId() != null) {
+            jsonGenerator.writeNumberField("linked content id", caption.getLinkedContentId());
+        }
         SerializerUtil.writeTextInfo(jsonGenerator, caption);
         jsonGenerator.writeEndObject();
     }
