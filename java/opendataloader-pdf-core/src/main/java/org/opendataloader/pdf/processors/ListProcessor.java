@@ -242,6 +242,15 @@ public class ListProcessor {
                 }
                 previousTextLine = currentTextLine;
             } else if (content != null) {
+                if (previousTextLine != null) {
+                    if (isListItem && isListItemLine(listItem, previousTextLine, null)) {
+                        listItem.add(previousTextLine);
+                    } else {
+                        isListItem = false;
+                        listItem.getContents().add(previousTextLine);
+                    }
+                    previousTextLine = null;
+                }
                 listItem.getContents().add(content);
             }
             pageContents.set(index, null);
