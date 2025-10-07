@@ -19,6 +19,7 @@ public class Config {
     private boolean keepLineBreaks = false;
     private boolean isGenerateJSON = true;
     private boolean isGenerateText = false;
+    private boolean useStructTree = false;
     private boolean useHTMLInMarkdown = false;
     private boolean addImageToMarkdown = false;
     private String replaceInvalidChars = " ";
@@ -242,5 +243,13 @@ public class Config {
      */
     public void setReplaceInvalidChars(String replaceInvalidChars) {
         this.replaceInvalidChars = replaceInvalidChars;
+    }
+
+    public boolean isUseStructTree() {
+        return useStructTree;
+    }
+
+    public void setUseStructTree(boolean useStructTree) {
+        this.useStructTree = useStructTree;
     }
 }

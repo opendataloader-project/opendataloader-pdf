@@ -326,7 +326,7 @@ public class ParagraphProcessor {
                 previousBlock.getTextAlignment() == TextAlignment.JUSTIFY && !previousBlock.isHasEndLine() && probability > DIFFERENT_LINES_PROBABILITY;
     }
 
-    private static SemanticParagraph createParagraphFromTextBlock(TextBlock textBlock) {
+    public static SemanticParagraph createParagraphFromTextBlock(TextBlock textBlock) {
         SemanticParagraph textParagraph = new SemanticParagraph();
         textParagraph.getColumns().add(new TextColumn());
         textParagraph.getLastColumn().getBlocks().add(textBlock);

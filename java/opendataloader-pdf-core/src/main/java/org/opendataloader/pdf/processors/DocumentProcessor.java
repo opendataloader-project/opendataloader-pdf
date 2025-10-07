@@ -49,6 +49,13 @@ public class DocumentProcessor {
     public static void processFile(String inputPdfName, Config config) throws IOException {
         preprocessing(inputPdfName, config);
         calculateDocumentInfo();
+        List<List<IObject>> contents = StaticLayoutContainers.isUseStructTree() ?
+            TaggedDocumentProcessor.processDocument(inputPdfName, config) :
+            processDocument(inputPdfName, config);
+        generateOutputs(inputPdfName, contents, config);
+    }
+
+    private static List<List<IObject>> processDocument(String inputPdfName, Config config) throws IOException {
         List<List<IObject>> contents = new ArrayList<>();
         for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
             List<IObject> pageContents = ContentFilterProcessor.getFilteredContents(inputPdfName,
@@ -74,6 +81,10 @@ public class DocumentProcessor {
         TableBorderProcessor.checkNeighborTables(contents);
         HeadingProcessor.detectHeadingsLevels();
         LevelProcessor.detectLevels(contents);
+        return contents;
+    }
+
+    private static void generateOutputs(String inputPdfName, List<List<IObject>> contents, Config config) throws IOException {
         File inputPDF = new File(inputPdfName);
         new File(config.getOutputFolder()).mkdirs();
         if (config.isGeneratePDF()) {
@@ -83,7 +94,8 @@ public class DocumentProcessor {
             JsonWriter.writeToJson(inputPDF, config.getOutputFolder(), contents);
         }
         if (config.isGenerateMarkdown()) {
-            try (MarkdownGenerator markdownGenerator = MarkdownGeneratorFactory.getMarkdownGenerator(inputPDF, config.getOutputFolder(), config)) {
+            try (MarkdownGenerator markdownGenerator = MarkdownGeneratorFactory.getMarkdownGenerator(inputPDF,
+                config.getOutputFolder(), config)) {
                 markdownGenerator.writeToMarkdown(contents);
             }
         }
@@ -109,10 +121,16 @@ public class DocumentProcessor {
         StaticResources.setFlavour(Collections.singletonList(PDFFlavour.WCAG_2_2_HUMAN));
         StaticStorages.setIsFilterInvisibleLayers(config.getFilterConfig().isFilterHiddenOCG());
         StaticContainers.setDocument(document);
+        if (config.isUseStructTree()) {
+            document.parseStructureTreeRoot();
+            if (document.getTree() != null) {
+                StaticLayoutContainers.setIsUseStructTree(true);
+            }
+        }
         StaticContainers.setIsDataLoader(true);
         StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
         StaticResources.setIsFontProgramsParsing(true);
-        StaticStorages.setIsIgnoreMCIDs(true);
+        StaticStorages.setIsIgnoreMCIDs(!StaticLayoutContainers.isUseStructTree());
         StaticStorages.setIsAddSpacesBetweenTextPieces(true);
         document.parseChunks();
         LinesPreprocessingConsumer linesPreprocessingConsumer = new LinesPreprocessingConsumer();
