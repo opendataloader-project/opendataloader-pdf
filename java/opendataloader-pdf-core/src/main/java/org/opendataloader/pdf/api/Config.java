@@ -19,7 +19,7 @@ public class Config {
     private boolean keepLineBreaks = false;
     private boolean isGenerateJSON = true;
     private boolean isGenerateText = false;
-    private boolean useStructTree = false;
+    private boolean useStructTree = true;
     private boolean useHTMLInMarkdown = false;
     private boolean addImageToMarkdown = false;
     private String replaceInvalidChars = " ";
