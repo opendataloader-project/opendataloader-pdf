@@ -205,7 +205,7 @@ opendataloader-pdf path/to/document.pdf path/to/folder -o path/to/output -f json
 
 ## Java
 
-For various example templates, including Gradle and Maven, please refer to https://github.com/opendataloader-project/opendataloader-pdf/tree/main/examples/java.
+For various example templates, including Gradle and Maven, please refer to [Examples](https://github.com/opendataloader-project/opendataloader-pdf-examples).
 
 ### Dependency
 
@@ -221,7 +221,7 @@ Check for the latest version on [Maven Central](https://search.maven.org/artifac
         <dependency>
             <groupId>org.opendataloader</groupId>
             <artifactId>opendataloader-pdf-core</artifactId>
-            <version>1.0.0</version>
+            <version>1.1.2</version>
         </dependency>
     </dependencies>
 
