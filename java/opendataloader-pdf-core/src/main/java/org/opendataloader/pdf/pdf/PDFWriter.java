@@ -66,6 +66,7 @@ public class PDFWriter {
                 document.getPage(pageNumber).getAnnotations().addAll(annotations.get(pageNumber));
             }
             annotations.clear();
+            pageBoundingBoxes.clear();
             createOptContentsForAnnotations(document);
             document.setAllSecurityToBeRemoved(true);
 
