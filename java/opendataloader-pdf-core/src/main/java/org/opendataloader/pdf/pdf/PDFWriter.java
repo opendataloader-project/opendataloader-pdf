@@ -51,11 +51,13 @@ public class PDFWriter {
 
     private static final List<List<PDAnnotation>> annotations = new ArrayList<>();
     private static final Logger LOGGER = Logger.getLogger(PDFWriter.class.getCanonicalName());
+    private static final List<BoundingBox> pageBoundingBoxes = new ArrayList<>();
 
     public static void updatePDF(File inputPDF, String password, String outputFolder, List<List<IObject>> contents) throws IOException {
         try (PDDocument document = Loader.loadPDF(inputPDF, password)) {
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 annotations.add(new ArrayList<>());
+                pageBoundingBoxes.add(DocumentProcessor.getPageBoundingBox(pageNumber));
                 for (IObject content : contents.get(pageNumber)) {
                     drawContent(content, PDFLayer.CONTENT);
                 }
@@ -136,8 +138,9 @@ public class PDFWriter {
 
     public static PDAnnotation draw(BoundingBox boundingBox, float[] colorArray,
                                     String contents, Long id, PDAnnotation linkedAnnot, String level, PDFLayer layerName) {
-        BoundingBox pageBoundingBox = DocumentProcessor.getPageBoundingBox(boundingBox.getPageNumber());
+
         BoundingBox movedBoundingBox = new BoundingBox(boundingBox);
+        BoundingBox pageBoundingBox = pageBoundingBoxes.get(boundingBox.getPageNumber());
         if (pageBoundingBox != null) {
             movedBoundingBox.move(pageBoundingBox.getLeftX(), pageBoundingBox.getBottomY());
         }

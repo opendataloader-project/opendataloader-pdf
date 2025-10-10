@@ -75,10 +75,8 @@ public class ContentFilterProcessor {
         pageBoundingBox.move(-pageBoundingBox.getLeftX(), -pageBoundingBox.getBottomY());
         for (int index = 0; index < contents.size(); index++) {
             IObject object = contents.get(index);
-            if (object != null) {
-                if (pageBoundingBox.notOverlaps(object.getBoundingBox())) {
-                    contents.set(index, null);
-                }
+            if (object != null && pageBoundingBox.notOverlaps(object.getBoundingBox())) {
+                contents.set(index, null);
             }
         }
     }
