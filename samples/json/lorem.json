@@ -1,0 +1,29 @@
+{
+  "file name" : "lorem.pdf",
+  "number of pages" : 1,
+  "author" : "leebd-public",
+  "title" : null,
+  "creation date" : "D:20251010112501+09'00'",
+  "modification date" : "D:20251010112501+09'00'",
+  "kids" : [ {
+    "type" : "heading",
+    "id" : 1,
+    "level" : "Doctitle",
+    "page number" : 1,
+    "bounding box" : [ 200.891, 706.938, 394.152, 745.132 ],
+    "heading level" : 1,
+    "font" : "Pretendard-Regular",
+    "font size" : 32.005,
+    "text color" : "[0.0]",
+    "content" : "Lorem Ipsum"
+  }, {
+    "type" : "paragraph",
+    "id" : 2,
+    "page number" : 1,
+    "bounding box" : [ 85.034, 567.936, 502.306, 659.761 ],
+    "font" : "Pretendard-Regular",
+    "font size" : 9.949,
+    "text color" : "[0.0]",
+    "content" : "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+  } ]
+}
