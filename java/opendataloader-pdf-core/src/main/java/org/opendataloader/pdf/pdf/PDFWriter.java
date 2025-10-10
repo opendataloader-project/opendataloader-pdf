@@ -136,6 +136,10 @@ public class PDFWriter {
 
     public static PDAnnotation draw(BoundingBox boundingBox, float[] colorArray,
                                     String contents, Long id, PDAnnotation linkedAnnot, String level, PDFLayer layerName) {
+        BoundingBox box = DocumentProcessor.getPageBoundingBox(boundingBox.getPageNumber());
+        if (box != null) {
+            boundingBox.move(box.getLeftX(), box.getBottomY());
+        }
         PDAnnotationSquareCircle square = new PDAnnotationSquare();
         square.setRectangle(new PDRectangle(getFloat(boundingBox.getLeftX()), getFloat(boundingBox.getBottomY()),
                 getFloat(boundingBox.getWidth()), getFloat(boundingBox.getHeight())));
