@@ -136,13 +136,14 @@ public class PDFWriter {
 
     public static PDAnnotation draw(BoundingBox boundingBox, float[] colorArray,
                                     String contents, Long id, PDAnnotation linkedAnnot, String level, PDFLayer layerName) {
-        BoundingBox box = DocumentProcessor.getPageBoundingBox(boundingBox.getPageNumber());
-        if (box != null) {
-            boundingBox.move(box.getLeftX(), box.getBottomY());
+        BoundingBox pageBoundingBox = DocumentProcessor.getPageBoundingBox(boundingBox.getPageNumber());
+        BoundingBox movedBoundingBox = new BoundingBox(boundingBox);
+        if (pageBoundingBox != null) {
+            movedBoundingBox.move(pageBoundingBox.getLeftX(), pageBoundingBox.getBottomY());
         }
         PDAnnotationSquareCircle square = new PDAnnotationSquare();
-        square.setRectangle(new PDRectangle(getFloat(boundingBox.getLeftX()), getFloat(boundingBox.getBottomY()),
-                getFloat(boundingBox.getWidth()), getFloat(boundingBox.getHeight())));
+        square.setRectangle(new PDRectangle(getFloat(movedBoundingBox.getLeftX()), getFloat(movedBoundingBox.getBottomY()),
+                getFloat(movedBoundingBox.getWidth()), getFloat(movedBoundingBox.getHeight())));
         square.setConstantOpacity(0.4f);
         PDColor color = new PDColor(colorArray, PDDeviceRGB.INSTANCE);
         square.setColor(color);
