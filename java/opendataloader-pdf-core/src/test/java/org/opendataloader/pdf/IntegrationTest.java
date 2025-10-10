@@ -28,26 +28,22 @@ public class IntegrationTest {
 
     static Stream<Arguments> integrationTestParams() {
         return Stream.of(
-                Arguments.of("1901.03003.pdf")
-        );
+                Arguments.of("lorem.pdf"));
     }
 
     @ParameterizedTest(name = "{index}: ({0}) => {0}")
     @MethodSource("integrationTestParams")
     public void test(String fileName) throws IOException {
-        Path pdfPath = Paths.get("../../resources", fileName);
-        Path jsonPath = Paths.get("../../resources", fileName.replace(".pdf", ".json"));
+        Path pdfPath = Paths.get("../../samples/pdf", fileName);
+        Path jsonPath = Paths.get("../../samples/json", fileName.replace(".pdf", ".json"));
         File pdfFile = pdfPath.toFile();
         File jsonFile = jsonPath.toFile();
 
         Config config = new Config();
-        config.setGenerateMarkdown(true);
-        config.setGenerateHtml(true);
-        config.setGeneratePDF(true);
-        config.setOutputFolder("../../resources/temp");
+        config.setOutputFolder("../../samples/temp");
         DocumentProcessor.processFile(pdfFile.getAbsolutePath(), config);
 
-        Path resultPath = Paths.get("../../resources/temp", fileName.replace(".pdf", ".json"));
+        Path resultPath = Paths.get("../../samples/temp", fileName.replace(".pdf", ".json"));
         File resultJson = resultPath.toFile();
 
         ObjectMapper mapper = new ObjectMapper();
