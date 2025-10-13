@@ -1,6 +1,7 @@
 package org.opendataloader.pdf.processors;
 
 import org.opendataloader.pdf.api.Config;
+import org.verapdf.gf.model.impl.sa.GFSANode;
 import org.verapdf.wcag.algorithms.entities.*;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextBlock;
@@ -53,7 +54,7 @@ public class TaggedDocumentProcessor {
                 processList(node);
                 break;
             case NUMBER_HEADING:
-                processHeading(node);
+                processNumberedHeading(node);
                 break;
             case PARAGRAPH:
                 processParagraph(node);
@@ -97,6 +98,14 @@ public class TaggedDocumentProcessor {
     private static void processHeading(INode node) {
         SemanticHeading heading = new SemanticHeading(createParagraph(node));
         heading.setHeadingLevel(1);//update
+        addObjectToContent(heading);
+    }
+
+    private static void processNumberedHeading(INode node) {
+        SemanticHeading heading = new SemanticHeading(createParagraph(node));
+        GFSANode gfsaNode = (GFSANode) node;
+        String headingLevel = gfsaNode.getStructElem().getstandardType();
+        heading.setHeadingLevel(Integer.parseInt(headingLevel.substring(1)));
         addObjectToContent(heading);
     }
 
