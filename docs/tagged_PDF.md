@@ -19,7 +19,7 @@ This challenge presents a unique opportunity for innovation. Hancom and Dual Lab
 
 | Organization | Role |
 | :---- | :---- |
-| PDF Association | Define Well-Tagged PDF specification and Tagged PDF Best practice guide aimed for accessibility and reuse in other workflows including AI. |
+| PDF Association | Define Well-Tagged PDF specification and Tagged PDF Best Practice Guide aimed at both accessibility and reuse in other workflows, including AI. |
 | Dual Lab | Develop a veraPDF-based validator to verify if PDFs adhere to the existing and future standards and recommendations. |
 | Hancom | Build OpenDataLoader-PDF's extraction engine to effectively use the validated tags. |
 
