@@ -88,6 +88,7 @@ export interface RunOptions {
   addImageToMarkdown?: boolean;
   noJson?: boolean;
   debug?: boolean;
+  useStructTree?: boolean;
 }
 
 export function run(inputPath: string, options: RunOptions = {}): Promise<string> {
@@ -130,6 +131,9 @@ export function run(inputPath: string, options: RunOptions = {}): Promise<string
     if (options.noJson) {
       args.push('--no-json');
     }
+    if (options.useStructTree) {
+      args.push('--use-struct-tree')
+    }
 
     args.push(inputPath);
     executeJar(args, {
@@ -149,6 +153,7 @@ export interface ConvertOptions {
   contentSafetyOff?: string[];
   keepLineBreaks?: boolean;
   replaceInvalidChars?: string;
+  useStructTree?: boolean;
 }
 
 export function convert(inputPaths: string[], options: ConvertOptions = {}): Promise<string> {
@@ -183,6 +188,9 @@ export function convert(inputPaths: string[], options: ConvertOptions = {}): Pro
   }
   if (options.replaceInvalidChars) {
     args.push('--replace-invalid-chars', options.replaceInvalidChars);
+  }
+  if (options.useStructTree) {
+    args.push('--use-struct-tree')
   }
 
   return executeJar(args, {
