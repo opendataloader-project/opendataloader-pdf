@@ -97,16 +97,17 @@ opendataloader-pdf path/to/document.pdf path/to/folder -o path/to/output -f json
 
 The main function to process PDFs.
 
-| Parameter                | Type           | Required | Default      | Description                                                                                                                                 |
-|--------------------------|----------------| -------- |--------------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| `input_path`             | `List[str]`     | ✅ Yes    | —            | One or more PDF file paths or directories to process.                                                                                       |
-| `output_dir`             | `Optional[str]` | No       | input folder | Directory where outputs are written.                                                                                                       |
-| `password`               | `Optional[str]` | No       | `None`       | Password used for encrypted PDFs.                                                                                                           |
-| `format`                 | `Optional[List[str]]` | No | `None`       | Output formats to generate (e.g. `"json"`, `"html"`, `"pdf"`, `"text"`, `"markdown"`, `"markdown-with-html"`, `"markdown-with-images"`).                                                             |
-| `quiet`                  | `bool`          | No       | `False`      | Suppresses CLI logging output when `True`.                                                                                                  |
-| `content_safety_off`     | `Optional[List[str]]` | No | `None`       | List of content safety filters to disable (e.g. `"all"`, `"hidden-text"`, `"off-page"`, `"tiny"`, `"hidden-ocg"`).                      |
-| `keep_line_breaks`       | `bool`          | No       | `False`      | Preserves line breaks in text output when `True`.                                                                                           |
-| `replace_invalid_chars`  | `Optional[str]` | No       | `None`       | Replacement character for invalid or unrecognized characters (e.g., �, `\u0000`).                                                           |
+| Parameter               | Type                  | Required | Default      | Description                                                                                                                              |
+|-------------------------|-----------------------| -------- |--------------|------------------------------------------------------------------------------------------------------------------------------------------|
+| `input_path`            | `List[str]`           | ✅ Yes    | —            | One or more PDF file paths or directories to process.                                                                                    |
+| `output_dir`            | `Optional[str]`       | No       | input folder | Directory where outputs are written.                                                                                                     |
+| `password`              | `Optional[str]`       | No       | `None`       | Password used for encrypted PDFs.                                                                                                        |
+| `format`                | `Optional[List[str]]` | No | `None`       | Output formats to generate (e.g. `"json"`, `"html"`, `"pdf"`, `"text"`, `"markdown"`, `"markdown-with-html"`, `"markdown-with-images"`). |
+| `quiet`                 | `bool`                | No       | `False`      | Suppresses CLI logging output when `True`.                                                                                               |
+| `content_safety_off`    | `Optional[List[str]]` | No | `None`       | List of content safety filters to disable (e.g. `"all"`, `"hidden-text"`, `"off-page"`, `"tiny"`, `"hidden-ocg"`).                       |
+| `keep_line_breaks`      | `bool`                | No       | `False`      | Preserves line breaks in text output when `True`.                                                                                        |
+| `replace_invalid_chars` | `Optional[str]`       | No       | `None`       | Replacement character for invalid or unrecognized characters (e.g., �, `\u0000`).                                                        |
+| `use_struct_tree`       | `bool `               | No       | `False`      | Enable processing structure tree (disabled by default).                                                                                  |
 
 ### Function: run()
 
@@ -155,16 +156,17 @@ main();
 
 Multi-input helper matching the Python wrapper.
 
-| Property                        | Type       | Default     | Description                                                                                                                         |
-| --------------------------------| ---------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `inputPaths`                    | `string[]` | —           | One or more file paths or directories to process.                                                                                   |
-| `options.outputDir`             | `string`   | `undefined` | Directory where outputs are written.                                                                                                |
-| `options.password`              | `string`   | `undefined` | Password for encrypted PDFs.                                                                                                        |
-| `options.format`                | `string[]` | `undefined` | Output formats (any combination of `json`, `text`, `html`, `pdf`, `markdown`, `markdown-with-html`, `markdown-with-images`).        |
-| `options.quiet`                 | `boolean`  | `false`     | Suppress CLI logging output and prevent streaming.                                                                                  |
-| `options.contentSafetyOff`      | `string[]` | `undefined` | Disable one or more content safety filters (`all`, `hidden-text`, `off-page`, `tiny`, `hidden-ocg`).                                |
-| `options.keepLineBreaks`        | `boolean`  | `false`     | Preserve line breaks in text output.                                                                                                |
-| `options.replaceInvalidChars`   | `string`   | `undefined` | Replacement character for invalid or unrecognized characters.                                                                       |
+| Property                       | Type       | Default     | Description                                                                                                                  |
+|--------------------------------| ---------- | ----------- |------------------------------------------------------------------------------------------------------------------------------|
+| `inputPaths`                   | `string[]` | —           | One or more file paths or directories to process.                                                                            |
+| `options.outputDir`            | `string`   | `undefined` | Directory where outputs are written.                                                                                         |
+| `options.password`             | `string`   | `undefined` | Password for encrypted PDFs.                                                                                                 |
+| `options.format`               | `string[]` | `undefined` | Output formats (any combination of `json`, `text`, `html`, `pdf`, `markdown`, `markdown-with-html`, `markdown-with-images`). |
+| `options.quiet`                | `boolean`  | `false`     | Suppress CLI logging output and prevent streaming.                                                                           |
+| `options.contentSafetyOff`     | `string[]` | `undefined` | Disable one or more content safety filters (`all`, `hidden-text`, `off-page`, `tiny`, `hidden-ocg`).                         |
+| `options.keepLineBreaks`       | `boolean`  | `false`     | Preserve line breaks in text output.                                                                                         |
+| `options.replaceInvalidChars`  | `string`   | `undefined` | Replacement character for invalid or unrecognized characters.                                                                |
+| `options.useStructTree`        | `boolean`  | `false`     | Enable processing structure tree (disabled by default).                                                                      |
 
 ### Function: run()
 
@@ -199,6 +201,7 @@ opendataloader-pdf path/to/document.pdf path/to/folder -o path/to/output -f json
       --keep-line-breaks              Preserve line breaks in text output
       --replace-invalid-chars <c>     Replacement character for invalid or unrecognized characters
   -h, --help                          Show usage information
+      --use-struct-tree               Enable processing structure tree (disabled by default)
 ```
 
 <br/>
@@ -333,6 +336,7 @@ The option `--content-safety-off` disables one or more content safety filters. A
 The option `--markdown-with-html` enables use of HTML in Markdown, which may improve Markdown preview in processors that support HTML tags. 
 The option `--markdown-with-images` enables inclusion of image references into the output Markdown. 
 The option `--replace-invalid-chars` replaces invalid or unrecognized characters (e.g., �, \u0000) with the specified character.
+The option `--use-struct-tree` enables processing structure tree (disabled by default).
 The images are extracted from PDF as individual files and stored in a subfolder next to the Markdown output.
 
 #### Available options:
@@ -346,6 +350,7 @@ Options:
 --content-safety-off <arg>      Disables one or more content safety filters. Accepts a list of filter names. Arguments: all, hidden-text, off-page, tiny, hidden-ocg
 --keep-line-breaks              Preserves original line breaks in the extracted text
 --replace-invalid-chars <arg>   Replaces invalid or unrecognized characters (e.g., �, \u0000) with the specified character
+--use-struct-tree               Enables processing structure tree (disabled by default)
 ```
 
 The legacy options (for backward compatibility):
