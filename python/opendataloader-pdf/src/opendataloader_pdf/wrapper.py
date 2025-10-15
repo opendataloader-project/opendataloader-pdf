@@ -24,6 +24,7 @@ def run(
     add_image_to_markdown: bool = False,
     no_json: bool = False,
     debug: bool = False,
+    use_struct_tree = False,
 ):
     """
     Runs the opendataloader-pdf with the given arguments.
@@ -41,6 +42,7 @@ def run(
         add_image_to_markdown: If True, adds images to the Markdown output.
         no_json: If True, disable the JSON output.
         debug: If True, prints all messages from the CLI to the console during execution.
+        use_struct_tree: If True, enable processing structure tree (disabled by default)
 
     Raises:
         FileNotFoundError: If the 'java' command is not found or input_path is invalid.
@@ -73,6 +75,8 @@ def run(
         args.append("--markdown-with-images")
     if no_json:
         args.append("--no-json")
+    if use_struct_tree:
+        args.append("--use-struct-tree")
 
     # Run the command
     run_jar(args, quiet=not debug)
@@ -87,6 +91,7 @@ def convert(
     content_safety_off: Optional[List[str]] = None,
     keep_line_breaks: bool = False,
     replace_invalid_chars: Optional[str] = None,
+    use_struct_tree: bool = False,
 ) -> None:
     """
     Convert PDF(s) into the requested output format(s).
@@ -100,6 +105,7 @@ def convert(
         content_safety_off: List of content safety filters to disable
         keep_line_breaks: Preserve line breaks in text output
         replace_invalid_chars: Replacement character for invalid/unrecognized characters
+        use_struct_tree: Enable processing structure tree (disabled by default)
     """
     args: List[str] = []
     args.extend(input_path)
@@ -117,6 +123,8 @@ def convert(
         args.append("--keep-line-breaks")
     if replace_invalid_chars:
         args.extend(["--replace-invalid-chars", replace_invalid_chars])
+    if use_struct_tree:
+        args.extend("--use-struct-tree")
 
     # Run the command
     run_jar(args, quiet)
@@ -237,6 +245,10 @@ def main(argv=None) -> int:
     parser.add_argument(
         "--replace-invalid-chars",
         help="Replacement character for invalid or unrecognized characters.",
+    )
+    parser.add_argument(
+        "--use-struct-tree",
+        help="Enable processing structure tree (disabled by default)",
     )
     args = parser.parse_args(argv)
 

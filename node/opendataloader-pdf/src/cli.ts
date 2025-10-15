@@ -10,6 +10,7 @@ interface CliOptions {
   contentSafetyOff?: string[];
   keepLineBreaks?: boolean;
   replaceInvalidChars?: string;
+  useStructTree?: boolean;
 }
 
 const VALID_FORMATS = new Set([
@@ -49,7 +50,8 @@ function createProgram(): Command {
     .option('-q, --quiet', 'Suppress CLI logging output')
     .option('--content-safety-off <mode...>', 'Disable one or more content safety filters')
     .option('--keep-line-breaks', 'Preserve line breaks in text output')
-    .option('--replace-invalid-chars <c>', 'Replacement character for invalid characters');
+    .option('--replace-invalid-chars <c>', 'Replacement character for invalid characters')
+    .option('--use-struct-tree', 'Enable processing structure tree (disabled by default)');
 
   program.configureOutput({
     writeErr: (str) => {
@@ -86,6 +88,9 @@ function buildConvertOptions(options: CliOptions): ConvertOptions {
   }
   if (options.replaceInvalidChars) {
     convertOptions.replaceInvalidChars = options.replaceInvalidChars;
+  }
+  if (options.useStructTree) {
+    convertOptions.useStructTree = true;
   }
 
   return convertOptions;

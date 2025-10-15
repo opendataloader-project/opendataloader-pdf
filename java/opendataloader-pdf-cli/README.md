@@ -16,6 +16,7 @@ The option `--content-safety-off` disables one or more content safety filters. A
 The option `--markdown-with-html` enables use of HTML in Markdown, which may improve Markdown preview in processors that support HTML tags.
 The option `--markdown-with-images` enables inclusion of image references into the output Markdown.
 The option `--replace-invalid-chars` replaces invalid or unrecognized characters (e.g., �, \u0000) with the specified character.
+The option `--use-struct-tree` enables processing structure tree (disabled by default).
 The images are extracted from PDF as individual files and stored in a subfolder next to the Markdown output.
 
 The complete set of options:
@@ -29,6 +30,7 @@ Options:
 --content-safety-off <arg>      Disables one or more content safety filters. Accepts a list of filter names. Arguments: all, hidden-text, off-page, tiny, hidden-ocg
 --keep-line-breaks              Preserves original line breaks in the extracted text
 --replace-invalid-chars <arg>   Replaces invalid or unrecognized characters (e.g., �, \u0000) with the specified character
+--use-struct-tree               Enables processing structure tree (disabled by default)
 ```
 
 The legacy options (for backward compatibility):

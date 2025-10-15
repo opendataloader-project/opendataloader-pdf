@@ -13,6 +13,7 @@ import org.apache.commons.cli.Options;
 import org.opendataloader.pdf.api.Config;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Set;
@@ -55,6 +56,8 @@ public class CLIOptions {
     public static final String NO_JSON_REPORT_LONG_OPTION = "no-json";
 
     private static final String REPLACE_INVALID_CHARS_LONG_OPTION = "replace-invalid-chars";
+
+    private static final String USE_STRUCT_TREE_LONG_OPTION = "use-struct-tree";
 
     public static Options defineOptions() {
         Options options = new Options();
@@ -99,6 +102,9 @@ public class CLIOptions {
         Option replaceInvalidChars = new Option(null, REPLACE_INVALID_CHARS_LONG_OPTION, true, "Replaces invalid or unrecognized characters (e.g., �, \\u0000) with the specified character (whitespace is used, if this parameter not specified)");
         replaceInvalidChars.setRequired(false);
         options.addOption(replaceInvalidChars);
+        Option useStructTree = new Option(null, USE_STRUCT_TREE_LONG_OPTION, false, "Enable processing structure tree (disabled by default)");
+        useStructTree.setRequired(false);
+        options.addOption(useStructTree);
         return options;
     }
 
@@ -131,6 +137,9 @@ public class CLIOptions {
         if (commandLine.hasOption(CLIOptions.REPLACE_INVALID_CHARS_LONG_OPTION)) {
             config.setReplaceInvalidChars(commandLine.getOptionValue(CLIOptions.REPLACE_INVALID_CHARS_LONG_OPTION));
         }
+        if (commandLine.hasOption(CLIOptions.USE_STRUCT_TREE_LONG_OPTION)) {
+            config.setUseStructTree(true);
+        }
         if (commandLine.hasOption(CLIOptions.FOLDER_OPTION)) {
             config.setOutputFolder(commandLine.getOptionValue(CLIOptions.FOLDER_OPTION));
         } else {
@@ -148,6 +157,7 @@ public class CLIOptions {
         if (!commandLine.hasOption(CONTENT_SAFETY_OFF_LONG_OPTION)) {
             return;
         }
+        
 
         String[] optionValues = commandLine.getOptionValues(CONTENT_SAFETY_OFF_LONG_OPTION);
         if (optionValues == null || optionValues.length == 0) {
