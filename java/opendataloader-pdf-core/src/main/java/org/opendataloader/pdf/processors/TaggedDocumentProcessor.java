@@ -76,7 +76,10 @@ public class TaggedDocumentProcessor {
     }
 
     private static void addObjectToContent(IObject object) {
-        contents.get(object.getPageNumber()).add(object);
+        Integer pageNumber = object.getPageNumber();
+        if (pageNumber != null) {
+            contents.get(pageNumber).add(object);
+        }
     }
 
     private static void processParagraph(INode paragraph) {
