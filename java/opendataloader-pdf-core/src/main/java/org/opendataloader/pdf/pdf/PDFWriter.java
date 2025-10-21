@@ -38,10 +38,7 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainer
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -58,6 +55,8 @@ public class PDFWriter {
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 annotations.add(new ArrayList<>());
                 pageBoundingBoxes.add(DocumentProcessor.getPageBoundingBox(pageNumber));
+            }
+            for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 for (IObject content : contents.get(pageNumber)) {
                     drawContent(content, PDFLayer.CONTENT);
                 }
@@ -139,6 +138,13 @@ public class PDFWriter {
 
     public static PDAnnotation draw(BoundingBox boundingBox, float[] colorArray,
                                     String contents, Long id, PDAnnotation linkedAnnot, String level, PDFLayer layerName) {
+        if (!Objects.equals(boundingBox.getPageNumber(), boundingBox.getLastPageNumber())) {
+            PDAnnotation square = null;
+            for (int pageNumber = boundingBox.getPageNumber(); pageNumber <= boundingBox.getLastPageNumber(); pageNumber++) {
+                square = draw(boundingBox.getBoundingBox(pageNumber), colorArray, contents, id, linkedAnnot, level, layerName);
+            }
+            return square;
+        }
 
         BoundingBox movedBoundingBox = new BoundingBox(boundingBox);
         BoundingBox pageBoundingBox = pageBoundingBoxes.get(boundingBox.getPageNumber());
