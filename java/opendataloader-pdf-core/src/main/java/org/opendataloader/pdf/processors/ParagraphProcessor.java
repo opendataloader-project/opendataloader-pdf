@@ -330,7 +330,7 @@ public class ParagraphProcessor {
         SemanticParagraph textParagraph = new SemanticParagraph();
         textParagraph.getColumns().add(new TextColumn());
         textParagraph.getLastColumn().getBlocks().add(textBlock);
-        textParagraph.getBoundingBox().union(textBlock.getBoundingBox());
+        textParagraph.setBoundingBox(textBlock.getBoundingBox());
         textParagraph.setCorrectSemanticScore(1.0);
         textParagraph.setHiddenText(textBlock.isHiddenText());
         return textParagraph;

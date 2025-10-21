@@ -38,10 +38,7 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainer
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -56,6 +53,8 @@ public class PDFWriter {
         try (PDDocument document = Loader.loadPDF(inputPDF, password)) {
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 annotations.add(new ArrayList<>());
+            }
+            for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 for (IObject content : contents.get(pageNumber)) {
                     drawContent(content, PDFLayer.CONTENT);
                 }
@@ -136,6 +135,13 @@ public class PDFWriter {
 
     public static PDAnnotation draw(BoundingBox boundingBox, float[] colorArray,
                                     String contents, Long id, PDAnnotation linkedAnnot, String level, PDFLayer layerName) {
+        if (!Objects.equals(boundingBox.getPageNumber(), boundingBox.getLastPageNumber())) {
+            PDAnnotation square = null;
+            for (int pageNumber = boundingBox.getPageNumber(); pageNumber <= boundingBox.getLastPageNumber(); pageNumber++) {
+                square = draw(boundingBox.getBoundingBox(pageNumber), colorArray, contents, id, linkedAnnot, level, layerName);
+            }
+            return square;
+        }
         PDAnnotationSquareCircle square = new PDAnnotationSquare();
         square.setRectangle(new PDRectangle(getFloat(boundingBox.getLeftX()), getFloat(boundingBox.getBottomY()),
                 getFloat(boundingBox.getWidth()), getFloat(boundingBox.getHeight())));
