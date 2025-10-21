@@ -9,6 +9,7 @@ import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
+import org.verapdf.wcag.algorithms.entities.geometry.MultiBoundingBox;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
 import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
@@ -112,7 +113,7 @@ public class TaggedDocumentProcessor {
     private static SemanticParagraph createParagraph(INode paragraph) {
         List<IObject> contents = getContents(paragraph);
         contents = TextLineProcessor.processTextLines(contents);
-        TextBlock textBlock = new TextBlock();
+        TextBlock textBlock = new TextBlock(new MultiBoundingBox());
         for (IObject line : contents) {
             if (line instanceof TextLine) {
                 textBlock.add((TextLine)line);
