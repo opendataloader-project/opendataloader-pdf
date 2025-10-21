@@ -30,6 +30,9 @@ importers:
       typescript:
         specifier: ^5.9.2
         version: 5.9.2
+      vite:
+        specifier: ^7.1.11
+        version: 7.1.11(@types/node@24.3.3)(tsx@4.20.5)
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.3.3)(tsx@4.20.5)
@@ -1491,7 +1494,6 @@ snapshots:
       '@esbuild/win32-arm64': 0.25.11
       '@esbuild/win32-ia32': 0.25.11
       '@esbuild/win32-x64': 0.25.11
-    optional: true
 
   esbuild@0.25.9:
     optionalDependencies:
@@ -1865,7 +1867,7 @@ snapshots:
 
   vite@7.1.11(@types/node@24.3.3)(tsx@4.20.5):
     dependencies:
-      esbuild: 0.25.9
+      esbuild: 0.25.11
       fdir: 6.5.0(picomatch@4.0.3)
       picomatch: 4.0.3
       postcss: 8.5.6
