@@ -5,6 +5,7 @@ import org.verapdf.gf.model.impl.sa.GFSANode;
 import org.verapdf.wcag.algorithms.entities.*;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextBlock;
+import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
@@ -29,6 +30,25 @@ public class TaggedDocumentProcessor {
         }
         ITree tree = StaticContainers.getDocument().getTree();
         processStructElem(tree.getRoot());
+        List<List<IObject>> artifacts = new ArrayList<>();
+        for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
+            artifacts.add(new ArrayList<>());
+            for (IObject content : StaticContainers.getDocument().getArtifacts(pageNumber)) {
+                if (content instanceof ImageChunk) {
+                    addObjectToContent(content);
+                } else if (content instanceof TextChunk) {
+                    artifacts.get(pageNumber).add(content);
+                }
+            }
+        }
+        HeaderFooterProcessor.processHeadersAndFooters(artifacts);
+        for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
+            contents.get(pageNumber).addAll(artifacts.get(pageNumber));
+        }
+        for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
+            List<IObject> pageContents = TextLineProcessor.processTextLines(contents.get(pageNumber));
+            contents.set(pageNumber, ParagraphProcessor.processParagraphs(pageContents));
+        }
         return contents;
     }
 
@@ -36,6 +56,9 @@ public class TaggedDocumentProcessor {
         if (node instanceof SemanticFigure) {
             processImage((SemanticFigure) node);
             return;
+        }
+        if (node instanceof SemanticSpan) {
+            processTextChunk((SemanticSpan) node);
         }
         if (node.getInitialSemanticType() == null) {
             for (INode child : node.getChildren()) {
@@ -157,6 +180,10 @@ public class TaggedDocumentProcessor {
         }
     }
 
+    private static void processTextChunk(SemanticSpan semanticSpan) {
+        addObjectToContent(semanticSpan.getColumns().get(0).getFirstLine().getFirstTextChunk());
+    }
+
     private static List<IObject> getContents(INode node) {
         List<IObject> result = new ArrayList<>();
         for (INode child : node.getChildren()) {
@@ -164,7 +191,6 @@ public class TaggedDocumentProcessor {
                 result.add(((SemanticSpan)child).getColumns().get(0).getFirstLine().getFirstTextChunk());
             } else if (child instanceof SemanticFigure) {
                 processImage((SemanticFigure)child);
-//                result.addAll(((SemanticFigure)child).getImages());
             } else {
                 result.addAll(getContents(child));
             }
