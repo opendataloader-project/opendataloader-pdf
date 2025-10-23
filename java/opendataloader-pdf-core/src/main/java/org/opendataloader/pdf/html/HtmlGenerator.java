@@ -59,6 +59,8 @@ public class HtmlGenerator implements Closeable {
         this.figureDirName = pdfFileName.substring(0, pdfFileName.length() - 4) + "_figures";
         this.figureDirPath = Path.of(outputFolder, figureDirName);
         this.htmlWriter = new FileWriter(htmlFilePath.toFile(), StandardCharsets.UTF_8);
+        this.figureDirPath.toFile().mkdirs();
+        this.contrastRatioConsumer = new ContrastRatioConsumer(this.pdfFilePath.toString(), password, false, null);
     }
 
     public void writeToHtml(List<List<IObject>> contents) {
@@ -105,11 +107,6 @@ public class HtmlGenerator implements Closeable {
 
     protected void writeImage(ImageChunk image) throws IOException {
         int currentImageIndex = StaticLayoutContainers.incrementImageIndex();
-        if (currentImageIndex == 1) {
-            figureDirPath.toFile().mkdirs();
-            contrastRatioConsumer = new ContrastRatioConsumer(this.pdfFilePath.toString(), password, false, null);
-        }
-
         String figureFileName = String.format(HtmlSyntax.IMAGE_FILE_NAME_FORMAT, currentImageIndex);
         Path figureFilePath = figureDirPath.resolve(figureFileName);
         boolean isFileCreated = createImageFile(image, figureFilePath.toString());
