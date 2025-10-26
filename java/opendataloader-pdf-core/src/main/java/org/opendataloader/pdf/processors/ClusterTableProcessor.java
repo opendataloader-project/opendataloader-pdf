@@ -15,6 +15,7 @@ import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.geometry.MultiBoundingBox;
 import org.verapdf.wcag.algorithms.entities.lists.PDFList;
+import org.verapdf.wcag.algorithms.entities.tables.Table;
 import org.verapdf.wcag.algorithms.entities.tables.TableToken;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ClusterTableConsumer;
 
@@ -35,15 +36,17 @@ public class ClusterTableProcessor {
             }
         }
         clusterTableConsumer.processEnd();
-        for (PDFList list : clusterTableConsumer.getLists()) {
-            replaceContentsToResult(contents, list);
-        }
-//        for (Table table : clusterTableConsumer.getTables()) {
-//            replaceContentsToResult(contents, table);
+//        for (PDFList list : clusterTableConsumer.getLists()) {
+//            replaceContentsToResult(contents, list);
+//        }
+        for (Table table : clusterTableConsumer.getTables()) {
+            replaceContentsToResult(contents, table);
 //            String value = "Table: " + table.getNumberOfColumns() + " columns, " + table.getNumberOfRows() + " rows";
 //            map.put(table, new Info(value, getColor(SemanticType.TABLE)));
-//        }
-//        System.out.println("Cluster tables number: " + clusterTableConsumer.getTables().size());
+        }
+        if (clusterTableConsumer.getTables().size() > 0) {
+            System.out.println("Cluster tables number: " + clusterTableConsumer.getTables().size());
+        }
     }
 
 //    public static void findListAndTablesImageMethod(List<SemanticTextNode> nodes) {
@@ -73,7 +76,7 @@ public class ClusterTableProcessor {
 //        System.out.println("test");
 //    }
 
-    public static void replaceContentsToResult(List<IObject> contents, IObject result) {
+    private static void replaceContentsToResult(List<IObject> contents, IObject result) {
         List<IObject> replacedContents = new LinkedList<>();
         Integer index = null;
         int i = 0;
