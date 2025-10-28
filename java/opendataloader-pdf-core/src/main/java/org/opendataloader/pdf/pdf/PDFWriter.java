@@ -29,6 +29,7 @@ import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
 import org.verapdf.wcag.algorithms.entities.content.LineChunk;
 import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
+import org.verapdf.wcag.algorithms.entities.geometry.MultiBoundingBox;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
 import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
@@ -139,11 +140,15 @@ public class PDFWriter {
     public static PDAnnotation draw(BoundingBox boundingBox, float[] colorArray,
                                     String contents, Long id, PDAnnotation linkedAnnot, String level, PDFLayer layerName) {
         if (!Objects.equals(boundingBox.getPageNumber(), boundingBox.getLastPageNumber())) {
-            PDAnnotation square = null;
-            for (int pageNumber = boundingBox.getPageNumber(); pageNumber <= boundingBox.getLastPageNumber(); pageNumber++) {
-                square = draw(boundingBox.getBoundingBox(pageNumber), colorArray, contents, id, linkedAnnot, level, layerName);
+            if (boundingBox instanceof MultiBoundingBox) {
+                PDAnnotation square = null;
+                for (int pageNumber = boundingBox.getPageNumber(); pageNumber <= boundingBox.getLastPageNumber(); pageNumber++) {
+                    square = draw(boundingBox.getBoundingBox(pageNumber), colorArray, contents, id, linkedAnnot, level, layerName);
+                }
+                return square;
+            } else {
+                LOGGER.log(Level.WARNING, "Bounding box on several pages cannot be split");
             }
-            return square;
         }
 
         BoundingBox movedBoundingBox = new BoundingBox(boundingBox);
