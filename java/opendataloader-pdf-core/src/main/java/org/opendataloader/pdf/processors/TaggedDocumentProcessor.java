@@ -16,13 +16,12 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class TaggedDocumentProcessor {
 
     private static List<List<IObject>> contents;
+    private static Stack<List<IObject>> contentsStack = new Stack<>();
 
     public static List<List<IObject>> processDocument(String inputPdfName, Config config) throws IOException {
         contents = new ArrayList<>();
@@ -102,7 +101,11 @@ public class TaggedDocumentProcessor {
     private static void addObjectToContent(IObject object) {
         Integer pageNumber = object.getPageNumber();
         if (pageNumber != null) {
-            contents.get(pageNumber).add(object);
+            if (contentsStack.isEmpty()) {
+                contents.get(pageNumber).add(object);
+            } else {
+                contentsStack.peek().add(object);
+            }
         }
     }
 
@@ -138,11 +141,12 @@ public class TaggedDocumentProcessor {
 
     private static void processList(INode node) {
         PDFList list = new PDFList();
+        list.setBoundingBox(new MultiBoundingBox());
         for (INode child : node.getChildren()) {
             if (child.getInitialSemanticType() == SemanticType.LIST) {
                 //todo
             } else {
-                ListItem listItem = new ListItem(new BoundingBox(), null);
+                ListItem listItem = new ListItem(new MultiBoundingBox(), null);
                 List<IObject> contents = getContents(child);
                 contents = TextLineProcessor.processTextLines(contents);
                 for (IObject line : contents) {
@@ -150,14 +154,12 @@ public class TaggedDocumentProcessor {
                         listItem.add((TextLine)line);
                     }
                 }
-                list.add(listItem);
+                if (listItem.getPageNumber() != null) {
+                    list.add(listItem);
+                }
             }
         }
-        if (Objects.equals(list.getPageNumber(), list.getLastPageNumber())) {
-            addObjectToContent(list);
-        } else {
-            processParagraph(node);
-        }
+        addObjectToContent(list);
     }
 
     private static void processTable(INode table) {
