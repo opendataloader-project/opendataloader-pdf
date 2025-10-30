@@ -15,10 +15,7 @@ import org.verapdf.wcag.algorithms.entities.SemanticCaption;
 import org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
-import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
-import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
-import org.verapdf.wcag.algorithms.entities.content.LineChunk;
-import org.verapdf.wcag.algorithms.entities.content.TextChunk;
+import org.verapdf.wcag.algorithms.entities.content.*;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
 import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
@@ -35,6 +32,9 @@ public class ObjectMapperHolder {
 
         TextChunkSerializer textChunkSerializer = new TextChunkSerializer(TextChunk.class);
         module.addSerializer(TextChunk.class, textChunkSerializer);
+
+        TextLineSerializer textLineSerializer = new TextLineSerializer(TextLine.class);
+        module.addSerializer(TextLine.class, textLineSerializer);
 
         ImageSerializer imageSerializer = new ImageSerializer(ImageChunk.class);
         module.addSerializer(ImageChunk.class, imageSerializer);
