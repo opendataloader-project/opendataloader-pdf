@@ -37,7 +37,10 @@ public class TaggedDocumentProcessor {
                 if (content instanceof ImageChunk) {
                     addObjectToContent(content);
                 } else if (content instanceof TextChunk) {
-                    artifacts.get(pageNumber).add(content);
+                    TextChunk textChunk = (TextChunk) content;
+                    if (!textChunk.isWhiteSpaceChunk() && !textChunk.isEmpty()) {
+                        artifacts.get(pageNumber).add(content);
+                    }
                 }
             }
         }
