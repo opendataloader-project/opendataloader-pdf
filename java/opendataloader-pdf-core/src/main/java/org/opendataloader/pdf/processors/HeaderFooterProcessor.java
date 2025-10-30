@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 
 public class HeaderFooterProcessor {
 
-    public static void processHeadersAndFooters(List<List<IObject>> contents) {
+    public static void processHeadersAndFooters(List<List<IObject>> contents, boolean isTagged) {
         DocumentProcessor.setIndexesForDocumentContents(contents);
         List<List<IObject>> sortedContents = new ArrayList<>();
         for (List<IObject> content : contents) {
@@ -45,8 +45,10 @@ public class HeaderFooterProcessor {
         for (int pageNumber = 0; pageNumber < contents.size(); pageNumber++) {
             contents.set(pageNumber, updatePageContents(contents.get(pageNumber), headers.get(pageNumber), footers.get(pageNumber)));
         }
-        processHeadersOrFootersContents(footers);
-        processHeadersOrFootersContents(headers);
+        if (!isTagged) {
+            processHeadersOrFootersContents(footers);
+            processHeadersOrFootersContents(headers);
+        }
     }
 
     private static void processHeadersOrFootersContents(List<SemanticHeaderOrFooter> headersOrFooters) {

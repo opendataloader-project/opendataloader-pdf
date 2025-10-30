@@ -47,7 +47,7 @@ public class HeaderFooterProcessorTest {
             "Footer2", 10, 10.0)));
         contents.add(page1Contents);
         contents.add(page2Contents);
-        HeaderFooterProcessor.processHeadersAndFooters((contents));
+        HeaderFooterProcessor.processHeadersAndFooters(contents, false);
 
         Assertions.assertEquals(3, contents.get(0).size());
         Assertions.assertEquals(3, contents.get(1).size());

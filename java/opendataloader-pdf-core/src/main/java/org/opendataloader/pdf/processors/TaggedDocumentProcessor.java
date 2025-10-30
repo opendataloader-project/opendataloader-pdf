@@ -44,7 +44,11 @@ public class TaggedDocumentProcessor {
                 }
             }
         }
-        HeaderFooterProcessor.processHeadersAndFooters(artifacts);
+        for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
+            artifacts.set(pageNumber, TextLineProcessor.processTextLines(artifacts.get(pageNumber)));
+        }
+
+        HeaderFooterProcessor.processHeadersAndFooters(artifacts, true);
         for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
             contents.get(pageNumber).addAll(artifacts.get(pageNumber));
         }

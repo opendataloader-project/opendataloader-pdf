@@ -66,7 +66,7 @@ public class DocumentProcessor {
             pageContents = SpecialTableProcessor.detectSpecialTables(pageContents);
             contents.add(pageContents);
         }
-        HeaderFooterProcessor.processHeadersAndFooters(contents);
+        HeaderFooterProcessor.processHeadersAndFooters(contents, false);
         ListProcessor.processLists(contents, false);
         for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
             List<IObject> pageContents = contents.get(pageNumber);
