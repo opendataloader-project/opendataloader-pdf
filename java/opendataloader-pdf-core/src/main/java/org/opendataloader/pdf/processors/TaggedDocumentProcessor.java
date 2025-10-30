@@ -35,7 +35,7 @@ public class TaggedDocumentProcessor {
             artifacts.add(new ArrayList<>());
             for (IObject content : StaticContainers.getDocument().getArtifacts(pageNumber)) {
                 if (content instanceof ImageChunk) {
-                    addObjectToContent(content);
+                    artifacts.get(pageNumber).add(content);
                 } else if (content instanceof TextChunk) {
                     TextChunk textChunk = (TextChunk) content;
                     if (!textChunk.isWhiteSpaceChunk() && !textChunk.isEmpty()) {
