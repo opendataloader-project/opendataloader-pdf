@@ -13,6 +13,9 @@ import org.verapdf.wcag.algorithms.entities.geometry.MultiBoundingBox;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
 import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
+import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.TableChecker;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
 import java.io.IOException;
@@ -169,9 +172,125 @@ public class TaggedDocumentProcessor {
         addObjectToContent(list);
     }
 
-    private static void processTable(INode table) {
-        TableBorder tableBorder = new TableBorder(table);
+    private static void processTable(INode tableNode) {
+        List<INode> tableRows = TableChecker.getTableRows(tableNode);
+        if (tableRows.isEmpty()) {
+            return;
+        }
+        int numberOfRows = tableRows.size();
+        int numberOfColumns = TableChecker.getNumberOfColumns(tableRows.get(0));
+        List<List<TableBorderCell>> table = new ArrayList<>(numberOfRows);
+        for (int rowNumber = 0; rowNumber < numberOfRows; rowNumber++) {
+            addTableRow(numberOfColumns, table);
+        }
+        BoundingBox tableBoundingBox = new MultiBoundingBox();
+        for (int rowNumber = 0; rowNumber < tableRows.size(); rowNumber++) {
+            int columnNumber = 0;
+            for (INode elem : tableRows.get(rowNumber).getChildren()) {
+                SemanticType type = elem.getInitialSemanticType();
+                if (SemanticType.TABLE_CELL != type && SemanticType.TABLE_HEADER != type) {
+                    continue;
+                }
+                while (columnNumber < numberOfColumns && table.get(rowNumber).get(columnNumber) != null) {
+                    ++columnNumber;
+                }
+                TableBorderCell cell = new TableBorderCell(elem, rowNumber, columnNumber);
+                processTableCell(cell, elem);
+                tableBoundingBox.union(cell.getBoundingBox());
+                for (int i = 0; i < cell.getRowSpan(); i++) {
+                    if (rowNumber + i >= numberOfRows) {
+                        numberOfRows++;
+                        addTableRow(numberOfColumns, table);
+                    }
+                    for (int j = 0; j < cell.getColSpan(); j++) {
+                        if (columnNumber + j >= numberOfColumns) {
+                            addTableColumn(table);
+                            numberOfColumns++;
+                        }
+                        table.get(rowNumber + i).set(columnNumber + j, cell);
+                    }
+                }
+                columnNumber += cell.getColSpan();
+            }
+        }
+        if (tableBoundingBox.isEmpty()) {
+            //empty table
+            return;
+        }
+        TableBorder tableBorder = new TableBorder(tableBoundingBox, createRowsForTable(table, numberOfRows, numberOfColumns),
+            numberOfRows, numberOfColumns);
+        setBoundingBoxesForTableRowsAndTableCells(tableBorder);
         addObjectToContent(tableBorder);
+    }
+
+    private static void addTableRow(int numberOfColumns, List<List<TableBorderCell>> table) {
+        List<TableBorderCell> row = new ArrayList<>(numberOfColumns);
+        table.add(row);
+        for (int columnNumber = 0; columnNumber < numberOfColumns; columnNumber++) {
+            row.add(null);
+        }
+    }
+
+    private static void addTableColumn(List<List<TableBorderCell>> table) {
+        for (List<TableBorderCell> tableBorderCells : table) {
+            tableBorderCells.add(null);
+        }
+    }
+
+    private static void processTableCell(TableBorderCell cell, INode elem) {
+        contentsStack.add(cell.getContents());
+        for (INode childChild : elem.getChildren()) {
+            processStructElem(childChild);
+        }
+        contentsStack.pop();
+        BoundingBox cellBoundingBox = new MultiBoundingBox();
+        for (IObject content : cell.getContents()) {
+            cellBoundingBox.union(content.getBoundingBox());
+        }
+        cell.setBoundingBox(cellBoundingBox);
+    }
+
+    private static TableBorderRow[] createRowsForTable(List<List<TableBorderCell>> table, int numberOfRows, int numberOfColumns) {
+        TableBorderRow[] rows = new TableBorderRow[numberOfRows];
+        for (int rowNumber = 0; rowNumber < numberOfRows; rowNumber++) {
+            rows[rowNumber] = new TableBorderRow(rowNumber, numberOfColumns, null);
+        }
+        for (int rowNumber = 0; rowNumber < numberOfRows; rowNumber++) {
+            for (int colNumber = 0; colNumber < numberOfColumns; colNumber++) {
+                rows[rowNumber].getCells()[colNumber] = table.get(rowNumber).get(colNumber);
+                if (rows[rowNumber].getCell(colNumber) == null) {
+                    rows[rowNumber].getCells()[colNumber] = new TableBorderCell(rowNumber, colNumber, 1, 1, 0L);
+                }
+            }
+        }
+        return rows;
+    }
+
+    private static void setBoundingBoxesForTableRowsAndTableCells(TableBorder tableBorder) {
+        BoundingBox boundingBox = new BoundingBox(tableBorder.getPageNumber(),
+            tableBorder.getTopY(), tableBorder.getLeftX(), tableBorder.getTopY(), tableBorder.getLeftX());
+        for (int rowNumber = 0; rowNumber < tableBorder.getNumberOfRows(); rowNumber++) {
+            BoundingBox rowBoundingBox = new MultiBoundingBox();
+            for (int colNumber = 0; colNumber < tableBorder.getNumberOfColumns(); colNumber++) {
+                TableBorderCell cell = tableBorder.getCell(rowNumber, colNumber);
+                if (cell.getColNumber() == colNumber && cell.getRowNumber() == rowNumber) {
+                    if (cell.getBoundingBox().isEmpty()) {
+                        cell.setBoundingBox(boundingBox);
+                    } else {
+                        rowBoundingBox.union(tableBorder.getCell(rowNumber, colNumber).getBoundingBox());
+                    }
+                }
+            }
+            tableBorder.getRow(rowNumber).setBoundingBox(rowBoundingBox.isEmpty() ? boundingBox : rowBoundingBox);
+        }
+        for (int rowNumber = 0; rowNumber < tableBorder.getNumberOfRows(); rowNumber++) {
+            for (int columnNumber = 0; columnNumber < tableBorder.getNumberOfColumns(); columnNumber++) {
+                TableBorderCell cell = tableBorder.getCell(rowNumber, columnNumber);
+                if (cell.getRowNumber() == rowNumber && cell.getColNumber() == columnNumber && cell.getBoundingBox().isEmpty()) {
+                    cell.setBoundingBox(boundingBox);
+                }
+            }
+        }
     }
 
     private static void processCaption(INode node) {
