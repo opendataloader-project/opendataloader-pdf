@@ -7,6 +7,7 @@
  */
 package org.opendataloader.pdf.processors;
 
+import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioConsumer;
@@ -22,7 +23,7 @@ public class HiddenTextProcessor {
     public static List<IObject> findHiddenText(String pdfName, List<IObject> contents, boolean isFilterHiddenText,
                                                String password) throws IOException {
         List<IObject> result = new LinkedList<>();
-        try (ContrastRatioConsumer contrastRatioConsumer = new ContrastRatioConsumer(pdfName, password, false, null)) {
+        try (ContrastRatioConsumer contrastRatioConsumer = StaticLayoutContainers.getContrastRatioConsumer(pdfName, password, false, null)) {
             for (IObject content : contents) {
                 if (content instanceof TextChunk) {
                     TextChunk textChunk = (TextChunk) content;

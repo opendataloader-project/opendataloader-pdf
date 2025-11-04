@@ -106,7 +106,7 @@ public class MarkdownGenerator implements Closeable {
         int currentImageIndex = StaticLayoutContainers.incrementImageIndex();
         if (currentImageIndex == 1) {
             new File(imageDirectoryName).mkdirs();
-            contrastRatioConsumer = new ContrastRatioConsumer(this.pdfFileName, password, false, null);
+            contrastRatioConsumer = StaticLayoutContainers.getContrastRatioConsumer(this.pdfFileName, password, false, null);
         }
 
         String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, imageDirectoryName, File.separator, currentImageIndex);

@@ -60,7 +60,7 @@ public class HtmlGenerator implements Closeable {
         this.figureDirPath = Path.of(outputFolder, figureDirName);
         this.htmlWriter = new FileWriter(htmlFilePath.toFile(), StandardCharsets.UTF_8);
         this.figureDirPath.toFile().mkdirs();
-        this.contrastRatioConsumer = new ContrastRatioConsumer(this.pdfFilePath.toString(), password, false, null);
+        this.contrastRatioConsumer = StaticLayoutContainers.getContrastRatioConsumer(this.pdfFilePath.toString(), password, false, null);
     }
 
     public void writeToHtml(List<List<IObject>> contents) {
