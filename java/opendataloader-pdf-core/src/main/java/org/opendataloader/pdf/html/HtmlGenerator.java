@@ -269,9 +269,5 @@ public class HtmlGenerator implements Closeable {
         if (htmlWriter != null) {
             htmlWriter.close();
         }
-
-        if (contrastRatioConsumer != null) {
-            contrastRatioConsumer.close();
-        }
     }
 }

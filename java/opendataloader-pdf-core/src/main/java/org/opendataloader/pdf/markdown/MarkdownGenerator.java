@@ -251,9 +251,5 @@ public class MarkdownGenerator implements Closeable {
         if (markdownWriter != null) {
             markdownWriter.close();
         }
-
-        if (contrastRatioConsumer != null) {
-            contrastRatioConsumer.close();
-        }
     }
 }
