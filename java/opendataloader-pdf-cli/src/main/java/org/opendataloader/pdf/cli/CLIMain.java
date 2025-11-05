@@ -10,8 +10,10 @@ package org.opendataloader.pdf.cli;
 import org.apache.commons.cli.*;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.api.OpenDataLoaderPDF;
+import org.opendataloader.pdf.containers.StaticLayoutContainers;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Locale;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -23,7 +25,7 @@ public class CLIMain {
 
     private static final String HELP = "[options] <INPUT FILE OR FOLDER>...\n Options:";
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         Options options = CLIOptions.defineOptions();
         HelpFormatter formatter = new HelpFormatter();
         CommandLine commandLine;
@@ -68,7 +70,7 @@ public class CLIMain {
         LOGGER.setLevel(Level.OFF);
     }
 
-    private static void processPath(File file, Config config) {
+    private static void processPath(File file, Config config) throws IOException {
         if (!file.exists()) {
             LOGGER.log(Level.WARNING, "File or folder " + file.getAbsolutePath() + " not found.");
             return;
@@ -80,7 +82,7 @@ public class CLIMain {
         }
     }
 
-    private static void processDirectory(File file, Config config) {
+    private static void processDirectory(File file, Config config) throws IOException {
         File[] children = file.listFiles();
         if (children == null) {
             LOGGER.log(Level.WARNING, "Unable to read folder " + file.getAbsolutePath());
@@ -91,7 +93,7 @@ public class CLIMain {
         }
     }
 
-    private static void processFile(File file, Config config) {
+    private static void processFile(File file, Config config) throws IOException {
         if (!isPdfFile(file)) {
             LOGGER.log(Level.FINE, "Skipping non-PDF file " + file.getAbsolutePath());
             return;
@@ -101,6 +103,8 @@ public class CLIMain {
         } catch (Exception exception) {
             LOGGER.log(Level.SEVERE, "Exception during processing file " + file.getAbsolutePath() + ": " +
                 exception.getMessage(), exception);
+        } finally {
+            StaticLayoutContainers.closeContrastRatioConsumer();
         }
     }
 

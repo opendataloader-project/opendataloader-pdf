@@ -109,7 +109,6 @@ public class DocumentProcessor {
                 textGenerator.writeToText(contents);
             }
         }
-        StaticLayoutContainers.closeContrastRatioConsumer();
     }
 
     public static void preprocessing(String pdfName, Config config) throws IOException {
