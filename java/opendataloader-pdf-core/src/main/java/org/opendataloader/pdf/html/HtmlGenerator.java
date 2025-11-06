@@ -105,7 +105,7 @@ public class HtmlGenerator implements Closeable {
         }
     }
 
-    protected void writeImage(ImageChunk image) throws IOException {
+    protected void writeImage(ImageChunk image) {
         try {
             int currentImageIndex = StaticLayoutContainers.incrementImageIndex();
             if (currentImageIndex == 1) {
@@ -123,7 +123,7 @@ public class HtmlGenerator implements Closeable {
                 htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
             }
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Unable to write image: " + e.getMessage());
+            LOGGER.log(Level.WARNING, "Unable to write image for html output: " + e.getMessage());
         }
 
         //add alt image

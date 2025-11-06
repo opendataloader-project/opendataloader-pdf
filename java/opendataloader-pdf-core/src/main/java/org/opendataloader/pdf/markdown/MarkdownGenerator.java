@@ -118,7 +118,7 @@ public class MarkdownGenerator implements Closeable {
                 markdownWriter.write(getCorrectMarkdownString(imageString));
             }
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Unable to write image: " + e.getMessage());
+            LOGGER.log(Level.WARNING, "Unable to write image for markdown output: " + e.getMessage());
         }
     }
 
