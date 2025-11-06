@@ -138,7 +138,7 @@ public class DocumentProcessor {
         StaticContainers.setTableBordersCollection(new TableBordersCollection(linesPreprocessingConsumer.getTableBorders()));
     }
 
-    private static void updateStaticContainers(Config config) throws IOException {
+    private static void updateStaticContainers(Config config) {
         StaticResources.clear();
         StaticContainers.updateContainers(null);
         StaticLayoutContainers.clearContainers();

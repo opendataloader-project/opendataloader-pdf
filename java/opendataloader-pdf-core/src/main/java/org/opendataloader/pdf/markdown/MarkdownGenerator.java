@@ -58,7 +58,7 @@ public class MarkdownGenerator implements Closeable {
 
     public void writeToMarkdown(List<List<IObject>> contents) {
         try {
-            StaticLayoutContainers.clearImageIndex();
+            StaticLayoutContainers.resetImageIndex();
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 for (IObject content : contents.get(pageNumber)) {
                     if (!isSupportedContent(content)) {

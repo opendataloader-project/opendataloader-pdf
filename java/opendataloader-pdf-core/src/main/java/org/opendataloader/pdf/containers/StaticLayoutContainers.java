@@ -62,7 +62,7 @@ public class StaticLayoutContainers {
         return imageIndex;
     }
 
-    public static void clearImageIndex() {
+    public static void resetImageIndex() {
         StaticLayoutContainers.imageIndex.set(1);
     }
 }

@@ -63,7 +63,7 @@ public class HtmlGenerator implements Closeable {
 
     public void writeToHtml(List<List<IObject>> contents) {
         try {
-            StaticLayoutContainers.clearImageIndex();
+            StaticLayoutContainers.resetImageIndex();
 
             htmlWriter.write("<!DOCTYPE html>\n");
             htmlWriter.write("<html lang=\"und\">\n<head>\n<meta charset=\"utf-8\">\n");
@@ -106,7 +106,7 @@ public class HtmlGenerator implements Closeable {
     }
 
     protected void writeImage(ImageChunk image) throws IOException {
-        try{
+        try {
             int currentImageIndex = StaticLayoutContainers.incrementImageIndex();
             if (currentImageIndex == 1) {
                 figureDirPath.toFile().mkdirs();
