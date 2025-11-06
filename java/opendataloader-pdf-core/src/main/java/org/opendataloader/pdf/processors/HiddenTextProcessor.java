@@ -24,7 +24,7 @@ public class HiddenTextProcessor {
     private static final double MIN_CONTRAST_RATIO = 1.2d;
 
     public static List<IObject> findHiddenText(String pdfName, List<IObject> contents, boolean isFilterHiddenText,
-                                               String password) throws IOException {
+                                               String password) {
         List<IObject> result = new LinkedList<>();
         try {
             ContrastRatioConsumer contrastRatioConsumer = StaticLayoutContainers.getContrastRatioConsumer(pdfName, password, false, null);

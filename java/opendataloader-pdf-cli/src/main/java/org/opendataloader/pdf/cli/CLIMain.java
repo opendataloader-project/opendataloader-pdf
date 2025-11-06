@@ -13,7 +13,6 @@ import org.opendataloader.pdf.api.OpenDataLoaderPDF;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Locale;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -25,7 +24,7 @@ public class CLIMain {
 
     private static final String HELP = "[options] <INPUT FILE OR FOLDER>...\n Options:";
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         Options options = CLIOptions.defineOptions();
         HelpFormatter formatter = new HelpFormatter();
         CommandLine commandLine;
@@ -70,7 +69,7 @@ public class CLIMain {
         LOGGER.setLevel(Level.OFF);
     }
 
-    private static void processPath(File file, Config config) throws IOException {
+    private static void processPath(File file, Config config) {
         if (!file.exists()) {
             LOGGER.log(Level.WARNING, "File or folder " + file.getAbsolutePath() + " not found.");
             return;
@@ -82,7 +81,7 @@ public class CLIMain {
         }
     }
 
-    private static void processDirectory(File file, Config config) throws IOException {
+    private static void processDirectory(File file, Config config) {
         File[] children = file.listFiles();
         if (children == null) {
             LOGGER.log(Level.WARNING, "Unable to read folder " + file.getAbsolutePath());
@@ -93,7 +92,7 @@ public class CLIMain {
         }
     }
 
-    private static void processFile(File file, Config config) throws IOException {
+    private static void processFile(File file, Config config) {
         if (!isPdfFile(file)) {
             LOGGER.log(Level.FINE, "Skipping non-PDF file " + file.getAbsolutePath());
             return;
