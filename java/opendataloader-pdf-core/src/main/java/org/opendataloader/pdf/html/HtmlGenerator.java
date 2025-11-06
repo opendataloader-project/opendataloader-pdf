@@ -59,12 +59,12 @@ public class HtmlGenerator implements Closeable {
         this.figureDirName = pdfFileName.substring(0, pdfFileName.length() - 4) + "_figures";
         this.figureDirPath = Path.of(outputFolder, figureDirName);
         this.htmlWriter = new FileWriter(htmlFilePath.toFile(), StandardCharsets.UTF_8);
-        this.figureDirPath.toFile().mkdirs();
-        this.contrastRatioConsumer = StaticLayoutContainers.getContrastRatioConsumer(this.pdfFilePath.toString(), password, false, null);
     }
 
     public void writeToHtml(List<List<IObject>> contents) {
         try {
+            StaticLayoutContainers.clearImageIndex();
+
             htmlWriter.write("<!DOCTYPE html>\n");
             htmlWriter.write("<html lang=\"und\">\n<head>\n<meta charset=\"utf-8\">\n");
             htmlWriter.write("<title>" + pdfFileName + "</title>\n");
@@ -106,17 +106,26 @@ public class HtmlGenerator implements Closeable {
     }
 
     protected void writeImage(ImageChunk image) throws IOException {
-        int currentImageIndex = StaticLayoutContainers.incrementImageIndex();
-        String figureFileName = String.format(HtmlSyntax.IMAGE_FILE_NAME_FORMAT, currentImageIndex);
-        Path figureFilePath = figureDirPath.resolve(figureFileName);
-        boolean isFileCreated = createImageFile(image, figureFilePath.toString());
-        if (isFileCreated) {
-            String relativePathName = figureFilePath.subpath(figureDirPath.getNameCount() - 1,
-                figureDirPath.getNameCount() + 1).toString().replace("\\", "/");
-            String imageString = String.format("<img src=\"%s\" alt=\"figure%d\">", relativePathName, currentImageIndex);
-            htmlWriter.write(imageString);
-            htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
+        try{
+            int currentImageIndex = StaticLayoutContainers.incrementImageIndex();
+            if (currentImageIndex == 1) {
+                figureDirPath.toFile().mkdirs();
+                contrastRatioConsumer = StaticLayoutContainers.getContrastRatioConsumer(pdfFilePath.toString(), password, false, null);
+            }
+            String figureFileName = String.format(HtmlSyntax.IMAGE_FILE_NAME_FORMAT, currentImageIndex);
+            Path figureFilePath = figureDirPath.resolve(figureFileName);
+            boolean isFileCreated = createImageFile(image, figureFilePath.toString());
+            if (isFileCreated) {
+                String relativePathName = figureFilePath.subpath(figureDirPath.getNameCount() - 1,
+                    figureDirPath.getNameCount() + 1).toString().replace("\\", "/");
+                String imageString = String.format("<img src=\"%s\" alt=\"figure%d\">", relativePathName, currentImageIndex);
+                htmlWriter.write(imageString);
+                htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
+            }
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Unable to write image: " + e.getMessage());
         }
+
         //add alt image
     }
 
