@@ -248,6 +248,7 @@ def main(argv=None) -> int:
     )
     parser.add_argument(
         "--use-struct-tree",
+        action="store_true",
         help="Enable processing structure tree (disabled by default)",
     )
     args = parser.parse_args(argv)
