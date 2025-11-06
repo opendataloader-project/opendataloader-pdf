@@ -25,7 +25,7 @@ This challenge presents a unique opportunity for innovation. Hancom and Dual Lab
 
 # **3\. Our Vision: Leading the Tagged PDF Revolution**
 
-Our vision is to not only be the first to develop a robust Tagged PDF data extraction tool for AI reuse for AI reuse but also to actively contribute to the global standards that govern it. By working with the PDF Association, we aim to ensure the reliability and integrity of Tagged PDF, turning it into a powerful and trustworthy asset for the entire AI ecosystem.
+Our vision is to not only be the first to develop a robust Tagged PDF data extraction tool for AI reuse for AI reuse but also to actively contribute to the global standards that govern it. By working with the PDF Association, we aim to engage the larger industry to facilitate the use of Tagged PDF as a trustworthy and efficient asset for the entire AI ecosystem.
 
 ## **3.1. Available Tagged PDF Filters**
 
