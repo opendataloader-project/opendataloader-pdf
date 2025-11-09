@@ -18,6 +18,7 @@ import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 import org.verapdf.wcag.algorithms.entities.tables.Table;
 import org.verapdf.wcag.algorithms.entities.tables.TableToken;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ClusterTableConsumer;
+import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -25,14 +26,19 @@ import java.util.List;
 public class ClusterTableProcessor {
 
     public static void processClusterDetectionLists(List<IObject> contents) {
+        StaticContainers.setIsDataLoader(false);
         ClusterTableConsumer clusterTableConsumer = new ClusterTableConsumer();
         for (IObject content : contents) {
             if (content instanceof TextChunk) {
-                SemanticTextNode semanticTextNode = new SemanticTextNode((TextChunk) content);
-                clusterTableConsumer.accept(new TableToken((TextChunk) content, semanticTextNode), semanticTextNode);
-            } else if (content instanceof ImageChunk) {
-                SemanticFigure semanticFigure = new SemanticFigure((ImageChunk) content);
-                clusterTableConsumer.accept(new TableToken((ImageChunk) content, semanticFigure), semanticFigure);
+                TextChunk textChunk = (TextChunk) content;
+                if (textChunk.isWhiteSpaceChunk() || textChunk.isEmpty()) {
+                    continue;
+                }
+                SemanticTextNode semanticTextNode = new SemanticTextNode(textChunk);
+                clusterTableConsumer.accept(new TableToken(textChunk, semanticTextNode), semanticTextNode);
+//            } else if (content instanceof ImageChunk) {
+//                SemanticFigure semanticFigure = new SemanticFigure((ImageChunk) content);
+//                clusterTableConsumer.accept(new TableToken((ImageChunk) content, semanticFigure), semanticFigure);
             }
         }
         clusterTableConsumer.processEnd();
@@ -47,6 +53,7 @@ public class ClusterTableProcessor {
         if (clusterTableConsumer.getTables().size() > 0) {
             System.out.println("Cluster tables number: " + clusterTableConsumer.getTables().size());
         }
+        StaticContainers.setIsDataLoader(true);
     }
 
 //    public static void findListAndTablesImageMethod(List<SemanticTextNode> nodes) {
