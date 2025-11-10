@@ -125,7 +125,7 @@ public class MarkdownGenerator implements Closeable {
     protected boolean createImageFile(ImageChunk image, String fileName) {
         try {
             BoundingBox imageBox = image.getBoundingBox();
-            BufferedImage targetImage = contrastRatioConsumer.getPageSubImage(imageBox);
+            BufferedImage targetImage = contrastRatioConsumer != null ? contrastRatioConsumer.getPageSubImage(imageBox) : null;
             if (targetImage == null) {
                 return false;
             }

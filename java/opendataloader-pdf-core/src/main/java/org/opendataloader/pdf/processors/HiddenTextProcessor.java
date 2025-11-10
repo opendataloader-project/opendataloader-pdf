@@ -28,6 +28,9 @@ public class HiddenTextProcessor {
         List<IObject> result = new LinkedList<>();
         try {
             ContrastRatioConsumer contrastRatioConsumer = StaticLayoutContainers.getContrastRatioConsumer(pdfName, password, false, null);
+            if (contrastRatioConsumer == null) {
+                return contents;
+            }
             for (IObject content : contents) {
                 if (content instanceof TextChunk) {
                     TextChunk textChunk = (TextChunk) content;
