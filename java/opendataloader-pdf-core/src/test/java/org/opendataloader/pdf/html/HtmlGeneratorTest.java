@@ -24,6 +24,7 @@ class HtmlGeneratorTest {
 
     @Test
     void testWriteImageCreatesFiguresDirectory() throws IOException {
+        StaticLayoutContainers.clearContainers();
         // Given
         Path tempDir = Files.createTempDirectory("htmlgen-test");
         File testPdf = new File("../../samples/pdf/lorem.pdf");
@@ -61,6 +62,7 @@ class HtmlGeneratorTest {
 
     @Test
     void testWriteImageInitializesContrastRatioConsumer() throws IOException {
+        StaticLayoutContainers.clearContainers();
         // Given
         Path tempDir = Files.createTempDirectory("htmlgen-test");
         File testPdf = new File("../../samples/pdf/lorem.pdf");
