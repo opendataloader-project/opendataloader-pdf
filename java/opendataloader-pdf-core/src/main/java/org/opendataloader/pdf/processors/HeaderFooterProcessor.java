@@ -206,11 +206,11 @@ public class HeaderFooterProcessor {
         List<IObject> result = new ArrayList<>();
         for (IObject content : contents) {
             if (isHeaderDetection) {
-                if (content.getBottomY() < boundingBox.getCenterY()) {
+                if (content.getBottomY() < boundingBox.getHeight() * 2 / 3) {
                     continue;
                 }
             } else {
-                if (content.getTopY() > boundingBox.getCenterY()) {
+                if (content.getTopY() > boundingBox.getHeight() / 3) {
                     continue;
                 }
             }
