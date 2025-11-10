@@ -58,6 +58,7 @@ public class MarkdownGenerator implements Closeable {
 
     public void writeToMarkdown(List<List<IObject>> contents) {
         try {
+            StaticLayoutContainers.resetImageIndex();
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 for (IObject content : contents.get(pageNumber)) {
                     if (!isSupportedContent(content)) {
@@ -102,25 +103,29 @@ public class MarkdownGenerator implements Closeable {
         }
     }
 
-    protected void writeImage(ImageChunk image) throws IOException {
-        int currentImageIndex = StaticLayoutContainers.incrementImageIndex();
-        if (currentImageIndex == 1) {
-            new File(imageDirectoryName).mkdirs();
-            contrastRatioConsumer = new ContrastRatioConsumer(this.pdfFileName, password, false, null);
-        }
+    protected void writeImage(ImageChunk image) {
+        try {
+            int currentImageIndex = StaticLayoutContainers.incrementImageIndex();
+            if (currentImageIndex == 1) {
+                new File(imageDirectoryName).mkdirs();
+                contrastRatioConsumer = StaticLayoutContainers.getContrastRatioConsumer(this.pdfFileName, password, false, null);
+            }
 
-        String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, imageDirectoryName, File.separator, currentImageIndex);
-        boolean isFileCreated = createImageFile(image, fileName);
-        if (isFileCreated) {
-            String imageString = String.format(MarkdownSyntax.IMAGE_FORMAT, "image " + currentImageIndex, fileName);
-            markdownWriter.write(getCorrectMarkdownString(imageString));
+            String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, imageDirectoryName, File.separator, currentImageIndex);
+            boolean isFileCreated = createImageFile(image, fileName);
+            if (isFileCreated) {
+                String imageString = String.format(MarkdownSyntax.IMAGE_FORMAT, "image " + currentImageIndex, fileName);
+                markdownWriter.write(getCorrectMarkdownString(imageString));
+            }
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Unable to write image for markdown output: " + e.getMessage());
         }
     }
 
     protected boolean createImageFile(ImageChunk image, String fileName) {
         try {
             BoundingBox imageBox = image.getBoundingBox();
-            BufferedImage targetImage = contrastRatioConsumer.getPageSubImage(imageBox);
+            BufferedImage targetImage = contrastRatioConsumer != null ? contrastRatioConsumer.getPageSubImage(imageBox) : null;
             if (targetImage == null) {
                 return false;
             }
@@ -250,10 +255,6 @@ public class MarkdownGenerator implements Closeable {
     public void close() throws IOException {
         if (markdownWriter != null) {
             markdownWriter.close();
-        }
-
-        if (contrastRatioConsumer != null) {
-            contrastRatioConsumer.close();
         }
     }
 }

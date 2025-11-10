@@ -10,6 +10,7 @@ package org.opendataloader.pdf.cli;
 import org.apache.commons.cli.*;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.api.OpenDataLoaderPDF;
+import org.opendataloader.pdf.containers.StaticLayoutContainers;
 
 import java.io.File;
 import java.util.Locale;
@@ -101,6 +102,8 @@ public class CLIMain {
         } catch (Exception exception) {
             LOGGER.log(Level.SEVERE, "Exception during processing file " + file.getAbsolutePath() + ": " +
                 exception.getMessage(), exception);
+        } finally {
+            StaticLayoutContainers.closeContrastRatioConsumer();
         }
     }
 
