@@ -29,7 +29,8 @@ AI-safety is enabled by default and automatically filters likely prompt-injectio
 - 🧩 **Layout Reconstruction** — Headings, Lists, Tables, Images, Reading Order
 - ⚡ **Fast & Lightweight** — Rule-Based Heuristic, High-Throughput, No GPU
 - 🔒 **Local-First Privacy** — Runs fully on your machine
-- 🛡️ **AI-Safety** — Auto-Filters likely prompt-injection content - [Learn more about AI-Safety](https://github.com/opendataloader-project/opendataloader-pdf/blob/main/docs/AI_SAFETY.md)
+- 🛡️ **AI-Safety** — Auto-Filters likely prompt-injection content - [Learn more](https://opendataloader.org/docs/ai-safety)
+- 🏷️ **Tagged PDF** — Advanced data extraction technology based on Tagged PDF - [Learn more](https://opendataloader.org/docs/tagged-pdf)
 - 🖍️ **Annotated PDF Visualization** — See detected structures overlaid on the original
 
 [Download Annotated PDF Sample](https://raw.githubusercontent.com/opendataloader-project/opendataloader-pdf/main/resources/1901.03003_annotated.pdf)
@@ -41,11 +42,9 @@ AI-safety is enabled by default and automatically filters likely prompt-injectio
 ## 🚀 Upcoming Features
 
 **Scheduled for November**
-- 📄 **Tagged PDF** — Develop advanced data extraction technology based on Tagged PDF
 - ⚡ **Performance Improvement** — Enhance the inference skill for greater accuracy and speed. 
 - 📊 **Benchmarks & Datasets** — Publish transparent evaluations using open datasets and standardized metrics. 
 - 🎯 **Metrics** — Publish the calculation methods to transparently share benchmark results.
-
 <br/>
 
 **Scheduled for December**
@@ -55,7 +54,6 @@ AI-safety is enabled by default and automatically filters likely prompt-injectio
 
 **Scheduled for 2026**
 - 🛡️ **AI Red Teaming** — Transparent adversarial benchmarks with datasets and metrics, then reported regularly.
-  
 <br/>
 
 ## Prerequisites
