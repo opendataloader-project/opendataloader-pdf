@@ -18,7 +18,6 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.TableChecker;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
-import java.io.IOException;
 import java.util.*;
 
 public class TaggedDocumentProcessor {
@@ -26,7 +25,8 @@ public class TaggedDocumentProcessor {
     private static List<List<IObject>> contents;
     private static Stack<List<IObject>> contentsStack = new Stack<>();
 
-    public static List<List<IObject>> processDocument(String inputPdfName, Config config) throws IOException {
+    public static List<List<IObject>> processDocument(String inputPdfName, Config config) {
+        contentsStack.clear();
         contents = new ArrayList<>();
         for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
             contents.add(new ArrayList<>());
@@ -124,12 +124,15 @@ public class TaggedDocumentProcessor {
     }
 
     private static SemanticParagraph createParagraph(INode paragraph) {
-        List<IObject> contents = getContents(paragraph);
+        List<IObject> contents = new ArrayList<>();
+        processChildContents(paragraph, contents);
         contents = TextLineProcessor.processTextLines(contents);
         TextBlock textBlock = new TextBlock(new MultiBoundingBox());
-        for (IObject line : contents) {
-            if (line instanceof TextLine) {
-                textBlock.add((TextLine)line);
+        for (IObject content : contents) {
+            if (content instanceof TextLine) {
+                textBlock.add((TextLine)content);
+            } else {
+                addObjectToContent(content);
             }
         }
         return ParagraphProcessor.createParagraphFromTextBlock(textBlock);
@@ -154,7 +157,7 @@ public class TaggedDocumentProcessor {
         list.setBoundingBox(new MultiBoundingBox());
         for (INode child : node.getChildren()) {
             if (child.getInitialSemanticType() == SemanticType.LIST) {
-                //todo
+                processList(child);
             } else {
                 ListItem listItem = new ListItem(new MultiBoundingBox(), null);
                 List<IObject> contents = getContents(child);
@@ -238,16 +241,20 @@ public class TaggedDocumentProcessor {
     }
 
     private static void processTableCell(TableBorderCell cell, INode elem) {
-        contentsStack.add(cell.getContents());
-        for (INode childChild : elem.getChildren()) {
-            processStructElem(childChild);
-        }
-        contentsStack.pop();
+        processChildContents(elem, cell.getContents());
         BoundingBox cellBoundingBox = new MultiBoundingBox();
         for (IObject content : cell.getContents()) {
             cellBoundingBox.union(content.getBoundingBox());
         }
         cell.setBoundingBox(cellBoundingBox);
+    }
+
+    private static void processChildContents(INode elem, List<IObject> contents) {
+        contentsStack.add(contents);
+        for (INode childChild : elem.getChildren()) {
+            processStructElem(childChild);
+        }
+        contentsStack.pop();
     }
 
     private static TableBorderRow[] createRowsForTable(List<List<TableBorderCell>> table, int numberOfRows, int numberOfColumns) {
