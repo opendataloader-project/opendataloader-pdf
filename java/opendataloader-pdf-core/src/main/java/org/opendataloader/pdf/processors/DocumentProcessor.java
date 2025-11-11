@@ -83,7 +83,7 @@ public class DocumentProcessor {
             contents.add(pageContents);
         }
         // This is called after text is processed in case we need to provide them to TATR
-        addTablesFromTATR(inputPdfName, config, contents);
+        new TableTransformerProcessor(inputPdfName, config).processTables(contents);
 
         for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
             List<IObject> pageContents = contents.get(pageNumber);
@@ -161,7 +161,7 @@ public class DocumentProcessor {
         StaticContainers.getTableBordersCollection().clearContentsOfTable();
 
         DocumentProcessor.timeHelper.start();
-        List<Integer> pageNumbers = getPageNumbersForTATR(contents);
+        List<Integer> pageNumbers = AbstractTableProcessor.getPagesWithPossibleTables(contents);
         DocumentProcessor.timeHelper.endJavaAndFilteredPython();
         List<Integer> otherPageNumbers = new ArrayList<>();
         for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
@@ -173,8 +173,8 @@ public class DocumentProcessor {
         if (!pageNumbers.isEmpty()) {
             DocumentProcessor.timeHelper.start();
             List<List<TableBorder>> filterTatrAndJavaTables = new ArrayList<>();
-            List<List<TableBorder>> tatrTables = callTATR(file.getAbsolutePath(), config, contents, pageNumbers);
-            addTablesFromTATR(tatrTables);
+            List<List<TableBorder>> tatrTables = TableTransformerProcessor.callTATR(file.getAbsolutePath(), config, contents, pageNumbers);
+            AbstractTableProcessor.addTablesToTableCollection(tatrTables);
             DocumentProcessor.timeHelper.endJavaAndPython();
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 filterTatrAndJavaTables.add(TableBorderProcessor.processTableBorders(contents.get(pageNumber)));
@@ -188,8 +188,8 @@ public class DocumentProcessor {
         if (!otherPageNumbers.isEmpty()) {
             DocumentProcessor.timeHelper.start();
             List<List<TableBorder>> tatrAndJavaTables = new ArrayList<>();
-            List<List<TableBorder>> filterTatrTables = callTATR(file.getAbsolutePath(), config, contents, otherPageNumbers);
-            addTablesFromTATR(filterTatrTables);
+            List<List<TableBorder>> filterTatrTables = TableTransformerProcessor.callTATR(file.getAbsolutePath(), config, contents, otherPageNumbers);
+            AbstractTableProcessor.addTablesToTableCollection(filterTatrTables);
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 tatrAndJavaTables.add(TableBorderProcessor.processTableBorders(contents.get(pageNumber)));
             }
@@ -220,99 +220,12 @@ public class DocumentProcessor {
         DocumentProcessor.timeHelper.print(file);
     }
 
-    private static void addTablesFromTATR(String inputPdfName, Config config, List<List<IObject>> contents) {
-        List<Integer> pageNumbers = getPageNumbersForTATR(contents);
-        if (!pageNumbers.isEmpty()) {
-            List<List<TableBorder>> tatrTables = callTATR(inputPdfName, config, contents, pageNumbers);
-            addTablesFromTATR(tatrTables);
-        }
-    }
-
-    private static List<Integer> getPageNumbersForTATR(List<List<IObject>> contents) {
-        List<Integer> pageNumbers = new ArrayList<>();
-        for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
-            TextChunk previousTextChunk = null;
-            for (IObject content : contents.get(pageNumber)) {
-                if (content instanceof TextChunk) {
-                    TextChunk currentTextChunk = (TextChunk) content;
-                    if (currentTextChunk.isWhiteSpaceChunk()) {
-                        continue;
-                    }
-                    if (previousTextChunk != null && areSuspiciousTextChunks(previousTextChunk, currentTextChunk)) {
-                        pageNumbers.add(pageNumber);
-                        break;
-                    }
-                    previousTextChunk = currentTextChunk;
-                }
-            }
-        }
-        System.out.println("Percent of pages for tatr " + String.format("%.2f",
-                ((double)pageNumbers.size() / StaticContainers.getDocument().getNumberOfPages()) * 100)
-                 + "%");
-        return pageNumbers;
-    }
-
-    private static boolean areSuspiciousTextChunks(TextChunk previousTextChunk, TextChunk currentTextChunk) {
-        if (previousTextChunk.getTopY() < currentTextChunk.getBottomY()) {
-            return true;
-        }
-        if (NodeUtils.areCloseNumbers(previousTextChunk.getBaseLine(), currentTextChunk.getBaseLine(),
-                currentTextChunk.getHeight() * 0.1)) {
-            if (currentTextChunk.getLeftX() - previousTextChunk.getRightX() > currentTextChunk.getHeight() * 3) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static void addTablesFromTATR(List<List<TableBorder>> tatrTables) {
-        if (tatrTables != null) {
-            TableBordersCollection javaCollection = StaticContainers.getTableBordersCollection();
-            List<SortedSet<TableBorder>> javaBorders = javaCollection.getTableBorders();
-            Iterator<SortedSet<TableBorder>> javaI = javaBorders.iterator();
-            Iterator<List<TableBorder>> pythonI = tatrTables.iterator();
-            while (pythonI.hasNext()) {
-                List<TableBorder> pythonList = pythonI.next();
-                SortedSet<TableBorder> javaSet = javaI.next();
-                for (TableBorder border : pythonList) {
-                    // Add tables from TATR that Java failed to detect
-                    if (javaCollection.getTableBorder(border.getBoundingBox()) == null) {
-                        javaSet.add(border);
-                    }
-                }
-            }
-        }
-    }
-
     public static List<List<TableBorder>> callTATR(String inputPdfName, Config config, List<List<IObject>> contents) {
         List<Integer> pageNumbers = new ArrayList<>();
         for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
             pageNumbers.add(pageNumber);
         }
-        return callTATR(inputPdfName, config, contents, pageNumbers);
-    }
-
-    public static List<List<TableBorder>> callTATR(String inputPdfName, Config config, List<List<IObject>> contents,
-                                                   List<Integer> pageNumbers) {
-        File tempDir = null;
-        List<List<TableBorder>> tables = null;
-        try {
-            Path scriptFolder = Paths.get("");
-            tempDir = Files.createTempDirectory(scriptFolder, "out-java").toFile();
-            tables = TableTransformerProcessor.processTableTransformer(
-                    inputPdfName, config.getPassword(), scriptFolder.toFile(), config.getPythonExecutable(),
-                    tempDir, contents, pageNumbers);
-        } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Failed to process document using TATR: " + e.getMessage());
-        }
-        if (tempDir != null) {
-            try {
-                FileUtils.deleteDirectory(tempDir);
-            } catch (IOException e) {
-                LOGGER.log(Level.WARNING, "Failed to clean up temp data of TATR: " + e.getMessage());
-            }
-        }
-        return tables;
+        return TableTransformerProcessor.callTATR(inputPdfName, config, contents, pageNumbers);
     }
 
     public static void preprocessing(String pdfName, Config config) throws IOException {

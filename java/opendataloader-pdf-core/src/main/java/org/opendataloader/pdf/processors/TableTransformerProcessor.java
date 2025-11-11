@@ -7,6 +7,8 @@
  */
 package org.opendataloader.pdf.processors;
 
+import org.codehaus.plexus.util.FileUtils;
+import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,13 +31,16 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpClient.Version;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.Normalizer;
 import java.time.Duration;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class TableTransformerProcessor {
+public class TableTransformerProcessor extends AbstractTableProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(TableTransformerProcessor.class.getCanonicalName());
 
@@ -43,6 +48,14 @@ public class TableTransformerProcessor {
     // It will cause cell bboxes to be a lot smaller than in Java
     // We need to decide if we want to use words generation or not
     private static final boolean TATR_USES_WORDS = false;
+
+    private String inputPdfName;
+    private Config config;
+
+    public TableTransformerProcessor(String inputPdfName, Config config) {
+        this.inputPdfName = inputPdfName;
+        this.config = config;
+    }
 
     public static List<List<TableBorder>> processTableTransformer(String pdfName, String password, File scriptFolder,
             String pythonPath, File resultFolder, List<List<IObject>> contents, List<Integer> pageNumbers) throws IOException {
@@ -296,5 +309,33 @@ public class TableTransformerProcessor {
             }
         }
         return textChunks;
+    }
+
+    public static List<List<TableBorder>> callTATR(String inputPdfName, Config config, List<List<IObject>> contents,
+                                                   List<Integer> pageNumbers) {
+        File tempDir = null;
+        List<List<TableBorder>> tables = null;
+        try {
+            Path scriptFolder = Paths.get("");
+            tempDir = Files.createTempDirectory(scriptFolder, "out-java").toFile();
+            tables = TableTransformerProcessor.processTableTransformer(
+                inputPdfName, config.getPassword(), scriptFolder.toFile(), config.getPythonExecutable(),
+                tempDir, contents, pageNumbers);
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Failed to process document using TATR: " + e.getMessage());
+        }
+        if (tempDir != null) {
+            try {
+                FileUtils.deleteDirectory(tempDir);
+            } catch (IOException e) {
+                LOGGER.log(Level.WARNING, "Failed to clean up temp data of TATR: " + e.getMessage());
+            }
+        }
+        return tables;
+    }
+
+    @Override
+    protected List<List<TableBorder>> getTables(List<List<IObject>> contents, List<Integer> pageNumbers) {
+        return callTATR(inputPdfName, config, contents, pageNumbers);
     }
 }

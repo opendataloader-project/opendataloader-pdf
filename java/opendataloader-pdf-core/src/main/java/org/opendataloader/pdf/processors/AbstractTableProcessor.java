@@ -30,7 +30,7 @@ public abstract class AbstractTableProcessor {
 
     protected abstract List<List<TableBorder>> getTables(List<List<IObject>> contents, List<Integer> pageNumbers);
 
-    private static void addTablesToTableCollection(List<List<TableBorder>> detectedTables) {
+    public static void addTablesToTableCollection(List<List<TableBorder>> detectedTables) {
         if (detectedTables != null) {
             TableBordersCollection tableCollection = StaticContainers.getTableBordersCollection();
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
