@@ -176,7 +176,7 @@ public class TaggedDocumentProcessor {
     }
 
     private static void processTable(INode tableNode) {
-        List<INode> tableRows = TableChecker.getTableRows(tableNode);
+        List<INode> tableRows = processTableRows(tableNode);
         if (tableRows.isEmpty()) {
             return;
         }
@@ -224,6 +224,39 @@ public class TaggedDocumentProcessor {
             numberOfRows, numberOfColumns);
         setBoundingBoxesForTableRowsAndTableCells(tableBorder);
         addObjectToContent(tableBorder);
+    }
+
+    private static List<INode> processTableRows(INode table) {
+        List<INode> listTR = new LinkedList<>();
+        for (INode elem : table.getChildren()) {
+            SemanticType type = elem.getInitialSemanticType();
+            if (SemanticType.TABLE_ROW == type) {
+                listTR.add(elem);
+                processTableRowsChildren(elem);
+            } else if (SemanticType.TABLE_FOOTER == type || SemanticType.TABLE_BODY == type ||
+                SemanticType.TABLE_HEADERS == type) {
+                for (INode child : elem.getChildren()) {
+                    if (SemanticType.TABLE_ROW == child.getInitialSemanticType()) {
+                        listTR.add(child);
+                        processTableRowsChildren(child);
+                    } else {
+                        processStructElem(child);
+                    }
+                }
+            } else {
+                processStructElem(elem);
+            }
+        }
+        return listTR;
+    }
+
+    private static void processTableRowsChildren(INode tableRow) {
+        for (INode tableCell : tableRow.getChildren()) {
+            SemanticType tableCellType = tableCell.getInitialSemanticType();
+            if (SemanticType.TABLE_CELL != tableCellType && SemanticType.TABLE_HEADER != tableCellType) {
+                processStructElem(tableCell);
+            }
+        }
     }
 
     private static void addTableRow(int numberOfColumns, List<List<TableBorderCell>> table) {
