@@ -193,9 +193,9 @@ opendataloader-pdf path/to/document.pdf path/to/folder -o path/to/output -f json
 ```
   -o, --output-dir <path>             Directory where outputs are written
   -p, --password <password>           Password for encrypted PDFs
-  -f, --format <value...>             Output formats to generate (json, text, html, pdf, markdown, markdown-with-html, markdown-with-images)
+  -f, --format <values>               Comma-separated output formats to generate (json, text, html, pdf, markdown, markdown-with-html, markdown-with-images)
   -q, --quiet                         Suppress CLI logging output
-      --content-safety-off <mode...>  Disable one or more content safety filters (all, hidden-text, off-page, tiny, hidden-ocg)
+      --content-safety-off <modes>    Disable one or more content safety filters (all, hidden-text, off-page, tiny, hidden-ocg)
       --keep-line-breaks              Preserve line breaks in text output
       --replace-invalid-chars <c>     Replacement character for invalid or unrecognized characters
   -h, --help                          Show usage information
@@ -343,9 +343,9 @@ The images are extracted from PDF as individual files and stored in a subfolder 
 Options:
 -o,--output-dir <arg>           Specifies the output directory for generated files
 -p,--password <arg>             Specifies the password for an encrypted PDF
--f,--format <arg>               List of output formats to generate (json, text, html, pdf, markdown, markdown-with-html, markdown-with-images). Default: json
+-f,--format <arg>               Comma-separated list of output formats to generate (json, text, html, pdf, markdown, markdown-with-html, markdown-with-images). Default: json
 -q,--quiet                      Suppresses console logging output
---content-safety-off <arg>      Disables one or more content safety filters. Accepts a list of filter names. Arguments: all, hidden-text, off-page, tiny, hidden-ocg
+--content-safety-off <arg>      Disables one or more content safety filters. Accepts a comma-separated list of filter names. Arguments: all, hidden-text, off-page, tiny, hidden-ocg
 --keep-line-breaks              Preserves original line breaks in the extracted text
 --replace-invalid-chars <arg>   Replaces invalid or unrecognized characters (e.g., �, \u0000) with the specified character
 --use-struct-tree               Enables processing structure tree (disabled by default)

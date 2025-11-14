@@ -5,31 +5,13 @@ import { convert, ConvertOptions } from './index.js';
 interface CliOptions {
   outputDir?: string;
   password?: string;
-  format?: string[];
+  format?: string;
   quiet?: boolean;
-  contentSafetyOff?: string[];
+  contentSafetyOff?: string;
   keepLineBreaks?: boolean;
   replaceInvalidChars?: string;
   useStructTree?: boolean;
 }
-
-const VALID_FORMATS = new Set([
-  'json',
-  'text',
-  'html',
-  'pdf',
-  'markdown',
-  'markdown-with-html',
-  'markdown-with-images',
-]);
-
-const VALID_CONTENT_SAFETY_MODES = new Set([
-  'all',
-  'hidden-text',
-  'off-page',
-  'tiny',
-  'hidden-ocg',
-]);
 
 function createProgram(): Command {
   const program = new Command();
@@ -43,12 +25,9 @@ function createProgram(): Command {
     .argument('<input...>', 'Input files or directories to convert')
     .option('-o, --output-dir <path>', 'Directory where outputs are written')
     .option('-p, --password <password>', 'Password for encrypted PDFs')
-    .option(
-      '-f, --format <value...>',
-      'Output formats to generate (json, text, html, pdf, markdown, markdown-with-html, markdown-with-images)',
-    )
+    .option('-f, --format <format>', 'Comma-separated output format(s) to generate.')
     .option('-q, --quiet', 'Suppress CLI logging output')
-    .option('--content-safety-off <mode...>', 'Disable one or more content safety filters')
+    .option('--content-safety-off <modes>', 'Comma-separated content safety filters to disable.')
     .option('--keep-line-breaks', 'Preserve line breaks in text output')
     .option('--replace-invalid-chars <c>', 'Replacement character for invalid characters')
     .option('--use-struct-tree', 'Enable processing structure tree (disabled by default)');
@@ -74,13 +53,13 @@ function buildConvertOptions(options: CliOptions): ConvertOptions {
   if (options.password) {
     convertOptions.password = options.password;
   }
-  if (options.format && options.format.length > 0) {
+  if (options.format) {
     convertOptions.format = options.format;
   }
   if (options.quiet) {
     convertOptions.quiet = true;
   }
-  if (options.contentSafetyOff && options.contentSafetyOff.length > 0) {
+  if (options.contentSafetyOff) {
     convertOptions.contentSafetyOff = options.contentSafetyOff;
   }
   if (options.keepLineBreaks) {
@@ -119,27 +98,6 @@ async function main(): Promise<number> {
 
   const cliOptions = program.opts<CliOptions>();
   const inputPaths = program.args;
-
-  if (cliOptions.format) {
-    for (const value of cliOptions.format) {
-      if (!VALID_FORMATS.has(value)) {
-        console.error(`Invalid format '${value}'. See '--help' for allowed values.`);
-        console.error("Use '--help' to see available options.");
-        return 1;
-      }
-    }
-  }
-
-  if (cliOptions.contentSafetyOff) {
-    for (const value of cliOptions.contentSafetyOff) {
-      if (!VALID_CONTENT_SAFETY_MODES.has(value)) {
-        console.error(`Invalid content safety mode '${value}'. See '--help' for allowed values.`);
-        console.error("Use '--help' to see available options.");
-        return 1;
-      }
-    }
-  }
-
   const convertOptions = buildConvertOptions(cliOptions);
 
   try {
