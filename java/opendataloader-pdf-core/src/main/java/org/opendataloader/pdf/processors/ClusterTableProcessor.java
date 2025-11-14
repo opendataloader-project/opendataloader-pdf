@@ -92,8 +92,8 @@ public class ClusterTableProcessor {
             String columnText = text.substring(start, end).trim();
             if (columnText.isEmpty()) continue;
 
-            double startX = getSymbolStart(originalChunk, start, originalBBox.getLeftX());
-            double endX = getSymbolEnd(originalChunk, end - 1, originalBBox.getRightX());
+            double startX = originalChunk.getSymbolStartCoordinate(start);
+            double endX = originalChunk.getSymbolEndCoordinate(end - 1);
 
             BoundingBox columnBBox = new BoundingBox(
                 startX,
@@ -113,23 +113,6 @@ public class ClusterTableProcessor {
         }
 
         return columns;
-    }
-
-    private static double getSymbolStart(TextChunk chunk, int charIndex, double defaultStart) {
-        if (charIndex == 0) {
-            return defaultStart;
-        }
-        if (charIndex - 1 < chunk.getSymbolEnds().size()) {
-            return chunk.getSymbolEnds().get(charIndex - 1);
-        }
-        return defaultStart;
-    }
-
-    private static double getSymbolEnd(TextChunk chunk, int charIndex, double defaultEnd) {
-        if (charIndex < chunk.getSymbolEnds().size()) {
-            return chunk.getSymbolEnds().get(charIndex);
-        }
-        return defaultEnd;
     }
 
 
