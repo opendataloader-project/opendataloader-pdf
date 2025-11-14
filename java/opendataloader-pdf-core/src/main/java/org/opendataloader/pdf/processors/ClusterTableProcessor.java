@@ -17,6 +17,7 @@ import org.verapdf.wcag.algorithms.entities.tables.Table;
 import org.verapdf.wcag.algorithms.entities.tables.TableToken;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ClusterTableConsumer;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -24,96 +25,7 @@ import java.util.List;
 
 public class ClusterTableProcessor {
 
-    private static List<TextChunk> splitTextChunk(TextChunk originalChunk) {
-        String text = originalChunk.getValue();
-        List<Double> symbolEnds = originalChunk.getSymbolEnds();
 
-        if (symbolEnds == null || symbolEnds.size() < text.length() || text == null || text.trim().isEmpty()) {
-            List<TextChunk> result = new ArrayList<>();
-            result.add(originalChunk);
-            return result;
-        }
-
-        List<Integer> columnBoundaries = findColumnBoundaries(originalChunk, text);
-
-        if (columnBoundaries.size() <= 1) {
-            List<TextChunk> result = new ArrayList<>();
-            result.add(originalChunk);
-            return result;
-        }
-
-        return createColumnsFromBoundaries(originalChunk, text, columnBoundaries);
-    }
-
-    private static List<Integer> findColumnBoundaries(TextChunk chunk, String text) {
-        List<Integer> boundaries = new ArrayList<>();
-        boundaries.add(0);
-
-        List<Double> spaceWidths = new ArrayList<>();
-        List<Integer> spacePositions = new ArrayList<>();
-
-        for (int i = 0; i < text.length(); i++) {
-            if (text.charAt(i) == ' ') {
-                Double width = chunk.getSymbolWidth(i);
-                if (width != null) {
-                    spaceWidths.add(width);
-                    spacePositions.add(i);
-                }
-            }
-        }
-
-        if (spaceWidths.isEmpty()) {
-            return boundaries;
-        }
-
-        double threshold = chunk.getFontSize() * 0.77;
-
-        for (int i = 0; i < spaceWidths.size(); i++) {
-            if (spaceWidths.get(i) > threshold) {
-                boundaries.add(spacePositions.get(i));
-            }
-        }
-
-        boundaries.add(text.length());
-
-        return boundaries;
-    }
-
-    private static List<TextChunk> createColumnsFromBoundaries(TextChunk originalChunk, String text, List<Integer> boundaries) {
-        List<TextChunk> columns = new ArrayList<>();
-        BoundingBox originalBBox = originalChunk.getBoundingBox();
-
-        for (int i = 0; i < boundaries.size() - 1; i++) {
-            int start = boundaries.get(i);
-            int end = boundaries.get(i + 1);
-
-            if (start >= end) continue;
-
-            String columnText = text.substring(start, end).trim();
-            if (columnText.isEmpty()) continue;
-
-            double startX = originalChunk.getSymbolStartCoordinate(start);
-            double endX = originalChunk.getSymbolEndCoordinate(end - 1);
-
-            BoundingBox columnBBox = new BoundingBox(
-                startX,
-                originalBBox.getBottomY(),
-                endX,
-                originalBBox.getTopY()
-            );
-
-            TextChunk columnChunk = new TextChunk(
-                columnBBox,
-                columnText,
-                originalChunk.getFontSize(),
-                originalChunk.getBaseLine()
-            );
-
-            columns.add(columnChunk);
-        }
-
-        return columns;
-    }
 
 
     public static void processClusterDetectionLists(List<IObject> contents) {
@@ -125,7 +37,7 @@ public class ClusterTableProcessor {
                 if (textChunk.isWhiteSpaceChunk() || textChunk.isEmpty()) {
                     continue;
                 }
-                List<TextChunk> splitChunks = splitTextChunk(textChunk);
+                List<TextChunk> splitChunks = TextChunkUtils.splitTextChunk(textChunk);
 //                SemanticTextNode semanticTextNode = new SemanticTextNode(textChunk);
 //                clusterTableConsumer.accept(new TableToken(textChunk, semanticTextNode), semanticTextNode);
                 for (TextChunk splitChunk : splitChunks) {
