@@ -8,17 +8,15 @@
 package org.opendataloader.pdf.processors;
 
 import org.verapdf.wcag.algorithms.entities.IObject;
-import org.verapdf.wcag.algorithms.entities.SemanticFigure;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
-import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.geometry.MultiBoundingBox;
-import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 import org.verapdf.wcag.algorithms.entities.tables.Table;
 import org.verapdf.wcag.algorithms.entities.tables.TableToken;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ClusterTableConsumer;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -34,8 +32,13 @@ public class ClusterTableProcessor {
                 if (textChunk.isWhiteSpaceChunk() || textChunk.isEmpty()) {
                     continue;
                 }
-                SemanticTextNode semanticTextNode = new SemanticTextNode(textChunk);
-                clusterTableConsumer.accept(new TableToken(textChunk, semanticTextNode), semanticTextNode);
+                List<TextChunk> splitChunks = TextChunkUtils.splitTextChunkByWhiteSpaces(textChunk);
+//                SemanticTextNode semanticTextNode = new SemanticTextNode(textChunk);
+//                clusterTableConsumer.accept(new TableToken(textChunk, semanticTextNode), semanticTextNode);
+                for (TextChunk splitChunk : splitChunks) {
+                    SemanticTextNode semanticTextNode = new SemanticTextNode(splitChunk);
+                    clusterTableConsumer.accept(new TableToken(splitChunk, semanticTextNode), semanticTextNode);
+                }
 //            } else if (content instanceof ImageChunk) {
 //                SemanticFigure semanticFigure = new SemanticFigure((ImageChunk) content);
 //                clusterTableConsumer.accept(new TableToken((ImageChunk) content, semanticFigure), semanticFigure);
