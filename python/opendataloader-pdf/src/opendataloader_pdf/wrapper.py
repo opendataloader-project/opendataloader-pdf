@@ -24,7 +24,7 @@ def run(
     add_image_to_markdown: bool = False,
     no_json: bool = False,
     debug: bool = False,
-    use_struct_tree = False,
+    use_struct_tree: bool = False,
 ):
     """
     Runs the opendataloader-pdf with the given arguments.
@@ -86,9 +86,9 @@ def convert(
     input_path: List[str],
     output_dir: Optional[str] = None,
     password: Optional[str] = None,
-    format: Optional[List[str]] = None,
+    format: Optional[str] = None,
     quiet: bool = False,
-    content_safety_off: Optional[List[str]] = None,
+    content_safety_off: Optional[str] = None,
     keep_line_breaks: bool = False,
     replace_invalid_chars: Optional[str] = None,
     use_struct_tree: bool = False,
@@ -114,11 +114,11 @@ def convert(
     if password:
         args.extend(["--password", password])
     if format:
-        args.extend(["--format", *format])
+        args.extend(["--format", format])
     if quiet:
         args.append("--quiet")
     if content_safety_off:
-        args.extend(["--content-safety-off", *content_safety_off])
+        args.extend(["--content-safety-off", content_safety_off])
     if keep_line_breaks:
         args.append("--keep-line-breaks")
     if replace_invalid_chars:
@@ -207,17 +207,7 @@ def main(argv=None) -> int:
     parser.add_argument(
         "-f",
         "--format",
-        nargs="+",
-        choices=[
-            "json",
-            "text",
-            "html",
-            "pdf",
-            "markdown",
-            "markdown-with-html",
-            "markdown-with-images",
-        ],
-        help="Output format(s) to generate.",
+        help="Comma-separated output format(s) to generate.",
     )
     parser.add_argument(
         "-q",
@@ -227,15 +217,7 @@ def main(argv=None) -> int:
     )
     parser.add_argument(
         "--content-safety-off",
-        nargs="+",
-        choices=[
-            "all",
-            "hidden-text",
-            "off-page",
-            "tiny",
-            "hidden-ocg",
-        ],
-        help="Disables one or more content safety filters. Accepts a list of filter names.",
+        help="Comma-separated content safety filters to disable.",
     )
     parser.add_argument(
         "--keep-line-breaks",

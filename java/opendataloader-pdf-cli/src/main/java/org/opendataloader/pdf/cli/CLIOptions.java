@@ -63,7 +63,6 @@ public class CLIOptions {
         Options options = new Options();
         Option contentSafetyOff = new Option(null, CONTENT_SAFETY_OFF_LONG_OPTION, true, "Disables one or more content safety filters. Accepts a comma-separated list of filter names. Arguments: all, hidden-text, off-page, tiny, hidden-ocg");
         contentSafetyOff.setRequired(false);
-        contentSafetyOff.setArgs(Option.UNLIMITED_VALUES);
         options.addOption(contentSafetyOff);
         Option password = new Option(PASSWORD_OPTION, PASSWORD_LONG_OPTION, true, "Specifies the password for an encrypted PDF");
         password.setRequired(false);
@@ -73,7 +72,6 @@ public class CLIOptions {
         options.addOption(htmlInMarkdown);
         Option format = new Option(FORMAT_OPTION, FORMAT_LONG_OPTION, true, String.format("Comma-separated list of output formats to generate. Supported values: %s", FORMAT_SUPPORTED_LIST));
         format.setRequired(false);
-        format.setArgs(Option.UNLIMITED_VALUES);
         options.addOption(format);
         Option quiet = new Option(QUIET_OPTION, QUIET_LONG_OPTION, false, "Suppresses console logging output");
         quiet.setRequired(false);
@@ -157,7 +155,7 @@ public class CLIOptions {
         if (!commandLine.hasOption(CONTENT_SAFETY_OFF_LONG_OPTION)) {
             return;
         }
-        
+
 
         String[] optionValues = commandLine.getOptionValues(CONTENT_SAFETY_OFF_LONG_OPTION);
         if (optionValues == null || optionValues.length == 0) {
