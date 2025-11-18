@@ -14,16 +14,27 @@ import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.geometry.MultiBoundingBox;
 import org.verapdf.wcag.algorithms.entities.tables.Table;
 import org.verapdf.wcag.algorithms.entities.tables.TableToken;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ClusterTableConsumer;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-public class ClusterTableProcessor {
+public class ClusterTableProcessor extends AbstractTableProcessor {
 
-    public static void processClusterDetectionLists(List<IObject> contents) {
+    @Override
+    protected List<List<TableBorder>> getTables(List<List<IObject>> contents, List<Integer> pageNumbers) {
+        List<List<TableBorder>> tables = new ArrayList<>();
+        for (int pageNumber : pageNumbers) {
+            tables.add(processClusterDetectionTables(contents.get(pageNumber)));
+        }
+        return tables;
+    }
+
+    public static List<TableBorder> processClusterDetectionTables(List<IObject> contents) {
         StaticContainers.setIsDataLoader(false);
         ClusterTableConsumer clusterTableConsumer = new ClusterTableConsumer();
         for (IObject content : contents) {
@@ -45,18 +56,13 @@ public class ClusterTableProcessor {
             }
         }
         clusterTableConsumer.processEnd();
-//        for (PDFList list : clusterTableConsumer.getLists()) {
-//            replaceContentsToResult(contents, list);
-//        }
+        List<TableBorder> result = new ArrayList<>();
         for (Table table : clusterTableConsumer.getTables()) {
-            replaceContentsToResult(contents, table);
-//            String value = "Table: " + table.getNumberOfColumns() + " columns, " + table.getNumberOfRows() + " rows";
-//            map.put(table, new Info(value, getColor(SemanticType.TABLE)));
-        }
-        if (clusterTableConsumer.getTables().size() > 0) {
-            System.out.println("Cluster tables number: " + clusterTableConsumer.getTables().size());
+            TableBorder tableBorder = table.createTableBorderFromTable();
+            result.add(tableBorder);
         }
         StaticContainers.setIsDataLoader(true);
+        return result;
     }
 
 //    public static void findListAndTablesImageMethod(List<SemanticTextNode> nodes) {
