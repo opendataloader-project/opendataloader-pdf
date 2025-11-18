@@ -53,13 +53,7 @@ class TestWrapper(unittest.TestCase):
         opendataloader_pdf.convert(
             input_path=[str(self.input_pdf)],
             output_dir=str(self.output_dir),
-            format=[
-                "json",
-                "text",
-                "html",
-                "pdf",
-                "markdown",
-            ],
+            format="json,text,html,pdf,markdown",
         )
 
         # Json
