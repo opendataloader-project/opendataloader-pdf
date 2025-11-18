@@ -24,18 +24,18 @@ public abstract class AbstractTableProcessor {
     public void processTables(List<List<IObject>> contents, List<Integer> pageNumbers) {
         if (!pageNumbers.isEmpty()) {
             List<List<TableBorder>> tables = getTables(contents, pageNumbers);
-            addTablesToTableCollection(tables);
+            addTablesToTableCollection(tables, pageNumbers);
         }
     }
 
     protected abstract List<List<TableBorder>> getTables(List<List<IObject>> contents, List<Integer> pageNumbers);
 
-    public static void addTablesToTableCollection(List<List<TableBorder>> detectedTables) {
+    public static void addTablesToTableCollection(List<List<TableBorder>> detectedTables, List<Integer> pageNumbers) {
         if (detectedTables != null) {
             TableBordersCollection tableCollection = StaticContainers.getTableBordersCollection();
-            for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
-                SortedSet<TableBorder> tables = tableCollection.getTableBorders(pageNumber);
-                for (TableBorder border : detectedTables.get(pageNumber)) {
+            for (int index = 0; index < pageNumbers.size(); index++) {
+                SortedSet<TableBorder> tables = tableCollection.getTableBorders(pageNumbers.get(index));
+                for (TableBorder border : detectedTables.get(index)) {
                     if (tableCollection.getTableBorder(border.getBoundingBox()) == null) {
                         tables.add(border);
                     }
