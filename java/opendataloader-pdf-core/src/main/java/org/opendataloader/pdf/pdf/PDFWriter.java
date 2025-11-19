@@ -74,6 +74,10 @@ public class PDFWriter {
                     inputPDF.getName().substring(0, inputPDF.getName().length() - 4) + "_annotated.pdf";
             document.save(outputFileName);
             LOGGER.log(Level.INFO, "Created {0}", outputFileName);
+        } catch (Exception ex) {
+            annotations.clear();
+            pageBoundingBoxes.clear();
+            throw new IOException("Error during updating PDF");
         }
     }
 
