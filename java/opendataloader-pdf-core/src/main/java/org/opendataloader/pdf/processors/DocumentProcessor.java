@@ -88,7 +88,8 @@ public class DocumentProcessor {
         File inputPDF = new File(inputPdfName);
         new File(config.getOutputFolder()).mkdirs();
         if (config.isGeneratePDF()) {
-            PDFWriter.updatePDF(inputPDF, config.getPassword(), config.getOutputFolder(), contents);
+            PDFWriter pdfWriter = new PDFWriter();
+            pdfWriter.updatePDF(inputPDF, config.getPassword(), config.getOutputFolder(), contents);
         }
         if (config.isGenerateJSON()) {
             JsonWriter.writeToJson(inputPDF, config.getOutputFolder(), contents);
