@@ -174,7 +174,7 @@ public class DocumentProcessor {
             DocumentProcessor.timeHelper.start();
             List<List<TableBorder>> filterTatrAndJavaTables = new ArrayList<>();
             List<List<TableBorder>> tatrTables = TableTransformerProcessor.callTATR(file.getAbsolutePath(), config, contents, pageNumbers);
-            AbstractTableProcessor.addTablesToTableCollection(tatrTables);
+            AbstractTableProcessor.addTablesToTableCollection(tatrTables, pageNumbers);
             DocumentProcessor.timeHelper.endJavaAndPython();
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 filterTatrAndJavaTables.add(TableBorderProcessor.processTableBorders(contents.get(pageNumber)));
@@ -189,7 +189,7 @@ public class DocumentProcessor {
             DocumentProcessor.timeHelper.start();
             List<List<TableBorder>> tatrAndJavaTables = new ArrayList<>();
             List<List<TableBorder>> filterTatrTables = TableTransformerProcessor.callTATR(file.getAbsolutePath(), config, contents, otherPageNumbers);
-            AbstractTableProcessor.addTablesToTableCollection(filterTatrTables);
+            AbstractTableProcessor.addTablesToTableCollection(filterTatrTables, pageNumbers);
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 tatrAndJavaTables.add(TableBorderProcessor.processTableBorders(contents.get(pageNumber)));
             }
