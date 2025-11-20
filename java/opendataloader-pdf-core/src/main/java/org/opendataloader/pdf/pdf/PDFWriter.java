@@ -45,13 +45,13 @@ import java.util.logging.Logger;
 
 public class PDFWriter {
 
-    private static final Map<PDFLayer, PDOptionalContentGroup> optionalContents = new HashMap<>();
-
-    private static final List<List<PDAnnotation>> annotations = new ArrayList<>();
     private static final Logger LOGGER = Logger.getLogger(PDFWriter.class.getCanonicalName());
-    private static final List<BoundingBox> pageBoundingBoxes = new ArrayList<>();
 
-    public static void updatePDF(File inputPDF, String password, String outputFolder, List<List<IObject>> contents) throws IOException {
+    private final Map<PDFLayer, PDOptionalContentGroup> optionalContents = new HashMap<>();
+    private final List<List<PDAnnotation>> annotations = new ArrayList<>();
+    private final List<BoundingBox> pageBoundingBoxes = new ArrayList<>();
+
+    public void updatePDF(File inputPDF, String password, String outputFolder, List<List<IObject>> contents) throws IOException {
         try (PDDocument document = Loader.loadPDF(inputPDF, password)) {
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 annotations.add(new ArrayList<>());
@@ -74,14 +74,16 @@ public class PDFWriter {
                     inputPDF.getName().substring(0, inputPDF.getName().length() - 4) + "_annotated.pdf";
             document.save(outputFileName);
             LOGGER.log(Level.INFO, "Created {0}", outputFileName);
+        } catch (Exception ex) {
+            LOGGER.log(Level.WARNING, "Unable to create annotated PDF output: " + ex.getMessage());
         }
     }
 
-    private static void drawContent(IObject content, PDFLayer layer) throws IOException {
+    private void drawContent(IObject content, PDFLayer layer) throws IOException {
         drawContent(content, layer, null);
     }
 
-    private static void drawContent(IObject content, PDFLayer layer, PDAnnotation linkedAnnot) throws IOException {
+    private void drawContent(IObject content, PDFLayer layer, PDAnnotation linkedAnnot) throws IOException {
         if ((content instanceof LineChunk)) {
             return;
         }
@@ -98,7 +100,7 @@ public class PDFWriter {
         }
     }
 
-    private static void drawTableCells(TableBorder table, PDAnnotation annot) throws IOException {
+    private void drawTableCells(TableBorder table, PDAnnotation annot) throws IOException {
         if (table.isTextBlock()) {
             for (IObject content : table.getCell(0, 0).getContents()) {
                 drawContent(content, PDFLayer.TEXT_BLOCK_CONTENT);
@@ -127,7 +129,7 @@ public class PDFWriter {
         }
     }
 
-    private static void drawListItems(PDFList list, PDAnnotation annot) throws IOException {
+    private void drawListItems(PDFList list, PDAnnotation annot) throws IOException {
         for (ListItem listItem : list.getListItems()) {
             String contentValue = String.format("List item: text content \"%s\"", listItem.toString());
             draw(listItem.getBoundingBox(), getColor(SemanticType.LIST), contentValue, null, annot, listItem.getLevel(), PDFLayer.LIST_ITEMS);
@@ -137,7 +139,7 @@ public class PDFWriter {
         }
     }
 
-    public static PDAnnotation draw(BoundingBox boundingBox, float[] colorArray,
+    public PDAnnotation draw(BoundingBox boundingBox, float[] colorArray,
                                     String contents, Long id, PDAnnotation linkedAnnot, String level, PDFLayer layerName) {
         if (!Objects.equals(boundingBox.getPageNumber(), boundingBox.getLastPageNumber())) {
             if (boundingBox instanceof MultiBoundingBox) {
@@ -273,7 +275,7 @@ public class PDFWriter {
         return null;
     }
 
-    private static void createOptContentsForAnnotations(PDDocument document) {
+    private void createOptContentsForAnnotations(PDDocument document) {
         if (optionalContents.isEmpty()) {
             return;
         }
@@ -291,7 +293,7 @@ public class PDFWriter {
         optionalContents.clear();
     }
 
-    public static PDOptionalContentGroup getOptionalContent(PDFLayer layer) {
+    public PDOptionalContentGroup getOptionalContent(PDFLayer layer) {
         PDOptionalContentGroup group = optionalContents.get(layer);
         if (group == null) {
             COSDictionary cosDictionary = new COSDictionary();
