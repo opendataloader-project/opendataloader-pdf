@@ -45,10 +45,10 @@ import java.util.logging.Logger;
 
 public class PDFWriter {
 
-    private final Map<PDFLayer, PDOptionalContentGroup> optionalContents = new HashMap<>();
-
-    private final List<List<PDAnnotation>> annotations = new ArrayList<>();
     private static final Logger LOGGER = Logger.getLogger(PDFWriter.class.getCanonicalName());
+
+    private final Map<PDFLayer, PDOptionalContentGroup> optionalContents = new HashMap<>();
+    private final List<List<PDAnnotation>> annotations = new ArrayList<>();
     private final List<BoundingBox> pageBoundingBoxes = new ArrayList<>();
 
     public void updatePDF(File inputPDF, String password, String outputFolder, List<List<IObject>> contents) throws IOException {
@@ -75,7 +75,7 @@ public class PDFWriter {
             document.save(outputFileName);
             LOGGER.log(Level.INFO, "Created {0}", outputFileName);
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, "Error during updating PDF");
+            LOGGER.log(Level.WARNING, "Unable to create annotated PDF output: " + ex.getMessage());
         }
     }
 

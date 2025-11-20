@@ -51,8 +51,10 @@ public class JsonWriter {
 
             jsonGenerator.writeEndArray();
             jsonGenerator.writeEndObject();
+            LOGGER.log(Level.INFO, "Created {0}", jsonFileName);
+        } catch (Exception ex) {
+            LOGGER.log(Level.WARNING, "Unable to create JSON output: " + ex.getMessage());
         }
-        LOGGER.log(Level.INFO, "Created {0}", jsonFileName);
     }
 
     private static void writeDocumentInfo(JsonGenerator generator, String pdfName) throws IOException {
