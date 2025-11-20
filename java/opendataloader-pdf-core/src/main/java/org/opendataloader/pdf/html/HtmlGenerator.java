@@ -78,7 +78,7 @@ public class HtmlGenerator implements Closeable {
 
             htmlWriter.write("\n</body>\n</html>");
             LOGGER.log(Level.INFO, "Created {0}", htmlFilePath);
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Unable to create html output: " + e.getMessage());
         }
     }
