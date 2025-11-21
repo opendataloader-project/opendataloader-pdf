@@ -4,7 +4,7 @@ import sys
 import importlib.resources as resources
 import locale
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Union
 
 # The consistent name of the JAR file bundled with the package
 _JAR_NAME = "opendataloader-pdf-cli.jar"
@@ -86,9 +86,9 @@ def convert(
     input_path: List[str],
     output_dir: Optional[str] = None,
     password: Optional[str] = None,
-    format: Optional[str] = None,
+    format: Optional[Union[str, List[str]]] = None,
     quiet: bool = False,
-    content_safety_off: Optional[str] = None,
+    content_safety_off: Optional[Union[str, List[str]]] = None,
     keep_line_breaks: bool = False,
     replace_invalid_chars: Optional[str] = None,
     use_struct_tree: bool = False,
@@ -100,9 +100,9 @@ def convert(
         input_path: One or more input PDF file paths or directories
         output_dir: Directory where outputs are written
         password: Password for encrypted PDFs
-        format: List of output formats (e.g., ["json", "html"])
+        format: Comma-separated output formats to generate (json, text, html, pdf, markdown, markdown-with-html, markdown-with-images)
         quiet: Suppress CLI logging output
-        content_safety_off: List of content safety filters to disable
+        content_safety_off: Disable one or more content safety filters (all, hidden-text, off-page, tiny, hidden-ocg)
         keep_line_breaks: Preserve line breaks in text output
         replace_invalid_chars: Replacement character for invalid/unrecognized characters
         use_struct_tree: Enable processing structure tree (disabled by default)
@@ -114,17 +114,23 @@ def convert(
     if password:
         args.extend(["--password", password])
     if format:
-        args.extend(["--format", format])
+        if isinstance(format, list):
+            args.extend(["--format", ",".join(format)])
+        else:
+            args.extend(["--format", format])
     if quiet:
-        args.append("--quiet")
+        args.extend(["--quiet"])
     if content_safety_off:
-        args.extend(["--content-safety-off", content_safety_off])
+        if isinstance(content_safety_off, list):
+            args.extend(["--content-safety-off", ",".join(content_safety_off)])
+        else:
+            args.extend(["--content-safety-off", content_safety_off])
     if keep_line_breaks:
-        args.append("--keep-line-breaks")
+        args.extend(["--keep-line-breaks"])
     if replace_invalid_chars:
         args.extend(["--replace-invalid-chars", replace_invalid_chars])
     if use_struct_tree:
-        args.extend("--use-struct-tree")
+        args.extend(["--use-struct-tree"])
 
     # Run the command
     run_jar(args, quiet)
@@ -207,7 +213,7 @@ def main(argv=None) -> int:
     parser.add_argument(
         "-f",
         "--format",
-        help="Comma-separated output format(s) to generate.",
+        help="Comma-separated output formats to generate. (json, text, html, pdf, markdown, markdown-with-html, markdown-with-images)",
     )
     parser.add_argument(
         "-q",
@@ -217,7 +223,7 @@ def main(argv=None) -> int:
     )
     parser.add_argument(
         "--content-safety-off",
-        help="Comma-separated content safety filters to disable.",
+        help="Comma-separated content safety filters to disable. (all, hidden-text, off-page, tiny, hidden-ocg)",
     )
     parser.add_argument(
         "--keep-line-breaks",
