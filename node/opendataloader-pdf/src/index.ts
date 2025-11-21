@@ -148,9 +148,9 @@ export function run(inputPath: string, options: RunOptions = {}): Promise<string
 export interface ConvertOptions {
   outputDir?: string;
   password?: string;
-  format?: string;
+  format?: string | string[];
   quiet?: boolean;
-  contentSafetyOff?: string;
+  contentSafetyOff?: string | string[];
   keepLineBreaks?: boolean;
   replaceInvalidChars?: string;
   useStructTree?: boolean;
@@ -175,13 +175,21 @@ export function convert(inputPaths: string[], options: ConvertOptions = {}): Pro
     args.push('--password', options.password);
   }
   if (options.format) {
-    args.push('--format', options.format);
+    if (Array.isArray(options.format)) {
+      args.push('--format', options.format.join(','));
+    } else {
+      args.push('--format', options.format);
+    }
   }
   if (options.quiet) {
     args.push('--quiet');
   }
   if (options.contentSafetyOff) {
-    args.push('--content-safety-off', options.contentSafetyOff);
+    if (Array.isArray(options.contentSafetyOff)) {
+      args.push('--content-safety-off', options.contentSafetyOff.join(','));
+    } else {
+      args.push('--content-safety-off', options.contentSafetyOff);
+    }
   }
   if (options.keepLineBreaks) {
     args.push('--keep-line-breaks');

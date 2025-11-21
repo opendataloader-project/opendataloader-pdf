@@ -81,14 +81,14 @@ import opendataloader_pdf
 opendataloader_pdf.convert(
     input_path=["path/to/document.pdf", "path/to/folder"],
     output_dir="path/to/output",
-    format=["json", "html", "pdf", "markdown"]
+    format="json,html,pdf,markdown"
 )
 ```
 
 If you want to run it via CLI, you can use the following command on the terminal:
 
 ```bash
-opendataloader-pdf path/to/document.pdf path/to/folder -o path/to/output -f json html pdf markdown
+opendataloader-pdf path/to/document.pdf path/to/folder -o path/to/output -f json,html,pdf,markdown
 ```
 
 ### Function: convert()
@@ -100,9 +100,9 @@ The main function to process PDFs.
 | `input_path`            | `List[str]`           | ✅ Yes    | —            | One or more PDF file paths or directories to process.                                                                                    |
 | `output_dir`            | `Optional[str]`       | No       | input folder | Directory where outputs are written.                                                                                                     |
 | `password`              | `Optional[str]`       | No       | `None`       | Password used for encrypted PDFs.                                                                                                        |
-| `format`                | `Optional[List[str]]` | No | `None`       | Output formats to generate (e.g. `"json"`, `"html"`, `"pdf"`, `"text"`, `"markdown"`, `"markdown-with-html"`, `"markdown-with-images"`). |
+| `format`                | `Optional[Union[str, List[str]]]` | No | `None`       | Comma-separated output formats to generate. (json, text, html, pdf, markdown, markdown-with-html, markdown-with-images) |
 | `quiet`                 | `bool`                | No       | `False`      | Suppresses CLI logging output when `True`.                                                                                               |
-| `content_safety_off`    | `Optional[List[str]]` | No | `None`       | List of content safety filters to disable (e.g. `"all"`, `"hidden-text"`, `"off-page"`, `"tiny"`, `"hidden-ocg"`).                       |
+| `content_safety_off`    | `Optional[Union[str, List[str]]]` | No | `None`       | Comma-separated content safety filters to disable. (all, hidden-text, off-page, tiny, hidden-ocg)                       |
 | `keep_line_breaks`      | `bool`                | No       | `False`      | Preserves line breaks in text output when `True`.                                                                                        |
 | `replace_invalid_chars` | `Optional[str]`       | No       | `None`       | Replacement character for invalid or unrecognized characters (e.g., �, `\u0000`).                                                        |
 | `use_struct_tree`       | `bool `               | No       | `False`      | Enable processing structure tree (disabled by default).                                                                                  |
@@ -138,7 +138,7 @@ async function main() {
   try {
     await convert(['path/to/document.pdf', 'path/to/folder'], {
       outputDir: 'path/to/output',
-      format: ['json', 'html', 'pdf', 'markdown'],
+      format: 'json,html,pdf,markdown',
     });
     console.log('convert() complete');
   } catch (error) {
@@ -159,9 +159,9 @@ Multi-input helper matching the Python wrapper.
 | `inputPaths`                   | `string[]` | —           | One or more file paths or directories to process.                                                                            |
 | `options.outputDir`            | `string`   | `undefined` | Directory where outputs are written.                                                                                         |
 | `options.password`             | `string`   | `undefined` | Password for encrypted PDFs.                                                                                                 |
-| `options.format`               | `string[]` | `undefined` | Output formats (any combination of `json`, `text`, `html`, `pdf`, `markdown`, `markdown-with-html`, `markdown-with-images`). |
+| `options.format`               | `string \| string[]` | `undefined` | Comma-separated output formats to generate. (json, text, html, pdf, markdown, markdown-with-html, markdown-with-images) |
 | `options.quiet`                | `boolean`  | `false`     | Suppress CLI logging output and prevent streaming.                                                                           |
-| `options.contentSafetyOff`     | `string[]` | `undefined` | Disable one or more content safety filters (`all`, `hidden-text`, `off-page`, `tiny`, `hidden-ocg`).                         |
+| `options.contentSafetyOff`     | `string \| string[]` | `undefined` | Comma-separated content safety filters to disable. (all, hidden-text, off-page, tiny, hidden-ocg)                         |
 | `options.keepLineBreaks`       | `boolean`  | `false`     | Preserve line breaks in text output.                                                                                         |
 | `options.replaceInvalidChars`  | `string`   | `undefined` | Replacement character for invalid or unrecognized characters.                                                                |
 | `options.useStructTree`        | `boolean`  | `false`     | Enable processing structure tree (disabled by default).                                                                      |
@@ -173,19 +173,7 @@ Deprecated.
 ### CLI
 
 ```bash
-npx @opendataloader/pdf path/to/document.pdf path/to/folder -o path/to/output -f json html pdf markdown
-```
-
-Or install globally:
-
-```bash
-npm install -g @opendataloader/pdf
-```
-
-Then run:
-
-```bash
-opendataloader-pdf path/to/document.pdf path/to/folder -o path/to/output -f json html pdf markdown
+npx @opendataloader/pdf path/to/document.pdf path/to/folder -o path/to/output -f json,html,pdf,markdown
 ```
 
 #### Available options
@@ -193,9 +181,9 @@ opendataloader-pdf path/to/document.pdf path/to/folder -o path/to/output -f json
 ```
   -o, --output-dir <path>             Directory where outputs are written
   -p, --password <password>           Password for encrypted PDFs
-  -f, --format <values>               Comma-separated output formats to generate (json, text, html, pdf, markdown, markdown-with-html, markdown-with-images)
+  -f, --format <values>               Comma-separated output formats to generate. (json, text, html, pdf, markdown, markdown-with-html, markdown-with-images)
   -q, --quiet                         Suppress CLI logging output
-      --content-safety-off <modes>    Disable one or more content safety filters (all, hidden-text, off-page, tiny, hidden-ocg)
+      --content-safety-off <modes>    Comma-separated content safety filters to disable. (all, hidden-text, off-page, tiny, hidden-ocg)
       --keep-line-breaks              Preserve line breaks in text output
       --replace-invalid-chars <c>     Replacement character for invalid or unrecognized characters
   -h, --help                          Show usage information
@@ -222,7 +210,7 @@ Check for the latest version on [Maven Central](https://search.maven.org/artifac
         <dependency>
             <groupId>org.opendataloader</groupId>
             <artifactId>opendataloader-pdf-core</artifactId>
-            <version>1.1.2</version>
+            <version>1.3.0</version>
         </dependency>
     </dependencies>
 
@@ -297,7 +285,7 @@ curl -L -o 1901.03003.pdf https://arxiv.org/pdf/1901.03003
 Run opendataloader-pdf in Docker container
 
 ```
-docker run --rm -v "$PWD":/work ghcr.io/opendataloader-project/opendataloader-pdf-cli:latest /work/1901.03003.pdf --markdown --html --pdf
+docker run --rm -v "$PWD":/work ghcr.io/opendataloader-project/opendataloader-pdf-cli:latest /work/1901.03003.pdf -f json,html,pdf,markdown
 ```
 
 <br/>
@@ -343,9 +331,9 @@ The images are extracted from PDF as individual files and stored in a subfolder 
 Options:
 -o,--output-dir <arg>           Specifies the output directory for generated files
 -p,--password <arg>             Specifies the password for an encrypted PDF
--f,--format <arg>               Comma-separated list of output formats to generate (json, text, html, pdf, markdown, markdown-with-html, markdown-with-images). Default: json
+-f,--format <arg>               Comma-separated output formats to generate. (json, text, html, pdf, markdown, markdown-with-html, markdown-with-images)
 -q,--quiet                      Suppresses console logging output
---content-safety-off <arg>      Disables one or more content safety filters. Accepts a comma-separated list of filter names. Arguments: all, hidden-text, off-page, tiny, hidden-ocg
+--content-safety-off <arg>      Comma-separated content safety filters to disable. (all, hidden-text, off-page, tiny, hidden-ocg)
 --keep-line-breaks              Preserves original line breaks in the extracted text
 --replace-invalid-chars <arg>   Replaces invalid or unrecognized characters (e.g., �, \u0000) with the specified character
 --use-struct-tree               Enables processing structure tree (disabled by default)
