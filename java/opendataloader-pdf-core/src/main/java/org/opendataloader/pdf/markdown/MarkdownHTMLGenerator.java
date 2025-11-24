@@ -40,7 +40,7 @@ public class MarkdownHTMLGenerator extends MarkdownGenerator {
                     writeCellTagBegin(cell, isHeader);
 
                     List<IObject> cellContents = cell.getContents();
-                    writeContents(cellContents);
+                    writeContents(cellContents, true);
 
                     writeCellTagEnd(isHeader);
                     markdownWriter.write(MarkdownSyntax.LINE_BREAK);
