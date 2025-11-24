@@ -126,6 +126,9 @@ public class DocumentProcessor {
             document.parseStructureTreeRoot();
             if (document.getTree() != null) {
                 StaticLayoutContainers.setIsUseStructTree(true);
+            } else {
+                StaticLayoutContainers.setIsUseStructTree(false);
+                LOGGER.log(Level.WARNING, "The document has no structure tree. The 'use-struct-tree' option will be ignored.");
             }
         }
         StaticContainers.setIsDataLoader(true);
