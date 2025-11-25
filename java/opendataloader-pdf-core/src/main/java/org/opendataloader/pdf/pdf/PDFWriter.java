@@ -83,24 +83,24 @@ public class PDFWriter {
         drawContent(content, layer, null);
     }
 
-    private void drawContent(IObject content, PDFLayer layer, PDAnnotation linkedAnnot) throws IOException {
+    private void drawContent(IObject content, PDFLayer layer, Map<Integer, PDAnnotation> linkedAnnots) throws IOException {
         if ((content instanceof LineChunk)) {
             return;
         }
-        PDAnnotation annot = draw(content.getBoundingBox(), getColor(content), getContents(content),
-                content.getRecognizedStructureId(), linkedAnnot, content.getLevel(), layer);
+        Map<Integer, PDAnnotation> annots = draw(content.getBoundingBox(), getColor(content), getContents(content),
+                content.getRecognizedStructureId(), linkedAnnots, content.getLevel(), layer);
         if (content instanceof TableBorder) {
-            drawTableCells((TableBorder) content, annot);
+            drawTableCells((TableBorder) content, annots);
         } else if (content instanceof PDFList) {
-            drawListItems((PDFList) content, annot);
+            drawListItems((PDFList) content, annots);
         } else if (content instanceof SemanticHeaderOrFooter) {
             for (IObject contentItem : ((SemanticHeaderOrFooter) content).getContents()) {
-                drawContent(contentItem, PDFLayer.HEADER_AND_FOOTER_CONTENT, annot);
+                drawContent(contentItem, PDFLayer.HEADER_AND_FOOTER_CONTENT, annots);
             }
         }
     }
 
-    private void drawTableCells(TableBorder table, PDAnnotation annot) throws IOException {
+    private void drawTableCells(TableBorder table, Map<Integer, PDAnnotation> annots) throws IOException {
         if (table.isTextBlock()) {
             for (IObject content : table.getCell(0, 0).getContents()) {
                 drawContent(content, PDFLayer.TEXT_BLOCK_CONTENT);
@@ -120,7 +120,7 @@ public class PDFWriter {
                     }
                     String cellValue = String.format("Table cell: row number %s, column number %s, row span %s, column span %s, text content \"%s\"",
                             cell.getRowNumber() + 1, cell.getColNumber() + 1, cell.getRowSpan(), cell.getColSpan(), contentValue);
-                    draw(cell.getBoundingBox(), getColor(SemanticType.TABLE), cellValue, null, annot, cell.getLevel(), PDFLayer.TABLE_CELLS);
+                    draw(cell.getBoundingBox(), getColor(SemanticType.TABLE), cellValue, null, annots, cell.getLevel(), PDFLayer.TABLE_CELLS);
                     for (IObject content : cell.getContents()) {
                         drawContent(content, PDFLayer.TABLE_CONTENT);
                     }
@@ -129,28 +129,28 @@ public class PDFWriter {
         }
     }
 
-    private void drawListItems(PDFList list, PDAnnotation annot) throws IOException {
+    private void drawListItems(PDFList list, Map<Integer, PDAnnotation> annots) throws IOException {
         for (ListItem listItem : list.getListItems()) {
             String contentValue = String.format("List item: text content \"%s\"", listItem.toString());
-            draw(listItem.getBoundingBox(), getColor(SemanticType.LIST), contentValue, null, annot, listItem.getLevel(), PDFLayer.LIST_ITEMS);
+            draw(listItem.getBoundingBox(), getColor(SemanticType.LIST), contentValue, null, annots, listItem.getLevel(), PDFLayer.LIST_ITEMS);
             for (IObject content : listItem.getContents()) {
                 drawContent(content, PDFLayer.LIST_CONTENT);
             }
         }
     }
 
-    public PDAnnotation draw(BoundingBox boundingBox, float[] colorArray,
-                                    String contents, Long id, PDAnnotation linkedAnnot, String level, PDFLayer layerName) {
+    public Map<Integer, PDAnnotation> draw(BoundingBox boundingBox, float[] colorArray, String contents, Long id,
+                                           Map<Integer, PDAnnotation> linkedAnnots, String level, PDFLayer layerName) {
+        Map<Integer, PDAnnotation> result = new HashMap<>();
         if (!Objects.equals(boundingBox.getPageNumber(), boundingBox.getLastPageNumber())) {
             if (boundingBox instanceof MultiBoundingBox) {
-                PDAnnotation square = null;
                 for (int pageNumber = boundingBox.getPageNumber(); pageNumber <= boundingBox.getLastPageNumber(); pageNumber++) {
                     BoundingBox boundingBoxForPage = boundingBox.getBoundingBox(pageNumber);
                     if (boundingBoxForPage != null) {
-                        square = draw(boundingBoxForPage, colorArray, contents, id, linkedAnnot, level, layerName);
+                        result.putAll(draw(boundingBoxForPage, colorArray, contents, id, linkedAnnots, level, layerName));
                     }
                 }
-                return square;
+                return result;
             } else {
                 LOGGER.log(Level.WARNING, "Bounding box on several pages cannot be split");
             }
@@ -169,12 +169,13 @@ public class PDFWriter {
         square.setColor(color);
         square.setInteriorColor(color);
         square.setContents((id != null ? "id = " + id + ", " : "") + (level != null ? "level = " + level + ", " : "") + contents);
-        if (linkedAnnot != null) {
-            square.setInReplyTo(linkedAnnot);
+        if (linkedAnnots != null) {
+            square.setInReplyTo(linkedAnnots.get(boundingBox.getPageNumber()));
         }
         square.setOptionalContent(getOptionalContent(layerName));
         annotations.get(boundingBox.getPageNumber()).add(square);
-        return square;
+        result.put(boundingBox.getPageNumber(), square);
+        return result;
     }
 
     private static float getFloat(double value) {
