@@ -31,7 +31,6 @@ import org.verapdf.tools.StaticResources;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.LineChunk;
-import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.tables.TableBordersCollection;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.LinesPreprocessingConsumer;
@@ -61,11 +60,6 @@ public class DocumentProcessor {
         for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
             List<IObject> pageContents = ContentFilterProcessor.getFilteredContents(inputPdfName,
                 StaticContainers.getDocument().getArtifacts(pageNumber), pageNumber, config);
-            for (IObject object : pageContents) {
-                if (object instanceof TextChunk) {
-                    ((TextChunk) object).compressSpaces();
-                }
-            }
             pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber);
             pageContents = pageContents.stream().filter(x -> !(x instanceof LineChunk)).collect(Collectors.toList());
             pageContents = TextLineProcessor.processTextLines(pageContents);
