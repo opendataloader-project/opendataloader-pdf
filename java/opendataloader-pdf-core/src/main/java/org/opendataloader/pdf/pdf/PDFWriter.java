@@ -145,7 +145,10 @@ public class PDFWriter {
             if (boundingBox instanceof MultiBoundingBox) {
                 PDAnnotation square = null;
                 for (int pageNumber = boundingBox.getPageNumber(); pageNumber <= boundingBox.getLastPageNumber(); pageNumber++) {
-                    square = draw(boundingBox.getBoundingBox(pageNumber), colorArray, contents, id, linkedAnnot, level, layerName);
+                    BoundingBox boundingBoxForPage = boundingBox.getBoundingBox(pageNumber);
+                    if (boundingBoxForPage != null) {
+                        square = draw(boundingBoxForPage, colorArray, contents, id, linkedAnnot, level, layerName);
+                    }
                 }
                 return square;
             } else {

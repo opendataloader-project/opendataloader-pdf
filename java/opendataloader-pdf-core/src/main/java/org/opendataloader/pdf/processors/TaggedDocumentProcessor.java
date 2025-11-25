@@ -158,21 +158,31 @@ public class TaggedDocumentProcessor {
         for (INode child : node.getChildren()) {
             if (child.getInitialSemanticType() == SemanticType.LIST) {
                 processList(child);
-            } else {
-                ListItem listItem = new ListItem(new MultiBoundingBox(), null);
-                List<IObject> contents = getContents(child);
-                contents = TextLineProcessor.processTextLines(contents);
-                for (IObject line : contents) {
-                    if (line instanceof TextLine) {
-                        listItem.add((TextLine)line);
-                    }
-                }
+            } else if (child.getInitialSemanticType() == SemanticType.LIST_ITEM) {
+                ListItem listItem = processListItem(child);
                 if (listItem.getPageNumber() != null) {
                     list.add(listItem);
                 }
+            } else {
+                processStructElem(child);
             }
         }
         addObjectToContent(list);
+    }
+
+    private static ListItem processListItem(INode node) {
+        ListItem listItem = new ListItem(new MultiBoundingBox(), null);
+        List<IObject> contents = new ArrayList<>();
+        processChildContents(node, contents);
+        contents = TextLineProcessor.processTextLines(contents);
+        for (IObject content : contents) {
+            if (content instanceof TextLine) {
+                listItem.add((TextLine)content);
+            } else {
+                listItem.getContents().add(content);
+            }
+        }
+        return listItem;
     }
 
     private static void processTable(INode tableNode) {
