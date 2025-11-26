@@ -1,4 +1,4 @@
-name: Test & Coverage (JaCoCo -> Codecov)
+name: Test & Coverage (Java/Node/Python -> Codecov)
 
 on:
   pull_request:
@@ -29,4 +29,58 @@ jobs:
         with:
           files: java/opendataloader-pdf-core/target/site/jacoco/jacoco.xml
           fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  node-coverage:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+        working-directory: ./node/opendataloader-pdf
+      - name: Run tests with coverage
+        run: pnpm exec vitest run --coverage.enabled --coverage.reporter=lcov --coverage.include=src/**
+        working-directory: ./node/opendataloader-pdf
+      - name: Upload Node coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: node/opendataloader-pdf/coverage/lcov.info
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  python-coverage:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install coverage
+        run: pip install coverage
+        working-directory: ./python/opendataloader-pdf
+      - name: Run tests with coverage
+        run: |
+          python -m coverage run -m unittest discover -s tests -p "test_*.py"
+          python -m coverage xml -o coverage.xml
+        working-directory: ./python/opendataloader-pdf
+      - name: Upload Python coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: python/opendataloader-pdf/coverage.xml
+          fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}

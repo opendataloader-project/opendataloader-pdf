@@ -50,7 +50,7 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <verapdf.version>[1.29.0,1.30.0-RC)</verapdf.version>
+        <verapdf.version>1.29.0</verapdf.version>
         <junit.jupiter.version>5.14.0</junit.jupiter.version>
         <assertj.version>3.27.6</assertj.version>
         <commons.cli.version>1.10.0</commons.cli.version>
