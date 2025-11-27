@@ -21,8 +21,8 @@ jobs:
           distribution: temurin
           java-version: '11'
 
-      - name: Build & Test (with JaCoCo)
-        run: mvn -B -U -DskipITs=true test -f java/opendataloader-pdf-core/pom.xml
+      - name: Build, Verify & Test (with JaCoCo)
+        run: mvn -B -U -DskipITs=true verify -f java/opendataloader-pdf-core/pom.xml
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
@@ -32,7 +32,12 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   node-coverage:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: [20, 22]
     permissions:
       contents: read
     steps:
@@ -41,13 +46,20 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ matrix.node }}
+          cache: pnpm
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 9
       - name: Install deps
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
+        working-directory: ./node/opendataloader-pdf
+      - name: Lint (ESLint)
+        run: pnpm run lint
+        working-directory: ./node/opendataloader-pdf
+      - name: Typecheck (tsc)
+        run: pnpm exec tsc -p tsconfig.json --noEmit
         working-directory: ./node/opendataloader-pdf
       - name: Run tests with coverage
         run: pnpm exec vitest run --coverage.enabled --coverage.reporter=lcov --coverage.include=src/**
@@ -60,7 +72,12 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   python-coverage:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ['3.11', '3.12']
     permissions:
       contents: read
     steps:
@@ -69,7 +86,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: ${{ matrix.python }}
       - name: Install coverage
         run: pip install coverage
         working-directory: ./python/opendataloader-pdf
