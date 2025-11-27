@@ -4,6 +4,7 @@ import org.opendataloader.pdf.api.Config;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.content.IChunk;
 import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
+import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 
 import java.io.IOException;
@@ -34,6 +35,7 @@ public class ContentFilterProcessor {
             pageContents = DocumentProcessor.removeNullObjectsFromList(pageContents);
         }
         TextProcessor.trimTextChunksWhiteSpaces(pageContents);
+        filterConsecutiveSpaces(pageContents);
         pageContents = HiddenTextProcessor.findHiddenText(inputPdfName, pageContents,
             config.getFilterConfig().isFilterHiddenText(), config.getPassword());
         TextProcessor.replaceUndefinedCharacters(pageContents, config.getReplaceInvalidChars());
@@ -57,6 +59,14 @@ public class ContentFilterProcessor {
         if (!backgrounds.isEmpty()) {
             LOGGER.log(Level.WARNING, "Detected background on page " + pageNumber);
             contents.removeAll(backgrounds);
+        }
+    }
+
+    private static void filterConsecutiveSpaces(List<IObject> pageContents) {
+        for (IObject object : pageContents) {
+            if (object instanceof TextChunk) {
+                ((TextChunk) object).compressSpaces();
+            }
         }
     }
 
