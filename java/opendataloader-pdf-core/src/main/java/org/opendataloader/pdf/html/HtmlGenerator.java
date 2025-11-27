@@ -153,7 +153,7 @@ public class HtmlGenerator implements Closeable {
             htmlWriter.write(HtmlSyntax.HTML_LIST_ITEM_TAG);
 
             htmlWriter.write(HtmlSyntax.HTML_PARAGRAPH_TAG);
-            htmlWriter.write(getCorrectString(item.toString()));
+            htmlWriter.write(escapeHtmlText(item.toString()));
             htmlWriter.write(HtmlSyntax.HTML_PARAGRAPH_CLOSE_TAG);
 
             for (IObject object : item.getContents()) {
@@ -168,7 +168,7 @@ public class HtmlGenerator implements Closeable {
 
     protected void writeSemanticTextNode(SemanticTextNode textNode) throws IOException {
         htmlWriter.write(HtmlSyntax.HTML_FIGURE_CAPTION_TAG);
-        htmlWriter.write(getCorrectString(textNode.getValue()));
+        htmlWriter.write(escapeHtmlText(textNode.getValue()));
         htmlWriter.write(HtmlSyntax.HTML_FIGURE_CAPTION_CLOSE_TAG);
         htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
     }
@@ -219,11 +219,11 @@ public class HtmlGenerator implements Closeable {
             htmlWriter.write(HtmlSyntax.HTML_INDENT);
         }
 
+        String safe = escapeHtmlText(paragraphValue);
         if (isInsideTable() && StaticContainers.isKeepLineBreaks()) {
-            paragraphValue = paragraphValue.replace(HtmlSyntax.HTML_LINE_BREAK, HtmlSyntax.HTML_LINE_BREAK_TAG);
+            safe = safe.replace(HtmlSyntax.HTML_LINE_BREAK, HtmlSyntax.HTML_LINE_BREAK_TAG);
         }
-
-        htmlWriter.write(getCorrectString(paragraphValue));
+        htmlWriter.write(safe);
         htmlWriter.write(HtmlSyntax.HTML_PARAGRAPH_CLOSE_TAG);
         htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
     }
@@ -231,7 +231,7 @@ public class HtmlGenerator implements Closeable {
     protected void writeHeading(SemanticHeading heading) throws IOException {
         int headingLevel = Math.min(6, Math.max(1, heading.getHeadingLevel()));
         htmlWriter.write("<h" + headingLevel + ">");
-        htmlWriter.write(getCorrectString(heading.getValue()));
+        htmlWriter.write(escapeHtmlText(heading.getValue()));
         htmlWriter.write("</h" + headingLevel + ">");
         htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
     }
@@ -249,7 +249,7 @@ public class HtmlGenerator implements Closeable {
             cellTag.append(" rowspan=\"").append(rowSpan).append("\"");
         }
         cellTag.append(">");
-        htmlWriter.write(getCorrectString(cellTag.toString()));
+        htmlWriter.write(cellTag.toString());
     }
 
     protected void enterTable() {
@@ -271,6 +271,27 @@ public class HtmlGenerator implements Closeable {
             return value.replace("\u0000", "");
         }
         return null;
+    }
+
+    private static String escapeHtmlText(String value) {
+        if (value == null) {
+            return null;
+        }
+        String s = value.replace("\u0000", "");
+        StringBuilder sb = new StringBuilder(s.length());
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            switch (c) {
+                case '&': sb.append("&amp;"); break;
+                case '<': sb.append("&lt;"); break;
+                case '>': sb.append("&gt;"); break;
+                case '"': sb.append("&quot;"); break;
+                case '\'': sb.append("&#x27;"); break;
+                case '/': sb.append("&#x2F;"); break;
+                default: sb.append(c);
+            }
+        }
+        return sb.toString();
     }
 
     @Override

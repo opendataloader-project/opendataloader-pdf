@@ -29,6 +29,11 @@ jobs:
             echo "VERSION=0.0.0" >> $GITHUB_ENV
           fi
 
+      - name: Write VERSION file and sync versions
+        run: |
+          echo "${{ env.VERSION }}" > VERSION
+          python build-scripts/set_version.py
+
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
@@ -62,19 +67,17 @@ jobs:
       # =================================================================
       - name: '[Java] Build and test'
         run: |
-          mvn versions:set -DnewVersion=${{ env.VERSION }} -DgenerateBackupPoms=false
           mvn -B clean package -P release
         working-directory: ./java
 
       - name: '[Python] Build and test'
         run: |
-          sed -i "s/version=\"0.0.0\"/version=\"${{ env.VERSION }}\"/" setup.py
           chmod +x build.sh && ./build.sh
         working-directory: ./python/opendataloader-pdf
 
       - name: '[Node.js] Build and test'
         run: |
-          pnpm install --frozen-lockfile
+          pnpm install --no-frozen-lockfile
           pnpm version ${{ env.VERSION }} --no-git-tag-version --allow-same-version
           pnpm run build
           pnpm test
