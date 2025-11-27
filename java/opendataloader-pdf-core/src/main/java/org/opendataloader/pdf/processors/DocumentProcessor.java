@@ -48,11 +48,25 @@ public class DocumentProcessor {
     private static final Logger LOGGER = Logger.getLogger(DocumentProcessor.class.getCanonicalName());
     public static void processFile(String inputPdfName, Config config) throws IOException {
         preprocessing(inputPdfName, config);
-        calculateDocumentInfo();
-        List<List<IObject>> contents = StaticLayoutContainers.isUseStructTree() ?
-            TaggedDocumentProcessor.processDocument(inputPdfName, config) :
-            processDocument(inputPdfName, config);
-        generateOutputs(inputPdfName, contents, config);
+        try {
+            calculateDocumentInfo();
+            List<List<IObject>> contents = StaticLayoutContainers.isUseStructTree() ?
+                TaggedDocumentProcessor.processDocument(inputPdfName, config) :
+                processDocument(inputPdfName, config);
+            generateOutputs(inputPdfName, contents, config);
+        } finally {
+            PDDocument doc = StaticResources.getDocument();
+            if (doc != null) {
+                doc.close();
+            }
+            StaticResources.clear();
+            StaticContainers.updateContainers(null);
+            StaticLayoutContainers.closeContrastRatioConsumer();
+            StaticLayoutContainers.clearContainers();
+            org.verapdf.gf.model.impl.containers.StaticContainers.clearAllContainers();
+            StaticCoreContainers.clearAllContainers();
+            StaticXmpCoreContainers.clearAllContainers();
+        }
     }
 
     private static List<List<IObject>> processDocument(String inputPdfName, Config config) throws IOException {
