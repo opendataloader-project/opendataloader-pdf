@@ -109,7 +109,7 @@ public class TableBorderProcessor {
         newContents = contentsList.get(0);
         newContents = ParagraphProcessor.processParagraphs(newContents);
         newContents = ListProcessor.processListsFromTextNodes(newContents);
-        HeadingProcessor.processHeadings(newContents);
+        HeadingProcessor.processHeadings(newContents, true);
         DocumentProcessor.setIDs(newContents);
         CaptionProcessor.processCaptions(newContents);
         contentsList.set(0, newContents);

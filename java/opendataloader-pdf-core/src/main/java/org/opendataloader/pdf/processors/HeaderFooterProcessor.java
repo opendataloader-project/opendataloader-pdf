@@ -123,7 +123,7 @@ public class HeaderFooterProcessor {
     private static List<IObject> processHeaderOrFooterContent(List<IObject> contents) {
         List<IObject> newContents = ParagraphProcessor.processParagraphs(contents);
         newContents = ListProcessor.processListsFromTextNodes(newContents);
-        HeadingProcessor.processHeadings(newContents);
+        HeadingProcessor.processHeadings(newContents, false);
         DocumentProcessor.setIDs(newContents);
         CaptionProcessor.processCaptions(newContents);
         return newContents;

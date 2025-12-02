@@ -26,7 +26,7 @@ public class HeadingProcessor {
     private static final double HEADING_PROBABILITY = 0.75;
     private static final double BULLETED_HEADING_PROBABILITY = 0.1;
 
-    public static void processHeadings(List<IObject> contents) {
+    public static void processHeadings(List<IObject> contents, boolean isTableCell) {
         TextNodeStatistics textNodeStatistics = new TextNodeStatistics();
         List<SemanticTextNode> textNodes = new LinkedList<>();
         for (IObject content : contents) {
@@ -34,6 +34,9 @@ public class HeadingProcessor {
         }
 
         int textNodesCount = textNodes.size();
+        if (isTableCell && textNodesCount < 2) {
+            return;
+        }
         for (int index = 0; index < textNodesCount; index++) {
             SemanticTextNode textNode = textNodes.get(index);
             if (textNode.getSemanticType() == SemanticType.HEADING) {

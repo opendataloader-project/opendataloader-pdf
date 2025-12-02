@@ -72,7 +72,7 @@ public class DocumentProcessor {
             List<IObject> pageContents = contents.get(pageNumber);
             pageContents = ParagraphProcessor.processParagraphs(pageContents);
             pageContents = ListProcessor.processListsFromTextNodes(pageContents);
-            HeadingProcessor.processHeadings(pageContents);
+            HeadingProcessor.processHeadings(pageContents, false);
             setIDs(pageContents);
             CaptionProcessor.processCaptions(pageContents);
             contents.set(pageNumber, pageContents);
