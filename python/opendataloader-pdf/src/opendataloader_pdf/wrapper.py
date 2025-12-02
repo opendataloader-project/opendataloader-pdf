@@ -83,7 +83,7 @@ def run(
 
 
 def convert(
-    input_path: List[str],
+    input_path: Union[str, List[str]],
     output_dir: Optional[str] = None,
     password: Optional[str] = None,
     format: Optional[Union[str, List[str]]] = None,
@@ -108,7 +108,12 @@ def convert(
         use_struct_tree: Enable processing structure tree (disabled by default)
     """
     args: List[str] = []
-    args.extend(input_path)
+
+    if isinstance(input_path, list):
+        args.extend(input_path)
+    else:
+        args.append(input_path)
+
     if output_dir:
         args.extend(["--output-dir", output_dir])
     if password:

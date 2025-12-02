@@ -156,18 +156,19 @@ export interface ConvertOptions {
   useStructTree?: boolean;
 }
 
-export function convert(inputPaths: string[], options: ConvertOptions = {}): Promise<string> {
-  if (inputPaths.length === 0) {
+export function convert(inputPaths: string | string[], options: ConvertOptions = {}): Promise<string> {
+  const inputList = Array.isArray(inputPaths) ? inputPaths : [inputPaths];
+  if (inputList.length === 0) {
     return Promise.reject(new Error('At least one input path must be provided.'));
   }
 
-  for (const input of inputPaths) {
+  for (const input of inputList) {
     if (!fs.existsSync(input)) {
       return Promise.reject(new Error(`Input file or folder not found: ${input}`));
     }
   }
 
-  const args: string[] = [...inputPaths];
+  const args: string[] = [...inputList];
   if (options.outputDir) {
     args.push('--output-dir', options.outputDir);
   }
