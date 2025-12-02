@@ -38,7 +38,7 @@ public class HeadingProcessorTest {
         paragraph2.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 20.0, 20.0, 30.0),
             "Paragraph", "Font1", 10, 700, 0, 20.0, new double[]{0.5},
             null, 0)));
-        HeadingProcessor.processHeadings(contents);
+        HeadingProcessor.processHeadings(contents, false);
         Assertions.assertEquals(2, contents.size());
         Assertions.assertTrue(contents.get(0) instanceof SemanticHeading);
     }
