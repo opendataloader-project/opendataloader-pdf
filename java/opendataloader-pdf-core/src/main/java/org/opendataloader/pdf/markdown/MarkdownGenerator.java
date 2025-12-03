@@ -145,7 +145,7 @@ public class MarkdownGenerator implements Closeable {
                 markdownWriter.write(MarkdownSyntax.LIST_ITEM);
                 markdownWriter.write(MarkdownSyntax.SPACE);
             }
-            markdownWriter.write(getCorrectMarkdownString(item.toString()));
+            markdownWriter.write(escapeMarkdownText(item.toString()));
             writeLineBreak();
 
             List<IObject> itemContents = item.getContents();
@@ -161,8 +161,7 @@ public class MarkdownGenerator implements Closeable {
         if (isInsideTable() && StaticContainers.isKeepLineBreaks()) {
             value = value.replace(MarkdownSyntax.LINE_BREAK, getLineBreak());
         }
-
-        markdownWriter.write(getCorrectMarkdownString(value));
+        markdownWriter.write(escapeMarkdownText(value));
     }
 
     protected void writeTable(TableBorder table) throws IOException {
@@ -249,6 +248,37 @@ public class MarkdownGenerator implements Closeable {
             return value.replace("\u0000", " ");
         }
         return null;
+    }
+
+    private static String escapeMarkdownText(String value) {
+        if (value == null) {
+            return null;
+        }
+        String s = value.replace("\u0000", " ");
+        StringBuilder sb = new StringBuilder(s.length());
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            switch (c) {
+                case '&': sb.append("&amp;"); break;
+                case '<': sb.append("&lt;"); break;
+                case '>': sb.append("&gt;"); break;
+                case '"': sb.append("&quot;"); break;
+                case '\'': sb.append("&#x27;"); break;
+                case '/': sb.append("&#x2F;"); break;
+                case '|': sb.append("\\|"); break;
+                case '*': sb.append("\\*"); break;
+                case '_': sb.append("\\_"); break;
+                case '`': sb.append("\\`"); break;
+                case '#': sb.append("\\#"); break;
+                case '[': sb.append("\\["); break;
+                case ']': sb.append("\\]"); break;
+                case '(': sb.append("\\("); break;
+                case ')': sb.append("\\)"); break;
+                case '!': sb.append("\\!"); break;
+                default: sb.append(c);
+            }
+        }
+        return sb.toString();
     }
 
     @Override

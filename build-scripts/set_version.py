@@ -4,7 +4,7 @@ import os
 import re
 import sys
 
-def set_version(version_file, pom_file, pyproject_toml_file):
+def set_version(version_file, pom_file, setup_py_file):
     with open(version_file, 'r') as f:
         version = f.read().strip()
 
@@ -16,13 +16,13 @@ def set_version(version_file, pom_file, pyproject_toml_file):
         f.write(pom_content)
     print(f"Updated Maven POM version to {version}")
 
-    # Update Python pyproject.toml
-    with open(pyproject_toml_file, 'r') as f:
-        pyproject_content = f.read()
-    pyproject_content = re.sub(r'version = ".*"', f'version = "{version}"', pyproject_content, count=1)
-    with open(pyproject_toml_file, 'w') as f:
-        f.write(pyproject_content)
-    print(f"Updated Python pyproject.toml version to {version}")
+    # Update Python setup.py
+    with open(setup_py_file, 'r') as f:
+        setup_content = f.read()
+    setup_content = re.sub(r'version=\".*\"', f'version=\"{version}\"', setup_content, count=1)
+    with open(setup_py_file, 'w') as f:
+        f.write(setup_content)
+    print(f"Updated Python setup.py version to {version}")
 
 if __name__ == "__main__":
     # Paths are relative to the monorepo root
@@ -30,7 +30,7 @@ if __name__ == "__main__":
     
     version_path = os.path.join(root_dir, 'VERSION')
     java_pom_path = os.path.join(root_dir, 'java', 'pom.xml')
-    python_pyproject_path = os.path.join(root_dir, 'python', 'packages', 'opendataloader_pdf', 'pyproject.toml')
+    python_setup_path = os.path.join(root_dir, 'python', 'opendataloader-pdf', 'setup.py')
 
     if not os.path.exists(version_path):
         print(f"Error: VERSION file not found at {version_path}")
@@ -38,8 +38,8 @@ if __name__ == "__main__":
     if not os.path.exists(java_pom_path):
         print(f"Error: Java pom.xml not found at {java_pom_path}")
         sys.exit(1)
-    if not os.path.exists(python_pyproject_path):
-        print(f"Error: Python pyproject.toml not found at {python_pyproject_path}")
+    if not os.path.exists(python_setup_path):
+        print(f"Error: Python setup.py not found at {python_setup_path}")
         sys.exit(1)
 
-    set_version(version_path, java_pom_path, python_pyproject_path)
+    set_version(version_path, java_pom_path, python_setup_path)
