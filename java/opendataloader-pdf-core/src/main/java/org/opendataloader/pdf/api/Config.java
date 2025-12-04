@@ -24,6 +24,7 @@ public class Config {
     private boolean addImageToMarkdown = false;
     private String replaceInvalidChars = " ";
     private String outputFolder;
+    private String readingOrder;
     private final FilterConfig filterConfig = new FilterConfig();
 
     /**
@@ -251,5 +252,23 @@ public class Config {
 
     public void setUseStructTree(boolean useStructTree) {
         this.useStructTree = useStructTree;
+    }
+
+    /**
+     * Gets the reading order, that states in which order content should be processed.
+     *
+     * @return The specified order.
+     */
+    public String getReadingOrder() {
+        return readingOrder;
+    }
+
+    /**
+     * Sets the reading order, that states in which order content should be processed.
+     *
+     * @param readingOrder The specified order.
+     */
+    public void setReadingOrder(String readingOrder) {
+        this.readingOrder = readingOrder;
     }
 }

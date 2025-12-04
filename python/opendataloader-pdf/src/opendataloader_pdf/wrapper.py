@@ -25,6 +25,7 @@ def run(
     no_json: bool = False,
     debug: bool = False,
     use_struct_tree: bool = False,
+    reading_order: str = None,
 ):
     """
     Runs the opendataloader-pdf with the given arguments.
@@ -43,6 +44,7 @@ def run(
         no_json: If True, disable the JSON output.
         debug: If True, prints all messages from the CLI to the console during execution.
         use_struct_tree: If True, enable processing structure tree (disabled by default)
+        reading_order: Order of content processing.
 
     Raises:
         FileNotFoundError: If the 'java' command is not found or input_path is invalid.
@@ -77,6 +79,8 @@ def run(
         args.append("--no-json")
     if use_struct_tree:
         args.append("--use-struct-tree")
+    if reading_order:
+        args.append("--reading-order", reading_order)
 
     # Run the command
     run_jar(args, quiet=not debug)
@@ -92,6 +96,7 @@ def convert(
     keep_line_breaks: bool = False,
     replace_invalid_chars: Optional[str] = None,
     use_struct_tree: bool = False,
+    reading_order: Optional[str] = None
 ) -> None:
     """
     Convert PDF(s) into the requested output format(s).
@@ -136,6 +141,8 @@ def convert(
         args.extend(["--replace-invalid-chars", replace_invalid_chars])
     if use_struct_tree:
         args.extend(["--use-struct-tree"])
+    if reading_order:
+        args.extend(["--reading-order"], reading_order)
 
     # Run the command
     run_jar(args, quiet)
@@ -243,6 +250,10 @@ def main(argv=None) -> int:
         "--use-struct-tree",
         action="store_true",
         help="Enable processing structure tree (disabled by default)",
+    )
+    parser.add_argument(
+        "--reading-order",
+        help="Specifies reading order of content. Supported values: bbox",
     )
     args = parser.parse_args(argv)
 
