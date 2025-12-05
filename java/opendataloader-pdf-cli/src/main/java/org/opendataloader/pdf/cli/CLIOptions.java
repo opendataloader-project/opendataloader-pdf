@@ -59,6 +59,8 @@ public class CLIOptions {
 
     private static final String USE_STRUCT_TREE_LONG_OPTION = "use-struct-tree";
 
+    private static final String READING_ORDER_LONG_OPTION = "reading-order";
+
     public static Options defineOptions() {
         Options options = new Options();
         Option contentSafetyOff = new Option(null, CONTENT_SAFETY_OFF_LONG_OPTION, true, "Disables one or more content safety filters. Accepts a comma-separated list of filter names. Arguments: all, hidden-text, off-page, tiny, hidden-ocg");
@@ -103,6 +105,9 @@ public class CLIOptions {
         Option useStructTree = new Option(null, USE_STRUCT_TREE_LONG_OPTION, false, "Enable processing structure tree (disabled by default)");
         useStructTree.setRequired(false);
         options.addOption(useStructTree);
+        Option readingOrder = new Option(null, READING_ORDER_LONG_OPTION, true, "Specifies reading order of content. Supported values: bbox.");
+        readingOrder.setRequired(false);
+        options.addOption(readingOrder);
         return options;
     }
 
@@ -137,6 +142,9 @@ public class CLIOptions {
         }
         if (commandLine.hasOption(CLIOptions.USE_STRUCT_TREE_LONG_OPTION)) {
             config.setUseStructTree(true);
+        }
+        if (commandLine.hasOption(CLIOptions.READING_ORDER_LONG_OPTION)) {
+            config.setReadingOrder(commandLine.getOptionValue(CLIOptions.READING_ORDER_LONG_OPTION));
         }
         if (commandLine.hasOption(CLIOptions.FOLDER_OPTION)) {
             config.setOutputFolder(commandLine.getOptionValue(CLIOptions.FOLDER_OPTION));
