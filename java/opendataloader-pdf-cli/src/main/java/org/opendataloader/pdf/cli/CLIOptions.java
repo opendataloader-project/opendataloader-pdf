@@ -13,7 +13,6 @@ import org.apache.commons.cli.Options;
 import org.opendataloader.pdf.api.Config;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Set;
@@ -27,6 +26,7 @@ public class CLIOptions {
     private static final String CONTENT_SAFETY_OFF_TINY_TEXT_ARGUMENT = "tiny";
     private static final String CONTENT_SAFETY_OFF_HIDDEN_OCG_ARGUMENT = "hidden-ocg";
     private static final String CONTENT_SAFETY_OFF_SUPPORTED_LIST = "all, hidden-text, off-page, tiny, hidden-ocg";
+    public static final String CLUSTER_TABLE_METHOD_ARGUMENT = "cluster";
 
     public static final String PASSWORD_OPTION = "p";
     private static final String PASSWORD_LONG_OPTION = "password";
@@ -145,9 +145,6 @@ public class CLIOptions {
         if (commandLine.hasOption(CLIOptions.USE_STRUCT_TREE_LONG_OPTION)) {
             config.setUseStructTree(true);
         }
-        if (commandLine.hasOption(CLIOptions.TABLE_METHOD_OPTION)) {
-            config.setTableMethod(commandLine.getOptionValue(CLIOptions.TABLE_METHOD_OPTION));
-        }
         if (commandLine.hasOption(CLIOptions.FOLDER_OPTION)) {
             config.setOutputFolder(commandLine.getOptionValue(CLIOptions.FOLDER_OPTION));
         } else {
@@ -158,7 +155,34 @@ public class CLIOptions {
         }
         applyContentSafetyOption(config, commandLine);
         applyFormatOption(config, commandLine);
+        applyTableMethodOption(config, commandLine);
         return config;
+    }
+
+    private static void applyTableMethodOption(Config config, CommandLine commandLine) {
+        if (!commandLine.hasOption(TABLE_METHOD_OPTION)) {
+            return;
+        }
+
+        String[] optionValues = commandLine.getOptionValues(TABLE_METHOD_OPTION);
+        if (optionValues == null || optionValues.length == 0) {
+            throw new IllegalArgumentException(String.format("Option --table-method requires at least one value. Supported values: %s", Config.getTableMethodOptions(",")));
+        }
+
+        Set<String> values = parseOptionValues(optionValues);
+        if (values.isEmpty()) {
+            throw new IllegalArgumentException(String.format("Option --table-method requires at least one value. Supported values: %s", Config.getTableMethodOptions(",")));
+        }
+
+        for (String value : values) {
+            switch (value) {
+                case CLUSTER_TABLE_METHOD_ARGUMENT:
+                    config.setClusterTableMethod(true);
+                    break;
+                default:
+                    throw new IllegalArgumentException(String.format("Unsupported value '%s'. Supported values: %s", value, Config.getTableMethodOptions(",")));
+            }
+        }
     }
 
     private static void applyContentSafetyOption(Config config, CommandLine commandLine) {

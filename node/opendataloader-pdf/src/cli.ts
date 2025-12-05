@@ -11,7 +11,7 @@ interface CliOptions {
   keepLineBreaks?: boolean;
   replaceInvalidChars?: string;
   useStructTree?: boolean;
-  tableMethod?: string;
+  tableMethod?: string[];
 }
 
 const VALID_FORMATS = new Set([
@@ -30,6 +30,10 @@ const VALID_CONTENT_SAFETY_MODES = new Set([
   'off-page',
   'tiny',
   'hidden-ocg',
+]);
+
+const VALID_TABLE_METHODES = new Set([
+    'cluster',
 ]);
 
 function createProgram(): Command {
@@ -53,7 +57,7 @@ function createProgram(): Command {
     .option('--keep-line-breaks', 'Preserve line breaks in text output')
     .option('--replace-invalid-chars <c>', 'Replacement character for invalid characters')
     .option('--use-struct-tree', 'Enable processing structure tree (disabled by default)')
-    .option('--table-method', 'Enable specified table detection method');
+    .option('--table-method <method...>', 'Enable specified table detection method');
 
   program.configureOutput({
     writeErr: (str) => {
@@ -94,7 +98,7 @@ function buildConvertOptions(options: CliOptions): ConvertOptions {
   if (options.useStructTree) {
     convertOptions.useStructTree = true;
   }
-  if (options.tableMethod) {
+  if (options.tableMethod && options.tableMethod.length) {
     convertOptions.tableMethod = options.tableMethod;
   }
 
@@ -139,6 +143,15 @@ async function main(): Promise<number> {
     for (const value of cliOptions.contentSafetyOff) {
       if (!VALID_CONTENT_SAFETY_MODES.has(value)) {
         console.error(`Invalid content safety mode '${value}'. See '--help' for allowed values.`);
+        console.error("Use '--help' to see available options.");
+        return 1;
+      }
+    }
+  }
+  if (cliOptions.tableMethod) {
+    for (const value of cliOptions.tableMethod) {
+      if (!VALID_TABLE_METHODES.has(value)) {
+        console.error(`Invalid table method '${value}'. See '--help' for allowed values.`);
         console.error("Use '--help' to see available options.");
         return 1;
       }

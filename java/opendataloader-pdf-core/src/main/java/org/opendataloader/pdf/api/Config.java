@@ -8,6 +8,7 @@
 package org.opendataloader.pdf.api;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -27,7 +28,7 @@ public class Config {
     private boolean addImageToMarkdown = false;
     private String replaceInvalidChars = " ";
     private String outputFolder;
-    private String tableMethod;
+    private boolean isClusterTableMethod = false;
     private final FilterConfig filterConfig = new FilterConfig();
 
     public static final String CLUSTER_TABLE_METHOD = "cluster";
@@ -269,17 +270,17 @@ public class Config {
      *
      * @return The specified method.
      */
-    public String getTableMethod() {
-        return tableMethod;
+    public boolean isClusterTableMethod() {
+        return isClusterTableMethod;
     }
 
     /**
      * Sets the method of table detection.
      *
-     * @param tableMethod The specified method.
+     * @param isClusterTableMethod The specified method.
      */
-    public void setTableMethod(String tableMethod) {
-        this.tableMethod = tableMethod;
+    public void setClusterTableMethod(boolean isClusterTableMethod) {
+        this.isClusterTableMethod = isClusterTableMethod;
     }
 
     /**

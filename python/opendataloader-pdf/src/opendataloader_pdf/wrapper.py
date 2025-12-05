@@ -96,7 +96,7 @@ def convert(
     keep_line_breaks: bool = False,
     replace_invalid_chars: Optional[str] = None,
     use_struct_tree: bool = False,
-    table_method: Optional[str] = None,
+    table_method: Optional[List[str]] = None,
 ) -> None:
     """
     Convert PDF(s) into the requested output format(s).
@@ -111,6 +111,7 @@ def convert(
         keep_line_breaks: Preserve line breaks in text output
         replace_invalid_chars: Replacement character for invalid/unrecognized characters
         use_struct_tree: Enable processing structure tree (disabled by default)
+        table_method: Specified table detection method.
     """
     args: List[str] = []
     args.extend(input_path)
@@ -131,7 +132,7 @@ def convert(
     if use_struct_tree:
         args.extend("--use-struct-tree")
     if table_method:
-        args.extend(["--table-method", table_method])
+        args.extend(["--table-method", *table_method])
 
     # Run the command
     run_jar(args, quiet)
@@ -260,6 +261,10 @@ def main(argv=None) -> int:
     )
     parser.add_argument(
         "--table_method",
+        nargs="+",
+        choices=[
+            "cluster",
+        ],
         help="Enable specified table detection method",
     )
     args = parser.parse_args(argv)

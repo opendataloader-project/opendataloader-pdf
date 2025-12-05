@@ -62,7 +62,7 @@ public class DocumentProcessor {
                 StaticContainers.getDocument().getArtifacts(pageNumber), pageNumber, config);
             contents.add(pageContents);
         }
-        if (Config.CLUSTER_TABLE_METHOD.equals(config.getTableMethod())) {
+        if (config.isClusterTableMethod()) {
             new ClusterTableProcessor().processTables(contents);
         }
         for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
