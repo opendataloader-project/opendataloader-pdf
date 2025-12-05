@@ -26,7 +26,6 @@ public class CLIOptions {
     private static final String CONTENT_SAFETY_OFF_TINY_TEXT_ARGUMENT = "tiny";
     private static final String CONTENT_SAFETY_OFF_HIDDEN_OCG_ARGUMENT = "hidden-ocg";
     private static final String CONTENT_SAFETY_OFF_SUPPORTED_LIST = "all, hidden-text, off-page, tiny, hidden-ocg";
-    public static final String CLUSTER_TABLE_METHOD_ARGUMENT = "cluster";
 
     public static final String PASSWORD_OPTION = "p";
     private static final String PASSWORD_LONG_OPTION = "password";
@@ -107,7 +106,7 @@ public class CLIOptions {
         Option useStructTree = new Option(null, USE_STRUCT_TREE_LONG_OPTION, false, "Enable processing structure tree (disabled by default)");
         useStructTree.setRequired(false);
         options.addOption(useStructTree);
-        Option tableMethod = new Option(null, TABLE_METHOD_OPTION, true, "Enable specified table detection method. Supported values: " + Config.getTableMethodOptions(","));
+        Option tableMethod = new Option(null, TABLE_METHOD_OPTION, true, "Enable specified table detection method. Accepts a comma-separated list of methods. Supported values: " + Config.getTableMethodOptions(","));
         tableMethod.setRequired(false);
         options.addOption(tableMethod);
         return options;
@@ -176,7 +175,7 @@ public class CLIOptions {
 
         for (String value : values) {
             switch (value) {
-                case CLUSTER_TABLE_METHOD_ARGUMENT:
+                case Config.CLUSTER_TABLE_METHOD:
                     config.setClusterTableMethod(true);
                     break;
                 default:

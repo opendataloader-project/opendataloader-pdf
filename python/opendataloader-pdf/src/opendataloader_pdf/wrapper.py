@@ -262,10 +262,7 @@ def main(argv=None) -> int:
     parser.add_argument(
         "--table_method",
         nargs="+",
-        choices=[
-            "cluster",
-        ],
-        help="Enable specified table detection method",
+        help="Enable specified table detection method. Accepts a comma-separated list of methods.",
     )
     args = parser.parse_args(argv)
 
