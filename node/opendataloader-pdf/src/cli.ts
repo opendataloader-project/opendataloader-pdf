@@ -11,6 +11,7 @@ interface CliOptions {
   keepLineBreaks?: boolean;
   replaceInvalidChars?: string;
   useStructTree?: boolean;
+  tableMethod?: string;
 }
 
 const VALID_FORMATS = new Set([
@@ -51,7 +52,8 @@ function createProgram(): Command {
     .option('--content-safety-off <mode...>', 'Disable one or more content safety filters')
     .option('--keep-line-breaks', 'Preserve line breaks in text output')
     .option('--replace-invalid-chars <c>', 'Replacement character for invalid characters')
-    .option('--use-struct-tree', 'Enable processing structure tree (disabled by default)');
+    .option('--use-struct-tree', 'Enable processing structure tree (disabled by default)')
+    .option('--table-method', 'Enable specified table detection method');
 
   program.configureOutput({
     writeErr: (str) => {
@@ -91,6 +93,9 @@ function buildConvertOptions(options: CliOptions): ConvertOptions {
   }
   if (options.useStructTree) {
     convertOptions.useStructTree = true;
+  }
+  if (options.tableMethod) {
+    convertOptions.tableMethod = options.tableMethod;
   }
 
   return convertOptions;

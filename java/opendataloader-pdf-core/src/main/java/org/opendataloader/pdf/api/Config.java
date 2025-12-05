@@ -7,6 +7,9 @@
  */
 package org.opendataloader.pdf.api;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Configuration class for the PDF processing.
  * Use this class to specify output formats, text processing options, and other settings.
@@ -24,7 +27,15 @@ public class Config {
     private boolean addImageToMarkdown = false;
     private String replaceInvalidChars = " ";
     private String outputFolder;
+    private String tableMethod;
     private final FilterConfig filterConfig = new FilterConfig();
+
+    public static final String CLUSTER_TABLE_METHOD = "cluster";
+    public static Set<String> tableMethodOptions = new HashSet<String>();
+
+    static {
+        tableMethodOptions.add(CLUSTER_TABLE_METHOD);
+    }
 
     /**
      * Gets the filter config.
@@ -251,5 +262,32 @@ public class Config {
 
     public void setUseStructTree(boolean useStructTree) {
         this.useStructTree = useStructTree;
+    }
+
+    /**
+     * Gets the method of table detection.
+     *
+     * @return The specified method.
+     */
+    public String getTableMethod() {
+        return tableMethod;
+    }
+
+    /**
+     * Sets the method of table detection.
+     *
+     * @param tableMethod The specified method.
+     */
+    public void setTableMethod(String tableMethod) {
+        this.tableMethod = tableMethod;
+    }
+
+    /**
+     * Gets the list of methods of table detection.
+     *
+     * @return The string with methods separated by @param delimiter.
+     */
+    public static String getTableMethodOptions(CharSequence delimiter) {
+        return String.join(delimiter, tableMethodOptions);
     }
 }

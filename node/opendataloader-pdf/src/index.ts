@@ -89,6 +89,7 @@ export interface RunOptions {
   noJson?: boolean;
   debug?: boolean;
   useStructTree?: boolean;
+  tableMethod?: string;
 }
 
 export function run(inputPath: string, options: RunOptions = {}): Promise<string> {
@@ -134,6 +135,9 @@ export function run(inputPath: string, options: RunOptions = {}): Promise<string
     if (options.useStructTree) {
       args.push('--use-struct-tree')
     }
+    if (options.tableMethod) {
+      args.push('--table-method')
+    }
 
     args.push(inputPath);
     executeJar(args, {
@@ -154,6 +158,7 @@ export interface ConvertOptions {
   keepLineBreaks?: boolean;
   replaceInvalidChars?: string;
   useStructTree?: boolean;
+  tableMethod?: string;
 }
 
 export function convert(inputPaths: string[], options: ConvertOptions = {}): Promise<string> {
@@ -191,6 +196,9 @@ export function convert(inputPaths: string[], options: ConvertOptions = {}): Pro
   }
   if (options.useStructTree) {
     args.push('--use-struct-tree')
+  }
+  if (options.tableMethod) {
+    args.push('--table-method')
   }
 
   return executeJar(args, {

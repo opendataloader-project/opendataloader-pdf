@@ -59,6 +59,8 @@ public class CLIOptions {
 
     private static final String USE_STRUCT_TREE_LONG_OPTION = "use-struct-tree";
 
+    private static final String TABLE_METHOD_OPTION = "table-method";
+
     public static Options defineOptions() {
         Options options = new Options();
         Option contentSafetyOff = new Option(null, CONTENT_SAFETY_OFF_LONG_OPTION, true, "Disables one or more content safety filters. Accepts a comma-separated list of filter names. Arguments: all, hidden-text, off-page, tiny, hidden-ocg");
@@ -105,6 +107,9 @@ public class CLIOptions {
         Option useStructTree = new Option(null, USE_STRUCT_TREE_LONG_OPTION, false, "Enable processing structure tree (disabled by default)");
         useStructTree.setRequired(false);
         options.addOption(useStructTree);
+        Option tableMethod = new Option(null, TABLE_METHOD_OPTION, true, "Enable specified table detection method. Supported values: " + Config.getTableMethodOptions(","));
+        tableMethod.setRequired(false);
+        options.addOption(tableMethod);
         return options;
     }
 
@@ -140,6 +145,9 @@ public class CLIOptions {
         if (commandLine.hasOption(CLIOptions.USE_STRUCT_TREE_LONG_OPTION)) {
             config.setUseStructTree(true);
         }
+        if (commandLine.hasOption(CLIOptions.TABLE_METHOD_OPTION)) {
+            config.setTableMethod(commandLine.getOptionValue(CLIOptions.TABLE_METHOD_OPTION));
+        }
         if (commandLine.hasOption(CLIOptions.FOLDER_OPTION)) {
             config.setOutputFolder(commandLine.getOptionValue(CLIOptions.FOLDER_OPTION));
         } else {
@@ -157,7 +165,7 @@ public class CLIOptions {
         if (!commandLine.hasOption(CONTENT_SAFETY_OFF_LONG_OPTION)) {
             return;
         }
-        
+
 
         String[] optionValues = commandLine.getOptionValues(CONTENT_SAFETY_OFF_LONG_OPTION);
         if (optionValues == null || optionValues.length == 0) {
