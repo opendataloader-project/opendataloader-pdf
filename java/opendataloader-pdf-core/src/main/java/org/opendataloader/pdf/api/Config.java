@@ -12,6 +12,7 @@ package org.opendataloader.pdf.api;
  * Use this class to specify output formats, text processing options, and other settings.
  */
 public class Config {
+    public static final String READING_ORDER_BY_BBOX = "bbox";
     private String password;
     private boolean isGenerateMarkdown = false;
     private boolean isGenerateHtml = false;
