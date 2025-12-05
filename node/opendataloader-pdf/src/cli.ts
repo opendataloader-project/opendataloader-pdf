@@ -11,6 +11,7 @@ interface CliOptions {
   keepLineBreaks?: boolean;
   replaceInvalidChars?: string;
   useStructTree?: boolean;
+  readingOrder?: string;
 }
 
 function createProgram(): Command {
@@ -30,7 +31,8 @@ function createProgram(): Command {
     .option('--content-safety-off <modes>', 'Comma-separated content safety filters to disable.')
     .option('--keep-line-breaks', 'Preserve line breaks in text output')
     .option('--replace-invalid-chars <c>', 'Replacement character for invalid characters')
-    .option('--use-struct-tree', 'Enable processing structure tree (disabled by default)');
+    .option('--use-struct-tree', 'Enable processing structure tree (disabled by default)')
+    .option('--reading-order <readingOrder>', 'Specifies reading order of content. Supported values: bbox');
 
   program.configureOutput({
     writeErr: (str) => {
@@ -70,6 +72,9 @@ function buildConvertOptions(options: CliOptions): ConvertOptions {
   }
   if (options.useStructTree) {
     convertOptions.useStructTree = true;
+  }
+  if (options.readingOrder) {
+      convertOptions.readingOrder = options.readingOrder;
   }
 
   return convertOptions;

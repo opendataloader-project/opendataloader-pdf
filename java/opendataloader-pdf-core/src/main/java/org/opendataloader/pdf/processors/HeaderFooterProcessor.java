@@ -34,7 +34,7 @@ public class HeaderFooterProcessor {
         DocumentProcessor.setIndexesForDocumentContents(contents);
         List<List<IObject>> sortedContents = new ArrayList<>();
         for (List<IObject> content : contents) {
-            sortedContents.add(DocumentProcessor.sortContents(content));
+            sortedContents.add(DocumentProcessor.sortPageContents(content));
         }
         List<List<IObject>> filteredSortedContents = new ArrayList<>();
         for (List<IObject> content : sortedContents) {

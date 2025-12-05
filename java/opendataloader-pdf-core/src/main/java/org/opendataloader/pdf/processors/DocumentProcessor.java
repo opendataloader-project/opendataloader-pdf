@@ -52,6 +52,7 @@ public class DocumentProcessor {
         List<List<IObject>> contents = StaticLayoutContainers.isUseStructTree() ?
             TaggedDocumentProcessor.processDocument(inputPdfName, config) :
             processDocument(inputPdfName, config);
+        sortContents(contents, config);
         generateOutputs(inputPdfName, contents, config);
     }
 
@@ -217,7 +218,7 @@ public class DocumentProcessor {
         return new BoundingBox(pageNumber, cropBox);
     }
 
-    public static List<IObject> sortContents(List<IObject> contents) {
+    public static List<IObject> sortPageContents(List<IObject> contents) {
         List<IObject> sortedContents = new ArrayList<>(contents);
         sortedContents.sort((o1, o2) -> {
             BoundingBox b1 = o1.getBoundingBox();
@@ -243,5 +244,13 @@ public class DocumentProcessor {
             return 0;
         });
         return sortedContents;
+    }
+
+    public static void sortContents(List<List<IObject>> contents, Config config) {
+        if (Config.READING_ORDER_BY_BBOX.equals(config.getReadingOrder())) {
+            for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
+                contents.set(pageNumber, sortPageContents(contents.get(pageNumber)));
+            }
+        }
     }
 }
