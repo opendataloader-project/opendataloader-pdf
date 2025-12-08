@@ -25,6 +25,7 @@ def run(
     no_json: bool = False,
     debug: bool = False,
     use_struct_tree = False,
+    table_method: str = None,
 ):
     """
     Runs the opendataloader-pdf with the given arguments.
@@ -43,6 +44,7 @@ def run(
         no_json: If True, disable the JSON output.
         debug: If True, prints all messages from the CLI to the console during execution.
         use_struct_tree: If True, enable processing structure tree (disabled by default)
+        table_method: Specified table detection method.
 
     Raises:
         FileNotFoundError: If the 'java' command is not found or input_path is invalid.
@@ -77,6 +79,8 @@ def run(
         args.append("--no-json")
     if use_struct_tree:
         args.append("--use-struct-tree")
+    if table_method:
+        args.append(["--table-method", table_method])
 
     # Run the command
     run_jar(args, quiet=not debug)
@@ -92,6 +96,7 @@ def convert(
     keep_line_breaks: bool = False,
     replace_invalid_chars: Optional[str] = None,
     use_struct_tree: bool = False,
+    table_method: Optional[List[str]] = None,
 ) -> None:
     """
     Convert PDF(s) into the requested output format(s).
@@ -106,6 +111,7 @@ def convert(
         keep_line_breaks: Preserve line breaks in text output
         replace_invalid_chars: Replacement character for invalid/unrecognized characters
         use_struct_tree: Enable processing structure tree (disabled by default)
+        table_method: Specified table detection method.
     """
     args: List[str] = []
     args.extend(input_path)
@@ -125,6 +131,8 @@ def convert(
         args.extend(["--replace-invalid-chars", replace_invalid_chars])
     if use_struct_tree:
         args.extend("--use-struct-tree")
+    if table_method:
+        args.extend(["--table-method", *table_method])
 
     # Run the command
     run_jar(args, quiet)
@@ -250,6 +258,11 @@ def main(argv=None) -> int:
         "--use-struct-tree",
         action="store_true",
         help="Enable processing structure tree (disabled by default)",
+    )
+    parser.add_argument(
+        "--table_method",
+        nargs="+",
+        help="Enable specified table detection method. Accepts a comma-separated list of methods.",
     )
     args = parser.parse_args(argv)
 
