@@ -86,7 +86,8 @@ def run(
     if use_struct_tree:
         args.append("--use-struct-tree")
     if table_method:
-        args.append(["--table-method", table_method])
+        args.append("--table-method")
+        args.append(table_method)
     if reading_order:
         args.append("--reading-order")
         args.append(reading_order)
@@ -160,7 +161,8 @@ def convert(
     if use_struct_tree:
         args.append("--use-struct-tree")
     if table_method:
-        args.extend(["--table-method", *table_method])
+        args.append("--table-method")
+        args.append(table_method)
     if reading_order:
         args.append("--reading-order")
         args.append(reading_order)
@@ -273,7 +275,7 @@ def main(argv=None) -> int:
         help="Enable processing structure tree (disabled by default)",
     )
     parser.add_argument(
-        "--table_method",
+        "--table-method",
         nargs="+",
         help="Enable specified table detection method. Accepts a comma-separated list of methods.",
     )
