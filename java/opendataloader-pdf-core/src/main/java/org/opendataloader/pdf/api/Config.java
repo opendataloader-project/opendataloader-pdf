@@ -34,7 +34,7 @@ public class Config {
     private final FilterConfig filterConfig = new FilterConfig();
 
     public static final String CLUSTER_TABLE_METHOD = "cluster";
-    public static Set<String> tableMethodOptions = new HashSet<String>();
+    private static Set<String> tableMethodOptions = new HashSet<>();
 
     static {
         tableMethodOptions.add(CLUSTER_TABLE_METHOD);
