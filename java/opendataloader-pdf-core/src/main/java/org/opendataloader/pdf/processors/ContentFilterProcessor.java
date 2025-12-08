@@ -34,6 +34,8 @@ public class ContentFilterProcessor {
             filterOutOfPageContents(pageNumber, pageContents);
             pageContents = DocumentProcessor.removeNullObjectsFromList(pageContents);
         }
+        TextProcessor.mergeCloseTextChunks(pageContents);
+        pageContents = DocumentProcessor.removeNullObjectsFromList(pageContents);
         TextProcessor.trimTextChunksWhiteSpaces(pageContents);
         filterConsecutiveSpaces(pageContents);
         pageContents = HiddenTextProcessor.findHiddenText(inputPdfName, pageContents,

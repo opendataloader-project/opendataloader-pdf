@@ -10,17 +10,13 @@ package org.opendataloader.pdf.processors;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
-import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
-import org.verapdf.wcag.algorithms.entities.geometry.MultiBoundingBox;
 import org.verapdf.wcag.algorithms.entities.tables.Table;
 import org.verapdf.wcag.algorithms.entities.tables.TableToken;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ClusterTableConsumer;
-import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 public class ClusterTableProcessor extends AbstractTableProcessor {
@@ -35,7 +31,6 @@ public class ClusterTableProcessor extends AbstractTableProcessor {
     }
 
     public static List<TableBorder> processClusterDetectionTables(List<IObject> contents) {
-        StaticContainers.setIsDataLoader(false);
         ClusterTableConsumer clusterTableConsumer = new ClusterTableConsumer();
         for (IObject content : contents) {
             if (content instanceof TextChunk) {
@@ -44,8 +39,6 @@ public class ClusterTableProcessor extends AbstractTableProcessor {
                     continue;
                 }
                 List<TextChunk> splitChunks = TextChunkUtils.splitTextChunkByWhiteSpaces(textChunk);
-//                SemanticTextNode semanticTextNode = new SemanticTextNode(textChunk);
-//                clusterTableConsumer.accept(new TableToken(textChunk, semanticTextNode), semanticTextNode);
                 for (TextChunk splitChunk : splitChunks) {
                     SemanticTextNode semanticTextNode = new SemanticTextNode(splitChunk);
                     clusterTableConsumer.accept(new TableToken(splitChunk, semanticTextNode), semanticTextNode);
@@ -59,9 +52,10 @@ public class ClusterTableProcessor extends AbstractTableProcessor {
         List<TableBorder> result = new ArrayList<>();
         for (Table table : clusterTableConsumer.getTables()) {
             TableBorder tableBorder = table.createTableBorderFromTable();
-            result.add(tableBorder);
+            if (tableBorder != null) {
+                result.add(tableBorder);
+            }
         }
-        StaticContainers.setIsDataLoader(true);
         return result;
     }
 
@@ -91,38 +85,4 @@ public class ClusterTableProcessor extends AbstractTableProcessor {
 //        clusterTableConsumer.processEnd();
 //        System.out.println("test");
 //    }
-
-    private static void replaceContentsToResult(List<IObject> contents, IObject result) {
-        List<IObject> replacedContents = new LinkedList<>();
-        Integer index = null;
-        int i = 0;
-        for (IObject content : contents) {
-            if (contains(result.getBoundingBox(), content.getBoundingBox())) {
-//            if (content.getBoundingBox().getIntersectionPercent(result.getBoundingBox()) > 0.5) {
-                replacedContents.add(content);
-                if (index == null) {
-                    index = i;
-                }
-            }
-            i++;
-        }
-        if (index == null) {
-            return;
-        }
-        contents.set(index, result);
-        contents.removeAll(replacedContents);
-    }
-
-    public static boolean contains(BoundingBox box, BoundingBox box2) {
-        if (box instanceof MultiBoundingBox) {
-            for (BoundingBox b : ((MultiBoundingBox) box).getBoundingBoxes()) {
-                if (b.contains(box2, 0.6, 0.6)) {
-                    return true;
-                }
-            }
-        } else {
-            return box.contains(box2, 0.6, 0.6);
-        }
-        return false;
-    }
 }
