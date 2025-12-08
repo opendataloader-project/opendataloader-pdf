@@ -65,7 +65,9 @@ public class DocumentProcessor {
                 StaticContainers.getDocument().getArtifacts(pageNumber), pageNumber, config);
             contents.add(pageContents);
         }
-        new ClusterTableProcessor().processTables(contents);
+        if (config.isClusterTableMethod()) {
+            new ClusterTableProcessor().processTables(contents);
+        }
         for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
             List<IObject> pageContents = TableBorderProcessor.processTableBorders(contents.get(pageNumber), pageNumber);
             pageContents = pageContents.stream().filter(x -> !(x instanceof LineChunk)).collect(Collectors.toList());

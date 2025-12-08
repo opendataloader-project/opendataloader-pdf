@@ -13,7 +13,6 @@ import org.apache.commons.cli.Options;
 import org.opendataloader.pdf.api.Config;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Set;
@@ -58,6 +57,8 @@ public class CLIOptions {
     private static final String REPLACE_INVALID_CHARS_LONG_OPTION = "replace-invalid-chars";
 
     private static final String USE_STRUCT_TREE_LONG_OPTION = "use-struct-tree";
+
+    private static final String TABLE_METHOD_OPTION = "table-method";
 
     private static final String READING_ORDER_LONG_OPTION = "reading-order";
 
@@ -105,6 +106,9 @@ public class CLIOptions {
         Option useStructTree = new Option(null, USE_STRUCT_TREE_LONG_OPTION, false, "Enable processing structure tree (disabled by default)");
         useStructTree.setRequired(false);
         options.addOption(useStructTree);
+        Option tableMethod = new Option(null, TABLE_METHOD_OPTION, true, "Enable specified table detection method. Accepts a comma-separated list of methods. Supported values: " + Config.getTableMethodOptions(","));
+        tableMethod.setRequired(false);
+        options.addOption(tableMethod);
         Option readingOrder = new Option(null, READING_ORDER_LONG_OPTION, true, "Specifies reading order of content. Supported values: bbox.");
         readingOrder.setRequired(false);
         options.addOption(readingOrder);
@@ -156,7 +160,34 @@ public class CLIOptions {
         }
         applyContentSafetyOption(config, commandLine);
         applyFormatOption(config, commandLine);
+        applyTableMethodOption(config, commandLine);
         return config;
+    }
+
+    private static void applyTableMethodOption(Config config, CommandLine commandLine) {
+        if (!commandLine.hasOption(TABLE_METHOD_OPTION)) {
+            return;
+        }
+
+        String[] optionValues = commandLine.getOptionValues(TABLE_METHOD_OPTION);
+        if (optionValues == null || optionValues.length == 0) {
+            throw new IllegalArgumentException(String.format("Option --table-method requires at least one value. Supported values: %s", Config.getTableMethodOptions(",")));
+        }
+
+        Set<String> values = parseOptionValues(optionValues);
+        if (values.isEmpty()) {
+            throw new IllegalArgumentException(String.format("Option --table-method requires at least one value. Supported values: %s", Config.getTableMethodOptions(",")));
+        }
+
+        for (String value : values) {
+            switch (value) {
+                case Config.CLUSTER_TABLE_METHOD:
+                    config.setClusterTableMethod(true);
+                    break;
+                default:
+                    throw new IllegalArgumentException(String.format("Unsupported value '%s'. Supported values: %s", value, Config.getTableMethodOptions(",")));
+            }
+        }
     }
 
     private static void applyContentSafetyOption(Config config, CommandLine commandLine) {
