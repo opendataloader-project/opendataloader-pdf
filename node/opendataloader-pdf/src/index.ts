@@ -89,6 +89,7 @@ export interface RunOptions {
   noJson?: boolean;
   debug?: boolean;
   useStructTree?: boolean;
+  tableMethod?: string;
   readingOrder?: string;
 }
 
@@ -135,6 +136,9 @@ export function run(inputPath: string, options: RunOptions = {}): Promise<string
     if (options.useStructTree) {
       args.push('--use-struct-tree')
     }
+    if (options.tableMethod) {
+      args.push('--table-method', options.tableMethod)
+    }
     if (options.readingOrder) {
       args.push('--reading-order', options.readingOrder)
     }
@@ -158,6 +162,7 @@ export interface ConvertOptions {
   keepLineBreaks?: boolean;
   replaceInvalidChars?: string;
   useStructTree?: boolean;
+  tableMethod?: string[];
   readingOrder?: string;
 }
 
@@ -205,6 +210,9 @@ export function convert(inputPaths: string | string[], options: ConvertOptions =
   }
   if (options.useStructTree) {
     args.push('--use-struct-tree')
+  }
+  if (options.tableMethod && options.tableMethod.length > 0) {
+    args.push('--table-method', ...options.tableMethod)
   }
   if (options.readingOrder) {
       args.push('--reading-order', options.readingOrder)
