@@ -59,7 +59,9 @@ public class ClusterTableProcessor extends AbstractTableProcessor {
         List<TableBorder> result = new ArrayList<>();
         for (Table table : clusterTableConsumer.getTables()) {
             TableBorder tableBorder = table.createTableBorderFromTable();
-            result.add(tableBorder);
+            if (tableBorder != null) {
+                result.add(tableBorder);
+            }
         }
         StaticContainers.setIsDataLoader(true);
         return result;

@@ -13,6 +13,7 @@ import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
 
 import java.util.Comparator;
 import java.util.List;
@@ -59,6 +60,23 @@ public class TextProcessor {
             IObject object = contents.get(i);
             if (object instanceof TextChunk) {
                 contents.set(i, ChunksMergeUtils.getTrimTextChunk((TextChunk) object));
+            }
+        }
+    }
+
+    public static void mergeCloseTextChunks(List<IObject> contents) {
+        for (int i = 0; i < contents.size() - 1; i++) {
+            IObject object = contents.get(i);
+            IObject nextObject = contents.get(i + 1);
+            if (object instanceof TextChunk && nextObject instanceof TextChunk) {
+                TextChunk textChunk = (TextChunk) object;
+                TextChunk nextTextChunk = (TextChunk) nextObject;
+                if (TextChunkUtils.areTextChunksHaveSameStyle(textChunk, nextTextChunk) &&
+                    TextChunkUtils.areTextChunksHaveSameBaseLine(textChunk, nextTextChunk) &&
+                    TextChunkUtils.areNeighborsTextChunks(textChunk, nextTextChunk)) {
+                    contents.set(i, null);
+                    contents.set(i + 1, TextChunkUtils.unionTextChunks(textChunk, nextTextChunk));
+                }
             }
         }
     }

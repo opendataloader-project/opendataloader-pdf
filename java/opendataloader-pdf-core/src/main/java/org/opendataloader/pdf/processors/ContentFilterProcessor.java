@@ -33,6 +33,8 @@ public class ContentFilterProcessor {
             filterOutOfPageContents(pageNumber, pageContents);
             pageContents = DocumentProcessor.removeNullObjectsFromList(pageContents);
         }
+        TextProcessor.mergeCloseTextChunks(pageContents);
+        pageContents = DocumentProcessor.removeNullObjectsFromList(pageContents);
         TextProcessor.trimTextChunksWhiteSpaces(pageContents);
         pageContents = HiddenTextProcessor.findHiddenText(inputPdfName, pageContents,
             config.getFilterConfig().isFilterHiddenText(), config.getPassword());
