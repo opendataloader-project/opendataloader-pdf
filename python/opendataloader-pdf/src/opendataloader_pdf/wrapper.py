@@ -26,6 +26,7 @@ def run(
     debug: bool = False,
     use_struct_tree: bool = False,
     reading_order: str = None,
+    table_method: str = None,
 ):
     """
     Runs the opendataloader-pdf with the given arguments.
@@ -44,6 +45,7 @@ def run(
         no_json: If True, disable the JSON output.
         debug: If True, prints all messages from the CLI to the console during execution.
         use_struct_tree: If True, enable processing structure tree (disabled by default)
+        table_method: Specified table detection method.
         reading_order: Order of content processing.
 
     Raises:
@@ -83,6 +85,8 @@ def run(
         args.append("--no-json")
     if use_struct_tree:
         args.append("--use-struct-tree")
+    if table_method:
+        args.append(["--table-method", table_method])
     if reading_order:
         args.append("--reading-order")
         args.append(reading_order)
@@ -101,6 +105,7 @@ def convert(
     keep_line_breaks: bool = False,
     replace_invalid_chars: Optional[str] = None,
     use_struct_tree: bool = False,
+    table_method: Optional[List[str]] = None,
     reading_order: Optional[str] = None,
 ) -> None:
     """
@@ -116,6 +121,7 @@ def convert(
         keep_line_breaks: Preserve line breaks in text output
         replace_invalid_chars: Replacement character for invalid/unrecognized characters
         use_struct_tree: Enable processing structure tree (disabled by default)
+        table_method: Specified table detection method.
     """
     args: List[str] = []
 
@@ -153,6 +159,8 @@ def convert(
         args.append(replace_invalid_chars)
     if use_struct_tree:
         args.append("--use-struct-tree")
+    if table_method:
+        args.extend(["--table-method", *table_method])
     if reading_order:
         args.append("--reading-order")
         args.append(reading_order)
@@ -263,6 +271,11 @@ def main(argv=None) -> int:
         "--use-struct-tree",
         action="store_true",
         help="Enable processing structure tree (disabled by default)",
+    )
+    parser.add_argument(
+        "--table_method",
+        nargs="+",
+        help="Enable specified table detection method. Accepts a comma-separated list of methods.",
     )
     parser.add_argument(
         "--reading-order",
