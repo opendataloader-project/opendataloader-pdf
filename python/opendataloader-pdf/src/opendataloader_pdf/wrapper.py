@@ -56,13 +56,17 @@ def run(
     args = []
     args.append(input_path)
     if output_folder:
-        args.extend(["--output-dir", output_folder])
+        args.append("--output-dir")
+        args.append(output_folder)
     if password:
-        args.extend(["--password", password])
+        args.append("--password")
+        args.append(password)
     if replace_invalid_chars:
-        args.extend(["--replace-invalid-chars", replace_invalid_chars])
+        args.append("--replace-invalid-chars")
+        args.append(replace_invalid_chars)
     if content_safety_off:
-        args.extend(["--content-safety-off", content_safety_off])
+        args.append("--content-safety-off")
+        args.append(content_safety_off)
     if generate_markdown:
         args.append("--markdown")
     if generate_html:
@@ -80,7 +84,8 @@ def run(
     if use_struct_tree:
         args.append("--use-struct-tree")
     if reading_order:
-        args.append("--reading-order", reading_order)
+        args.append("--reading-order")
+        args.append(reading_order)
 
     # Run the command
     run_jar(args, quiet=not debug)
@@ -96,7 +101,7 @@ def convert(
     keep_line_breaks: bool = False,
     replace_invalid_chars: Optional[str] = None,
     use_struct_tree: bool = False,
-    reading_order: Optional[str] = None
+    reading_order: Optional[str] = None,
 ) -> None:
     """
     Convert PDF(s) into the requested output format(s).
@@ -120,29 +125,37 @@ def convert(
         args.append(input_path)
 
     if output_dir:
-        args.extend(["--output-dir", output_dir])
+        args.append("--output-dir")
+        args.append(output_dir)
     if password:
-        args.extend(["--password", password])
+        args.append("--password")
+        args.append(password)
     if format:
         if isinstance(format, list):
-            args.extend(["--format", ",".join(format)])
+            args.append("--format")
+            args.append(",".join(format))
         else:
-            args.extend(["--format", format])
+            args.append("--format")
+            args.append(format)
     if quiet:
-        args.extend(["--quiet"])
+        args.append("--quiet")
     if content_safety_off:
         if isinstance(content_safety_off, list):
-            args.extend(["--content-safety-off", ",".join(content_safety_off)])
+            args.append("--content-safety-off")
+            args.append(",".join(content_safety_off))
         else:
-            args.extend(["--content-safety-off", content_safety_off])
+            args.append("--content-safety-off")
+            args.append(content_safety_off)
     if keep_line_breaks:
-        args.extend(["--keep-line-breaks"])
+        args.append("--keep-line-breaks")
     if replace_invalid_chars:
-        args.extend(["--replace-invalid-chars", replace_invalid_chars])
+        args.append("--replace-invalid-chars")
+        args.append(replace_invalid_chars)
     if use_struct_tree:
-        args.extend(["--use-struct-tree"])
+        args.append("--use-struct-tree")
     if reading_order:
-        args.extend(["--reading-order"], reading_order)
+        args.append("--reading-order")
+        args.append(reading_order)
 
     # Run the command
     run_jar(args, quiet)
