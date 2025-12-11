@@ -17,8 +17,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class ImagesUtils {
-    protected static final Logger LOGGER = Logger.getLogger(ImagesUtils.class.getCanonicalName());
-    protected static ContrastRatioConsumer contrastRatioConsumer;
+    private static final Logger LOGGER = Logger.getLogger(ImagesUtils.class.getCanonicalName());
+    private static ContrastRatioConsumer contrastRatioConsumer;
+
+    public static ContrastRatioConsumer getContrastRatioConsumer() {
+        return contrastRatioConsumer;
+    }
 
     public static void createImagesDirectory(String path) {
         File directory = new File(path);
@@ -35,7 +39,7 @@ public class ImagesUtils {
         }
     }
 
-    private static void write(IObject content, String pdfFilePath, String password) {
+    protected static void write(IObject content, String pdfFilePath, String password) {
         if (content instanceof ImageChunk) {
             int currentImageIndex = StaticLayoutContainers.incrementImageIndex();
             if (currentImageIndex == 1) {
