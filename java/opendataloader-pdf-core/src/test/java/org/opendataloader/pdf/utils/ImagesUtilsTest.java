@@ -5,48 +5,45 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.opendataloader.pdf.html;
+package org.opendataloader.pdf.utils;
 
 import org.junit.jupiter.api.Test;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
-import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
-import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
+import org.opendataloader.pdf.processors.DocumentProcessor;
+import org.verapdf.wcag.algorithms.entities.IObject;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class HtmlGeneratorTest {
+class ImagesUtilsTest {
 
     @Test
-    void testWriteImageCreatesFiguresDirectory() throws IOException {
+    void testCreateImagesDirectory() throws IOException {
         StaticLayoutContainers.clearContainers();
         // Given
-        Path tempDir = Files.createTempDirectory("htmlgen-test");
+        Path tempDir = Files.createTempDirectory("test");
         File testPdf = new File("../../samples/pdf/lorem.pdf");
         String outputFolder = tempDir.toString();
-        Config config = new Config();
 
         // When
-        HtmlGenerator htmlGenerator = new HtmlGenerator(testPdf, outputFolder, config);
-
         try {
-            StaticLayoutContainers.resetImageIndex();
-            ImageChunk image = new ImageChunk(new BoundingBox(0,0, 0, 100, 100));
-            htmlGenerator.writeImage(image);
+            Path path = Paths.get(testPdf.getPath());
+            StaticLayoutContainers.setImagesDirectory(path.getFileName().toString().substring(0, path.getFileName().toString().length() - 4) + "_images");
+            ImagesUtils.createImagesDirectory(outputFolder + File.separator + StaticLayoutContainers.getImagesDirectory());
             // Then - verify figures directory was created in writeImage()
-            String expectedFiguresDirName = testPdf.getName().substring(0, testPdf.getName().length() - 4) + "_figures";
+            String expectedFiguresDirName = testPdf.getName().substring(0, testPdf.getName().length() - 4) + "_images";
             Path expectedFiguresPath = Path.of(outputFolder, expectedFiguresDirName);
 
             assertTrue(Files.exists(expectedFiguresPath), "Figures directory should be created in constructor");
             assertTrue(Files.isDirectory(expectedFiguresPath), "Figures path should be a directory");
         } finally {
-            StaticLayoutContainers.closeContrastRatioConsumer();
-            htmlGenerator.close();
             // Cleanup
             Files.walk(tempDir)
                 .sorted((a, b) -> b.compareTo(a))
@@ -65,30 +62,27 @@ class HtmlGeneratorTest {
         StaticLayoutContainers.clearContainers();
         // Given
         Path tempDir = Files.createTempDirectory("htmlgen-test");
-        File testPdf = new File("../../samples/pdf/lorem.pdf");
-        String outputFolder = tempDir.toString();
-        Config config = new Config();
+        File testPdf = new File("../../samples/pdf/images-test.pdf");
+        String s = testPdf.getAbsolutePath();
 
         // When
-        HtmlGenerator htmlGenerator = new HtmlGenerator(testPdf, outputFolder, config);
-
         try {
             // Then - if ContrastRatioConsumer wasn't initialized,
             // it would be null and cause NPE when used
-            assertNull(htmlGenerator.contrastRatioConsumer);
+            assertNull(ImagesUtils.contrastRatioConsumer);
             StaticLayoutContainers.resetImageIndex();
-            ImageChunk image = new ImageChunk(new BoundingBox(0,0, 0, 100, 100));
+            Config config = new Config();
+            config.setGenerateHtml(true);
+            config.setOutputFolder("../../samples/temp");
             // Initializing contrastRatioConsumer in writeImage()
-            htmlGenerator.writeImage(image);
-            assertNotNull(htmlGenerator.contrastRatioConsumer);
-
+            DocumentProcessor.processFile(testPdf.getAbsolutePath(), config);
+            assertNotNull(ImagesUtils.contrastRatioConsumer);
+            String outputFolder = config.getOutputFolder();
             // Verify HTML writer was created
-            Path htmlPath = Path.of(outputFolder, "lorem.html");
+            Path htmlPath = Path.of(outputFolder, "images-test.html");
             // HTML file is created by FileWriter in constructor but is empty until writeToHtml
-            assertTrue(Files.exists(htmlPath) || true, "HtmlGenerator initialized successfully");
+            assertTrue(Files.exists(htmlPath), "HtmlGenerator initialized successfully");
         } finally {
-            StaticLayoutContainers.closeContrastRatioConsumer();
-            htmlGenerator.close();
             // Cleanup
             Files.walk(tempDir)
                 .sorted((a, b) -> b.compareTo(a))

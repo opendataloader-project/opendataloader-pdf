@@ -10,9 +10,13 @@ package org.opendataloader.pdf.json.serializers;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.json.JsonName;
+import org.opendataloader.pdf.markdown.MarkdownSyntax;
+import org.opendataloader.pdf.utils.ImagesUtils;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 
+import java.io.File;
 import java.io.IOException;
 
 public class ImageSerializer extends StdSerializer<ImageChunk> {
@@ -24,8 +28,13 @@ public class ImageSerializer extends StdSerializer<ImageChunk> {
     @Override
     public void serialize(ImageChunk imageChunk, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
             throws IOException {
+        int currentImageIndex = StaticLayoutContainers.incrementImageIndex();
+        String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, currentImageIndex);
         jsonGenerator.writeStartObject();
         SerializerUtil.writeEssentialInfo(jsonGenerator, imageChunk, JsonName.IMAGE_CHUNK_TYPE);
+        if (ImagesUtils.checkIfImageFileExists(fileName)) {
+            jsonGenerator.writeStringField(JsonName.SOURCE, fileName);
+        }
         jsonGenerator.writeEndObject();
     }
 }

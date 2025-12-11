@@ -9,12 +9,12 @@ package org.opendataloader.pdf.markdown;
 
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
+import org.opendataloader.pdf.utils.ImagesUtils;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
-import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
 import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
@@ -23,13 +23,13 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioConsumer;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -38,22 +38,15 @@ public class MarkdownGenerator implements Closeable {
 
     protected static final Logger LOGGER = Logger.getLogger(MarkdownGenerator.class.getCanonicalName());
     protected final FileWriter markdownWriter;
-    protected final String pdfFileName;
-    protected final String imageDirectoryName;
-    protected ContrastRatioConsumer contrastRatioConsumer;
     protected final String markdownFileName;
     protected int tableNesting = 0;
     protected boolean isImageSupported;
-    private final String password;
 
     MarkdownGenerator(File inputPdf, String outputFolder, Config config) throws IOException {
         String cutPdfFileName = inputPdf.getName();
         this.markdownFileName = outputFolder + File.separator + cutPdfFileName.substring(0, cutPdfFileName.length() - 3) + "md";
-        this.imageDirectoryName = outputFolder + File.separator + cutPdfFileName.substring(0, cutPdfFileName.length() - 4) + "_images";
-        this.pdfFileName = inputPdf.getAbsolutePath();
         this.markdownWriter = new FileWriter(markdownFileName, StandardCharsets.UTF_8);
         this.isImageSupported = config.isAddImageToMarkdown();
-        this.password = config.getPassword();
     }
 
     public void writeToMarkdown(List<List<IObject>> contents) {
@@ -89,7 +82,7 @@ public class MarkdownGenerator implements Closeable {
 
     protected void write(IObject object) throws IOException {
         if (object instanceof ImageChunk) {
-            writeImage((ImageChunk) object);
+            writeImage();
         } else if (object instanceof SemanticHeading) {
             writeHeading((SemanticHeading) object);
         } else if (object instanceof SemanticParagraph) {
@@ -103,39 +96,17 @@ public class MarkdownGenerator implements Closeable {
         }
     }
 
-    protected void writeImage(ImageChunk image) {
+    protected void writeImage() {
         try {
             int currentImageIndex = StaticLayoutContainers.incrementImageIndex();
-            if (currentImageIndex == 1) {
-                new File(imageDirectoryName).mkdirs();
-                contrastRatioConsumer = StaticLayoutContainers.getContrastRatioConsumer(this.pdfFileName, password, false, null);
-            }
+            String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, currentImageIndex);
 
-            String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, imageDirectoryName, File.separator, currentImageIndex);
-            boolean isFileCreated = createImageFile(image, fileName);
-            if (isFileCreated) {
+            if (ImagesUtils.checkIfImageFileExists(fileName)) {
                 String imageString = String.format(MarkdownSyntax.IMAGE_FORMAT, "image " + currentImageIndex, fileName);
                 markdownWriter.write(getCorrectMarkdownString(imageString));
             }
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Unable to write image for markdown output: " + e.getMessage());
-        }
-    }
-
-    protected boolean createImageFile(ImageChunk image, String fileName) {
-        try {
-            BoundingBox imageBox = image.getBoundingBox();
-            BufferedImage targetImage = contrastRatioConsumer != null ? contrastRatioConsumer.getPageSubImage(imageBox) : null;
-            if (targetImage == null) {
-                return false;
-            }
-
-            File outputFile = new File(fileName);
-            ImageIO.write(targetImage, "png", outputFile);
-            return true;
-        } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Unable to create image files: " + e.getMessage());
-            return false;
         }
     }
 

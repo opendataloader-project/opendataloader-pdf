@@ -9,22 +9,20 @@ package org.opendataloader.pdf.html;
 
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.markdown.MarkdownSyntax;
+import org.opendataloader.pdf.utils.ImagesUtils;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
-import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
 import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
-import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioConsumer;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileWriter;
@@ -42,22 +40,15 @@ public class HtmlGenerator implements Closeable {
     protected final FileWriter htmlWriter;
     protected final String pdfFileName;
     protected final Path pdfFilePath;
-    protected final String figureDirName;
-    protected final Path figureDirPath;
-    protected ContrastRatioConsumer contrastRatioConsumer;
     protected final String htmlFileName;
     protected final Path htmlFilePath;
     protected int tableNesting = 0;
-    private final String password;
 
-    public HtmlGenerator(File inputPdf, String outputFolder, Config config) throws IOException {
+    public HtmlGenerator(File inputPdf, String outputFolder) throws IOException {
         this.pdfFileName = inputPdf.getName();
         this.pdfFilePath = inputPdf.toPath().toAbsolutePath();
-        this.password = config.getPassword();
         this.htmlFileName = pdfFileName.substring(0, pdfFileName.length() - 3) + "html";
         this.htmlFilePath = Path.of(outputFolder, htmlFileName);
-        this.figureDirName = pdfFileName.substring(0, pdfFileName.length() - 4) + "_figures";
-        this.figureDirPath = Path.of(outputFolder, figureDirName);
         this.htmlWriter = new FileWriter(htmlFilePath.toFile(), StandardCharsets.UTF_8);
     }
 
@@ -85,7 +76,7 @@ public class HtmlGenerator implements Closeable {
 
     protected void write(IObject object) throws IOException {
         if (object instanceof ImageChunk) {
-            writeImage((ImageChunk) object);
+            writeImage();
         } else if (object instanceof SemanticHeading) {
             writeHeading((SemanticHeading) object);
         } else if (object instanceof SemanticParagraph) {
@@ -105,17 +96,14 @@ public class HtmlGenerator implements Closeable {
         }
     }
 
-    protected void writeImage(ImageChunk image) {
+    protected void writeImage() {
         try {
             int currentImageIndex = StaticLayoutContainers.incrementImageIndex();
-            if (currentImageIndex == 1) {
-                figureDirPath.toFile().mkdirs();
-                contrastRatioConsumer = StaticLayoutContainers.getContrastRatioConsumer(pdfFilePath.toString(), password, false, null);
-            }
-            String figureFileName = String.format(HtmlSyntax.IMAGE_FILE_NAME_FORMAT, currentImageIndex);
+            String figureFileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, currentImageIndex);
+            Path figureDirPath = Path.of(StaticLayoutContainers.getImagesDirectory());
             Path figureFilePath = figureDirPath.resolve(figureFileName);
-            boolean isFileCreated = createImageFile(image, figureFilePath.toString());
-            if (isFileCreated) {
+
+            if (ImagesUtils.checkIfImageFileExists(figureFilePath.toString())) {
                 String relativePathName = figureFilePath.subpath(figureDirPath.getNameCount() - 1,
                     figureDirPath.getNameCount() + 1).toString().replace("\\", "/");
                 String imageString = String.format("<img src=\"%s\" alt=\"figure%d\">", relativePathName, currentImageIndex);
@@ -127,23 +115,6 @@ public class HtmlGenerator implements Closeable {
         }
 
         //add alt image
-    }
-
-    protected boolean createImageFile(ImageChunk image, String fileName) {
-        try {
-            BoundingBox imageBox = image.getBoundingBox();
-            BufferedImage targetImage = contrastRatioConsumer != null ? contrastRatioConsumer.getPageSubImage(imageBox) : null;
-            if (targetImage == null) {
-                return false;
-            }
-
-            File outputFile = new File(fileName);
-            ImageIO.write(targetImage, "png", outputFile);
-            return true;
-        } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Unable to create image files: " + e.getMessage());
-            return false;
-        }
     }
 
     protected void writeList(PDFList list) throws IOException {
