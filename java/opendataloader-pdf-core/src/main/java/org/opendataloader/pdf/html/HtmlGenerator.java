@@ -97,7 +97,7 @@ public class HtmlGenerator implements Closeable {
         try {
             String figureFileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, image.getIndex());
             Path figureDirPath = Path.of(StaticLayoutContainers.getImagesDirectory());
-            Path figureFilePath = figureDirPath.resolve(figureFileName);
+            Path figureFilePath = Path.of(figureFileName);
 
             if (ImagesUtils.isImageFileExists(figureFilePath.toString())) {
                 String relativePathName = figureFilePath.subpath(figureDirPath.getNameCount() - 1,
