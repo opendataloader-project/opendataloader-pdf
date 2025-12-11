@@ -98,7 +98,7 @@ public class ImagesUtils {
         }
     }
 
-    public static boolean checkIfImageFileExists(String fileName) {
+    public static boolean isImageFileExists(String fileName) {
         File outputFile = new File(fileName);
         return outputFile.exists();
     }

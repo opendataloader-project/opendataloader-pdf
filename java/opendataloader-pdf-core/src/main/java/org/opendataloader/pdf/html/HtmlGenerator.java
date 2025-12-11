@@ -8,7 +8,6 @@
 package org.opendataloader.pdf.html;
 
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
-import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.markdown.MarkdownSyntax;
 import org.opendataloader.pdf.utils.ImagesUtils;
 import org.verapdf.wcag.algorithms.entities.IObject;
@@ -102,7 +101,7 @@ public class HtmlGenerator implements Closeable {
             Path figureDirPath = Path.of(StaticLayoutContainers.getImagesDirectory());
             Path figureFilePath = figureDirPath.resolve(figureFileName);
 
-            if (ImagesUtils.checkIfImageFileExists(figureFilePath.toString())) {
+            if (ImagesUtils.isImageFileExists(figureFilePath.toString())) {
                 String relativePathName = figureFilePath.subpath(figureDirPath.getNameCount() - 1,
                     figureDirPath.getNameCount() + 1).toString().replace("\\", "/");
                 String imageString = String.format("<img src=\"%s\" alt=\"figure%d\">", relativePathName, chunk.getIndex());

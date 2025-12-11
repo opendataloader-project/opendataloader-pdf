@@ -20,7 +20,6 @@ import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
-import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioConsumer;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
 import java.io.Closeable;
@@ -28,8 +27,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -99,7 +96,7 @@ public class MarkdownGenerator implements Closeable {
         try {
             String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, chunk.getIndex());
 
-            if (ImagesUtils.checkIfImageFileExists(fileName)) {
+            if (ImagesUtils.isImageFileExists(fileName)) {
                 String imageString = String.format(MarkdownSyntax.IMAGE_FORMAT, "image " + chunk.getIndex(), fileName);
                 markdownWriter.write(getCorrectMarkdownString(imageString));
             }

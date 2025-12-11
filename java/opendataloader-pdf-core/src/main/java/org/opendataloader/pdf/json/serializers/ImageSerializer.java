@@ -31,7 +31,7 @@ public class ImageSerializer extends StdSerializer<ImageChunk> {
         String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, imageChunk.getIndex());
         jsonGenerator.writeStartObject();
         SerializerUtil.writeEssentialInfo(jsonGenerator, imageChunk, JsonName.IMAGE_CHUNK_TYPE);
-        if (ImagesUtils.checkIfImageFileExists(fileName)) {
+        if (ImagesUtils.isImageFileExists(fileName)) {
             jsonGenerator.writeStringField(JsonName.SOURCE, fileName);
         }
         jsonGenerator.writeEndObject();
