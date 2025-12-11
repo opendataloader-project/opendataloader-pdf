@@ -51,7 +51,6 @@ public class MarkdownGenerator implements Closeable {
 
     public void writeToMarkdown(List<List<IObject>> contents) {
         try {
-            StaticLayoutContainers.resetImageIndex();
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 for (IObject content : contents.get(pageNumber)) {
                     if (!isSupportedContent(content)) {
@@ -82,7 +81,7 @@ public class MarkdownGenerator implements Closeable {
 
     protected void write(IObject object) throws IOException {
         if (object instanceof ImageChunk) {
-            writeImage();
+            writeImage((ImageChunk) object);
         } else if (object instanceof SemanticHeading) {
             writeHeading((SemanticHeading) object);
         } else if (object instanceof SemanticParagraph) {
@@ -96,13 +95,12 @@ public class MarkdownGenerator implements Closeable {
         }
     }
 
-    protected void writeImage() {
+    protected void writeImage(ImageChunk chunk) {
         try {
-            int currentImageIndex = StaticLayoutContainers.incrementImageIndex();
-            String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, currentImageIndex);
+            String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, chunk.getIndex());
 
             if (ImagesUtils.checkIfImageFileExists(fileName)) {
-                String imageString = String.format(MarkdownSyntax.IMAGE_FORMAT, "image " + currentImageIndex, fileName);
+                String imageString = String.format(MarkdownSyntax.IMAGE_FORMAT, "image " + chunk.getIndex(), fileName);
                 markdownWriter.write(getCorrectMarkdownString(imageString));
             }
         } catch (IOException e) {

@@ -8,10 +8,7 @@
 package org.opendataloader.pdf.utils;
 
 import org.junit.jupiter.api.Test;
-import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
-import org.opendataloader.pdf.processors.DocumentProcessor;
-import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 
@@ -20,8 +17,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -75,8 +70,8 @@ class ImagesUtilsTest {
             assertNull(ImagesUtils.getContrastRatioConsumer());
             StaticLayoutContainers.setImagesDirectory(outputFolder + File.separator + path.getFileName().toString().substring(0, path.getFileName().toString().length() - 4) + "_images");
             ImageChunk imageChunk = new ImageChunk(new BoundingBox(0));
-            // Initializing contrastRatioConsumer in write()
-            ImagesUtils.write(imageChunk, testPdf.getAbsolutePath(),"");
+            // Initializing contrastRatioConsumer in writeImage()
+            ImagesUtils.writeImage(imageChunk, testPdf.getAbsolutePath(),"");
             assertNotNull(ImagesUtils.getContrastRatioConsumer());
             // Verify file was created
             Path htmlPath = Path.of(StaticLayoutContainers.getImagesDirectory(), "imageFile1.png");

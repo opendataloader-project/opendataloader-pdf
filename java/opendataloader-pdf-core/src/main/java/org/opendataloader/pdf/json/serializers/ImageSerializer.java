@@ -28,8 +28,7 @@ public class ImageSerializer extends StdSerializer<ImageChunk> {
     @Override
     public void serialize(ImageChunk imageChunk, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
             throws IOException {
-        int currentImageIndex = StaticLayoutContainers.incrementImageIndex();
-        String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, currentImageIndex);
+        String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, imageChunk.getIndex());
         jsonGenerator.writeStartObject();
         SerializerUtil.writeEssentialInfo(jsonGenerator, imageChunk, JsonName.IMAGE_CHUNK_TYPE);
         if (ImagesUtils.checkIfImageFileExists(fileName)) {

@@ -40,7 +40,6 @@ import org.verapdf.xmp.containers.StaticXmpCoreContainers;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -94,7 +93,7 @@ public class DocumentProcessor {
         if (config.isGenerateHtml() || config.isAddImageToMarkdown() || config.isGenerateJSON()) {
             String fileName = Paths.get(inputPdfName).getFileName().toString();
             StaticLayoutContainers.setImagesDirectory(config.getOutputFolder() + File.separator + fileName.substring(0, fileName.length() - 4) + "_images");
-            ImagesUtils.writeImages(contents, inputPdfName, config.getPassword());
+            ImagesUtils.write(contents, inputPdfName, config.getPassword());
         }
         if (config.isGeneratePDF()) {
             PDFWriter pdfWriter = new PDFWriter();

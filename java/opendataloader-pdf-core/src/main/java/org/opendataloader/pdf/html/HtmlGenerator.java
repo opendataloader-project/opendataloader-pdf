@@ -76,7 +76,7 @@ public class HtmlGenerator implements Closeable {
 
     protected void write(IObject object) throws IOException {
         if (object instanceof ImageChunk) {
-            writeImage();
+            writeImage((ImageChunk) object);
         } else if (object instanceof SemanticHeading) {
             writeHeading((SemanticHeading) object);
         } else if (object instanceof SemanticParagraph) {
@@ -96,17 +96,16 @@ public class HtmlGenerator implements Closeable {
         }
     }
 
-    protected void writeImage() {
+    protected void writeImage(ImageChunk chunk) {
         try {
-            int currentImageIndex = StaticLayoutContainers.incrementImageIndex();
-            String figureFileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, currentImageIndex);
+            String figureFileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, chunk.getIndex());
             Path figureDirPath = Path.of(StaticLayoutContainers.getImagesDirectory());
             Path figureFilePath = figureDirPath.resolve(figureFileName);
 
             if (ImagesUtils.checkIfImageFileExists(figureFilePath.toString())) {
                 String relativePathName = figureFilePath.subpath(figureDirPath.getNameCount() - 1,
                     figureDirPath.getNameCount() + 1).toString().replace("\\", "/");
-                String imageString = String.format("<img src=\"%s\" alt=\"figure%d\">", relativePathName, currentImageIndex);
+                String imageString = String.format("<img src=\"%s\" alt=\"figure%d\">", relativePathName, chunk.getIndex());
                 htmlWriter.write(imageString);
                 htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
             }
