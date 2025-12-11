@@ -35,12 +35,12 @@ class ImagesUtilsTest {
             Path path = Paths.get(testPdf.getPath());
             StaticLayoutContainers.setImagesDirectory(outputFolder + File.separator + path.getFileName().toString().substring(0, path.getFileName().toString().length() - 4) + "_images");
             ImagesUtils.createImagesDirectory(StaticLayoutContainers.getImagesDirectory());
-            // Then - verify figures directory was created in createImagesDirectory()
-            String expectedFiguresDirName = testPdf.getName().substring(0, testPdf.getName().length() - 4) + "_images";
-            Path expectedFiguresPath = Path.of(outputFolder, expectedFiguresDirName);
+            // Then - verify images directory was created in createImagesDirectory()
+            String expectedImagesDirName = testPdf.getName().substring(0, testPdf.getName().length() - 4) + "_images";
+            Path expectedImagesPath = Path.of(outputFolder, expectedImagesDirName);
 
-            assertTrue(Files.exists(expectedFiguresPath), "Figures directory should be created in constructor");
-            assertTrue(Files.isDirectory(expectedFiguresPath), "Figures path should be a directory");
+            assertTrue(Files.exists(expectedImagesPath), "Images directory should be created in constructor");
+            assertTrue(Files.isDirectory(expectedImagesPath), "Images path should be a directory");
         } finally {
             // Cleanup
             Files.walk(tempDir)
@@ -60,7 +60,7 @@ class ImagesUtilsTest {
         StaticLayoutContainers.clearContainers();
         // Given
         Path tempDir = Files.createTempDirectory("htmlgen-test");
-        File testPdf = new File("../../samples/pdf/images-test.pdf");
+        File testPdf = new File("../../samples/pdf/lorem.pdf");
         String outputFolder = tempDir.toString();
         // When
         try {
@@ -74,9 +74,9 @@ class ImagesUtilsTest {
             ImagesUtils.writeImage(imageChunk, testPdf.getAbsolutePath(),"");
             assertNotNull(ImagesUtils.getContrastRatioConsumer());
             // Verify file was created
-            Path htmlPath = Path.of(StaticLayoutContainers.getImagesDirectory(), "imageFile1.png");
+            Path pngPath = Path.of(StaticLayoutContainers.getImagesDirectory(), "imageFile1.png");
             // PNG file is created
-            assertTrue(Files.exists(htmlPath), "HtmlGenerator initialized successfully");
+            assertTrue(Files.exists(pngPath), "PNG file created successfully");
         } finally {
             // Cleanup
             Files.walk(tempDir)

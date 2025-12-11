@@ -53,8 +53,6 @@ public class HtmlGenerator implements Closeable {
 
     public void writeToHtml(List<List<IObject>> contents) {
         try {
-            StaticLayoutContainers.resetImageIndex();
-
             htmlWriter.write("<!DOCTYPE html>\n");
             htmlWriter.write("<html lang=\"und\">\n<head>\n<meta charset=\"utf-8\">\n");
             htmlWriter.write("<title>" + pdfFileName + "</title>\n");
@@ -95,16 +93,16 @@ public class HtmlGenerator implements Closeable {
         }
     }
 
-    protected void writeImage(ImageChunk chunk) {
+    protected void writeImage(ImageChunk image) {
         try {
-            String figureFileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, chunk.getIndex());
+            String figureFileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, image.getIndex());
             Path figureDirPath = Path.of(StaticLayoutContainers.getImagesDirectory());
             Path figureFilePath = figureDirPath.resolve(figureFileName);
 
             if (ImagesUtils.isImageFileExists(figureFilePath.toString())) {
                 String relativePathName = figureFilePath.subpath(figureDirPath.getNameCount() - 1,
                     figureDirPath.getNameCount() + 1).toString().replace("\\", "/");
-                String imageString = String.format("<img src=\"%s\" alt=\"figure%d\">", relativePathName, chunk.getIndex());
+                String imageString = String.format("<img src=\"%s\" alt=\"figure%d\">", relativePathName, image.getIndex());
                 htmlWriter.write(imageString);
                 htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
             }

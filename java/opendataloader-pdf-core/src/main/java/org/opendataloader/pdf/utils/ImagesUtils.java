@@ -47,7 +47,7 @@ public class ImagesUtils {
 
     private static void writeFromContents(IObject content, String pdfFilePath, String password) {
         if (content instanceof ImageChunk) {
-            writeImage(content, pdfFilePath, password);
+            writeImage((ImageChunk) content, pdfFilePath, password);
         } else if (content instanceof PDFList) {
             for (ListItem listItem : ((PDFList) content).getListItems()) {
                 for (IObject item : listItem.getContents()) {
@@ -73,15 +73,15 @@ public class ImagesUtils {
         }
     }
 
-    protected static void writeImage(IObject content, String pdfFilePath, String password) {
+    protected static void writeImage(ImageChunk chunk, String pdfFilePath, String password) {
         int currentImageIndex = StaticLayoutContainers.incrementImageIndex();
         if (currentImageIndex == 1) {
             createImagesDirectory(StaticLayoutContainers.getImagesDirectory());
             contrastRatioConsumer = StaticLayoutContainers.getContrastRatioConsumer(pdfFilePath, password, false, null);
         }
         String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, currentImageIndex);
-        content.setIndex(currentImageIndex);
-        createImageFile((ImageChunk) content, fileName);
+        chunk.setIndex(currentImageIndex);
+        createImageFile(chunk, fileName);
     }
 
     private static void createImageFile(ImageChunk image, String fileName) {

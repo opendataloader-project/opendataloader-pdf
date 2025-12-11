@@ -92,12 +92,12 @@ public class MarkdownGenerator implements Closeable {
         }
     }
 
-    protected void writeImage(ImageChunk chunk) {
+    protected void writeImage(ImageChunk image) {
         try {
-            String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, chunk.getIndex());
+            String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, image.getIndex());
 
             if (ImagesUtils.isImageFileExists(fileName)) {
-                String imageString = String.format(MarkdownSyntax.IMAGE_FORMAT, "image " + chunk.getIndex(), fileName);
+                String imageString = String.format(MarkdownSyntax.IMAGE_FORMAT, "image " + image.getIndex(), fileName);
                 markdownWriter.write(getCorrectMarkdownString(imageString));
             }
         } catch (IOException e) {
