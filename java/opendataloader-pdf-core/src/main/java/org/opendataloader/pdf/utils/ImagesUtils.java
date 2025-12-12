@@ -24,20 +24,20 @@ import java.util.logging.Logger;
 
 public class ImagesUtils {
     private static final Logger LOGGER = Logger.getLogger(ImagesUtils.class.getCanonicalName());
-    private static ContrastRatioConsumer contrastRatioConsumer;
+    private ContrastRatioConsumer contrastRatioConsumer;
 
-    public static ContrastRatioConsumer getContrastRatioConsumer() {
+    public ContrastRatioConsumer getContrastRatioConsumer() {
         return contrastRatioConsumer;
     }
 
-    public static void createImagesDirectory(String path) {
+    public void createImagesDirectory(String path) {
         File directory = new File(path);
         if (!directory.exists()) {
             directory.mkdirs();
         }
     }
 
-    public static void write(List<List<IObject>> contents, String pdfFilePath, String password) {
+    public void write(List<List<IObject>> contents, String pdfFilePath, String password) {
         for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
             for (IObject content : contents.get(pageNumber)) {
                 writeFromContents(content, pdfFilePath, password);
@@ -45,7 +45,7 @@ public class ImagesUtils {
         }
     }
 
-    private static void writeFromContents(IObject content, String pdfFilePath, String password) {
+    private void writeFromContents(IObject content, String pdfFilePath, String password) {
         if (content instanceof ImageChunk) {
             writeImage((ImageChunk) content, pdfFilePath, password);
         } else if (content instanceof PDFList) {
@@ -73,7 +73,7 @@ public class ImagesUtils {
         }
     }
 
-    protected static void writeImage(ImageChunk chunk, String pdfFilePath, String password) {
+    protected void writeImage(ImageChunk chunk, String pdfFilePath, String password) {
         int currentImageIndex = StaticLayoutContainers.incrementImageIndex();
         if (currentImageIndex == 1) {
             createImagesDirectory(StaticLayoutContainers.getImagesDirectory());
@@ -84,7 +84,7 @@ public class ImagesUtils {
         createImageFile(chunk, fileName);
     }
 
-    private static void createImageFile(ImageChunk image, String fileName) {
+    private void createImageFile(ImageChunk image, String fileName) {
         try {
             File outputFile = new File(fileName);
             BoundingBox imageBox = image.getBoundingBox();

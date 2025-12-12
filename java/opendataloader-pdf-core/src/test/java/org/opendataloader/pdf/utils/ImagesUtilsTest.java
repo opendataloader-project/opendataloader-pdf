@@ -34,7 +34,8 @@ class ImagesUtilsTest {
         try {
             Path path = Paths.get(testPdf.getPath());
             StaticLayoutContainers.setImagesDirectory(outputFolder + File.separator + path.getFileName().toString().substring(0, path.getFileName().toString().length() - 4) + "_images");
-            ImagesUtils.createImagesDirectory(StaticLayoutContainers.getImagesDirectory());
+            ImagesUtils imagesUtils = new ImagesUtils();
+            imagesUtils.createImagesDirectory(StaticLayoutContainers.getImagesDirectory());
             // Then - verify images directory was created in createImagesDirectory()
             String expectedImagesDirName = testPdf.getName().substring(0, testPdf.getName().length() - 4) + "_images";
             Path expectedImagesPath = Path.of(outputFolder, expectedImagesDirName);
@@ -67,18 +68,20 @@ class ImagesUtilsTest {
             // Then - if ContrastRatioConsumer wasn't initialized,
             // it would be null and cause NPE when used
             Path path = Paths.get(testPdf.getAbsolutePath());
-            assertNull(ImagesUtils.getContrastRatioConsumer());
+            ImagesUtils imagesUtils = new ImagesUtils();
+            assertNull(imagesUtils.getContrastRatioConsumer());
             StaticLayoutContainers.setImagesDirectory(outputFolder + File.separator + path.getFileName().toString().substring(0, path.getFileName().toString().length() - 4) + "_images");
             ImageChunk imageChunk = new ImageChunk(new BoundingBox(0));
             // Initializing contrastRatioConsumer in writeImage()
-            ImagesUtils.writeImage(imageChunk, testPdf.getAbsolutePath(),"");
-            assertNotNull(ImagesUtils.getContrastRatioConsumer());
+            imagesUtils.writeImage(imageChunk, testPdf.getAbsolutePath(),"");
+            assertNotNull(imagesUtils.getContrastRatioConsumer());
             // Verify file was created
             Path pngPath = Path.of(StaticLayoutContainers.getImagesDirectory(), "imageFile1.png");
             // PNG file is created
             assertTrue(Files.exists(pngPath), "PNG file created successfully");
         } finally {
             // Cleanup
+            StaticLayoutContainers.closeContrastRatioConsumer();
             Files.walk(tempDir)
                 .sorted((a, b) -> b.compareTo(a))
                 .forEach(p -> {

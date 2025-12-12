@@ -93,7 +93,8 @@ public class DocumentProcessor {
         if (config.isGenerateHtml() || config.isAddImageToMarkdown() || config.isGenerateJSON()) {
             String fileName = Paths.get(inputPdfName).getFileName().toString();
             StaticLayoutContainers.setImagesDirectory(config.getOutputFolder() + File.separator + fileName.substring(0, fileName.length() - 4) + "_images");
-            ImagesUtils.write(contents, inputPdfName, config.getPassword());
+            ImagesUtils imagesUtils = new ImagesUtils();
+            imagesUtils.write(contents, inputPdfName, config.getPassword());
         }
         if (config.isGeneratePDF()) {
             PDFWriter pdfWriter = new PDFWriter();
