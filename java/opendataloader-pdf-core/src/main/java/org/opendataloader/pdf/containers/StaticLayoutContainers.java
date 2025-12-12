@@ -25,6 +25,7 @@ public class StaticLayoutContainers {
     private static final ThreadLocal<Boolean> isUseStructTree = new ThreadLocal<>();
     private static final ThreadLocal<ContrastRatioConsumer>  contrastRatioConsumer = new ThreadLocal<>();
     private static final ThreadLocal<Boolean> isContrastRatioConsumerFailedToCreate =  new ThreadLocal<>();
+    private static final ThreadLocal<String> imagesDirectory = new ThreadLocal<>();
 
     public static void clearContainers() {
         currentContentId.set(1L);
@@ -33,6 +34,7 @@ public class StaticLayoutContainers {
         isUseStructTree.set(false);
         contrastRatioConsumer.remove();
         isContrastRatioConsumerFailedToCreate.set(false);
+        imagesDirectory.set("");
     }
 
     public static long getCurrentContentId() {
@@ -47,6 +49,14 @@ public class StaticLayoutContainers {
 
     public static void setCurrentContentId(long currentContentId) {
         StaticLayoutContainers.currentContentId.set(currentContentId);
+    }
+
+    public static String getImagesDirectory() {
+        return imagesDirectory.get();
+    }
+
+    public static void setImagesDirectory(String imagesDirectory) {
+        StaticLayoutContainers.imagesDirectory.set(imagesDirectory);
     }
 
     public static ContrastRatioConsumer getContrastRatioConsumer(String sourcePdfPath, String password, boolean enableAntialias, Float imagePixelSize) {

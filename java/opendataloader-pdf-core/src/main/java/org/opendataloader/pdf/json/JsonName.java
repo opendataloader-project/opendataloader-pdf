@@ -52,4 +52,5 @@ public class JsonName {
     public static final String ROWS = "rows";
     public static final String CELLS = "cells";
     public static final String NUMBERING_STYLE = "numbering style";
+    public static final String SOURCE = "source";
 }
