@@ -16,6 +16,7 @@ import org.opendataloader.pdf.html.HtmlGeneratorFactory;
 import org.opendataloader.pdf.pdf.PDFWriter;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.text.TextGenerator;
+import org.opendataloader.pdf.utils.ImagesUtils;
 import org.verapdf.as.ASAtom;
 import org.verapdf.containers.StaticCoreContainers;
 import org.verapdf.cos.COSDictionary;
@@ -39,6 +40,7 @@ import org.verapdf.xmp.containers.StaticXmpCoreContainers;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.logging.Level;
@@ -88,6 +90,12 @@ public class DocumentProcessor {
     private static void generateOutputs(String inputPdfName, List<List<IObject>> contents, Config config) throws IOException {
         File inputPDF = new File(inputPdfName);
         new File(config.getOutputFolder()).mkdirs();
+        if (config.isGenerateHtml() || config.isAddImageToMarkdown() || config.isGenerateJSON()) {
+            String fileName = Paths.get(inputPdfName).getFileName().toString();
+            StaticLayoutContainers.setImagesDirectory(config.getOutputFolder() + File.separator + fileName.substring(0, fileName.length() - 4) + "_images");
+            ImagesUtils imagesUtils = new ImagesUtils();
+            imagesUtils.write(contents, inputPdfName, config.getPassword());
+        }
         if (config.isGeneratePDF()) {
             PDFWriter pdfWriter = new PDFWriter();
             pdfWriter.updatePDF(inputPDF, config.getPassword(), config.getOutputFolder(), contents);
@@ -102,7 +110,7 @@ public class DocumentProcessor {
             }
         }
         if (config.isGenerateHtml()) {
-            try (HtmlGenerator htmlGenerator = HtmlGeneratorFactory.getHtmlGenerator(inputPDF, config.getOutputFolder(), config)) {
+            try (HtmlGenerator htmlGenerator = HtmlGeneratorFactory.getHtmlGenerator(inputPDF, config.getOutputFolder())) {
                 htmlGenerator.writeToHtml(contents);
             }
         }
