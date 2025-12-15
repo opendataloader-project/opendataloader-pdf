@@ -13,11 +13,6 @@ on:
         description: 'Issue number to fix'
         required: true
         type: number
-      force:
-        description: 'Skip label check (force run without fix/auto-eligible label)'
-        required: false
-        type: boolean
-        default: false
   issue_comment:
     types: [created]
 
@@ -26,14 +21,6 @@ env:
 
 jobs:
   fix:
-    if: |
-      github.event_name == 'workflow_call' ||
-      github.event_name == 'workflow_dispatch' ||
-      (
-        github.event_name == 'issue_comment' &&
-        contains(github.event.comment.body, '@ai-issue fix') &&
-        github.event.comment.user.type != 'Bot'
-      )
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -42,11 +29,56 @@ jobs:
       actions: read
 
     steps:
+      - name: Check trigger conditions
+        id: trigger
+        run: |
+          echo "=== Trigger Check ==="
+          echo "Event: ${{ github.event_name }}"
+          echo "Input issue_number: ${{ inputs.issue_number }}"
+
+          SHOULD_RUN="false"
+          SKIP_REASON=""
+          NEEDS_AUTH="false"
+
+          # workflow_call passes inputs.issue_number, but github.event_name stays as original event (e.g., 'issues')
+          # So we detect workflow_call by checking if inputs.issue_number is set
+          if [ -n "${{ inputs.issue_number }}" ]; then
+            echo "✅ Trigger via workflow_call or workflow_dispatch (issue_number=${{ inputs.issue_number }})"
+            SHOULD_RUN="true"
+          elif [ "${{ github.event_name }}" = "issue_comment" ]; then
+            COMMENT_BODY="${{ github.event.comment.body }}"
+            COMMENTER_TYPE="${{ github.event.comment.user.type }}"
+            echo "Comment body: $COMMENT_BODY"
+            echo "Commenter type: $COMMENTER_TYPE"
+
+            if echo "$COMMENT_BODY" | grep -q "@ai-issue fix"; then
+              if [ "$COMMENTER_TYPE" != "Bot" ]; then
+                echo "✅ @ai-issue fix command detected from non-bot user"
+                SHOULD_RUN="true"
+                NEEDS_AUTH="true"
+              else
+                SKIP_REASON="@ai-issue fix command from Bot is ignored"
+              fi
+            else
+              SKIP_REASON="Comment does not contain '@ai-issue fix' command"
+            fi
+          else
+            SKIP_REASON="Unknown trigger: event=${{ github.event_name }}, no issue_number input"
+          fi
+
+          echo "should_run=$SHOULD_RUN" >> $GITHUB_OUTPUT
+          echo "skip_reason=$SKIP_REASON" >> $GITHUB_OUTPUT
+          echo "needs_auth=$NEEDS_AUTH" >> $GITHUB_OUTPUT
+
+          if [ "$SHOULD_RUN" = "false" ]; then
+            echo "⚠️ Skipping: $SKIP_REASON"
+          fi
+
       - uses: actions/checkout@v4
-        if: github.event_name == 'issue_comment'
+        if: steps.trigger.outputs.needs_auth == 'true'
 
       - name: Check CODEOWNERS permission
-        if: github.event_name == 'issue_comment'
+        if: steps.trigger.outputs.needs_auth == 'true'
         id: auth
         run: |
           COMMENTER="${{ github.event.comment.user.login }}"
@@ -63,12 +95,15 @@ jobs:
           fi
 
       - name: Check preconditions
-        if: github.event_name == 'workflow_call' || github.event_name == 'workflow_dispatch' || steps.auth.outputs.authorized == 'true'
+        if: |
+          steps.trigger.outputs.should_run == 'true' &&
+          (steps.trigger.outputs.needs_auth != 'true' || steps.auth.outputs.authorized == 'true')
         id: check
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "${{ github.event_name }}" = "workflow_call" ]; then
+          # inputs.issue_number is set for workflow_call and workflow_dispatch
+          if [ -n "${{ inputs.issue_number }}" ]; then
             ISSUE_NUM=${{ inputs.issue_number }}
           else
             ISSUE_NUM=${{ github.event.issue.number }}
@@ -88,59 +123,52 @@ jobs:
             exit 0
           fi
 
-          # Skip label check for workflow_call (already validated by Stage 2) or force mode
-          if [ "${{ github.event_name }}" = "workflow_call" ] || [ "${{ inputs.force }}" = "true" ]; then
-            echo "skip=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          # Check labels (for manual triggers only)
-          LABELS=$(gh issue view $ISSUE_NUM --repo ${{ github.repository }} --json labels --jq '.labels[].name')
-
-          # Must have fix/auto-eligible label
-          if ! echo "$LABELS" | grep -q "fix/auto-eligible"; then
-            echo "skip=true" >> $GITHUB_OUTPUT
-            echo "reason=Issue does not have fix/auto-eligible label" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
           echo "skip=false" >> $GITHUB_OUTPUT
 
       - name: Skip notification
-        if: steps.check.outputs.skip == 'true'
+        if: |
+          steps.trigger.outputs.should_run != 'true' ||
+          (steps.trigger.outputs.needs_auth == 'true' && steps.auth.outputs.authorized != 'true') ||
+          steps.check.outputs.skip == 'true'
         run: |
-          echo "⚠️ Skipping: ${{ steps.check.outputs.reason }}"
+          if [ "${{ steps.trigger.outputs.should_run }}" != "true" ]; then
+            echo "⚠️ Trigger condition not met: ${{ steps.trigger.outputs.skip_reason }}"
+          elif [ "${{ steps.trigger.outputs.needs_auth }}" = "true" ] && [ "${{ steps.auth.outputs.authorized }}" != "true" ]; then
+            echo "⚠️ Authorization failed: ${{ github.event.comment.user.login }} is not a CODEOWNER"
+          else
+            echo "⚠️ Precondition not met: ${{ steps.check.outputs.reason }}"
+          fi
 
       - uses: actions/checkout@v4
-        if: (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call') && steps.check.outputs.skip != 'true'
+        if: steps.check.outputs.skip == 'false'
 
       - name: Setup Java
-        if: steps.check.outputs.skip != 'true'
+        if: steps.check.outputs.skip == 'false'
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '21'
 
       - name: Setup Python
-        if: steps.check.outputs.skip != 'true'
+        if: steps.check.outputs.skip == 'false'
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
       - name: Setup Node.js
-        if: steps.check.outputs.skip != 'true'
+        if: steps.check.outputs.skip == 'false'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
       - name: Setup pnpm
-        if: steps.check.outputs.skip != 'true'
+        if: steps.check.outputs.skip == 'false'
         uses: pnpm/action-setup@v4
         with:
           version: 9
 
       - name: Gather context
-        if: steps.check.outputs.skip != 'true'
+        if: steps.check.outputs.skip == 'false'
         id: context
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -162,7 +190,7 @@ jobs:
           cat /tmp/issue.json | jq -r '.comments[] | "### Comment by \(.author.login):\n\(.body)\n"' > /tmp/all_comments.txt || true
 
       - name: Pre-fix build & test
-        if: steps.check.outputs.skip != 'true'
+        if: steps.check.outputs.skip == 'false'
         id: pre_build
         run: |
           echo "Running build-all.sh to verify baseline..."
@@ -176,7 +204,7 @@ jobs:
           fi
 
       - name: Run fix
-        if: steps.check.outputs.skip != 'true'
+        if: steps.check.outputs.skip == 'false'
         id: fix
         timeout-minutes: 30
         env:
@@ -274,7 +302,7 @@ jobs:
           fi
 
       - name: Post-fix build & test
-        if: steps.check.outputs.skip != 'true' && steps.fix.outputs.has_changes == 'true'
+        if: steps.check.outputs.skip == 'false' && steps.fix.outputs.has_changes == 'true'
         id: post_build
         run: |
           echo "Running build-all.sh to verify fix..."
@@ -288,7 +316,7 @@ jobs:
           fi
 
       - name: Commit and push
-        if: steps.check.outputs.skip != 'true' && steps.fix.outputs.has_changes == 'true' && steps.post_build.outputs.success == 'true'
+        if: steps.check.outputs.skip == 'false' && steps.fix.outputs.has_changes == 'true' && steps.post_build.outputs.success == 'true'
         id: commit
         env:
           ISSUE_NUM: ${{ steps.check.outputs.issue_num }}
@@ -309,7 +337,7 @@ jobs:
           echo "success=true" >> $GITHUB_OUTPUT
 
       - name: Create pull request
-        if: steps.check.outputs.skip != 'true' && steps.commit.outputs.success == 'true'
+        if: steps.check.outputs.skip == 'false' && steps.commit.outputs.success == 'true'
         id: pr
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -367,7 +395,7 @@ jobs:
           echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
 
       - name: "Result: Success"
-        if: steps.check.outputs.skip != 'true' && steps.commit.outputs.success == 'true'
+        if: steps.check.outputs.skip == 'false' && steps.commit.outputs.success == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_URL: ${{ steps.pr.outputs.pr_url }}
@@ -396,7 +424,7 @@ jobs:
           gh issue edit $ISSUE_NUM --remove-label "fix/auto-eligible"
 
       - name: "Result: Build Failed"
-        if: steps.check.outputs.skip != 'true' && steps.fix.outputs.has_changes == 'true' && steps.post_build.outputs.success != 'true'
+        if: steps.check.outputs.skip == 'false' && steps.fix.outputs.has_changes == 'true' && steps.post_build.outputs.success != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -422,7 +450,7 @@ jobs:
           gh issue edit $ISSUE_NUM --remove-label "fix/auto-eligible" --add-label "fix/manual-required"
 
       - name: "Result: No Changes"
-        if: steps.check.outputs.skip != 'true' && steps.fix.outputs.has_changes != 'true'
+        if: steps.check.outputs.skip == 'false' && steps.fix.outputs.has_changes != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
