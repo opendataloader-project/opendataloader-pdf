@@ -64,8 +64,9 @@ public class HtmlGenerator implements Closeable {
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 if (!htmlPageSeparator.isEmpty()) {
                     htmlWriter.write(htmlPageSeparator.contains(Config.PAGE_NUMBER_STRING)
-                        ? htmlPageSeparator.replace(Config.PAGE_NUMBER_STRING, String.valueOf(pageNumber + 1)) + "\n"
-                        : htmlPageSeparator + "\n");
+                        ? htmlPageSeparator.replace(Config.PAGE_NUMBER_STRING, String.valueOf(pageNumber + 1))
+                        : htmlPageSeparator);
+                    htmlWriter.write("\n");
                 }
                 for (IObject content : contents.get(pageNumber)) {
                     this.write(content);
