@@ -1,11 +1,9 @@
 name: "AI Issue: Tests"
 
+permissions:
+  contents: read
+
 on:
-  pull_request:
-    paths:
-      - '.github/workflows/ai-issue-*.yml'
-      - '.github/scripts/ai-issue/**'
-      - '.claude/skills/ai-issue/**'
   workflow_dispatch:
     inputs:
       stage:
