@@ -66,6 +66,9 @@ jobs:
         id: context
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Pass user input via env vars to prevent shell injection
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
         run: |
           ISSUE_NUM=${{ github.event.issue.number || inputs.issue_number }}
 
@@ -77,9 +80,10 @@ jobs:
             echo "$ISSUE_JSON" | jq -r '.body // ""' >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
           else
-            echo "title=${{ github.event.issue.title }}" >> $GITHUB_OUTPUT
+            # Use env vars (not direct interpolation) for security
+            echo "title=$ISSUE_TITLE" >> $GITHUB_OUTPUT
             echo "body<<EOF" >> $GITHUB_OUTPUT
-            echo "${{ github.event.issue.body }}" >> $GITHUB_OUTPUT
+            echo "$ISSUE_BODY" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
           fi
 
