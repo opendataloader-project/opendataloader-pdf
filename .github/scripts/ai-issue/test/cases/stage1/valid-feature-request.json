@@ -1,0 +1,12 @@
+{
+  "name": "Valid feature request",
+  "description": "Clear feature request related to PDF processing should be valid",
+  "input": {
+    "title": "Add support for extracting form field values",
+    "body": "## Feature Request\n\nIt would be great if the library could extract form field values from fillable PDFs.\n\n## Use Case\nWe have many fillable PDF forms submitted by users and need to extract the data programmatically.\n\n## Proposed Solution\nAdd an option like `extract_form_fields=True` that returns form field names and their values.\n\n## Alternatives Considered\n- Using PyPDF2 separately for forms (but would prefer a unified solution)\n- Manual text extraction (unreliable for structured data)"
+  },
+  "expected": {
+    "decision": "valid",
+    "duplicate_of": null
+  }
+}

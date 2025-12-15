@@ -1,0 +1,13 @@
+#1 Initial release
+#5 Add Python wrapper
+#8 Support for Node.js
+#10 Memory leak when processing large PDFs
+#12 Add Docker support
+#15 Table extraction produces incorrect column alignment
+#18 Support for encrypted PDFs
+#22 OCR support for scanned documents
+#25 Performance improvement for multi-page documents
+#30 Add CLI tool
+#35 Support for PDF/A format
+#40 Markdown output formatting issues
+#42 Add progress callback for long operations
