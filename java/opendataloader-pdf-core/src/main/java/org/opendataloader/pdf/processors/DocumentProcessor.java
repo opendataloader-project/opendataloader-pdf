@@ -116,12 +116,12 @@ public class DocumentProcessor {
             }
         }
         if (config.isGenerateHtml()) {
-            try (HtmlGenerator htmlGenerator = HtmlGeneratorFactory.getHtmlGenerator(inputPDF, config.getOutputFolder())) {
+            try (HtmlGenerator htmlGenerator = HtmlGeneratorFactory.getHtmlGenerator(inputPDF, config.getOutputFolder(), config)) {
                 htmlGenerator.writeToHtml(contents);
             }
         }
         if (config.isGenerateText()) {
-            try (TextGenerator textGenerator = new TextGenerator(inputPDF, config.getOutputFolder())) {
+            try (TextGenerator textGenerator = new TextGenerator(inputPDF, config.getOutputFolder(), config)) {
                 textGenerator.writeToText(contents);
             }
         }
