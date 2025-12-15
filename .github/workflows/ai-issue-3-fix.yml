@@ -34,6 +34,10 @@ jobs:
     steps:
       - name: Check trigger conditions
         id: trigger
+        env:
+          # Pass user input via env vars to prevent shell injection
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          COMMENTER_TYPE: ${{ github.event.comment.user.type }}
         run: |
           echo "=== Trigger Check ==="
           echo "Event: ${{ github.event_name }}"
@@ -49,8 +53,7 @@ jobs:
             echo "✅ Trigger via workflow_call or workflow_dispatch (issue_number=${{ inputs.issue_number }})"
             SHOULD_RUN="true"
           elif [ "${{ github.event_name }}" = "issue_comment" ]; then
-            COMMENT_BODY="${{ github.event.comment.body }}"
-            COMMENTER_TYPE="${{ github.event.comment.user.type }}"
+            # Use env vars (not direct interpolation) for security
             echo "Comment body: $COMMENT_BODY"
             echo "Commenter type: $COMMENTER_TYPE"
 
@@ -83,8 +86,10 @@ jobs:
       - name: Check CODEOWNERS permission
         if: steps.trigger.outputs.needs_auth == 'true'
         id: auth
+        env:
+          # Pass user input via env vars to prevent shell injection
+          COMMENTER: ${{ github.event.comment.user.login }}
         run: |
-          COMMENTER="${{ github.event.comment.user.login }}"
 
           # Parse CODEOWNERS file - extract all @usernames
           OWNERS=$(grep -oE '@[a-zA-Z0-9_-]+' .github/CODEOWNERS | sort -u | tr '\n' ' ')
