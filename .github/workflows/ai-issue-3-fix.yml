@@ -17,7 +17,10 @@ on:
     types: [created]
 
 env:
-  DAILY_LIMIT: 3
+  # Recommended: 0 (DISABLED - run locally instead)
+  # Claude Code CLI + full build/test ~$1-5+/call, too expensive for CI
+  # Use: claude "@ai-issue fix #123" locally with pay-as-you-go
+  DAILY_LIMIT: 0
 
 jobs:
   fix:

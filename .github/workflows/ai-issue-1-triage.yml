@@ -11,7 +11,9 @@ on:
         type: number
 
 env:
-  DAILY_LIMIT: 20  # Triage limit per day
+  # Recommended: 20 (Haiku API ~$0.001/call, cheap but prevents spam)
+  # Cost estimate: 20/day × 30 days × $0.001 = ~$0.60/month
+  DAILY_LIMIT: 20
 
 jobs:
   triage:
