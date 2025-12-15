@@ -7,7 +7,7 @@
 # Also writes analysis fields to files in output_dir (default: /tmp)
 #
 # Outputs to stdout:
-#   action=fix/auto-eligible|fix/manual-required|respond/comment-only
+#   action=fix/auto-eligible|fix/manual-required|fix/comment-only
 #   labels=["label1", "label2"]
 #   priority=P0|P1|P2
 #   estimated=1|2|3|5|8
@@ -92,6 +92,9 @@ ASSIGNEE=$(echo "$PARSED_JSON" | jq -r '.assignee // ""' | tr -d '@')
 SCORE_TOTAL=$(echo "$PARSED_JSON" | jq -r '.score.total // 0')
 SCORE_THRESHOLD=$(echo "$PARSED_JSON" | jq -r '.score.threshold // 70')
 
+# Parse comment_draft for fix/comment-only cases
+COMMENT_DRAFT=$(echo "$PARSED_JSON" | jq -r '.comment_draft // ""')
+
 # Output for GitHub Actions (single-line values)
 echo "action=$ACTION"
 echo "labels=$LABELS"
@@ -130,3 +133,6 @@ echo "$PARSED_JSON" | jq -r '.analysis.suggested_approach // ""' > "$OUTPUT_DIR/
   CLARITY_REASON=$(echo "$PARSED_JSON" | jq -r '.score.breakdown.clarity.reason // ""')
   echo "| Clarity | 15 | $CLARITY_SCORE | $CLARITY_REASON |"
 } > "$OUTPUT_DIR/score_breakdown.txt"
+
+# Write comment_draft to file (for fix/comment-only cases)
+echo "$PARSED_JSON" | jq -r '.comment_draft // ""' > "$OUTPUT_DIR/comment_draft.txt"
