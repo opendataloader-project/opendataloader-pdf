@@ -108,6 +108,7 @@ Have questions or need a little help? We're here for you!🤗
 
 - [GitHub Discussions](https://github.com/hancom-inc/opendataloader-pdf/discussions): For Q&A and general chats. Let's talk! 🗣️
 - [GitHub Issues](https://github.com/hancom-inc/opendataloader-pdf/issues): Found a bug? 🐛 Please report it here so we can fix it.
+- [SUPPORT.md](SUPPORT.md): Learn about our issue guidelines and AI-powered issue processing system.
 
 <br/>
 
