@@ -97,13 +97,16 @@ jobs:
         id: triage
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Pass user-derived input via env vars to prevent shell injection
+          CONTEXT_TITLE: ${{ steps.context.outputs.title }}
+          CONTEXT_BODY: ${{ steps.context.outputs.body }}
         run: |
           # Build prompt using shared script
           ISSUE_NUM="${{ github.event.issue.number || inputs.issue_number }}"
           .github/scripts/ai-issue/build-stage1-prompt.sh \
             "$ISSUE_NUM" \
-            "${{ steps.context.outputs.title }}" \
-            "${{ steps.context.outputs.body }}" \
+            "$CONTEXT_TITLE" \
+            "$CONTEXT_BODY" \
             "README.md" \
             "/tmp/issues.txt" > /tmp/triage_prompt.txt
 
@@ -229,6 +232,11 @@ jobs:
   analyze:
     needs: triage
     if: needs.triage.outputs.decision == 'valid'
+    # Explicit permissions for reusable workflow call (least privilege principle)
+    permissions:
+      issues: write
+      contents: read
+      actions: read
     uses: ./.github/workflows/ai-issue-2-analyze.yml
     with:
       issue_number: ${{ fromJson(needs.triage.outputs.issue_number) }}

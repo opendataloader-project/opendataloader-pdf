@@ -150,11 +150,14 @@ jobs:
           steps.trigger.outputs.should_run != 'true' ||
           (steps.trigger.outputs.needs_auth == 'true' && steps.auth.outputs.authorized != 'true') ||
           steps.check.outputs.skip == 'true'
+        env:
+          # Pass user input via env vars to prevent shell injection
+          COMMENTER_LOGIN: ${{ github.event.comment.user.login }}
         run: |
           if [ "${{ steps.trigger.outputs.should_run }}" != "true" ]; then
             echo "⚠️ Trigger condition not met: ${{ steps.trigger.outputs.skip_reason }}"
           elif [ "${{ steps.trigger.outputs.needs_auth }}" = "true" ] && [ "${{ steps.auth.outputs.authorized }}" != "true" ]; then
-            echo "⚠️ Authorization failed: ${{ github.event.comment.user.login }} is not a CODEOWNER"
+            echo "⚠️ Authorization failed: $COMMENTER_LOGIN is not a CODEOWNER"
           else
             echo "⚠️ Precondition not met: ${{ steps.check.outputs.reason }}"
           fi
@@ -377,6 +380,12 @@ jobs:
     if: |
       needs.analyze.outputs.action == 'fix/auto-eligible' &&
       needs.analyze.outputs.issue_number != ''
+    # Explicit permissions for reusable workflow call (least privilege principle)
+    permissions:
+      issues: write
+      contents: write
+      pull-requests: write
+      actions: read
     uses: ./.github/workflows/ai-issue-3-fix.yml
     with:
       issue_number: ${{ fromJson(needs.analyze.outputs.issue_number) }}
