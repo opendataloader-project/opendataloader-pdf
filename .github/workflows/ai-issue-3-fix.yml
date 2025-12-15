@@ -138,11 +138,14 @@ jobs:
           steps.trigger.outputs.should_run != 'true' ||
           (steps.trigger.outputs.needs_auth == 'true' && steps.auth.outputs.authorized != 'true') ||
           steps.check.outputs.skip == 'true'
+        env:
+          # Pass user input via env vars to prevent shell injection
+          COMMENTER_LOGIN: ${{ github.event.comment.user.login }}
         run: |
           if [ "${{ steps.trigger.outputs.should_run }}" != "true" ]; then
             echo "⚠️ Trigger condition not met: ${{ steps.trigger.outputs.skip_reason }}"
           elif [ "${{ steps.trigger.outputs.needs_auth }}" = "true" ] && [ "${{ steps.auth.outputs.authorized }}" != "true" ]; then
-            echo "⚠️ Authorization failed: ${{ github.event.comment.user.login }} is not a CODEOWNER"
+            echo "⚠️ Authorization failed: $COMMENTER_LOGIN is not a CODEOWNER"
           else
             echo "⚠️ Precondition not met: ${{ steps.check.outputs.reason }}"
           fi
@@ -218,9 +221,10 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Pass user-derived input via env vars to prevent shell injection
+          ISSUE_TITLE: ${{ steps.context.outputs.title }}
         run: |
           ISSUE_NUM=${{ steps.check.outputs.issue_num }}
-          ISSUE_TITLE="${{ steps.context.outputs.title }}"
           ISSUE_BODY=$(cat /tmp/issue_body.txt 2>/dev/null || echo "")
           ALL_COMMENTS=$(cat /tmp/all_comments.txt 2>/dev/null || echo "No comments")
 
@@ -350,9 +354,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: ${{ steps.fix.outputs.branch }}
+          # Pass user-derived input via env vars to prevent shell injection
+          ISSUE_TITLE: ${{ steps.context.outputs.title }}
         run: |
           ISSUE_NUM=${{ steps.check.outputs.issue_num }}
-          ISSUE_TITLE="${{ steps.context.outputs.title }}"
 
           SUMMARY_SECTION=$(cat /tmp/fix_summary.txt)
           CHANGED_FILES=$(cat /tmp/changed_files.txt)
