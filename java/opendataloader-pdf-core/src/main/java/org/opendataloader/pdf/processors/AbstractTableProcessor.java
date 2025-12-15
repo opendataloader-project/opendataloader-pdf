@@ -15,6 +15,7 @@ public abstract class AbstractTableProcessor {
 
     private static final double Y_DIFFERENCE_EPSILON = 0.1;
     private static final double X_DIFFERENCE_EPSILON = 3;
+    private static final double TABLE_INTERSECTION_PERCENT = 0.01;
 
     public void processTables(List<List<IObject>> contents) {
         List<Integer> pageNumbers = getPagesWithPossibleTables(contents);
@@ -36,7 +37,14 @@ public abstract class AbstractTableProcessor {
             for (int index = 0; index < pageNumbers.size(); index++) {
                 SortedSet<TableBorder> tables = tableCollection.getTableBorders(pageNumbers.get(index));
                 for (TableBorder border : detectedTables.get(index)) {
-                    if (tableCollection.getTableBorder(border.getBoundingBox()) == null) {
+                    boolean hasIntersections = false;
+                    for (TableBorder table : tables) {
+                        if (table.getBoundingBox().getIntersectionPercent(border.getBoundingBox()) > TABLE_INTERSECTION_PERCENT) {
+                            hasIntersections = true;
+                            break;
+                        }
+                    }
+                    if (!hasIntersections) {
                         tables.add(border);
                     }
                 }
