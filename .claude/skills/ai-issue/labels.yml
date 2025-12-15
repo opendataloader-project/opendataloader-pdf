@@ -9,6 +9,9 @@ action:
   - name: fix/manual-required
     color: "FBCA04"
     description: "Requires human implementation"
+  - name: fix/comment-only
+    color: "C5DEF5"
+    description: "No code change needed, responded with comment"
 
 # Type Labels (issue categorization)
 type:

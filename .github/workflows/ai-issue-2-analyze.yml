@@ -226,7 +226,7 @@ jobs:
           # Determine action badge based on score
           if [ "$ACTION" = "fix/auto-eligible" ]; then
             ACTION_BADGE="🤖 **Auto-fix eligible** - Stage 3 can attempt automatic fix"
-          elif [ "$ACTION" = "respond/comment-only" ]; then
+          elif [ "$ACTION" = "fix/comment-only" ]; then
             ACTION_BADGE="💬 **Comment only** - No code change required"
           else
             ACTION_BADGE="👤 **Manual fix required** - Assigned for human implementation"
@@ -320,11 +320,30 @@ jobs:
           # Add fix status label based on action
           if [ "$ACTION" = "fix/auto-eligible" ]; then
             LABEL_ARGS="$LABEL_ARGS --add-label \"fix/auto-eligible\""
+          elif [ "$ACTION" = "fix/comment-only" ]; then
+            LABEL_ARGS="$LABEL_ARGS --add-label \"fix/comment-only\""
           else
             LABEL_ARGS="$LABEL_ARGS --add-label \"fix/manual-required\""
           fi
 
           eval gh issue edit $ISSUE_NUM $LABEL_ARGS
+
+      - name: Post response and close issue for comment-only
+        if: steps.check.outputs.skip == 'false' && steps.analysis.outputs.action == 'fix/comment-only'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ISSUE_NUM=${{ steps.check.outputs.issue_number }}
+
+          # Read and post the comment_draft
+          COMMENT_DRAFT=$(cat /tmp/comment_draft.txt)
+          if [ -n "$COMMENT_DRAFT" ]; then
+            echo "💬 Posting response comment..."
+            gh issue comment $ISSUE_NUM --body "$COMMENT_DRAFT"
+          fi
+
+          echo "💬 Issue #$ISSUE_NUM is comment-only, closing issue..."
+          gh issue close $ISSUE_NUM --comment "🤖 This issue has been addressed with the response above. Closing as no code changes are required."
 
       - name: Log Stage 3 eligibility
         if: steps.check.outputs.skip == 'false' && steps.analysis.outputs.action == 'fix/auto-eligible'

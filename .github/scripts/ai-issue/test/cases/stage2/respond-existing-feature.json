@@ -8,7 +8,7 @@
     "comments": []
   },
   "expected": {
-    "action": "respond/comment-only",
+    "action": "fix/comment-only",
     "labels_include": ["documentation"]
   }
 }

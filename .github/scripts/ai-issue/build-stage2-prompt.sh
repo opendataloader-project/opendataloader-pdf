@@ -74,8 +74,8 @@ Use the ai-issue skill to:
 4. Decide action based on total score vs threshold:
    - score >= threshold → "fix/auto-eligible"
    - score < threshold → "fix/manual-required"
-   - no code change needed → "respond/comment-only"
-5. For "respond/comment-only", use when:
+   - no code change needed → "fix/comment-only"
+5. For "fix/comment-only", use when:
    - User didn't find existing feature (guide them to it)
    - Documentation question (point to docs)
    - Feature request requiring roadmap review
@@ -84,7 +84,7 @@ Use the ai-issue skill to:
    - Duplicate of existing issue
    - Working as designed (won't fix)
 6. Select appropriate labels, priority, and estimate based on issue-policy.yml
-7. Recommend the best available team member from members.yml (skip if respond/comment-only)
+7. Recommend the best available team member from members.yml (skip if fix/comment-only)
 
 ## AI Fix Criteria (Scoring System)
 ${AI_FIX_CRITERIA:-Use standard criteria with threshold 70.}
@@ -98,7 +98,7 @@ ${MEMBERS:-Available: benedict (available)}
 ## Required Output
 Respond with JSON only (no markdown code blocks):
 {
-  "action": "fix/auto-eligible" | "fix/manual-required" | "respond/comment-only",
+  "action": "fix/auto-eligible" | "fix/manual-required" | "fix/comment-only",
   "score": {
     "total": <number 0-100>,
     "threshold": <number from ai-fix-criteria.yml>,
@@ -121,6 +121,6 @@ Respond with JSON only (no markdown code blocks):
     "root_cause": "Technical explanation of why the issue occurs (if identifiable)",
     "suggested_approach": "How to fix or implement this"
   },
-  "comment_draft": "(Only for respond/comment-only) Draft response to post on the issue"
+  "comment_draft": "(Only for fix/comment-only) Draft response to post on the issue"
 }
 PROMPT_EOF
