@@ -345,10 +345,17 @@ jobs:
           echo "💬 Issue #$ISSUE_NUM is comment-only, closing issue..."
           gh issue close $ISSUE_NUM --comment "🤖 This issue has been addressed with the response above. Closing as no code changes are required."
 
+      - name: Debug outputs
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          echo "=== Job Outputs Debug ==="
+          echo "steps.check.outputs.issue_number: ${{ steps.check.outputs.issue_number }}"
+          echo "steps.analysis.outputs.action: ${{ steps.analysis.outputs.action }}"
+          echo "steps.analysis.outputs.labels: ${{ steps.analysis.outputs.labels }}"
+          echo "========================="
+
       - name: Log Stage 3 eligibility
         if: steps.check.outputs.skip == 'false' && steps.analysis.outputs.action == 'fix/auto-eligible'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ISSUE_NUM=${{ steps.check.outputs.issue_number }}
 
@@ -358,7 +365,11 @@ jobs:
   # Call Stage 3 when analysis determines auto-fix is eligible
   fix:
     needs: analyze
-    if: needs.analyze.outputs.action == 'fix/auto-eligible'
+    # Check if action output exists and equals 'fix/auto-eligible'
+    # Also ensure issue_number is set (analysis completed successfully)
+    if: |
+      needs.analyze.outputs.action == 'fix/auto-eligible' &&
+      needs.analyze.outputs.issue_number != ''
     uses: ./.github/workflows/ai-issue-3-fix.yml
     with:
       issue_number: ${{ fromJson(needs.analyze.outputs.issue_number) }}
