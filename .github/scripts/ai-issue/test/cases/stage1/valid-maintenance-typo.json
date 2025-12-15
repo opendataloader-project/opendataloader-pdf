@@ -1,0 +1,12 @@
+{
+  "name": "Valid maintenance request - documentation typo",
+  "description": "Typo corrections in documentation are valid maintenance tasks",
+  "input": {
+    "title": "Typo in README: 'recieve' should be 'receive'",
+    "body": "Found a small typo in the README.md file.\n\nLine 45 says \"recieve the output\" but it should be \"receive the output\"."
+  },
+  "expected": {
+    "decision": "valid",
+    "duplicate_of": null
+  }
+}
