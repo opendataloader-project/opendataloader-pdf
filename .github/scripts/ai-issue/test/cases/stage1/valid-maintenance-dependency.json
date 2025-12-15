@@ -1,0 +1,12 @@
+{
+  "name": "Valid maintenance request - dependency update",
+  "description": "Dependency update requests are valid maintenance tasks, not out of scope",
+  "input": {
+    "title": "Update log4j to latest version for security patch",
+    "body": "The current version of log4j has known vulnerabilities. Please update to the latest patched version."
+  },
+  "expected": {
+    "decision": "valid",
+    "duplicate_of": null
+  }
+}

@@ -1,0 +1,27 @@
+# Team Members
+# Used for issue assignment routing
+
+members:
+  - github_id: hnc-leebd
+    role: DevOps Engineer
+    available: true
+
+  - github_id: hnc-sujicho
+    role: Project Manager
+    available: false
+
+  - github_id: hnc-hyunheejo
+    role: Sub Engineer
+    available: false
+
+  - github_id: MaximPlusov
+    role: Main Engineer
+    available: false
+
+  - github_id: LonelyMidoriya
+    role: Sub Engineer
+    available: false
+
+  - github_id: bdoubrov
+    role: Project Manager
+    available: false

@@ -32,7 +32,7 @@ jobs:
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          java-version: '11'
+          java-version: '21'
           distribution: 'temurin'
           cache: 'maven'
           server-id: central
@@ -44,7 +44,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: '3.12'
 
       - name: Set up Node.js and pnpm
         uses: actions/setup-node@v4
@@ -60,25 +60,8 @@ jobs:
       # =================================================================
       # 2. BUILD & TEST
       # =================================================================
-      - name: '[Java] Build and test'
-        run: |
-          mvn versions:set -DnewVersion=${{ env.VERSION }} -DgenerateBackupPoms=false
-          mvn -B clean package -P release
-        working-directory: ./java
-
-      - name: '[Python] Build and test'
-        run: |
-          sed -i "s/version=\"0.0.0\"/version=\"${{ env.VERSION }}\"/" setup.py
-          chmod +x build.sh && ./build.sh
-        working-directory: ./python/opendataloader-pdf
-
-      - name: '[Node.js] Build and test'
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm version ${{ env.VERSION }} --no-git-tag-version --allow-same-version
-          pnpm run build
-          pnpm test
-        working-directory: ./node/opendataloader-pdf
+      - name: Build and test all packages
+        run: ./scripts/build-all.sh ${{ env.VERSION }}
 
       # =================================================================
       # 3. DEPLOY (only on tag push)

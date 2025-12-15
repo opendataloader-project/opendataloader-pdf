@@ -1,0 +1,65 @@
+# AI Fix Criteria
+# Score-based system for determining auto-fix eligibility
+# Total: 100 points, Threshold determines auto-fix vs manual-fix
+
+threshold:
+  auto_fix: 70  # Score >= this triggers auto-fix
+  # Adjustment guide:
+  # - Conservative (initial): 80
+  # - Standard: 70
+  # - Aggressive: 60
+  # - Very aggressive: 50
+
+# 4-axis scoring system
+criteria:
+  scope:
+    weight: 30
+    description: Change scope and complexity
+    levels:
+      - score: 30
+        description: Single file, clear modification point
+      - score: 20
+        description: 2-3 related files, local changes
+      - score: 10
+        description: 4-6 files, cross-component impact
+      - score: 0
+        description: 7+ files, architecture/design changes required
+
+  risk:
+    weight: 30
+    description: Failure risk level
+    levels:
+      - score: 30
+        description: No security/data concerns, internal logic only
+      - score: 20
+        description: Uses external API but read-only
+      - score: 10
+        description: Data modification but limited scope
+      - score: 0
+        description: Auth/permissions/encryption/payment related
+
+  verifiability:
+    weight: 25
+    description: Verification capability
+    levels:
+      - score: 25
+        description: Existing tests cover it, type/lint checks pass
+      - score: 15
+        description: Tests needed but straightforward
+      - score: 5
+        description: Manual testing required
+      - score: 0
+        description: Cannot verify, requires long-term monitoring
+
+  clarity:
+    weight: 15
+    description: Requirement clarity
+    levels:
+      - score: 15
+        description: Clear error message, definite expected behavior
+      - score: 10
+        description: Some interpretation needed but clear direction
+      - score: 5
+        description: Some domain knowledge required
+      - score: 0
+        description: Subjective judgment, UX decisions, trade-offs needed
