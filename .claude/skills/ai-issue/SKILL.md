@@ -10,7 +10,7 @@ Three-stage AI system for automatic GitHub issue classification and processing.
 ## Purpose
 
 - **Stage 1 (Triage)**: Validate issues (duplicate, spam, scope check)
-- **Stage 2 (Analyze)**: Analyze code and decide action (fix/auto-eligible, fix/manual-required, respond/comment-only)
+- **Stage 2 (Analyze)**: Analyze code and decide action (fix/auto-eligible, fix/manual-required, fix/comment-only)
 - **Stage 3 (Fix)**: Automatically fix eligible issues and create PRs
 
 ## When to Use
@@ -41,7 +41,7 @@ Three-stage AI system for automatic GitHub issue classification and processing.
 |--------|-----------|
 | `fix/auto-eligible` | Meets criteria in ai-fix-criteria.yml, creates PR |
 | `fix/manual-required` | Expert review required (see members.yml) |
-| `respond/comment-only` | No code change needed, respond with comment (existing feature guidance, docs reference, roadmap review needed, external dependency, needs more info, duplicate, won't fix) |
+| `fix/comment-only` | No code change needed, respond with comment (existing feature guidance, docs reference, roadmap review needed, external dependency, needs more info, duplicate, won't fix) |
 
 ## Build & Test
 
