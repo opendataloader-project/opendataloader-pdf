@@ -45,11 +45,11 @@ public class HtmlGenerator implements Closeable {
     protected int tableNesting = 0;
     protected String htmlPageSeparator = "";
 
-    public HtmlGenerator(File inputPdf, String outputFolder, Config config) throws IOException {
+    public HtmlGenerator(File inputPdf, Config config) throws IOException {
         this.pdfFileName = inputPdf.getName();
         this.pdfFilePath = inputPdf.toPath().toAbsolutePath();
         this.htmlFileName = pdfFileName.substring(0, pdfFileName.length() - 3) + "html";
-        this.htmlFilePath = Path.of(outputFolder, htmlFileName);
+        this.htmlFilePath = Path.of(config.getOutputFolder(), htmlFileName);
         this.htmlWriter = new FileWriter(htmlFilePath.toFile(), StandardCharsets.UTF_8);
         this.htmlPageSeparator = config.getHtmlPageSeparator();
     }
@@ -63,11 +63,9 @@ public class HtmlGenerator implements Closeable {
 
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 if (!htmlPageSeparator.isEmpty()) {
-                    if (htmlPageSeparator.contains(Config.PAGE_NUMBER_STRING)) {
-                        htmlWriter.write(htmlPageSeparator.replace(Config.PAGE_NUMBER_STRING, String.valueOf(pageNumber + 1)) + "\n");
-                    } else {
-                        htmlWriter.write(htmlPageSeparator + "\n");
-                    }
+                    htmlWriter.write(htmlPageSeparator.contains(Config.PAGE_NUMBER_STRING)
+                        ? htmlPageSeparator.replace(Config.PAGE_NUMBER_STRING, String.valueOf(pageNumber + 1)) + "\n"
+                        : htmlPageSeparator + "\n");
                 }
                 for (IObject content : contents.get(pageNumber)) {
                     this.write(content);

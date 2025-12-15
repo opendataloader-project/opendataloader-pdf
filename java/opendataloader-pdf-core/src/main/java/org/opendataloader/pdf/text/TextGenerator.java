@@ -43,9 +43,9 @@ public class TextGenerator implements Closeable {
     private final String lineSeparator = System.lineSeparator();
     private final String textPageSeparator;
 
-    public TextGenerator(File inputPdf, String outputFolder, Config config) throws IOException {
+    public TextGenerator(File inputPdf, Config config) throws IOException {
         String cutPdfFileName = inputPdf.getName();
-        this.textFileName = outputFolder + File.separator + cutPdfFileName.substring(0, cutPdfFileName.length() - 3) + "txt";
+        this.textFileName = config.getOutputFolder() + File.separator + cutPdfFileName.substring(0, cutPdfFileName.length() - 3) + "txt";
         this.textWriter = new FileWriter(textFileName, StandardCharsets.UTF_8);
         this.textPageSeparator = config.getTextPageSeparator();
     }
@@ -54,11 +54,9 @@ public class TextGenerator implements Closeable {
         try {
             for (int pageIndex = 0; pageIndex < contents.size(); pageIndex++) {
                 if (!textPageSeparator.isEmpty()) {
-                    if (textPageSeparator.contains(Config.PAGE_NUMBER_STRING)) {
-                        textWriter.write(textPageSeparator.replace(Config.PAGE_NUMBER_STRING, String.valueOf(pageIndex + 1)));
-                    } else {
-                        textWriter.write(textPageSeparator);
-                    }
+                    textWriter.write(textPageSeparator.contains(Config.PAGE_NUMBER_STRING)
+                        ? textPageSeparator.replace(Config.PAGE_NUMBER_STRING, String.valueOf(pageIndex + 1))
+                        : textPageSeparator);
                     textWriter.write(lineSeparator);
                 }
                 List<IObject> pageContents = contents.get(pageIndex);

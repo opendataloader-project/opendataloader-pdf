@@ -19,8 +19,8 @@ import java.util.List;
 
 public class MarkdownHTMLGenerator extends MarkdownGenerator {
 
-    protected MarkdownHTMLGenerator(File inputPdf, String fileName, Config config) throws IOException {
-        super(inputPdf, fileName, config);
+    protected MarkdownHTMLGenerator(File inputPdf, Config config) throws IOException {
+        super(inputPdf, config);
     }
 
     @Override

@@ -40,9 +40,9 @@ public class MarkdownGenerator implements Closeable {
     protected boolean isImageSupported;
     protected String markdownPageSeparator;
 
-    MarkdownGenerator(File inputPdf, String outputFolder, Config config) throws IOException {
+    MarkdownGenerator(File inputPdf, Config config) throws IOException {
         String cutPdfFileName = inputPdf.getName();
-        this.markdownFileName = outputFolder + File.separator + cutPdfFileName.substring(0, cutPdfFileName.length() - 3) + "md";
+        this.markdownFileName = config.getOutputFolder() + File.separator + cutPdfFileName.substring(0, cutPdfFileName.length() - 3) + "md";
         this.markdownWriter = new FileWriter(markdownFileName, StandardCharsets.UTF_8);
         this.isImageSupported = config.isAddImageToMarkdown();
         this.markdownPageSeparator = config.getMarkdownPageSeparator();
@@ -52,11 +52,9 @@ public class MarkdownGenerator implements Closeable {
         try {
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 if (!markdownPageSeparator.isEmpty()) {
-                    if (markdownPageSeparator.contains(Config.PAGE_NUMBER_STRING)) {
-                        markdownWriter.write(markdownPageSeparator.replace(Config.PAGE_NUMBER_STRING, String.valueOf(pageNumber + 1)));
-                    } else {
-                        markdownWriter.write(markdownPageSeparator);
-                    }
+                    markdownWriter.write(markdownPageSeparator.contains(Config.PAGE_NUMBER_STRING)
+                        ? markdownPageSeparator.replace(Config.PAGE_NUMBER_STRING, String.valueOf(pageNumber + 1))
+                        : markdownPageSeparator);
                     writeContentsSeparator();
                 }
 
