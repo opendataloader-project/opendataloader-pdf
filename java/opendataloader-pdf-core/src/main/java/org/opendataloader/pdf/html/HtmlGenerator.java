@@ -7,6 +7,7 @@
  */
 package org.opendataloader.pdf.html;
 
+import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.markdown.MarkdownSyntax;
 import org.opendataloader.pdf.utils.ImagesUtils;
@@ -42,13 +43,15 @@ public class HtmlGenerator implements Closeable {
     protected final String htmlFileName;
     protected final Path htmlFilePath;
     protected int tableNesting = 0;
+    protected String htmlPageSeparator = "";
 
-    public HtmlGenerator(File inputPdf, String outputFolder) throws IOException {
+    public HtmlGenerator(File inputPdf, Config config) throws IOException {
         this.pdfFileName = inputPdf.getName();
         this.pdfFilePath = inputPdf.toPath().toAbsolutePath();
         this.htmlFileName = pdfFileName.substring(0, pdfFileName.length() - 3) + "html";
-        this.htmlFilePath = Path.of(outputFolder, htmlFileName);
+        this.htmlFilePath = Path.of(config.getOutputFolder(), htmlFileName);
         this.htmlWriter = new FileWriter(htmlFilePath.toFile(), StandardCharsets.UTF_8);
+        this.htmlPageSeparator = config.getHtmlPageSeparator();
     }
 
     public void writeToHtml(List<List<IObject>> contents) {
@@ -59,6 +62,7 @@ public class HtmlGenerator implements Closeable {
             htmlWriter.write("</head>\n<body>\n");
 
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
+                writePageSeparator(pageNumber);
                 for (IObject content : contents.get(pageNumber)) {
                     this.write(content);
                 }
@@ -68,6 +72,15 @@ public class HtmlGenerator implements Closeable {
             LOGGER.log(Level.INFO, "Created {0}", htmlFilePath);
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Unable to create html output: " + e.getMessage());
+        }
+    }
+
+    protected void writePageSeparator(int pageNumber) throws IOException {
+        if (!htmlPageSeparator.isEmpty()) {
+            htmlWriter.write(htmlPageSeparator.contains(Config.PAGE_NUMBER_STRING)
+                ? htmlPageSeparator.replace(Config.PAGE_NUMBER_STRING, String.valueOf(pageNumber + 1))
+                : htmlPageSeparator);
+            htmlWriter.write("\n");
         }
     }
 

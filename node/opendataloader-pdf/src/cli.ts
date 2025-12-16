@@ -13,6 +13,9 @@ interface CliOptions {
   useStructTree?: boolean;
   tableMethod?: string;
   readingOrder?: string;
+  markdownPageSeparator?: string;
+  textPageSeparator?: string;
+  htmlPageSeparator?: string;
 }
 
 function createProgram(): Command {
@@ -34,7 +37,10 @@ function createProgram(): Command {
     .option('--replace-invalid-chars <c>', 'Replacement character for invalid characters')
     .option('--use-struct-tree', 'Enable processing structure tree (disabled by default)')
     .option('--reading-order <readingOrder>', 'Specifies reading order of content. Supported values: bbox')
-    .option('--table-method <method>', 'Enable specified table detection method');
+    .option('--table-method <method>', 'Enable specified table detection method')
+    .option('--markdown-page-separator <markdownPageSeparator>', 'Specifies the separator string inserted between pages in the markdown output. Use \\"%page-number%\\" inside the string to include the current page number.')
+    .option('--text-page-separator <textPageSeparator>', 'Specifies the separator string inserted between pages in the text output. Use \\"%page-number%\\" inside the string to include the current page number.')
+    .option('--html-page-separator <htmlPageSeparator>', 'Specifies the separator string inserted between pages in the html output. Use \\"%page-number%\\" inside the string to include the current page number.');
 
   program.configureOutput({
     writeErr: (str) => {
@@ -80,6 +86,15 @@ function buildConvertOptions(options: CliOptions): ConvertOptions {
   }
   if (options.readingOrder) {
       convertOptions.readingOrder = options.readingOrder;
+  }
+  if (options.markdownPageSeparator) {
+      convertOptions.markdownPageSeparator = options.markdownPageSeparator;
+  }
+  if (options.textPageSeparator) {
+      convertOptions.textPageSeparator = options.textPageSeparator;
+  }
+  if (options.htmlPageSeparator) {
+      convertOptions.htmlPageSeparator = options.htmlPageSeparator;
   }
 
   return convertOptions;

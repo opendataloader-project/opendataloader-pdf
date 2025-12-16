@@ -38,17 +38,20 @@ public class MarkdownGenerator implements Closeable {
     protected final String markdownFileName;
     protected int tableNesting = 0;
     protected boolean isImageSupported;
+    protected String markdownPageSeparator;
 
-    MarkdownGenerator(File inputPdf, String outputFolder, Config config) throws IOException {
+    MarkdownGenerator(File inputPdf, Config config) throws IOException {
         String cutPdfFileName = inputPdf.getName();
-        this.markdownFileName = outputFolder + File.separator + cutPdfFileName.substring(0, cutPdfFileName.length() - 3) + "md";
+        this.markdownFileName = config.getOutputFolder() + File.separator + cutPdfFileName.substring(0, cutPdfFileName.length() - 3) + "md";
         this.markdownWriter = new FileWriter(markdownFileName, StandardCharsets.UTF_8);
         this.isImageSupported = config.isAddImageToMarkdown();
+        this.markdownPageSeparator = config.getMarkdownPageSeparator();
     }
 
     public void writeToMarkdown(List<List<IObject>> contents) {
         try {
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
+                writePageSeparator(pageNumber);
                 for (IObject content : contents.get(pageNumber)) {
                     if (!isSupportedContent(content)) {
                         continue;
@@ -61,6 +64,15 @@ public class MarkdownGenerator implements Closeable {
             LOGGER.log(Level.INFO, "Created {0}", markdownFileName);
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Unable to create markdown output: " + e.getMessage());
+        }
+    }
+
+    protected void writePageSeparator(int pageNumber) throws IOException {
+        if (!markdownPageSeparator.isEmpty()) {
+            markdownWriter.write(markdownPageSeparator.contains(Config.PAGE_NUMBER_STRING)
+                ? markdownPageSeparator.replace(Config.PAGE_NUMBER_STRING, String.valueOf(pageNumber + 1))
+                : markdownPageSeparator);
+            writeContentsSeparator();
         }
     }
 

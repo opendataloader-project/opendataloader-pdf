@@ -91,6 +91,9 @@ export interface RunOptions {
   useStructTree?: boolean;
   tableMethod?: string;
   readingOrder?: string;
+  markdownPageSeparator?: string;
+  textPageSeparator?: string;
+  htmlPageSeparator?: string;
 }
 
 export function run(inputPath: string, options: RunOptions = {}): Promise<string> {
@@ -142,6 +145,15 @@ export function run(inputPath: string, options: RunOptions = {}): Promise<string
     if (options.readingOrder) {
       args.push('--reading-order', options.readingOrder)
     }
+    if (options.markdownPageSeparator) {
+      args.push('--markdown-page-separator', options.markdownPageSeparator)
+    }
+    if (options.textPageSeparator) {
+      args.push('--text-page-separator', options.textPageSeparator)
+    }
+    if (options.htmlPageSeparator) {
+      args.push('--html-page-separator', options.htmlPageSeparator)
+    }
 
     args.push(inputPath);
     executeJar(args, {
@@ -164,6 +176,9 @@ export interface ConvertOptions {
   useStructTree?: boolean;
   tableMethod?: string | string[];
   readingOrder?: string;
+  markdownPageSeparator?: string;
+  textPageSeparator?: string;
+  htmlPageSeparator?: string;
 }
 
 export function convert(inputPaths: string | string[], options: ConvertOptions = {}): Promise<string> {
@@ -219,7 +234,16 @@ export function convert(inputPaths: string | string[], options: ConvertOptions =
       }
   }
   if (options.readingOrder) {
-      args.push('--reading-order', options.readingOrder)
+    args.push('--reading-order', options.readingOrder)
+  }
+  if (options.markdownPageSeparator) {
+    args.push('--markdown-page-separator', options.markdownPageSeparator)
+  }
+  if (options.textPageSeparator) {
+    args.push('--text-page-separator', options.textPageSeparator)
+  }
+  if (options.htmlPageSeparator) {
+    args.push('--html-page-separator', options.htmlPageSeparator)
   }
 
   return executeJar(args, {

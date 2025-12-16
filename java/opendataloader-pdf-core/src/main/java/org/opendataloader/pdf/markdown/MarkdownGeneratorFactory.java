@@ -13,11 +13,11 @@ import java.io.File;
 import java.io.IOException;
 
 public class MarkdownGeneratorFactory {
-    public static MarkdownGenerator getMarkdownGenerator(File inputPdf, String outputFileName,
+    public static MarkdownGenerator getMarkdownGenerator(File inputPdf,
                                                          Config config) throws IOException {
         if (config.isUseHTMLInMarkdown()) {
-            return new MarkdownHTMLGenerator(inputPdf, outputFileName, config);
+            return new MarkdownHTMLGenerator(inputPdf, config);
         }
-        return new MarkdownGenerator(inputPdf, outputFileName, config);
+        return new MarkdownGenerator(inputPdf, config);
     }
 }
