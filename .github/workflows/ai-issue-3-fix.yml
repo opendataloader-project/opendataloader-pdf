@@ -229,55 +229,17 @@ jobs:
           ISSUE_TITLE: ${{ steps.context.outputs.title }}
         run: |
           ISSUE_NUM=${{ steps.check.outputs.issue_num }}
-          ISSUE_BODY=$(cat /tmp/issue_body.txt 2>/dev/null || echo "")
-          ALL_COMMENTS=$(cat /tmp/all_comments.txt 2>/dev/null || echo "No comments")
 
           # Create branch
           BRANCH="ai-fix/issue-$ISSUE_NUM"
           git checkout -b "$BRANCH"
 
-          # Build prompt with full issue context
-          FIX_PROMPT=$(cat <<'FIX_EOF'
-          You are fixing GitHub issue #ISSUE_NUM_PLACEHOLDER.
-
-          ## Issue Title
-          ISSUE_TITLE_PLACEHOLDER
-
-          ## Issue Body
-          ISSUE_BODY_PLACEHOLDER
-
-          ## Discussion Thread (All Comments)
-          The following is the complete discussion thread including AI analysis and any follow-up questions/answers from humans:
-
-          ALL_COMMENTS_PLACEHOLDER
-
-          ## Instructions
-          Based on the issue description and the ENTIRE discussion thread above:
-          1. First, understand the issue by reading the original description and ALL comments (including any clarifications or additional context provided after the AI analysis)
-          2. Locate the affected files
-          3. Understand the root cause and decide on the approach
-          4. **Write a test that reproduces the issue BEFORE implementing the fix** - The test should fail before the fix and pass after. This is required for code changes (bug fixes, new features, logic changes). Skip only for non-code changes (documentation, config files, typos, comments).
-          5. Implement the fix
-          6. Verify all tests pass (including any new tests you added)
-          7. Ensure the build succeeds
-          8. Only make minimal, focused changes
-
-          ## Output Format
-          After completing the fix, output a summary in the following format:
-
-          ---FIX_SUMMARY_START---
-          UNDERSTANDING: <Your understanding of the issue based on the description and all comments. Summarize what the problem is, what was discussed, and what approach you decided to take.>
-          SUCCESS: true/false
-          TEST_ADDED: <name and location of the test file(s) added, or "N/A - non-code change" if not applicable>
-          CHANGES: <list of files changed and why>
-          VERIFICATION: <how you verified the fix works - must include test results>
-          ---FIX_SUMMARY_END---
-
-          Do NOT create a PR - just make the code changes and verify they work.
-          FIX_EOF
-          )
+          # Build prompt using shared script (outputs template with placeholders)
+          FIX_PROMPT=$(.github/scripts/ai-issue/build-stage3-prompt.sh)
 
           # Replace placeholders
+          ISSUE_BODY=$(cat /tmp/issue_body.txt 2>/dev/null || echo "")
+          ALL_COMMENTS=$(cat /tmp/all_comments.txt 2>/dev/null || echo "No comments")
           FIX_PROMPT="${FIX_PROMPT//ISSUE_NUM_PLACEHOLDER/$ISSUE_NUM}"
           FIX_PROMPT="${FIX_PROMPT//ISSUE_TITLE_PLACEHOLDER/$ISSUE_TITLE}"
           FIX_PROMPT="${FIX_PROMPT//ISSUE_BODY_PLACEHOLDER/$ISSUE_BODY}"
@@ -286,6 +248,7 @@ jobs:
           # Save prompt to file (avoid argument length limits)
           echo "$FIX_PROMPT" > /tmp/fix_prompt.txt
 
+          # Run Claude Code CLI
           FIX_RESULT=$(cat /tmp/fix_prompt.txt | npx -y @anthropic-ai/claude-code \
             --print \
             --verbose \
@@ -296,12 +259,12 @@ jobs:
           echo "$FIX_RESULT"
           echo "=================="
 
-          # Save full output for PR body
-          echo "$FIX_RESULT" > /tmp/fix_result.txt
+          # Parse response using shared script
+          PARSED=$(echo "$FIX_RESULT" | .github/scripts/ai-issue/parse-stage3-response.sh /tmp)
 
-          # Extract summary section if present
-          SUMMARY_SECTION=$(sed -n '/---FIX_SUMMARY_START---/,/---FIX_SUMMARY_END---/p' /tmp/fix_result.txt | sed '1d;$d' || echo "")
-          echo "$SUMMARY_SECTION" > /tmp/fix_summary.txt
+          echo "=== Parsed Result ==="
+          echo "$PARSED"
+          echo "====================="
 
           # Check if fix was successful (has changes)
           if [ -n "$(git status --porcelain)" ]; then
@@ -366,8 +329,8 @@ jobs:
           SUMMARY_SECTION=$(cat /tmp/fix_summary.txt)
           CHANGED_FILES=$(cat /tmp/changed_files.txt)
 
-          # Extract understanding section from summary
-          UNDERSTANDING=$(echo "$SUMMARY_SECTION" | sed -n 's/^UNDERSTANDING: //p' | head -1)
+          # Read understanding from parsed file (created by parse-stage3-response.sh)
+          UNDERSTANDING=$(cat /tmp/fix_understanding.txt 2>/dev/null || echo "")
           if [ -z "$UNDERSTANDING" ]; then
             UNDERSTANDING="(No understanding summary provided)"
           fi
