@@ -106,7 +106,7 @@ def convert(
     keep_line_breaks: bool = False,
     replace_invalid_chars: Optional[str] = None,
     use_struct_tree: bool = False,
-    table_method: Optional[List[str]] = None,
+    table_method: Optional[Union[str, List[str]]] = None,
     reading_order: Optional[str] = None,
 ) -> None:
     """
@@ -161,8 +161,12 @@ def convert(
     if use_struct_tree:
         args.append("--use-struct-tree")
     if table_method:
-        args.append("--table-method")
-        args.append(table_method)
+        if isinstance(table_method, list):
+            args.append("--table-method")
+            args.append(",".join(table_method))
+        else:
+            args.append("--table-method")
+            args.append(table_method)
     if reading_order:
         args.append("--reading-order")
         args.append(reading_order)
@@ -276,7 +280,6 @@ def main(argv=None) -> int:
     )
     parser.add_argument(
         "--table-method",
-        nargs="+",
         help="Enable specified table detection method. Accepts a comma-separated list of methods.",
     )
     parser.add_argument(

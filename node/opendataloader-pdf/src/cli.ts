@@ -11,13 +11,9 @@ interface CliOptions {
   keepLineBreaks?: boolean;
   replaceInvalidChars?: string;
   useStructTree?: boolean;
-  tableMethod?: string[];
+  tableMethod?: string;
   readingOrder?: string;
 }
-
-const VALID_TABLE_METHODS = new Set([
-    'cluster',
-]);
 
 function createProgram(): Command {
   const program = new Command();
@@ -38,7 +34,7 @@ function createProgram(): Command {
     .option('--replace-invalid-chars <c>', 'Replacement character for invalid characters')
     .option('--use-struct-tree', 'Enable processing structure tree (disabled by default)')
     .option('--reading-order <readingOrder>', 'Specifies reading order of content. Supported values: bbox')
-    .option('--table-method <method...>', 'Enable specified table detection method');
+    .option('--table-method <method>', 'Enable specified table detection method');
 
   program.configureOutput({
     writeErr: (str) => {
@@ -79,7 +75,7 @@ function buildConvertOptions(options: CliOptions): ConvertOptions {
   if (options.useStructTree) {
     convertOptions.useStructTree = true;
   }
-  if (options.tableMethod && options.tableMethod.length) {
+  if (options.tableMethod) {
     convertOptions.tableMethod = options.tableMethod;
   }
   if (options.readingOrder) {
@@ -112,36 +108,6 @@ async function main(): Promise<number> {
 
   const cliOptions = program.opts<CliOptions>();
   const inputPaths = program.args;
-
-  if (cliOptions.format) {
-    for (const value of cliOptions.format) {
-      if (!VALID_FORMATS.has(value)) {
-        console.error(`Invalid format '${value}'. See '--help' for allowed values.`);
-        console.error("Use '--help' to see available options.");
-        return 1;
-      }
-    }
-  }
-
-  if (cliOptions.contentSafetyOff) {
-    for (const value of cliOptions.contentSafetyOff) {
-      if (!VALID_CONTENT_SAFETY_MODES.has(value)) {
-        console.error(`Invalid content safety mode '${value}'. See '--help' for allowed values.`);
-        console.error("Use '--help' to see available options.");
-        return 1;
-      }
-    }
-  }
-  if (cliOptions.tableMethod) {
-    for (const value of cliOptions.tableMethod) {
-      if (!VALID_TABLE_METHODS.has(value)) {
-        console.error(`Invalid table method '${value}'. See '--help' for allowed values.`);
-        console.error("Use '--help' to see available options.");
-        return 1;
-      }
-    }
-  }
-
   const convertOptions = buildConvertOptions(cliOptions);
 
   try {
