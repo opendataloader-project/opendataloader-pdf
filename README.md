@@ -31,10 +31,15 @@ AI-safety is enabled by default and automatically filters likely prompt-injectio
 - 🔒 **Local-First Privacy** — Runs fully on your machine
 - 🏷️ **Tagged PDF** — Advanced data extraction technology based on Tagged PDF - [Learn more](https://opendataloader.org/docs/tagged-pdf)
 - 🛡️ **AI-Safety** — Auto-Filters likely prompt-injection content - [Learn more](https://opendataloader.org/docs/ai-safety)
-- 📊 **Benchmark** — Continuously researched to deliver **HIGH-QUALITY** extraction with **LOW ENERGY** use - [Learn more](https://opendataloader.org/docs/benchmark)
 - 🖍️ **Annotated PDF Visualization** — See detected structures overlaid on the original - [See examples](https://opendataloader.org/demo/samples)
 
-![Annotated PDF Preview](https://raw.githubusercontent.com/opendataloader-project/opendataloader-pdf/main/resources/example_annotated_pdf.png)
+[![Annotated PDF Preview](https://raw.githubusercontent.com/opendataloader-project/opendataloader-pdf/main/resources/example_annotated_pdf.png)](https://opendataloader.org/demo/samples/01030000000000?view1=annot&view2=json)
+
+<br/>
+
+- 📊 **Benchmark** — Continuously researched to deliver High-Performance & Quality - [GitHub](https://github.com/opendataloader-project/opendataloader-bench)
+
+[![Benchmark Preview](https://github.com/opendataloader-project/opendataloader-bench/raw/refs/heads/main/charts/benchmark.png)](https://github.com/opendataloader-project/opendataloader-bench)
 
 <br/>
 
