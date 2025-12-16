@@ -162,7 +162,7 @@ export interface ConvertOptions {
   keepLineBreaks?: boolean;
   replaceInvalidChars?: string;
   useStructTree?: boolean;
-  tableMethod?: string[];
+  tableMethod?: string | string[];
   readingOrder?: string;
 }
 
@@ -211,8 +211,12 @@ export function convert(inputPaths: string | string[], options: ConvertOptions =
   if (options.useStructTree) {
     args.push('--use-struct-tree')
   }
-  if (options.tableMethod && options.tableMethod.length > 0) {
-    args.push('--table-method', ...options.tableMethod)
+  if (options.tableMethod) {
+      if (Array.isArray(options.tableMethod)) {
+          args.push('--table-method', options.tableMethod.join(','));
+      } else {
+          args.push('--table-method', options.tableMethod);
+      }
   }
   if (options.readingOrder) {
       args.push('--reading-order', options.readingOrder)
