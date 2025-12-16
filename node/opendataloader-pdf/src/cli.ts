@@ -38,7 +38,6 @@ function createProgram(): Command {
     .option('--use-struct-tree', 'Enable processing structure tree (disabled by default)')
     .option('--reading-order <readingOrder>', 'Specifies reading order of content. Supported values: bbox')
     .option('--table-method <method>', 'Enable specified table detection method')
-    .option('--reading-order <readingOrder>', 'Specifies reading order of content. Supported values: bbox')
     .option('--markdown-page-separator <markdownPageSeparator>', 'Specifies the separator string inserted between pages in the markdown output. Use \\"%page-number%\\" inside the string to include the current page number.')
     .option('--text-page-separator <textPageSeparator>', 'Specifies the separator string inserted between pages in the text output. Use \\"%page-number%\\" inside the string to include the current page number.')
     .option('--html-page-separator <htmlPageSeparator>', 'Specifies the separator string inserted between pages in the html output. Use \\"%page-number%\\" inside the string to include the current page number.');

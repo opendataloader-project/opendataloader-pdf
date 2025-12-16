@@ -53,12 +53,7 @@ public class TextGenerator implements Closeable {
     public void writeToText(List<List<IObject>> contents) {
         try {
             for (int pageIndex = 0; pageIndex < contents.size(); pageIndex++) {
-                if (!textPageSeparator.isEmpty()) {
-                    textWriter.write(textPageSeparator.contains(Config.PAGE_NUMBER_STRING)
-                        ? textPageSeparator.replace(Config.PAGE_NUMBER_STRING, String.valueOf(pageIndex + 1))
-                        : textPageSeparator);
-                    textWriter.write(lineSeparator);
-                }
+                writePageSeparator(pageIndex);
                 List<IObject> pageContents = contents.get(pageIndex);
                 writeContents(pageContents, 0);
                 if (pageIndex < contents.size() - 1) {
@@ -68,6 +63,15 @@ public class TextGenerator implements Closeable {
             LOGGER.log(Level.INFO, "Created {0}", textFileName);
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Unable to create text output: " + e.getMessage());
+        }
+    }
+
+    private void writePageSeparator(int pageIndex) throws IOException {
+        if (!textPageSeparator.isEmpty()) {
+            textWriter.write(textPageSeparator.contains(Config.PAGE_NUMBER_STRING)
+                ? textPageSeparator.replace(Config.PAGE_NUMBER_STRING, String.valueOf(pageIndex + 1))
+                : textPageSeparator);
+            textWriter.write(lineSeparator);
         }
     }
 

@@ -51,13 +51,7 @@ public class MarkdownGenerator implements Closeable {
     public void writeToMarkdown(List<List<IObject>> contents) {
         try {
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
-                if (!markdownPageSeparator.isEmpty()) {
-                    markdownWriter.write(markdownPageSeparator.contains(Config.PAGE_NUMBER_STRING)
-                        ? markdownPageSeparator.replace(Config.PAGE_NUMBER_STRING, String.valueOf(pageNumber + 1))
-                        : markdownPageSeparator);
-                    writeContentsSeparator();
-                }
-
+                writePageSeparator(pageNumber);
                 for (IObject content : contents.get(pageNumber)) {
                     if (!isSupportedContent(content)) {
                         continue;
@@ -70,6 +64,15 @@ public class MarkdownGenerator implements Closeable {
             LOGGER.log(Level.INFO, "Created {0}", markdownFileName);
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Unable to create markdown output: " + e.getMessage());
+        }
+    }
+
+    protected void writePageSeparator(int pageNumber) throws IOException {
+        if (!markdownPageSeparator.isEmpty()) {
+            markdownWriter.write(markdownPageSeparator.contains(Config.PAGE_NUMBER_STRING)
+                ? markdownPageSeparator.replace(Config.PAGE_NUMBER_STRING, String.valueOf(pageNumber + 1))
+                : markdownPageSeparator);
+            writeContentsSeparator();
         }
     }
 

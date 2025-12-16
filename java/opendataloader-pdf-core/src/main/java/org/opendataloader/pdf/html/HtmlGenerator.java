@@ -62,12 +62,7 @@ public class HtmlGenerator implements Closeable {
             htmlWriter.write("</head>\n<body>\n");
 
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
-                if (!htmlPageSeparator.isEmpty()) {
-                    htmlWriter.write(htmlPageSeparator.contains(Config.PAGE_NUMBER_STRING)
-                        ? htmlPageSeparator.replace(Config.PAGE_NUMBER_STRING, String.valueOf(pageNumber + 1))
-                        : htmlPageSeparator);
-                    htmlWriter.write("\n");
-                }
+                writePageSeparator(pageNumber);
                 for (IObject content : contents.get(pageNumber)) {
                     this.write(content);
                 }
@@ -77,6 +72,15 @@ public class HtmlGenerator implements Closeable {
             LOGGER.log(Level.INFO, "Created {0}", htmlFilePath);
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Unable to create html output: " + e.getMessage());
+        }
+    }
+
+    protected void writePageSeparator(int pageNumber) throws IOException {
+        if (!htmlPageSeparator.isEmpty()) {
+            htmlWriter.write(htmlPageSeparator.contains(Config.PAGE_NUMBER_STRING)
+                ? htmlPageSeparator.replace(Config.PAGE_NUMBER_STRING, String.valueOf(pageNumber + 1))
+                : htmlPageSeparator);
+            htmlWriter.write("\n");
         }
     }
 
