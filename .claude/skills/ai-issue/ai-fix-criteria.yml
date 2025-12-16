@@ -3,7 +3,7 @@
 # Total: 100 points, Threshold determines auto-fix vs manual-fix
 
 threshold:
-  auto_fix: 70  # Score >= this triggers auto-fix
+  auto_fix: 80  # Score >= this triggers auto-fix
   # Adjustment guide:
   # - Conservative (initial): 80
   # - Standard: 70

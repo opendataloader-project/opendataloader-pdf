@@ -17,9 +17,13 @@ on:
         type: number
 
 env:
-  # Recommended: 5 (Claude Code CLI with Sonnet ~$0.10-0.50/call)
-  # Cost estimate: 5/day × 30 days × $0.30 = ~$45/month
-  DAILY_LIMIT: 5
+  # Daily limit for analysis runs
+  # Adjustment guide:
+  # - 5: Conservative (~$45/month)
+  # - 10: Standard (~$90/month)
+  # - 20: Aggressive (~$180/month)
+  # Note: Claude Code CLI with Sonnet ~$0.10-0.50/call
+  DAILY_LIMIT: 10
 
 jobs:
   analyze:

@@ -11,8 +11,12 @@ on:
         type: number
 
 env:
-  # Recommended: 20 (Haiku API ~$0.001/call, cheap but prevents spam)
-  # Cost estimate: 20/day × 30 days × $0.001 = ~$0.60/month
+  # Daily limit for triage runs
+  # Adjustment guide:
+  # - 10: Conservative (~$0.30/month)
+  # - 20: Standard (~$0.60/month)
+  # - 50: Aggressive (~$1.50/month)
+  # Note: Haiku API ~$0.001/call (very cheap)
   DAILY_LIMIT: 20
 
 jobs:
