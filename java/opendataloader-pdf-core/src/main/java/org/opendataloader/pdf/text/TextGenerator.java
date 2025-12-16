@@ -7,6 +7,7 @@
  */
 package org.opendataloader.pdf.text;
 
+import org.opendataloader.pdf.api.Config;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
@@ -40,16 +41,19 @@ public class TextGenerator implements Closeable {
     private final FileWriter textWriter;
     private final String textFileName;
     private final String lineSeparator = System.lineSeparator();
+    private final String textPageSeparator;
 
-    public TextGenerator(File inputPdf, String outputFolder) throws IOException {
+    public TextGenerator(File inputPdf, Config config) throws IOException {
         String cutPdfFileName = inputPdf.getName();
-        this.textFileName = outputFolder + File.separator + cutPdfFileName.substring(0, cutPdfFileName.length() - 3) + "txt";
+        this.textFileName = config.getOutputFolder() + File.separator + cutPdfFileName.substring(0, cutPdfFileName.length() - 3) + "txt";
         this.textWriter = new FileWriter(textFileName, StandardCharsets.UTF_8);
+        this.textPageSeparator = config.getTextPageSeparator();
     }
 
     public void writeToText(List<List<IObject>> contents) {
         try {
             for (int pageIndex = 0; pageIndex < contents.size(); pageIndex++) {
+                writePageSeparator(pageIndex);
                 List<IObject> pageContents = contents.get(pageIndex);
                 writeContents(pageContents, 0);
                 if (pageIndex < contents.size() - 1) {
@@ -59,6 +63,15 @@ public class TextGenerator implements Closeable {
             LOGGER.log(Level.INFO, "Created {0}", textFileName);
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Unable to create text output: " + e.getMessage());
+        }
+    }
+
+    private void writePageSeparator(int pageIndex) throws IOException {
+        if (!textPageSeparator.isEmpty()) {
+            textWriter.write(textPageSeparator.contains(Config.PAGE_NUMBER_STRING)
+                ? textPageSeparator.replace(Config.PAGE_NUMBER_STRING, String.valueOf(pageIndex + 1))
+                : textPageSeparator);
+            textWriter.write(lineSeparator);
         }
     }
 

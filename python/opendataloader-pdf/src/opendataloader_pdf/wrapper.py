@@ -27,6 +27,9 @@ def run(
     use_struct_tree: bool = False,
     reading_order: str = None,
     table_method: str = None,
+    markdown_page_separator: str = None,
+    text_page_separator: str = None,
+    html_page_separator: str = None,
 ):
     """
     Runs the opendataloader-pdf with the given arguments.
@@ -47,6 +50,9 @@ def run(
         use_struct_tree: If True, enable processing structure tree (disabled by default)
         table_method: Specified table detection method.
         reading_order: Order of content processing.
+        markdown_page_separator: Specifies the separator string inserted between pages in the markdown output.
+        text_page_separator: Specifies the separator string inserted between pages in the text output.
+        html_page_separator: Specifies the separator string inserted between pages in the html output.
 
     Raises:
         FileNotFoundError: If the 'java' command is not found or input_path is invalid.
@@ -91,6 +97,15 @@ def run(
     if reading_order:
         args.append("--reading-order")
         args.append(reading_order)
+    if markdown_page_separator:
+        args.append("--markdown-page-separator")
+        args.append(markdown_page_separator)
+    if text_page_separator:
+        args.append("--text-page-separator")
+        args.append(text_page_separator)
+    if html_page_separator:
+        args.append("--html-page-separator")
+        args.append(html_page_separator)
 
     # Run the command
     run_jar(args, quiet=not debug)
@@ -108,6 +123,9 @@ def convert(
     use_struct_tree: bool = False,
     table_method: Optional[Union[str, List[str]]] = None,
     reading_order: Optional[str] = None,
+    markdown_page_separator: Optional[str] = None,
+    text_page_separator: Optional[str] = None,
+    html_page_separator: Optional[str] = None,
 ) -> None:
     """
     Convert PDF(s) into the requested output format(s).
@@ -123,6 +141,9 @@ def convert(
         replace_invalid_chars: Replacement character for invalid/unrecognized characters
         use_struct_tree: Enable processing structure tree (disabled by default)
         table_method: Specified table detection method.
+        markdown_page_separator: Specifies the separator string inserted between pages in the markdown output.
+        text_page_separator: Specifies the separator string inserted between pages in the text output.
+        html_page_separator: Specifies the separator string inserted between pages in the html output.
     """
     args: List[str] = []
 
@@ -170,6 +191,15 @@ def convert(
     if reading_order:
         args.append("--reading-order")
         args.append(reading_order)
+    if markdown_page_separator:
+        args.append("--markdown-page-separator")
+        args.append(markdown_page_separator)
+    if text_page_separator:
+        args.append("--text-page-separator")
+        args.append(text_page_separator)
+    if html_page_separator:
+        args.append("--html-page-separator")
+        args.append(html_page_separator)
 
     # Run the command
     run_jar(args, quiet)
@@ -285,6 +315,18 @@ def main(argv=None) -> int:
     parser.add_argument(
         "--reading-order",
         help="Specifies reading order of content. Supported values: bbox",
+    )
+    parser.add_argument(
+        "--markdown-page-separator",
+        help="Specifies the separator string inserted between pages in the markdown output. Use \"%page-number%\" inside the string to include the current page number.",
+    )
+    parser.add_argument(
+        "--text-page-separator",
+        help="Specifies the separator string inserted between pages in the text output. Use \"%page-number%\" inside the string to include the current page number.",
+    )
+    parser.add_argument(
+        "--html-page-separator",
+        help="Specifies the separator string inserted between pages in the html output. Use \"%page-number%\" inside the string to include the current page number.",
     )
     args = parser.parse_args(argv)
 

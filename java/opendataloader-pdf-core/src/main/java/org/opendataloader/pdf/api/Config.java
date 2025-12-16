@@ -17,6 +17,7 @@ import java.util.Set;
  */
 public class Config {
     public static final String READING_ORDER_BY_BBOX = "bbox";
+    public static final String PAGE_NUMBER_STRING = "%page-number%";
     private String password;
     private boolean isGenerateMarkdown = false;
     private boolean isGenerateHtml = false;
@@ -31,6 +32,9 @@ public class Config {
     private String outputFolder;
     private boolean isClusterTableMethod = false;
     private String readingOrder;
+    private String markdownPageSeparator = "";
+    private String textPageSeparator = "";
+    private String htmlPageSeparator = "";
     private final FilterConfig filterConfig = new FilterConfig();
 
     public static final String CLUSTER_TABLE_METHOD = "cluster";
@@ -310,5 +314,59 @@ public class Config {
      */
     public void setReadingOrder(String readingOrder) {
         this.readingOrder = readingOrder;
+    }
+
+    /**
+     * Gets the string, that separates content from different pages in markdown.
+     *
+     * @return The specified string.
+     */
+    public String getMarkdownPageSeparator() {
+        return markdownPageSeparator;
+    }
+
+    /**
+     * Sets the string, that separates content from different pages in markdown.
+     *
+     * @param markdownPageSeparator The specified string.
+     */
+    public void setMarkdownPageSeparator(String markdownPageSeparator) {
+        this.markdownPageSeparator = markdownPageSeparator;
+    }
+
+    /**
+     * Gets the string, that separates content from different pages in text.
+     *
+     * @return The specified string.
+     */
+    public String getTextPageSeparator() {
+        return textPageSeparator;
+    }
+
+    /**
+     * Sets the string, that separates content from different pages in text.
+     *
+     * @param textPageSeparator The specified string.
+     */
+    public void setTextPageSeparator(String textPageSeparator) {
+        this.textPageSeparator = textPageSeparator;
+    }
+
+    /**
+     * Gets the string, that separates content from different pages in html.
+     *
+     * @return The specified string.
+     */
+    public String getHtmlPageSeparator() {
+        return htmlPageSeparator;
+    }
+
+    /**
+     * Sets the string, that separates content from different pages in html.
+     *
+     * @param htmlPageSeparator The specified string.
+     */
+    public void setHtmlPageSeparator(String htmlPageSeparator) {
+        this.htmlPageSeparator = htmlPageSeparator;
     }
 }

@@ -111,17 +111,17 @@ public class DocumentProcessor {
         }
         if (config.isGenerateMarkdown()) {
             try (MarkdownGenerator markdownGenerator = MarkdownGeneratorFactory.getMarkdownGenerator(inputPDF,
-                config.getOutputFolder(), config)) {
+                config)) {
                 markdownGenerator.writeToMarkdown(contents);
             }
         }
         if (config.isGenerateHtml()) {
-            try (HtmlGenerator htmlGenerator = HtmlGeneratorFactory.getHtmlGenerator(inputPDF, config.getOutputFolder())) {
+            try (HtmlGenerator htmlGenerator = HtmlGeneratorFactory.getHtmlGenerator(inputPDF, config)) {
                 htmlGenerator.writeToHtml(contents);
             }
         }
         if (config.isGenerateText()) {
-            try (TextGenerator textGenerator = new TextGenerator(inputPDF, config.getOutputFolder())) {
+            try (TextGenerator textGenerator = new TextGenerator(inputPDF, config)) {
                 textGenerator.writeToText(contents);
             }
         }

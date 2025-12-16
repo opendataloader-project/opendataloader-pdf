@@ -13,7 +13,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class HtmlGeneratorFactory {
-    public static HtmlGenerator getHtmlGenerator(File inputPdf, String outputFolder) throws IOException {
-        return new HtmlGenerator(inputPdf, outputFolder);
+    public static HtmlGenerator getHtmlGenerator(File inputPdf, Config config) throws IOException {
+        return new HtmlGenerator(inputPdf, config);
     }
 }

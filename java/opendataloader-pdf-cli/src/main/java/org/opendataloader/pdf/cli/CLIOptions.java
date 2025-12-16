@@ -62,6 +62,12 @@ public class CLIOptions {
 
     private static final String READING_ORDER_LONG_OPTION = "reading-order";
 
+    private static final String MARKDOWN_PAGE_SEPARATOR_LONG_OPTION = "markdown-page-separator";
+
+    private static final String TEXT_PAGE_SEPARATOR_LONG_OPTION = "text-page-separator";
+
+    private static final String HTML_PAGE_SEPARATOR_LONG_OPTION = "html-page-separator";
+
     public static Options defineOptions() {
         Options options = new Options();
         Option contentSafetyOff = new Option(null, CONTENT_SAFETY_OFF_LONG_OPTION, true, "Disables one or more content safety filters. Accepts a comma-separated list of filter names. Arguments: all, hidden-text, off-page, tiny, hidden-ocg");
@@ -112,6 +118,15 @@ public class CLIOptions {
         Option readingOrder = new Option(null, READING_ORDER_LONG_OPTION, true, "Specifies reading order of content. Supported values: bbox.");
         readingOrder.setRequired(false);
         options.addOption(readingOrder);
+        Option markdownPageSeparator = new Option(null, MARKDOWN_PAGE_SEPARATOR_LONG_OPTION, true, "Specifies the separator string inserted between pages in the markdown output. Use \"%page-number%\" inside the string to include the current page number.");
+        markdownPageSeparator.setRequired(false);
+        options.addOption(markdownPageSeparator);
+        Option textPageSeparator = new Option(null, TEXT_PAGE_SEPARATOR_LONG_OPTION, true, "Specifies the separator string inserted between pages in the text output. Use \"%page-number%\" inside the string to include the current page number.");
+        textPageSeparator.setRequired(false);
+        options.addOption(textPageSeparator);
+        Option htmlPageSeparator = new Option(null, HTML_PAGE_SEPARATOR_LONG_OPTION, true, "Specifies the separator string inserted between pages in the html output. Use \"%page-number%\" inside the string to include the current page number.");
+        htmlPageSeparator.setRequired(false);
+        options.addOption(htmlPageSeparator);
         return options;
     }
 
@@ -149,6 +164,15 @@ public class CLIOptions {
         }
         if (commandLine.hasOption(CLIOptions.READING_ORDER_LONG_OPTION)) {
             config.setReadingOrder(commandLine.getOptionValue(CLIOptions.READING_ORDER_LONG_OPTION));
+        }
+        if (commandLine.hasOption(CLIOptions.MARKDOWN_PAGE_SEPARATOR_LONG_OPTION)) {
+            config.setMarkdownPageSeparator(commandLine.getOptionValue(CLIOptions.MARKDOWN_PAGE_SEPARATOR_LONG_OPTION));
+        }
+        if (commandLine.hasOption(CLIOptions.TEXT_PAGE_SEPARATOR_LONG_OPTION)) {
+            config.setTextPageSeparator(commandLine.getOptionValue(CLIOptions.TEXT_PAGE_SEPARATOR_LONG_OPTION));
+        }
+        if (commandLine.hasOption(CLIOptions.HTML_PAGE_SEPARATOR_LONG_OPTION)) {
+            config.setHtmlPageSeparator(commandLine.getOptionValue(CLIOptions.HTML_PAGE_SEPARATOR_LONG_OPTION));
         }
         if (commandLine.hasOption(CLIOptions.FOLDER_OPTION)) {
             config.setOutputFolder(commandLine.getOptionValue(CLIOptions.FOLDER_OPTION));
