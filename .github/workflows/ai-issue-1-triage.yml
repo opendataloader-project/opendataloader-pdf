@@ -236,10 +236,13 @@ jobs:
   analyze:
     needs: triage
     if: needs.triage.outputs.decision == 'valid'
-    # Explicit permissions for reusable workflow call (least privilege principle)
+    # Permissions for analyze workflow and its nested fix workflow call
+    # Note: contents:write and pull-requests:write are needed because
+    # analyze may call fix workflow which creates branches and PRs
     permissions:
       issues: write
-      contents: read
+      contents: write
+      pull-requests: write
       actions: read
     uses: ./.github/workflows/ai-issue-2-analyze.yml
     with:
