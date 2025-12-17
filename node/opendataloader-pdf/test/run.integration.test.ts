@@ -55,7 +55,7 @@ describe('opendataloader-pdf', () => {
 
     await convert([inputPdf], {
       outputDir: convertDir,
-      format: ['json', 'text', 'html', 'pdf', 'markdown']
+      format: ['json', 'text', 'html', 'pdf', 'markdown'],
     });
 
     expect(fs.existsSync(path.join(convertDir, '1901.03003.json'))).toBe(true);

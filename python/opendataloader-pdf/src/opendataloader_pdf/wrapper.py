@@ -3,112 +3,11 @@ import subprocess
 import sys
 import importlib.resources as resources
 import locale
-from pathlib import Path
+import warnings
 from typing import List, Optional, Union
 
 # The consistent name of the JAR file bundled with the package
 _JAR_NAME = "opendataloader-pdf-cli.jar"
-
-
-def run(
-    input_path: str,
-    output_folder: str = None,
-    password: str = None,
-    replace_invalid_chars: str = None,
-    generate_markdown: bool = False,
-    generate_html: bool = False,
-    generate_annotated_pdf: bool = False,
-    keep_line_breaks: bool = False,
-    content_safety_off: str = None,
-    html_in_markdown: bool = False,
-    add_image_to_markdown: bool = False,
-    no_json: bool = False,
-    debug: bool = False,
-    use_struct_tree: bool = False,
-    reading_order: str = None,
-    table_method: str = None,
-    markdown_page_separator: str = None,
-    text_page_separator: str = None,
-    html_page_separator: str = None,
-):
-    """
-    Runs the opendataloader-pdf with the given arguments.
-
-    Args:
-        input_path: Path to the input PDF file or folder.
-        output_folder: Path to the output folder. Defaults to the input folder.
-        password: Password for the PDF file.
-        replace_invalid_chars: Character to replace invalid or unrecognized characters (e.g., , \u0000) with.
-        generate_markdown: If True, generates a Markdown output file.
-        generate_html: If True, generates an HTML output file.
-        generate_annotated_pdf: If True, generates an annotated PDF output file.
-        keep_line_breaks: If True, keeps line breaks in the output.
-        html_in_markdown: If True, uses HTML in the Markdown output.
-        add_image_to_markdown: If True, adds images to the Markdown output.
-        no_json: If True, disable the JSON output.
-        debug: If True, prints all messages from the CLI to the console during execution.
-        use_struct_tree: If True, enable processing structure tree (disabled by default)
-        table_method: Specified table detection method.
-        reading_order: Order of content processing.
-        markdown_page_separator: Specifies the separator string inserted between pages in the markdown output.
-        text_page_separator: Specifies the separator string inserted between pages in the text output.
-        html_page_separator: Specifies the separator string inserted between pages in the html output.
-
-    Raises:
-        FileNotFoundError: If the 'java' command is not found or input_path is invalid.
-        subprocess.CalledProcessError: If the CLI tool returns a non-zero exit code.
-    """
-    if not Path(input_path).exists():
-        raise FileNotFoundError(f"Input file or folder not found: {input_path}")
-
-    args = []
-    args.append(input_path)
-    if output_folder:
-        args.append("--output-dir")
-        args.append(output_folder)
-    if password:
-        args.append("--password")
-        args.append(password)
-    if replace_invalid_chars:
-        args.append("--replace-invalid-chars")
-        args.append(replace_invalid_chars)
-    if content_safety_off:
-        args.append("--content-safety-off")
-        args.append(content_safety_off)
-    if generate_markdown:
-        args.append("--markdown")
-    if generate_html:
-        args.append("--html")
-    if generate_annotated_pdf:
-        args.append("--pdf")
-    if keep_line_breaks:
-        args.append("--keep-line-breaks")
-    if html_in_markdown:
-        args.append("--markdown-with-html")
-    if add_image_to_markdown:
-        args.append("--markdown-with-images")
-    if no_json:
-        args.append("--no-json")
-    if use_struct_tree:
-        args.append("--use-struct-tree")
-    if table_method:
-        args.append("--table-method")
-        args.append(table_method)
-    if reading_order:
-        args.append("--reading-order")
-        args.append(reading_order)
-    if markdown_page_separator:
-        args.append("--markdown-page-separator")
-        args.append(markdown_page_separator)
-    if text_page_separator:
-        args.append("--text-page-separator")
-        args.append(text_page_separator)
-    if html_page_separator:
-        args.append("--html-page-separator")
-        args.append(html_page_separator)
-
-    # Run the command
-    run_jar(args, quiet=not debug)
 
 
 def convert(
@@ -203,6 +102,83 @@ def convert(
 
     # Run the command
     run_jar(args, quiet)
+
+
+# Deprecated : Use `convert()` instead. This function will be removed in a future version.
+def run(
+    input_path: str,
+    output_folder: Optional[str] = None,
+    password: Optional[str] = None,
+    replace_invalid_chars: Optional[str] = None,
+    generate_markdown: bool = False,
+    generate_html: bool = False,
+    generate_annotated_pdf: bool = False,
+    keep_line_breaks: bool = False,
+    content_safety_off: Optional[str] = None,
+    html_in_markdown: bool = False,
+    add_image_to_markdown: bool = False,
+    no_json: bool = False,
+    debug: bool = False,
+    use_struct_tree: bool = False,
+):
+    """
+    Runs the opendataloader-pdf with the given arguments.
+
+    .. deprecated::
+        Use :func:`convert` instead. This function will be removed in a future version.
+
+    Args:
+        input_path: Path to the input PDF file or folder.
+        output_folder: Path to the output folder. Defaults to the input folder.
+        password: Password for the PDF file.
+        replace_invalid_chars: Character to replace invalid or unrecognized characters (e.g., , \u0000) with.
+        generate_markdown: If True, generates a Markdown output file.
+        generate_html: If True, generates an HTML output file.
+        generate_annotated_pdf: If True, generates an annotated PDF output file.
+        keep_line_breaks: If True, keeps line breaks in the output.
+        html_in_markdown: If True, uses HTML in the Markdown output.
+        add_image_to_markdown: If True, adds images to the Markdown output.
+        no_json: If True, disable the JSON output.
+        debug: If True, prints all messages from the CLI to the console during execution.
+        use_struct_tree: If True, enable processing structure tree (disabled by default)
+
+    Raises:
+        FileNotFoundError: If the 'java' command is not found or input_path is invalid.
+        subprocess.CalledProcessError: If the CLI tool returns a non-zero exit code.
+    """
+    warnings.warn(
+        "run() is deprecated and will be removed in a future version. Use convert() instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
+    # Build format list based on legacy boolean options
+    formats: List[str] = []
+    if not no_json:
+        formats.append("json")
+    if generate_markdown:
+        if add_image_to_markdown:
+            formats.append("markdown-with-images")
+        elif html_in_markdown:
+            formats.append("markdown-with-html")
+        else:
+            formats.append("markdown")
+    if generate_html:
+        formats.append("html")
+    if generate_annotated_pdf:
+        formats.append("pdf")
+
+    convert(
+        input_path=input_path,
+        output_dir=output_folder,
+        password=password,
+        replace_invalid_chars=replace_invalid_chars,
+        keep_line_breaks=keep_line_breaks,
+        content_safety_off=content_safety_off,
+        use_struct_tree=use_struct_tree,
+        format=formats if formats else None,
+        quiet=not debug,
+    )
 
 
 def run_jar(args: List[str], quiet: bool = False) -> str:
@@ -318,15 +294,15 @@ def main(argv=None) -> int:
     )
     parser.add_argument(
         "--markdown-page-separator",
-        help="Specifies the separator string inserted between pages in the markdown output. Use \"%page-number%\" inside the string to include the current page number.",
+        help='Specifies the separator string inserted between pages in the markdown output. Use "%page-number%" inside the string to include the current page number.',
     )
     parser.add_argument(
         "--text-page-separator",
-        help="Specifies the separator string inserted between pages in the text output. Use \"%page-number%\" inside the string to include the current page number.",
+        help='Specifies the separator string inserted between pages in the text output. Use "%page-number%" inside the string to include the current page number.',
     )
     parser.add_argument(
         "--html-page-separator",
-        help="Specifies the separator string inserted between pages in the html output. Use \"%page-number%\" inside the string to include the current page number.",
+        help='Specifies the separator string inserted between pages in the html output. Use "%page-number%" inside the string to include the current page number.',
     )
     args = parser.parse_args(argv)
 
