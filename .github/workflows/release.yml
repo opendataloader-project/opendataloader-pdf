@@ -3,14 +3,14 @@ name: Release
 on:
   push:
     tags:
-      - "v*"
+      - 'v*'
   workflow_dispatch:
 
 jobs:
   release:
     runs-on: ubuntu-latest
     env:
-      VERSION: "0.0.0"
+      VERSION: '0.0.0'
     permissions:
       contents: write
       packages: write
@@ -34,9 +34,9 @@ jobs:
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          java-version: "21"
-          distribution: "temurin"
-          cache: "maven"
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
           server-id: central
           server-username: MAVEN_CENTRAL_USERNAME
           server-password: MAVEN_CENTRAL_PASSWORD
@@ -46,13 +46,13 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: '3.12'
 
       - name: Set up Node.js and pnpm
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          registry-url: "https://registry.npmjs.org"
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -68,7 +68,7 @@ jobs:
       # =================================================================
       # 3. DEPLOY (only on tag push)
       # =================================================================
-      - name: "[Java] Deploy to Maven Central"
+      - name: '[Java] Deploy to Maven Central'
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         run: mvn -B -pl opendataloader-pdf-core deploy -P release
         working-directory: ./java
@@ -78,13 +78,13 @@ jobs:
           MAVEN_GPG_KEY: ${{ secrets.MAVEN_GPG_KEY }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
 
-      - name: "[Python] Publish to PyPI"
+      - name: '[Python] Publish to PyPI'
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: ./python/opendataloader-pdf/dist
 
-      - name: "[Node.js] Publish to npm"
+      - name: '[Node.js] Publish to npm'
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         run: pnpm publish --no-git-checks
         working-directory: ./node/opendataloader-pdf
@@ -128,10 +128,10 @@ jobs:
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
-          generate_release_notes: true
-          files: |
-            java/opendataloader-pdf-cli/target/opendataloader-pdf-cli-${{ env.VERSION }}.zip
+            tag_name: ${{ github.ref_name }}
+            name: Release ${{ github.ref_name }}
+            generate_release_notes: true
+            files: |
+              java/opendataloader-pdf-cli/target/opendataloader-pdf-cli-${{ env.VERSION }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
