@@ -42,7 +42,7 @@ echo "----------------------------------------"
 
 cd "$ROOT_DIR/java"
 mvn versions:set -DnewVersion="$VERSION" -DgenerateBackupPoms=false
-mvn -B clean package -P release
+"$SCRIPT_DIR/build-java.sh"
 
 echo "[1/3] Java: Done"
 
@@ -55,7 +55,7 @@ echo "----------------------------------------"
 
 cd "$ROOT_DIR/python/opendataloader-pdf"
 sed -i.bak "s/version=\"[^\"]*\"/version=\"$VERSION\"/" setup.py && rm -f setup.py.bak
-chmod +x build.sh && ./build.sh
+"$SCRIPT_DIR/build-python.sh"
 
 echo "[2/3] Python: Done"
 
@@ -67,10 +67,8 @@ echo "[3/3] Node.js: Building and testing..."
 echo "----------------------------------------"
 
 cd "$ROOT_DIR/node/opendataloader-pdf"
-pnpm install --frozen-lockfile
 pnpm version "$VERSION" --no-git-tag-version --allow-same-version
-pnpm run build
-pnpm test
+"$SCRIPT_DIR/build-node.sh"
 
 echo "[3/3] Node.js: Done"
 

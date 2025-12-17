@@ -18,7 +18,7 @@
   "scripts": {
     "setup": "node ./scripts/setup.cjs",
     "build": "pnpm run setup && tsup",
-    "test": "vitest",
+    "test": "vitest --run",
     "format": "prettier --write \"**/*.{ts,js,json,md}\""
   },
   "repository": {
