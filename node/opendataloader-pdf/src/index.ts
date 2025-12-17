@@ -75,96 +75,6 @@ function executeJar(args: string[], executionOptions: JarExecutionOptions = {}):
   });
 }
 
-export interface RunOptions {
-  outputFolder?: string;
-  password?: string;
-  replaceInvalidChars?: string;
-  generateMarkdown?: boolean;
-  generateHtml?: boolean;
-  generateAnnotatedPdf?: boolean;
-  keepLineBreaks?: boolean;
-  contentSafetyOff?: string;
-  htmlInMarkdown?: boolean;
-  addImageToMarkdown?: boolean;
-  noJson?: boolean;
-  debug?: boolean;
-  useStructTree?: boolean;
-  tableMethod?: string;
-  readingOrder?: string;
-  markdownPageSeparator?: string;
-  textPageSeparator?: string;
-  htmlPageSeparator?: string;
-}
-
-export function run(inputPath: string, options: RunOptions = {}): Promise<string> {
-  return new Promise((resolve, reject) => {
-    if (!fs.existsSync(inputPath)) {
-      return reject(new Error(`Input file or folder not found: ${inputPath}`));
-    }
-
-    const args: string[] = [];
-    if (options.outputFolder) {
-      args.push('--output-dir', options.outputFolder);
-    }
-    if (options.password) {
-      args.push('--password', options.password);
-    }
-    if (options.replaceInvalidChars) {
-      args.push('--replace-invalid-chars', options.replaceInvalidChars);
-    }
-    if (options.generateMarkdown) {
-      args.push('--markdown');
-    }
-    if (options.generateHtml) {
-      args.push('--html');
-    }
-    if (options.generateAnnotatedPdf) {
-      args.push('--pdf');
-    }
-    if (options.keepLineBreaks) {
-      args.push('--keep-line-breaks');
-    }
-    if (options.contentSafetyOff) {
-      args.push('--content-safety-off', options.contentSafetyOff);
-    }
-    if (options.htmlInMarkdown) {
-      args.push('--markdown-with-html');
-    }
-    if (options.addImageToMarkdown) {
-      args.push('--markdown-with-images');
-    }
-    if (options.noJson) {
-      args.push('--no-json');
-    }
-    if (options.useStructTree) {
-      args.push('--use-struct-tree')
-    }
-    if (options.tableMethod) {
-      args.push('--table-method', options.tableMethod)
-    }
-    if (options.readingOrder) {
-      args.push('--reading-order', options.readingOrder)
-    }
-    if (options.markdownPageSeparator) {
-      args.push('--markdown-page-separator', options.markdownPageSeparator)
-    }
-    if (options.textPageSeparator) {
-      args.push('--text-page-separator', options.textPageSeparator)
-    }
-    if (options.htmlPageSeparator) {
-      args.push('--html-page-separator', options.htmlPageSeparator)
-    }
-
-    args.push(inputPath);
-    executeJar(args, {
-      debug: options.debug,
-      streamOutput: Boolean(options.debug),
-    })
-      .then(resolve)
-      .catch(reject);
-  });
-}
-
 export interface ConvertOptions {
   outputDir?: string;
   password?: string;
@@ -181,7 +91,10 @@ export interface ConvertOptions {
   htmlPageSeparator?: string;
 }
 
-export function convert(inputPaths: string | string[], options: ConvertOptions = {}): Promise<string> {
+export function convert(
+  inputPaths: string | string[],
+  options: ConvertOptions = {},
+): Promise<string> {
   const inputList = Array.isArray(inputPaths) ? inputPaths : [inputPaths];
   if (inputList.length === 0) {
     return Promise.reject(new Error('At least one input path must be provided.'));
@@ -224,29 +137,89 @@ export function convert(inputPaths: string | string[], options: ConvertOptions =
     args.push('--replace-invalid-chars', options.replaceInvalidChars);
   }
   if (options.useStructTree) {
-    args.push('--use-struct-tree')
+    args.push('--use-struct-tree');
   }
   if (options.tableMethod) {
-      if (Array.isArray(options.tableMethod)) {
-          args.push('--table-method', options.tableMethod.join(','));
-      } else {
-          args.push('--table-method', options.tableMethod);
-      }
+    if (Array.isArray(options.tableMethod)) {
+      args.push('--table-method', options.tableMethod.join(','));
+    } else {
+      args.push('--table-method', options.tableMethod);
+    }
   }
   if (options.readingOrder) {
-    args.push('--reading-order', options.readingOrder)
+    args.push('--reading-order', options.readingOrder);
   }
   if (options.markdownPageSeparator) {
-    args.push('--markdown-page-separator', options.markdownPageSeparator)
+    args.push('--markdown-page-separator', options.markdownPageSeparator);
   }
   if (options.textPageSeparator) {
-    args.push('--text-page-separator', options.textPageSeparator)
+    args.push('--text-page-separator', options.textPageSeparator);
   }
   if (options.htmlPageSeparator) {
-    args.push('--html-page-separator', options.htmlPageSeparator)
+    args.push('--html-page-separator', options.htmlPageSeparator);
   }
 
   return executeJar(args, {
     streamOutput: !options.quiet,
+  });
+}
+
+/**
+ * @deprecated Use `convert()` and `ConvertOptions` instead. This function will be removed in a future version.
+ */
+export interface RunOptions {
+  outputFolder?: string;
+  password?: string;
+  replaceInvalidChars?: string;
+  generateMarkdown?: boolean;
+  generateHtml?: boolean;
+  generateAnnotatedPdf?: boolean;
+  keepLineBreaks?: boolean;
+  contentSafetyOff?: string;
+  htmlInMarkdown?: boolean;
+  addImageToMarkdown?: boolean;
+  noJson?: boolean;
+  debug?: boolean;
+  useStructTree?: boolean;
+}
+
+/**
+ * @deprecated Use `convert()` instead. This function will be removed in a future version.
+ */
+export function run(inputPath: string, options: RunOptions = {}): Promise<string> {
+  console.warn(
+    'Warning: run() is deprecated and will be removed in a future version. Use convert() instead.',
+  );
+
+  // Build format array based on legacy boolean options
+  const formats: string[] = [];
+  if (!options.noJson) {
+    formats.push('json');
+  }
+  if (options.generateMarkdown) {
+    if (options.addImageToMarkdown) {
+      formats.push('markdown-with-images');
+    } else if (options.htmlInMarkdown) {
+      formats.push('markdown-with-html');
+    } else {
+      formats.push('markdown');
+    }
+  }
+  if (options.generateHtml) {
+    formats.push('html');
+  }
+  if (options.generateAnnotatedPdf) {
+    formats.push('pdf');
+  }
+
+  return convert(inputPath, {
+    outputDir: options.outputFolder,
+    password: options.password,
+    replaceInvalidChars: options.replaceInvalidChars,
+    keepLineBreaks: options.keepLineBreaks,
+    contentSafetyOff: options.contentSafetyOff,
+    useStructTree: options.useStructTree,
+    format: formats.length > 0 ? formats : undefined,
+    quiet: !options.debug,
   });
 }
