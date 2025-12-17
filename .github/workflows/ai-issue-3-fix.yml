@@ -204,20 +204,6 @@ jobs:
           # This includes AI Deep Analysis and any follow-up Q&A from humans
           cat /tmp/issue.json | jq -r '.comments[] | "### Comment by \(.author.login):\n\(.body)\n"' > /tmp/all_comments.txt || true
 
-      - name: Pre-fix build & test
-        if: steps.check.outputs.skip == 'false'
-        id: pre_build
-        run: |
-          echo "Running build-all.sh to verify baseline..."
-          chmod +x ./scripts/build-all.sh
-          if ./scripts/build-all.sh; then
-            echo "success=true" >> $GITHUB_OUTPUT
-            echo "✅ Pre-fix build & test passed"
-          else
-            echo "success=false" >> $GITHUB_OUTPUT
-            echo "❌ Pre-fix build & test failed (baseline is broken)"
-          fi
-
       - name: Run fix
         if: steps.check.outputs.skip == 'false'
         id: fix

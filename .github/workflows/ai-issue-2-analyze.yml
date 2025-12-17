@@ -342,7 +342,7 @@ jobs:
 
           eval gh issue edit $ISSUE_NUM $LABEL_ARGS
 
-      - name: Post response and close issue for comment-only
+      - name: Post response for comment-only
         if: steps.check.outputs.skip == 'false' && steps.analysis.outputs.action == 'fix/comment-only'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -356,8 +356,7 @@ jobs:
             gh issue comment $ISSUE_NUM --body "$COMMENT_DRAFT"
           fi
 
-          echo "💬 Issue #$ISSUE_NUM is comment-only, closing issue..."
-          gh issue close $ISSUE_NUM --comment "🤖 This issue has been addressed with the response above. Closing as no code changes are required."
+          echo "💬 Issue #$ISSUE_NUM is comment-only (issue remains open for human review)"
 
       - name: Debug outputs
         if: steps.check.outputs.skip == 'false'
@@ -374,23 +373,4 @@ jobs:
           ISSUE_NUM=${{ steps.check.outputs.issue_number }}
 
           echo "✅ Issue #$ISSUE_NUM is eligible for auto-fix"
-          echo "Automatically triggering Stage 3..."
-
-  # Call Stage 3 when analysis determines auto-fix is eligible
-  fix:
-    needs: analyze
-    # Check if action output exists and equals 'fix/auto-eligible'
-    # Also ensure issue_number is set (analysis completed successfully)
-    if: |
-      needs.analyze.outputs.action == 'fix/auto-eligible' &&
-      needs.analyze.outputs.issue_number != ''
-    # Explicit permissions for reusable workflow call (least privilege principle)
-    permissions:
-      issues: write
-      contents: write
-      pull-requests: write
-      actions: read
-    uses: ./.github/workflows/ai-issue-3-fix.yml
-    with:
-      issue_number: ${{ fromJson(needs.analyze.outputs.issue_number) }}
-    secrets: inherit
+          echo "To trigger Stage 3, use: @ai-issue fix"
