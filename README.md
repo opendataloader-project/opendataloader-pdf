@@ -91,6 +91,22 @@ opendataloader_pdf.convert(
 
 ## Developing with OpenDataLoader
 
+### Build & Test
+
+**Prerequisites**: Java 11+, Python 3.9+, Node.js 20+, pnpm
+
+```sh
+# Run tests (for local development)
+./scripts/test-java.sh
+./scripts/test-python.sh
+./scripts/test-node.sh
+
+# Full CI build (all packages)
+./scripts/build-all.sh
+```
+
+### Resources
+
 - [Development](https://opendataloader.org/docs/development-workflow)
 - [Json Schema](https://opendataloader.org/docs/json-schema)
 - [Javadoc](https://javadoc.io/doc/org.opendataloader/opendataloader-pdf-core/latest/index.html)
