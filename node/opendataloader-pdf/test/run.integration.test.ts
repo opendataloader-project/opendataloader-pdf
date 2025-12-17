@@ -9,7 +9,7 @@ const __dirname = path.dirname(__filename);
 
 const rootDir = path.resolve(__dirname, '..', '..', '..');
 const inputPdf = path.join(rootDir, 'resources', '1901.03003.pdf');
-const tempDir = path.join(__dirname, 'temp');
+const tempDir = path.join(__dirname, 'temp-run');
 
 describe('opendataloader-pdf', () => {
   beforeAll(() => {
@@ -17,7 +17,7 @@ describe('opendataloader-pdf', () => {
     if (fs.existsSync(tempDir)) {
       fs.rmSync(tempDir, { recursive: true, force: true });
     }
-    fs.mkdirSync(tempDir);
+    fs.mkdirSync(tempDir, { recursive: true });
   });
 
   afterAll(() => {
