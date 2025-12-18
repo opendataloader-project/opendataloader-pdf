@@ -10,6 +10,7 @@ package org.opendataloader.pdf.html;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.markdown.MarkdownSyntax;
+import org.opendataloader.pdf.utils.Base64ImageUtils;
 import org.opendataloader.pdf.utils.ImagesUtils;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
@@ -44,6 +45,8 @@ public class HtmlGenerator implements Closeable {
     protected final Path htmlFilePath;
     protected int tableNesting = 0;
     protected String htmlPageSeparator = "";
+    protected boolean embedImages = false;
+    protected String imageFormat = Config.IMAGE_FORMAT_PNG;
 
     public HtmlGenerator(File inputPdf, Config config) throws IOException {
         this.pdfFileName = inputPdf.getName();
@@ -52,6 +55,8 @@ public class HtmlGenerator implements Closeable {
         this.htmlFilePath = Path.of(config.getOutputFolder(), htmlFileName);
         this.htmlWriter = new FileWriter(htmlFilePath.toFile(), StandardCharsets.UTF_8);
         this.htmlPageSeparator = config.getHtmlPageSeparator();
+        this.embedImages = config.isEmbedImages();
+        this.imageFormat = config.getImageFormat();
     }
 
     public void writeToHtml(List<List<IObject>> contents) {
@@ -108,22 +113,31 @@ public class HtmlGenerator implements Closeable {
 
     protected void writeImage(ImageChunk image) {
         try {
-            String figureFileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, image.getIndex());
+            String figureFileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, image.getIndex(), imageFormat);
             Path figureDirPath = Path.of(StaticLayoutContainers.getImagesDirectory());
             Path figureFilePath = Path.of(figureFileName);
 
             if (ImagesUtils.isImageFileExists(figureFilePath.toString())) {
-                String relativePathName = figureFilePath.subpath(figureDirPath.getNameCount() - 1,
-                    figureDirPath.getNameCount() + 1).toString().replace("\\", "/");
-                String imageString = String.format("<img src=\"%s\" alt=\"figure%d\">", relativePathName, image.getIndex());
-                htmlWriter.write(imageString);
-                htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
+                String imageSource;
+                if (embedImages) {
+                    File imageFile = figureFilePath.toFile();
+                    imageSource = Base64ImageUtils.toDataUri(imageFile, imageFormat);
+                    if (imageSource == null) {
+                        LOGGER.log(Level.WARNING, "Failed to convert image to Base64: {0}", figureFileName);
+                    }
+                } else {
+                    imageSource = figureFilePath.subpath(figureDirPath.getNameCount() - 1,
+                        figureDirPath.getNameCount() + 1).toString().replace("\\", "/");
+                }
+                if (imageSource != null) {
+                    String imageString = String.format("<img src=\"%s\" alt=\"figure%d\">", imageSource, image.getIndex());
+                    htmlWriter.write(imageString);
+                    htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
+                }
             }
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Unable to write image for html output: " + e.getMessage());
         }
-
-        //add alt image
     }
 
     protected void writeList(PDFList list) throws IOException {

@@ -53,4 +53,6 @@ public class JsonName {
     public static final String CELLS = "cells";
     public static final String NUMBERING_STYLE = "numbering style";
     public static final String SOURCE = "source";
+    public static final String DATA = "data";
+    public static final String IMAGE_FORMAT = "format";
 }

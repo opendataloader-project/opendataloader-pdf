@@ -96,3 +96,34 @@ def test_page_separator(input_pdf, kwarg, cli_flag, value):
         args = print_args(mock_run_jar)
         assert cli_flag in args
         assert value in args
+
+
+# --- Embed images tests ---
+def test_embed_images(input_pdf):
+    with patch("opendataloader_pdf.wrapper.run_jar") as mock_run_jar:
+        opendataloader_pdf.convert(input_path=str(input_pdf), format="json", embed_images=True)
+        args = print_args(mock_run_jar)
+        assert "--embed-images" in args
+
+
+@pytest.mark.parametrize("fmt", ["png", "jpeg"])
+def test_image_format(input_pdf, fmt):
+    with patch("opendataloader_pdf.wrapper.run_jar") as mock_run_jar:
+        opendataloader_pdf.convert(input_path=str(input_pdf), format="json", image_format=fmt)
+        args = print_args(mock_run_jar)
+        assert "--image-format" in args
+        assert fmt in args
+
+
+def test_embed_images_with_format(input_pdf):
+    with patch("opendataloader_pdf.wrapper.run_jar") as mock_run_jar:
+        opendataloader_pdf.convert(
+            input_path=str(input_pdf),
+            format="json",
+            embed_images=True,
+            image_format="jpeg",
+        )
+        args = print_args(mock_run_jar)
+        assert "--embed-images" in args
+        assert "--image-format" in args
+        assert "jpeg" in args

@@ -166,6 +166,8 @@ public class DocumentProcessor {
         StaticXmpCoreContainers.clearAllContainers();
         StaticContainers.setKeepLineBreaks(config.isKeepLineBreaks());
         StaticLayoutContainers.setCurrentContentId(1);
+        StaticLayoutContainers.setEmbedImages(config.isEmbedImages());
+        StaticLayoutContainers.setImageFormat(config.getImageFormat());
         StaticResources.setPassword(config.getPassword());
     }
 

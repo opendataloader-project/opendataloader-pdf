@@ -68,6 +68,10 @@ public class CLIOptions {
 
     private static final String HTML_PAGE_SEPARATOR_LONG_OPTION = "html-page-separator";
 
+    private static final String EMBED_IMAGES_LONG_OPTION = "embed-images";
+    private static final String IMAGE_FORMAT_LONG_OPTION = "image-format";
+    private static final String IMAGE_FORMAT_SUPPORTED_LIST = "png, jpeg";
+
     public static Options defineOptions() {
         Options options = new Options();
         Option contentSafetyOff = new Option(null, CONTENT_SAFETY_OFF_LONG_OPTION, true, "Disables one or more content safety filters. Accepts a comma-separated list of filter names. Arguments: all, hidden-text, off-page, tiny, hidden-ocg");
@@ -127,6 +131,12 @@ public class CLIOptions {
         Option htmlPageSeparator = new Option(null, HTML_PAGE_SEPARATOR_LONG_OPTION, true, "Specifies the separator string inserted between pages in the html output. Use \"%page-number%\" inside the string to include the current page number.");
         htmlPageSeparator.setRequired(false);
         options.addOption(htmlPageSeparator);
+        Option embedImages = new Option(null, EMBED_IMAGES_LONG_OPTION, false, "Embeds images as Base64 data URIs in JSON, HTML, and Markdown outputs instead of file path references. Note: Automatically enables markdown-with-images output");
+        embedImages.setRequired(false);
+        options.addOption(embedImages);
+        Option imageFormat = new Option(null, IMAGE_FORMAT_LONG_OPTION, true, String.format("Specifies the output format for extracted images (default: png). Supported values: %s", IMAGE_FORMAT_SUPPORTED_LIST));
+        imageFormat.setRequired(false);
+        options.addOption(imageFormat);
         return options;
     }
 
@@ -185,7 +195,31 @@ public class CLIOptions {
         applyContentSafetyOption(config, commandLine);
         applyFormatOption(config, commandLine);
         applyTableMethodOption(config, commandLine);
+        applyImageOptions(config, commandLine);
         return config;
+    }
+
+    private static void applyImageOptions(Config config, CommandLine commandLine) {
+        if (commandLine.hasOption(EMBED_IMAGES_LONG_OPTION)) {
+            config.setEmbedImages(true);
+            // When embedding images, automatically enable image output in markdown
+            if (config.isGenerateMarkdown()) {
+                config.setAddImageToMarkdown(true);
+            }
+        }
+        if (commandLine.hasOption(IMAGE_FORMAT_LONG_OPTION)) {
+            String formatValue = commandLine.getOptionValue(IMAGE_FORMAT_LONG_OPTION);
+            if (formatValue == null || formatValue.trim().isEmpty()) {
+                throw new IllegalArgumentException(
+                    String.format("Option --image-format requires a value. Supported values: %s", IMAGE_FORMAT_SUPPORTED_LIST));
+            }
+            String format = formatValue.trim().toLowerCase(Locale.ROOT);
+            if (!Config.isValidImageFormat(format)) {
+                throw new IllegalArgumentException(
+                    String.format("Unsupported image format '%s'. Supported values: %s", format, IMAGE_FORMAT_SUPPORTED_LIST));
+            }
+            config.setImageFormat(format);
+        }
     }
 
     private static void applyTableMethodOption(Config config, CommandLine commandLine) {

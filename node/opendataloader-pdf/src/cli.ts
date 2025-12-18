@@ -16,6 +16,8 @@ interface CliOptions {
   markdownPageSeparator?: string;
   textPageSeparator?: string;
   htmlPageSeparator?: string;
+  embedImages?: boolean;
+  imageFormat?: string;
 }
 
 function createProgram(): Command {
@@ -52,6 +54,14 @@ function createProgram(): Command {
     .option(
       '--html-page-separator <htmlPageSeparator>',
       'Specifies the separator string inserted between pages in the html output. Use \\"%page-number%\\" inside the string to include the current page number.',
+    )
+    .option(
+      '--embed-images',
+      'Embed images as Base64 data URIs in JSON, HTML, and Markdown outputs',
+    )
+    .option(
+      '--image-format <format>',
+      'Image format for extracted images (png, jpeg). Default: png',
     );
 
   program.configureOutput({
@@ -107,6 +117,12 @@ function buildConvertOptions(options: CliOptions): ConvertOptions {
   }
   if (options.htmlPageSeparator) {
     convertOptions.htmlPageSeparator = options.htmlPageSeparator;
+  }
+  if (options.embedImages) {
+    convertOptions.embedImages = true;
+  }
+  if (options.imageFormat) {
+    convertOptions.imageFormat = options.imageFormat;
   }
 
   return convertOptions;
