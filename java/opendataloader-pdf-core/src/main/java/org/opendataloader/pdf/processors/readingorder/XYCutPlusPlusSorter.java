@@ -38,7 +38,7 @@ public class XYCutPlusPlusSorter {
 
     /** Default beta multiplier for cross-layout detection threshold.
      *  Higher value = fewer elements detected as cross-layout.
-     *  2.0 means element must be 2x wider than maxWidth to be considered cross-layout. */
+     *  2.0 means element must be 2x wider than maxWidth to be considered cross-layout (effectively disabled). */
     static final double DEFAULT_BETA = 2.0;
 
     /** Default density threshold for adaptive axis selection. */
@@ -49,6 +49,10 @@ public class XYCutPlusPlusSorter {
 
     /** Minimum number of overlaps required for cross-layout classification. */
     static final int MIN_OVERLAP_COUNT = 2;
+
+    /** Minimum gap size (in points) required to perform a cut.
+     *  Prevents splitting on insignificant gaps (e.g., 1-pixel gaps). */
+    static final double MIN_GAP_THRESHOLD = 5.0;
 
     private XYCutPlusPlusSorter() {
         // Utility class - prevent instantiation
@@ -345,13 +349,17 @@ public class XYCutPlusPlusSorter {
         // Choose cut direction based on gap sizes
         // For column layouts, vertical cuts (column separation) take priority
         // Use horizontal cut only when horizontal gap is larger than vertical gap
+        // Apply minimum gap threshold to avoid splitting on insignificant gaps
+        boolean hasValidHorizontalCut = horizontalCut.gap >= MIN_GAP_THRESHOLD;
+        boolean hasValidVerticalCut = verticalCut.gap >= MIN_GAP_THRESHOLD;
+
         boolean useHorizontalCut;
-        if (horizontalCut.gap > 0 && verticalCut.gap > 0) {
+        if (hasValidHorizontalCut && hasValidVerticalCut) {
             // Both cuts available - prefer larger gap
             useHorizontalCut = horizontalCut.gap > verticalCut.gap;
-        } else if (horizontalCut.gap > 0) {
+        } else if (hasValidHorizontalCut) {
             useHorizontalCut = true;
-        } else if (verticalCut.gap > 0) {
+        } else if (hasValidVerticalCut) {
             useHorizontalCut = false;
         } else {
             // No valid cuts found - sort by Y then X (reading order)
