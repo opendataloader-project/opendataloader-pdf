@@ -58,3 +58,6 @@ logs/
 **/temp/
 *.swp
 *.swo
+
+# Configuration files
+.claude/settings.local.json
