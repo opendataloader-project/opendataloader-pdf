@@ -6,10 +6,9 @@ import pytest
 import opendataloader_pdf
 
 
-def print_args(mock_run_jar):
-    """Helper to print CLI args for debugging (use with -s flag)"""
+def get_args(mock_run_jar):
+    """Helper to extract CLI args from mock"""
     args = mock_run_jar.call_args[0][0]
-    print(f"\nCLI args: {args}")
     return args
 
 
@@ -29,7 +28,7 @@ def print_args(mock_run_jar):
 def test_format(input_pdf, fmt):
     with patch("opendataloader_pdf.wrapper.run_jar") as mock_run_jar:
         opendataloader_pdf.convert(input_path=str(input_pdf), format=fmt)
-        args = print_args(mock_run_jar)
+        args = get_args(mock_run_jar)
         assert "--format" in args
         assert fmt in args
 
@@ -37,7 +36,7 @@ def test_format(input_pdf, fmt):
 def test_format_as_list(input_pdf):
     with patch("opendataloader_pdf.wrapper.run_jar") as mock_run_jar:
         opendataloader_pdf.convert(input_path=str(input_pdf), format=["json", "text"])
-        args = print_args(mock_run_jar)
+        args = get_args(mock_run_jar)
         assert "--format" in args
         assert "json,text" in args
 
@@ -46,7 +45,7 @@ def test_format_as_list(input_pdf):
 def test_input_path_as_list(input_pdf):
     with patch("opendataloader_pdf.wrapper.run_jar") as mock_run_jar:
         opendataloader_pdf.convert(input_path=[str(input_pdf)], format="json")
-        args = print_args(mock_run_jar)
+        args = get_args(mock_run_jar)
         assert str(input_pdf) in args
 
 
@@ -75,7 +74,7 @@ def test_input_path_as_list(input_pdf):
 def test_option_args(input_pdf, kwarg, cli_flag, value):
     with patch("opendataloader_pdf.wrapper.run_jar") as mock_run_jar:
         opendataloader_pdf.convert(input_path=str(input_pdf), format="json", **kwarg)
-        args = print_args(mock_run_jar)
+        args = get_args(mock_run_jar)
         assert cli_flag in args
         if value:
             assert value in args
@@ -93,7 +92,7 @@ def test_option_args(input_pdf, kwarg, cli_flag, value):
 def test_page_separator(input_pdf, kwarg, cli_flag, value):
     with patch("opendataloader_pdf.wrapper.run_jar") as mock_run_jar:
         opendataloader_pdf.convert(input_path=str(input_pdf), format="json", **kwarg)
-        args = print_args(mock_run_jar)
+        args = get_args(mock_run_jar)
         assert cli_flag in args
         assert value in args
 
@@ -102,7 +101,7 @@ def test_page_separator(input_pdf, kwarg, cli_flag, value):
 def test_embed_images(input_pdf):
     with patch("opendataloader_pdf.wrapper.run_jar") as mock_run_jar:
         opendataloader_pdf.convert(input_path=str(input_pdf), format="json", embed_images=True)
-        args = print_args(mock_run_jar)
+        args = get_args(mock_run_jar)
         assert "--embed-images" in args
 
 
@@ -110,7 +109,7 @@ def test_embed_images(input_pdf):
 def test_image_format(input_pdf, fmt):
     with patch("opendataloader_pdf.wrapper.run_jar") as mock_run_jar:
         opendataloader_pdf.convert(input_path=str(input_pdf), format="json", image_format=fmt)
-        args = print_args(mock_run_jar)
+        args = get_args(mock_run_jar)
         assert "--image-format" in args
         assert fmt in args
 
@@ -123,7 +122,7 @@ def test_embed_images_with_format(input_pdf):
             embed_images=True,
             image_format="jpeg",
         )
-        args = print_args(mock_run_jar)
+        args = get_args(mock_run_jar)
         assert "--embed-images" in args
         assert "--image-format" in args
         assert "jpeg" in args
