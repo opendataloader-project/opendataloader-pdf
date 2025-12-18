@@ -12,6 +12,7 @@ import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioConsumer;
 
 import java.awt.*;
+import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
@@ -58,6 +59,11 @@ public class StaticLayoutContainers {
 
     public static String getImagesDirectory() {
         return imagesDirectory.get();
+    }
+
+    public static String getImagesDirectoryName() {
+        String dir = imagesDirectory.get();
+        return dir != null && !dir.isEmpty() ? new File(dir).getName() : "";
     }
 
     public static void setImagesDirectory(String imagesDirectory) {

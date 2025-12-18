@@ -113,21 +113,19 @@ public class HtmlGenerator implements Closeable {
 
     protected void writeImage(ImageChunk image) {
         try {
-            String figureFileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, image.getIndex(), imageFormat);
-            Path figureDirPath = Path.of(StaticLayoutContainers.getImagesDirectory());
-            Path figureFilePath = Path.of(figureFileName);
+            String absolutePath = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, image.getIndex(), imageFormat);
+            String relativePath = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectoryName(), "/", image.getIndex(), imageFormat);
 
-            if (ImagesUtils.isImageFileExists(figureFilePath.toString())) {
+            if (ImagesUtils.isImageFileExists(absolutePath)) {
                 String imageSource;
                 if (embedImages) {
-                    File imageFile = figureFilePath.toFile();
+                    File imageFile = new File(absolutePath);
                     imageSource = Base64ImageUtils.toDataUri(imageFile, imageFormat);
                     if (imageSource == null) {
-                        LOGGER.log(Level.WARNING, "Failed to convert image to Base64: {0}", figureFileName);
+                        LOGGER.log(Level.WARNING, "Failed to convert image to Base64: {0}", absolutePath);
                     }
                 } else {
-                    imageSource = figureFilePath.subpath(figureDirPath.getNameCount() - 1,
-                        figureDirPath.getNameCount() + 1).toString().replace("\\", "/");
+                    imageSource = relativePath;
                 }
                 if (imageSource != null) {
                     String imageString = String.format("<img src=\"%s\" alt=\"figure%d\">", imageSource, image.getIndex());

@@ -27,7 +27,8 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class EmbedImagesIntegrationTest {
 
-    private static final String SAMPLE_PDF_WITH_IMAGES = "../../samples/pdf/2408.02509v1.pdf";
+    private static final String SAMPLE_PDF_WITH_IMAGES = "../../samples/pdf/1901.03003.pdf";
+    private static final String SAMPLE_PDF_BASENAME = "1901.03003";
     private static final String BASE64_DATA_URI_PREFIX = "data:image/png;base64,";
     private static final String BASE64_JPEG_PREFIX = "data:image/jpeg;base64,";
 
@@ -69,17 +70,17 @@ class EmbedImagesIntegrationTest {
         DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
 
         // Then
-        Path jsonOutput = tempDir.resolve("2408.02509v1.json");
+        Path jsonOutput = tempDir.resolve(SAMPLE_PDF_BASENAME + ".json");
         assertTrue(Files.exists(jsonOutput), "JSON output should exist");
 
         String jsonContent = Files.readString(jsonOutput);
         // Check for Base64 data URI in JSON output
-        if (jsonContent.contains("\"type\":\"image\"")) {
+        if (jsonContent.contains("\"type\" : \"image\"")) {
             assertTrue(
                 jsonContent.contains(BASE64_DATA_URI_PREFIX) || jsonContent.contains(BASE64_JPEG_PREFIX),
                 "JSON should contain Base64 data URI for images when embedImages is true"
             );
-            assertTrue(jsonContent.contains("\"format\":"), "JSON should contain format field");
+            assertTrue(jsonContent.contains("\"format\""), "JSON should contain format field");
         }
     }
 
@@ -103,7 +104,7 @@ class EmbedImagesIntegrationTest {
         DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
 
         // Then
-        Path htmlOutput = tempDir.resolve("2408.02509v1.html");
+        Path htmlOutput = tempDir.resolve(SAMPLE_PDF_BASENAME + ".html");
         assertTrue(Files.exists(htmlOutput), "HTML output should exist");
 
         String htmlContent = Files.readString(htmlOutput);
@@ -136,7 +137,7 @@ class EmbedImagesIntegrationTest {
         DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
 
         // Then
-        Path mdOutput = tempDir.resolve("2408.02509v1.md");
+        Path mdOutput = tempDir.resolve(SAMPLE_PDF_BASENAME + ".md");
         assertTrue(Files.exists(mdOutput), "Markdown output should exist");
 
         String mdContent = Files.readString(mdOutput);
@@ -167,14 +168,14 @@ class EmbedImagesIntegrationTest {
         DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
 
         // Then
-        Path jsonOutput = tempDir.resolve("2408.02509v1.json");
+        Path jsonOutput = tempDir.resolve(SAMPLE_PDF_BASENAME + ".json");
         assertTrue(Files.exists(jsonOutput), "JSON output should exist");
 
         String jsonContent = Files.readString(jsonOutput);
         // When embedImages is false, should use source field with file path
-        if (jsonContent.contains("\"type\":\"image\"")) {
-            assertTrue(jsonContent.contains("\"source\":"), "JSON should contain source field for file path");
-            assertFalse(jsonContent.contains("\"data\":\"data:image"), "JSON should not contain Base64 data");
+        if (jsonContent.contains("\"type\" : \"image\"")) {
+            assertTrue(jsonContent.contains("\"source\""), "JSON should contain source field for file path");
+            assertFalse(jsonContent.contains("\"data\" : \"data:image"), "JSON should not contain Base64 data");
         }
     }
 
@@ -197,12 +198,12 @@ class EmbedImagesIntegrationTest {
         DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
 
         // Then
-        Path jsonOutput = tempDir.resolve("2408.02509v1.json");
+        Path jsonOutput = tempDir.resolve(SAMPLE_PDF_BASENAME + ".json");
         assertTrue(Files.exists(jsonOutput), "JSON output should exist");
 
         String jsonContent = Files.readString(jsonOutput);
-        if (jsonContent.contains("\"type\":\"image\"") && jsonContent.contains("\"data\":")) {
-            assertTrue(jsonContent.contains("\"format\":\"jpeg\""), "Format should be jpeg");
+        if (jsonContent.contains("\"type\" : \"image\"") && jsonContent.contains("\"data\"")) {
+            assertTrue(jsonContent.contains("\"format\" : \"jpeg\""), "Format should be jpeg");
         }
     }
 }
