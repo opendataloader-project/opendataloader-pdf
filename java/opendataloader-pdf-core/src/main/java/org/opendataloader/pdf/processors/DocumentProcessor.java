@@ -8,6 +8,7 @@
 package org.opendataloader.pdf.processors;
 
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
+import org.opendataloader.pdf.processors.readingorder.XYCutPlusPlusSorter;
 import org.opendataloader.pdf.json.JsonWriter;
 import org.opendataloader.pdf.markdown.MarkdownGenerator;
 import org.opendataloader.pdf.markdown.MarkdownGeneratorFactory;
@@ -237,10 +238,22 @@ public class DocumentProcessor {
     }
 
     public static List<IObject> sortPageContents(List<IObject> contents) {
+        if (contents == null || contents.isEmpty()) {
+            return contents;
+        }
         List<IObject> sortedContents = new ArrayList<>(contents);
         sortedContents.sort((o1, o2) -> {
             BoundingBox b1 = o1.getBoundingBox();
             BoundingBox b2 = o2.getBoundingBox();
+            if (b1 == null && b2 == null) {
+                return 0;
+            }
+            if (b1 == null) {
+                return 1;
+            }
+            if (b2 == null) {
+                return -1;
+            }
             if (!Objects.equals(b1.getPageNumber(), b2.getPageNumber())) {
                 return b1.getPageNumber() - b2.getPageNumber();
             }
@@ -251,7 +264,7 @@ public class DocumentProcessor {
                 return b2.getTopY() - b1.getTopY() > 0 ? 1 : -1;
             }
             if (!Objects.equals(b1.getLeftX(), b2.getLeftX())) {
-                return b2.getLeftX() - b1.getLeftX() > 0 ? 1 : -1;
+                return b1.getLeftX() - b2.getLeftX() > 0 ? 1 : -1;
             }
             if (!Objects.equals(b1.getBottomY(), b2.getBottomY())) {
                 return b1.getBottomY() - b2.getBottomY() > 0 ? 1 : -1;
@@ -265,10 +278,21 @@ public class DocumentProcessor {
     }
 
     public static void sortContents(List<List<IObject>> contents, Config config) {
-        if (Config.READING_ORDER_BY_BBOX.equals(config.getReadingOrder())) {
+        String readingOrder = config.getReadingOrder();
+
+        // xycut: XY-Cut++ sorting
+        if (Config.READING_ORDER_XYCUT.equals(readingOrder)) {
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
-                contents.set(pageNumber, sortPageContents(contents.get(pageNumber)));
+                contents.set(pageNumber, XYCutPlusPlusSorter.sort(contents.get(pageNumber)));
             }
+            return;
         }
+
+        // Log warning for unknown reading order values
+        if (!Config.READING_ORDER_NONE.equals(readingOrder)) {
+            LOGGER.log(Level.WARNING, "Unknown reading order value ''{0}'', using default ''none''", readingOrder);
+        }
+
+        // none (default): skip sorting (keep PDF COS object order)
     }
 }

@@ -17,7 +17,8 @@ import java.util.Set;
  * Use this class to specify output formats, text processing options, and other settings.
  */
 public class Config {
-    public static final String READING_ORDER_BY_BBOX = "bbox";
+    public static final String READING_ORDER_NONE = "none";
+    public static final String READING_ORDER_XYCUT = "xycut";
     public static final String PAGE_NUMBER_STRING = "%page-number%";
     private String password;
     private boolean isGenerateMarkdown = false;
@@ -32,7 +33,7 @@ public class Config {
     private String replaceInvalidChars = " ";
     private String outputFolder;
     private boolean isClusterTableMethod = false;
-    private String readingOrder;
+    private String readingOrder = READING_ORDER_NONE;
     private String markdownPageSeparator = "";
     private String textPageSeparator = "";
     private String htmlPageSeparator = "";
@@ -440,4 +441,5 @@ public class Config {
     public static boolean isValidImageFormat(String format) {
         return format != null && imageFormatOptions.contains(format.toLowerCase(Locale.ROOT));
     }
+
 }
