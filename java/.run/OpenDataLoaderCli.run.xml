@@ -1,10 +1,12 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="OpenDataLoaderCli" type="Application" factoryName="Application">
+  <configuration default="false" name="OpenDataLoaderCli" type="Application"
+    factoryName="Application">
     <option name="ALTERNATIVE_JRE_PATH" value="corretto-21" />
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
     <option name="MAIN_CLASS_NAME" value="org.opendataloader.pdf.cli.CLIMain" />
     <module name="opendataloader-pdf-cli" />
-    <option name="PROGRAM_PARAMETERS" value="../resources/1901.03003.pdf --markdown --html --pdf" />
+    <option name="PROGRAM_PARAMETERS"
+      value="../samples/pdf/1901.03003.pdf --markdown --html --pdf" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>

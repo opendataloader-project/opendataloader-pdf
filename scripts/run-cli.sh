@@ -17,7 +17,7 @@ ROOT_DIR="$SCRIPT_DIR/.."
 JAR_DIR="$ROOT_DIR/java/opendataloader-pdf-cli/target"
 
 # Defaults (used only when no arguments provided)
-DEFAULT_ARGS=("-f" "json,markdown,html,pdf" "$ROOT_DIR/resources/1901.03003.pdf")
+DEFAULT_ARGS=("-f" "json,markdown,html,pdf" "-o" "$ROOT_DIR/samples/temp" "$ROOT_DIR/samples/pdf")
 
 # Check if Java is installed
 command -v java >/dev/null || { echo "Error: java not found"; exit 1; }

@@ -111,18 +111,19 @@ public class MarkdownGenerator implements Closeable {
 
     protected void writeImage(ImageChunk image) {
         try {
-            String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, image.getIndex(), imageFormat);
+            String absolutePath = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, image.getIndex(), imageFormat);
+            String relativePath = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectoryName(), "/", image.getIndex(), imageFormat);
 
-            if (ImagesUtils.isImageFileExists(fileName)) {
+            if (ImagesUtils.isImageFileExists(absolutePath)) {
                 String imageSource;
                 if (embedImages) {
-                    File imageFile = new File(fileName);
+                    File imageFile = new File(absolutePath);
                     imageSource = Base64ImageUtils.toDataUri(imageFile, imageFormat);
                     if (imageSource == null) {
-                        LOGGER.log(Level.WARNING, "Failed to convert image to Base64: {0}", fileName);
+                        LOGGER.log(Level.WARNING, "Failed to convert image to Base64: {0}", absolutePath);
                     }
                 } else {
-                    imageSource = fileName;
+                    imageSource = relativePath;
                 }
                 if (imageSource != null) {
                     String imageString = String.format(MarkdownSyntax.IMAGE_FORMAT, "image " + image.getIndex(), imageSource);

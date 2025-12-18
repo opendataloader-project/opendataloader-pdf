@@ -27,8 +27,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  */
 class PageSeparatorIntegrationTest {
 
-    private static final String SAMPLE_PDF = "../../samples/pdf/2408.02509v1.pdf";
-    private static final String OUTPUT_BASENAME = "2408.02509v1";
+    private static final String SAMPLE_PDF = "../../samples/pdf/1901.03003.pdf";
+    private static final String OUTPUT_BASENAME = "1901.03003";
 
     @TempDir
     Path tempDir;

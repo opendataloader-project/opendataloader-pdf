@@ -9,7 +9,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..', '..', '..');
-const inputPdf = path.join(rootDir, 'resources', '1901.03003.pdf');
+const inputPdf = path.join(rootDir, 'samples', 'pdf', '1901.03003.pdf');
 
 // Mock child_process.spawn
 vi.mock('child_process', () => ({

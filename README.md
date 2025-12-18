@@ -33,7 +33,7 @@ AI-safety is enabled by default and automatically filters likely prompt-injectio
 - 🛡️ **AI-Safety** — Auto-Filters likely prompt-injection content - [Learn more](https://opendataloader.org/docs/ai-safety)
 - 🖍️ **Annotated PDF Visualization** — See detected structures overlaid on the original - [See examples](https://opendataloader.org/demo/samples)
 
-[![Annotated PDF Preview](https://raw.githubusercontent.com/opendataloader-project/opendataloader-pdf/main/resources/example_annotated_pdf.png)](https://opendataloader.org/demo/samples/01030000000000?view1=annot&view2=json)
+[![Annotated PDF Preview](https://github.com/opendataloader-project/opendataloader-pdf/raw/refs/heads/main/samples/pdf/example_annotated_pdf.png)](https://opendataloader.org/demo/samples/01030000000000?view1=annot&view2=json)
 
 <br/>
 
