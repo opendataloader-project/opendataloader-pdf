@@ -30,19 +30,20 @@ public class ImageSerializer extends StdSerializer<ImageChunk> {
     public void serialize(ImageChunk imageChunk, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
             throws IOException {
         String imageFormat = StaticLayoutContainers.getImageFormat();
-        String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, imageChunk.getIndex(), imageFormat);
+        String absolutePath = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, imageChunk.getIndex(), imageFormat);
+        String relativePath = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectoryName(), "/", imageChunk.getIndex(), imageFormat);
         jsonGenerator.writeStartObject();
         SerializerUtil.writeEssentialInfo(jsonGenerator, imageChunk, JsonName.IMAGE_CHUNK_TYPE);
-        if (ImagesUtils.isImageFileExists(fileName)) {
+        if (ImagesUtils.isImageFileExists(absolutePath)) {
             if (StaticLayoutContainers.isEmbedImages()) {
-                File imageFile = new File(fileName);
+                File imageFile = new File(absolutePath);
                 String dataUri = Base64ImageUtils.toDataUri(imageFile, imageFormat);
                 if (dataUri != null) {
                     jsonGenerator.writeStringField(JsonName.DATA, dataUri);
                     jsonGenerator.writeStringField(JsonName.IMAGE_FORMAT, imageFormat);
                 }
             } else {
-                jsonGenerator.writeStringField(JsonName.SOURCE, fileName);
+                jsonGenerator.writeStringField(JsonName.SOURCE, relativePath);
             }
         }
         jsonGenerator.writeEndObject();

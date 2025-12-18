@@ -40,10 +40,10 @@ public class IntegrationTest {
         File jsonFile = jsonPath.toFile();
 
         Config config = new Config();
-        config.setOutputFolder("../../samples/temp");
+        config.setOutputFolder("../../samples/json");
         DocumentProcessor.processFile(pdfFile.getAbsolutePath(), config);
 
-        Path resultPath = Paths.get("../../samples/temp", fileName.replace(".pdf", ".json"));
+        Path resultPath = Paths.get("../../samples/json", fileName.replace(".pdf", ".json"));
         File resultJson = resultPath.toFile();
 
         ObjectMapper mapper = new ObjectMapper();

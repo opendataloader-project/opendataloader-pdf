@@ -11,6 +11,7 @@ import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.json.JsonWriter;
 import org.opendataloader.pdf.markdown.MarkdownGenerator;
 import org.opendataloader.pdf.markdown.MarkdownGeneratorFactory;
+import org.opendataloader.pdf.markdown.MarkdownSyntax;
 import org.opendataloader.pdf.html.HtmlGenerator;
 import org.opendataloader.pdf.html.HtmlGeneratorFactory;
 import org.opendataloader.pdf.pdf.PDFWriter;
@@ -98,7 +99,8 @@ public class DocumentProcessor {
         new File(config.getOutputFolder()).mkdirs();
         if (config.isGenerateHtml() || config.isAddImageToMarkdown() || config.isGenerateJSON()) {
             String fileName = Paths.get(inputPdfName).getFileName().toString();
-            StaticLayoutContainers.setImagesDirectory(config.getOutputFolder() + File.separator + fileName.substring(0, fileName.length() - 4) + "_images");
+            String baseName = fileName.substring(0, fileName.length() - 4);
+            StaticLayoutContainers.setImagesDirectory(config.getOutputFolder() + File.separator + baseName + MarkdownSyntax.IMAGES_DIRECTORY_SUFFIX);
             ImagesUtils imagesUtils = new ImagesUtils();
             imagesUtils.write(contents, inputPdfName, config.getPassword());
         }
