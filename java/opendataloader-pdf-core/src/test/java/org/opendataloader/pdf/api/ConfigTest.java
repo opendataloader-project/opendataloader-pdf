@@ -78,6 +78,38 @@ class ConfigTest {
         assertEquals("jpeg", Config.IMAGE_FORMAT_JPEG);
     }
 
+    @Test
+    void testSetImageFormatNormalizesToLowercase() {
+        Config config = new Config();
+
+        config.setImageFormat("PNG");
+        assertEquals("png", config.getImageFormat());
+
+        config.setImageFormat("JPEG");
+        assertEquals("jpeg", config.getImageFormat());
+    }
+
+    @Test
+    void testSetImageFormatWithNullDefaultsToPng() {
+        Config config = new Config();
+
+        config.setImageFormat(null);
+        assertEquals("png", config.getImageFormat());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"bmp", "gif", "webp", "invalid"})
+    void testSetImageFormatThrowsExceptionForInvalidFormat(String format) {
+        Config config = new Config();
+
+        IllegalArgumentException exception = assertThrows(
+            IllegalArgumentException.class,
+            () -> config.setImageFormat(format)
+        );
+        assertTrue(exception.getMessage().contains("Unsupported image format"));
+        assertTrue(exception.getMessage().contains(format));
+    }
+
     // Test existing Config fields to ensure new fields don't break them
     @Test
     void testExistingConfigFields() {

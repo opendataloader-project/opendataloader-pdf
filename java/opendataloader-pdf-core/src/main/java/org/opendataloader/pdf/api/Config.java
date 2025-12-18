@@ -410,9 +410,15 @@ public class Config {
      * Sets the image format for extracted images.
      *
      * @param imageFormat The image format (png or jpeg).
+     * @throws IllegalArgumentException if the format is not supported.
      */
     public void setImageFormat(String imageFormat) {
-        this.imageFormat = imageFormat;
+        if (imageFormat != null && !isValidImageFormat(imageFormat)) {
+            throw new IllegalArgumentException(
+                String.format("Unsupported image format '%s'. Supported values: %s",
+                    imageFormat, getImageFormatOptions(", ")));
+        }
+        this.imageFormat = imageFormat != null ? imageFormat.toLowerCase(Locale.ROOT) : IMAGE_FORMAT_PNG;
     }
 
     /**
