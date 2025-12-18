@@ -89,6 +89,8 @@ export interface ConvertOptions {
   markdownPageSeparator?: string;
   textPageSeparator?: string;
   htmlPageSeparator?: string;
+  embedImages?: boolean;
+  imageFormat?: string;
 }
 
 export function convert(
@@ -157,6 +159,12 @@ export function convert(
   }
   if (options.htmlPageSeparator) {
     args.push('--html-page-separator', options.htmlPageSeparator);
+  }
+  if (options.embedImages) {
+    args.push('--embed-images');
+  }
+  if (options.imageFormat) {
+    args.push('--image-format', options.imageFormat);
   }
 
   return executeJar(args, {

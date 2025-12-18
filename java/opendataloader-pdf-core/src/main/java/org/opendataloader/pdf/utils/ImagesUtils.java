@@ -1,3 +1,10 @@
+/*
+ * Copyright 2025 Hancom Inc.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 package org.opendataloader.pdf.utils;
 
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
@@ -79,12 +86,13 @@ public class ImagesUtils {
             createImagesDirectory(StaticLayoutContainers.getImagesDirectory());
             contrastRatioConsumer = StaticLayoutContainers.getContrastRatioConsumer(pdfFilePath, password, false, null);
         }
-        String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, currentImageIndex);
+        String imageFormat = StaticLayoutContainers.getImageFormat();
+        String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, currentImageIndex, imageFormat);
         chunk.setIndex(currentImageIndex);
-        createImageFile(chunk, fileName);
+        createImageFile(chunk, fileName, imageFormat);
     }
 
-    private void createImageFile(ImageChunk image, String fileName) {
+    private void createImageFile(ImageChunk image, String fileName, String imageFormat) {
         try {
             File outputFile = new File(fileName);
             BoundingBox imageBox = image.getBoundingBox();
@@ -92,7 +100,7 @@ public class ImagesUtils {
             if (targetImage == null) {
                 return;
             }
-            ImageIO.write(targetImage, "png", outputFile);
+            ImageIO.write(targetImage, imageFormat, outputFile);
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Unable to create image files: " + e.getMessage());
         }

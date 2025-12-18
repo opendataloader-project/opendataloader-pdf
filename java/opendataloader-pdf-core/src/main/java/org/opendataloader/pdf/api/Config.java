@@ -9,6 +9,7 @@ package org.opendataloader.pdf.api;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -35,13 +36,21 @@ public class Config {
     private String markdownPageSeparator = "";
     private String textPageSeparator = "";
     private String htmlPageSeparator = "";
+    private boolean embedImages = false;
+    private String imageFormat = IMAGE_FORMAT_PNG;
     private final FilterConfig filterConfig = new FilterConfig();
 
     public static final String CLUSTER_TABLE_METHOD = "cluster";
     private static Set<String> tableMethodOptions = new HashSet<>();
 
+    public static final String IMAGE_FORMAT_PNG = "png";
+    public static final String IMAGE_FORMAT_JPEG = "jpeg";
+    private static Set<String> imageFormatOptions = new HashSet<>();
+
     static {
         tableMethodOptions.add(CLUSTER_TABLE_METHOD);
+        imageFormatOptions.add(IMAGE_FORMAT_PNG);
+        imageFormatOptions.add(IMAGE_FORMAT_JPEG);
     }
 
     /**
@@ -368,5 +377,61 @@ public class Config {
      */
     public void setHtmlPageSeparator(String htmlPageSeparator) {
         this.htmlPageSeparator = htmlPageSeparator;
+    }
+
+    /**
+     * Checks if images should be embedded as Base64 data URIs in the output.
+     *
+     * @return true if images should be embedded as Base64, false for file path references.
+     */
+    public boolean isEmbedImages() {
+        return embedImages;
+    }
+
+    /**
+     * Enables or disables embedding images as Base64 data URIs in JSON, HTML, and Markdown outputs.
+     *
+     * @param embedImages true to embed images as Base64, false for file path references.
+     */
+    public void setEmbedImages(boolean embedImages) {
+        this.embedImages = embedImages;
+    }
+
+    /**
+     * Gets the image format for extracted images.
+     *
+     * @return The image format (png or jpeg).
+     */
+    public String getImageFormat() {
+        return imageFormat;
+    }
+
+    /**
+     * Sets the image format for extracted images.
+     *
+     * @param imageFormat The image format (png or jpeg).
+     */
+    public void setImageFormat(String imageFormat) {
+        this.imageFormat = imageFormat;
+    }
+
+    /**
+     * Gets the list of supported image format options.
+     *
+     * @param delimiter The delimiter to use between options.
+     * @return The string with image formats separated by the delimiter.
+     */
+    public static String getImageFormatOptions(CharSequence delimiter) {
+        return String.join(delimiter, imageFormatOptions);
+    }
+
+    /**
+     * Checks if the given image format is valid.
+     *
+     * @param format The image format to check.
+     * @return true if the format is valid, false otherwise.
+     */
+    public static boolean isValidImageFormat(String format) {
+        return format != null && imageFormatOptions.contains(format.toLowerCase(Locale.ROOT));
     }
 }

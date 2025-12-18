@@ -112,3 +112,27 @@ describe('page separator arguments', () => {
     expect(args).toContain(value);
   });
 });
+
+// --- Embed images tests ---
+describe('embed images arguments', () => {
+  it('should pass --embed-images flag', async () => {
+    await convert(inputPdf, { format: 'json', embedImages: true });
+    const args = getSpawnArgs();
+    expect(args).toContain('--embed-images');
+  });
+
+  it.each(['png', 'jpeg'])('should pass --image-format %s', async (fmt) => {
+    await convert(inputPdf, { format: 'json', imageFormat: fmt });
+    const args = getSpawnArgs();
+    expect(args).toContain('--image-format');
+    expect(args).toContain(fmt);
+  });
+
+  it('should pass both embed-images and image-format', async () => {
+    await convert(inputPdf, { format: 'json', embedImages: true, imageFormat: 'jpeg' });
+    const args = getSpawnArgs();
+    expect(args).toContain('--embed-images');
+    expect(args).toContain('--image-format');
+    expect(args).toContain('jpeg');
+  });
+});

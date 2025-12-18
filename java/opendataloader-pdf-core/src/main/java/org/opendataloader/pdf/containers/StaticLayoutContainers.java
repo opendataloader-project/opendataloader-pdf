@@ -26,6 +26,8 @@ public class StaticLayoutContainers {
     private static final ThreadLocal<ContrastRatioConsumer>  contrastRatioConsumer = new ThreadLocal<>();
     private static final ThreadLocal<Boolean> isContrastRatioConsumerFailedToCreate =  new ThreadLocal<>();
     private static final ThreadLocal<String> imagesDirectory = new ThreadLocal<>();
+    private static final ThreadLocal<Boolean> embedImages = new ThreadLocal<>();
+    private static final ThreadLocal<String> imageFormat = new ThreadLocal<>();
 
     public static void clearContainers() {
         currentContentId.set(1L);
@@ -35,6 +37,8 @@ public class StaticLayoutContainers {
         contrastRatioConsumer.remove();
         isContrastRatioConsumerFailedToCreate.set(false);
         imagesDirectory.set("");
+        embedImages.set(false);
+        imageFormat.set("png");
     }
 
     public static long getCurrentContentId() {
@@ -106,5 +110,22 @@ public class StaticLayoutContainers {
 
     public static void resetImageIndex() {
         StaticLayoutContainers.imageIndex.set(1);
+    }
+
+    public static boolean isEmbedImages() {
+        return Boolean.TRUE.equals(embedImages.get());
+    }
+
+    public static void setEmbedImages(boolean embedImages) {
+        StaticLayoutContainers.embedImages.set(embedImages);
+    }
+
+    public static String getImageFormat() {
+        String format = imageFormat.get();
+        return format != null ? format : "png";
+    }
+
+    public static void setImageFormat(String format) {
+        StaticLayoutContainers.imageFormat.set(format);
     }
 }

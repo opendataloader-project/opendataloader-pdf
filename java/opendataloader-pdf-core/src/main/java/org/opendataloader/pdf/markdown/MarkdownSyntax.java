@@ -16,7 +16,7 @@ public class MarkdownSyntax {
     public static final String INDENT = "  ";
     public static final String HEADING_LEVEL = "#";
     public static final String LIST_ITEM = "-";
-    public static final String IMAGE_FILE_NAME_FORMAT = "%s%simageFile%d.png";
+    public static final String IMAGE_FILE_NAME_FORMAT = "%s%simageFile%d.%s";
     public static final String IMAGE_FORMAT = "![%s](%s)";
     public static final String HTML_TABLE_TAG = "<table>";
     public static final String HTML_TABLE_CLOSE_TAG = "</table>";

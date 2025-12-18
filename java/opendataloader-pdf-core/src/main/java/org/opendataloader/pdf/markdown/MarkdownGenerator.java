@@ -9,6 +9,7 @@ package org.opendataloader.pdf.markdown;
 
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
+import org.opendataloader.pdf.utils.Base64ImageUtils;
 import org.opendataloader.pdf.utils.ImagesUtils;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
@@ -39,6 +40,8 @@ public class MarkdownGenerator implements Closeable {
     protected int tableNesting = 0;
     protected boolean isImageSupported;
     protected String markdownPageSeparator;
+    protected boolean embedImages = false;
+    protected String imageFormat = "png";
 
     MarkdownGenerator(File inputPdf, Config config) throws IOException {
         String cutPdfFileName = inputPdf.getName();
@@ -46,6 +49,8 @@ public class MarkdownGenerator implements Closeable {
         this.markdownWriter = new FileWriter(markdownFileName, StandardCharsets.UTF_8);
         this.isImageSupported = config.isAddImageToMarkdown();
         this.markdownPageSeparator = config.getMarkdownPageSeparator();
+        this.embedImages = config.isEmbedImages();
+        this.imageFormat = config.getImageFormat();
     }
 
     public void writeToMarkdown(List<List<IObject>> contents) {
@@ -106,11 +111,20 @@ public class MarkdownGenerator implements Closeable {
 
     protected void writeImage(ImageChunk image) {
         try {
-            String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, image.getIndex());
+            String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, image.getIndex(), imageFormat);
 
             if (ImagesUtils.isImageFileExists(fileName)) {
-                String imageString = String.format(MarkdownSyntax.IMAGE_FORMAT, "image " + image.getIndex(), fileName);
-                markdownWriter.write(getCorrectMarkdownString(imageString));
+                String imageSource;
+                if (embedImages) {
+                    File imageFile = new File(fileName);
+                    imageSource = Base64ImageUtils.toDataUri(imageFile, imageFormat);
+                } else {
+                    imageSource = fileName;
+                }
+                if (imageSource != null) {
+                    String imageString = String.format(MarkdownSyntax.IMAGE_FORMAT, "image " + image.getIndex(), imageSource);
+                    markdownWriter.write(getCorrectMarkdownString(imageString));
+                }
             }
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Unable to write image for markdown output: " + e.getMessage());
