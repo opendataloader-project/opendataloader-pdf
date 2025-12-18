@@ -40,7 +40,7 @@ function createProgram(): Command {
     .option('--use-struct-tree', 'Enable processing structure tree (disabled by default)')
     .option(
       '--reading-order <readingOrder>',
-      'Specifies reading order of content. Supported values: bbox',
+      'Specifies reading order of content. Supported values: none (default), xycut',
     )
     .option('--table-method <method>', 'Enable specified table detection method')
     .option(

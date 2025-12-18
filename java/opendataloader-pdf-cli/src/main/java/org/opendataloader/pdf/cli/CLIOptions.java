@@ -119,7 +119,7 @@ public class CLIOptions {
         Option tableMethod = new Option(null, TABLE_METHOD_OPTION, true, "Enable specified table detection method. Accepts a comma-separated list of methods. Supported values: " + Config.getTableMethodOptions(","));
         tableMethod.setRequired(false);
         options.addOption(tableMethod);
-        Option readingOrder = new Option(null, READING_ORDER_LONG_OPTION, true, "Specifies reading order of content. Supported values: bbox.");
+        Option readingOrder = new Option(null, READING_ORDER_LONG_OPTION, true, "Specifies reading order of content. Supported values: none (default), xycut");
         readingOrder.setRequired(false);
         options.addOption(readingOrder);
         Option markdownPageSeparator = new Option(null, MARKDOWN_PAGE_SEPARATOR_LONG_OPTION, true, "Specifies the separator string inserted between pages in the markdown output. Use \"%page-number%\" inside the string to include the current page number.");

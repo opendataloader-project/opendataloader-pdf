@@ -299,7 +299,7 @@ def main(argv=None) -> int:
     )
     parser.add_argument(
         "--reading-order",
-        help="Specifies reading order of content. Supported values: bbox",
+        help="Specifies reading order of content. Supported values: none (default), xycut",
     )
     parser.add_argument(
         "--markdown-page-separator",
