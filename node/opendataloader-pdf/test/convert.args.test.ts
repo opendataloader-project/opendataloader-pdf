@@ -32,7 +32,6 @@ function getSpawnArgs(): string[] {
   const lastCall = calls[calls.length - 1];
   // spawn(command, args) -> args is lastCall[1]
   const args = lastCall[1] as string[];
-  console.log('\nCLI args:', args);
   return args;
 }
 
