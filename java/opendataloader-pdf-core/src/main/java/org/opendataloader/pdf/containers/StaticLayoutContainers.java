@@ -7,6 +7,7 @@
  */
 package org.opendataloader.pdf.containers;
 
+import org.opendataloader.pdf.api.Config;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioConsumer;
 
@@ -38,7 +39,7 @@ public class StaticLayoutContainers {
         isContrastRatioConsumerFailedToCreate.set(false);
         imagesDirectory.set("");
         embedImages.set(false);
-        imageFormat.set("png");
+        imageFormat.set(Config.IMAGE_FORMAT_PNG);
     }
 
     public static long getCurrentContentId() {
@@ -122,7 +123,7 @@ public class StaticLayoutContainers {
 
     public static String getImageFormat() {
         String format = imageFormat.get();
-        return format != null ? format : "png";
+        return format != null ? format : Config.IMAGE_FORMAT_PNG;
     }
 
     public static void setImageFormat(String format) {

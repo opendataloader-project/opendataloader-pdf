@@ -41,7 +41,7 @@ public class MarkdownGenerator implements Closeable {
     protected boolean isImageSupported;
     protected String markdownPageSeparator;
     protected boolean embedImages = false;
-    protected String imageFormat = "png";
+    protected String imageFormat = Config.IMAGE_FORMAT_PNG;
 
     MarkdownGenerator(File inputPdf, Config config) throws IOException {
         String cutPdfFileName = inputPdf.getName();
@@ -118,6 +118,9 @@ public class MarkdownGenerator implements Closeable {
                 if (embedImages) {
                     File imageFile = new File(fileName);
                     imageSource = Base64ImageUtils.toDataUri(imageFile, imageFormat);
+                    if (imageSource == null) {
+                        LOGGER.log(Level.WARNING, "Failed to convert image to Base64: {0}", fileName);
+                    }
                 } else {
                     imageSource = fileName;
                 }

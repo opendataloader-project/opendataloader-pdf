@@ -131,7 +131,7 @@ public class CLIOptions {
         Option htmlPageSeparator = new Option(null, HTML_PAGE_SEPARATOR_LONG_OPTION, true, "Specifies the separator string inserted between pages in the html output. Use \"%page-number%\" inside the string to include the current page number.");
         htmlPageSeparator.setRequired(false);
         options.addOption(htmlPageSeparator);
-        Option embedImages = new Option(null, EMBED_IMAGES_LONG_OPTION, false, "Embeds images as Base64 data URIs in JSON, HTML, and Markdown outputs instead of file path references");
+        Option embedImages = new Option(null, EMBED_IMAGES_LONG_OPTION, false, "Embeds images as Base64 data URIs in JSON, HTML, and Markdown outputs instead of file path references. Note: Automatically enables image output in Markdown");
         embedImages.setRequired(false);
         options.addOption(embedImages);
         Option imageFormat = new Option(null, IMAGE_FORMAT_LONG_OPTION, true, String.format("Specifies the output format for extracted images (default: png). Supported values: %s", IMAGE_FORMAT_SUPPORTED_LIST));

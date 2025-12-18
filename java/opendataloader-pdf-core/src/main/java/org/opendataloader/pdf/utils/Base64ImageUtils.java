@@ -57,8 +57,6 @@ public final class Base64ImageUtils {
             case "jpeg":
             case "jpg":
                 return "image/jpeg";
-            case "webp":
-                return "image/webp";
             case "png":
             default:
                 return "image/png";

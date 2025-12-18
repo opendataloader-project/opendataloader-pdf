@@ -58,21 +58,6 @@ class Base64ImageUtilsTest {
     }
 
     @Test
-    void testToDataUri_withWebpFormat() throws IOException {
-        // Given
-        byte[] testContent = "WebP image content".getBytes();
-        File testFile = tempDir.resolve("test.webp").toFile();
-        Files.write(testFile.toPath(), testContent);
-
-        // When
-        String dataUri = Base64ImageUtils.toDataUri(testFile, "webp");
-
-        // Then
-        assertNotNull(dataUri);
-        assertTrue(dataUri.startsWith("data:image/webp;base64,"));
-    }
-
-    @Test
     void testToDataUri_withNonExistentFile() {
         // Given
         File nonExistentFile = new File("/non/existent/file.png");
@@ -91,9 +76,7 @@ class Base64ImageUtilsTest {
         "jpeg, image/jpeg",
         "JPEG, image/jpeg",
         "jpg, image/jpeg",
-        "JPG, image/jpeg",
-        "webp, image/webp",
-        "WEBP, image/webp"
+        "JPG, image/jpeg"
     })
     void testGetMimeType_withValidFormats(String format, String expectedMimeType) {
         assertEquals(expectedMimeType, Base64ImageUtils.getMimeType(format));
@@ -109,6 +92,7 @@ class Base64ImageUtilsTest {
         // Unknown formats default to PNG
         assertEquals("image/png", Base64ImageUtils.getMimeType("bmp"));
         assertEquals("image/png", Base64ImageUtils.getMimeType("gif"));
+        assertEquals("image/png", Base64ImageUtils.getMimeType("webp"));
         assertEquals("image/png", Base64ImageUtils.getMimeType("unknown"));
     }
 }

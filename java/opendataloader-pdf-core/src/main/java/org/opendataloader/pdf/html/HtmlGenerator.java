@@ -46,7 +46,7 @@ public class HtmlGenerator implements Closeable {
     protected int tableNesting = 0;
     protected String htmlPageSeparator = "";
     protected boolean embedImages = false;
-    protected String imageFormat = "png";
+    protected String imageFormat = Config.IMAGE_FORMAT_PNG;
 
     public HtmlGenerator(File inputPdf, Config config) throws IOException {
         this.pdfFileName = inputPdf.getName();
@@ -122,6 +122,9 @@ public class HtmlGenerator implements Closeable {
                 if (embedImages) {
                     File imageFile = figureFilePath.toFile();
                     imageSource = Base64ImageUtils.toDataUri(imageFile, imageFormat);
+                    if (imageSource == null) {
+                        LOGGER.log(Level.WARNING, "Failed to convert image to Base64: {0}", figureFileName);
+                    }
                 } else {
                     imageSource = figureFilePath.subpath(figureDirPath.getNameCount() - 1,
                         figureDirPath.getNameCount() + 1).toString().replace("\\", "/");
