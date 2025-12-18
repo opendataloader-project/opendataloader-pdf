@@ -95,4 +95,26 @@ class Base64ImageUtilsTest {
         assertEquals("image/png", Base64ImageUtils.getMimeType("webp"));
         assertEquals("image/png", Base64ImageUtils.getMimeType("unknown"));
     }
+
+    @Test
+    void testMaxEmbeddedImageSizeConstant() {
+        // Verify the constant is 10MB
+        assertEquals(10L * 1024 * 1024, Base64ImageUtils.MAX_EMBEDDED_IMAGE_SIZE);
+    }
+
+    @Test
+    void testToDataUriWithImageAtSizeLimit() throws IOException {
+        // Given: Create a file exactly at the size limit
+        // Note: We use a smaller size for test performance (1KB instead of 10MB)
+        byte[] content = new byte[1024];
+        File testFile = tempDir.resolve("at_limit.png").toFile();
+        Files.write(testFile.toPath(), content);
+
+        // When
+        String dataUri = Base64ImageUtils.toDataUri(testFile, "png");
+
+        // Then: Should succeed for files under the limit
+        assertNotNull(dataUri);
+        assertTrue(dataUri.startsWith("data:image/png;base64,"));
+    }
 }
