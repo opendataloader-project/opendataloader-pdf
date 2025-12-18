@@ -25,6 +25,8 @@ def convert(
     markdown_page_separator: Optional[str] = None,
     text_page_separator: Optional[str] = None,
     html_page_separator: Optional[str] = None,
+    embed_images: bool = False,
+    image_format: Optional[str] = None,
 ) -> None:
     """
     Convert PDF(s) into the requested output format(s).
@@ -43,6 +45,8 @@ def convert(
         markdown_page_separator: Specifies the separator string inserted between pages in the markdown output.
         text_page_separator: Specifies the separator string inserted between pages in the text output.
         html_page_separator: Specifies the separator string inserted between pages in the html output.
+        embed_images: Embed images as Base64 data URIs instead of file path references.
+        image_format: Image format for extracted images (png, jpeg). Default: png.
     """
     args: List[str] = []
 
@@ -99,6 +103,11 @@ def convert(
     if html_page_separator:
         args.append("--html-page-separator")
         args.append(html_page_separator)
+    if embed_images:
+        args.append("--embed-images")
+    if image_format:
+        args.append("--image-format")
+        args.append(image_format)
 
     # Run the command
     run_jar(args, quiet)
@@ -303,6 +312,15 @@ def main(argv=None) -> int:
     parser.add_argument(
         "--html-page-separator",
         help='Specifies the separator string inserted between pages in the html output. Use "%page-number%" inside the string to include the current page number.',
+    )
+    parser.add_argument(
+        "--embed-images",
+        action="store_true",
+        help="Embed images as Base64 data URIs in JSON, HTML, and Markdown outputs.",
+    )
+    parser.add_argument(
+        "--image-format",
+        help="Image format for extracted images (png, jpeg). Default: png.",
     )
     args = parser.parse_args(argv)
 
