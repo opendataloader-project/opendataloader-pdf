@@ -34,20 +34,41 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Generates HTML output from PDF document content.
+ * Converts semantic elements like paragraphs, headings, tables, and images into HTML format.
+ */
 public class HtmlGenerator implements Closeable {
 
+    /** Logger for this class. */
     protected static final Logger LOGGER = Logger.getLogger(HtmlGenerator.class.getCanonicalName());
 
+    /** Writer for the HTML output file. */
     protected final FileWriter htmlWriter;
+    /** Name of the input PDF file. */
     protected final String pdfFileName;
+    /** Absolute path to the input PDF file. */
     protected final Path pdfFilePath;
+    /** Name of the output HTML file. */
     protected final String htmlFileName;
+    /** Absolute path to the output HTML file. */
     protected final Path htmlFilePath;
+    /** Current table nesting level for tracking nested tables. */
     protected int tableNesting = 0;
+    /** String to insert between pages in HTML output. */
     protected String htmlPageSeparator = "";
+    /** Whether to embed images as Base64 data URIs. */
     protected boolean embedImages = false;
+    /** Format for extracted images (png or jpeg). */
     protected String imageFormat = Config.IMAGE_FORMAT_PNG;
 
+    /**
+     * Creates a new HtmlGenerator for the specified PDF file.
+     *
+     * @param inputPdf the input PDF file
+     * @param config the configuration settings
+     * @throws IOException if unable to create the output file
+     */
     public HtmlGenerator(File inputPdf, Config config) throws IOException {
         this.pdfFileName = inputPdf.getName();
         this.pdfFilePath = inputPdf.toPath().toAbsolutePath();
@@ -59,6 +80,11 @@ public class HtmlGenerator implements Closeable {
         this.imageFormat = config.getImageFormat();
     }
 
+    /**
+     * Writes the document contents to HTML format.
+     *
+     * @param contents the document contents organized by page
+     */
     public void writeToHtml(List<List<IObject>> contents) {
         try {
             htmlWriter.write("<!DOCTYPE html>\n");
@@ -80,6 +106,12 @@ public class HtmlGenerator implements Closeable {
         }
     }
 
+    /**
+     * Writes a page separator to the HTML output if configured.
+     *
+     * @param pageNumber the current page number (0-indexed)
+     * @throws IOException if unable to write to the output
+     */
     protected void writePageSeparator(int pageNumber) throws IOException {
         if (!htmlPageSeparator.isEmpty()) {
             htmlWriter.write(htmlPageSeparator.contains(Config.PAGE_NUMBER_STRING)
@@ -89,6 +121,12 @@ public class HtmlGenerator implements Closeable {
         }
     }
 
+    /**
+     * Writes a single content object to the HTML output.
+     *
+     * @param object the content object to write
+     * @throws IOException if unable to write to the output
+     */
     protected void write(IObject object) throws IOException {
         if (object instanceof ImageChunk) {
             writeImage((ImageChunk) object);
@@ -111,6 +149,11 @@ public class HtmlGenerator implements Closeable {
         }
     }
 
+    /**
+     * Writes an image element to the HTML output.
+     *
+     * @param image the image chunk to write
+     */
     protected void writeImage(ImageChunk image) {
         try {
             String absolutePath = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, image.getIndex(), imageFormat);
@@ -138,6 +181,12 @@ public class HtmlGenerator implements Closeable {
         }
     }
 
+    /**
+     * Writes a list element to the HTML output.
+     *
+     * @param list the PDF list to write
+     * @throws IOException if unable to write to the output
+     */
     protected void writeList(PDFList list) throws IOException {
         htmlWriter.write(HtmlSyntax.HTML_UNORDERED_LIST_TAG);
         htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
@@ -158,6 +207,12 @@ public class HtmlGenerator implements Closeable {
         htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
     }
 
+    /**
+     * Writes a semantic text node as a figure caption to the HTML output.
+     *
+     * @param textNode the text node to write
+     * @throws IOException if unable to write to the output
+     */
     protected void writeSemanticTextNode(SemanticTextNode textNode) throws IOException {
         htmlWriter.write(HtmlSyntax.HTML_FIGURE_CAPTION_TAG);
         htmlWriter.write(getCorrectString(textNode.getValue()));
@@ -165,6 +220,12 @@ public class HtmlGenerator implements Closeable {
         htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
     }
 
+    /**
+     * Writes a table element to the HTML output.
+     *
+     * @param table the table border to write
+     * @throws IOException if unable to write to the output
+     */
     protected void writeTable(TableBorder table) throws IOException {
         enterTable();
         htmlWriter.write(HtmlSyntax.HTML_TABLE_TAG);
@@ -202,6 +263,12 @@ public class HtmlGenerator implements Closeable {
         leaveTable();
     }
 
+    /**
+     * Writes a paragraph element to the HTML output.
+     *
+     * @param paragraph the semantic paragraph to write
+     * @throws IOException if unable to write to the output
+     */
     protected void writeParagraph(SemanticParagraph paragraph) throws IOException {
         String paragraphValue = paragraph.getValue();
         double paragraphIndent = paragraph.getColumns().get(0).getBlocks().get(0).getFirstLineIndent();
@@ -220,6 +287,12 @@ public class HtmlGenerator implements Closeable {
         htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
     }
 
+    /**
+     * Writes a heading element to the HTML output.
+     *
+     * @param heading the semantic heading to write
+     * @throws IOException if unable to write to the output
+     */
     protected void writeHeading(SemanticHeading heading) throws IOException {
         int headingLevel = Math.min(6, Math.max(1, heading.getHeadingLevel()));
         htmlWriter.write("<h" + headingLevel + ">");
@@ -244,20 +317,37 @@ public class HtmlGenerator implements Closeable {
         htmlWriter.write(getCorrectString(cellTag.toString()));
     }
 
+    /**
+     * Increments the table nesting level when entering a table.
+     */
     protected void enterTable() {
         tableNesting++;
     }
 
+    /**
+     * Decrements the table nesting level when leaving a table.
+     */
     protected void leaveTable() {
         if (tableNesting > 0) {
             tableNesting--;
         }
     }
 
+    /**
+     * Checks whether currently writing inside a table.
+     *
+     * @return true if inside a table, false otherwise
+     */
     protected boolean isInsideTable() {
         return tableNesting > 0;
     }
 
+    /**
+     * Removes null characters from the given string.
+     *
+     * @param value the string to process
+     * @return the string with null characters removed, or null if input is null
+     */
     protected String getCorrectString(String value) {
         if (value != null) {
             return value.replace("\u0000", "");

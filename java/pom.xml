@@ -120,8 +120,7 @@
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>${maven-compiler.plugin.version}</version>
                     <configuration>
-                        <source>${maven.compiler.source}</source>
-                        <target>${maven.compiler.target}</target>
+                        <release>${maven.compiler.source}</release>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -143,6 +142,9 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
                     <version>${maven-javadoc.plugin.version}</version>
+                    <configuration>
+                        <doclint>all,-missing</doclint>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>

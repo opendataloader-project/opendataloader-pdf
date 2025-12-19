@@ -15,8 +15,17 @@ import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 
 import java.io.IOException;
 
+/**
+ * Jackson serializer for SemanticHeading objects.
+ * Serializes headings with their level and text content.
+ */
 public class HeadingSerializer extends StdSerializer<SemanticHeading> {
 
+    /**
+     * Creates a new HeadingSerializer.
+     *
+     * @param t the class type for SemanticHeading
+     */
     public HeadingSerializer(Class<SemanticHeading> t) {
         super(t);
     }

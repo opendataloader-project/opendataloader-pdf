@@ -19,6 +19,10 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Table processor that uses clustering algorithms to detect tables.
+ * Identifies tables by analyzing spatial relationships between text chunks.
+ */
 public class ClusterTableProcessor extends AbstractTableProcessor {
 
     @Override
@@ -30,6 +34,12 @@ public class ClusterTableProcessor extends AbstractTableProcessor {
         return tables;
     }
 
+    /**
+     * Detects tables on a single page using cluster-based detection.
+     *
+     * @param contents the page contents to analyze
+     * @return a list of detected table borders
+     */
     public static List<TableBorder> processClusterDetectionTables(List<IObject> contents) {
         ClusterTableConsumer clusterTableConsumer = new ClusterTableConsumer();
         for (IObject content : contents) {

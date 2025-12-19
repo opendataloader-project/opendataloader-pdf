@@ -17,8 +17,11 @@ import java.util.Set;
  * Use this class to specify output formats, text processing options, and other settings.
  */
 public class Config {
+    /** Reading order option: no sorting, keeps PDF COS object order. */
     public static final String READING_ORDER_NONE = "none";
+    /** Reading order option: XY-Cut++ algorithm for layout-aware sorting. */
     public static final String READING_ORDER_XYCUT = "xycut";
+    /** Placeholder string for page number in separators. */
     public static final String PAGE_NUMBER_STRING = "%page-number%";
     private String password;
     private boolean isGenerateMarkdown = false;
@@ -41,10 +44,13 @@ public class Config {
     private String imageFormat = IMAGE_FORMAT_PNG;
     private final FilterConfig filterConfig = new FilterConfig();
 
+    /** Table detection method: cluster-based detection. */
     public static final String CLUSTER_TABLE_METHOD = "cluster";
     private static Set<String> tableMethodOptions = new HashSet<>();
 
+    /** Image format: PNG. */
     public static final String IMAGE_FORMAT_PNG = "png";
+    /** Image format: JPEG. */
     public static final String IMAGE_FORMAT_JPEG = "jpeg";
     private static Set<String> imageFormatOptions = new HashSet<>();
 
@@ -273,10 +279,20 @@ public class Config {
         this.replaceInvalidChars = replaceInvalidChars;
     }
 
+    /**
+     * Checks if the PDF structure tree should be used for document parsing.
+     *
+     * @return true if structure tree should be used, false otherwise.
+     */
     public boolean isUseStructTree() {
         return useStructTree;
     }
 
+    /**
+     * Enables or disables use of PDF structure tree for document parsing.
+     *
+     * @param useStructTree true to use structure tree, false otherwise.
+     */
     public void setUseStructTree(boolean useStructTree) {
         this.useStructTree = useStructTree;
     }
@@ -302,7 +318,8 @@ public class Config {
     /**
      * Gets the list of methods of table detection.
      *
-     * @return The string with methods separated by @param delimiter.
+     * @param delimiter the delimiter to use between options
+     * @return the string with methods separated by the delimiter
      */
     public static String getTableMethodOptions(CharSequence delimiter) {
         return String.join(delimiter, tableMethodOptions);

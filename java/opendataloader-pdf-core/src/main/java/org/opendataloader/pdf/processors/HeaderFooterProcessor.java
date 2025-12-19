@@ -28,8 +28,18 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.utils.listLabelsDetection.
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Processor for detecting and extracting headers and footers from PDF documents.
+ * Identifies repeating content at the top and bottom of pages.
+ */
 public class HeaderFooterProcessor {
 
+    /**
+     * Processes document contents to detect headers and footers.
+     *
+     * @param contents the document contents organized by page
+     * @param isTagged whether the document is tagged
+     */
     public static void processHeadersAndFooters(List<List<IObject>> contents, boolean isTagged) {
         DocumentProcessor.setIndexesForDocumentContents(contents);
         List<List<IObject>> sortedContents = new ArrayList<>();
@@ -188,6 +198,12 @@ public class HeaderFooterProcessor {
         return result;
     }
 
+    /**
+     * Checks if a content object is a header or footer.
+     *
+     * @param content the content object to check
+     * @return true if the content is a header or footer, false otherwise
+     */
     public static boolean isHeaderOrFooter(IObject content) {
         if (content instanceof INode) {
             INode node = (INode) content;
