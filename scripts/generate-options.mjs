@@ -57,6 +57,21 @@ function isListOption(opt) {
 }
 
 /**
+ * Escape string for use in generated code.
+ * @param {string} str - The string to escape
+ * @param {string} quote - The quote character (' or ")
+ */
+function escapeString(str, quote = "'") {
+  let result = str.replace(/\\/g, '\\\\'); // escape backslashes first
+  if (quote === "'") {
+    result = result.replace(/'/g, "\\'");
+  } else {
+    result = result.replace(/"/g, '\\"');
+  }
+  return result;
+}
+
+/**
  * Generate Node.js CLI options file
  */
 function generateNodeCliOptions() {
@@ -73,7 +88,7 @@ function generateNodeCliOptions() {
       ? `-${opt.shortName}, --${opt.name}${opt.type === 'string' ? ' <value>' : ''}`
       : `--${opt.name}${opt.type === 'string' ? ' <value>' : ''}`;
 
-    const description = opt.description.replace(/'/g, "\\'");
+    const description = escapeString(opt.description, "'");
     lines.push(`  program.option('${flags}', '${description}');`);
   }
 
@@ -223,7 +238,7 @@ function generatePythonCliOptions() {
     lines.push(`        "type": "${opt.type}",`);
     lines.push(`        "required": ${opt.required ? 'True' : 'False'},`);
     lines.push(`        "default": ${defaultValue},`);
-    lines.push(`        "description": "${opt.description.replace(/"/g, '\\"')}",`);
+    lines.push(`        "description": "${escapeString(opt.description, '"')}",`);
     lines.push('    },');
   }
 
