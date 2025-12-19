@@ -15,8 +15,17 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+/**
+ * Jackson serializer for Double values.
+ * Rounds double values to 3 decimal places for cleaner JSON output.
+ */
 public class DoubleSerializer extends StdSerializer<Double> {
 
+    /**
+     * Creates a new DoubleSerializer.
+     *
+     * @param t the class type for Double
+     */
     public DoubleSerializer(Class<Double> t) {
         super(t);
     }

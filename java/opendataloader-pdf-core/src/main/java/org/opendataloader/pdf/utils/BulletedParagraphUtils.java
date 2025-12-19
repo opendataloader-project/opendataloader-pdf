@@ -13,6 +13,11 @@ import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Utility class for detecting and processing bulleted paragraphs and list items.
+ * Provides methods to identify various bullet and label formats including symbols,
+ * numbers, Korean characters, and special Unicode characters.
+ */
 public class BulletedParagraphUtils {
     private static final String POSSIBLE_LABELS = "∘*+-.=‐‑‒–—―•‣․‧※⁃⁎→↳⇒⇨⇾∙■□▢▣▤▥▦▧▨▩▪▬▭▮▯▰▱▲△▴▵▶▷▸▹►▻▼▽▾▿◀◁◂◃◄◅◆◇◈◉◊○◌◍" +
             "◎●◐◑◒◓◔◕◖◗◘◙◢◣◤◥◦◧◨◩◪◫◬◭◮◯◰◱◲◳◴◵◶◷◸◹◺◻◼◽◾◿★☆☐☑☒☓☛☞♠♡♢♣♤♥♦♧⚪⚫⚬✓✔✕✖✗✘✙✚✛✜✝✞✟✦✧✨❍❏❐❑" +
@@ -21,16 +26,35 @@ public class BulletedParagraphUtils {
     private static final Set<String> BULLET_REGEXES = new HashSet<>();
     private static final Set<String> ARABIC_NUMBER_REGEXES = new HashSet<>();
     private static final String KOREAN_NUMBERS_REGEX = "[가나다라마바사아자차카타파하거너더러머버서어저처커터퍼허고노도로모보소오조초코토포호구누두루무부수우주추쿠투푸후그느드르므브스으즈츠크트프흐기니디리미비시이지치키티피히]";
+    /** Regular expression for Korean chapter patterns like 제1장, 제2조, 제3절. */
     public static final String KOREAN_CHAPTER_REGEX = "^(제\\d+[장조절]).*";
 
+    /**
+     * Gets the first character label from a text node.
+     *
+     * @param semanticTextNode the text node to extract the label from
+     * @return the first character of the text node value
+     */
     public static String getLabel(SemanticTextNode semanticTextNode) {
         return semanticTextNode.getValue().substring(0, 1);
     }
 
+    /**
+     * Checks if a text node starts with a bullet or list marker.
+     *
+     * @param textNode the text node to check
+     * @return true if the first line is bulleted, false otherwise
+     */
     public static boolean isBulletedParagraph(SemanticTextNode textNode) {
         return isBulletedLine(textNode.getFirstLine());
     }
 
+    /**
+     * Checks if a text line starts with a bullet or list marker.
+     *
+     * @param textLine the text line to check
+     * @return true if the line is bulleted, false otherwise
+     */
     public static boolean isBulletedLine(TextLine textLine) {
         if (isLabeledLine(textLine)) {
             return true;
@@ -38,6 +62,12 @@ public class BulletedParagraphUtils {
         return false;
     }
 
+    /**
+     * Checks if a text line starts with a recognized label character or pattern.
+     *
+     * @param textLine the text line to check
+     * @return true if the line has a recognized label, false otherwise
+     */
     public static boolean isLabeledLine(TextLine textLine) {
         String value = textLine.getValue();
         char character = value.charAt(0);
@@ -55,10 +85,22 @@ public class BulletedParagraphUtils {
         return false;
     }
 
+    /**
+     * Checks if a text node has a connected line art label (graphical bullet).
+     *
+     * @param textNode the text node to check
+     * @return true if the first line has a connected line art label, false otherwise
+     */
     public static boolean isBulletedLineArtParagraph(SemanticTextNode textNode) {
         return textNode.getFirstLine().getConnectedLineArtLabel() != null;
     }
 
+    /**
+     * Finds the matching regex pattern for a text node's label.
+     *
+     * @param textNode the text node to analyze
+     * @return the matching regex pattern, or null if no pattern matches
+     */
     public static String getLabelRegex(SemanticTextNode textNode) {
         String value = textNode.getFirstLine().getValue();
         for (String regex : BULLET_REGEXES) {

@@ -16,8 +16,17 @@ import org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter;
 
 import java.io.IOException;
 
+/**
+ * Jackson serializer for SemanticHeaderOrFooter objects.
+ * Serializes headers and footers with their child contents.
+ */
 public class HeaderFooterSerializer extends StdSerializer<SemanticHeaderOrFooter> {
 
+    /**
+     * Creates a new HeaderFooterSerializer.
+     *
+     * @param t the class type for SemanticHeaderOrFooter
+     */
     public HeaderFooterSerializer(Class<SemanticHeaderOrFooter> t) {
         super(t);
     }

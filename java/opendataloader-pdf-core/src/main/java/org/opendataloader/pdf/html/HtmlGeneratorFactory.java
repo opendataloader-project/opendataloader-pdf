@@ -12,7 +12,19 @@ import org.opendataloader.pdf.api.Config;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * Factory class for creating HtmlGenerator instances.
+ */
 public class HtmlGeneratorFactory {
+
+    /**
+     * Creates a new HtmlGenerator for the specified PDF file.
+     *
+     * @param inputPdf the input PDF file
+     * @param config the configuration settings
+     * @return a new HtmlGenerator instance
+     * @throws IOException if unable to create the generator
+     */
     public static HtmlGenerator getHtmlGenerator(File inputPdf, Config config) throws IOException {
         return new HtmlGenerator(inputPdf, config);
     }

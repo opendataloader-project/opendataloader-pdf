@@ -1,5 +1,16 @@
+/*
+ * Copyright 2025 Hancom Inc.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 package org.opendataloader.pdf.api;
 
+/**
+ * Configuration class for content filtering options.
+ * Controls filtering of hidden text, out-of-page content, tiny text, and hidden OCGs.
+ */
 public class FilterConfig {
     private boolean filterHiddenText = true;
     private boolean filterOutOfPage = true;

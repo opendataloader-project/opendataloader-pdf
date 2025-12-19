@@ -14,8 +14,17 @@ import org.verapdf.wcag.algorithms.entities.SemanticCaption;
 
 import java.io.IOException;
 
+/**
+ * Jackson serializer for SemanticCaption objects.
+ * Serializes captions with their essential info and linked content ID.
+ */
 public class CaptionSerializer extends StdSerializer<SemanticCaption> {
 
+    /**
+     * Creates a new CaptionSerializer.
+     *
+     * @param t the class type for SemanticCaption
+     */
     public CaptionSerializer(Class<SemanticCaption> t) {
         super(t);
     }

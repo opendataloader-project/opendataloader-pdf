@@ -48,8 +48,20 @@ import java.util.stream.Collectors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Main processor for PDF document analysis and output generation.
+ * Coordinates the extraction, processing, and generation of various output formats.
+ */
 public class DocumentProcessor {
     private static final Logger LOGGER = Logger.getLogger(DocumentProcessor.class.getCanonicalName());
+
+    /**
+     * Processes a PDF file and generates the configured outputs.
+     *
+     * @param inputPdfName the path to the input PDF file
+     * @param config the configuration settings
+     * @throws IOException if unable to process the file
+     */
     public static void processFile(String inputPdfName, Config config) throws IOException {
         preprocessing(inputPdfName, config);
         calculateDocumentInfo();
@@ -130,6 +142,14 @@ public class DocumentProcessor {
         }
     }
 
+    /**
+     * Performs preprocessing on a PDF document.
+     * Initializes static containers and parses the document structure.
+     *
+     * @param pdfName the path to the PDF file
+     * @param config the configuration settings
+     * @throws IOException if unable to read the PDF file
+     */
     public static void preprocessing(String pdfName, Config config) throws IOException {
         LOGGER.log(Level.INFO, () -> "File name: " + pdfName);
         updateStaticContainers(config);
@@ -174,24 +194,45 @@ public class DocumentProcessor {
         StaticResources.setPassword(config.getPassword());
     }
 
+    /**
+     * Assigns unique IDs to each content object.
+     *
+     * @param contents the list of content objects
+     */
     public static void setIDs(List<IObject> contents) {
         for (IObject object : contents) {
             object.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
         }
     }
 
+    /**
+     * Sets index values for all content objects across all pages.
+     *
+     * @param contents the document contents organized by page
+     */
     public static void setIndexesForDocumentContents(List<List<IObject>> contents) {
         for (List<IObject> pageContents : contents) {
             setIndexesForContentsList(pageContents);
         }
     }
 
+    /**
+     * Sets index values for content objects in a list.
+     *
+     * @param contents the list of content objects
+     */
     public static void setIndexesForContentsList(List<IObject> contents) {
         for (int index = 0; index < contents.size(); index++) {
             contents.get(index).setIndex(index);
         }
     }
 
+    /**
+     * Creates a new list with null objects removed.
+     *
+     * @param contents the list that may contain null objects
+     * @return a new list without null objects
+     */
     public static List<IObject> removeNullObjectsFromList(List<IObject> contents) {
         List<IObject> newContents = new ArrayList<>();
         for (IObject content : contents) {
@@ -218,6 +259,12 @@ public class DocumentProcessor {
         return new GFCosInfo((COSDictionary) (object != null && object.getType() == COSObjType.COS_DICT ? object.getDirectBase() : COSDictionary.construct().get()));
     }
 
+    /**
+     * Gets a debug string representation of a text node.
+     *
+     * @param textNode the text node to describe
+     * @return a string with font, size, color, and content information
+     */
     public static String getContentsValueForTextNode(SemanticTextNode textNode) {
         return String.format("%s: font %s, text size %.2f, text color %s, text content \"%s\"",
                 textNode.getSemanticType().getValue(), textNode.getFontName(),
@@ -225,6 +272,12 @@ public class DocumentProcessor {
                 textNode.getValue().length() > 15 ? textNode.getValue().substring(0, 15) + "..." : textNode.getValue());
     }
 
+    /**
+     * Gets the bounding box for a page.
+     *
+     * @param pageNumber the page number (0-indexed)
+     * @return the page bounding box, or null if not available
+     */
     public static BoundingBox getPageBoundingBox(int pageNumber) {
         PDDocument document = StaticResources.getDocument();
         if (document == null) {
@@ -237,6 +290,12 @@ public class DocumentProcessor {
         return new BoundingBox(pageNumber, cropBox);
     }
 
+    /**
+     * Sorts page contents by their bounding box positions.
+     *
+     * @param contents the list of content objects to sort
+     * @return a new sorted list of content objects
+     */
     public static List<IObject> sortPageContents(List<IObject> contents) {
         if (contents == null || contents.isEmpty()) {
             return contents;
@@ -277,6 +336,12 @@ public class DocumentProcessor {
         return sortedContents;
     }
 
+    /**
+     * Sorts document contents according to the configured reading order.
+     *
+     * @param contents the document contents organized by page
+     * @param config the configuration containing reading order settings
+     */
     public static void sortContents(List<List<IObject>> contents, Config config) {
         String readingOrder = config.getReadingOrder();
 

@@ -22,10 +22,20 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
 import java.util.*;
 
+/**
+ * Processor for detecting and classifying headings in PDF content.
+ * Uses font size, weight, and position to identify potential headings.
+ */
 public class HeadingProcessor {
     private static final double HEADING_PROBABILITY = 0.75;
     private static final double BULLETED_HEADING_PROBABILITY = 0.1;
 
+    /**
+     * Processes content to identify and mark headings.
+     *
+     * @param contents the list of content objects to process
+     * @param isTableCell whether the content is inside a table cell
+     */
     public static void processHeadings(List<IObject> contents, boolean isTableCell) {
         TextNodeStatistics textNodeStatistics = new TextNodeStatistics();
         List<SemanticTextNode> textNodes = new LinkedList<>();
@@ -87,6 +97,10 @@ public class HeadingProcessor {
         }
     }
 
+    /**
+     * Detects and assigns heading levels based on text style.
+     * Groups headings by text style and assigns levels from 1 upwards.
+     */
     public static void detectHeadingsLevels() {
         SortedMap<TextStyle, Set<SemanticHeading>> map = new TreeMap<>();
         List<SemanticHeading> headings = StaticLayoutContainers.getHeadings();

@@ -17,6 +17,10 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.utils.CaptionUtils;
 
 import java.util.List;
 
+/**
+ * Processor for detecting and linking captions to figures and tables.
+ * Identifies text nodes that are likely captions based on proximity and content.
+ */
 public class CaptionProcessor {
 
     private static final double CAPTION_PROBABILITY = 0.75;
@@ -24,6 +28,11 @@ public class CaptionProcessor {
     private static final double CAPTION_VERTICAL_OFFSET_RATIO = 1;
     private static final double CAPTION_HORIZONTAL_OFFSET_RATIO = 1;
 
+    /**
+     * Processes content to identify and link captions to images and tables.
+     *
+     * @param contents the list of content objects to process
+     */
     public static void processCaptions(List<IObject> contents) {
         DocumentProcessor.setIndexesForContentsList(contents);
         SemanticFigure imageNode = null;
@@ -79,6 +88,13 @@ public class CaptionProcessor {
     }
 
 
+    /**
+     * Checks if a text node is not contained within an image's bounding box.
+     *
+     * @param image the image to check against
+     * @param text the text node to check
+     * @return true if the text is outside the image bounds, false otherwise
+     */
     public static boolean isTextNotContainedInImage(SemanticFigure image, SemanticTextNode text) {
         if (text == null) {
             return true;
