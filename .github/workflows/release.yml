@@ -141,8 +141,8 @@ jobs:
       # =================================================================
       - name: Sync docs to homepage repo
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-        # Pinned to v1.7.2 for security - verify before updating
-        uses: cpina/github-action-push-to-another-repository@07c4d7b3def0a8edd15773f4edd2ee4589648639  # v1.7.2
+        # Pinned to v1.7.3 for security - verify before updating
+        uses: cpina/github-action-push-to-another-repository@55306faa4ed53b815ae49e564af8cfb359d32ae2  # v1.7.3
         with:
           source-directory: 'content/docs'
           destination-github-username: 'opendataloader-project'
