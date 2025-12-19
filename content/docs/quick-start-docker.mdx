@@ -1,0 +1,48 @@
+---
+title: Quick Start with Docker
+description: Run OpenDataLoader PDF inside a container
+---
+
+Use the published container when you want an isolated runtime or do not want to manage Python/Node installations locally.
+
+## Quick run
+
+Download a sample PDF:
+
+```bash
+curl -L -o 1901.03003.pdf https://arxiv.org/pdf/1901.03003
+```
+
+Run the container to convert the PDF into Markdown, HTML, and an annotated PDF:
+
+```bash
+docker run --rm -v "$PWD":/work \
+  ghcr.io/opendataloader-project/opendataloader-pdf-cli:latest \
+  /work/1901.03003.pdf -f json,html,pdf,markdown
+```
+
+- Mount the working directory so that outputs are written back to the host.
+
+## Image details
+
+- Registry: `ghcr.io/opendataloader-project/opendataloader-pdf-cli`
+- Tags follow the CLI release cycle; `latest` tracks the most recent tag.
+- Java 11+ is already bundled inside the container.
+
+For long-running jobs, mount a dedicated output directory and consider using bind mounts for input corpora to avoid copying data into the container each time.
+
+## CLI options
+
+The container accepts the same CLI options as the standalone CLI. For a complete list, see the [CLI Options Reference](./cli-options-reference).
+
+Common options:
+
+```bash
+docker run --rm -v "$PWD":/work \
+  ghcr.io/opendataloader-project/opendataloader-pdf-cli:latest \
+  /work/document.pdf \
+  -o /work/output \
+  -f json,markdown \
+  --embed-images \
+  --reading-order xycut
+```

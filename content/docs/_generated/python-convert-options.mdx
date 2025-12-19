@@ -1,0 +1,22 @@
+{/* AUTO-GENERATED FROM options.json - DO NOT EDIT DIRECTLY */}
+{/* Run `npm run generate-options` to regenerate */}
+
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `input_path` | `str \| list[str]` | required | One or more input PDF file paths or directories |
+| `output_dir` | `str` | - | Directory where output files are written. Default: input file directory |
+| `password` | `str` | - | Password for encrypted PDF files |
+| `format` | `str \| list[str]` | - | Output formats (comma-separated). Values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images. Default: json |
+| `quiet` | `bool` | `False` | Suppress console logging output |
+| `content_safety_off` | `str \| list[str]` | - | Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg |
+| `keep_line_breaks` | `bool` | `False` | Preserve original line breaks in extracted text |
+| `replace_invalid_chars` | `str` | `" "` | Replacement character for invalid/unrecognized characters. Default: space |
+| `use_struct_tree` | `bool` | `False` | Use PDF structure tree (tagged PDF) for reading order and semantic structure |
+| `table_method` | `str` | - | Table detection method. Values: cluster |
+| `reading_order` | `str` | `"none"` | Reading order algorithm. Values: none, xycut. Default: none |
+| `markdown_page_separator` | `str` | - | Separator between pages in Markdown output. Use %page-number% for page numbers. Default: none |
+| `text_page_separator` | `str` | - | Separator between pages in text output. Use %page-number% for page numbers. Default: none |
+| `html_page_separator` | `str` | - | Separator between pages in HTML output. Use %page-number% for page numbers. Default: none |
+| `embed_images` | `bool` | `False` | Embed images as Base64 data URIs instead of file path references |
+| `image_format` | `str` | `"png"` | Output format for extracted images. Values: png, jpeg. Default: png |

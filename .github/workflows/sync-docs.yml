@@ -1,0 +1,41 @@
+# Sync documentation to homepage repository on release
+#
+# Required Setup:
+# 1. Create a GitHub Personal Access Token (PAT) with minimal scope:
+#    - 'contents: write' permission ONLY for opendataloader.org repository
+#    - Use fine-grained PAT if possible for better security
+# 2. Add the token as a repository secret named 'HOMEPAGE_SYNC_TOKEN'
+#    Settings > Secrets and variables > Actions > New repository secret
+# 3. The token owner must have write access to opendataloader.org repository
+#
+# Testing: This workflow only runs on published releases.
+# To test manually, create a pre-release or use workflow_dispatch.
+#
+# Security: Third-party action is pinned to a specific SHA for integrity.
+
+name: Sync docs to homepage
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Push to homepage repo
+        # Pinned to v1.7.2 for security - verify before updating
+        uses: cpina/github-action-push-to-another-repository@07c4d7b3def0a8edd15773f4edd2ee4589648639  # v1.7.2
+        with:
+          source-directory: 'content/docs'
+          destination-github-username: 'opendataloader-project'
+          destination-repository-name: 'opendataloader.org'
+          target-directory: 'apps/v1/content/docs'
+          target-branch: main
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.HOMEPAGE_SYNC_TOKEN }}

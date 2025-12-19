@@ -1,0 +1,33 @@
+---
+title: Reading Order (NID)
+description: Normalized indel distance for reading order fidelity
+---
+
+Reading order is scored with two Normalized Indel Distance variants. The corpus average `NID` is a major contributor to the overall score, and the table-stripped variant `NID-S` is also reported.
+
+![Reading order](/figures/benchmark_reading-order.png)
+
+The reading order is evaluated using two metrics based on Normalized Indel Distance (NID), which measures the similarity between the ground truth and predicted text. These metrics provide a score that is sensitive to text length.
+
+```math
+NID = 1 - \frac{\text{distance}}{\text{len(gt)} + \text{len(pred)}}
+```
+
+(where `distance` is the indel distance and `len` is character length)
+
+- **`NID` (Normalized Indel Distance)**: This metric compares the full Markdown text of the prediction against the ground truth. It evaluates the overall similarity, including all content.
+
+- **`NID-S` (Normalized Indel Distance - Stripped)**: This metric provides a more focused evaluation of the narrative reading order. Before comparison, tables (both HTML and Markdown formats) are stripped from both the ground truth and the prediction, and repeated whitespace is collapsed. This ensures that the score reflects the correctness of the body text flow, independent of table formatting; only table content is removed before scoring.
+
+## Notes
+
+- Scores closer to 1 mean closer alignment to the ground truth; values near 0 indicate order drift.
+
+## Explore the source code
+
+https://github.com/opendataloader-project/opendataloader-bench
+
+Browse all benchmark datasets, documentation, evaluation logic, and metrics in the open source.
+
+<br />
+<br />

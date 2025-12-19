@@ -1,0 +1,31 @@
+---
+title: Energy Efficiency
+description: Energy consumption per engine, measured with powermetrics
+---
+
+This metric reports total energy consumed per engine, computed as the integral of power over time from `powermetrics` logs. For similar quality, lower energy means the model is more efficient.
+
+![Energy consumption](/figures/benchmark_energy-consumption.png)
+
+Capture power with macOS `powermetrics` at a 1s cadence (e.g., `sudo powermetrics --samplers cpu_power,gpu_power,ane_power -i 1000`) and feed the raw log to the parser. For each sample, parse elapsed time and CPU/GPU/ANE/combined power (mW) via regex, defaulting to 1000 ms if the timestamp is missing. Average the parsed power values per component to show steady-state draw. Integrate power over time by converting milliwatts to watts, multiplying by elapsed seconds, and summing to Joules, while also recording the sample count and total elapsed seconds.
+
+## Why energy is a primary KPI
+
+- Power and cooling dominate the cost of large-scale inference and serving; lower joules per document translate directly to cost advantage.
+- High efficiency unlocks battery-powered edge deployments and constrained colocation footprints.
+- Energy and infrastructure limits are rising to the forefront of AI competitiveness—see the Federal Reserve’s [The State of AI Competition in Advanced Economies](https://www.federalreserve.gov/econres/notes/feds-notes/the-state-of-ai-competition-in-advanced-economies-20251006.html) for a macro view of power constraints and policy pressure.
+- Energy and time often trend together, but engines differ in SIMD/accelerator utilization, so `energy` and `time` rankings can diverge; review both.
+
+## Notes
+
+- Lower is better. When running repeated passes on the same corpus, record thermal throttling to explain variance.
+- Electricity prices vary by region and time; incorporate local rates to estimate TCO before deployment.
+
+## Explore the source code
+
+https://github.com/opendataloader-project/opendataloader-bench
+
+Browse all benchmark datasets, documentation, evaluation logic, and metrics in the open source.
+
+<br />
+<br />

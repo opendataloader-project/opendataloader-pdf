@@ -13,130 +13,130 @@ import org.apache.commons.cli.Options;
 import org.opendataloader.pdf.api.Config;
 
 import java.io.File;
+import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class CLIOptions {
 
-    private static final String CONTENT_SAFETY_OFF_LONG_OPTION = "content-safety-off";
-    private static final String CONTENT_SAFETY_OFF_ALL_ARGUMENT = "all";
-    private static final String CONTENT_SAFETY_OFF_HIDDEN_TEXT_ARGUMENT = "hidden-text";
-    private static final String CONTENT_SAFETY_OFF_OFF_PAGE_ARGUMENT = "off-page";
-    private static final String CONTENT_SAFETY_OFF_TINY_TEXT_ARGUMENT = "tiny";
-    private static final String CONTENT_SAFETY_OFF_HIDDEN_OCG_ARGUMENT = "hidden-ocg";
-    private static final String CONTENT_SAFETY_OFF_SUPPORTED_LIST = "all, hidden-text, off-page, tiny, hidden-ocg";
-
-    public static final String PASSWORD_OPTION = "p";
-    private static final String PASSWORD_LONG_OPTION = "password";
-
+    // ===== Output Directory =====
     public static final String FOLDER_OPTION = "o";
     private static final String FOLDER_LONG_OPTION = "output-dir";
+    private static final String FOLDER_DESC = "Directory where output files are written. Default: input file directory";
 
+    // ===== Password =====
+    public static final String PASSWORD_OPTION = "p";
+    private static final String PASSWORD_LONG_OPTION = "password";
+    private static final String PASSWORD_DESC = "Password for encrypted PDF files";
+
+    // ===== Format =====
     public static final String FORMAT_OPTION = "f";
     private static final String FORMAT_LONG_OPTION = "format";
-    private static final String FORMAT_SUPPORTED_LIST = "json, text, html, pdf, markdown, markdown-with-html, markdown-with-images";
+    private static final String FORMAT_DESC = "Output formats (comma-separated). "
+            + "Values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images. Default: json";
 
+    // ===== Quiet =====
     public static final String QUIET_OPTION = "q";
     private static final String QUIET_LONG_OPTION = "quiet";
+    private static final String QUIET_DESC = "Suppress console logging output";
 
-    private static final String HTML_IN_MARKDOWN_LONG_OPTION = "markdown-with-html";
+    // ===== Content Safety =====
+    private static final String CONTENT_SAFETY_OFF_LONG_OPTION = "content-safety-off";
+    private static final String CONTENT_SAFETY_OFF_DESC = "Disable content safety filters. "
+            + "Values: all, hidden-text, off-page, tiny, hidden-ocg";
 
+    // ===== Keep Line Breaks =====
     private static final String KEEP_LINE_BREAKS_LONG_OPTION = "keep-line-breaks";
+    private static final String KEEP_LINE_BREAKS_DESC = "Preserve original line breaks in extracted text";
 
-    public static final String PDF_REPORT_LONG_OPTION = "pdf";
-
-    public static final String MARKDOWN_REPORT_LONG_OPTION = "markdown";
-
-    public static final String HTML_REPORT_LONG_OPTION = "html";
-
-    private static final String MARKDOWN_IMAGE_LONG_OPTION = "markdown-with-images";
-
-    public static final String NO_JSON_REPORT_LONG_OPTION = "no-json";
-
+    // ===== Replace Invalid Chars =====
     private static final String REPLACE_INVALID_CHARS_LONG_OPTION = "replace-invalid-chars";
+    private static final String REPLACE_INVALID_CHARS_DESC = "Replacement character for invalid/unrecognized characters. Default: space";
 
+    // ===== Use Struct Tree =====
     private static final String USE_STRUCT_TREE_LONG_OPTION = "use-struct-tree";
+    private static final String USE_STRUCT_TREE_DESC = "Use PDF structure tree (tagged PDF) for reading order and semantic structure";
 
-    private static final String TABLE_METHOD_OPTION = "table-method";
+    // ===== Table Method =====
+    private static final String TABLE_METHOD_LONG_OPTION = "table-method";
+    private static final String TABLE_METHOD_DESC = "Table detection method. Values: cluster";
 
+    // ===== Reading Order =====
     private static final String READING_ORDER_LONG_OPTION = "reading-order";
+    private static final String READING_ORDER_DESC = "Reading order algorithm. Values: none, xycut. Default: none";
 
+    // ===== Page Separators =====
     private static final String MARKDOWN_PAGE_SEPARATOR_LONG_OPTION = "markdown-page-separator";
+    private static final String MARKDOWN_PAGE_SEPARATOR_DESC = "Separator between pages in Markdown output. Use %page-number% for page numbers. Default: none";
 
     private static final String TEXT_PAGE_SEPARATOR_LONG_OPTION = "text-page-separator";
+    private static final String TEXT_PAGE_SEPARATOR_DESC = "Separator between pages in text output. Use %page-number% for page numbers. Default: none";
 
     private static final String HTML_PAGE_SEPARATOR_LONG_OPTION = "html-page-separator";
+    private static final String HTML_PAGE_SEPARATOR_DESC = "Separator between pages in HTML output. Use %page-number% for page numbers. Default: none";
 
+    // ===== Image Options =====
     private static final String EMBED_IMAGES_LONG_OPTION = "embed-images";
+    private static final String EMBED_IMAGES_DESC = "Embed images as Base64 data URIs instead of file path references";
+
     private static final String IMAGE_FORMAT_LONG_OPTION = "image-format";
-    private static final String IMAGE_FORMAT_SUPPORTED_LIST = "png, jpeg";
+    private static final String IMAGE_FORMAT_DESC = "Output format for extracted images. Values: png, jpeg. Default: png";
+
+    // ===== Export Options (internal) =====
+    public static final String EXPORT_OPTIONS_LONG_OPTION = "export-options";
+
+    // ===== Legacy Options (hidden, backward compatibility) =====
+    public static final String PDF_REPORT_LONG_OPTION = "pdf";
+    public static final String MARKDOWN_REPORT_LONG_OPTION = "markdown";
+    public static final String HTML_REPORT_LONG_OPTION = "html";
+    private static final String HTML_IN_MARKDOWN_LONG_OPTION = "markdown-with-html";
+    private static final String MARKDOWN_IMAGE_LONG_OPTION = "markdown-with-images";
+    public static final String NO_JSON_REPORT_LONG_OPTION = "no-json";
+
+    /**
+     * Single source of truth for all CLI option definitions.
+     * Add new options here - they will automatically be available in both CLI and
+     * JSON export.
+     */
+    private static final List<OptionDefinition> OPTION_DEFINITIONS = Arrays.asList(
+            // Primary options (exported to JSON)
+            new OptionDefinition(FOLDER_LONG_OPTION, FOLDER_OPTION, "string", null, FOLDER_DESC, true),
+            new OptionDefinition(PASSWORD_LONG_OPTION, PASSWORD_OPTION, "string", null, PASSWORD_DESC, true),
+            new OptionDefinition(FORMAT_LONG_OPTION, FORMAT_OPTION, "string", null, FORMAT_DESC, true),
+            new OptionDefinition(QUIET_LONG_OPTION, QUIET_OPTION, "boolean", false, QUIET_DESC, true),
+            new OptionDefinition(CONTENT_SAFETY_OFF_LONG_OPTION, null, "string", null, CONTENT_SAFETY_OFF_DESC, true),
+            new OptionDefinition(KEEP_LINE_BREAKS_LONG_OPTION, null, "boolean", false, KEEP_LINE_BREAKS_DESC, true),
+            new OptionDefinition(REPLACE_INVALID_CHARS_LONG_OPTION, null, "string", " ", REPLACE_INVALID_CHARS_DESC,
+                    true),
+            new OptionDefinition(USE_STRUCT_TREE_LONG_OPTION, null, "boolean", false, USE_STRUCT_TREE_DESC, true),
+            new OptionDefinition(TABLE_METHOD_LONG_OPTION, null, "string", null, TABLE_METHOD_DESC, true),
+            new OptionDefinition(READING_ORDER_LONG_OPTION, null, "string", "none", READING_ORDER_DESC, true),
+            new OptionDefinition(MARKDOWN_PAGE_SEPARATOR_LONG_OPTION, null, "string", null,
+                    MARKDOWN_PAGE_SEPARATOR_DESC, true),
+            new OptionDefinition(TEXT_PAGE_SEPARATOR_LONG_OPTION, null, "string", null, TEXT_PAGE_SEPARATOR_DESC, true),
+            new OptionDefinition(HTML_PAGE_SEPARATOR_LONG_OPTION, null, "string", null, HTML_PAGE_SEPARATOR_DESC, true),
+            new OptionDefinition(EMBED_IMAGES_LONG_OPTION, null, "boolean", false, EMBED_IMAGES_DESC, true),
+            new OptionDefinition(IMAGE_FORMAT_LONG_OPTION, null, "string", "png", IMAGE_FORMAT_DESC, true),
+            new OptionDefinition(EXPORT_OPTIONS_LONG_OPTION, null, "boolean", null, null, false),
+
+            // Legacy options (not exported, for backward compatibility)
+            new OptionDefinition(PDF_REPORT_LONG_OPTION, null, "boolean", null, null, false),
+            new OptionDefinition(MARKDOWN_REPORT_LONG_OPTION, null, "boolean", null, null, false),
+            new OptionDefinition(HTML_REPORT_LONG_OPTION, null, "boolean", null, null, false),
+            new OptionDefinition(HTML_IN_MARKDOWN_LONG_OPTION, null, "boolean", null, null, false),
+            new OptionDefinition(MARKDOWN_IMAGE_LONG_OPTION, null, "boolean", null, null, false),
+            new OptionDefinition(NO_JSON_REPORT_LONG_OPTION, null, "boolean", null, null, false));
 
     public static Options defineOptions() {
         Options options = new Options();
-        Option contentSafetyOff = new Option(null, CONTENT_SAFETY_OFF_LONG_OPTION, true, "Disables one or more content safety filters. Accepts a comma-separated list of filter names. Arguments: all, hidden-text, off-page, tiny, hidden-ocg");
-        contentSafetyOff.setRequired(false);
-        options.addOption(contentSafetyOff);
-        Option password = new Option(PASSWORD_OPTION, PASSWORD_LONG_OPTION, true, "Specifies the password for an encrypted PDF");
-        password.setRequired(false);
-        options.addOption(password);
-        Option htmlInMarkdown = new Option(null, HTML_IN_MARKDOWN_LONG_OPTION, false, "Sets the data extraction output format to Markdown with rendering complex elements like tables as HTML for better structure");
-        htmlInMarkdown.setRequired(false);
-        options.addOption(htmlInMarkdown);
-        Option format = new Option(FORMAT_OPTION, FORMAT_LONG_OPTION, true, String.format("Comma-separated list of output formats to generate. Supported values: %s", FORMAT_SUPPORTED_LIST));
-        format.setRequired(false);
-        options.addOption(format);
-        Option quiet = new Option(QUIET_OPTION, QUIET_LONG_OPTION, false, "Suppresses console logging output");
-        quiet.setRequired(false);
-        options.addOption(quiet);
-        Option keepLineBreaks = new Option(null, KEEP_LINE_BREAKS_LONG_OPTION, false, "Preserves original line breaks in the extracted text");
-        keepLineBreaks.setRequired(false);
-        options.addOption(keepLineBreaks);
-        Option pdfOutput = new Option(null, PDF_REPORT_LONG_OPTION, false, "Generates a new PDF file where the extracted layout data is visualized as annotations");
-        pdfOutput.setRequired(false);
-        options.addOption(pdfOutput);
-        Option markdownOutput = new Option(null, MARKDOWN_REPORT_LONG_OPTION, false, "Sets the data extraction output format to Markdown");
-        markdownOutput.setRequired(false);
-        options.addOption(markdownOutput);
-        Option generateHtml = new Option(null, HTML_REPORT_LONG_OPTION, false, "Sets the data extraction output format to HTML");
-        generateHtml.setRequired(false);
-        options.addOption(generateHtml);
-        Option imageSupport = new Option(null, MARKDOWN_IMAGE_LONG_OPTION, false, "Sets the data extraction output format to Markdown with extracting images from the PDF and includes them as links");
-        imageSupport.setRequired(false);
-        options.addOption(imageSupport);
-        Option noJson = new Option(null, NO_JSON_REPORT_LONG_OPTION, false, "Disables the JSON output format.");
-        noJson.setRequired(false);
-        options.addOption(noJson);
-        Option folder = new Option(FOLDER_OPTION, FOLDER_LONG_OPTION, true, "Specifies the output directory for generated files (default the folder of the input PDF)");
-        folder.setRequired(false);
-        options.addOption(folder);
-        Option replaceInvalidChars = new Option(null, REPLACE_INVALID_CHARS_LONG_OPTION, true, "Replaces invalid or unrecognized characters (e.g., �, \\u0000) with the specified character (whitespace is used, if this parameter not specified)");
-        replaceInvalidChars.setRequired(false);
-        options.addOption(replaceInvalidChars);
-        Option useStructTree = new Option(null, USE_STRUCT_TREE_LONG_OPTION, false, "Enable processing structure tree (disabled by default)");
-        useStructTree.setRequired(false);
-        options.addOption(useStructTree);
-        Option tableMethod = new Option(null, TABLE_METHOD_OPTION, true, "Enable specified table detection method. Accepts a comma-separated list of methods. Supported values: " + Config.getTableMethodOptions(","));
-        tableMethod.setRequired(false);
-        options.addOption(tableMethod);
-        Option readingOrder = new Option(null, READING_ORDER_LONG_OPTION, true, "Specifies reading order of content. Supported values: none (default), xycut");
-        readingOrder.setRequired(false);
-        options.addOption(readingOrder);
-        Option markdownPageSeparator = new Option(null, MARKDOWN_PAGE_SEPARATOR_LONG_OPTION, true, "Specifies the separator string inserted between pages in the markdown output. Use \"%page-number%\" inside the string to include the current page number.");
-        markdownPageSeparator.setRequired(false);
-        options.addOption(markdownPageSeparator);
-        Option textPageSeparator = new Option(null, TEXT_PAGE_SEPARATOR_LONG_OPTION, true, "Specifies the separator string inserted between pages in the text output. Use \"%page-number%\" inside the string to include the current page number.");
-        textPageSeparator.setRequired(false);
-        options.addOption(textPageSeparator);
-        Option htmlPageSeparator = new Option(null, HTML_PAGE_SEPARATOR_LONG_OPTION, true, "Specifies the separator string inserted between pages in the html output. Use \"%page-number%\" inside the string to include the current page number.");
-        htmlPageSeparator.setRequired(false);
-        options.addOption(htmlPageSeparator);
-        Option embedImages = new Option(null, EMBED_IMAGES_LONG_OPTION, false, "Embeds images as Base64 data URIs in JSON, HTML, and Markdown outputs instead of file path references. Note: Automatically enables markdown-with-images output");
-        embedImages.setRequired(false);
-        options.addOption(embedImages);
-        Option imageFormat = new Option(null, IMAGE_FORMAT_LONG_OPTION, true, String.format("Specifies the output format for extracted images (default: png). Supported values: %s", IMAGE_FORMAT_SUPPORTED_LIST));
-        imageFormat.setRequired(false);
-        options.addOption(imageFormat);
+        for (OptionDefinition def : OPTION_DEFINITIONS) {
+            options.addOption(def.toOption());
+        }
+
         return options;
     }
 
@@ -211,30 +211,34 @@ public class CLIOptions {
             String formatValue = commandLine.getOptionValue(IMAGE_FORMAT_LONG_OPTION);
             if (formatValue == null || formatValue.trim().isEmpty()) {
                 throw new IllegalArgumentException(
-                    String.format("Option --image-format requires a value. Supported values: %s", IMAGE_FORMAT_SUPPORTED_LIST));
+                        "Option --image-format requires a value. Supported values: png, jpeg");
             }
             String format = formatValue.trim().toLowerCase(Locale.ROOT);
             if (!Config.isValidImageFormat(format)) {
                 throw new IllegalArgumentException(
-                    String.format("Unsupported image format '%s'. Supported values: %s", format, IMAGE_FORMAT_SUPPORTED_LIST));
+                        String.format("Unsupported image format '%s'. Supported values: png, jpeg", format));
             }
             config.setImageFormat(format);
         }
     }
 
     private static void applyTableMethodOption(Config config, CommandLine commandLine) {
-        if (!commandLine.hasOption(TABLE_METHOD_OPTION)) {
+        if (!commandLine.hasOption(TABLE_METHOD_LONG_OPTION)) {
             return;
         }
 
-        String[] optionValues = commandLine.getOptionValues(TABLE_METHOD_OPTION);
+        String[] optionValues = commandLine.getOptionValues(TABLE_METHOD_LONG_OPTION);
         if (optionValues == null || optionValues.length == 0) {
-            throw new IllegalArgumentException(String.format("Option --table-method requires at least one value. Supported values: %s", Config.getTableMethodOptions(",")));
+            throw new IllegalArgumentException(
+                    String.format("Option --table-method requires at least one value. Supported values: %s",
+                            Config.getTableMethodOptions(",")));
         }
 
         Set<String> values = parseOptionValues(optionValues);
         if (values.isEmpty()) {
-            throw new IllegalArgumentException(String.format("Option --table-method requires at least one value. Supported values: %s", Config.getTableMethodOptions(",")));
+            throw new IllegalArgumentException(
+                    String.format("Option --table-method requires at least one value. Supported values: %s",
+                            Config.getTableMethodOptions(",")));
         }
 
         for (String value : values) {
@@ -243,7 +247,8 @@ public class CLIOptions {
                     config.setClusterTableMethod(true);
                     break;
                 default:
-                    throw new IllegalArgumentException(String.format("Unsupported value '%s'. Supported values: %s", value, Config.getTableMethodOptions(",")));
+                    throw new IllegalArgumentException(String.format("Unsupported value '%s'. Supported values: %s",
+                            value, Config.getTableMethodOptions(",")));
             }
         }
     }
@@ -253,39 +258,42 @@ public class CLIOptions {
             return;
         }
 
-
         String[] optionValues = commandLine.getOptionValues(CONTENT_SAFETY_OFF_LONG_OPTION);
         if (optionValues == null || optionValues.length == 0) {
-            throw new IllegalArgumentException(String.format("Option --content-safety-off requires at least one value. Supported values: %s", CONTENT_SAFETY_OFF_SUPPORTED_LIST));
+            throw new IllegalArgumentException(
+                    "Option --content-safety-off requires at least one value. Supported values: all, hidden-text, off-page, tiny, hidden-ocg");
         }
 
         Set<String> values = parseOptionValues(optionValues);
         if (values.isEmpty()) {
-            throw new IllegalArgumentException(String.format("Option --content-safety-off requires at least one value. Supported values: %s", CONTENT_SAFETY_OFF_SUPPORTED_LIST));
+            throw new IllegalArgumentException(
+                    "Option --content-safety-off requires at least one value. Supported values: all, hidden-text, off-page, tiny, hidden-ocg");
         }
 
         for (String value : values) {
             switch (value) {
-                case CONTENT_SAFETY_OFF_HIDDEN_TEXT_ARGUMENT:
+                case "hidden-text":
                     config.getFilterConfig().setFilterHiddenText(false);
                     break;
-                case CONTENT_SAFETY_OFF_OFF_PAGE_ARGUMENT:
+                case "off-page":
                     config.getFilterConfig().setFilterOutOfPage(false);
                     break;
-                case CONTENT_SAFETY_OFF_TINY_TEXT_ARGUMENT:
+                case "tiny":
                     config.getFilterConfig().setFilterTinyText(false);
                     break;
-                case CONTENT_SAFETY_OFF_HIDDEN_OCG_ARGUMENT:
+                case "hidden-ocg":
                     config.getFilterConfig().setFilterHiddenOCG(false);
                     break;
-                case CONTENT_SAFETY_OFF_ALL_ARGUMENT:
+                case "all":
                     config.getFilterConfig().setFilterHiddenText(false);
                     config.getFilterConfig().setFilterOutOfPage(false);
                     config.getFilterConfig().setFilterTinyText(false);
                     config.getFilterConfig().setFilterHiddenOCG(false);
                     break;
                 default:
-                    throw new IllegalArgumentException(String.format("Unsupported value '%s'. Supported values: %s", value, CONTENT_SAFETY_OFF_SUPPORTED_LIST));
+                    throw new IllegalArgumentException(String.format(
+                            "Unsupported value '%s'. Supported values: all, hidden-text, off-page, tiny, hidden-ocg",
+                            value));
             }
         }
     }
@@ -297,12 +305,14 @@ public class CLIOptions {
 
         String[] optionValues = commandLine.getOptionValues(FORMAT_OPTION);
         if (optionValues == null || optionValues.length == 0) {
-            throw new IllegalArgumentException(String.format("Option --format requires at least one value. Supported values: %s", FORMAT_SUPPORTED_LIST));
+            throw new IllegalArgumentException(
+                    "Option --format requires at least one value. Supported values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images");
         }
 
         Set<String> values = parseOptionValues(optionValues);
         if (values.isEmpty()) {
-            throw new IllegalArgumentException(String.format("Option --format requires at least one value. Supported values: %s", FORMAT_SUPPORTED_LIST));
+            throw new IllegalArgumentException(
+                    "Option --format requires at least one value. Supported values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images");
         }
 
         config.setGenerateJSON(false);
@@ -331,7 +341,9 @@ public class CLIOptions {
                     config.setAddImageToMarkdown(true);
                     break;
                 default:
-                    throw new IllegalArgumentException(String.format("Unsupported format '%s'. Supported values: %s", value, FORMAT_SUPPORTED_LIST));
+                    throw new IllegalArgumentException(String.format(
+                            "Unsupported format '%s'. Supported values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images",
+                            value));
             }
         }
     }
@@ -351,6 +363,93 @@ public class CLIOptions {
             }
         }
         return values;
+    }
+
+    /**
+     * Exports CLI option definitions as JSON for code generation.
+     * This is used to generate Node.js, Python, and documentation from a single
+     * source of truth.
+     *
+     * @param out The output stream to write JSON to
+     */
+    public static void exportOptionsAsJson(PrintStream out) {
+        List<OptionDefinition> exportable = OPTION_DEFINITIONS.stream()
+                .filter(d -> d.exported)
+                .collect(Collectors.toList());
+
+        // Build JSON manually to avoid external dependencies
+        StringBuilder json = new StringBuilder();
+        json.append("{\n");
+        json.append("  \"options\": [\n");
+
+        for (int i = 0; i < exportable.size(); i++) {
+            OptionDefinition opt = exportable.get(i);
+            json.append("    {\n");
+            json.append("      \"name\": \"").append(opt.longName).append("\",\n");
+            json.append("      \"shortName\": ").append(opt.shortName == null ? "null" : "\"" + opt.shortName + "\"")
+                    .append(",\n");
+            json.append("      \"type\": \"").append(opt.type).append("\",\n");
+            json.append("      \"required\": false,\n");
+            if (opt.defaultValue == null) {
+                json.append("      \"default\": null,\n");
+            } else if (opt.defaultValue instanceof Boolean) {
+                json.append("      \"default\": ").append(opt.defaultValue).append(",\n");
+            } else {
+                json.append("      \"default\": \"").append(escapeJson(opt.defaultValue.toString())).append("\",\n");
+            }
+            json.append("      \"description\": \"").append(escapeJson(opt.description)).append("\"\n");
+            json.append("    }");
+            if (i < exportable.size() - 1) {
+                json.append(",");
+            }
+            json.append("\n");
+        }
+
+        json.append("  ]\n");
+        json.append("}\n");
+
+        out.print(json.toString());
+    }
+
+    private static String escapeJson(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t");
+    }
+
+    /**
+     * Internal class to hold option definition for both CLI and JSON export.
+     * Single source of truth for all option metadata.
+     */
+    private static class OptionDefinition {
+        final String longName;
+        final String shortName;
+        final String type; // "string" | "boolean"
+        final Object defaultValue;
+        final String description;
+        final boolean exported; // Whether to include in JSON export
+
+        OptionDefinition(String longName, String shortName, String type, Object defaultValue, String description,
+                boolean exported) {
+            this.longName = longName;
+            this.shortName = shortName;
+            this.type = type;
+            this.defaultValue = defaultValue;
+            this.description = description;
+            this.exported = exported;
+        }
+
+        /** Creates an Apache Commons CLI Option from this definition. */
+        Option toOption() {
+            boolean hasArg = "string".equals(type);
+            return new Option(shortName, longName, hasArg, description);
+        }
     }
 
 }

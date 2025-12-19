@@ -1,0 +1,32 @@
+---
+title: Table Structure (TEDS)
+description: Table edit distance for structure and content fidelity
+---
+
+TEDS uses table edit distance between predicted and reference table HTML to score structure and content fidelity. `TEDS` covers structure + content, while `TEDS-S` isolates structure only.
+
+![Table structure](/figures/benchmark_table-structure.png)
+
+`evaluate_table` extracts the first table (prefers HTML tables, falls back to Markdown heuristics) and evaluates it with the Tree Edit Distance Similarity (TEDS) proposed for table structure assessment. The table DOMs are converted into labeled trees and compared using the APTED algorithm with custom tokenization. The TEDS score reflects how similar these tree structures are.
+
+```math
+TEDS(T_{\text{gt}}, T_{\text{pred}}) = 1 - \frac{EditDist(T_{\text{gt}}, T_{\text{pred}})}{\max(|T_{\text{gt}}|, |T_{\text{pred}}|, 1)}
+```
+
+`TEDS` evaluates both structure and cell text.
+
+`TEDS-S` switches the rename cost to be structure-only (cell text substitutions cost zero), isolating layout fidelity when textual mismatches are considered acceptable (for example, OCR noise).
+
+## Notes
+
+- Scores near 1 indicate tables are reconstructed accurately.
+- Complex headers and heavy row/col spans tend to widen differences across engines.
+
+## Explore the source code
+
+https://github.com/opendataloader-project/opendataloader-bench
+
+Browse all benchmark datasets, documentation, evaluation logic, and metrics in the open source.
+
+<br />
+<br />

@@ -1,0 +1,164 @@
+# AUTO-GENERATED FROM options.json - DO NOT EDIT DIRECTLY
+# Run `npm run generate-options` to regenerate
+
+"""
+CLI option definitions for opendataloader-pdf.
+"""
+from typing import Any, Dict, List
+
+
+# Option metadata list
+CLI_OPTIONS: List[Dict[str, Any]] = [
+    {
+        "name": "output-dir",
+        "python_name": "output_dir",
+        "short_name": "o",
+        "type": "string",
+        "required": False,
+        "default": None,
+        "description": "Directory where output files are written. Default: input file directory",
+    },
+    {
+        "name": "password",
+        "python_name": "password",
+        "short_name": "p",
+        "type": "string",
+        "required": False,
+        "default": None,
+        "description": "Password for encrypted PDF files",
+    },
+    {
+        "name": "format",
+        "python_name": "format",
+        "short_name": "f",
+        "type": "string",
+        "required": False,
+        "default": None,
+        "description": "Output formats (comma-separated). Values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images. Default: json",
+    },
+    {
+        "name": "quiet",
+        "python_name": "quiet",
+        "short_name": "q",
+        "type": "boolean",
+        "required": False,
+        "default": False,
+        "description": "Suppress console logging output",
+    },
+    {
+        "name": "content-safety-off",
+        "python_name": "content_safety_off",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": None,
+        "description": "Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg",
+    },
+    {
+        "name": "keep-line-breaks",
+        "python_name": "keep_line_breaks",
+        "short_name": None,
+        "type": "boolean",
+        "required": False,
+        "default": False,
+        "description": "Preserve original line breaks in extracted text",
+    },
+    {
+        "name": "replace-invalid-chars",
+        "python_name": "replace_invalid_chars",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": " ",
+        "description": "Replacement character for invalid/unrecognized characters. Default: space",
+    },
+    {
+        "name": "use-struct-tree",
+        "python_name": "use_struct_tree",
+        "short_name": None,
+        "type": "boolean",
+        "required": False,
+        "default": False,
+        "description": "Use PDF structure tree (tagged PDF) for reading order and semantic structure",
+    },
+    {
+        "name": "table-method",
+        "python_name": "table_method",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": None,
+        "description": "Table detection method. Values: cluster",
+    },
+    {
+        "name": "reading-order",
+        "python_name": "reading_order",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": "none",
+        "description": "Reading order algorithm. Values: none, xycut. Default: none",
+    },
+    {
+        "name": "markdown-page-separator",
+        "python_name": "markdown_page_separator",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": None,
+        "description": "Separator between pages in Markdown output. Use %page-number% for page numbers. Default: none",
+    },
+    {
+        "name": "text-page-separator",
+        "python_name": "text_page_separator",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": None,
+        "description": "Separator between pages in text output. Use %page-number% for page numbers. Default: none",
+    },
+    {
+        "name": "html-page-separator",
+        "python_name": "html_page_separator",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": None,
+        "description": "Separator between pages in HTML output. Use %page-number% for page numbers. Default: none",
+    },
+    {
+        "name": "embed-images",
+        "python_name": "embed_images",
+        "short_name": None,
+        "type": "boolean",
+        "required": False,
+        "default": False,
+        "description": "Embed images as Base64 data URIs instead of file path references",
+    },
+    {
+        "name": "image-format",
+        "python_name": "image_format",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": "png",
+        "description": "Output format for extracted images. Values: png, jpeg. Default: png",
+    },
+]
+
+
+def add_options_to_parser(parser) -> None:
+    """Add all CLI options to an argparse.ArgumentParser."""
+    for opt in CLI_OPTIONS:
+        flags = []
+        if opt["short_name"]:
+            flags.append(f'-{opt["short_name"]}')
+        flags.append(f'--{opt["name"]}')
+
+        kwargs = {"help": opt["description"]}
+        if opt["type"] == "boolean":
+            kwargs["action"] = "store_true"
+        else:
+            kwargs["default"] = None
+
+        parser.add_argument(*flags, **kwargs)

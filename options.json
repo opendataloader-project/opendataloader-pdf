@@ -1,0 +1,124 @@
+{
+  "options": [
+    {
+      "name": "output-dir",
+      "shortName": "o",
+      "type": "string",
+      "required": false,
+      "default": null,
+      "description": "Directory where output files are written. Default: input file directory"
+    },
+    {
+      "name": "password",
+      "shortName": "p",
+      "type": "string",
+      "required": false,
+      "default": null,
+      "description": "Password for encrypted PDF files"
+    },
+    {
+      "name": "format",
+      "shortName": "f",
+      "type": "string",
+      "required": false,
+      "default": null,
+      "description": "Output formats (comma-separated). Values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images. Default: json"
+    },
+    {
+      "name": "quiet",
+      "shortName": "q",
+      "type": "boolean",
+      "required": false,
+      "default": false,
+      "description": "Suppress console logging output"
+    },
+    {
+      "name": "content-safety-off",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": null,
+      "description": "Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg"
+    },
+    {
+      "name": "keep-line-breaks",
+      "shortName": null,
+      "type": "boolean",
+      "required": false,
+      "default": false,
+      "description": "Preserve original line breaks in extracted text"
+    },
+    {
+      "name": "replace-invalid-chars",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": " ",
+      "description": "Replacement character for invalid/unrecognized characters. Default: space"
+    },
+    {
+      "name": "use-struct-tree",
+      "shortName": null,
+      "type": "boolean",
+      "required": false,
+      "default": false,
+      "description": "Use PDF structure tree (tagged PDF) for reading order and semantic structure"
+    },
+    {
+      "name": "table-method",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": null,
+      "description": "Table detection method. Values: cluster"
+    },
+    {
+      "name": "reading-order",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": "none",
+      "description": "Reading order algorithm. Values: none, xycut. Default: none"
+    },
+    {
+      "name": "markdown-page-separator",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": null,
+      "description": "Separator between pages in Markdown output. Use %page-number% for page numbers. Default: none"
+    },
+    {
+      "name": "text-page-separator",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": null,
+      "description": "Separator between pages in text output. Use %page-number% for page numbers. Default: none"
+    },
+    {
+      "name": "html-page-separator",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": null,
+      "description": "Separator between pages in HTML output. Use %page-number% for page numbers. Default: none"
+    },
+    {
+      "name": "embed-images",
+      "shortName": null,
+      "type": "boolean",
+      "required": false,
+      "default": false,
+      "description": "Embed images as Base64 data URIs instead of file path references"
+    },
+    {
+      "name": "image-format",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": "png",
+      "description": "Output format for extracted images. Values: png, jpeg. Default: png"
+    }
+  ]
+}

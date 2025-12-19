@@ -1,24 +1,8 @@
 #!/usr/bin/env node
 import { Command, CommanderError } from 'commander';
-import { convert, ConvertOptions } from './index.js';
-
-interface CliOptions {
-  outputDir?: string;
-  password?: string;
-  format?: string;
-  quiet?: boolean;
-  contentSafetyOff?: string;
-  keepLineBreaks?: boolean;
-  replaceInvalidChars?: string;
-  useStructTree?: boolean;
-  tableMethod?: string;
-  readingOrder?: string;
-  markdownPageSeparator?: string;
-  textPageSeparator?: string;
-  htmlPageSeparator?: string;
-  embedImages?: boolean;
-  imageFormat?: string;
-}
+import { convert } from './index.js';
+import { CliOptions, buildConvertOptions } from './convert-options.generated.js';
+import { registerCliOptions } from './cli-options.generated.js';
 
 function createProgram(): Command {
   const program = new Command();
@@ -29,40 +13,10 @@ function createProgram(): Command {
     .description('Convert PDFs using the OpenDataLoader CLI.')
     .showHelpAfterError("Use '--help' to see available options.")
     .showSuggestionAfterError(false)
-    .argument('<input...>', 'Input files or directories to convert')
-    .option('-o, --output-dir <path>', 'Directory where outputs are written')
-    .option('-p, --password <password>', 'Password for encrypted PDFs')
-    .option('-f, --format <format>', 'Comma-separated output format(s) to generate.')
-    .option('-q, --quiet', 'Suppress CLI logging output')
-    .option('--content-safety-off <modes>', 'Comma-separated content safety filters to disable.')
-    .option('--keep-line-breaks', 'Preserve line breaks in text output')
-    .option('--replace-invalid-chars <c>', 'Replacement character for invalid characters')
-    .option('--use-struct-tree', 'Enable processing structure tree (disabled by default)')
-    .option(
-      '--reading-order <readingOrder>',
-      'Specifies reading order of content. Supported values: none (default), xycut',
-    )
-    .option('--table-method <method>', 'Enable specified table detection method')
-    .option(
-      '--markdown-page-separator <markdownPageSeparator>',
-      'Specifies the separator string inserted between pages in the markdown output. Use \\"%page-number%\\" inside the string to include the current page number.',
-    )
-    .option(
-      '--text-page-separator <textPageSeparator>',
-      'Specifies the separator string inserted between pages in the text output. Use \\"%page-number%\\" inside the string to include the current page number.',
-    )
-    .option(
-      '--html-page-separator <htmlPageSeparator>',
-      'Specifies the separator string inserted between pages in the html output. Use \\"%page-number%\\" inside the string to include the current page number.',
-    )
-    .option(
-      '--embed-images',
-      'Embed images as Base64 data URIs in JSON, HTML, and Markdown outputs',
-    )
-    .option(
-      '--image-format <format>',
-      'Image format for extracted images (png, jpeg). Default: png',
-    );
+    .argument('<input...>', 'Input files or directories to convert');
+
+  // Register CLI options from auto-generated file
+  registerCliOptions(program);
 
   program.configureOutput({
     writeErr: (str) => {
@@ -74,58 +28,6 @@ function createProgram(): Command {
   });
 
   return program;
-}
-
-function buildConvertOptions(options: CliOptions): ConvertOptions {
-  const convertOptions: ConvertOptions = {};
-
-  if (options.outputDir) {
-    convertOptions.outputDir = options.outputDir;
-  }
-  if (options.password) {
-    convertOptions.password = options.password;
-  }
-  if (options.format) {
-    convertOptions.format = options.format;
-  }
-  if (options.quiet) {
-    convertOptions.quiet = true;
-  }
-  if (options.contentSafetyOff) {
-    convertOptions.contentSafetyOff = options.contentSafetyOff;
-  }
-  if (options.keepLineBreaks) {
-    convertOptions.keepLineBreaks = true;
-  }
-  if (options.replaceInvalidChars) {
-    convertOptions.replaceInvalidChars = options.replaceInvalidChars;
-  }
-  if (options.useStructTree) {
-    convertOptions.useStructTree = true;
-  }
-  if (options.tableMethod) {
-    convertOptions.tableMethod = options.tableMethod;
-  }
-  if (options.readingOrder) {
-    convertOptions.readingOrder = options.readingOrder;
-  }
-  if (options.markdownPageSeparator) {
-    convertOptions.markdownPageSeparator = options.markdownPageSeparator;
-  }
-  if (options.textPageSeparator) {
-    convertOptions.textPageSeparator = options.textPageSeparator;
-  }
-  if (options.htmlPageSeparator) {
-    convertOptions.htmlPageSeparator = options.htmlPageSeparator;
-  }
-  if (options.embedImages) {
-    convertOptions.embedImages = true;
-  }
-  if (options.imageFormat) {
-    convertOptions.imageFormat = options.imageFormat;
-  }
-
-  return convertOptions;
 }
 
 async function main(): Promise<number> {

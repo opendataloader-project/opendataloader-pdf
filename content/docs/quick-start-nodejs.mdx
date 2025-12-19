@@ -1,0 +1,60 @@
+---
+title: Quick Start with Node.js
+description: Use the @opendataloader/pdf package from TypeScript or JavaScript
+---
+
+The TypeScript package mirrors the Python API and exposes both a programmatic helper and a CLI (`npx @opendataloader/pdf`).
+
+## Requirements
+
+- Node.js 18 or later
+- Java 11+ available on the system `PATH`
+
+Verify Java once before installing:
+
+```bash
+java -version
+```
+
+## Install
+
+```bash
+npm install @opendataloader/pdf
+```
+
+## Convert from TypeScript
+
+```typescript
+import { convert } from "@opendataloader/pdf";
+
+async function main() {
+  await convert(["path/to/document.pdf", "path/to/folder"], {
+    outputDir: "path/to/output",
+    format: "json,html,pdf,markdown",
+  });
+}
+
+main().catch((error) => {
+  console.error("Error processing PDF:", error);
+});
+```
+
+### `convert()` options
+
+import NodeConvertOptions from './_generated/node-convert-options.mdx';
+
+<NodeConvertOptions />
+
+## CLI usage
+
+```bash
+npx @opendataloader/pdf path/to/document.pdf path/to/folder \
+  -o path/to/output \
+  -f json,html,pdf,markdown
+```
+
+For CLI options, see the [CLI Options Reference](./cli-options-reference).
+
+## Next steps
+
+- Need schema details for downstream parsing? See the [JSON schema](./json-schema).

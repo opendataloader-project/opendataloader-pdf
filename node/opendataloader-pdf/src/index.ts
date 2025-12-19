@@ -3,18 +3,23 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { fileURLToPath } from 'url';
 
+// Re-export types and utilities from auto-generated file
+export type { ConvertOptions } from './convert-options.generated.js';
+export { buildArgs } from './convert-options.generated.js';
+import type { ConvertOptions } from './convert-options.generated.js';
+import { buildArgs } from './convert-options.generated.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const JAR_NAME = 'opendataloader-pdf-cli.jar';
 
 interface JarExecutionOptions {
-  debug?: boolean;
   streamOutput?: boolean;
 }
 
 function executeJar(args: string[], executionOptions: JarExecutionOptions = {}): Promise<string> {
-  const { debug = false, streamOutput = false } = executionOptions;
+  const { streamOutput = false } = executionOptions;
 
   return new Promise((resolve, reject) => {
     const jarPath = path.join(__dirname, '..', 'lib', JAR_NAME);
@@ -75,24 +80,6 @@ function executeJar(args: string[], executionOptions: JarExecutionOptions = {}):
   });
 }
 
-export interface ConvertOptions {
-  outputDir?: string;
-  password?: string;
-  format?: string | string[];
-  quiet?: boolean;
-  contentSafetyOff?: string | string[];
-  keepLineBreaks?: boolean;
-  replaceInvalidChars?: string;
-  useStructTree?: boolean;
-  tableMethod?: string | string[];
-  readingOrder?: string;
-  markdownPageSeparator?: string;
-  textPageSeparator?: string;
-  htmlPageSeparator?: string;
-  embedImages?: boolean;
-  imageFormat?: string;
-}
-
 export function convert(
   inputPaths: string | string[],
   options: ConvertOptions = {},
@@ -108,64 +95,7 @@ export function convert(
     }
   }
 
-  const args: string[] = [...inputList];
-  if (options.outputDir) {
-    args.push('--output-dir', options.outputDir);
-  }
-  if (options.password) {
-    args.push('--password', options.password);
-  }
-  if (options.format) {
-    if (Array.isArray(options.format)) {
-      args.push('--format', options.format.join(','));
-    } else {
-      args.push('--format', options.format);
-    }
-  }
-  if (options.quiet) {
-    args.push('--quiet');
-  }
-  if (options.contentSafetyOff) {
-    if (Array.isArray(options.contentSafetyOff)) {
-      args.push('--content-safety-off', options.contentSafetyOff.join(','));
-    } else {
-      args.push('--content-safety-off', options.contentSafetyOff);
-    }
-  }
-  if (options.keepLineBreaks) {
-    args.push('--keep-line-breaks');
-  }
-  if (options.replaceInvalidChars) {
-    args.push('--replace-invalid-chars', options.replaceInvalidChars);
-  }
-  if (options.useStructTree) {
-    args.push('--use-struct-tree');
-  }
-  if (options.tableMethod) {
-    if (Array.isArray(options.tableMethod)) {
-      args.push('--table-method', options.tableMethod.join(','));
-    } else {
-      args.push('--table-method', options.tableMethod);
-    }
-  }
-  if (options.readingOrder) {
-    args.push('--reading-order', options.readingOrder);
-  }
-  if (options.markdownPageSeparator) {
-    args.push('--markdown-page-separator', options.markdownPageSeparator);
-  }
-  if (options.textPageSeparator) {
-    args.push('--text-page-separator', options.textPageSeparator);
-  }
-  if (options.htmlPageSeparator) {
-    args.push('--html-page-separator', options.htmlPageSeparator);
-  }
-  if (options.embedImages) {
-    args.push('--embed-images');
-  }
-  if (options.imageFormat) {
-    args.push('--image-format', options.imageFormat);
-  }
+  const args: string[] = [...inputList, ...buildArgs(options)];
 
   return executeJar(args, {
     streamOutput: !options.quiet,

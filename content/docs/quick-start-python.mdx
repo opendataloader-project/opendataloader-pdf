@@ -1,0 +1,59 @@
+---
+title: Quick Start with Python
+description: Install and use opendataloader-pdf from Python or its CLI
+---
+
+Python is the fastest way to get started. The package bundles bindings, a CLI entrypoint, and AI-safety filters that run locally.
+
+## Requirements
+
+- Python 3.9 or later
+- Java 11+ available on the system `PATH`
+
+Verify Java once before installing:
+
+```bash
+java -version
+```
+
+## Install
+
+```bash
+pip install -U opendataloader-pdf
+```
+
+Upgrade regularly to pick up model, parser, and safety improvements.
+
+## Convert PDFs from Python
+
+```python
+import opendataloader_pdf
+
+opendataloader_pdf.convert(
+    input_path=["path/to/document.pdf", "path/to/folder"],
+    output_dir="path/to/output",
+    format="json,html,pdf,markdown",
+)
+```
+
+### `convert()` options
+
+import PythonConvertOptions from './_generated/python-convert-options.mdx';
+
+<PythonConvertOptions />
+
+### CLI usage
+
+Use the same installation to drive conversions from the terminal:
+
+```bash
+opendataloader-pdf path/to/document.pdf \
+  -o path/to/output \
+  -f json,html,pdf,markdown
+```
+
+For CLI options, see the [CLI Options Reference](./cli-options-reference).
+
+## Next steps
+
+- Need schema details for downstream parsing? See the [JSON schema](./json-schema).
