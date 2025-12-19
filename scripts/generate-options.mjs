@@ -72,6 +72,16 @@ function escapeString(str, quote = "'") {
 }
 
 /**
+ * Escape string for use in Markdown table cells.
+ * @param {string} str - The string to escape
+ */
+function escapeMarkdown(str) {
+  return str
+    .replace(/\\/g, '\\\\')  // escape backslashes first
+    .replace(/\|/g, '\\|');  // escape pipe characters
+}
+
+/**
  * Generate Node.js CLI options file
  */
 function generateNodeCliOptions() {
@@ -387,7 +397,7 @@ function generatePythonConvertOptionsMdx() {
       : typeof opt.default === 'boolean' ? (opt.default ? '`True`' : '`False`')
       : `\`"${opt.default}"\``;
 
-    const description = opt.description.replace(/\|/g, '\\|');
+    const description = escapeMarkdown(opt.description);
     lines.push(`| \`${snakeName}\` | \`${pyType}\` | ${defaultVal} | ${description} |`);
   }
 
@@ -421,7 +431,7 @@ function generateNodeConvertOptionsMdx() {
       : typeof opt.default === 'boolean' ? `\`${opt.default}\``
       : `\`"${opt.default}"\``;
 
-    const description = opt.description.replace(/\|/g, '\\|');
+    const description = escapeMarkdown(opt.description);
     lines.push(`| \`${camelName}\` | \`${tsType}\` | ${defaultVal} | ${description} |`);
   }
 
@@ -460,7 +470,7 @@ function generateOptionsReferenceMdx() {
     const defaultVal = opt.default === null ? '-'
       : typeof opt.default === 'boolean' ? `\`${opt.default}\``
       : `\`"${opt.default}"\``;
-    const description = opt.description.replace(/\|/g, '\\|');
+    const description = escapeMarkdown(opt.description);
 
     lines.push(`| ${longOpt} | ${shortOpt} | ${type} | ${defaultVal} | ${description} |`);
   }
