@@ -1,0 +1,29 @@
+{
+  "title": "docs",
+  "description": "The documentation",
+  "root": true,
+  "pages": [
+    "---Overview---",
+    "index",
+    "---Quick Start---",
+    "quick-start-python",
+    "quick-start-java",
+    "quick-start-nodejs",
+    "quick-start-docker",
+    "---Features---",
+    "ai-safety",
+    "tagged-pdf",
+    "---Benchmark---",
+    "benchmark",
+    "---Reference---",
+    "cli-options-reference",
+    "json-schema",
+    "---Development---",
+    "development-workflow",
+    "---Community---",
+    "community",
+    "contributing",
+    "upcoming-roadmap",
+    "license"
+  ]
+}

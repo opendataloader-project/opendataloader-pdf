@@ -105,8 +105,25 @@ opendataloader_pdf.convert(
 ./scripts/build-all.sh
 ```
 
+### Syncing CLI Options
+
+CLI options are defined in Java and auto-generated for Node.js, Python, and documentation.
+
+```sh
+# After modifying Java CLI options, regenerate all bindings:
+pnpm run sync-options
+```
+
+This generates:
+- `node/opendataloader-pdf/src/cli-options.generated.ts`
+- `node/opendataloader-pdf/src/convert-options.generated.ts`
+- `python/opendataloader-pdf/src/opendataloader_pdf/cli_options_generated.py`
+- `python/opendataloader-pdf/src/opendataloader_pdf/convert_generated.py`
+- `content/docs/cli-options-reference.mdx`
+
 ### Resources
 
+- [CLI Options Reference](https://opendataloader.org/docs/cli-options-reference)
 - [Development](https://opendataloader.org/docs/development-workflow)
 - [Json Schema](https://opendataloader.org/docs/json-schema)
 - [Javadoc](https://javadoc.io/doc/org.opendataloader/opendataloader-pdf-core/latest/index.html)

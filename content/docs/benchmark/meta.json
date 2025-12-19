@@ -1,0 +1,5 @@
+{
+  "title": "Benchmark Overview",
+  "description": "The documentation",
+  "pages": ["nid", "teds", "mhs", "energy", "time"]
+}

@@ -1,0 +1,26 @@
+---
+title: Development Workflow
+description: Build and run OpenDataLoader PDF from source
+---
+
+The repository ships a Maven-based build that produces the CLI and core libraries. Use it when you need to test local changes or contribute fixes.
+
+## Build the project
+
+```bash
+mvn clean install -f java/pom.xml
+```
+
+Successful builds produce artifacts under `java/opendataloader-pdf-cli/target`, including the shaded CLI JAR.
+
+## Run the CLI from source
+
+```bash
+java -jar opendataloader-pdf-cli-<VERSION>.jar [options] <INPUT FILE OR FOLDER>
+```
+
+Refer to the [CLI usage](/docs/quick-start-java#cli-usage) for the full flag list.
+
+## Javadoc
+
+Refer to the [Javadoc documentation](https://javadoc.io/doc/org.opendataloader/opendataloader-pdf-core/latest) for the full API reference.

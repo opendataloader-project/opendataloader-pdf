@@ -1,0 +1,22 @@
+name: Sync docs to homepage
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Push to homepage repo
+        uses: cpina/github-action-push-to-another-repository@main
+        with:
+          source-directory: 'content/docs'
+          destination-github-username: 'opendataloader-project'
+          destination-repository-name: 'opendataloader.org'
+          target-directory: 'apps/v1/content/docs'
+          target-branch: main
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.HOMEPAGE_SYNC_TOKEN }}

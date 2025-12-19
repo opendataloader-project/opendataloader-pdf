@@ -1,0 +1,10 @@
+{
+  "name": "opendataloader-pdf-workspace",
+  "private": true,
+  "description": "OpenDataLoader PDF - Monorepo workspace",
+  "scripts": {
+    "export-options": "java -jar java/opendataloader-pdf-cli/target/opendataloader-pdf-cli-0.0.0.jar --export-options > options.json",
+    "generate-options": "node scripts/generate-options.mjs",
+    "sync-options": "java -jar java/opendataloader-pdf-cli/target/opendataloader-pdf-cli-0.0.0.jar --export-options > options.json && node scripts/generate-options.mjs"
+  }
+}

@@ -1,0 +1,30 @@
+---
+title: Heading Levels (MHS)
+description: Markdown heading structure and content alignment
+---
+
+MHS measures how closely heading hierarchy and text match the reference. `MHS` evaluates both heading text and levels; `MHS-S` evaluates structure only.
+
+![Heading levels](/figures/benchmark_heading-level.png)
+
+`evaluate_heading_level` parses Markdown into a flat list of heading nodes and associated content blocks while skipping detected tables. It compares the ground truth and prediction twice with APTED: once with content-aware rename penalties and once with pure structural penalties. The resulting Markdown Heading-Level Similarity (MHS) scores are defined as:
+
+```math
+MHS(H_{\text{gt}}, H_{\text{pred}}) = 1 - \frac{EditDist(H_{\text{gt}}, H_{\text{pred}})}{\max(|H_{\text{gt}}|, |H_{\text{pred}}|, 1)}
+```
+
+`MHS` rewards both correctly positioned headings and well-aligned content blocks, while `MHS-S` isolates the heading topology to flag missing or mis-leveled sections even when the surrounding prose overlaps.
+
+## Notes
+
+- Long or heavily sectioned documents show the biggest gaps here.
+- Misdetected headers can break downstream RAG chunking; when overall scores tie, check `MHS_*` to prioritize outline quality.
+
+## Explore the source code
+
+https://github.com/opendataloader-project/opendataloader-bench
+
+Browse all benchmark datasets, documentation, evaluation logic, and metrics in the open source.
+
+<br />
+<br />
