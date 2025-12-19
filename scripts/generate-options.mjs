@@ -377,6 +377,11 @@ function generatePythonConvert() {
  */
 function generatePythonConvertOptionsMdx() {
   const lines = [];
+  lines.push('---');
+  lines.push('title: Python Convert Options');
+  lines.push('description: Options for the Python convert function');
+  lines.push('---');
+  lines.push('');
   lines.push(AUTO_GENERATED_HEADER_MDX);
   lines.push('| Parameter | Type | Default | Description |');
   lines.push('|-----------|------|---------|-------------|');
@@ -414,6 +419,11 @@ function generatePythonConvertOptionsMdx() {
  */
 function generateNodeConvertOptionsMdx() {
   const lines = [];
+  lines.push('---');
+  lines.push('title: Node.js Convert Options');
+  lines.push('description: Options for the Node.js convert function');
+  lines.push('---');
+  lines.push('');
   lines.push(AUTO_GENERATED_HEADER_MDX);
   lines.push('| Option | Type | Default | Description |');
   lines.push('|--------|------|---------|-------------|');
