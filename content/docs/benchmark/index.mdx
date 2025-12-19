@@ -1,0 +1,33 @@
+---
+title: Benchmark Overview
+description: Benchmarks for OpenDataLoader PDF with energy and overall scores up front
+---
+
+[OpenDataLoader Benchmark](https://github.com/opendataloader-project/opendataloader-bench) compares engines using a shared corpus and harmonised evaluation pipeline. It normalises predictions into Markdown, compares them against curated ground-truth annotations, and reports quality metrics for reading order, table fidelity, and heading hierarchy. The tooling is modular so new engines, corpora, or scoring routines can be slotted in with minimal effort.
+
+![benchmark score](/figures/benchmark.png)
+
+## How to read the metrics
+
+- **OVERALL QUALITY**: Average of `Reading Order (NID)`, `Table Structure (TEDS)`, and `Heading Levels (MHS)`. This is the default quality view.
+- **ENERGY**: Total energy consumption from `powermetrics`. It is the primary operating KPI for cost, battery, and carbon impact.
+- **TIME**: Average document processing time. It is a secondary KPI for latency-sensitive workloads.
+
+## Pages
+
+- [Reading Order (NID)](/docs/benchmark/nid)
+- [Table Structure (TEDS)](/docs/benchmark/teds)
+- [Heading Levels (MHS)](/docs/benchmark/mhs)
+- [Energy Efficiency](/docs/benchmark/energy)
+- [Extraction Time](/docs/benchmark/time)
+
+Each page links to the corresponding chart and highlights how to interpret the numbers.
+
+## Explore the source code
+
+https://github.com/opendataloader-project/opendataloader-bench
+
+Browse all benchmark datasets, documentation, evaluation logic, and metrics in the open source.
+
+<br />
+<br />

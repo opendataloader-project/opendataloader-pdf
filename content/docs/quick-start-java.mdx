@@ -1,0 +1,85 @@
+---
+title: Quick Start with Java
+description: Integrate OpenDataLoader PDF as a JVM dependency or CLI
+---
+
+Use the core Java library when you need full JVM control or want to embed PDF parsing inside existing Java services.
+
+## Requirements
+
+- Java 11+ available on the system `PATH`
+
+Verify Java once before installing:
+
+```bash
+java -version
+```
+
+## Dependency (Maven)
+
+```xml
+<dependency>
+  <groupId>org.opendataloader</groupId>
+  <artifactId>opendataloader-pdf-core</artifactId>
+  <version>1.3.0</version>
+</dependency>
+
+<repositories>
+  <repository>
+    <snapshots>
+      <enabled>true</enabled>
+    </snapshots>
+    <id>vera-dev</id>
+    <name>Vera development</name>
+    <url>https://artifactory.openpreservation.org/artifactory/vera-dev</url>
+  </repository>
+</repositories>
+```
+
+Check [Maven Central](https://search.maven.org/artifact/org.opendataloader/opendataloader-pdf-core) for the latest version.
+
+Sample Gradle and Maven projects live in [opendataloader-pdf-examples](https://github.com/opendataloader-project/opendataloader-pdf-examples).
+
+## Process a PDF
+
+```java
+import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.api.OpenDataLoaderPDF;
+
+public class Sample {
+    public static void main(String[] args) throws Exception {
+        Config config = new Config();
+        config.setOutputFolder("path/to/output");
+        config.setGeneratePDF(true);
+        config.setGenerateMarkdown(true);
+        config.setGenerateHtml(true);
+
+        OpenDataLoaderPDF.processFile("path/to/document.pdf", config);
+    }
+}
+```
+
+For all `Config` options, see the [Config Javadoc](https://javadoc.io/doc/org.opendataloader/opendataloader-pdf-core/latest/org/opendataloader/pdf/api/Config.html).
+
+### CLI usage
+
+Download CLI JAR from the [releases page](https://github.com/opendataloader-project/opendataloader-pdf/releases).
+
+and run the CLI:
+
+```bash
+java -jar opendataloader-pdf-cli-<VERSION>.jar \
+  path/to/document.pdf \
+  -o path/to/output \
+  -f json,html,pdf,markdown
+```
+
+For all CLI options, see the [CLI Options Reference](./cli-options-reference).
+
+## API docs
+
+Full Javadoc is published at [javadoc.io](https://javadoc.io/doc/org.opendataloader/opendataloader-pdf-core/latest/).
+
+## Next steps
+
+- Need schema details for downstream parsing? See the [JSON schema](./json-schema).

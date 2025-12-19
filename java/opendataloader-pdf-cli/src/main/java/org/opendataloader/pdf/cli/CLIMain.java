@@ -35,6 +35,13 @@ public class CLIMain {
             formatter.printHelp(HELP, options);
             return;
         }
+
+        // Handle --export-options before requiring input files
+        if (commandLine.hasOption(CLIOptions.EXPORT_OPTIONS_LONG_OPTION)) {
+            CLIOptions.exportOptionsAsJson(System.out);
+            return;
+        }
+
         if (commandLine.getArgs().length < 1) {
             formatter.printHelp(HELP, options);
             return;
