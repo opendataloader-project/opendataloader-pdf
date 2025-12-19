@@ -1,3 +1,14 @@
+# Sync documentation to homepage repository on release
+#
+# Required Setup:
+# 1. Create a GitHub Personal Access Token (PAT) with 'repo' scope
+# 2. Add the token as a repository secret named 'HOMEPAGE_SYNC_TOKEN'
+#    Settings > Secrets and variables > Actions > New repository secret
+# 3. The token owner must have write access to opendataloader.org repository
+#
+# Testing: This workflow only runs on published releases.
+# To test manually, create a pre-release or use workflow_dispatch.
+
 name: Sync docs to homepage
 
 on:

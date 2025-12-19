@@ -189,7 +189,9 @@ function generateNodeConvertOptions() {
     } else if (isListOption(opt)) {
       lines.push(`  if (options.${camelName}) {`);
       lines.push(`    if (Array.isArray(options.${camelName})) {`);
-      lines.push(`      args.push('${cliFlag}', options.${camelName}.join(','));`);
+      lines.push(`      if (options.${camelName}.length > 0) {`);
+      lines.push(`        args.push('${cliFlag}', options.${camelName}.join(','));`);
+      lines.push('      }');
       lines.push('    } else {');
       lines.push(`      args.push('${cliFlag}', options.${camelName});`);
       lines.push('    }');
@@ -340,7 +342,8 @@ function generatePythonConvert() {
     } else if (isListOption(opt)) {
       lines.push(`    if ${snakeName}:`);
       lines.push(`        if isinstance(${snakeName}, list):`);
-      lines.push(`            args.extend(["${cliFlag}", ",".join(${snakeName})])`);
+      lines.push(`            if ${snakeName}:`);
+      lines.push(`                args.extend(["${cliFlag}", ",".join(${snakeName})])`);
       lines.push(`        else:`);
       lines.push(`            args.extend(["${cliFlag}", ${snakeName}])`);
     } else {

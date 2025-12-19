@@ -62,14 +62,16 @@ def convert(
         args.extend(["--password", password])
     if format:
         if isinstance(format, list):
-            args.extend(["--format", ",".join(format)])
+            if format:
+                args.extend(["--format", ",".join(format)])
         else:
             args.extend(["--format", format])
     if quiet:
         args.append("--quiet")
     if content_safety_off:
         if isinstance(content_safety_off, list):
-            args.extend(["--content-safety-off", ",".join(content_safety_off)])
+            if content_safety_off:
+                args.extend(["--content-safety-off", ",".join(content_safety_off)])
         else:
             args.extend(["--content-safety-off", content_safety_off])
     if keep_line_breaks:

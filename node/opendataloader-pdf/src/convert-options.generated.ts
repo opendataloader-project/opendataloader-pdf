@@ -127,7 +127,9 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.format) {
     if (Array.isArray(options.format)) {
-      args.push('--format', options.format.join(','));
+      if (options.format.length > 0) {
+        args.push('--format', options.format.join(','));
+      }
     } else {
       args.push('--format', options.format);
     }
@@ -137,7 +139,9 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.contentSafetyOff) {
     if (Array.isArray(options.contentSafetyOff)) {
-      args.push('--content-safety-off', options.contentSafetyOff.join(','));
+      if (options.contentSafetyOff.length > 0) {
+        args.push('--content-safety-off', options.contentSafetyOff.join(','));
+      }
     } else {
       args.push('--content-safety-off', options.contentSafetyOff);
     }

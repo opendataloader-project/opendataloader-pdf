@@ -57,12 +57,10 @@ describe('buildArgs()', () => {
     const args = buildArgs({
       format: ['json', 'markdown', 'html'],
       contentSafetyOff: ['hidden-text', 'off-page'],
-      tableMethod: ['cluster'],
     });
     expect(args).toEqual([
       '--format', 'json,markdown,html',
       '--content-safety-off', 'hidden-text,off-page',
-      '--table-method', 'cluster',
     ]);
   });
 
@@ -116,6 +114,15 @@ describe('buildArgs()', () => {
       outputDir: '/output',
       quiet: false,
       keepLineBreaks: false,
+    });
+    expect(args).toEqual(['--output-dir', '/output']);
+  });
+
+  it('should skip empty arrays for list options', () => {
+    const args = buildArgs({
+      format: [],
+      contentSafetyOff: [],
+      outputDir: '/output',
     });
     expect(args).toEqual(['--output-dir', '/output']);
   });
