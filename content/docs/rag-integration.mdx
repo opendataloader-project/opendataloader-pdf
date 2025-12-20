@@ -27,6 +27,25 @@ OpenDataLoader is designed specifically for RAG pipelines, providing structured 
 └─────────────┘    └──────────────────┘    └─────────────┘
 ```
 
+## Working Examples
+
+Complete, runnable examples are available in the repository:
+
+```bash
+git clone https://github.com/opendataloader-project/opendataloader-pdf
+cd opendataloader-pdf/examples/python/rag
+
+# Basic chunking (no external dependencies)
+pip install opendataloader-pdf
+python basic_chunking.py
+
+# LangChain integration
+pip install -r requirements.txt
+python langchain_example.py
+```
+
+See [examples/python/rag](https://github.com/opendataloader-project/opendataloader-pdf/tree/main/examples/python/rag) for details.
+
 ## Quick Start
 
 ### Step 1: Convert PDFs
@@ -38,36 +57,47 @@ import opendataloader_pdf
 opendataloader_pdf.convert(
     input_path="documents/",
     output_dir="output/",
-    format="markdown,json",
-    reading_order="xycut"  # Correct multi-column order
+    format="json,markdown",
+    reading_order="xycut",  # Correct multi-column order
+    quiet=True,
 )
 ```
 
 ### Step 2: Load and Chunk
 
 ```python
-from pathlib import Path
+import json
 
-# Load markdown for text content
-markdown_content = Path("output/document.md").read_text()
+with open("output/document.json", encoding="utf-8") as f:
+    doc = json.load(f)
 
-# Simple chunking by sections
-chunks = markdown_content.split("\n## ")
+# Chunk by semantic elements
+chunks = []
+for element in doc["kids"]:
+    if element["type"] in ("paragraph", "heading", "list"):
+        chunks.append({
+            "text": element.get("content", ""),
+            "metadata": {
+                "type": element["type"],
+                "page": element.get("page number"),
+                "bbox": element.get("bounding box"),
+                "source": doc.get("file name"),
+            }
+        })
 ```
 
-### Step 3: Use with Your Vector Store
+### Step 3: Embed and Store
+
+Each chunk is ready for your embedding model and vector store:
 
 ```python
-# Example with any embedding model
-from your_embedding_library import embed
+for chunk in chunks:
+    text = chunk["text"]           # Text to embed
+    metadata = chunk["metadata"]   # Page, bbox, source for citations
 
-for i, chunk in enumerate(chunks):
-    embedding = embed(chunk)
-    vector_store.add(
-        id=f"doc-chunk-{i}",
-        embedding=embedding,
-        metadata={"source": "document.pdf", "chunk_index": i}
-    )
+    # Your embedding step:
+    # embedding = your_model.embed(text)
+    # vector_store.add(embedding, metadata=metadata)
 ```
 
 ## Using Bounding Boxes for Citations
@@ -77,24 +107,22 @@ OpenDataLoader provides bounding boxes for every element, enabling precise sourc
 ```python
 import json
 
-# Load JSON output
-with open("output/document.json") as f:
+with open("output/document.json", encoding="utf-8") as f:
     doc = json.load(f)
 
 # Extract elements with locations
-for page in doc["kids"]:
-    page_num = page["page number"]
-    for element in page.get("kids", []):
-        content = element.get("content", "")
-        bbox = element.get("bounding box")  # [left, bottom, right, top]
-        element_type = element.get("type")
+for element in doc["kids"]:
+    content = element.get("content", "")
+    bbox = element.get("bounding box")  # [left, bottom, right, top]
+    page = element.get("page number")
+    element_type = element.get("type")
 
-        # Store with your chunks for citation
-        chunk_metadata = {
-            "page": page_num,
-            "bbox": bbox,
-            "type": element_type
-        }
+    # Store with your chunks for citation
+    chunk_metadata = {
+        "page": page,
+        "bbox": bbox,
+        "type": element_type
+    }
 ```
 
 ### Citation Format Example
@@ -103,54 +131,115 @@ When your RAG system retrieves a chunk, you can generate precise citations:
 
 ```python
 def format_citation(metadata):
-    page = metadata["page"]
-    bbox = metadata["bbox"]
-    return f"Source: Page {page}, coordinates ({bbox[0]:.0f}, {bbox[1]:.0f})"
+    source = metadata.get("source", "unknown")
+    page = metadata.get("page")
+    bbox = metadata.get("bbox")
 
-# Output: "Source: Page 3, coordinates (72, 450)"
+    citation = f"Source: {source}"
+    if page:
+        citation += f", Page {page}"
+    if bbox:
+        citation += f", Position ({bbox[0]:.0f}, {bbox[1]:.0f})"
+    return citation
+
+# Output: "Source: document.pdf, Page 3, Position (72, 450)"
 ```
 
 ## Chunking Strategies
 
 ### By Semantic Elements
 
-Use JSON output to chunk by document structure:
+Create one chunk per paragraph, heading, or list element:
 
 ```python
-import json
-
-with open("output/document.json") as f:
-    doc = json.load(f)
-
-chunks = []
-for page in doc["kids"]:
-    for element in page.get("kids", []):
-        if element["type"] in ["paragraph", "heading", "list"]:
+def chunk_by_element(doc):
+    """Best for: Fine-grained retrieval, precise citations."""
+    chunks = []
+    for element in doc["kids"]:
+        if element["type"] in ("paragraph", "heading", "list"):
             chunks.append({
                 "text": element.get("content", ""),
-                "type": element["type"],
-                "page": page["page number"],
-                "bbox": element.get("bounding box")
+                "metadata": {
+                    "type": element["type"],
+                    "page": element.get("page number"),
+                    "bbox": element.get("bounding box"),
+                    "source": doc.get("file name"),
+                }
             })
+    return chunks
 ```
 
 ### By Headings (Sections)
 
-```python
-current_section = []
-current_heading = None
+Group content under headings into coherent sections:
 
-for element in all_elements:
-    if element["type"] == "heading":
-        if current_section:
-            chunks.append({
-                "heading": current_heading,
-                "content": "\n".join(current_section)
-            })
-        current_heading = element["content"]
-        current_section = []
-    else:
-        current_section.append(element.get("content", ""))
+```python
+def chunk_by_section(doc):
+    """Best for: Context-rich retrieval, topic-based search."""
+    chunks = []
+    current_heading = None
+    current_content = []
+    current_start_page = None
+
+    for element in doc["kids"]:
+        if element["type"] == "heading":
+            if current_content:
+                chunks.append({
+                    "text": "\n".join(current_content),
+                    "metadata": {
+                        "heading": current_heading,
+                        "page": current_start_page,
+                        "source": doc.get("file name"),
+                    }
+                })
+            current_heading = element.get("content", "")
+            current_content = [current_heading]
+            current_start_page = element.get("page number")
+        elif element["type"] in ("paragraph", "list"):
+            content = element.get("content", "")
+            if content:
+                current_content.append(content)
+
+    # Save the last section
+    if current_content:
+        chunks.append({
+            "text": "\n".join(current_content),
+            "metadata": {"heading": current_heading, "page": current_start_page}
+        })
+
+    return chunks
+```
+
+### Merged Chunks (Minimum Size)
+
+Combine small paragraphs to avoid overly fragmented chunks:
+
+```python
+def chunk_with_min_size(doc, min_chars=200):
+    """Best for: Balanced chunk sizes, reducing noise."""
+    chunks = []
+    buffer_text = ""
+    buffer_pages = []
+
+    for element in doc["kids"]:
+        if element["type"] in ("paragraph", "heading", "list"):
+            buffer_text += element.get("content", "") + "\n"
+            page = element.get("page number")
+            if page and page not in buffer_pages:
+                buffer_pages.append(page)
+
+            if len(buffer_text) >= min_chars:
+                chunks.append({
+                    "text": buffer_text.strip(),
+                    "metadata": {"pages": buffer_pages.copy()}
+                })
+                buffer_text = ""
+                buffer_pages = []
+
+    if buffer_text.strip():
+        chunks.append({"text": buffer_text.strip(), "metadata": {"pages": buffer_pages}})
+
+    return chunks
 ```
 
 ### Tables as Separate Chunks
@@ -158,13 +247,12 @@ for element in all_elements:
 Tables often contain dense information. Chunk them separately:
 
 ```python
-for element in all_elements:
+for element in doc["kids"]:
     if element["type"] == "table":
-        # Tables are preserved as structured data
         chunks.append({
             "type": "table",
             "content": element,  # Keep full structure
-            "page": element["page number"]
+            "page": element.get("page number")
         })
 ```
 
@@ -225,13 +313,13 @@ Process multiple files efficiently:
 
 ```python
 import opendataloader_pdf
-from pathlib import Path
 
 # Process entire folder
 opendataloader_pdf.convert(
     input_path="documents/",  # Folder path
     output_dir="output/",
-    format="json,markdown"
+    format="json,markdown",
+    quiet=True,
 )
 ```
 
@@ -263,17 +351,10 @@ reading_order="xycut"
 
 ### Issue: Too many small chunks
 
-**Solution**: Chunk by headings or merge adjacent paragraphs:
+**Solution**: Use the merged chunking strategy with a minimum size threshold:
 
 ```python
-# Merge short paragraphs
-merged = []
-buffer = ""
-for chunk in chunks:
-    buffer += chunk["text"] + "\n"
-    if len(buffer) > 500:  # Minimum chunk size
-        merged.append(buffer)
-        buffer = ""
+chunks = chunk_with_min_size(doc, min_chars=500)
 ```
 
 ## Framework Integrations
@@ -292,7 +373,8 @@ from langchain_opendataloader_pdf import OpenDataLoaderPDFLoader
 # Load documents
 loader = OpenDataLoaderPDFLoader(
     file_path=["document.pdf", "folder/"],
-    format="text"
+    format="text",
+    quiet=True,
 )
 documents = loader.load()
 
@@ -301,6 +383,8 @@ for doc in documents:
     print(doc.metadata)
     print(doc.page_content[:100])
 ```
+
+See [examples/python/rag/langchain_example.py](https://github.com/opendataloader-project/opendataloader-pdf/blob/main/examples/python/rag/langchain_example.py) for a complete working example.
 
 **Configuration options:**
 
