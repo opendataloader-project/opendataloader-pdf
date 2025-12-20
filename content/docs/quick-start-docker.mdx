@@ -18,7 +18,8 @@ Run the container to convert the PDF into Markdown, HTML, and an annotated PDF:
 ```bash
 docker run --rm -v "$PWD":/work \
   ghcr.io/opendataloader-project/opendataloader-pdf-cli:latest \
-  /work/1901.03003.pdf -f json,html,pdf,markdown
+  /work/1901.03003.pdf -f json,html,pdf,markdown \
+  --reading-order xycut  # For accurate multi-column reading order
 ```
 
 - Mount the working directory so that outputs are written back to the host.
