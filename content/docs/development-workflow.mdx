@@ -9,12 +9,12 @@ This guide covers building from source, running tests, and contributing changes 
 
 Before you begin, ensure you have the following installed:
 
-| Tool | Version | Purpose |
-|------|---------|---------|
-| Java | 11+ | Core engine |
-| Python | 3.9+ | Python bindings |
-| Node.js | 20+ | Node.js bindings |
-| pnpm | Latest | Package management |
+| Tool    | Version | Purpose            |
+|---------|---------|------------------  |
+| Java    | 11+     | Core engine        |
+| Python  | 3.9+    | Python bindings    |
+| Node.js | 20+     | Node.js bindings   |
+| pnpm    | Latest  | Package management |
 
 Verify your setup:
 
@@ -68,27 +68,59 @@ java -jar java/opendataloader-pdf-cli/target/opendataloader-pdf-cli-<VERSION>.ja
 
 Refer to the [CLI Options Reference](/docs/cli-options-reference) for the full flag list.
 
-## Syncing CLI Options
+## Code Generation
 
-CLI options are defined in Java and auto-generated for Node.js, Python, and documentation. This ensures consistency across all language bindings.
+CLI options and JSON schema documentation are auto-generated from source files. This ensures consistency across all language bindings.
 
-After modifying Java CLI options, regenerate all bindings:
+### Available Commands
+
+| Command                    | Description                                         |
+|----------------------------|-----------------------------------------------------|
+| `npm run sync`             | Full sync: export options from Java + generate all docs |
+| `npm run sync-options`     | Export options from Java + generate option docs     |
+| `npm run sync-schema`      | Generate schema docs                                |
+| `npm run generate-options` | Generate option docs only (without Java export)     |
+| `npm run generate-schema`  | Generate schema docs only                           |
+
+### After Modifying Java CLI Options
 
 ```bash
-pnpm run sync-options
+npm run sync-options
+```
+
+This exports options from Java and generates:
+
+| Generated File                                                              | Purpose                     |
+|-----------------------------------------------------------------------------|-----------------------------|
+| `options.json`                                                              | CLI options source of truth |
+| `node/opendataloader-pdf/src/cli-options.generated.ts`                      | Node.js CLI options         |
+| `node/opendataloader-pdf/src/convert-options.generated.ts`                  | Node.js convert options     |
+| `python/opendataloader-pdf/src/opendataloader_pdf/cli_options_generated.py` | Python CLI options          |
+| `python/opendataloader-pdf/src/opendataloader_pdf/convert_generated.py`     | Python convert options      |
+| `content/docs/cli-options-reference.mdx`                                    | CLI options documentation   |
+
+### After Modifying JSON Schema
+
+Edit `schema.json` directly, then:
+
+```bash
+npm run generate-schema
 ```
 
 This generates:
 
-| Generated File | Purpose |
-|----------------|---------|
-| `node/opendataloader-pdf/src/cli-options.generated.ts` | Node.js CLI options |
-| `node/opendataloader-pdf/src/convert-options.generated.ts` | Node.js convert options |
-| `python/opendataloader-pdf/src/opendataloader_pdf/cli_options_generated.py` | Python CLI options |
-| `python/opendataloader-pdf/src/opendataloader_pdf/convert_generated.py` | Python convert options |
-| `content/docs/cli-options-reference.mdx` | Documentation page |
+| Generated File                 | Purpose                      |
+|--------------------------------|------------------------------|
+| `content/docs/json-schema.mdx` | JSON schema documentation    |
+| `public/schema.json`           | Public schema for web access |
 
-**Important**: Always run `sync-options` after changing CLI options in Java to keep all bindings in sync.
+### Full Sync
+
+To regenerate everything (options + schema):
+
+```bash
+npm run sync
+```
 
 ## Project Structure
 
