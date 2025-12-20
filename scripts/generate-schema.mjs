@@ -67,72 +67,6 @@ function isRequired(propName, requiredList) {
 }
 
 /**
- * Extract properties from a definition, handling allOf.
- */
-function extractProperties(def) {
-  const props = {};
-  const required = [];
-
-  if (def.properties) {
-    Object.assign(props, def.properties);
-  }
-  if (def.required) {
-    required.push(...def.required);
-  }
-
-  if (def.allOf) {
-    for (const part of def.allOf) {
-      if (part.$ref) {
-        const refName = part.$ref.split('/').pop();
-        const refDef = schema.$defs[refName];
-        if (refDef) {
-          const extracted = extractProperties(refDef);
-          Object.assign(props, extracted.props);
-          required.push(...extracted.required);
-        }
-      } else {
-        const extracted = extractProperties(part);
-        Object.assign(props, extracted.props);
-        required.push(...extracted.required);
-      }
-    }
-  }
-
-  return { props, required: [...new Set(required)] };
-}
-
-/**
- * Generate properties table for a definition.
- */
-function generatePropertiesTable(def, title) {
-  const lines = [];
-  const { props, required } = extractProperties(def);
-
-  if (Object.keys(props).length === 0) {
-    return lines;
-  }
-
-  lines.push(`### ${title}`);
-  lines.push('');
-  lines.push('| Field | Type | Required | Description |');
-  lines.push('|-------|------|----------|-------------|');
-
-  for (const [name, prop] of Object.entries(props)) {
-    // Skip 'type' field with const value as it's implied by the section
-    if (name === 'type' && prop.const) continue;
-
-    const fieldName = `\`${name}\``;
-    const fieldType = formatType(prop);
-    const isReq = isRequired(name, required) ? 'Yes' : 'No';
-    const desc = escapeMarkdown(prop.description || '');
-    lines.push(`| ${fieldName} | ${fieldType} | ${isReq} | ${desc} |`);
-  }
-
-  lines.push('');
-  return lines;
-}
-
-/**
  * Generate JSON Schema documentation (MDX).
  */
 function generateJsonSchemaMdx() {
@@ -321,20 +255,9 @@ function generateJsonSchemaMdx() {
   console.log(`Generated: ${outputPath}`);
 }
 
-/**
- * Copy schema.json to public directory for web access.
- */
-function copySchemaToPublic() {
-  const outputPath = join(ROOT_DIR, 'public/schema.json');
-  mkdirSync(dirname(outputPath), { recursive: true });
-  writeFileSync(outputPath, JSON.stringify(schema, null, 2));
-  console.log(`Generated: ${outputPath}`);
-}
-
 // Run all generators
 console.log('Generating files from schema.json...\n');
 
 generateJsonSchemaMdx();
-copySchemaToPublic();
 
 console.log('\nDone!');
