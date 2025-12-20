@@ -30,18 +30,17 @@ OpenDataLoader PDF is the only open-source PDF parser that combines:
 
 Most alternatives require GPU, lack coordinates, or ignore PDF structure tags.
 
-### What makes OpenDataLoader different from Docling or MinerU?
+### What makes OpenDataLoader unique?
 
-| Feature | OpenDataLoader | Docling | MinerU |
-|---------|----------------|---------|--------|
-| Approach | Rule-based heuristics | Deep learning | Deep learning |
-| GPU Required | No | Yes | Yes |
-| Output Consistency | Deterministic | Variable | Variable |
-| Bounding Boxes | All elements | Limited | Limited |
-| AI Safety Filters | Built-in | No | No |
-| Tagged PDF Support | Native | Limited | No |
+OpenDataLoader takes a different approach from many PDF parsers:
 
-OpenDataLoader uses deterministic rule-based heuristics instead of deep learning. This means: consistent output (same input = same output), no GPU required, faster processing, and no model hallucinations.
+- **Rule-based extraction** — Deterministic output without GPU requirements
+- **Bounding boxes for all elements** — Essential for citation systems
+- **XY-Cut++ reading order** — Handles multi-column layouts correctly
+- **Built-in AI safety filters** — Protects against prompt injection
+- **Native Tagged PDF support** — Leverages accessibility metadata
+
+This means: consistent output (same input = same output), no GPU required, faster processing, and no model hallucinations.
 
 ## Installation & Setup
 
@@ -193,7 +192,7 @@ Yes. OpenDataLoader:
 
 ### How fast is OpenDataLoader?
 
-OpenDataLoader processes **100+ pages per second** on typical hardware (CPU only, no GPU). Exact speed depends on:
+OpenDataLoader processes **100+ pages per second** on typical hardware (CPU only, no GPU). See our [benchmark results](/docs/benchmark) for details. Exact speed depends on:
 - Document complexity
 - Number of tables/images
 - Output formats selected
@@ -222,7 +221,7 @@ Tagged PDF is a document structure that includes semantic information (headings,
 
 ### Why does Tagged PDF matter?
 
-The [European Accessibility Act (EAA)](https://commission.europa.eu/strategy-and-policy/policies/justice-and-fundamental-rights/disability/union-equality-strategy-rights-persons-disabilities-2021-2030/european-accessibility-act_en) took effect June 28, 2025, requiring accessible digital documents across the EU. This means more PDFs will be properly tagged.
+The [European Accessibility Act (EAA)](https://commission.europa.eu/strategy-and-policy/policies/justice-and-fundamental-rights/disability/union-equality-strategy-rights-persons-disabilities-2021-2030/european-accessibility-act_en) took effect on June 28, 2025, requiring accessible digital documents across the EU. This means more PDFs are now properly tagged.
 
 ### How do I use Tagged PDF features?
 
