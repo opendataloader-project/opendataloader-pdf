@@ -293,13 +293,17 @@ OpenDataLoader detects tables using both border analysis and text clustering, pr
 
 Yes. OpenDataLoader runs 100% locally on your machine. No API calls, no data transmission — your documents never leave your environment. This makes it ideal for sensitive documents in legal, healthcare, and financial industries.
 
-### How does OpenDataLoader compare to other PDF parsers?
+### What makes OpenDataLoader unique?
 
-OpenDataLoader is the only open-source PDF parser that combines: rule-based extraction (no GPU needed), bounding boxes for every element, XY-Cut++ reading order algorithm, built-in AI safety filters, and native Tagged PDF support. Most alternatives require GPU, lack coordinates, or ignore PDF structure tags.
+OpenDataLoader takes a different approach from many PDF parsers:
 
-### What makes OpenDataLoader different from Docling or MinerU?
+- **Rule-based extraction** — Deterministic output without GPU requirements
+- **Bounding boxes for all elements** — Essential for citation systems
+- **XY-Cut++ reading order** — Handles multi-column layouts correctly
+- **Built-in AI safety filters** — Protects against prompt injection
+- **Native Tagged PDF support** — Leverages accessibility metadata
 
-OpenDataLoader uses deterministic rule-based heuristics instead of deep learning. This means: consistent output (same input = same output), no GPU required, faster processing, and no model hallucinations. It's designed for production RAG pipelines where reliability matters.
+This means: consistent output (same input = same output), no GPU required, faster processing, and no model hallucinations.
 
 <br/>
 
