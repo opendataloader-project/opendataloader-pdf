@@ -1,6 +1,6 @@
 # OpenDataLoader PDF
 
-**PDF to Markdown & JSON for RAG** — Fast, Local, No GPU Required
+**PDF Parsing for RAG** — Convert to Markdown & JSON, Fast, Local, No GPU
 
 [![License](https://img.shields.io/pypi/l/opendataloader-pdf.svg)](https://github.com/opendataloader-project/opendataloader-pdf/blob/main/LICENSE)
 [![PyPI version](https://img.shields.io/pypi/v/opendataloader-pdf.svg)](https://pypi.org/project/opendataloader-pdf/)
