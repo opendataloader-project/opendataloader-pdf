@@ -246,7 +246,22 @@ reading_order="xycut"
 
 ### Tables are not detected correctly
 
-Try both detection methods by default. For complex tables, Table AI support is coming soon.
+Try the cluster detection method for better results with borderless or complex tables:
+
+```python
+opendataloader_pdf.convert(
+    input_path="document.pdf",
+    output_dir="output/",
+    table_method="cluster"
+)
+```
+
+Or via CLI:
+```bash
+opendataloader-pdf document.pdf -f json --table-method cluster
+```
+
+For complex tables, Table AI support is coming soon.
 
 ### Headers and footers appear in my output
 
