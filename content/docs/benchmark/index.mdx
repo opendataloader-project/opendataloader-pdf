@@ -1,33 +1,56 @@
 ---
 title: Benchmark Overview
-description: Benchmarks for OpenDataLoader PDF with energy and overall scores up front
+description: Benchmarks for OpenDataLoader PDF
 ---
 
-[OpenDataLoader Benchmark](https://github.com/opendataloader-project/opendataloader-bench) compares engines using a shared corpus and harmonised evaluation pipeline. It normalises predictions into Markdown, compares them against curated ground-truth annotations, and reports quality metrics for reading order, table fidelity, and heading hierarchy. The tooling is modular so new engines, corpora, or scoring routines can be slotted in with minimal effort.
+## About the Benchmark Project
 
-![benchmark score](/figures/benchmark.png)
+PDF documents are everywhere, but LLMs can't read them directly. Converting PDFs to Markdown preserves structure (headings, tables, reading order) that helps LLMs understand and answer questions accurately.
 
-## How to read the metrics
+This benchmark compares open-source PDF-to-Markdown engines to help you choose the right tool for your RAG pipeline or document processing workflow.
 
-- **OVERALL QUALITY**: Average of `Reading Order (NID)`, `Table Structure (TEDS)`, and `Heading Levels (MHS)`. This is the default quality view.
-- **ENERGY**: Total energy consumption from `powermetrics`. It is the primary operating KPI for cost, battery, and carbon impact.
-- **TIME**: Average document processing time. It is a secondary KPI for latency-sensitive workloads.
+**What we measure:**
 
-## Pages
+- **Reading Order** — Is the text extracted in the correct sequence?
+- **Table Fidelity** — Are tables accurately reconstructed?
+- **Heading Hierarchy** — Is the document structure preserved?
+
+The evaluation pipeline is modular—add new engines, corpora, or metrics with minimal effort.
+
+## Benchmark Results
+
+[View full benchmark results →](https://github.com/opendataloader-project/opendataloader-bench)
+
+### Quick Comparison
+
+| Engine             | Accuracy |      | Speed (s/page) |      | Reading Order |      | Table |      | Heading |      |
+|--------------------|----------|------|----------------|------|---------------|------|-------|------|---------|------|
+| **opendataloader** | 0.82     | #2   | **0.05**       | #1   | **0.91**      | #1   | 0.49  | #2   | 0.65    | #2   |
+| docling            | **0.88** | #1   | 0.73           | #4   | 0.90          | #2   | **0.89** | #1 | **0.80**| #1   |
+| pymupdf4llm        | 0.73     | #3   | 0.09           | #2   | 0.89          | #3   | 0.40  | #3   | 0.41    | #3   |
+| markitdown         | 0.58     | #4   | **0.04**       | #1   | 0.88          | #4   | 0.00  | #4   | 0.00    | #4   |
+
+> Scores are normalized to [0, 1]. Higher is better for accuracy metrics; lower is better for speed. **Bold** indicates best performance.
+
+## When to Use Each Engine
+
+| Use Case                | Recommended Engine   | Why                                                      |
+|-------------------------|----------------------|----------------------------------------------------------|
+| Best overall balance    | **opendataloader**   | Fast (0.05s/page) with high reading order accuracy       |
+| Maximum accuracy        | docling              | Highest scores for tables and headings, but 16x slower   |
+| Speed-critical pipelines| markitdown           | Fastest, but no table/heading extraction                 |
+| PyMuPDF ecosystem       | pymupdf4llm          | Good balance if already using PyMuPDF                    |
+
+### Visual Comparison
+
+[![Benchmark](https://github.com/opendataloader-project/opendataloader-bench/raw/refs/heads/main/charts/benchmark.png)](https://github.com/opendataloader-project/opendataloader-bench)
+
+## Detailed Metrics
 
 - [Reading Order (NID)](/docs/benchmark/nid)
 - [Table Structure (TEDS)](/docs/benchmark/teds)
 - [Heading Levels (MHS)](/docs/benchmark/mhs)
-- [Energy Efficiency](/docs/benchmark/energy)
-- [Extraction Time](/docs/benchmark/time)
-
-Each page links to the corresponding chart and highlights how to interpret the numbers.
-
-## Explore the source code
-
-https://github.com/opendataloader-project/opendataloader-bench
-
-Browse all benchmark datasets, documentation, evaluation logic, and metrics in the open source.
+- [Extraction Speed (s/page)](/docs/benchmark/speed)
 
 <br />
 <br />

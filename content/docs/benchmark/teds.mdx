@@ -1,32 +1,48 @@
 ---
 title: Table Structure (TEDS)
-description: Table edit distance for structure and content fidelity
+description: Measures whether tables are accurately reconstructed
 ---
 
-TEDS uses table edit distance between predicted and reference table HTML to score structure and content fidelity. `TEDS` covers structure + content, while `TEDS-S` isolates structure only.
+## Why Table Extraction Matters for RAG
 
-![Table structure](/figures/benchmark_table-structure.png)
+Tables contain structured data that LLMs need to answer questions like "What was Q3 revenue?" or "Compare Product A vs B." If rows and columns are scrambled or merged incorrectly, the LLM gets wrong data and gives wrong answers.
 
-`evaluate_table` extracts the first table (prefers HTML tables, falls back to Markdown heuristics) and evaluates it with the Tree Edit Distance Similarity (TEDS) proposed for table structure assessment. The table DOMs are converted into labeled trees and compared using the APTED algorithm with custom tokenization. The TEDS score reflects how similar these tree structures are.
+**Example problem:** A financial table where cell values shift to wrong columns, causing the LLM to report incorrect figures.
 
-```math
-TEDS(T_{\text{gt}}, T_{\text{pred}}) = 1 - \frac{EditDist(T_{\text{gt}}, T_{\text{pred}})}{\max(|T_{\text{gt}}|, |T_{\text{pred}}|, 1)}
-```
+## What TEDS Measures
 
-`TEDS` evaluates both structure and cell text.
+TEDS (Tree Edit Distance Similarity) compares the structure of extracted tables against ground truth. A score of 1.0 means perfect reconstruction; lower scores indicate missing rows, merged cells, or scrambled content.
 
-`TEDS-S` switches the rename cost to be structure-only (cell text substitutions cost zero), isolating layout fidelity when textual mismatches are considered acceptable (for example, OCR noise).
+![Table structure](https://github.com/opendataloader-project/opendataloader-bench/raw/refs/heads/main/charts/benchmark_table-structure.png)
 
-## Notes
+## Results
 
-- Scores near 1 indicate tables are reconstructed accurately.
-- Complex headers and heavy row/col spans tend to widen differences across engines.
+| Engine         | Score | Rank |
+|----------------|-------|------|
+| Docling        | 0.89  | #1   |
+| OpenDataLoader | 0.49  | #2   |
+| PyMuPDF4LLM    | 0.40  | #3   |
+| MarkItDown     | 0.00  | #4   |
 
-## Explore the source code
+- Table extraction remains the hardest problem — even the best engine scores below 0.90
+- Borderless tables, nested headers, and merged cells cause errors across all engines
 
-https://github.com/opendataloader-project/opendataloader-bench
+## When to Prioritize This Metric
 
-Browse all benchmark datasets, documentation, evaluation logic, and metrics in the open source.
+| Use Case                           | Recommended Engine   |
+|------------------------------------|----------------------|
+| Financial documents with tables    | **Docling**          |
+| Technical specs, comparison tables | **Docling**          |
+| Simple bordered tables             | OpenDataLoader       |
+| No tables in documents             | Any engine works     |
+
+## Current Limitations
+
+If your documents are table-heavy, test with your actual files before choosing an engine. Consider post-processing or manual review for critical data.
+
+## Learn More
+
+For detailed methodology, raw data, and reproduction scripts, see the [opendataloader-bench repository](https://github.com/opendataloader-project/opendataloader-bench).
 
 <br />
 <br />

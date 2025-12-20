@@ -57,7 +57,7 @@ Building RAG pipelines? You've probably hit these problems:
 - **Bounding Boxes** — Every element includes `[x1, y1, x2, y2]` coordinates for citations
 - **Reading Order** — XY-Cut++ algorithm handles multi-column layouts correctly
 - **Noise Filtering** — Headers, footers, hidden text, watermarks auto-removed
-- **Page Numbers** — Track which page each element came from
+- **LangChain Integration** — [Official document loader](https://python.langchain.com/docs/integrations/document_loaders/opendataloader_pdf/)
 
 ### Performance & Privacy
 
@@ -65,7 +65,6 @@ Building RAG pipelines? You've probably hit these problems:
 - **Local-First** — Your documents never leave your machine
 - **High Throughput** — Process thousands of PDFs efficiently
 - **Multi-Language SDK** — Python, Node.js, Java, Docker
-- **LangChain Integration** — [Official document loader](https://python.langchain.com/docs/integrations/document_loaders/opendataloader_pdf/)
 
 ### Document Understanding
 
@@ -74,6 +73,7 @@ Building RAG pipelines? You've probably hit these problems:
 - **Headings** — Auto-detects hierarchy levels
 - **Images** — Extracts with captions linked
 - **Tagged PDF Support** — Uses native PDF structure when available
+- **AI Safety** — Auto-filters prompt injection content
 
 <br/>
 
@@ -219,24 +219,38 @@ for doc in documents:
 
 We continuously benchmark against real-world documents.
 
+[View full benchmark results →](https://github.com/opendataloader-project/opendataloader-bench)
+
+### Quick Comparison
+
+| Engine             | Accuracy |      | Speed (s/page) |      | Reading Order |      | Table    |      | Heading  |      |
+|--------------------|----------|------|----------------|------|---------------|------|----------|------|----------|------|
+| **opendataloader** | 0.82     | #2   | **0.05**       | #1   | **0.91**      | #1   | 0.49     | #2   | 0.65     | #2   |
+| docling            | **0.88** | #1   | 0.73           | #4   | 0.90          | #2   | **0.89** | #1   | **0.80** | #1   |
+| pymupdf4llm        | 0.73     | #3   | 0.09           | #2   | 0.89          | #3   | 0.40     | #3   | 0.41     | #3   |
+| markitdown         | 0.58     | #4   | **0.04**       | #1   | 0.88          | #4   | 0.00     | #4   | 0.00     | #4   |
+
+> Scores are normalized to [0, 1]. Higher is better for accuracy metrics; lower is better for speed. **Bold** indicates best performance.
+
+### When to Use Each Engine
+
+| Use Case                 | Recommended Engine | Why                                                    |
+|--------------------------|--------------------|--------------------------------------------------------|
+| Best overall balance     | **opendataloader** | Fast (0.05s/page) with high reading order accuracy     |
+| Maximum accuracy         | docling            | Highest scores for tables and headings, but 16x slower |
+| Speed-critical pipelines | markitdown         | Fastest, but no table/heading extraction               |
+| PyMuPDF ecosystem        | pymupdf4llm        | Good balance if already using PyMuPDF                  |
+
+### Visual Comparison
+
 [![Benchmark](https://github.com/opendataloader-project/opendataloader-bench/raw/refs/heads/main/charts/benchmark.png)](https://github.com/opendataloader-project/opendataloader-bench)
 
-| Tool               | Overall (rank) | Speed (rank) |
-|--------------------|----------------|--------------|
-| **OpenDataLoader** | **0.78 (#2)**  | **0.05s (#2)** |
-| Docling            | 0.88 (#1)      | 0.57s (#4)   |
-| PyMuPDF4LLM        | 0.73 (#3)      | 0.09s (#3)   |
-| MarkItDown         | 0.58 (#4)      | 0.04s (#1)   |
-
-[View full benchmark results →](https://github.com/opendataloader-project/opendataloader-bench)
 
 <br/>
 
 ## Roadmap
 
-**Coming Soon:**
-- OCR for scanned PDFs
-- Table AI for borderless/merged cells
+See our [upcoming features and priorities →](https://opendataloader.org/docs/upcoming-roadmap)
 
 <br/>
 

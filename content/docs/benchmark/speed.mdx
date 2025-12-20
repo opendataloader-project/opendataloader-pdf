@@ -1,0 +1,45 @@
+---
+title: Extraction Speed
+description: Measures processing speed per document
+---
+
+## Why Speed Matters
+
+Processing time directly impacts cost and user experience. A 10x slower parser means 10x more compute cost at scale — or unacceptable wait times for interactive applications.
+
+## What We Measure
+
+Average seconds per page across the benchmark corpus, covering the full pipeline: PDF parsing, layout analysis, and Markdown generation.
+
+![Extraction time](https://github.com/opendataloader-project/opendataloader-bench/raw/refs/heads/main/charts/benchmark_extraction-time.png)
+
+## Results
+
+| Engine         | Speed (s/page) | Rank | Notes                          |
+|----------------|----------------|------|--------------------------------|
+| MarkItDown     | 0.04           | #1   | No table/heading extraction    |
+| OpenDataLoader | 0.05           | #1   | Best speed/accuracy balance    |
+| PyMuPDF4LLM    | 0.09           | #2   | Moderate speed                 |
+| Docling        | 0.73           | #4   | 16x slower, highest accuracy   |
+
+## When to Prioritize Speed
+
+| Use Case                           | Recommended Engine   |
+|------------------------------------|----------------------|
+| Batch processing (1000s of docs)   | **OpenDataLoader**   |
+| Real-time / interactive apps       | **OpenDataLoader** or MarkItDown |
+| Cost-sensitive deployments         | **OpenDataLoader**   |
+| Accuracy-critical, time flexible   | Docling              |
+
+## Notes
+
+- Measurements are single-threaded on CPU
+- Multi-threading and GPU acceleration can change rankings
+- All engines run locally — no network latency
+
+## Learn More
+
+For detailed methodology, raw data, and reproduction scripts, see the [opendataloader-bench repository](https://github.com/opendataloader-project/opendataloader-bench).
+
+<br />
+<br />
