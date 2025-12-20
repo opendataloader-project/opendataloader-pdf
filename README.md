@@ -6,6 +6,8 @@
 [![PyPI version](https://img.shields.io/pypi/v/opendataloader-pdf.svg)](https://pypi.org/project/opendataloader-pdf/)
 [![npm version](https://img.shields.io/npm/v/@opendataloader/pdf.svg)](https://www.npmjs.com/package/@opendataloader/pdf)
 [![Maven Central](https://img.shields.io/maven-central/v/org.opendataloader/opendataloader-pdf-core.svg)](https://search.maven.org/artifact/org.opendataloader/opendataloader-pdf-core)
+[![GHCR Version](https://ghcr-badge.egpl.dev/opendataloader-project/opendataloader-pdf-cli/latest_tag?trim=major&label=docker)](https://github.com/opendataloader-project/opendataloader-pdf/pkgs/container/opendataloader-pdf-cli)
+[![Java](https://img.shields.io/badge/Java-11%2B-blue.svg)](https://github.com/opendataloader-project/opendataloader-pdf#java)
 
 Convert PDFs into **LLM-ready Markdown and JSON** with accurate reading order, table extraction, and bounding boxes — all running locally on your machine.
 
@@ -16,7 +18,7 @@ Convert PDFs into **LLM-ready Markdown and JSON** with accurate reading order, t
 - **Accurate** — Bounding boxes for every element, correct multi-column reading order
 
 ```bash
-pip install opendataloader-pdf
+pip install -U opendataloader-pdf
 ```
 
 ```python
@@ -82,7 +84,7 @@ Building RAG pipelines? You've probably hit these problems:
 | **JSON** | Structured data with bounding boxes, semantic types |
 | **Markdown** | Clean text for LLM context, RAG chunks |
 | **HTML** | Web display with styling |
-| **Annotated PDF** | Visual debugging — see detected structures |
+| **Annotated PDF** | Visual debugging — see detected structures ([sample](https://opendataloader.org/demo/samples/01030000000000?view1=annot&view2=json)) |
 
 <br/>
 
@@ -91,73 +93,38 @@ Building RAG pipelines? You've probably hit these problems:
 ```json
 {
   "type": "heading",
-  "level": 1,
+  "id": 42,
+  "level": "Title",
   "page number": 1,
-  "bounding box": [72.0, 700.5, 540.0, 730.2],
+  "bounding box": [72.0, 700.0, 540.0, 730.0],
+  "heading level": 1,
+  "font": "Helvetica-Bold",
+  "font size": 24.0,
+  "text color": "[0.0]",
   "content": "Introduction"
 }
 ```
 
-Every element includes:
-- `type` — heading, paragraph, table, list, image, caption
-- `page number` — 1-indexed page reference
-- `bounding box` — `[left, bottom, right, top]` in PDF points
-- `content` — extracted text
+| Field | Description |
+|-------|-------------|
+| `type` | Element type: heading, paragraph, table, list, image, caption |
+| `id` | Unique identifier for cross-referencing |
+| `page number` | 1-indexed page reference |
+| `bounding box` | `[left, bottom, right, top]` in PDF points |
+| `heading level` | Heading depth (1+) |
+| `font`, `font size` | Typography info |
+| `content` | Extracted text |
+
+[Full JSON Schema →](https://opendataloader.org/docs/json-schema)
 
 <br/>
 
 ## Quick Start
 
-### Python
-
-```bash
-pip install opendataloader-pdf
-```
-
-```python
-import opendataloader_pdf
-
-opendataloader_pdf.convert(
-    input_path=["doc1.pdf", "folder/"],
-    output_dir="output/",
-    format="json,markdown"
-)
-```
-
-### Node.js
-
-```bash
-npm install @opendataloader/pdf
-```
-
-```javascript
-import { convert } from '@opendataloader/pdf';
-
-await convert({
-  inputPath: ['doc1.pdf'],
-  outputDir: 'output/',
-  format: 'json,markdown'
-});
-```
-
-### Docker
-
-```bash
-docker run -v $(pwd):/data ghcr.io/opendataloader-project/opendataloader-pdf-cli \
-  --input /data/document.pdf \
-  --output /data/output \
-  --format json,markdown
-```
-
-### Java
-
-```xml
-<dependency>
-  <groupId>org.opendataloader</groupId>
-  <artifactId>opendataloader-pdf-core</artifactId>
-  <version>LATEST</version>
-</dependency>
-```
+- [Python](https://opendataloader.org/docs/quick-start-python)
+- [Node.js / TypeScript](https://opendataloader.org/docs/quick-start-nodejs)
+- [Docker](https://opendataloader.org/docs/quick-start-docker)
+- [Java](https://opendataloader.org/docs/quick-start-java)
 
 <br/>
 
@@ -171,9 +138,6 @@ opendataloader_pdf.convert(
 
     # Reading order
     reading_order="xycut",           # XY-Cut++ for multi-column
-
-    # Content filtering
-    content_safety_off=None,         # Keep AI-safety filters on
 
     # Images
     embed_images=True,               # Base64 in output
@@ -256,6 +220,13 @@ for doc in documents:
 We continuously benchmark against real-world documents.
 
 [![Benchmark](https://github.com/opendataloader-project/opendataloader-bench/raw/refs/heads/main/charts/benchmark.png)](https://github.com/opendataloader-project/opendataloader-bench)
+
+| Tool               | Overall (rank) | Speed (rank) |
+|--------------------|----------------|--------------|
+| **OpenDataLoader** | **0.78 (#2)**  | **0.05s (#2)** |
+| Docling            | 0.88 (#1)      | 0.57s (#4)   |
+| PyMuPDF4LLM        | 0.73 (#3)      | 0.09s (#3)   |
+| MarkItDown         | 0.58 (#4)      | 0.04s (#1)   |
 
 [View full benchmark results →](https://github.com/opendataloader-project/opendataloader-bench)
 
