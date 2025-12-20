@@ -54,6 +54,28 @@ opendataloader-pdf path/to/document.pdf \
 
 For CLI options, see the [CLI Options Reference](./cli-options-reference).
 
-## Next steps
+## LangChain Integration
 
-- Need schema details for downstream parsing? See the [JSON schema](./json-schema).
+For RAG pipelines, use the official LangChain integration:
+
+```bash
+pip install -U langchain-opendataloader-pdf
+```
+
+```python
+from langchain_opendataloader_pdf import OpenDataLoaderPDFLoader
+
+loader = OpenDataLoaderPDFLoader(
+    file_path=["document.pdf"],
+    format="text"
+)
+documents = loader.load()
+```
+
+See the [LangChain documentation](https://python.langchain.com/docs/integrations/document_loaders/opendataloader_pdf/) for more details.
+
+## Next Steps
+
+- Building a RAG pipeline? See the [RAG Integration Guide](./rag-integration)
+- Need schema details? See the [JSON Schema](./json-schema)
+- Multi-column documents? Learn about [Reading Order](./reading-order)

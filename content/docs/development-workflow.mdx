@@ -1,11 +1,56 @@
 ---
 title: Development Workflow
-description: Build and run OpenDataLoader PDF from source
+description: Build, test, and contribute to OpenDataLoader PDF
 ---
 
-The repository ships a Maven-based build that produces the CLI and core libraries. Use it when you need to test local changes or contribute fixes.
+This guide covers building from source, running tests, and contributing changes to OpenDataLoader PDF.
 
-## Build the project
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+| Tool | Version | Purpose |
+|------|---------|---------|
+| Java | 11+ | Core engine |
+| Python | 3.9+ | Python bindings |
+| Node.js | 20+ | Node.js bindings |
+| pnpm | Latest | Package management |
+
+Verify your setup:
+
+```bash
+java -version
+python --version
+node --version
+pnpm --version
+```
+
+## Build & Test
+
+### Quick Start (Local Development)
+
+Run tests for each package independently:
+
+```bash
+# Java tests
+./scripts/test-java.sh
+
+# Python tests
+./scripts/test-python.sh
+
+# Node.js tests
+./scripts/test-node.sh
+```
+
+### Full CI Build
+
+Build all packages (Java, Python, Node.js) in one command:
+
+```bash
+./scripts/build-all.sh
+```
+
+### Build Java Only
 
 ```bash
 mvn clean install -f java/pom.xml
@@ -13,14 +58,60 @@ mvn clean install -f java/pom.xml
 
 Successful builds produce artifacts under `java/opendataloader-pdf-cli/target`, including the shaded CLI JAR.
 
-## Run the CLI from source
+## Run the CLI from Source
+
+After building, run the CLI directly:
 
 ```bash
-java -jar opendataloader-pdf-cli-<VERSION>.jar [options] <INPUT FILE OR FOLDER>
+java -jar java/opendataloader-pdf-cli/target/opendataloader-pdf-cli-<VERSION>.jar [options] <INPUT>
 ```
 
-Refer to the [CLI usage](/docs/quick-start-java#cli-usage) for the full flag list.
+Refer to the [CLI Options Reference](/docs/cli-options-reference) for the full flag list.
 
-## Javadoc
+## Syncing CLI Options
 
-Refer to the [Javadoc documentation](https://javadoc.io/doc/org.opendataloader/opendataloader-pdf-core/latest) for the full API reference.
+CLI options are defined in Java and auto-generated for Node.js, Python, and documentation. This ensures consistency across all language bindings.
+
+After modifying Java CLI options, regenerate all bindings:
+
+```bash
+pnpm run sync-options
+```
+
+This generates:
+
+| Generated File | Purpose |
+|----------------|---------|
+| `node/opendataloader-pdf/src/cli-options.generated.ts` | Node.js CLI options |
+| `node/opendataloader-pdf/src/convert-options.generated.ts` | Node.js convert options |
+| `python/opendataloader-pdf/src/opendataloader_pdf/cli_options_generated.py` | Python CLI options |
+| `python/opendataloader-pdf/src/opendataloader_pdf/convert_generated.py` | Python convert options |
+| `content/docs/cli-options-reference.mdx` | Documentation page |
+
+**Important**: Always run `sync-options` after changing CLI options in Java to keep all bindings in sync.
+
+## Project Structure
+
+```
+opendataloader-pdf/
+├── java/                          # Core Java engine
+│   ├── opendataloader-pdf-core/   # Main library
+│   └── opendataloader-pdf-cli/    # CLI application
+├── python/                        # Python package
+├── node/                          # Node.js package
+├── content/docs/                  # Documentation (Fumadocs)
+└── scripts/                       # Build & test scripts
+```
+
+## Code Style
+
+- **Java**: Follow existing patterns in the codebase
+- **Python**: PEP 8 with type hints
+- **TypeScript**: ESLint configuration in project
+
+## Resources
+
+- [CLI Options Reference](/docs/cli-options-reference) — All available command-line options
+- [JSON Schema](/docs/json-schema) — Output format specification
+- [Javadoc](https://javadoc.io/doc/org.opendataloader/opendataloader-pdf-core/latest) — Java API reference
+- [Contributing Guide](/docs/contributing) — How to submit changes

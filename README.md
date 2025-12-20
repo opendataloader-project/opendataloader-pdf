@@ -1,176 +1,318 @@
 # OpenDataLoader PDF
 
+**PDF to Markdown & JSON for RAG** — Fast, Local, No GPU Required
 
 [![License](https://img.shields.io/pypi/l/opendataloader-pdf.svg)](https://github.com/opendataloader-project/opendataloader-pdf/blob/main/LICENSE)
-![Java](https://img.shields.io/badge/Java-11+-blue.svg)
-![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)
-[![Maven Central](https://img.shields.io/maven-central/v/org.opendataloader/opendataloader-pdf-core.svg)](https://search.maven.org/artifact/org.opendataloader/opendataloader-pdf-core)
 [![PyPI version](https://img.shields.io/pypi/v/opendataloader-pdf.svg)](https://pypi.org/project/opendataloader-pdf/)
 [![npm version](https://img.shields.io/npm/v/@opendataloader/pdf.svg)](https://www.npmjs.com/package/@opendataloader/pdf)
-[![GHCR Version](https://ghcr-badge.egpl.dev/opendataloader-project/opendataloader-pdf-cli/latest_tag?trim=major&label=docker-image)](https://github.com/opendataloader-project/opendataloader-pdf/pkgs/container/opendataloader-pdf-cli)
-[![Coverage](https://codecov.io/gh/opendataloader-project/opendataloader-pdf/branch/main/graph/badge.svg)](https://app.codecov.io/gh/opendataloader-project/opendataloader-pdf)
-[![CLA assistant](https://cla-assistant.io/readme/badge/opendataloader-project/opendataloader-pdf)](https://cla-assistant.io/opendataloader-project/opendataloader-pdf)
+[![Maven Central](https://img.shields.io/maven-central/v/org.opendataloader/opendataloader-pdf-core.svg)](https://search.maven.org/artifact/org.opendataloader/opendataloader-pdf-core)
 
-<br/>
+Convert PDFs into **LLM-ready Markdown and JSON** with accurate reading order, table extraction, and bounding boxes — all running locally on your machine.
 
-**Safe, Open, High-Performance — PDF for AI**
+**Why developers choose OpenDataLoader:**
+- **Deterministic** — Same input always produces same output (no LLM hallucinations)
+- **Fast** — Process 100+ pages per second on CPU
+- **Private** — 100% local, zero data transmission
+- **Accurate** — Bounding boxes for every element, correct multi-column reading order
 
-OpenDataLoader-PDF converts PDFs into JSON, Markdown or Html — ready to feed into modern AI stacks (LLMs, vector search, and RAG).
-
-It reconstructs document layout (headings, lists, tables, and reading order) so the content is easier to chunk, index, and query.
-Powered by fast, heuristic, rule-based inference, it runs entirely on your local machine and delivers high-throughput processing for large document sets.
-AI-safety is enabled by default and automatically filters likely prompt-injection content embedded in PDFs to reduce downstream risk.
-
-<br/>
-
-## 🌟 Key Features
-
-- 🧾 **Rich, Structured Output** — JSON, Markdown or Html
-- 🧩 **Layout Reconstruction** — Headings, Lists, Tables, Images, Reading Order
-- ⚡ **Fast & Lightweight** — Rule-Based Heuristic, High-Throughput, No GPU
-- 🔒 **Local-First Privacy** — Runs fully on your machine
-- 🏷️ **Tagged PDF** — Advanced data extraction technology based on Tagged PDF - [Learn more](https://opendataloader.org/docs/tagged-pdf)
-- 🛡️ **AI-Safety** — Auto-Filters likely prompt-injection content - [Learn more](https://opendataloader.org/docs/ai-safety)
-- 🖍️ **Annotated PDF Visualization** — See detected structures overlaid on the original - [See examples](https://opendataloader.org/demo/samples)
-
-[![Annotated PDF Preview](https://github.com/opendataloader-project/opendataloader-pdf/raw/refs/heads/main/samples/image/example_annotated_pdf.png)](https://opendataloader.org/demo/samples/01030000000000?view1=annot&view2=json)
-
-<br/>
-
-- 📊 **Benchmark** — Continuously researched to deliver High-Performance & Quality - [GitHub](https://github.com/opendataloader-project/opendataloader-bench)
-
-[![Benchmark Preview](https://github.com/opendataloader-project/opendataloader-bench/raw/refs/heads/main/charts/benchmark.png)](https://github.com/opendataloader-project/opendataloader-bench)
-
-<br/>
-
-### 🚀 Upcoming Features
-
-**Scheduled for December**
-- 🖨️ **OCR for scanned PDFs** — Extract data from image-only pages. 
-- 🧠 **Table AI option** — Higher accuracy for tables with borderless or merged cells.
-
-<br/>
-
-## Quick Start with Python
-
-### Prerequisites
-
-- Java 11 or higher must be installed and available in your system's PATH.
-- Python 3.9+
-
-### Installation
-
-```sh
-pip install -U opendataloader-pdf
+```bash
+pip install opendataloader-pdf
 ```
-
-### Usage
-
-input_path can be either the path to a single document or the path to a folder.
 
 ```python
 import opendataloader_pdf
 
+# PDF to Markdown for RAG
 opendataloader_pdf.convert(
-    input_path=["path/to/document.pdf", "path/to/folder"],
-    output_dir="path/to/output",
-    format="json,html,pdf,markdown"
+    input_path="document.pdf",
+    output_dir="output/",
+    format="markdown,json"
 )
 ```
 
 <br/>
 
-## Quick Start with more languages & tools
+## Why OpenDataLoader?
 
-- [Quick Start with Python](https://opendataloader.org/docs/quick-start-python)
-- [Quick Start with Java](https://opendataloader.org/docs/quick-start-java)
-- [Quick Start with Node.js](https://opendataloader.org/docs/quick-start-nodejs)
-- [Quick Start with Docker](https://opendataloader.org/docs/quick-start-docker)
+Building RAG pipelines? You've probably hit these problems:
+
+| Problem | How We Solve It |
+|---------|-----------------|
+| **Multi-column text reads left-to-right incorrectly** | XY-Cut++ algorithm preserves correct reading order |
+| **Tables lose structure** | Border + cluster detection keeps rows/columns intact |
+| **Headers/footers pollute context** | Auto-filtered before output |
+| **No coordinates for citations** | Bounding box for every element |
+| **Cloud APIs = privacy concerns** | 100% local, no data leaves your machine |
+| **GPU required** | Pure CPU, rule-based — runs anywhere |
 
 <br/>
 
-## Developing with OpenDataLoader
+## Key Features
 
-### Build & Test
+### For RAG & LLM Pipelines
 
-**Prerequisites**: Java 11+, Python 3.9+, Node.js 20+, pnpm
+- **Structured Output** — JSON with semantic types (heading, paragraph, table, list, caption)
+- **Bounding Boxes** — Every element includes `[x1, y1, x2, y2]` coordinates for citations
+- **Reading Order** — XY-Cut++ algorithm handles multi-column layouts correctly
+- **Noise Filtering** — Headers, footers, hidden text, watermarks auto-removed
+- **Page Numbers** — Track which page each element came from
 
-```sh
-# Run tests (for local development)
-./scripts/test-java.sh
-./scripts/test-python.sh
-./scripts/test-node.sh
+### Performance & Privacy
 
-# Full CI build (all packages)
-./scripts/build-all.sh
+- **No GPU** — Fast, rule-based heuristics
+- **Local-First** — Your documents never leave your machine
+- **High Throughput** — Process thousands of PDFs efficiently
+- **Multi-Language SDK** — Python, Node.js, Java, Docker
+- **LangChain Integration** — [Official document loader](https://python.langchain.com/docs/integrations/document_loaders/opendataloader_pdf/)
+
+### Document Understanding
+
+- **Tables** — Detects borders, handles merged cells
+- **Lists** — Numbered, bulleted, nested
+- **Headings** — Auto-detects hierarchy levels
+- **Images** — Extracts with captions linked
+- **Tagged PDF Support** — Uses native PDF structure when available
+
+<br/>
+
+## Output Formats
+
+| Format | Use Case |
+|--------|----------|
+| **JSON** | Structured data with bounding boxes, semantic types |
+| **Markdown** | Clean text for LLM context, RAG chunks |
+| **HTML** | Web display with styling |
+| **Annotated PDF** | Visual debugging — see detected structures |
+
+<br/>
+
+## JSON Output Example
+
+```json
+{
+  "type": "heading",
+  "level": 1,
+  "page number": 1,
+  "bounding box": [72.0, 700.5, 540.0, 730.2],
+  "content": "Introduction"
+}
 ```
 
-### Syncing CLI Options
+Every element includes:
+- `type` — heading, paragraph, table, list, image, caption
+- `page number` — 1-indexed page reference
+- `bounding box` — `[left, bottom, right, top]` in PDF points
+- `content` — extracted text
 
-CLI options are defined in Java and auto-generated for Node.js, Python, and documentation.
+<br/>
 
-```sh
-# After modifying Java CLI options, regenerate all bindings:
-pnpm run sync-options
+## Quick Start
+
+### Python
+
+```bash
+pip install opendataloader-pdf
 ```
 
-This generates:
-- `node/opendataloader-pdf/src/cli-options.generated.ts`
-- `node/opendataloader-pdf/src/convert-options.generated.ts`
-- `python/opendataloader-pdf/src/opendataloader_pdf/cli_options_generated.py`
-- `python/opendataloader-pdf/src/opendataloader_pdf/convert_generated.py`
-- `content/docs/cli-options-reference.mdx`
+```python
+import opendataloader_pdf
 
-### Resources
+opendataloader_pdf.convert(
+    input_path=["doc1.pdf", "folder/"],
+    output_dir="output/",
+    format="json,markdown"
+)
+```
 
-- [CLI Options Reference](https://opendataloader.org/docs/cli-options-reference)
-- [Development](https://opendataloader.org/docs/development-workflow)
-- [Json Schema](https://opendataloader.org/docs/json-schema)
-- [Javadoc](https://javadoc.io/doc/org.opendataloader/opendataloader-pdf-core/latest/index.html)
+### Node.js
 
-<br/>
+```bash
+npm install @opendataloader/pdf
+```
 
-## 🤝 Contributing
+```javascript
+import { convert } from '@opendataloader/pdf';
 
-We believe that great software is built together.
+await convert({
+  inputPath: ['doc1.pdf'],
+  outputDir: 'output/',
+  format: 'json,markdown'
+});
+```
 
-Your contributions are vital to the success of this project.
+### Docker
 
-Please read [CONTRIBUTING.md](https://github.com/hancom-inc/opendataloader-pdf/blob/main/CONTRIBUTING.md) for details on how to contribute.
+```bash
+docker run -v $(pwd):/data ghcr.io/opendataloader-project/opendataloader-pdf-cli \
+  --input /data/document.pdf \
+  --output /data/output \
+  --format json,markdown
+```
 
-<br/>
+### Java
 
-## 💖 Community & Support
-
-Have questions or need a little help? We're here for you!🤗
-
-- [GitHub Discussions](https://github.com/hancom-inc/opendataloader-pdf/discussions): For Q&A and general chats. Let's talk! 🗣️
-- [GitHub Issues](https://github.com/hancom-inc/opendataloader-pdf/issues): Found a bug? 🐛 Please report it here so we can fix it.
-- [SUPPORT.md](SUPPORT.md): Learn about our issue guidelines and AI-powered issue processing system.
-
-<br/>
-
-## ✨ Our Branding and Trademarks
-
-We love our brand and want to protect it!
-
-This project may contain trademarks, logos, or brand names for our products and services.
-
-To ensure everyone is on the same page, please remember these simple rules:
-
-- **Authorized Use**: You're welcome to use our logos and trademarks, but you must follow our official brand guidelines.
-- **No Confusion**: When you use our trademarks in a modified version of this project, it should never cause confusion or imply that Hancom officially sponsors or endorses your version.
-- **Third-Party Brands**: Any use of trademarks or logos from other companies must follow that company’s specific policies.
+```xml
+<dependency>
+  <groupId>org.opendataloader</groupId>
+  <artifactId>opendataloader-pdf-core</artifactId>
+  <version>LATEST</version>
+</dependency>
+```
 
 <br/>
 
-## ⚖️ License
+## Advanced Options
 
-This project is licensed under the [Mozilla Public License 2.0](https://www.mozilla.org/MPL/2.0/).
+```python
+opendataloader_pdf.convert(
+    input_path="document.pdf",
+    output_dir="output/",
+    format="json,markdown,pdf",
 
-For the full license text, see [LICENSE](LICENSE).
+    # Reading order
+    reading_order="xycut",           # XY-Cut++ for multi-column
 
-For information on third-party libraries and components, see:
-- [THIRD_PARTY_LICENSES](./THIRD_PARTY/THIRD_PARTY_LICENSES.md)
-- [THIRD_PARTY_NOTICES](./THIRD_PARTY/THIRD_PARTY_NOTICES.md)
-- [licenses/](./THIRD_PARTY/licenses/)
+    # Content filtering
+    content_safety_off=None,         # Keep AI-safety filters on
+
+    # Images
+    embed_images=True,               # Base64 in output
+    image_format="png",
+
+    # Tagged PDF
+    use_struct_tree=True,            # Use native PDF structure
+)
+```
+
+[Full CLI Options Reference →](https://opendataloader.org/docs/cli-options-reference)
+
+<br/>
+
+## AI Safety
+
+PDFs can contain hidden prompt injection attacks. OpenDataLoader automatically filters:
+
+- Hidden text (transparent, zero-size)
+- Off-page content
+- Suspicious invisible layers
+
+This is **enabled by default**. [Learn more →](https://opendataloader.org/docs/ai-safety)
+
+<br/>
+
+## Tagged PDF Support
+
+**Why it matters:** The [European Accessibility Act (EAA)](https://commission.europa.eu/strategy-and-policy/policies/justice-and-fundamental-rights/disability/union-equality-strategy-rights-persons-disabilities-2021-2030/european-accessibility-act_en) took effect June 28, 2025, requiring accessible digital documents across the EU. This means more PDFs will be properly tagged with semantic structure.
+
+**OpenDataLoader leverages this:**
+
+- When a PDF has structure tags, we extract the **exact layout** the author intended
+- Headings, lists, tables, reading order — all preserved from the source
+- No guessing, no heuristics needed — **pixel-perfect semantic extraction**
+
+```python
+opendataloader_pdf.convert(
+    input_path="accessible_document.pdf",
+    use_struct_tree=True  # Use native PDF structure tags
+)
+```
+
+Most PDF parsers ignore structure tags entirely. We're one of the few that fully support them.
+
+[Learn more about Tagged PDF →](https://opendataloader.org/docs/tagged-pdf)
+
+<br/>
+
+## LangChain Integration
+
+OpenDataLoader PDF has an official LangChain integration for seamless RAG pipeline development.
+
+```bash
+pip install -U langchain-opendataloader-pdf
+```
+
+```python
+from langchain_opendataloader_pdf import OpenDataLoaderPDFLoader
+
+loader = OpenDataLoaderPDFLoader(
+    file_path=["document.pdf"],
+    format="text"
+)
+documents = loader.load()
+
+# Use with any LangChain pipeline
+for doc in documents:
+    print(doc.page_content[:100])
+```
+
+- [LangChain Documentation](https://python.langchain.com/docs/integrations/document_loaders/opendataloader_pdf/)
+- [GitHub Repository](https://github.com/opendataloader-project/langchain-opendataloader-pdf)
+- [PyPI Package](https://pypi.org/project/langchain-opendataloader-pdf/)
+
+<br/>
+
+## Benchmarks
+
+We continuously benchmark against real-world documents.
+
+[![Benchmark](https://github.com/opendataloader-project/opendataloader-bench/raw/refs/heads/main/charts/benchmark.png)](https://github.com/opendataloader-project/opendataloader-bench)
+
+[View full benchmark results →](https://github.com/opendataloader-project/opendataloader-bench)
+
+<br/>
+
+## Roadmap
+
+**Coming Soon:**
+- OCR for scanned PDFs
+- Table AI for borderless/merged cells
+
+<br/>
+
+## Documentation
+
+- [Quick Start Guide](https://opendataloader.org/docs/quick-start-python)
+- [JSON Schema Reference](https://opendataloader.org/docs/json-schema)
+- [CLI Options](https://opendataloader.org/docs/cli-options-reference)
+- [Tagged PDF Support](https://opendataloader.org/docs/tagged-pdf)
+- [AI Safety Features](https://opendataloader.org/docs/ai-safety)
+
+<br/>
+
+## Frequently Asked Questions
+
+### What is the best PDF parser for RAG?
+
+For RAG pipelines, you need a parser that preserves document structure, maintains correct reading order, and provides element coordinates for citations. OpenDataLoader is designed specifically for this use case — it outputs structured JSON with bounding boxes, handles multi-column layouts correctly with XY-Cut++, and runs locally without GPU requirements.
+
+### How do I extract tables from PDF for LLM?
+
+OpenDataLoader detects tables using both border analysis and text clustering, preserving row/column structure in the output. Tables are exported as structured data in JSON or as formatted Markdown tables, ready for LLM consumption.
+
+### Can I use this without sending data to the cloud?
+
+Yes. OpenDataLoader runs 100% locally on your machine. No API calls, no data transmission — your documents never leave your environment. This makes it ideal for sensitive documents in legal, healthcare, and financial industries.
+
+### How does OpenDataLoader compare to other PDF parsers?
+
+OpenDataLoader is the only open-source PDF parser that combines: rule-based extraction (no GPU needed), bounding boxes for every element, XY-Cut++ reading order algorithm, built-in AI safety filters, and native Tagged PDF support. Most alternatives require GPU, lack coordinates, or ignore PDF structure tags.
+
+### What makes OpenDataLoader different from Docling or MinerU?
+
+OpenDataLoader uses deterministic rule-based heuristics instead of deep learning. This means: consistent output (same input = same output), no GPU required, faster processing, and no model hallucinations. It's designed for production RAG pipelines where reliability matters.
+
+<br/>
+
+## Contributing
+
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+<br/>
+
+## License
+
+[Mozilla Public License 2.0](LICENSE)
+
+---
+
+**Found this useful?** Give us a star to help others discover OpenDataLoader.

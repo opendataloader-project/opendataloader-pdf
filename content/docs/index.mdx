@@ -1,42 +1,82 @@
 ---
 title: OpenDataLoader PDF
-description: Safe, local-first PDF conversion for AI workflows
+description: PDF to Markdown & JSON for RAG — Fast, Local, No GPU Required
 ---
 
-OpenDataLoader PDF converts PDFs into JSON, Markdown, HTML, or annotated PDFs that are ready for LLMs, vector search, and RAG pipelines. It reconstructs layout (tables, lists, headers, images, reading order) using a fast heuristic engine that runs entirely on your machine with AI-safety enabled by default.
+OpenDataLoader PDF converts PDFs into **LLM-ready Markdown and JSON** with accurate reading order, table extraction, and bounding boxes — all running locally on your machine.
+
+**Why developers choose OpenDataLoader:**
+- **Deterministic** — Same input always produces same output (no LLM hallucinations)
+- **Fast** — Process 100+ pages per second on CPU
+- **Private** — 100% local, zero data transmission
+- **Accurate** — Bounding boxes for every element, correct multi-column reading order
 
 ## Quick Start
 
-Pick the language binding that fits your stack—Python ships first-class support, with matching APIs for JavaScript/TypeScript and Java.
-
 <Cards>
   <Card title="Python" href="/docs/quick-start-python" />
-  <Card title="Java" href="/docs/quick-start-java" />
   <Card title="Node.js" href="/docs/quick-start-nodejs" />
+  <Card title="Java" href="/docs/quick-start-java" />
   <Card title="Docker" href="/docs/quick-start-docker" />
+  <Card title="LangChain" href="https://python.langchain.com/docs/integrations/document_loaders/opendataloader_pdf/" />
 </Cards>
 
-Need the CLI, Docker image, or schema reference? Head to the operations section in the sidebar.
+## Why OpenDataLoader?
 
-## Annotated PDF Visualizations
+Building RAG pipelines? You've probably hit these problems:
 
-OpenDataLoader supports Annotated PDF visualization that highlights the actual layout structure extracted from the document.
+| Problem | How We Solve It |
+|---------|-----------------|
+| Multi-column text reads incorrectly | XY-Cut++ algorithm preserves correct reading order |
+| Tables lose structure | Border + cluster detection keeps rows/columns intact |
+| Headers/footers pollute context | Auto-filtered before output |
+| No coordinates for citations | Bounding box for every element |
+| Cloud APIs = privacy concerns | 100% local, no data leaves your machine |
+| GPU required | Pure CPU, rule-based — runs anywhere |
 
-Explore the [sample PDFs](/demo) to see it in action!
+[Learn more about RAG integration →](/docs/rag-integration)
+
+## Key Features
+
+### For RAG & LLM Pipelines
+
+- **Structured Output** — JSON with semantic types (heading, paragraph, table, list, caption)
+- **Bounding Boxes** — Every element includes coordinates for citations
+- **Reading Order** — [XY-Cut++ algorithm](/docs/reading-order) handles multi-column layouts correctly
+- **Noise Filtering** — Headers, footers, hidden text, watermarks auto-removed
+- **LangChain Integration** — [Official document loader](https://python.langchain.com/docs/integrations/document_loaders/opendataloader_pdf/)
+
+### Performance & Privacy
+
+- **No GPU** — Fast, rule-based heuristics
+- **Local-First** — Your documents never leave your machine
+- **High Throughput** — Process thousands of PDFs efficiently
+- **Multi-Language SDK** — Python, Node.js, Java, Docker
+
+### Document Understanding
+
+- **Tables** — Detects borders, handles merged cells
+- **Lists** — Numbered, bulleted, nested
+- **Headings** — Auto-detects hierarchy levels
+- **Images** — Extracts with captions linked
+- **[Tagged PDF Support](/docs/tagged-pdf)** — Uses native PDF structure when available
+- **[AI Safety](/docs/ai-safety)** — Auto-filters prompt injection content
+
+## Annotated PDF Visualization
+
+See detected structures overlaid on the original document for debugging and validation.
 
 <img
   src="/figures/example_annotated_pdf.webp"
   width="480"
   style={{ border: "1px solid var(--border)", borderRadius: "1rem" }}
-  alt="sample"
+  alt="Annotated PDF showing detected layout structure"
 />
 
-## 🌟 Key Features
+Explore the [sample PDFs](/demo) to see it in action.
 
-- 🧾 **Rich, Structured Output** — JSON, Markdown or Html
-- 🧩 **Layout Reconstruction** — Headings, Lists, Tables, Images, Reading Order
-- ⚡ **Fast & Lightweight** — Rule-Based Heuristic, High-Throughput, No GPU
-- 🔒 **Local-First Privacy** — Runs fully on your machine
-- 🏷️ **Tagged PDF** — Advanced data extraction technology based on Tagged PDF - [Learn more](/docs/tagged-pdf)
-- 🛡️ **AI-Safety** — Auto-Filters likely prompt-injection content - [Learn more](/docs/ai-safety)
-- 📊 **Benchmark** — Continuously researched to deliver **HIGH-QUALITY & LOW-ENERGY** - [Learn more](/docs/benchmark)
+## Benchmarks
+
+We continuously benchmark against real-world documents to ensure high quality and efficiency.
+
+[View benchmark results →](/docs/benchmark)
