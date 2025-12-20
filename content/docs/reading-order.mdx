@@ -1,0 +1,134 @@
+---
+title: Reading Order & XY-Cut++
+description: How OpenDataLoader PDF handles multi-column layouts and preserves correct reading order
+---
+
+## The Multi-Column Problem
+
+PDF files don't store text in reading order. They store drawing instructions — "draw this glyph at position (x, y)". When you have a two-column academic paper or a newspaper layout, naive text extraction reads left-to-right across the entire page, mixing content from different columns:
+
+```
+❌ Wrong extraction:
+"Introduction    Methods
+This paper...   We used..."
+
+✅ Correct extraction:
+"Introduction
+This paper presents a novel approach...
+
+Methods
+We used the following methodology..."
+```
+
+This is one of the most common complaints about PDF parsers in RAG pipelines. Jumbled text destroys context and confuses LLMs.
+
+## How XY-Cut++ Works
+
+OpenDataLoader uses the **XY-Cut++** algorithm, an enhanced version of the classic XY-Cut recursive segmentation. It works in four phases:
+
+### Phase 1: Cross-Layout Detection
+
+First, we identify elements that span multiple columns — headers, footers, and full-width titles. These are extracted separately so they don't interfere with column detection.
+
+```
+┌─────────────────────────────────┐
+│      DOCUMENT TITLE             │  ← Cross-layout (full width)
+├───────────────┬─────────────────┤
+│ Column 1      │ Column 2        │
+│ text...       │ text...         │
+│ text...       │ text...         │
+├───────────────┴─────────────────┤
+│      Page Footer                │  ← Cross-layout (full width)
+└─────────────────────────────────┘
+```
+
+### Phase 2: Density Analysis
+
+We calculate the content density ratio to determine whether the layout is content-dense (like newspapers) or sparse:
+
+- **High density (>0.9)**: Prefer horizontal cuts first
+- **Low density**: Prefer vertical cuts first
+
+This adaptive approach handles different document styles correctly.
+
+### Phase 3: Recursive Segmentation
+
+The algorithm recursively divides the page by finding the largest gaps:
+
+1. Project all content onto the X-axis and Y-axis
+2. Find the largest gap in each direction
+3. Cut along the axis with the larger gap
+4. Repeat recursively until regions contain single columns
+
+```
+Step 1: Find vertical gap → Split into left/right columns
+Step 2: Within each column, find horizontal gaps → Split into blocks
+Step 3: Order blocks top-to-bottom within each column
+```
+
+### Phase 4: Merge Cross-Layout Elements
+
+Finally, cross-layout elements (headers, footers) are reinserted at the correct positions based on their Y-coordinates.
+
+## Why This Matters for RAG
+
+Correct reading order is essential for:
+
+- **Chunking**: Semantic chunks should contain coherent text, not mixed columns
+- **Context windows**: LLMs need text in the order humans would read it
+- **Citations**: Bounding boxes are only useful if the text they reference is correct
+
+## Usage
+
+Enable XY-Cut++ reading order in your conversion:
+
+```python
+import opendataloader_pdf
+
+opendataloader_pdf.convert(
+    input_path="two-column-paper.pdf",
+    output_dir="output/",
+    format="markdown,json",
+    reading_order="xycut"  # Enable XY-Cut++
+)
+```
+
+Or via CLI:
+
+```bash
+opendataloader-pdf --reading-order xycut input.pdf
+```
+
+## Comparison with Other Approaches
+
+| Approach | Pros | Cons |
+|----------|------|------|
+| **Raw extraction** | Fast | Wrong order, unusable for RAG |
+| **ML-based** (Docling, etc.) | Can learn complex layouts | GPU required, inconsistent |
+| **XY-Cut++** (OpenDataLoader) | Deterministic, fast, no GPU | May struggle with very irregular layouts |
+
+## Technical Details
+
+The algorithm is implemented in:
+- `XYCutPlusPlusSorter.java` — Main algorithm
+- `GapBasedSorter.java` — Gap detection utilities
+
+Key parameters:
+- **Beta threshold** (default: 2.0): Controls cross-layout element detection
+- **Density threshold** (default: 0.9): Switches between horizontal/vertical preference
+- **Minimum gap** (default: 5.0 points): Prevents splitting on insignificant gaps
+
+## When to Use Reading Order
+
+| Document Type | Recommendation |
+|---------------|----------------|
+| Single-column documents | Optional (already in order) |
+| Academic papers (2-column) | **Strongly recommended** |
+| Newspapers, magazines | **Strongly recommended** |
+| Forms, tables | Usually not needed |
+| Scanned documents | Combine with OCR (coming soon) |
+
+## Further Reading
+
+- [XY-Cut algorithm (Wikipedia)](https://en.wikipedia.org/wiki/Recursive_XY-cut)
+- [arXiv:2504.10258](https://arxiv.org/abs/2504.10258) — XY-Cut++ paper

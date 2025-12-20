@@ -1,0 +1,336 @@
+---
+title: RAG Integration Guide
+description: How to use OpenDataLoader PDF in Retrieval-Augmented Generation pipelines
+---
+
+## Why PDF Parsing Matters for RAG
+
+RAG (Retrieval-Augmented Generation) systems retrieve relevant context from documents to ground LLM responses. The quality of your PDF parsing directly impacts:
+
+- **Retrieval accuracy**: Poorly parsed text → wrong chunks retrieved
+- **Answer quality**: Jumbled text → confused LLM responses
+- **Citation accuracy**: No coordinates → can't point to source location
+
+OpenDataLoader is designed specifically for RAG pipelines, providing structured output with bounding boxes for every element.
+
+## Basic RAG Workflow
+
+```
+┌─────────────┐    ┌──────────────────┐    ┌─────────────┐
+│   PDF       │ →  │  OpenDataLoader  │ →  │  Markdown/  │
+│   Files     │    │  PDF             │    │  JSON       │
+└─────────────┘    └──────────────────┘    └─────────────┘
+                                                  ↓
+┌─────────────┐    ┌──────────────────┐    ┌─────────────┐
+│   LLM       │ ←  │  Vector Store    │ ←  │  Chunking   │
+│   Response  │    │  (Retrieval)     │    │  & Embed    │
+└─────────────┘    └──────────────────┘    └─────────────┘
+```
+
+## Quick Start
+
+### Step 1: Convert PDFs
+
+```python
+import opendataloader_pdf
+
+# Convert to both Markdown (for chunking) and JSON (for metadata)
+opendataloader_pdf.convert(
+    input_path="documents/",
+    output_dir="output/",
+    format="markdown,json",
+    reading_order="xycut"  # Correct multi-column order
+)
+```
+
+### Step 2: Load and Chunk
+
+```python
+from pathlib import Path
+
+# Load markdown for text content
+markdown_content = Path("output/document.md").read_text()
+
+# Simple chunking by sections
+chunks = markdown_content.split("\n## ")
+```
+
+### Step 3: Use with Your Vector Store
+
+```python
+# Example with any embedding model
+from your_embedding_library import embed
+
+for i, chunk in enumerate(chunks):
+    embedding = embed(chunk)
+    vector_store.add(
+        id=f"doc-chunk-{i}",
+        embedding=embedding,
+        metadata={"source": "document.pdf", "chunk_index": i}
+    )
+```
+
+## Using Bounding Boxes for Citations
+
+OpenDataLoader provides bounding boxes for every element, enabling precise source citations:
+
+```python
+import json
+
+# Load JSON output
+with open("output/document.json") as f:
+    doc = json.load(f)
+
+# Extract elements with locations
+for page in doc["kids"]:
+    page_num = page["page number"]
+    for element in page.get("kids", []):
+        content = element.get("content", "")
+        bbox = element.get("bounding box")  # [left, bottom, right, top]
+        element_type = element.get("type")
+
+        # Store with your chunks for citation
+        chunk_metadata = {
+            "page": page_num,
+            "bbox": bbox,
+            "type": element_type
+        }
+```
+
+### Citation Format Example
+
+When your RAG system retrieves a chunk, you can generate precise citations:
+
+```python
+def format_citation(metadata):
+    page = metadata["page"]
+    bbox = metadata["bbox"]
+    return f"Source: Page {page}, coordinates ({bbox[0]:.0f}, {bbox[1]:.0f})"
+
+# Output: "Source: Page 3, coordinates (72, 450)"
+```
+
+## Chunking Strategies
+
+### By Semantic Elements
+
+Use JSON output to chunk by document structure:
+
+```python
+import json
+
+with open("output/document.json") as f:
+    doc = json.load(f)
+
+chunks = []
+for page in doc["kids"]:
+    for element in page.get("kids", []):
+        if element["type"] in ["paragraph", "heading", "list"]:
+            chunks.append({
+                "text": element.get("content", ""),
+                "type": element["type"],
+                "page": page["page number"],
+                "bbox": element.get("bounding box")
+            })
+```
+
+### By Headings (Sections)
+
+```python
+current_section = []
+current_heading = None
+
+for element in all_elements:
+    if element["type"] == "heading":
+        if current_section:
+            chunks.append({
+                "heading": current_heading,
+                "content": "\n".join(current_section)
+            })
+        current_heading = element["content"]
+        current_section = []
+    else:
+        current_section.append(element.get("content", ""))
+```
+
+### Tables as Separate Chunks
+
+Tables often contain dense information. Chunk them separately:
+
+```python
+for element in all_elements:
+    if element["type"] == "table":
+        # Tables are preserved as structured data
+        chunks.append({
+            "type": "table",
+            "content": element,  # Keep full structure
+            "page": element["page number"]
+        })
+```
+
+## Handling Different Document Types
+
+### Academic Papers (Multi-Column)
+
+```python
+opendataloader_pdf.convert(
+    input_path="paper.pdf",
+    reading_order="xycut",  # Essential for 2-column layouts
+    format="json,markdown"
+)
+```
+
+### Financial Reports (Tables Heavy)
+
+```python
+opendataloader_pdf.convert(
+    input_path="report.pdf",
+    format="json",  # JSON preserves table structure
+    # Tables automatically detected with border + cluster methods
+)
+```
+
+### Legal Documents (Long Text)
+
+```python
+opendataloader_pdf.convert(
+    input_path="contract.pdf",
+    format="markdown",
+    # Headers/footers auto-filtered to reduce noise
+)
+```
+
+## Filtering Noise
+
+OpenDataLoader automatically filters content that would pollute your RAG context:
+
+- **Headers/footers**: Repeated page elements removed
+- **Hidden text**: Transparent or off-page content filtered
+- **Watermarks**: Background elements excluded
+
+This is enabled by default. To disable (not recommended for RAG):
+
+```python
+opendataloader_pdf.convert(
+    input_path="document.pdf",
+    content_safety_off="all"  # Disable all filters
+)
+```
+
+## Performance Tips
+
+### Batch Processing
+
+Process multiple files efficiently:
+
+```python
+import opendataloader_pdf
+from pathlib import Path
+
+# Process entire folder
+opendataloader_pdf.convert(
+    input_path="documents/",  # Folder path
+    output_dir="output/",
+    format="json,markdown"
+)
+```
+
+### Output Format Selection
+
+| Format | Use Case | Size |
+|--------|----------|------|
+| `markdown` | Text for chunking/embedding | Smallest |
+| `json` | Structured data with metadata | Medium |
+| `json,markdown` | Both (recommended for RAG) | Larger |
+
+## Common Issues and Solutions
+
+### Issue: Text from different columns mixed together
+
+**Solution**: Enable reading order
+
+```python
+reading_order="xycut"
+```
+
+### Issue: Headers/footers appearing in chunks
+
+**Solution**: These are filtered by default. If still appearing, check if they're part of the main content flow.
+
+### Issue: Tables losing structure
+
+**Solution**: Use JSON output for tables, which preserves row/column structure.
+
+### Issue: Too many small chunks
+
+**Solution**: Chunk by headings or merge adjacent paragraphs:
+
+```python
+# Merge short paragraphs
+merged = []
+buffer = ""
+for chunk in chunks:
+    buffer += chunk["text"] + "\n"
+    if len(buffer) > 500:  # Minimum chunk size
+        merged.append(buffer)
+        buffer = ""
+```
+
+## Framework Integrations
+
+### LangChain
+
+OpenDataLoader PDF has an official LangChain integration. Install it separately:
+
+```bash
+pip install -U langchain-opendataloader-pdf
+```
+
+```python
+from langchain_opendataloader_pdf import OpenDataLoaderPDFLoader
+
+# Load documents
+loader = OpenDataLoaderPDFLoader(
+    file_path=["document.pdf", "folder/"],
+    format="text"
+)
+documents = loader.load()
+
+# Use with any LangChain pipeline
+for doc in documents:
+    print(doc.metadata)
+    print(doc.page_content[:100])
+```
+
+**Configuration options:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `file_path` | List[str] | Required | PDF files or directories |
+| `format` | str | None | Output format (json, html, markdown, text) |
+| `quiet` | bool | False | Suppress CLI logging |
+| `content_safety_off` | List[str] | None | Disable specific safety filters |
+
+**Resources:**
+- [LangChain Documentation](https://python.langchain.com/docs/integrations/document_loaders/opendataloader_pdf/)
+- [GitHub Repository](https://github.com/opendataloader-project/langchain-opendataloader-pdf)
+- [PyPI Package](https://pypi.org/project/langchain-opendataloader-pdf/)
+
+### LlamaIndex (Coming Soon)
+
+```python
+# Future integration
+from llama_index.readers import OpenDataLoaderReader
+
+reader = OpenDataLoaderReader()
+documents = reader.load_data("document.pdf")
+```
+
+## Best Practices Summary
+
+1. **Always enable reading order** for multi-column documents
+2. **Use JSON output** when you need bounding boxes for citations
+3. **Use Markdown output** for simple text chunking
+4. **Keep AI safety filters on** to avoid prompt injection
+5. **Chunk by semantic elements** (headings, paragraphs) rather than fixed sizes
+6. **Store bounding boxes** with chunks for precise citations

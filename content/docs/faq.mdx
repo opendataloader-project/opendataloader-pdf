@@ -1,0 +1,277 @@
+---
+title: Frequently Asked Questions
+description: Common questions about OpenDataLoader PDF for RAG, LLM, and document processing
+---
+
+## General
+
+### What is OpenDataLoader PDF?
+
+OpenDataLoader PDF is an open-source tool that converts PDF documents into structured formats (JSON, Markdown, HTML) optimized for AI applications like RAG (Retrieval-Augmented Generation), LLM processing, and vector search. It runs entirely on your local machine without requiring GPU or cloud services.
+
+### What is the best PDF parser for RAG?
+
+For RAG pipelines, you need a PDF parser that:
+- Preserves correct **reading order** (especially for multi-column layouts)
+- Provides **bounding boxes** for citations
+- Outputs **structured data** (headings, paragraphs, tables)
+- Filters **noise** (headers, footers, hidden text)
+
+OpenDataLoader PDF is designed specifically for these requirements. It uses the XY-Cut++ algorithm for reading order, provides coordinates for every element, and includes built-in AI safety filters.
+
+### How does OpenDataLoader compare to other PDF parsers?
+
+OpenDataLoader PDF is the only open-source PDF parser that combines:
+- **Rule-based extraction** (no GPU needed)
+- **Bounding boxes** for every element
+- **XY-Cut++ reading order** algorithm
+- **Built-in AI safety** filters
+- **Native Tagged PDF** support
+
+Most alternatives require GPU, lack coordinates, or ignore PDF structure tags.
+
+### What makes OpenDataLoader different from Docling or MinerU?
+
+| Feature | OpenDataLoader | Docling | MinerU |
+|---------|----------------|---------|--------|
+| Approach | Rule-based heuristics | Deep learning | Deep learning |
+| GPU Required | No | Yes | Yes |
+| Output Consistency | Deterministic | Variable | Variable |
+| Bounding Boxes | All elements | Limited | Limited |
+| AI Safety Filters | Built-in | No | No |
+| Tagged PDF Support | Native | Limited | No |
+
+OpenDataLoader uses deterministic rule-based heuristics instead of deep learning. This means: consistent output (same input = same output), no GPU required, faster processing, and no model hallucinations.
+
+## Installation & Setup
+
+### What are the system requirements?
+
+- **Java 11 or higher** (must be installed and in PATH)
+- **Python 3.9+** (for Python package)
+- **Node.js 18+** (for Node.js package)
+- No GPU required
+- Works on Linux, macOS, and Windows
+
+### Why does OpenDataLoader require Java?
+
+The core PDF parsing engine is written in Java for performance and reliability. The Python and Node.js packages automatically manage the Java runtime — you just need Java installed on your system.
+
+### How do I install OpenDataLoader PDF?
+
+**Python:**
+```bash
+pip install opendataloader-pdf
+```
+
+**Node.js:**
+```bash
+npm install @opendataloader/pdf
+```
+
+**Docker:**
+```bash
+docker pull ghcr.io/opendataloader-project/opendataloader-pdf-cli
+```
+
+## Usage
+
+### How do I extract tables from PDF for LLM?
+
+OpenDataLoader detects tables using both border analysis and text clustering, preserving row/column structure in the output:
+
+```python
+import opendataloader_pdf
+
+opendataloader_pdf.convert(
+    input_path="document.pdf",
+    output_dir="output/",
+    format="json"  # JSON preserves table structure
+)
+```
+
+Tables are exported as structured data with rows, columns, and cell content preserved.
+
+### How do I handle multi-column PDFs?
+
+Enable the XY-Cut++ reading order algorithm:
+
+```python
+opendataloader_pdf.convert(
+    input_path="two-column-paper.pdf",
+    output_dir="output/",
+    reading_order="xycut"  # Preserves correct reading order
+)
+```
+
+This ensures text is extracted in the order humans would read it, not left-to-right across columns.
+
+### How do I get bounding boxes for citations?
+
+Use JSON output format. Every element includes a `bounding box` field:
+
+```python
+opendataloader_pdf.convert(
+    input_path="document.pdf",
+    output_dir="output/",
+    format="json"
+)
+```
+
+Output:
+```json
+{
+  "type": "paragraph",
+  "page number": 1,
+  "bounding box": [72.0, 650.5, 540.0, 700.2],
+  "content": "This is the paragraph text..."
+}
+```
+
+Coordinates are `[left, bottom, right, top]` in PDF points (72 points = 1 inch).
+
+### What output formats are available?
+
+| Format | Use Case |
+|--------|----------|
+| `json` | Structured data with bounding boxes, semantic types |
+| `markdown` | Clean text for LLM context, RAG chunks |
+| `html` | Web display with styling |
+| `pdf` | Annotated PDF showing detected structures |
+| `text` | Plain text extraction |
+
+You can combine formats: `format="json,markdown"`
+
+### Does OpenDataLoader work with LangChain?
+
+Yes! OpenDataLoader PDF has an official LangChain integration:
+
+```bash
+pip install -U langchain-opendataloader-pdf
+```
+
+```python
+from langchain_opendataloader_pdf import OpenDataLoaderPDFLoader
+
+loader = OpenDataLoaderPDFLoader(
+    file_path=["document.pdf"],
+    format="text"
+)
+documents = loader.load()
+```
+
+See the [LangChain documentation](https://python.langchain.com/docs/integrations/document_loaders/opendataloader_pdf/) for more details.
+
+## Privacy & Security
+
+### Can I use this without sending data to the cloud?
+
+Yes. OpenDataLoader PDF runs **100% locally** on your machine. No API calls, no data transmission — your documents never leave your environment. This makes it ideal for:
+- Legal documents
+- Medical records
+- Financial reports
+- Any sensitive data
+
+### What is AI Safety filtering?
+
+PDFs can contain hidden text designed for prompt injection attacks — invisible instructions that manipulate LLMs. OpenDataLoader automatically filters:
+- Hidden text (transparent, zero-size fonts)
+- Off-page content
+- Suspicious invisible layers
+
+This is **enabled by default**. Learn more in our [AI Safety documentation](/docs/ai-safety).
+
+### Is my data safe?
+
+Yes. OpenDataLoader:
+- Runs entirely on your machine
+- Makes no network requests
+- Stores no data externally
+- Is open-source (you can audit the code)
+
+## Performance
+
+### How fast is OpenDataLoader?
+
+OpenDataLoader processes **100+ pages per second** on typical hardware (CPU only, no GPU). Exact speed depends on:
+- Document complexity
+- Number of tables/images
+- Output formats selected
+
+### Can I process multiple PDFs at once?
+
+Yes. Point to a folder instead of a single file:
+
+```python
+opendataloader_pdf.convert(
+    input_path="documents/",  # Folder containing PDFs
+    output_dir="output/",
+    format="json,markdown"
+)
+```
+
+### Does it work with scanned PDFs?
+
+OCR support for scanned PDFs is **coming soon** (scheduled for December 2025). Currently, OpenDataLoader works best with digital PDFs that have embedded text.
+
+## Tagged PDF
+
+### What is Tagged PDF?
+
+Tagged PDF is a document structure that includes semantic information (headings, paragraphs, lists, tables). When a PDF has proper tags, OpenDataLoader can extract the **exact layout** the author intended — no guessing required.
+
+### Why does Tagged PDF matter?
+
+The [European Accessibility Act (EAA)](https://commission.europa.eu/strategy-and-policy/policies/justice-and-fundamental-rights/disability/union-equality-strategy-rights-persons-disabilities-2021-2030/european-accessibility-act_en) took effect June 28, 2025, requiring accessible digital documents across the EU. This means more PDFs will be properly tagged.
+
+### How do I use Tagged PDF features?
+
+```python
+opendataloader_pdf.convert(
+    input_path="accessible-document.pdf",
+    output_dir="output/",
+    use_struct_tree=True  # Use native PDF structure tags
+)
+```
+
+Most PDF parsers ignore structure tags entirely. OpenDataLoader is one of the few that fully supports them.
+
+## Troubleshooting
+
+### Text from different columns is mixed together
+
+Enable reading order:
+```python
+reading_order="xycut"
+```
+
+### Tables are not detected correctly
+
+Try both detection methods by default. For complex tables, Table AI support is coming soon.
+
+### Headers and footers appear in my output
+
+These should be filtered by default. If they're appearing, they may be part of the main content flow rather than repeated elements.
+
+### Java is not found
+
+Ensure Java 11+ is installed and in your PATH:
+```bash
+java -version
+```
+
+If not installed, download from [Adoptium](https://adoptium.net/) or use your package manager.
+
+## Contributing
+
+### How can I contribute?
+
+We welcome contributions! See our [Contributing Guide](/docs/contributing) for details on:
+- Reporting bugs
+- Suggesting features
+- Submitting pull requests
+
+### Where can I get help?
+
+- [GitHub Discussions](https://github.com/opendataloader-project/opendataloader-pdf/discussions) — Q&A and general conversations
+- [GitHub Issues](https://github.com/opendataloader-project/opendataloader-pdf/issues) — Bug reports and feature requests
