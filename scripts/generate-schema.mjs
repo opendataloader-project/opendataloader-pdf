@@ -1,0 +1,384 @@
+#!/usr/bin/env node
+/**
+ * Generates JSON Schema documentation from the single source of truth (schema.json).
+ *
+ * Usage: node scripts/generate-schema.mjs
+ */
+
+import { readFileSync, writeFileSync, mkdirSync } from 'fs';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const ROOT_DIR = join(__dirname, '..');
+
+// Read schema.json
+const schemaPath = join(ROOT_DIR, 'schema.json');
+const schema = JSON.parse(readFileSync(schemaPath, 'utf-8'));
+
+const AUTO_GENERATED_HEADER_MDX = `{/* AUTO-GENERATED FROM schema.json - DO NOT EDIT DIRECTLY */}
+{/* Run \`npm run generate-schema\` to regenerate */}
+
+`;
+
+/**
+ * Escape string for use in Markdown table cells.
+ * @param {string} str - The string to escape
+ * @returns {string} - Escaped string safe for Markdown tables
+ */
+function escapeMarkdown(str) {
+  if (!str) return '';
+  return str
+    .replace(/\\/g, String.raw`\\`)   // escape backslashes first
+    .replace(/\|/g, String.raw`\|`)   // escape pipe characters
+    .replace(/`/g, String.raw`\``)    // escape backticks
+    .replace(/\*/g, String.raw`\*`)   // escape asterisks
+    .replace(/_/g, String.raw`\_`)    // escape underscores
+    .replace(/</g, '&lt;')            // escape HTML angle brackets
+    .replace(/>/g, '&gt;');
+}
+
+/**
+ * Format a markdown table with aligned columns.
+ * @param {string[]} headers - Table headers
+ * @param {string[][]} rows - Table rows (each row is an array of cell values)
+ * @returns {string[]} - Formatted table lines
+ */
+function formatTable(headers, rows) {
+  // Calculate max width for each column
+  const colWidths = headers.map((h, i) => {
+    const headerLen = h.length;
+    const maxRowLen = rows.reduce((max, row) => Math.max(max, (row[i] || '').length), 0);
+    return Math.max(headerLen, maxRowLen);
+  });
+
+  // Build header row
+  const headerRow = '| ' + headers.map((h, i) => h.padEnd(colWidths[i])).join(' | ') + ' |';
+
+  // Build separator row
+  const separatorRow = '|' + colWidths.map(w => '-'.repeat(w + 2)).join('|') + '|';
+
+  // Build data rows
+  const dataRows = rows.map(row =>
+    '| ' + row.map((cell, i) => (cell || '').padEnd(colWidths[i])).join(' | ') + ' |'
+  );
+
+  return [headerRow, separatorRow, ...dataRows];
+}
+
+/**
+ * Get JSON Schema type as a readable string.
+ */
+function formatType(prop) {
+  if (!prop) return 'any';
+
+  if (prop.$ref) {
+    const refName = prop.$ref.split('/').pop();
+    return `\`${refName}\``;
+  }
+
+  if (prop.oneOf) {
+    return prop.oneOf.map(formatType).join(' \\| ');
+  }
+
+  if (prop.const) {
+    return `\`"${prop.const}"\``;
+  }
+
+  if (prop.enum) {
+    return prop.enum.map(v => `\`${v}\``).join(', ');
+  }
+
+  if (Array.isArray(prop.type)) {
+    return prop.type.map(t => `\`${t}\``).join(' \\| ');
+  }
+
+  if (prop.type === 'array') {
+    if (prop.items) {
+      return `\`array\``;
+    }
+    return `\`array\``;
+  }
+
+  return `\`${prop.type || 'any'}\``;
+}
+
+/**
+ * Check if a property is required.
+ */
+function isRequired(propName, requiredList) {
+  return requiredList && requiredList.includes(propName);
+}
+
+/**
+ * Extract properties from a definition, handling allOf.
+ */
+function extractProperties(def) {
+  const props = {};
+  const required = [];
+
+  if (def.properties) {
+    Object.assign(props, def.properties);
+  }
+  if (def.required) {
+    required.push(...def.required);
+  }
+
+  if (def.allOf) {
+    for (const part of def.allOf) {
+      if (part.$ref) {
+        const refName = part.$ref.split('/').pop();
+        const refDef = schema.$defs[refName];
+        if (refDef) {
+          const extracted = extractProperties(refDef);
+          Object.assign(props, extracted.props);
+          required.push(...extracted.required);
+        }
+      } else {
+        const extracted = extractProperties(part);
+        Object.assign(props, extracted.props);
+        required.push(...extracted.required);
+      }
+    }
+  }
+
+  return { props, required: [...new Set(required)] };
+}
+
+/**
+ * Generate properties table for a definition.
+ */
+function generatePropertiesTable(def, title) {
+  const lines = [];
+  const { props, required } = extractProperties(def);
+
+  if (Object.keys(props).length === 0) {
+    return lines;
+  }
+
+  lines.push(`### ${title}`);
+  lines.push('');
+  lines.push('| Field | Type | Required | Description |');
+  lines.push('|-------|------|----------|-------------|');
+
+  for (const [name, prop] of Object.entries(props)) {
+    // Skip 'type' field with const value as it's implied by the section
+    if (name === 'type' && prop.const) continue;
+
+    const fieldName = `\`${name}\``;
+    const fieldType = formatType(prop);
+    const isReq = isRequired(name, required) ? 'Yes' : 'No';
+    const desc = escapeMarkdown(prop.description || '');
+    lines.push(`| ${fieldName} | ${fieldType} | ${isReq} | ${desc} |`);
+  }
+
+  lines.push('');
+  return lines;
+}
+
+/**
+ * Generate JSON Schema documentation (MDX).
+ */
+function generateJsonSchemaMdx() {
+  const lines = [];
+  lines.push('---');
+  lines.push('title: JSON Schema');
+  lines.push('description: Understand the layout structure emitted by OpenDataLoader PDF');
+  lines.push('---');
+  lines.push('');
+  lines.push(AUTO_GENERATED_HEADER_MDX);
+
+  lines.push('Every conversion that includes the `json` format produces a hierarchical document describing detected elements (pages, tables, lists, captions, etc.). Use the following reference to map fields into your downstream processors.');
+  lines.push('');
+
+  // Helper to build rows from schema properties
+  const buildRows = (properties, requiredList) =>
+    Object.entries(properties).map(([name, prop]) => [
+      `\`${name}\``,
+      formatType(prop),
+      isRequired(name, requiredList) ? 'Yes' : 'No',
+      escapeMarkdown(prop.description || '')
+    ]);
+
+  // Root node
+  const rootRows = buildRows(schema.properties, schema.required);
+  lines.push(
+    '## Root node',
+    '',
+    ...formatTable(['Field', 'Type', 'Required', 'Description'], rootRows),
+    ''
+  );
+
+  // Common content fields (baseElement)
+  const baseElement = schema.$defs.baseElement;
+  const baseRows = buildRows(baseElement.properties, baseElement.required);
+  lines.push(
+    '## Common content fields',
+    '',
+    'All content elements share these base properties:',
+    '',
+    ...formatTable(['Field', 'Type', 'Required', 'Description'], baseRows),
+    ''
+  );
+
+  // Text properties
+  const textProps = schema.$defs.textProperties;
+  const textRows = buildRows(textProps.properties, textProps.required);
+  lines.push(
+    '## Text properties',
+    '',
+    'Text nodes (`paragraph`, `heading`, `caption`, `list item`) include these additional fields:',
+    '',
+    ...formatTable(['Field', 'Type', 'Required', 'Description'], textRows),
+    ''
+  );
+
+  // Headings
+  lines.push(
+    '## Headings',
+    '',
+    ...formatTable(['Field', 'Type', 'Required', 'Description'], [
+      ['`heading level`', '`integer`', 'Yes', 'Heading level (e.g., 1 for h1)']
+    ]),
+    ''
+  );
+
+  // Captions
+  lines.push(
+    '## Captions',
+    '',
+    ...formatTable(['Field', 'Type', 'Required', 'Description'], [
+      ['`linked content id`', '`integer`', 'No', 'ID of the linked content element (table, image, etc.)']
+    ]),
+    ''
+  );
+
+  // Tables
+  lines.push(
+    '## Tables',
+    '',
+    ...formatTable(['Field', 'Type', 'Required', 'Description'], [
+      ['`number of rows`', '`integer`', 'Yes', 'Row count'],
+      ['`number of columns`', '`integer`', 'Yes', 'Column count'],
+      ['`previous table id`', '`integer`', 'No', 'Linked table identifier (if broken across pages)'],
+      ['`next table id`', '`integer`', 'No', 'Linked table identifier'],
+      ['`rows`', '`array`', 'Yes', 'Row objects']
+    ]),
+    ''
+  );
+
+  // Table rows
+  lines.push(
+    '### Table rows',
+    '',
+    ...formatTable(['Field', 'Type', 'Required', 'Description'], [
+      ['`type`', '`"table row"`', 'Yes', 'Element type'],
+      ['`row number`', '`integer`', 'Yes', 'Row index (1-indexed)'],
+      ['`cells`', '`array`', 'Yes', 'Cell objects']
+    ]),
+    ''
+  );
+
+  // Table cells
+  lines.push(
+    '### Table cells',
+    '',
+    ...formatTable(['Field', 'Type', 'Required', 'Description'], [
+      ['`row number`', '`integer`', 'Yes', 'Row index of the cell (1-indexed)'],
+      ['`column number`', '`integer`', 'Yes', 'Column index of the cell (1-indexed)'],
+      ['`row span`', '`integer`', 'Yes', 'Number of rows spanned'],
+      ['`column span`', '`integer`', 'Yes', 'Number of columns spanned'],
+      ['`kids`', '`array`', 'Yes', 'Nested content elements']
+    ]),
+    ''
+  );
+
+  // Lists
+  lines.push(
+    '## Lists',
+    '',
+    ...formatTable(['Field', 'Type', 'Required', 'Description'], [
+      ['`numbering style`', '`string`', 'Yes', 'Marker style (ordered, bullet, etc.)'],
+      ['`number of list items`', '`integer`', 'Yes', 'Item count'],
+      ['`previous list id`', '`integer`', 'No', 'Linked list identifier'],
+      ['`next list id`', '`integer`', 'No', 'Linked list identifier'],
+      ['`list items`', '`array`', 'Yes', 'Item nodes']
+    ]),
+    ''
+  );
+
+  // List items
+  lines.push(
+    '### List items',
+    '',
+    'List items include text properties plus:',
+    '',
+    ...formatTable(['Field', 'Type', 'Required', 'Description'], [
+      ['`kids`', '`array`', 'Yes', 'Nested content elements']
+    ]),
+    ''
+  );
+
+  // Images
+  lines.push(
+    '## Images',
+    '',
+    ...formatTable(['Field', 'Type', 'Required', 'Description'], [
+      ['`source`', '`string`', 'No', 'Relative path to the image file'],
+      ['`data`', '`string`', 'No', 'Base64 data URI (when embed-images is enabled)'],
+      ['`format`', '`string`', 'No', 'Image format (`png`, `jpeg`)']
+    ]),
+    ''
+  );
+
+  // Headers and footers
+  lines.push(
+    '## Headers and footers',
+    '',
+    ...formatTable(['Field', 'Type', 'Required', 'Description'], [
+      ['`type`', '`string`', 'Yes', 'Either `header` or `footer`'],
+      ['`kids`', '`array`', 'Yes', 'Content elements within the header or footer']
+    ]),
+    ''
+  );
+
+  // Text blocks
+  lines.push(
+    '## Text blocks',
+    '',
+    ...formatTable(['Field', 'Type', 'Required', 'Description'], [
+      ['`kids`', '`array`', 'Yes', 'Text block children']
+    ]),
+    ''
+  );
+
+  lines.push(
+    '## JSON Schema',
+    '',
+    'The complete JSON Schema is available at [`schema.json`](https://github.com/opendataloader-project/opendataloader-pdf/blob/main/schema.json) in the repository root.'
+  );
+  lines.push('');
+
+  const outputPath = join(ROOT_DIR, 'content/docs/json-schema.mdx');
+  mkdirSync(dirname(outputPath), { recursive: true });
+  writeFileSync(outputPath, lines.join('\n'));
+  console.log(`Generated: ${outputPath}`);
+}
+
+/**
+ * Copy schema.json to public directory for web access.
+ */
+function copySchemaToPublic() {
+  const outputPath = join(ROOT_DIR, 'public/schema.json');
+  mkdirSync(dirname(outputPath), { recursive: true });
+  writeFileSync(outputPath, JSON.stringify(schema, null, 2));
+  console.log(`Generated: ${outputPath}`);
+}
+
+// Run all generators
+console.log('Generating files from schema.json...\n');
+
+generateJsonSchemaMdx();
+copySchemaToPublic();
+
+console.log('\nDone!');

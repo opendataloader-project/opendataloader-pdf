@@ -6,9 +6,9 @@
  * Usage: node scripts/generate-options.mjs
  */
 
-import { readFileSync, writeFileSync, mkdirSync } from 'fs';
-import { dirname, join } from 'path';
-import { fileURLToPath } from 'url';
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = join(__dirname, '..');
@@ -74,11 +74,46 @@ function escapeString(str, quote = "'") {
 /**
  * Escape string for use in Markdown table cells.
  * @param {string} str - The string to escape
+ * @returns {string} - Escaped string safe for Markdown tables
  */
 function escapeMarkdown(str) {
+  if (!str) return '';
   return str
-    .replace(/\\/g, '\\\\')  // escape backslashes first
-    .replace(/\|/g, '\\|');  // escape pipe characters
+    .replace(/\\/g, String.raw`\\`)   // escape backslashes first
+    .replace(/\|/g, String.raw`\|`)   // escape pipe characters
+    .replace(/`/g, String.raw`\``)    // escape backticks
+    .replace(/\*/g, String.raw`\*`)   // escape asterisks
+    .replace(/_/g, String.raw`\_`)    // escape underscores
+    .replace(/</g, '&lt;')            // escape HTML angle brackets
+    .replace(/>/g, '&gt;');
+}
+
+/**
+ * Format a markdown table with aligned columns.
+ * @param {string[]} headers - Table headers
+ * @param {string[][]} rows - Table rows (each row is an array of cell values)
+ * @returns {string[]} - Formatted table lines
+ */
+function formatTable(headers, rows) {
+  // Calculate max width for each column
+  const colWidths = headers.map((h, i) => {
+    const headerLen = h.length;
+    const maxRowLen = rows.reduce((max, row) => Math.max(max, (row[i] || '').length), 0);
+    return Math.max(headerLen, maxRowLen);
+  });
+
+  // Build header row
+  const headerRow = '| ' + headers.map((h, i) => h.padEnd(colWidths[i])).join(' | ') + ' |';
+
+  // Build separator row
+  const separatorRow = '|' + colWidths.map(w => '-'.repeat(w + 2)).join('|') + '|';
+
+  // Build data rows
+  const dataRows = rows.map(row =>
+    '| ' + row.map((cell, i) => (cell || '').padEnd(colWidths[i])).join(' | ') + ' |'
+  );
+
+  return [headerRow, separatorRow, ...dataRows];
 }
 
 /**
@@ -383,11 +418,12 @@ function generatePythonConvertOptionsMdx() {
   lines.push('---');
   lines.push('');
   lines.push(AUTO_GENERATED_HEADER_MDX);
-  lines.push('| Parameter | Type | Default | Description |');
-  lines.push('|-----------|------|---------|-------------|');
+
+  // Build rows array
+  const rows = [];
 
   // Add input_path first (not in options.json)
-  lines.push('| `input_path` | `str \\| list[str]` | required | One or more input PDF file paths or directories |');
+  rows.push(['`input_path`', String.raw`\`str \| list[str]\``, 'required', 'One or more input PDF file paths or directories']);
 
   for (const opt of options.options) {
     const snakeName = toSnakeCase(opt.name);
@@ -395,7 +431,7 @@ function generatePythonConvertOptionsMdx() {
     if (opt.type === 'boolean') {
       pyType = 'bool';
     } else if (isListOption(opt)) {
-      pyType = 'str \\| list[str]';
+      pyType = String.raw`str \| list[str]`;
     }
 
     const defaultVal = opt.default === null ? '-'
@@ -403,9 +439,10 @@ function generatePythonConvertOptionsMdx() {
       : `\`"${opt.default}"\``;
 
     const description = escapeMarkdown(opt.description);
-    lines.push(`| \`${snakeName}\` | \`${pyType}\` | ${defaultVal} | ${description} |`);
+    rows.push([`\`${snakeName}\``, `\`${pyType}\``, defaultVal, description]);
   }
 
+  lines.push(...formatTable(['Parameter', 'Type', 'Default', 'Description'], rows));
   lines.push('');
 
   const outputPath = join(ROOT_DIR, 'content/docs/_generated/python-convert-options.mdx');
@@ -425,8 +462,9 @@ function generateNodeConvertOptionsMdx() {
   lines.push('---');
   lines.push('');
   lines.push(AUTO_GENERATED_HEADER_MDX);
-  lines.push('| Option | Type | Default | Description |');
-  lines.push('|--------|------|---------|-------------|');
+
+  // Build rows array
+  const rows = [];
 
   for (const opt of options.options) {
     const camelName = toCamelCase(opt.name);
@@ -434,7 +472,7 @@ function generateNodeConvertOptionsMdx() {
     if (opt.type === 'boolean') {
       tsType = 'boolean';
     } else if (isListOption(opt)) {
-      tsType = 'string \\| string[]';
+      tsType = String.raw`string \| string[]`;
     }
 
     const defaultVal = opt.default === null ? '-'
@@ -442,9 +480,10 @@ function generateNodeConvertOptionsMdx() {
       : `\`"${opt.default}"\``;
 
     const description = escapeMarkdown(opt.description);
-    lines.push(`| \`${camelName}\` | \`${tsType}\` | ${defaultVal} | ${description} |`);
+    rows.push([`\`${camelName}\``, `\`${tsType}\``, defaultVal, description]);
   }
 
+  lines.push(...formatTable(['Option', 'Type', 'Default', 'Description'], rows));
   lines.push('');
 
   const outputPath = join(ROOT_DIR, 'content/docs/_generated/node-convert-options.mdx');
@@ -457,21 +496,8 @@ function generateNodeConvertOptionsMdx() {
  * Generate options reference documentation (MDX)
  */
 function generateOptionsReferenceMdx() {
-  const lines = [];
-  lines.push('---');
-  lines.push('title: CLI Options Reference');
-  lines.push('description: Complete reference for all CLI options');
-  lines.push('---');
-  lines.push('');
-  lines.push(AUTO_GENERATED_HEADER_MDX);
-  lines.push('# CLI Options Reference');
-  lines.push('');
-  lines.push('This page documents all available CLI options for opendataloader-pdf.');
-  lines.push('');
-  lines.push('## Options');
-  lines.push('');
-  lines.push('| Option | Short | Type | Default | Description |');
-  lines.push('|--------|-------|------|---------|-------------|');
+  // Build rows array
+  const rows = [];
 
   for (const opt of options.options) {
     const longOpt = `\`--${opt.name}\``;
@@ -482,48 +508,63 @@ function generateOptionsReferenceMdx() {
       : `\`"${opt.default}"\``;
     const description = escapeMarkdown(opt.description);
 
-    lines.push(`| ${longOpt} | ${shortOpt} | ${type} | ${defaultVal} | ${description} |`);
+    rows.push([longOpt, shortOpt, type, defaultVal, description]);
   }
 
-  lines.push('');
-  lines.push('## Examples');
-  lines.push('');
-  lines.push('### Basic conversion');
-  lines.push('');
-  lines.push('```bash');
-  lines.push('opendataloader-pdf document.pdf -o ./output -f json,markdown');
-  lines.push('```');
-  lines.push('');
-  lines.push('### Convert entire folder');
-  lines.push('');
-  lines.push('```bash');
-  lines.push('opendataloader-pdf ./pdf-folder -o ./output -f json');
-  lines.push('```');
-  lines.push('');
-  lines.push('### Markdown with embedded images');
-  lines.push('');
-  lines.push('```bash');
-  lines.push('opendataloader-pdf document.pdf -f markdown --embed-images');
-  lines.push('```');
-  lines.push('');
-  lines.push('### Improve reading order with XY-Cut algorithm');
-  lines.push('');
-  lines.push('```bash');
-  lines.push('opendataloader-pdf document.pdf -f json --reading-order xycut');
-  lines.push('```');
-  lines.push('');
-  lines.push('### Add page separators in output');
-  lines.push('');
-  lines.push('```bash');
-  lines.push('opendataloader-pdf document.pdf -f markdown --markdown-page-separator "--- Page %page-number% ---"');
-  lines.push('```');
-  lines.push('');
-  lines.push('### Encrypted PDF');
-  lines.push('');
-  lines.push('```bash');
-  lines.push('opendataloader-pdf encrypted.pdf -p mypassword -o ./output');
-  lines.push('```');
-  lines.push('');
+  const lines = [
+    '---',
+    'title: CLI Options Reference',
+    'description: Complete reference for all CLI options',
+    '---',
+    '',
+    AUTO_GENERATED_HEADER_MDX.trimEnd(),
+    '# CLI Options Reference',
+    '',
+    'This page documents all available CLI options for opendataloader-pdf.',
+    '',
+    '## Options',
+    '',
+    ...formatTable(['Option', 'Short', 'Type', 'Default', 'Description'], rows),
+    '',
+    '## Examples',
+    '',
+    '### Basic conversion',
+    '',
+    '```bash',
+    'opendataloader-pdf document.pdf -o ./output -f json,markdown',
+    '```',
+    '',
+    '### Convert entire folder',
+    '',
+    '```bash',
+    'opendataloader-pdf ./pdf-folder -o ./output -f json',
+    '```',
+    '',
+    '### Markdown with embedded images',
+    '',
+    '```bash',
+    'opendataloader-pdf document.pdf -f markdown --embed-images',
+    '```',
+    '',
+    '### Improve reading order with XY-Cut algorithm',
+    '',
+    '```bash',
+    'opendataloader-pdf document.pdf -f json --reading-order xycut',
+    '```',
+    '',
+    '### Add page separators in output',
+    '',
+    '```bash',
+    'opendataloader-pdf document.pdf -f markdown --markdown-page-separator "--- Page %page-number% ---"',
+    '```',
+    '',
+    '### Encrypted PDF',
+    '',
+    '```bash',
+    'opendataloader-pdf encrypted.pdf -p mypassword -o ./output',
+    '```',
+    '',
+  ];
 
   const outputPath = join(ROOT_DIR, 'content/docs/cli-options-reference.mdx');
   mkdirSync(dirname(outputPath), { recursive: true });

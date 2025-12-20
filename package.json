@@ -5,6 +5,9 @@
   "scripts": {
     "export-options": "java -jar java/opendataloader-pdf-cli/target/opendataloader-pdf-cli-0.0.0.jar --export-options > options.json",
     "generate-options": "node scripts/generate-options.mjs",
-    "sync-options": "java -jar java/opendataloader-pdf-cli/target/opendataloader-pdf-cli-0.0.0.jar --export-options > options.json && node scripts/generate-options.mjs"
+    "sync-options": "npm run export-options && npm run generate-options",
+    "generate-schema": "node scripts/generate-schema.mjs",
+    "sync-schema": "npm run generate-schema",
+    "sync": "npm run sync-options && npm run sync-schema"
   }
 }

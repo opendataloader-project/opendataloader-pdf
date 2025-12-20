@@ -1,0 +1,354 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/opendataloader-project/opendataloader-pdf/main/schema.json",
+  "title": "OpenDataLoader PDF Output",
+  "description": "JSON output schema for OpenDataLoader PDF conversion",
+  "type": "object",
+  "required": ["file name", "number of pages", "author", "title", "creation date", "modification date", "kids"],
+  "properties": {
+    "file name": {
+      "type": "string",
+      "description": "Name of the processed PDF"
+    },
+    "number of pages": {
+      "type": "integer",
+      "description": "Total page count"
+    },
+    "author": {
+      "type": ["string", "null"],
+      "description": "PDF author metadata"
+    },
+    "title": {
+      "type": ["string", "null"],
+      "description": "PDF title metadata"
+    },
+    "creation date": {
+      "type": ["string", "null"],
+      "description": "PDF creation timestamp"
+    },
+    "modification date": {
+      "type": ["string", "null"],
+      "description": "PDF modification timestamp"
+    },
+    "kids": {
+      "type": "array",
+      "description": "Top-level content elements (per page)",
+      "items": {
+        "$ref": "#/$defs/contentElement"
+      }
+    }
+  },
+  "$defs": {
+    "boundingBox": {
+      "type": "array",
+      "description": "Bounding box coordinates [left, bottom, right, top]",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "baseElement": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Element type"
+        },
+        "id": {
+          "type": "integer",
+          "description": "Unique content identifier"
+        },
+        "level": {
+          "type": "string",
+          "description": "Heading or structural level"
+        },
+        "page number": {
+          "type": "integer",
+          "description": "Page containing the element (1-indexed)"
+        },
+        "bounding box": {
+          "$ref": "#/$defs/boundingBox"
+        }
+      },
+      "required": ["type", "page number", "bounding box"]
+    },
+    "textProperties": {
+      "type": "object",
+      "properties": {
+        "font": {
+          "type": "string",
+          "description": "Font name"
+        },
+        "font size": {
+          "type": "number",
+          "description": "Font size"
+        },
+        "text color": {
+          "type": "string",
+          "description": "RGB color as string array"
+        },
+        "content": {
+          "type": "string",
+          "description": "Raw text value"
+        },
+        "hidden text": {
+          "type": "boolean",
+          "description": "Whether this is hidden text (e.g., OCR layer)"
+        }
+      },
+      "required": ["font", "font size", "text color", "content"]
+    },
+    "contentElement": {
+      "oneOf": [
+        { "$ref": "#/$defs/paragraph" },
+        { "$ref": "#/$defs/heading" },
+        { "$ref": "#/$defs/caption" },
+        { "$ref": "#/$defs/table" },
+        { "$ref": "#/$defs/textBlock" },
+        { "$ref": "#/$defs/list" },
+        { "$ref": "#/$defs/image" },
+        { "$ref": "#/$defs/headerFooter" }
+      ]
+    },
+    "paragraph": {
+      "allOf": [
+        { "$ref": "#/$defs/baseElement" },
+        { "$ref": "#/$defs/textProperties" },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "paragraph" }
+          }
+        }
+      ]
+    },
+    "heading": {
+      "allOf": [
+        { "$ref": "#/$defs/baseElement" },
+        { "$ref": "#/$defs/textProperties" },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "heading" },
+            "heading level": {
+              "type": "integer",
+              "description": "Heading level (e.g., 1 for h1)"
+            }
+          },
+          "required": ["heading level"]
+        }
+      ]
+    },
+    "caption": {
+      "allOf": [
+        { "$ref": "#/$defs/baseElement" },
+        { "$ref": "#/$defs/textProperties" },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "caption" },
+            "linked content id": {
+              "type": "integer",
+              "description": "ID of the linked content element (table, image, etc.)"
+            }
+          }
+        }
+      ]
+    },
+    "table": {
+      "allOf": [
+        { "$ref": "#/$defs/baseElement" },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "table" },
+            "number of rows": {
+              "type": "integer",
+              "description": "Row count"
+            },
+            "number of columns": {
+              "type": "integer",
+              "description": "Column count"
+            },
+            "previous table id": {
+              "type": "integer",
+              "description": "Linked table identifier (if broken across pages)"
+            },
+            "next table id": {
+              "type": "integer",
+              "description": "Linked table identifier"
+            },
+            "rows": {
+              "type": "array",
+              "description": "Row objects",
+              "items": { "$ref": "#/$defs/tableRow" }
+            }
+          },
+          "required": ["number of rows", "number of columns", "rows"]
+        }
+      ]
+    },
+    "tableRow": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "table row" },
+        "row number": {
+          "type": "integer",
+          "description": "Row index (1-indexed)"
+        },
+        "cells": {
+          "type": "array",
+          "description": "Cell objects",
+          "items": { "$ref": "#/$defs/tableCell" }
+        }
+      },
+      "required": ["type", "row number", "cells"]
+    },
+    "tableCell": {
+      "allOf": [
+        { "$ref": "#/$defs/baseElement" },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "table cell" },
+            "row number": {
+              "type": "integer",
+              "description": "Row index of the cell (1-indexed)"
+            },
+            "column number": {
+              "type": "integer",
+              "description": "Column index of the cell (1-indexed)"
+            },
+            "row span": {
+              "type": "integer",
+              "description": "Number of rows spanned"
+            },
+            "column span": {
+              "type": "integer",
+              "description": "Number of columns spanned"
+            },
+            "kids": {
+              "type": "array",
+              "description": "Nested content elements",
+              "items": { "$ref": "#/$defs/contentElement" }
+            }
+          },
+          "required": ["row number", "column number", "row span", "column span", "kids"]
+        }
+      ]
+    },
+    "textBlock": {
+      "allOf": [
+        { "$ref": "#/$defs/baseElement" },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "text block" },
+            "kids": {
+              "type": "array",
+              "description": "Text block children",
+              "items": { "$ref": "#/$defs/contentElement" }
+            }
+          },
+          "required": ["kids"]
+        }
+      ]
+    },
+    "list": {
+      "allOf": [
+        { "$ref": "#/$defs/baseElement" },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "list" },
+            "numbering style": {
+              "type": "string",
+              "description": "Marker style (ordered, bullet, etc.)"
+            },
+            "number of list items": {
+              "type": "integer",
+              "description": "Item count"
+            },
+            "previous list id": {
+              "type": "integer",
+              "description": "Linked list identifier"
+            },
+            "next list id": {
+              "type": "integer",
+              "description": "Linked list identifier"
+            },
+            "list items": {
+              "type": "array",
+              "description": "Item nodes",
+              "items": { "$ref": "#/$defs/listItem" }
+            }
+          },
+          "required": ["numbering style", "number of list items", "list items"]
+        }
+      ]
+    },
+    "listItem": {
+      "allOf": [
+        { "$ref": "#/$defs/baseElement" },
+        { "$ref": "#/$defs/textProperties" },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "list item" },
+            "kids": {
+              "type": "array",
+              "description": "Nested content elements",
+              "items": { "$ref": "#/$defs/contentElement" }
+            }
+          },
+          "required": ["kids"]
+        }
+      ]
+    },
+    "image": {
+      "allOf": [
+        { "$ref": "#/$defs/baseElement" },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "image" },
+            "source": {
+              "type": "string",
+              "description": "Relative path to the image file"
+            },
+            "data": {
+              "type": "string",
+              "description": "Base64 data URI (when embed-images is enabled)"
+            },
+            "format": {
+              "type": "string",
+              "description": "Image format (png, jpeg)",
+              "enum": ["png", "jpeg"]
+            }
+          }
+        }
+      ]
+    },
+    "headerFooter": {
+      "allOf": [
+        { "$ref": "#/$defs/baseElement" },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["header", "footer"]
+            },
+            "kids": {
+              "type": "array",
+              "description": "Content elements within the header or footer",
+              "items": { "$ref": "#/$defs/contentElement" }
+            }
+          },
+          "required": ["kids"]
+        }
+      ]
+    }
+  }
+}
