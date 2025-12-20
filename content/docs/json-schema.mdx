@@ -3,98 +3,127 @@ title: JSON Schema
 description: Understand the layout structure emitted by OpenDataLoader PDF
 ---
 
+{/* AUTO-GENERATED FROM schema.json - DO NOT EDIT DIRECTLY */}
+{/* Run `npm run generate-schema` to regenerate */}
+
+
 Every conversion that includes the `json` format produces a hierarchical document describing detected elements (pages, tables, lists, captions, etc.). Use the following reference to map fields into your downstream processors.
 
 ## Root node
 
-| Field               | Type      | Optional | Description                            |
-| ------------------- | --------- | -------- | -------------------------------------- |
-| `file name`         | `string`  | No       | Name of the processed PDF.             |
-| `number of pages`   | `integer` | No       | Total page count.                      |
-| `author`            | `string`  | No       | PDF author metadata.                   |
-| `title`             | `string`  | No       | PDF title metadata.                    |
-| `creation date`     | `string`  | No       | PDF creation timestamp.                |
-| `modification date` | `string`  | No       | PDF modification timestamp.            |
-| `kids`              | `array`   | No       | Top-level content elements (per page). |
+| Field               | Type               | Required | Description                           |
+|---------------------|--------------------|----------|---------------------------------------|
+| `file name`         | `string`           | Yes      | Name of the processed PDF             |
+| `number of pages`   | `integer`          | Yes      | Total page count                      |
+| `author`            | `string` \| `null` | Yes      | PDF author metadata                   |
+| `title`             | `string` \| `null` | Yes      | PDF title metadata                    |
+| `creation date`     | `string` \| `null` | Yes      | PDF creation timestamp                |
+| `modification date` | `string` \| `null` | Yes      | PDF modification timestamp            |
+| `kids`              | `array`            | Yes      | Top-level content elements (per page) |
 
 ## Common content fields
 
-| Field          | Type      | Optional | Description                                                                                                                                                               |
-| -------------- | --------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`           | `integer` | Yes      | Unique content identifier.                                                                                                                                                |
-| `level`        | `string`  | Yes      | Heading or structural level.                                                                                                                                              |
-| `type`         | `string`  | No       | Element type (`footer`, `header`, `heading`, `line`, `table`, `table row`, `table cell`, `paragraph`, `list`, `list item`, `image`, `line art`, `caption`, `text block`). |
-| `page number`  | `integer` | No       | Page containing the element.                                                                                                                                              |
-| `bounding box` | `array`   | No       | Bounding box coordinates.                                                                                                                                                 |
+All content elements share these base properties:
 
-## Text nodes (`caption`, `heading`, `paragraph`)
+| Field          | Type          | Required | Description                             |
+|----------------|---------------|----------|-----------------------------------------|
+| `type`         | `string`      | Yes      | Element type                            |
+| `id`           | `integer`     | No       | Unique content identifier               |
+| `level`        | `string`      | No       | Heading or structural level             |
+| `page number`  | `integer`     | Yes      | Page containing the element (1-indexed) |
+| `bounding box` | `boundingBox` | Yes      |                                         |
 
-| Field        | Type     | Optional | Description     |
-| ------------ | -------- | -------- | --------------- |
-| `font`       | `string` | No       | Font name.      |
-| `font size`  | `double` | No       | Font size.      |
-| `text color` | `array`  | No       | RGB color.      |
-| `content`    | `string` | No       | Raw text value. |
+## Text properties
 
-## Tables
+Text nodes (`paragraph`, `heading`, `caption`, `list item`) include these additional fields:
 
-| Field               | Type      | Optional | Description                                       |
-| ------------------- | --------- | -------- | ------------------------------------------------- |
-| `number of rows`    | `integer` | No       | Row count.                                        |
-| `number of columns` | `integer` | No       | Column count.                                     |
-| `rows`              | `array`   | No       | Row objects.                                      |
-| `previous table id` | `integer` | Yes      | Linked table identifier (if broken across pages). |
-| `next table id`     | `integer` | Yes      | Linked table identifier.                          |
-
-### Table rows
-
-| Field        | Type      | Optional | Description   |
-| ------------ | --------- | -------- | ------------- |
-| `row number` | `integer` | No       | Row index.    |
-| `cells`      | `array`   | No       | Cell objects. |
-
-### Table cells
-
-| Field           | Type      | Optional | Description                |
-| --------------- | --------- | -------- | -------------------------- |
-| `row number`    | `integer` | No       | Row index of the cell.     |
-| `column number` | `integer` | No       | Column index of the cell.  |
-| `row span`      | `integer` | No       | Number of rows spanned.    |
-| `column span`   | `integer` | No       | Number of columns spanned. |
-| `kids`          | `array`   | No       | Nested content elements.   |
+| Field         | Type      | Required | Description                                   |
+|---------------|-----------|----------|-----------------------------------------------|
+| `font`        | `string`  | Yes      | Font name                                     |
+| `font size`   | `number`  | Yes      | Font size                                     |
+| `text color`  | `string`  | Yes      | RGB color as string array                     |
+| `content`     | `string`  | Yes      | Raw text value                                |
+| `hidden text` | `boolean` | No       | Whether this is hidden text (e.g., OCR layer) |
 
 ## Headings
 
-| Field           | Type      | Optional | Description               |
-| --------------- | --------- | -------- | ------------------------- |
-| `heading level` | `integer` | No       | Level (e.g., 1 for `h1`). |
+| Field           | Type      | Required | Description                    |
+|-----------------|-----------|----------|--------------------------------|
+| `heading level` | `integer` | Yes      | Heading level (e.g., 1 for h1) |
+
+## Captions
+
+| Field               | Type      | Required | Description                                           |
+|---------------------|-----------|----------|-------------------------------------------------------|
+| `linked content id` | `integer` | No       | ID of the linked content element (table, image, etc.) |
+
+## Tables
+
+| Field               | Type      | Required | Description                                      |
+|---------------------|-----------|----------|--------------------------------------------------|
+| `number of rows`    | `integer` | Yes      | Row count                                        |
+| `number of columns` | `integer` | Yes      | Column count                                     |
+| `previous table id` | `integer` | No       | Linked table identifier (if broken across pages) |
+| `next table id`     | `integer` | No       | Linked table identifier                          |
+| `rows`              | `array`   | Yes      | Row objects                                      |
+
+### Table rows
+
+| Field        | Type          | Required | Description           |
+|--------------|---------------|----------|-----------------------|
+| `type`       | `"table row"` | Yes      | Element type          |
+| `row number` | `integer`     | Yes      | Row index (1-indexed) |
+| `cells`      | `array`       | Yes      | Cell objects          |
+
+### Table cells
+
+| Field           | Type      | Required | Description                          |
+|-----------------|-----------|----------|--------------------------------------|
+| `row number`    | `integer` | Yes      | Row index of the cell (1-indexed)    |
+| `column number` | `integer` | Yes      | Column index of the cell (1-indexed) |
+| `row span`      | `integer` | Yes      | Number of rows spanned               |
+| `column span`   | `integer` | Yes      | Number of columns spanned            |
+| `kids`          | `array`   | Yes      | Nested content elements              |
 
 ## Lists
 
-| Field                  | Type      | Optional | Description                           |
-| ---------------------- | --------- | -------- | ------------------------------------- |
-| `number of list items` | `integer` | No       | Item count.                           |
-| `numbering style`      | `string`  | No       | Marker style (ordered, bullet, etc.). |
-| `previous list id`     | `integer` | Yes      | Linked list identifier.               |
-| `next list id`         | `integer` | Yes      | Linked list identifier.               |
-| `list items`           | `array`   | No       | Item nodes.                           |
+| Field                  | Type      | Required | Description                          |
+|------------------------|-----------|----------|--------------------------------------|
+| `numbering style`      | `string`  | Yes      | Marker style (ordered, bullet, etc.) |
+| `number of list items` | `integer` | Yes      | Item count                           |
+| `previous list id`     | `integer` | No       | Linked list identifier               |
+| `next list id`         | `integer` | No       | Linked list identifier               |
+| `list items`           | `array`   | Yes      | Item nodes                           |
 
 ### List items
 
-| Field  | Type    | Optional | Description              |
-| ------ | ------- | -------- | ------------------------ |
-| `kids` | `array` | No       | Nested content elements. |
+List items include text properties plus:
+
+| Field  | Type    | Required | Description             |
+|--------|---------|----------|-------------------------|
+| `kids` | `array` | Yes      | Nested content elements |
+
+## Images
+
+| Field    | Type     | Required | Description                                    |
+|----------|----------|----------|------------------------------------------------|
+| `source` | `string` | No       | Relative path to the image file                |
+| `data`   | `string` | No       | Base64 data URI (when embed-images is enabled) |
+| `format` | `string` | No       | Image format (`png`, `jpeg`)                   |
 
 ## Headers and footers
 
-| Field  | Type    | Optional | Description                                   |
-| ------ | ------- | -------- | --------------------------------------------- |
-| `kids` | `array` | No       | Content elements within the header or footer. |
+| Field  | Type     | Required | Description                                  |
+|--------|----------|----------|----------------------------------------------|
+| `type` | `string` | Yes      | Either `header` or `footer`                  |
+| `kids` | `array`  | Yes      | Content elements within the header or footer |
 
 ## Text blocks
 
-| Field  | Type    | Optional | Description          |
-| ------ | ------- | -------- | -------------------- |
-| `kids` | `array` | No       | Text block children. |
+| Field  | Type    | Required | Description         |
+|--------|---------|----------|---------------------|
+| `kids` | `array` | Yes      | Text block children |
 
-Use these tables as guidance for building downstream schemas or validations; the actual JSON output is designed to be self-descriptive and can be inspected with typical JSON tooling.
+## JSON Schema
+
+The complete JSON Schema is available at [`schema.json`](https://github.com/opendataloader-project/opendataloader-pdf/blob/main/schema.json) in the repository root.

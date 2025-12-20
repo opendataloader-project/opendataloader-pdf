@@ -7,20 +7,20 @@ description: Options for the Node.js convert function
 {/* Run `npm run generate-options` to regenerate */}
 
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `outputDir` | `string` | - | Directory where output files are written. Default: input file directory |
-| `password` | `string` | - | Password for encrypted PDF files |
-| `format` | `string \| string[]` | - | Output formats (comma-separated). Values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images. Default: json |
-| `quiet` | `boolean` | `false` | Suppress console logging output |
-| `contentSafetyOff` | `string \| string[]` | - | Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg |
-| `keepLineBreaks` | `boolean` | `false` | Preserve original line breaks in extracted text |
-| `replaceInvalidChars` | `string` | `" "` | Replacement character for invalid/unrecognized characters. Default: space |
-| `useStructTree` | `boolean` | `false` | Use PDF structure tree (tagged PDF) for reading order and semantic structure |
-| `tableMethod` | `string` | - | Table detection method. Values: cluster |
-| `readingOrder` | `string` | `"none"` | Reading order algorithm. Values: none, xycut. Default: none |
-| `markdownPageSeparator` | `string` | - | Separator between pages in Markdown output. Use %page-number% for page numbers. Default: none |
-| `textPageSeparator` | `string` | - | Separator between pages in text output. Use %page-number% for page numbers. Default: none |
-| `htmlPageSeparator` | `string` | - | Separator between pages in HTML output. Use %page-number% for page numbers. Default: none |
-| `embedImages` | `boolean` | `false` | Embed images as Base64 data URIs instead of file path references |
-| `imageFormat` | `string` | `"png"` | Output format for extracted images. Values: png, jpeg. Default: png |
+| Option                  | Type                 | Default  | Description                                                                                                                        |
+|-------------------------|----------------------|----------|------------------------------------------------------------------------------------------------------------------------------------|
+| `outputDir`             | `string`             | -        | Directory where output files are written. Default: input file directory                                                            |
+| `password`              | `string`             | -        | Password for encrypted PDF files                                                                                                   |
+| `format`                | `string \| string[]` | -        | Output formats (comma-separated). Values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images. Default: json |
+| `quiet`                 | `boolean`            | `false`  | Suppress console logging output                                                                                                    |
+| `contentSafetyOff`      | `string \| string[]` | -        | Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg                                               |
+| `keepLineBreaks`        | `boolean`            | `false`  | Preserve original line breaks in extracted text                                                                                    |
+| `replaceInvalidChars`   | `string`             | `" "`    | Replacement character for invalid/unrecognized characters. Default: space                                                          |
+| `useStructTree`         | `boolean`            | `false`  | Use PDF structure tree (tagged PDF) for reading order and semantic structure                                                       |
+| `tableMethod`           | `string`             | -        | Table detection method. Values: cluster                                                                                            |
+| `readingOrder`          | `string`             | `"none"` | Reading order algorithm. Values: none, xycut. Default: none                                                                        |
+| `markdownPageSeparator` | `string`             | -        | Separator between pages in Markdown output. Use %page-number% for page numbers. Default: none                                      |
+| `textPageSeparator`     | `string`             | -        | Separator between pages in text output. Use %page-number% for page numbers. Default: none                                          |
+| `htmlPageSeparator`     | `string`             | -        | Separator between pages in HTML output. Use %page-number% for page numbers. Default: none                                          |
+| `embedImages`           | `boolean`            | `false`  | Embed images as Base64 data URIs instead of file path references                                                                   |
+| `imageFormat`           | `string`             | `"png"`  | Output format for extracted images. Values: png, jpeg. Default: png                                                                |
