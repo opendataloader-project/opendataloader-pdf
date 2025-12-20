@@ -133,6 +133,7 @@
             "type": { "const": "heading" },
             "heading level": {
               "type": "integer",
+              "minimum": 1,
               "description": "Heading level (e.g., 1 for h1)"
             }
           },
@@ -222,10 +223,12 @@
             },
             "row span": {
               "type": "integer",
+              "minimum": 1,
               "description": "Number of rows spanned"
             },
             "column span": {
               "type": "integer",
+              "minimum": 1,
               "description": "Number of columns spanned"
             },
             "kids": {
