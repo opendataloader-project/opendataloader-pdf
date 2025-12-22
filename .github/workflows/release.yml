@@ -119,7 +119,7 @@ jobs:
           cd java/opendataloader-pdf-cli/target
           mkdir -p release
           cp "opendataloader-pdf-cli-${{ env.VERSION }}.jar" release/
-          cp ../README.md release/
+          cp ../../../README.md release/
           cd release
           zip "../opendataloader-pdf-cli-${{ env.VERSION }}.zip" *
           cd ../..
