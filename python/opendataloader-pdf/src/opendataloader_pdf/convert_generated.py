@@ -45,7 +45,7 @@ def convert(
         markdown_page_separator: Separator between pages in Markdown output. Use %page-number% for page numbers. Default: none
         text_page_separator: Separator between pages in text output. Use %page-number% for page numbers. Default: none
         html_page_separator: Separator between pages in HTML output. Use %page-number% for page numbers. Default: none
-        image_output: Image output mode. Values: embedded (Base64 data URIs), external (file references). Default: embedded
+        image_output: Image output mode. Values: off (no images), embedded (Base64 data URIs), external (file references). Default: external
         image_format: Output format for extracted images. Values: png, jpeg. Default: png
     """
     args: List[str] = []

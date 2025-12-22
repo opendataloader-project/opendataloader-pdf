@@ -47,7 +47,7 @@ public class MarkdownGenerator implements Closeable {
         String cutPdfFileName = inputPdf.getName();
         this.markdownFileName = config.getOutputFolder() + File.separator + cutPdfFileName.substring(0, cutPdfFileName.length() - 3) + "md";
         this.markdownWriter = new FileWriter(markdownFileName, StandardCharsets.UTF_8);
-        this.isImageSupported = config.isAddImageToMarkdown();
+        this.isImageSupported = !config.isImageOutputOff() && config.isGenerateMarkdown();
         this.markdownPageSeparator = config.getMarkdownPageSeparator();
         this.embedImages = config.isEmbedImages();
         this.imageFormat = config.getImageFormat();

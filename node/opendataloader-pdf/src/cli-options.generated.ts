@@ -20,6 +20,6 @@ export function registerCliOptions(program: Command): void {
   program.option('--markdown-page-separator <value>', 'Separator between pages in Markdown output. Use %page-number% for page numbers. Default: none');
   program.option('--text-page-separator <value>', 'Separator between pages in text output. Use %page-number% for page numbers. Default: none');
   program.option('--html-page-separator <value>', 'Separator between pages in HTML output. Use %page-number% for page numbers. Default: none');
-  program.option('--image-output <value>', 'Image output mode. Values: embedded (Base64 data URIs), external (file references). Default: embedded');
+  program.option('--image-output <value>', 'Image output mode. Values: off (no images), embedded (Base64 data URIs), external (file references). Default: external');
   program.option('--image-format <value>', 'Output format for extracted images. Values: png, jpeg. Default: png');
 }

@@ -81,7 +81,7 @@ public class CLIOptions {
 
     // ===== Image Options =====
     private static final String IMAGE_OUTPUT_LONG_OPTION = "image-output";
-    private static final String IMAGE_OUTPUT_DESC = "Image output mode. Values: embedded (Base64 data URIs), external (file references). Default: embedded";
+    private static final String IMAGE_OUTPUT_DESC = "Image output mode. Values: off (no images), embedded (Base64 data URIs), external (file references). Default: external";
 
     private static final String IMAGE_FORMAT_LONG_OPTION = "image-format";
     private static final String IMAGE_FORMAT_DESC = "Output format for extracted images. Values: png, jpeg. Default: png";
@@ -119,7 +119,7 @@ public class CLIOptions {
                     MARKDOWN_PAGE_SEPARATOR_DESC, true),
             new OptionDefinition(TEXT_PAGE_SEPARATOR_LONG_OPTION, null, "string", null, TEXT_PAGE_SEPARATOR_DESC, true),
             new OptionDefinition(HTML_PAGE_SEPARATOR_LONG_OPTION, null, "string", null, HTML_PAGE_SEPARATOR_DESC, true),
-            new OptionDefinition(IMAGE_OUTPUT_LONG_OPTION, null, "string", "embedded", IMAGE_OUTPUT_DESC, true),
+            new OptionDefinition(IMAGE_OUTPUT_LONG_OPTION, null, "string", "external", IMAGE_OUTPUT_DESC, true),
             new OptionDefinition(IMAGE_FORMAT_LONG_OPTION, null, "string", "png", IMAGE_FORMAT_DESC, true),
             new OptionDefinition(EXPORT_OPTIONS_LONG_OPTION, null, "boolean", null, null, false),
 

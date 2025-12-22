@@ -19,9 +19,10 @@ class ConfigTest {
     void testDefaultValues() {
         Config config = new Config();
 
-        // Verify default values (new defaults: embedded=true, xycut)
-        assertTrue(config.isEmbedImages());
-        assertEquals(Config.IMAGE_OUTPUT_EMBEDDED, config.getImageOutput());
+        // Verify default values (new defaults: external, xycut)
+        assertFalse(config.isEmbedImages());
+        assertFalse(config.isImageOutputOff());
+        assertEquals(Config.IMAGE_OUTPUT_EXTERNAL, config.getImageOutput());
         assertEquals(Config.IMAGE_FORMAT_PNG, config.getImageFormat());
         assertEquals(Config.READING_ORDER_XYCUT, config.getReadingOrder());
     }
@@ -32,9 +33,15 @@ class ConfigTest {
 
         config.setImageOutput(Config.IMAGE_OUTPUT_EMBEDDED);
         assertTrue(config.isEmbedImages());
+        assertFalse(config.isImageOutputOff());
 
         config.setImageOutput(Config.IMAGE_OUTPUT_EXTERNAL);
         assertFalse(config.isEmbedImages());
+        assertFalse(config.isImageOutputOff());
+
+        config.setImageOutput(Config.IMAGE_OUTPUT_OFF);
+        assertFalse(config.isEmbedImages());
+        assertTrue(config.isImageOutputOff());
     }
 
     @Test
@@ -126,7 +133,7 @@ class ConfigTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"embedded", "EMBEDDED", "external", "EXTERNAL"})
+    @ValueSource(strings = {"off", "OFF", "embedded", "EMBEDDED", "external", "EXTERNAL"})
     void testIsValidImageOutput_withValidModes(String mode) {
         assertTrue(Config.isValidImageOutput(mode));
     }
@@ -141,12 +148,14 @@ class ConfigTest {
     void testGetImageOutputOptions() {
         String options = Config.getImageOutputOptions(", ");
 
+        assertTrue(options.contains("off"));
         assertTrue(options.contains("embedded"));
         assertTrue(options.contains("external"));
     }
 
     @Test
     void testImageOutputConstants() {
+        assertEquals("off", Config.IMAGE_OUTPUT_OFF);
         assertEquals("embedded", Config.IMAGE_OUTPUT_EMBEDDED);
         assertEquals("external", Config.IMAGE_OUTPUT_EXTERNAL);
     }
@@ -163,11 +172,11 @@ class ConfigTest {
     }
 
     @Test
-    void testSetImageOutputWithNullDefaultsToEmbedded() {
+    void testSetImageOutputWithNullDefaultsToExternal() {
         Config config = new Config();
 
         config.setImageOutput(null);
-        assertEquals(Config.IMAGE_OUTPUT_EMBEDDED, config.getImageOutput());
+        assertEquals(Config.IMAGE_OUTPUT_EXTERNAL, config.getImageOutput());
     }
 
     @ParameterizedTest

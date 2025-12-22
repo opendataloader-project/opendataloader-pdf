@@ -41,7 +41,7 @@ public class Config {
     private String markdownPageSeparator = "";
     private String textPageSeparator = "";
     private String htmlPageSeparator = "";
-    private String imageOutput = IMAGE_OUTPUT_EMBEDDED;
+    private String imageOutput = IMAGE_OUTPUT_EXTERNAL;
     private String imageFormat = IMAGE_FORMAT_PNG;
     private final FilterConfig filterConfig = new FilterConfig();
 
@@ -57,6 +57,8 @@ public class Config {
     public static final String IMAGE_FORMAT_JPEG = "jpeg";
     private static Set<String> imageFormatOptions = new HashSet<>();
 
+    /** Image output mode: no image extraction. */
+    public static final String IMAGE_OUTPUT_OFF = "off";
     /** Image output mode: embedded as Base64 data URIs. */
     public static final String IMAGE_OUTPUT_EMBEDDED = "embedded";
     /** Image output mode: external file references. */
@@ -70,6 +72,7 @@ public class Config {
         tableMethodOptions.add(TABLE_METHOD_CLUSTER);
         imageFormatOptions.add(IMAGE_FORMAT_PNG);
         imageFormatOptions.add(IMAGE_FORMAT_JPEG);
+        imageOutputOptions.add(IMAGE_OUTPUT_OFF);
         imageOutputOptions.add(IMAGE_OUTPUT_EMBEDDED);
         imageOutputOptions.add(IMAGE_OUTPUT_EXTERNAL);
     }
@@ -472,9 +475,18 @@ public class Config {
     }
 
     /**
+     * Checks if image extraction is disabled.
+     *
+     * @return true if image output is off, false otherwise.
+     */
+    public boolean isImageOutputOff() {
+        return IMAGE_OUTPUT_OFF.equals(imageOutput);
+    }
+
+    /**
      * Gets the image output mode.
      *
-     * @return The image output mode (embedded or external).
+     * @return The image output mode (off, embedded, or external).
      */
     public String getImageOutput() {
         return imageOutput;
@@ -483,7 +495,7 @@ public class Config {
     /**
      * Sets the image output mode.
      *
-     * @param imageOutput The image output mode (embedded or external).
+     * @param imageOutput The image output mode (off, embedded, or external).
      * @throws IllegalArgumentException if the mode is not supported.
      */
     public void setImageOutput(String imageOutput) {
@@ -492,7 +504,7 @@ public class Config {
                 String.format("Unsupported image output mode '%s'. Supported values: %s",
                     imageOutput, getImageOutputOptions(", ")));
         }
-        this.imageOutput = imageOutput != null ? imageOutput.toLowerCase(Locale.ROOT) : IMAGE_OUTPUT_EMBEDDED;
+        this.imageOutput = imageOutput != null ? imageOutput.toLowerCase(Locale.ROOT) : IMAGE_OUTPUT_EXTERNAL;
     }
 
     /**

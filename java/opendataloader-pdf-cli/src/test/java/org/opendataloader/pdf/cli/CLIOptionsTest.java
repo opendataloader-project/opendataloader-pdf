@@ -77,14 +77,27 @@ class CLIOptionsTest {
 
     @Test
     void testCreateConfig_defaultImageOutput() throws ParseException {
-        // Default should be embedded (new default)
+        // Default should be external
         String[] args = {testPdf.getAbsolutePath()};
         CommandLine cmd = parser.parse(options, args);
 
         Config config = CLIOptions.createConfigFromCommandLine(cmd);
 
-        assertTrue(config.isEmbedImages());
-        assertEquals(Config.IMAGE_OUTPUT_EMBEDDED, config.getImageOutput());
+        assertFalse(config.isEmbedImages());
+        assertFalse(config.isImageOutputOff());
+        assertEquals(Config.IMAGE_OUTPUT_EXTERNAL, config.getImageOutput());
+    }
+
+    @Test
+    void testCreateConfig_withImageOutputOff() throws ParseException {
+        String[] args = {"--image-output", "off", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertFalse(config.isEmbedImages());
+        assertTrue(config.isImageOutputOff());
+        assertEquals(Config.IMAGE_OUTPUT_OFF, config.getImageOutput());
     }
 
     @ParameterizedTest

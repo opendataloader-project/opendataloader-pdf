@@ -136,8 +136,8 @@ opendataloader_pdf.convert(
     output_dir="output/",
     format="json,markdown,pdf",
 
-    # Image output mode: "embedded" (Base64) or "external" (file references)
-    image_output="external",
+    # Image output mode: "off", "embedded" (Base64), or "external" (default)
+    image_output="embedded",
 
     # Image format: "png" or "jpeg"
     image_format="jpeg",

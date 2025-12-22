@@ -31,7 +31,7 @@ export interface ConvertOptions {
   textPageSeparator?: string;
   /** Separator between pages in HTML output. Use %page-number% for page numbers. Default: none */
   htmlPageSeparator?: string;
-  /** Image output mode. Values: embedded (Base64 data URIs), external (file references). Default: embedded */
+  /** Image output mode. Values: off (no images), embedded (Base64 data URIs), external (file references). Default: external */
   imageOutput?: string;
   /** Output format for extracted images. Values: png, jpeg. Default: png */
   imageFormat?: string;
