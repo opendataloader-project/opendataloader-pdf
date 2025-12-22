@@ -119,13 +119,13 @@ Key parameters:
 
 ## When to Disable Reading Order
 
-Reading order is enabled by default. Consider disabling (`--reading-order off`) for:
+Reading order is enabled by default and works well for most documents. Disabling (`--reading-order off`) is rarely needed:
 
-| Document Type | Recommendation |
-|---------------|----------------|
-| Single-column documents | Default works fine, but `off` is slightly faster |
-| Forms, tables | May want `off` if layout detection interferes |
-| Pre-sorted PDFs | Use `off` if PDF already has correct order |
+| Use Case | Notes |
+|----------|-------|
+| Debugging | Compare xycut output vs raw PDF order |
+| Custom post-processing | When your pipeline handles ordering |
+| Tagged PDFs | Use `--use-struct-tree` instead (not `off`) |
 
 ## Further Reading
 
