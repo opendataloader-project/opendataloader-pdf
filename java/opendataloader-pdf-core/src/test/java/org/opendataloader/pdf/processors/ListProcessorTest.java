@@ -108,8 +108,12 @@ public class ListProcessorTest {
             "나. 두 번째 항목", 10, 30.0)));
         pageContents.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 20.0, 20.0, 30.0),
             ")", 10, 20.0)));
-        Assertions.assertDoesNotThrow(() -> ListProcessor.processLists(contents, false),
-            "processLists should handle single character labels without throwing StringIndexOutOfBoundsException");
+        int originalSize = pageContents.size();
+        ListProcessor.processLists(contents, false);
+        Assertions.assertFalse(contents.get(0).isEmpty(),
+            "Content should not be empty after processing");
+        Assertions.assertTrue(contents.get(0).size() <= originalSize,
+            "Content size should not exceed original size");
     }
 
     @Test
@@ -127,7 +131,11 @@ public class ListProcessorTest {
             "1)", 10, 30.0)));
         pageContents.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 20.0, 20.0, 30.0),
             "2)", 10, 20.0)));
-        Assertions.assertDoesNotThrow(() -> ListProcessor.processLists(contents, false),
-            "processLists should handle edge case labels without throwing StringIndexOutOfBoundsException");
+        int originalSize = pageContents.size();
+        ListProcessor.processLists(contents, false);
+        Assertions.assertFalse(contents.get(0).isEmpty(),
+            "Content should not be empty after processing");
+        Assertions.assertTrue(contents.get(0).size() <= originalSize,
+            "Content size should not exceed original size");
     }
 }

@@ -150,7 +150,9 @@ public class ListProcessor {
                     break;
                 }
             } catch (StringIndexOutOfBoundsException e) {
-                LOGGER.log(Level.WARNING, "Malformed list label: " + listItemTextInfo.getListItemValue().getValue(), e);
+                // Malformed label cannot be matched; treat as new list (isSingle remains true)
+                LOGGER.log(Level.WARNING, "Malformed list label, starting new list: " + listItemTextInfo.getListItemValue().getValue(), e);
+                break;
             }
             if (shouldHaveSameLeftDifference && !NodeUtils.areCloseNumbers(previousLeftDifference, leftDifference)) {
                 break;
