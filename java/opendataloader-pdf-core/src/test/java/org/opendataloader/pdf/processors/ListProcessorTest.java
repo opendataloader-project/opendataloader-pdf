@@ -92,4 +92,55 @@ public class ListProcessorTest {
         Assertions.assertTrue(contents.get(0).get(0) instanceof PDFList);
         Assertions.assertEquals(4, ((PDFList) contents.get(0).get(0)).getNumberOfListItems());
     }
+
+    @Test
+    public void testProcessListsWithSingleCharacterLabels() {
+        // This test reproduces the StringIndexOutOfBoundsException issue with single-character or
+        // malformed list labels that can occur in complex Korean PDFs
+        StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
+        StaticContainers.setIsDataLoader(true);
+        List<IObject> pageContents = new ArrayList<>();
+        List<List<IObject>> contents = new ArrayList<>();
+        contents.add(pageContents);
+
+        // Create list items with single-character labels and Korean text that can trigger
+        // StringIndexOutOfBoundsException in ListLabelsUtils.haveDifferentSuffixChars
+        pageContents.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 50.0, 20.0, 60.0),
+            "1", 10, 50.0)));  // Single character label without suffix
+        pageContents.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 40.0, 20.0, 50.0),
+            "가. 첫 번째 항목", 10, 40.0)));  // Korean list item
+        pageContents.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 30.0, 20.0, 40.0),
+            "나. 두 번째 항목", 10, 30.0)));  // Korean list item
+        pageContents.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 20.0, 20.0, 30.0),
+            ")", 10, 20.0)));  // Single character label - just a suffix
+
+        // This should not throw StringIndexOutOfBoundsException
+        // Instead it should handle the error gracefully and continue processing
+        Assertions.assertDoesNotThrow(() -> ListProcessor.processLists(contents, false),
+            "processLists should handle malformed list labels gracefully without throwing StringIndexOutOfBoundsException");
+    }
+
+    @Test
+    public void testProcessListsWithEmptyAndEdgeCaseLabels() {
+        // Test additional edge cases that could trigger StringIndexOutOfBoundsException
+        StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
+        StaticContainers.setIsDataLoader(true);
+        List<IObject> pageContents = new ArrayList<>();
+        List<List<IObject>> contents = new ArrayList<>();
+        contents.add(pageContents);
+
+        // Edge case: list items with various problematic label formats
+        pageContents.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 50.0, 20.0, 60.0),
+            "a", 10, 50.0)));  // Single character
+        pageContents.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 40.0, 20.0, 50.0),
+            "b", 10, 40.0)));  // Single character
+        pageContents.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 30.0, 20.0, 40.0),
+            "1)", 10, 30.0)));  // Two characters
+        pageContents.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 20.0, 20.0, 30.0),
+            "2)", 10, 20.0)));  // Two characters
+
+        // This should not throw StringIndexOutOfBoundsException
+        Assertions.assertDoesNotThrow(() -> ListProcessor.processLists(contents, false),
+            "processLists should handle edge case list labels gracefully without throwing StringIndexOutOfBoundsException");
+    }
 }
