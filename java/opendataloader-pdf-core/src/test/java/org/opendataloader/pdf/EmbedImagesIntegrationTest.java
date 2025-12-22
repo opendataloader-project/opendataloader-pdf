@@ -60,7 +60,7 @@ class EmbedImagesIntegrationTest {
 
         Config config = new Config();
         config.setOutputFolder(tempDir.toString());
-        config.setEmbedImages(true);
+        config.setImageOutput(Config.IMAGE_OUTPUT_EMBEDDED);
         config.setImageFormat("png");
         config.setGenerateJSON(true);
         config.setGenerateHtml(false);
@@ -95,7 +95,7 @@ class EmbedImagesIntegrationTest {
 
         Config config = new Config();
         config.setOutputFolder(tempDir.toString());
-        config.setEmbedImages(true);
+        config.setImageOutput(Config.IMAGE_OUTPUT_EMBEDDED);
         config.setImageFormat("png");
         config.setGenerateJSON(false);
         config.setGenerateHtml(true);
@@ -128,7 +128,7 @@ class EmbedImagesIntegrationTest {
 
         Config config = new Config();
         config.setOutputFolder(tempDir.toString());
-        config.setEmbedImages(true);
+        config.setImageOutput(Config.IMAGE_OUTPUT_EMBEDDED);
         config.setImageFormat("png");
         config.setGenerateJSON(false);
         config.setAddImageToMarkdown(true);
@@ -161,7 +161,7 @@ class EmbedImagesIntegrationTest {
 
         Config config = new Config();
         config.setOutputFolder(tempDir.toString());
-        config.setEmbedImages(false);
+        config.setImageOutput(Config.IMAGE_OUTPUT_EXTERNAL);
         config.setGenerateJSON(true);
 
         // When
@@ -190,7 +190,7 @@ class EmbedImagesIntegrationTest {
 
         Config config = new Config();
         config.setOutputFolder(tempDir.toString());
-        config.setEmbedImages(true);
+        config.setImageOutput(Config.IMAGE_OUTPUT_EMBEDDED);
         config.setImageFormat("jpeg");
         config.setGenerateJSON(true);
 

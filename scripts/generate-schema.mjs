@@ -215,7 +215,7 @@ function generateJsonSchemaMdx() {
     '',
     ...formatTable(['Field', 'Type', 'Required', 'Description'], [
       ['`source`', '`string`', 'No', 'Relative path to the image file'],
-      ['`data`', '`string`', 'No', 'Base64 data URI (when embed-images is enabled)'],
+      ['`data`', '`string`', 'No', 'Base64 data URI (when image-output is "embedded")'],
       ['`format`', '`string`', 'No', 'Image format (`png`, `jpeg`)']
     ]),
     ''

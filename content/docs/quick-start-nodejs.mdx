@@ -31,7 +31,6 @@ async function main() {
   await convert(["path/to/document.pdf", "path/to/folder"], {
     outputDir: "path/to/output",
     format: "json,html,pdf,markdown",
-    readingOrder: "xycut",  // For accurate multi-column reading order
   });
 }
 
@@ -51,8 +50,7 @@ import NodeConvertOptions from './_generated/node-convert-options.mdx';
 ```bash
 npx @opendataloader/pdf path/to/document.pdf path/to/folder \
   -o path/to/output \
-  -f json,html,pdf,markdown \
-  --reading-order xycut  # For accurate multi-column reading order
+  -f json,html,pdf,markdown
 ```
 
 For CLI options, see the [CLI Options Reference](./cli-options-reference).

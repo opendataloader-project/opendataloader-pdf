@@ -63,11 +63,11 @@ public class CLIOptions {
 
     // ===== Table Method =====
     private static final String TABLE_METHOD_LONG_OPTION = "table-method";
-    private static final String TABLE_METHOD_DESC = "Table detection method. Values: cluster";
+    private static final String TABLE_METHOD_DESC = "Table detection method. Values: default (border-based), cluster (border + cluster). Default: default";
 
     // ===== Reading Order =====
     private static final String READING_ORDER_LONG_OPTION = "reading-order";
-    private static final String READING_ORDER_DESC = "Reading order algorithm. Values: none, xycut. Default: none";
+    private static final String READING_ORDER_DESC = "Reading order algorithm. Values: off, xycut. Default: xycut";
 
     // ===== Page Separators =====
     private static final String MARKDOWN_PAGE_SEPARATOR_LONG_OPTION = "markdown-page-separator";
@@ -80,8 +80,8 @@ public class CLIOptions {
     private static final String HTML_PAGE_SEPARATOR_DESC = "Separator between pages in HTML output. Use %page-number% for page numbers. Default: none";
 
     // ===== Image Options =====
-    private static final String EMBED_IMAGES_LONG_OPTION = "embed-images";
-    private static final String EMBED_IMAGES_DESC = "Embed images as Base64 data URIs instead of file path references";
+    private static final String IMAGE_OUTPUT_LONG_OPTION = "image-output";
+    private static final String IMAGE_OUTPUT_DESC = "Image output mode. Values: embedded (Base64 data URIs), external (file references). Default: embedded";
 
     private static final String IMAGE_FORMAT_LONG_OPTION = "image-format";
     private static final String IMAGE_FORMAT_DESC = "Output format for extracted images. Values: png, jpeg. Default: png";
@@ -113,13 +113,13 @@ public class CLIOptions {
             new OptionDefinition(REPLACE_INVALID_CHARS_LONG_OPTION, null, "string", " ", REPLACE_INVALID_CHARS_DESC,
                     true),
             new OptionDefinition(USE_STRUCT_TREE_LONG_OPTION, null, "boolean", false, USE_STRUCT_TREE_DESC, true),
-            new OptionDefinition(TABLE_METHOD_LONG_OPTION, null, "string", null, TABLE_METHOD_DESC, true),
-            new OptionDefinition(READING_ORDER_LONG_OPTION, null, "string", "none", READING_ORDER_DESC, true),
+            new OptionDefinition(TABLE_METHOD_LONG_OPTION, null, "string", "default", TABLE_METHOD_DESC, true),
+            new OptionDefinition(READING_ORDER_LONG_OPTION, null, "string", "xycut", READING_ORDER_DESC, true),
             new OptionDefinition(MARKDOWN_PAGE_SEPARATOR_LONG_OPTION, null, "string", null,
                     MARKDOWN_PAGE_SEPARATOR_DESC, true),
             new OptionDefinition(TEXT_PAGE_SEPARATOR_LONG_OPTION, null, "string", null, TEXT_PAGE_SEPARATOR_DESC, true),
             new OptionDefinition(HTML_PAGE_SEPARATOR_LONG_OPTION, null, "string", null, HTML_PAGE_SEPARATOR_DESC, true),
-            new OptionDefinition(EMBED_IMAGES_LONG_OPTION, null, "boolean", false, EMBED_IMAGES_DESC, true),
+            new OptionDefinition(IMAGE_OUTPUT_LONG_OPTION, null, "string", "embedded", IMAGE_OUTPUT_DESC, true),
             new OptionDefinition(IMAGE_FORMAT_LONG_OPTION, null, "string", "png", IMAGE_FORMAT_DESC, true),
             new OptionDefinition(EXPORT_OPTIONS_LONG_OPTION, null, "boolean", null, null, false),
 
@@ -200,12 +200,20 @@ public class CLIOptions {
     }
 
     private static void applyImageOptions(Config config, CommandLine commandLine) {
-        if (commandLine.hasOption(EMBED_IMAGES_LONG_OPTION)) {
-            config.setEmbedImages(true);
-            // When embedding images, automatically enable image output in markdown
-            if (config.isGenerateMarkdown()) {
-                config.setAddImageToMarkdown(true);
+        if (commandLine.hasOption(IMAGE_OUTPUT_LONG_OPTION)) {
+            String outputValue = commandLine.getOptionValue(IMAGE_OUTPUT_LONG_OPTION);
+            if (outputValue == null || outputValue.trim().isEmpty()) {
+                throw new IllegalArgumentException(
+                        String.format("Option --image-output requires a value. Supported values: %s",
+                                Config.getImageOutputOptions(", ")));
             }
+            String output = outputValue.trim().toLowerCase(Locale.ROOT);
+            if (!Config.isValidImageOutput(output)) {
+                throw new IllegalArgumentException(
+                        String.format("Unsupported image output mode '%s'. Supported values: %s",
+                                output, Config.getImageOutputOptions(", ")));
+            }
+            config.setImageOutput(output);
         }
         if (commandLine.hasOption(IMAGE_FORMAT_LONG_OPTION)) {
             String formatValue = commandLine.getOptionValue(IMAGE_FORMAT_LONG_OPTION);
@@ -223,33 +231,20 @@ public class CLIOptions {
     }
 
     private static void applyTableMethodOption(Config config, CommandLine commandLine) {
-        if (!commandLine.hasOption(TABLE_METHOD_LONG_OPTION)) {
-            return;
-        }
-
-        String[] optionValues = commandLine.getOptionValues(TABLE_METHOD_LONG_OPTION);
-        if (optionValues == null || optionValues.length == 0) {
-            throw new IllegalArgumentException(
-                    String.format("Option --table-method requires at least one value. Supported values: %s",
-                            Config.getTableMethodOptions(",")));
-        }
-
-        Set<String> values = parseOptionValues(optionValues);
-        if (values.isEmpty()) {
-            throw new IllegalArgumentException(
-                    String.format("Option --table-method requires at least one value. Supported values: %s",
-                            Config.getTableMethodOptions(",")));
-        }
-
-        for (String value : values) {
-            switch (value) {
-                case Config.CLUSTER_TABLE_METHOD:
-                    config.setClusterTableMethod(true);
-                    break;
-                default:
-                    throw new IllegalArgumentException(String.format("Unsupported value '%s'. Supported values: %s",
-                            value, Config.getTableMethodOptions(",")));
+        if (commandLine.hasOption(TABLE_METHOD_LONG_OPTION)) {
+            String methodValue = commandLine.getOptionValue(TABLE_METHOD_LONG_OPTION);
+            if (methodValue == null || methodValue.trim().isEmpty()) {
+                throw new IllegalArgumentException(
+                        String.format("Option --table-method requires a value. Supported values: %s",
+                                Config.getTableMethodOptions(", ")));
             }
+            String method = methodValue.trim().toLowerCase(Locale.ROOT);
+            if (!Config.isValidTableMethod(method)) {
+                throw new IllegalArgumentException(
+                        String.format("Unsupported table method '%s'. Supported values: %s",
+                                method, Config.getTableMethodOptions(", ")));
+            }
+            config.setTableMethod(method);
         }
     }
 

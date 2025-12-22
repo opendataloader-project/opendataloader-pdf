@@ -53,7 +53,6 @@ public class Sample {
         config.setGeneratePDF(true);
         config.setGenerateMarkdown(true);
         config.setGenerateHtml(true);
-        config.setReadingOrder(Config.READING_ORDER_XYCUT);  // For accurate multi-column reading order
 
         OpenDataLoaderPDF.processFile("path/to/document.pdf", config);
     }
@@ -72,8 +71,7 @@ and run the CLI:
 java -jar opendataloader-pdf-cli-<VERSION>.jar \
   path/to/document.pdf \
   -o path/to/output \
-  -f json,html,pdf,markdown \
-  --reading-order xycut  # For accurate multi-column reading order
+  -f json,html,pdf,markdown
 ```
 
 For all CLI options, see the [CLI Options Reference](./cli-options-reference).

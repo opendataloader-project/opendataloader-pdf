@@ -93,13 +93,12 @@ Tables are exported as structured data with rows, columns, and cell content pres
 
 ### How do I handle multi-column PDFs?
 
-Enable the XY-Cut++ reading order algorithm:
+Reading order is enabled by default using the XY-Cut++ algorithm. No configuration needed:
 
 ```python
 opendataloader_pdf.convert(
     input_path="two-column-paper.pdf",
     output_dir="output/",
-    reading_order="xycut"  # Preserves correct reading order
 )
 ```
 
@@ -239,10 +238,7 @@ Most PDF parsers ignore structure tags entirely. OpenDataLoader is one of the fe
 
 ### Text from different columns is mixed together
 
-Enable reading order:
-```python
-reading_order="xycut"
-```
+Reading order is enabled by default (XY-Cut++). If still seeing issues, try `--use-struct-tree` for tagged PDFs.
 
 ### Tables are not detected correctly
 

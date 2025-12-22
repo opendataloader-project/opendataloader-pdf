@@ -51,7 +51,7 @@ class TestCLIOptions:
             "quiet",
             "content-safety-off",
             "keep-line-breaks",
-            "embed-images",
+            "image-output",
             "image-format",
         }
         for expected in expected_options:

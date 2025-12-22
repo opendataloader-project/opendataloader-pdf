@@ -354,10 +354,10 @@ public class DocumentProcessor {
         }
 
         // Log warning for unknown reading order values
-        if (!Config.READING_ORDER_NONE.equals(readingOrder)) {
-            LOGGER.log(Level.WARNING, "Unknown reading order value ''{0}'', using default ''none''", readingOrder);
+        if (!Config.READING_ORDER_OFF.equals(readingOrder)) {
+            LOGGER.log(Level.WARNING, "Unknown reading order value ''{0}'', using default ''off''", readingOrder);
         }
 
-        // none (default): skip sorting (keep PDF COS object order)
+        // off: skip sorting (keep PDF COS object order)
     }
 }

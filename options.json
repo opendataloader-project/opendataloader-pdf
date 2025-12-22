@@ -69,16 +69,16 @@
       "shortName": null,
       "type": "string",
       "required": false,
-      "default": null,
-      "description": "Table detection method. Values: cluster"
+      "default": "default",
+      "description": "Table detection method. Values: default (border-based), cluster (border + cluster). Default: default"
     },
     {
       "name": "reading-order",
       "shortName": null,
       "type": "string",
       "required": false,
-      "default": "none",
-      "description": "Reading order algorithm. Values: none, xycut. Default: none"
+      "default": "xycut",
+      "description": "Reading order algorithm. Values: off, xycut. Default: xycut"
     },
     {
       "name": "markdown-page-separator",
@@ -105,12 +105,12 @@
       "description": "Separator between pages in HTML output. Use %page-number% for page numbers. Default: none"
     },
     {
-      "name": "embed-images",
+      "name": "image-output",
       "shortName": null,
-      "type": "boolean",
+      "type": "string",
       "required": false,
-      "default": false,
-      "description": "Embed images as Base64 data URIs instead of file path references"
+      "default": "embedded",
+      "description": "Image output mode. Values: embedded (Base64 data URIs), external (file references). Default: embedded"
     },
     {
       "name": "image-format",
