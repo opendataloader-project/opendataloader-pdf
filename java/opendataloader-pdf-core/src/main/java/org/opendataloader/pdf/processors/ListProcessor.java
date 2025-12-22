@@ -141,12 +141,16 @@ public class ListProcessor {
             double leftDifference = listItemTextInfo.getListItemValue().getLeftX() -
                     preivousListItemTextInfo.getListItemValue().getLeftX();
             boolean haveSameLeft = NodeUtils.areCloseNumbers(leftDifference, 0, maxXGap);
-            if (NodeUtils.areCloseNumbers(leftDifference, 0, 4 * maxXGap) &&
-                    ListLabelsUtils.isTwoListItemsOfOneList(interval, listItemTextInfo,
-                            !haveSameLeft, isUnordered)) {
-                listIntervals.add(interval);
-                isSingle = false;
-                break;
+            try {
+                if (NodeUtils.areCloseNumbers(leftDifference, 0, 4 * maxXGap) &&
+                        ListLabelsUtils.isTwoListItemsOfOneList(interval, listItemTextInfo,
+                                !haveSameLeft, isUnordered)) {
+                    listIntervals.add(interval);
+                    isSingle = false;
+                    break;
+                }
+            } catch (StringIndexOutOfBoundsException e) {
+                LOGGER.log(Level.WARNING, "Malformed list label: " + listItemTextInfo.getListItemValue().getValue(), e);
             }
             if (shouldHaveSameLeftDifference && !NodeUtils.areCloseNumbers(previousLeftDifference, leftDifference)) {
                 break;
