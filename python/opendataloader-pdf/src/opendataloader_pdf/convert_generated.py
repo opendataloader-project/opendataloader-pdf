@@ -24,7 +24,7 @@ def convert(
     markdown_page_separator: Optional[str] = None,
     text_page_separator: Optional[str] = None,
     html_page_separator: Optional[str] = None,
-    embed_images: bool = False,
+    image_output: Optional[str] = None,
     image_format: Optional[str] = None,
 ) -> None:
     """
@@ -40,12 +40,12 @@ def convert(
         keep_line_breaks: Preserve original line breaks in extracted text
         replace_invalid_chars: Replacement character for invalid/unrecognized characters. Default: space
         use_struct_tree: Use PDF structure tree (tagged PDF) for reading order and semantic structure
-        table_method: Table detection method. Values: cluster
-        reading_order: Reading order algorithm. Values: none, xycut. Default: none
+        table_method: Table detection method. Values: default (border-based), cluster (border + cluster). Default: default
+        reading_order: Reading order algorithm. Values: off, xycut. Default: xycut
         markdown_page_separator: Separator between pages in Markdown output. Use %page-number% for page numbers. Default: none
         text_page_separator: Separator between pages in text output. Use %page-number% for page numbers. Default: none
         html_page_separator: Separator between pages in HTML output. Use %page-number% for page numbers. Default: none
-        embed_images: Embed images as Base64 data URIs instead of file path references
+        image_output: Image output mode. Values: embedded (Base64 data URIs), external (file references). Default: embedded
         image_format: Output format for extracted images. Values: png, jpeg. Default: png
     """
     args: List[str] = []
@@ -90,8 +90,8 @@ def convert(
         args.extend(["--text-page-separator", text_page_separator])
     if html_page_separator:
         args.extend(["--html-page-separator", html_page_separator])
-    if embed_images:
-        args.append("--embed-images")
+    if image_output:
+        args.extend(["--image-output", image_output])
     if image_format:
         args.extend(["--image-format", image_format])
 

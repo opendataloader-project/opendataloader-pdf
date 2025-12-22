@@ -136,12 +136,11 @@ opendataloader_pdf.convert(
     output_dir="output/",
     format="json,markdown,pdf",
 
-    # Reading order
-    reading_order="xycut",           # XY-Cut++ for multi-column
+    # Image output mode: "embedded" (Base64) or "external" (file references)
+    image_output="external",
 
-    # Images
-    embed_images=True,               # Base64 in output
-    image_format="png",
+    # Image format: "png" or "jpeg"
+    image_format="jpeg",
 
     # Tagged PDF
     use_struct_tree=True,            # Use native PDF structure
@@ -223,12 +222,12 @@ We continuously benchmark against real-world documents.
 
 ### Quick Comparison
 
-| Engine             | Accuracy |      | Speed (s/page) |      | Reading Order |      | Table    |      | Heading  |      |
-|--------------------|----------|------|----------------|------|---------------|------|----------|------|----------|------|
-| **opendataloader** | 0.82     | #2   | **0.05**       | #1   | **0.91**      | #1   | 0.49     | #2   | 0.65     | #2   |
-| docling            | **0.88** | #1   | 0.73           | #4   | 0.90          | #2   | **0.89** | #1   | **0.80** | #1   |
-| pymupdf4llm        | 0.73     | #3   | 0.09           | #2   | 0.89          | #3   | 0.40     | #3   | 0.41     | #3   |
-| markitdown         | 0.58     | #4   | **0.04**       | #1   | 0.88          | #4   | 0.00     | #4   | 0.00     | #4   |
+| Engine             | Speed (s/page) | Reading Order | Table    | Heading  |
+|--------------------|----------------|---------------|----------|----------|
+| **opendataloader** | **0.05**       | **0.91**      | 0.49     | 0.65     |
+| docling            | 0.73           | 0.90          | **0.89** | **0.80** |
+| pymupdf4llm        | 0.09           | 0.89          | 0.40     | 0.41     |
+| markitdown         | **0.04**       | 0.88          | 0.00     | 0.00     |
 
 > Scores are normalized to [0, 1]. Higher is better for accuracy metrics; lower is better for speed. **Bold** indicates best performance.
 
@@ -236,7 +235,7 @@ We continuously benchmark against real-world documents.
 
 | Use Case                 | Recommended Engine | Why                                                    |
 |--------------------------|--------------------|--------------------------------------------------------|
-| Best overall balance     | **opendataloader** | Fast (0.05s/page) with high reading order accuracy     |
+| Best overall balance     | **opendataloader** | Fast with high reading order accuracy     |
 | Maximum accuracy         | docling            | Highest scores for tables and headings, but 16x slower |
 | Speed-critical pipelines | markitdown         | Fastest, but no table/heading extraction               |
 | PyMuPDF ecosystem        | pymupdf4llm        | Good balance if already using PyMuPDF                  |

@@ -18,9 +18,10 @@ import java.util.Set;
  */
 public class Config {
     /** Reading order option: no sorting, keeps PDF COS object order. */
-    public static final String READING_ORDER_NONE = "none";
+    public static final String READING_ORDER_OFF = "off";
     /** Reading order option: XY-Cut++ algorithm for layout-aware sorting. */
     public static final String READING_ORDER_XYCUT = "xycut";
+    private static Set<String> readingOrderOptions = new HashSet<>();
     /** Placeholder string for page number in separators. */
     public static final String PAGE_NUMBER_STRING = "%page-number%";
     private String password;
@@ -35,17 +36,19 @@ public class Config {
     private boolean addImageToMarkdown = false;
     private String replaceInvalidChars = " ";
     private String outputFolder;
-    private boolean isClusterTableMethod = false;
-    private String readingOrder = READING_ORDER_NONE;
+    private String tableMethod = TABLE_METHOD_DEFAULT;
+    private String readingOrder = READING_ORDER_XYCUT;
     private String markdownPageSeparator = "";
     private String textPageSeparator = "";
     private String htmlPageSeparator = "";
-    private boolean embedImages = false;
+    private String imageOutput = IMAGE_OUTPUT_EMBEDDED;
     private String imageFormat = IMAGE_FORMAT_PNG;
     private final FilterConfig filterConfig = new FilterConfig();
 
-    /** Table detection method: cluster-based detection. */
-    public static final String CLUSTER_TABLE_METHOD = "cluster";
+    /** Table detection method: default (border-based detection). */
+    public static final String TABLE_METHOD_DEFAULT = "default";
+    /** Table detection method: cluster-based detection (includes border-based). */
+    public static final String TABLE_METHOD_CLUSTER = "cluster";
     private static Set<String> tableMethodOptions = new HashSet<>();
 
     /** Image format: PNG. */
@@ -54,10 +57,21 @@ public class Config {
     public static final String IMAGE_FORMAT_JPEG = "jpeg";
     private static Set<String> imageFormatOptions = new HashSet<>();
 
+    /** Image output mode: embedded as Base64 data URIs. */
+    public static final String IMAGE_OUTPUT_EMBEDDED = "embedded";
+    /** Image output mode: external file references. */
+    public static final String IMAGE_OUTPUT_EXTERNAL = "external";
+    private static Set<String> imageOutputOptions = new HashSet<>();
+
     static {
-        tableMethodOptions.add(CLUSTER_TABLE_METHOD);
+        readingOrderOptions.add(READING_ORDER_OFF);
+        readingOrderOptions.add(READING_ORDER_XYCUT);
+        tableMethodOptions.add(TABLE_METHOD_DEFAULT);
+        tableMethodOptions.add(TABLE_METHOD_CLUSTER);
         imageFormatOptions.add(IMAGE_FORMAT_PNG);
         imageFormatOptions.add(IMAGE_FORMAT_JPEG);
+        imageOutputOptions.add(IMAGE_OUTPUT_EMBEDDED);
+        imageOutputOptions.add(IMAGE_OUTPUT_EXTERNAL);
     }
 
     /**
@@ -298,21 +312,36 @@ public class Config {
     }
 
     /**
-     * Gets the method of table detection.
+     * Checks if cluster-based table detection is enabled.
      *
-     * @return The specified method.
+     * @return true if cluster table detection is enabled, false otherwise.
      */
     public boolean isClusterTableMethod() {
-        return isClusterTableMethod;
+        return TABLE_METHOD_CLUSTER.equals(tableMethod);
     }
 
     /**
-     * Sets the method of table detection.
+     * Gets the table detection method.
      *
-     * @param isClusterTableMethod The specified method.
+     * @return The table detection method (default or cluster).
      */
-    public void setClusterTableMethod(boolean isClusterTableMethod) {
-        this.isClusterTableMethod = isClusterTableMethod;
+    public String getTableMethod() {
+        return tableMethod;
+    }
+
+    /**
+     * Sets the table detection method.
+     *
+     * @param tableMethod The table detection method (default or cluster).
+     * @throws IllegalArgumentException if the method is not supported.
+     */
+    public void setTableMethod(String tableMethod) {
+        if (tableMethod != null && !isValidTableMethod(tableMethod)) {
+            throw new IllegalArgumentException(
+                String.format("Unsupported table method '%s'. Supported values: %s",
+                    tableMethod, getTableMethodOptions(", ")));
+        }
+        this.tableMethod = tableMethod != null ? tableMethod.toLowerCase(Locale.ROOT) : TABLE_METHOD_DEFAULT;
     }
 
     /**
@@ -323,6 +352,16 @@ public class Config {
      */
     public static String getTableMethodOptions(CharSequence delimiter) {
         return String.join(delimiter, tableMethodOptions);
+    }
+
+    /**
+     * Checks if the given table method is valid.
+     *
+     * @param method The table method to check.
+     * @return true if the method is valid, false otherwise.
+     */
+    public static boolean isValidTableMethod(String method) {
+        return method != null && tableMethodOptions.contains(method.toLowerCase(Locale.ROOT));
     }
 
     /**
@@ -337,10 +376,36 @@ public class Config {
     /**
      * Sets the reading order, that states in which order content should be processed.
      *
-     * @param readingOrder The specified order.
+     * @param readingOrder The specified order (off or xycut).
+     * @throws IllegalArgumentException if the order is not supported.
      */
     public void setReadingOrder(String readingOrder) {
-        this.readingOrder = readingOrder;
+        if (readingOrder != null && !isValidReadingOrder(readingOrder)) {
+            throw new IllegalArgumentException(
+                String.format("Unsupported reading order '%s'. Supported values: %s",
+                    readingOrder, getReadingOrderOptions(", ")));
+        }
+        this.readingOrder = readingOrder != null ? readingOrder.toLowerCase(Locale.ROOT) : READING_ORDER_XYCUT;
+    }
+
+    /**
+     * Gets the list of reading order options.
+     *
+     * @param delimiter The delimiter to use between options.
+     * @return The string with reading orders separated by the delimiter.
+     */
+    public static String getReadingOrderOptions(CharSequence delimiter) {
+        return String.join(delimiter, readingOrderOptions);
+    }
+
+    /**
+     * Checks if the given reading order is valid.
+     *
+     * @param order The reading order to check.
+     * @return true if the order is valid, false otherwise.
+     */
+    public static boolean isValidReadingOrder(String order) {
+        return order != null && readingOrderOptions.contains(order.toLowerCase(Locale.ROOT));
     }
 
     /**
@@ -403,16 +468,51 @@ public class Config {
      * @return true if images should be embedded as Base64, false for file path references.
      */
     public boolean isEmbedImages() {
-        return embedImages;
+        return IMAGE_OUTPUT_EMBEDDED.equals(imageOutput);
     }
 
     /**
-     * Enables or disables embedding images as Base64 data URIs in JSON, HTML, and Markdown outputs.
+     * Gets the image output mode.
      *
-     * @param embedImages true to embed images as Base64, false for file path references.
+     * @return The image output mode (embedded or external).
      */
-    public void setEmbedImages(boolean embedImages) {
-        this.embedImages = embedImages;
+    public String getImageOutput() {
+        return imageOutput;
+    }
+
+    /**
+     * Sets the image output mode.
+     *
+     * @param imageOutput The image output mode (embedded or external).
+     * @throws IllegalArgumentException if the mode is not supported.
+     */
+    public void setImageOutput(String imageOutput) {
+        if (imageOutput != null && !isValidImageOutput(imageOutput)) {
+            throw new IllegalArgumentException(
+                String.format("Unsupported image output mode '%s'. Supported values: %s",
+                    imageOutput, getImageOutputOptions(", ")));
+        }
+        this.imageOutput = imageOutput != null ? imageOutput.toLowerCase(Locale.ROOT) : IMAGE_OUTPUT_EMBEDDED;
+    }
+
+    /**
+     * Gets the list of supported image output options.
+     *
+     * @param delimiter The delimiter to use between options.
+     * @return The string with image output modes separated by the delimiter.
+     */
+    public static String getImageOutputOptions(CharSequence delimiter) {
+        return String.join(delimiter, imageOutputOptions);
+    }
+
+    /**
+     * Checks if the given image output mode is valid.
+     *
+     * @param mode The image output mode to check.
+     * @return true if the mode is valid, false otherwise.
+     */
+    public static boolean isValidImageOutput(String mode) {
+        return mode != null && imageOutputOptions.contains(mode.toLowerCase(Locale.ROOT));
     }
 
     /**

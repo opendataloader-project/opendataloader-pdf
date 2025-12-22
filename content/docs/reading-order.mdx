@@ -80,7 +80,7 @@ Correct reading order is essential for:
 
 ## Usage
 
-Enable XY-Cut++ reading order in your conversion:
+XY-Cut++ is **enabled by default**. No configuration needed:
 
 ```python
 import opendataloader_pdf
@@ -89,14 +89,13 @@ opendataloader_pdf.convert(
     input_path="two-column-paper.pdf",
     output_dir="output/",
     format="markdown,json",
-    reading_order="xycut"  # Enable XY-Cut++
 )
 ```
 
-Or via CLI:
+To disable reading order sorting (use raw PDF order):
 
 ```bash
-opendataloader-pdf --reading-order xycut input.pdf
+opendataloader-pdf --reading-order off input.pdf
 ```
 
 ## Comparison with Other Approaches
@@ -118,15 +117,15 @@ Key parameters:
 - **Density threshold** (default: 0.9): Switches between horizontal/vertical preference
 - **Minimum gap** (default: 5.0 points): Prevents splitting on insignificant gaps
 
-## When to Use Reading Order
+## When to Disable Reading Order
 
-| Document Type | Recommendation |
-|---------------|----------------|
-| Single-column documents | Optional (already in order) |
-| Academic papers (2-column) | **Strongly recommended** |
-| Newspapers, magazines | **Strongly recommended** |
-| Forms, tables | Usually not needed |
-| Scanned documents | Combine with OCR (coming soon) |
+Reading order is enabled by default and works well for most documents. Disabling (`--reading-order off`) is rarely needed:
+
+| Use Case | Notes |
+|----------|-------|
+| Debugging | Compare xycut output vs raw PDF order |
+| Custom post-processing | When your pipeline handles ordering |
+| Tagged PDFs | Use `--use-struct-tree` instead (not `off`) |
 
 ## Further Reading
 

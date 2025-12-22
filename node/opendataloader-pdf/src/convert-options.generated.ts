@@ -21,9 +21,9 @@ export interface ConvertOptions {
   replaceInvalidChars?: string;
   /** Use PDF structure tree (tagged PDF) for reading order and semantic structure */
   useStructTree?: boolean;
-  /** Table detection method. Values: cluster */
+  /** Table detection method. Values: default (border-based), cluster (border + cluster). Default: default */
   tableMethod?: string;
-  /** Reading order algorithm. Values: none, xycut. Default: none */
+  /** Reading order algorithm. Values: off, xycut. Default: xycut */
   readingOrder?: string;
   /** Separator between pages in Markdown output. Use %page-number% for page numbers. Default: none */
   markdownPageSeparator?: string;
@@ -31,8 +31,8 @@ export interface ConvertOptions {
   textPageSeparator?: string;
   /** Separator between pages in HTML output. Use %page-number% for page numbers. Default: none */
   htmlPageSeparator?: string;
-  /** Embed images as Base64 data URIs instead of file path references */
-  embedImages?: boolean;
+  /** Image output mode. Values: embedded (Base64 data URIs), external (file references). Default: embedded */
+  imageOutput?: string;
   /** Output format for extracted images. Values: png, jpeg. Default: png */
   imageFormat?: string;
 }
@@ -54,7 +54,7 @@ export interface CliOptions {
   markdownPageSeparator?: string;
   textPageSeparator?: string;
   htmlPageSeparator?: string;
-  embedImages?: boolean;
+  imageOutput?: string;
   imageFormat?: string;
 }
 
@@ -103,8 +103,8 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   if (cliOptions.htmlPageSeparator) {
     convertOptions.htmlPageSeparator = cliOptions.htmlPageSeparator;
   }
-  if (cliOptions.embedImages) {
-    convertOptions.embedImages = true;
+  if (cliOptions.imageOutput) {
+    convertOptions.imageOutput = cliOptions.imageOutput;
   }
   if (cliOptions.imageFormat) {
     convertOptions.imageFormat = cliOptions.imageFormat;
@@ -170,8 +170,8 @@ export function buildArgs(options: ConvertOptions): string[] {
   if (options.htmlPageSeparator) {
     args.push('--html-page-separator', options.htmlPageSeparator);
   }
-  if (options.embedImages) {
-    args.push('--embed-images');
+  if (options.imageOutput) {
+    args.push('--image-output', options.imageOutput);
   }
   if (options.imageFormat) {
     args.push('--image-format', options.imageFormat);
