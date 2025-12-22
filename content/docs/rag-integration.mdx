@@ -58,7 +58,6 @@ opendataloader_pdf.convert(
     input_path="documents/",
     output_dir="output/",
     format="json,markdown",
-    reading_order="xycut",  # Correct multi-column order
     quiet=True,
 )
 ```
@@ -263,8 +262,7 @@ for element in doc["kids"]:
 ```python
 opendataloader_pdf.convert(
     input_path="paper.pdf",
-    reading_order="xycut",  # Essential for 2-column layouts
-    format="json,markdown"
+    format="json,markdown",
 )
 ```
 
@@ -335,11 +333,7 @@ opendataloader_pdf.convert(
 
 ### Issue: Text from different columns mixed together
 
-**Solution**: Enable reading order
-
-```python
-reading_order="xycut"
-```
+**Solution**: Reading order is enabled by default (XY-Cut++). If still seeing issues, the PDF may have irregular layout that requires `--use-struct-tree` for tagged PDFs.
 
 ### Issue: Headers/footers appearing in chunks
 
