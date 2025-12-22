@@ -132,8 +132,8 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "short_name": None,
         "type": "string",
         "required": False,
-        "default": "embedded",
-        "description": "Image output mode. Values: embedded (Base64 data URIs), external (file references). Default: embedded",
+        "default": "external",
+        "description": "Image output mode. Values: off (no images), embedded (Base64 data URIs), external (file references). Default: external",
     },
     {
         "name": "image-format",
