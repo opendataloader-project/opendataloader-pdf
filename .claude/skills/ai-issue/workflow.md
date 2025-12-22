@@ -11,6 +11,7 @@
 - Is it spam?
 - Is it within project scope?
 - Is it clear enough?
+- For bug reports: Is sample PDF/document provided?
 
 **Outcomes:**
 - Invalid → auto-close, add `wontfix` (GitHub default)
@@ -36,8 +37,8 @@
 - Decide if auto-fix is appropriate
 
 **Outputs:**
-- Detailed analysis comment on the issue
-- Labels: `fix/auto-eligible` or `fix/manual-required`
+- Analysis comment: summary (what, why, how), affected files, score breakdown
+- Labels: `fix/auto-eligible`, `fix/manual-required`, or `fix/comment-only`
 - Assignee recommendation
 
 **Outcomes:**
@@ -57,17 +58,20 @@
 **Preconditions:**
 - Has `fix/auto-eligible` label (from Stage 2)
 
+**Context (from Stage 2):**
+- AI Analysis comment (truncated 2000 chars)
+- @ai-issue fix comment with additional instructions (truncated 500 chars)
+
 **Process:**
-1. Read issue details and AI analysis from Stage 2
-2. Use analysis to understand affected files and approach
-3. Write test (if applicable)
-4. Implement fix
-5. Verify tests and build pass
-6. Create PR
+1. Read AI analysis to understand affected files and approach
+2. Write test (if applicable)
+3. Implement fix
+4. Verify tests and build pass
+5. Create PR
 
 **Outcomes:**
 - Success → PR created, remove `fix/auto-eligible` label
-- Failure → remove `fix/auto-eligible`, add `fix/manual-required`
+- Failure → log error (no PR/comment created), needs manual attention
 
 ---
 

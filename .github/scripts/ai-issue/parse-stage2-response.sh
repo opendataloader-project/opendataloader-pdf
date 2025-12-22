@@ -17,12 +17,9 @@
 #
 # Outputs to files (in output_dir):
 #   analysis_summary.txt
-#   expected_behavior.txt
-#   current_behavior.txt
 #   affected_files.txt
-#   root_cause.txt
-#   suggested_approach.txt
 #   score_breakdown.txt
+#   comment_draft.txt
 
 set -euo pipefail
 
@@ -106,32 +103,16 @@ echo "score_threshold=$SCORE_THRESHOLD"
 
 # Write analysis fields to files (for multi-line content)
 echo "$PARSED_JSON" | jq -r '.analysis.summary // "Unable to analyze"' > "$OUTPUT_DIR/analysis_summary.txt"
-echo "$PARSED_JSON" | jq -r '.analysis.expected_behavior // ""' > "$OUTPUT_DIR/expected_behavior.txt"
-echo "$PARSED_JSON" | jq -r '.analysis.current_behavior // ""' > "$OUTPUT_DIR/current_behavior.txt"
-echo "$PARSED_JSON" | jq -r '.analysis.affected_files // [] | join(", ")' > "$OUTPUT_DIR/affected_files.txt"
-echo "$PARSED_JSON" | jq -r '.analysis.root_cause // ""' > "$OUTPUT_DIR/root_cause.txt"
-echo "$PARSED_JSON" | jq -r '.analysis.suggested_approach // ""' > "$OUTPUT_DIR/suggested_approach.txt"
+echo "$PARSED_JSON" | jq -r '.analysis.files // [] | join(", ")' > "$OUTPUT_DIR/affected_files.txt"
 
-# Write score breakdown to file (markdown table format)
+# Write score breakdown to file (compact format)
 {
-  echo "| Criteria | Max | Score | Reason |"
-  echo "|----------|-----|-------|--------|"
+  SCOPE_SCORE=$(echo "$PARSED_JSON" | jq -r '.score.breakdown.scope // 0')
+  RISK_SCORE=$(echo "$PARSED_JSON" | jq -r '.score.breakdown.risk // 0')
+  VERIFY_SCORE=$(echo "$PARSED_JSON" | jq -r '.score.breakdown.verifiability // 0')
+  CLARITY_SCORE=$(echo "$PARSED_JSON" | jq -r '.score.breakdown.clarity // 0')
 
-  SCOPE_SCORE=$(echo "$PARSED_JSON" | jq -r '.score.breakdown.scope.score // 0')
-  SCOPE_REASON=$(echo "$PARSED_JSON" | jq -r '.score.breakdown.scope.reason // ""')
-  echo "| Scope | 30 | $SCOPE_SCORE | $SCOPE_REASON |"
-
-  RISK_SCORE=$(echo "$PARSED_JSON" | jq -r '.score.breakdown.risk.score // 0')
-  RISK_REASON=$(echo "$PARSED_JSON" | jq -r '.score.breakdown.risk.reason // ""')
-  echo "| Risk | 30 | $RISK_SCORE | $RISK_REASON |"
-
-  VERIFY_SCORE=$(echo "$PARSED_JSON" | jq -r '.score.breakdown.verifiability.score // 0')
-  VERIFY_REASON=$(echo "$PARSED_JSON" | jq -r '.score.breakdown.verifiability.reason // ""')
-  echo "| Verifiability | 25 | $VERIFY_SCORE | $VERIFY_REASON |"
-
-  CLARITY_SCORE=$(echo "$PARSED_JSON" | jq -r '.score.breakdown.clarity.score // 0')
-  CLARITY_REASON=$(echo "$PARSED_JSON" | jq -r '.score.breakdown.clarity.reason // ""')
-  echo "| Clarity | 15 | $CLARITY_SCORE | $CLARITY_REASON |"
+  echo "Scope: $SCOPE_SCORE/30 | Risk: $RISK_SCORE/30 | Verifiability: $VERIFY_SCORE/25 | Clarity: $CLARITY_SCORE/15"
 } > "$OUTPUT_DIR/score_breakdown.txt"
 
 # Write comment_draft to file (for fix/comment-only cases)
