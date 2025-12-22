@@ -60,31 +60,11 @@ $ISSUE_JSON
 $CODEBASE_INSTRUCTION
 
 ## Instructions
-Use the ai-issue skill to:
-1. Read the skill files in .claude/skills/ai-issue/ for policies and criteria
-2. **Analyze the codebase** (within the specified scope) to understand:
-   - What the issue is about
-   - Which files/components are involved
-   - How the current implementation works
-3. **Score the issue** using the 4-axis scoring system in ai-fix-criteria.yml:
-   - Scope (0-30): Change scope and complexity
-   - Risk (0-30): Failure risk level
-   - Verifiability (0-25): Verification capability
-   - Clarity (0-15): Requirement clarity
-4. Decide action based on total score vs threshold:
-   - score >= threshold → "fix/auto-eligible"
-   - score < threshold → "fix/manual-required"
-   - no code change needed → "fix/comment-only"
-5. For "fix/comment-only", use when:
-   - User didn't find existing feature (guide them to it)
-   - Documentation question (point to docs)
-   - Feature request requiring roadmap review
-   - External dependency issue (not our problem)
-   - Need more information to reproduce
-   - Duplicate of existing issue
-   - Working as designed (won't fix)
-6. Select appropriate labels, priority, and estimate based on issue-policy.yml
-7. Recommend the best available team member from members.yml (skip if fix/comment-only)
+1. Read skill files in .claude/skills/ai-issue/ for policies
+2. Analyze codebase to identify affected files and root cause
+3. Score: Scope(0-30), Risk(0-30), Verifiability(0-25), Clarity(0-15)
+4. Action: score >= threshold → "fix/auto-eligible", else → "fix/manual-required", no code → "fix/comment-only"
+5. Select labels, priority, estimate, assignee per policies
 
 ## AI Fix Criteria (Scoring System)
 ${AI_FIX_CRITERIA:-Use standard criteria with threshold 70.}
@@ -100,27 +80,18 @@ Respond with JSON only (no markdown code blocks):
 {
   "action": "fix/auto-eligible" | "fix/manual-required" | "fix/comment-only",
   "score": {
-    "total": <number 0-100>,
-    "threshold": <number from ai-fix-criteria.yml>,
-    "breakdown": {
-      "scope": { "score": <0-30>, "reason": "explanation" },
-      "risk": { "score": <0-30>, "reason": "explanation" },
-      "verifiability": { "score": <0-25>, "reason": "explanation" },
-      "clarity": { "score": <0-15>, "reason": "explanation" }
-    }
+    "total": <0-100>,
+    "threshold": <from ai-fix-criteria.yml>,
+    "breakdown": { "scope": <0-30>, "risk": <0-30>, "verifiability": <0-25>, "clarity": <0-15> }
   },
-  "labels": ["bug", "enhancement", "documentation", ...],
+  "labels": ["bug" | "enhancement" | "documentation"],
   "priority": "P0" | "P1" | "P2",
   "estimated": 1 | 2 | 3 | 5 | 8,
   "assignee": "github_id",
   "analysis": {
-    "summary": "One paragraph summary of what this issue is about",
-    "expected_behavior": "What the user expects to happen",
-    "current_behavior": "What currently happens (if applicable)",
-    "affected_files": ["path/to/file1.ts", "path/to/file2.ts"],
-    "root_cause": "Technical explanation of why the issue occurs (if identifiable)",
-    "suggested_approach": "How to fix or implement this"
+    "summary": "2-3 sentences: what the issue is, why it occurs, and how to fix",
+    "files": ["path/to/file1.java", ...]
   },
-  "comment_draft": "(Only for fix/comment-only) Draft response to post on the issue"
+  "comment_draft": "(Only for fix/comment-only) Response to post"
 }
 PROMPT_EOF

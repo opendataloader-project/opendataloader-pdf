@@ -197,12 +197,13 @@ jobs:
           ISSUE_TITLE=$(cat /tmp/issue.json | jq -r '.title')
           echo "title=$ISSUE_TITLE" >> $GITHUB_OUTPUT
 
-          # Extract issue body
-          cat /tmp/issue.json | jq -r '.body // ""' > /tmp/issue_body.txt
+          # Extract AI Analysis comment (starts with "## 🔍 AI Analysis"), truncate to 2000 chars
+          AI_ANALYSIS=$(cat /tmp/issue.json | jq -r '.comments[] | select(.body | startswith("## 🔍 AI Analysis")) | .body' | head -c 2000)
+          echo "$AI_ANALYSIS" > /tmp/ai_analysis.txt
 
-          # Extract all comments in chronological order with author info
-          # This includes AI Deep Analysis and any follow-up Q&A from humans
-          cat /tmp/issue.json | jq -r '.comments[] | "### Comment by \(.author.login):\n\(.body)\n"' > /tmp/all_comments.txt || true
+          # Extract @ai-issue fix comment (contains additional instructions), truncate to 500 chars
+          FIX_INSTRUCTION=$(cat /tmp/issue.json | jq -r '.comments[] | select(.body | contains("@ai-issue fix")) | .body' | head -c 500)
+          echo "$FIX_INSTRUCTION" > /tmp/fix_instruction.txt
 
       - name: Run fix
         if: steps.check.outputs.skip == 'false'
@@ -224,12 +225,12 @@ jobs:
           FIX_PROMPT=$(.github/scripts/ai-issue/build-stage3-prompt.sh)
 
           # Replace placeholders
-          ISSUE_BODY=$(cat /tmp/issue_body.txt 2>/dev/null || echo "")
-          ALL_COMMENTS=$(cat /tmp/all_comments.txt 2>/dev/null || echo "No comments")
+          AI_ANALYSIS=$(cat /tmp/ai_analysis.txt 2>/dev/null || echo "No analysis available")
+          FIX_INSTRUCTION=$(cat /tmp/fix_instruction.txt 2>/dev/null || echo "")
           FIX_PROMPT="${FIX_PROMPT//ISSUE_NUM_PLACEHOLDER/$ISSUE_NUM}"
           FIX_PROMPT="${FIX_PROMPT//ISSUE_TITLE_PLACEHOLDER/$ISSUE_TITLE}"
-          FIX_PROMPT="${FIX_PROMPT//ISSUE_BODY_PLACEHOLDER/$ISSUE_BODY}"
-          FIX_PROMPT="${FIX_PROMPT//ALL_COMMENTS_PLACEHOLDER/$ALL_COMMENTS}"
+          FIX_PROMPT="${FIX_PROMPT//AI_ANALYSIS_PLACEHOLDER/$AI_ANALYSIS}"
+          FIX_PROMPT="${FIX_PROMPT//FIX_INSTRUCTION_PLACEHOLDER/$FIX_INSTRUCTION}"
 
           # Save prompt to file (avoid argument length limits)
           echo "$FIX_PROMPT" > /tmp/fix_prompt.txt
@@ -245,12 +246,35 @@ jobs:
           echo "$FIX_RESULT"
           echo "=================="
 
+          # Check for critical errors that should abort immediately
+          if echo "$FIX_RESULT" | grep -q "Prompt is too long"; then
+            echo "❌ Fix aborted: Prompt is too long"
+            echo "fix_failed=true" >> $GITHUB_OUTPUT
+            echo "fail_reason=Prompt is too long - issue context exceeds Claude's limits" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          if echo "$FIX_RESULT" | grep -q "FIX_FAILED"; then
+            echo "❌ Fix aborted: Claude Code CLI failed"
+            echo "fix_failed=true" >> $GITHUB_OUTPUT
+            echo "fail_reason=Claude Code CLI returned an error" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
           # Parse response using shared script
           PARSED=$(echo "$FIX_RESULT" | .github/scripts/ai-issue/parse-stage3-response.sh /tmp)
 
           echo "=== Parsed Result ==="
           echo "$PARSED"
           echo "====================="
+
+          # Check if parsing was successful
+          if echo "$PARSED" | grep -q "success=false"; then
+            echo "❌ Fix aborted: No valid fix summary found"
+            echo "fix_failed=true" >> $GITHUB_OUTPUT
+            echo "fail_reason=Fix did not produce a valid summary" >> $GITHUB_OUTPUT
+            exit 0
+          fi
 
           # Check if fix was successful (has changes)
           if [ -n "$(git status --porcelain)" ]; then
@@ -259,15 +283,16 @@ jobs:
             echo "$CHANGED_FILES" > /tmp/changed_files.txt
 
             echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "fix_failed=false" >> $GITHUB_OUTPUT
             echo "branch=$BRANCH" >> $GITHUB_OUTPUT
           else
             echo "has_changes=false" >> $GITHUB_OUTPUT
-            echo "success=false" >> $GITHUB_OUTPUT
+            echo "fix_failed=true" >> $GITHUB_OUTPUT
             echo "fail_reason=No changes were made" >> $GITHUB_OUTPUT
           fi
 
       - name: Commit and push
-        if: steps.check.outputs.skip == 'false' && steps.fix.outputs.has_changes == 'true'
+        if: steps.check.outputs.skip == 'false' && steps.fix.outputs.fix_failed != 'true' && steps.fix.outputs.has_changes == 'true'
         id: commit
         env:
           ISSUE_NUM: ${{ steps.check.outputs.issue_num }}
@@ -288,7 +313,7 @@ jobs:
           echo "success=true" >> $GITHUB_OUTPUT
 
       - name: Create pull request
-        if: steps.check.outputs.skip == 'false' && steps.commit.outputs.success == 'true'
+        if: steps.check.outputs.skip == 'false' && steps.fix.outputs.fix_failed != 'true' && steps.commit.outputs.success == 'true'
         id: pr
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -347,7 +372,7 @@ jobs:
           echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
 
       - name: "Result: Success"
-        if: steps.check.outputs.skip == 'false' && steps.commit.outputs.success == 'true'
+        if: steps.check.outputs.skip == 'false' && steps.fix.outputs.fix_failed != 'true' && steps.commit.outputs.success == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_URL: ${{ steps.pr.outputs.pr_url }}
@@ -372,23 +397,13 @@ jobs:
 
           gh issue comment $ISSUE_NUM --body "$COMMENT"
 
-      - name: "Result: No Changes"
-        if: steps.check.outputs.skip == 'false' && steps.fix.outputs.has_changes != 'true'
+      - name: "Result: Fix Failed (Critical Error)"
+        if: steps.check.outputs.skip == 'false' && steps.fix.outputs.fix_failed == 'true'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FAIL_REASON: ${{ steps.fix.outputs.fail_reason }}
         run: |
-          ISSUE_NUM=${{ steps.check.outputs.issue_num }}
+          # Log the failure but do NOT create a PR or comment on the issue
+          echo "❌ Auto-fix failed: $FAIL_REASON"
+          echo "Skipping PR creation and issue comment due to critical error."
+          echo "The issue will need manual attention."
 
-          COMMENT=$(cat <<EOF
-          ## ⚠️ Auto-Fix Failed
-
-          I attempted to automatically fix this issue, but **no changes were made**.
-
-          This issue will need manual attention. The AI analysis from Stage 2 should still be helpful for understanding the problem.
-
-          ---
-          🤖 *This is an automated response generated by AI.*
-          EOF
-          )
-
-          gh issue comment $ISSUE_NUM --body "$COMMENT"
