@@ -44,8 +44,8 @@ class CLIOptionsTest {
     }
 
     @Test
-    void testDefineOptions_containsEmbedImagesOption() {
-        assertTrue(options.hasOption("embed-images"));
+    void testDefineOptions_containsImageOutputOption() {
+        assertTrue(options.hasOption("image-output"));
     }
 
     @Test
@@ -54,23 +54,37 @@ class CLIOptionsTest {
     }
 
     @Test
-    void testCreateConfig_withEmbedImagesFlag() throws ParseException {
-        String[] args = {"--embed-images", testPdf.getAbsolutePath()};
+    void testCreateConfig_withImageOutputEmbedded() throws ParseException {
+        String[] args = {"--image-output", "embedded", testPdf.getAbsolutePath()};
         CommandLine cmd = parser.parse(options, args);
 
         Config config = CLIOptions.createConfigFromCommandLine(cmd);
 
         assertTrue(config.isEmbedImages());
+        assertEquals(Config.IMAGE_OUTPUT_EMBEDDED, config.getImageOutput());
     }
 
     @Test
-    void testCreateConfig_withoutEmbedImagesFlag() throws ParseException {
-        String[] args = {testPdf.getAbsolutePath()};
+    void testCreateConfig_withImageOutputExternal() throws ParseException {
+        String[] args = {"--image-output", "external", testPdf.getAbsolutePath()};
         CommandLine cmd = parser.parse(options, args);
 
         Config config = CLIOptions.createConfigFromCommandLine(cmd);
 
         assertFalse(config.isEmbedImages());
+        assertEquals(Config.IMAGE_OUTPUT_EXTERNAL, config.getImageOutput());
+    }
+
+    @Test
+    void testCreateConfig_defaultImageOutput() throws ParseException {
+        // Default should be embedded (new default)
+        String[] args = {testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertTrue(config.isEmbedImages());
+        assertEquals(Config.IMAGE_OUTPUT_EMBEDDED, config.getImageOutput());
     }
 
     @ParameterizedTest
@@ -115,8 +129,8 @@ class CLIOptionsTest {
     }
 
     @Test
-    void testCreateConfig_withBothEmbedImagesAndImageFormat() throws ParseException {
-        String[] args = {"--embed-images", "--image-format", "jpeg", testPdf.getAbsolutePath()};
+    void testCreateConfig_withImageOutputAndImageFormat() throws ParseException {
+        String[] args = {"--image-output", "embedded", "--image-format", "jpeg", testPdf.getAbsolutePath()};
         CommandLine cmd = parser.parse(options, args);
 
         Config config = CLIOptions.createConfigFromCommandLine(cmd);
@@ -126,10 +140,8 @@ class CLIOptionsTest {
     }
 
     @Test
-    void testCreateConfig_imageFormatWithoutEmbedImages() throws ParseException {
-        // It's valid to specify image format without embed-images
-        // (affects image file format even when not embedding)
-        String[] args = {"--image-format", "jpeg", testPdf.getAbsolutePath()};
+    void testCreateConfig_imageFormatWithExternalOutput() throws ParseException {
+        String[] args = {"--image-output", "external", "--image-format", "jpeg", testPdf.getAbsolutePath()};
         CommandLine cmd = parser.parse(options, args);
 
         Config config = CLIOptions.createConfigFromCommandLine(cmd);
@@ -157,5 +169,46 @@ class CLIOptionsTest {
         Config config = CLIOptions.createConfigFromCommandLine(cmd);
 
         assertEquals(Config.IMAGE_FORMAT_PNG, config.getImageFormat());
+    }
+
+    @Test
+    void testCreateConfig_withInvalidImageOutput() throws ParseException {
+        String[] args = {"--image-output", "invalid", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            CLIOptions.createConfigFromCommandLine(cmd);
+        });
+    }
+
+    @Test
+    void testCreateConfig_withUppercaseImageOutput() throws ParseException {
+        String[] args = {"--image-output", "EMBEDDED", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertTrue(config.isEmbedImages());
+    }
+
+    @Test
+    void testCreateConfig_defaultReadingOrder() throws ParseException {
+        // Default should be xycut (new default)
+        String[] args = {testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertEquals(Config.READING_ORDER_XYCUT, config.getReadingOrder());
+    }
+
+    @Test
+    void testCreateConfig_withReadingOrderOff() throws ParseException {
+        String[] args = {"--reading-order", "off", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertEquals(Config.READING_ORDER_OFF, config.getReadingOrder());
     }
 }

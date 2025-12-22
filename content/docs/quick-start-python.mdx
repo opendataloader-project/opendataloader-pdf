@@ -33,7 +33,6 @@ opendataloader_pdf.convert(
     input_path=["path/to/document.pdf", "path/to/folder"],
     output_dir="path/to/output",
     format="json,html,pdf,markdown",
-    reading_order="xycut",  # For accurate multi-column reading order
 )
 ```
 
@@ -50,8 +49,7 @@ Use the same installation to drive conversions from the terminal:
 ```bash
 opendataloader-pdf path/to/document.pdf \
   -o path/to/output \
-  -f json,html,pdf,markdown \
-  --reading-order xycut  # For accurate multi-column reading order
+  -f json,html,pdf,markdown
 ```
 
 For CLI options, see the [CLI Options Reference](./cli-options-reference).

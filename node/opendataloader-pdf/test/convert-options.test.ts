@@ -33,12 +33,10 @@ describe('buildArgs()', () => {
     const args = buildArgs({
       quiet: true,
       keepLineBreaks: true,
-      embedImages: true,
     });
     expect(args).toEqual([
       '--quiet',
       '--keep-line-breaks',
-      '--embed-images',
     ]);
   });
 
@@ -79,7 +77,7 @@ describe('buildArgs()', () => {
       markdownPageSeparator: '---',
       textPageSeparator: '\\n\\n',
       htmlPageSeparator: '<hr>',
-      embedImages: true,
+      imageOutput: 'external',
       imageFormat: 'jpeg',
     };
 
@@ -104,7 +102,8 @@ describe('buildArgs()', () => {
     expect(args).toContain('xycut');
     expect(args).toContain('--markdown-page-separator');
     expect(args).toContain('---');
-    expect(args).toContain('--embed-images');
+    expect(args).toContain('--image-output');
+    expect(args).toContain('external');
     expect(args).toContain('--image-format');
     expect(args).toContain('jpeg');
   });
@@ -155,14 +154,12 @@ describe('buildConvertOptions()', () => {
       quiet: true,
       keepLineBreaks: true,
       useStructTree: true,
-      embedImages: true,
     };
     const result = buildConvertOptions(cliOptions);
     expect(result).toEqual({
       quiet: true,
       keepLineBreaks: true,
       useStructTree: true,
-      embedImages: true,
     });
   });
 
@@ -193,7 +190,7 @@ describe('buildConvertOptions()', () => {
       markdownPageSeparator: '---',
       textPageSeparator: '\\n',
       htmlPageSeparator: '<hr>',
-      embedImages: true,
+      imageOutput: 'external',
       imageFormat: 'jpeg',
     };
     const result = buildConvertOptions(cliOptions);
@@ -210,7 +207,7 @@ describe('buildConvertOptions()', () => {
     expect(result.markdownPageSeparator).toBe('---');
     expect(result.textPageSeparator).toBe('\\n');
     expect(result.htmlPageSeparator).toBe('<hr>');
-    expect(result.embedImages).toBe(true);
+    expect(result.imageOutput).toBe('external');
     expect(result.imageFormat).toBe('jpeg');
   });
 });

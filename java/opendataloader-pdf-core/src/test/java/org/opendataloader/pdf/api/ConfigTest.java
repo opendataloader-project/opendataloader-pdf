@@ -19,19 +19,21 @@ class ConfigTest {
     void testDefaultValues() {
         Config config = new Config();
 
-        // Verify default values
-        assertFalse(config.isEmbedImages());
+        // Verify default values (new defaults: embedded=true, xycut)
+        assertTrue(config.isEmbedImages());
+        assertEquals(Config.IMAGE_OUTPUT_EMBEDDED, config.getImageOutput());
         assertEquals(Config.IMAGE_FORMAT_PNG, config.getImageFormat());
+        assertEquals(Config.READING_ORDER_XYCUT, config.getReadingOrder());
     }
 
     @Test
-    void testSetEmbedImages() {
+    void testSetImageOutputAffectsIsEmbedImages() {
         Config config = new Config();
 
-        config.setEmbedImages(true);
+        config.setImageOutput(Config.IMAGE_OUTPUT_EMBEDDED);
         assertTrue(config.isEmbedImages());
 
-        config.setEmbedImages(false);
+        config.setImageOutput(Config.IMAGE_OUTPUT_EXTERNAL);
         assertFalse(config.isEmbedImages());
     }
 
@@ -108,6 +110,77 @@ class ConfigTest {
         );
         assertTrue(exception.getMessage().contains("Unsupported image format"));
         assertTrue(exception.getMessage().contains(format));
+    }
+
+    @Test
+    void testSetImageOutput() {
+        Config config = new Config();
+
+        config.setImageOutput(Config.IMAGE_OUTPUT_EXTERNAL);
+        assertEquals(Config.IMAGE_OUTPUT_EXTERNAL, config.getImageOutput());
+        assertFalse(config.isEmbedImages());
+
+        config.setImageOutput(Config.IMAGE_OUTPUT_EMBEDDED);
+        assertEquals(Config.IMAGE_OUTPUT_EMBEDDED, config.getImageOutput());
+        assertTrue(config.isEmbedImages());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"embedded", "EMBEDDED", "external", "EXTERNAL"})
+    void testIsValidImageOutput_withValidModes(String mode) {
+        assertTrue(Config.isValidImageOutput(mode));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"base64", "file", "invalid", ""})
+    void testIsValidImageOutput_withInvalidModes(String mode) {
+        assertFalse(Config.isValidImageOutput(mode));
+    }
+
+    @Test
+    void testGetImageOutputOptions() {
+        String options = Config.getImageOutputOptions(", ");
+
+        assertTrue(options.contains("embedded"));
+        assertTrue(options.contains("external"));
+    }
+
+    @Test
+    void testImageOutputConstants() {
+        assertEquals("embedded", Config.IMAGE_OUTPUT_EMBEDDED);
+        assertEquals("external", Config.IMAGE_OUTPUT_EXTERNAL);
+    }
+
+    @Test
+    void testSetImageOutputNormalizesToLowercase() {
+        Config config = new Config();
+
+        config.setImageOutput("EXTERNAL");
+        assertEquals("external", config.getImageOutput());
+
+        config.setImageOutput("EMBEDDED");
+        assertEquals("embedded", config.getImageOutput());
+    }
+
+    @Test
+    void testSetImageOutputWithNullDefaultsToEmbedded() {
+        Config config = new Config();
+
+        config.setImageOutput(null);
+        assertEquals(Config.IMAGE_OUTPUT_EMBEDDED, config.getImageOutput());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"base64", "file", "invalid"})
+    void testSetImageOutputThrowsExceptionForInvalidMode(String mode) {
+        Config config = new Config();
+
+        IllegalArgumentException exception = assertThrows(
+            IllegalArgumentException.class,
+            () -> config.setImageOutput(mode)
+        );
+        assertTrue(exception.getMessage().contains("Unsupported image output mode"));
+        assertTrue(exception.getMessage().contains(mode));
     }
 
     // Test existing Config fields to ensure new fields don't break them
