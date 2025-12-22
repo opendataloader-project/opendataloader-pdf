@@ -92,4 +92,42 @@ public class ListProcessorTest {
         Assertions.assertTrue(contents.get(0).get(0) instanceof PDFList);
         Assertions.assertEquals(4, ((PDFList) contents.get(0).get(0)).getNumberOfListItems());
     }
+
+    @Test
+    public void testProcessListsWithSingleCharacterLabels() {
+        StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
+        StaticContainers.setIsDataLoader(true);
+        List<IObject> pageContents = new ArrayList<>();
+        List<List<IObject>> contents = new ArrayList<>();
+        contents.add(pageContents);
+        pageContents.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 50.0, 20.0, 60.0),
+            "1", 10, 50.0)));
+        pageContents.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 40.0, 20.0, 50.0),
+            "가. 첫 번째 항목", 10, 40.0)));
+        pageContents.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 30.0, 20.0, 40.0),
+            "나. 두 번째 항목", 10, 30.0)));
+        pageContents.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 20.0, 20.0, 30.0),
+            ")", 10, 20.0)));
+        Assertions.assertDoesNotThrow(() -> ListProcessor.processLists(contents, false),
+            "processLists should handle single character labels without throwing StringIndexOutOfBoundsException");
+    }
+
+    @Test
+    public void testProcessListsWithEdgeCaseLabels() {
+        StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
+        StaticContainers.setIsDataLoader(true);
+        List<IObject> pageContents = new ArrayList<>();
+        List<List<IObject>> contents = new ArrayList<>();
+        contents.add(pageContents);
+        pageContents.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 50.0, 20.0, 60.0),
+            "a", 10, 50.0)));
+        pageContents.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 40.0, 20.0, 50.0),
+            "b", 10, 40.0)));
+        pageContents.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 30.0, 20.0, 40.0),
+            "1)", 10, 30.0)));
+        pageContents.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 20.0, 20.0, 30.0),
+            "2)", 10, 20.0)));
+        Assertions.assertDoesNotThrow(() -> ListProcessor.processLists(contents, false),
+            "processLists should handle edge case labels without throwing StringIndexOutOfBoundsException");
+    }
 }
