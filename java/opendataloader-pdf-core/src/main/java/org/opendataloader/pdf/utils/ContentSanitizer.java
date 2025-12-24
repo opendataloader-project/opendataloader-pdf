@@ -15,6 +15,7 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.regex.Matcher;
 
 public class ContentSanitizer {
 
@@ -56,10 +57,6 @@ public class ContentSanitizer {
     }
 
     private void processObject(IObject obj) {
-        if (obj == null) {
-            return;
-        }
-
         if (obj instanceof SemanticTextNode) {
             processSemanticTextNode((SemanticTextNode) obj);
         } else if (obj instanceof TextLine) {
@@ -74,80 +71,39 @@ public class ContentSanitizer {
     }
 
     private void processSemanticHeaderOrFooter(SemanticHeaderOrFooter headerOrFooter) {
-        if (headerOrFooter == null || headerOrFooter.getContents() == null) {
-            return;
-        }
-
         for (IObject obj : headerOrFooter.getContents()) {
             processObject(obj);
         }
     }
 
     private void processPDFList(PDFList pdfList) {
-        if (pdfList == null || pdfList.getListItems() == null) {
-            return;
-        }
-
         for (ListItem listItem : pdfList.getListItems()) {
-            processListItem(listItem);
-        }
-    }
-
-    private void processListItem(ListItem listItem) {
-        if (listItem == null || listItem.getContents() == null) {
-            return;
-        }
-
-        for (IObject obj : listItem.getLines()) {
-            processObject(obj);
+            for (TextLine textLine : listItem.getLines()) {
+                processTextLine(textLine);
+            }
+            for (IObject obj : listItem.getContents()) {
+                processObject(obj);
+            }
         }
     }
 
     private void processTableBorder(TableBorder tableBorder) {
-        if (tableBorder == null || tableBorder.getRows() == null) {
-            return;
-        }
-
         for (TableBorderRow row : tableBorder.getRows()) {
-            processTableBorderRow(row);
-        }
-    }
-
-    private void processTableBorderRow(TableBorderRow row) {
-        if (row == null || row.getCells() == null) {
-            return;
-        }
-        for (TableBorderCell cell : row.getCells()) {
-            processTableBorderCell(cell);
-        }
-    }
-
-    private void processTableBorderCell(TableBorderCell cell) {
-        if (cell == null || cell.getContents() == null) {
-            return;
-        }
-
-        for (IObject obj : cell.getContents()) {
-            processObject(obj);
+            for (TableBorderCell cell : row.getCells()) {
+                for (IObject obj : cell.getContents()) {
+                    processObject(obj);
+                }
+            }
         }
     }
 
     private void processSemanticTextNode(SemanticTextNode node) {
-        String fullText = node.getValue();
-        if (fullText == null || fullText.isEmpty()) {
-            return;
-        }
-        String sanitizedText = applySanitization(fullText);
-        if (fullText.equals(sanitizedText)) {
-            return;
-        }
-        List<ReplacementInfo> replacements = findReplacements(fullText, sanitizedText);
-        if (replacements.isEmpty()) {
-            return;
-        }
-        List<TextLine> allTextLines = collectAllTextLines(node);
-        for (TextLine textLine : allTextLines) {
-            applyReplacementsToTextLine(textLine, replacements, fullText, sanitizedText);
+        for (TextColumn textColumn : node.getColumns()) {
+            for (TextBlock textBlock : textColumn.getBlocks()) {
+                for (TextLine textLine : textBlock.getLines()) {
+                    processTextLine(textLine);
+                }
+            }
         }
     }
 
@@ -165,13 +121,12 @@ public class ContentSanitizer {
             return;
         }
 
-        List<ReplacementInfo> replacements = findReplacements(originalText, sanitizedText);
+        List<ReplacementInfo> replacements = findAllReplacements(originalText);
         if (replacements.isEmpty()) {
             return;
         }
         List<TextChunk> textChunks = textLine.getTextChunks();
-        List<TextChunk> newChunks = applyReplacementsToChunks(
-            textChunks, replacements, sanitizedText);
+        List<TextChunk> newChunks = applyReplacementsToChunks(textChunks, replacements);
 
         removeEmptyChunks(newChunks);
 
@@ -179,76 +134,8 @@ public class ContentSanitizer {
         textChunks.addAll(newChunks);
     }
 
-    private List<TextLine> collectAllTextLines(SemanticTextNode node) {
-        List<TextLine> result = new ArrayList<>();
-        collectTextLinesFromSemanticTextNode(node, result);
-        return result;
-    }
-
-    private void collectTextLinesFromSemanticTextNode(SemanticTextNode node, List<TextLine> result) {
-        if (node == null || node.getColumns() == null) {
-            return;
-        }
-
-        for (TextColumn column : node.getColumns()) {
-            collectTextLinesFromTextColumn(column, result);
-        }
-    }
-
-    private void collectTextLinesFromTextColumn(TextColumn column, List<TextLine> result) {
-        if (column == null || column.getBlocks() == null) {
-            return;
-        }
-
-        for (TextBlock block : column.getBlocks()) {
-            collectTextLinesFromTextBlock(block, result);
-        }
-    }
-
-    private void collectTextLinesFromTextBlock(TextBlock block, List<TextLine> result) {
-        if (block == null || block.getLines() == null) {
-            return;
-        }
-
-        result.addAll(block.getLines());
-    }
-
-    private void applyReplacementsToTextLine(TextLine textLine, List<ReplacementInfo> replacements,
-                                             String originalFullText, String sanitizedFullText) {
-        if (textLine == null || textLine.getTextChunks() == null || replacements.isEmpty()) {
-            return;
-        }
-
-        String lineText = textLine.getValue();
-        if (lineText.isEmpty()) {
-            return;
-        }
-
-        int lineStart = originalFullText.indexOf(lineText);
-        if (lineStart == -1) {
-            return;
-        }
-        int lineEnd = lineStart + lineText.length();
-        List<ReplacementInfo> lineReplacements = new ArrayList<>();
-        for (ReplacementInfo replacement : replacements) {
-            if (replacement.originalEnd > lineStart && replacement.originalStart < lineEnd) {
-                lineReplacements.add(replacement);
-            }
-        }
-
-        if (lineReplacements.isEmpty()) {
-            return;
-        }
-        List<TextChunk> newChunks = applyReplacementsToChunks(
-            textLine.getTextChunks(), lineReplacements, sanitizedFullText);
-        removeEmptyChunks(newChunks);
-        textLine.getTextChunks().clear();
-        textLine.getTextChunks().addAll(newChunks);
-    }
-
     private List<TextChunk> applyReplacementsToChunks(List<TextChunk> originalChunks,
-                                                      List<ReplacementInfo> replacements,
-                                                      String sanitizedText) {
+                                                      List<ReplacementInfo> replacements) {
         List<TextChunk> newChunks = new ArrayList<>();
         List<ChunkInfo> chunkInfos = getChunkInfos(originalChunks);
         int currentChunkIndex = 0;
@@ -278,7 +165,7 @@ public class ContentSanitizer {
                     currentChunkIndex++;
                 }
             }
-            String replacementText = sanitizedText.substring(replacement.sanitizedStart, replacement.sanitizedEnd);
+            String replacementText = replacement.replacementText;
             if (!replacementText.isEmpty()) {
                 TextChunk chunk = originalChunks.get(0);
                 TextChunk replacementChunk = new TextChunk(chunk);
@@ -324,44 +211,28 @@ public class ContentSanitizer {
         return chunk == null || chunk.getValue() == null || chunk.getValue().isEmpty();
     }
 
+    private List<ReplacementInfo> findAllReplacements(String originalText) {
+        List<ReplacementInfo> replacements = new ArrayList<>();
+
+        for (SanitizationRule rule : rules) {
+            Matcher matcher = rule.getPattern().matcher(originalText);
+            while (matcher.find()) {
+                replacements.add(new ReplacementInfo(matcher.start(), matcher.end(), rule.getReplacement()));
+            }
+        }
+        return replacements;
+    }
+
     private static class ReplacementInfo {
         int originalStart;
         int originalEnd;
-        int sanitizedStart;
-        int sanitizedEnd;
+        String replacementText;
 
-        ReplacementInfo(int originalStart, int originalEnd, int sanitizedStart, int sanitizedEnd) {
+        ReplacementInfo(int originalStart, int originalEnd, String replacementText) {
             this.originalStart = originalStart;
             this.originalEnd = originalEnd;
-            this.sanitizedStart = sanitizedStart;
-            this.sanitizedEnd = sanitizedEnd;
+            this.replacementText = replacementText;
         }
-    }
-
-    private List<ReplacementInfo> findReplacements(String originalText, String sanitizedText) {
-        List<ReplacementInfo> replacements = new ArrayList<>();
-
-        if (originalText.equals(sanitizedText)) {
-            return replacements;
-        }
-        int prefixLen = 0;
-        int minLen = Math.min(originalText.length(), sanitizedText.length());
-        while (prefixLen < minLen && originalText.charAt(prefixLen) == sanitizedText.charAt(prefixLen)) {
-            prefixLen++;
-        }
-        int suffixLen = 0;
-        while (suffixLen < minLen - prefixLen &&
-            originalText.charAt(originalText.length() - 1 - suffixLen) ==
-                sanitizedText.charAt(sanitizedText.length() - 1 - suffixLen)) {
-            suffixLen++;
-        }
-        int origStart = prefixLen;
-        int origEnd = originalText.length() - suffixLen;
-        int sanitStart = prefixLen;
-        int sanitEnd = sanitizedText.length() - suffixLen;
-        replacements.add(new ReplacementInfo(origStart, origEnd, sanitStart, sanitEnd));
-
-        return replacements;
     }
 
     private static class ChunkInfo {
