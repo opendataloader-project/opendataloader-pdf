@@ -14,85 +14,20 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 
 import java.util.List;
-import java.util.regex.Pattern;
 import java.util.ArrayList;
 
 public class ContentSanitizer {
 
-    private static class SanitizationRule {
-        private final Pattern pattern;
-        private final String replacement;
-
-        public SanitizationRule(Pattern pattern, String replacement) {
-            this.pattern = pattern;
-            this.replacement = replacement;
-        }
-
-        public Pattern getPattern() {
-            return pattern;
-        }
-
-        public String getReplacement() {
-            return replacement;
-        }
-    }
-
-    private static final List<SanitizationRule> DEFAULT_RULES;
-
-    static {
-        DEFAULT_RULES = new ArrayList<>();
-        DEFAULT_RULES.add(new SanitizationRule(
-            Pattern.compile("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"),
-            "email@example.com"
-        ));
-        DEFAULT_RULES.add(new SanitizationRule(
-            Pattern.compile("^+\\d+(?:-\\d+)+$"),
-            "+00-0000-0000"
-        ));
-        DEFAULT_RULES.add(new SanitizationRule(
-            Pattern.compile("[A-Z]{1,2}\\d{6,9}"),
-            "AA0000000"
-        ));
-        DEFAULT_RULES.add(new SanitizationRule(
-            Pattern.compile("\\b\\d{4}-?\\d{4}-?\\d{4}-?\\d{4}\\b"),
-            "0000-0000-0000-0000"
-        ));
-        DEFAULT_RULES.add(new SanitizationRule(
-            Pattern.compile("\\b\\d{10,18}\\b"),
-            "0000000000000000"
-        ));
-        DEFAULT_RULES.add(new SanitizationRule(
-            Pattern.compile("\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b"),
-            "0.0.0.0"
-        ));
-        DEFAULT_RULES.add(new SanitizationRule(
-            Pattern.compile("\\b([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}\\b"),
-            "0.0.0.0::1"
-        ));
-        DEFAULT_RULES.add(new SanitizationRule(
-            Pattern.compile("\\b(?:[0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}\\b"),
-            "00:00:00:00:00:00"
-        ));
-        DEFAULT_RULES.add(new SanitizationRule(
-            Pattern.compile("\\b\\d{15}\\b"),
-            "000000000000000"
-        ));
-        DEFAULT_RULES.add(new SanitizationRule(
-            Pattern.compile("https?://[A-Za-z0-9.-]+(:\\d+)?(/\\S*)?"),
-            "https://example.com"
-        ));
-    }
-
     private final List<SanitizationRule> rules;
     private final boolean contentSafetyEnabled;
 
-    public ContentSanitizer() {
-        this.rules = DEFAULT_RULES;
+    public ContentSanitizer(List<SanitizationRule> rules) {
+        this.rules = rules;
         this.contentSafetyEnabled = true;
     }
 
-    public ContentSanitizer(boolean contentSafetyEnabled) {
-        this.rules = DEFAULT_RULES;
+    public ContentSanitizer(List<SanitizationRule> rules, boolean contentSafetyEnabled) {
+        this.rules = rules;
         this.contentSafetyEnabled = contentSafetyEnabled;
     }
 
