@@ -189,7 +189,6 @@ public class FilterConfig {
      * @param pattern pattern string.
      */
     public void removeFilterRule(String pattern) {
-        Pattern p = Pattern.compile(pattern);
-        filterRules.removeIf(rule -> rule.getPattern().equals(p));
+        filterRules.removeIf(rule -> rule.getPattern().pattern().equals(pattern));
     }
 }

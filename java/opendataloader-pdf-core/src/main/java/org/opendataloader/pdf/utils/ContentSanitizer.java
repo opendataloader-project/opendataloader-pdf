@@ -37,23 +37,11 @@ public class ContentSanitizer {
             return;
         }
 
-        for (List<IObject> row : contents) {
-            for (IObject obj : row) {
+        for (List<IObject> pageContents : contents) {
+            for (IObject obj : pageContents) {
                 processObject(obj);
             }
         }
-    }
-
-    private String applySanitization(String text) {
-        if (text == null || text.isEmpty()) {
-            return text;
-        }
-
-        String result = text;
-        for (SanitizationRule rule : rules) {
-            result = rule.getPattern().matcher(result).replaceAll(rule.getReplacement());
-        }
-        return result;
     }
 
     private void processObject(IObject obj) {
@@ -89,9 +77,13 @@ public class ContentSanitizer {
 
     private void processTableBorder(TableBorder tableBorder) {
         for (TableBorderRow row : tableBorder.getRows()) {
-            for (TableBorderCell cell : row.getCells()) {
-                for (IObject obj : cell.getContents()) {
-                    processObject(obj);
+            TableBorderCell[] cells = row.getCells();
+            for (int columnNumber = 0; columnNumber < cells.length; columnNumber++) {
+                TableBorderCell cell = cells[columnNumber];
+                if (cell.getColNumber() == columnNumber && cell.getRowNumber() == row.getRowNumber()) {
+                    for (IObject obj : cell.getContents()) {
+                        processObject(obj);
+                    }
                 }
             }
         }
@@ -116,19 +108,12 @@ public class ContentSanitizer {
             return;
         }
 
-        String sanitizedText = applySanitization(originalText);
-        if (originalText.equals(sanitizedText)) {
-            return;
-        }
-
         List<ReplacementInfo> replacements = findAllReplacements(originalText);
         if (replacements.isEmpty()) {
             return;
         }
         List<TextChunk> textChunks = textLine.getTextChunks();
         List<TextChunk> newChunks = applyReplacementsToChunks(textChunks, replacements);
-
-        removeEmptyChunks(newChunks);
 
         textChunks.clear();
         textChunks.addAll(newChunks);
@@ -152,7 +137,7 @@ public class ContentSanitizer {
                     if (chunkStart < chunkEnd) {
                         TextChunk chunk = originalChunks.get(currentChunkIndex);
                         TextChunk subChunk = TextChunk.getTextChunk(chunk, chunkStart, chunkEnd);
-                        if (subChunk != null && !isEmptyChunk(subChunk)) {
+                        if (isNotEmptyChunk(subChunk)) {
                             newChunks.add(subChunk);
                         }
                     }
@@ -185,12 +170,12 @@ public class ContentSanitizer {
                 int chunkStart = currentPosition - info.start;
                 TextChunk chunk = originalChunks.get(currentChunkIndex);
                 TextChunk subChunk = TextChunk.getTextChunk(chunk, chunkStart, info.length);
-                if (subChunk != null && !isEmptyChunk(subChunk)) {
+                if (isNotEmptyChunk(subChunk)) {
                     newChunks.add(subChunk);
                 }
             } else if (currentPosition < info.start) {
                 TextChunk chunk = originalChunks.get(currentChunkIndex);
-                if (!isEmptyChunk(chunk)) {
+                if (isNotEmptyChunk(chunk)) {
                     newChunks.add(chunk);
                 }
             }
@@ -199,16 +184,8 @@ public class ContentSanitizer {
         return newChunks;
     }
 
-    private void removeEmptyChunks(List<TextChunk> chunks) {
-        if (chunks == null) {
-            return;
-        }
-
-        chunks.removeIf(this::isEmptyChunk);
-    }
-
-    private boolean isEmptyChunk(TextChunk chunk) {
-        return chunk == null || chunk.getValue() == null || chunk.getValue().isEmpty();
+    private boolean isNotEmptyChunk(TextChunk chunk) {
+        return chunk != null && chunk.getValue() != null && !chunk.getValue().isEmpty();
     }
 
     private List<ReplacementInfo> findAllReplacements(String originalText) {
