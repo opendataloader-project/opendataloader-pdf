@@ -76,7 +76,8 @@ public class DocumentProcessor {
             contents = processDocument(inputPdfName, config, pagesToProcess);
         }
         sortContents(contents, config);
-        ContentSanitizer contentSanitizer = new ContentSanitizer();
+        ContentSanitizer contentSanitizer = new ContentSanitizer(config.getFilterConfig().getFilterRules(),
+            config.getFilterConfig().isFilterSensitiveData());
         contentSanitizer.sanitizeContents(contents);
         generateOutputs(inputPdfName, contents, config);
     }
