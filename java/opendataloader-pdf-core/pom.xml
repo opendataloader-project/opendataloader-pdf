@@ -54,11 +54,6 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.verapdf</groupId>
-            <artifactId>wcag-algorithms</artifactId>
-            <version>1.29.36</version>
-        </dependency>
-        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
