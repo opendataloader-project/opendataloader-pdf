@@ -50,7 +50,7 @@ jobs:
     if: github.event_name == 'issues'
     runs-on: ubuntu-latest
     steps:
-      - uses: opendataloader-project/beneissue@v1
+      - uses: opendataloader-project/beneissue@dbe647d9d92d0400344eef3cf56c59d47e728bef # v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -61,15 +61,22 @@ jobs:
   on-command:
     # Run on @beneissue commands in comments
     # Supported: @beneissue triage, @beneissue analyze, @beneissue fix, @beneissue run
+    # Restricted to repository collaborators only
     if: |
       github.event_name == 'issue_comment' &&
-      contains(github.event.comment.body, '@beneissue')
+      contains(github.event.comment.body, '@beneissue') &&
+      (
+        github.event.comment.author_association == 'OWNER' ||
+        github.event.comment.author_association == 'MEMBER' ||
+        github.event.comment.author_association == 'COLLABORATOR'
+      )
     runs-on: ubuntu-latest
     steps:
       - name: Parse command
         id: parse
+        env:
+          COMMENT: ${{ github.event.comment.body }}
         run: |
-          COMMENT="${{ github.event.comment.body }}"
           if [[ "$COMMENT" == *"@beneissue triage"* ]]; then
             echo "command=triage" >> $GITHUB_OUTPUT
           elif [[ "$COMMENT" == *"@beneissue analyze"* ]]; then
@@ -82,7 +89,7 @@ jobs:
             echo "command=run" >> $GITHUB_OUTPUT
           fi
 
-      - uses: opendataloader-project/beneissue@v1
+      - uses: opendataloader-project/beneissue@dbe647d9d92d0400344eef3cf56c59d47e728bef # v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -95,7 +102,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: opendataloader-project/beneissue@v1
+      - uses: opendataloader-project/beneissue@dbe647d9d92d0400344eef3cf56c59d47e728bef # v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           anthropic-api-key: ${{ inputs.dry_run && '' || secrets.ANTHROPIC_API_KEY }}
