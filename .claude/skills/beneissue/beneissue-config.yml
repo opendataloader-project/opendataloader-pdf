@@ -1,0 +1,19 @@
+# beneissue configuration
+# Location: .claude/skills/beneissue/beneissue-config.yml
+version: "1.0"
+
+# Daily limits (cost control)
+limits:
+  daily:
+    triage: 50
+    analyze: 20
+    fix: 5
+
+# Team settings (for assignee recommendation)
+# team:
+#   - github_id: "pm-jane"
+#     available: true
+#     specialties: ["project-management", "planning", "requirements"]
+#   - github_id: "dev-john"
+#     available: true
+#     specialties: ["python", "backend", "testing"]
