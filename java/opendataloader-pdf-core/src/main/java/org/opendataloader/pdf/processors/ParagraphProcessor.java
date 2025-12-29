@@ -17,6 +17,7 @@ import org.verapdf.wcag.algorithms.entities.enums.TextAlignment;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.CaptionUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -37,7 +38,8 @@ public class ParagraphProcessor {
         }
         blocks = detectParagraphsWithJustifyAlignments(blocks);
         blocks = detectFirstAndLastLinesOfParagraphsWithJustifyAlignments(blocks);
-        blocks = detectParagraphsWithLeftAlignments(blocks);
+        blocks = detectParagraphsWithLeftAlignments(blocks, true);
+        blocks = detectParagraphsWithLeftAlignments(blocks, false);
         blocks = detectFirstLinesOfParagraphWithLeftAlignments(blocks);
         blocks = detectTwoLinesParagraphs(blocks);
         blocks = detectBulletedParagraphsWithLeftAlignments(blocks);
@@ -75,7 +77,7 @@ public class ParagraphProcessor {
                 TextBlock previousBlock = newBlocks.get(newBlocks.size() - 1);
                 TextBlock nextBlock = textBlocks.get(i);
                 TextAlignment textAlignment = ChunksMergeUtils.getAlignment(previousBlock.getLastLine(), nextBlock.getFirstLine());
-                double probability = getDifferentLinesProbability(previousBlock, nextBlock);
+                double probability = getDifferentLinesProbability(previousBlock, nextBlock, false, false);
                 if (textAlignment == TextAlignment.JUSTIFY && probability > DIFFERENT_LINES_PROBABILITY) {
                     previousBlock.add(nextBlock.getLines());
                     previousBlock.setTextAlignment(TextAlignment.JUSTIFY);
@@ -97,7 +99,7 @@ public class ParagraphProcessor {
                 TextBlock previousBlock = newBlocks.get(newBlocks.size() - 1);
                 TextBlock nextBlock = textBlocks.get(i);
                 TextAlignment textAlignment = ChunksMergeUtils.getAlignment(previousBlock.getLastLine(), nextBlock.getFirstLine());
-                double probability = getDifferentLinesProbability(previousBlock, nextBlock);
+                double probability = getDifferentLinesProbability(previousBlock, nextBlock, false, false);
                 if (textAlignment == TextAlignment.CENTER && probability > DIFFERENT_LINES_PROBABILITY) {
                     previousBlock.add(nextBlock.getLines());
                     previousBlock.setTextAlignment(TextAlignment.CENTER);
@@ -119,7 +121,7 @@ public class ParagraphProcessor {
                 TextBlock previousBlock = newBlocks.get(newBlocks.size() - 1);
                 TextBlock nextBlock = textBlocks.get(i);
                 TextAlignment textAlignment = ChunksMergeUtils.getAlignment(previousBlock.getLastLine(), nextBlock.getFirstLine());
-                double probability = getDifferentLinesProbability(previousBlock, nextBlock);
+                double probability = getDifferentLinesProbability(previousBlock, nextBlock, false, false);
                 if (isFirstLineOfBlock(previousBlock, nextBlock, textAlignment, probability)) {
                     previousBlock.add(nextBlock.getLines());
                     previousBlock.setTextAlignment(TextAlignment.JUSTIFY);
@@ -136,7 +138,7 @@ public class ParagraphProcessor {
         return newBlocks;
     }
 
-    private static List<TextBlock> detectParagraphsWithLeftAlignments(List<TextBlock> textBlocks) {
+    private static List<TextBlock> detectParagraphsWithLeftAlignments(List<TextBlock> textBlocks, boolean checkStyle) {
         List<TextBlock> newBlocks = new ArrayList<>();
         if (!textBlocks.isEmpty()) {
             newBlocks.add(textBlocks.get(0));
@@ -145,9 +147,10 @@ public class ParagraphProcessor {
             for (int i = 1; i < textBlocks.size(); i++) {
                 TextBlock previousBlock = newBlocks.get(newBlocks.size() - 1);
                 TextBlock nextBlock = textBlocks.get(i);
-                if (areLinesOfParagraphsWithLeftAlignments(previousBlock, nextBlock)) {
+                if (areLinesOfParagraphsWithLeftAlignments(previousBlock, nextBlock, checkStyle)) {
                     previousBlock.add(nextBlock.getLines());
                     previousBlock.setTextAlignment(TextAlignment.LEFT);
+                    previousBlock.setHasEndLine(false);
                 } else {
                     newBlocks.add(nextBlock);
                 }
@@ -158,19 +161,61 @@ public class ParagraphProcessor {
 
     private static boolean areLinesOfParagraphsWithRightAlignments(TextBlock previousBlock, TextBlock nextBlock) {
         TextAlignment textAlignment = ChunksMergeUtils.getAlignment(previousBlock.getLastLine(), nextBlock.getFirstLine());
-        double probability = getDifferentLinesProbability(previousBlock, nextBlock);
-        return textAlignment == TextAlignment.RIGHT && probability > DIFFERENT_LINES_PROBABILITY &&
-                (previousBlock.getLinesNumber() == 1 || previousBlock.getTextAlignment() == TextAlignment.RIGHT) &&
-                (nextBlock.getLinesNumber() == 1 || nextBlock.getTextAlignment() == TextAlignment.RIGHT);
+        if (textAlignment != TextAlignment.RIGHT) {
+            return false;
+        }
+        double probability = getDifferentLinesProbability(previousBlock, nextBlock, false, false);
+        if (probability < DIFFERENT_LINES_PROBABILITY) {
+            return false;
+        }
+        if (previousBlock.getLinesNumber() != 1 && previousBlock.getTextAlignment() != TextAlignment.RIGHT) {
+            return false;
+        }
+        if (nextBlock.getLinesNumber() != 1 && nextBlock.getTextAlignment() != TextAlignment.RIGHT) {
+            return false;
+        }
+        return true;
     }
 
-    private static boolean areLinesOfParagraphsWithLeftAlignments(TextBlock previousBlock, TextBlock nextBlock) {
+    private static boolean areLinesOfParagraphsWithLeftAlignments(TextBlock previousBlock, TextBlock nextBlock, boolean checkStyle) {
         TextAlignment textAlignment = ChunksMergeUtils.getAlignment(previousBlock.getLastLine(), nextBlock.getFirstLine());
-        double probability = getDifferentLinesProbability(previousBlock, nextBlock);
-        return textAlignment == TextAlignment.LEFT && probability > DIFFERENT_LINES_PROBABILITY &&
-                (previousBlock.getLinesNumber() == 1 || previousBlock.getTextAlignment() == TextAlignment.LEFT) &&
-                (nextBlock.getLinesNumber() == 1 || nextBlock.getTextAlignment() == TextAlignment.LEFT) &&
-                !BulletedParagraphUtils.isLabeledLine(nextBlock.getFirstLine());
+        if (textAlignment != TextAlignment.LEFT) {
+            return false;
+        }
+        boolean haveSameStyle = TextChunkUtils.areTextChunksHaveSameStyle(previousBlock.getLastLine().getFirstTextChunk(),
+            nextBlock.getFirstLine().getFirstTextChunk());
+        if (checkStyle && !haveSameStyle) {
+            return false;
+        }
+        if (BulletedParagraphUtils.isLabeledLine(nextBlock.getFirstLine())) {
+            return false;
+        }
+        boolean areShouldBeCloseLines = false;
+        if (previousBlock.getLinesNumber() != 1) {
+            if (previousBlock.getTextAlignment() == TextAlignment.JUSTIFY) {
+                if (!haveSameStyle) {
+                    return false;
+                }
+                areShouldBeCloseLines = true;
+            } else if (previousBlock.getTextAlignment() != TextAlignment.LEFT) {
+                return false;
+            }
+        }
+        if (nextBlock.getLinesNumber() != 1) {
+            if (nextBlock.getTextAlignment() == TextAlignment.JUSTIFY) {
+                if (!haveSameStyle) {
+                    return false;
+                }
+                areShouldBeCloseLines = true;
+            } else if (nextBlock.getTextAlignment() != TextAlignment.LEFT) {
+                return false;
+            }
+        }
+        double probability = getDifferentLinesProbability(previousBlock, nextBlock, true, areShouldBeCloseLines);
+        if (probability < DIFFERENT_LINES_PROBABILITY) {
+            return false;
+        }
+        return true;
     }
 
     private static List<TextBlock> detectFirstLinesOfParagraphWithLeftAlignments(List<TextBlock> textBlocks) {
@@ -195,11 +240,29 @@ public class ParagraphProcessor {
     }
 
     private static boolean isFirstLineOfParagraphWithLeftAlignment(TextBlock previousBlock, TextBlock nextBlock) {
-        double probability = getDifferentLinesProbability(previousBlock, nextBlock);
-        return previousBlock.getLinesNumber() == 1 && previousBlock.getLastLine().getLeftX() > nextBlock.getFirstLine().getLeftX() &&
-                CaptionUtils.areOverlapping(previousBlock.getLastLine(), nextBlock.getFirstLine().getBoundingBox()) &&
-                nextBlock.getTextAlignment() == TextAlignment.LEFT && !nextBlock.isHasStartLine() &&
-                probability > DIFFERENT_LINES_PROBABILITY && !BulletedParagraphUtils.isLabeledLine(nextBlock.getFirstLine());
+        double probability = getDifferentLinesProbability(previousBlock, nextBlock, false, false);
+        if (previousBlock.getLinesNumber() != 1) {
+            return false;
+        }
+        if (previousBlock.getLastLine().getLeftX() <= nextBlock.getFirstLine().getLeftX()) {
+            return false;
+        }
+        if (probability < DIFFERENT_LINES_PROBABILITY) {
+            return false;
+        }
+        if (BulletedParagraphUtils.isLabeledLine(nextBlock.getFirstLine())) {
+            return false;
+        }
+        if (nextBlock.isHasStartLine()) {
+            return false;
+        }
+        if (nextBlock.getTextAlignment() != TextAlignment.LEFT) {
+            return false;
+        }
+        if (!CaptionUtils.areOverlapping(previousBlock.getLastLine(), nextBlock.getFirstLine().getBoundingBox())) {
+            return false;
+        }
+        return true;
     }
 
     private static List<TextBlock> detectTwoLinesParagraphs(List<TextBlock> textBlocks) {
@@ -225,21 +288,50 @@ public class ParagraphProcessor {
     }
 
     private static boolean isTwoLinesParagraph(TextBlock previousBlock, TextBlock nextBlock) {
-        double probability = getDifferentLinesProbability(previousBlock, nextBlock);
-        return previousBlock.getLinesNumber() == 1 && nextBlock.getLinesNumber() == 1 &&
-                previousBlock.getLastLine().getLeftX() > nextBlock.getFirstLine().getLeftX() &&
-                previousBlock.getLastLine().getRightX() > nextBlock.getFirstLine().getRightX() &&
-                probability > DIFFERENT_LINES_PROBABILITY && !BulletedParagraphUtils.isLabeledLine(nextBlock.getFirstLine());
+        if (previousBlock.getLinesNumber() != 1 || nextBlock.getLinesNumber() != 1) {
+            return false;
+        }
+        double probability = getDifferentLinesProbability(previousBlock, nextBlock, false, false);
+        if (probability < DIFFERENT_LINES_PROBABILITY) {
+            return false;
+        }
+        if (BulletedParagraphUtils.isLabeledLine(nextBlock.getFirstLine())) {
+            return false;
+        }
+        if (previousBlock.getLastLine().getLeftX() < nextBlock.getFirstLine().getLeftX() ||
+            previousBlock.getLastLine().getRightX() < nextBlock.getFirstLine().getRightX()) {
+            return false;
+        }
+        return true;
     }
 
     private static boolean isFirstLineOfBulletedParagraphWithLeftAlignment(TextBlock previousBlock, TextBlock nextBlock) {
-        double probability = getDifferentLinesProbability(previousBlock, nextBlock);
-        return previousBlock.getLinesNumber() == 1 && previousBlock.getLastLine().getLeftX() < nextBlock.getFirstLine().getLeftX() &&
-                CaptionUtils.areOverlapping(previousBlock.getLastLine(), nextBlock.getFirstLine().getBoundingBox()) &&
-                (nextBlock.getTextAlignment() == TextAlignment.LEFT || nextBlock.getLinesNumber() == 1) &&
-                !nextBlock.isHasStartLine() && probability > DIFFERENT_LINES_PROBABILITY &&
-                BulletedParagraphUtils.isLabeledLine(previousBlock.getFirstLine()) &&
-                !BulletedParagraphUtils.isLabeledLine(nextBlock.getFirstLine());
+        double probability = getDifferentLinesProbability(previousBlock, nextBlock, false, false);
+        if (probability < DIFFERENT_LINES_PROBABILITY) {
+            return false;
+        }
+        if (previousBlock.getLinesNumber() != 1) {
+            return false;
+        }
+        if (nextBlock.isHasStartLine()) {
+            return false;
+        }
+        if (BulletedParagraphUtils.isLabeledLine(nextBlock.getFirstLine())) {
+            return false;
+        }
+        if (!BulletedParagraphUtils.isLabeledLine(previousBlock.getFirstLine())) {
+            return false;
+        }
+        if (previousBlock.getLastLine().getLeftX() > nextBlock.getFirstLine().getLeftX()) {
+            return false;
+        }
+        if (nextBlock.getTextAlignment() != TextAlignment.LEFT && nextBlock.getLinesNumber() != 1) {
+            return false;
+        }
+        if (!CaptionUtils.areOverlapping(previousBlock.getLastLine(), nextBlock.getFirstLine().getBoundingBox())) {
+            return false;
+        }
+        return true;
     }
 
     private static List<TextBlock> detectParagraphsWithRightAlignments(List<TextBlock> textBlocks) {
@@ -306,12 +398,23 @@ public class ParagraphProcessor {
         if (!areCloseStyle(previousBlock, nextBlock)) {
             return false;
         }
-        double probability = getDifferentLinesProbability(previousBlock, nextBlock);
-        return CaptionUtils.areOverlapping(previousBlock.getLastLine(), nextBlock.getFirstLine().getBoundingBox()) &&
-                probability > DIFFERENT_LINES_PROBABILITY &&
-                (previousBlock.getLinesNumber() == 1 || previousBlock.getTextAlignment() == null) &&
-                (nextBlock.getLinesNumber() == 1 || nextBlock.getTextAlignment() == null) &&
-                !BulletedParagraphUtils.isLabeledLine(nextBlock.getFirstLine());
+        double probability = getDifferentLinesProbability(previousBlock, nextBlock, false, false);
+        if (probability < DIFFERENT_LINES_PROBABILITY) {
+            return false;
+        }
+        if (BulletedParagraphUtils.isLabeledLine(nextBlock.getFirstLine())) {
+            return false;
+        }
+        if (!CaptionUtils.areOverlapping(previousBlock.getLastLine(), nextBlock.getFirstLine().getBoundingBox())) {
+            return false;
+        }
+        if (previousBlock.getLinesNumber() != 1 && previousBlock.getTextAlignment() != null) {
+            return false;
+        }
+        if (nextBlock.getLinesNumber() != 1 && nextBlock.getTextAlignment() != null) {
+            return false;
+        }
+        return true;
     }
 
     private static boolean isFirstLineOfBlock(TextBlock previousBlock, TextBlock nextBlock, TextAlignment textAlignment,
@@ -336,7 +439,8 @@ public class ParagraphProcessor {
         return textParagraph;
     }
 
-    private static double getDifferentLinesProbability(TextBlock previousBlock, TextBlock nextBlock) {
+    private static double getDifferentLinesProbability(TextBlock previousBlock, TextBlock nextBlock,
+                                                       boolean areSupportNotSingleLines, boolean areShouldBeCloseLines) {
         if (previousBlock.isHiddenText() != nextBlock.isHiddenText()) {
             return 0;
         }
@@ -344,11 +448,13 @@ public class ParagraphProcessor {
             return ChunksMergeUtils.mergeLeadingProbability(previousBlock.getLastLine(), nextBlock.getFirstLine());
         }
         if (previousBlock.getLinesNumber() == 1) {
-            return ChunksMergeUtils.mergeLeadingProbability(previousBlock.getLastLine(), nextBlock);
+            return ChunksMergeUtils.mergeLeadingProbability(previousBlock.getLastLine(), nextBlock, areShouldBeCloseLines);
         }
         if (nextBlock.getLinesNumber() == 1) {
-            return ChunksMergeUtils.mergeLeadingProbability(previousBlock, nextBlock.getFirstLine());
-
+            return ChunksMergeUtils.mergeLeadingProbability(previousBlock, nextBlock.getFirstLine(), areShouldBeCloseLines);
+        }
+        if (areSupportNotSingleLines) {
+            return ChunksMergeUtils.mergeLeadingProbability(previousBlock, nextBlock);
         }
         return 0;
     }
