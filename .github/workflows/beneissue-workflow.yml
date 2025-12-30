@@ -45,18 +45,20 @@ permissions:
   pull-requests: write
 
 jobs:
-  analyze:
+  process-issue:
     # Run on new or reopened issues
     if: github.event_name == 'issues'
     runs-on: ubuntu-latest
     steps:
-      - uses: opendataloader-project/beneissue@dbe647d9d92d0400344eef3cf56c59d47e728bef # v1
+      - uses: opendataloader-project/beneissue@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           langchain-api-key: ${{ secrets.LANGCHAIN_API_KEY }}
           langchain-project: ${{ vars.LANGCHAIN_PROJECT }}
-          command: analyze
+          supabase-url: ${{ secrets.SUPABASE_URL }}
+          supabase-service-key: ${{ secrets.SUPABASE_SERVICE_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          command: run
 
   on-command:
     # Run on @beneissue commands in comments
@@ -77,24 +79,22 @@ jobs:
         env:
           COMMENT: ${{ github.event.comment.body }}
         run: |
-          if [[ "$COMMENT" == *"@beneissue triage"* ]]; then
-            echo "command=triage" >> $GITHUB_OUTPUT
-          elif [[ "$COMMENT" == *"@beneissue analyze"* ]]; then
-            echo "command=analyze" >> $GITHUB_OUTPUT
-          elif [[ "$COMMENT" == *"@beneissue fix"* ]]; then
-            echo "command=fix" >> $GITHUB_OUTPUT
-          elif [[ "$COMMENT" == *"@beneissue run"* ]]; then
-            echo "command=run" >> $GITHUB_OUTPUT
-          else
-            echo "command=run" >> $GITHUB_OUTPUT
-          fi
+          case "$COMMENT" in
+            *"@beneissue triage"*) echo "command=triage" >> "$GITHUB_OUTPUT" ;;
+            *"@beneissue analyze"*) echo "command=analyze" >> "$GITHUB_OUTPUT" ;;
+            *"@beneissue fix"*) echo "command=fix" >> "$GITHUB_OUTPUT" ;;
+            *"@beneissue run"*) echo "command=run" >> "$GITHUB_OUTPUT" ;;
+            *) echo "command=run" >> "$GITHUB_OUTPUT" ;;
+          esac
 
-      - uses: opendataloader-project/beneissue@dbe647d9d92d0400344eef3cf56c59d47e728bef # v1
+      - uses: opendataloader-project/beneissue@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           langchain-api-key: ${{ secrets.LANGCHAIN_API_KEY }}
           langchain-project: ${{ vars.LANGCHAIN_PROJECT }}
+          supabase-url: ${{ secrets.SUPABASE_URL }}
+          supabase-service-key: ${{ secrets.SUPABASE_SERVICE_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY }}
           command: ${{ steps.parse.outputs.command }}
 
   manual:
@@ -102,12 +102,14 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: opendataloader-project/beneissue@dbe647d9d92d0400344eef3cf56c59d47e728bef # v1
+      - uses: opendataloader-project/beneissue@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           anthropic-api-key: ${{ inputs.dry_run && '' || secrets.ANTHROPIC_API_KEY }}
           langchain-api-key: ${{ secrets.LANGCHAIN_API_KEY }}
           langchain-project: ${{ vars.LANGCHAIN_PROJECT }}
+          supabase-url: ${{ secrets.SUPABASE_URL }}
+          supabase-service-key: ${{ secrets.SUPABASE_SERVICE_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY }}
           command: ${{ inputs.command }}
           issue-number: ${{ inputs.issue_number }}
         env:
