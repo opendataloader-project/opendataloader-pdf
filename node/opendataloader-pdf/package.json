@@ -19,7 +19,9 @@
     "setup": "node ./scripts/setup.cjs",
     "build": "pnpm run setup && tsup",
     "test": "vitest --run",
-    "format": "prettier --write \"**/*.{ts,js,json,md}\""
+    "format": "prettier --write \"**/*.{ts,js,json,md}\"",
+    "lint": "eslint \"src/**/*.ts\"",
+    "lint:fix": "eslint \"src/**/*.ts\" --fix"
   },
   "repository": {
     "type": "git",
@@ -51,6 +53,9 @@
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
+    "@typescript-eslint/eslint-plugin": "^8.33.0",
+    "@typescript-eslint/parser": "^8.33.0",
+    "eslint": "^9.28.0",
     "glob": "^12.0.0",
     "prettier": "^3.6.2",
     "tsup": "^8.5.1",
