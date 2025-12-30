@@ -18,6 +18,9 @@ on:
           - policy
         default: 'connection'
 
+permissions:
+  contents: read
+
 jobs:
   test-connection:
     # Test Supabase metrics connection
