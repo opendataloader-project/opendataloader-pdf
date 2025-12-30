@@ -287,7 +287,6 @@ public class HtmlGenerator implements Closeable {
                 case '>': sb.append("&gt;"); break;
                 case '"': sb.append("&quot;"); break;
                 case '\'': sb.append("&#x27;"); break;
-                case '/': sb.append("&#x2F;"); break;
                 default: sb.append(c);
             }
         }

@@ -77,7 +77,7 @@ jobs:
 
       - name: '[Node.js] Build and test'
         run: |
-          pnpm install --no-frozen-lockfile
+          pnpm install --frozen-lockfile
           pnpm version ${{ env.VERSION }} --no-git-tag-version --allow-same-version
           pnpm run build
           pnpm test

@@ -259,12 +259,8 @@ public class MarkdownGenerator implements Closeable {
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
             switch (c) {
-                case '&': sb.append("&amp;"); break;
                 case '<': sb.append("&lt;"); break;
                 case '>': sb.append("&gt;"); break;
-                case '"': sb.append("&quot;"); break;
-                case '\'': sb.append("&#x27;"); break;
-                case '/': sb.append("&#x2F;"); break;
                 case '|': sb.append("\\|"); break;
                 case '*': sb.append("\\*"); break;
                 case '_': sb.append("\\_"); break;
@@ -272,9 +268,7 @@ public class MarkdownGenerator implements Closeable {
                 case '#': sb.append("\\#"); break;
                 case '[': sb.append("\\["); break;
                 case ']': sb.append("\\]"); break;
-                case '(': sb.append("\\("); break;
-                case ')': sb.append("\\)"); break;
-                case '!': sb.append("\\!"); break;
+                case '\\': sb.append("\\\\"); break;
                 default: sb.append(c);
             }
         }

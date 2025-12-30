@@ -22,6 +22,7 @@ class MarkdownGeneratorEscapingTest {
         MarkdownGenerator generator = new MarkdownGenerator(testPdf, tempDir.toString(), config);
         try {
             SemanticHeading heading = new SemanticHeading();
+            heading.setHeadingLevel(1);
             TextLine line = new TextLine(new TextChunk(new BoundingBox(0, 0, 0, 10, 10), "<script>alert('x')</script>", "Font", 10, 400, 0, 10.0, new double[]{0.0}, null, 0));
             heading.add(line);
             generator.writeHeading(heading);
@@ -30,7 +31,7 @@ class MarkdownGeneratorEscapingTest {
         }
         Path mdPath = tempDir.resolve("lorem.md");
         String content = Files.readString(mdPath);
-        Assertions.assertThat(content).contains("&lt;script&gt;alert\\(&#x27;x&#x27;\\)&lt;/script&gt;");
+        Assertions.assertThat(content).contains("&lt;script&gt;alert('x')&lt;/script&gt;");
     }
 }
 

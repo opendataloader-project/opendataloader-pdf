@@ -22,6 +22,7 @@ class HtmlGeneratorEscapingTest {
         HtmlGenerator generator = new HtmlGenerator(testPdf, tempDir.toString(), config);
         try {
             SemanticHeading heading = new SemanticHeading();
+            heading.setHeadingLevel(1);
             TextLine line = new TextLine(new TextChunk(new BoundingBox(0, 0, 0, 10, 10), "<script>alert('x')</script>", "Font", 10, 400, 0, 10.0, new double[]{0.0}, null, 0));
             heading.add(line);
             generator.writeHeading(heading);
