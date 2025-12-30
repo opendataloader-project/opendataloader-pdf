@@ -1,3 +1,15 @@
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 100
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+exclude = ["dist", "build"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = []
