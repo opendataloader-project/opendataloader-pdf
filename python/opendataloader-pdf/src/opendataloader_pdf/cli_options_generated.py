@@ -106,7 +106,7 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "type": "string",
         "required": False,
         "default": None,
-        "description": "Separator between pages in Markdown output. Use %page-number% for page numbers. Default: none",
+        "description": "Separator between pages in Markdown output. Use %%page-number%% for page numbers. Default: none",
     },
     {
         "name": "text-page-separator",
@@ -115,7 +115,7 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "type": "string",
         "required": False,
         "default": None,
-        "description": "Separator between pages in text output. Use %page-number% for page numbers. Default: none",
+        "description": "Separator between pages in text output. Use %%page-number%% for page numbers. Default: none",
     },
     {
         "name": "html-page-separator",
@@ -124,7 +124,7 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "type": "string",
         "required": False,
         "default": None,
-        "description": "Separator between pages in HTML output. Use %page-number% for page numbers. Default: none",
+        "description": "Separator between pages in HTML output. Use %%page-number%% for page numbers. Default: none",
     },
     {
         "name": "image-output",

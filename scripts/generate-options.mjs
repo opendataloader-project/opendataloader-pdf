@@ -61,13 +61,18 @@ function isListOption(opt) {
  * Escape string for use in generated code.
  * @param {string} str - The string to escape
  * @param {string} quote - The quote character (' or ")
+ * @param {object} options - Additional escape options
+ * @param {boolean} options.escapePercent - Escape % as %% for Python argparse
  */
-function escapeString(str, quote = "'") {
+function escapeString(str, quote = "'", { escapePercent = false } = {}) {
   let result = str.replace(/\\/g, '\\\\'); // escape backslashes first
   if (quote === "'") {
     result = result.replace(/'/g, "\\'");
   } else {
     result = result.replace(/"/g, '\\"');
+  }
+  if (escapePercent) {
+    result = result.replace(/%/g, '%%');
   }
   return result;
 }
@@ -241,7 +246,7 @@ function generatePythonCliOptions() {
     lines.push(`        "type": "${opt.type}",`);
     lines.push(`        "required": ${opt.required ? 'True' : 'False'},`);
     lines.push(`        "default": ${defaultValue},`);
-    lines.push(`        "description": "${escapeString(opt.description, '"')}",`);
+    lines.push(`        "description": "${escapeString(opt.description, '"', { escapePercent: true })}",`);
     lines.push('    },');
   }
 
