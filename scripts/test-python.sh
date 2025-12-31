@@ -1,22 +1,18 @@
 #!/bin/bash
 
-# Local development test script for Python package
+# Local development test script for Python package using uv
 # For CI/CD builds, use build-python.sh instead
 
 set -e
-
-# Python executable (can be overridden: PYTHON=python3.11 ./scripts/test-python.sh)
-PYTHON="${PYTHON:-python3}"
-command -v "$PYTHON" >/dev/null || PYTHON="python"
-command -v "$PYTHON" >/dev/null || { echo "Error: python not found"; exit 1; }
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$SCRIPT_DIR/.."
 PACKAGE_DIR="$ROOT_DIR/python/opendataloader-pdf"
 cd "$PACKAGE_DIR"
 
-# Install in editable mode (if not already)
-$PYTHON -m pip install -e . --quiet
+# Check uv is available
+command -v uv >/dev/null || { echo "Error: uv not found. Install with: curl -LsSf https://astral.sh/uv/install.sh | sh"; exit 1; }
 
-# Run tests
-$PYTHON -m pytest tests -v -s "$@"
+# Sync dependencies and run tests
+uv sync
+uv run pytest tests -v -s "$@"

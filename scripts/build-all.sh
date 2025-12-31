@@ -21,8 +21,7 @@ echo "Checking prerequisites..."
 
 command -v java >/dev/null || { echo "Error: java not found"; exit 1; }
 command -v mvn >/dev/null || { echo "Error: mvn not found"; exit 1; }
-command -v python3 >/dev/null || { echo "Error: python3 not found"; exit 1; }
-command -v pip >/dev/null || { echo "Error: pip not found"; exit 1; }
+command -v uv >/dev/null || { echo "Error: uv not found. Install with: curl -LsSf https://astral.sh/uv/install.sh | sh"; exit 1; }
 command -v node >/dev/null || { echo "Error: node not found"; exit 1; }
 command -v pnpm >/dev/null || { echo "Error: pnpm not found"; exit 1; }
 
@@ -54,7 +53,7 @@ echo "[2/3] Python: Building and testing..."
 echo "----------------------------------------"
 
 cd "$ROOT_DIR/python/opendataloader-pdf"
-sed -i.bak "s/version=\"[^\"]*\"/version=\"$VERSION\"/" setup.py && rm -f setup.py.bak
+sed -i.bak "s/^version = \"[^\"]*\"/version = \"$VERSION\"/" pyproject.toml && rm -f pyproject.toml.bak
 "$SCRIPT_DIR/build-python.sh"
 
 echo "[2/3] Python: Done"
