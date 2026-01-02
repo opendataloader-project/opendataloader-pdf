@@ -289,14 +289,6 @@ public class HybridDocumentProcessor {
         // Get or create cached client
         HybridClient client = getClient(config);
 
-        // Check if backend is available
-        if (!client.isAvailable()) {
-            LOGGER.log(Level.WARNING, "Backend {0} is not available", config.getHybrid());
-            if (config.getHybridConfig().isFallbackToJava()) {
-                throw new IOException("Backend not available");
-            }
-        }
-
         // Read PDF bytes
         byte[] pdfBytes = Files.readAllBytes(Path.of(inputPdfName));
 
