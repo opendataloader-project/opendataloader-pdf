@@ -8,8 +8,10 @@
 package org.opendataloader.pdf.hybrid;
 
 import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
 import org.verapdf.wcag.algorithms.entities.content.LineChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
+import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
@@ -46,6 +48,51 @@ public class TriageProcessor {
 
     /** Epsilon for comparing baseline coordinates. */
     private static final double BASELINE_EPSILON = 0.1;
+
+    // ============= Vector Graphics Detection Constants =============
+
+    /** Minimum number of line segments to suggest table borders. */
+    private static final int MIN_LINE_COUNT_FOR_TABLE = 8;
+
+    /** Minimum number of horizontal + vertical line pairs for grid pattern. */
+    private static final int MIN_GRID_LINES = 3;
+
+    /** Minimum number of line-text-line alternations for row separator pattern. */
+    private static final int MIN_ROW_SEPARATOR_PATTERN = 5;
+
+    /** Minimum LineArt chunks to indicate table structure. */
+    private static final int MIN_LINE_ART_FOR_TABLE = 8;
+
+    // ============= Aligned Short Lines Detection Constants =============
+
+    /** Tolerance for matching line lengths (5%). */
+    private static final double LINE_LENGTH_TOLERANCE = 0.05;
+
+    /** Minimum aligned short lines with same X and length. */
+    private static final int MIN_ALIGNED_SHORT_LINES = 2;
+
+    // ============= Consecutive Pattern Detection Constants =============
+
+    /** Minimum consecutive suspicious patterns required. */
+    private static final int MIN_CONSECUTIVE_PATTERNS = 2;
+
+    /** High pattern count threshold (skip consecutive check). */
+    private static final int HIGH_PATTERN_COUNT_THRESHOLD = 30;
+
+    /** Minimum absolute patterns required. */
+    private static final int MIN_TABLE_PATTERNS = 3;
+
+    /** Minimum pattern density (patterns / text chunks). */
+    private static final double MIN_PATTERN_DENSITY = 0.10;
+
+    /** Minimum patterns for density check. */
+    private static final int MIN_PATTERNS_FOR_DENSITY = 2;
+
+    /** X shift ratio to detect column change (filters multi-column layouts). */
+    private static final double MULTI_COLUMN_X_SHIFT_RATIO = 2.0;
+
+    /** X difference epsilon for gap detection. */
+    private static final double X_DIFFERENCE_EPSILON = 1.5;
 
     /**
      * Triage decision indicating which processing path to use.
@@ -179,8 +226,23 @@ public class TriageProcessor {
         private final boolean hasTableBorder;
         private final boolean hasSuspiciousPattern;
 
+        // New vector graphics signals
+        private final int horizontalLineCount;
+        private final int verticalLineCount;
+        private final int lineArtCount;
+        private final boolean hasGridLines;
+        private final boolean hasTableBorderLines;
+        private final boolean hasRowSeparatorPattern;
+        private final boolean hasAlignedShortLines;
+
+        // New text pattern signals
+        private final int tablePatternCount;
+        private final int maxConsecutiveStreak;
+        private final double patternDensity;
+        private final boolean hasConsecutivePatterns;
+
         /**
-         * Creates new triage signals.
+         * Creates new triage signals with basic fields (backward compatibility).
          *
          * @param lineChunkCount       Number of LineChunk objects on the page.
          * @param textChunkCount       Number of TextChunk objects on the page.
@@ -191,12 +253,39 @@ public class TriageProcessor {
          */
         public TriageSignals(int lineChunkCount, int textChunkCount, double lineToTextRatio,
                              int alignedLineGroups, boolean hasTableBorder, boolean hasSuspiciousPattern) {
+            this(lineChunkCount, textChunkCount, lineToTextRatio, alignedLineGroups,
+                    hasTableBorder, hasSuspiciousPattern,
+                    0, 0, 0, false, false, false, false,
+                    0, 0, 0.0, false);
+        }
+
+        /**
+         * Creates new triage signals with all fields.
+         */
+        public TriageSignals(int lineChunkCount, int textChunkCount, double lineToTextRatio,
+                             int alignedLineGroups, boolean hasTableBorder, boolean hasSuspiciousPattern,
+                             int horizontalLineCount, int verticalLineCount, int lineArtCount,
+                             boolean hasGridLines, boolean hasTableBorderLines,
+                             boolean hasRowSeparatorPattern, boolean hasAlignedShortLines,
+                             int tablePatternCount, int maxConsecutiveStreak, double patternDensity,
+                             boolean hasConsecutivePatterns) {
             this.lineChunkCount = lineChunkCount;
             this.textChunkCount = textChunkCount;
             this.lineToTextRatio = lineToTextRatio;
             this.alignedLineGroups = alignedLineGroups;
             this.hasTableBorder = hasTableBorder;
             this.hasSuspiciousPattern = hasSuspiciousPattern;
+            this.horizontalLineCount = horizontalLineCount;
+            this.verticalLineCount = verticalLineCount;
+            this.lineArtCount = lineArtCount;
+            this.hasGridLines = hasGridLines;
+            this.hasTableBorderLines = hasTableBorderLines;
+            this.hasRowSeparatorPattern = hasRowSeparatorPattern;
+            this.hasAlignedShortLines = hasAlignedShortLines;
+            this.tablePatternCount = tablePatternCount;
+            this.maxConsecutiveStreak = maxConsecutiveStreak;
+            this.patternDensity = patternDensity;
+            this.hasConsecutivePatterns = hasConsecutivePatterns;
         }
 
         /**
@@ -205,7 +294,9 @@ public class TriageProcessor {
          * @return A new TriageSignals with zero/false values.
          */
         public static TriageSignals empty() {
-            return new TriageSignals(0, 0, 0.0, 0, false, false);
+            return new TriageSignals(0, 0, 0.0, 0, false, false,
+                    0, 0, 0, false, false, false, false,
+                    0, 0, 0.0, false);
         }
 
         /**
@@ -262,6 +353,72 @@ public class TriageProcessor {
             return hasSuspiciousPattern;
         }
 
+        /**
+         * Checks if vector graphics indicate table structure.
+         *
+         * @return true if any vector graphics signal indicates table.
+         */
+        public boolean hasVectorTableSignal() {
+            return hasGridLines || hasTableBorderLines || lineArtCount >= MIN_LINE_ART_FOR_TABLE
+                    || hasRowSeparatorPattern || hasAlignedShortLines;
+        }
+
+        /**
+         * Checks if text patterns indicate table structure (with consecutive validation).
+         *
+         * @return true if text patterns suggest table.
+         */
+        public boolean hasTextTablePattern() {
+            boolean hasHighPatternCount = tablePatternCount >= HIGH_PATTERN_COUNT_THRESHOLD;
+            boolean meetsPatternThreshold = tablePatternCount >= MIN_TABLE_PATTERNS
+                    || (patternDensity >= MIN_PATTERN_DENSITY && tablePatternCount >= MIN_PATTERNS_FOR_DENSITY);
+            return (hasConsecutivePatterns || hasHighPatternCount) && meetsPatternThreshold;
+        }
+
+        public int getHorizontalLineCount() {
+            return horizontalLineCount;
+        }
+
+        public int getVerticalLineCount() {
+            return verticalLineCount;
+        }
+
+        public int getLineArtCount() {
+            return lineArtCount;
+        }
+
+        public boolean hasGridLines() {
+            return hasGridLines;
+        }
+
+        public boolean hasTableBorderLines() {
+            return hasTableBorderLines;
+        }
+
+        public boolean hasRowSeparatorPattern() {
+            return hasRowSeparatorPattern;
+        }
+
+        public boolean hasAlignedShortLines() {
+            return hasAlignedShortLines;
+        }
+
+        public int getTablePatternCount() {
+            return tablePatternCount;
+        }
+
+        public int getMaxConsecutiveStreak() {
+            return maxConsecutiveStreak;
+        }
+
+        public double getPatternDensity() {
+            return patternDensity;
+        }
+
+        public boolean hasConsecutivePatterns() {
+            return hasConsecutivePatterns;
+        }
+
         @Override
         public boolean equals(Object obj) {
             if (this == obj) return true;
@@ -272,13 +429,28 @@ public class TriageProcessor {
                    Double.compare(that.lineToTextRatio, lineToTextRatio) == 0 &&
                    alignedLineGroups == that.alignedLineGroups &&
                    hasTableBorder == that.hasTableBorder &&
-                   hasSuspiciousPattern == that.hasSuspiciousPattern;
+                   hasSuspiciousPattern == that.hasSuspiciousPattern &&
+                   horizontalLineCount == that.horizontalLineCount &&
+                   verticalLineCount == that.verticalLineCount &&
+                   lineArtCount == that.lineArtCount &&
+                   hasGridLines == that.hasGridLines &&
+                   hasTableBorderLines == that.hasTableBorderLines &&
+                   hasRowSeparatorPattern == that.hasRowSeparatorPattern &&
+                   hasAlignedShortLines == that.hasAlignedShortLines &&
+                   tablePatternCount == that.tablePatternCount &&
+                   maxConsecutiveStreak == that.maxConsecutiveStreak &&
+                   Double.compare(that.patternDensity, patternDensity) == 0 &&
+                   hasConsecutivePatterns == that.hasConsecutivePatterns;
         }
 
         @Override
         public int hashCode() {
             return Objects.hash(lineChunkCount, textChunkCount, lineToTextRatio,
-                                alignedLineGroups, hasTableBorder, hasSuspiciousPattern);
+                                alignedLineGroups, hasTableBorder, hasSuspiciousPattern,
+                                horizontalLineCount, verticalLineCount, lineArtCount,
+                                hasGridLines, hasTableBorderLines, hasRowSeparatorPattern,
+                                hasAlignedShortLines, tablePatternCount, maxConsecutiveStreak,
+                                patternDensity, hasConsecutivePatterns);
         }
 
         @Override
@@ -290,6 +462,17 @@ public class TriageProcessor {
                    ", alignedLineGroups=" + alignedLineGroups +
                    ", hasTableBorder=" + hasTableBorder +
                    ", hasSuspiciousPattern=" + hasSuspiciousPattern +
+                   ", horizontalLineCount=" + horizontalLineCount +
+                   ", verticalLineCount=" + verticalLineCount +
+                   ", lineArtCount=" + lineArtCount +
+                   ", hasGridLines=" + hasGridLines +
+                   ", hasTableBorderLines=" + hasTableBorderLines +
+                   ", hasRowSeparatorPattern=" + hasRowSeparatorPattern +
+                   ", hasAlignedShortLines=" + hasAlignedShortLines +
+                   ", tablePatternCount=" + tablePatternCount +
+                   ", maxConsecutiveStreak=" + maxConsecutiveStreak +
+                   ", patternDensity=" + patternDensity +
+                   ", hasConsecutivePatterns=" + hasConsecutivePatterns +
                    '}';
         }
     }
@@ -413,17 +596,27 @@ public class TriageProcessor {
             return TriageResult.backend(pageNumber, 1.0, signals);
         }
 
-        // Signal 2: Suspicious text patterns (catches borderless tables)
-        if (signals.hasSuspiciousPattern()) {
+        // Signal 2: Vector graphics based table detection (grid lines, borders, line art)
+        if (signals.hasVectorTableSignal()) {
+            return TriageResult.backend(pageNumber, 0.95, signals);
+        }
+
+        // Signal 3: Text-based table patterns (with consecutive validation)
+        if (signals.hasTextTablePattern()) {
             return TriageResult.backend(pageNumber, 0.9, signals);
         }
 
-        // Signal 3: High LineChunk ratio (grid/border elements)
+        // Signal 4: Suspicious text patterns (catches borderless tables)
+        if (signals.hasSuspiciousPattern()) {
+            return TriageResult.backend(pageNumber, 0.85, signals);
+        }
+
+        // Signal 5: High LineChunk ratio (grid/border elements)
         if (signals.getLineToTextRatio() > thresholds.getLineRatioThreshold()) {
             return TriageResult.backend(pageNumber, 0.8, signals);
         }
 
-        // Signal 4: Grid pattern detection (aligned baselines with gaps)
+        // Signal 6: Grid pattern detection (aligned baselines with gaps)
         if (signals.getAlignedLineGroups() >= thresholds.getAlignedLineGroupsThreshold()) {
             return TriageResult.backend(pageNumber, 0.7, signals);
         }
@@ -449,41 +642,192 @@ public class TriageProcessor {
             return TriageSignals.empty();
         }
 
-        int lineChunkCount = 0;
-        int textChunkCount = 0;
-        List<TextChunk> textChunks = new ArrayList<>();
+        // Use SignalAccumulator to collect all signals in a single pass
+        SignalAccumulator accumulator = new SignalAccumulator();
 
-        // Count content types
         for (IObject content : filteredContents) {
             if (content instanceof LineChunk) {
-                lineChunkCount++;
+                accumulator.processLineChunk((LineChunk) content);
             } else if (content instanceof TextChunk) {
-                textChunkCount++;
-                textChunks.add((TextChunk) content);
+                accumulator.processTextChunk((TextChunk) content);
+            } else if (content instanceof LineArtChunk) {
+                accumulator.processLineArtChunk();
             }
         }
 
-        // Calculate line to text ratio
+        // Calculate derived values
         int totalCount = filteredContents.size();
-        double lineToTextRatio = totalCount > 0 ? (double) lineChunkCount / totalCount : 0.0;
+        double lineToTextRatio = totalCount > 0
+                ? (double) accumulator.lineChunkCount / totalCount : 0.0;
 
         // Check for TableBorder in StaticContainers
         boolean hasTableBorder = checkTableBorderPresence(pageNumber);
 
         // Check for suspicious text patterns (grid-like layout)
-        boolean hasSuspiciousPattern = checkSuspiciousPatterns(textChunks);
+        boolean hasSuspiciousPattern = checkSuspiciousPatterns(accumulator.textChunks);
 
         // Count aligned line groups (potential table columns)
-        int alignedLineGroups = countAlignedLineGroups(textChunks, thresholds.getGridGapMultiplier());
+        int alignedLineGroups = countAlignedLineGroups(
+                accumulator.textChunks, thresholds.getGridGapMultiplier());
+
+        // Build vector graphics signals
+        boolean hasGridLines = accumulator.horizontalLineCount >= MIN_GRID_LINES
+                && accumulator.verticalLineCount >= MIN_GRID_LINES;
+        boolean hasTableBorderLines = (accumulator.horizontalLineCount + accumulator.verticalLineCount)
+                >= MIN_LINE_COUNT_FOR_TABLE;
+        boolean hasRowSeparatorPattern = accumulator.rowSeparatorPatternCount >= MIN_ROW_SEPARATOR_PATTERN;
+        boolean hasAlignedShortLines = accumulator.hasAlignedShortHorizontalLines();
+
+        // Build text pattern signals
+        double patternDensity = accumulator.nonWhitespaceTextCount > 0
+                ? (double) accumulator.tablePatternCount / accumulator.nonWhitespaceTextCount : 0.0;
+        boolean hasConsecutivePatterns = accumulator.maxConsecutiveStreak >= MIN_CONSECUTIVE_PATTERNS;
 
         return new TriageSignals(
-            lineChunkCount,
-            textChunkCount,
+            accumulator.lineChunkCount,
+            accumulator.textChunkCount,
             lineToTextRatio,
             alignedLineGroups,
             hasTableBorder,
-            hasSuspiciousPattern
+            hasSuspiciousPattern,
+            accumulator.horizontalLineCount,
+            accumulator.verticalLineCount,
+            accumulator.lineArtCount,
+            hasGridLines,
+            hasTableBorderLines,
+            hasRowSeparatorPattern,
+            hasAlignedShortLines,
+            accumulator.tablePatternCount,
+            accumulator.maxConsecutiveStreak,
+            patternDensity,
+            hasConsecutivePatterns
         );
+    }
+
+    /**
+     * Helper class to accumulate signals during page analysis.
+     */
+    private static class SignalAccumulator {
+        int lineChunkCount = 0;
+        int textChunkCount = 0;
+        int nonWhitespaceTextCount = 0;
+        int horizontalLineCount = 0;
+        int verticalLineCount = 0;
+        int lineArtCount = 0;
+        int tablePatternCount = 0;
+        int currentConsecutiveStreak = 0;
+        int maxConsecutiveStreak = 0;
+        int rowSeparatorPatternCount = 0;
+        boolean lastWasHorizontalLine = false;
+        TextChunk previousTextChunk = null;
+        List<TextChunk> textChunks = new ArrayList<>();
+        List<double[]> shortHorizontalLines = new ArrayList<>();
+
+        void processLineChunk(LineChunk lineChunk) {
+            lineChunkCount++;
+            BoundingBox box = lineChunk.getBoundingBox();
+            double width = box.getRightX() - box.getLeftX();
+            double height = box.getTopY() - box.getBottomY();
+
+            // Horizontal line: width >> height
+            if (width > height * 3) {
+                horizontalLineCount++;
+                if (!lastWasHorizontalLine) {
+                    rowSeparatorPatternCount++;
+                }
+                // Track short horizontal lines for aligned pattern detection
+                shortHorizontalLines.add(new double[]{box.getLeftX(), width});
+                lastWasHorizontalLine = true;
+            }
+            // Vertical line: height >> width
+            else if (height > width * 3) {
+                verticalLineCount++;
+            }
+        }
+
+        void processLineArtChunk() {
+            lineArtCount++;
+        }
+
+        void processTextChunk(TextChunk textChunk) {
+            textChunkCount++;
+            textChunks.add(textChunk);
+
+            if (textChunk.isWhiteSpaceChunk()) {
+                return;
+            }
+
+            nonWhitespaceTextCount++;
+            lastWasHorizontalLine = false;
+
+            if (previousTextChunk != null) {
+                if (areSuspiciousTextChunks(previousTextChunk, textChunk)) {
+                    tablePatternCount++;
+                    currentConsecutiveStreak++;
+                    if (currentConsecutiveStreak > maxConsecutiveStreak) {
+                        maxConsecutiveStreak = currentConsecutiveStreak;
+                    }
+                } else {
+                    currentConsecutiveStreak = 0;
+                }
+            }
+            previousTextChunk = textChunk;
+        }
+
+        /**
+         * Detects suspicious text chunks that may indicate table structure.
+         */
+        private boolean areSuspiciousTextChunks(TextChunk previous, TextChunk current) {
+            // Text going backwards suggests multi-column layout or table
+            if (previous.getTopY() < current.getBottomY()) {
+                // Filter out multi-column layout: X moves significantly left
+                double xShift = previous.getLeftX() - current.getLeftX();
+                double textWidth = previous.getRightX() - previous.getLeftX();
+                if (textWidth > 0 && xShift > textWidth * MULTI_COLUMN_X_SHIFT_RATIO) {
+                    return false;
+                }
+                return true;
+            }
+            // Same baseline with large horizontal gap suggests table cell boundaries
+            double baselineDiff = Math.abs(previous.getBaseLine() - current.getBaseLine());
+            double avgHeight = (previous.getHeight() + current.getHeight()) / 2.0;
+            if (baselineDiff < avgHeight * BASELINE_EPSILON) {
+                return current.getLeftX() - previous.getRightX() > current.getHeight() * X_DIFFERENCE_EPSILON;
+            }
+            return false;
+        }
+
+        /**
+         * Checks for aligned short horizontal lines with same length and X position.
+         */
+        boolean hasAlignedShortHorizontalLines() {
+            if (shortHorizontalLines.size() < MIN_ALIGNED_SHORT_LINES) {
+                return false;
+            }
+            for (int i = 0; i < shortHorizontalLines.size(); i++) {
+                double[] refLine = shortHorizontalLines.get(i);
+                double refLeftX = refLine[0];
+                double refLen = refLine[1];
+                int matchCount = 1;
+                for (int j = i + 1; j < shortHorizontalLines.size(); j++) {
+                    double[] line = shortHorizontalLines.get(j);
+                    double leftX = line[0];
+                    double len = line[1];
+                    double xDiff = Math.abs(refLeftX - leftX);
+                    double lenDiff = Math.abs(refLen - len);
+                    double maxLen = Math.max(refLen, len);
+                    boolean xMatches = maxLen > 0 && xDiff / maxLen <= LINE_LENGTH_TOLERANCE;
+                    boolean lenMatches = maxLen > 0 && lenDiff / maxLen <= LINE_LENGTH_TOLERANCE;
+                    if (xMatches && lenMatches) {
+                        matchCount++;
+                        if (matchCount >= MIN_ALIGNED_SHORT_LINES) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
     }
 
     /**
