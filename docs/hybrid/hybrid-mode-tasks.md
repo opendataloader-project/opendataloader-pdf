@@ -36,7 +36,7 @@ These decisions **require execution results** before they can be made.
 
 | Task | Status | Completed | Notes |
 |------|--------|-----------|-------|
-| Task -1: Pre-research | ⬜ not_started | - | - |
+| Task -1: Pre-research | ✅ completed | 2026-01-02 | See docs/hybrid/research/ |
 | Task 0: docling-api skill | ⬜ not_started | - | Depends on Task -1 |
 | Task 1: schema-mapping skill | ⬜ not_started | - | Depends on Task -1 |
 | Task 2: triage-criteria skill | ⬜ not_started | - | Depends on Task -1 |
@@ -86,10 +86,10 @@ curl -s http://localhost:5001/docs | head -20
 # Access UI playground at: http://localhost:5001/ui
 
 # Collect OpenAPI specification
-curl http://localhost:5001/openapi.json > docs/research/docling-openapi.json
+curl http://localhost:5001/openapi.json > docs/hybrid/research/docling-openapi.json
 
 # Check available endpoints
-cat docs/research/docling-openapi.json | jq '.paths | keys'
+cat docs/hybrid/research/docling-openapi.json | jq '.paths | keys'
 
 # Alternative: Using pip (if Docker not available)
 # pip install "docling-serve[ui]"
@@ -106,21 +106,21 @@ curl -X POST http://localhost:5001/v1/convert/source \
     "sources": [{"kind": "file", "path": "samples/pdf/1901.03003.pdf"}],
     "options": {"to_formats": ["json", "md"], "do_table_structure": true}
   }' \
-  > docs/research/docling-sample-response.json
+  > docs/hybrid/research/docling-sample-response.json
 
 # If file path doesn't work, try with base64 or HTTP URL
 # Alternative: Use multipart form if available
 curl -X POST http://localhost:5001/v1/convert/source \
   -F "file=@samples/pdf/1901.03003.pdf" \
-  > docs/research/docling-sample-response.json
+  > docs/hybrid/research/docling-sample-response.json
 
 # Extract response structure
-cat docs/research/docling-sample-response.json | jq 'keys'
-cat docs/research/docling-sample-response.json | jq '.document | keys' 2>/dev/null || \
-  cat docs/research/docling-sample-response.json | jq '.[0] | keys'
+cat docs/hybrid/research/docling-sample-response.json | jq 'keys'
+cat docs/hybrid/research/docling-sample-response.json | jq '.document | keys' 2>/dev/null || \
+  cat docs/hybrid/research/docling-sample-response.json | jq '.[0] | keys'
 
 # Check element types in response
-cat docs/research/docling-sample-response.json | jq '[.. | .type? // empty] | unique' 2>/dev/null
+cat docs/hybrid/research/docling-sample-response.json | jq '[.. | .type? // empty] | unique' 2>/dev/null
 ```
 
 #### 3. Extract documents with tables (for triage evaluation)
@@ -128,10 +128,10 @@ cat docs/research/docling-sample-response.json | jq '[.. | .type? // empty] | un
 # List documents containing tables
 cat tests/benchmark/ground-truth/reference.json | \
   jq -r 'to_entries[] | select(.value[]?.category == "Table") | .key' | \
-  sort | uniq > docs/research/documents-with-tables.txt
+  sort | uniq > docs/hybrid/research/documents-with-tables.txt
 
 # Count
-wc -l docs/research/documents-with-tables.txt
+wc -l docs/hybrid/research/documents-with-tables.txt
 ```
 
 #### 4. Parse same PDF with OpenDataLoader Java
@@ -142,19 +142,19 @@ wc -l docs/research/documents-with-tables.txt
 # Parse the same PDF with Java (JSON output)
 java -jar java/opendataloader-pdf-cli/target/opendataloader-pdf-cli-*.jar \
   --format json \
-  -o docs/research/ \
+  -o docs/hybrid/research/ \
   samples/pdf/1901.03003.pdf
 
 # Rename for clarity
-mv docs/research/1901.03003.json docs/research/opendataloader-sample-response.json
+mv docs/hybrid/research/1901.03003.json docs/hybrid/research/opendataloader-sample-response.json
 
 # Also generate markdown for comparison
 java -jar java/opendataloader-pdf-cli/target/opendataloader-pdf-cli-*.jar \
   --format md \
-  -o docs/research/ \
+  -o docs/hybrid/research/ \
   samples/pdf/1901.03003.pdf
 
-mv docs/research/1901.03003.md docs/research/opendataloader-sample-response.md
+mv docs/hybrid/research/1901.03003.md docs/hybrid/research/opendataloader-sample-response.md
 ```
 
 #### 5. Document IObject class structure
@@ -173,15 +173,15 @@ grep -r "implements.*IObject" java/opendataloader-pdf-core/ --include="*.java"
 ```bash
 # Compare element counts
 echo "=== Docling elements ==="
-cat docs/research/docling-sample-response.json | jq '[.document.content[].type] | group_by(.) | map({type: .[0], count: length})'
+cat docs/hybrid/research/docling-sample-response.json | jq '[.document.content[].type] | group_by(.) | map({type: .[0], count: length})'
 
 echo "=== OpenDataLoader elements ==="
-cat docs/research/opendataloader-sample-response.json | jq '[.kids[].semanticType] | group_by(.) | map({type: .[0], count: length})'
+cat docs/hybrid/research/opendataloader-sample-response.json | jq '[.kids[].semanticType] | group_by(.) | map({type: .[0], count: length})'
 ```
 
 ### Files to Create
 ```
-docs/research/
+docs/hybrid/research/
 ├── docling-openapi.json              # Full OpenAPI spec
 ├── docling-sample-response.json      # Docling conversion response
 ├── opendataloader-sample-response.json  # OpenDataLoader JSON output
@@ -203,10 +203,10 @@ docs/research/
 ### Test Method
 ```bash
 # Verify all files exist
-ls -la docs/research/
+ls -la docs/hybrid/research/
 
 # Verify docling response has expected structure
-cat docs/research/docling-sample-response.json | jq '.document.content | length'
+cat docs/hybrid/research/docling-sample-response.json | jq '.document.content | length'
 ```
 
 ### Dependencies
