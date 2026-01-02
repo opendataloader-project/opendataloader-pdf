@@ -7,6 +7,7 @@
  */
 package org.opendataloader.pdf.api;
 
+import org.opendataloader.pdf.hybrid.HybridClientFactory;
 import org.opendataloader.pdf.processors.DocumentProcessor;
 
 import java.io.IOException;
@@ -29,5 +30,15 @@ public final class OpenDataLoaderPDF {
      */
     public static void processFile(String inputPdfName, Config config) throws IOException {
         DocumentProcessor.processFile(inputPdfName, config);
+    }
+
+    /**
+     * Shuts down any cached resources used by the library.
+     *
+     * <p>This method should be called when processing is complete, typically at CLI exit.
+     * It releases resources such as HTTP client thread pools used for hybrid mode backends.
+     */
+    public static void shutdown() {
+        HybridClientFactory.shutdown();
     }
 }
