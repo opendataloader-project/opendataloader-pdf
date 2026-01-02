@@ -45,6 +45,7 @@ public class Config {
     private String imageOutput = IMAGE_OUTPUT_EXTERNAL;
     private String imageFormat = IMAGE_FORMAT_PNG;
     private String pages;
+    private List<Integer> cachedPageNumbers;
     private final FilterConfig filterConfig = new FilterConfig();
 
     /** Table detection method: default (border-based detection). */
@@ -574,6 +575,8 @@ public class Config {
     }
 
     private static final String INVALID_PAGE_RANGE_FORMAT = "Invalid page range format: '%s'. Expected format: 1,3,5-7";
+    /** Split limit to preserve trailing empty strings (e.g., "5-" splits to ["5", ""]). */
+    private static final int SPLIT_KEEP_EMPTY_TRAILING = -1;
 
     /**
      * Gets the pages to extract from the PDF.
@@ -592,7 +595,9 @@ public class Config {
      */
     public void setPages(String pages) {
         if (pages != null && !pages.trim().isEmpty()) {
-            parsePageRanges(pages);
+            this.cachedPageNumbers = parsePageRanges(pages);
+        } else {
+            this.cachedPageNumbers = null;
         }
         this.pages = pages;
     }
@@ -603,10 +608,10 @@ public class Config {
      * @return List of 1-based page numbers, or empty list if all pages should be extracted.
      */
     public List<Integer> getPageNumbers() {
-        if (pages == null || pages.trim().isEmpty()) {
+        if (cachedPageNumbers == null) {
             return new ArrayList<>();
         }
-        return parsePageRanges(pages);
+        return new ArrayList<>(cachedPageNumbers);
     }
 
     /**
@@ -637,7 +642,7 @@ public class Config {
     }
 
     private static void parseRange(String range, String fullInput, List<Integer> result) {
-        String[] parts = range.split("-", -1);
+        String[] parts = range.split("-", SPLIT_KEEP_EMPTY_TRAILING);
         if (parts.length != 2 || parts[0].isEmpty() || parts[1].isEmpty()) {
             throw new IllegalArgumentException(String.format(INVALID_PAGE_RANGE_FORMAT, fullInput));
         }
