@@ -64,34 +64,33 @@ Use `/ai-issue` skill locally to process issues.
 
 ## Benchmark
 
-### 실행
+### Running
 
 ```bash
-./scripts/bench.sh                      # 전체 벤치마크
-./scripts/bench.sh --doc-id 01030...    # 특정 문서만
-./scripts/bench.sh --check-regression   # 회귀 테스트 포함 (CI용)
+./scripts/bench.sh                      # Full benchmark
+./scripts/bench.sh --doc-id 01030...    # Specific document only
+./scripts/bench.sh --check-regression   # Include regression test (for CI)
 ```
 
-### 평가 지표
+### Evaluation Metrics
 
-- **NID**: 읽기 순서 정확도 (Normalized Indel Distance)
-- **TEDS**: 테이블 구조 정확도 (Tree Edit Distance Similarity)
-- **MHS**: 헤딩 구조 정확도 (Markdown Heading Similarity)
-- **Table Detection F1**: 테이블 유무 탐지 정확도
+- **NID**: Reading order accuracy (Normalized Indel Distance)
+- **TEDS**: Table structure accuracy (Tree Edit Distance Similarity)
+- **MHS**: Heading structure accuracy (Markdown Heading Similarity)
+- **Table Detection F1**: Table presence detection accuracy
 
-### Claude 명령
+### Claude Commands
 
-- `/bench` - 벤치마크 실행 및 결과 분석
-- `/bench-debug <doc_id>` - 특정 문서 실패 원인 분석
-- `/improve-perf` - 성능 개선 리서치-구현-검증 루프
+- `/bench` - Run benchmark and analyze results
+- `/bench-debug <doc_id>` - Analyze failure causes for a specific document
 
-### 회귀 테스트
+### Regression Testing
 
-PR 머지 전 벤치마크가 자동 실행됩니다.
-`tests/benchmark/thresholds.json` 기준 미달 시 CI 실패.
+Benchmark runs automatically before PR merge.
+CI fails if scores fall below thresholds in `tests/benchmark/thresholds.json`.
 
-### 벤치마크 데이터
+### Benchmark Data
 
-- `tests/benchmark/pdfs/` - 200개 테스트 PDF (Git LFS)
-- `tests/benchmark/ground-truth/` - 정답 마크다운
-- `tests/benchmark/prediction/` - 예측 결과
+- `tests/benchmark/pdfs/` - 200 test PDFs (Git LFS)
+- `tests/benchmark/ground-truth/` - Ground-truth markdown
+- `tests/benchmark/prediction/` - Prediction results
