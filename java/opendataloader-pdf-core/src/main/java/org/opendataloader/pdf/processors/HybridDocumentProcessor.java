@@ -15,6 +15,7 @@ import org.opendataloader.pdf.hybrid.HybridClient.HybridRequest;
 import org.opendataloader.pdf.hybrid.HybridClient.HybridResponse;
 import org.opendataloader.pdf.hybrid.HybridConfig;
 import org.opendataloader.pdf.hybrid.HybridSchemaTransformer;
+import org.opendataloader.pdf.hybrid.TriageLogger;
 import org.opendataloader.pdf.hybrid.TriageProcessor;
 import org.opendataloader.pdf.hybrid.TriageProcessor.TriageDecision;
 import org.opendataloader.pdf.hybrid.TriageProcessor.TriageResult;
@@ -74,6 +75,24 @@ public class HybridDocumentProcessor {
             String inputPdfName,
             Config config,
             Set<Integer> pagesToProcess) throws IOException {
+        return processDocument(inputPdfName, config, pagesToProcess, null);
+    }
+
+    /**
+     * Processes a document using hybrid mode with triage-based routing and optional triage logging.
+     *
+     * @param inputPdfName   The path to the input PDF file.
+     * @param config         The configuration settings.
+     * @param pagesToProcess The set of 0-indexed page numbers to process, or null for all pages.
+     * @param outputDir      The output directory for triage logging, or null to skip logging.
+     * @return List of IObject lists, one per page.
+     * @throws IOException If an error occurs during processing.
+     */
+    public static List<List<IObject>> processDocument(
+            String inputPdfName,
+            Config config,
+            Set<Integer> pagesToProcess,
+            Path outputDir) throws IOException {
 
         int totalPages = StaticContainers.getDocument().getNumberOfPages();
         LOGGER.log(Level.INFO, "Starting hybrid processing for {0} pages", totalPages);
@@ -88,6 +107,11 @@ public class HybridDocumentProcessor {
 
         // Log triage summary
         logTriageSummary(triageResults);
+
+        // Log triage results to JSON file if output directory is specified
+        if (outputDir != null) {
+            logTriageToFile(inputPdfName, config.getHybrid(), triageResults, outputDir);
+        }
 
         // Phase 3: Split pages by decision
         Set<Integer> javaPages = filterByDecision(triageResults, TriageDecision.JAVA);
@@ -468,6 +492,29 @@ public class HybridDocumentProcessor {
             TriageResult result = entry.getValue();
             LOGGER.log(Level.FINE, "Page {0}: {1} (confidence={2})",
                 new Object[]{entry.getKey(), result.getDecision(), result.getConfidence()});
+        }
+    }
+
+    /**
+     * Logs triage results to a JSON file for benchmark evaluation.
+     *
+     * @param inputPdfName   The path to the input PDF file.
+     * @param hybridBackend  The hybrid backend used.
+     * @param triageResults  Map of page number to triage result.
+     * @param outputDir      The output directory for the triage log.
+     */
+    private static void logTriageToFile(
+            String inputPdfName,
+            String hybridBackend,
+            Map<Integer, TriageResult> triageResults,
+            Path outputDir) {
+
+        try {
+            String documentName = Path.of(inputPdfName).getFileName().toString();
+            TriageLogger triageLogger = new TriageLogger();
+            triageLogger.logToFile(outputDir, documentName, hybridBackend, triageResults);
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Failed to write triage log: {0}", e.getMessage());
         }
     }
 }
