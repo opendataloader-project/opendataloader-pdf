@@ -9,41 +9,29 @@ package org.opendataloader.pdf.hybrid;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import okhttp3.OkHttpClient;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.net.Authenticator;
-import java.net.CookieHandler;
-import java.net.ProxySelector;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpHeaders;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Duration;
 import java.util.Collections;
-import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLParameters;
-import javax.net.ssl.SSLSession;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for DoclingClient.
  *
- * <p>These tests use a mock HTTP client to verify the client behavior
+ * <p>These tests use MockWebServer to verify the client behavior
  * without requiring a running docling-serve instance.
  */
 class DoclingClientTest {
 
-    private static final String TEST_BASE_URL = "http://localhost:5001";
     private static final String SAMPLE_RESPONSE = "{\n" +
         "    \"document\": {\n" +
         "        \"filename\": \"test.pdf\",\n" +
@@ -73,11 +61,19 @@ class DoclingClientTest {
         "    \"processing_time\": 0.5\n" +
         "}";
 
+    private MockWebServer mockServer;
     private ObjectMapper objectMapper;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws IOException {
+        mockServer = new MockWebServer();
+        mockServer.start();
         objectMapper = new ObjectMapper();
+    }
+
+    @AfterEach
+    void tearDown() throws IOException {
+        mockServer.shutdown();
     }
 
     @Test
@@ -140,12 +136,12 @@ class DoclingClientTest {
 
     @Test
     void testConvertSuccessfulResponse() throws Exception {
-        // Create a mock HTTP client that returns a successful response
-        HttpClient mockClient = createMockHttpClient(200, SAMPLE_RESPONSE);
+        mockServer.enqueue(new MockResponse()
+            .setBody(SAMPLE_RESPONSE)
+            .setResponseCode(200)
+            .addHeader("Content-Type", "application/json"));
 
-        DoclingClient client = new DoclingClient(
-            TEST_BASE_URL, mockClient, objectMapper, 30000
-        );
+        DoclingClient client = createClient();
 
         HybridClient.HybridRequest request = HybridClient.HybridRequest.allPages(
             new byte[]{0x25, 0x50, 0x44, 0x46} // %PDF
@@ -159,16 +155,18 @@ class DoclingClientTest {
         assertEquals("DoclingDocument", response.getJson().get("schema_name").asText());
         assertFalse(response.getPageContents().isEmpty());
         assertTrue(response.getPageContents().containsKey(1));
+
+        client.shutdown();
     }
 
     @Test
     void testConvertErrorResponse() throws Exception {
-        // Create a mock HTTP client that returns an error response
-        HttpClient mockClient = createMockHttpClient(200, ERROR_RESPONSE);
+        mockServer.enqueue(new MockResponse()
+            .setBody(ERROR_RESPONSE)
+            .setResponseCode(200)
+            .addHeader("Content-Type", "application/json"));
 
-        DoclingClient client = new DoclingClient(
-            TEST_BASE_URL, mockClient, objectMapper, 30000
-        );
+        DoclingClient client = createClient();
 
         HybridClient.HybridRequest request = HybridClient.HybridRequest.allPages(
             new byte[]{0x25, 0x50, 0x44, 0x46}
@@ -176,16 +174,17 @@ class DoclingClientTest {
 
         IOException exception = assertThrows(IOException.class, () -> client.convert(request));
         assertTrue(exception.getMessage().contains("Docling processing failed"));
+
+        client.shutdown();
     }
 
     @Test
     void testConvertHttpError() throws Exception {
-        // Create a mock HTTP client that returns a 500 error
-        HttpClient mockClient = createMockHttpClient(500, "Internal Server Error");
+        mockServer.enqueue(new MockResponse()
+            .setBody("Internal Server Error")
+            .setResponseCode(500));
 
-        DoclingClient client = new DoclingClient(
-            TEST_BASE_URL, mockClient, objectMapper, 30000
-        );
+        DoclingClient client = createClient();
 
         HybridClient.HybridRequest request = HybridClient.HybridRequest.allPages(
             new byte[]{0x25, 0x50, 0x44, 0x46}
@@ -193,15 +192,18 @@ class DoclingClientTest {
 
         IOException exception = assertThrows(IOException.class, () -> client.convert(request));
         assertTrue(exception.getMessage().contains("status 500"));
+
+        client.shutdown();
     }
 
     @Test
     void testConvertAsyncSuccessfulResponse() throws Exception {
-        HttpClient mockClient = createMockAsyncHttpClient(200, SAMPLE_RESPONSE);
+        mockServer.enqueue(new MockResponse()
+            .setBody(SAMPLE_RESPONSE)
+            .setResponseCode(200)
+            .addHeader("Content-Type", "application/json"));
 
-        DoclingClient client = new DoclingClient(
-            TEST_BASE_URL, mockClient, objectMapper, 30000
-        );
+        DoclingClient client = createClient();
 
         HybridClient.HybridRequest request = HybridClient.HybridRequest.allPages(
             new byte[]{0x25, 0x50, 0x44, 0x46}
@@ -212,39 +214,34 @@ class DoclingClientTest {
 
         assertNotNull(response);
         assertEquals("# Test Document\n\nThis is a test.", response.getMarkdown());
+
+        client.shutdown();
     }
 
     @Test
     void testIsAvailableReturnsTrue() throws Exception {
-        HttpClient mockClient = createMockHttpClient(200, "OK");
+        mockServer.enqueue(new MockResponse()
+            .setBody("{\"status\":\"ok\"}")
+            .setResponseCode(200));
 
-        DoclingClient client = new DoclingClient(
-            TEST_BASE_URL, mockClient, objectMapper, 30000
-        );
+        DoclingClient client = createClient();
 
         assertTrue(client.isAvailable());
+
+        client.shutdown();
     }
 
     @Test
     void testIsAvailableReturnsFalseOnError() throws Exception {
-        HttpClient mockClient = createMockHttpClient(503, "Service Unavailable");
+        mockServer.enqueue(new MockResponse()
+            .setBody("Service Unavailable")
+            .setResponseCode(503));
 
-        DoclingClient client = new DoclingClient(
-            TEST_BASE_URL, mockClient, objectMapper, 30000
-        );
-
-        assertFalse(client.isAvailable());
-    }
-
-    @Test
-    void testIsAvailableReturnsFalseOnException() {
-        HttpClient mockClient = createExceptionThrowingHttpClient();
-
-        DoclingClient client = new DoclingClient(
-            TEST_BASE_URL, mockClient, objectMapper, 30000
-        );
+        DoclingClient client = createClient();
 
         assertFalse(client.isAvailable());
+
+        client.shutdown();
     }
 
     @Test
@@ -271,11 +268,12 @@ class DoclingClientTest {
 
     @Test
     void testConvertWithPageNumbers() throws Exception {
-        HttpClient mockClient = createMockHttpClient(200, SAMPLE_RESPONSE);
+        mockServer.enqueue(new MockResponse()
+            .setBody(SAMPLE_RESPONSE)
+            .setResponseCode(200)
+            .addHeader("Content-Type", "application/json"));
 
-        DoclingClient client = new DoclingClient(
-            TEST_BASE_URL, mockClient, objectMapper, 30000
-        );
+        DoclingClient client = createClient();
 
         HybridClient.HybridRequest request = new HybridClient.HybridRequest(
             new byte[]{0x25, 0x50, 0x44, 0x46},
@@ -288,176 +286,34 @@ class DoclingClientTest {
 
         assertNotNull(response);
         assertNotNull(response.getMarkdown());
+
+        client.shutdown();
     }
 
-    // ===== Helper Methods for Creating Mock HTTP Clients =====
+    @Test
+    void testShutdownReleasesResources() {
+        HybridConfig config = new HybridConfig();
+        DoclingClient client = new DoclingClient(config);
 
-    /**
-     * Creates a mock HttpClient that returns a synchronous response.
-     */
-    private HttpClient createMockHttpClient(int statusCode, String body) {
-        return new MockHttpClient(statusCode, body, false);
-    }
-
-    /**
-     * Creates a mock HttpClient for async operations.
-     */
-    private HttpClient createMockAsyncHttpClient(int statusCode, String body) {
-        return new MockHttpClient(statusCode, body, false);
+        // Should not throw
+        client.shutdown();
     }
 
     /**
-     * Creates a mock HttpClient that throws an exception.
+     * Creates a DoclingClient connected to the mock server.
      */
-    private HttpClient createExceptionThrowingHttpClient() {
-        return new MockHttpClient(0, null, true);
-    }
-
-    /**
-     * Mock HttpClient implementation for testing.
-     */
-    private static class MockHttpClient extends HttpClient {
-        private final int statusCode;
-        private final String body;
-        private final boolean throwException;
-
-        MockHttpClient(int statusCode, String body, boolean throwException) {
-            this.statusCode = statusCode;
-            this.body = body;
-            this.throwException = throwException;
+    private DoclingClient createClient() {
+        String baseUrl = mockServer.url("/").toString();
+        // Remove trailing slash
+        if (baseUrl.endsWith("/")) {
+            baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
         }
 
-        @Override
-        public Optional<CookieHandler> cookieHandler() {
-            return Optional.empty();
-        }
+        OkHttpClient httpClient = new OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .build();
 
-        @Override
-        public Redirect followRedirects() {
-            return Redirect.NORMAL;
-        }
-
-        @Override
-        public Optional<ProxySelector> proxy() {
-            return Optional.empty();
-        }
-
-        @Override
-        public SSLContext sslContext() {
-            return null;
-        }
-
-        @Override
-        public SSLParameters sslParameters() {
-            return null;
-        }
-
-        @Override
-        public Optional<Executor> executor() {
-            return Optional.empty();
-        }
-
-        @Override
-        public Version version() {
-            return Version.HTTP_1_1;
-        }
-
-        @Override
-        public Optional<Duration> connectTimeout() {
-            return Optional.of(Duration.ofSeconds(30));
-        }
-
-        @Override
-        public Optional<Authenticator> authenticator() {
-            return Optional.empty();
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
-        public <T> HttpResponse<T> send(HttpRequest request, HttpResponse.BodyHandler<T> responseBodyHandler)
-            throws IOException {
-            if (throwException) {
-                throw new IOException("Connection refused");
-            }
-            return (HttpResponse<T>) createMockResponse(statusCode, body);
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
-        public <T> CompletableFuture<HttpResponse<T>> sendAsync(
-            HttpRequest request,
-            HttpResponse.BodyHandler<T> responseBodyHandler) {
-            if (throwException) {
-                return CompletableFuture.failedFuture(new IOException("Connection refused"));
-            }
-            return CompletableFuture.completedFuture(
-                (HttpResponse<T>) createMockResponse(statusCode, body)
-            );
-        }
-
-        @Override
-        public <T> CompletableFuture<HttpResponse<T>> sendAsync(
-            HttpRequest request,
-            HttpResponse.BodyHandler<T> responseBodyHandler,
-            HttpResponse.PushPromiseHandler<T> pushPromiseHandler) {
-            return sendAsync(request, responseBodyHandler);
-        }
-
-        private HttpResponse<String> createMockResponse(int statusCode, String body) {
-            return new MockHttpResponse(statusCode, body);
-        }
-    }
-
-    /**
-     * Mock HttpResponse implementation for testing.
-     */
-    private static class MockHttpResponse implements HttpResponse<String> {
-        private final int statusCode;
-        private final String body;
-
-        MockHttpResponse(int statusCode, String body) {
-            this.statusCode = statusCode;
-            this.body = body;
-        }
-
-        @Override
-        public int statusCode() {
-            return statusCode;
-        }
-
-        @Override
-        public HttpRequest request() {
-            return null;
-        }
-
-        @Override
-        public Optional<HttpResponse<String>> previousResponse() {
-            return Optional.empty();
-        }
-
-        @Override
-        public HttpHeaders headers() {
-            return HttpHeaders.of(Collections.emptyMap(), (a, b) -> true);
-        }
-
-        @Override
-        public String body() {
-            return body;
-        }
-
-        @Override
-        public Optional<SSLSession> sslSession() {
-            return Optional.empty();
-        }
-
-        @Override
-        public URI uri() {
-            return URI.create(TEST_BASE_URL);
-        }
-
-        @Override
-        public HttpClient.Version version() {
-            return HttpClient.Version.HTTP_1_1;
-        }
+        return new DoclingClient(baseUrl, httpClient, objectMapper);
     }
 }
