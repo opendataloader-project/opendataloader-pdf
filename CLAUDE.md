@@ -61,3 +61,37 @@ GitHub Actions automatically process issues: Triage → Analyze → Fix (see `ai
 Manual triggers via issue comment: `@ai-issue analyze` or `@ai-issue fix` (CODEOWNERS only).
 
 Use `/ai-issue` skill locally to process issues.
+
+## Benchmark
+
+### 실행
+
+```bash
+./scripts/bench.sh                      # 전체 벤치마크
+./scripts/bench.sh --doc-id 01030...    # 특정 문서만
+./scripts/bench.sh --check-regression   # 회귀 테스트 포함 (CI용)
+```
+
+### 평가 지표
+
+- **NID**: 읽기 순서 정확도 (Normalized Indel Distance)
+- **TEDS**: 테이블 구조 정확도 (Tree Edit Distance Similarity)
+- **MHS**: 헤딩 구조 정확도 (Markdown Heading Similarity)
+- **Table Detection F1**: 테이블 유무 탐지 정확도
+
+### Claude 명령
+
+- `/bench` - 벤치마크 실행 및 결과 분석
+- `/bench-debug <doc_id>` - 특정 문서 실패 원인 분석
+- `/improve-perf` - 성능 개선 리서치-구현-검증 루프
+
+### 회귀 테스트
+
+PR 머지 전 벤치마크가 자동 실행됩니다.
+`tests/benchmark/thresholds.json` 기준 미달 시 CI 실패.
+
+### 벤치마크 데이터
+
+- `tests/benchmark/pdfs/` - 200개 테스트 PDF (Git LFS)
+- `tests/benchmark/ground-truth/` - 정답 마크다운
+- `tests/benchmark/prediction/` - 예측 결과

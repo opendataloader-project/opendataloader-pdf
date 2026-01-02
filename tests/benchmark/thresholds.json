@@ -1,0 +1,7 @@
+{
+  "nid": 0.85,
+  "teds": 0.40,
+  "mhs": 0.55,
+  "table_detection_f1": 0.55,
+  "regression_tolerance": 0.05
+}

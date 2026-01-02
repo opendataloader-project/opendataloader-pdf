@@ -14,3 +14,6 @@
 *.jpeg binary
 *.gif binary
 *.pdf binary
+
+# Git LFS for benchmark PDFs
+tests/benchmark/pdfs/*.pdf filter=lfs diff=lfs merge=lfs -text

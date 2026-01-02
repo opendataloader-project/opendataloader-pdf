@@ -1,0 +1,36 @@
+name: Benchmark
+
+on:
+  pull_request:
+    paths:
+      - 'java/**'
+      - 'tests/benchmark/**'
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Run benchmark with regression check
+        run: ./scripts/bench.sh --check-regression
+
+      - name: Upload evaluation results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: benchmark-results
+          path: tests/benchmark/prediction/opendataloader/evaluation.json
