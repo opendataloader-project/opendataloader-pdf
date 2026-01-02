@@ -260,6 +260,58 @@ This skill manages experiment records and optimization history for triage logic.
 
 ---
 
+### Experiment 005 (2026-01-03): Large Image Signal for FN Reduction
+
+**Goal**: Reduce FN by detecting pages with large images (potential table/chart images)
+
+**Background**:
+- FN documents `01030000000110` and `01030000000122` contain images with tables
+- 110: 28.64% page area (graph image)
+- 122: 11.73% page area (table image)
+
+**Implementation**:
+- Added `hasLargeImage` signal to TriageProcessor
+- Detects ImageChunk objects and calculates max image area / page area ratio
+
+**Experiments**:
+| Threshold | Precision | Recall | F1 | FP | FN |
+|-----------|-----------|--------|-----|-----|-----|
+| Baseline (no image) | 48.19% | 95.24% | 64.00% | 43 | 2 |
+| 10% | 33.07% | **100%** | 49.70% | 85 | 0 |
+| **11%** | **33.60%** | **100%** | **50.30%** | **83** | **0** |
+| 15% | 35.96% | 97.62% | 52.56% | 73 | 1 |
+
+**Analysis**:
+- 11% threshold achieves **100% Recall** (all 42 table documents detected)
+- Trade-off: FP increases from 43 → 83 (+40), Precision drops from 48% → 34%
+- F1 decreases from 64% → 50% due to high FP increase
+- Many FPs are documents with decorative images, diagrams, photos
+
+**Experiment 005B: Adding Aspect Ratio Condition**
+
+Observation: FN documents have wide images (ratio 1.79, 3.68), while FP documents often have square/tall images (ratio 0.6~1.5).
+
+| Config | Precision | Recall | F1 | FP | FN |
+|--------|-----------|--------|-----|-----|-----|
+| Baseline (no image) | 48.19% | 95.24% | 64.00% | 43 | 2 |
+| 11% only | 33.60% | 100% | 50.30% | 83 | 0 |
+| 11% + ratio 1.7 | 42.86% | 100% | 60.00% | 56 | 0 |
+| **11% + ratio 1.75** | **43.30%** | **100%** | **60.43%** | **55** | **0** |
+| 11% + ratio 2.0 | 46.59% | 97.62% | 63.08% | 47 | 1 |
+
+**Final Configuration**:
+- Image area >= 11% of page area
+- Image aspect ratio (width/height) >= 1.75
+
+**Trade-off**:
+- Achieves **100% Recall** (all 42 table documents detected)
+- FP increases from 43 → 55 (+12)
+- F1 decreases from 64% → 60.43% (-3.57%)
+
+**Applied**: 11% + aspect ratio 1.75 (2026-01-03)
+
+---
+
 ## Template for New Experiments
 
 ```markdown
