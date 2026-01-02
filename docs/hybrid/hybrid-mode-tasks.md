@@ -42,9 +42,9 @@ These decisions **require execution results** before they can be made.
 | Task 2: triage-criteria skill | ✅ completed | 2026-01-02 | See .claude/skills/triage-criteria/ |
 | Task 3: HybridConfig | ✅ completed | 2026-01-02 | See java/.../hybrid/HybridConfig.java |
 | Task 4: CLI Options | ✅ completed | 2026-01-02 | See java/.../cli/CLIOptions.java |
-| Task 5: TriageProcessor | ⬜ not_started | - | Depends on Task 3 |
-| Task 6: DoclingClient | ⬜ not_started | - | Depends on Task 0, 3 |
-| Task 7: SchemaTransformer | ⬜ not_started | - | Depends on Task 1, 6 |
+| Task 5: TriageProcessor | ✅ completed | 2026-01-02 | See java/.../hybrid/TriageProcessor.java |
+| Task 6: DoclingClient | ✅ completed | 2026-01-02 | See java/.../hybrid/DoclingClient.java |
+| Task 7: SchemaTransformer | ✅ completed | 2026-01-02 | See java/.../hybrid/DoclingSchemaTransformer.java |
 | Task 8: HybridDocumentProcessor | ⬜ not_started | - | Depends on Task 5, 6, 7 |
 | Task 9: Triage Logging | ⬜ not_started | - | Depends on Task 8 |
 | Task 10: Triage Evaluator | ⬜ not_started | - | Depends on Task 9 |
