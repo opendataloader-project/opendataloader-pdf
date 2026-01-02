@@ -21,6 +21,7 @@ class TableDetectionMetrics:
     precision: Optional[float]
     recall: Optional[float]
     f1: Optional[float]
+    accuracy: Optional[float]
     tp: int  # True positives
     fp: int  # False positives
     fn: int  # False negatives
@@ -31,6 +32,7 @@ class TableDetectionMetrics:
             "precision": self.precision,
             "recall": self.recall,
             "f1": self.f1,
+            "accuracy": self.accuracy,
             "tp": self.tp,
             "fp": self.fp,
             "fn": self.fn,
@@ -91,7 +93,7 @@ def evaluate_table_detection_single(
 def compute_metrics(
     tp: int, fp: int, fn: int, tn: int
 ) -> TableDetectionMetrics:
-    """Compute precision, recall, and F1 from confusion matrix values."""
+    """Compute precision, recall, F1, and accuracy from confusion matrix values."""
     precision = tp / (tp + fp) if (tp + fp) > 0 else None
     recall = tp / (tp + fn) if (tp + fn) > 0 else None
 
@@ -100,10 +102,14 @@ def compute_metrics(
     else:
         f1 = None
 
+    total = tp + fp + fn + tn
+    accuracy = (tp + tn) / total if total > 0 else None
+
     return TableDetectionMetrics(
         precision=precision,
         recall=recall,
         f1=f1,
+        accuracy=accuracy,
         tp=tp,
         fp=fp,
         fn=fn,
