@@ -125,7 +125,9 @@ public class TriageProcessorTest {
     }
 
     @Test
-    public void testSuspiciousPatternReturnsBackend() {
+    public void testSuspiciousPatternDetectedButDisabled() {
+        // Note: SuspiciousPattern signal is disabled (Experiment 003, 2026-01-03)
+        // Signal is still detected but doesn't trigger BACKEND routing
         List<IObject> contents = new ArrayList<>();
         // Add text chunks on the same baseline with large gap (table-like pattern)
         contents.add(createTextChunk(10, 100, 50, 120, "Col1"));
@@ -133,12 +135,15 @@ public class TriageProcessorTest {
 
         TriageResult result = TriageProcessor.classifyPage(contents, 0, new HybridConfig());
 
-        Assertions.assertEquals(TriageDecision.BACKEND, result.getDecision());
+        // Signal is detected but routing to JAVA (signal disabled)
+        Assertions.assertEquals(TriageDecision.JAVA, result.getDecision());
         Assertions.assertTrue(result.getSignals().hasSuspiciousPattern());
     }
 
     @Test
-    public void testAlignedLineGroupsReturnsBackend() {
+    public void testAlignedLineGroupsDetectedButDisabled() {
+        // Note: AlignedLineGroups signal is disabled (Experiment 004D, 2026-01-03)
+        // Signal is still detected but doesn't trigger BACKEND routing
         List<IObject> contents = new ArrayList<>();
         TriageThresholds thresholds = new TriageThresholds();
         thresholds.setAlignedLineGroupsThreshold(3);
@@ -159,7 +164,8 @@ public class TriageProcessorTest {
 
         TriageResult result = TriageProcessor.classifyPage(contents, 0, thresholds);
 
-        Assertions.assertEquals(TriageDecision.BACKEND, result.getDecision());
+        // Signal is detected but routing to JAVA (signal disabled)
+        Assertions.assertEquals(TriageDecision.JAVA, result.getDecision());
         Assertions.assertTrue(result.getSignals().getAlignedLineGroups() >= 3);
     }
 
