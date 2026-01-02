@@ -294,11 +294,13 @@ public class DoclingClient implements HybridClient {
      * Shuts down the executor service used by this client.
      *
      * <p>This should be called when the client is no longer needed
-     * to release resources.
+     * to release resources. Uses shutdownNow() to immediately terminate
+     * waiting threads, as shutdown() alone would leave threads blocked
+     * on the work queue indefinitely, preventing JVM exit.
      */
     public void shutdown() {
         if (executor != null) {
-            executor.shutdown();
+            executor.shutdownNow();
         }
     }
 }

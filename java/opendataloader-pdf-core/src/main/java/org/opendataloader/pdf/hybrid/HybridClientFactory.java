@@ -7,11 +7,15 @@
  */
 package org.opendataloader.pdf.hybrid;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
- * Factory for creating hybrid client instances.
+ * Factory for creating and managing hybrid client instances.
  *
  * <p>This factory provides a central point for instantiating HybridClient
- * implementations based on the specified backend type.
+ * implementations based on the specified backend type. Clients are cached
+ * and reused to avoid creating multiple thread pools per document.
  *
  * <p>Supported backends:
  * <ul>
@@ -42,8 +46,51 @@ public class HybridClientFactory {
     /** Backend type constant for Google (not yet implemented). */
     public static final String BACKEND_GOOGLE = "google";
 
+    /** Cache of created clients, keyed by backend type. */
+    private static final Map<String, HybridClient> CLIENT_CACHE = new ConcurrentHashMap<>();
+
     private HybridClientFactory() {
         // Private constructor to prevent instantiation
+    }
+
+    /**
+     * Gets or creates a hybrid client for the specified backend.
+     *
+     * <p>Clients are cached and reused across multiple documents to avoid
+     * creating new thread pools for each document. Call {@link #shutdown()}
+     * when processing is complete to release resources.
+     *
+     * @param hybrid The backend type (e.g., "docling", "hancom", "azure", "google").
+     * @param config The configuration for the hybrid client.
+     * @return A HybridClient instance for the specified backend.
+     * @throws IllegalArgumentException If the backend type is unknown or not supported.
+     */
+    public static HybridClient getOrCreate(String hybrid, HybridConfig config) {
+        if (hybrid == null || hybrid.isEmpty()) {
+            throw new IllegalArgumentException("Hybrid backend type cannot be null or empty");
+        }
+
+        String lowerHybrid = hybrid.toLowerCase();
+
+        return CLIENT_CACHE.computeIfAbsent(lowerHybrid, key -> createClient(key, config));
+    }
+
+    /**
+     * Creates a new hybrid client instance.
+     */
+    private static HybridClient createClient(String hybrid, HybridConfig config) {
+        if (BACKEND_DOCLING.equals(hybrid)) {
+            return new DoclingClient(config);
+        } else if (BACKEND_HANCOM.equals(hybrid)) {
+            throw new UnsupportedOperationException("Hancom backend is not yet implemented");
+        } else if (BACKEND_AZURE.equals(hybrid)) {
+            throw new UnsupportedOperationException("Azure Document Intelligence backend is not yet implemented");
+        } else if (BACKEND_GOOGLE.equals(hybrid)) {
+            throw new UnsupportedOperationException("Google Document AI backend is not yet implemented");
+        } else {
+            throw new IllegalArgumentException("Unknown hybrid backend: " + hybrid +
+                ". Supported backends: " + BACKEND_DOCLING);
+        }
     }
 
     /**
@@ -53,26 +100,11 @@ public class HybridClientFactory {
      * @param config The configuration for the hybrid client.
      * @return A new HybridClient instance for the specified backend.
      * @throws IllegalArgumentException If the backend type is unknown or not supported.
+     * @deprecated Use {@link #getOrCreate(String, HybridConfig)} instead to reuse clients.
      */
+    @Deprecated
     public static HybridClient create(String hybrid, HybridConfig config) {
-        if (hybrid == null || hybrid.isEmpty()) {
-            throw new IllegalArgumentException("Hybrid backend type cannot be null or empty");
-        }
-
-        String lowerHybrid = hybrid.toLowerCase();
-
-        if (BACKEND_DOCLING.equals(lowerHybrid)) {
-            return new DoclingClient(config);
-        } else if (BACKEND_HANCOM.equals(lowerHybrid)) {
-            throw new UnsupportedOperationException("Hancom backend is not yet implemented");
-        } else if (BACKEND_AZURE.equals(lowerHybrid)) {
-            throw new UnsupportedOperationException("Azure Document Intelligence backend is not yet implemented");
-        } else if (BACKEND_GOOGLE.equals(lowerHybrid)) {
-            throw new UnsupportedOperationException("Google Document AI backend is not yet implemented");
-        } else {
-            throw new IllegalArgumentException("Unknown hybrid backend: " + hybrid +
-                ". Supported backends: " + BACKEND_DOCLING);
-        }
+        return getOrCreate(hybrid, config);
     }
 
     /**
@@ -81,9 +113,26 @@ public class HybridClientFactory {
      * @param hybrid The backend type (e.g., "docling").
      * @return A new HybridClient instance for the specified backend.
      * @throws IllegalArgumentException If the backend type is unknown or not supported.
+     * @deprecated Use {@link #getOrCreate(String, HybridConfig)} instead to reuse clients.
      */
+    @Deprecated
     public static HybridClient create(String hybrid) {
-        return create(hybrid, new HybridConfig());
+        return getOrCreate(hybrid, new HybridConfig());
+    }
+
+    /**
+     * Shuts down all cached clients and releases resources.
+     *
+     * <p>This method should be called when all processing is complete,
+     * typically at the end of the CLI main method.
+     */
+    public static void shutdown() {
+        for (HybridClient client : CLIENT_CACHE.values()) {
+            if (client instanceof DoclingClient) {
+                ((DoclingClient) client).shutdown();
+            }
+        }
+        CLIENT_CACHE.clear();
     }
 
     /**
