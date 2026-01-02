@@ -26,6 +26,7 @@ def convert(
     html_page_separator: Optional[str] = None,
     image_output: Optional[str] = None,
     image_format: Optional[str] = None,
+    pages: Optional[str] = None,
 ) -> None:
     """
     Convert PDF(s) into the requested output format(s).
@@ -47,6 +48,7 @@ def convert(
         html_page_separator: Separator between pages in HTML output. Use %page-number% for page numbers. Default: none
         image_output: Image output mode. Values: off (no images), embedded (Base64 data URIs), external (file references). Default: external
         image_format: Output format for extracted images. Values: png, jpeg. Default: png
+        pages: Pages to extract (e.g., "1,3,5-7"). Default: all pages
     """
     args: List[str] = []
 
@@ -94,5 +96,7 @@ def convert(
         args.extend(["--image-output", image_output])
     if image_format:
         args.extend(["--image-format", image_format])
+    if pages:
+        args.extend(["--pages", pages])
 
     run_jar(args, quiet)
