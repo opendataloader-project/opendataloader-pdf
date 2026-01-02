@@ -34,7 +34,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -119,26 +118,21 @@ public class HybridDocumentProcessor {
         LOGGER.log(Level.INFO, "Routing: {0} pages to Java, {1} pages to Backend",
             new Object[]{javaPages.size(), backendPages.size()});
 
-        // Phase 4: Process in parallel
+        // Phase 4: Process sequentially (Java first, then backend)
         List<List<IObject>> contents = new ArrayList<>();
         for (int i = 0; i < totalPages; i++) {
             contents.add(new ArrayList<>());
         }
 
-        // Start backend processing asynchronously
-        CompletableFuture<Map<Integer, List<IObject>>> backendFuture = processBackendPathAsync(
-            inputPdfName, backendPages, config, totalPages
-        );
-
-        // Process Java path while backend is running
+        // Process Java path first
         Map<Integer, List<IObject>> javaResults = processJavaPath(
             filteredContents, javaPages, config, totalPages
         );
 
-        // Wait for backend results
+        // Process backend path (synchronous)
         Map<Integer, List<IObject>> backendResults;
         try {
-            backendResults = backendFuture.join();
+            backendResults = processBackendPath(inputPdfName, backendPages, config, totalPages);
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Backend processing failed: {0}", e.getMessage());
             if (config.getHybridConfig().isFallbackToJava()) {
@@ -277,28 +271,6 @@ public class HybridDocumentProcessor {
     }
 
     /**
-     * Processes pages using the external backend asynchronously.
-     */
-    private static CompletableFuture<Map<Integer, List<IObject>>> processBackendPathAsync(
-            String inputPdfName,
-            Set<Integer> pageNumbers,
-            Config config,
-            int totalPages) {
-
-        if (pageNumbers.isEmpty()) {
-            return CompletableFuture.completedFuture(new HashMap<>());
-        }
-
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                return processBackendPath(inputPdfName, pageNumbers, config, totalPages);
-            } catch (IOException e) {
-                throw new RuntimeException("Backend processing failed: " + e.getMessage(), e);
-            }
-        });
-    }
-
-    /**
      * Processes pages using the external backend.
      */
     private static Map<Integer, List<IObject>> processBackendPath(
@@ -307,9 +279,9 @@ public class HybridDocumentProcessor {
             Config config,
             int totalPages) throws IOException {
 
-        // Initialize ThreadLocal containers for this async thread
-        // Required because setIDs() uses StaticLayoutContainers.incrementContentId()
-        StaticLayoutContainers.clearContainers();
+        if (pageNumbers.isEmpty()) {
+            return new HashMap<>();
+        }
 
         LOGGER.log(Level.INFO, "Processing {0} pages via {1} backend",
             new Object[]{pageNumbers.size(), config.getHybrid()});

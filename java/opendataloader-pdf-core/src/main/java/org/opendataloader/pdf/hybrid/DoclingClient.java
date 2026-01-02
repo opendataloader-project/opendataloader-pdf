@@ -9,23 +9,20 @@ package org.opendataloader.pdf.hybrid;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpClient.Version;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -47,12 +44,11 @@ public class DoclingClient implements HybridClient {
     private static final String CONVERT_ENDPOINT = "/v1/convert/file";
     private static final String HEALTH_ENDPOINT = "/health";
     private static final String DEFAULT_FILENAME = "document.pdf";
+    private static final MediaType MEDIA_TYPE_PDF = MediaType.parse("application/pdf");
 
     private final String baseUrl;
-    private final HttpClient httpClient;
+    private final OkHttpClient httpClient;
     private final ObjectMapper objectMapper;
-    private final int timeoutMs;
-    private final ExecutorService executor;
 
     /**
      * Creates a new DoclingClient with the specified configuration.
@@ -61,84 +57,64 @@ public class DoclingClient implements HybridClient {
      */
     public DoclingClient(HybridConfig config) {
         this.baseUrl = config.getEffectiveUrl("docling");
-        this.timeoutMs = config.getTimeoutMs();
         this.objectMapper = new ObjectMapper();
-        this.executor = Executors.newFixedThreadPool(config.getMaxConcurrentRequests());
-        this.httpClient = HttpClient.newBuilder()
-            .version(Version.HTTP_1_1)  // Use HTTP/1.1 for compatibility with docling-serve
-            .connectTimeout(Duration.ofMillis(timeoutMs))
-            .executor(executor)
+        this.httpClient = new OkHttpClient.Builder()
+            .connectTimeout(config.getTimeoutMs(), TimeUnit.MILLISECONDS)
+            .readTimeout(config.getTimeoutMs(), TimeUnit.MILLISECONDS)
+            .writeTimeout(config.getTimeoutMs(), TimeUnit.MILLISECONDS)
             .build();
     }
 
     /**
-     * Creates a new DoclingClient with a custom HttpClient (for testing).
+     * Creates a new DoclingClient with a custom OkHttpClient (for testing).
      *
      * @param baseUrl      The base URL of the docling-serve instance.
-     * @param httpClient   The HTTP client to use for requests.
+     * @param httpClient   The OkHttp client to use for requests.
      * @param objectMapper The Jackson ObjectMapper for JSON parsing.
-     * @param timeoutMs    Request timeout in milliseconds.
      */
-    DoclingClient(String baseUrl, HttpClient httpClient, ObjectMapper objectMapper, int timeoutMs) {
+    DoclingClient(String baseUrl, OkHttpClient httpClient, ObjectMapper objectMapper) {
         this.baseUrl = baseUrl;
         this.httpClient = httpClient;
         this.objectMapper = objectMapper;
-        this.timeoutMs = timeoutMs;
-        this.executor = null; // Not needed when HttpClient is provided
     }
 
     @Override
     public HybridResponse convert(HybridRequest request) throws IOException {
-        try {
-            HttpRequest httpRequest = buildConvertRequest(request);
-            LOGGER.log(Level.FINE, "Sending request to {0}", baseUrl + CONVERT_ENDPOINT);
-            HttpResponse<String> response = httpClient.send(
-                httpRequest,
-                HttpResponse.BodyHandlers.ofString()
-            );
+        Request httpRequest = buildConvertRequest(request);
+        LOGGER.log(Level.FINE, "Sending request to {0}", baseUrl + CONVERT_ENDPOINT);
+
+        try (Response response = httpClient.newCall(httpRequest).execute()) {
             return parseResponse(response);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IOException("Request interrupted", e);
         }
     }
 
     @Override
     public CompletableFuture<HybridResponse> convertAsync(HybridRequest request) {
-        try {
-            HttpRequest httpRequest = buildConvertRequest(request);
-            return httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString())
-                .thenApply(response -> {
-                    try {
-                        return parseResponse(response);
-                    } catch (IOException e) {
-                        throw new IllegalStateException("Failed to parse response", e);
-                    }
-                });
-        } catch (IOException e) {
-            return CompletableFuture.failedFuture(e);
-        }
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return convert(request);
+            } catch (IOException e) {
+                throw new IllegalStateException("Failed to convert", e);
+            }
+        });
     }
 
     @Override
     public boolean isAvailable() {
-        try {
-            HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseUrl + HEALTH_ENDPOINT))
-                .timeout(Duration.ofMillis(Math.min(timeoutMs, 5000))) // Short timeout for health check
-                .GET()
-                .build();
+        Request request = new Request.Builder()
+            .url(baseUrl + HEALTH_ENDPOINT)
+            .get()
+            .build();
 
-            HttpResponse<String> response = httpClient.send(
-                request,
-                HttpResponse.BodyHandlers.ofString()
-            );
+        // Use a short timeout for health check
+        OkHttpClient healthClient = httpClient.newBuilder()
+            .connectTimeout(5, TimeUnit.SECONDS)
+            .readTimeout(5, TimeUnit.SECONDS)
+            .build();
 
-            return response.statusCode() == 200;
+        try (Response response = healthClient.newCall(request).execute()) {
+            return response.isSuccessful();
         } catch (IOException e) {
-            return false;
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
             return false;
         }
     }
@@ -155,85 +131,48 @@ public class DoclingClient implements HybridClient {
     /**
      * Builds a multipart/form-data HTTP request for the convert endpoint.
      */
-    private HttpRequest buildConvertRequest(HybridRequest request) throws IOException {
-        String boundary = UUID.randomUUID().toString();
-        byte[] body = buildMultipartBody(request, boundary);
+    private Request buildConvertRequest(HybridRequest request) {
+        MultipartBody.Builder bodyBuilder = new MultipartBody.Builder()
+            .setType(MultipartBody.FORM)
+            .addFormDataPart("files", DEFAULT_FILENAME,
+                RequestBody.create(request.getPdfBytes(), MEDIA_TYPE_PDF))
+            .addFormDataPart("to_formats", "json")
+            .addFormDataPart("to_formats", "md")
+            .addFormDataPart("do_table_structure", String.valueOf(request.isDoTableStructure()))
+            .addFormDataPart("do_ocr", String.valueOf(request.isDoOcr()));
 
-        HttpRequest.Builder builder = HttpRequest.newBuilder()
-            .uri(URI.create(baseUrl + CONVERT_ENDPOINT))
-            .timeout(Duration.ofMillis(timeoutMs))
-            .header("Content-Type", "multipart/form-data; boundary=" + boundary)
-            .POST(HttpRequest.BodyPublishers.ofByteArray(body));
-
-        return builder.build();
-    }
-
-    /**
-     * Builds the multipart/form-data request body.
-     */
-    private byte[] buildMultipartBody(HybridRequest request, String boundary) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-        // Add file part
-        writeFilePart(baos, boundary, "files", DEFAULT_FILENAME, request.getPdfBytes());
-
-        // Add to_formats - request both JSON and Markdown
-        writeFormField(baos, boundary, "to_formats", "json");
-        writeFormField(baos, boundary, "to_formats", "md");
-
-        // Add processing options
-        writeFormField(baos, boundary, "do_table_structure", String.valueOf(request.isDoTableStructure()));
-        writeFormField(baos, boundary, "do_ocr", String.valueOf(request.isDoOcr()));
-
-        // Add page range if specified (docling-serve expects two separate form fields for start and end)
+        // Add page range if specified
         if (request.getPageNumbers() != null && !request.getPageNumbers().isEmpty()) {
             int minPage = request.getPageNumbers().stream().min(Integer::compareTo).orElse(1);
             int maxPage = request.getPageNumbers().stream().max(Integer::compareTo).orElse(Integer.MAX_VALUE);
-            // docling-serve page_range expects two separate form field values: start and end (inclusive)
-            writeFormField(baos, boundary, "page_range", String.valueOf(minPage));
-            writeFormField(baos, boundary, "page_range", String.valueOf(maxPage));
+            bodyBuilder.addFormDataPart("page_range", String.valueOf(minPage));
+            bodyBuilder.addFormDataPart("page_range", String.valueOf(maxPage));
         }
 
-        // Write closing boundary
-        baos.write(("--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8));
-
-        return baos.toByteArray();
-    }
-
-    /**
-     * Writes a file part to the multipart body.
-     */
-    private void writeFilePart(ByteArrayOutputStream baos, String boundary,
-                               String fieldName, String filename, byte[] content) throws IOException {
-        String header = "--" + boundary + "\r\n" +
-            "Content-Disposition: form-data; name=\"" + fieldName + "\"; filename=\"" + filename + "\"\r\n" +
-            "Content-Type: application/pdf\r\n\r\n";
-        baos.write(header.getBytes(StandardCharsets.UTF_8));
-        baos.write(content);
-        baos.write("\r\n".getBytes(StandardCharsets.UTF_8));
-    }
-
-    /**
-     * Writes a form field to the multipart body.
-     */
-    private void writeFormField(ByteArrayOutputStream baos, String boundary,
-                                String fieldName, String value) throws IOException {
-        String part = "--" + boundary + "\r\n" +
-            "Content-Disposition: form-data; name=\"" + fieldName + "\"\r\n\r\n" +
-            value + "\r\n";
-        baos.write(part.getBytes(StandardCharsets.UTF_8));
+        return new Request.Builder()
+            .url(baseUrl + CONVERT_ENDPOINT)
+            .post(bodyBuilder.build())
+            .build();
     }
 
     /**
      * Parses the HTTP response into a HybridResponse.
      */
-    private HybridResponse parseResponse(HttpResponse<String> response) throws IOException {
-        if (response.statusCode() != 200) {
-            throw new IOException("Docling API request failed with status " + response.statusCode() +
-                ": " + response.body());
+    private HybridResponse parseResponse(Response response) throws IOException {
+        if (!response.isSuccessful()) {
+            ResponseBody body = response.body();
+            String bodyStr = body != null ? body.string() : "";
+            throw new IOException("Docling API request failed with status " + response.code() +
+                ": " + bodyStr);
         }
 
-        JsonNode root = objectMapper.readTree(response.body());
+        ResponseBody body = response.body();
+        if (body == null) {
+            throw new IOException("Empty response body");
+        }
+
+        String responseStr = body.string();
+        JsonNode root = objectMapper.readTree(responseStr);
 
         // Check for API error status
         JsonNode statusNode = root.get("status");
@@ -299,16 +238,24 @@ public class DoclingClient implements HybridClient {
     }
 
     /**
-     * Shuts down the executor service used by this client.
+     * Shuts down the HTTP client and releases all resources.
      *
-     * <p>This should be called when the client is no longer needed
-     * to release resources. Uses shutdownNow() to immediately terminate
-     * waiting threads, as shutdown() alone would leave threads blocked
-     * on the work queue indefinitely, preventing JVM exit.
+     * <p>This gracefully shuts down the dispatcher's executor service,
+     * allowing the JVM to exit cleanly. Idle connections are evicted
+     * from the connection pool.
      */
     public void shutdown() {
-        if (executor != null) {
-            executor.shutdownNow();
+        // Gracefully shutdown the dispatcher - allows pending requests to complete
+        httpClient.dispatcher().executorService().shutdown();
+        // Evict idle connections from pool (does not affect the server)
+        httpClient.connectionPool().evictAll();
+        // Close the cache if present
+        if (httpClient.cache() != null) {
+            try {
+                httpClient.cache().close();
+            } catch (Exception ignored) {
+                // Ignore cache close errors
+            }
         }
     }
 }
