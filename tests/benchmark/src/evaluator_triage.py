@@ -23,6 +23,8 @@ class TriageMetrics:
 
     recall: Optional[float]  # Table pages correctly sent to BACKEND
     precision: Optional[float]  # BACKEND pages that actually had tables
+    accuracy: Optional[float]  # Overall accuracy (TP + TN) / total
+    f1: Optional[float]  # F1 score
     fn_count: int  # Tables missed (sent to JAVA) - critical metric
     fp_count: int  # Non-table pages sent to BACKEND (acceptable)
     tp_count: int  # Table pages sent to BACKEND (correct)
@@ -36,6 +38,8 @@ class TriageMetrics:
         return {
             "recall": self.recall,
             "precision": self.precision,
+            "accuracy": self.accuracy,
+            "f1": self.f1,
             "fn_count": self.fn_count,
             "fp_count": self.fp_count,
             "tp_count": self.tp_count,
@@ -195,6 +199,8 @@ def evaluate_triage_batch(
         return TriageMetrics(
             recall=None,
             precision=None,
+            accuracy=None,
+            f1=None,
             fn_count=0,
             fp_count=0,
             tp_count=0,
@@ -269,9 +275,19 @@ def _compute_metrics(
 
     total_pages = tp + fp + fn + tn
 
+    # Accuracy = (TP + TN) / total
+    accuracy = (tp + tn) / total_pages if total_pages > 0 else None
+
+    # F1 = 2 * precision * recall / (precision + recall)
+    f1 = None
+    if precision is not None and recall is not None and (precision + recall) > 0:
+        f1 = 2 * precision * recall / (precision + recall)
+
     return TriageMetrics(
         recall=recall,
         precision=precision,
+        accuracy=accuracy,
+        f1=f1,
         fn_count=fn,
         fp_count=fp,
         tp_count=tp,
