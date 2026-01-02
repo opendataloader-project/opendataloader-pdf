@@ -90,6 +90,19 @@ public class CLIOptions {
     private static final String PAGES_LONG_OPTION = "pages";
     private static final String PAGES_DESC = "Pages to extract (e.g., \"1,3,5-7\"). Default: all pages";
 
+    // ===== Hybrid Mode =====
+    private static final String HYBRID_LONG_OPTION = "hybrid";
+    private static final String HYBRID_DESC = "Hybrid backend for AI processing. Values: off (default), docling";
+
+    private static final String HYBRID_URL_LONG_OPTION = "hybrid-url";
+    private static final String HYBRID_URL_DESC = "Hybrid backend server URL (overrides default)";
+
+    private static final String HYBRID_TIMEOUT_LONG_OPTION = "hybrid-timeout";
+    private static final String HYBRID_TIMEOUT_DESC = "Hybrid backend request timeout in milliseconds. Default: 30000";
+
+    private static final String HYBRID_FALLBACK_LONG_OPTION = "hybrid-fallback";
+    private static final String HYBRID_FALLBACK_DESC = "Fallback to Java processing on hybrid backend error. Default: true";
+
     // ===== Export Options (internal) =====
     public static final String EXPORT_OPTIONS_LONG_OPTION = "export-options";
 
@@ -126,6 +139,10 @@ public class CLIOptions {
             new OptionDefinition(IMAGE_OUTPUT_LONG_OPTION, null, "string", "external", IMAGE_OUTPUT_DESC, true),
             new OptionDefinition(IMAGE_FORMAT_LONG_OPTION, null, "string", "png", IMAGE_FORMAT_DESC, true),
             new OptionDefinition(PAGES_LONG_OPTION, null, "string", null, PAGES_DESC, true),
+            new OptionDefinition(HYBRID_LONG_OPTION, null, "string", "off", HYBRID_DESC, true),
+            new OptionDefinition(HYBRID_URL_LONG_OPTION, null, "string", null, HYBRID_URL_DESC, true),
+            new OptionDefinition(HYBRID_TIMEOUT_LONG_OPTION, null, "string", "30000", HYBRID_TIMEOUT_DESC, true),
+            new OptionDefinition(HYBRID_FALLBACK_LONG_OPTION, null, "boolean", true, HYBRID_FALLBACK_DESC, true),
             new OptionDefinition(EXPORT_OPTIONS_LONG_OPTION, null, "boolean", null, null, false),
 
             // Legacy options (not exported, for backward compatibility)
@@ -202,6 +219,7 @@ public class CLIOptions {
         applyTableMethodOption(config, commandLine);
         applyImageOptions(config, commandLine);
         applyPagesOption(config, commandLine);
+        applyHybridOptions(config, commandLine);
         return config;
     }
 
@@ -370,6 +388,45 @@ public class CLIOptions {
             }
         }
         return values;
+    }
+
+    private static void applyHybridOptions(Config config, CommandLine commandLine) {
+        if (commandLine.hasOption(HYBRID_LONG_OPTION)) {
+            String hybridValue = commandLine.getOptionValue(HYBRID_LONG_OPTION);
+            if (hybridValue == null || hybridValue.trim().isEmpty()) {
+                throw new IllegalArgumentException(
+                        String.format("Option --hybrid requires a value. Supported values: %s",
+                                Config.getHybridOptions(", ")));
+            }
+            String hybrid = hybridValue.trim().toLowerCase(Locale.ROOT);
+            if (!Config.isValidHybrid(hybrid)) {
+                throw new IllegalArgumentException(
+                        String.format("Unsupported hybrid backend '%s'. Supported values: %s",
+                                hybrid, Config.getHybridOptions(", ")));
+            }
+            config.setHybrid(hybrid);
+        }
+        if (commandLine.hasOption(HYBRID_URL_LONG_OPTION)) {
+            String url = commandLine.getOptionValue(HYBRID_URL_LONG_OPTION);
+            if (url != null && !url.trim().isEmpty()) {
+                config.getHybridConfig().setUrl(url.trim());
+            }
+        }
+        if (commandLine.hasOption(HYBRID_TIMEOUT_LONG_OPTION)) {
+            String timeoutValue = commandLine.getOptionValue(HYBRID_TIMEOUT_LONG_OPTION);
+            if (timeoutValue != null && !timeoutValue.trim().isEmpty()) {
+                try {
+                    int timeout = Integer.parseInt(timeoutValue.trim());
+                    config.getHybridConfig().setTimeoutMs(timeout);
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException(
+                            String.format("Invalid timeout value '%s'. Must be a positive integer.", timeoutValue));
+                }
+            }
+        }
+        if (commandLine.hasOption(HYBRID_FALLBACK_LONG_OPTION)) {
+            config.getHybridConfig().setFallbackToJava(true);
+        }
     }
 
     /**
