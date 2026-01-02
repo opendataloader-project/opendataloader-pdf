@@ -8,6 +8,7 @@
 package org.opendataloader.pdf.processors;
 
 import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.hybrid.DoclingSchemaTransformer;
 import org.opendataloader.pdf.hybrid.HybridClient;
 import org.opendataloader.pdf.hybrid.HybridClientFactory;
@@ -292,7 +293,7 @@ public class HybridDocumentProcessor {
             try {
                 return processBackendPath(inputPdfName, pageNumbers, config, totalPages);
             } catch (IOException e) {
-                throw new RuntimeException("Backend processing failed", e);
+                throw new RuntimeException("Backend processing failed: " + e.getMessage(), e);
             }
         });
     }
@@ -305,6 +306,10 @@ public class HybridDocumentProcessor {
             Set<Integer> pageNumbers,
             Config config,
             int totalPages) throws IOException {
+
+        // Initialize ThreadLocal containers for this async thread
+        // Required because setIDs() uses StaticLayoutContainers.incrementContentId()
+        StaticLayoutContainers.clearContainers();
 
         LOGGER.log(Level.INFO, "Processing {0} pages via {1} backend",
             new Object[]{pageNumbers.size(), config.getHybrid()});

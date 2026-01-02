@@ -4,9 +4,9 @@ This skill provides API specification for docling-serve, the HTTP API for the Do
 
 ## API Overview
 
-- **Base URL**: `http://localhost:5000` (default)
+- **Base URL**: `http://localhost:5001` (default port for docling-serve)
 - **API Version**: 1.9.0
-- **Authentication**: Optional API key via `APIKeyAuth` header
+- **Authentication**: Optional API key via `X-Api-Key` header
 
 ## Endpoints
 
@@ -24,12 +24,27 @@ Converts a PDF or document file and returns structured output.
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `files` | binary[] | required | File(s) to convert |
-| `to_formats` | string[] | `["md"]` | Output formats: `md`, `json`, `html`, `text`, `doctags` |
+| `from_formats` | string[] | auto | Input formats: `pdf`, `docx`, `pptx`, `html`, `image`, `md`, `csv`, `xlsx`, etc. |
+| `to_formats` | string[] | `["md"]` | Output formats: `md`, `json`, `html`, `html_split_page`, `text`, `doctags` |
 | `do_ocr` | boolean | `true` | Enable OCR for bitmap content |
+| `force_ocr` | boolean | `false` | Force OCR even on text-based PDFs |
+| `ocr_engine` | string | `"auto"` | OCR engine: `auto`, `easyocr`, `ocrmac`, `rapidocr`, `tesserocr`, `tesseract` |
+| `ocr_lang` | string[] | - | Languages for OCR (can specify multiple) |
 | `do_table_structure` | boolean | `true` | Extract table structure |
 | `table_mode` | string | `"accurate"` | Table mode: `fast` or `accurate` |
+| `table_cell_matching` | boolean | - | Enable table cell matching |
+| `pdf_backend` | string | - | PDF backend: `ppypdfium2`, `dlparse_v1`, `dlparse_v2`, `dlparse_v4` |
 | `pipeline` | string | `"standard"` | Processing pipeline: `standard` or `vlm` |
-| `page_range` | int[2] | `[1, MAX]` | Page range to convert (1-indexed) |
+| `page_range` | int[2] | `[1, MAX]` | Page range to convert (1-indexed). Send as two separate form fields. |
+| `document_timeout` | float | - | Timeout in seconds for document processing |
+| `abort_on_error` | boolean | `false` | Abort processing on error |
+| `include_images` | boolean | `true` | Include images in output |
+| `images_scale` | float | `2.0` | Scale factor for images |
+| `image_export_mode` | string | - | Image export: `placeholder`, `embedded`, `referenced` |
+| `do_code_enrichment` | boolean | `false` | Enable code block enrichment |
+| `do_formula_enrichment` | boolean | `false` | Enable formula enrichment |
+| `do_picture_classification` | boolean | `false` | Enable picture classification |
+| `do_picture_description` | boolean | `false` | Enable picture description (requires VLM) |
 
 ### Convert File (Async)
 
@@ -64,10 +79,29 @@ GET /health
 
 Returns server health status.
 
-## Request Example (Java HttpClient)
+## Request Examples
+
+### curl Example
+
+```bash
+curl -X POST 'http://localhost:5001/v1/convert/file' \
+  -F 'files=@document.pdf;type=application/pdf' \
+  -F 'from_formats=pdf' \
+  -F 'to_formats=json' \
+  -F 'to_formats=md' \
+  -F 'do_table_structure=true' \
+  -F 'do_ocr=false' \
+  -F 'page_range=1' \
+  -F 'page_range=5'
+```
+
+**Note**: Array parameters like `to_formats` and `page_range` are specified with multiple `-F` flags.
+
+### Java HttpClient Example
 
 ```java
 // Build multipart request
+String boundary = UUID.randomUUID().toString();
 HttpRequest.Builder builder = HttpRequest.newBuilder()
     .uri(URI.create(baseUrl + "/v1/convert/file"))
     .header("Content-Type", "multipart/form-data; boundary=" + boundary);
@@ -75,7 +109,10 @@ HttpRequest.Builder builder = HttpRequest.newBuilder()
 // Multipart body parts:
 // 1. File part: name="files", filename="document.pdf"
 // 2. Form fields: name="to_formats", value="json"
+//                 name="to_formats", value="md"
 //                 name="do_table_structure", value="true"
+//                 name="page_range", value="1"
+//                 name="page_range", value="5"
 ```
 
 ## Response Structure
@@ -250,12 +287,23 @@ Coordinates for element position on page:
 
 ## Java Implementation Notes
 
-1. **Multipart Request**: Use boundary-based multipart/form-data encoding
-2. **Timeouts**: Set appropriate timeouts (default document timeout is 604800s)
-3. **JSON Parsing**: Use Jackson or Gson with proper type handling for polymorphic text types
-4. **Coordinate Handling**: Normalize coordinates to a single origin (recommend TOPLEFT)
-5. **Reference Resolution**: Elements use JSON pointer refs (`#/texts/0`) - build a lookup map
-6. **Reading Order**: Iterate `body.children` refs in order for correct reading sequence
+1. **HTTP Version**: Use HTTP/1.1 (not HTTP/2) for compatibility with docling-serve
+2. **Multipart Request**: Use boundary-based multipart/form-data encoding
+3. **Array Parameters**: For array parameters like `to_formats` and `page_range`, send multiple form fields with the same name:
+   ```java
+   // For to_formats=["json", "md"]
+   writeFormField(baos, boundary, "to_formats", "json");
+   writeFormField(baos, boundary, "to_formats", "md");
+
+   // For page_range=[1, 5]
+   writeFormField(baos, boundary, "page_range", "1");
+   writeFormField(baos, boundary, "page_range", "5");
+   ```
+4. **Timeouts**: Set appropriate timeouts (default document timeout is 604800s)
+5. **JSON Parsing**: Use Jackson or Gson with proper type handling for polymorphic text types
+6. **Coordinate Handling**: Normalize coordinates to a single origin (recommend TOPLEFT)
+7. **Reference Resolution**: Elements use JSON pointer refs (`#/texts/0`) - build a lookup map
+8. **Reading Order**: Iterate `body.children` refs in order for correct reading sequence
 
 ## Error Handling
 
