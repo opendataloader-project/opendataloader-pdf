@@ -609,9 +609,12 @@ public class TriageProcessor {
         }
 
         // Signal 4: Suspicious text patterns (catches borderless tables)
-        if (signals.hasSuspiciousPattern()) {
-            return TriageResult.backend(pageNumber, 0.85, signals);
-        }
+        // Note: Disabled (Experiment 003, 2026-01-03)
+        // This signal caused 19 FPs (28.4%) by detecting large gaps in non-table layouts
+        // Disabling reduces FP by 12 with only +1 FN (Recall: 97.62% → 95.24%)
+        // if (signals.hasSuspiciousPattern()) {
+        //     return TriageResult.backend(pageNumber, 0.85, signals);
+        // }
 
         // Signal 5: High LineChunk ratio (grid/border elements)
         if (signals.getLineToTextRatio() > thresholds.getLineRatioThreshold()) {

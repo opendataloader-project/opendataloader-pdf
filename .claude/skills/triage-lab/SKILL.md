@@ -141,6 +141,70 @@ This skill manages experiment records and optimization history for triage logic.
 
 ---
 
+### Experiment 003 (2026-01-03): VectorTableSignal & SuspiciousPattern Analysis
+
+**Goal**: Further reduce FP 67 while maintaining high Recall
+
+**Current FP by Signal** (after Experiment 002):
+| Signal | Count | % |
+|--------|-------|---|
+| hasVectorTableSignal | 23 | 34.3% |
+| hasSuspiciousPattern | 19 | 28.4% |
+| hasTableBorder | 14 | 20.9% |
+| hasTextTablePattern | 5 | 7.5% |
+| alignedLineGroups | 5 | 7.5% |
+| highLineRatio | 1 | 1.5% |
+
+**VectorTableSignal Sub-signal Analysis** (23 FPs):
+| Sub-signal | Count |
+|------------|-------|
+| hasAlignedShortLines | 30 |
+| hasTableBorderLines | 22 |
+| hasGridLines | 16 |
+| lineArt>=8 | 13 |
+| hasRowSeparatorPattern | 12 |
+
+→ `hasAlignedShortLines` is the primary cause of VectorSignal FPs
+
+**Experiments**:
+| Config | Precision | Recall | F1 | FP | FN |
+|--------|-----------|--------|-----|-----|-----|
+| Current (Exp 002) | 37.96% | 97.62% | 54.67% | 67 | 1 |
+| 003B: Disable VectorSignal | 40.00% | 90.48% | 55.47% | 57 | 4 |
+| 003C: Grid OR BorderLines only | 40.21% | 92.86% | 56.12% | 58 | 3 |
+| **003D: Disable SuspiciousPattern** | **42.11%** | **95.24%** | **58.39%** | **55** | **2** |
+| 003F: Only Reliable Signals | 56.25% | 85.71% | 67.92% | 28 | 6 |
+| 003G: Disable AlignedShortLines | 40.00% | 95.24% | 56.34% | 60 | 2 |
+| 003I: Combined (NoAlign+NoSusp) | 44.71% | 90.48% | 59.84% | 47 | 4 |
+
+**Analysis**:
+- `hasTableBorder` (14 FPs): External library, cannot modify
+- `hasVectorTableSignal` (23 FPs): `hasAlignedShortLines` too aggressive
+- `hasSuspiciousPattern` (19 FPs): Gap detection catches non-table layouts
+
+**Recommendation**:
+- **Best for Recall**: 003D (Disable SuspiciousPattern)
+  - FP: 67 → 55 (-12), FN: 1 → 2 (+1), Recall: 95.24%
+- **Best for F1**: 003I (Combined)
+  - FP: 67 → 47 (-20), FN: 1 → 4 (+3), F1: 59.84%
+
+**FN Documents** (003D):
+- `01030000000122`: Only detected by SuspiciousPattern (gap-based)
+- `01030000000110`: Never detected (needs separate investigation)
+
+**Applied**: 003D - Disabled hasSuspiciousPattern (2026-01-03)
+
+**Actual Results**:
+| Metric | Before (Exp 002) | After (Exp 003) | Change |
+|--------|------------------|-----------------|--------|
+| FP | 67 | 55 | -12 |
+| FN | 1 | 2 | +1 |
+| Precision | 37.96% | 42.11% | +4.15% |
+| Recall | 97.62% | 95.24% | -2.38% |
+| F1 | 54.67% | 58.39% | +3.72% |
+
+---
+
 ## Template for New Experiments
 
 ```markdown
