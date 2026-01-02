@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -223,5 +224,76 @@ class CLIOptionsTest {
         Config config = CLIOptions.createConfigFromCommandLine(cmd);
 
         assertEquals(Config.READING_ORDER_OFF, config.getReadingOrder());
+    }
+
+    // ===== Pages Option Tests =====
+
+    @Test
+    void testDefineOptions_containsPagesOption() {
+        assertTrue(options.hasOption("pages"));
+    }
+
+    @Test
+    void testCreateConfig_withPages() throws ParseException {
+        String[] args = {"--pages", "1,3,5-7", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertEquals("1,3,5-7", config.getPages());
+        assertEquals(List.of(1, 3, 5, 6, 7), config.getPageNumbers());
+    }
+
+    @Test
+    void testCreateConfig_withSinglePage() throws ParseException {
+        String[] args = {"--pages", "5", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertEquals("5", config.getPages());
+        assertEquals(List.of(5), config.getPageNumbers());
+    }
+
+    @Test
+    void testCreateConfig_withPageRange() throws ParseException {
+        String[] args = {"--pages", "1-10", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertEquals("1-10", config.getPages());
+        assertEquals(List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), config.getPageNumbers());
+    }
+
+    @Test
+    void testCreateConfig_defaultPages() throws ParseException {
+        String[] args = {testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertNull(config.getPages());
+        assertTrue(config.getPageNumbers().isEmpty());
+    }
+
+    @Test
+    void testCreateConfig_withInvalidPages() throws ParseException {
+        String[] args = {"--pages", "abc", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            CLIOptions.createConfigFromCommandLine(cmd);
+        });
+    }
+
+    @Test
+    void testCreateConfig_withReversePageRange() throws ParseException {
+        String[] args = {"--pages", "5-3", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            CLIOptions.createConfigFromCommandLine(cmd);
+        });
     }
 }

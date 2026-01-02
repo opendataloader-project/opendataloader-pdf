@@ -24,18 +24,50 @@ public class TaggedDocumentProcessor {
 
     private static List<List<IObject>> contents;
     private static Stack<List<IObject>> contentsStack = new Stack<>();
+    private static Set<Integer> pagesToProcess;
 
-    public static List<List<IObject>> processDocument(String inputPdfName, Config config) {
+    public static List<List<IObject>> processDocument(String inputPdfName, Config config, Set<Integer> pages) {
+        pagesToProcess = pages;
         contentsStack.clear();
         contents = new ArrayList<>();
-        for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
+        int totalPages = StaticContainers.getDocument().getNumberOfPages();
+        for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
             contents.add(new ArrayList<>());
         }
         ITree tree = StaticContainers.getDocument().getTree();
         processStructElem(tree.getRoot());
+        List<List<IObject>> artifacts = collectArtifacts(totalPages);
+        for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
+            if (!shouldProcessPage(pageNumber)) {
+                continue;
+            }
+            artifacts.set(pageNumber, TextLineProcessor.processTextLines(artifacts.get(pageNumber)));
+        }
+
+        HeaderFooterProcessor.processHeadersAndFooters(artifacts, true);
+        for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
+            if (!shouldProcessPage(pageNumber)) {
+                continue;
+            }
+            contents.get(pageNumber).addAll(artifacts.get(pageNumber));
+        }
+        for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
+            if (!shouldProcessPage(pageNumber)) {
+                continue;
+            }
+            List<IObject> pageContents = TextLineProcessor.processTextLines(contents.get(pageNumber));
+            contents.set(pageNumber, ParagraphProcessor.processParagraphs(pageContents));
+        }
+        return contents;
+    }
+
+    private static List<List<IObject>> collectArtifacts(int totalPages) {
         List<List<IObject>> artifacts = new ArrayList<>();
-        for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
+        for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
             artifacts.add(new ArrayList<>());
+            if (!shouldProcessPage(pageNumber)) {
+                continue;
+            }
             for (IObject content : StaticContainers.getDocument().getArtifacts(pageNumber)) {
                 if (content instanceof ImageChunk) {
                     artifacts.get(pageNumber).add(content);
@@ -47,19 +79,17 @@ public class TaggedDocumentProcessor {
                 }
             }
         }
-        for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
-            artifacts.set(pageNumber, TextLineProcessor.processTextLines(artifacts.get(pageNumber)));
-        }
+        return artifacts;
+    }
 
-        HeaderFooterProcessor.processHeadersAndFooters(artifacts, true);
-        for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
-            contents.get(pageNumber).addAll(artifacts.get(pageNumber));
-        }
-        for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
-            List<IObject> pageContents = TextLineProcessor.processTextLines(contents.get(pageNumber));
-            contents.set(pageNumber, ParagraphProcessor.processParagraphs(pageContents));
-        }
-        return contents;
+    /**
+     * Checks if a page should be processed based on the filter.
+     *
+     * @param pageNumber 0-indexed page number
+     * @return true if the page should be processed
+     */
+    private static boolean shouldProcessPage(int pageNumber) {
+        return pagesToProcess == null || pagesToProcess.contains(pageNumber);
     }
 
     private static void processStructElem(INode node) {

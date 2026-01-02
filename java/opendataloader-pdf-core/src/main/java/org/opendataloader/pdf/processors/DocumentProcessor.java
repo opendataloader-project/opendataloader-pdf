@@ -65,24 +65,75 @@ public class DocumentProcessor {
     public static void processFile(String inputPdfName, Config config) throws IOException {
         preprocessing(inputPdfName, config);
         calculateDocumentInfo();
+        Set<Integer> pagesToProcess = getValidPageNumbers(config);
         List<List<IObject>> contents = StaticLayoutContainers.isUseStructTree() ?
-            TaggedDocumentProcessor.processDocument(inputPdfName, config) :
-            processDocument(inputPdfName, config);
+            TaggedDocumentProcessor.processDocument(inputPdfName, config, pagesToProcess) :
+            processDocument(inputPdfName, config, pagesToProcess);
         sortContents(contents, config);
         generateOutputs(inputPdfName, contents, config);
     }
 
-    private static List<List<IObject>> processDocument(String inputPdfName, Config config) throws IOException {
+    /**
+     * Validates and filters page numbers from config against actual document pages.
+     * Logs warnings for pages that don't exist in the document.
+     *
+     * @param config the configuration containing page selection
+     * @return Set of valid 0-indexed page numbers to process, or null for all pages
+     */
+    private static Set<Integer> getValidPageNumbers(Config config) {
+        List<Integer> requestedPages = config.getPageNumbers();
+        if (requestedPages.isEmpty()) {
+            return null; // null means process all pages
+        }
+
+        int totalPages = StaticContainers.getDocument().getNumberOfPages();
+        Set<Integer> validPages = new LinkedHashSet<>();
+        List<Integer> invalidPages = new ArrayList<>();
+
+        for (Integer page : requestedPages) {
+            int zeroIndexed = page - 1; // Convert 1-based to 0-based
+            if (zeroIndexed >= 0 && zeroIndexed < totalPages) {
+                validPages.add(zeroIndexed);
+            } else {
+                invalidPages.add(page);
+            }
+        }
+
+        if (!invalidPages.isEmpty()) {
+            LOGGER.log(Level.WARNING,
+                "Requested pages {0} do not exist in document (total pages: {1}). Processing only existing pages: {2}",
+                new Object[]{invalidPages, totalPages,
+                    validPages.stream().map(p -> p + 1).collect(Collectors.toList())});
+        }
+
+        if (validPages.isEmpty()) {
+            LOGGER.log(Level.WARNING,
+                "No valid pages to process. Document has {0} pages but requested: {1}",
+                new Object[]{totalPages, requestedPages});
+        }
+
+        return validPages;
+    }
+
+    private static List<List<IObject>> processDocument(String inputPdfName, Config config, Set<Integer> pagesToProcess) throws IOException {
         List<List<IObject>> contents = new ArrayList<>();
-        for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
-            List<IObject> pageContents = ContentFilterProcessor.getFilteredContents(inputPdfName,
-                StaticContainers.getDocument().getArtifacts(pageNumber), pageNumber, config);
-            contents.add(pageContents);
+        int totalPages = StaticContainers.getDocument().getNumberOfPages();
+        for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
+            if (shouldProcessPage(pageNumber, pagesToProcess)) {
+                List<IObject> pageContents = ContentFilterProcessor.getFilteredContents(inputPdfName,
+                    StaticContainers.getDocument().getArtifacts(pageNumber), pageNumber, config);
+                contents.add(pageContents);
+            } else {
+                contents.add(new ArrayList<>()); // Empty placeholder for skipped pages
+            }
         }
         if (config.isClusterTableMethod()) {
             new ClusterTableProcessor().processTables(contents);
         }
-        for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
+        for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
+            if (!shouldProcessPage(pageNumber, pagesToProcess)) {
+                continue;
+            }
             List<IObject> pageContents = TableBorderProcessor.processTableBorders(contents.get(pageNumber), pageNumber);
             pageContents = pageContents.stream().filter(x -> !(x instanceof LineChunk)).collect(Collectors.toList());
             pageContents = TextLineProcessor.processTextLines(pageContents);
@@ -91,7 +142,10 @@ public class DocumentProcessor {
         }
         HeaderFooterProcessor.processHeadersAndFooters(contents, false);
         ListProcessor.processLists(contents, false);
-        for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
+        for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
+            if (!shouldProcessPage(pageNumber, pagesToProcess)) {
+                continue;
+            }
             List<IObject> pageContents = contents.get(pageNumber);
             pageContents = ParagraphProcessor.processParagraphs(pageContents);
             pageContents = ListProcessor.processListsFromTextNodes(pageContents);
@@ -105,6 +159,17 @@ public class DocumentProcessor {
         HeadingProcessor.detectHeadingsLevels();
         LevelProcessor.detectLevels(contents);
         return contents;
+    }
+
+    /**
+     * Checks if a page should be processed based on the filter.
+     *
+     * @param pageNumber 0-indexed page number
+     * @param pagesToProcess set of valid page numbers to process, or null for all pages
+     * @return true if the page should be processed
+     */
+    private static boolean shouldProcessPage(int pageNumber, Set<Integer> pagesToProcess) {
+        return pagesToProcess == null || pagesToProcess.contains(pageNumber);
     }
 
     private static void generateOutputs(String inputPdfName, List<List<IObject>> contents, Config config) throws IOException {

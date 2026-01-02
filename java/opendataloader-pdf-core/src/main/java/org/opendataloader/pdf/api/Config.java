@@ -7,6 +7,7 @@
  */
 package org.opendataloader.pdf.api;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -43,6 +44,7 @@ public class Config {
     private String htmlPageSeparator = "";
     private String imageOutput = IMAGE_OUTPUT_EXTERNAL;
     private String imageFormat = IMAGE_FORMAT_PNG;
+    private String pages;
     private final FilterConfig filterConfig = new FilterConfig();
 
     /** Table detection method: default (border-based detection). */
@@ -569,6 +571,109 @@ public class Config {
      */
     public static boolean isValidImageFormat(String format) {
         return format != null && imageFormatOptions.contains(format.toLowerCase(Locale.ROOT));
+    }
+
+    private static final String INVALID_PAGE_RANGE_FORMAT = "Invalid page range format: '%s'. Expected format: 1,3,5-7";
+
+    /**
+     * Gets the pages to extract from the PDF.
+     *
+     * @return The page specification string (e.g., "1,3,5-7"), or null for all pages.
+     */
+    public String getPages() {
+        return pages;
+    }
+
+    /**
+     * Sets the pages to extract from the PDF.
+     *
+     * @param pages The page specification (e.g., "1,3,5-7"). Use null or empty for all pages.
+     * @throws IllegalArgumentException if the format is invalid.
+     */
+    public void setPages(String pages) {
+        if (pages != null && !pages.trim().isEmpty()) {
+            parsePageRanges(pages);
+        }
+        this.pages = pages;
+    }
+
+    /**
+     * Gets the list of page numbers to extract.
+     *
+     * @return List of 1-based page numbers, or empty list if all pages should be extracted.
+     */
+    public List<Integer> getPageNumbers() {
+        if (pages == null || pages.trim().isEmpty()) {
+            return new ArrayList<>();
+        }
+        return parsePageRanges(pages);
+    }
+
+    /**
+     * Parses a page range specification into a list of page numbers.
+     *
+     * @param pages The page specification (e.g., "1,3,5-7").
+     * @return List of 1-based page numbers.
+     * @throws IllegalArgumentException if the format is invalid.
+     */
+    private static List<Integer> parsePageRanges(String pages) {
+        List<Integer> result = new ArrayList<>();
+        String[] parts = pages.split(",");
+
+        for (String part : parts) {
+            String trimmed = part.trim();
+            if (trimmed.isEmpty()) {
+                throw new IllegalArgumentException(String.format(INVALID_PAGE_RANGE_FORMAT, pages));
+            }
+
+            if (trimmed.contains("-")) {
+                parseRange(trimmed, pages, result);
+            } else {
+                parseSinglePage(trimmed, pages, result);
+            }
+        }
+
+        return result;
+    }
+
+    private static void parseRange(String range, String fullInput, List<Integer> result) {
+        String[] parts = range.split("-", -1);
+        if (parts.length != 2 || parts[0].isEmpty() || parts[1].isEmpty()) {
+            throw new IllegalArgumentException(String.format(INVALID_PAGE_RANGE_FORMAT, fullInput));
+        }
+
+        try {
+            int start = Integer.parseInt(parts[0].trim());
+            int end = Integer.parseInt(parts[1].trim());
+
+            if (start < 1 || end < 1) {
+                throw new IllegalArgumentException(
+                    String.format("Page numbers must be positive: '%s'", fullInput));
+            }
+            if (start > end) {
+                throw new IllegalArgumentException(
+                    String.format("Invalid page range '%s': start page cannot be greater than end page", range));
+            }
+
+            for (int i = start; i <= end; i++) {
+                result.add(i);
+            }
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(String.format(INVALID_PAGE_RANGE_FORMAT, fullInput));
+        }
+    }
+
+    private static void parseSinglePage(String page, String fullInput, List<Integer> result) {
+        try {
+            int pageNum = Integer.parseInt(page);
+            if (pageNum < 1) {
+                throw new IllegalArgumentException(
+                    String.format("Page numbers must be positive: '%s'", fullInput));
+            }
+            result.add(pageNum);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(String.format(INVALID_PAGE_RANGE_FORMAT, fullInput));
+        }
     }
 
 }

@@ -86,6 +86,10 @@ public class CLIOptions {
     private static final String IMAGE_FORMAT_LONG_OPTION = "image-format";
     private static final String IMAGE_FORMAT_DESC = "Output format for extracted images. Values: png, jpeg. Default: png";
 
+    // ===== Pages =====
+    private static final String PAGES_LONG_OPTION = "pages";
+    private static final String PAGES_DESC = "Pages to extract (e.g., \"1,3,5-7\"). Default: all pages";
+
     // ===== Export Options (internal) =====
     public static final String EXPORT_OPTIONS_LONG_OPTION = "export-options";
 
@@ -121,6 +125,7 @@ public class CLIOptions {
             new OptionDefinition(HTML_PAGE_SEPARATOR_LONG_OPTION, null, "string", null, HTML_PAGE_SEPARATOR_DESC, true),
             new OptionDefinition(IMAGE_OUTPUT_LONG_OPTION, null, "string", "external", IMAGE_OUTPUT_DESC, true),
             new OptionDefinition(IMAGE_FORMAT_LONG_OPTION, null, "string", "png", IMAGE_FORMAT_DESC, true),
+            new OptionDefinition(PAGES_LONG_OPTION, null, "string", null, PAGES_DESC, true),
             new OptionDefinition(EXPORT_OPTIONS_LONG_OPTION, null, "boolean", null, null, false),
 
             // Legacy options (not exported, for backward compatibility)
@@ -196,6 +201,7 @@ public class CLIOptions {
         applyFormatOption(config, commandLine);
         applyTableMethodOption(config, commandLine);
         applyImageOptions(config, commandLine);
+        applyPagesOption(config, commandLine);
         return config;
     }
 
@@ -227,6 +233,12 @@ public class CLIOptions {
                         String.format("Unsupported image format '%s'. Supported values: png, jpeg", format));
             }
             config.setImageFormat(format);
+        }
+    }
+
+    private static void applyPagesOption(Config config, CommandLine commandLine) {
+        if (commandLine.hasOption(PAGES_LONG_OPTION)) {
+            config.setPages(commandLine.getOptionValue(PAGES_LONG_OPTION));
         }
     }
 
