@@ -4,9 +4,9 @@
     "engine_version": "local",
     "processor": "Apple M4",
     "document_count": 200,
-    "total_elapsed": 9.405285120010376,
-    "elapsed_per_doc": 0.04702642560005188,
-    "date": "2026-01-02"
+    "total_elapsed": 9.174453973770142,
+    "elapsed_per_doc": 0.04587226986885071,
+    "date": "2026-01-03"
   },
   "metrics": {
     "score": {
@@ -2629,14 +2629,15 @@
     "precision": 0.6086956521739131,
     "recall": 0.6666666666666666,
     "f1": 0.6363636363636365,
+    "accuracy": 0.84,
     "tp": 28,
     "fp": 18,
     "fn": 14,
     "tn": 140
   },
   "speed": {
-    "total_elapsed": 9.405285120010376,
-    "elapsed_per_doc": 0.04702642560005188,
+    "total_elapsed": 9.174453973770142,
+    "elapsed_per_doc": 0.04587226986885071,
     "document_count": 200,
     "processor": "Apple M4"
   }
