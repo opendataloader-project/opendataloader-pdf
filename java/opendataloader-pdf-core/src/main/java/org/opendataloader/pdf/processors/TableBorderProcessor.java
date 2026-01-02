@@ -30,6 +30,11 @@ public class TableBorderProcessor {
     private static final double NEIGHBOUR_TABLE_EPSILON = 0.2;
 
     public static List<IObject> processTableBorders(List<IObject> contents, int pageNumber) {
+        // Check if TableBordersCollection exists (may be null if no borders detected during preprocessing)
+        if (StaticContainers.getTableBordersCollection() == null) {
+            return new ArrayList<>(contents);
+        }
+
         List<IObject> newContents = new ArrayList<>();
         Set<TableBorder> processedTableBorders = new HashSet<>();
         for (IObject content : contents) {
@@ -51,6 +56,9 @@ public class TableBorderProcessor {
     }
 
     private static TableBorder addContentToTableBorder(IObject content) {
+        if (StaticContainers.getTableBordersCollection() == null) {
+            return null;
+        }
         TableBorder tableBorder = StaticContainers.getTableBordersCollection().getTableBorder(content.getBoundingBox());
         if (tableBorder != null) {
             if (content instanceof LineChunk) {
