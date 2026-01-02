@@ -8,12 +8,14 @@
 package org.opendataloader.pdf.hybrid;
 
 import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
 import org.verapdf.wcag.algorithms.entities.content.LineChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
+import org.opendataloader.pdf.processors.DocumentProcessor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -77,6 +79,14 @@ public class TriageProcessor {
 
     /** Minimum consecutive suspicious patterns required. */
     private static final int MIN_CONSECUTIVE_PATTERNS = 2;
+
+    // ============= Large Image Detection Constants =============
+
+    /** Minimum image area ratio to trigger BACKEND (11% of page). */
+    private static final double MIN_LARGE_IMAGE_RATIO = 0.11;
+
+    /** Minimum image aspect ratio (width/height) for table/chart detection. */
+    private static final double MIN_IMAGE_ASPECT_RATIO = 1.75;
 
     /** High pattern count threshold (skip consecutive check). */
     private static final int HIGH_PATTERN_COUNT_THRESHOLD = 30;
@@ -243,6 +253,10 @@ public class TriageProcessor {
         private final double patternDensity;
         private final boolean hasConsecutivePatterns;
 
+        // Image signals
+        private final double largeImageRatio;
+        private final double largeImageAspectRatio;
+
         /**
          * Creates new triage signals with basic fields (backward compatibility).
          *
@@ -258,7 +272,7 @@ public class TriageProcessor {
             this(lineChunkCount, textChunkCount, lineToTextRatio, alignedLineGroups,
                     hasTableBorder, hasSuspiciousPattern,
                     0, 0, 0, false, false, false, false,
-                    0, 0, 0.0, false);
+                    0, 0, 0.0, false, 0.0, 0.0);
         }
 
         /**
@@ -270,7 +284,7 @@ public class TriageProcessor {
                              boolean hasGridLines, boolean hasTableBorderLines,
                              boolean hasRowSeparatorPattern, boolean hasAlignedShortLines,
                              int tablePatternCount, int maxConsecutiveStreak, double patternDensity,
-                             boolean hasConsecutivePatterns) {
+                             boolean hasConsecutivePatterns, double largeImageRatio, double largeImageAspectRatio) {
             this.lineChunkCount = lineChunkCount;
             this.textChunkCount = textChunkCount;
             this.lineToTextRatio = lineToTextRatio;
@@ -288,6 +302,8 @@ public class TriageProcessor {
             this.maxConsecutiveStreak = maxConsecutiveStreak;
             this.patternDensity = patternDensity;
             this.hasConsecutivePatterns = hasConsecutivePatterns;
+            this.largeImageRatio = largeImageRatio;
+            this.largeImageAspectRatio = largeImageAspectRatio;
         }
 
         /**
@@ -298,7 +314,7 @@ public class TriageProcessor {
         public static TriageSignals empty() {
             return new TriageSignals(0, 0, 0.0, 0, false, false,
                     0, 0, 0, false, false, false, false,
-                    0, 0, 0.0, false);
+                    0, 0, 0.0, false, 0.0, 0.0);
         }
 
         /**
@@ -421,6 +437,35 @@ public class TriageProcessor {
             return hasConsecutivePatterns;
         }
 
+        /**
+         * Gets the ratio of largest image area to page area.
+         *
+         * @return The large image ratio (0.0 to 1.0).
+         */
+        public double getLargeImageRatio() {
+            return largeImageRatio;
+        }
+
+        /**
+         * Checks if a large image is present (potential table/chart image).
+         * Requires both size (>= 11% of page) and aspect ratio (>= 1.7, wider than tall).
+         *
+         * @return true if largest image meets size and aspect ratio criteria.
+         */
+        public boolean hasLargeImage() {
+            return largeImageRatio >= MIN_LARGE_IMAGE_RATIO
+                    && largeImageAspectRatio >= MIN_IMAGE_ASPECT_RATIO;
+        }
+
+        /**
+         * Gets the aspect ratio (width/height) of the largest image.
+         *
+         * @return The aspect ratio of the largest image.
+         */
+        public double getLargeImageAspectRatio() {
+            return largeImageAspectRatio;
+        }
+
         @Override
         public boolean equals(Object obj) {
             if (this == obj) return true;
@@ -442,7 +487,9 @@ public class TriageProcessor {
                    tablePatternCount == that.tablePatternCount &&
                    maxConsecutiveStreak == that.maxConsecutiveStreak &&
                    Double.compare(that.patternDensity, patternDensity) == 0 &&
-                   hasConsecutivePatterns == that.hasConsecutivePatterns;
+                   hasConsecutivePatterns == that.hasConsecutivePatterns &&
+                   Double.compare(that.largeImageRatio, largeImageRatio) == 0 &&
+                   Double.compare(that.largeImageAspectRatio, largeImageAspectRatio) == 0;
         }
 
         @Override
@@ -452,7 +499,8 @@ public class TriageProcessor {
                                 horizontalLineCount, verticalLineCount, lineArtCount,
                                 hasGridLines, hasTableBorderLines, hasRowSeparatorPattern,
                                 hasAlignedShortLines, tablePatternCount, maxConsecutiveStreak,
-                                patternDensity, hasConsecutivePatterns);
+                                patternDensity, hasConsecutivePatterns, largeImageRatio,
+                                largeImageAspectRatio);
         }
 
         @Override
@@ -475,6 +523,8 @@ public class TriageProcessor {
                    ", maxConsecutiveStreak=" + maxConsecutiveStreak +
                    ", patternDensity=" + patternDensity +
                    ", hasConsecutivePatterns=" + hasConsecutivePatterns +
+                   ", largeImageRatio=" + largeImageRatio +
+                   ", largeImageAspectRatio=" + largeImageAspectRatio +
                    '}';
         }
     }
@@ -608,6 +658,12 @@ public class TriageProcessor {
             return TriageResult.backend(pageNumber, 0.9, signals);
         }
 
+        // Signal 3.5: Large image detection (potential table/chart image)
+        // Added in Experiment 005 (2026-01-03) to catch FN documents with table images
+        if (signals.hasLargeImage()) {
+            return TriageResult.backend(pageNumber, 0.85, signals);
+        }
+
         // Signal 4: Suspicious text patterns (catches borderless tables)
         // Note: Disabled (Experiment 003, 2026-01-03)
         // This signal caused 19 FPs (28.4%) by detecting large gaps in non-table layouts
@@ -660,6 +716,8 @@ public class TriageProcessor {
                 accumulator.processTextChunk((TextChunk) content);
             } else if (content instanceof LineArtChunk) {
                 accumulator.processLineArtChunk();
+            } else if (content instanceof ImageChunk) {
+                accumulator.processImageChunk((ImageChunk) content);
             }
         }
 
@@ -691,6 +749,21 @@ public class TriageProcessor {
                 ? (double) accumulator.tablePatternCount / accumulator.nonWhitespaceTextCount : 0.0;
         boolean hasConsecutivePatterns = accumulator.maxConsecutiveStreak >= MIN_CONSECUTIVE_PATTERNS;
 
+        // Calculate large image ratio and aspect ratio
+        double largeImageRatio = 0.0;
+        double largeImageAspectRatio = accumulator.maxImageAspectRatio;
+        try {
+            BoundingBox pageBoundingBox = DocumentProcessor.getPageBoundingBox(pageNumber);
+            if (pageBoundingBox != null && accumulator.maxImageArea > 0) {
+                double pageArea = pageBoundingBox.getWidth() * pageBoundingBox.getHeight();
+                if (pageArea > 0) {
+                    largeImageRatio = accumulator.maxImageArea / pageArea;
+                }
+            }
+        } catch (Exception e) {
+            // DocumentProcessor may not be initialized in some test contexts
+        }
+
         return new TriageSignals(
             accumulator.lineChunkCount,
             accumulator.textChunkCount,
@@ -708,7 +781,9 @@ public class TriageProcessor {
             accumulator.tablePatternCount,
             accumulator.maxConsecutiveStreak,
             patternDensity,
-            hasConsecutivePatterns
+            hasConsecutivePatterns,
+            largeImageRatio,
+            largeImageAspectRatio
         );
     }
 
@@ -730,6 +805,8 @@ public class TriageProcessor {
         TextChunk previousTextChunk = null;
         List<TextChunk> textChunks = new ArrayList<>();
         List<double[]> shortHorizontalLines = new ArrayList<>();
+        double maxImageArea = 0.0;
+        double maxImageAspectRatio = 0.0;
 
         void processLineChunk(LineChunk lineChunk) {
             lineChunkCount++;
@@ -755,6 +832,18 @@ public class TriageProcessor {
 
         void processLineArtChunk() {
             lineArtCount++;
+        }
+
+        void processImageChunk(ImageChunk imageChunk) {
+            BoundingBox box = imageChunk.getBoundingBox();
+            double width = box.getRightX() - box.getLeftX();
+            double height = box.getTopY() - box.getBottomY();
+            double area = width * height;
+            if (area > maxImageArea) {
+                maxImageArea = area;
+                // Store aspect ratio of the largest image
+                maxImageAspectRatio = height > 0 ? width / height : 0.0;
+            }
         }
 
         void processTextChunk(TextChunk textChunk) {
