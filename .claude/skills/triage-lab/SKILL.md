@@ -205,6 +205,61 @@ This skill manages experiment records and optimization history for triage logic.
 
 ---
 
+### Experiment 004 (2026-01-03): AlignedLineGroups Signal Analysis
+
+**Goal**: Further reduce FP 55 while maintaining Recall 95.24%
+
+**Current FP by Signal** (after Experiment 003):
+| Signal | Count | % |
+|--------|-------|---|
+| hasVectorTableSignal | 23 | 41.8% |
+| hasTableBorder | 14 | 25.5% |
+| alignedLineGroups | 12 | 21.8% |
+| hasTextTablePattern | 5 | 9.1% |
+| highLineRatio | 1 | 1.8% |
+
+**VectorTableSignal Sub-signal Analysis** (23 FPs):
+| Sub-signal | Count |
+|------------|-------|
+| hasAlignedShortLines | 16 |
+| hasTableBorderLines | 10 |
+| lineArt>=8 | 8 |
+| hasRowSeparatorPattern | 7 |
+| hasGridLines | 5 |
+
+**Experiments**:
+| Config | Precision | Recall | F1 | FP | FN |
+|--------|-----------|--------|-----|-----|-----|
+| Current (Exp 003) | 42.11% | 95.24% | 58.39% | 55 | 2 |
+| 004A: NoAlignedShortLines | 44.71% | 90.48% | 59.84% | 47 | 4 |
+| 004B: Grid+BorderLines only | 45.12% | 88.10% | 59.68% | 45 | 5 |
+| **004D: No alignedLineGroups** | **48.19%** | **95.24%** | **64.00%** | **43** | **2** |
+| 004E: alignedLineGroups>=7 | 44.94% | 95.24% | 61.07% | 49 | 2 |
+| 004G: NoAlignShort+Groups>=7 | 48.10% | 90.48% | 62.81% | 41 | 4 |
+| 004I: Reliable Only | 54.41% | 88.10% | 67.27% | 31 | 5 |
+
+**Analysis**:
+- `alignedLineGroups` signal caused 12 FPs but detected no additional true tables
+- Disabling it removes all 12 FPs without any FN increase
+- Best option for maintaining Recall while improving Precision
+
+**Applied**: 004D - Disabled alignedLineGroups signal (2026-01-03)
+
+**Actual Results**:
+| Metric | Before (Exp 003) | After (Exp 004) | Change |
+|--------|------------------|-----------------|--------|
+| FP | 55 | 43 | -12 |
+| FN | 2 | 2 | 0 |
+| Precision | 42.11% | 48.19% | +6.08% |
+| Recall | 95.24% | 95.24% | 0 |
+| F1 | 58.39% | 64.00% | +5.61% |
+
+**Next Steps**:
+- Investigate `hasVectorTableSignal` FPs (23 remaining) - hasAlignedShortLines main cause
+- Investigate `hasTableBorder` FPs (14 cases, external library limitation)
+
+---
+
 ## Template for New Experiments
 
 ```markdown
