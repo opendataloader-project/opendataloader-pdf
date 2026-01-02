@@ -140,7 +140,7 @@ public class TaggedDocumentProcessor {
 
     private static void addObjectToContent(IObject object) {
         Integer pageNumber = object.getPageNumber();
-        if (pageNumber != null) {
+        if (pageNumber != null && shouldProcessPage(pageNumber)) {
             if (contentsStack.isEmpty()) {
                 contents.get(pageNumber).add(object);
             } else {

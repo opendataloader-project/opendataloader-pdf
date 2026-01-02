@@ -33,6 +33,11 @@ class PagesOptionIntegrationTest {
 
     private static final String SAMPLE_PDF = "../../samples/pdf/1901.03003.pdf";
     private static final String OUTPUT_BASENAME = "1901.03003";
+    private static final String JSON_EXT = ".json";
+    private static final String JSON_OUTPUT_EXISTS_MSG = "JSON output should exist";
+    private static final String PAGE_1_CONTENT_MSG = "Page 1 should have content";
+    private static final String PAGE_3_CONTENT_MSG = "Page 3 should have content";
+    private static final String TAGGED_PDF_NOT_FOUND_MSG = "Tagged PDF not found at ";
 
     @TempDir
     Path tempDir;
@@ -46,7 +51,7 @@ class PagesOptionIntegrationTest {
     }
 
     @Test
-    void testPagesOption_singlePage() throws IOException {
+    void testPagesOptionSinglePage() throws IOException {
         Config config = new Config();
         config.setOutputFolder(tempDir.toString());
         config.setGenerateJSON(true);
@@ -54,8 +59,8 @@ class PagesOptionIntegrationTest {
 
         DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
 
-        Path jsonOutput = tempDir.resolve(OUTPUT_BASENAME + ".json");
-        assertTrue(Files.exists(jsonOutput), "JSON output should exist");
+        Path jsonOutput = tempDir.resolve(OUTPUT_BASENAME + JSON_EXT);
+        assertTrue(Files.exists(jsonOutput), JSON_OUTPUT_EXISTS_MSG);
 
         JsonNode root = parseJson(jsonOutput);
         Set<Integer> pagesInOutput = getPageNumbersFromKids(root);
@@ -64,7 +69,7 @@ class PagesOptionIntegrationTest {
     }
 
     @Test
-    void testPagesOption_multiplePages() throws IOException {
+    void testPagesOptionMultiplePages() throws IOException {
         Config config = new Config();
         config.setOutputFolder(tempDir.toString());
         config.setGenerateJSON(true);
@@ -72,21 +77,21 @@ class PagesOptionIntegrationTest {
 
         DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
 
-        Path jsonOutput = tempDir.resolve(OUTPUT_BASENAME + ".json");
-        assertTrue(Files.exists(jsonOutput), "JSON output should exist");
+        Path jsonOutput = tempDir.resolve(OUTPUT_BASENAME + JSON_EXT);
+        assertTrue(Files.exists(jsonOutput), JSON_OUTPUT_EXISTS_MSG);
 
         JsonNode root = parseJson(jsonOutput);
         Set<Integer> pagesInOutput = getPageNumbersFromKids(root);
 
-        assertTrue(pagesInOutput.contains(1), "Page 1 should have content");
-        assertTrue(pagesInOutput.contains(3), "Page 3 should have content");
+        assertTrue(pagesInOutput.contains(1), PAGE_1_CONTENT_MSG);
+        assertTrue(pagesInOutput.contains(3), PAGE_3_CONTENT_MSG);
         assertTrue(pagesInOutput.contains(5), "Page 5 should have content");
         assertFalse(pagesInOutput.contains(2), "Page 2 should NOT have content");
         assertFalse(pagesInOutput.contains(4), "Page 4 should NOT have content");
     }
 
     @Test
-    void testPagesOption_pageRange() throws IOException {
+    void testPagesOptionPageRange() throws IOException {
         Config config = new Config();
         config.setOutputFolder(tempDir.toString());
         config.setGenerateJSON(true);
@@ -94,20 +99,20 @@ class PagesOptionIntegrationTest {
 
         DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
 
-        Path jsonOutput = tempDir.resolve(OUTPUT_BASENAME + ".json");
-        assertTrue(Files.exists(jsonOutput), "JSON output should exist");
+        Path jsonOutput = tempDir.resolve(OUTPUT_BASENAME + JSON_EXT);
+        assertTrue(Files.exists(jsonOutput), JSON_OUTPUT_EXISTS_MSG);
 
         JsonNode root = parseJson(jsonOutput);
         Set<Integer> pagesInOutput = getPageNumbersFromKids(root);
 
-        assertTrue(pagesInOutput.contains(1), "Page 1 should have content");
+        assertTrue(pagesInOutput.contains(1), PAGE_1_CONTENT_MSG);
         assertTrue(pagesInOutput.contains(2), "Page 2 should have content");
-        assertTrue(pagesInOutput.contains(3), "Page 3 should have content");
+        assertTrue(pagesInOutput.contains(3), PAGE_3_CONTENT_MSG);
         assertFalse(pagesInOutput.contains(4), "Page 4 should NOT have content");
     }
 
     @Test
-    void testPagesOption_mixedRangeAndSingle() throws IOException {
+    void testPagesOptionMixedRangeAndSingle() throws IOException {
         Config config = new Config();
         config.setOutputFolder(tempDir.toString());
         config.setGenerateJSON(true);
@@ -115,21 +120,21 @@ class PagesOptionIntegrationTest {
 
         DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
 
-        Path jsonOutput = tempDir.resolve(OUTPUT_BASENAME + ".json");
-        assertTrue(Files.exists(jsonOutput), "JSON output should exist");
+        Path jsonOutput = tempDir.resolve(OUTPUT_BASENAME + JSON_EXT);
+        assertTrue(Files.exists(jsonOutput), JSON_OUTPUT_EXISTS_MSG);
 
         JsonNode root = parseJson(jsonOutput);
         Set<Integer> pagesInOutput = getPageNumbersFromKids(root);
 
-        assertTrue(pagesInOutput.contains(1), "Page 1 should have content");
+        assertTrue(pagesInOutput.contains(1), PAGE_1_CONTENT_MSG);
         assertFalse(pagesInOutput.contains(2), "Page 2 should NOT have content");
-        assertTrue(pagesInOutput.contains(3), "Page 3 should have content");
+        assertTrue(pagesInOutput.contains(3), PAGE_3_CONTENT_MSG);
         assertTrue(pagesInOutput.contains(4), "Page 4 should have content");
         assertTrue(pagesInOutput.contains(5), "Page 5 should have content");
     }
 
     @Test
-    void testPagesOption_allPages() throws IOException {
+    void testPagesOptionAllPages() throws IOException {
         Config config = new Config();
         config.setOutputFolder(tempDir.toString());
         config.setGenerateJSON(true);
@@ -137,8 +142,8 @@ class PagesOptionIntegrationTest {
 
         DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
 
-        Path jsonOutput = tempDir.resolve(OUTPUT_BASENAME + ".json");
-        assertTrue(Files.exists(jsonOutput), "JSON output should exist");
+        Path jsonOutput = tempDir.resolve(OUTPUT_BASENAME + JSON_EXT);
+        assertTrue(Files.exists(jsonOutput), JSON_OUTPUT_EXISTS_MSG);
 
         JsonNode root = parseJson(jsonOutput);
         Set<Integer> pagesInOutput = getPageNumbersFromKids(root);
@@ -148,7 +153,7 @@ class PagesOptionIntegrationTest {
     }
 
     @Test
-    void testPagesOption_markdown() throws IOException {
+    void testPagesOptionMarkdown() throws IOException {
         Config config = new Config();
         config.setOutputFolder(tempDir.toString());
         config.setGenerateJSON(false);
@@ -169,7 +174,7 @@ class PagesOptionIntegrationTest {
     }
 
     @Test
-    void testPagesOption_exceedsDocumentPages() throws IOException {
+    void testPagesOptionExceedsDocumentPages() throws IOException {
         Config config = new Config();
         config.setOutputFolder(tempDir.toString());
         config.setGenerateJSON(true);
@@ -178,8 +183,8 @@ class PagesOptionIntegrationTest {
         // Should not throw - just warn and process existing pages
         DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
 
-        Path jsonOutput = tempDir.resolve(OUTPUT_BASENAME + ".json");
-        assertTrue(Files.exists(jsonOutput), "JSON output should exist");
+        Path jsonOutput = tempDir.resolve(OUTPUT_BASENAME + JSON_EXT);
+        assertTrue(Files.exists(jsonOutput), JSON_OUTPUT_EXISTS_MSG);
 
         JsonNode root = parseJson(jsonOutput);
         Set<Integer> pagesInOutput = getPageNumbersFromKids(root);
@@ -190,7 +195,7 @@ class PagesOptionIntegrationTest {
     }
 
     @Test
-    void testPagesOption_allPagesExceedDocument() throws IOException {
+    void testPagesOptionAllPagesExceedDocument() throws IOException {
         Config config = new Config();
         config.setOutputFolder(tempDir.toString());
         config.setGenerateJSON(true);
@@ -199,13 +204,85 @@ class PagesOptionIntegrationTest {
         // Should not throw - just warn and produce empty result
         DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
 
-        Path jsonOutput = tempDir.resolve(OUTPUT_BASENAME + ".json");
-        assertTrue(Files.exists(jsonOutput), "JSON output should exist");
+        Path jsonOutput = tempDir.resolve(OUTPUT_BASENAME + JSON_EXT);
+        assertTrue(Files.exists(jsonOutput), JSON_OUTPUT_EXISTS_MSG);
 
         JsonNode root = parseJson(jsonOutput);
         Set<Integer> pagesInOutput = getPageNumbersFromKids(root);
 
         assertTrue(pagesInOutput.isEmpty(), "No pages should have content when all requested pages don't exist");
+    }
+
+    // ===== Tagged PDF Tests (using struct-tree) =====
+
+    private static final String TAGGED_PDF = "../../samples/pdf/pdfua-1-reference-suite-1-1/PDFUA-Ref-2-04_Presentation.pdf";
+    private static final String TAGGED_OUTPUT_BASENAME = "PDFUA-Ref-2-04_Presentation";
+
+    @Test
+    void testPagesOptionTaggedPdfSinglePage() throws IOException {
+        File taggedPdf = new File(TAGGED_PDF);
+        assumeTrue(taggedPdf.exists(), TAGGED_PDF_NOT_FOUND_MSG + taggedPdf.getAbsolutePath());
+
+        Config config = new Config();
+        config.setOutputFolder(tempDir.toString());
+        config.setGenerateJSON(true);
+        config.setUseStructTree(true);
+        config.setPages("1");
+
+        DocumentProcessor.processFile(taggedPdf.getAbsolutePath(), config);
+
+        Path jsonOutput = tempDir.resolve(TAGGED_OUTPUT_BASENAME + JSON_EXT);
+        assertTrue(Files.exists(jsonOutput), JSON_OUTPUT_EXISTS_MSG);
+
+        JsonNode root = parseJson(jsonOutput);
+        Set<Integer> pagesInOutput = getPageNumbersFromKids(root);
+
+        assertEquals(Set.of(1), pagesInOutput, "Only page 1 should have content when --pages=1");
+    }
+
+    @Test
+    void testPagesOptionTaggedPdfMultiplePages() throws IOException {
+        File taggedPdf = new File(TAGGED_PDF);
+        assumeTrue(taggedPdf.exists(), TAGGED_PDF_NOT_FOUND_MSG + taggedPdf.getAbsolutePath());
+
+        Config config = new Config();
+        config.setOutputFolder(tempDir.toString());
+        config.setGenerateJSON(true);
+        config.setUseStructTree(true);
+        config.setPages("1,2");
+
+        DocumentProcessor.processFile(taggedPdf.getAbsolutePath(), config);
+
+        Path jsonOutput = tempDir.resolve(TAGGED_OUTPUT_BASENAME + JSON_EXT);
+        assertTrue(Files.exists(jsonOutput), JSON_OUTPUT_EXISTS_MSG);
+
+        JsonNode root = parseJson(jsonOutput);
+        Set<Integer> pagesInOutput = getPageNumbersFromKids(root);
+
+        assertTrue(pagesInOutput.contains(1), PAGE_1_CONTENT_MSG);
+        assertTrue(pagesInOutput.contains(2), "Page 2 should have content");
+    }
+
+    @Test
+    void testPagesOptionTaggedPdfAllPages() throws IOException {
+        File taggedPdf = new File(TAGGED_PDF);
+        assumeTrue(taggedPdf.exists(), TAGGED_PDF_NOT_FOUND_MSG + taggedPdf.getAbsolutePath());
+
+        Config config = new Config();
+        config.setOutputFolder(tempDir.toString());
+        config.setGenerateJSON(true);
+        config.setUseStructTree(true);
+        // No pages option - all pages should be processed
+
+        DocumentProcessor.processFile(taggedPdf.getAbsolutePath(), config);
+
+        Path jsonOutput = tempDir.resolve(TAGGED_OUTPUT_BASENAME + JSON_EXT);
+        assertTrue(Files.exists(jsonOutput), JSON_OUTPUT_EXISTS_MSG);
+
+        JsonNode root = parseJson(jsonOutput);
+        Set<Integer> pagesInOutput = getPageNumbersFromKids(root);
+
+        assertFalse(pagesInOutput.isEmpty(), "All pages should have content when no --pages option");
     }
 
     private JsonNode parseJson(Path jsonPath) throws IOException {
