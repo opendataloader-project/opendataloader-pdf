@@ -3,5 +3,6 @@
   "teds": 0.40,
   "mhs": 0.55,
   "table_detection_f1": 0.55,
+  "elapsed_per_doc": 2.0,
   "regression_tolerance": 0.05
 }

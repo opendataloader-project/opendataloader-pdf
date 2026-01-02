@@ -77,6 +77,18 @@ def run_benchmark(args: argparse.Namespace) -> dict:
     # Add table detection metrics to evaluation
     eval_data["table_detection"] = table_detection_metrics.to_dict()
 
+    # Step 4: Load speed metrics from summary.json
+    summary_path = prediction_root / "opendataloader" / "summary.json"
+    if summary_path.exists():
+        with summary_path.open(encoding="utf-8") as f:
+            summary_data = json.load(f)
+        eval_data["speed"] = {
+            "total_elapsed": summary_data.get("total_elapsed"),
+            "elapsed_per_doc": summary_data.get("elapsed_per_doc"),
+            "document_count": summary_data.get("document_count"),
+            "processor": summary_data.get("processor"),
+        }
+
     # Save updated evaluation
     with eval_path.open("w", encoding="utf-8") as f:
         json.dump(eval_data, f, indent=2, ensure_ascii=False)
@@ -101,6 +113,7 @@ def check_regression(eval_data: dict, thresholds_path: Path) -> bool:
 
     scores = eval_data.get("metrics", {}).get("score", {})
     table_detection = eval_data.get("table_detection", {})
+    speed = eval_data.get("speed", {})
 
     failures = []
 
@@ -124,6 +137,11 @@ def check_regression(eval_data: dict, thresholds_path: Path) -> bool:
     if td_f1 is not None and td_f1 < thresholds.get("table_detection_f1", 0):
         failures.append(f"Table Detection F1 {td_f1:.4f} < {thresholds['table_detection_f1']}")
 
+    # Check Speed (elapsed_per_doc) - higher is worse
+    elapsed_per_doc = speed.get("elapsed_per_doc")
+    if elapsed_per_doc is not None and elapsed_per_doc > thresholds.get("elapsed_per_doc", float("inf")):
+        failures.append(f"Speed {elapsed_per_doc:.2f}s/doc > {thresholds['elapsed_per_doc']}s/doc")
+
     if failures:
         logging.error("Regression detected:")
         for failure in failures:
@@ -138,6 +156,7 @@ def print_summary(eval_data: dict) -> None:
     """Print a summary of evaluation results."""
     scores = eval_data.get("metrics", {}).get("score", {})
     table_detection = eval_data.get("table_detection", {})
+    speed = eval_data.get("speed", {})
 
     print("\n" + "=" * 50)
     print("BENCHMARK RESULTS")
@@ -149,6 +168,9 @@ def print_summary(eval_data: dict) -> None:
     td_f1 = table_detection.get("f1")
     td_precision = table_detection.get("precision")
     td_recall = table_detection.get("recall")
+    elapsed_per_doc = speed.get("elapsed_per_doc")
+    total_elapsed = speed.get("total_elapsed")
+    document_count = speed.get("document_count")
 
     print(f"NID  (Reading Order):     {nid:.4f}" if nid else "NID:  N/A")
     print(f"TEDS (Table Structure):   {teds:.4f}" if teds else "TEDS: N/A")
@@ -158,6 +180,10 @@ def print_summary(eval_data: dict) -> None:
     print(f"  Precision: {td_precision:.4f}" if td_precision else "  Precision: N/A")
     print(f"  Recall:    {td_recall:.4f}" if td_recall else "  Recall: N/A")
     print(f"  F1:        {td_f1:.4f}" if td_f1 else "  F1: N/A")
+    print()
+    print("Speed:")
+    print(f"  Per Document: {elapsed_per_doc:.2f}s" if elapsed_per_doc else "  Per Document: N/A")
+    print(f"  Total:        {total_elapsed:.1f}s ({document_count} docs)" if total_elapsed else "  Total: N/A")
     print("=" * 50 + "\n")
 
 

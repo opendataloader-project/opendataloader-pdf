@@ -78,6 +78,7 @@ Use `/ai-issue` skill locally to process issues.
 - **TEDS**: Table structure accuracy (Tree Edit Distance Similarity)
 - **MHS**: Heading structure accuracy (Markdown Heading Similarity)
 - **Table Detection F1**: Table presence detection accuracy
+- **Speed**: Processing time per document (seconds/doc)
 
 ### Claude Commands
 
