@@ -8,9 +8,9 @@
 package org.opendataloader.pdf.processors;
 
 import org.opendataloader.pdf.api.Config;
-import org.opendataloader.pdf.hybrid.DoclingClient;
 import org.opendataloader.pdf.hybrid.DoclingSchemaTransformer;
 import org.opendataloader.pdf.hybrid.HybridClient;
+import org.opendataloader.pdf.hybrid.HybridClientFactory;
 import org.opendataloader.pdf.hybrid.HybridClient.HybridRequest;
 import org.opendataloader.pdf.hybrid.HybridClient.HybridResponse;
 import org.opendataloader.pdf.hybrid.HybridConfig;
@@ -309,8 +309,8 @@ public class HybridDocumentProcessor {
         LOGGER.log(Level.INFO, "Processing {0} pages via {1} backend",
             new Object[]{pageNumbers.size(), config.getHybrid()});
 
-        // Create client based on backend type
-        HybridClient client = createClient(config);
+        // Get or create cached client
+        HybridClient client = getClient(config);
 
         // Check if backend is available
         if (!client.isAvailable()) {
@@ -352,26 +352,19 @@ public class HybridDocumentProcessor {
             }
         }
 
-        // Shutdown client if it has resources to release
-        if (client instanceof DoclingClient) {
-            ((DoclingClient) client).shutdown();
-        }
+        // Note: Client is cached and reused across documents.
+        // HybridClientFactory.shutdown() should be called at CLI exit.
 
         return results;
     }
 
     /**
-     * Creates a hybrid client based on configuration.
+     * Gets or creates a hybrid client based on configuration.
+     *
+     * <p>Uses HybridClientFactory to cache and reuse clients across documents.
      */
-    private static HybridClient createClient(Config config) {
-        String hybrid = config.getHybrid();
-        HybridConfig hybridConfig = config.getHybridConfig();
-
-        if (Config.HYBRID_DOCLING.equals(hybrid)) {
-            return new DoclingClient(hybridConfig);
-        }
-
-        throw new IllegalArgumentException("Unsupported hybrid backend: " + hybrid);
+    private static HybridClient getClient(Config config) {
+        return HybridClientFactory.getOrCreate(config.getHybrid(), config.getHybridConfig());
     }
 
     /**

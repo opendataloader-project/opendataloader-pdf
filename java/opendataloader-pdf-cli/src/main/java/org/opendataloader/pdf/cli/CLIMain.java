@@ -59,8 +59,13 @@ public class CLIMain {
             return;
         }
         configureLogging(quiet);
-        for (String argument : arguments) {
-            processPath(new File(argument), config);
+        try {
+            for (String argument : arguments) {
+                processPath(new File(argument), config);
+            }
+        } finally {
+            // Release resources (e.g., hybrid client thread pools)
+            OpenDataLoaderPDF.shutdown();
         }
     }
 
