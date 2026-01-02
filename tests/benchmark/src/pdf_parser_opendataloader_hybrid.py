@@ -66,7 +66,7 @@ def to_markdown(_, input_path, output_dir):
     # Get backend URL from environment or use default
     backend_url = os.environ.get("DOCLING_URL", DEFAULT_DOCLING_URL)
     backend = os.environ.get("HYBRID_BACKEND", "docling")
-    timeout_ms = os.environ.get("HYBRID_TIMEOUT", "60000")
+    timeout_ms = os.environ.get("HYBRID_TIMEOUT", "600000")
 
     # Build command - pass input path directly (directory or file)
     command = [
