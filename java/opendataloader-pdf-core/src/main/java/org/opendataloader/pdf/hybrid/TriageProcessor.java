@@ -622,9 +622,12 @@ public class TriageProcessor {
         }
 
         // Signal 6: Grid pattern detection (aligned baselines with gaps)
-        if (signals.getAlignedLineGroups() >= thresholds.getAlignedLineGroupsThreshold()) {
-            return TriageResult.backend(pageNumber, 0.7, signals);
-        }
+        // Note: Disabled (Experiment 004D, 2026-01-03)
+        // This signal caused 12 FPs (21.8%) without detecting any additional true tables
+        // Disabling reduces FP by 12 with no FN change (Recall: 95.24% maintained)
+        // if (signals.getAlignedLineGroups() >= thresholds.getAlignedLineGroupsThreshold()) {
+        //     return TriageResult.backend(pageNumber, 0.7, signals);
+        // }
 
         // Default: Route to JAVA for simple text-only content
         return TriageResult.java(pageNumber, 0.9, signals);
