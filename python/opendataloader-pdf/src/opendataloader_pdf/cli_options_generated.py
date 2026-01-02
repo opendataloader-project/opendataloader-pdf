@@ -144,6 +144,15 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "default": "png",
         "description": "Output format for extracted images. Values: png, jpeg. Default: png",
     },
+    {
+        "name": "pages",
+        "python_name": "pages",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": None,
+        "description": "Pages to extract (e.g., \"1,3,5-7\"). Default: all pages",
+    },
 ]
 
 

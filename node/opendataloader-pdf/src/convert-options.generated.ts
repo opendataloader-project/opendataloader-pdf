@@ -35,6 +35,8 @@ export interface ConvertOptions {
   imageOutput?: string;
   /** Output format for extracted images. Values: png, jpeg. Default: png */
   imageFormat?: string;
+  /** Pages to extract (e.g., "1,3,5-7"). Default: all pages */
+  pages?: string;
 }
 
 /**
@@ -56,6 +58,7 @@ export interface CliOptions {
   htmlPageSeparator?: string;
   imageOutput?: string;
   imageFormat?: string;
+  pages?: string;
 }
 
 /**
@@ -108,6 +111,9 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   }
   if (cliOptions.imageFormat) {
     convertOptions.imageFormat = cliOptions.imageFormat;
+  }
+  if (cliOptions.pages) {
+    convertOptions.pages = cliOptions.pages;
   }
 
   return convertOptions;
@@ -175,6 +181,9 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.imageFormat) {
     args.push('--image-format', options.imageFormat);
+  }
+  if (options.pages) {
+    args.push('--pages', options.pages);
   }
 
   return args;

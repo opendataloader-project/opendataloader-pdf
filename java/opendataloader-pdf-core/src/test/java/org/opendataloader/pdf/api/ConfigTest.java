@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class ConfigTest {
@@ -213,5 +215,116 @@ class ConfigTest {
 
         config.setGenerateHtml(true);
         assertTrue(config.isGenerateHtml());
+    }
+
+    // ===== Pages Option Tests =====
+
+    @Test
+    void testDefaultPages() {
+        Config config = new Config();
+        assertNull(config.getPages());
+        assertTrue(config.getPageNumbers().isEmpty());
+    }
+
+    @Test
+    void testSetPages_singlePage() {
+        Config config = new Config();
+        config.setPages("1");
+        assertEquals("1", config.getPages());
+        assertEquals(List.of(1), config.getPageNumbers());
+    }
+
+    @Test
+    void testSetPages_commaSeparated() {
+        Config config = new Config();
+        config.setPages("1,3,5");
+        assertEquals(List.of(1, 3, 5), config.getPageNumbers());
+    }
+
+    @Test
+    void testSetPages_range() {
+        Config config = new Config();
+        config.setPages("1-5");
+        assertEquals(List.of(1, 2, 3, 4, 5), config.getPageNumbers());
+    }
+
+    @Test
+    void testSetPages_mixed() {
+        Config config = new Config();
+        config.setPages("1,3,5-7");
+        assertEquals(List.of(1, 3, 5, 6, 7), config.getPageNumbers());
+    }
+
+    @Test
+    void testSetPages_complexMixed() {
+        Config config = new Config();
+        config.setPages("1-3,5,7-9");
+        assertEquals(List.of(1, 2, 3, 5, 7, 8, 9), config.getPageNumbers());
+    }
+
+    @Test
+    void testSetPages_withSpaces() {
+        Config config = new Config();
+        config.setPages(" 1 , 3 , 5 - 7 ");
+        assertEquals(List.of(1, 3, 5, 6, 7), config.getPageNumbers());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"abc", "1-", "-5", "5-3", "0", "-1", "1,,3", "1-2-3", ""})
+    void testSetPages_invalidFormat(String invalidPages) {
+        Config config = new Config();
+        if (invalidPages.isEmpty()) {
+            // Empty string should not throw, just set as-is
+            config.setPages(invalidPages);
+            assertTrue(config.getPageNumbers().isEmpty());
+        } else {
+            assertThrows(IllegalArgumentException.class, () -> config.setPages(invalidPages));
+        }
+    }
+
+    @Test
+    void testSetPages_nullAndEmpty() {
+        Config config = new Config();
+
+        config.setPages(null);
+        assertNull(config.getPages());
+        assertTrue(config.getPageNumbers().isEmpty());
+
+        config.setPages("");
+        assertTrue(config.getPageNumbers().isEmpty());
+
+        config.setPages("   ");
+        assertTrue(config.getPageNumbers().isEmpty());
+    }
+
+    @Test
+    void testSetPages_reverseRangeThrows() {
+        Config config = new Config();
+        IllegalArgumentException exception = assertThrows(
+            IllegalArgumentException.class,
+            () -> config.setPages("5-3")
+        );
+        assertTrue(exception.getMessage().contains("start page cannot be greater than end page"));
+    }
+
+    @Test
+    void testSetPages_zeroPageThrows() {
+        Config config = new Config();
+        IllegalArgumentException exception = assertThrows(
+            IllegalArgumentException.class,
+            () -> config.setPages("0")
+        );
+        assertTrue(exception.getMessage().contains("Page numbers must be positive"));
+    }
+
+    @Test
+    void testSetPages_negativePageThrows() {
+        Config config = new Config();
+        IllegalArgumentException exception = assertThrows(
+            IllegalArgumentException.class,
+            () -> config.setPages("-1")
+        );
+        // This will throw "Invalid page range format" because "-1" looks like a range
+        assertTrue(exception.getMessage().contains("Invalid page range format"));
     }
 }
