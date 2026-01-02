@@ -14,6 +14,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
+import java.net.http.HttpClient.Version;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
@@ -25,6 +26,8 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * HTTP client for docling-serve API.
@@ -38,6 +41,8 @@ import java.util.concurrent.Executors;
  * @see HybridConfig
  */
 public class DoclingClient implements HybridClient {
+
+    private static final Logger LOGGER = Logger.getLogger(DoclingClient.class.getCanonicalName());
 
     private static final String CONVERT_ENDPOINT = "/v1/convert/file";
     private static final String HEALTH_ENDPOINT = "/health";
@@ -60,6 +65,7 @@ public class DoclingClient implements HybridClient {
         this.objectMapper = new ObjectMapper();
         this.executor = Executors.newFixedThreadPool(config.getMaxConcurrentRequests());
         this.httpClient = HttpClient.newBuilder()
+            .version(Version.HTTP_1_1)  // Use HTTP/1.1 for compatibility with docling-serve
             .connectTimeout(Duration.ofMillis(timeoutMs))
             .executor(executor)
             .build();
@@ -85,6 +91,7 @@ public class DoclingClient implements HybridClient {
     public HybridResponse convert(HybridRequest request) throws IOException {
         try {
             HttpRequest httpRequest = buildConvertRequest(request);
+            LOGGER.log(Level.FINE, "Sending request to {0}", baseUrl + CONVERT_ENDPOINT);
             HttpResponse<String> response = httpClient.send(
                 httpRequest,
                 HttpResponse.BodyHandlers.ofString()
@@ -178,12 +185,13 @@ public class DoclingClient implements HybridClient {
         writeFormField(baos, boundary, "do_table_structure", String.valueOf(request.isDoTableStructure()));
         writeFormField(baos, boundary, "do_ocr", String.valueOf(request.isDoOcr()));
 
-        // Add page range if specified
+        // Add page range if specified (docling-serve expects two separate form fields for start and end)
         if (request.getPageNumbers() != null && !request.getPageNumbers().isEmpty()) {
             int minPage = request.getPageNumbers().stream().min(Integer::compareTo).orElse(1);
             int maxPage = request.getPageNumbers().stream().max(Integer::compareTo).orElse(Integer.MAX_VALUE);
-            // Note: docling-serve uses page_range as [start, end] inclusive
-            writeFormField(baos, boundary, "page_range", "[" + minPage + "," + maxPage + "]");
+            // docling-serve page_range expects two separate form field values: start and end (inclusive)
+            writeFormField(baos, boundary, "page_range", String.valueOf(minPage));
+            writeFormField(baos, boundary, "page_range", String.valueOf(maxPage));
         }
 
         // Write closing boundary
