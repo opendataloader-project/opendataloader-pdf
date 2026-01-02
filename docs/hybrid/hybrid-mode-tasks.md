@@ -37,9 +37,9 @@ These decisions **require execution results** before they can be made.
 | Task | Status | Completed | Notes |
 |------|--------|-----------|-------|
 | Task -1: Pre-research | ✅ completed | 2026-01-02 | See docs/hybrid/research/ |
-| Task 0: docling-api skill | ⬜ not_started | - | Depends on Task -1 |
-| Task 1: schema-mapping skill | ⬜ not_started | - | Depends on Task -1 |
-| Task 2: triage-criteria skill | ⬜ not_started | - | Depends on Task -1 |
+| Task 0: docling-api skill | ✅ completed | 2026-01-02 | See .claude/skills/docling-api/ |
+| Task 1: schema-mapping skill | ✅ completed | 2026-01-02 | See .claude/skills/schema-mapping/ |
+| Task 2: triage-criteria skill | ✅ completed | 2026-01-02 | See .claude/skills/triage-criteria/ |
 | Task 3: HybridConfig | ⬜ not_started | - | - |
 | Task 4: CLI Options | ⬜ not_started | - | Depends on Task 3 |
 | Task 5: TriageProcessor | ⬜ not_started | - | Depends on Task 3 |
