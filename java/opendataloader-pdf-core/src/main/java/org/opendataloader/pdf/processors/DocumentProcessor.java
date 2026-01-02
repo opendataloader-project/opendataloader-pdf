@@ -66,9 +66,14 @@ public class DocumentProcessor {
         preprocessing(inputPdfName, config);
         calculateDocumentInfo();
         Set<Integer> pagesToProcess = getValidPageNumbers(config);
-        List<List<IObject>> contents = StaticLayoutContainers.isUseStructTree() ?
-            TaggedDocumentProcessor.processDocument(inputPdfName, config, pagesToProcess) :
-            processDocument(inputPdfName, config, pagesToProcess);
+        List<List<IObject>> contents;
+        if (StaticLayoutContainers.isUseStructTree()) {
+            contents = TaggedDocumentProcessor.processDocument(inputPdfName, config, pagesToProcess);
+        } else if (config.isHybridEnabled()) {
+            contents = HybridDocumentProcessor.processDocument(inputPdfName, config, pagesToProcess);
+        } else {
+            contents = processDocument(inputPdfName, config, pagesToProcess);
+        }
         sortContents(contents, config);
         generateOutputs(inputPdfName, contents, config);
     }
