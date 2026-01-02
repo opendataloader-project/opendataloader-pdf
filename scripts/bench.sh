@@ -2,9 +2,10 @@
 # Benchmark script for opendataloader-pdf
 #
 # Usage:
-#   ./scripts/bench.sh                      # Run full benchmark
+#   ./scripts/bench.sh                      # Run full benchmark (Java only)
 #   ./scripts/bench.sh --doc-id 01030...    # Run for specific document
 #   ./scripts/bench.sh --check-regression   # Run with regression check (CI)
+#   ./scripts/bench.sh --hybrid docling     # Run with hybrid mode (requires docling-serve)
 
 set -e
 

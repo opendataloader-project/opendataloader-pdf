@@ -44,9 +44,15 @@ def run_benchmark(args: argparse.Namespace) -> dict:
     ground_truth_dir = _resolve_path(args.ground_truth_dir, project_root)
     prediction_root = _resolve_path(args.prediction_root, project_root)
 
+    # Determine engine based on hybrid mode
+    if args.hybrid and args.hybrid != "off":
+        engine_name = f"opendataloader-hybrid-{args.hybrid}"
+    else:
+        engine_name = "opendataloader"
+
     # Step 1: Parse PDFs
-    logging.info("Starting PDF parsing with opendataloader...")
-    process_markdown("opendataloader", str(input_dir), doc_id=args.doc_id)
+    logging.info("Starting PDF parsing with %s...", engine_name)
+    process_markdown(engine_name, str(input_dir), doc_id=args.doc_id)
 
     # Step 2: Run evaluation
     logging.info("Running evaluation...")
@@ -54,7 +60,7 @@ def run_benchmark(args: argparse.Namespace) -> dict:
         str(ground_truth_dir),
         str(prediction_root),
         args.evaluation_filename,
-        target_engine="opendataloader",
+        target_engine=engine_name,
         target_doc_id=args.doc_id,
     )
 
@@ -64,7 +70,8 @@ def run_benchmark(args: argparse.Namespace) -> dict:
     # Step 3: Table detection evaluation
     logging.info("Evaluating table detection...")
     reference_path = project_root / "ground-truth" / "reference.json"
-    prediction_markdown_dir = prediction_root / "opendataloader" / "markdown"
+    prediction_engine_dir = prediction_root / engine_name
+    prediction_markdown_dir = prediction_engine_dir / "markdown"
 
     table_detection_metrics = evaluate_table_detection_batch(
         reference_path, prediction_markdown_dir
@@ -79,7 +86,7 @@ def run_benchmark(args: argparse.Namespace) -> dict:
     eval_data["table_detection"] = table_detection_metrics.to_dict()
 
     # Step 4: Load speed metrics from summary.json
-    summary_path = prediction_root / "opendataloader" / "summary.json"
+    summary_path = prediction_engine_dir / "summary.json"
     if summary_path.exists():
         with summary_path.open(encoding="utf-8") as f:
             summary_data = json.load(f)
@@ -91,8 +98,7 @@ def run_benchmark(args: argparse.Namespace) -> dict:
         }
 
     # Step 5: Triage evaluation (for hybrid mode)
-    prediction_opendataloader_dir = prediction_root / "opendataloader"
-    triage_metrics = evaluate_triage_batch(reference_path, prediction_opendataloader_dir)
+    triage_metrics = evaluate_triage_batch(reference_path, prediction_engine_dir)
     if triage_metrics.total_pages_evaluated > 0:
         eval_data["triage"] = triage_metrics.to_dict()
         logging.info("Triage evaluation: recall=%.4f, fn=%d",
@@ -265,6 +271,12 @@ def _parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         "--log-level",
         default="INFO",
         help="Logging verbosity (e.g. INFO, DEBUG)",
+    )
+    parser.add_argument(
+        "--hybrid",
+        default="off",
+        choices=["off", "docling"],
+        help="Hybrid backend: off (default), docling. Requires backend server running.",
     )
     return parser.parse_args(argv)
 
