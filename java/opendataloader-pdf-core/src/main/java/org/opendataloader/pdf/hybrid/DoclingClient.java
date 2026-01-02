@@ -42,7 +42,6 @@ public class DoclingClient implements HybridClient {
     private static final Logger LOGGER = Logger.getLogger(DoclingClient.class.getCanonicalName());
 
     private static final String CONVERT_ENDPOINT = "/v1/convert/file";
-    private static final String HEALTH_ENDPOINT = "/health";
     private static final String DEFAULT_FILENAME = "document.pdf";
     private static final MediaType MEDIA_TYPE_PDF = MediaType.parse("application/pdf");
 
@@ -97,26 +96,6 @@ public class DoclingClient implements HybridClient {
                 throw new IllegalStateException("Failed to convert", e);
             }
         });
-    }
-
-    @Override
-    public boolean isAvailable() {
-        Request request = new Request.Builder()
-            .url(baseUrl + HEALTH_ENDPOINT)
-            .get()
-            .build();
-
-        // Use a short timeout for health check
-        OkHttpClient healthClient = httpClient.newBuilder()
-            .connectTimeout(5, TimeUnit.SECONDS)
-            .readTimeout(5, TimeUnit.SECONDS)
-            .build();
-
-        try (Response response = healthClient.newCall(request).execute()) {
-            return response.isSuccessful();
-        } catch (IOException e) {
-            return false;
-        }
     }
 
     /**

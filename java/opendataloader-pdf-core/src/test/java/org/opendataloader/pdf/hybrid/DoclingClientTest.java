@@ -219,32 +219,6 @@ class DoclingClientTest {
     }
 
     @Test
-    void testIsAvailableReturnsTrue() throws Exception {
-        mockServer.enqueue(new MockResponse()
-            .setBody("{\"status\":\"ok\"}")
-            .setResponseCode(200));
-
-        DoclingClient client = createClient();
-
-        assertTrue(client.isAvailable());
-
-        client.shutdown();
-    }
-
-    @Test
-    void testIsAvailableReturnsFalseOnError() throws Exception {
-        mockServer.enqueue(new MockResponse()
-            .setBody("Service Unavailable")
-            .setResponseCode(503));
-
-        DoclingClient client = createClient();
-
-        assertFalse(client.isAvailable());
-
-        client.shutdown();
-    }
-
-    @Test
     void testGetBaseUrl() {
         HybridConfig config = new HybridConfig();
         config.setUrl("http://custom:8080");

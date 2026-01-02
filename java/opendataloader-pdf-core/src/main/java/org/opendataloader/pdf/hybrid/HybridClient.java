@@ -166,15 +166,4 @@ public interface HybridClient {
      * @return A CompletableFuture that completes with the conversion response.
      */
     CompletableFuture<HybridResponse> convertAsync(HybridRequest request);
-
-    /**
-     * Checks if the backend service is available.
-     *
-     * <p>This method performs a health check against the backend service.
-     * Implementations should return false if the service is unreachable
-     * or returns an unhealthy status.
-     *
-     * @return true if the backend is available and healthy, false otherwise.
-     */
-    boolean isAvailable();
 }
