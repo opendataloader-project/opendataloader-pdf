@@ -1,0 +1,370 @@
+{
+  "file name" : "01030000000045.pdf",
+  "number of pages" : 1,
+  "author" : null,
+  "title" : null,
+  "creation date" : null,
+  "modification date" : null,
+  "kids" : [ {
+    "type" : "paragraph",
+    "id" : 17,
+    "page number" : 1,
+    "bounding box" : [ 281.571, 551.756, 372.715, 560.694 ],
+    "font" : "ArialMT",
+    "font size" : 8.0,
+    "text color" : "[0.0, 0.0, 0.0, 0.7]",
+    "content" : "Civil Society Engagement"
+  }, {
+    "type" : "paragraph",
+    "id" : 19,
+    "page number" : 1,
+    "bounding box" : [ 54.0, 499.92, 372.727, 539.282 ],
+    "font" : "Georgia",
+    "font size" : 10.0,
+    "text color" : "[0.0, 0.0, 0.0, 1.0]",
+    "content" : "election integrity. The registration of local election observers runs until 25 May, and the NEC is still reviewing the application of nearly 5,000 observers."
+  }, {
+    "type" : "heading",
+    "id" : 20,
+    "level" : "Doctitle",
+    "page number" : 1,
+    "bounding box" : [ 54.0, 455.381, 350.475, 480.87 ],
+    "heading level" : 1,
+    "font" : "Arial-BoldMT",
+    "font size" : 11.0,
+    "text color" : "[0.0, 0.0, 0.0, 1.0]",
+    "content" : "Table: The number of accredited observers as of 28 April 202215"
+  }, {
+    "type" : "table",
+    "id" : 21,
+    "level" : "1",
+    "page number" : 1,
+    "bounding box" : [ 54.0, 234.441, 372.727, 440.212 ],
+    "number of rows" : 3,
+    "number of columns" : 3,
+    "rows" : [ {
+      "type" : "table row",
+      "row number" : 1,
+      "cells" : [ {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 54.375, 413.86, 83.52, 440.087 ],
+        "row number" : 1,
+        "column number" : 1,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 1,
+          "page number" : 1,
+          "bounding box" : [ 61.757, 427.253, 75.761, 437.307 ],
+          "font" : "ArialMT",
+          "font size" : 9.0,
+          "text color" : "[0.0, 0.0, 0.0, 1.0]",
+          "content" : "No."
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 83.52, 413.86, 273.472, 440.087 ],
+        "row number" : 1,
+        "column number" : 2,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 2,
+          "page number" : 1,
+          "bounding box" : [ 87.52, 427.253, 173.056, 437.307 ],
+          "font" : "ArialMT",
+          "font size" : 9.0,
+          "text color" : "[0.0, 0.0, 0.0, 1.0]",
+          "content" : "Name of organization"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 273.472, 413.86, 372.352, 440.087 ],
+        "row number" : 1,
+        "column number" : 3,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 3,
+          "page number" : 1,
+          "bounding box" : [ 280.08, 416.453, 366.111, 437.307 ],
+          "font" : "ArialMT",
+          "font size" : 9.0,
+          "text color" : "[0.0, 0.0, 0.0, 1.0]",
+          "content" : "Number of accredited observers"
+        } ]
+      } ]
+    }, {
+      "type" : "table row",
+      "row number" : 2,
+      "cells" : [ {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 54.375, 249.993, 83.52, 413.86 ],
+        "row number" : 2,
+        "column number" : 1,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "list",
+          "id" : 4,
+          "level" : "1",
+          "page number" : 1,
+          "bounding box" : [ 66.257, 263.386, 71.261, 410.955 ],
+          "numbering style" : "arabic numbers",
+          "number of list items" : 7,
+          "list items" : [ {
+            "type" : "list item",
+            "page number" : 1,
+            "bounding box" : [ 66.257, 400.9, 71.261, 410.955 ],
+            "font" : "ArialMT",
+            "font size" : 9.0,
+            "text color" : "[0.0, 0.0, 0.0, 1.0]",
+            "content" : "1",
+            "kids" : [ ]
+          }, {
+            "type" : "list item",
+            "page number" : 1,
+            "bounding box" : [ 66.257, 374.548, 71.261, 384.603 ],
+            "font" : "ArialMT",
+            "font size" : 9.0,
+            "text color" : "[0.0, 0.0, 0.0, 1.0]",
+            "content" : "2",
+            "kids" : [ ]
+          }, {
+            "type" : "list item",
+            "page number" : 1,
+            "bounding box" : [ 66.257, 348.196, 71.261, 358.251 ],
+            "font" : "ArialMT",
+            "font size" : 9.0,
+            "text color" : "[0.0, 0.0, 0.0, 1.0]",
+            "content" : "3",
+            "kids" : [ ]
+          }, {
+            "type" : "list item",
+            "page number" : 1,
+            "bounding box" : [ 66.257, 321.844, 71.261, 331.898 ],
+            "font" : "ArialMT",
+            "font size" : 9.0,
+            "text color" : "[0.0, 0.0, 0.0, 1.0]",
+            "content" : "4",
+            "kids" : [ ]
+          }, {
+            "type" : "list item",
+            "page number" : 1,
+            "bounding box" : [ 66.257, 295.491, 71.261, 305.546 ],
+            "font" : "ArialMT",
+            "font size" : 9.0,
+            "text color" : "[0.0, 0.0, 0.0, 1.0]",
+            "content" : "5",
+            "kids" : [ ]
+          }, {
+            "type" : "list item",
+            "page number" : 1,
+            "bounding box" : [ 66.257, 278.939, 71.261, 288.993 ],
+            "font" : "ArialMT",
+            "font size" : 9.0,
+            "text color" : "[0.0, 0.0, 0.0, 1.0]",
+            "content" : "6",
+            "kids" : [ ]
+          }, {
+            "type" : "list item",
+            "page number" : 1,
+            "bounding box" : [ 66.257, 263.386, 71.261, 273.441 ],
+            "font" : "ArialMT",
+            "font size" : 9.0,
+            "text color" : "[0.0, 0.0, 0.0, 1.0]",
+            "content" : "7",
+            "kids" : [ ]
+          } ]
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 83.52, 249.993, 273.472, 413.86 ],
+        "row number" : 2,
+        "column number" : 2,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 5,
+          "page number" : 1,
+          "bounding box" : [ 87.52, 390.1, 249.615, 410.955 ],
+          "font" : "ArialMT",
+          "font size" : 9.0,
+          "text color" : "[0.0, 0.0, 0.0, 1.0]",
+          "content" : "Union of Youth Federations of Cambodia (UYFC)"
+        }, {
+          "type" : "paragraph",
+          "id" : 6,
+          "page number" : 1,
+          "bounding box" : [ 87.52, 363.748, 225.426, 384.603 ],
+          "font" : "ArialMT",
+          "font size" : 9.0,
+          "text color" : "[0.0, 0.0, 0.0, 1.0]",
+          "content" : "Cambodian Women for Peace and Development"
+        }, {
+          "type" : "paragraph",
+          "id" : 7,
+          "page number" : 1,
+          "bounding box" : [ 87.52, 337.396, 239.584, 358.251 ],
+          "font" : "ArialMT",
+          "font size" : 9.0,
+          "text color" : "[0.0, 0.0, 0.0, 1.0]",
+          "content" : "Association of Democratic Students of Cambodia"
+        }, {
+          "type" : "paragraph",
+          "id" : 8,
+          "page number" : 1,
+          "bounding box" : [ 87.52, 311.044, 231.623, 331.898 ],
+          "font" : "ArialMT",
+          "font size" : 9.0,
+          "text color" : "[0.0, 0.0, 0.0, 1.0]",
+          "content" : "Association of Intellectual and Youth Volunteer"
+        }, {
+          "type" : "paragraph",
+          "id" : 9,
+          "page number" : 1,
+          "bounding box" : [ 87.52, 252.586, 237.745, 305.546 ],
+          "font" : "ArialMT",
+          "font size" : 9.0,
+          "text color" : "[0.0, 0.0, 0.0, 1.0]",
+          "content" : "Our Friends Association COMFREL Traditional and Modern Mental Health Organization"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 273.472, 249.993, 372.352, 413.86 ],
+        "row number" : 2,
+        "column number" : 3,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 10,
+          "page number" : 1,
+          "bounding box" : [ 309.336, 400.9, 336.858, 410.955 ],
+          "font" : "ArialMT",
+          "font size" : 9.0,
+          "text color" : "[0.0, 0.0, 0.0, 1.0]",
+          "content" : "17,266"
+        }, {
+          "type" : "paragraph",
+          "id" : 11,
+          "page number" : 1,
+          "bounding box" : [ 311.839, 374.548, 334.357, 384.603 ],
+          "font" : "ArialMT",
+          "font size" : 9.0,
+          "text color" : "[0.0, 0.0, 0.0, 1.0]",
+          "content" : "9,835"
+        }, {
+          "type" : "paragraph",
+          "id" : 12,
+          "page number" : 1,
+          "bounding box" : [ 315.926, 348.196, 329.608, 358.251 ],
+          "font" : "ArialMT",
+          "font size" : 9.0,
+          "text color" : "[0.0, 0.0, 0.0, 1.0]",
+          "content" : "711"
+        }, {
+          "type" : "paragraph",
+          "id" : 13,
+          "page number" : 1,
+          "bounding box" : [ 318.095, 321.844, 328.103, 331.898 ],
+          "font" : "ArialMT",
+          "font size" : 9.0,
+          "text color" : "[0.0, 0.0, 0.0, 1.0]",
+          "content" : "46"
+        }, {
+          "type" : "paragraph",
+          "id" : 14,
+          "page number" : 1,
+          "bounding box" : [ 318.095, 263.386, 328.103, 305.546 ],
+          "font" : "ArialMT",
+          "font size" : 9.0,
+          "text color" : "[0.0, 0.0, 0.0, 1.0]",
+          "content" : "27 26 15"
+        } ]
+      } ]
+    }, {
+      "type" : "table row",
+      "row number" : 3,
+      "cells" : [ {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 54.375, 234.566, 83.52, 249.993 ],
+        "row number" : 3,
+        "column number" : 1,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 83.52, 234.566, 273.472, 249.993 ],
+        "row number" : 3,
+        "column number" : 2,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 15,
+          "page number" : 1,
+          "bounding box" : [ 87.52, 237.034, 108.351, 247.089 ],
+          "font" : "Arial-BoldMT",
+          "font size" : 9.0,
+          "text color" : "[0.0, 0.0, 0.0, 1.0]",
+          "content" : "Total"
+        } ]
+      }, {
+        "type" : "table cell",
+        "page number" : 1,
+        "bounding box" : [ 273.472, 234.566, 372.352, 249.993 ],
+        "row number" : 3,
+        "column number" : 3,
+        "row span" : 1,
+        "column span" : 1,
+        "kids" : [ {
+          "type" : "paragraph",
+          "id" : 16,
+          "page number" : 1,
+          "bounding box" : [ 309.336, 237.034, 336.858, 247.089 ],
+          "font" : "Arial-BoldMT",
+          "font size" : 9.0,
+          "text color" : "[0.0, 0.0, 0.0, 1.0]",
+          "content" : "27,926"
+        } ]
+      } ]
+    } ]
+  }, {
+    "type" : "image",
+    "id" : 22,
+    "page number" : 1,
+    "bounding box" : [ 54.0, 68.275, 126.0, 68.525 ]
+  }, {
+    "type" : "paragraph",
+    "id" : 23,
+    "page number" : 1,
+    "bounding box" : [ 54.0, 52.729, 185.287, 59.432 ],
+    "font" : "ArialMT",
+    "font size" : 6.0,
+    "text color" : "[0.86, 0.57, 0.0, 0.16]",
+    "content" : "15 https://www.nec.gov.kh/khmer/content/5524"
+  }, {
+    "type" : "paragraph",
+    "id" : 18,
+    "page number" : 1,
+    "bounding box" : [ 363.829, 34.305, 372.725, 43.242 ],
+    "font" : "ArialMT",
+    "font size" : 8.0,
+    "text color" : "[0.0, 0.0, 0.0, 0.75]",
+    "content" : "17"
+  } ]
+}
