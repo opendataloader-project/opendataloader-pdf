@@ -4,5 +4,7 @@
   "mhs": 0.55,
   "table_detection_f1": 0.55,
   "elapsed_per_doc": 2.0,
-  "regression_tolerance": 0.05
+  "regression_tolerance": 0.05,
+  "triage_recall": 0.95,
+  "triage_fn_max": 5
 }

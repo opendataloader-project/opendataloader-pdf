@@ -23,6 +23,7 @@ from evaluator import (
     run as evaluate_run,
 )
 from evaluator_table_detection import evaluate_table_detection_batch
+from evaluator_triage import evaluate_triage_batch, print_triage_summary
 from pdf_parser import DEFAULT_INPUT_DIR, process_markdown
 
 
@@ -89,6 +90,14 @@ def run_benchmark(args: argparse.Namespace) -> dict:
             "processor": summary_data.get("processor"),
         }
 
+    # Step 5: Triage evaluation (for hybrid mode)
+    prediction_opendataloader_dir = prediction_root / "opendataloader"
+    triage_metrics = evaluate_triage_batch(reference_path, prediction_opendataloader_dir)
+    if triage_metrics.total_pages_evaluated > 0:
+        eval_data["triage"] = triage_metrics.to_dict()
+        logging.info("Triage evaluation: recall=%.4f, fn=%d",
+                     triage_metrics.recall or 0, triage_metrics.fn_count)
+
     # Save updated evaluation
     with eval_path.open("w", encoding="utf-8") as f:
         json.dump(eval_data, f, indent=2, ensure_ascii=False)
@@ -142,6 +151,18 @@ def check_regression(eval_data: dict, thresholds_path: Path) -> bool:
     if elapsed_per_doc is not None and elapsed_per_doc > thresholds.get("elapsed_per_doc", float("inf")):
         failures.append(f"Speed {elapsed_per_doc:.2f}s/doc > {thresholds['elapsed_per_doc']}s/doc")
 
+    # Check Triage metrics (only if triage data exists)
+    triage = eval_data.get("triage", {})
+    if triage:
+        triage_recall = triage.get("recall")
+        if triage_recall is not None and triage_recall < thresholds.get("triage_recall", 0):
+            failures.append(f"Triage Recall {triage_recall:.4f} < {thresholds['triage_recall']}")
+
+        triage_fn = triage.get("fn_count", 0)
+        triage_fn_max = thresholds.get("triage_fn_max")
+        if triage_fn_max is not None and triage_fn > triage_fn_max:
+            failures.append(f"Triage FN {triage_fn} > {triage_fn_max}")
+
     if failures:
         logging.error("Regression detected:")
         for failure in failures:
@@ -157,6 +178,7 @@ def print_summary(eval_data: dict) -> None:
     scores = eval_data.get("metrics", {}).get("score", {})
     table_detection = eval_data.get("table_detection", {})
     speed = eval_data.get("speed", {})
+    triage = eval_data.get("triage", {})
 
     print("\n" + "=" * 50)
     print("BENCHMARK RESULTS")
@@ -184,6 +206,19 @@ def print_summary(eval_data: dict) -> None:
     print("Speed:")
     print(f"  Per Document: {elapsed_per_doc:.2f}s" if elapsed_per_doc else "  Per Document: N/A")
     print(f"  Total:        {total_elapsed:.1f}s ({document_count} docs)" if total_elapsed else "  Total: N/A")
+
+    # Print triage results if available
+    if triage:
+        print()
+        print("Triage (Hybrid Mode):")
+        tr_recall = triage.get("recall")
+        tr_fn = triage.get("fn_count", 0)
+        tr_precision = triage.get("precision")
+        print(f"  Recall:    {tr_recall:.4f}" if tr_recall is not None else "  Recall: N/A")
+        print(f"  Precision: {tr_precision:.4f}" if tr_precision is not None else "  Precision: N/A")
+        print(f"  FN (missed tables): {tr_fn}")
+        print(f"  Pages: {triage.get('java_pages', 0)} JAVA, {triage.get('backend_pages', 0)} BACKEND")
+
     print("=" * 50 + "\n")
 
 
