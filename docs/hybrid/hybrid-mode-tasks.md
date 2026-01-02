@@ -46,7 +46,7 @@ These decisions **require execution results** before they can be made.
 | Task 6: DoclingClient | ✅ completed | 2026-01-02 | See java/.../hybrid/DoclingClient.java |
 | Task 7: SchemaTransformer | ✅ completed | 2026-01-02 | See java/.../hybrid/DoclingSchemaTransformer.java |
 | Task 8: HybridDocumentProcessor | ✅ completed | 2026-01-02 | See java/.../processors/HybridDocumentProcessor.java |
-| Task 9: Triage Logging | ⬜ not_started | - | Depends on Task 8 |
+| Task 9: Triage Logging | ✅ completed | 2026-01-02 | See java/.../hybrid/TriageLogger.java |
 | Task 10: Triage Evaluator | ⬜ not_started | - | Depends on Task 9 |
 | Task 11: Triage Analyzer Agent | ⬜ not_started | - | Depends on Task 2, 10 |
 
