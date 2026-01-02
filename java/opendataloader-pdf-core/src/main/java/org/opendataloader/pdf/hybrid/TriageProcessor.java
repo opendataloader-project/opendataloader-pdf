@@ -41,7 +41,9 @@ public class TriageProcessor {
     public static final double DEFAULT_LINE_RATIO_THRESHOLD = 0.3;
 
     /** Default minimum aligned line groups to trigger BACKEND routing. */
-    public static final int DEFAULT_ALIGNED_LINE_GROUPS_THRESHOLD = 3;
+    // Note: Increased from 3 to 5 (Experiment 002, 2026-01-03)
+    // Threshold 3 caused 10 FPs from normal documents with aligned baselines
+    public static final int DEFAULT_ALIGNED_LINE_GROUPS_THRESHOLD = 5;
 
     /** Default gap multiplier for grid pattern detection (relative to text height). */
     public static final double DEFAULT_GRID_GAP_MULTIPLIER = 3.0;
