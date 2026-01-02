@@ -34,8 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -232,37 +230,21 @@ public class HybridDocumentProcessor {
         }
 
         // Process each page through the standard Java pipeline
-        ExecutorService executor = Executors.newFixedThreadPool(
-            Math.min(pageNumbers.size(), Runtime.getRuntime().availableProcessors())
-        );
-
-        try {
-            List<CompletableFuture<Void>> futures = new ArrayList<>();
-
-            for (int pageNumber : pageNumbers) {
-                final int pn = pageNumber;
-                futures.add(CompletableFuture.runAsync(() -> {
-                    try {
-                        List<IObject> pageContents = workingContents.get(pn);
-                        pageContents = TableBorderProcessor.processTableBorders(pageContents, pn);
-                        pageContents = pageContents.stream()
-                            .filter(x -> !(x instanceof LineChunk))
-                            .collect(Collectors.toList());
-                        pageContents = TextLineProcessor.processTextLines(pageContents);
-                        pageContents = SpecialTableProcessor.detectSpecialTables(pageContents);
-                        workingContents.set(pn, pageContents);
-                    } catch (Exception e) {
-                        LOGGER.log(Level.WARNING, "Error processing page {0}: {1}",
-                            new Object[]{pn, e.getMessage()});
-                    }
-                }, executor));
+        // Note: Sequential processing is required because StaticContainers uses ThreadLocal
+        for (int pageNumber : pageNumbers) {
+            try {
+                List<IObject> pageContents = workingContents.get(pageNumber);
+                pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber);
+                pageContents = pageContents.stream()
+                    .filter(x -> !(x instanceof LineChunk))
+                    .collect(Collectors.toList());
+                pageContents = TextLineProcessor.processTextLines(pageContents);
+                pageContents = SpecialTableProcessor.detectSpecialTables(pageContents);
+                workingContents.set(pageNumber, pageContents);
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, "Error processing page {0}: {1}",
+                    new Object[]{pageNumber, e.getMessage()});
             }
-
-            // Wait for all page processing to complete
-            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
-
-        } finally {
-            executor.shutdown();
         }
 
         // Apply cross-page processing for Java pages only
