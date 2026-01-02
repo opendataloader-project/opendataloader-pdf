@@ -1,0 +1,20 @@
+[project]
+name = "opendataloader-benchmark"
+version = "0.1.0"
+description = "Benchmark suite for opendataloader-pdf"
+requires-python = ">=3.11"
+dependencies = [
+    "apted>=1.0.3",
+    "beautifulsoup4>=4.12.0",
+    "lxml>=5.0.0",
+    "py-cpuinfo>=9.0.0",
+    "rapidfuzz>=3.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+]
+
+[tool.uv]
+package = false
