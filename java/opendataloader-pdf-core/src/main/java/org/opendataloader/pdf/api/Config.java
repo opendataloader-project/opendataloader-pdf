@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import org.opendataloader.pdf.hybrid.HybridConfig;
+
 /**
  * Configuration class for the PDF processing.
  * Use this class to specify output formats, text processing options, and other settings.
@@ -23,6 +25,18 @@ public class Config {
     /** Reading order option: XY-Cut++ algorithm for layout-aware sorting. */
     public static final String READING_ORDER_XYCUT = "xycut";
     private static Set<String> readingOrderOptions = new HashSet<>();
+
+    /** Hybrid mode: off (Java-only processing, no external dependency). */
+    public static final String HYBRID_OFF = "off";
+    /** Hybrid mode: docling backend (docling-serve REST API). */
+    public static final String HYBRID_DOCLING = "docling";
+    /** Hybrid mode: hancom backend (Hancom Document AI). */
+    public static final String HYBRID_HANCOM = "hancom";
+    /** Hybrid mode: azure backend (Azure Document Intelligence). */
+    public static final String HYBRID_AZURE = "azure";
+    /** Hybrid mode: google backend (Google Document AI). */
+    public static final String HYBRID_GOOGLE = "google";
+    private static Set<String> hybridOptions = new HashSet<>();
     /** Placeholder string for page number in separators. */
     public static final String PAGE_NUMBER_STRING = "%page-number%";
     private String password;
@@ -47,6 +61,8 @@ public class Config {
     private String pages;
     private List<Integer> cachedPageNumbers;
     private final FilterConfig filterConfig = new FilterConfig();
+    private String hybrid = HYBRID_OFF;
+    private final HybridConfig hybridConfig = new HybridConfig();
 
     /** Table detection method: default (border-based detection). */
     public static final String TABLE_METHOD_DEFAULT = "default";
@@ -78,6 +94,9 @@ public class Config {
         imageOutputOptions.add(IMAGE_OUTPUT_OFF);
         imageOutputOptions.add(IMAGE_OUTPUT_EMBEDDED);
         imageOutputOptions.add(IMAGE_OUTPUT_EXTERNAL);
+        hybridOptions.add(HYBRID_OFF);
+        hybridOptions.add(HYBRID_DOCLING);
+        // hancom, azure, google added when implemented
     }
 
     /**
@@ -679,6 +698,68 @@ public class Config {
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException(String.format(INVALID_PAGE_RANGE_FORMAT, fullInput));
         }
+    }
+
+    /**
+     * Gets the hybrid backend name.
+     *
+     * @return The hybrid backend (off, docling, hancom, azure, google).
+     */
+    public String getHybrid() {
+        return hybrid;
+    }
+
+    /**
+     * Sets the hybrid backend.
+     *
+     * @param hybrid The hybrid backend (off, docling, hancom, azure, google).
+     * @throws IllegalArgumentException if the backend is not supported.
+     */
+    public void setHybrid(String hybrid) {
+        if (hybrid != null && !isValidHybrid(hybrid)) {
+            throw new IllegalArgumentException(
+                String.format("Unsupported hybrid backend '%s'. Supported values: %s",
+                    hybrid, getHybridOptions(", ")));
+        }
+        this.hybrid = hybrid != null ? hybrid.toLowerCase(Locale.ROOT) : HYBRID_OFF;
+    }
+
+    /**
+     * Gets the list of supported hybrid backend options.
+     *
+     * @param delimiter The delimiter to use between options.
+     * @return The string with hybrid backends separated by the delimiter.
+     */
+    public static String getHybridOptions(CharSequence delimiter) {
+        return String.join(delimiter, hybridOptions);
+    }
+
+    /**
+     * Checks if the given hybrid backend is valid.
+     *
+     * @param hybrid The hybrid backend to check.
+     * @return true if the backend is valid, false otherwise.
+     */
+    public static boolean isValidHybrid(String hybrid) {
+        return hybrid != null && hybridOptions.contains(hybrid.toLowerCase(Locale.ROOT));
+    }
+
+    /**
+     * Checks if hybrid processing is enabled.
+     *
+     * @return true if hybrid mode is not off, false otherwise.
+     */
+    public boolean isHybridEnabled() {
+        return !HYBRID_OFF.equals(hybrid);
+    }
+
+    /**
+     * Gets the hybrid configuration.
+     *
+     * @return The HybridConfig instance.
+     */
+    public HybridConfig getHybridConfig() {
+        return hybridConfig;
     }
 
 }

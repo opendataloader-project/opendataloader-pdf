@@ -40,8 +40,8 @@ These decisions **require execution results** before they can be made.
 | Task 0: docling-api skill | ✅ completed | 2026-01-02 | See .claude/skills/docling-api/ |
 | Task 1: schema-mapping skill | ✅ completed | 2026-01-02 | See .claude/skills/schema-mapping/ |
 | Task 2: triage-criteria skill | ✅ completed | 2026-01-02 | See .claude/skills/triage-criteria/ |
-| Task 3: HybridConfig | ⬜ not_started | - | - |
-| Task 4: CLI Options | ⬜ not_started | - | Depends on Task 3 |
+| Task 3: HybridConfig | ✅ completed | 2026-01-02 | See java/.../hybrid/HybridConfig.java |
+| Task 4: CLI Options | ✅ completed | 2026-01-02 | See java/.../cli/CLIOptions.java |
 | Task 5: TriageProcessor | ⬜ not_started | - | Depends on Task 3 |
 | Task 6: DoclingClient | ⬜ not_started | - | Depends on Task 0, 3 |
 | Task 7: SchemaTransformer | ⬜ not_started | - | Depends on Task 1, 6 |
