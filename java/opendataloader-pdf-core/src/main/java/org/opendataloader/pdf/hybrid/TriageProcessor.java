@@ -864,18 +864,14 @@ public class TriageProcessor {
             if (current.isWhiteSpaceChunk()) {
                 continue;
             }
-            if (previous != null) {
-                // Check if text chunks are on the same line with large gap
-                if (areOnSameBaseline(previous, current)) {
-                    double gap = current.getLeftX() - previous.getRightX();
-                    double avgHeight = (previous.getHeight() + current.getHeight()) / 2.0;
-                    // Gap larger than 3x text height suggests table columns
-                    if (gap > avgHeight * 3.0) {
-                        return true;
-                    }
-                }
-                // Check for overlapping Y coordinates (out of reading order)
-                if (previous.getTopY() < current.getBottomY()) {
+            // Check if text chunks are on the same line with large gap
+            // Note: Y-overlap check removed (Experiment 001, 2026-01-03)
+            // The condition `previous.getTopY() < current.getBottomY()` caused 59% of FPs
+            if (previous != null && areOnSameBaseline(previous, current)) {
+                double gap = current.getLeftX() - previous.getRightX();
+                double avgHeight = (previous.getHeight() + current.getHeight()) / 2.0;
+                // Gap larger than 3x text height suggests table columns
+                if (gap > avgHeight * 3.0) {
                     return true;
                 }
             }
