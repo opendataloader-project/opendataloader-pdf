@@ -21,10 +21,10 @@ API Endpoints:
 
 The /v1/convert/file endpoint accepts the same parameters as docling-serve:
     - files: PDF file (multipart/form-data)
-    - to_formats: Output formats (md, json)
-    - do_ocr: Enable OCR (default: true)
-    - do_table_structure: Enable table detection (default: true)
+    - to_formats: Output formats (md, json, html)
     - page_range: Page range to process (optional)
+
+Note: OCR and table structure detection are always enabled (fixed at startup).
 """
 
 import argparse
@@ -101,22 +101,20 @@ def health():
 async def convert_file(
     files: UploadFile = File(...),
     to_formats: List[str] = Form(default=["md", "json"]),
-    do_ocr: str = Form(default="true"),
-    do_table_structure: str = Form(default="true"),
     page_ranges: Optional[str] = Form(default=None),
-    image_export_mode: str = Form(default="placeholder"),
 ):
-    """Convert PDF file to markdown and/or JSON.
+    """Convert PDF file to markdown, JSON, and/or HTML.
 
     This endpoint is compatible with docling-serve API.
 
+    Note: OCR and table structure detection are always enabled.
+    The DocumentConverter is initialized once at startup with fixed options
+    for optimal performance.
+
     Args:
         files: The PDF file to convert
-        to_formats: Output formats (md, json)
-        do_ocr: Whether to perform OCR (default: true)
-        do_table_structure: Whether to detect table structure (default: true)
+        to_formats: Output formats (md, json, html)
         page_ranges: Page range string "start-end" (e.g., "1-5") (optional)
-        image_export_mode: How to handle images (placeholder, embedded, etc.)
 
     Returns:
         JSON response with document content in the requested formats.
@@ -156,6 +154,7 @@ async def convert_file(
         # Export to requested formats
         md_content = ""
         json_content = None
+        html_content = ""
 
         if "md" in to_formats:
             md_content = result.document.export_to_markdown()
@@ -164,12 +163,16 @@ async def convert_file(
             # Export to dict for JSON response
             json_content = result.document.export_to_dict()
 
+        if "html" in to_formats:
+            html_content = result.document.export_to_html()
+
         # Build response compatible with docling-serve format
         response = {
             "status": "success",
             "document": {
                 "md_content": md_content,
                 "json_content": json_content,
+                "html_content": html_content,
             },
             "processing_time": processing_time,
         }

@@ -119,12 +119,14 @@ public class DoclingFastServerClient implements HybridClient {
         MultipartBody.Builder bodyBuilder = new MultipartBody.Builder()
             .setType(MultipartBody.FORM)
             .addFormDataPart("files", DEFAULT_FILENAME,
-                RequestBody.create(request.getPdfBytes(), MEDIA_TYPE_PDF))
-            .addFormDataPart("to_formats", "json")
-            .addFormDataPart("to_formats", "md")
-            .addFormDataPart("do_table_structure", String.valueOf(request.isDoTableStructure()))
-            .addFormDataPart("do_ocr", String.valueOf(request.isDoOcr()))
-            .addFormDataPart("image_export_mode", "placeholder");
+                RequestBody.create(request.getPdfBytes(), MEDIA_TYPE_PDF));
+
+        // Add only requested output formats
+        for (HybridClient.OutputFormat format : request.getOutputFormats()) {
+            bodyBuilder.addFormDataPart("to_formats", format.getApiValue());
+        }
+
+        LOGGER.log(Level.FINE, "Requesting formats: {0}", request.getOutputFormats());
 
         // Add page range if specified
         if (request.getPageNumbers() != null && !request.getPageNumbers().isEmpty()) {
@@ -174,12 +176,13 @@ public class DoclingFastServerClient implements HybridClient {
         }
 
         String markdown = extractString(documentNode, "md_content");
+        String html = extractString(documentNode, "html_content");
         JsonNode jsonContent = documentNode.get("json_content");
 
         // Extract per-page content from json_content if available
         Map<Integer, JsonNode> pageContents = extractPageContents(jsonContent);
 
-        return new HybridResponse(markdown, jsonContent, pageContents);
+        return new HybridResponse(markdown, html, jsonContent, pageContents);
     }
 
     /**
