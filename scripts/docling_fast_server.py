@@ -32,6 +32,7 @@ import os
 import sys
 import tempfile
 import time
+from contextlib import asynccontextmanager
 from typing import List, Optional
 
 import uvicorn
@@ -52,10 +53,24 @@ from docling.document_converter import DocumentConverter, PdfFormatOption
 DEFAULT_HOST = "0.0.0.0"
 DEFAULT_PORT = 5002
 
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """Lifespan context manager for startup and shutdown events."""
+    global converter
+    print("Initializing DocumentConverter...", flush=True)
+    start = time.perf_counter()
+    converter = create_converter()
+    elapsed = time.perf_counter() - start
+    print(f"DocumentConverter initialized in {elapsed:.2f}s", flush=True)
+    yield
+    # Cleanup on shutdown (if needed)
+
+
 app = FastAPI(
     title="Docling Fast Server",
     description="Fast PDF conversion using docling SDK with singleton pattern",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 # Global converter instance (initialized on startup)
@@ -78,17 +93,6 @@ def create_converter(do_ocr: bool = True, do_table_structure: bool = True) -> Do
             InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)
         }
     )
-
-
-@app.on_event("startup")
-async def startup_event():
-    """Initialize DocumentConverter on server startup."""
-    global converter
-    print("Initializing DocumentConverter...", flush=True)
-    start = time.perf_counter()
-    converter = create_converter()
-    elapsed = time.perf_counter() - start
-    print(f"DocumentConverter initialized in {elapsed:.2f}s", flush=True)
 
 
 @app.get("/health")
