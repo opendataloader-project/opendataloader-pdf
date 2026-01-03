@@ -28,9 +28,7 @@ public class Config {
 
     /** Hybrid mode: off (Java-only processing, no external dependency). */
     public static final String HYBRID_OFF = "off";
-    /** Hybrid mode: docling backend (docling-serve REST API). */
-    public static final String HYBRID_DOCLING = "docling";
-    /** Hybrid mode: docling-fast backend (optimized FastAPI server, 3.3x faster). */
+    /** Hybrid mode: docling-fast backend (optimized FastAPI server). */
     public static final String HYBRID_DOCLING_FAST = "docling-fast";
     /** Hybrid mode: hancom backend (Hancom Document AI). */
     public static final String HYBRID_HANCOM = "hancom";
@@ -97,7 +95,6 @@ public class Config {
         imageOutputOptions.add(IMAGE_OUTPUT_EMBEDDED);
         imageOutputOptions.add(IMAGE_OUTPUT_EXTERNAL);
         hybridOptions.add(HYBRID_OFF);
-        hybridOptions.add(HYBRID_DOCLING);
         hybridOptions.add(HYBRID_DOCLING_FAST);
         // hancom, azure, google added when implemented
     }
