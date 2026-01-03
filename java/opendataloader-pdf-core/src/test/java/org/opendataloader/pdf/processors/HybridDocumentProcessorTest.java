@@ -10,11 +10,14 @@ package org.opendataloader.pdf.processors;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.hybrid.HybridClient.HybridRequest;
+import org.opendataloader.pdf.hybrid.HybridClient.OutputFormat;
 import org.opendataloader.pdf.hybrid.HybridConfig;
 import org.opendataloader.pdf.hybrid.TriageProcessor.TriageDecision;
 import org.opendataloader.pdf.hybrid.TriageProcessor.TriageResult;
 import org.opendataloader.pdf.hybrid.TriageProcessor.TriageSignals;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -204,5 +207,101 @@ public class HybridDocumentProcessorTest {
     // Helper method matching HybridDocumentProcessor logic
     private static boolean shouldProcessPage(int pageNumber, Set<Integer> pagesToProcess) {
         return pagesToProcess == null || pagesToProcess.contains(pageNumber);
+    }
+
+    // ===== OutputFormat Tests =====
+
+    @Test
+    public void testOutputFormatApiValue() {
+        Assertions.assertEquals("json", OutputFormat.JSON.getApiValue());
+        Assertions.assertEquals("md", OutputFormat.MARKDOWN.getApiValue());
+        Assertions.assertEquals("html", OutputFormat.HTML.getApiValue());
+    }
+
+    @Test
+    public void testHybridRequestDefaultOutputFormats() {
+        byte[] pdfBytes = new byte[]{1, 2, 3};
+        HybridRequest request = HybridRequest.allPages(pdfBytes);
+
+        // Default should include all formats
+        Set<OutputFormat> formats = request.getOutputFormats();
+        Assertions.assertEquals(3, formats.size());
+        Assertions.assertTrue(formats.contains(OutputFormat.JSON));
+        Assertions.assertTrue(formats.contains(OutputFormat.MARKDOWN));
+        Assertions.assertTrue(formats.contains(OutputFormat.HTML));
+        Assertions.assertTrue(request.wantsJson());
+        Assertions.assertTrue(request.wantsMarkdown());
+        Assertions.assertTrue(request.wantsHtml());
+    }
+
+    @Test
+    public void testHybridRequestWithJsonOnly() {
+        byte[] pdfBytes = new byte[]{1, 2, 3};
+        Set<OutputFormat> jsonOnly = EnumSet.of(OutputFormat.JSON);
+        HybridRequest request = HybridRequest.allPages(pdfBytes, jsonOnly);
+
+        Set<OutputFormat> formats = request.getOutputFormats();
+        Assertions.assertEquals(1, formats.size());
+        Assertions.assertTrue(formats.contains(OutputFormat.JSON));
+        Assertions.assertFalse(formats.contains(OutputFormat.MARKDOWN));
+        Assertions.assertTrue(request.wantsJson());
+        Assertions.assertFalse(request.wantsMarkdown());
+    }
+
+    @Test
+    public void testHybridRequestWithMarkdownOnly() {
+        byte[] pdfBytes = new byte[]{1, 2, 3};
+        Set<OutputFormat> mdOnly = EnumSet.of(OutputFormat.MARKDOWN);
+        HybridRequest request = HybridRequest.allPages(pdfBytes, mdOnly);
+
+        Set<OutputFormat> formats = request.getOutputFormats();
+        Assertions.assertEquals(1, formats.size());
+        Assertions.assertFalse(formats.contains(OutputFormat.JSON));
+        Assertions.assertTrue(formats.contains(OutputFormat.MARKDOWN));
+        Assertions.assertFalse(request.wantsJson());
+        Assertions.assertTrue(request.wantsMarkdown());
+    }
+
+    @Test
+    public void testHybridRequestEmptyFormatsFallsBackToAll() {
+        byte[] pdfBytes = new byte[]{1, 2, 3};
+        Set<OutputFormat> empty = EnumSet.noneOf(OutputFormat.class);
+        HybridRequest request = HybridRequest.allPages(pdfBytes, empty);
+
+        // Empty should fallback to all formats
+        Set<OutputFormat> formats = request.getOutputFormats();
+        Assertions.assertEquals(3, formats.size());
+        Assertions.assertTrue(formats.contains(OutputFormat.JSON));
+        Assertions.assertTrue(formats.contains(OutputFormat.MARKDOWN));
+        Assertions.assertTrue(formats.contains(OutputFormat.HTML));
+    }
+
+    @Test
+    public void testHybridRequestNullFormatsFallsBackToAll() {
+        byte[] pdfBytes = new byte[]{1, 2, 3};
+        HybridRequest request = HybridRequest.allPages(pdfBytes, null);
+
+        // null should fallback to all formats
+        Set<OutputFormat> formats = request.getOutputFormats();
+        Assertions.assertEquals(3, formats.size());
+        Assertions.assertTrue(formats.contains(OutputFormat.JSON));
+        Assertions.assertTrue(formats.contains(OutputFormat.MARKDOWN));
+        Assertions.assertTrue(formats.contains(OutputFormat.HTML));
+    }
+
+    @Test
+    public void testHybridRequestWithHtmlOnly() {
+        byte[] pdfBytes = new byte[]{1, 2, 3};
+        Set<OutputFormat> htmlOnly = EnumSet.of(OutputFormat.HTML);
+        HybridRequest request = HybridRequest.allPages(pdfBytes, htmlOnly);
+
+        Set<OutputFormat> formats = request.getOutputFormats();
+        Assertions.assertEquals(1, formats.size());
+        Assertions.assertFalse(formats.contains(OutputFormat.JSON));
+        Assertions.assertFalse(formats.contains(OutputFormat.MARKDOWN));
+        Assertions.assertTrue(formats.contains(OutputFormat.HTML));
+        Assertions.assertFalse(request.wantsJson());
+        Assertions.assertFalse(request.wantsMarkdown());
+        Assertions.assertTrue(request.wantsHtml());
     }
 }

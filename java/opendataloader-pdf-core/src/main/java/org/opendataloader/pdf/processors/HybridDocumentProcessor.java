@@ -14,6 +14,7 @@ import org.opendataloader.pdf.hybrid.HybridClient;
 import org.opendataloader.pdf.hybrid.HybridClientFactory;
 import org.opendataloader.pdf.hybrid.HybridClient.HybridRequest;
 import org.opendataloader.pdf.hybrid.HybridClient.HybridResponse;
+import org.opendataloader.pdf.hybrid.HybridClient.OutputFormat;
 import org.opendataloader.pdf.hybrid.HybridConfig;
 import org.opendataloader.pdf.hybrid.HybridSchemaTransformer;
 import org.opendataloader.pdf.hybrid.TriageLogger;
@@ -29,6 +30,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -292,8 +294,11 @@ public class HybridDocumentProcessor {
         // Read PDF bytes
         byte[] pdfBytes = Files.readAllBytes(Path.of(inputPdfName));
 
+        // Determine required output formats based on config
+        Set<OutputFormat> outputFormats = determineOutputFormats(config);
+
         // Make API request for all pages (avoids per-chunk overhead)
-        HybridRequest request = HybridRequest.allPages(pdfBytes);
+        HybridRequest request = HybridRequest.allPages(pdfBytes, outputFormats);
         HybridResponse response = client.convert(request);
 
         // Get page heights for coordinate transformation
@@ -412,6 +417,36 @@ public class HybridDocumentProcessor {
      */
     private static boolean shouldProcessPage(int pageNumber, Set<Integer> pagesToProcess) {
         return pagesToProcess == null || pagesToProcess.contains(pageNumber);
+    }
+
+    /**
+     * Determines the output formats to request from the hybrid backend based on config.
+     *
+     * <p>JSON is always required for structured element extraction (tables, headings, etc.).
+     * Markdown and HTML are only requested if needed for output.
+     *
+     * @param config The configuration settings.
+     * @return Set of output formats to request.
+     */
+    private static Set<OutputFormat> determineOutputFormats(Config config) {
+        Set<OutputFormat> formats = EnumSet.noneOf(OutputFormat.class);
+
+        // JSON is always needed for structured element extraction
+        // (tables, figures, headings are extracted from JSON)
+        formats.add(OutputFormat.JSON);
+
+        // Request markdown only if needed for output
+        if (config.isGenerateMarkdown() || config.isGenerateText()) {
+            formats.add(OutputFormat.MARKDOWN);
+        }
+
+        // Request HTML only if needed for output
+        if (config.isGenerateHtml()) {
+            formats.add(OutputFormat.HTML);
+        }
+
+        LOGGER.log(Level.FINE, "Determined output formats: {0}", formats);
+        return formats;
     }
 
     /**
