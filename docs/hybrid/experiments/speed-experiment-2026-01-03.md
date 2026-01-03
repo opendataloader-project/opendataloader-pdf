@@ -16,12 +16,12 @@
 
 Proceed to Phase 1 implementation:
 
-- [ ] Task 1.1: docling_subprocess_worker.py
-- [ ] Task 1.2: docling_fast_server.py
-- [ ] Task 2.1: DoclingSubprocessClient.java
-- [ ] Task 2.2: DoclingFastServerClient.java
-- [ ] Task 2.3: HybridClientFactory modification
-- [ ] Task 3: Benchmark integration
+- [x] Task 1.1: docling_subprocess_worker.py (skipped - FastAPI only)
+- [x] Task 1.2: hybrid_server.py (opendataloader-pdf-hybrid CLI)
+- [x] Task 2.1: DoclingSubprocessClient.java (skipped - FastAPI only)
+- [x] Task 2.2: DoclingFastServerClient.java
+- [x] Task 2.3: HybridClientFactory modification
+- [x] Task 3: Benchmark integration
 - [ ] Task 4: Final validation
 
 Subprocess approach also passed - both approaches available for implementation.

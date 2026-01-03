@@ -9,7 +9,7 @@
 | Phase 0: subprocess experiment | ✅ completed | 2026-01-03 | 0.661s/doc (PASS < 1.0s) |
 | Phase 0: Results comparison | ✅ completed | 2026-01-03 | 3.3x-3.5x speedup |
 | Task 1.1: docling_subprocess_worker.py | ⏭️ skipped | - | FastAPI only |
-| Task 1.2: docling_fast_server.py | ✅ completed | 2026-01-03 | - |
+| Task 1.2: hybrid_server.py | ✅ completed | 2026-01-03 | opendataloader-pdf-hybrid |
 | Task 2.1: DoclingSubprocessClient.java | ⏭️ skipped | - | FastAPI only |
 | Task 2.2: DoclingFastServerClient.java | ✅ completed | 2026-01-03 | - |
 | Task 2.3: HybridClientFactory modification | ✅ completed | 2026-01-03 | docling-fast only |
@@ -114,14 +114,14 @@ docs/hybrid/experiments/
 | Success Criteria | Single PDF conversion succeeds, JSON output parseable |
 | Test | `echo '{"pdf_path":"/path/to.pdf"}' \| python scripts/docling_subprocess_worker.py` |
 
-#### Task 1.2: docling_fast_server.py
+#### Task 1.2: hybrid_server.py
 | Item | Details |
 |------|---------|
-| File | `scripts/docling_fast_server.py` |
-| Prerequisites | fastapi, uvicorn, docling installed |
+| File | `python/opendataloader-pdf/src/opendataloader_pdf/hybrid_server.py` |
+| Prerequisites | `pip install opendataloader-pdf[hybrid]` |
 | Description | POST /convert endpoint, DocumentConverter singleton |
-| Success Criteria | curl PDF upload returns markdown response |
-| Test | `curl -F "file=@test.pdf" http://localhost:5002/convert` |
+| Success Criteria | curl PDF upload returns JSON response |
+| Test | `opendataloader-pdf-hybrid &` then `curl -F "file=@test.pdf" http://localhost:5002/v1/convert/file` |
 
 ### Task 2: Java Client Implementation
 
@@ -259,8 +259,8 @@ Task 1.2 → Task 2.2 ─┘
 | `scripts/experiments/docling_fastapi_bench.py` | 0 | FastAPI experiment |
 | `scripts/experiments/docling_subprocess_bench.py` | 0 | Subprocess experiment |
 | `scripts/experiments/docling_speed_report.py` | 0 | Results report |
-| `scripts/docling_subprocess_worker.py` | 1 | Subprocess worker |
-| `scripts/docling_fast_server.py` | 1 | FastAPI server |
+| `scripts/docling_subprocess_worker.py` | 1 | Subprocess worker (skipped) |
+| `python/.../hybrid_server.py` | 1 | FastAPI server (opendataloader-pdf-hybrid) |
 | `java/.../hybrid/DoclingSubprocessClient.java` | 2 | Java client |
 | `java/.../hybrid/DoclingFastServerClient.java` | 2 | Java client |
 | `tests/.../pdf_parser_opendataloader_hybrid_subprocess.py` | 3 | Benchmark parser |

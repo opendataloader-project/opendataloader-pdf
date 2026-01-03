@@ -5,11 +5,11 @@ which routes complex pages (tables, etc.) to a backend server for
 improved accuracy.
 
 Requirements:
-- docling-fast server running: python scripts/docling_fast_server.py
+- docling-fast server running: pip install opendataloader-pdf[hybrid] && opendataloader-pdf-hybrid
 - Local JAR built: ./scripts/build-java.sh
 
 Usage:
-    python scripts/docling_fast_server.py &
+    opendataloader-pdf-hybrid &
     ./scripts/bench.sh --hybrid docling-fast
 """
 
