@@ -292,13 +292,8 @@ public class HybridDocumentProcessor {
         // Read PDF bytes
         byte[] pdfBytes = Files.readAllBytes(Path.of(inputPdfName));
 
-        // Convert page numbers to 1-indexed for API
-        Set<Integer> oneIndexedPages = pageNumbers.stream()
-            .map(p -> p + 1)
-            .collect(Collectors.toSet());
-
-        // Make API request
-        HybridRequest request = HybridRequest.forPages(pdfBytes, oneIndexedPages);
+        // Make API request for all pages (avoids per-chunk overhead)
+        HybridRequest request = HybridRequest.allPages(pdfBytes);
         HybridResponse response = client.convert(request);
 
         // Get page heights for coordinate transformation
