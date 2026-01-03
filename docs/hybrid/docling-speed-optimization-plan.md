@@ -1,5 +1,34 @@
 # Docling Speed Optimization Plan
 
+## Progress Tracker
+
+| Task | Status | Completed | Result |
+|------|--------|-----------|--------|
+| Phase 0: Baseline measurement | ⬜ not_started | - | - |
+| Phase 0: FastAPI experiment | ⬜ not_started | - | - |
+| Phase 0: subprocess experiment | ⬜ not_started | - | - |
+| Phase 0: Results comparison | ⬜ not_started | - | - |
+| Task 1.1: docling_subprocess_worker.py | ⬜ not_started | - | - |
+| Task 1.2: docling_fast_server.py | ⬜ not_started | - | - |
+| Task 2.1: DoclingSubprocessClient.java | ⬜ not_started | - | - |
+| Task 2.2: DoclingFastServerClient.java | ⬜ not_started | - | - |
+| Task 2.3: HybridClientFactory modification | ⬜ not_started | - | - |
+| Task 3.1: pdf_parser modules | ⬜ not_started | - | - |
+| Task 3.2: engine_registry.py | ⬜ not_started | - | - |
+| Task 3.3: run.py CLI options | ⬜ not_started | - | - |
+| Task 4.1: Full benchmark | ⬜ not_started | - | - |
+| Task 4.2: Results documentation | ⬜ not_started | - | - |
+
+**Status Legend:**
+- ⬜ `not_started` - Not yet begun
+- 🔄 `in_progress` - Currently working
+- ✅ `completed` - Done and verified
+- ⏸️ `blocked` - Waiting on dependency
+- ❌ `failed` - Did not meet criteria
+- 🚫 `discarded` - Plan abandoned
+
+---
+
 ## 1. Background
 
 ### Current Problem
