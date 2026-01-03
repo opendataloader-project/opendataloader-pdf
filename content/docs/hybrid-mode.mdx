@@ -1,0 +1,197 @@
+---
+title: Hybrid Mode
+description: Route complex pages to AI backends while keeping simple pages fast and local
+---
+
+## Overview
+
+Hybrid mode combines the speed of local Java processing with the accuracy of AI backends. Instead of sending every page to an AI service, OpenDataLoader intelligently routes only complex pages (tables, OCR) to the backend while processing simple text pages locally.
+
+**Results**: Table accuracy jumps from 0.49 → 0.93 (+90%) with acceptable speed trade-off.
+
+| Metric | Java-only | Hybrid | Improvement |
+|:-------|:----------|:-------|:------------|
+| Table accuracy (TEDS) | 0.49 | **0.93** | +90% |
+| Heading accuracy (MHS) | 0.65 | **0.78** | +20% |
+| Reading order (NID) | 0.91 | **0.93** | +2% |
+| Speed | 0.05s/doc | 0.45s/doc | 9x slower |
+
+## Installation
+
+```bash
+pip install opendataloader-pdf[hybrid]
+```
+
+This installs the hybrid dependencies including docling and the backend server.
+
+## Quick Start
+
+### CLI
+
+Start the backend server (first terminal)
+
+```bash
+opendataloader-pdf-hybrid --port 5002
+```
+
+Process PDFs with hybrid mode (second terminal)
+
+```bash
+opendataloader-pdf --hybrid docling-fast input.pdf
+```
+
+### Python
+
+```python
+import opendataloader_pdf
+
+opendataloader_pdf.convert(
+    input_path="complex_tables.pdf",
+    output_dir="output/",
+    hybrid="docling-fast"  # Routes complex pages to AI backend
+)
+```
+
+### Docker
+
+```bash
+# Run the hybrid backend
+docker run -p 5002:5002 ghcr.io/opendataloader-project/opendataloader-pdf-hybrid
+
+# Process with hybrid mode
+opendataloader-pdf --hybrid docling-fast --hybrid-url http://localhost:5002 input.pdf
+```
+
+## How It Works
+
+```
+PDF Input
+    │
+    ▼
+┌─────────────────────────────────────┐
+│         Triage Processor            │
+│   Analyzes each page complexity     │
+└─────────────────────────────────────┘
+    │                    │
+    ▼                    ▼
+┌─────────────┐    ┌─────────────────┐
+│  JAVA Path  │    │  BACKEND Path   │
+│  (0.05s)    │    │  (AI processing)│
+│  Simple     │    │  Complex tables │
+│  text pages │    │  OCR pages      │
+└─────────────┘    └─────────────────┘
+    │                    │
+    └────────┬───────────┘
+             ▼
+┌─────────────────────────────────────┐
+│         Result Merger               │
+│    Combines results by page order   │
+└─────────────────────────────────────┘
+```
+
+### Triage Strategy
+
+The triage processor uses a **conservative strategy**: it routes uncertain pages to the backend to minimize missed tables (false negatives). This means:
+
+- Simple text pages → Fast Java path
+- Pages with tables → Backend path
+- Uncertain pages → Backend path (better safe than sorry)
+
+## Configuration Options
+
+| Option | Type | Default | Description |
+|:-------|:-----|:--------|:------------|
+| `hybrid` | string | `"off"` | Backend name: `off`, `docling-fast` |
+| `hybrid_url` | string | auto | Backend server URL |
+| `hybrid_timeout` | int | 30000 | Request timeout in milliseconds |
+| `hybrid_fallback` | bool | true | Fallback to Java on backend error |
+
+### Python Options
+
+```python
+opendataloader_pdf.convert(
+    input_path="document.pdf",
+    output_dir="output/",
+    hybrid="docling-fast",
+    hybrid_url="http://localhost:5002",  # Custom backend URL
+    hybrid_timeout=60000,                 # 60 second timeout
+    hybrid_fallback=True                  # Fallback to Java on error
+)
+```
+
+### CLI Options
+
+```bash
+opendataloader-pdf \
+    --hybrid docling-fast \
+    --hybrid-url http://localhost:5002 \
+    --hybrid-timeout 60000 \
+    --hybrid-fallback \
+    input.pdf
+```
+
+## Supported Backends
+
+| Backend | Status | Description |
+|:--------|:-------|:------------|
+| `off` | Default | Java-only, no external calls |
+| `docling-fast` | Available | Docling-serve backend (local/Docker) |
+| `hancom` | Planned | Hancom Document AI |
+| `azure` | Planned | Azure Document Intelligence |
+| `google` | Planned | Google Document AI |
+
+## Privacy & Security
+
+Hybrid mode is designed with privacy in mind:
+
+- **Local-first**: Simple pages never leave your machine
+- **On-premise backend**: Run docling-serve locally in Docker
+- **Fallback**: If backend is unavailable, processing continues with Java-only
+- **No cloud dependency**: Default configuration requires no external services
+
+## When to Use Hybrid Mode
+
+| Use Case | Recommendation |
+|:---------|:---------------|
+| High-volume simple documents | Java-only (faster) |
+| Documents with complex tables | **Hybrid mode** |
+| OCR-heavy scanned documents | **Hybrid mode** |
+| Maximum speed priority | Java-only |
+| Maximum accuracy priority | **Hybrid mode** |
+| Air-gapped environments | Hybrid with local Docker backend |
+
+## Troubleshooting
+
+### Backend Connection Failed
+
+```
+Error: Could not connect to hybrid backend at http://localhost:5002
+```
+
+**Solution**: Start the backend server first:
+
+```bash
+opendataloader-pdf-hybrid  # or use Docker
+```
+
+### Slow Processing
+
+If hybrid mode is slower than expected:
+
+1. Check if the backend server is healthy
+2. Consider increasing `hybrid_timeout` for large documents
+3. Ensure the backend has sufficient resources (RAM, CPU)
+
+### Fallback Activated
+
+```
+Warning: Hybrid backend unavailable, falling back to Java processing
+```
+
+This is expected behavior when `hybrid_fallback=true`. The document will still be processed, but without AI-enhanced table extraction.
+
+## Learn More
+
+- [CLI Options Reference](./cli-options-reference) — Full list of CLI options
+- [Benchmark Results](./benchmark) — Detailed accuracy comparisons
+- [RAG Integration](./rag-integration) — Using hybrid mode in RAG pipelines

@@ -242,22 +242,35 @@ Reading order is enabled by default (XY-Cut++). If still seeing issues, try `--u
 
 ### Tables are not detected correctly
 
-Try the cluster detection method for better results with borderless or complex tables:
+For complex tables, enable **hybrid mode** which routes table-heavy pages to an AI backend for 90% better accuracy:
+
+```bash
+pip install opendataloader-pdf[hybrid]
+```
+
+Terminal 1: Start the backend server
+
+```bash
+opendataloader-pdf-hybrid --port 5002
+```
+
+Terminal 2: Process PDFs with hybrid mode
+
+```bash
+opendataloader-pdf --hybrid docling-fast input.pdf
+```
+
+Or use in Python:
 
 ```python
 opendataloader_pdf.convert(
     input_path="document.pdf",
     output_dir="output/",
-    table_method="cluster"
+    hybrid="docling-fast"  # Routes complex pages to AI backend
 )
 ```
 
-Or via CLI:
-```bash
-opendataloader-pdf document.pdf -f json --table-method cluster
-```
-
-For complex tables, Table AI support is coming soon.
+This improves table accuracy from 0.49 to 0.93. See [Hybrid Mode](/docs/hybrid-mode) for details.
 
 ### Headers and footers appear in my output
 
