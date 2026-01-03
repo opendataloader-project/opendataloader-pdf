@@ -118,7 +118,8 @@ public class DoclingClient implements HybridClient {
             .addFormDataPart("to_formats", "json")
             .addFormDataPart("to_formats", "md")
             .addFormDataPart("do_table_structure", String.valueOf(request.isDoTableStructure()))
-            .addFormDataPart("do_ocr", String.valueOf(request.isDoOcr()));
+            .addFormDataPart("do_ocr", String.valueOf(request.isDoOcr()))
+            .addFormDataPart("image_export_mode", "placeholder");
 
         // Add page range if specified
         if (request.getPageNumbers() != null && !request.getPageNumbers().isEmpty()) {
