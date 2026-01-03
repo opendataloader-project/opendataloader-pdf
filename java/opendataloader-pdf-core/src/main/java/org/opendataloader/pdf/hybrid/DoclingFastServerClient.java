@@ -29,7 +29,7 @@ import java.util.logging.Logger;
 /**
  * HTTP client for docling-fast-server API.
  *
- * <p>This client communicates with the optimized FastAPI server (docling_fast_server.py)
+ * <p>This client communicates with the optimized FastAPI server (opendataloader-pdf-hybrid)
  * which provides 3.3x faster performance than docling-serve by using a DocumentConverter
  * singleton pattern.
  *
