@@ -121,19 +121,11 @@ public class DoclingFastServerClient implements HybridClient {
             .addFormDataPart("files", DEFAULT_FILENAME,
                 RequestBody.create(request.getPdfBytes(), MEDIA_TYPE_PDF));
 
-        // Add only requested output formats
-        for (HybridClient.OutputFormat format : request.getOutputFormats()) {
-            bodyBuilder.addFormDataPart("to_formats", format.getApiValue());
-        }
-
-        LOGGER.log(Level.FINE, "Requesting formats: {0}", request.getOutputFormats());
-
         // Add page range if specified
         if (request.getPageNumbers() != null && !request.getPageNumbers().isEmpty()) {
             int minPage = request.getPageNumbers().stream().min(Integer::compareTo).orElse(1);
             int maxPage = request.getPageNumbers().stream().max(Integer::compareTo).orElse(Integer.MAX_VALUE);
-            bodyBuilder.addFormDataPart("page_range", String.valueOf(minPage));
-            bodyBuilder.addFormDataPart("page_range", String.valueOf(maxPage));
+            bodyBuilder.addFormDataPart("page_ranges", minPage + "-" + maxPage);
         }
 
         return new Request.Builder()
@@ -175,22 +167,12 @@ public class DoclingFastServerClient implements HybridClient {
             throw new IOException("Invalid response: missing 'document' field");
         }
 
-        String markdown = extractString(documentNode, "md_content");
-        String html = extractString(documentNode, "html_content");
         JsonNode jsonContent = documentNode.get("json_content");
 
         // Extract per-page content from json_content if available
         Map<Integer, JsonNode> pageContents = extractPageContents(jsonContent);
 
-        return new HybridResponse(markdown, html, jsonContent, pageContents);
-    }
-
-    /**
-     * Extracts a string value from a JSON node.
-     */
-    private String extractString(JsonNode node, String fieldName) {
-        JsonNode field = node.get(fieldName);
-        return field != null && !field.isNull() ? field.asText() : "";
+        return new HybridResponse(null, null, jsonContent, pageContents);
     }
 
     /**
