@@ -127,6 +127,38 @@
       "required": false,
       "default": null,
       "description": "Pages to extract (e.g., \"1,3,5-7\"). Default: all pages"
+    },
+    {
+      "name": "hybrid",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": "off",
+      "description": "Hybrid backend for AI processing. Values: off (default), docling-fast"
+    },
+    {
+      "name": "hybrid-url",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": null,
+      "description": "Hybrid backend server URL (overrides default)"
+    },
+    {
+      "name": "hybrid-timeout",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": "30000",
+      "description": "Hybrid backend request timeout in milliseconds. Default: 30000"
+    },
+    {
+      "name": "hybrid-fallback",
+      "shortName": null,
+      "type": "boolean",
+      "required": false,
+      "default": true,
+      "description": "Fallback to Java processing on hybrid backend error. Default: true"
     }
   ]
 }

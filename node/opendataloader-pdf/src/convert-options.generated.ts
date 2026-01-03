@@ -37,6 +37,14 @@ export interface ConvertOptions {
   imageFormat?: string;
   /** Pages to extract (e.g., "1,3,5-7"). Default: all pages */
   pages?: string;
+  /** Hybrid backend for AI processing. Values: off (default), docling-fast */
+  hybrid?: string;
+  /** Hybrid backend server URL (overrides default) */
+  hybridUrl?: string;
+  /** Hybrid backend request timeout in milliseconds. Default: 30000 */
+  hybridTimeout?: string;
+  /** Fallback to Java processing on hybrid backend error. Default: true */
+  hybridFallback?: boolean;
 }
 
 /**
@@ -59,6 +67,10 @@ export interface CliOptions {
   imageOutput?: string;
   imageFormat?: string;
   pages?: string;
+  hybrid?: string;
+  hybridUrl?: string;
+  hybridTimeout?: string;
+  hybridFallback?: boolean;
 }
 
 /**
@@ -114,6 +126,18 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   }
   if (cliOptions.pages) {
     convertOptions.pages = cliOptions.pages;
+  }
+  if (cliOptions.hybrid) {
+    convertOptions.hybrid = cliOptions.hybrid;
+  }
+  if (cliOptions.hybridUrl) {
+    convertOptions.hybridUrl = cliOptions.hybridUrl;
+  }
+  if (cliOptions.hybridTimeout) {
+    convertOptions.hybridTimeout = cliOptions.hybridTimeout;
+  }
+  if (cliOptions.hybridFallback) {
+    convertOptions.hybridFallback = true;
   }
 
   return convertOptions;
@@ -184,6 +208,18 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.pages) {
     args.push('--pages', options.pages);
+  }
+  if (options.hybrid) {
+    args.push('--hybrid', options.hybrid);
+  }
+  if (options.hybridUrl) {
+    args.push('--hybrid-url', options.hybridUrl);
+  }
+  if (options.hybridTimeout) {
+    args.push('--hybrid-timeout', options.hybridTimeout);
+  }
+  if (options.hybridFallback) {
+    args.push('--hybrid-fallback');
   }
 
   return args;
