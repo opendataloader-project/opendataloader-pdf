@@ -19,8 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <p>Supported backends:
  * <ul>
- *   <li>{@code docling} - Docling-serve backend for advanced PDF parsing</li>
- *   <li>{@code docling-fast} - Optimized docling SDK server (3.3x faster than docling-serve)</li>
+ *   <li>{@code docling-fast} - Optimized docling SDK server</li>
  * </ul>
  *
  * <p>Future backends (not yet implemented):
@@ -34,9 +33,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * @see HybridConfig
  */
 public class HybridClientFactory {
-
-    /** Backend type constant for Docling. */
-    public static final String BACKEND_DOCLING = "docling";
 
     /** Backend type constant for Docling Fast Server. */
     public static final String BACKEND_DOCLING_FAST = "docling-fast";
@@ -83,9 +79,7 @@ public class HybridClientFactory {
      * Creates a new hybrid client instance.
      */
     private static HybridClient createClient(String hybrid, HybridConfig config) {
-        if (BACKEND_DOCLING.equals(hybrid)) {
-            return new DoclingClient(config);
-        } else if (BACKEND_DOCLING_FAST.equals(hybrid)) {
+        if (BACKEND_DOCLING_FAST.equals(hybrid)) {
             return new DoclingFastServerClient(config);
         } else if (BACKEND_HANCOM.equals(hybrid)) {
             throw new UnsupportedOperationException("Hancom backend is not yet implemented");
@@ -134,9 +128,7 @@ public class HybridClientFactory {
      */
     public static void shutdown() {
         for (HybridClient client : CLIENT_CACHE.values()) {
-            if (client instanceof DoclingClient) {
-                ((DoclingClient) client).shutdown();
-            } else if (client instanceof DoclingFastServerClient) {
+            if (client instanceof DoclingFastServerClient) {
                 ((DoclingFastServerClient) client).shutdown();
             }
         }
@@ -155,7 +147,7 @@ public class HybridClientFactory {
         }
 
         String lowerHybrid = hybrid.toLowerCase();
-        return BACKEND_DOCLING.equals(lowerHybrid) || BACKEND_DOCLING_FAST.equals(lowerHybrid);
+        return BACKEND_DOCLING_FAST.equals(lowerHybrid);
     }
 
     /**
@@ -164,7 +156,7 @@ public class HybridClientFactory {
      * @return A string listing all supported backends.
      */
     public static String getSupportedBackends() {
-        return BACKEND_DOCLING + ", " + BACKEND_DOCLING_FAST;
+        return BACKEND_DOCLING_FAST;
     }
 
     /**
@@ -173,6 +165,6 @@ public class HybridClientFactory {
      * @return A string listing all known backends.
      */
     public static String getAllKnownBackends() {
-        return String.join(", ", BACKEND_DOCLING, BACKEND_DOCLING_FAST, BACKEND_HANCOM, BACKEND_AZURE, BACKEND_GOOGLE);
+        return String.join(", ", BACKEND_DOCLING_FAST, BACKEND_HANCOM, BACKEND_AZURE, BACKEND_GOOGLE);
     }
 }
