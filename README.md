@@ -186,6 +186,46 @@ Most PDF parsers ignore structure tags entirely. We're one of the few that fully
 
 <br/>
 
+## Hybrid Mode
+
+For documents with complex tables or OCR needs, enable hybrid mode to route challenging pages to an AI backend while keeping simple pages fast and local.
+
+**Results**: Table accuracy jumps from 0.49 → 0.93 (+90%) with acceptable speed trade-off.
+
+```bash
+pip install opendataloader-pdf[hybrid]
+```
+
+Terminal 1: Start the backend server
+
+```bash
+opendataloader-pdf-hybrid --port 5002
+```
+
+Terminal 2: Process PDFs with hybrid mode
+
+```bash
+opendataloader-pdf --hybrid docling-fast input.pdf
+```
+
+Or use in Python:
+
+```python
+opendataloader_pdf.convert(
+    input_path="complex_tables.pdf",
+    output_dir="output/",
+    hybrid="docling-fast"  # Routes complex pages to AI backend
+)
+```
+
+- **Local-first**: Simple pages processed locally, complex pages routed to backend
+- **Fallback**: If backend unavailable, gracefully falls back to local processing
+- **Privacy**: Run the backend locally in Docker for 100% on-premise
+
+[Hybrid Mode Guide →](https://opendataloader.org/docs/hybrid-mode)
+
+<br/>
+
 ## LangChain Integration
 
 OpenDataLoader PDF has an official LangChain integration for seamless RAG pipeline development.
@@ -222,23 +262,24 @@ We continuously benchmark against real-world documents.
 
 ### Quick Comparison
 
-| Engine             | Speed (s/page) | Reading Order | Table    | Heading  |
-|--------------------|----------------|---------------|----------|----------|
-| **opendataloader** | **0.05**       | **0.91**      | 0.49     | 0.65     |
-| docling            | 0.73           | 0.90          | **0.89** | **0.80** |
-| pymupdf4llm        | 0.09           | 0.89          | 0.40     | 0.41     |
-| markitdown         | **0.04**       | 0.88          | 0.00     | 0.00     |
+| Engine                      | Speed (s/page) | Reading Order | Table    | Heading  |
+|-----------------------------|----------------|---------------|----------|----------|
+| **opendataloader**          | **0.05**       | 0.91          | 0.49     | 0.65     |
+| **opendataloader [hybrid]** | 0.45           | **0.93**      | **0.93** | 0.78     |
+| docling                     | 0.73           | 0.90          | 0.89     | **0.80** |
+| pymupdf4llm                 | 0.09           | 0.89          | 0.40     | 0.41     |
+| markitdown                  | **0.04**       | 0.88          | 0.00     | 0.00     |
 
 > Scores are normalized to [0, 1]. Higher is better for accuracy metrics; lower is better for speed. **Bold** indicates best performance.
 
 ### When to Use Each Engine
 
-| Use Case                 | Recommended Engine | Why                                                    |
-|--------------------------|--------------------|--------------------------------------------------------|
-| Best overall balance     | **opendataloader** | Fast with high reading order accuracy     |
-| Maximum accuracy         | docling            | Highest scores for tables and headings, but 16x slower |
-| Speed-critical pipelines | markitdown         | Fastest, but no table/heading extraction               |
-| PyMuPDF ecosystem        | pymupdf4llm        | Good balance if already using PyMuPDF                  |
+| Use Case                      | Recommended Engine          | Why                                                    |
+|-------------------------------|-----------------------------|--------------------------------------------------------|
+| Best overall balance          | **opendataloader**          | Fast with high reading order accuracy                  |
+| Complex tables & max accuracy | **opendataloader [hybrid]** | Docling-level accuracy, 40% faster                     |
+| Speed-critical pipelines      | markitdown                  | Fastest, but no table/heading extraction               |
+| PyMuPDF ecosystem             | pymupdf4llm                 | Good balance if already using PyMuPDF                  |
 
 ### Visual Comparison
 
@@ -288,6 +329,10 @@ OpenDataLoader takes a different approach from many PDF parsers:
 - **Native Tagged PDF support** — Leverages accessibility metadata
 
 This means: consistent output (same input = same output), no GPU required, faster processing, and no model hallucinations.
+
+### How do I get better accuracy for complex tables?
+
+Enable hybrid mode with `pip install opendataloader-pdf[hybrid]`. This routes pages with complex tables to an AI backend (like docling-serve) while keeping simple pages fast and local. Table accuracy improves from 0.49 to 0.93 — matching or exceeding dedicated AI parsers while remaining faster and more cost-effective.
 
 <br/>
 
