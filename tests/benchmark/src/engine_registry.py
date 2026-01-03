@@ -13,10 +13,12 @@ EngineHandler = Callable[..., None]
 ENGINES: Dict[str, str] = {
     "opendataloader": "local",
     "opendataloader-hybrid-docling": "local+docling",
+    "opendataloader-hybrid-docling-fast": "local+docling-fast",
 }
 
 
 ENGINE_DISPATCH: Dict[str, EngineHandler] = {
     "opendataloader": opendataloader.to_markdown,
     "opendataloader-hybrid-docling": opendataloader_hybrid.to_markdown,
+    "opendataloader-hybrid-docling-fast": opendataloader_hybrid.to_markdown,
 }

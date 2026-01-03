@@ -342,7 +342,8 @@ public class HybridDocumentProcessor {
     private static HybridSchemaTransformer createTransformer(Config config) {
         String hybrid = config.getHybrid();
 
-        if (Config.HYBRID_DOCLING.equals(hybrid)) {
+        // Both docling and docling-fast use the same schema transformer
+        if (Config.HYBRID_DOCLING.equals(hybrid) || Config.HYBRID_DOCLING_FAST.equals(hybrid)) {
             return new DoclingSchemaTransformer();
         }
 

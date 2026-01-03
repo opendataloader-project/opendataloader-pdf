@@ -8,14 +8,14 @@
 | Phase 0: FastAPI experiment | ✅ completed | 2026-01-03 | 0.685s/doc (PASS < 0.8s) |
 | Phase 0: subprocess experiment | ✅ completed | 2026-01-03 | 0.661s/doc (PASS < 1.0s) |
 | Phase 0: Results comparison | ✅ completed | 2026-01-03 | 3.3x-3.5x speedup |
-| Task 1.1: docling_subprocess_worker.py | ⬜ not_started | - | - |
-| Task 1.2: docling_fast_server.py | ⬜ not_started | - | - |
-| Task 2.1: DoclingSubprocessClient.java | ⬜ not_started | - | - |
-| Task 2.2: DoclingFastServerClient.java | ⬜ not_started | - | - |
-| Task 2.3: HybridClientFactory modification | ⬜ not_started | - | - |
-| Task 3.1: pdf_parser modules | ⬜ not_started | - | - |
-| Task 3.2: engine_registry.py | ⬜ not_started | - | - |
-| Task 3.3: run.py CLI options | ⬜ not_started | - | - |
+| Task 1.1: docling_subprocess_worker.py | ⏭️ skipped | - | FastAPI only |
+| Task 1.2: docling_fast_server.py | ✅ completed | 2026-01-03 | - |
+| Task 2.1: DoclingSubprocessClient.java | ⏭️ skipped | - | FastAPI only |
+| Task 2.2: DoclingFastServerClient.java | ✅ completed | 2026-01-03 | - |
+| Task 2.3: HybridClientFactory modification | ✅ completed | 2026-01-03 | docling-fast only |
+| Task 3.1: pdf_parser modules | ✅ completed | 2026-01-03 | docling-fast only |
+| Task 3.2: engine_registry.py | ✅ completed | 2026-01-03 | - |
+| Task 3.3: run.py CLI options | ✅ completed | 2026-01-03 | - |
 | Task 4.1: Full benchmark | ⬜ not_started | - | - |
 | Task 4.2: Results documentation | ⬜ not_started | - | - |
 
@@ -23,6 +23,7 @@
 - ⬜ `not_started` - Not yet begun
 - 🔄 `in_progress` - Currently working
 - ✅ `completed` - Done and verified
+- ⏭️ `skipped` - Excluded from plan
 - ⏸️ `blocked` - Waiting on dependency
 - ❌ `failed` - Did not meet criteria
 - 🚫 `discarded` - Plan abandoned
