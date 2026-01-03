@@ -1,0 +1,1226 @@
+{
+  "approach": "fastapi",
+  "description": "FastAPI server with docling SDK singleton",
+  "timestamp": "2026-01-03 14:27:18",
+  "config": {
+    "do_ocr": true,
+    "do_table_structure": true,
+    "server_port": 5002
+  },
+  "statistics": {
+    "total_documents": 200,
+    "successful": 200,
+    "failed": 0,
+    "total_elapsed": 137.13,
+    "elapsed_per_doc": 0.6855,
+    "server_time_per_doc": 0.6817,
+    "min_elapsed": 0.1912,
+    "max_elapsed": 4.242
+  },
+  "threshold": {
+    "target": 0.8,
+    "passed": true
+  },
+  "details": [
+    {
+      "filename": "01030000000001.pdf",
+      "status": "success",
+      "elapsed": 4.241993249976076,
+      "server_time": 4.227881416969467
+    },
+    {
+      "filename": "01030000000002.pdf",
+      "status": "success",
+      "elapsed": 0.23566016694530845,
+      "server_time": 0.23280070797773078
+    },
+    {
+      "filename": "01030000000003.pdf",
+      "status": "success",
+      "elapsed": 0.22420825000153854,
+      "server_time": 0.22058429196476936
+    },
+    {
+      "filename": "01030000000004.pdf",
+      "status": "success",
+      "elapsed": 0.23249245795886964,
+      "server_time": 0.22876758401980624
+    },
+    {
+      "filename": "01030000000005.pdf",
+      "status": "success",
+      "elapsed": 1.2118705419707112,
+      "server_time": 1.2071917499997653
+    },
+    {
+      "filename": "01030000000006.pdf",
+      "status": "success",
+      "elapsed": 0.6285073750186712,
+      "server_time": 0.6227812499855645
+    },
+    {
+      "filename": "01030000000007.pdf",
+      "status": "success",
+      "elapsed": 0.2389346249983646,
+      "server_time": 0.23626212502131239
+    },
+    {
+      "filename": "01030000000008.pdf",
+      "status": "success",
+      "elapsed": 0.3985443330020644,
+      "server_time": 0.39515100000426173
+    },
+    {
+      "filename": "01030000000009.pdf",
+      "status": "success",
+      "elapsed": 1.7510037909960374,
+      "server_time": 1.7469792500487529
+    },
+    {
+      "filename": "01030000000010.pdf",
+      "status": "success",
+      "elapsed": 1.2974770410219207,
+      "server_time": 1.2927536670467816
+    },
+    {
+      "filename": "01030000000011.pdf",
+      "status": "success",
+      "elapsed": 0.45968362502753735,
+      "server_time": 0.4560427500400692
+    },
+    {
+      "filename": "01030000000012.pdf",
+      "status": "success",
+      "elapsed": 0.7207962909596972,
+      "server_time": 0.7176154999760911
+    },
+    {
+      "filename": "01030000000013.pdf",
+      "status": "success",
+      "elapsed": 2.1797685000346974,
+      "server_time": 2.1760722910403274
+    },
+    {
+      "filename": "01030000000014.pdf",
+      "status": "success",
+      "elapsed": 0.6489314580103382,
+      "server_time": 0.6451131249777973
+    },
+    {
+      "filename": "01030000000015.pdf",
+      "status": "success",
+      "elapsed": 0.9263249999494292,
+      "server_time": 0.922744709008839
+    },
+    {
+      "filename": "01030000000016.pdf",
+      "status": "success",
+      "elapsed": 1.0506074170116335,
+      "server_time": 1.046110708033666
+    },
+    {
+      "filename": "01030000000017.pdf",
+      "status": "success",
+      "elapsed": 0.4874885830213316,
+      "server_time": 0.48433470900636166
+    },
+    {
+      "filename": "01030000000018.pdf",
+      "status": "success",
+      "elapsed": 1.1500459590461105,
+      "server_time": 1.1473956660483964
+    },
+    {
+      "filename": "01030000000019.pdf",
+      "status": "success",
+      "elapsed": 0.2308129160082899,
+      "server_time": 0.22639750002417713
+    },
+    {
+      "filename": "01030000000020.pdf",
+      "status": "success",
+      "elapsed": 0.21323525003390387,
+      "server_time": 0.2105082920170389
+    },
+    {
+      "filename": "01030000000021.pdf",
+      "status": "success",
+      "elapsed": 0.20920270797796547,
+      "server_time": 0.20658841700060293
+    },
+    {
+      "filename": "01030000000022.pdf",
+      "status": "success",
+      "elapsed": 0.2119444579584524,
+      "server_time": 0.20953537500463426
+    },
+    {
+      "filename": "01030000000023.pdf",
+      "status": "success",
+      "elapsed": 0.235977666976396,
+      "server_time": 0.2327706660144031
+    },
+    {
+      "filename": "01030000000024.pdf",
+      "status": "success",
+      "elapsed": 0.2377851249766536,
+      "server_time": 0.23435454099671915
+    },
+    {
+      "filename": "01030000000025.pdf",
+      "status": "success",
+      "elapsed": 0.2237196249770932,
+      "server_time": 0.2203012090176344
+    },
+    {
+      "filename": "01030000000026.pdf",
+      "status": "success",
+      "elapsed": 0.21026112500112504,
+      "server_time": 0.2070769999991171
+    },
+    {
+      "filename": "01030000000027.pdf",
+      "status": "success",
+      "elapsed": 0.9411582500324585,
+      "server_time": 0.9383027500007302
+    },
+    {
+      "filename": "01030000000028.pdf",
+      "status": "success",
+      "elapsed": 0.3246801670175046,
+      "server_time": 0.3208107079844922
+    },
+    {
+      "filename": "01030000000029.pdf",
+      "status": "success",
+      "elapsed": 0.3724506669677794,
+      "server_time": 0.36965475004399195
+    },
+    {
+      "filename": "01030000000030.pdf",
+      "status": "success",
+      "elapsed": 0.38395462499465793,
+      "server_time": 0.37976345903007314
+    },
+    {
+      "filename": "01030000000031.pdf",
+      "status": "success",
+      "elapsed": 0.5076975840493105,
+      "server_time": 0.5048673329874873
+    },
+    {
+      "filename": "01030000000032.pdf",
+      "status": "success",
+      "elapsed": 0.23879974998999387,
+      "server_time": 0.23493745899759233
+    },
+    {
+      "filename": "01030000000033.pdf",
+      "status": "success",
+      "elapsed": 0.6313839589711279,
+      "server_time": 0.6280267079710029
+    },
+    {
+      "filename": "01030000000034.pdf",
+      "status": "success",
+      "elapsed": 0.34056245803367347,
+      "server_time": 0.33657804201357067
+    },
+    {
+      "filename": "01030000000035.pdf",
+      "status": "success",
+      "elapsed": 0.24111783294938505,
+      "server_time": 0.2377793330233544
+    },
+    {
+      "filename": "01030000000036.pdf",
+      "status": "success",
+      "elapsed": 0.48011695803143084,
+      "server_time": 0.47627237503184006
+    },
+    {
+      "filename": "01030000000037.pdf",
+      "status": "success",
+      "elapsed": 0.2930380000034347,
+      "server_time": 0.29027362499618903
+    },
+    {
+      "filename": "01030000000038.pdf",
+      "status": "success",
+      "elapsed": 0.28517066698987037,
+      "server_time": 0.2813679579994641
+    },
+    {
+      "filename": "01030000000039.pdf",
+      "status": "success",
+      "elapsed": 0.2850311250076629,
+      "server_time": 0.2814176249667071
+    },
+    {
+      "filename": "01030000000040.pdf",
+      "status": "success",
+      "elapsed": 0.289940792019479,
+      "server_time": 0.2864480830030516
+    },
+    {
+      "filename": "01030000000041.pdf",
+      "status": "success",
+      "elapsed": 0.298040084016975,
+      "server_time": 0.29536312498385087
+    },
+    {
+      "filename": "01030000000042.pdf",
+      "status": "success",
+      "elapsed": 0.2992368749692105,
+      "server_time": 0.2964798330212943
+    },
+    {
+      "filename": "01030000000043.pdf",
+      "status": "success",
+      "elapsed": 0.3038468749728054,
+      "server_time": 0.3007674170075916
+    },
+    {
+      "filename": "01030000000044.pdf",
+      "status": "success",
+      "elapsed": 0.4782290000002831,
+      "server_time": 0.4752873340039514
+    },
+    {
+      "filename": "01030000000045.pdf",
+      "status": "success",
+      "elapsed": 0.5771124169696122,
+      "server_time": 0.5731774160522036
+    },
+    {
+      "filename": "01030000000046.pdf",
+      "status": "success",
+      "elapsed": 1.0459730839938857,
+      "server_time": 1.0422542500309646
+    },
+    {
+      "filename": "01030000000047.pdf",
+      "status": "success",
+      "elapsed": 0.8931527499807999,
+      "server_time": 0.8899007920408621
+    },
+    {
+      "filename": "01030000000048.pdf",
+      "status": "success",
+      "elapsed": 0.22698091698111966,
+      "server_time": 0.22377945802873
+    },
+    {
+      "filename": "01030000000049.pdf",
+      "status": "success",
+      "elapsed": 0.2325494169490412,
+      "server_time": 0.22927216696552932
+    },
+    {
+      "filename": "01030000000050.pdf",
+      "status": "success",
+      "elapsed": 0.2267532079713419,
+      "server_time": 0.2240170420263894
+    },
+    {
+      "filename": "01030000000051.pdf",
+      "status": "success",
+      "elapsed": 0.6663411670015194,
+      "server_time": 0.6634712500381283
+    },
+    {
+      "filename": "01030000000052.pdf",
+      "status": "success",
+      "elapsed": 0.7772178329760209,
+      "server_time": 0.7743580000242218
+    },
+    {
+      "filename": "01030000000053.pdf",
+      "status": "success",
+      "elapsed": 0.6779300839989446,
+      "server_time": 0.6740249579888768
+    },
+    {
+      "filename": "01030000000054.pdf",
+      "status": "success",
+      "elapsed": 0.29146766697522253,
+      "server_time": 0.28862808301346377
+    },
+    {
+      "filename": "01030000000055.pdf",
+      "status": "success",
+      "elapsed": 0.6896979580051266,
+      "server_time": 0.6864265000331216
+    },
+    {
+      "filename": "01030000000056.pdf",
+      "status": "success",
+      "elapsed": 0.6088304580189288,
+      "server_time": 0.6049436670145951
+    },
+    {
+      "filename": "01030000000057.pdf",
+      "status": "success",
+      "elapsed": 0.6948379170498811,
+      "server_time": 0.6919721249723807
+    },
+    {
+      "filename": "01030000000058.pdf",
+      "status": "success",
+      "elapsed": 0.5237096249475144,
+      "server_time": 0.5201857089996338
+    },
+    {
+      "filename": "01030000000059.pdf",
+      "status": "success",
+      "elapsed": 1.0556424160022289,
+      "server_time": 1.051542041997891
+    },
+    {
+      "filename": "01030000000060.pdf",
+      "status": "success",
+      "elapsed": 0.9378715420025401,
+      "server_time": 0.9339362920145504
+    },
+    {
+      "filename": "01030000000061.pdf",
+      "status": "success",
+      "elapsed": 0.5744501660228707,
+      "server_time": 0.5710695830057375
+    },
+    {
+      "filename": "01030000000062.pdf",
+      "status": "success",
+      "elapsed": 0.5739157920470461,
+      "server_time": 0.5699651660397649
+    },
+    {
+      "filename": "01030000000063.pdf",
+      "status": "success",
+      "elapsed": 0.545565499982331,
+      "server_time": 0.5423177090124227
+    },
+    {
+      "filename": "01030000000064.pdf",
+      "status": "success",
+      "elapsed": 0.7559935839963146,
+      "server_time": 0.7518507920322008
+    },
+    {
+      "filename": "01030000000065.pdf",
+      "status": "success",
+      "elapsed": 0.7622525419574231,
+      "server_time": 0.7584597080131061
+    },
+    {
+      "filename": "01030000000066.pdf",
+      "status": "success",
+      "elapsed": 0.5409429160063155,
+      "server_time": 0.5375342919724062
+    },
+    {
+      "filename": "01030000000067.pdf",
+      "status": "success",
+      "elapsed": 0.2639236249960959,
+      "server_time": 0.2609299580217339
+    },
+    {
+      "filename": "01030000000068.pdf",
+      "status": "success",
+      "elapsed": 0.3791036249604076,
+      "server_time": 0.3755642910255119
+    },
+    {
+      "filename": "01030000000069.pdf",
+      "status": "success",
+      "elapsed": 0.2975422500167042,
+      "server_time": 0.2913320420193486
+    },
+    {
+      "filename": "01030000000070.pdf",
+      "status": "success",
+      "elapsed": 0.7183983749710023,
+      "server_time": 0.7153602500329725
+    },
+    {
+      "filename": "01030000000071.pdf",
+      "status": "success",
+      "elapsed": 0.29412354197120294,
+      "server_time": 0.29085429199039936
+    },
+    {
+      "filename": "01030000000072.pdf",
+      "status": "success",
+      "elapsed": 0.777759040996898,
+      "server_time": 0.7740345419733785
+    },
+    {
+      "filename": "01030000000073.pdf",
+      "status": "success",
+      "elapsed": 0.6562319590011612,
+      "server_time": 0.6535182910156436
+    },
+    {
+      "filename": "01030000000074.pdf",
+      "status": "success",
+      "elapsed": 0.28343045798828825,
+      "server_time": 0.2796145839965902
+    },
+    {
+      "filename": "01030000000075.pdf",
+      "status": "success",
+      "elapsed": 0.28680941701168194,
+      "server_time": 0.28328687499742955
+    },
+    {
+      "filename": "01030000000076.pdf",
+      "status": "success",
+      "elapsed": 0.29438183398451656,
+      "server_time": 0.2910186250228435
+    },
+    {
+      "filename": "01030000000077.pdf",
+      "status": "success",
+      "elapsed": 0.29165641602594405,
+      "server_time": 0.28862891596509144
+    },
+    {
+      "filename": "01030000000078.pdf",
+      "status": "success",
+      "elapsed": 1.0204909999738447,
+      "server_time": 1.0173910839948803
+    },
+    {
+      "filename": "01030000000079.pdf",
+      "status": "success",
+      "elapsed": 0.2726650420227088,
+      "server_time": 0.26920916698873043
+    },
+    {
+      "filename": "01030000000080.pdf",
+      "status": "success",
+      "elapsed": 0.27147929195780307,
+      "server_time": 0.26783212495502084
+    },
+    {
+      "filename": "01030000000081.pdf",
+      "status": "success",
+      "elapsed": 0.8019527500146069,
+      "server_time": 0.7987610420095734
+    },
+    {
+      "filename": "01030000000082.pdf",
+      "status": "success",
+      "elapsed": 0.9925202919985168,
+      "server_time": 0.9887124999659136
+    },
+    {
+      "filename": "01030000000083.pdf",
+      "status": "success",
+      "elapsed": 1.31362504203571,
+      "server_time": 1.309416665986646
+    },
+    {
+      "filename": "01030000000084.pdf",
+      "status": "success",
+      "elapsed": 0.8973014999646693,
+      "server_time": 0.8946025000186637
+    },
+    {
+      "filename": "01030000000085.pdf",
+      "status": "success",
+      "elapsed": 0.2703269170015119,
+      "server_time": 0.26723237498663366
+    },
+    {
+      "filename": "01030000000086.pdf",
+      "status": "success",
+      "elapsed": 0.31575808400521055,
+      "server_time": 0.3122708339942619
+    },
+    {
+      "filename": "01030000000087.pdf",
+      "status": "success",
+      "elapsed": 0.2932149580447003,
+      "server_time": 0.2899437500163913
+    },
+    {
+      "filename": "01030000000088.pdf",
+      "status": "success",
+      "elapsed": 0.6827465840033256,
+      "server_time": 0.6795382089912891
+    },
+    {
+      "filename": "01030000000089.pdf",
+      "status": "success",
+      "elapsed": 0.6815644160378724,
+      "server_time": 0.6780082919867709
+    },
+    {
+      "filename": "01030000000090.pdf",
+      "status": "success",
+      "elapsed": 0.7230202499777079,
+      "server_time": 0.7197811250225641
+    },
+    {
+      "filename": "01030000000091.pdf",
+      "status": "success",
+      "elapsed": 0.29087054199771956,
+      "server_time": 0.2875624159933068
+    },
+    {
+      "filename": "01030000000092.pdf",
+      "status": "success",
+      "elapsed": 0.28777975001139566,
+      "server_time": 0.2850096669862978
+    },
+    {
+      "filename": "01030000000093.pdf",
+      "status": "success",
+      "elapsed": 0.27819625003030524,
+      "server_time": 0.2750208330107853
+    },
+    {
+      "filename": "01030000000094.pdf",
+      "status": "success",
+      "elapsed": 0.8608404159895144,
+      "server_time": 0.8571256250143051
+    },
+    {
+      "filename": "01030000000095.pdf",
+      "status": "success",
+      "elapsed": 0.625199124973733,
+      "server_time": 0.6218751670094207
+    },
+    {
+      "filename": "01030000000096.pdf",
+      "status": "success",
+      "elapsed": 0.5693329999921843,
+      "server_time": 0.565007166005671
+    },
+    {
+      "filename": "01030000000097.pdf",
+      "status": "success",
+      "elapsed": 0.9042992499889806,
+      "server_time": 0.8982586250058375
+    },
+    {
+      "filename": "01030000000098.pdf",
+      "status": "success",
+      "elapsed": 1.0319968330441043,
+      "server_time": 1.027021041023545
+    },
+    {
+      "filename": "01030000000099.pdf",
+      "status": "success",
+      "elapsed": 0.9114150829846039,
+      "server_time": 0.9061132500064559
+    },
+    {
+      "filename": "01030000000100.pdf",
+      "status": "success",
+      "elapsed": 1.5465596670401283,
+      "server_time": 1.5426428329665214
+    },
+    {
+      "filename": "01030000000101.pdf",
+      "status": "success",
+      "elapsed": 0.3061483330093324,
+      "server_time": 0.30136958399089053
+    },
+    {
+      "filename": "01030000000102.pdf",
+      "status": "success",
+      "elapsed": 0.9578264160081744,
+      "server_time": 0.95446754101431
+    },
+    {
+      "filename": "01030000000103.pdf",
+      "status": "success",
+      "elapsed": 0.3398451249813661,
+      "server_time": 0.3357120000291616
+    },
+    {
+      "filename": "01030000000104.pdf",
+      "status": "success",
+      "elapsed": 0.6835829580086283,
+      "server_time": 0.6800786249805242
+    },
+    {
+      "filename": "01030000000105.pdf",
+      "status": "success",
+      "elapsed": 0.7943414589972235,
+      "server_time": 0.7907470000209287
+    },
+    {
+      "filename": "01030000000106.pdf",
+      "status": "success",
+      "elapsed": 1.504911332973279,
+      "server_time": 1.4998468339908868
+    },
+    {
+      "filename": "01030000000107.pdf",
+      "status": "success",
+      "elapsed": 2.0411745000164956,
+      "server_time": 2.0363634999957867
+    },
+    {
+      "filename": "01030000000108.pdf",
+      "status": "success",
+      "elapsed": 0.8543117080116645,
+      "server_time": 0.8507597499992698
+    },
+    {
+      "filename": "01030000000109.pdf",
+      "status": "success",
+      "elapsed": 0.2945376660209149,
+      "server_time": 0.2915094590280205
+    },
+    {
+      "filename": "01030000000110.pdf",
+      "status": "success",
+      "elapsed": 2.746348583023064,
+      "server_time": 2.7426476670079865
+    },
+    {
+      "filename": "01030000000111.pdf",
+      "status": "success",
+      "elapsed": 0.8354320420185104,
+      "server_time": 0.8313681249856018
+    },
+    {
+      "filename": "01030000000112.pdf",
+      "status": "success",
+      "elapsed": 0.5660255419788882,
+      "server_time": 0.5612640000181273
+    },
+    {
+      "filename": "01030000000113.pdf",
+      "status": "success",
+      "elapsed": 0.8941574160126038,
+      "server_time": 0.8887739999918267
+    },
+    {
+      "filename": "01030000000114.pdf",
+      "status": "success",
+      "elapsed": 0.584699459024705,
+      "server_time": 0.580986374989152
+    },
+    {
+      "filename": "01030000000115.pdf",
+      "status": "success",
+      "elapsed": 0.42892508301883936,
+      "server_time": 0.42490545799955726
+    },
+    {
+      "filename": "01030000000116.pdf",
+      "status": "success",
+      "elapsed": 0.7870269579580054,
+      "server_time": 0.7833477500244044
+    },
+    {
+      "filename": "01030000000117.pdf",
+      "status": "success",
+      "elapsed": 0.5688162919832394,
+      "server_time": 0.5651287919608876
+    },
+    {
+      "filename": "01030000000118.pdf",
+      "status": "success",
+      "elapsed": 0.9510037080035545,
+      "server_time": 0.9477845840156078
+    },
+    {
+      "filename": "01030000000119.pdf",
+      "status": "success",
+      "elapsed": 0.5877052919822745,
+      "server_time": 0.5849201250239275
+    },
+    {
+      "filename": "01030000000120.pdf",
+      "status": "success",
+      "elapsed": 0.8888135419692844,
+      "server_time": 0.8856102499994449
+    },
+    {
+      "filename": "01030000000121.pdf",
+      "status": "success",
+      "elapsed": 0.6567836250178516,
+      "server_time": 0.6525404170388356
+    },
+    {
+      "filename": "01030000000122.pdf",
+      "status": "success",
+      "elapsed": 1.0605309999664314,
+      "server_time": 1.0559296669671312
+    },
+    {
+      "filename": "01030000000123.pdf",
+      "status": "success",
+      "elapsed": 0.4666487079812214,
+      "server_time": 0.4635189580149017
+    },
+    {
+      "filename": "01030000000124.pdf",
+      "status": "success",
+      "elapsed": 0.5405656660441309,
+      "server_time": 0.537837749987375
+    },
+    {
+      "filename": "01030000000125.pdf",
+      "status": "success",
+      "elapsed": 0.19119008298730478,
+      "server_time": 0.18880258302669972
+    },
+    {
+      "filename": "01030000000126.pdf",
+      "status": "success",
+      "elapsed": 0.4471094170003198,
+      "server_time": 0.4434728749911301
+    },
+    {
+      "filename": "01030000000127.pdf",
+      "status": "success",
+      "elapsed": 1.4135877499938942,
+      "server_time": 1.4096584590151906
+    },
+    {
+      "filename": "01030000000128.pdf",
+      "status": "success",
+      "elapsed": 1.6433422910049558,
+      "server_time": 1.6393002499826252
+    },
+    {
+      "filename": "01030000000129.pdf",
+      "status": "success",
+      "elapsed": 0.3084769159904681,
+      "server_time": 0.305576334008947
+    },
+    {
+      "filename": "01030000000130.pdf",
+      "status": "success",
+      "elapsed": 0.90140687499661,
+      "server_time": 0.898328458017204
+    },
+    {
+      "filename": "01030000000131.pdf",
+      "status": "success",
+      "elapsed": 1.1844341660034843,
+      "server_time": 1.1810526669723913
+    },
+    {
+      "filename": "01030000000132.pdf",
+      "status": "success",
+      "elapsed": 0.9030522079556249,
+      "server_time": 0.8989290830213577
+    },
+    {
+      "filename": "01030000000133.pdf",
+      "status": "success",
+      "elapsed": 0.4822871250216849,
+      "server_time": 0.47932595800375566
+    },
+    {
+      "filename": "01030000000134.pdf",
+      "status": "success",
+      "elapsed": 1.298552458989434,
+      "server_time": 1.294351499993354
+    },
+    {
+      "filename": "01030000000135.pdf",
+      "status": "success",
+      "elapsed": 0.2621786250383593,
+      "server_time": 0.25933074997738004
+    },
+    {
+      "filename": "01030000000136.pdf",
+      "status": "success",
+      "elapsed": 1.3238888750202022,
+      "server_time": 1.311885875009466
+    },
+    {
+      "filename": "01030000000137.pdf",
+      "status": "success",
+      "elapsed": 0.8403377499780618,
+      "server_time": 0.8339723329991102
+    },
+    {
+      "filename": "01030000000138.pdf",
+      "status": "success",
+      "elapsed": 0.5353121669613756,
+      "server_time": 0.531863207987044
+    },
+    {
+      "filename": "01030000000139.pdf",
+      "status": "success",
+      "elapsed": 0.7436200419906527,
+      "server_time": 0.7343198750168085
+    },
+    {
+      "filename": "01030000000140.pdf",
+      "status": "success",
+      "elapsed": 0.7806904169847257,
+      "server_time": 0.7767318330006674
+    },
+    {
+      "filename": "01030000000141.pdf",
+      "status": "success",
+      "elapsed": 1.8583039169898257,
+      "server_time": 1.852555666002445
+    },
+    {
+      "filename": "01030000000142.pdf",
+      "status": "success",
+      "elapsed": 0.31356708297971636,
+      "server_time": 0.31048604199895635
+    },
+    {
+      "filename": "01030000000143.pdf",
+      "status": "success",
+      "elapsed": 0.26917862496338785,
+      "server_time": 0.2659839590196498
+    },
+    {
+      "filename": "01030000000144.pdf",
+      "status": "success",
+      "elapsed": 0.33301412500441074,
+      "server_time": 0.3285883340286091
+    },
+    {
+      "filename": "01030000000145.pdf",
+      "status": "success",
+      "elapsed": 0.29921541694784537,
+      "server_time": 0.2955516669899225
+    },
+    {
+      "filename": "01030000000146.pdf",
+      "status": "success",
+      "elapsed": 0.6665330420364626,
+      "server_time": 0.6623209589743055
+    },
+    {
+      "filename": "01030000000147.pdf",
+      "status": "success",
+      "elapsed": 0.6086918330402113,
+      "server_time": 0.6055471249856055
+    },
+    {
+      "filename": "01030000000148.pdf",
+      "status": "success",
+      "elapsed": 1.2324286660295911,
+      "server_time": 1.228848917002324
+    },
+    {
+      "filename": "01030000000149.pdf",
+      "status": "success",
+      "elapsed": 0.5432566669769585,
+      "server_time": 0.540514666994568
+    },
+    {
+      "filename": "01030000000150.pdf",
+      "status": "success",
+      "elapsed": 0.5812739160028286,
+      "server_time": 0.5783333339495584
+    },
+    {
+      "filename": "01030000000151.pdf",
+      "status": "success",
+      "elapsed": 0.2893044580123387,
+      "server_time": 0.2857375830062665
+    },
+    {
+      "filename": "01030000000152.pdf",
+      "status": "success",
+      "elapsed": 0.7221482080058195,
+      "server_time": 0.718181874952279
+    },
+    {
+      "filename": "01030000000153.pdf",
+      "status": "success",
+      "elapsed": 0.3029647910152562,
+      "server_time": 0.2989172500092536
+    },
+    {
+      "filename": "01030000000154.pdf",
+      "status": "success",
+      "elapsed": 0.8416399580310099,
+      "server_time": 0.8388635000446811
+    },
+    {
+      "filename": "01030000000155.pdf",
+      "status": "success",
+      "elapsed": 0.6114308750256896,
+      "server_time": 0.6078014579834417
+    },
+    {
+      "filename": "01030000000156.pdf",
+      "status": "success",
+      "elapsed": 0.2561130420072004,
+      "server_time": 0.25318087497726083
+    },
+    {
+      "filename": "01030000000157.pdf",
+      "status": "success",
+      "elapsed": 0.20582254201872274,
+      "server_time": 0.20246308395871893
+    },
+    {
+      "filename": "01030000000158.pdf",
+      "status": "success",
+      "elapsed": 0.20003566599916667,
+      "server_time": 0.1964530000113882
+    },
+    {
+      "filename": "01030000000159.pdf",
+      "status": "success",
+      "elapsed": 0.1972768750274554,
+      "server_time": 0.19408700003987178
+    },
+    {
+      "filename": "01030000000160.pdf",
+      "status": "success",
+      "elapsed": 0.19714324997039512,
+      "server_time": 0.19412262499099597
+    },
+    {
+      "filename": "01030000000161.pdf",
+      "status": "success",
+      "elapsed": 0.19712374999653548,
+      "server_time": 0.19399954203981906
+    },
+    {
+      "filename": "01030000000162.pdf",
+      "status": "success",
+      "elapsed": 0.20451800001319498,
+      "server_time": 0.20128179102903232
+    },
+    {
+      "filename": "01030000000163.pdf",
+      "status": "success",
+      "elapsed": 1.8700883749988861,
+      "server_time": 1.8623094169888645
+    },
+    {
+      "filename": "01030000000164.pdf",
+      "status": "success",
+      "elapsed": 0.3052973329904489,
+      "server_time": 0.3013727920479141
+    },
+    {
+      "filename": "01030000000165.pdf",
+      "status": "success",
+      "elapsed": 0.6568588329828344,
+      "server_time": 0.6517472910345532
+    },
+    {
+      "filename": "01030000000166.pdf",
+      "status": "success",
+      "elapsed": 0.5618557499838062,
+      "server_time": 0.5589704170124605
+    },
+    {
+      "filename": "01030000000167.pdf",
+      "status": "success",
+      "elapsed": 0.30160895898006856,
+      "server_time": 0.2975445840274915
+    },
+    {
+      "filename": "01030000000168.pdf",
+      "status": "success",
+      "elapsed": 0.30773508304264396,
+      "server_time": 0.3048531669774093
+    },
+    {
+      "filename": "01030000000169.pdf",
+      "status": "success",
+      "elapsed": 0.3223462500027381,
+      "server_time": 0.3182865839917213
+    },
+    {
+      "filename": "01030000000170.pdf",
+      "status": "success",
+      "elapsed": 1.3695825419854373,
+      "server_time": 1.365699667017907
+    },
+    {
+      "filename": "01030000000171.pdf",
+      "status": "success",
+      "elapsed": 1.1203059169929475,
+      "server_time": 1.115905707993079
+    },
+    {
+      "filename": "01030000000172.pdf",
+      "status": "success",
+      "elapsed": 1.1942022090079263,
+      "server_time": 1.1902694159653038
+    },
+    {
+      "filename": "01030000000173.pdf",
+      "status": "success",
+      "elapsed": 0.4695068749715574,
+      "server_time": 0.46629795798799023
+    },
+    {
+      "filename": "01030000000174.pdf",
+      "status": "success",
+      "elapsed": 0.4568356249947101,
+      "server_time": 0.45275104203028604
+    },
+    {
+      "filename": "01030000000175.pdf",
+      "status": "success",
+      "elapsed": 0.32698520802659914,
+      "server_time": 0.32330883300164714
+    },
+    {
+      "filename": "01030000000176.pdf",
+      "status": "success",
+      "elapsed": 0.3407604579697363,
+      "server_time": 0.3375459579983726
+    },
+    {
+      "filename": "01030000000177.pdf",
+      "status": "success",
+      "elapsed": 0.49446658400120214,
+      "server_time": 0.49120904202573
+    },
+    {
+      "filename": "01030000000178.pdf",
+      "status": "success",
+      "elapsed": 0.6391962919733487,
+      "server_time": 0.635195582988672
+    },
+    {
+      "filename": "01030000000179.pdf",
+      "status": "success",
+      "elapsed": 0.9593374999822117,
+      "server_time": 0.9551061250385828
+    },
+    {
+      "filename": "01030000000180.pdf",
+      "status": "success",
+      "elapsed": 0.5181393749662675,
+      "server_time": 0.5149723750073463
+    },
+    {
+      "filename": "01030000000181.pdf",
+      "status": "success",
+      "elapsed": 0.28714429202955216,
+      "server_time": 0.2835321670281701
+    },
+    {
+      "filename": "01030000000182.pdf",
+      "status": "success",
+      "elapsed": 0.622386250004638,
+      "server_time": 0.6188804999692366
+    },
+    {
+      "filename": "01030000000183.pdf",
+      "status": "success",
+      "elapsed": 0.8731557919527404,
+      "server_time": 0.8693063330138102
+    },
+    {
+      "filename": "01030000000184.pdf",
+      "status": "success",
+      "elapsed": 0.6455512919928879,
+      "server_time": 0.6415903749875724
+    },
+    {
+      "filename": "01030000000185.pdf",
+      "status": "success",
+      "elapsed": 0.3357716670143418,
+      "server_time": 0.33166358404560015
+    },
+    {
+      "filename": "01030000000186.pdf",
+      "status": "success",
+      "elapsed": 0.639882082992699,
+      "server_time": 0.6365475840284489
+    },
+    {
+      "filename": "01030000000187.pdf",
+      "status": "success",
+      "elapsed": 0.81347754097078,
+      "server_time": 0.8095759159768932
+    },
+    {
+      "filename": "01030000000188.pdf",
+      "status": "success",
+      "elapsed": 1.6670277909724973,
+      "server_time": 1.662580624979455
+    },
+    {
+      "filename": "01030000000189.pdf",
+      "status": "success",
+      "elapsed": 1.7871013340190984,
+      "server_time": 1.7834812499932013
+    },
+    {
+      "filename": "01030000000190.pdf",
+      "status": "success",
+      "elapsed": 1.15512587496778,
+      "server_time": 1.1509053339832462
+    },
+    {
+      "filename": "01030000000191.pdf",
+      "status": "success",
+      "elapsed": 0.31478129199240357,
+      "server_time": 0.31154333299491554
+    },
+    {
+      "filename": "01030000000192.pdf",
+      "status": "success",
+      "elapsed": 0.37252099998295307,
+      "server_time": 0.3682804580312222
+    },
+    {
+      "filename": "01030000000193.pdf",
+      "status": "success",
+      "elapsed": 0.3488778339815326,
+      "server_time": 0.34501120896311477
+    },
+    {
+      "filename": "01030000000194.pdf",
+      "status": "success",
+      "elapsed": 0.2987960000173189,
+      "server_time": 0.29538512497674674
+    },
+    {
+      "filename": "01030000000195.pdf",
+      "status": "success",
+      "elapsed": 0.30467862501973286,
+      "server_time": 0.3011551249655895
+    },
+    {
+      "filename": "01030000000196.pdf",
+      "status": "success",
+      "elapsed": 0.2963709589676,
+      "server_time": 0.29255999997258186
+    },
+    {
+      "filename": "01030000000197.pdf",
+      "status": "success",
+      "elapsed": 0.6323719170177355,
+      "server_time": 0.6291057909838855
+    },
+    {
+      "filename": "01030000000198.pdf",
+      "status": "success",
+      "elapsed": 1.5045152499806136,
+      "server_time": 1.499544334015809
+    },
+    {
+      "filename": "01030000000199.pdf",
+      "status": "success",
+      "elapsed": 2.419794333050959,
+      "server_time": 2.4141910420148633
+    },
+    {
+      "filename": "01030000000200.pdf",
+      "status": "success",
+      "elapsed": 3.9152356670238078,
+      "server_time": 3.9101335000013933
+    }
+  ]
+}

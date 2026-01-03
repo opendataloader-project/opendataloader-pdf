@@ -4,10 +4,10 @@
 
 | Task | Status | Completed | Result |
 |------|--------|-----------|--------|
-| Phase 0: Baseline measurement | ⬜ not_started | - | - |
-| Phase 0: FastAPI experiment | ⬜ not_started | - | - |
-| Phase 0: subprocess experiment | ⬜ not_started | - | - |
-| Phase 0: Results comparison | ⬜ not_started | - | - |
+| Phase 0: Baseline measurement | ✅ completed | 2026-01-03 | 2.283s/doc |
+| Phase 0: FastAPI experiment | ✅ completed | 2026-01-03 | 0.685s/doc (PASS < 0.8s) |
+| Phase 0: subprocess experiment | ✅ completed | 2026-01-03 | 0.661s/doc (PASS < 1.0s) |
+| Phase 0: Results comparison | ✅ completed | 2026-01-03 | 3.3x-3.5x speedup |
 | Task 1.1: docling_subprocess_worker.py | ⬜ not_started | - | - |
 | Task 1.2: docling_fast_server.py | ⬜ not_started | - | - |
 | Task 2.1: DoclingSubprocessClient.java | ⬜ not_started | - | - |
