@@ -38,7 +38,6 @@ import java.util.logging.Logger;
  *
  * @see HybridClient
  * @see HybridConfig
- * @see DoclingClient
  */
 public class DoclingFastServerClient implements HybridClient {
 

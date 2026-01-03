@@ -27,6 +27,10 @@ def convert(
     image_output: Optional[str] = None,
     image_format: Optional[str] = None,
     pages: Optional[str] = None,
+    hybrid: Optional[str] = None,
+    hybrid_url: Optional[str] = None,
+    hybrid_timeout: Optional[str] = None,
+    hybrid_fallback: bool = True,
 ) -> None:
     """
     Convert PDF(s) into the requested output format(s).
@@ -49,6 +53,10 @@ def convert(
         image_output: Image output mode. Values: off (no images), embedded (Base64 data URIs), external (file references). Default: external
         image_format: Output format for extracted images. Values: png, jpeg. Default: png
         pages: Pages to extract (e.g., "1,3,5-7"). Default: all pages
+        hybrid: Hybrid backend for AI processing. Values: off (default), docling-fast
+        hybrid_url: Hybrid backend server URL (overrides default)
+        hybrid_timeout: Hybrid backend request timeout in milliseconds. Default: 30000
+        hybrid_fallback: Fallback to Java processing on hybrid backend error. Default: true
     """
     args: List[str] = []
 
@@ -98,5 +106,13 @@ def convert(
         args.extend(["--image-format", image_format])
     if pages:
         args.extend(["--pages", pages])
+    if hybrid:
+        args.extend(["--hybrid", hybrid])
+    if hybrid_url:
+        args.extend(["--hybrid-url", hybrid_url])
+    if hybrid_timeout:
+        args.extend(["--hybrid-timeout", hybrid_timeout])
+    if hybrid_fallback:
+        args.append("--hybrid-fallback")
 
     run_jar(args, quiet)

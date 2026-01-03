@@ -153,6 +153,42 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "default": None,
         "description": "Pages to extract (e.g., \"1,3,5-7\"). Default: all pages",
     },
+    {
+        "name": "hybrid",
+        "python_name": "hybrid",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": "off",
+        "description": "Hybrid backend for AI processing. Values: off (default), docling-fast",
+    },
+    {
+        "name": "hybrid-url",
+        "python_name": "hybrid_url",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": None,
+        "description": "Hybrid backend server URL (overrides default)",
+    },
+    {
+        "name": "hybrid-timeout",
+        "python_name": "hybrid_timeout",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": "30000",
+        "description": "Hybrid backend request timeout in milliseconds. Default: 30000",
+    },
+    {
+        "name": "hybrid-fallback",
+        "python_name": "hybrid_fallback",
+        "short_name": None,
+        "type": "boolean",
+        "required": False,
+        "default": True,
+        "description": "Fallback to Java processing on hybrid backend error. Default: true",
+    },
 ]
 
 
