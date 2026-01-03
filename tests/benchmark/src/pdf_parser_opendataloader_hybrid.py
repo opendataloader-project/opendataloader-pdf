@@ -74,7 +74,6 @@ def to_markdown(_, input_path, output_dir):
         str(input_path),
         "--output-dir", str(output_dir),
         "--format", "markdown",
-        "--table-method", "cluster",
         "--image-output", "off",
         "--quiet",
         # Hybrid mode options

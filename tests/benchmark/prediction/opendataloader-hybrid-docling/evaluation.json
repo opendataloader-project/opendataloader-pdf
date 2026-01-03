@@ -4,18 +4,18 @@
     "engine_version": "local+docling",
     "processor": "Apple M4",
     "document_count": 200,
-    "total_elapsed": 218.4418499469757,
-    "elapsed_per_doc": 1.0922092497348785,
+    "total_elapsed": 218.73932194709778,
+    "elapsed_per_doc": 1.093696609735489,
     "date": "2026-01-03"
   },
   "metrics": {
     "score": {
-      "overall_mean": 0.8914737927676905,
-      "nid_mean": 0.9278303972181492,
-      "nid_s_mean": 0.8961354527099015,
+      "overall_mean": 0.8939574524476684,
+      "nid_mean": 0.9311510563768686,
+      "nid_s_mean": 0.9052051491904319,
       "teds_mean": 0.9276430534097512,
       "teds_s_mean": 0.9446749141946094,
-      "mhs_mean": 0.777826110773959,
+      "mhs_mean": 0.7809039803089807,
       "mhs_s_mean": 0.8516600069651197
     },
     "nid_count": 200,
@@ -222,12 +222,12 @@
     {
       "document_id": "01030000000016",
       "scores": {
-        "overall": 0.7817727402676976,
-        "nid": 0.7059736229635376,
-        "nid_s": 0.0409756097560976,
+        "overall": 0.9966717869943676,
+        "nid": 0.996031746031746,
+        "nid_s": 0.996031746031746,
         "teds": null,
         "teds_s": null,
-        "mhs": 0.8575718575718576,
+        "mhs": 0.9973118279569892,
         "mhs_s": 1.0
       },
       "prediction_available": true
@@ -2029,12 +2029,12 @@
     {
       "document_id": "01030000000155",
       "scores": {
-        "overall": 0.7498329359121552,
-        "nid": 0.6650887573964497,
-        "nid_s": 0.20481927710843373,
+        "overall": 1.0,
+        "nid": 1.0,
+        "nid_s": 1.0,
         "teds": null,
         "teds_s": null,
-        "mhs": 0.8345771144278606,
+        "mhs": 1.0,
         "mhs_s": 1.0
       },
       "prediction_available": true
@@ -2237,12 +2237,12 @@
     {
       "document_id": "01030000000171",
       "scores": {
-        "overall": 0.9683341748189245,
-        "nid": 0.9608375339278791,
-        "nid_s": 0.9362975630611372,
+        "overall": 1.0,
+        "nid": 1.0,
+        "nid_s": 1.0,
         "teds": null,
         "teds_s": null,
-        "mhs": 0.9758308157099698,
+        "mhs": 1.0,
         "mhs_s": 1.0
       },
       "prediction_available": true
@@ -2626,18 +2626,18 @@
     }
   ],
   "table_detection": {
-    "precision": 0.875,
+    "precision": 0.9333333333333333,
     "recall": 1.0,
-    "f1": 0.9333333333333333,
-    "accuracy": 0.97,
+    "f1": 0.9655172413793104,
+    "accuracy": 0.985,
     "tp": 42,
-    "fp": 6,
+    "fp": 3,
     "fn": 0,
-    "tn": 152
+    "tn": 155
   },
   "speed": {
-    "total_elapsed": 218.4418499469757,
-    "elapsed_per_doc": 1.0922092497348785,
+    "total_elapsed": 218.73932194709778,
+    "elapsed_per_doc": 1.093696609735489,
     "document_count": 200,
     "processor": "Apple M4"
   }
