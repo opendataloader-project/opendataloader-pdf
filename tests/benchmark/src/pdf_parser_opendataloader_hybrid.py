@@ -1,19 +1,25 @@
 """PDF parser using opendataloader-pdf with hybrid mode (docling backend).
 
-This module runs the local opendataloader-pdf JAR with --hybrid docling option,
-which routes complex pages (tables, etc.) to the docling-serve backend for
+This module runs the local opendataloader-pdf JAR with --hybrid option,
+which routes complex pages (tables, etc.) to a backend server for
 improved accuracy.
 
+Supported backends:
+- docling: docling-serve (http://localhost:5001)
+- docling-fast: optimized FastAPI server (http://localhost:5002, 3.3x faster)
+
 Requirements:
-- docling-serve running at http://localhost:5001 (or specify DOCLING_URL env var)
+- Backend server running at the appropriate port
 - Local JAR built: ./scripts/build-java.sh
 
 Usage:
-    # Start docling-serve first
+    # docling-serve backend
     docker run -d -p 5001:5001 quay.io/docling-project/docling-serve
-
-    # Run benchmark with hybrid mode
     ./scripts/bench.sh --hybrid docling
+
+    # docling-fast backend (3.3x faster)
+    python scripts/docling_fast_server.py &
+    ./scripts/bench.sh --hybrid docling-fast
 """
 
 import os
@@ -22,8 +28,11 @@ import sys
 from pathlib import Path
 
 
-# Default docling-serve URL
-DEFAULT_DOCLING_URL = "http://localhost:5001"
+# Default URLs for each backend
+DEFAULT_URLS = {
+    "docling": "http://localhost:5001",
+    "docling-fast": "http://localhost:5002",
+}
 
 
 def _find_local_jar() -> Path:
@@ -54,18 +63,26 @@ def _find_local_jar() -> Path:
 
 
 def to_markdown(_, input_path, output_dir):
-    """Convert PDF to Markdown using hybrid mode with docling backend.
+    """Convert PDF to Markdown using hybrid mode with specified backend.
 
     Args:
         _: Unused (for compatibility with engine dispatch signature).
         input_path: Input directory or single PDF file path.
         output_dir: Output directory for markdown files.
+
+    Environment Variables:
+        HYBRID_BACKEND: Backend to use (docling, docling-fast). Default: docling
+        DOCLING_URL: Override URL for the backend server.
+        HYBRID_TIMEOUT: Request timeout in milliseconds. Default: 600000
     """
     jar_path = _find_local_jar()
 
-    # Get backend URL from environment or use default
-    backend_url = os.environ.get("DOCLING_URL", DEFAULT_DOCLING_URL)
+    # Get backend type from environment
     backend = os.environ.get("HYBRID_BACKEND", "docling")
+
+    # Get backend URL from environment or use default for the backend
+    default_url = DEFAULT_URLS.get(backend, DEFAULT_URLS["docling"])
+    backend_url = os.environ.get("DOCLING_URL", default_url)
     timeout_ms = os.environ.get("HYBRID_TIMEOUT", "600000")
 
     # Build command - pass input path directly (directory or file)

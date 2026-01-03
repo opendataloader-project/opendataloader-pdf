@@ -92,7 +92,7 @@ public class CLIOptions {
 
     // ===== Hybrid Mode =====
     private static final String HYBRID_LONG_OPTION = "hybrid";
-    private static final String HYBRID_DESC = "Hybrid backend for AI processing. Values: off (default), docling";
+    private static final String HYBRID_DESC = "Hybrid backend for AI processing. Values: off (default), docling, docling-fast";
 
     private static final String HYBRID_URL_LONG_OPTION = "hybrid-url";
     private static final String HYBRID_URL_DESC = "Hybrid backend server URL (overrides default)";

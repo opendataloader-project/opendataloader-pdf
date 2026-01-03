@@ -24,6 +24,9 @@ public class HybridConfig {
     /** Default URL for docling-serve. */
     public static final String DOCLING_DEFAULT_URL = "http://localhost:5001";
 
+    /** Default URL for docling-fast-server. */
+    public static final String DOCLING_FAST_DEFAULT_URL = "http://localhost:5002";
+
     private String url;
     private int timeoutMs = DEFAULT_TIMEOUT_MS;
     private boolean fallbackToJava = true;
@@ -118,7 +121,7 @@ public class HybridConfig {
     /**
      * Gets the default URL for a given hybrid backend.
      *
-     * @param hybrid The hybrid backend name (docling, hancom, azure, google).
+     * @param hybrid The hybrid backend name (docling, docling-fast, hancom, azure, google).
      * @return The default URL, or null if the backend requires explicit URL.
      */
     public static String getDefaultUrl(String hybrid) {
@@ -128,6 +131,9 @@ public class HybridConfig {
         String lowerHybrid = hybrid.toLowerCase();
         if ("docling".equals(lowerHybrid)) {
             return DOCLING_DEFAULT_URL;
+        }
+        if ("docling-fast".equals(lowerHybrid)) {
+            return DOCLING_FAST_DEFAULT_URL;
         }
         // hancom, azure, google require explicit URL
         return null;

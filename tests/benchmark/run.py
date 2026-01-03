@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 import sys
 from pathlib import Path
 from typing import List, Optional, Sequence
@@ -47,6 +48,8 @@ def run_benchmark(args: argparse.Namespace) -> dict:
     # Determine engine based on hybrid mode
     if args.hybrid and args.hybrid != "off":
         engine_name = f"opendataloader-hybrid-{args.hybrid}"
+        # Set environment variable for the hybrid parser
+        os.environ["HYBRID_BACKEND"] = args.hybrid
     else:
         engine_name = "opendataloader"
 
@@ -288,8 +291,8 @@ def _parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser.add_argument(
         "--hybrid",
         default="off",
-        choices=["off", "docling"],
-        help="Hybrid backend: off (default), docling. Requires backend server running.",
+        choices=["off", "docling", "docling-fast"],
+        help="Hybrid backend: off (default), docling, docling-fast. Requires backend server running.",
     )
     return parser.parse_args(argv)
 
