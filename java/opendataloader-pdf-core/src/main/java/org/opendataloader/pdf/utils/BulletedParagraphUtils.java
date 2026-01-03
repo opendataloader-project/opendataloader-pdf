@@ -70,6 +70,9 @@ public class BulletedParagraphUtils {
      */
     public static boolean isLabeledLine(TextLine textLine) {
         String value = textLine.getValue();
+        if (value == null || value.isEmpty()) {
+            return false;
+        }
         char character = value.charAt(0);
         if (POSSIBLE_LABELS.indexOf(character) != -1) {
             return true;

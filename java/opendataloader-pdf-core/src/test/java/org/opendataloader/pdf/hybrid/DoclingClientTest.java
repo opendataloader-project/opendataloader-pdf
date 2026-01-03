@@ -85,7 +85,7 @@ class DoclingClientTest {
         assertArrayEquals(pdfBytes, allPagesRequest.getPdfBytes());
         assertTrue(allPagesRequest.getPageNumbers().isEmpty());
         assertTrue(allPagesRequest.isDoTableStructure());
-        assertFalse(allPagesRequest.isDoOcr());
+        assertTrue(allPagesRequest.isDoOcr());
 
         // Test forPages factory method
         Set<Integer> pages = Set.of(1, 2, 3);
@@ -93,7 +93,7 @@ class DoclingClientTest {
         assertArrayEquals(pdfBytes, forPagesRequest.getPdfBytes());
         assertEquals(pages, forPagesRequest.getPageNumbers());
         assertTrue(forPagesRequest.isDoTableStructure());
-        assertFalse(forPagesRequest.isDoOcr());
+        assertTrue(forPagesRequest.isDoOcr());
     }
 
     @Test
