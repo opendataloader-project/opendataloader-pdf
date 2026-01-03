@@ -55,10 +55,10 @@ public interface HybridClient {
          * Creates a request to process all pages with default options.
          *
          * @param pdfBytes The PDF file bytes.
-         * @return A new HybridRequest with table structure enabled and OCR disabled.
+         * @return A new HybridRequest with table structure and OCR enabled.
          */
         public static HybridRequest allPages(byte[] pdfBytes) {
-            return new HybridRequest(pdfBytes, Collections.emptySet(), true, false);
+            return new HybridRequest(pdfBytes, Collections.emptySet(), true, true);
         }
 
         /**
@@ -66,10 +66,10 @@ public interface HybridClient {
          *
          * @param pdfBytes    The PDF file bytes.
          * @param pageNumbers The 1-indexed page numbers to process.
-         * @return A new HybridRequest with table structure enabled and OCR disabled.
+         * @return A new HybridRequest with table structure and OCR enabled.
          */
         public static HybridRequest forPages(byte[] pdfBytes, Set<Integer> pageNumbers) {
-            return new HybridRequest(pdfBytes, pageNumbers, true, false);
+            return new HybridRequest(pdfBytes, pageNumbers, true, true);
         }
 
         public byte[] getPdfBytes() {
