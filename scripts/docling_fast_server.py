@@ -103,7 +103,7 @@ async def convert_file(
     to_formats: List[str] = Form(default=["md", "json"]),
     do_ocr: str = Form(default="true"),
     do_table_structure: str = Form(default="true"),
-    page_range: Optional[List[int]] = Form(default=None),
+    page_ranges: Optional[str] = Form(default=None),
     image_export_mode: str = Form(default="placeholder"),
 ):
     """Convert PDF file to markdown and/or JSON.
@@ -115,7 +115,7 @@ async def convert_file(
         to_formats: Output formats (md, json)
         do_ocr: Whether to perform OCR (default: true)
         do_table_structure: Whether to detect table structure (default: true)
-        page_range: Page range to process [start, end] (optional)
+        page_ranges: Page range string "start-end" (e.g., "1-5") (optional)
         image_export_mode: How to handle images (placeholder, embedded, etc.)
 
     Returns:
@@ -129,6 +129,16 @@ async def convert_file(
             status_code=503,
         )
 
+    # Parse page_ranges string to tuple
+    page_range_tuple = None
+    if page_ranges:
+        try:
+            parts = page_ranges.split("-")
+            if len(parts) == 2:
+                page_range_tuple = (int(parts[0]), int(parts[1]))
+        except ValueError:
+            pass
+
     # Save uploaded file to temp location
     with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
         content = await files.read()
@@ -137,7 +147,10 @@ async def convert_file(
 
     try:
         start = time.perf_counter()
-        result = converter.convert(tmp_path)
+        if page_range_tuple:
+            result = converter.convert(tmp_path, page_range=page_range_tuple)
+        else:
+            result = converter.convert(tmp_path)
         processing_time = time.perf_counter() - start
 
         # Export to requested formats
