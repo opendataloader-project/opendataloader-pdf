@@ -20,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>Supported backends:
  * <ul>
  *   <li>{@code docling} - Docling-serve backend for advanced PDF parsing</li>
+ *   <li>{@code docling-fast} - Optimized docling SDK server (3.3x faster than docling-serve)</li>
  * </ul>
  *
  * <p>Future backends (not yet implemented):
@@ -36,6 +37,9 @@ public class HybridClientFactory {
 
     /** Backend type constant for Docling. */
     public static final String BACKEND_DOCLING = "docling";
+
+    /** Backend type constant for Docling Fast Server. */
+    public static final String BACKEND_DOCLING_FAST = "docling-fast";
 
     /** Backend type constant for Hancom (not yet implemented). */
     public static final String BACKEND_HANCOM = "hancom";
@@ -81,6 +85,8 @@ public class HybridClientFactory {
     private static HybridClient createClient(String hybrid, HybridConfig config) {
         if (BACKEND_DOCLING.equals(hybrid)) {
             return new DoclingClient(config);
+        } else if (BACKEND_DOCLING_FAST.equals(hybrid)) {
+            return new DoclingFastServerClient(config);
         } else if (BACKEND_HANCOM.equals(hybrid)) {
             throw new UnsupportedOperationException("Hancom backend is not yet implemented");
         } else if (BACKEND_AZURE.equals(hybrid)) {
@@ -89,7 +95,7 @@ public class HybridClientFactory {
             throw new UnsupportedOperationException("Google Document AI backend is not yet implemented");
         } else {
             throw new IllegalArgumentException("Unknown hybrid backend: " + hybrid +
-                ". Supported backends: " + BACKEND_DOCLING);
+                ". Supported backends: " + getSupportedBackends());
         }
     }
 
@@ -130,6 +136,8 @@ public class HybridClientFactory {
         for (HybridClient client : CLIENT_CACHE.values()) {
             if (client instanceof DoclingClient) {
                 ((DoclingClient) client).shutdown();
+            } else if (client instanceof DoclingFastServerClient) {
+                ((DoclingFastServerClient) client).shutdown();
             }
         }
         CLIENT_CACHE.clear();
@@ -147,7 +155,7 @@ public class HybridClientFactory {
         }
 
         String lowerHybrid = hybrid.toLowerCase();
-        return BACKEND_DOCLING.equals(lowerHybrid);
+        return BACKEND_DOCLING.equals(lowerHybrid) || BACKEND_DOCLING_FAST.equals(lowerHybrid);
     }
 
     /**
@@ -156,7 +164,7 @@ public class HybridClientFactory {
      * @return A string listing all supported backends.
      */
     public static String getSupportedBackends() {
-        return BACKEND_DOCLING;
+        return BACKEND_DOCLING + ", " + BACKEND_DOCLING_FAST;
     }
 
     /**
@@ -165,6 +173,6 @@ public class HybridClientFactory {
      * @return A string listing all known backends.
      */
     public static String getAllKnownBackends() {
-        return String.join(", ", BACKEND_DOCLING, BACKEND_HANCOM, BACKEND_AZURE, BACKEND_GOOGLE);
+        return String.join(", ", BACKEND_DOCLING, BACKEND_DOCLING_FAST, BACKEND_HANCOM, BACKEND_AZURE, BACKEND_GOOGLE);
     }
 }
