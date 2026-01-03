@@ -23,7 +23,7 @@ import java.util.Set;
 /**
  * Unit tests for HybridDocumentProcessor.
  *
- * <p>Note: Full integration tests require a running docling-serve instance.
+ * <p>Note: Full integration tests require a running docling-fast server.
  * These tests focus on the triage-based routing logic.
  */
 public class HybridDocumentProcessorTest {
@@ -31,10 +31,10 @@ public class HybridDocumentProcessorTest {
     @Test
     public void testHybridModeEnabled() {
         Config config = new Config();
-        config.setHybrid("docling");
+        config.setHybrid("docling-fast");
 
         Assertions.assertTrue(config.isHybridEnabled());
-        Assertions.assertEquals("docling", config.getHybrid());
+        Assertions.assertEquals("docling-fast", config.getHybrid());
     }
 
     @Test
@@ -68,12 +68,12 @@ public class HybridDocumentProcessorTest {
     public void testHybridConfigEffectiveUrl() {
         HybridConfig config = new HybridConfig();
 
-        // Default URL for docling
-        Assertions.assertEquals(HybridConfig.DOCLING_DEFAULT_URL, config.getEffectiveUrl("docling"));
+        // Default URL for docling-fast
+        Assertions.assertEquals(HybridConfig.DOCLING_FAST_DEFAULT_URL, config.getEffectiveUrl("docling-fast"));
 
         // Custom URL overrides default
         config.setUrl("http://custom:8080");
-        Assertions.assertEquals("http://custom:8080", config.getEffectiveUrl("docling"));
+        Assertions.assertEquals("http://custom:8080", config.getEffectiveUrl("docling-fast"));
     }
 
     @Test

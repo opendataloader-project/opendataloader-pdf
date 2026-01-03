@@ -19,39 +19,28 @@ import static org.junit.jupiter.api.Assertions.*;
 class HybridClientFactoryTest {
 
     @Test
-    void testCreateDoclingClient() {
+    void testCreateDoclingFastClient() {
         HybridConfig config = new HybridConfig();
-        HybridClient client = HybridClientFactory.create("docling", config);
+        HybridClient client = HybridClientFactory.create("docling-fast", config);
 
         assertNotNull(client);
-        assertInstanceOf(DoclingClient.class, client);
+        assertInstanceOf(DoclingFastServerClient.class, client);
 
         // Cleanup
-        ((DoclingClient) client).shutdown();
+        ((DoclingFastServerClient) client).shutdown();
     }
 
     @Test
-    void testCreateDoclingClientWithDefaultConfig() {
-        HybridClient client = HybridClientFactory.create("docling");
-
-        assertNotNull(client);
-        assertInstanceOf(DoclingClient.class, client);
-
-        // Cleanup
-        ((DoclingClient) client).shutdown();
-    }
-
-    @Test
-    void testCreateDoclingClientCaseInsensitive() {
+    void testCreateDoclingFastClientCaseInsensitive() {
         HybridConfig config = new HybridConfig();
 
-        HybridClient client1 = HybridClientFactory.create("DOCLING", config);
-        assertInstanceOf(DoclingClient.class, client1);
-        ((DoclingClient) client1).shutdown();
+        HybridClient client1 = HybridClientFactory.create("DOCLING-FAST", config);
+        assertInstanceOf(DoclingFastServerClient.class, client1);
+        ((DoclingFastServerClient) client1).shutdown();
 
-        HybridClient client2 = HybridClientFactory.create("Docling", config);
-        assertInstanceOf(DoclingClient.class, client2);
-        ((DoclingClient) client2).shutdown();
+        HybridClient client2 = HybridClientFactory.create("Docling-Fast", config);
+        assertInstanceOf(DoclingFastServerClient.class, client2);
+        ((DoclingFastServerClient) client2).shutdown();
     }
 
     @Test
@@ -91,7 +80,7 @@ class HybridClientFactoryTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"unknown", "invalid", "other", "pdf"})
+    @ValueSource(strings = {"unknown", "invalid", "other", "pdf", "docling"})
     void testCreateUnknownBackendThrows(String backend) {
         HybridConfig config = new HybridConfig();
 
@@ -121,14 +110,15 @@ class HybridClientFactoryTest {
     }
 
     @Test
-    void testIsSupportedDocling() {
-        assertTrue(HybridClientFactory.isSupported("docling"));
-        assertTrue(HybridClientFactory.isSupported("DOCLING"));
-        assertTrue(HybridClientFactory.isSupported("Docling"));
+    void testIsSupportedDoclingFast() {
+        assertTrue(HybridClientFactory.isSupported("docling-fast"));
+        assertTrue(HybridClientFactory.isSupported("DOCLING-FAST"));
+        assertTrue(HybridClientFactory.isSupported("Docling-Fast"));
     }
 
     @Test
     void testIsSupportedUnsupportedBackends() {
+        assertFalse(HybridClientFactory.isSupported("docling"));
         assertFalse(HybridClientFactory.isSupported("hancom"));
         assertFalse(HybridClientFactory.isSupported("azure"));
         assertFalse(HybridClientFactory.isSupported("google"));
@@ -145,14 +135,15 @@ class HybridClientFactoryTest {
     void testGetSupportedBackends() {
         String supported = HybridClientFactory.getSupportedBackends();
 
-        assertTrue(supported.contains("docling"));
+        assertTrue(supported.contains("docling-fast"));
+        assertFalse(supported.contains("docling,"));
     }
 
     @Test
     void testGetAllKnownBackends() {
         String allKnown = HybridClientFactory.getAllKnownBackends();
 
-        assertTrue(allKnown.contains("docling"));
+        assertTrue(allKnown.contains("docling-fast"));
         assertTrue(allKnown.contains("hancom"));
         assertTrue(allKnown.contains("azure"));
         assertTrue(allKnown.contains("google"));
@@ -160,7 +151,7 @@ class HybridClientFactoryTest {
 
     @Test
     void testBackendConstants() {
-        assertEquals("docling", HybridClientFactory.BACKEND_DOCLING);
+        assertEquals("docling-fast", HybridClientFactory.BACKEND_DOCLING_FAST);
         assertEquals("hancom", HybridClientFactory.BACKEND_HANCOM);
         assertEquals("azure", HybridClientFactory.BACKEND_AZURE);
         assertEquals("google", HybridClientFactory.BACKEND_GOOGLE);
