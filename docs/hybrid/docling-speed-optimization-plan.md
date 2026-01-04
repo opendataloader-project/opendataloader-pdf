@@ -16,8 +16,8 @@
 | Task 3.1: pdf_parser modules | ✅ completed | 2026-01-03 | docling-fast only |
 | Task 3.2: engine_registry.py | ✅ completed | 2026-01-03 | - |
 | Task 3.3: run.py CLI options | ✅ completed | 2026-01-03 | - |
-| Task 4.1: Full benchmark | ⬜ not_started | - | - |
-| Task 4.2: Results documentation | ⬜ not_started | - | - |
+| Task 4.1: Full benchmark | ✅ completed | 2026-01-03 | See experiments/speed/ |
+| Task 4.2: Results documentation | ✅ completed | 2026-01-03 | speed-experiment-2026-01-03.md |
 
 **Status Legend:**
 - ⬜ `not_started` - Not yet begun
