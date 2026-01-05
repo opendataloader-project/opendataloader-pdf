@@ -38,6 +38,7 @@ from typing import Optional
 # Configuration
 DEFAULT_HOST = "0.0.0.0"
 DEFAULT_PORT = 5002
+MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB max file size
 
 # Global converter instance (initialized on startup)
 converter = None
@@ -161,9 +162,20 @@ def create_app():
             except ValueError:
                 pass
 
+        # Read and validate file size
+        content = await files.read()
+        if len(content) > MAX_FILE_SIZE:
+            return JSONResponse(
+                {
+                    "status": "failure",
+                    "errors": [f"File size exceeds maximum allowed ({MAX_FILE_SIZE // (1024*1024)}MB)"],
+                },
+                status_code=413,
+            )
+
         # Save uploaded file to temp location
+        tmp_path = None
         with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
-            content = await files.read()
             tmp.write(content)
             tmp_path = tmp.name
 
@@ -198,7 +210,8 @@ def create_app():
                 status_code=500,
             )
         finally:
-            os.unlink(tmp_path)
+            if tmp_path and os.path.exists(tmp_path):
+                os.unlink(tmp_path)
 
     return app
 
