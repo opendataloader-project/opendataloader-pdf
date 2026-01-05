@@ -42,7 +42,6 @@ public class ParagraphProcessor {
         blocks = detectParagraphsWithLeftAlignments(blocks, false);
         blocks = detectFirstLinesOfParagraphWithLeftAlignments(blocks);
         blocks = detectTwoLinesParagraphs(blocks);
-        blocks = detectBulletedParagraphsWithLeftAlignments(blocks);
         blocks = detectParagraphsWithCenterAlignments(blocks);
         blocks = detectParagraphsWithRightAlignments(blocks);
         blocks = processOtherLines(blocks);
@@ -98,9 +97,7 @@ public class ParagraphProcessor {
             for (int i = 1; i < textBlocks.size(); i++) {
                 TextBlock previousBlock = newBlocks.get(newBlocks.size() - 1);
                 TextBlock nextBlock = textBlocks.get(i);
-                TextAlignment textAlignment = ChunksMergeUtils.getAlignment(previousBlock.getLastLine(), nextBlock.getFirstLine());
-                double probability = getDifferentLinesProbability(previousBlock, nextBlock, false, false);
-                if (textAlignment == TextAlignment.CENTER && probability > DIFFERENT_LINES_PROBABILITY) {
+                if (areLinesOfParagraphsWithCenterAlignments(previousBlock, nextBlock)) {
                     previousBlock.add(nextBlock.getLines());
                     previousBlock.setTextAlignment(TextAlignment.CENTER);
                 } else {
@@ -109,6 +106,12 @@ public class ParagraphProcessor {
             }
         }
         return newBlocks;
+    }
+
+    private static boolean areLinesOfParagraphsWithCenterAlignments(TextBlock previousBlock, TextBlock nextBlock) {
+        TextAlignment textAlignment = ChunksMergeUtils.getAlignment(previousBlock.getLastLine(), nextBlock.getFirstLine());
+        double probability = getDifferentLinesProbability(previousBlock, nextBlock, true, false);
+        return textAlignment == TextAlignment.CENTER && probability > DIFFERENT_LINES_PROBABILITY;
     }
 
     private static List<TextBlock> detectFirstAndLastLinesOfParagraphsWithJustifyAlignments(List<TextBlock> textBlocks) {
@@ -242,9 +245,6 @@ public class ParagraphProcessor {
     private static boolean isFirstLineOfParagraphWithLeftAlignment(TextBlock previousBlock, TextBlock nextBlock) {
         double probability = getDifferentLinesProbability(previousBlock, nextBlock, false, false);
         if (previousBlock.getLinesNumber() != 1) {
-            return false;
-        }
-        if (previousBlock.getLastLine().getLeftX() <= nextBlock.getFirstLine().getLeftX()) {
             return false;
         }
         if (probability < DIFFERENT_LINES_PROBABILITY) {
