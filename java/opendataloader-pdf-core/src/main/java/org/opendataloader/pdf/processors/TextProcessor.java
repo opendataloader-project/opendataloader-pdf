@@ -27,6 +27,7 @@ public class TextProcessor {
     private static final double MAX_BOTTOM_DECORATION_IMAGE_EPSILON = 0.1;
     private static final double MAX_LEFT_DECORATION_IMAGE_EPSILON = 0.1;
     private static final double MAX_RIGHT_DECORATION_IMAGE_EPSILON = 1.5;
+    private static final double NEIGHBORS_TEXT_CHUNKS_EPSILON = 0.1;
     private static final double TEXT_MIN_HEIGHT = 1;
 
     public static void replaceUndefinedCharacters(List<IObject> contents, String replacementCharacterString) {
@@ -73,7 +74,7 @@ public class TextProcessor {
                 TextChunk nextTextChunk = (TextChunk) nextObject;
                 if (TextChunkUtils.areTextChunksHaveSameStyle(textChunk, nextTextChunk) &&
                     TextChunkUtils.areTextChunksHaveSameBaseLine(textChunk, nextTextChunk) &&
-                    TextChunkUtils.areNeighborsTextChunks(textChunk, nextTextChunk)) {
+                    areNeighborsTextChunks(textChunk, nextTextChunk)) {
                     contents.set(i, null);
                     contents.set(i + 1, TextChunkUtils.unionTextChunks(textChunk, nextTextChunk));
                 }
@@ -122,5 +123,10 @@ public class TextProcessor {
                 NodeUtils.areCloseNumbers(imageChunk.getBottomY(), textChunk.getBottomY(), MAX_BOTTOM_DECORATION_IMAGE_EPSILON * textChunk.getHeight()) &&
                 (NodeUtils.areCloseNumbers(imageChunk.getLeftX(), textChunk.getLeftX(), MAX_LEFT_DECORATION_IMAGE_EPSILON * textChunk.getHeight()) || imageChunk.getLeftX() > textChunk.getLeftX()) &&
                 (NodeUtils.areCloseNumbers(imageChunk.getRightX(), textChunk.getRightX(), MAX_RIGHT_DECORATION_IMAGE_EPSILON * textChunk.getHeight()) || imageChunk.getRightX() < textChunk.getRightX());
+    }
+
+    private static boolean areNeighborsTextChunks(TextChunk firstTextChunk, TextChunk secondTextChunk) {
+        return NodeUtils.areCloseNumbers(firstTextChunk.getTextEnd(), secondTextChunk.getTextStart(),
+            NEIGHBORS_TEXT_CHUNKS_EPSILON * firstTextChunk.getBoundingBox().getHeight());
     }
 }
