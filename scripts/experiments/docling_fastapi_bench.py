@@ -97,10 +97,10 @@ def run_server():
                 "markdown": md_content,
                 "processing_time": elapsed,
             })
-        except Exception as e:
+        except Exception:
             return JSONResponse({
                 "status": "error",
-                "error": str(e),
+                "error": "PDF conversion failed",
             }, status_code=500)
         finally:
             os.unlink(tmp_path)

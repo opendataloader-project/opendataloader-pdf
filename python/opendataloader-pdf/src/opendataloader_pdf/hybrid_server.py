@@ -189,11 +189,11 @@ def create_app():
 
             return JSONResponse(response)
 
-        except Exception as e:
+        except Exception:
             return JSONResponse(
                 {
                     "status": "failure",
-                    "errors": [str(e)],
+                    "errors": ["PDF conversion failed"],
                 },
                 status_code=500,
             )
