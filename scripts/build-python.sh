@@ -16,6 +16,9 @@ command -v uv >/dev/null || { echo "Error: uv not found. Install with: curl -LsS
 # Clean previous build
 rm -rf dist/
 
+# Copy README.md from root (gitignored in package dir)
+cp "$ROOT_DIR/README.md" "$PACKAGE_DIR/README.md"
+
 # Build wheel package
 uv build --wheel
 
