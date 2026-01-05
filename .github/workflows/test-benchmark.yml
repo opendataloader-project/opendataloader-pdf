@@ -1,0 +1,92 @@
+name: Test & Benchmark
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'java/**'
+      - 'tests/benchmark/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        run: npm install -g pnpm
+
+      - name: Build & Test All
+        run: ./scripts/build-all.sh
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: java/opendataloader-pdf-core/target/site/jacoco/jacoco.xml
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: java-build
+          path: java/opendataloader-pdf-cli/target/*.jar
+          retention-days: 1
+
+  benchmark:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: java-build
+          path: java/opendataloader-pdf-cli/target/
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Run benchmark with regression check
+        run: |
+          cd tests/benchmark
+          uv sync --quiet
+          uv run python run.py --check-regression
+
+      - name: Upload evaluation results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: benchmark-results
+          path: tests/benchmark/prediction/opendataloader/evaluation.json
