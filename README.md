@@ -193,7 +193,7 @@ For documents with complex tables or OCR needs, enable hybrid mode to route chal
 **Results**: Table accuracy jumps from 0.49 → 0.93 (+90%) with acceptable speed trade-off.
 
 ```bash
-pip install opendataloader-pdf[hybrid]
+pip install -U "opendataloader-pdf[hybrid]"
 ```
 
 Terminal 1: Start the backend server
@@ -332,7 +332,7 @@ This means: consistent output (same input = same output), no GPU required, faste
 
 ### How do I get better accuracy for complex tables?
 
-Enable hybrid mode with `pip install opendataloader-pdf[hybrid]`. This routes pages with complex tables to an AI backend (like docling-serve) while keeping simple pages fast and local. Table accuracy improves from 0.49 to 0.93 — matching or exceeding dedicated AI parsers while remaining faster and more cost-effective.
+Enable hybrid mode with `pip install -U "opendataloader-pdf[hybrid]"`. This routes pages with complex tables to an AI backend (like docling-serve) while keeping simple pages fast and local. Table accuracy improves from 0.49 to 0.93 — matching or exceeding dedicated AI parsers while remaining faster and more cost-effective.
 
 <br/>
 
