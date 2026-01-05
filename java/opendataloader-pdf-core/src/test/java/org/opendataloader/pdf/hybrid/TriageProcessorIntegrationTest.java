@@ -56,20 +56,36 @@ public class TriageProcessorIntegrationTest {
         "01030000000197", "01030000000200"
     ));
 
-    private static boolean benchmarkDirExists = false;
+    private static boolean benchmarkPdfsAvailable = false;
+
+    /**
+     * Minimum file size to consider a PDF valid (not a Git LFS stub).
+     * Git LFS stubs are typically small text files (~130 bytes).
+     */
+    private static final long MIN_PDF_SIZE = 1024;
 
     @BeforeAll
     static void checkBenchmarkDir() {
-        benchmarkDirExists = Files.exists(BENCHMARK_PDF_DIR) && Files.isDirectory(BENCHMARK_PDF_DIR);
-        if (!benchmarkDirExists) {
+        if (!Files.exists(BENCHMARK_PDF_DIR) || !Files.isDirectory(BENCHMARK_PDF_DIR)) {
             System.out.println("Benchmark PDF directory not found: " + BENCHMARK_PDF_DIR.toAbsolutePath());
             System.out.println("Skipping integration tests. Run 'git lfs pull' to fetch test PDFs.");
+            return;
+        }
+
+        // Check if PDFs are actual files (not Git LFS stubs)
+        File samplePdf = BENCHMARK_PDF_DIR.resolve("01030000000001.pdf").toFile();
+        if (samplePdf.exists() && samplePdf.length() > MIN_PDF_SIZE) {
+            benchmarkPdfsAvailable = true;
+        } else {
+            System.out.println("Benchmark PDFs appear to be Git LFS stubs (size: " +
+                (samplePdf.exists() ? samplePdf.length() : 0) + " bytes)");
+            System.out.println("Skipping integration tests. Run 'git lfs pull' to fetch actual PDFs.");
         }
     }
 
     @Test
     public void testTriageAccuracyOnBenchmarkPDFs() throws IOException {
-        if (!benchmarkDirExists) {
+        if (!benchmarkPdfsAvailable) {
             System.out.println("Skipping test: benchmark PDFs not available");
             return;
         }
@@ -186,7 +202,7 @@ public class TriageProcessorIntegrationTest {
 
     @Test
     public void testSingleDocumentTriage() throws IOException {
-        if (!benchmarkDirExists) {
+        if (!benchmarkPdfsAvailable) {
             return;
         }
 
