@@ -1,5 +1,0 @@
-build
-twine
-setuptools
-wheel
-pytest
