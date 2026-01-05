@@ -10,6 +10,7 @@ package org.opendataloader.pdf.hybrid;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Map;
@@ -70,7 +71,7 @@ public interface HybridClient {
          */
         public HybridRequest(byte[] pdfBytes, Set<Integer> pageNumbers,
                              Set<OutputFormat> outputFormats) {
-            this.pdfBytes = pdfBytes;
+            this.pdfBytes = pdfBytes != null ? Arrays.copyOf(pdfBytes, pdfBytes.length) : null;
             this.pageNumbers = pageNumbers != null ? pageNumbers : Collections.emptySet();
             this.outputFormats = outputFormats != null && !outputFormats.isEmpty()
                 ? EnumSet.copyOf(outputFormats)
@@ -123,7 +124,7 @@ public interface HybridClient {
         }
 
         public byte[] getPdfBytes() {
-            return pdfBytes;
+            return pdfBytes != null ? Arrays.copyOf(pdfBytes, pdfBytes.length) : null;
         }
 
         public Set<Integer> getPageNumbers() {
