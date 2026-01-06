@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   test:
@@ -83,6 +84,72 @@ jobs:
           cd tests/benchmark
           uv sync --quiet
           uv run python run.py --check-regression
+
+      - name: Fetch baseline from main
+        run: |
+          git fetch origin main
+          git show origin/main:tests/benchmark/prediction/opendataloader/evaluation.json > /tmp/baseline.json || echo '{}' > /tmp/baseline.json
+
+      - name: Comment benchmark results on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            // 현재 결과 로드
+            const current = JSON.parse(fs.readFileSync('tests/benchmark/prediction/opendataloader/evaluation.json', 'utf8'));
+
+            // baseline 로드 (없으면 빈 객체)
+            let baseline = {};
+            try {
+              baseline = JSON.parse(fs.readFileSync('/tmp/baseline.json', 'utf8'));
+            } catch (e) {}
+
+            const m = current.metrics.score;
+            const b = baseline.metrics?.score || {};
+            const td = current.table_detection || {};
+            const btd = baseline.table_detection || {};
+
+            const fmt = (v) => v != null ? v.toFixed(3) : '-';
+            const diff = (curr, base) => {
+              if (curr == null || base == null) return '-';
+              const pct = ((curr - base) / base * 100);
+              const sign = pct >= 0 ? '+' : '';
+              return `${sign}${pct.toFixed(1)}%`;
+            };
+
+            const body = `## 📊 Benchmark Results
+
+            ### Scores
+            | Metric | Score | Baseline | Change |
+            |--------|-------|----------|--------|
+            | **NID** | ${fmt(m.nid_mean)} | ${fmt(b.nid_mean)} | ${diff(m.nid_mean, b.nid_mean)} |
+            | **TEDS** | ${fmt(m.teds_mean)} | ${fmt(b.teds_mean)} | ${diff(m.teds_mean, b.teds_mean)} |
+            | **MHS** | ${fmt(m.mhs_mean)} | ${fmt(b.mhs_mean)} | ${diff(m.mhs_mean, b.mhs_mean)} |
+
+            ### Table Detection
+            | Metric | Score | Baseline | Change |
+            |--------|-------|----------|--------|
+            | **F1** | ${fmt(td.f1)} | ${fmt(btd.f1)} | ${diff(td.f1, btd.f1)} |
+            | **Precision** | ${fmt(td.precision)} | ${fmt(btd.precision)} | ${diff(td.precision, btd.precision)} |
+            | **Recall** | ${fmt(td.recall)} | ${fmt(btd.recall)} | ${diff(td.recall, btd.recall)} |
+
+            <details>
+            <summary>Details</summary>
+
+            - Documents: ${current.summary.document_count}
+            - Commit: \`${context.sha.substring(0, 7)}\`
+
+            </details>
+            `;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body
+            });
 
       - name: Upload evaluation results
         uses: actions/upload-artifact@v4
