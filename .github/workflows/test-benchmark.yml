@@ -79,16 +79,16 @@ jobs:
       - name: Setup uv
         uses: astral-sh/setup-uv@v4
 
+      - name: Fetch baseline from main
+        run: |
+          git fetch origin main
+          git show origin/main:tests/benchmark/prediction/opendataloader/evaluation.json > /tmp/baseline.json || echo '{}' > /tmp/baseline.json
+
       - name: Run benchmark with regression check
         run: |
           cd tests/benchmark
           uv sync --quiet
           uv run python run.py --check-regression
-
-      - name: Fetch baseline from main
-        run: |
-          git fetch origin main
-          git show origin/main:tests/benchmark/prediction/opendataloader/evaluation.json > /tmp/baseline.json || echo '{}' > /tmp/baseline.json
 
       - name: Comment benchmark results on PR
         if: github.event_name == 'pull_request'
@@ -97,52 +97,61 @@ jobs:
           script: |
             const fs = require('fs');
 
-            // 현재 결과 로드
-            const current = JSON.parse(fs.readFileSync('tests/benchmark/prediction/opendataloader/evaluation.json', 'utf8'));
+            let current;
+            try {
+              current = JSON.parse(fs.readFileSync('tests/benchmark/prediction/opendataloader/evaluation.json', 'utf8'));
+            } catch (e) {
+              core.warning('Failed to read evaluation results');
+              return;
+            }
 
-            // baseline 로드 (없으면 빈 객체)
             let baseline = {};
             try {
               baseline = JSON.parse(fs.readFileSync('/tmp/baseline.json', 'utf8'));
             } catch (e) {}
 
-            const m = current.metrics.score;
+            const m = current.metrics?.score || {};
             const b = baseline.metrics?.score || {};
             const td = current.table_detection || {};
             const btd = baseline.table_detection || {};
 
-            const fmt = (v) => v != null ? v.toFixed(3) : '-';
+            const fmt = (v) => v != null ? Number(v).toFixed(3) : '-';
             const diff = (curr, base) => {
               if (curr == null || base == null) return '-';
-              const pct = ((curr - base) / base * 100);
+              const pct = ((Number(curr) - Number(base)) / Number(base) * 100);
               const sign = pct >= 0 ? '+' : '';
               return `${sign}${pct.toFixed(1)}%`;
             };
 
-            const body = `## 📊 Benchmark Results
+            const docCount = Number(current.summary?.document_count) || 0;
+            const commitSha = String(context.sha || '').substring(0, 7);
 
-            ### Scores
-            | Metric | Score | Baseline | Change |
-            |--------|-------|----------|--------|
-            | **NID** | ${fmt(m.nid_mean)} | ${fmt(b.nid_mean)} | ${diff(m.nid_mean, b.nid_mean)} |
-            | **TEDS** | ${fmt(m.teds_mean)} | ${fmt(b.teds_mean)} | ${diff(m.teds_mean, b.teds_mean)} |
-            | **MHS** | ${fmt(m.mhs_mean)} | ${fmt(b.mhs_mean)} | ${diff(m.mhs_mean, b.mhs_mean)} |
-
-            ### Table Detection
-            | Metric | Score | Baseline | Change |
-            |--------|-------|----------|--------|
-            | **F1** | ${fmt(td.f1)} | ${fmt(btd.f1)} | ${diff(td.f1, btd.f1)} |
-            | **Precision** | ${fmt(td.precision)} | ${fmt(btd.precision)} | ${diff(td.precision, btd.precision)} |
-            | **Recall** | ${fmt(td.recall)} | ${fmt(btd.recall)} | ${diff(td.recall, btd.recall)} |
-
-            <details>
-            <summary>Details</summary>
-
-            - Documents: ${current.summary.document_count}
-            - Commit: \`${context.sha.substring(0, 7)}\`
-
-            </details>
-            `;
+            const lines = [
+              '## 📊 Benchmark Results',
+              '',
+              '### Scores',
+              '| Metric | Score | Baseline | Change |',
+              '|--------|-------|----------|--------|',
+              `| **NID** | ${fmt(m.nid_mean)} | ${fmt(b.nid_mean)} | ${diff(m.nid_mean, b.nid_mean)} |`,
+              `| **TEDS** | ${fmt(m.teds_mean)} | ${fmt(b.teds_mean)} | ${diff(m.teds_mean, b.teds_mean)} |`,
+              `| **MHS** | ${fmt(m.mhs_mean)} | ${fmt(b.mhs_mean)} | ${diff(m.mhs_mean, b.mhs_mean)} |`,
+              '',
+              '### Table Detection',
+              '| Metric | Score | Baseline | Change |',
+              '|--------|-------|----------|--------|',
+              `| **F1** | ${fmt(td.f1)} | ${fmt(btd.f1)} | ${diff(td.f1, btd.f1)} |`,
+              `| **Precision** | ${fmt(td.precision)} | ${fmt(btd.precision)} | ${diff(td.precision, btd.precision)} |`,
+              `| **Recall** | ${fmt(td.recall)} | ${fmt(btd.recall)} | ${diff(td.recall, btd.recall)} |`,
+              '',
+              '<details>',
+              '<summary>Details</summary>',
+              '',
+              `- Documents: ${docCount}`,
+              `- Commit: \`${commitSha}\``,
+              '',
+              '</details>',
+            ];
+            const body = lines.join('\n');
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,
