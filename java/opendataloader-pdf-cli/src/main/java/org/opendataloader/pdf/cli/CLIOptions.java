@@ -86,6 +86,9 @@ public class CLIOptions {
     private static final String IMAGE_FORMAT_LONG_OPTION = "image-format";
     private static final String IMAGE_FORMAT_DESC = "Output format for extracted images. Values: png, jpeg. Default: png";
 
+    private static final String IMAGE_DIR_LONG_OPTION = "image-dir";
+    private static final String IMAGE_DIR_DESC = "Directory for extracted images. Default: {output-dir}/{pdf-name}_images";
+
     // ===== Pages =====
     private static final String PAGES_LONG_OPTION = "pages";
     private static final String PAGES_DESC = "Pages to extract (e.g., \"1,3,5-7\"). Default: all pages";
@@ -138,6 +141,7 @@ public class CLIOptions {
             new OptionDefinition(HTML_PAGE_SEPARATOR_LONG_OPTION, null, "string", null, HTML_PAGE_SEPARATOR_DESC, true),
             new OptionDefinition(IMAGE_OUTPUT_LONG_OPTION, null, "string", "external", IMAGE_OUTPUT_DESC, true),
             new OptionDefinition(IMAGE_FORMAT_LONG_OPTION, null, "string", "png", IMAGE_FORMAT_DESC, true),
+            new OptionDefinition(IMAGE_DIR_LONG_OPTION, null, "string", null, IMAGE_DIR_DESC, true),
             new OptionDefinition(PAGES_LONG_OPTION, null, "string", null, PAGES_DESC, true),
             new OptionDefinition(HYBRID_LONG_OPTION, null, "string", "off", HYBRID_DESC, true),
             new OptionDefinition(HYBRID_URL_LONG_OPTION, null, "string", null, HYBRID_URL_DESC, true),
@@ -251,6 +255,9 @@ public class CLIOptions {
                         String.format("Unsupported image format '%s'. Supported values: png, jpeg", format));
             }
             config.setImageFormat(format);
+        }
+        if (commandLine.hasOption(IMAGE_DIR_LONG_OPTION)) {
+            config.setImageDir(commandLine.getOptionValue(IMAGE_DIR_LONG_OPTION));
         }
     }
 

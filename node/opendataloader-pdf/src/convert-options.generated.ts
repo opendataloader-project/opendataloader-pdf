@@ -35,6 +35,8 @@ export interface ConvertOptions {
   imageOutput?: string;
   /** Output format for extracted images. Values: png, jpeg. Default: png */
   imageFormat?: string;
+  /** Directory for extracted images. Default: {output-dir}/{pdf-name}_images */
+  imageDir?: string;
   /** Pages to extract (e.g., "1,3,5-7"). Default: all pages */
   pages?: string;
   /** Hybrid backend for AI processing. Values: off (default), docling-fast */
@@ -66,6 +68,7 @@ export interface CliOptions {
   htmlPageSeparator?: string;
   imageOutput?: string;
   imageFormat?: string;
+  imageDir?: string;
   pages?: string;
   hybrid?: string;
   hybridUrl?: string;
@@ -123,6 +126,9 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   }
   if (cliOptions.imageFormat) {
     convertOptions.imageFormat = cliOptions.imageFormat;
+  }
+  if (cliOptions.imageDir) {
+    convertOptions.imageDir = cliOptions.imageDir;
   }
   if (cliOptions.pages) {
     convertOptions.pages = cliOptions.pages;
@@ -205,6 +211,9 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.imageFormat) {
     args.push('--image-format', options.imageFormat);
+  }
+  if (options.imageDir) {
+    args.push('--image-dir', options.imageDir);
   }
   if (options.pages) {
     args.push('--pages', options.pages);

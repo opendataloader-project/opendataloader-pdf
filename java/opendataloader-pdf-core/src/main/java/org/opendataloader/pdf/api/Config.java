@@ -58,6 +58,7 @@ public class Config {
     private String htmlPageSeparator = "";
     private String imageOutput = IMAGE_OUTPUT_EXTERNAL;
     private String imageFormat = IMAGE_FORMAT_PNG;
+    private String imageDir;
     private String pages;
     private List<Integer> cachedPageNumbers;
     private final FilterConfig filterConfig = new FilterConfig();
@@ -591,6 +592,24 @@ public class Config {
      */
     public static boolean isValidImageFormat(String format) {
         return format != null && imageFormatOptions.contains(format.toLowerCase(Locale.ROOT));
+    }
+
+    /**
+     * Gets the directory for extracted images.
+     *
+     * @return The image directory path, or null for default ({output-dir}/{pdf-name}_images).
+     */
+    public String getImageDir() {
+        return imageDir;
+    }
+
+    /**
+     * Sets the directory for extracted images.
+     *
+     * @param imageDir The directory path for extracted images.
+     */
+    public void setImageDir(String imageDir) {
+        this.imageDir = imageDir;
     }
 
     private static final String INVALID_PAGE_RANGE_FORMAT = "Invalid page range format: '%s'. Expected format: 1,3,5-7";

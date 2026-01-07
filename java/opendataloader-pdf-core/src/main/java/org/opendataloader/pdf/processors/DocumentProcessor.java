@@ -181,9 +181,15 @@ public class DocumentProcessor {
         File inputPDF = new File(inputPdfName);
         new File(config.getOutputFolder()).mkdirs();
         if (!config.isImageOutputOff() && (config.isGenerateHtml() || config.isGenerateMarkdown() || config.isGenerateJSON())) {
-            String fileName = Paths.get(inputPdfName).getFileName().toString();
-            String baseName = fileName.substring(0, fileName.length() - 4);
-            StaticLayoutContainers.setImagesDirectory(config.getOutputFolder() + File.separator + baseName + MarkdownSyntax.IMAGES_DIRECTORY_SUFFIX);
+            String imagesDirectory;
+            if (config.getImageDir() != null && !config.getImageDir().isEmpty()) {
+                imagesDirectory = config.getImageDir();
+            } else {
+                String fileName = Paths.get(inputPdfName).getFileName().toString();
+                String baseName = fileName.substring(0, fileName.length() - 4);
+                imagesDirectory = config.getOutputFolder() + File.separator + baseName + MarkdownSyntax.IMAGES_DIRECTORY_SUFFIX;
+            }
+            StaticLayoutContainers.setImagesDirectory(imagesDirectory);
             ImagesUtils imagesUtils = new ImagesUtils();
             imagesUtils.write(contents, inputPdfName, config.getPassword());
         }
