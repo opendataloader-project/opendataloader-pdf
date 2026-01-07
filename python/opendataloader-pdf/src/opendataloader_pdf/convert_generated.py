@@ -26,6 +26,7 @@ def convert(
     html_page_separator: Optional[str] = None,
     image_output: Optional[str] = None,
     image_format: Optional[str] = None,
+    image_dir: Optional[str] = None,
     pages: Optional[str] = None,
     hybrid: Optional[str] = None,
     hybrid_url: Optional[str] = None,
@@ -52,6 +53,7 @@ def convert(
         html_page_separator: Separator between pages in HTML output. Use %page-number% for page numbers. Default: none
         image_output: Image output mode. Values: off (no images), embedded (Base64 data URIs), external (file references). Default: external
         image_format: Output format for extracted images. Values: png, jpeg. Default: png
+        image_dir: Directory for extracted images. Default: {output-dir}/{pdf-name}_images
         pages: Pages to extract (e.g., "1,3,5-7"). Default: all pages
         hybrid: Hybrid backend for AI processing. Values: off (default), docling-fast
         hybrid_url: Hybrid backend server URL (overrides default)
@@ -104,6 +106,8 @@ def convert(
         args.extend(["--image-output", image_output])
     if image_format:
         args.extend(["--image-format", image_format])
+    if image_dir:
+        args.extend(["--image-dir", image_dir])
     if pages:
         args.extend(["--pages", pages])
     if hybrid:

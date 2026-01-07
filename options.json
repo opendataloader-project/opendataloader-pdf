@@ -121,6 +121,14 @@
       "description": "Output format for extracted images. Values: png, jpeg. Default: png"
     },
     {
+      "name": "image-dir",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": null,
+      "description": "Directory for extracted images. Default: {output-dir}/{pdf-name}_images"
+    },
+    {
       "name": "pages",
       "shortName": null,
       "type": "string",
