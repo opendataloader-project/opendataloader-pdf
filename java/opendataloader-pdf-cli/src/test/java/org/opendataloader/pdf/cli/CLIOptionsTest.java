@@ -296,4 +296,65 @@ class CLIOptionsTest {
             CLIOptions.createConfigFromCommandLine(cmd);
         });
     }
+
+    // ===== Image Directory Option Tests =====
+
+    @Test
+    void testDefineOptions_containsImageDirOption() {
+        assertTrue(options.hasOption("image-dir"));
+    }
+
+    @Test
+    void testCreateConfig_withImageDir() throws ParseException {
+        Path customDir = tempDir.resolve("custom-images");
+        String[] args = {"--image-dir", customDir.toString(), testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertEquals(customDir.toString(), config.getImageDir());
+    }
+
+    @Test
+    void testCreateConfig_defaultImageDir() throws ParseException {
+        String[] args = {testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertNull(config.getImageDir()); // null means use default
+    }
+
+    @Test
+    void testCreateConfig_withImageDirAndOutputDir() throws ParseException {
+        Path outputDir = tempDir.resolve("output");
+        Path imageDir = tempDir.resolve("images");
+        String[] args = {"-o", outputDir.toString(), "--image-dir", imageDir.toString(), testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertEquals(outputDir.toString(), config.getOutputFolder());
+        assertEquals(imageDir.toString(), config.getImageDir());
+    }
+
+    @Test
+    void testCreateConfig_withEmptyImageDir() throws ParseException {
+        String[] args = {"--image-dir", "", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertNull(config.getImageDir()); // empty string treated as null (use default)
+    }
+
+    @Test
+    void testCreateConfig_withWhitespaceImageDir() throws ParseException {
+        String[] args = {"--image-dir", "   ", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertNull(config.getImageDir()); // whitespace-only treated as null (use default)
+    }
 }

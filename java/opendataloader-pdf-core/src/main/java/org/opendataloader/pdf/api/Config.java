@@ -605,11 +605,16 @@ public class Config {
 
     /**
      * Sets the directory for extracted images.
+     * Empty or whitespace-only strings are treated as null (use default).
      *
      * @param imageDir The directory path for extracted images.
      */
     public void setImageDir(String imageDir) {
-        this.imageDir = imageDir;
+        if (imageDir != null && imageDir.trim().isEmpty()) {
+            this.imageDir = null;
+        } else {
+            this.imageDir = imageDir;
+        }
     }
 
     private static final String INVALID_PAGE_RANGE_FORMAT = "Invalid page range format: '%s'. Expected format: 1,3,5-7";
