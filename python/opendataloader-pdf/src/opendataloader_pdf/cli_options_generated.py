@@ -145,6 +145,15 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "description": "Output format for extracted images. Values: png, jpeg. Default: png",
     },
     {
+        "name": "image-dir",
+        "python_name": "image_dir",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": None,
+        "description": "Directory for extracted images. Default: {output-dir}/{pdf-name}_images",
+    },
+    {
         "name": "pages",
         "python_name": "pages",
         "short_name": None,
