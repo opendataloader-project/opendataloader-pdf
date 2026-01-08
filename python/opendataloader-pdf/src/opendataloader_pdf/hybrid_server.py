@@ -29,11 +29,15 @@ Requirements:
 """
 
 import argparse
+import logging
 import os
 import tempfile
 import time
+import traceback
 from contextlib import asynccontextmanager
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 # Configuration
 DEFAULT_HOST = "0.0.0.0"
@@ -201,11 +205,15 @@ def create_app():
 
             return JSONResponse(response)
 
-        except Exception:
+        except Exception as e:
+            error_msg = str(e)
+            stack_trace = traceback.format_exc()
+            logger.error(f"PDF conversion failed: {error_msg}\n{stack_trace}")
             return JSONResponse(
                 {
                     "status": "failure",
-                    "errors": ["PDF conversion failed"],
+                    "errors": [error_msg],
+                    "traceback": stack_trace,
                 },
                 status_code=500,
             )
