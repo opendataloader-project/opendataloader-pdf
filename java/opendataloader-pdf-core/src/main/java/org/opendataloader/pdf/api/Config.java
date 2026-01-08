@@ -597,7 +597,7 @@ public class Config {
     /**
      * Gets the directory for extracted images.
      *
-     * @return The image directory path, or null for default ({output-dir}/{pdf-name}_images).
+     * @return The image directory path, or null for default.
      */
     public String getImageDir() {
         return imageDir;
