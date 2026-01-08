@@ -32,7 +32,7 @@ public class FilterConfig {
             "email@example.com"
         ));
         filterRules.add(new SanitizationRule(
-            Pattern.compile("^+\\d+(?:-\\d+)+$"),
+            Pattern.compile("^[+]\\d+(?:-\\d+)+$"),
             "+00-0000-0000"
         ));
         filterRules.add(new SanitizationRule(

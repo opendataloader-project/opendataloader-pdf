@@ -7,12 +7,14 @@ import org.verapdf.wcag.algorithms.entities.content.TextBlock;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextColumn;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
+import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
 import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
@@ -125,7 +127,7 @@ public class ContentSanitizer {
         List<ChunkInfo> chunkInfos = getChunkInfos(originalChunks);
         int currentChunkIndex = 0;
         int currentPosition = 0;
-        replacements.sort((a, b) -> Integer.compare(a.originalStart, b.originalStart));
+        replacements.sort(Comparator.comparingInt(a -> a.originalStart));
 
         for (ReplacementInfo replacement : replacements) {
             while (currentPosition < replacement.originalStart && currentChunkIndex < chunkInfos.size()) {
@@ -152,9 +154,41 @@ public class ContentSanitizer {
             }
             String replacementText = replacement.replacementText;
             if (!replacementText.isEmpty()) {
-                TextChunk chunk = originalChunks.get(0);
-                TextChunk replacementChunk = new TextChunk(chunk);
+                TextChunk sourceChunk = null;
+                int startChunkIndex = -1;
+                int endChunkIndex = -1;
+
+                for (int i = 0; i < chunkInfos.size(); i++) {
+                    ChunkInfo info = chunkInfos.get(i);
+                    if (replacement.originalStart >= info.start &&
+                        replacement.originalStart < info.end) {
+                        sourceChunk = originalChunks.get(i);
+                        startChunkIndex = i;
+                        break;
+                    }
+                }
+                for (int i = startChunkIndex; i < chunkInfos.size(); i++) {
+                    ChunkInfo info = chunkInfos.get(i);
+                    if (replacement.originalEnd > info.start &&
+                        replacement.originalEnd <= info.end) {
+                        endChunkIndex = i;
+                        break;
+                    }
+                }
+                if (endChunkIndex == -1) {
+                    endChunkIndex = chunkInfos.size() - 1;
+                }
+                if (sourceChunk == null) {
+                    if (currentChunkIndex < chunkInfos.size()) {
+                        sourceChunk = originalChunks.get(currentChunkIndex);
+                    } else {
+                        sourceChunk = originalChunks.get(originalChunks.size() - 1);
+                    }
+                }
+
+                TextChunk replacementChunk = new TextChunk(sourceChunk);
                 replacementChunk.setValue(replacementText);
+                updateBBoxForReplacement(replacementChunk, originalChunks, startChunkIndex, endChunkIndex, replacement.originalStart, replacement.originalEnd, chunkInfos);
                 newChunks.add(replacementChunk);
             }
             currentPosition = replacement.originalEnd;
@@ -198,6 +232,46 @@ public class ContentSanitizer {
             }
         }
         return replacements;
+    }
+
+    private void updateBBoxForReplacement(TextChunk replacementChunk,
+                                          List<TextChunk> originalChunks,
+                                          int startChunkIndex, int endChunkIndex,
+                                          int replacementStart, int replacementEnd,
+                                          List<ChunkInfo> chunkInfos) {
+        if (startChunkIndex < 0 || endChunkIndex < 0 ||
+            startChunkIndex >= originalChunks.size() ||
+            endChunkIndex >= originalChunks.size()) {
+            return;
+        }
+        if (startChunkIndex == endChunkIndex) {
+            TextChunk sourceChunk = originalChunks.get(startChunkIndex);
+            ChunkInfo info = chunkInfos.get(startChunkIndex);
+            int startInChunk = replacementStart - info.start;
+            int endInChunk = replacementEnd - info.start;
+
+            TextChunk tempChunk = TextChunk.getTextChunk(sourceChunk, startInChunk, endInChunk);
+            BoundingBox partialBBox = tempChunk.getBoundingBox();
+            if (partialBBox != null) {
+                replacementChunk.setBoundingBox(partialBBox);
+                replacementChunk.adjustSymbolEndsToBoundingBox(null);
+            }
+        } else {
+            TextChunk firstChunk = originalChunks.get(startChunkIndex);
+            TextChunk lastChunk = originalChunks.get(endChunkIndex);
+            ChunkInfo firstInfo = chunkInfos.get(startChunkIndex);
+            ChunkInfo lastInfo = chunkInfos.get(endChunkIndex);
+            int startInFirstChunk = replacementStart - firstInfo.start;
+            int endInLastChunk = replacementEnd - lastInfo.start;
+            double left = firstChunk.getSymbolStartCoordinate(startInFirstChunk);
+            double right = lastChunk.getSymbolStartCoordinate(endInLastChunk);
+
+            BoundingBox bBox = replacementChunk.getBoundingBox();
+            bBox.setLeftX(left);
+            bBox.setRightX(right);
+            replacementChunk.setBoundingBox(bBox);
+            replacementChunk.adjustSymbolEndsToBoundingBox(null);
+        }
     }
 
     private static class ReplacementInfo {
