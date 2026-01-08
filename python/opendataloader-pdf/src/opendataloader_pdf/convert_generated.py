@@ -53,7 +53,7 @@ def convert(
         html_page_separator: Separator between pages in HTML output. Use %page-number% for page numbers. Default: none
         image_output: Image output mode. Values: off (no images), embedded (Base64 data URIs), external (file references). Default: external
         image_format: Output format for extracted images. Values: png, jpeg. Default: png
-        image_dir: Directory for extracted images. Default: {output-dir}/{pdf-name}_images
+        image_dir: Directory for extracted images
         pages: Pages to extract (e.g., "1,3,5-7"). Default: all pages
         hybrid: Hybrid backend for AI processing. Values: off (default), docling-fast
         hybrid_url: Hybrid backend server URL (overrides default)

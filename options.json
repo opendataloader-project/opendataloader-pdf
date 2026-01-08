@@ -126,7 +126,7 @@
       "type": "string",
       "required": false,
       "default": null,
-      "description": "Directory for extracted images. Default: {output-dir}/{pdf-name}_images"
+      "description": "Directory for extracted images"
     },
     {
       "name": "pages",

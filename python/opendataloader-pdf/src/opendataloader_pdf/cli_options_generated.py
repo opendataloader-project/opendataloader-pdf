@@ -151,7 +151,7 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "type": "string",
         "required": False,
         "default": None,
-        "description": "Directory for extracted images. Default: {output-dir}/{pdf-name}_images",
+        "description": "Directory for extracted images",
     },
     {
         "name": "pages",

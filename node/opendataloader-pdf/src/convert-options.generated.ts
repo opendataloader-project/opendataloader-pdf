@@ -35,7 +35,7 @@ export interface ConvertOptions {
   imageOutput?: string;
   /** Output format for extracted images. Values: png, jpeg. Default: png */
   imageFormat?: string;
-  /** Directory for extracted images. Default: {output-dir}/{pdf-name}_images */
+  /** Directory for extracted images */
   imageDir?: string;
   /** Pages to extract (e.g., "1,3,5-7"). Default: all pages */
   pages?: string;
