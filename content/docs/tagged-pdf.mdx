@@ -1,6 +1,6 @@
 ---
 title: Tagged PDF
-description: Using native PDF structure tags for accurate AI data extraction
+description: Using native PDF structure tags for accurate AI data extraction and accessibility compliance
 ---
 
 ## Why Tagged PDF Matters for AI
@@ -11,13 +11,17 @@ Tagged PDF includes semantic structure (headings, paragraphs, lists, tables) tha
 - **Correct reading order** — Author's intended flow preserved
 - **Semantic hierarchy** — Headings, lists, tables properly identified
 
-### European Accessibility Act (EAA)
+### Global Accessibility Regulations
 
-The [European Accessibility Act](https://commission.europa.eu/strategy-and-policy/policies/justice-and-fundamental-rights/disability/union-equality-strategy-rights-persons-disabilities-2021-2030/european-accessibility-act_en) took effect **June 28, 2025**, requiring accessible digital documents across the EU. This means:
+Multiple regulations now require accessible digital documents, driving widespread adoption of Tagged PDF:
 
-- More PDFs will be properly tagged with semantic structure
-- Organizations must publish accessible documents
-- Tagged PDF adoption is accelerating
+| Regulation | Region | Effective Date | PDF Requirement |
+|:-----------|:-------|:---------------|:----------------|
+| **European Accessibility Act (EAA)** | EU | June 28, 2025 | EN 301 549 / Tagged PDF |
+| **ADA / Section 508** | USA | 2024-2026 updates | WCAG 2.2 / Accessible PDF |
+| **Digital Inclusion Act** | South Korea | January 1, 2026 | PDF/UA compliance |
+
+The [European Accessibility Act](https://commission.europa.eu/strategy-and-policy/policies/justice-and-fundamental-rights/disability/union-equality-strategy-rights-persons-disabilities-2021-2030/european-accessibility-act_en) is particularly significant, with penalties up to €500,000 for non-compliance.
 
 **OpenDataLoader leverages this shift** — when structure tags exist, we extract the exact layout the author intended, without guessing.
 
@@ -37,12 +41,30 @@ opendataloader_pdf.convert(
 
 Most PDF parsers ignore structure tags entirely. OpenDataLoader is one of the few that fully supports them.
 
+### CLI Usage
+
+```bash
+opendataloader-pdf convert document.pdf \
+  --output-dir output/ \
+  --use-struct-tree
+```
+
+### Checking if a PDF is Tagged
+
+If a PDF lacks structure tags, OpenDataLoader logs a warning and falls back to visual heuristics (XY-Cut++ algorithm). Check your logs for:
+
+```
+WARN: Document lacks structure tree, falling back to visual heuristics
+```
+
 ## Development Status
 
 | Feature | Purpose | Status |
 |:--------|:--------|:-------|
 | Tag extraction | Use existing tags to determine document structure | Available |
+| Auto-Tagging Engine | Generate structure tags for untagged PDFs | Q1 2026 |
 | Tag validation | Validate tags against PDF Association recommendations | In progress |
+| PDF/UA Validation | Verify compliance with PDF/UA standards | Q2 2026 |
 | Hybrid extraction | Combine tags with visual heuristics for best results | In progress |
 
 ## Use Cases
@@ -58,4 +80,8 @@ Tags help AI quickly identify and cross-reference clauses, dates, and parties �
 
 ## Learn More
 
+- [Tagged PDF for RAG](./tagged-pdf-rag) — Optimizing extraction for AI pipelines
+- [Accessibility Compliance](./accessibility-compliance) — EAA, ADA, and regulatory requirements
+- [PDF Accessibility Glossary](./accessibility-glossary) — Key terms and concepts
 - [Industry Collaboration](./tagged-pdf-collaboration) — Our partnership with PDF Association and Dual Lab
+- [Open Source PDF/UA Libraries](./open-source-pdf-ua) — Comparison with other tools

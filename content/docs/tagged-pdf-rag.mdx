@@ -1,0 +1,280 @@
+---
+title: Tagged PDF for RAG Pipelines
+description: Leverage PDF structure tags for higher-quality AI data extraction in RAG applications
+---
+
+## Why Tagged PDFs Improve RAG Quality
+
+Retrieval-Augmented Generation (RAG) systems depend on accurate document parsing. When PDFs have proper structure tags, you get semantic ground truth instead of heuristic guesses.
+
+**Tagged PDF advantages for RAG:**
+- **Exact reading order** — No algorithmic guessing about column layouts
+- **Semantic hierarchy** — Headings, lists, and sections are explicitly marked
+- **Table structure** — Row/column relationships are preserved
+- **Chunk boundaries** — Natural semantic units for vector embedding
+
+## Tag-Aware vs Tag-Blind Extraction
+
+| Aspect | Tag-Blind (Heuristics) | Tag-Aware (Structure Tree) |
+|:-------|:-----------------------|:---------------------------|
+| **Reading order** | Inferred from coordinates | Author-defined, exact |
+| **Multi-column** | Often fails on complex layouts | Correct by design |
+| **Headings** | Guessed from font size | Semantically tagged (H1-H6) |
+| **Tables** | Cell boundaries estimated | Row/column spans preserved |
+| **Lists** | Detected by bullet patterns | List structure explicit |
+| **Processing speed** | Slower (visual analysis) | Faster (direct extraction) |
+
+### Example: Multi-Column Document
+
+```
+Tag-Blind Result:                    Tag-Aware Result:
+┌─────────────────────┐              ┌─────────────────────┐
+│ Introduction The    │              │ Introduction        │
+│ first column text   │              │                     │
+│ continues here The  │              │ The first column    │
+│ second column has   │              │ text continues here │
+│ different content   │              │                     │
+└─────────────────────┘              │ The second column   │
+  ↑ Columns merged incorrectly       │ has different       │
+                                     │ content             │
+                                     └─────────────────────┘
+                                       ↑ Correct reading order
+```
+
+## Using Tagged PDFs in RAG Workflows
+
+### Check if a PDF is Tagged
+
+Not all PDFs have structure tags. OpenDataLoader automatically detects and uses tags when available:
+
+```python
+import opendataloader_pdf
+
+# Extract with structure tree (if available)
+opendataloader_pdf.convert(
+    input_path="document.pdf",
+    output_dir="output/",
+    output_formats=["md", "json"],
+    use_struct_tree=True  # Use tags if present
+)
+```
+
+If the PDF lacks structure tags, OpenDataLoader logs a warning and falls back to the XY-Cut++ algorithm for reading order detection.
+
+### CLI Usage
+
+```bash
+opendataloader-pdf convert document.pdf \
+  --output-dir output/ \
+  --output-formats md,json \
+  --use-struct-tree
+```
+
+### Docker Usage
+
+```bash
+docker run -v $(pwd):/data opendataloader/opendataloader-pdf \
+  convert /data/document.pdf \
+  --output-dir /data/output \
+  --use-struct-tree
+```
+
+## Semantic Chunking with Tagged PDFs
+
+Tagged PDFs enable semantic chunking—splitting documents by meaning rather than arbitrary character counts.
+
+### Strategy 1: Chunk by Heading Level
+
+```python
+import json
+
+# Load extracted JSON
+with open("output/document.json") as f:
+    doc = json.load(f)
+
+# Split into chunks by H1/H2 boundaries
+chunks = []
+current_chunk = []
+
+for element in doc["kids"]:
+    if element.get("type") == "heading" and element.get("heading level") in [1, 2]:
+        if current_chunk:
+            chunks.append(current_chunk)
+        current_chunk = [element]
+    else:
+        current_chunk.append(element)
+
+if current_chunk:
+    chunks.append(current_chunk)
+```
+
+### Strategy 2: Preserve Semantic Units
+
+Keep related content together (e.g., a heading with its paragraphs):
+
+```python
+def semantic_chunk(elements, max_tokens=512):
+    """Chunk while preserving semantic units."""
+    chunks = []
+    current = []
+    current_tokens = 0
+
+    for elem in elements:
+        elem_tokens = len(elem.get("content", "").split())
+
+        # Start new chunk at major headings (H1)
+        is_h1 = elem.get("type") == "heading" and elem.get("heading level") == 1
+        if is_h1 and current:
+            chunks.append(current)
+            current = [elem]
+            current_tokens = elem_tokens
+        # Or when exceeding token limit
+        elif current_tokens + elem_tokens > max_tokens:
+            chunks.append(current)
+            current = [elem]
+            current_tokens = elem_tokens
+        else:
+            current.append(elem)
+            current_tokens += elem_tokens
+
+    if current:
+        chunks.append(current)
+
+    return chunks
+```
+
+### Strategy 3: Table-Aware Chunking
+
+Never split tables across chunks:
+
+```python
+def table_aware_chunk(elements, max_tokens=512):
+    """Keep tables intact during chunking."""
+    chunks = []
+    current = []
+    current_tokens = 0
+
+    for elem in elements:
+        elem_tokens = len(elem.get("content", "").split())
+
+        # Tables stay together regardless of size
+        if elem.get("type") == "table":
+            if current:
+                chunks.append(current)
+            chunks.append([elem])  # Table as its own chunk
+            current = []
+            current_tokens = 0
+        elif current_tokens + elem_tokens > max_tokens:
+            chunks.append(current)
+            current = [elem]
+            current_tokens = elem_tokens
+        else:
+            current.append(elem)
+            current_tokens += elem_tokens
+
+    if current:
+        chunks.append(current)
+
+    return chunks
+```
+
+## Handling Mixed Documents
+
+Real-world PDF collections contain both tagged and untagged documents. OpenDataLoader handles this gracefully:
+
+```python
+import opendataloader_pdf
+import os
+
+def process_pdf_collection(pdf_dir, output_dir):
+    """Process PDFs using tags when available."""
+    for filename in os.listdir(pdf_dir):
+        if filename.endswith(".pdf"):
+            opendataloader_pdf.convert(
+                input_path=os.path.join(pdf_dir, filename),
+                output_dir=output_dir,
+                output_formats=["md", "json"],
+                use_struct_tree=True  # Auto-fallback if no tags
+            )
+```
+
+**Behavior:**
+- If PDF has tags → Uses structure tree (exact)
+- If PDF lacks tags → Falls back to XY-Cut++ (heuristic)
+- Logs indicate which method was used
+
+## Quality Comparison
+
+Based on our benchmarks, tagged PDF extraction significantly outperforms heuristic methods:
+
+| Metric | Tag-Blind | Tag-Aware | Improvement |
+|:-------|:----------|:----------|:------------|
+| **Reading Order (NID)** | 0.82 | 0.98 | +19.5% |
+| **Table Structure (TEDS)** | 0.71 | 0.94 | +32.4% |
+| **Heading Detection (MHS)** | 0.75 | 0.99 | +32.0% |
+
+*NID = Normalized Indel Distance; TEDS = Tree Edit Distance Similarity; MHS = Markdown Heading Similarity*
+
+## Future: Auto-Tagging Untagged PDFs
+
+Many legacy PDFs lack structure tags. Our upcoming Auto-Tagging Engine (Q1 2026) will generate tags automatically:
+
+```python
+# Coming Q1 2026
+opendataloader_pdf.convert(
+    input_path="legacy-untagged.pdf",
+    output_dir="output/",
+    auto_tag=True  # Generate structure tags
+)
+```
+
+This enables RAG-quality extraction even for older documents.
+
+## Integration with RAG Frameworks
+
+### LangChain Integration
+
+```python
+from langchain.document_loaders import DirectoryLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+
+# First, extract with OpenDataLoader
+import opendataloader_pdf
+
+opendataloader_pdf.convert(
+    input_path="documents/",
+    output_dir="extracted/",
+    output_formats=["md"],
+    use_struct_tree=True
+)
+
+# Then load into LangChain
+loader = DirectoryLoader("extracted/", glob="**/*.md")
+documents = loader.load()
+```
+
+### LlamaIndex Integration
+
+```python
+from llama_index import SimpleDirectoryReader
+
+# Extract with OpenDataLoader first
+import opendataloader_pdf
+
+opendataloader_pdf.convert(
+    input_path="documents/",
+    output_dir="extracted/",
+    output_formats=["md"],
+    use_struct_tree=True
+)
+
+# Load into LlamaIndex
+documents = SimpleDirectoryReader("extracted/").load_data()
+```
+
+## Learn More
+
+- [Tagged PDF](./tagged-pdf) — Core Tagged PDF documentation
+- [RAG Integration](./rag-integration) — General RAG pipeline guide
+- [Accessibility Compliance](./accessibility-compliance) — Why Tagged PDFs are becoming standard
+- [Benchmark Metrics](./benchmark) — How we measure extraction quality

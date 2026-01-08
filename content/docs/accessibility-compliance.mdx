@@ -1,0 +1,170 @@
+---
+title: PDF Accessibility Compliance Guide
+description: Navigate EAA, ADA, Section 508, and PDF/UA requirements with OpenDataLoader PDF
+---
+
+## Why PDF Accessibility Matters Now
+
+Digital accessibility is no longer optional. With the European Accessibility Act (EAA) now in effect and similar regulations emerging worldwide, organizations face significant legal and financial risks from non-compliant PDFs.
+
+**Key statistics:**
+- **90%** of PDFs remain partially or fully inaccessible
+- **37%** increase in ADA accessibility lawsuits (H1 2025)
+- **\$0.85B** digital accessibility market in 2025, growing to **\$1.89B** by 2034
+
+## Global Regulatory Landscape
+
+### European Union: European Accessibility Act (EAA)
+
+The [European Accessibility Act](https://commission.europa.eu/strategy-and-policy/policies/justice-and-fundamental-rights/disability/union-equality-strategy-rights-persons-disabilities-2021-2030/european-accessibility-act_en) is a landmark directive requiring accessible digital products and services across all EU member states.
+
+| Aspect | Requirement |
+|:-------|:------------|
+| **Effective Date** | June 28, 2025 |
+| **Technical Standard** | EN 301 549 (aligned with WCAG 2.1 AA) |
+| **PDF Requirement** | Accessible formatting including Tagged PDF |
+| **Penalties** | Up to €500,000 in fines; potential market ban |
+| **Scope** | All businesses selling in EU (regardless of location) |
+| **Exemption** | Microenterprises (< 10 employees, < €2M revenue) |
+
+**Key deadline:** June 28, 2030 for existing digital content to be fully compliant.
+
+### United States: ADA & Section 508
+
+| Regulation | Scope | Standard |
+|:-----------|:------|:---------|
+| **Section 508** | Federal agencies and contractors | WCAG 2.2 (as of 2024) |
+| **ADA Title II** | State and local governments | WCAG 2.1 AA |
+| **ADA Title III** | Private businesses (public accommodations) | WCAG 2.1 AA (courts increasingly applying) |
+
+ADA enforcement is expanding to digital content. Courts have ruled that inaccessible digital documents violate civil rights protections.
+
+### South Korea: Digital Inclusion Act
+
+| Aspect | Requirement |
+|:-------|:------------|
+| **Effective Date** | January 1, 2026 |
+| **PDF Guidelines** | PDF Accessibility Guidelines (2024) |
+| **Public Sector** | PDF/UA conversion projects underway |
+| **Penalties** | Up to 3 years imprisonment / ₩30M fine |
+
+### Other Jurisdictions
+
+- **Canada:** Accessible Canada Act (ACA) requires accessible digital documents
+- **Australia:** Disability Discrimination Act (DDA) covers digital accessibility
+- **Japan:** Revised accessibility standards for public procurement
+
+## PDF/UA: The Compliance Standard
+
+[PDF/UA](https://pdfa.org/supporting-pdf-ua/) (PDF/Universal Accessibility, ISO 14289) is the international standard for accessible PDF documents.
+
+### What PDF/UA Requires
+
+1. **Structure tags** — Document must have a complete tag tree
+2. **Reading order** — Logical sequence defined in structure tree
+3. **Alternative text** — Images and figures must have alt text
+4. **Language specification** — Document language must be set
+5. **Unicode mapping** — All text must map to Unicode characters
+
+### PDF/UA-1 vs PDF/UA-2
+
+| Feature | PDF/UA-1 (2014) | PDF/UA-2 (2024) |
+|:--------|:----------------|:----------------|
+| Base PDF Version | PDF 1.7 | PDF 2.0 |
+| MathML Support | Limited | Full support |
+| Pronunciation | Limited | Enhanced |
+| Namespaces | None | Custom namespace support |
+
+## How OpenDataLoader PDF Helps
+
+OpenDataLoader PDF provides tools for PDF accessibility workflows:
+
+### 1. Extract Structure Tags
+
+Use existing PDF structure tags to understand document organization:
+
+```python
+import opendataloader_pdf
+
+# Extract using native structure tags
+opendataloader_pdf.convert(
+    input_path="document.pdf",
+    output_dir="output/",
+    use_struct_tree=True  # Use native PDF structure tags
+)
+```
+
+This preserves the author's intended reading order and semantic structure.
+
+### 2. Detect Tagged vs Untagged PDFs
+
+Check if a PDF has structure tags before processing:
+
+```bash
+# Check PDF metadata for structure tags
+opendataloader-pdf convert document.pdf --output-dir output/ --use-struct-tree
+```
+
+If the PDF lacks structure tags, OpenDataLoader falls back to visual heuristics (XY-Cut++ algorithm).
+
+### 3. Future: Auto-Tagging Engine (Q1 2026)
+
+Generate accessible Tagged PDFs automatically from untagged documents:
+
+```python
+# Coming Q1 2026
+opendataloader_pdf.convert(
+    input_path="legacy-document.pdf",
+    output_dir="output/",
+    auto_tag=True  # Generate structure tags
+)
+```
+
+### 4. Future: PDF/UA Validation (Q2 2026)
+
+Validate documents against PDF/UA standards:
+
+```python
+# Coming Q2 2026
+result = opendataloader_pdf.validate(
+    input_path="document.pdf",
+    standard="pdf-ua-2"
+)
+```
+
+## Compliance Workflow
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│  Audit PDFs     │───▶│  Remediate      │───▶│  Validate       │
+│  (check tags)   │    │  (auto-tag)     │    │  (PDF/UA)       │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+        │                      │                      │
+        ▼                      ▼                      ▼
+  use_struct_tree         auto_tag              validate()
+  (Available now)      (Q1 2026)              (Q2 2026)
+```
+
+## Penalties by Jurisdiction
+
+| Jurisdiction | Maximum Penalty | Enforcement |
+|:-------------|:----------------|:------------|
+| **EU (EAA)** | €500,000 + market ban | National authorities |
+| **USA (ADA)** | $75,000-150,000 per violation | DOJ + private lawsuits |
+| **South Korea** | ₩30M + 3 years imprisonment | Government agencies |
+| **Canada** | $250,000 CAD | Accessibility Commissioner |
+
+## Best Practices
+
+1. **Audit existing PDFs** — Identify which documents need remediation
+2. **Prioritize high-traffic documents** — Start with most-accessed content
+3. **Create accessible templates** — Ensure new documents are born accessible
+4. **Automate validation** — Integrate PDF/UA checks into publishing workflows
+5. **Document compliance** — Maintain accessibility statements as required by EAA
+
+## Learn More
+
+- [Tagged PDF](./tagged-pdf) — Using native PDF structure tags
+- [Tagged PDF for RAG](./tagged-pdf-rag) — Leveraging structure tags for AI extraction
+- [Industry Collaboration](./tagged-pdf-collaboration) — Our partnership with PDF Association
+- [Roadmap](./upcoming-roadmap) — Upcoming accessibility features

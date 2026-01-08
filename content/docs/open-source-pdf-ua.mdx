@@ -1,0 +1,272 @@
+---
+title: Open Source PDF/UA Libraries
+description: Comparing open-source options for PDF accessibility and Tagged PDF support
+---
+
+## The Open Source PDF/UA Landscape
+
+Finding open-source tools for PDF accessibility and Tagged PDF support can be challenging. Most robust solutions are commercial, and licensing terms vary significantly.
+
+This guide compares available options to help you choose the right tool for your needs.
+
+## Feature Comparison
+
+| Feature | OpenDataLoader PDF | iText 7 | Apache PDFBox | OpenPDF | PyMuPDF |
+|:--------|:-------------------|:--------|:--------------|:--------|:--------|
+| **Read Tagged PDFs** | Yes | Yes | Partial | Partial | Yes |
+| **Write Tagged PDFs** | Planned (Q1 2026) | Yes | No | Limited | No |
+| **PDF/UA Validation** | Planned (Q2 2026) | Yes | No | No | No |
+| **RAG-Optimized Output** | Yes | No | No | No | Yes |
+| **Multi-Format Export** | MD, JSON, HTML | PDF only | PDF only | PDF only | MD, JSON |
+| **AI Safety Filters** | Yes | No | No | No | No |
+| **License** | Apache 2.0 | AGPL/Commercial | Apache 2.0 | LGPL/MPL | AGPL |
+
+## Library Profiles
+
+### OpenDataLoader PDF
+
+**Best for:** RAG pipelines, AI data extraction, accessibility-aware parsing
+
+OpenDataLoader PDF is designed specifically for AI and LLM workflows. It extracts content from PDFs while preserving semantic structure from Tagged PDFs.
+
+```python
+import opendataloader_pdf
+
+opendataloader_pdf.convert(
+    input_path="document.pdf",
+    output_dir="output/",
+    output_formats=["md", "json"],
+    use_struct_tree=True  # Use structure tags
+)
+```
+
+**Strengths:**
+- Native Tagged PDF support with `use_struct_tree` option
+- Multiple output formats (Markdown, JSON, HTML, annotated PDF)
+- AI safety filters for prompt injection defense
+- Collaboration with PDF Association on Tagged PDF standards
+- Permissive Apache 2.0 license
+
+**Limitations:**
+- PDF generation not yet supported (extraction-focused)
+- Auto-tagging coming Q1 2026
+
+**Links:** [GitHub](https://github.com/opendataloader-project/opendataloader-pdf) | [Documentation](https://opendataloader.org/docs)
+
+---
+
+### iText 7
+
+**Best for:** Enterprise PDF generation with accessibility compliance
+
+iText is the most feature-complete PDF library, with full PDF/UA support for both reading and writing. However, licensing requires careful consideration.
+
+```java
+// Creating a PDF/UA document with iText
+PdfDocument pdfDoc = new PdfDocument(new PdfWriter(dest, new WriterProperties().addUAXmpMetadata()));
+pdfDoc.setTagged();
+// ...
+```
+
+**Strengths:**
+- Complete PDF/UA-1 and PDF/UA-2 support
+- Comprehensive PDF generation and manipulation
+- Mature, well-documented API
+- Active development and support
+
+**Limitations:**
+- **AGPL license** requires open-sourcing your code or purchasing commercial license
+- Commercial licenses can be expensive for small teams
+- Focused on PDF creation, not AI extraction
+
+**Links:** [Website](https://itextpdf.com) | [GitHub](https://github.com/itext/itext7)
+
+---
+
+### Apache PDFBox
+
+**Best for:** Basic PDF operations in Java projects
+
+PDFBox is a pure Java library for PDF manipulation. It's widely used but has limited accessibility support.
+
+```java
+// Reading text with PDFBox
+PDDocument document = PDDocument.load(new File("document.pdf"));
+PDFTextStripper stripper = new PDFTextStripper();
+String text = stripper.getText(document);
+```
+
+**Strengths:**
+- Apache 2.0 license (permissive)
+- No external dependencies
+- Stable and mature
+- Good for basic text extraction and PDF manipulation
+
+**Limitations:**
+- No PDF/UA support
+- Limited structure tag extraction
+- No semantic structure preservation
+- Reading order can be incorrect for complex layouts
+
+**Links:** [Website](https://pdfbox.apache.org) | [GitHub](https://github.com/apache/pdfbox)
+
+---
+
+### OpenPDF
+
+**Best for:** Legacy iText 4 projects needing permissive licensing
+
+OpenPDF is a fork of iText 4, maintained under LGPL/MPL licensing. It's suitable for projects that need to avoid AGPL.
+
+```java
+// Creating a PDF with OpenPDF
+Document document = new Document();
+PdfWriter.getInstance(document, new FileOutputStream("output.pdf"));
+document.open();
+document.add(new Paragraph("Hello World"));
+document.close();
+```
+
+**Strengths:**
+- LGPL/MPL license (permissive for most uses)
+- API compatible with older iText versions
+- Active community maintenance
+- PDF 2.0 features being added
+
+**Limitations:**
+- Limited Tagged PDF support
+- No PDF/UA validation
+- Fewer features than iText 7
+- Smaller community than iText
+
+**Links:** [GitHub](https://github.com/LibrePDF/OpenPDF)
+
+---
+
+### PyMuPDF (MuPDF Python bindings)
+
+**Best for:** Python developers needing fast PDF rendering and extraction
+
+PyMuPDF provides Python bindings to the MuPDF library. It's fast and capable but has AGPL licensing.
+
+```python
+import pymupdf4llm
+
+# Extract PDF as Markdown for LLM use
+md_text = pymupdf4llm.to_markdown("document.pdf")
+```
+
+**Strengths:**
+- Very fast rendering and extraction
+- Good Markdown output for LLMs (via pymupdf4llm)
+- Handles complex PDF features well
+- Active development
+
+**Limitations:**
+- **AGPL license** (same concerns as iText)
+- Commercial license required for proprietary use
+- Limited structure tag extraction
+- No PDF/UA support
+
+**Links:** [PyPI](https://pypi.org/project/pymupdf/) | [GitHub](https://github.com/pymupdf/PyMuPDF)
+
+---
+
+### Other Notable Tools
+
+| Tool | Language | License | Notes |
+|:-----|:---------|:--------|:------|
+| **OpenHTMLtoPDF** | Java | LGPL | HTML to PDF with PDF/UA support |
+| **pdf.js** | JavaScript | Apache 2.0 | Browser rendering, no tag support |
+| **pdfplumber** | Python | MIT | Table extraction, no tags |
+| **veraPDF** | Java | GPL/MPL | PDF/A validation (not extraction) |
+| **pikepdf** | Python | MPL | PDF manipulation, limited tags |
+
+## Licensing Considerations
+
+### AGPL vs Permissive Licenses
+
+**AGPL (iText 7, PyMuPDF):**
+- Requires releasing source code if you distribute software or provide services
+- "Network use" clause applies to SaaS applications
+- Commercial license required to avoid open-source obligations
+
+**Apache 2.0 / MIT / LGPL (OpenDataLoader, PDFBox, OpenPDF):**
+- Can be used in proprietary software
+- No source code disclosure requirements
+- Attribution typically required
+
+### Decision Matrix
+
+| Your Use Case | Recommended Library |
+|:--------------|:--------------------|
+| RAG/LLM extraction | OpenDataLoader PDF |
+| Enterprise PDF generation with PDF/UA | iText 7 (commercial license) |
+| Open-source project | OpenDataLoader PDF, PDFBox, or OpenPDF |
+| SaaS product (budget-conscious) | OpenDataLoader PDF or PDFBox |
+| Legacy iText migration | OpenPDF |
+| Fast Python extraction | OpenDataLoader PDF (for tags) or PyMuPDF (commercial) |
+
+## Why OpenDataLoader?
+
+OpenDataLoader PDF differentiates itself in several ways:
+
+1. **AI-First Design** — Built for RAG and LLM workflows, not general PDF manipulation
+2. **Permissive License** — Apache 2.0 allows commercial use without restrictions
+3. **Standards Collaboration** — Working with PDF Association on Tagged PDF specifications
+4. **Safety Features** — Built-in filters for prompt injection and hidden content
+5. **Active Roadmap** — Auto-tagging (Q1 2026) and PDF/UA validation (Q2 2026) planned
+
+## Migration Guides
+
+### From iText to OpenDataLoader
+
+If you're using iText for PDF text extraction and want to avoid AGPL:
+
+```python
+# Before (iText - requires AGPL compliance or commercial license)
+# PdfReader reader = new PdfReader("document.pdf");
+# PdfDocument pdfDoc = new PdfDocument(reader);
+# String text = PdfTextExtractor.getTextFromPage(pdfDoc.getFirstPage());
+
+# After (OpenDataLoader - Apache 2.0)
+import opendataloader_pdf
+
+opendataloader_pdf.convert(
+    input_path="document.pdf",
+    output_dir="output/",
+    output_formats=["md"],
+    use_struct_tree=True
+)
+# Read extracted Markdown
+with open("output/document.md") as f:
+    text = f.read()
+```
+
+### From PDFBox to OpenDataLoader
+
+If you need better reading order and structure preservation:
+
+```python
+# Before (PDFBox - often incorrect reading order)
+# PDDocument document = PDDocument.load(new File("document.pdf"));
+# PDFTextStripper stripper = new PDFTextStripper();
+# String text = stripper.getText(document);
+
+# After (OpenDataLoader - correct reading order with tags)
+import opendataloader_pdf
+
+opendataloader_pdf.convert(
+    input_path="document.pdf",
+    output_dir="output/",
+    output_formats=["json"],
+    use_struct_tree=True
+)
+```
+
+## Learn More
+
+- [Tagged PDF](./tagged-pdf) — Using structure tags in OpenDataLoader
+- [Tagged PDF for RAG](./tagged-pdf-rag) — Optimizing extraction for AI pipelines
+- [Industry Collaboration](./tagged-pdf-collaboration) — PDF Association partnership
+- [Quick Start](./quick-start-python) — Get started with OpenDataLoader

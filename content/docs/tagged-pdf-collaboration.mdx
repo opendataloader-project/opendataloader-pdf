@@ -1,12 +1,12 @@
 ---
 title: Tagged PDF Collaboration
-description: Partnering with PDF Association and Dual Lab for Tagged PDF standards
+description: Partnering with PDF Association, Dual Lab, and veraPDF for Tagged PDF and PDF/UA standards
 ---
 
 <div className="flex flex-col md:flex-row justify-center items-center gap-8 mb-8 bg-white p-6 rounded-lg">
-<img src="/figures/pdf-association-logo.png" alt="PDF Association" width="160" />
-<img src="/figures/hnc-logo.svg" alt="Hancom" width="160" />
-<img src="/figures/duallab-logo.png" alt="Dual Lab" width="160" />
+<img src="/figures/pdf-association-logo.webp" alt="PDF Association" width="160" />
+<img src="/figures/hnc-logo.webp" alt="Hancom" width="160" />
+<img src="/figures/duallab-logo.webp" alt="Dual Lab" width="160" />
 </div>
 
 ## 1. The Growing Importance of Tagged PDF
@@ -33,6 +33,7 @@ This challenge presents a unique opportunity for innovation. Hancom and Dual Lab
 | PDF Association | Define Well-Tagged PDF specification and Tagged PDF Best Practice Guide aimed at both accessibility and reuse in other workflows, including AI. |
 | Dual Lab        | Develop a veraPDF-based validator to verify if PDFs adhere to the existing and future standards and recommendations.                            |
 | Hancom          | Build OpenDataLoader-PDF's extraction engine to effectively use the validated tags.                                                             |
+| veraPDF         | Open-source PDF/A and PDF/UA validation library powering compliance verification.                                                               |
 
 ## 3. Our Vision: Leading the Tagged PDF Revolution
 
@@ -51,3 +52,20 @@ Our vision is to not only be the first to develop a robust Tagged PDF data extra
 Research Papers: A well-tagged paper allows an AI to accurately identify the author's name and affiliation as "heading" and "metadata," enabling automated citation building.
 Financial Reports: In a financial report, proper tags enable an AI to precisely extract the title of a balance sheet and its corresponding data cells, automating analysis without relying on error-prone heuristics.
 Legal Contracts: An AI could use tags to quickly identify and cross-reference specific clauses, dates, and parties in a contract, dramatically speeding up the legal review process.
+
+## 4. Development Timeline
+
+| Feature | Target | Status |
+|:--------|:-------|:-------|
+| Tag extraction engine | Available | Shipped (v1.3.0+) |
+| veraPDF integration | Q1 2026 | In development |
+| Auto-Tagging Engine | Q1 2026 | In development |
+| PDF/UA Validation | Q2 2026 | Planned |
+| Well-Tagged PDF compliance | Q2 2026 | Planned |
+
+## Learn More
+
+- [Tagged PDF](./tagged-pdf) — Using structure tags in OpenDataLoader
+- [Accessibility Compliance](./accessibility-compliance) — EAA, ADA, and regulatory requirements
+- [Open Source PDF/UA Libraries](./open-source-pdf-ua) — Comparison with other tools
+- [Roadmap](./upcoming-roadmap) — Full development roadmap
