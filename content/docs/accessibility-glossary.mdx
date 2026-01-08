@@ -1,0 +1,246 @@
+---
+title: PDF Accessibility Glossary
+description: Key terms and concepts for PDF accessibility, Tagged PDF, and PDF/UA compliance
+---
+
+## Glossary of PDF Accessibility Terms
+
+This glossary defines key terms used in PDF accessibility, Tagged PDF, and related standards.
+
+---
+
+### Accessible PDF
+
+A PDF document that can be read and navigated by people with disabilities, including those using assistive technologies like screen readers. Accessible PDFs typically have structure tags, proper reading order, and alternative text for images.
+
+**Related:** [Tagged PDF](#tagged-pdf), [PDF/UA](#pdfua)
+
+---
+
+### ADA (Americans with Disabilities Act)
+
+A U.S. civil rights law prohibiting discrimination against people with disabilities. Courts increasingly interpret ADA requirements to include digital accessibility, including PDFs.
+
+**Learn more:** [Accessibility Compliance Guide](./accessibility-compliance)
+
+---
+
+### Alternative Text (Alt Text)
+
+Descriptive text associated with images, figures, and other non-text content. Screen readers read alt text aloud to convey the meaning of visual elements to users who cannot see them.
+
+```
+Example in PDF structure:
+<Figure Alt="Bar chart showing Q4 sales increased 15%">
+  [image data]
+</Figure>
+```
+
+---
+
+### Artifact
+
+Content in a PDF that is not part of the author's intended message, such as page numbers, headers, footers, and decorative elements. Artifacts are marked so assistive technologies can skip them.
+
+---
+
+### Assistive Technology (AT)
+
+Software or hardware that helps people with disabilities access digital content. Examples include screen readers (JAWS, NVDA, VoiceOver), screen magnifiers, and alternative input devices.
+
+---
+
+### EAA (European Accessibility Act)
+
+An EU directive requiring accessible products and services, including digital documents. Took effect **June 28, 2025**. Requires compliance with EN 301 549 standard.
+
+**Penalties:** Up to €500,000 and potential market ban
+**Learn more:** [Accessibility Compliance Guide](./accessibility-compliance)
+
+---
+
+### EN 301 549
+
+The harmonized European standard for ICT accessibility. It incorporates WCAG 2.1 requirements and specifies additional requirements for documents, software, and hardware. Required for EAA compliance.
+
+---
+
+### Heading Structure
+
+The hierarchical organization of a document using heading levels (H1, H2, H3, etc.). Proper heading structure allows users to navigate documents efficiently and understand content organization.
+
+```
+H1: Annual Report 2025
+  H2: Executive Summary
+  H2: Financial Results
+    H3: Q1 Performance
+    H3: Q2 Performance
+```
+
+---
+
+### ISO 14289
+
+The international standard for accessible PDF documents. See [PDF/UA](#pdfua).
+
+---
+
+### Logical Reading Order
+
+The sequence in which content should be read to make sense. In Tagged PDFs, reading order is explicitly defined in the structure tree. Without tags, reading order must be inferred from visual layout.
+
+**Related:** [Reading Order](./reading-order), [XY-Cut++](./reading-order#xy-cut-algorithm)
+
+---
+
+### PDF/A
+
+An ISO standard (ISO 19005) for long-term archiving of PDF documents. PDF/A ensures documents remain viewable and reproducible over time. Different from PDF/UA, which focuses on accessibility.
+
+| Standard | Purpose |
+|:---------|:--------|
+| PDF/A | Archival/preservation |
+| PDF/UA | Accessibility |
+
+---
+
+### PDF/UA
+
+**PDF/Universal Accessibility** (ISO 14289) is the international standard for accessible PDF documents.
+
+**PDF/UA-1** (2014): Based on PDF 1.7
+**PDF/UA-2** (2024): Based on PDF 2.0, adds MathML support
+
+A PDF/UA-compliant document must have:
+- Complete structure tags
+- Defined reading order
+- Alternative text for images
+- Specified document language
+- Unicode text mapping
+
+**Learn more:** [Tagged PDF](./tagged-pdf), [Accessibility Compliance](./accessibility-compliance)
+
+---
+
+### Reading Order
+
+The sequence in which content is presented to the user. In accessible PDFs, reading order is defined by the structure tree, not the visual layout or the order in which content appears in the PDF file.
+
+**Learn more:** [Reading Order](./reading-order)
+
+---
+
+### Remediation
+
+The process of making an inaccessible PDF accessible. This typically involves adding structure tags, setting reading order, adding alt text, and fixing other accessibility issues.
+
+**Related:** Auto-tagging, [Roadmap](./upcoming-roadmap)
+
+---
+
+### Role Map
+
+A PDF structure that maps custom tag names to standard structure types. Allows organizations to use meaningful custom tags while maintaining PDF/UA compliance.
+
+```
+Example: CustomChapterTitle → H1
+```
+
+---
+
+### Screen Reader
+
+Assistive technology that converts text and structural information into speech or braille output. Common screen readers include JAWS, NVDA (Windows), VoiceOver (macOS/iOS), and TalkBack (Android).
+
+---
+
+### Section 508
+
+A U.S. law requiring federal agencies to make electronic information accessible to people with disabilities. Applies to federal agencies and their contractors.
+
+**Learn more:** [Accessibility Compliance Guide](./accessibility-compliance)
+
+---
+
+### Semantic Structure
+
+The meaningful organization of document content, including headings, paragraphs, lists, tables, and other elements that convey the document's logical structure.
+
+---
+
+### Structure Element
+
+A node in the PDF structure tree representing a semantic unit of content. Examples include Document, Part, Section, Paragraph (P), Heading (H1-H6), Table, List, and Figure.
+
+---
+
+### Structure Tree
+
+The hierarchical representation of a PDF's logical structure. The structure tree defines the relationships between content elements and determines reading order.
+
+```
+Document
+├── H1: Title
+├── P: Introduction paragraph
+├── H2: First Section
+│   ├── P: Content
+│   └── Table
+│       ├── TR (header)
+│       └── TR (data)
+└── H2: Second Section
+```
+
+---
+
+### Tag
+
+A label in the PDF structure tree that identifies the semantic role of content. Standard tags include P (paragraph), H1-H6 (headings), Table, L (list), Figure, and many others.
+
+---
+
+### Tagged PDF
+
+A PDF that contains a structure tree with tags identifying the semantic role of each content element. Tagged PDFs enable:
+- Correct reading order
+- Accessibility for assistive technologies
+- Content reflow on different screen sizes
+- Accurate data extraction
+
+**In OpenDataLoader:**
+```python
+opendataloader_pdf.convert(
+    input_path="document.pdf",
+    use_struct_tree=True  # Use structure tags
+)
+```
+
+**Learn more:** [Tagged PDF](./tagged-pdf), [Tagged PDF for RAG](./tagged-pdf-rag)
+
+---
+
+### WCAG (Web Content Accessibility Guidelines)
+
+W3C guidelines for making web content accessible. While designed for web, WCAG principles apply to PDFs. Current version is WCAG 2.2.
+
+**Four principles (POUR):**
+- **Perceivable** — Content can be perceived by all users
+- **Operable** — Interface can be operated by all users
+- **Understandable** — Content and interface are understandable
+- **Robust** — Content works with current and future technologies
+
+---
+
+### Well-Tagged PDF
+
+A PDF with complete, accurate, and properly structured tags. The PDF Association is developing formal specifications for "Well-Tagged PDF" to ensure consistent implementation.
+
+**Related:** [Industry Collaboration](./tagged-pdf-collaboration)
+
+---
+
+## Learn More
+
+- [Tagged PDF](./tagged-pdf) — Using structure tags in OpenDataLoader
+- [Accessibility Compliance](./accessibility-compliance) — Regulatory requirements
+- [Open Source PDF/UA Libraries](./open-source-pdf-ua) — Tool comparison
+- [Reading Order](./reading-order) — How reading order detection works
