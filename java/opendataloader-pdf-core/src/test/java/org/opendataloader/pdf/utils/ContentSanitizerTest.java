@@ -74,8 +74,7 @@ class ContentSanitizerTest {
     @Test
     void testReplaceCoveringPartsOfChunks() {
         List<TextChunk> originalChunks = new ArrayList<>();
-        originalChunks.add(createTextChunk("User: ", 0f, 60f, 10f, 20f));
-        originalChunks.add(createTextChunk("john", 60f, 60f, 100f, 20f));
+        originalChunks.add(createTextChunk("User: john", 0f, 60f, 100, 20f));
         originalChunks.add(createTextChunk(".doe@", 100f, 60f, 140f, 20f));
         originalChunks.add(createTextChunk("example.com. Hi!", 140f, 60f, 250f, 20f));
         TextLine line = new TextLine();
@@ -97,6 +96,7 @@ class ContentSanitizerTest {
         originalChunks.add(createTextChunk("User: ", 0f, 60f, 10f, 20f));
         originalChunks.add(createTextChunk("john.doe@example.com", 20f, 60f, 140f, 20f));
         originalChunks.add(createTextChunk(". Hi!", 150f, 60f, 180f, 20f));
+        originalChunks.add(createTextChunk(" Hello!", 180f, 60f, 210f, 20f));
         TextLine line = new TextLine();
         for (TextChunk chunk : originalChunks) {
             line.add(chunk);
@@ -107,6 +107,6 @@ class ContentSanitizerTest {
         List<TextChunk> result = sanitizer.applyReplacementsToChunks(
             originalChunks, replacements);
 
-        assertChunksContainValues(result, "User: ", "email@example.com", ". Hi!");
+        assertChunksContainValues(result, "User: ", "email@example.com", ". Hi!", " Hello!");
     }
 }
