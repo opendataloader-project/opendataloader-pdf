@@ -121,7 +121,7 @@ public class ContentSanitizer {
         textChunks.addAll(newChunks);
     }
 
-    private List<TextChunk> applyReplacementsToChunks(List<TextChunk> originalChunks,
+    protected List<TextChunk> applyReplacementsToChunks(List<TextChunk> originalChunks,
                                                       List<ReplacementInfo> replacements) {
         List<TextChunk> newChunks = new ArrayList<>();
         List<ChunkInfo> chunkInfos = getChunkInfos(originalChunks);
@@ -152,50 +152,33 @@ public class ContentSanitizer {
                     currentChunkIndex++;
                 }
             }
+            int endChunkIndex = -1;
+            for (int i = currentChunkIndex; i < chunkInfos.size(); i++) {
+                ChunkInfo info = chunkInfos.get(i);
+                if (replacement.originalEnd > info.start &&
+                    replacement.originalEnd <= info.end) {
+                    endChunkIndex = i;
+                    break;
+                }
+            }
+            if (endChunkIndex == -1) {
+                endChunkIndex = chunkInfos.size() - 1;
+            }
+
             String replacementText = replacement.replacementText;
             if (!replacementText.isEmpty()) {
-                TextChunk sourceChunk = null;
-                int startChunkIndex = -1;
-                int endChunkIndex = -1;
-
-                for (int i = 0; i < chunkInfos.size(); i++) {
-                    ChunkInfo info = chunkInfos.get(i);
-                    if (replacement.originalStart >= info.start &&
-                        replacement.originalStart < info.end) {
-                        sourceChunk = originalChunks.get(i);
-                        startChunkIndex = i;
-                        break;
-                    }
-                }
-                for (int i = startChunkIndex; i < chunkInfos.size(); i++) {
-                    ChunkInfo info = chunkInfos.get(i);
-                    if (replacement.originalEnd > info.start &&
-                        replacement.originalEnd <= info.end) {
-                        endChunkIndex = i;
-                        break;
-                    }
-                }
-                if (endChunkIndex == -1) {
-                    endChunkIndex = chunkInfos.size() - 1;
-                }
-                if (sourceChunk == null) {
-                    if (currentChunkIndex < chunkInfos.size()) {
-                        sourceChunk = originalChunks.get(currentChunkIndex);
-                    } else {
-                        sourceChunk = originalChunks.get(originalChunks.size() - 1);
-                    }
-                }
-
+                TextChunk sourceChunk = originalChunks.get(currentChunkIndex);
                 TextChunk replacementChunk = new TextChunk(sourceChunk);
                 replacementChunk.setValue(replacementText);
-                updateBBoxForReplacement(replacementChunk, originalChunks, startChunkIndex, endChunkIndex, replacement.originalStart, replacement.originalEnd, chunkInfos);
+                updateBBoxForReplacement(replacementChunk, originalChunks, currentChunkIndex, endChunkIndex, replacement.originalStart, replacement.originalEnd, chunkInfos);
                 newChunks.add(replacementChunk);
             }
             currentPosition = replacement.originalEnd;
-            while (currentChunkIndex < chunkInfos.size() &&
-                chunkInfos.get(currentChunkIndex).end <= currentPosition) {
+            currentChunkIndex = endChunkIndex;
+            if (currentChunkIndex < chunkInfos.size() && currentPosition == chunkInfos.get(endChunkIndex).end) {
                 currentChunkIndex++;
             }
+
         }
         while (currentChunkIndex < originalChunks.size()) {
             ChunkInfo info = chunkInfos.get(currentChunkIndex);
@@ -222,7 +205,7 @@ public class ContentSanitizer {
         return chunk != null && chunk.getValue() != null && !chunk.getValue().isEmpty();
     }
 
-    private List<ReplacementInfo> findAllReplacements(String originalText) {
+    protected List<ReplacementInfo> findAllReplacements(String originalText) {
         List<ReplacementInfo> replacements = new ArrayList<>();
 
         for (SanitizationRule rule : rules) {
@@ -239,42 +222,22 @@ public class ContentSanitizer {
                                           int startChunkIndex, int endChunkIndex,
                                           int replacementStart, int replacementEnd,
                                           List<ChunkInfo> chunkInfos) {
-        if (startChunkIndex < 0 || endChunkIndex < 0 ||
-            startChunkIndex >= originalChunks.size() ||
-            endChunkIndex >= originalChunks.size()) {
-            return;
-        }
-        if (startChunkIndex == endChunkIndex) {
-            TextChunk sourceChunk = originalChunks.get(startChunkIndex);
-            ChunkInfo info = chunkInfos.get(startChunkIndex);
-            int startInChunk = replacementStart - info.start;
-            int endInChunk = replacementEnd - info.start;
+        TextChunk firstChunk = originalChunks.get(startChunkIndex);
+        TextChunk lastChunk = originalChunks.get(endChunkIndex);
+        ChunkInfo firstInfo = chunkInfos.get(startChunkIndex);
+        ChunkInfo lastInfo = chunkInfos.get(endChunkIndex);
+        int startInFirstChunk = replacementStart - firstInfo.start;
+        int endInLastChunk = replacementEnd - lastInfo.start;
+        double left = firstChunk.getSymbolStartCoordinate(startInFirstChunk);
+        double right = lastChunk.getSymbolStartCoordinate(endInLastChunk);
 
-            TextChunk tempChunk = TextChunk.getTextChunk(sourceChunk, startInChunk, endInChunk);
-            BoundingBox partialBBox = tempChunk.getBoundingBox();
-            if (partialBBox != null) {
-                replacementChunk.setBoundingBox(partialBBox);
-                replacementChunk.adjustSymbolEndsToBoundingBox(null);
-            }
-        } else {
-            TextChunk firstChunk = originalChunks.get(startChunkIndex);
-            TextChunk lastChunk = originalChunks.get(endChunkIndex);
-            ChunkInfo firstInfo = chunkInfos.get(startChunkIndex);
-            ChunkInfo lastInfo = chunkInfos.get(endChunkIndex);
-            int startInFirstChunk = replacementStart - firstInfo.start;
-            int endInLastChunk = replacementEnd - lastInfo.start;
-            double left = firstChunk.getSymbolStartCoordinate(startInFirstChunk);
-            double right = lastChunk.getSymbolStartCoordinate(endInLastChunk);
-
-            BoundingBox bBox = replacementChunk.getBoundingBox();
-            bBox.setLeftX(left);
-            bBox.setRightX(right);
-            replacementChunk.setBoundingBox(bBox);
-            replacementChunk.adjustSymbolEndsToBoundingBox(null);
-        }
+        BoundingBox bBox = replacementChunk.getBoundingBox();
+        bBox.setLeftX(left);
+        bBox.setRightX(right);
+        replacementChunk.adjustSymbolEndsToBoundingBox(null);
     }
 
-    private static class ReplacementInfo {
+    protected static class ReplacementInfo {
         int originalStart;
         int originalEnd;
         String replacementText;
