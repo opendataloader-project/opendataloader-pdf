@@ -152,26 +152,10 @@ public class ContentSanitizer {
                     currentChunkIndex++;
                 }
             }
-            int endChunkIndex = -1;
-            for (int i = currentChunkIndex; i < chunkInfos.size(); i++) {
-                ChunkInfo info = chunkInfos.get(i);
-                if (replacement.originalEnd > info.start &&
-                    replacement.originalEnd <= info.end) {
-                    endChunkIndex = i;
-                    break;
-                }
-            }
-            if (endChunkIndex == -1) {
-                endChunkIndex = chunkInfos.size() - 1;
-            }
-
+            int endChunkIndex = findEndChunkIndex(currentChunkIndex, chunkInfos, replacement);
             String replacementText = replacement.replacementText;
             if (!replacementText.isEmpty()) {
-                TextChunk sourceChunk = originalChunks.get(currentChunkIndex);
-                TextChunk replacementChunk = new TextChunk(sourceChunk);
-                replacementChunk.setValue(replacementText);
-                updateBBoxForReplacement(replacementChunk, originalChunks, currentChunkIndex, endChunkIndex, replacement.originalStart, replacement.originalEnd, chunkInfos);
-                newChunks.add(replacementChunk);
+                newChunks.add(createReplacementChunk(originalChunks, currentChunkIndex, replacementText, endChunkIndex, replacement, chunkInfos));
             }
             currentPosition = replacement.originalEnd;
             currentChunkIndex = endChunkIndex;
@@ -180,7 +164,7 @@ public class ContentSanitizer {
             }
 
         }
-        while (currentChunkIndex < originalChunks.size()) {
+        if (currentChunkIndex < chunkInfos.size()) {
             ChunkInfo info = chunkInfos.get(currentChunkIndex);
 
             if (currentPosition >= info.start && currentPosition < info.end) {
@@ -190,15 +174,46 @@ public class ContentSanitizer {
                 if (isNotEmptyChunk(subChunk)) {
                     newChunks.add(subChunk);
                 }
-            } else if (currentPosition < info.start) {
-                TextChunk chunk = originalChunks.get(currentChunkIndex);
-                if (isNotEmptyChunk(chunk)) {
-                    newChunks.add(chunk);
-                }
+                currentChunkIndex++;
             }
-            currentChunkIndex++;
+            while (currentChunkIndex < originalChunks.size()) {
+                info = chunkInfos.get(currentChunkIndex);
+                if (currentPosition < info.start) {
+                    TextChunk chunk = originalChunks.get(currentChunkIndex);
+                    if (isNotEmptyChunk(chunk)) {
+                        newChunks.add(chunk);
+                    }
+                }
+                currentChunkIndex++;
+            }
         }
+
         return newChunks;
+    }
+
+    private TextChunk createReplacementChunk(List<TextChunk> originalChunks, int currentChunkIndex, String replacementText,
+                                             int endChunkIndex, ReplacementInfo replacement, List<ChunkInfo> chunkInfos) {
+        TextChunk sourceChunk = originalChunks.get(currentChunkIndex);
+        TextChunk replacementChunk = new TextChunk(sourceChunk);
+        replacementChunk.setValue(replacementText);
+        updateBBoxForReplacement(replacementChunk, originalChunks, currentChunkIndex, endChunkIndex, replacement.originalStart, replacement.originalEnd, chunkInfos);
+        return replacementChunk;
+    }
+
+    private int findEndChunkIndex(int currentChunkIndex, List<ChunkInfo> chunkInfos, ReplacementInfo replacement) {
+        int endChunkIndex = -1;
+        for (int i = currentChunkIndex; i < chunkInfos.size(); i++) {
+            ChunkInfo info = chunkInfos.get(i);
+            if (replacement.originalEnd > info.start &&
+                replacement.originalEnd <= info.end) {
+                endChunkIndex = i;
+                break;
+            }
+        }
+        if (endChunkIndex == -1) {
+            endChunkIndex = chunkInfos.size() - 1;
+        }
+        return endChunkIndex;
     }
 
     private boolean isNotEmptyChunk(TextChunk chunk) {
