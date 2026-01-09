@@ -170,7 +170,7 @@ public class FilterConfig {
     /**
      * Gets custom filter sanitization rules.
      *
-     * @return List<String> of sanitization rules.
+     * @return List of sanitization rules.
      */
     public List<SanitizationRule> getFilterRules() {
         return filterRules;
