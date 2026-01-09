@@ -23,16 +23,16 @@ public class FilterConfig {
     private boolean filterTinyText = true;
     private boolean filterHiddenOCG = true;
     private boolean filterSensitiveData = true;
-    private static final List<SanitizationRule> filterRules = new ArrayList<>();
+    private final List<SanitizationRule> filterRules;
 
     /** Default rules */
-    static {
+    private void initializeDefaultRules() {
         filterRules.add(new SanitizationRule(
             Pattern.compile("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"),
             "email@example.com"
         ));
         filterRules.add(new SanitizationRule(
-            Pattern.compile("^[+]\\d+(?:-\\d+)+$"),
+            Pattern.compile("[+]\\d+(?:-\\d+)+"),
             "+00-0000-0000"
         ));
         filterRules.add(new SanitizationRule(
@@ -72,7 +72,10 @@ public class FilterConfig {
     /**
      * Constructor initializing the configuration of filter.
      */
-    public FilterConfig() {}
+    public FilterConfig() {
+        this.filterRules = new ArrayList<>();
+        initializeDefaultRules();
+    }
 
     /**
      * Enables or disables filter of hidden text.
