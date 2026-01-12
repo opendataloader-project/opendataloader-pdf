@@ -15,8 +15,8 @@ import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
-import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.text.TextStyle;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
@@ -69,12 +69,29 @@ public class HeadingProcessor {
         setHeadings(contents);
     }
 
+    private static List<SemanticTextNode> getTextNodesFromContents(List<IObject> contents) {
+        List<SemanticTextNode> textNodes = new LinkedList<>();
+        for (IObject content : contents) {
+            if (content instanceof SemanticTextNode) {
+                textNodes.add((SemanticTextNode) content);
+            }
+        }
+        return textNodes;
+    }
+
     private static void processContent(List<SemanticTextNode> textNodes, IObject content, TextNodeStatistics textNodeStatistics) {
         if (content instanceof SemanticTextNode) {
             SemanticTextNode textNode = (SemanticTextNode) content;
             if (!textNode.isSpaceNode()) {
                 textNodes.add(textNode);
                 textNodeStatistics.addTextNode(textNode);
+            }
+        } else if (content instanceof TableBorder && ((TableBorder) content).isTextBlock()) {
+            TableBorder textBlock = (TableBorder) content;
+            TableBorderCell cell = textBlock.getCell(0, 0);
+            List<SemanticTextNode> cellTextNodes = getTextNodesFromContents(cell.getContents());
+            if (cellTextNodes.size() == 1) {
+                processContent(textNodes, cellTextNodes.get(0), textNodeStatistics);
             }
         }
     }
