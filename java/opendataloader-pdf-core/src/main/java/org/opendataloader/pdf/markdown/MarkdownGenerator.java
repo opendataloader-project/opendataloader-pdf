@@ -185,17 +185,21 @@ public class MarkdownGenerator implements Closeable {
     }
 
     protected void writeContents(List<IObject> contents, boolean isTable) throws IOException {
+        boolean wroteAnyContent = false;
         for (int i = 0; i < contents.size(); i++) {
             IObject content = contents.get(i);
             if (!isSupportedContent(content)) {
                 continue;
             }
             this.write(content);
-
             boolean isLastContent = i == contents.size() - 1;
             if (!isTable || !isLastContent) {
                 writeContentsSeparator();
             }
+            wroteAnyContent = true;
+        }
+        if (!wroteAnyContent && isTable) {
+            writeSpace();
         }
     }
 
@@ -238,6 +242,10 @@ public class MarkdownGenerator implements Closeable {
 
     protected void writeLineBreak() throws IOException {
         markdownWriter.write(getLineBreak());
+    }
+
+    protected void writeSpace() throws IOException {
+        markdownWriter.write(MarkdownSyntax.SPACE);
     }
 
     protected String getCorrectMarkdownString(String value) {
