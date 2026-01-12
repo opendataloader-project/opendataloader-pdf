@@ -167,7 +167,11 @@ public class MarkdownGenerator implements Closeable {
             markdownWriter.write(MarkdownSyntax.TABLE_COLUMN_SEPARATOR);
             for (TableBorderCell cell : row.getCells()) {
                 List<IObject> cellContents = cell.getContents();
-                writeContents(cellContents, true);
+                if (cellContents.isEmpty()) {
+                    writeSpace();
+                } else {
+                    writeContents(cellContents, true);
+                }
                 markdownWriter.write(MarkdownSyntax.TABLE_COLUMN_SEPARATOR);
             }
             markdownWriter.write(MarkdownSyntax.LINE_BREAK);
@@ -185,9 +189,6 @@ public class MarkdownGenerator implements Closeable {
     }
 
     protected void writeContents(List<IObject> contents, boolean isTable) throws IOException {
-        if (contents.isEmpty() && isTable) {
-            writeSpace();
-        }
         for (int i = 0; i < contents.size(); i++) {
             IObject content = contents.get(i);
             if (!isSupportedContent(content)) {
