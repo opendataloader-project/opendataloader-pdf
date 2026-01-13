@@ -33,6 +33,22 @@ npm run sync
 
 This exports options from the Java CLI and regenerates `options.json`, `schema.json`, and language-specific bindings.
 
+### Hybrid Server (Local Testing)
+
+```bash
+# Install Python dependencies with hybrid extra
+cd python/opendataloader-pdf && pip install -e ".[hybrid]"
+
+# Run hybrid server (default: http://localhost:5002)
+opendataloader-pdf-hybrid
+
+# Custom port
+opendataloader-pdf-hybrid --port 5003
+
+# With debug logging
+opendataloader-pdf-hybrid --log-level debug
+```
+
 ## Architecture
 
 ```
