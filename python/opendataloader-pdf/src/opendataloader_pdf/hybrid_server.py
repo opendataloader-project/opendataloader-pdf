@@ -37,13 +37,16 @@ import traceback
 from contextlib import asynccontextmanager
 from typing import Optional
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+)
 logger = logging.getLogger(__name__)
 
 # Configuration
 DEFAULT_HOST = "0.0.0.0"
 DEFAULT_PORT = 5002
 MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB max file size
-DEBUG_MODE = os.environ.get("OPENDATALOADER_DEBUG", "").lower() in ("1", "true", "yes")
 
 # Global converter instance (initialized on startup)
 converter = None
@@ -108,11 +111,11 @@ def create_app():
     async def lifespan(_app: FastAPI):
         """Lifespan context manager for startup and shutdown events."""
         global converter
-        print("Initializing DocumentConverter...", flush=True)
+        logger.info("Initializing DocumentConverter...")
         start = time.perf_counter()
         converter = create_converter()
         elapsed = time.perf_counter() - start
-        print(f"DocumentConverter initialized in {elapsed:.2f}s", flush=True)
+        logger.info(f"DocumentConverter initialized in {elapsed:.2f}s")
         yield
         # Cleanup on shutdown (if needed)
 
@@ -210,13 +213,10 @@ def create_app():
             error_msg = str(e)
             stack_trace = traceback.format_exc()
             logger.error(f"PDF conversion failed: {error_msg}\n{stack_trace}")
-            response_data = {
-                "status": "failure",
-                "errors": [error_msg],
-            }
-            if DEBUG_MODE:
-                response_data["traceback"] = stack_trace
-            return JSONResponse(response_data, status_code=500)
+            return JSONResponse(
+                {"status": "failure", "errors": [error_msg]},
+                status_code=500,
+            )
         finally:
             if tmp_path and os.path.exists(tmp_path):
                 os.unlink(tmp_path)
@@ -249,7 +249,7 @@ def main():
     )
     args = parser.parse_args()
 
-    print(f"Starting Docling Fast Server on http://{args.host}:{args.port}", flush=True)
+    logger.info(f"Starting Docling Fast Server on http://{args.host}:{args.port}")
     app = create_app()
     uvicorn.run(
         app,
