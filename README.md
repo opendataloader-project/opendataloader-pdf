@@ -222,6 +222,16 @@ opendataloader_pdf.convert(
 - **Fallback**: If backend unavailable, gracefully falls back to local processing
 - **Privacy**: Run the backend locally in Docker for 100% on-premise
 
+### Debugging
+
+To enable detailed error messages (stack traces) in API responses:
+
+```bash
+OPENDATALOADER_DEBUG=1 opendataloader-pdf-hybrid --port 5002
+```
+
+**Note**: Only enable in development. Stack traces may expose internal paths.
+
 [Hybrid Mode Guide →](https://opendataloader.org/docs/hybrid-mode)
 
 <br/>

@@ -43,6 +43,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_HOST = "0.0.0.0"
 DEFAULT_PORT = 5002
 MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB max file size
+DEBUG_MODE = os.environ.get("OPENDATALOADER_DEBUG", "").lower() in ("1", "true", "yes")
 
 # Global converter instance (initialized on startup)
 converter = None
@@ -209,14 +210,13 @@ def create_app():
             error_msg = str(e)
             stack_trace = traceback.format_exc()
             logger.error(f"PDF conversion failed: {error_msg}\n{stack_trace}")
-            return JSONResponse(
-                {
-                    "status": "failure",
-                    "errors": [error_msg],
-                    "traceback": stack_trace,
-                },
-                status_code=500,
-            )
+            response_data = {
+                "status": "failure",
+                "errors": [error_msg],
+            }
+            if DEBUG_MODE:
+                response_data["traceback"] = stack_trace
+            return JSONResponse(response_data, status_code=500)
         finally:
             if tmp_path and os.path.exists(tmp_path):
                 os.unlink(tmp_path)
