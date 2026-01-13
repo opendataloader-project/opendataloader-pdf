@@ -39,8 +39,12 @@ export interface ConvertOptions {
   imageDir?: string;
   /** Pages to extract (e.g., "1,3,5-7"). Default: all pages */
   pages?: string;
-  /** Hybrid backend for AI processing. Values: off (default), docling-fast */
+  /** Hybrid backend for AI processing. Values: off (default), docling (docling-fast is deprecated alias) */
   hybrid?: string;
+  /** Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend) */
+  hybridMode?: string;
+  /** Hybrid OCR mode for Docling backend. Values: auto (default, OCR only where needed), force (force full-page OCR) */
+  hybridOcr?: string;
   /** Hybrid backend server URL (overrides default) */
   hybridUrl?: string;
   /** Hybrid backend request timeout in milliseconds. Default: 30000 */
@@ -71,6 +75,8 @@ export interface CliOptions {
   imageDir?: string;
   pages?: string;
   hybrid?: string;
+  hybridMode?: string;
+  hybridOcr?: string;
   hybridUrl?: string;
   hybridTimeout?: string;
   hybridFallback?: boolean;
@@ -135,6 +141,12 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   }
   if (cliOptions.hybrid) {
     convertOptions.hybrid = cliOptions.hybrid;
+  }
+  if (cliOptions.hybridMode) {
+    convertOptions.hybridMode = cliOptions.hybridMode;
+  }
+  if (cliOptions.hybridOcr) {
+    convertOptions.hybridOcr = cliOptions.hybridOcr;
   }
   if (cliOptions.hybridUrl) {
     convertOptions.hybridUrl = cliOptions.hybridUrl;
@@ -220,6 +232,12 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.hybrid) {
     args.push('--hybrid', options.hybrid);
+  }
+  if (options.hybridMode) {
+    args.push('--hybrid-mode', options.hybridMode);
+  }
+  if (options.hybridOcr) {
+    args.push('--hybrid-ocr', options.hybridOcr);
   }
   if (options.hybridUrl) {
     args.push('--hybrid-url', options.hybridUrl);
