@@ -142,7 +142,23 @@
       "type": "string",
       "required": false,
       "default": "off",
-      "description": "Hybrid backend for AI processing. Values: off (default), docling-fast"
+      "description": "Hybrid backend for AI processing. Values: off (default), docling (docling-fast is deprecated alias)"
+    },
+    {
+      "name": "hybrid-mode",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": "auto",
+      "description": "Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)"
+    },
+    {
+      "name": "hybrid-ocr",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": "auto",
+      "description": "Hybrid OCR mode for Docling backend. Values: auto (default, OCR only where needed), force (force full-page OCR)"
     },
     {
       "name": "hybrid-url",
