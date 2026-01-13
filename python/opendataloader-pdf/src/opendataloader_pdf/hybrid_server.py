@@ -210,11 +210,9 @@ def create_app():
             return JSONResponse(response)
 
         except Exception as e:
-            error_msg = str(e)
-            stack_trace = traceback.format_exc()
-            logger.error(f"PDF conversion failed: {error_msg}\n{stack_trace}")
+            logger.error(f"PDF conversion failed: {e}\n{traceback.format_exc()}")
             return JSONResponse(
-                {"status": "failure", "errors": [error_msg]},
+                {"status": "failure", "errors": ["PDF conversion failed"]},
                 status_code=500,
             )
         finally:
