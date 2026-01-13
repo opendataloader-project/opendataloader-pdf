@@ -304,4 +304,58 @@ public class HybridDocumentProcessorTest {
         Assertions.assertFalse(request.wantsMarkdown());
         Assertions.assertTrue(request.wantsHtml());
     }
+
+    // ===== HybridConfig Mode Tests =====
+
+    @Test
+    public void testHybridConfigModeDefaults() {
+        HybridConfig config = new HybridConfig();
+
+        Assertions.assertEquals(HybridConfig.MODE_AUTO, config.getMode());
+        Assertions.assertFalse(config.isFullMode());
+    }
+
+    @Test
+    public void testHybridConfigModeFullMode() {
+        HybridConfig config = new HybridConfig();
+        config.setMode(HybridConfig.MODE_FULL);
+
+        Assertions.assertEquals(HybridConfig.MODE_FULL, config.getMode());
+        Assertions.assertTrue(config.isFullMode());
+    }
+
+    @Test
+    public void testHybridConfigOcrDefaults() {
+        HybridConfig config = new HybridConfig();
+
+        Assertions.assertEquals(HybridConfig.OCR_AUTO, config.getOcrMode());
+        Assertions.assertFalse(config.isForceOcr());
+    }
+
+    @Test
+    public void testHybridConfigOcrForce() {
+        HybridConfig config = new HybridConfig();
+        config.setOcrMode(HybridConfig.OCR_FORCE);
+
+        Assertions.assertEquals(HybridConfig.OCR_FORCE, config.getOcrMode());
+        Assertions.assertTrue(config.isForceOcr());
+    }
+
+    @Test
+    public void testDoclingBackendEnabled() {
+        Config config = new Config();
+        config.setHybrid("docling");
+
+        Assertions.assertTrue(config.isHybridEnabled());
+        Assertions.assertEquals("docling", config.getHybrid());
+    }
+
+    @Test
+    public void testDoclingEffectiveUrl() {
+        HybridConfig config = new HybridConfig();
+
+        // docling uses same URL as docling-fast
+        Assertions.assertEquals(HybridConfig.DOCLING_FAST_DEFAULT_URL, config.getEffectiveUrl("docling"));
+        Assertions.assertEquals(HybridConfig.DOCLING_FAST_DEFAULT_URL, config.getEffectiveUrl("docling-fast"));
+    }
 }
