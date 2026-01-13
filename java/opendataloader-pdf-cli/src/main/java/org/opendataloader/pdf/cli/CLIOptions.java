@@ -95,7 +95,13 @@ public class CLIOptions {
 
     // ===== Hybrid Mode =====
     private static final String HYBRID_LONG_OPTION = "hybrid";
-    private static final String HYBRID_DESC = "Hybrid backend for AI processing. Values: off (default), docling-fast";
+    private static final String HYBRID_DESC = "Hybrid backend for AI processing. Values: off (default), docling (docling-fast is deprecated alias)";
+
+    private static final String HYBRID_MODE_LONG_OPTION = "hybrid-mode";
+    private static final String HYBRID_MODE_DESC = "Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)";
+
+    private static final String HYBRID_OCR_LONG_OPTION = "hybrid-ocr";
+    private static final String HYBRID_OCR_DESC = "Hybrid OCR mode for Docling backend. Values: auto (default, OCR only where needed), force (force full-page OCR)";
 
     private static final String HYBRID_URL_LONG_OPTION = "hybrid-url";
     private static final String HYBRID_URL_DESC = "Hybrid backend server URL (overrides default)";
@@ -144,6 +150,8 @@ public class CLIOptions {
             new OptionDefinition(IMAGE_DIR_LONG_OPTION, null, "string", null, IMAGE_DIR_DESC, true),
             new OptionDefinition(PAGES_LONG_OPTION, null, "string", null, PAGES_DESC, true),
             new OptionDefinition(HYBRID_LONG_OPTION, null, "string", "off", HYBRID_DESC, true),
+            new OptionDefinition(HYBRID_MODE_LONG_OPTION, null, "string", "auto", HYBRID_MODE_DESC, true),
+            new OptionDefinition(HYBRID_OCR_LONG_OPTION, null, "string", "auto", HYBRID_OCR_DESC, true),
             new OptionDefinition(HYBRID_URL_LONG_OPTION, null, "string", null, HYBRID_URL_DESC, true),
             new OptionDefinition(HYBRID_TIMEOUT_LONG_OPTION, null, "string", "30000", HYBRID_TIMEOUT_DESC, true),
             new OptionDefinition(HYBRID_FALLBACK_LONG_OPTION, null, "boolean", true, HYBRID_FALLBACK_DESC, true),
@@ -412,6 +420,36 @@ public class CLIOptions {
                                 hybrid, Config.getHybridOptions(", ")));
             }
             config.setHybrid(hybrid);
+        }
+        if (commandLine.hasOption(HYBRID_MODE_LONG_OPTION)) {
+            String modeValue = commandLine.getOptionValue(HYBRID_MODE_LONG_OPTION);
+            if (modeValue == null || modeValue.trim().isEmpty()) {
+                throw new IllegalArgumentException(
+                        String.format("Option --hybrid-mode requires a value. Supported values: %s",
+                                Config.getHybridModeOptions(", ")));
+            }
+            String mode = modeValue.trim().toLowerCase(Locale.ROOT);
+            if (!Config.isValidHybridMode(mode)) {
+                throw new IllegalArgumentException(
+                        String.format("Unsupported hybrid mode '%s'. Supported values: %s",
+                                mode, Config.getHybridModeOptions(", ")));
+            }
+            config.getHybridConfig().setMode(mode);
+        }
+        if (commandLine.hasOption(HYBRID_OCR_LONG_OPTION)) {
+            String ocrValue = commandLine.getOptionValue(HYBRID_OCR_LONG_OPTION);
+            if (ocrValue == null || ocrValue.trim().isEmpty()) {
+                throw new IllegalArgumentException(
+                        String.format("Option --hybrid-ocr requires a value. Supported values: %s",
+                                Config.getHybridOcrOptions(", ")));
+            }
+            String ocr = ocrValue.trim().toLowerCase(Locale.ROOT);
+            if (!Config.isValidHybridOcr(ocr)) {
+                throw new IllegalArgumentException(
+                        String.format("Unsupported hybrid OCR mode '%s'. Supported values: %s",
+                                ocr, Config.getHybridOcrOptions(", ")));
+            }
+            config.getHybridConfig().setOcrMode(ocr);
         }
         if (commandLine.hasOption(HYBRID_URL_LONG_OPTION)) {
             String url = commandLine.getOptionValue(HYBRID_URL_LONG_OPTION);
