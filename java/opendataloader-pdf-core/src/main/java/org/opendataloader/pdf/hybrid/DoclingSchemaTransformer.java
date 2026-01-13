@@ -13,6 +13,7 @@ import org.opendataloader.pdf.hybrid.HybridClient.HybridResponse;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
+import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
@@ -44,7 +45,7 @@ import java.util.logging.Logger;
  *   <li>texts (label: caption, footnote) → SemanticParagraph</li>
  *   <li>texts (label: page_header, page_footer) → Filtered out (furniture)</li>
  *   <li>tables → TableBorder with rows and cells</li>
- *   <li>pictures → ImageChunk (not yet implemented)</li>
+ *   <li>pictures → ImageChunk</li>
  * </ul>
  *
  * <h2>Coordinate System</h2>
@@ -106,6 +107,14 @@ public class DoclingSchemaTransformer implements HybridSchemaTransformer {
         if (tables != null && tables.isArray()) {
             for (JsonNode tableNode : tables) {
                 transformTable(tableNode, result, pageHeights);
+            }
+        }
+
+        // Transform pictures
+        JsonNode pictures = json.get("pictures");
+        if (pictures != null && pictures.isArray()) {
+            for (JsonNode pictureNode : pictures) {
+                transformPicture(pictureNode, result, pageHeights);
             }
         }
 
@@ -302,6 +311,35 @@ public class DoclingSchemaTransformer implements HybridSchemaTransformer {
         paragraph.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
 
         return paragraph;
+    }
+
+    /**
+     * Transforms a Docling picture element to an ImageChunk.
+     */
+    private void transformPicture(JsonNode pictureNode, List<List<IObject>> result, Map<Integer, Double> pageHeights) {
+        // Get provenance for position info
+        JsonNode prov = pictureNode.get("prov");
+        if (prov == null || !prov.isArray() || prov.size() == 0) {
+            LOGGER.log(Level.FINE, "Picture element missing provenance, skipping");
+            return;
+        }
+
+        JsonNode firstProv = prov.get(0);
+        int pageNo = firstProv.has("page_no") ? firstProv.get("page_no").asInt() : 1;
+        int pageIndex = pageNo - 1;
+
+        // Ensure result list is large enough
+        while (result.size() <= pageIndex) {
+            result.add(new ArrayList<>());
+        }
+
+        // Get bounding box
+        BoundingBox bbox = extractBoundingBox(firstProv.get("bbox"), pageIndex, pageHeights.get(pageNo));
+
+        // Create ImageChunk with the bounding box
+        ImageChunk imageChunk = new ImageChunk(bbox);
+
+        result.get(pageIndex).add(imageChunk);
     }
 
     /**
