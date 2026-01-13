@@ -20,8 +20,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public class TextProcessor {
 
+    private static final Logger LOGGER = Logger.getLogger(TextProcessor.class.getCanonicalName());
     private static final double MIN_TEXT_INTERSECTION_PERCENT = 0.5;
     private static final double MAX_TOP_DECORATION_IMAGE_EPSILON = 0.3;
     private static final double MAX_BOTTOM_DECORATION_IMAGE_EPSILON = 0.1;
@@ -91,6 +95,10 @@ public class TextProcessor {
             if (object instanceof TextChunk) {
                 TextChunk currentTextChunk = (TextChunk) object;
                 if (lastTextChunk != null && areSameTextChunks(lastTextChunk, currentTextChunk)) {
+                    LOGGER.log(Level.FINE, "Removing duplicate text chunk: ''{0}'' at ({1}, {2})",
+                        new Object[]{lastTextChunk.getValue(),
+                            lastTextChunk.getBoundingBox().getLeftX(),
+                            lastTextChunk.getBoundingBox().getBottomY()});
                     contents.set(lastTextChunk.getIndex(), null);
                 }
                 lastTextChunk = currentTextChunk;
@@ -126,7 +134,22 @@ public class TextProcessor {
     }
 
     private static boolean areNeighborsTextChunks(TextChunk firstTextChunk, TextChunk secondTextChunk) {
-        return NodeUtils.areCloseNumbers(firstTextChunk.getTextEnd(), secondTextChunk.getTextStart(),
+        // Check if textEnd/textStart are close (VeraPDF internal positions)
+        boolean textPositionsClose = NodeUtils.areCloseNumbers(firstTextChunk.getTextEnd(), secondTextChunk.getTextStart(),
             NEIGHBORS_TEXT_CHUNKS_EPSILON * firstTextChunk.getBoundingBox().getHeight());
+        if (!textPositionsClose) {
+            return false;
+        }
+        // Also verify physical bounding box proximity - textEnd/textStart and rightX can be unreliable
+        // when PDF has text chunks encoded in non-sequential order within a stream.
+        // Use leftX difference as a more reliable indicator of physical proximity.
+        double leftXGap = secondTextChunk.getBoundingBox().getLeftX() - firstTextChunk.getBoundingBox().getLeftX();
+        // For neighbors, the gap between leftX values should be reasonable based on text width
+        // Estimate expected width: use height as proxy (typical aspect ratio for text)
+        String value = firstTextChunk.getValue();
+        int charCount = (value != null) ? value.length() : 0;
+        double estimatedWidth = charCount * firstTextChunk.getBoundingBox().getHeight() * 0.6;
+        double maxAllowedLeftXGap = estimatedWidth + firstTextChunk.getBoundingBox().getHeight() * 2;
+        return leftXGap > 0 && leftXGap < maxAllowedLeftXGap;
     }
 }

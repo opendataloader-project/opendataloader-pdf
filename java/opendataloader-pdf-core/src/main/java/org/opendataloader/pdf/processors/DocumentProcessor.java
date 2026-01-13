@@ -141,6 +141,10 @@ public class DocumentProcessor {
             }
             List<IObject> pageContents = TableBorderProcessor.processTableBorders(contents.get(pageNumber), pageNumber);
             pageContents = pageContents.stream().filter(x -> !(x instanceof LineChunk)).collect(Collectors.toList());
+            // Apply reading order sorting BEFORE text line processing to ensure correct merge order
+            if (Config.READING_ORDER_XYCUT.equals(config.getReadingOrder())) {
+                pageContents = XYCutPlusPlusSorter.sort(pageContents);
+            }
             pageContents = TextLineProcessor.processTextLines(pageContents);
             pageContents = SpecialTableProcessor.detectSpecialTables(pageContents);
             contents.set(pageNumber, pageContents);

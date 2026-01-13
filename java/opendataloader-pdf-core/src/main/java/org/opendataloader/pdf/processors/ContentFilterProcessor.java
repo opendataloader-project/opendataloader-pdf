@@ -43,6 +43,9 @@ public class ContentFilterProcessor {
     public static List<IObject> getFilteredContents(String inputPdfName, List<IChunk> contents, int pageNumber,
                                                     Config config) throws IOException {
         List<IObject> pageContents = new ArrayList<>(contents);
+        // Fix abnormal bounding boxes where rightX extends far beyond expected width
+        // This occurs when PDF streams have non-sequential text rendering
+        fixAbnormalTextChunkBoundingBoxes(pageContents);
         TextProcessor.removeSameTextChunks(pageContents);
         pageContents = DocumentProcessor.removeNullObjectsFromList(pageContents);
         TextProcessor.removeTextDecorationImages(pageContents);
@@ -95,6 +98,42 @@ public class ContentFilterProcessor {
         for (IObject object : pageContents) {
             if (object instanceof TextChunk) {
                 ((TextChunk) object).compressSpaces();
+            }
+        }
+    }
+
+    /**
+     * Fixes abnormal TextChunk bounding boxes where rightX extends far beyond expected width.
+     * This occurs when PDF streams have text rendered in non-sequential order within a single
+     * text show operation (Tj/TJ), causing VeraPDF to calculate incorrect bounding boxes.
+     */
+    private static void fixAbnormalTextChunkBoundingBoxes(List<IObject> contents) {
+        for (IObject object : contents) {
+            if (object instanceof TextChunk) {
+                TextChunk tc = (TextChunk) object;
+                String value = tc.getValue();
+                if (value == null || value.isEmpty()) {
+                    continue;
+                }
+                BoundingBox bbox = tc.getBoundingBox();
+                double actualWidth = bbox.getWidth();
+                // Estimate expected width: characters * height * typical aspect ratio
+                double expectedWidth = value.length() * bbox.getHeight() * 0.7;
+                // If actual width is more than 3x expected, it's likely incorrect
+                if (actualWidth > expectedWidth * 3 && value.length() <= 3) {
+                    double newRightX = bbox.getLeftX() + expectedWidth;
+                    // Create corrected bounding box
+                    BoundingBox correctedBbox = new BoundingBox(
+                        bbox.getPageNumber(),
+                        bbox.getLeftX(),
+                        bbox.getBottomY(),
+                        newRightX,
+                        bbox.getTopY()
+                    );
+                    tc.setBoundingBox(correctedBbox);
+                    LOGGER.log(Level.FINE, "Fixed abnormal bbox for ''{0}'': width {1} -> {2}",
+                        new Object[]{tc.getValue(), actualWidth, correctedBbox.getWidth()});
+                }
             }
         }
     }
