@@ -28,7 +28,9 @@ public class Config {
 
     /** Hybrid mode: off (Java-only processing, no external dependency). */
     public static final String HYBRID_OFF = "off";
-    /** Hybrid mode: docling-fast backend (optimized FastAPI server). */
+    /** Hybrid mode: docling backend (Docling FastAPI server). */
+    public static final String HYBRID_DOCLING = "docling";
+    /** Hybrid mode: docling-fast backend (deprecated alias for docling). */
     public static final String HYBRID_DOCLING_FAST = "docling-fast";
     /** Hybrid mode: hancom backend (Hancom Document AI). */
     public static final String HYBRID_HANCOM = "hancom";
@@ -37,6 +39,18 @@ public class Config {
     /** Hybrid mode: google backend (Google Document AI). */
     public static final String HYBRID_GOOGLE = "google";
     private static Set<String> hybridOptions = new HashSet<>();
+
+    /** Hybrid triage mode: auto (dynamic triage based on page content). */
+    public static final String HYBRID_MODE_AUTO = "auto";
+    /** Hybrid triage mode: full (skip triage, send all pages to backend). */
+    public static final String HYBRID_MODE_FULL = "full";
+    private static Set<String> hybridModeOptions = new HashSet<>();
+
+    /** Hybrid OCR mode: auto (OCR only where needed, Docling internal logic). */
+    public static final String HYBRID_OCR_AUTO = "auto";
+    /** Hybrid OCR mode: force (force full-page OCR on all pages). */
+    public static final String HYBRID_OCR_FORCE = "force";
+    private static Set<String> hybridOcrOptions = new HashSet<>();
     /** Placeholder string for page number in separators. */
     public static final String PAGE_NUMBER_STRING = "%page-number%";
     private String password;
@@ -96,8 +110,13 @@ public class Config {
         imageOutputOptions.add(IMAGE_OUTPUT_EMBEDDED);
         imageOutputOptions.add(IMAGE_OUTPUT_EXTERNAL);
         hybridOptions.add(HYBRID_OFF);
-        hybridOptions.add(HYBRID_DOCLING_FAST);
+        hybridOptions.add(HYBRID_DOCLING);
+        hybridOptions.add(HYBRID_DOCLING_FAST);  // deprecated alias
         // hancom, azure, google added when implemented
+        hybridModeOptions.add(HYBRID_MODE_AUTO);
+        hybridModeOptions.add(HYBRID_MODE_FULL);
+        hybridOcrOptions.add(HYBRID_OCR_AUTO);
+        hybridOcrOptions.add(HYBRID_OCR_FORCE);
     }
 
     /**
@@ -784,6 +803,46 @@ public class Config {
      */
     public HybridConfig getHybridConfig() {
         return hybridConfig;
+    }
+
+    /**
+     * Gets the list of supported hybrid mode options.
+     *
+     * @param delimiter The delimiter to use between options.
+     * @return The string with hybrid modes separated by the delimiter.
+     */
+    public static String getHybridModeOptions(CharSequence delimiter) {
+        return String.join(delimiter, hybridModeOptions);
+    }
+
+    /**
+     * Checks if the given hybrid mode is valid.
+     *
+     * @param mode The hybrid mode to check.
+     * @return true if the mode is valid, false otherwise.
+     */
+    public static boolean isValidHybridMode(String mode) {
+        return mode != null && hybridModeOptions.contains(mode.toLowerCase(Locale.ROOT));
+    }
+
+    /**
+     * Gets the list of supported hybrid OCR options.
+     *
+     * @param delimiter The delimiter to use between options.
+     * @return The string with hybrid OCR modes separated by the delimiter.
+     */
+    public static String getHybridOcrOptions(CharSequence delimiter) {
+        return String.join(delimiter, hybridOcrOptions);
+    }
+
+    /**
+     * Checks if the given hybrid OCR mode is valid.
+     *
+     * @param ocr The hybrid OCR mode to check.
+     * @return true if the OCR mode is valid, false otherwise.
+     */
+    public static boolean isValidHybridOcr(String ocr) {
+        return ocr != null && hybridOcrOptions.contains(ocr.toLowerCase(Locale.ROOT));
     }
 
 }

@@ -100,10 +100,24 @@ public class HybridDocumentProcessor {
         // Phase 1: Filter all pages and collect filtered contents
         Map<Integer, List<IObject>> filteredContents = filterAllPages(inputPdfName, config, pagesToProcess, totalPages);
 
-        // Phase 2: Triage all pages
-        Map<Integer, TriageResult> triageResults = TriageProcessor.triageAllPages(
-            filteredContents, config.getHybridConfig()
-        );
+        // Phase 2: Triage all pages (or skip if full mode)
+        Map<Integer, TriageResult> triageResults;
+        if (config.getHybridConfig().isFullMode()) {
+            // Full mode: skip triage, route all pages to backend
+            LOGGER.log(Level.INFO, "Hybrid mode=full: skipping triage, all pages to backend");
+            triageResults = new HashMap<>();
+            for (int pageNumber : filteredContents.keySet()) {
+                if (shouldProcessPage(pageNumber, pagesToProcess)) {
+                    triageResults.put(pageNumber,
+                        TriageResult.backend(pageNumber, 1.0, TriageProcessor.TriageSignals.empty()));
+                }
+            }
+        } else {
+            // Auto mode: dynamic triage based on page content
+            triageResults = TriageProcessor.triageAllPages(
+                filteredContents, config.getHybridConfig()
+            );
+        }
 
         // Log triage summary
         logTriageSummary(triageResults);
@@ -341,8 +355,8 @@ public class HybridDocumentProcessor {
     private static HybridSchemaTransformer createTransformer(Config config) {
         String hybrid = config.getHybrid();
 
-        // docling-fast uses DoclingSchemaTransformer
-        if (Config.HYBRID_DOCLING_FAST.equals(hybrid)) {
+        // docling and docling-fast (deprecated) use DoclingSchemaTransformer
+        if (Config.HYBRID_DOCLING.equals(hybrid) || Config.HYBRID_DOCLING_FAST.equals(hybrid)) {
             return new DoclingSchemaTransformer();
         }
 
