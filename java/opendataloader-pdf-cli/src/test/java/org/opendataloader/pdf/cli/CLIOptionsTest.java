@@ -357,4 +357,102 @@ class CLIOptionsTest {
 
         assertNull(config.getImageDir()); // whitespace-only treated as null (use default)
     }
+
+    // ===== Hybrid Mode Option Tests =====
+
+    @Test
+    void testDefineOptions_containsHybridModeOption() {
+        assertTrue(options.hasOption("hybrid-mode"));
+    }
+
+    @Test
+    void testDefineOptions_containsHybridOcrOption() {
+        assertTrue(options.hasOption("hybrid-ocr"));
+    }
+
+    @Test
+    void testCreateConfig_withHybridModeAuto() throws ParseException {
+        String[] args = {"--hybrid", "docling", "--hybrid-mode", "auto", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertEquals("auto", config.getHybridConfig().getMode());
+        assertFalse(config.getHybridConfig().isFullMode());
+    }
+
+    @Test
+    void testCreateConfig_withHybridModeFull() throws ParseException {
+        String[] args = {"--hybrid", "docling", "--hybrid-mode", "full", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertEquals("full", config.getHybridConfig().getMode());
+        assertTrue(config.getHybridConfig().isFullMode());
+    }
+
+    @Test
+    void testCreateConfig_withInvalidHybridMode() throws ParseException {
+        String[] args = {"--hybrid-mode", "invalid", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            CLIOptions.createConfigFromCommandLine(cmd);
+        });
+    }
+
+    @Test
+    void testCreateConfig_withHybridOcrAuto() throws ParseException {
+        String[] args = {"--hybrid", "docling", "--hybrid-ocr", "auto", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertEquals("auto", config.getHybridConfig().getOcrMode());
+        assertFalse(config.getHybridConfig().isForceOcr());
+    }
+
+    @Test
+    void testCreateConfig_withHybridOcrForce() throws ParseException {
+        String[] args = {"--hybrid", "docling", "--hybrid-ocr", "force", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertEquals("force", config.getHybridConfig().getOcrMode());
+        assertTrue(config.getHybridConfig().isForceOcr());
+    }
+
+    @Test
+    void testCreateConfig_withInvalidHybridOcr() throws ParseException {
+        String[] args = {"--hybrid-ocr", "invalid", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            CLIOptions.createConfigFromCommandLine(cmd);
+        });
+    }
+
+    @Test
+    void testCreateConfig_defaultHybridModeAndOcr() throws ParseException {
+        String[] args = {"--hybrid", "docling", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertEquals("auto", config.getHybridConfig().getMode());
+        assertEquals("auto", config.getHybridConfig().getOcrMode());
+    }
+
+    @Test
+    void testCreateConfig_withDoclingBackend() throws ParseException {
+        String[] args = {"--hybrid", "docling", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertEquals("docling", config.getHybrid());
+        assertTrue(config.isHybridEnabled());
+    }
 }
