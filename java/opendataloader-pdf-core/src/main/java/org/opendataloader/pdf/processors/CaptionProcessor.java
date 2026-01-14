@@ -94,11 +94,8 @@ public class CaptionProcessor {
         if (imageWidth == 0 || imageHeight == 0) {
             return true;
         }
-        if (imageHeight > imageWidth) {
-            return imageWidth/imageHeight < SUBTLE_IMAGE_RATIO_THRESHOLD;
-        } else {
-            return imageHeight/imageWidth < SUBTLE_IMAGE_RATIO_THRESHOLD;
-        }
+        double aspectRatio = Math.min(imageWidth, imageHeight) / Math.max(imageWidth, imageHeight);
+        return aspectRatio < SUBTLE_IMAGE_RATIO_THRESHOLD;
     }
 
 
