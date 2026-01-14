@@ -27,6 +27,7 @@ public class CaptionProcessor {
 
     private static final double CAPTION_VERTICAL_OFFSET_RATIO = 1;
     private static final double CAPTION_HORIZONTAL_OFFSET_RATIO = 1;
+    private static final double SUBTLE_IMAGE_RATIO_THRESHOLD = 100;
 
     /**
      * Processes content to identify and link captions to images and tables.
@@ -53,7 +54,7 @@ public class CaptionProcessor {
                 }
 
                 lastTextNode = textNode;
-            } else if (content instanceof ImageChunk) {
+            } else if (content instanceof ImageChunk && !isImageSubtle((ImageChunk) content)) {
                 if (imageNode != null && isTextNotContainedInImage(imageNode, lastTextNode)) {
                     acceptImageCaption(contents, imageNode, lastTextNode, null);
                     lastTextNode = null;
@@ -85,6 +86,16 @@ public class CaptionProcessor {
 //                }
 //            }
 //        }
+    }
+
+    private static boolean isImageSubtle(ImageChunk imageChunk) {
+        double imageHeight = imageChunk.getHeight();
+        double imageWidth = imageChunk.getWidth();
+        if (imageHeight > imageWidth) {
+            return imageHeight/imageWidth > SUBTLE_IMAGE_RATIO_THRESHOLD;
+        } else {
+            return imageWidth/imageHeight > SUBTLE_IMAGE_RATIO_THRESHOLD;
+        }
     }
 
 
