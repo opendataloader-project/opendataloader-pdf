@@ -14,6 +14,7 @@ import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.CaptionUtils;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
 import java.util.List;
 
@@ -91,7 +92,7 @@ public class CaptionProcessor {
     private static boolean isImageSubtle(ImageChunk imageChunk) {
         double imageHeight = imageChunk.getHeight();
         double imageWidth = imageChunk.getWidth();
-        if (imageWidth == 0 || imageHeight == 0) {
+        if (NodeUtils.areCloseNumbers(imageWidth, 0) || NodeUtils.areCloseNumbers(imageHeight, 0)) {
             return true;
         }
         double aspectRatio = Math.min(imageWidth, imageHeight) / Math.max(imageWidth, imageHeight);
