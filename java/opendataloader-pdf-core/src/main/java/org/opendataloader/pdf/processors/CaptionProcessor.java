@@ -14,6 +14,7 @@ import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.CaptionUtils;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
 import java.util.List;
 
@@ -27,6 +28,7 @@ public class CaptionProcessor {
 
     private static final double CAPTION_VERTICAL_OFFSET_RATIO = 1;
     private static final double CAPTION_HORIZONTAL_OFFSET_RATIO = 1;
+    private static final double SUBTLE_IMAGE_RATIO_THRESHOLD = 0.01;
 
     /**
      * Processes content to identify and link captions to images and tables.
@@ -53,7 +55,7 @@ public class CaptionProcessor {
                 }
 
                 lastTextNode = textNode;
-            } else if (content instanceof ImageChunk) {
+            } else if (content instanceof ImageChunk && !isImageSubtle((ImageChunk) content)) {
                 if (imageNode != null && isTextNotContainedInImage(imageNode, lastTextNode)) {
                     acceptImageCaption(contents, imageNode, lastTextNode, null);
                     lastTextNode = null;
@@ -85,6 +87,16 @@ public class CaptionProcessor {
 //                }
 //            }
 //        }
+    }
+
+    private static boolean isImageSubtle(ImageChunk imageChunk) {
+        double imageHeight = imageChunk.getHeight();
+        double imageWidth = imageChunk.getWidth();
+        if (NodeUtils.areCloseNumbers(imageWidth, 0) || NodeUtils.areCloseNumbers(imageHeight, 0)) {
+            return true;
+        }
+        double aspectRatio = Math.min(imageWidth, imageHeight) / Math.max(imageWidth, imageHeight);
+        return aspectRatio < SUBTLE_IMAGE_RATIO_THRESHOLD;
     }
 
 
