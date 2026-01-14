@@ -27,7 +27,7 @@ public class CaptionProcessor {
 
     private static final double CAPTION_VERTICAL_OFFSET_RATIO = 1;
     private static final double CAPTION_HORIZONTAL_OFFSET_RATIO = 1;
-    private static final double SUBTLE_IMAGE_RATIO_THRESHOLD = 100;
+    private static final double SUBTLE_IMAGE_RATIO_THRESHOLD = 0.01;
 
     /**
      * Processes content to identify and link captions to images and tables.
@@ -91,10 +91,13 @@ public class CaptionProcessor {
     private static boolean isImageSubtle(ImageChunk imageChunk) {
         double imageHeight = imageChunk.getHeight();
         double imageWidth = imageChunk.getWidth();
+        if (imageWidth == 0 || imageHeight == 0) {
+            return true;
+        }
         if (imageHeight > imageWidth) {
-            return imageHeight/imageWidth > SUBTLE_IMAGE_RATIO_THRESHOLD;
+            return imageWidth/imageHeight < SUBTLE_IMAGE_RATIO_THRESHOLD;
         } else {
-            return imageWidth/imageHeight > SUBTLE_IMAGE_RATIO_THRESHOLD;
+            return imageHeight/imageWidth < SUBTLE_IMAGE_RATIO_THRESHOLD;
         }
     }
 
