@@ -173,6 +173,9 @@ public class TableBorderProcessor {
         if (end == null) {
             return null;
         }
+        if (start == end && end != textChunk.getValue().length()) {
+            end++;
+        }
         TextChunk result = TextChunk.getTextChunk(textChunk, start, end);
         return ChunksMergeUtils.getTrimTextChunk(result);
     }
