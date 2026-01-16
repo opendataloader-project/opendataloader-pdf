@@ -34,7 +34,6 @@ import java.util.*;
 public class HeadingProcessor {
     private static final double HEADING_PROBABILITY = 0.75;
     private static final double BULLETED_HEADING_PROBABILITY = 0.1;
-    private static final Map<SemanticTextNode, PDFList> possibleHeadingsInList = new HashMap<>();
 
     /**
      * Processes content to identify and mark headings.
@@ -45,8 +44,9 @@ public class HeadingProcessor {
     public static void processHeadings(List<IObject> contents, boolean isTableCell) {
         TextNodeStatistics textNodeStatistics = new TextNodeStatistics();
         List<SemanticTextNode> textNodes = new LinkedList<>();
+        Map<SemanticTextNode, PDFList> possibleHeadingsInList = new HashMap<>();
         for (IObject content : contents) {
-            processContent(textNodes, content, textNodeStatistics);
+            processContent(textNodes, content, textNodeStatistics, possibleHeadingsInList);
         }
 
         int textNodesCount = textNodes.size();
@@ -113,7 +113,8 @@ public class HeadingProcessor {
         return textNodes;
     }
 
-    private static void processContent(List<SemanticTextNode> textNodes, IObject content, TextNodeStatistics textNodeStatistics) {
+    private static void processContent(List<SemanticTextNode> textNodes, IObject content, TextNodeStatistics textNodeStatistics,
+                                       Map<SemanticTextNode, PDFList> possibleHeadingsInList) {
         if (content instanceof SemanticTextNode) {
             SemanticTextNode textNode = (SemanticTextNode) content;
             if (!textNode.isSpaceNode()) {
@@ -125,7 +126,7 @@ public class HeadingProcessor {
             TableBorderCell cell = textBlock.getCell(0, 0);
             List<SemanticTextNode> cellTextNodes = getTextNodesFromContents(cell.getContents());
             if (cellTextNodes.size() == 1) {
-                processContent(textNodes, cellTextNodes.get(0), textNodeStatistics);
+                processContent(textNodes, cellTextNodes.get(0), textNodeStatistics, possibleHeadingsInList);
             }
         } else if (content instanceof PDFList) {
             PDFList list = (PDFList) content;
