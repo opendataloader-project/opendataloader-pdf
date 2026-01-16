@@ -44,9 +44,9 @@ public class HeadingProcessor {
     public static void processHeadings(List<IObject> contents, boolean isTableCell) {
         TextNodeStatistics textNodeStatistics = new TextNodeStatistics();
         List<SemanticTextNode> textNodes = new LinkedList<>();
-        Map<SemanticTextNode, PDFList> possibleHeadingsInList = new HashMap<>();
+        Map<SemanticTextNode, PDFList> textNodeToListMap = new HashMap<>();
         for (IObject content : contents) {
-            processContent(textNodes, content, textNodeStatistics, possibleHeadingsInList);
+            processContent(textNodes, content, textNodeStatistics, textNodeToListMap);
         }
 
         int textNodesCount = textNodes.size();
@@ -72,7 +72,7 @@ public class HeadingProcessor {
                 textNode.setSemanticType(SemanticType.HEADING);
             }
             if (textNode.getSemanticType() == SemanticType.HEADING && textNode.getInitialSemanticType() == SemanticType.LIST) {
-                PDFList list = possibleHeadingsInList.get(textNode);
+                PDFList list = textNodeToListMap.get(textNode);
                 if (isNotHeadings(list)) {
                     continue;
                 }
@@ -132,11 +132,9 @@ public class HeadingProcessor {
             PDFList list = (PDFList) content;
             ListItem listItem = list.getFirstListItem();
             SemanticTextNode textNode = convertListItemToSemanticTextNode(listItem);
-            if (!textNode.isSpaceNode()) {
-                textNodes.add(textNode);
-                textNodeStatistics.addTextNode(textNode);
-                possibleHeadingsInList.put(textNode, list);
-            }
+            textNodes.add(textNode);
+            textNodeStatistics.addTextNode(textNode);
+            possibleHeadingsInList.put(textNode, list);
         }
     }
 
