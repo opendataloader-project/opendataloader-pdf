@@ -14,7 +14,12 @@ import org.verapdf.wcag.algorithms.entities.INode;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
+import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
+import org.verapdf.wcag.algorithms.entities.content.TextBlock;
+import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
+import org.verapdf.wcag.algorithms.entities.lists.ListItem;
+import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.text.TextStyle;
@@ -29,6 +34,7 @@ import java.util.*;
 public class HeadingProcessor {
     private static final double HEADING_PROBABILITY = 0.75;
     private static final double BULLETED_HEADING_PROBABILITY = 0.1;
+    private static final Map<SemanticTextNode, PDFList> possibleHeadingsInList = new HashMap<>();
 
     /**
      * Processes content to identify and mark headings.
@@ -65,8 +71,36 @@ public class HeadingProcessor {
             if (probability > HEADING_PROBABILITY && textNode.getSemanticType() != SemanticType.LIST) {
                 textNode.setSemanticType(SemanticType.HEADING);
             }
+            if (textNode.getSemanticType() == SemanticType.HEADING && textNode.getInitialSemanticType() == SemanticType.LIST) {
+                PDFList list = possibleHeadingsInList.get(textNode);
+                if (isNotHeadings(list)) {
+                    continue;
+                }
+                int listIndex = contents.indexOf(list);
+                contents.remove(listIndex);
+                contents.addAll(listIndex, disassemblePDFList(list));
+            }
         }
         setHeadings(contents);
+    }
+
+    private static List<IObject> disassemblePDFList(PDFList list) {
+        List<IObject> contents = new LinkedList<>();
+        for (ListItem item : list.getListItems()) {
+            SemanticTextNode node = convertListItemToSemanticTextNode(item);
+            node.setSemanticType(SemanticType.HEADING);
+            contents.add(node);
+            contents.addAll(item.getContents());
+        }
+        return contents;
+    }
+
+    private static SemanticTextNode convertListItemToSemanticTextNode(TextBlock textBlock) {
+        SemanticTextNode semanticTextNode = new SemanticTextNode(SemanticType.LIST);
+        for (TextLine line : textBlock.getLines()) {
+            semanticTextNode.add(line);
+        }
+        return semanticTextNode;
     }
 
     private static List<SemanticTextNode> getTextNodesFromContents(List<IObject> contents) {
@@ -93,7 +127,36 @@ public class HeadingProcessor {
             if (cellTextNodes.size() == 1) {
                 processContent(textNodes, cellTextNodes.get(0), textNodeStatistics);
             }
+        } else if (content instanceof PDFList) {
+            PDFList list = (PDFList) content;
+            ListItem listItem = list.getFirstListItem();
+            SemanticTextNode textNode = convertListItemToSemanticTextNode(listItem);
+            if (!textNode.isSpaceNode()) {
+                textNodes.add(textNode);
+                textNodeStatistics.addTextNode(textNode);
+                possibleHeadingsInList.put(textNode, list);
+            }
         }
+    }
+
+    private static boolean isNotHeadings(PDFList list) {
+        for (int i = 0; i < list.getListItems().size() - 1; i++) {
+            boolean onlyLineArtChunks = true;
+            List<ListItem> listItems = list.getListItems();
+            if (listItems.get(i).getContents().isEmpty()) {
+                return true;
+            }
+            for (IObject item : listItems.get(i).getContents()) {
+                if (!(item instanceof LineArtChunk)) {
+                    onlyLineArtChunks = false;
+                    break;
+                }
+            }
+            if (onlyLineArtChunks) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static void setHeadings(List<IObject> contents) {
