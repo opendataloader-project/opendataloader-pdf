@@ -53,6 +53,7 @@ public class DoclingFastServerClient implements HybridClient {
     private final String baseUrl;
     private final OkHttpClient httpClient;
     private final ObjectMapper objectMapper;
+    private final boolean forceOcr;
 
     /**
      * Creates a new DoclingFastServerClient with the specified configuration.
@@ -62,6 +63,7 @@ public class DoclingFastServerClient implements HybridClient {
     public DoclingFastServerClient(HybridConfig config) {
         this.baseUrl = config.getEffectiveUrl("docling-fast");
         this.objectMapper = new ObjectMapper();
+        this.forceOcr = config.isForceOcr();
         this.httpClient = new OkHttpClient.Builder()
             .connectTimeout(config.getTimeoutMs(), TimeUnit.MILLISECONDS)
             .readTimeout(config.getTimeoutMs(), TimeUnit.MILLISECONDS)
@@ -80,6 +82,7 @@ public class DoclingFastServerClient implements HybridClient {
         this.baseUrl = baseUrl;
         this.httpClient = httpClient;
         this.objectMapper = objectMapper;
+        this.forceOcr = false;
     }
 
     @Override
@@ -126,6 +129,11 @@ public class DoclingFastServerClient implements HybridClient {
             int minPage = request.getPageNumbers().stream().min(Integer::compareTo).orElse(1);
             int maxPage = request.getPageNumbers().stream().max(Integer::compareTo).orElse(Integer.MAX_VALUE);
             bodyBuilder.addFormDataPart("page_ranges", minPage + "-" + maxPage);
+        }
+
+        // Add force_ocr parameter if enabled
+        if (forceOcr) {
+            bodyBuilder.addFormDataPart("force_ocr", "true");
         }
 
         return new Request.Builder()

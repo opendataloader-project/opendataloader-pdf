@@ -31,6 +31,18 @@ public class HybridConfig {
     private int timeoutMs = DEFAULT_TIMEOUT_MS;
     private boolean fallbackToJava = true;
     private int maxConcurrentRequests = DEFAULT_MAX_CONCURRENT_REQUESTS;
+    /** Hybrid triage mode: auto (dynamic triage based on page content). */
+    public static final String MODE_AUTO = "auto";
+    /** Hybrid triage mode: full (skip triage, send all pages to backend). */
+    public static final String MODE_FULL = "full";
+
+    /** Hybrid OCR mode: auto (OCR only where needed). */
+    public static final String OCR_AUTO = "auto";
+    /** Hybrid OCR mode: force (force full-page OCR on all pages). */
+    public static final String OCR_FORCE = "force";
+
+    private String mode = MODE_AUTO;
+    private String ocrMode = OCR_AUTO;
 
     /**
      * Default constructor initializing the configuration with default values.
@@ -129,10 +141,8 @@ public class HybridConfig {
             return null;
         }
         String lowerHybrid = hybrid.toLowerCase();
-        if ("docling".equals(lowerHybrid)) {
-            return DOCLING_DEFAULT_URL;
-        }
-        if ("docling-fast".equals(lowerHybrid)) {
+        // Both "docling" and "docling-fast" (deprecated) use the same server
+        if ("docling".equals(lowerHybrid) || "docling-fast".equals(lowerHybrid)) {
             return DOCLING_FAST_DEFAULT_URL;
         }
         // hancom, azure, google require explicit URL
@@ -151,5 +161,59 @@ public class HybridConfig {
             return url;
         }
         return getDefaultUrl(hybrid);
+    }
+
+    /**
+     * Gets the hybrid triage mode.
+     *
+     * @return The mode (auto or full).
+     */
+    public String getMode() {
+        return mode;
+    }
+
+    /**
+     * Sets the hybrid triage mode.
+     *
+     * @param mode The mode (auto or full).
+     */
+    public void setMode(String mode) {
+        this.mode = mode;
+    }
+
+    /**
+     * Checks if full mode is enabled (skip triage, send all pages to backend).
+     *
+     * @return true if mode is full, false otherwise.
+     */
+    public boolean isFullMode() {
+        return MODE_FULL.equals(mode);
+    }
+
+    /**
+     * Gets the hybrid OCR mode.
+     *
+     * @return The OCR mode (auto or force).
+     */
+    public String getOcrMode() {
+        return ocrMode;
+    }
+
+    /**
+     * Sets the hybrid OCR mode.
+     *
+     * @param ocrMode The OCR mode (auto or force).
+     */
+    public void setOcrMode(String ocrMode) {
+        this.ocrMode = ocrMode;
+    }
+
+    /**
+     * Checks if force OCR mode is enabled.
+     *
+     * @return true if OCR mode is force, false otherwise.
+     */
+    public boolean isForceOcr() {
+        return OCR_FORCE.equals(ocrMode);
     }
 }
