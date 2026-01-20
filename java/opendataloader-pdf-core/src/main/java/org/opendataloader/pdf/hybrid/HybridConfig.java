@@ -36,13 +36,7 @@ public class HybridConfig {
     /** Hybrid triage mode: full (skip triage, send all pages to backend). */
     public static final String MODE_FULL = "full";
 
-    /** Hybrid OCR mode: auto (OCR only where needed). */
-    public static final String OCR_AUTO = "auto";
-    /** Hybrid OCR mode: force (force full-page OCR on all pages). */
-    public static final String OCR_FORCE = "force";
-
     private String mode = MODE_AUTO;
-    private String ocrMode = OCR_AUTO;
 
     /**
      * Default constructor initializing the configuration with default values.
@@ -188,32 +182,5 @@ public class HybridConfig {
      */
     public boolean isFullMode() {
         return MODE_FULL.equals(mode);
-    }
-
-    /**
-     * Gets the hybrid OCR mode.
-     *
-     * @return The OCR mode (auto or force).
-     */
-    public String getOcrMode() {
-        return ocrMode;
-    }
-
-    /**
-     * Sets the hybrid OCR mode.
-     *
-     * @param ocrMode The OCR mode (auto or force).
-     */
-    public void setOcrMode(String ocrMode) {
-        this.ocrMode = ocrMode;
-    }
-
-    /**
-     * Checks if force OCR mode is enabled.
-     *
-     * @return true if OCR mode is force, false otherwise.
-     */
-    public boolean isForceOcr() {
-        return OCR_FORCE.equals(ocrMode);
     }
 }

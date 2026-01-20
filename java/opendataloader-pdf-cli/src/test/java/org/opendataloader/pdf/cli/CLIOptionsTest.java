@@ -367,6 +367,7 @@ class CLIOptionsTest {
 
     @Test
     void testDefineOptions_containsHybridOcrOption() {
+        // --hybrid-ocr is deprecated but still accepted for backward compatibility
         assertTrue(options.hasOption("hybrid-ocr"));
     }
 
@@ -403,46 +404,24 @@ class CLIOptionsTest {
     }
 
     @Test
-    void testCreateConfig_withHybridOcrAuto() throws ParseException {
-        String[] args = {"--hybrid", "docling", "--hybrid-ocr", "auto", testPdf.getAbsolutePath()};
-        CommandLine cmd = parser.parse(options, args);
-
-        Config config = CLIOptions.createConfigFromCommandLine(cmd);
-
-        assertEquals("auto", config.getHybridConfig().getOcrMode());
-        assertFalse(config.getHybridConfig().isForceOcr());
-    }
-
-    @Test
-    void testCreateConfig_withHybridOcrForce() throws ParseException {
+    void testCreateConfig_withDeprecatedHybridOcr() throws ParseException {
+        // --hybrid-ocr is deprecated; it should print a warning but not throw
         String[] args = {"--hybrid", "docling", "--hybrid-ocr", "force", testPdf.getAbsolutePath()};
         CommandLine cmd = parser.parse(options, args);
 
+        // Should not throw, just prints deprecation warning
         Config config = CLIOptions.createConfigFromCommandLine(cmd);
-
-        assertEquals("force", config.getHybridConfig().getOcrMode());
-        assertTrue(config.getHybridConfig().isForceOcr());
+        assertNotNull(config);
     }
 
     @Test
-    void testCreateConfig_withInvalidHybridOcr() throws ParseException {
-        String[] args = {"--hybrid-ocr", "invalid", testPdf.getAbsolutePath()};
-        CommandLine cmd = parser.parse(options, args);
-
-        assertThrows(IllegalArgumentException.class, () -> {
-            CLIOptions.createConfigFromCommandLine(cmd);
-        });
-    }
-
-    @Test
-    void testCreateConfig_defaultHybridModeAndOcr() throws ParseException {
+    void testCreateConfig_defaultHybridMode() throws ParseException {
         String[] args = {"--hybrid", "docling", testPdf.getAbsolutePath()};
         CommandLine cmd = parser.parse(options, args);
 
         Config config = CLIOptions.createConfigFromCommandLine(cmd);
 
         assertEquals("auto", config.getHybridConfig().getMode());
-        assertEquals("auto", config.getHybridConfig().getOcrMode());
     }
 
     @Test
