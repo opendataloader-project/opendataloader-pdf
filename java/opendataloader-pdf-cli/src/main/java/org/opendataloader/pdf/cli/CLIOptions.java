@@ -100,8 +100,9 @@ public class CLIOptions {
     private static final String HYBRID_MODE_LONG_OPTION = "hybrid-mode";
     private static final String HYBRID_MODE_DESC = "Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)";
 
+    // Deprecated: OCR settings are now configured on the hybrid server
     private static final String HYBRID_OCR_LONG_OPTION = "hybrid-ocr";
-    private static final String HYBRID_OCR_DESC = "Hybrid OCR mode for Docling backend. Values: auto (default, OCR only where needed), force (force full-page OCR)";
+    private static final String HYBRID_OCR_DESC = "[Deprecated] OCR settings are now configured on the hybrid server (--ocr-lang, --force-ocr)";
 
     private static final String HYBRID_URL_LONG_OPTION = "hybrid-url";
     private static final String HYBRID_URL_DESC = "Hybrid backend server URL (overrides default)";
@@ -151,13 +152,13 @@ public class CLIOptions {
             new OptionDefinition(PAGES_LONG_OPTION, null, "string", null, PAGES_DESC, true),
             new OptionDefinition(HYBRID_LONG_OPTION, null, "string", "off", HYBRID_DESC, true),
             new OptionDefinition(HYBRID_MODE_LONG_OPTION, null, "string", "auto", HYBRID_MODE_DESC, true),
-            new OptionDefinition(HYBRID_OCR_LONG_OPTION, null, "string", "auto", HYBRID_OCR_DESC, true),
             new OptionDefinition(HYBRID_URL_LONG_OPTION, null, "string", null, HYBRID_URL_DESC, true),
             new OptionDefinition(HYBRID_TIMEOUT_LONG_OPTION, null, "string", "30000", HYBRID_TIMEOUT_DESC, true),
             new OptionDefinition(HYBRID_FALLBACK_LONG_OPTION, null, "boolean", true, HYBRID_FALLBACK_DESC, true),
             new OptionDefinition(EXPORT_OPTIONS_LONG_OPTION, null, "boolean", null, null, false),
 
             // Legacy options (not exported, for backward compatibility)
+            new OptionDefinition(HYBRID_OCR_LONG_OPTION, null, "string", null, HYBRID_OCR_DESC, false),
             new OptionDefinition(PDF_REPORT_LONG_OPTION, null, "boolean", null, null, false),
             new OptionDefinition(MARKDOWN_REPORT_LONG_OPTION, null, "boolean", null, null, false),
             new OptionDefinition(HTML_REPORT_LONG_OPTION, null, "boolean", null, null, false),
@@ -437,19 +438,9 @@ public class CLIOptions {
             config.getHybridConfig().setMode(mode);
         }
         if (commandLine.hasOption(HYBRID_OCR_LONG_OPTION)) {
-            String ocrValue = commandLine.getOptionValue(HYBRID_OCR_LONG_OPTION);
-            if (ocrValue == null || ocrValue.trim().isEmpty()) {
-                throw new IllegalArgumentException(
-                        String.format("Option --hybrid-ocr requires a value. Supported values: %s",
-                                Config.getHybridOcrOptions(", ")));
-            }
-            String ocr = ocrValue.trim().toLowerCase(Locale.ROOT);
-            if (!Config.isValidHybridOcr(ocr)) {
-                throw new IllegalArgumentException(
-                        String.format("Unsupported hybrid OCR mode '%s'. Supported values: %s",
-                                ocr, Config.getHybridOcrOptions(", ")));
-            }
-            config.getHybridConfig().setOcrMode(ocr);
+            // Deprecated: OCR settings are now configured on the hybrid server
+            System.err.println("Warning: --hybrid-ocr is deprecated. "
+                    + "Configure OCR settings on the hybrid server instead (--ocr-lang, --force-ocr).");
         }
         if (commandLine.hasOption(HYBRID_URL_LONG_OPTION)) {
             String url = commandLine.getOptionValue(HYBRID_URL_LONG_OPTION);

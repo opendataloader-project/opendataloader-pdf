@@ -153,14 +153,6 @@
       "description": "Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)"
     },
     {
-      "name": "hybrid-ocr",
-      "shortName": null,
-      "type": "string",
-      "required": false,
-      "default": "auto",
-      "description": "Hybrid OCR mode for Docling backend. Values: auto (default, OCR only where needed), force (force full-page OCR)"
-    },
-    {
       "name": "hybrid-url",
       "shortName": null,
       "type": "string",
