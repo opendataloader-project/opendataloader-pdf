@@ -325,23 +325,6 @@ public class HybridDocumentProcessorTest {
     }
 
     @Test
-    public void testHybridConfigOcrDefaults() {
-        HybridConfig config = new HybridConfig();
-
-        Assertions.assertEquals(HybridConfig.OCR_AUTO, config.getOcrMode());
-        Assertions.assertFalse(config.isForceOcr());
-    }
-
-    @Test
-    public void testHybridConfigOcrForce() {
-        HybridConfig config = new HybridConfig();
-        config.setOcrMode(HybridConfig.OCR_FORCE);
-
-        Assertions.assertEquals(HybridConfig.OCR_FORCE, config.getOcrMode());
-        Assertions.assertTrue(config.isForceOcr());
-    }
-
-    @Test
     public void testDoclingBackendEnabled() {
         Config config = new Config();
         config.setHybrid("docling");

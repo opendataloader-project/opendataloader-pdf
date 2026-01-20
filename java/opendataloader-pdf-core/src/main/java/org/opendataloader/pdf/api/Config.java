@@ -46,11 +46,6 @@ public class Config {
     public static final String HYBRID_MODE_FULL = "full";
     private static Set<String> hybridModeOptions = new HashSet<>();
 
-    /** Hybrid OCR mode: auto (OCR only where needed, Docling internal logic). */
-    public static final String HYBRID_OCR_AUTO = "auto";
-    /** Hybrid OCR mode: force (force full-page OCR on all pages). */
-    public static final String HYBRID_OCR_FORCE = "force";
-    private static Set<String> hybridOcrOptions = new HashSet<>();
     /** Placeholder string for page number in separators. */
     public static final String PAGE_NUMBER_STRING = "%page-number%";
     private String password;
@@ -115,8 +110,6 @@ public class Config {
         // hancom, azure, google added when implemented
         hybridModeOptions.add(HYBRID_MODE_AUTO);
         hybridModeOptions.add(HYBRID_MODE_FULL);
-        hybridOcrOptions.add(HYBRID_OCR_AUTO);
-        hybridOcrOptions.add(HYBRID_OCR_FORCE);
     }
 
     /**
@@ -823,26 +816,6 @@ public class Config {
      */
     public static boolean isValidHybridMode(String mode) {
         return mode != null && hybridModeOptions.contains(mode.toLowerCase(Locale.ROOT));
-    }
-
-    /**
-     * Gets the list of supported hybrid OCR options.
-     *
-     * @param delimiter The delimiter to use between options.
-     * @return The string with hybrid OCR modes separated by the delimiter.
-     */
-    public static String getHybridOcrOptions(CharSequence delimiter) {
-        return String.join(delimiter, hybridOcrOptions);
-    }
-
-    /**
-     * Checks if the given hybrid OCR mode is valid.
-     *
-     * @param ocr The hybrid OCR mode to check.
-     * @return true if the OCR mode is valid, false otherwise.
-     */
-    public static boolean isValidHybridOcr(String ocr) {
-        return ocr != null && hybridOcrOptions.contains(ocr.toLowerCase(Locale.ROOT));
     }
 
 }

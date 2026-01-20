@@ -181,15 +181,6 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "description": "Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)",
     },
     {
-        "name": "hybrid-ocr",
-        "python_name": "hybrid_ocr",
-        "short_name": None,
-        "type": "string",
-        "required": False,
-        "default": "auto",
-        "description": "Hybrid OCR mode for Docling backend. Values: auto (default, OCR only where needed), force (force full-page OCR)",
-    },
-    {
         "name": "hybrid-url",
         "python_name": "hybrid_url",
         "short_name": None,

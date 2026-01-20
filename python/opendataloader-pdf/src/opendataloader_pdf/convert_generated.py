@@ -30,7 +30,6 @@ def convert(
     pages: Optional[str] = None,
     hybrid: Optional[str] = None,
     hybrid_mode: Optional[str] = None,
-    hybrid_ocr: Optional[str] = None,
     hybrid_url: Optional[str] = None,
     hybrid_timeout: Optional[str] = None,
     hybrid_fallback: bool = True,
@@ -59,7 +58,6 @@ def convert(
         pages: Pages to extract (e.g., "1,3,5-7"). Default: all pages
         hybrid: Hybrid backend for AI processing. Values: off (default), docling (docling-fast is deprecated alias)
         hybrid_mode: Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)
-        hybrid_ocr: Hybrid OCR mode for Docling backend. Values: auto (default, OCR only where needed), force (force full-page OCR)
         hybrid_url: Hybrid backend server URL (overrides default)
         hybrid_timeout: Hybrid backend request timeout in milliseconds. Default: 30000
         hybrid_fallback: Fallback to Java processing on hybrid backend error. Default: true
@@ -118,8 +116,6 @@ def convert(
         args.extend(["--hybrid", hybrid])
     if hybrid_mode:
         args.extend(["--hybrid-mode", hybrid_mode])
-    if hybrid_ocr:
-        args.extend(["--hybrid-ocr", hybrid_ocr])
     if hybrid_url:
         args.extend(["--hybrid-url", hybrid_url])
     if hybrid_timeout:
