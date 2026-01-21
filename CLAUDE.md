@@ -47,7 +47,16 @@ opendataloader-pdf-hybrid --port 5003
 
 # With debug logging
 opendataloader-pdf-hybrid --log-level debug
+
+# With OCR language configuration (for scanned PDFs)
+opendataloader-pdf-hybrid --ocr-lang "ch_sim,en"  # Chinese + English
+opendataloader-pdf-hybrid --ocr-lang "ko"          # Korean
+opendataloader-pdf-hybrid --ocr-lang "ja" --force-ocr  # Japanese with forced OCR
 ```
+
+**OCR Options:**
+- `--ocr-lang`: Comma-separated [EasyOCR language codes](https://www.jaided.ai/easyocr/) (default: EasyOCR default languages)
+- `--force-ocr`: Force full-page OCR on all pages regardless of embedded text
 
 ## Architecture
 
