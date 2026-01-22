@@ -13,8 +13,8 @@ This guide compares available options to help you choose the right tool for your
 
 | Feature | OpenDataLoader PDF | iText 7 | Apache PDFBox | OpenPDF | PyMuPDF |
 |:--------|:-------------------|:--------|:--------------|:--------|:--------|
-| **Read Tagged PDFs** | Yes | Yes | Partial | Partial | Yes |
-| **Write Tagged PDFs** | Planned (Q1 2026) | Yes | No | Limited | No |
+| **Read Tagged PDFs** | Yes | Yes | Partial | Yes | Unknown |
+| **Write Tagged PDFs** | Planned (Q1 2026) | Yes | No | Yes | No |
 | **PDF/UA Validation** | Planned (Q2 2026) | Yes | No | No | No |
 | **RAG-Optimized Output** | Yes | No | No | No | Yes |
 | **Multi-Format Export** | MD, JSON, HTML | PDF only | PDF only | PDF only | MD, JSON |
@@ -116,7 +116,7 @@ String text = stripper.getText(document);
 
 **Best for:** Legacy iText 4 projects needing permissive licensing
 
-OpenPDF is a fork of iText 4, maintained under LGPL/MPL licensing. It's suitable for projects that need to avoid AGPL.
+OpenPDF is a fork of iText 4, maintained under LGPL/MPL licensing. It's suitable for projects that need to avoid AGPL. Version 3.0.0 (August 2025) added PDF 2.0 and Tagged PDF support.
 
 ```java
 // Creating a PDF with OpenPDF
@@ -131,11 +131,10 @@ document.close();
 - LGPL/MPL license (permissive for most uses)
 - API compatible with older iText versions
 - Active community maintenance
-- PDF 2.0 features being added
+- PDF 2.0 and Tagged PDF support (since v3.0.0)
 
 **Limitations:**
-- Limited Tagged PDF support
-- No PDF/UA validation
+- PDF/UA validation not included (use veraPDF for validation)
 - Fewer features than iText 7
 - Smaller community than iText
 
@@ -165,7 +164,7 @@ md_text = pymupdf4llm.to_markdown("document.pdf")
 **Limitations:**
 - **AGPL license** (same concerns as iText)
 - Commercial license required for proprietary use
-- Limited structure tag extraction
+- Structure tag extraction support unknown
 - No PDF/UA support
 
 **Links:** [PyPI](https://pypi.org/project/pymupdf/) | [GitHub](https://github.com/pymupdf/PyMuPDF)
@@ -179,8 +178,8 @@ md_text = pymupdf4llm.to_markdown("document.pdf")
 | **OpenHTMLtoPDF** | Java | LGPL | HTML to PDF with PDF/UA support |
 | **pdf.js** | JavaScript | Apache 2.0 | Browser rendering, no tag support |
 | **pdfplumber** | Python | MIT | Table extraction, no tags |
-| **veraPDF** | Java | GPL/MPL | PDF/A validation (not extraction) |
-| **pikepdf** | Python | MPL | PDF manipulation, limited tags |
+| **veraPDF** | Java | GPLv3+/MPLv2+ | PDF/A and PDF/UA validation (not extraction) |
+| **pikepdf** | Python | MPL 2.0 | PDF manipulation, limited tag API |
 
 ## Licensing Considerations
 
