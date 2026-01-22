@@ -9,6 +9,7 @@ package org.opendataloader.pdf.html;
 
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
+import org.opendataloader.pdf.entities.SemanticFormula;
 import org.opendataloader.pdf.markdown.MarkdownSyntax;
 import org.opendataloader.pdf.utils.Base64ImageUtils;
 import org.opendataloader.pdf.utils.ImagesUtils;
@@ -130,6 +131,8 @@ public class HtmlGenerator implements Closeable {
     protected void write(IObject object) throws IOException {
         if (object instanceof ImageChunk) {
             writeImage((ImageChunk) object);
+        } else if (object instanceof SemanticFormula) {
+            writeFormula((SemanticFormula) object);
         } else if (object instanceof SemanticHeading) {
             writeHeading((SemanticHeading) object);
         } else if (object instanceof SemanticParagraph) {
@@ -147,6 +150,21 @@ public class HtmlGenerator implements Closeable {
         if (!isInsideTable()) {
             htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
         }
+    }
+
+    /**
+     * Writes a formula element to the HTML output using MathJax-compatible markup.
+     *
+     * @param formula the formula to write
+     * @throws IOException if unable to write to the output
+     */
+    protected void writeFormula(SemanticFormula formula) throws IOException {
+        htmlWriter.write(HtmlSyntax.HTML_MATH_DISPLAY_TAG);
+        htmlWriter.write("\\[");
+        htmlWriter.write(getCorrectString(formula.getLatex()));
+        htmlWriter.write("\\]");
+        htmlWriter.write(HtmlSyntax.HTML_MATH_DISPLAY_CLOSE_TAG);
+        htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
     }
 
     /**
