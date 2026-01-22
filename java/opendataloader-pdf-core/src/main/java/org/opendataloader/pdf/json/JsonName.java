@@ -55,4 +55,5 @@ public class JsonName {
     public static final String SOURCE = "source";
     public static final String DATA = "data";
     public static final String IMAGE_FORMAT = "format";
+    public static final String FORMULA_TYPE = "formula";
 }

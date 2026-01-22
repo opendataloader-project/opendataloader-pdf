@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
+import org.opendataloader.pdf.entities.SemanticFormula;
 import org.opendataloader.pdf.hybrid.HybridClient.HybridResponse;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
@@ -535,6 +536,95 @@ public class DoclingSchemaTransformerTest {
 
         Assertions.assertEquals(1, result.size());
         Assertions.assertTrue(result.get(0).isEmpty());
+    }
+
+    @Test
+    void testTransformFormula() {
+        ObjectNode json = createDoclingDocument();
+        ArrayNode texts = json.putArray("texts");
+
+        ObjectNode formulaNode = texts.addObject();
+        formulaNode.put("label", "formula");
+        formulaNode.put("text", "\\frac{f(x+h) - f(x)}{h}");
+        addProvenance(formulaNode, 1, 226, 144, 377, 168);
+
+        HybridResponse response = new HybridResponse("", json, null);
+        Map<Integer, Double> pageHeights = new HashMap<>();
+        pageHeights.put(1, 842.0);
+
+        List<List<IObject>> result = transformer.transform(response, pageHeights);
+
+        Assertions.assertEquals(1, result.size());
+        Assertions.assertEquals(1, result.get(0).size());
+        Assertions.assertTrue(result.get(0).get(0) instanceof SemanticFormula);
+
+        SemanticFormula formula = (SemanticFormula) result.get(0).get(0);
+        Assertions.assertEquals("\\frac{f(x+h) - f(x)}{h}", formula.getLatex());
+    }
+
+    @Test
+    void testTransformFormulaWithComplexLatex() {
+        ObjectNode json = createDoclingDocument();
+        ArrayNode texts = json.putArray("texts");
+
+        ObjectNode formulaNode = texts.addObject();
+        formulaNode.put("label", "formula");
+        formulaNode.put("text", "\\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h} = f'(x)");
+        addProvenance(formulaNode, 1, 237, 84, 365, 114);
+
+        HybridResponse response = new HybridResponse("", json, null);
+        Map<Integer, Double> pageHeights = new HashMap<>();
+        pageHeights.put(1, 842.0);
+
+        List<List<IObject>> result = transformer.transform(response, pageHeights);
+
+        Assertions.assertEquals(1, result.size());
+        Assertions.assertEquals(1, result.get(0).size());
+        Assertions.assertTrue(result.get(0).get(0) instanceof SemanticFormula);
+
+        SemanticFormula formula = (SemanticFormula) result.get(0).get(0);
+        Assertions.assertEquals("\\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h} = f'(x)", formula.getLatex());
+    }
+
+    @Test
+    void testMixedContentWithFormula() {
+        ObjectNode json = createDoclingDocument();
+        ArrayNode texts = json.putArray("texts");
+
+        // Add paragraph before formula
+        ObjectNode para = texts.addObject();
+        para.put("label", "text");
+        para.put("text", "The forward difference is defined as");
+        addProvenance(para, 1, 90, 180, 468, 190);
+
+        // Add formula
+        ObjectNode formulaNode = texts.addObject();
+        formulaNode.put("label", "formula");
+        formulaNode.put("text", "Q_f(h) = \\frac{f(x+h) - f(x)}{h}");
+        addProvenance(formulaNode, 1, 226, 144, 377, 168);
+
+        // Add paragraph after formula
+        ObjectNode paraAfter = texts.addObject();
+        paraAfter.put("label", "text");
+        paraAfter.put("text", "in which h is called the step size");
+        addProvenance(paraAfter, 1, 90, 125, 291, 135);
+
+        HybridResponse response = new HybridResponse("", json, null);
+        Map<Integer, Double> pageHeights = new HashMap<>();
+        pageHeights.put(1, 842.0);
+
+        List<List<IObject>> result = transformer.transform(response, pageHeights);
+
+        Assertions.assertEquals(1, result.size());
+        Assertions.assertEquals(3, result.get(0).size());
+
+        // Sorted by reading order: paragraph (top), formula, paragraph (bottom)
+        Assertions.assertTrue(result.get(0).get(0) instanceof SemanticParagraph);
+        Assertions.assertTrue(result.get(0).get(1) instanceof SemanticFormula);
+        Assertions.assertTrue(result.get(0).get(2) instanceof SemanticParagraph);
+
+        SemanticFormula formula = (SemanticFormula) result.get(0).get(1);
+        Assertions.assertEquals("Q_f(h) = \\frac{f(x+h) - f(x)}{h}", formula.getLatex());
     }
 
     // Helper methods

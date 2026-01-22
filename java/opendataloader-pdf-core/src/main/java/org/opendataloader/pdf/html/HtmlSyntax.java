@@ -55,4 +55,8 @@ public class HtmlSyntax {
     public static final String HTML_FIGURE_CAPTION_TAG = "<figcaption>";
     /** Closing figure caption tag. */
     public static final String HTML_FIGURE_CAPTION_CLOSE_TAG = "</figcaption>";
+    /** Opening math display block tag for MathJax/KaTeX rendering. */
+    public static final String HTML_MATH_DISPLAY_TAG = "<div class=\"math-display\">";
+    /** Closing math display block tag. */
+    public static final String HTML_MATH_DISPLAY_CLOSE_TAG = "</div>";
 }

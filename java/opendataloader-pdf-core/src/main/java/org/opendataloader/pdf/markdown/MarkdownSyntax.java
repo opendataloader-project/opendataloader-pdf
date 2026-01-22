@@ -37,4 +37,6 @@ public class MarkdownSyntax {
     public static final String HTML_INDENT = "&nbsp;&nbsp;&nbsp;&nbsp;";
     public static final String HTML_PARAGRAPH_TAG = "<p>";
     public static final String HTML_PARAGRAPH_CLOSE_TAG = "</p>";
+    public static final String MATH_BLOCK_START = "$$";
+    public static final String MATH_BLOCK_END = "$$";
 }

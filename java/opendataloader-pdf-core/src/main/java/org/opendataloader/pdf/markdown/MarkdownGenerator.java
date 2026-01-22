@@ -9,6 +9,7 @@ package org.opendataloader.pdf.markdown;
 
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
+import org.opendataloader.pdf.entities.SemanticFormula;
 import org.opendataloader.pdf.utils.Base64ImageUtils;
 import org.opendataloader.pdf.utils.ImagesUtils;
 import org.verapdf.wcag.algorithms.entities.IObject;
@@ -83,6 +84,7 @@ public class MarkdownGenerator implements Closeable {
 
     protected boolean isSupportedContent(IObject content) {
         return content instanceof SemanticTextNode || // Heading, Paragraph etc...
+            content instanceof SemanticFormula ||
             content instanceof TableBorder ||
             content instanceof PDFList ||
             (content instanceof ImageChunk && isImageSupported);
@@ -96,6 +98,8 @@ public class MarkdownGenerator implements Closeable {
     protected void write(IObject object) throws IOException {
         if (object instanceof ImageChunk) {
             writeImage((ImageChunk) object);
+        } else if (object instanceof SemanticFormula) {
+            writeFormula((SemanticFormula) object);
         } else if (object instanceof SemanticHeading) {
             writeHeading((SemanticHeading) object);
         } else if (object instanceof SemanticParagraph) {
@@ -133,6 +137,19 @@ public class MarkdownGenerator implements Closeable {
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Unable to write image for markdown output: " + e.getMessage());
         }
+    }
+
+    /**
+     * Writes a formula in LaTeX format wrapped in $$ delimiters.
+     *
+     * @param formula The formula to write
+     */
+    protected void writeFormula(SemanticFormula formula) throws IOException {
+        markdownWriter.write(MarkdownSyntax.MATH_BLOCK_START);
+        markdownWriter.write(MarkdownSyntax.LINE_BREAK);
+        markdownWriter.write(formula.getLatex());
+        markdownWriter.write(MarkdownSyntax.LINE_BREAK);
+        markdownWriter.write(MarkdownSyntax.MATH_BLOCK_END);
     }
 
     protected void writeList(PDFList list) throws IOException {

@@ -58,6 +58,32 @@ opendataloader-pdf-hybrid --ocr-lang "ja" --force-ocr  # Japanese with forced OC
 - `--ocr-lang`: Comma-separated [EasyOCR language codes](https://www.jaided.ai/easyocr/) (default: EasyOCR default languages)
 - `--force-ocr`: Force full-page OCR on all pages regardless of embedded text
 
+**Enrichment Options:**
+```bash
+# With formula enrichment (LaTeX extraction)
+opendataloader-pdf-hybrid --enrich-formula
+
+# With picture classification
+opendataloader-pdf-hybrid --enrich-picture-classes
+
+# Combined: OCR + enrichments
+opendataloader-pdf-hybrid --ocr-lang "en" --enrich-formula --enrich-picture-classes
+```
+
+- `--enrich-formula / --no-enrich-formula`: Enable formula recognition (extracts LaTeX representation)
+- `--enrich-picture-classes / --no-enrich-picture-classes`: Enable picture classification (bar_chart, pie_chart, flow_chart, etc.)
+
+**Formula Processing Note:**
+When using `--enrich-formula`, use `--hybrid-mode full` on the client side to route all pages to the backend:
+```bash
+# Server
+opendataloader-pdf-hybrid --enrich-formula
+
+# Client
+opendataloader-pdf --hybrid docling-fast --hybrid-mode full input.pdf
+```
+This is required because the formula enrichment model runs on the backend, not in Java processing.
+
 ## Architecture
 
 ```
