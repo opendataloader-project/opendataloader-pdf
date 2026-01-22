@@ -24,7 +24,7 @@ export function registerCliOptions(program: Command): void {
   program.option('--image-format <value>', 'Output format for extracted images. Values: png, jpeg. Default: png');
   program.option('--image-dir <value>', 'Directory for extracted images');
   program.option('--pages <value>', 'Pages to extract (e.g., "1,3,5-7"). Default: all pages');
-  program.option('--hybrid <value>', 'Hybrid backend for AI processing. Values: off (default), docling (docling-fast is deprecated alias)');
+  program.option('--hybrid <value>', 'Hybrid backend for AI processing. Values: off (default), docling-fast');
   program.option('--hybrid-mode <value>', 'Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)');
   program.option('--hybrid-url <value>', 'Hybrid backend server URL (overrides default)');
   program.option('--hybrid-timeout <value>', 'Hybrid backend request timeout in milliseconds. Default: 30000');

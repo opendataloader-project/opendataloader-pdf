@@ -39,7 +39,7 @@ export interface ConvertOptions {
   imageDir?: string;
   /** Pages to extract (e.g., "1,3,5-7"). Default: all pages */
   pages?: string;
-  /** Hybrid backend for AI processing. Values: off (default), docling (docling-fast is deprecated alias) */
+  /** Hybrid backend for AI processing. Values: off (default), docling-fast */
   hybrid?: string;
   /** Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend) */
   hybridMode?: string;

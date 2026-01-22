@@ -56,7 +56,7 @@ def convert(
         image_format: Output format for extracted images. Values: png, jpeg. Default: png
         image_dir: Directory for extracted images
         pages: Pages to extract (e.g., "1,3,5-7"). Default: all pages
-        hybrid: Hybrid backend for AI processing. Values: off (default), docling (docling-fast is deprecated alias)
+        hybrid: Hybrid backend for AI processing. Values: off (default), docling-fast
         hybrid_mode: Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)
         hybrid_url: Hybrid backend server URL (overrides default)
         hybrid_timeout: Hybrid backend request timeout in milliseconds. Default: 30000

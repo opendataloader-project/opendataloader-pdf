@@ -142,7 +142,7 @@
       "type": "string",
       "required": false,
       "default": "off",
-      "description": "Hybrid backend for AI processing. Values: off (default), docling (docling-fast is deprecated alias)"
+      "description": "Hybrid backend for AI processing. Values: off (default), docling-fast"
     },
     {
       "name": "hybrid-mode",
