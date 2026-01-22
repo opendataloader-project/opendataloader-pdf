@@ -3,58 +3,22 @@ title: PDF Accessibility Compliance Guide
 description: Navigate EAA, ADA, Section 508, and PDF/UA requirements with OpenDataLoader PDF
 ---
 
-## Why PDF Accessibility Matters Now
+## Why PDF Accessibility Matters
 
-Digital accessibility is no longer optional. With the European Accessibility Act (EAA) now in effect and similar regulations emerging worldwide, organizations face significant legal and financial risks from non-compliant PDFs.
+Digital accessibility is increasingly required by law. Multiple regulations worldwide now mandate accessible digital documents, including PDFs. Organizations should consult official sources and legal counsel for compliance requirements.
 
-**Key statistics:**
-- **90%** of PDFs remain partially or fully inaccessible
-- **37%** increase in ADA accessibility lawsuits (H1 2025)
-- **\$0.85B** digital accessibility market in 2025, growing to **\$1.89B** by 2034
+## Key Regulations
 
-## Global Regulatory Landscape
+Several major regulations address PDF accessibility:
 
-### European Union: European Accessibility Act (EAA)
+- **European Accessibility Act (EAA)** — EU directive requiring accessible digital products and services. See [official EAA page](https://commission.europa.eu/strategy-and-policy/policies/justice-and-fundamental-rights/disability/union-equality-strategy-rights-persons-disabilities-2021-2030/european-accessibility-act_en).
+- **ADA & Section 508** — U.S. laws covering digital accessibility for federal agencies and public accommodations.
+- **Digital Inclusion Act** — South Korea's accessibility requirements for digital services.
+- **Accessible Canada Act (ACA)** — Canada's federal accessibility legislation.
 
-The [European Accessibility Act](https://commission.europa.eu/strategy-and-policy/policies/justice-and-fundamental-rights/disability/union-equality-strategy-rights-persons-disabilities-2021-2030/european-accessibility-act_en) is a landmark directive requiring accessible digital products and services across all EU member states.
+For current requirements, effective dates, and penalties, consult the official regulatory sources.
 
-| Aspect | Requirement |
-|:-------|:------------|
-| **Effective Date** | June 28, 2025 |
-| **Technical Standard** | EN 301 549 (aligned with WCAG 2.1 AA) |
-| **PDF Requirement** | Accessible formatting including Tagged PDF |
-| **Penalties** | Up to €500,000 in fines; potential market ban |
-| **Scope** | All businesses selling in EU (regardless of location) |
-| **Exemption** | Microenterprises (< 10 employees, < €2M revenue) |
-
-**Key deadline:** June 28, 2030 for existing digital content to be fully compliant.
-
-### United States: ADA & Section 508
-
-| Regulation | Scope | Standard |
-|:-----------|:------|:---------|
-| **Section 508** | Federal agencies and contractors | WCAG 2.2 (as of 2024) |
-| **ADA Title II** | State and local governments | WCAG 2.1 AA |
-| **ADA Title III** | Private businesses (public accommodations) | WCAG 2.1 AA (courts increasingly applying) |
-
-ADA enforcement is expanding to digital content. Courts have ruled that inaccessible digital documents violate civil rights protections.
-
-### South Korea: Digital Inclusion Act
-
-| Aspect | Requirement |
-|:-------|:------------|
-| **Effective Date** | January 1, 2026 |
-| **PDF Guidelines** | PDF Accessibility Guidelines (2024) |
-| **Public Sector** | PDF/UA conversion projects underway |
-| **Penalties** | Up to 3 years imprisonment / ₩30M fine |
-
-### Other Jurisdictions
-
-- **Canada:** Accessible Canada Act (ACA) requires accessible digital documents
-- **Australia:** Disability Discrimination Act (DDA) covers digital accessibility
-- **Japan:** Revised accessibility standards for public procurement
-
-## PDF/UA: The Compliance Standard
+## PDF/UA: The Technical Standard
 
 [PDF/UA](https://pdfa.org/supporting-pdf-ua/) (PDF/Universal Accessibility, ISO 14289) is the international standard for accessible PDF documents.
 
@@ -66,14 +30,10 @@ ADA enforcement is expanding to digital content. Courts have ruled that inaccess
 4. **Language specification** — Document language must be set
 5. **Unicode mapping** — All text must map to Unicode characters
 
-### PDF/UA-1 vs PDF/UA-2
+### PDF/UA Versions
 
-| Feature | PDF/UA-1 (2014) | PDF/UA-2 (2024) |
-|:--------|:----------------|:----------------|
-| Base PDF Version | PDF 1.7 | PDF 2.0 |
-| MathML Support | Limited | Full support |
-| Pronunciation | Limited | Enhanced |
-| Namespaces | None | Custom namespace support |
+- **PDF/UA-1** — Based on PDF 1.7
+- **PDF/UA-2** — Based on PDF 2.0, adds MathML support
 
 ## How OpenDataLoader PDF Helps
 
@@ -98,14 +58,11 @@ This preserves the author's intended reading order and semantic structure.
 
 ### 2. Detect Tagged vs Untagged PDFs
 
-Check if a PDF has structure tags before processing:
+If the PDF lacks structure tags, OpenDataLoader falls back to visual heuristics (XY-Cut++ algorithm).
 
 ```bash
-# Check PDF metadata for structure tags
 opendataloader-pdf convert document.pdf --output-dir output/ --use-struct-tree
 ```
-
-If the PDF lacks structure tags, OpenDataLoader falls back to visual heuristics (XY-Cut++ algorithm).
 
 ### 3. Future: Auto-Tagging Engine (Q1 2026)
 
@@ -145,22 +102,13 @@ result = opendataloader_pdf.validate(
   (Available now)      (Q1 2026)              (Q2 2026)
 ```
 
-## Penalties by Jurisdiction
-
-| Jurisdiction | Maximum Penalty | Enforcement |
-|:-------------|:----------------|:------------|
-| **EU (EAA)** | €500,000 + market ban | National authorities |
-| **USA (ADA)** | $75,000-150,000 per violation | DOJ + private lawsuits |
-| **South Korea** | ₩30M + 3 years imprisonment | Government agencies |
-| **Canada** | $250,000 CAD | Accessibility Commissioner |
-
 ## Best Practices
 
 1. **Audit existing PDFs** — Identify which documents need remediation
 2. **Prioritize high-traffic documents** — Start with most-accessed content
 3. **Create accessible templates** — Ensure new documents are born accessible
 4. **Automate validation** — Integrate PDF/UA checks into publishing workflows
-5. **Document compliance** — Maintain accessibility statements as required by EAA
+5. **Consult legal counsel** — For specific compliance requirements in your jurisdiction
 
 ## Learn More
 
