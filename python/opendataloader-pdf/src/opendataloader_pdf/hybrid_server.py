@@ -7,6 +7,7 @@ A lightweight FastAPI server optimized for hybrid PDF processing:
 
 Usage:
     opendataloader-pdf-hybrid [--port PORT] [--host HOST] [--ocr-lang LANG] [--force-ocr]
+                              [--enrich-formula] [--enrich-picture-classes]
 
     # Default: http://localhost:5002
     opendataloader-pdf-hybrid
@@ -19,6 +20,15 @@ Usage:
 
     # Korean OCR
     opendataloader-pdf-hybrid --ocr-lang "ko"
+
+    # With formula enrichment (LaTeX extraction)
+    opendataloader-pdf-hybrid --enrich-formula
+
+    # With picture classification
+    opendataloader-pdf-hybrid --enrich-picture-classes
+
+    # Combined: OCR + enrichments
+    opendataloader-pdf-hybrid --ocr-lang "en" --enrich-formula --enrich-picture-classes
 
 API Endpoints:
     GET  /health              - Health check
@@ -79,14 +89,21 @@ def _check_dependencies():
         )
 
 
-def create_converter(force_full_page_ocr: bool = False, ocr_lang: list[str] | None = None):
-    """Create a DocumentConverter with the specified OCR options.
+def create_converter(
+    force_full_page_ocr: bool = False,
+    ocr_lang: list[str] | None = None,
+    enrich_formula: bool = False,
+    enrich_picture_classes: bool = False,
+):
+    """Create a DocumentConverter with the specified options.
 
     Args:
         force_full_page_ocr: If True, force OCR on all pages regardless of text content.
                             If False (default), OCR only where needed.
         ocr_lang: List of EasyOCR language codes (e.g., ["ch_sim", "en"]).
                   If None, uses EasyOCR default languages.
+        enrich_formula: If True, enable formula enrichment (LaTeX extraction).
+        enrich_picture_classes: If True, enable picture classification.
     """
     from docling.datamodel.base_models import InputFormat
     from docling.datamodel.pipeline_options import (
@@ -108,6 +125,10 @@ def create_converter(force_full_page_ocr: bool = False, ocr_lang: list[str] | No
         table_structure_options=TableStructureOptions(
             mode=TableFormerMode.ACCURATE
         ),
+        # Enrichment options
+        do_formula_enrichment=enrich_formula,
+        do_picture_classification=enrich_picture_classes,
+        generate_picture_images=enrich_picture_classes,  # Required for classification
     )
 
     return DocumentConverter(
@@ -117,12 +138,19 @@ def create_converter(force_full_page_ocr: bool = False, ocr_lang: list[str] | No
     )
 
 
-def create_app(force_ocr: bool = False, ocr_lang: list[str] | None = None):
+def create_app(
+    force_ocr: bool = False,
+    ocr_lang: list[str] | None = None,
+    enrich_formula: bool = False,
+    enrich_picture_classes: bool = False,
+):
     """Create and configure the FastAPI application.
 
     Args:
         force_ocr: If True, force full-page OCR on all pages.
         ocr_lang: List of EasyOCR language codes (e.g., ["ch_sim", "en"]).
+        enrich_formula: If True, enable formula enrichment (LaTeX extraction).
+        enrich_picture_classes: If True, enable picture classification.
     """
     from fastapi import FastAPI, File, Form, UploadFile
     from fastapi.responses import JSONResponse
@@ -132,10 +160,24 @@ def create_app(force_ocr: bool = False, ocr_lang: list[str] | None = None):
         """Lifespan context manager for startup and shutdown events."""
         global converter
         lang_str = ",".join(ocr_lang) if ocr_lang else "default"
-        logger.info(f"Initializing DocumentConverter (force_ocr={force_ocr}, lang={lang_str})...")
+        enrichments = []
+        if enrich_formula:
+            enrichments.append("formula")
+        if enrich_picture_classes:
+            enrichments.append("picture-classes")
+        enrichment_str = ",".join(enrichments) if enrichments else "none"
+        logger.info(
+            f"Initializing DocumentConverter "
+            f"(force_ocr={force_ocr}, lang={lang_str}, enrichments={enrichment_str})..."
+        )
         start = time.perf_counter()
 
-        converter = create_converter(force_full_page_ocr=force_ocr, ocr_lang=ocr_lang)
+        converter = create_converter(
+            force_full_page_ocr=force_ocr,
+            ocr_lang=ocr_lang,
+            enrich_formula=enrich_formula,
+            enrich_picture_classes=enrich_picture_classes,
+        )
 
         elapsed = time.perf_counter() - start
         logger.info(f"DocumentConverter initialized in {elapsed:.2f}s")
@@ -275,6 +317,28 @@ def main():
         default=None,
         help="OCR languages (comma-separated EasyOCR codes, e.g., 'ch_sim,en'). Default: EasyOCR default",
     )
+    parser.add_argument(
+        "--enrich-formula",
+        action="store_true",
+        default=False,
+        help="Enable formula enrichment model (LaTeX extraction)",
+    )
+    parser.add_argument(
+        "--no-enrich-formula",
+        action="store_false",
+        dest="enrich_formula",
+    )
+    parser.add_argument(
+        "--enrich-picture-classes",
+        action="store_true",
+        default=False,
+        help="Enable picture classification model",
+    )
+    parser.add_argument(
+        "--no-enrich-picture-classes",
+        action="store_false",
+        dest="enrich_picture_classes",
+    )
     args = parser.parse_args()
 
     # Parse ocr_lang
@@ -282,10 +346,24 @@ def main():
     if args.ocr_lang:
         ocr_lang = [lang.strip() for lang in args.ocr_lang.split(",") if lang.strip()]
 
+    # Build enrichment log message
+    enrichments = []
+    if args.enrich_formula:
+        enrichments.append("formula")
+    if args.enrich_picture_classes:
+        enrichments.append("picture-classes")
+
     logger.info(f"Starting Docling Fast Server on http://{args.host}:{args.port}")
     logger.info(f"OCR settings: force_ocr={args.force_ocr}, lang={ocr_lang or 'default'}")
+    if enrichments:
+        logger.info(f"Enrichments enabled: {', '.join(enrichments)}")
 
-    app = create_app(force_ocr=args.force_ocr, ocr_lang=ocr_lang)
+    app = create_app(
+        force_ocr=args.force_ocr,
+        ocr_lang=ocr_lang,
+        enrich_formula=args.enrich_formula,
+        enrich_picture_classes=args.enrich_picture_classes,
+    )
     uvicorn.run(
         app,
         host=args.host,

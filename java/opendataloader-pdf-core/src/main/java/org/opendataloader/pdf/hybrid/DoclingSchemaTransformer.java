@@ -9,6 +9,7 @@ package org.opendataloader.pdf.hybrid;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
+import org.opendataloader.pdf.entities.SemanticFormula;
 import org.opendataloader.pdf.hybrid.HybridClient.HybridResponse;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
@@ -67,6 +68,7 @@ public class DoclingSchemaTransformer implements HybridSchemaTransformer {
     private static final String LABEL_PAGE_HEADER = "page_header";
     private static final String LABEL_PAGE_FOOTER = "page_footer";
     private static final String LABEL_LIST_ITEM = "list_item";
+    private static final String LABEL_FORMULA = "formula";
 
     // Docling coordinate origins
     private static final String COORD_ORIGIN_BOTTOMLEFT = "BOTTOMLEFT";
@@ -261,6 +263,8 @@ public class DoclingSchemaTransformer implements HybridSchemaTransformer {
         IObject object;
         if (LABEL_SECTION_HEADER.equals(label)) {
             object = createHeading(text, bbox, textNode);
+        } else if (LABEL_FORMULA.equals(label)) {
+            object = createFormula(text, bbox);
         } else {
             object = createParagraph(text, bbox);
         }
@@ -311,6 +315,19 @@ public class DoclingSchemaTransformer implements HybridSchemaTransformer {
         paragraph.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
 
         return paragraph;
+    }
+
+    /**
+     * Creates a SemanticFormula from Docling formula element.
+     *
+     * @param latex The LaTeX representation of the formula
+     * @param bbox  The bounding box
+     * @return A SemanticFormula object
+     */
+    private SemanticFormula createFormula(String latex, BoundingBox bbox) {
+        SemanticFormula formula = new SemanticFormula(bbox, latex);
+        formula.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+        return formula;
     }
 
     /**

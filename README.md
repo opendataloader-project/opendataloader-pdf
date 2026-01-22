@@ -222,6 +222,42 @@ opendataloader_pdf.convert(
 - **Fallback**: If backend unavailable, gracefully falls back to local processing
 - **Privacy**: Run the backend locally in Docker for 100% on-premise
 
+### Formula Extraction (LaTeX)
+
+For PDFs containing mathematical formulas, enable formula enrichment to extract LaTeX representations:
+
+```bash
+# Start backend with formula enrichment
+opendataloader-pdf-hybrid --enrich-formula
+
+# Process with full backend mode (required for formula extraction)
+opendataloader-pdf --hybrid docling-fast --hybrid-mode full input.pdf
+```
+
+Output in JSON:
+```json
+{
+  "type": "formula",
+  "page number": 1,
+  "bounding box": [226.2, 144.7, 377.1, 168.7],
+  "content": "\\frac{f(x+h) - f(x)}{h}"
+}
+```
+
+Output in Markdown:
+```markdown
+$$
+\frac{f(x+h) - f(x)}{h}
+$$
+```
+
+Output in HTML (MathJax/KaTeX compatible):
+```html
+<div class="math-display">\[\frac{f(x+h) - f(x)}{h}\]</div>
+```
+
+> **Note**: Formula extraction requires `--hybrid-mode full` to route all pages to the backend where the formula enrichment model runs.
+
 [Hybrid Mode Guide →](https://opendataloader.org/docs/hybrid-mode)
 
 <br/>
