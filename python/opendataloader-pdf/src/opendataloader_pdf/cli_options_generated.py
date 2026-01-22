@@ -169,7 +169,7 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "type": "string",
         "required": False,
         "default": "off",
-        "description": "Hybrid backend for AI processing. Values: off (default), docling (docling-fast is deprecated alias)",
+        "description": "Hybrid backend for AI processing. Values: off (default), docling-fast",
     },
     {
         "name": "hybrid-mode",
