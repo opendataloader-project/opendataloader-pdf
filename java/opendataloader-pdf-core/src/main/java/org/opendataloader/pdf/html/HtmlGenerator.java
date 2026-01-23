@@ -192,7 +192,8 @@ public class HtmlGenerator implements Closeable {
                     imageSource = relativePath;
                 }
                 if (imageSource != null) {
-                    String imageString = String.format("<img src=\"%s\" alt=\"figure%d\">", imageSource, image.getIndex());
+                    String escapedSource = escapeHtmlAttribute(imageSource);
+                    String imageString = String.format("<img src=\"%s\" alt=\"figure%d\">", escapedSource, image.getIndex());
                     htmlWriter.write(imageString);
                     htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
                 }
@@ -226,11 +227,12 @@ public class HtmlGenerator implements Closeable {
                 if (imageSource != null) {
                     // Use simple alt text
                     String altText = "figure" + picture.getPictureIndex();
+                    String escapedSource = escapeHtmlAttribute(imageSource);
 
                     // Use figure/figcaption pattern for semantic markup
                     htmlWriter.write(HtmlSyntax.HTML_FIGURE_TAG);
                     htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
-                    String imageString = String.format("<img src=\"%s\" alt=\"%s\">", imageSource, altText);
+                    String imageString = String.format("<img src=\"%s\" alt=\"%s\">", escapedSource, altText);
                     htmlWriter.write(imageString);
                     htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
 

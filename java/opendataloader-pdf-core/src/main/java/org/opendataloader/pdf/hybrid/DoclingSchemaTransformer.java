@@ -53,6 +53,12 @@ import java.util.logging.Logger;
  * <p>Both Docling and OpenDataLoader use BOTTOMLEFT origin. Docling provides
  * bbox as {l, t, r, b} while OpenDataLoader uses [left, bottom, right, top].
  * When Docling uses TOPLEFT origin, coordinates are converted appropriately.
+ *
+ * <h2>Thread Safety</h2>
+ * <p>This class is NOT thread-safe. The {@code transform()} method resets
+ * internal state (pictureIndex) at the start of each call. Concurrent calls
+ * to transform() on the same instance may produce incorrect results.
+ * Use separate instances for concurrent transformations.
  */
 public class DoclingSchemaTransformer implements HybridSchemaTransformer {
 
