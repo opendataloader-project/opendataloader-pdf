@@ -10,11 +10,11 @@ package org.opendataloader.pdf.hybrid;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.entities.SemanticFormula;
+import org.opendataloader.pdf.entities.SemanticPicture;
 import org.opendataloader.pdf.hybrid.HybridClient.HybridResponse;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
-import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
@@ -46,7 +46,7 @@ import java.util.logging.Logger;
  *   <li>texts (label: caption, footnote) → SemanticParagraph</li>
  *   <li>texts (label: page_header, page_footer) → Filtered out (furniture)</li>
  *   <li>tables → TableBorder with rows and cells</li>
- *   <li>pictures → ImageChunk</li>
+ *   <li>pictures → SemanticPicture (with optional description)</li>
  * </ul>
  *
  * <h2>Coordinate System</h2>
@@ -59,6 +59,9 @@ public class DoclingSchemaTransformer implements HybridSchemaTransformer {
     private static final Logger LOGGER = Logger.getLogger(DoclingSchemaTransformer.class.getCanonicalName());
 
     private static final String BACKEND_TYPE = "docling";
+
+    // Picture index counter (reset per transform call)
+    private int pictureIndex;
 
     // Docling text labels
     private static final String LABEL_TEXT = "text";
@@ -86,6 +89,9 @@ public class DoclingSchemaTransformer implements HybridSchemaTransformer {
             LOGGER.log(Level.WARNING, "HybridResponse JSON is null, returning empty result");
             return Collections.emptyList();
         }
+
+        // Reset picture index for each transform call
+        pictureIndex = 0;
 
         // Determine number of pages from page info or content
         int numPages = determinePageCount(json, pageHeights);
@@ -331,7 +337,7 @@ public class DoclingSchemaTransformer implements HybridSchemaTransformer {
     }
 
     /**
-     * Transforms a Docling picture element to an ImageChunk.
+     * Transforms a Docling picture element to a SemanticPicture.
      */
     private void transformPicture(JsonNode pictureNode, List<List<IObject>> result, Map<Integer, Double> pageHeights) {
         // Get provenance for position info
@@ -353,10 +359,35 @@ public class DoclingSchemaTransformer implements HybridSchemaTransformer {
         // Get bounding box
         BoundingBox bbox = extractBoundingBox(firstProv.get("bbox"), pageIndex, pageHeights.get(pageNo));
 
-        // Create ImageChunk with the bounding box
-        ImageChunk imageChunk = new ImageChunk(bbox);
+        // Extract description from annotations (if available)
+        String description = extractPictureDescription(pictureNode);
 
-        result.get(pageIndex).add(imageChunk);
+        // Create SemanticPicture with description
+        SemanticPicture picture = new SemanticPicture(bbox, ++pictureIndex, description);
+        picture.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+
+        result.get(pageIndex).add(picture);
+    }
+
+    /**
+     * Extracts picture description from annotations array.
+     *
+     * <p>Docling stores picture descriptions in the annotations array with kind="description".
+     *
+     * @param pictureNode The picture JSON node
+     * @return The description text, or null if not available
+     */
+    private String extractPictureDescription(JsonNode pictureNode) {
+        JsonNode annotations = pictureNode.get("annotations");
+        if (annotations != null && annotations.isArray()) {
+            for (JsonNode annotation : annotations) {
+                String kind = getTextValue(annotation, "kind");
+                if ("description".equals(kind)) {
+                    return getTextValue(annotation, "text");
+                }
+            }
+        }
+        return null;
     }
 
     /**

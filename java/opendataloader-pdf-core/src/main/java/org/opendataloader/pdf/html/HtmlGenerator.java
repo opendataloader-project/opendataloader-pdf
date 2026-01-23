@@ -10,6 +10,7 @@ package org.opendataloader.pdf.html;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.entities.SemanticFormula;
+import org.opendataloader.pdf.entities.SemanticPicture;
 import org.opendataloader.pdf.markdown.MarkdownSyntax;
 import org.opendataloader.pdf.utils.Base64ImageUtils;
 import org.opendataloader.pdf.utils.ImagesUtils;
@@ -129,7 +130,9 @@ public class HtmlGenerator implements Closeable {
      * @throws IOException if unable to write to the output
      */
     protected void write(IObject object) throws IOException {
-        if (object instanceof ImageChunk) {
+        if (object instanceof SemanticPicture) {
+            writePicture((SemanticPicture) object);
+        } else if (object instanceof ImageChunk) {
             writeImage((ImageChunk) object);
         } else if (object instanceof SemanticFormula) {
             writeFormula((SemanticFormula) object);
@@ -196,6 +199,55 @@ public class HtmlGenerator implements Closeable {
             }
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Unable to write image for html output: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Writes a SemanticPicture element with figure/figcaption for description.
+     *
+     * @param picture the picture to write
+     */
+    protected void writePicture(SemanticPicture picture) {
+        try {
+            String absolutePath = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, picture.getPictureIndex(), imageFormat);
+            String relativePath = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectoryName(), "/", picture.getPictureIndex(), imageFormat);
+
+            if (ImagesUtils.isImageFileExists(absolutePath)) {
+                String imageSource;
+                if (embedImages) {
+                    File imageFile = new File(absolutePath);
+                    imageSource = Base64ImageUtils.toDataUri(imageFile, imageFormat);
+                    if (imageSource == null) {
+                        LOGGER.log(Level.WARNING, "Failed to convert image to Base64: {0}", absolutePath);
+                    }
+                } else {
+                    imageSource = relativePath;
+                }
+                if (imageSource != null) {
+                    // Use simple alt text
+                    String altText = "figure" + picture.getPictureIndex();
+
+                    // Use figure/figcaption pattern for semantic markup
+                    htmlWriter.write(HtmlSyntax.HTML_FIGURE_TAG);
+                    htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
+                    String imageString = String.format("<img src=\"%s\" alt=\"%s\">", imageSource, altText);
+                    htmlWriter.write(imageString);
+                    htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
+
+                    // Add figcaption with description if available
+                    if (picture.hasDescription()) {
+                        htmlWriter.write(HtmlSyntax.HTML_FIGURE_CAPTION_TAG);
+                        htmlWriter.write(getCorrectString(picture.getDescription()));
+                        htmlWriter.write(HtmlSyntax.HTML_FIGURE_CAPTION_CLOSE_TAG);
+                        htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
+                    }
+
+                    htmlWriter.write(HtmlSyntax.HTML_FIGURE_CLOSE_TAG);
+                    htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
+                }
+            }
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Unable to write picture for html output: " + e.getMessage());
         }
     }
 
@@ -371,6 +423,26 @@ public class HtmlGenerator implements Closeable {
             return value.replace("\u0000", "");
         }
         return null;
+    }
+
+    /**
+     * Escapes special characters for use in HTML attributes.
+     * Handles quotes, ampersands, less-than, greater-than, and newlines.
+     *
+     * @param value the string to escape
+     * @return the escaped string safe for HTML attribute values
+     */
+    protected String escapeHtmlAttribute(String value) {
+        if (value == null) {
+            return null;
+        }
+        return value
+            .replace("&", "&amp;")
+            .replace("\"", "&quot;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\n", " ")
+            .replace("\r", "");
     }
 
     @Override

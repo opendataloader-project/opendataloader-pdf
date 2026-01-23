@@ -51,6 +51,10 @@ public class HtmlSyntax {
     public static final String HTML_PARAGRAPH_TAG = "<p>";
     /** Closing paragraph tag. */
     public static final String HTML_PARAGRAPH_CLOSE_TAG = "</p>";
+    /** Opening figure tag. */
+    public static final String HTML_FIGURE_TAG = "<figure>";
+    /** Closing figure tag. */
+    public static final String HTML_FIGURE_CLOSE_TAG = "</figure>";
     /** Opening figure caption tag. */
     public static final String HTML_FIGURE_CAPTION_TAG = "<figcaption>";
     /** Closing figure caption tag. */
