@@ -16,6 +16,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.entities.SemanticFormula;
+import org.opendataloader.pdf.entities.SemanticPicture;
 import org.opendataloader.pdf.hybrid.HybridClient.HybridResponse;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
@@ -625,6 +626,104 @@ public class DoclingSchemaTransformerTest {
 
         SemanticFormula formula = (SemanticFormula) result.get(0).get(1);
         Assertions.assertEquals("Q_f(h) = \\frac{f(x+h) - f(x)}{h}", formula.getLatex());
+    }
+
+    @Test
+    void testTransformPictureWithDescription() {
+        ObjectNode json = createDoclingDocument();
+        ArrayNode pictures = json.putArray("pictures");
+
+        ObjectNode pictureNode = pictures.addObject();
+        addProvenance(pictureNode, 1, 100, 300, 400, 500);
+
+        // Add annotations with description
+        ArrayNode annotations = pictureNode.putArray("annotations");
+        ObjectNode descAnnotation = annotations.addObject();
+        descAnnotation.put("kind", "description");
+        descAnnotation.put("text", "A bar chart showing quarterly sales data from Q1 to Q4");
+
+        HybridResponse response = new HybridResponse("", json, null);
+        Map<Integer, Double> pageHeights = new HashMap<>();
+        pageHeights.put(1, 842.0);
+
+        List<List<IObject>> result = transformer.transform(response, pageHeights);
+
+        Assertions.assertEquals(1, result.size());
+        Assertions.assertEquals(1, result.get(0).size());
+        Assertions.assertTrue(result.get(0).get(0) instanceof SemanticPicture);
+
+        SemanticPicture picture = (SemanticPicture) result.get(0).get(0);
+        Assertions.assertTrue(picture.hasDescription());
+        Assertions.assertEquals("A bar chart showing quarterly sales data from Q1 to Q4", picture.getDescription());
+        Assertions.assertEquals(1, picture.getPictureIndex());
+    }
+
+    @Test
+    void testTransformPictureWithoutDescription() {
+        ObjectNode json = createDoclingDocument();
+        ArrayNode pictures = json.putArray("pictures");
+
+        ObjectNode pictureNode = pictures.addObject();
+        addProvenance(pictureNode, 1, 100, 300, 400, 500);
+        // No annotations
+
+        HybridResponse response = new HybridResponse("", json, null);
+        Map<Integer, Double> pageHeights = new HashMap<>();
+        pageHeights.put(1, 842.0);
+
+        List<List<IObject>> result = transformer.transform(response, pageHeights);
+
+        Assertions.assertEquals(1, result.size());
+        Assertions.assertEquals(1, result.get(0).size());
+        Assertions.assertTrue(result.get(0).get(0) instanceof SemanticPicture);
+
+        SemanticPicture picture = (SemanticPicture) result.get(0).get(0);
+        Assertions.assertFalse(picture.hasDescription());
+        Assertions.assertEquals("", picture.getDescription());
+    }
+
+    @Test
+    void testTransformMultiplePicturesWithDescriptions() {
+        ObjectNode json = createDoclingDocument();
+        ArrayNode pictures = json.putArray("pictures");
+
+        // First picture with description
+        ObjectNode picture1 = pictures.addObject();
+        addProvenance(picture1, 1, 100, 600, 300, 700);
+        ArrayNode annotations1 = picture1.putArray("annotations");
+        ObjectNode desc1 = annotations1.addObject();
+        desc1.put("kind", "description");
+        desc1.put("text", "A flow chart showing the process flow");
+
+        // Second picture without description
+        ObjectNode picture2 = pictures.addObject();
+        addProvenance(picture2, 1, 100, 300, 300, 400);
+
+        // Third picture with description
+        ObjectNode picture3 = pictures.addObject();
+        addProvenance(picture3, 1, 100, 100, 300, 200);
+        ArrayNode annotations3 = picture3.putArray("annotations");
+        ObjectNode desc3 = annotations3.addObject();
+        desc3.put("kind", "description");
+        desc3.put("text", "A pie chart showing market share distribution");
+
+        HybridResponse response = new HybridResponse("", json, null);
+        Map<Integer, Double> pageHeights = new HashMap<>();
+        pageHeights.put(1, 842.0);
+
+        List<List<IObject>> result = transformer.transform(response, pageHeights);
+
+        Assertions.assertEquals(1, result.size());
+        Assertions.assertEquals(3, result.get(0).size());
+
+        // Pictures should be sorted by reading order (top to bottom)
+        SemanticPicture pic1 = (SemanticPicture) result.get(0).get(0);
+        SemanticPicture pic2 = (SemanticPicture) result.get(0).get(1);
+        SemanticPicture pic3 = (SemanticPicture) result.get(0).get(2);
+
+        Assertions.assertTrue(pic1.hasDescription());
+        Assertions.assertFalse(pic2.hasDescription());
+        Assertions.assertTrue(pic3.hasDescription());
     }
 
     // Helper methods

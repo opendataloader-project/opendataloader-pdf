@@ -8,6 +8,7 @@
 package org.opendataloader.pdf.utils;
 
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
+import org.opendataloader.pdf.entities.SemanticPicture;
 import org.opendataloader.pdf.markdown.MarkdownSyntax;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter;
@@ -55,6 +56,8 @@ public class ImagesUtils {
     private void writeFromContents(IObject content, String pdfFilePath, String password) {
         if (content instanceof ImageChunk) {
             writeImage((ImageChunk) content, pdfFilePath, password);
+        } else if (content instanceof SemanticPicture) {
+            writePicture((SemanticPicture) content, pdfFilePath, password);
         } else if (content instanceof PDFList) {
             for (ListItem listItem : ((PDFList) content).getListItems()) {
                 for (IObject item : listItem.getContents()) {
@@ -89,13 +92,23 @@ public class ImagesUtils {
         String imageFormat = StaticLayoutContainers.getImageFormat();
         String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, currentImageIndex, imageFormat);
         chunk.setIndex(currentImageIndex);
-        createImageFile(chunk, fileName, imageFormat);
+        createImageFile(chunk.getBoundingBox(), fileName, imageFormat);
     }
 
-    private void createImageFile(ImageChunk image, String fileName, String imageFormat) {
+    protected void writePicture(SemanticPicture picture, String pdfFilePath, String password) {
+        int pictureIndex = picture.getPictureIndex();
+        if (contrastRatioConsumer == null) {
+            createImagesDirectory(StaticLayoutContainers.getImagesDirectory());
+            contrastRatioConsumer = StaticLayoutContainers.getContrastRatioConsumer(pdfFilePath, password, false, null);
+        }
+        String imageFormat = StaticLayoutContainers.getImageFormat();
+        String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, pictureIndex, imageFormat);
+        createImageFile(picture.getBoundingBox(), fileName, imageFormat);
+    }
+
+    private void createImageFile(BoundingBox imageBox, String fileName, String imageFormat) {
         try {
             File outputFile = new File(fileName);
-            BoundingBox imageBox = image.getBoundingBox();
             BufferedImage targetImage = contrastRatioConsumer != null ? contrastRatioConsumer.getPageSubImage(imageBox) : null;
             if (targetImage == null) {
                 return;

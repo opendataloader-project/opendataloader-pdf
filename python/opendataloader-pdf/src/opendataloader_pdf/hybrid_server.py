@@ -7,7 +7,7 @@ A lightweight FastAPI server optimized for hybrid PDF processing:
 
 Usage:
     opendataloader-pdf-hybrid [--port PORT] [--host HOST] [--ocr-lang LANG] [--force-ocr]
-                              [--enrich-formula] [--enrich-picture-classes]
+                              [--enrich-formula] [--enrich-picture-description]
 
     # Default: http://localhost:5002
     opendataloader-pdf-hybrid
@@ -24,11 +24,11 @@ Usage:
     # With formula enrichment (LaTeX extraction)
     opendataloader-pdf-hybrid --enrich-formula
 
-    # With picture classification
-    opendataloader-pdf-hybrid --enrich-picture-classes
+    # With picture description (alt text generation)
+    opendataloader-pdf-hybrid --enrich-picture-description
 
     # Combined: OCR + enrichments
-    opendataloader-pdf-hybrid --ocr-lang "en" --enrich-formula --enrich-picture-classes
+    opendataloader-pdf-hybrid --ocr-lang "en" --enrich-formula --enrich-picture-description
 
 API Endpoints:
     GET  /health              - Health check
@@ -89,11 +89,15 @@ def _check_dependencies():
         )
 
 
+DEFAULT_PICTURE_DESCRIPTION_PROMPT = "Describe what you see in this image. Include any text, numbers, labels, and data values visible."
+
+
 def create_converter(
     force_full_page_ocr: bool = False,
     ocr_lang: list[str] | None = None,
     enrich_formula: bool = False,
-    enrich_picture_classes: bool = False,
+    enrich_picture_description: bool = False,
+    picture_description_prompt: str | None = None,
 ):
     """Create a DocumentConverter with the specified options.
 
@@ -103,12 +107,14 @@ def create_converter(
         ocr_lang: List of EasyOCR language codes (e.g., ["ch_sim", "en"]).
                   If None, uses EasyOCR default languages.
         enrich_formula: If True, enable formula enrichment (LaTeX extraction).
-        enrich_picture_classes: If True, enable picture classification.
+        enrich_picture_description: If True, enable picture description (alt text generation).
+        picture_description_prompt: Custom prompt for picture description. If None, uses default.
     """
     from docling.datamodel.base_models import InputFormat
     from docling.datamodel.pipeline_options import (
         EasyOcrOptions,
         PdfPipelineOptions,
+        PictureDescriptionVlmOptions,
         TableFormerMode,
         TableStructureOptions,
     )
@@ -118,18 +124,29 @@ def create_converter(
     if ocr_lang:
         ocr_options.lang = ocr_lang
 
-    pipeline_options = PdfPipelineOptions(
-        do_ocr=True,
-        do_table_structure=True,
-        ocr_options=ocr_options,
-        table_structure_options=TableStructureOptions(
-            mode=TableFormerMode.ACCURATE
-        ),
-        # Enrichment options
-        do_formula_enrichment=enrich_formula,
-        do_picture_classification=enrich_picture_classes,
-        generate_picture_images=enrich_picture_classes,  # Required for classification
-    )
+    # Configure picture description options with custom prompt
+    picture_description_options = None
+    if enrich_picture_description:
+        prompt = picture_description_prompt or DEFAULT_PICTURE_DESCRIPTION_PROMPT
+        picture_description_options = PictureDescriptionVlmOptions(
+            repo_id="HuggingFaceTB/SmolVLM-256M-Instruct",
+            prompt=prompt,
+            generation_config={"max_new_tokens": 300, "do_sample": False},
+        )
+
+    pipeline_kwargs = {
+        "do_ocr": True,
+        "do_table_structure": True,
+        "ocr_options": ocr_options,
+        "table_structure_options": TableStructureOptions(mode=TableFormerMode.ACCURATE),
+        "do_formula_enrichment": enrich_formula,
+        "do_picture_description": enrich_picture_description,
+        "generate_picture_images": enrich_picture_description,
+    }
+    if picture_description_options is not None:
+        pipeline_kwargs["picture_description_options"] = picture_description_options
+
+    pipeline_options = PdfPipelineOptions(**pipeline_kwargs)
 
     return DocumentConverter(
         format_options={
@@ -142,7 +159,8 @@ def create_app(
     force_ocr: bool = False,
     ocr_lang: list[str] | None = None,
     enrich_formula: bool = False,
-    enrich_picture_classes: bool = False,
+    enrich_picture_description: bool = False,
+    picture_description_prompt: str | None = None,
 ):
     """Create and configure the FastAPI application.
 
@@ -150,7 +168,8 @@ def create_app(
         force_ocr: If True, force full-page OCR on all pages.
         ocr_lang: List of EasyOCR language codes (e.g., ["ch_sim", "en"]).
         enrich_formula: If True, enable formula enrichment (LaTeX extraction).
-        enrich_picture_classes: If True, enable picture classification.
+        enrich_picture_description: If True, enable picture description (alt text generation).
+        picture_description_prompt: Custom prompt for picture description.
     """
     from fastapi import FastAPI, File, Form, UploadFile
     from fastapi.responses import JSONResponse
@@ -163,8 +182,8 @@ def create_app(
         enrichments = []
         if enrich_formula:
             enrichments.append("formula")
-        if enrich_picture_classes:
-            enrichments.append("picture-classes")
+        if enrich_picture_description:
+            enrichments.append("picture-description")
         enrichment_str = ",".join(enrichments) if enrichments else "none"
         logger.info(
             f"Initializing DocumentConverter "
@@ -176,7 +195,8 @@ def create_app(
             force_full_page_ocr=force_ocr,
             ocr_lang=ocr_lang,
             enrich_formula=enrich_formula,
-            enrich_picture_classes=enrich_picture_classes,
+            enrich_picture_description=enrich_picture_description,
+            picture_description_prompt=picture_description_prompt,
         )
 
         elapsed = time.perf_counter() - start
@@ -329,15 +349,21 @@ def main():
         dest="enrich_formula",
     )
     parser.add_argument(
-        "--enrich-picture-classes",
+        "--enrich-picture-description",
         action="store_true",
         default=False,
-        help="Enable picture classification model",
+        help="Enable picture description model (alt text generation using SmolVLM)",
     )
     parser.add_argument(
-        "--no-enrich-picture-classes",
+        "--no-enrich-picture-description",
         action="store_false",
-        dest="enrich_picture_classes",
+        dest="enrich_picture_description",
+    )
+    parser.add_argument(
+        "--picture-description-prompt",
+        type=str,
+        default=None,
+        help="Custom prompt for picture description. If not set, uses default prompt optimized for charts and images.",
     )
     args = parser.parse_args()
 
@@ -350,8 +376,8 @@ def main():
     enrichments = []
     if args.enrich_formula:
         enrichments.append("formula")
-    if args.enrich_picture_classes:
-        enrichments.append("picture-classes")
+    if args.enrich_picture_description:
+        enrichments.append("picture-description")
 
     logger.info(f"Starting Docling Fast Server on http://{args.host}:{args.port}")
     logger.info(f"OCR settings: force_ocr={args.force_ocr}, lang={ocr_lang or 'default'}")
@@ -362,7 +388,8 @@ def main():
         force_ocr=args.force_ocr,
         ocr_lang=ocr_lang,
         enrich_formula=args.enrich_formula,
-        enrich_picture_classes=args.enrich_picture_classes,
+        enrich_picture_description=args.enrich_picture_description,
+        picture_description_prompt=args.picture_description_prompt,
     )
     uvicorn.run(
         app,
