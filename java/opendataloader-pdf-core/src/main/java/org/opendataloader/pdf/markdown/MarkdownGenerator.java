@@ -10,6 +10,7 @@ package org.opendataloader.pdf.markdown;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.entities.SemanticFormula;
+import org.opendataloader.pdf.entities.SemanticPicture;
 import org.opendataloader.pdf.utils.Base64ImageUtils;
 import org.opendataloader.pdf.utils.ImagesUtils;
 import org.verapdf.wcag.algorithms.entities.IObject;
@@ -85,6 +86,7 @@ public class MarkdownGenerator implements Closeable {
     protected boolean isSupportedContent(IObject content) {
         return content instanceof SemanticTextNode || // Heading, Paragraph etc...
             content instanceof SemanticFormula ||
+            content instanceof SemanticPicture ||
             content instanceof TableBorder ||
             content instanceof PDFList ||
             (content instanceof ImageChunk && isImageSupported);
@@ -96,7 +98,9 @@ public class MarkdownGenerator implements Closeable {
     }
 
     protected void write(IObject object) throws IOException {
-        if (object instanceof ImageChunk) {
+        if (object instanceof SemanticPicture) {
+            writePicture((SemanticPicture) object);
+        } else if (object instanceof ImageChunk) {
             writeImage((ImageChunk) object);
         } else if (object instanceof SemanticFormula) {
             writeFormula((SemanticFormula) object);
@@ -136,6 +140,47 @@ public class MarkdownGenerator implements Closeable {
             }
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Unable to write image for markdown output: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Writes a SemanticPicture with its description as alt text.
+     *
+     * @param picture The picture to write
+     */
+    protected void writePicture(SemanticPicture picture) {
+        try {
+            String absolutePath = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, picture.getPictureIndex(), imageFormat);
+            String relativePath = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectoryName(), "/", picture.getPictureIndex(), imageFormat);
+
+            if (ImagesUtils.isImageFileExists(absolutePath)) {
+                String imageSource;
+                if (embedImages) {
+                    File imageFile = new File(absolutePath);
+                    imageSource = Base64ImageUtils.toDataUri(imageFile, imageFormat);
+                    if (imageSource == null) {
+                        LOGGER.log(Level.WARNING, "Failed to convert image to Base64: {0}", absolutePath);
+                    }
+                } else {
+                    imageSource = relativePath;
+                }
+                if (imageSource != null) {
+                    // Use simple alt text
+                    String altText = "image " + picture.getPictureIndex();
+                    String imageString = String.format(MarkdownSyntax.IMAGE_FORMAT, altText, imageSource);
+                    markdownWriter.write(getCorrectMarkdownString(imageString));
+
+                    // Add caption as italic text below the image if description available
+                    if (picture.hasDescription()) {
+                        markdownWriter.write(MarkdownSyntax.DOUBLE_LINE_BREAK);
+                        String caption = picture.getDescription().replace("\n", " ").replace("\r", "");
+                        markdownWriter.write("*" + getCorrectMarkdownString(caption) + "*");
+                        markdownWriter.write(MarkdownSyntax.DOUBLE_LINE_BREAK);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Unable to write picture for markdown output: " + e.getMessage());
         }
     }
 

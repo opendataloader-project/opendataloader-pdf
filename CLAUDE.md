@@ -63,26 +63,27 @@ opendataloader-pdf-hybrid --ocr-lang "ja" --force-ocr  # Japanese with forced OC
 # With formula enrichment (LaTeX extraction)
 opendataloader-pdf-hybrid --enrich-formula
 
-# With picture classification
-opendataloader-pdf-hybrid --enrich-picture-classes
+# With picture description (alt text generation)
+opendataloader-pdf-hybrid --enrich-picture-description
 
 # Combined: OCR + enrichments
-opendataloader-pdf-hybrid --ocr-lang "en" --enrich-formula --enrich-picture-classes
+opendataloader-pdf-hybrid --ocr-lang "en" --enrich-formula --enrich-picture-description
 ```
 
 - `--enrich-formula / --no-enrich-formula`: Enable formula recognition (extracts LaTeX representation)
-- `--enrich-picture-classes / --no-enrich-picture-classes`: Enable picture classification (bar_chart, pie_chart, flow_chart, etc.)
+- `--enrich-picture-description / --no-enrich-picture-description`: Enable picture description (generates alt text using SmolVLM)
+- `--picture-description-prompt "..."`: Custom prompt for picture description (default: optimized for charts and data extraction)
 
-**Formula Processing Note:**
-When using `--enrich-formula`, use `--hybrid-mode full` on the client side to route all pages to the backend:
+**Enrichment Processing Note:**
+When using `--enrich-formula` or `--enrich-picture-description`, use `--hybrid-mode full` on the client side to route all pages to the backend:
 ```bash
 # Server
-opendataloader-pdf-hybrid --enrich-formula
+opendataloader-pdf-hybrid --enrich-formula --enrich-picture-description
 
 # Client
 opendataloader-pdf --hybrid docling-fast --hybrid-mode full input.pdf
 ```
-This is required because the formula enrichment model runs on the backend, not in Java processing.
+This is required because the enrichment models run on the backend, not in Java processing.
 
 ## Architecture
 

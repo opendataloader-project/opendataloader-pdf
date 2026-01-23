@@ -258,6 +258,52 @@ Output in HTML (MathJax/KaTeX compatible):
 
 > **Note**: Formula extraction requires `--hybrid-mode full` to route all pages to the backend where the formula enrichment model runs.
 
+### Picture / Chart Description (Alt Text)
+
+Generate AI-powered descriptions for images and charts in your PDFs. Useful for accessibility (alt text) and making visual content searchable in RAG pipelines.
+
+```bash
+# Start backend with picture description
+opendataloader-pdf-hybrid --enrich-picture-description
+
+# Process with full backend mode (required for picture description)
+opendataloader-pdf --hybrid docling-fast --hybrid-mode full input.pdf
+```
+
+Output in JSON:
+```json
+{
+  "type": "picture",
+  "page number": 1,
+  "bounding box": [72.0, 400.0, 540.0, 650.0],
+  "description": "A bar chart showing waste generation by region from 2016 to 2030..."
+}
+```
+
+Output in Markdown:
+```markdown
+![image 1](document_images/imageFile1.png)
+
+*A bar chart showing waste generation by region from 2016 to 2030...*
+```
+
+Output in HTML:
+```html
+<figure>
+<img src="document_images/imageFile1.png" alt="figure1">
+<figcaption>A bar chart showing waste generation by region from 2016 to 2030...</figcaption>
+</figure>
+```
+
+You can also customize the prompt for better results with specific document types:
+
+```bash
+opendataloader-pdf-hybrid --enrich-picture-description \
+  --picture-description-prompt "Describe this scientific figure in detail."
+```
+
+> **Note**: Picture description uses SmolVLM (256M), a lightweight vision model. Results are suitable for general context but may not capture precise data values from complex charts.
+
 [Hybrid Mode Guide →](https://opendataloader.org/docs/hybrid-mode)
 
 <br/>
