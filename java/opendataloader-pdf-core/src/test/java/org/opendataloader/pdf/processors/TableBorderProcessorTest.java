@@ -69,7 +69,7 @@ public class TableBorderProcessorTest {
         List<IObject> cellContents = resultBorder.getRow(0).getCell(0).getContents();
         Assertions.assertEquals(1, cellContents.size());
         Assertions.assertTrue(cellContents.get(0) instanceof SemanticParagraph);
-        Assertions.assertEquals("t", ((SemanticParagraph) cellContents.get(0)).getValue());
+        Assertions.assertEquals("te", ((SemanticParagraph) cellContents.get(0)).getValue());
         cellContents = resultBorder.getRow(0).getCell(1).getContents();
         Assertions.assertEquals(1, cellContents.size());
         Assertions.assertTrue(cellContents.get(0) instanceof SemanticParagraph);

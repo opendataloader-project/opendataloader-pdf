@@ -44,6 +44,17 @@ public class TableBorderProcessor {
                     processedTableBorders.add(tableBorder);
                     newContents.add(tableBorder);
                 }
+                if (content instanceof TextChunk) {
+                    TextChunk textChunk = (TextChunk) content;
+                    TextChunk textChunkPart = getTextChunkPartBeforeTable(textChunk, tableBorder);
+                    if (textChunkPart != null && !textChunkPart.isEmpty() && !textChunkPart.isWhiteSpaceChunk()) {
+                        newContents.add(textChunkPart);
+                    }
+                    textChunkPart = getTextChunkPartAfterTable(textChunk, tableBorder);
+                    if (textChunkPart != null && !textChunkPart.isEmpty() && !textChunkPart.isWhiteSpaceChunk()) {
+                        newContents.add(textChunkPart);
+                    }
+                }
             } else {
                 newContents.add(content);
             }
@@ -173,10 +184,31 @@ public class TableBorderProcessor {
         if (end == null) {
             return null;
         }
-        if (start == end && end != textChunk.getValue().length()) {
+        if (end != textChunk.getValue().length()) {
             end++;
         }
         TextChunk result = TextChunk.getTextChunk(textChunk, start, end);
+        return ChunksMergeUtils.getTrimTextChunk(result);
+    }
+
+    public static TextChunk getTextChunkPartBeforeTable(TextChunk textChunk, TableBorder table) {
+        Integer end = textChunk.getSymbolEndIndexByCoordinate(table.getLeftX());
+        if (end == null) {
+            return null;
+        }
+        if (end != textChunk.getValue().length()) {
+            end++;
+        }
+        TextChunk result = TextChunk.getTextChunk(textChunk, 0, end);
+        return ChunksMergeUtils.getTrimTextChunk(result);
+    }
+
+    public static TextChunk getTextChunkPartAfterTable(TextChunk textChunk, TableBorder table) {
+        Integer start = textChunk.getSymbolStartIndexByCoordinate(table.getRightX());
+        if (start == null) {
+            return null;
+        }
+        TextChunk result = TextChunk.getTextChunk(textChunk, start, textChunk.getValue().length());
         return ChunksMergeUtils.getTrimTextChunk(result);
     }
 }
