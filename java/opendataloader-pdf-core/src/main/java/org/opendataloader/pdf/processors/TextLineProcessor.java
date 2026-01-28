@@ -18,6 +18,7 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ListUtils;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class TextLineProcessor {
@@ -53,6 +54,12 @@ public class TextLineProcessor {
             }
         }
         linkTextLinesWithConnectedLineArtBullet(newContents);
+        for (IObject content : newContents) {
+            if (content instanceof TextLine) {
+                TextLine textLine = (TextLine) content;
+                textLine.getTextChunks().sort(Comparator.comparingDouble(o -> o.getBoundingBox().getLeftX()));
+            }
+        }
         return newContents;
     }
 
