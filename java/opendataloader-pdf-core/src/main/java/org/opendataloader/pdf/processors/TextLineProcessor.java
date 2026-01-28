@@ -24,6 +24,8 @@ import java.util.List;
 public class TextLineProcessor {
 
     private static final double ONE_LINE_PROBABILITY = 0.75;
+    private static final Comparator<TextChunk> TEXT_CHUNK_COMPARATOR =
+        Comparator.comparingDouble(o -> o.getBoundingBox().getLeftX());
 
     public static List<IObject> processTextLines(List<IObject> contents) {
         List<IObject> newContents = new ArrayList<>();
@@ -56,7 +58,7 @@ public class TextLineProcessor {
         for (IObject content : newContents) {
             if (content instanceof TextLine) {
                 TextLine textLine = (TextLine) content;
-                textLine.getTextChunks().sort(Comparator.comparingDouble(o -> o.getBoundingBox().getLeftX()));
+                textLine.getTextChunks().sort(TEXT_CHUNK_COMPARATOR);
             }
         }
         linkTextLinesWithConnectedLineArtBullet(newContents);
