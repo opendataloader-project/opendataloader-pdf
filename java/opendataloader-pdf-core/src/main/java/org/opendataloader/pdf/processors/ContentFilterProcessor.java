@@ -13,6 +13,7 @@ import org.verapdf.wcag.algorithms.entities.content.IChunk;
 import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -59,6 +60,7 @@ public class ContentFilterProcessor {
         pageContents = DocumentProcessor.removeNullObjectsFromList(pageContents);
         TextProcessor.trimTextChunksWhiteSpaces(pageContents);
         filterConsecutiveSpaces(pageContents);
+        pageContents = splitTextChunksByWhiteSpacesInPageContents(pageContents);
         pageContents = HiddenTextProcessor.findHiddenText(inputPdfName, pageContents,
             config.getFilterConfig().isFilterHiddenText(), config.getPassword());
         TextProcessor.replaceUndefinedCharacters(pageContents, config.getReplaceInvalidChars());
@@ -118,5 +120,19 @@ public class ContentFilterProcessor {
                 contents.set(index, null);
             }
         }
+    }
+
+    private static List<IObject> splitTextChunksByWhiteSpacesInPageContents(List<IObject> contents) {
+        List<IObject> newContents = new ArrayList<>();
+        for (IObject object : contents) {
+            if (object instanceof TextChunk) {
+                TextChunk textChunk = (TextChunk) object;
+                List<TextChunk> splitChunks = TextChunkUtils.splitTextChunkByWhiteSpaces(textChunk);
+                newContents.addAll(splitChunks);
+            } else {
+                newContents.add(object);
+            }
+        }
+        return newContents;
     }
 }
