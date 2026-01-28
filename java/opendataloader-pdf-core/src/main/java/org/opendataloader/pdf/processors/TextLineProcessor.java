@@ -53,13 +53,13 @@ public class TextLineProcessor {
                 newContents.add(content);
             }
         }
-        linkTextLinesWithConnectedLineArtBullet(newContents);
         for (IObject content : newContents) {
             if (content instanceof TextLine) {
                 TextLine textLine = (TextLine) content;
                 textLine.getTextChunks().sort(Comparator.comparingDouble(o -> o.getBoundingBox().getLeftX()));
             }
         }
+        linkTextLinesWithConnectedLineArtBullet(newContents);
         return newContents;
     }
 

@@ -129,7 +129,6 @@ public class DocumentProcessor {
             if (shouldProcessPage(pageNumber, pagesToProcess)) {
                 List<IObject> pageContents = ContentFilterProcessor.getFilteredContents(inputPdfName,
                     StaticContainers.getDocument().getArtifacts(pageNumber), pageNumber, config);
-                pageContents = splitTextChunksByWhiteSpacesInPageContents(pageContents);
                 contents.add(pageContents);
             } else {
                 contents.add(new ArrayList<>()); // Empty placeholder for skipped pages
@@ -438,19 +437,5 @@ public class DocumentProcessor {
         }
 
         // off: skip sorting (keep PDF COS object order)
-    }
-
-    private static List<IObject> splitTextChunksByWhiteSpacesInPageContents(List<IObject> contents) {
-        List<IObject> newContents = new ArrayList<>();
-        for (IObject object : contents) {
-            if (object instanceof TextChunk) {
-                TextChunk textChunk = (TextChunk) object;
-                List<TextChunk> splitChunks = TextChunkUtils.splitTextChunkByWhiteSpaces(textChunk);
-                newContents.addAll(splitChunks);
-            } else {
-                newContents.add(object);
-            }
-        }
-        return newContents;
     }
 }
