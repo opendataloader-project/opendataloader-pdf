@@ -51,19 +51,19 @@
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <verapdf.version>[1.29.0,1.30.0-RC)</verapdf.version>
-        <junit.jupiter.version>5.14.0</junit.jupiter.version>
-        <assertj.version>3.27.6</assertj.version>
+        <junit.jupiter.version>5.14.2</junit.jupiter.version>
+        <assertj.version>3.27.7</assertj.version>
         <commons.cli.version>1.10.0</commons.cli.version>
         <maven-compiler.plugin.version>3.14.1</maven-compiler.plugin.version>
         <flatten.plugin.version>1.7.3</flatten.plugin.version>
-        <jacoco.plugin.version>0.8.13</jacoco.plugin.version>
-        <maven-source.plugin.version>3.3.1</maven-source.plugin.version>
+        <jacoco.plugin.version>0.8.14</jacoco.plugin.version>
+        <maven-source.plugin.version>3.4.0</maven-source.plugin.version>
         <maven-javadoc.plugin.version>3.12.0</maven-javadoc.plugin.version>
         <maven-shade.plugin.version>3.6.1</maven-shade.plugin.version>
         <maven-gpg.plugin.version>3.2.8</maven-gpg.plugin.version>
-        <central-publishing.plugin.version>0.9.0</central-publishing.plugin.version>
+        <central-publishing.plugin.version>0.10.0</central-publishing.plugin.version>
         <checkstyle.plugin.version>3.6.0</checkstyle.plugin.version>
-        <spotbugs.plugin.version>4.9.3.0</spotbugs.plugin.version>
+        <spotbugs.plugin.version>4.9.8.2</spotbugs.plugin.version>
     </properties>
 
     <modules>
