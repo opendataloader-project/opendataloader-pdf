@@ -19,10 +19,7 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class ParagraphProcessor {
 
@@ -77,7 +74,8 @@ public class ParagraphProcessor {
                 TextBlock nextBlock = textBlocks.get(i);
                 TextAlignment textAlignment = ChunksMergeUtils.getAlignment(previousBlock.getLastLine(), nextBlock.getFirstLine());
                 double probability = getDifferentLinesProbability(previousBlock, nextBlock, false, false);
-                if (textAlignment == TextAlignment.JUSTIFY && probability > DIFFERENT_LINES_PROBABILITY) {
+                if (textAlignment == TextAlignment.JUSTIFY && probability > DIFFERENT_LINES_PROBABILITY &&
+                    areTextBlocksHaveSameTextSize(previousBlock, nextBlock)) {
                     previousBlock.add(nextBlock.getLines());
                     previousBlock.setTextAlignment(TextAlignment.JUSTIFY);
                 } else {
@@ -110,8 +108,17 @@ public class ParagraphProcessor {
 
     private static boolean areLinesOfParagraphsWithCenterAlignments(TextBlock previousBlock, TextBlock nextBlock) {
         TextAlignment textAlignment = ChunksMergeUtils.getAlignment(previousBlock.getLastLine(), nextBlock.getFirstLine());
+        if (textAlignment != TextAlignment.CENTER) {
+            return false;
+        }
         double probability = getDifferentLinesProbability(previousBlock, nextBlock, true, false);
-        return textAlignment == TextAlignment.CENTER && probability > DIFFERENT_LINES_PROBABILITY;
+        if (probability < DIFFERENT_LINES_PROBABILITY) {
+            return false;
+        }
+        if (!areTextBlocksHaveSameTextSize(previousBlock, nextBlock)) {
+            return false;
+        }
+        return true;
     }
 
     private static List<TextBlock> detectFirstAndLastLinesOfParagraphsWithJustifyAlignments(List<TextBlock> textBlocks) {
@@ -174,6 +181,9 @@ public class ParagraphProcessor {
         if (previousBlock.getLinesNumber() != 1 && previousBlock.getTextAlignment() != TextAlignment.RIGHT) {
             return false;
         }
+        if (!areTextBlocksHaveSameTextSize(previousBlock, nextBlock)) {
+            return false;
+        }
         if (nextBlock.getLinesNumber() != 1 && nextBlock.getTextAlignment() != TextAlignment.RIGHT) {
             return false;
         }
@@ -188,6 +198,9 @@ public class ParagraphProcessor {
         boolean haveSameStyle = TextChunkUtils.areTextChunksHaveSameStyle(previousBlock.getLastLine().getFirstTextChunk(),
             nextBlock.getFirstLine().getFirstTextChunk());
         if (checkStyle && !haveSameStyle) {
+            return false;
+        }
+        if (!areTextBlocksHaveSameTextSize(previousBlock, nextBlock)) {
             return false;
         }
         if (BulletedParagraphUtils.isLabeledLine(nextBlock.getFirstLine())) {
@@ -250,6 +263,9 @@ public class ParagraphProcessor {
         if (probability < DIFFERENT_LINES_PROBABILITY) {
             return false;
         }
+        if (!areTextBlocksHaveSameTextSize(previousBlock, nextBlock)) {
+            return false;
+        }
         if (BulletedParagraphUtils.isLabeledLine(nextBlock.getFirstLine())) {
             return false;
         }
@@ -293,6 +309,9 @@ public class ParagraphProcessor {
         }
         double probability = getDifferentLinesProbability(previousBlock, nextBlock, false, false);
         if (probability < DIFFERENT_LINES_PROBABILITY) {
+            return false;
+        }
+        if (!areTextBlocksHaveSameTextSize(previousBlock, nextBlock)) {
             return false;
         }
         if (BulletedParagraphUtils.isLabeledLine(nextBlock.getFirstLine())) {
@@ -402,6 +421,9 @@ public class ParagraphProcessor {
         if (probability < DIFFERENT_LINES_PROBABILITY) {
             return false;
         }
+        if (!areTextBlocksHaveSameTextSize(previousBlock, nextBlock)) {
+            return false;
+        }
         if (BulletedParagraphUtils.isLabeledLine(nextBlock.getFirstLine())) {
             return false;
         }
@@ -419,14 +441,48 @@ public class ParagraphProcessor {
 
     private static boolean isFirstLineOfBlock(TextBlock previousBlock, TextBlock nextBlock, TextAlignment textAlignment,
                                               double probability) {
-        return previousBlock.getLinesNumber() == 1 && textAlignment == TextAlignment.RIGHT &&
-                nextBlock.getTextAlignment() == TextAlignment.JUSTIFY && !nextBlock.isHasStartLine() && probability > DIFFERENT_LINES_PROBABILITY;
+        if (previousBlock.getLinesNumber() != 1) {
+            return false;
+        }
+        if (textAlignment != TextAlignment.RIGHT) {
+            return false;
+        }
+        if (!areTextBlocksHaveSameTextSize(previousBlock, nextBlock)) {
+            return false;
+        }
+        if (nextBlock.getTextAlignment() != TextAlignment.JUSTIFY) {
+            return false;
+        }
+        if (nextBlock.isHasStartLine()) {
+            return false;
+        }
+        if (probability < DIFFERENT_LINES_PROBABILITY) {
+            return false;
+        }
+        return true;
     }
 
     private static boolean isLastLineOfBlock(TextBlock previousBlock, TextBlock nextBlock, TextAlignment textAlignment,
                                              double probability) {
-        return nextBlock.getLinesNumber() == 1 && textAlignment == TextAlignment.LEFT &&
-                previousBlock.getTextAlignment() == TextAlignment.JUSTIFY && !previousBlock.isHasEndLine() && probability > DIFFERENT_LINES_PROBABILITY;
+        if (nextBlock.getLinesNumber() != 1) {
+            return false;
+        }
+        if (textAlignment != TextAlignment.LEFT) {
+            return false;
+        }
+        if (!areTextBlocksHaveSameTextSize(previousBlock, nextBlock)) {
+            return false;
+        }
+        if (previousBlock.getTextAlignment() != TextAlignment.JUSTIFY) {
+            return false;
+        }
+        if (previousBlock.isHasEndLine()) {
+            return false;
+        }
+        if (probability < DIFFERENT_LINES_PROBABILITY) {
+            return false;
+        }
+        return true;
     }
 
     public static SemanticParagraph createParagraphFromTextBlock(TextBlock textBlock) {
@@ -463,5 +519,16 @@ public class ParagraphProcessor {
         return NodeUtils.areCloseNumbers(previousBlock.getFontSize(), nextBlock.getFontSize(), 1e-1) &&
             NodeUtils.areCloseNumbers(previousBlock.getFirstLine().getFirstTextChunk().getFontWeight(),
                 nextBlock.getFirstLine().getFirstTextChunk().getFontWeight(), 1e-1);
+    }
+
+    private static boolean areTextBlocksHaveSameTextSize(TextBlock firstBlock, TextBlock secondBlock) {
+        for (Double textSize1 : firstBlock.getTextSizes()) {
+            for (Double textSize2 : secondBlock.getTextSizes()) {
+                if (NodeUtils.areCloseNumbers(textSize1, textSize2)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
