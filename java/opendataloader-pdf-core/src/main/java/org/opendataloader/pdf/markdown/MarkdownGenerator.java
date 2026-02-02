@@ -218,7 +218,7 @@ public class MarkdownGenerator implements Closeable {
         String value = textNode.getValue();
         if (StaticContainers.isKeepLineBreaks()) {
             if (textNode instanceof SemanticHeading) {
-                value = textNode.getValue().replace(MarkdownSyntax.LINE_BREAK, " ");
+                value = value.replace(MarkdownSyntax.LINE_BREAK, " ");
             } else if (isInsideTable()) {
                 value = value.replace(MarkdownSyntax.LINE_BREAK, getLineBreak());
             }
