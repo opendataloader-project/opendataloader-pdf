@@ -17,7 +17,7 @@ import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
-import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
+import org.verapdf.wcag.algorithms.entities.content.*;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
 import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
@@ -216,8 +216,12 @@ public class MarkdownGenerator implements Closeable {
 
     protected void writeSemanticTextNode(SemanticTextNode textNode) throws IOException {
         String value = textNode.getValue();
-        if (isInsideTable() && StaticContainers.isKeepLineBreaks()) {
-            value = value.replace(MarkdownSyntax.LINE_BREAK, getLineBreak());
+        if (StaticContainers.isKeepLineBreaks()) {
+            if (textNode instanceof SemanticHeading) {
+                value = value.replace(MarkdownSyntax.LINE_BREAK, MarkdownSyntax.SPACE);
+            } else if (isInsideTable()) {
+                value = value.replace(MarkdownSyntax.LINE_BREAK, getLineBreak());
+            }
         }
 
         markdownWriter.write(getCorrectMarkdownString(value));
