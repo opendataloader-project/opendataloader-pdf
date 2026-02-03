@@ -28,6 +28,7 @@ def convert(
     image_format: Optional[str] = None,
     image_dir: Optional[str] = None,
     pages: Optional[str] = None,
+    include_header_footer: bool = False,
     hybrid: Optional[str] = None,
     hybrid_mode: Optional[str] = None,
     hybrid_url: Optional[str] = None,
@@ -56,6 +57,7 @@ def convert(
         image_format: Output format for extracted images. Values: png, jpeg. Default: png
         image_dir: Directory for extracted images
         pages: Pages to extract (e.g., "1,3,5-7"). Default: all pages
+        include_header_footer: Include page headers and footers in output
         hybrid: Hybrid backend for AI processing. Values: off (default), docling-fast
         hybrid_mode: Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)
         hybrid_url: Hybrid backend server URL (overrides default)
@@ -112,6 +114,8 @@ def convert(
         args.extend(["--image-dir", image_dir])
     if pages:
         args.extend(["--pages", pages])
+    if include_header_footer:
+        args.append("--include-header-footer")
     if hybrid:
         args.extend(["--hybrid", hybrid])
     if hybrid_mode:

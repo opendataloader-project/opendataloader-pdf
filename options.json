@@ -137,6 +137,14 @@
       "description": "Pages to extract (e.g., \"1,3,5-7\"). Default: all pages"
     },
     {
+      "name": "include-header-footer",
+      "shortName": null,
+      "type": "boolean",
+      "required": false,
+      "default": false,
+      "description": "Include page headers and footers in output"
+    },
+    {
       "name": "hybrid",
       "shortName": null,
       "type": "string",

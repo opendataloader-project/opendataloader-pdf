@@ -9,6 +9,7 @@ package org.opendataloader.pdf.text;
 
 import org.opendataloader.pdf.api.Config;
 import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
@@ -42,12 +43,14 @@ public class TextGenerator implements Closeable {
     private final String textFileName;
     private final String lineSeparator = System.lineSeparator();
     private final String textPageSeparator;
+    private final boolean includeHeaderFooter;
 
     public TextGenerator(File inputPdf, Config config) throws IOException {
         String cutPdfFileName = inputPdf.getName();
         this.textFileName = config.getOutputFolder() + File.separator + cutPdfFileName.substring(0, cutPdfFileName.length() - 3) + "txt";
         this.textWriter = new FileWriter(textFileName, StandardCharsets.UTF_8);
         this.textPageSeparator = config.getTextPageSeparator();
+        this.includeHeaderFooter = config.isIncludeHeaderFooter();
     }
 
     public void writeToText(List<List<IObject>> contents) {
@@ -85,7 +88,11 @@ public class TextGenerator implements Closeable {
     }
 
     private void write(IObject object, int indentLevel) throws IOException {
-        if (object instanceof SemanticHeading) {
+        if (object instanceof SemanticHeaderOrFooter) {
+            if (includeHeaderFooter) {
+                writeHeaderOrFooter((SemanticHeaderOrFooter) object, indentLevel);
+            }
+        } else if (object instanceof SemanticHeading) {
             writeMultiline(((SemanticHeading) object).getValue(), indentLevel);
         } else if (object instanceof SemanticParagraph) {
             writeMultiline(((SemanticParagraph) object).getValue(), indentLevel);
@@ -96,6 +103,10 @@ public class TextGenerator implements Closeable {
         } else if (object instanceof TableBorder) {
             writeTable((TableBorder) object, indentLevel);
         }
+    }
+
+    private void writeHeaderOrFooter(SemanticHeaderOrFooter headerOrFooter, int indentLevel) throws IOException {
+        writeContents(headerOrFooter.getContents(), indentLevel);
     }
 
     private void writeList(PDFList list, int indentLevel) throws IOException {
@@ -145,7 +156,12 @@ public class TextGenerator implements Closeable {
     }
 
     private String extractPlainText(IObject content) {
-        if (content instanceof SemanticHeading) {
+        if (content instanceof SemanticHeaderOrFooter) {
+            if (includeHeaderFooter) {
+                return collectPlainText(((SemanticHeaderOrFooter) content).getContents());
+            }
+            return "";
+        } else if (content instanceof SemanticHeading) {
             return sanitize(((SemanticHeading) content).getValue());
         } else if (content instanceof SemanticParagraph) {
             return sanitize(((SemanticParagraph) content).getValue());

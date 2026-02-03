@@ -73,6 +73,7 @@ public class Config {
     private final FilterConfig filterConfig = new FilterConfig();
     private String hybrid = HYBRID_OFF;
     private final HybridConfig hybridConfig = new HybridConfig();
+    private boolean includeHeaderFooter = false;
 
     /** Table detection method: default (border-based detection). */
     public static final String TABLE_METHOD_DEFAULT = "default";
@@ -816,6 +817,24 @@ public class Config {
      */
     public static boolean isValidHybridMode(String mode) {
         return mode != null && hybridModeOptions.contains(mode.toLowerCase(Locale.ROOT));
+    }
+
+    /**
+     * Checks if page headers and footers should be included in output.
+     *
+     * @return true if headers and footers should be included, false otherwise.
+     */
+    public boolean isIncludeHeaderFooter() {
+        return includeHeaderFooter;
+    }
+
+    /**
+     * Enables or disables inclusion of page headers and footers in output.
+     *
+     * @param includeHeaderFooter true to include headers and footers, false to exclude.
+     */
+    public void setIncludeHeaderFooter(boolean includeHeaderFooter) {
+        this.includeHeaderFooter = includeHeaderFooter;
     }
 
 }
