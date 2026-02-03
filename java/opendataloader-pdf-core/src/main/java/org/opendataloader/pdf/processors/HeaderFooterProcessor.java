@@ -236,20 +236,15 @@ public class HeaderFooterProcessor {
     }
 
     private static boolean arePossibleHeadersOrFooters(IObject object1, IObject object2, int increment) {
-        if (object1 instanceof TextLine && object2 instanceof TextLine) {
+        if (object1 instanceof SemanticTextNode && object2 instanceof SemanticTextNode) {
+            SemanticTextNode textNode1 = (SemanticTextNode) object1;
+            SemanticTextNode textNode2 = (SemanticTextNode) object2;
             if (!BoundingBox.areOverlapsBoundingBoxesExcludingPages(object1.getBoundingBox(), object2.getBoundingBox())) {
                 return false;
             }
-            TextLine line1 = (TextLine) object1;
-            TextLine line2 = (TextLine) object2;
-            if (!NodeUtils.areCloseNumbers(line1.getFontSize(), line2.getFontSize())) {
+            if (!NodeUtils.areCloseNumbers(textNode1.getFontSize(), textNode2.getFontSize())) {
                 return false;
             }
-            SemanticTextNode textNode1 = new SemanticTextNode();
-            textNode1.add(line1);
-            SemanticTextNode textNode2 = new SemanticTextNode();
-            textNode2.add(line2);
-            //todo check boundingBoxes
             if (Objects.equals(textNode1.getValue(), textNode2.getValue())) {
                 return true;
             }
@@ -259,6 +254,14 @@ public class HeaderFooterProcessor {
             if (getHeadersOrFootersIntervals(textNodes, increment).size() == 1) {
                 return true;
             }
+        } else if (object1 instanceof TextLine && object2 instanceof TextLine) {
+            TextLine line1 = (TextLine) object1;
+            TextLine line2 = (TextLine) object2;
+            SemanticTextNode textNode1 = new SemanticTextNode();
+            textNode1.add(line1);
+            SemanticTextNode textNode2 = new SemanticTextNode();
+            textNode2.add(line2);
+            return arePossibleHeadersOrFooters(textNode1, textNode2, increment);
         } else {
             if (BoundingBox.areSameBoundingBoxesExcludingPages(object1.getBoundingBox(), object2.getBoundingBox())) {
                 return true;
