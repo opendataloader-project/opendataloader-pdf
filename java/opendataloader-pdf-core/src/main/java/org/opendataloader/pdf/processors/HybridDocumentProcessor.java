@@ -418,7 +418,9 @@ public class HybridDocumentProcessor {
 
         // Cross-page operations
         HeaderFooterProcessor.processHeadersAndFooters(contents, false);
-        ListProcessor.processLists(contents, false);
+        for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
+            contents.set(pageNumber, ListProcessor.processListsFromTextNodes(contents.get(pageNumber)));
+        }
         ListProcessor.checkNeighborLists(contents);
         TableBorderProcessor.checkNeighborTables(contents);
         HeadingProcessor.detectHeadingsLevels();
