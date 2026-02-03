@@ -43,7 +43,7 @@ def convert(
         password: Password for encrypted PDF files
         format: Output formats (comma-separated). Values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images. Default: json
         quiet: Suppress console logging output
-        content_safety_off: Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg
+        content_safety_off: Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg, sensitive-data
         keep_line_breaks: Preserve original line breaks in extracted text
         replace_invalid_chars: Replacement character for invalid/unrecognized characters. Default: space
         use_struct_tree: Use PDF structure tree (tagged PDF) for reading order and semantic structure

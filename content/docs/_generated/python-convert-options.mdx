@@ -14,7 +14,7 @@ description: Options for the Python convert function
 | `password`                | `str`                | -            | Password for encrypted PDF files                                                                                                   |
 | `format`                  | `str \| list[str]`   | -            | Output formats (comma-separated). Values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images. Default: json |
 | `quiet`                   | `bool`               | `False`      | Suppress console logging output                                                                                                    |
-| `content_safety_off`      | `str \| list[str]`   | -            | Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg                                               |
+| `content_safety_off`      | `str \| list[str]`   | -            | Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg, sensitive-data                               |
 | `keep_line_breaks`        | `bool`               | `False`      | Preserve original line breaks in extracted text                                                                                    |
 | `replace_invalid_chars`   | `str`                | `" "`        | Replacement character for invalid/unrecognized characters. Default: space                                                          |
 | `use_struct_tree`         | `bool`               | `False`      | Use PDF structure tree (tagged PDF) for reading order and semantic structure                                                       |
