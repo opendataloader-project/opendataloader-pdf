@@ -39,6 +39,8 @@ export interface ConvertOptions {
   imageDir?: string;
   /** Pages to extract (e.g., "1,3,5-7"). Default: all pages */
   pages?: string;
+  /** Include page headers and footers in output */
+  includeHeaderFooter?: boolean;
   /** Hybrid backend for AI processing. Values: off (default), docling-fast */
   hybrid?: string;
   /** Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend) */
@@ -72,6 +74,7 @@ export interface CliOptions {
   imageFormat?: string;
   imageDir?: string;
   pages?: string;
+  includeHeaderFooter?: boolean;
   hybrid?: string;
   hybridMode?: string;
   hybridUrl?: string;
@@ -135,6 +138,9 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   }
   if (cliOptions.pages) {
     convertOptions.pages = cliOptions.pages;
+  }
+  if (cliOptions.includeHeaderFooter) {
+    convertOptions.includeHeaderFooter = true;
   }
   if (cliOptions.hybrid) {
     convertOptions.hybrid = cliOptions.hybrid;
@@ -223,6 +229,9 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.pages) {
     args.push('--pages', options.pages);
+  }
+  if (options.includeHeaderFooter) {
+    args.push('--include-header-footer');
   }
   if (options.hybrid) {
     args.push('--hybrid', options.hybrid);

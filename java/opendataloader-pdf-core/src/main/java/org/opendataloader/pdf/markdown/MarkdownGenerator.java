@@ -14,6 +14,7 @@ import org.opendataloader.pdf.entities.SemanticPicture;
 import org.opendataloader.pdf.utils.Base64ImageUtils;
 import org.opendataloader.pdf.utils.ImagesUtils;
 import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
@@ -44,6 +45,7 @@ public class MarkdownGenerator implements Closeable {
     protected String markdownPageSeparator;
     protected boolean embedImages = false;
     protected String imageFormat = Config.IMAGE_FORMAT_PNG;
+    protected boolean includeHeaderFooter = false;
 
     MarkdownGenerator(File inputPdf, Config config) throws IOException {
         String cutPdfFileName = inputPdf.getName();
@@ -53,6 +55,7 @@ public class MarkdownGenerator implements Closeable {
         this.markdownPageSeparator = config.getMarkdownPageSeparator();
         this.embedImages = config.isEmbedImages();
         this.imageFormat = config.getImageFormat();
+        this.includeHeaderFooter = config.isIncludeHeaderFooter();
     }
 
     public void writeToMarkdown(List<List<IObject>> contents) {
@@ -84,6 +87,9 @@ public class MarkdownGenerator implements Closeable {
     }
 
     protected boolean isSupportedContent(IObject content) {
+        if (content instanceof SemanticHeaderOrFooter) {
+            return includeHeaderFooter;
+        }
         return content instanceof SemanticTextNode || // Heading, Paragraph etc...
             content instanceof SemanticFormula ||
             content instanceof SemanticPicture ||
@@ -98,7 +104,9 @@ public class MarkdownGenerator implements Closeable {
     }
 
     protected void write(IObject object) throws IOException {
-        if (object instanceof SemanticPicture) {
+        if (object instanceof SemanticHeaderOrFooter) {
+            writeHeaderOrFooter((SemanticHeaderOrFooter) object);
+        } else if (object instanceof SemanticPicture) {
             writePicture((SemanticPicture) object);
         } else if (object instanceof ImageChunk) {
             writeImage((ImageChunk) object);
@@ -195,6 +203,15 @@ public class MarkdownGenerator implements Closeable {
         markdownWriter.write(formula.getLatex());
         markdownWriter.write(MarkdownSyntax.LINE_BREAK);
         markdownWriter.write(MarkdownSyntax.MATH_BLOCK_END);
+    }
+
+    protected void writeHeaderOrFooter(SemanticHeaderOrFooter headerOrFooter) throws IOException {
+        for (IObject content : headerOrFooter.getContents()) {
+            if (isSupportedContent(content)) {
+                write(content);
+                writeContentsSeparator();
+            }
+        }
     }
 
     protected void writeList(PDFList list) throws IOException {

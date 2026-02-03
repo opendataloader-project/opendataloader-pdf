@@ -15,6 +15,7 @@ import org.opendataloader.pdf.markdown.MarkdownSyntax;
 import org.opendataloader.pdf.utils.Base64ImageUtils;
 import org.opendataloader.pdf.utils.ImagesUtils;
 import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
@@ -63,6 +64,8 @@ public class HtmlGenerator implements Closeable {
     protected boolean embedImages = false;
     /** Format for extracted images (png or jpeg). */
     protected String imageFormat = Config.IMAGE_FORMAT_PNG;
+    /** Whether to include page headers and footers in output. */
+    protected boolean includeHeaderFooter = false;
 
     /**
      * Creates a new HtmlGenerator for the specified PDF file.
@@ -80,6 +83,7 @@ public class HtmlGenerator implements Closeable {
         this.htmlPageSeparator = config.getHtmlPageSeparator();
         this.embedImages = config.isEmbedImages();
         this.imageFormat = config.getImageFormat();
+        this.includeHeaderFooter = config.isIncludeHeaderFooter();
     }
 
     /**
@@ -130,7 +134,12 @@ public class HtmlGenerator implements Closeable {
      * @throws IOException if unable to write to the output
      */
     protected void write(IObject object) throws IOException {
-        if (object instanceof SemanticPicture) {
+        if (object instanceof SemanticHeaderOrFooter) {
+            if (includeHeaderFooter) {
+                writeHeaderOrFooter((SemanticHeaderOrFooter) object);
+            }
+            return;
+        } else if (object instanceof SemanticPicture) {
             writePicture((SemanticPicture) object);
         } else if (object instanceof ImageChunk) {
             writeImage((ImageChunk) object);
@@ -152,6 +161,18 @@ public class HtmlGenerator implements Closeable {
 
         if (!isInsideTable()) {
             htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
+        }
+    }
+
+    /**
+     * Writes a header or footer element to the HTML output.
+     *
+     * @param headerOrFooter the header or footer to write
+     * @throws IOException if unable to write to the output
+     */
+    protected void writeHeaderOrFooter(SemanticHeaderOrFooter headerOrFooter) throws IOException {
+        for (IObject content : headerOrFooter.getContents()) {
+            write(content);
         }
     }
 

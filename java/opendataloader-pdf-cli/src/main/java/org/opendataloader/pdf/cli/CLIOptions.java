@@ -93,6 +93,10 @@ public class CLIOptions {
     private static final String PAGES_LONG_OPTION = "pages";
     private static final String PAGES_DESC = "Pages to extract (e.g., \"1,3,5-7\"). Default: all pages";
 
+    // ===== Include Header Footer =====
+    private static final String INCLUDE_HEADER_FOOTER_LONG_OPTION = "include-header-footer";
+    private static final String INCLUDE_HEADER_FOOTER_DESC = "Include page headers and footers in output";
+
     // ===== Hybrid Mode =====
     private static final String HYBRID_LONG_OPTION = "hybrid";
     private static final String HYBRID_DESC = "Hybrid backend for AI processing. Values: off (default), docling-fast";
@@ -150,6 +154,8 @@ public class CLIOptions {
             new OptionDefinition(IMAGE_FORMAT_LONG_OPTION, null, "string", "png", IMAGE_FORMAT_DESC, true),
             new OptionDefinition(IMAGE_DIR_LONG_OPTION, null, "string", null, IMAGE_DIR_DESC, true),
             new OptionDefinition(PAGES_LONG_OPTION, null, "string", null, PAGES_DESC, true),
+            new OptionDefinition(INCLUDE_HEADER_FOOTER_LONG_OPTION, null, "boolean", false,
+                    INCLUDE_HEADER_FOOTER_DESC, true),
             new OptionDefinition(HYBRID_LONG_OPTION, null, "string", "off", HYBRID_DESC, true),
             new OptionDefinition(HYBRID_MODE_LONG_OPTION, null, "string", "auto", HYBRID_MODE_DESC, true),
             new OptionDefinition(HYBRID_URL_LONG_OPTION, null, "string", null, HYBRID_URL_DESC, true),
@@ -206,6 +212,9 @@ public class CLIOptions {
         }
         if (commandLine.hasOption(CLIOptions.USE_STRUCT_TREE_LONG_OPTION)) {
             config.setUseStructTree(true);
+        }
+        if (commandLine.hasOption(INCLUDE_HEADER_FOOTER_LONG_OPTION)) {
+            config.setIncludeHeaderFooter(true);
         }
         if (commandLine.hasOption(CLIOptions.READING_ORDER_LONG_OPTION)) {
             config.setReadingOrder(commandLine.getOptionValue(CLIOptions.READING_ORDER_LONG_OPTION));
