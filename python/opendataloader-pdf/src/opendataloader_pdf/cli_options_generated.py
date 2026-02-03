@@ -163,6 +163,15 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "description": "Pages to extract (e.g., \"1,3,5-7\"). Default: all pages",
     },
     {
+        "name": "include-header-footer",
+        "python_name": "include_header_footer",
+        "short_name": None,
+        "type": "boolean",
+        "required": False,
+        "default": False,
+        "description": "Include page headers and footers in output",
+    },
+    {
         "name": "hybrid",
         "python_name": "hybrid",
         "short_name": None,
