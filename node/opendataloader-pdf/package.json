@@ -49,19 +49,19 @@
     "access": "public"
   },
   "dependencies": {
-    "commander": "^14.0.2"
+    "commander": "^14.0.3"
   },
   "devDependencies": {
-    "@types/node": "^24.10.1",
-    "@typescript-eslint/eslint-plugin": "^8.33.0",
-    "@typescript-eslint/parser": "^8.33.0",
+    "@types/node": "^25.2.0",
+    "@typescript-eslint/eslint-plugin": "^8.54.0",
+    "@typescript-eslint/parser": "^8.54.0",
     "eslint": "^9.28.0",
-    "glob": "^12.0.0",
-    "prettier": "^3.6.2",
+    "glob": "^13.0.1",
+    "prettier": "^3.8.1",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
-    "vite": "^7.2.2",
-    "vitest": "^4.0.10"
+    "vite": "^7.3.1",
+    "vitest": "^4.0.18"
   },
   "files": [
     "dist",
