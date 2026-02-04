@@ -11,6 +11,16 @@ Thumbs.db
 *.ipr
 *.iws
 
+# Emacs
+\#*\#
+*~
+.#*
+
+# Vim
+*.swp
+*.swo
+*.swn
+
 # Java (Maven & Gradle)
 **/target/
 **/build/
@@ -29,6 +39,7 @@ logs/
 **/npm-debug.log*
 **/yarn-debug.log*
 **/yarn-error.log*
+**/pnpm-debug.log*
 
 # Node.js
 **/node_modules/
@@ -36,6 +47,7 @@ logs/
 **/.turbo/
 **/dist/
 **/.cache/
+*.tsbuildinfo
 
 # Python
 **/__pycache__/
@@ -56,8 +68,8 @@ logs/
 # Temporary / Generated
 **/tmp/
 **/temp/
-*.swp
-*.swo
 
 # Configuration files
 .claude/settings.local.json
+.claude/plans/
+
