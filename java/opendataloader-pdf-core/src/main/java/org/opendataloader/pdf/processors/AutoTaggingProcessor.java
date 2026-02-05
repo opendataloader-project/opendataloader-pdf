@@ -1,0 +1,205 @@
+package org.opendataloader.pdf.processors;
+
+import org.verapdf.as.ASAtom;
+import org.verapdf.cos.*;
+
+import org.verapdf.pd.*;
+import org.verapdf.tools.TaggedPDFConstants;
+import org.verapdf.wcag.algorithms.entities.*;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class AutoTaggingProcessor {
+
+//    private static List<Integer> mcids = new ArrayList<>();
+    private static List<COSObject> structParents = new ArrayList<>();
+
+    public static void createTaggedPDF(File inputPDF, String outputFolder, PDDocument document, List<List<IObject>> contents) throws IOException {
+        COSDocument cosDocument = document.getDocument();
+        PDCatalog catalog = document.getCatalog();
+        COSObject structTreeRoot = createStructTreeRoot(catalog, cosDocument, document);
+        createStructureTreeElements(contents, structTreeRoot, cosDocument);
+//        updatePages(document, cosDocument);
+//        createParentTree(cosDocument, structTreeRoot);
+        String outputFileName = outputFolder + File.separator +
+            inputPDF.getName().substring(0, inputPDF.getName().length() - 4) + "_tagged.pdf";
+        try (OutputStream output = new FileOutputStream(outputFileName)) {
+            document.saveTo(output);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+//    private static void updatePages(PDDocument document, COSDocument cosDocument) throws IOException {
+//        List<org.verapdf.pd.PDPage> rawPages = document.getPages();
+//        for (PDPage page : rawPages) {
+//            page.getObject().setKey(ASAtom.STRUCT_PARENTS, COSInteger.construct(page.getPageNumber()));
+//            cosDocument.addChangedObject(page.getObject());
+//            COSObject contentsObject = page.getKey(ASAtom.CONTENTS);
+////            byte[] res = new PDFStreamWriter().write(processTokens(getTokens(page.getContent())));
+//            try (InputStream inStream = new ByteArrayInputStream(res)) {
+//                contentsObject.setData(new ASMemoryInStream(inStream));
+//            }
+//            contentsObject.setKey(ASAtom.FILTER, new COSObject());
+////            ((COSStream)contentsObject.getDirectBase()).setFilters(new COSFilters(COSName.construct(ASAtom.FLATE_DECODE)));
+//            cosDocument.addChangedObject(contentsObject);
+//        }
+//    }
+
+    private static COSObject createStructTreeRoot(PDCatalog catalog, COSDocument cosDocument, PDDocument document) {
+        COSObject structTreeRoot = COSIndirect.construct(COSDictionary.construct(), cosDocument);
+        catalog.setKey(ASAtom.STRUCT_TREE_ROOT, structTreeRoot);
+        structTreeRoot.setKey(ASAtom.TYPE, COSName.construct(ASAtom.STRUCT_TREE_ROOT));
+        cosDocument.addObject(structTreeRoot);
+        structTreeRoot.setKey(ASAtom.PARENT_TREE_NEXT_KEY, COSInteger.construct(document.getNumberOfPages()));
+        cosDocument.addChangedObject(catalog.getObject());
+        return structTreeRoot;
+    }
+
+//    private static void createParentTree(COSDocument cosDocument, COSObject structTreeRoot) {
+//        COSObject parentTree = COSIndirect.construct(COSDictionary.construct(), cosDocument);
+//        cosDocument.addObject(parentTree);
+//        structTreeRoot.setKey(ASAtom.PARENT_TREE, parentTree);
+//        COSObject nums = COSArray.construct();
+//        parentTree.setKey(ASAtom.NUMS, nums);
+//        nums.add(COSInteger.construct(0));//todo fix
+//        COSObject array = COSArray.construct();
+//        for (COSObject structParent : structParents) {
+//            array.add(structParent);
+//        }
+//        nums.add(array);
+//    }
+
+    private static COSObject addStructElement(COSObject parent, COSDocument cosDocument, String type) {
+        COSObject structElement = COSIndirect.construct(COSDictionary.construct(), cosDocument);
+        COSObject k = parent.getKey(ASAtom.K);
+        if (k.getType() == COSObjType.COS_ARRAY) {
+            k.add(structElement);
+        } else {
+            k = COSArray.construct();
+            parent.setKey(ASAtom.K, k);
+            k.add(structElement);
+        }
+        structElement.setKey(ASAtom.S, COSName.construct(type));
+        structElement.setKey(ASAtom.TYPE, COSName.construct(ASAtom.STRUCT_ELEM));
+        structElement.setKey(ASAtom.P, parent);
+        structElement.setKey(ASAtom.PG, cosDocument.getPDDocument().getPages().get(0).getObject());//todo calculate page number
+        cosDocument.addObject(structElement);
+        return structElement;
+    }
+
+
+    public static void createStructureTreeElements(List<List<IObject>> contents, COSObject structTreeRoot, COSDocument cosDocument) {
+        COSObject seDocument = addStructElement(structTreeRoot, cosDocument, TaggedPDFConstants.DOCUMENT);
+        for (List<IObject> pageContents : contents) {
+            for (IObject content : pageContents) {
+                createStructElem(content, seDocument, cosDocument);
+            }
+        }
+    }
+
+    private static void createStructElem(IObject object, COSObject parentStructElem, COSDocument cosDocument) {
+        if (object instanceof SemanticHeading) {
+            createHeadingStructElem((SemanticHeading) object, parentStructElem, cosDocument);
+        } else if (object instanceof SemanticParagraph) {
+            createParagraphStructElem((SemanticParagraph) object, parentStructElem, cosDocument);
+        } else if (object instanceof SemanticCaption) {
+            createCaptionStructElem((SemanticCaption) object, parentStructElem, cosDocument);
+//        } else if (object instanceof PDFList) {
+//            createListStructElem((PDFList) object, parent, cosDocument);
+//        } else if (object instanceof TableBorder) {
+//            createTableStructElem((TableBorder) object, parentStructElem, cosDocument);
+//        } else if (object instanceof ImageChunk) {
+//            createFigureStructElem((ImageChunk) object, parentStructElem, cosDocument);
+        }
+    }
+
+    private static void createHeadingStructElem(SemanticHeading heading, COSObject parent, COSDocument cosDocument) {
+        COSObject headingObject = addStructElement(parent, cosDocument, TaggedPDFConstants.H + heading.getHeadingLevel());
+//        processTextNode(heading, headingObject);
+    }
+
+    private static void createParagraphStructElem(SemanticParagraph paragraph, COSObject parent, COSDocument cosDocument) {
+        COSObject paragraphObject = addStructElement(parent, cosDocument, TaggedPDFConstants.P);
+//        processTextNode(paragraph, paragraphObject);
+    }
+
+    private static void createCaptionStructElem(SemanticCaption caption, COSObject parent, COSDocument cosDocument) {
+        COSObject captionObject = addStructElement(parent, cosDocument, TaggedPDFConstants.CAPTION);
+//        processTextNode(caption, captionObject);
+    }
+
+//    protected static List<Object> getTokens(PDContentStream pdContentStream) {
+//        if (pdContentStream != null) {
+//            try {
+//                COSObject contentStream = pdContentStream.getContents();
+//                if (contentStream.getType() == COSObjType.COS_STREAM || contentStream.getType() == COSObjType.COS_ARRAY) {
+//                    try (ASInputStream opStream = contentStream.getDirectBase().getData(COSStream.FilterFlags.DECODE)) {
+//                        try (PDFStreamParser streamParser = new PDFStreamParser(opStream)) {
+//                            streamParser.parseTokens();
+//                            return streamParser.getTokens();
+//                        }
+//                    }
+//                }
+//            } catch (IOException e) {
+//            }
+//        }
+//        return Collections.emptyList();
+//    }
+
+//    private static void processTextNode(SemanticTextNode textNode, COSObject cosObject) {
+//        List<Integer> mcids = new ArrayList<>();
+//        for (TextColumn textColumn : textNode.getColumns()) {
+//            for (TextLine textLine : textColumn.getLines()) {
+//                for (TextChunk textChunk : textLine.getTextChunks()) {
+//                    mcids.addAll(textChunk.getErrorCodes());
+//                }
+//            }
+//        }
+//        AutoTaggingProcessor.mcids.addAll(mcids);
+//        for (int index : mcids) {
+//            structParents.add(cosObject);
+//        }
+//        if (!mcids.isEmpty()) {
+//            COSObject array = COSArray.construct();
+//            cosObject.setKey(ASAtom.K, array);
+//            for (Integer mcid : mcids) {
+//                array.add(COSInteger.construct(AutoTaggingProcessor.mcids.indexOf(mcid)));
+//            }
+//        }
+//    }
+
+//    protected static List<Object> processTokens(List<Object> processTokens) {
+//        List<Object> result = new ArrayList<>();
+//        List<Object> arguments = new ArrayList<>();
+//        for (int index = 0; index < processTokens.size(); index++) {
+//            Object token = processTokens.get(index);
+//            if (token instanceof COSBase) {
+//                arguments.add(token);
+//            } else if (token instanceof Operator) {
+//                if (Operators.BDC.equals(((Operator) token).getOperator()) ||
+//                    Operators.EMC.equals(((Operator) token).getOperator()) ||
+//                    Operators.BMC.equals(((Operator) token).getOperator())) {
+//                    arguments.clear();
+//                    continue;
+//                }
+//                if (mcids.contains(index)) {
+//                    result.add(COSName.construct("Span").getDirectBase());
+//                    COSObject dictionary = COSDictionary.construct();
+//                    dictionary.setKey(ASAtom.MCID, COSInteger.construct(mcids.indexOf(index)));
+//                    result.add(dictionary.getDirectBase());
+//                    result.add(Operator.getOperator(Operators.BDC));
+//                }
+//                result.addAll(arguments);
+//                arguments.clear();
+//                result.add(token);
+//                if (mcids.contains(index)) {
+//                    result.add(Operator.getOperator(Operators.EMC));
+//                }
+//            }
+//        }
+//        return result;
+//    }
+}
