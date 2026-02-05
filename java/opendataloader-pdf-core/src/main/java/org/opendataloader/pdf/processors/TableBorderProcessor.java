@@ -29,41 +29,71 @@ public class TableBorderProcessor {
     private static final double LINE_ART_PERCENT = 0.9;
     private static final double NEIGHBOUR_TABLE_EPSILON = 0.2;
 
+    /**
+     * Maximum depth for nested table processing.
+     * Real-world PDFs rarely have tables nested more than 2-3 levels.
+     * This limit prevents stack overflow from malicious or malformed PDFs.
+     */
+    private static final int MAX_NESTED_TABLE_DEPTH = 10;
+
+    /**
+     * Thread-local counter for tracking current nesting depth.
+     */
+    private static final ThreadLocal<Integer> currentDepth = ThreadLocal.withInitial(() -> 0);
+
     public static List<IObject> processTableBorders(List<IObject> contents, int pageNumber) {
         // Check if TableBordersCollection exists (may be null if no borders detected during preprocessing)
         if (StaticContainers.getTableBordersCollection() == null) {
             return new ArrayList<>(contents);
         }
 
-        List<IObject> newContents = new ArrayList<>();
-        Set<TableBorder> processedTableBorders = new HashSet<>();
-        for (IObject content : contents) {
-            TableBorder tableBorder = addContentToTableBorder(content);
-            if (tableBorder != null) {
-                if (!processedTableBorders.contains(tableBorder)) {
-                    processedTableBorders.add(tableBorder);
-                    newContents.add(tableBorder);
-                }
-                if (content instanceof TextChunk) {
-                    TextChunk textChunk = (TextChunk) content;
-                    TextChunk textChunkPart = getTextChunkPartBeforeTable(textChunk, tableBorder);
-                    if (textChunkPart != null && !textChunkPart.isEmpty() && !textChunkPart.isWhiteSpaceChunk()) {
-                        newContents.add(textChunkPart);
+        // Check depth limit to prevent stack overflow from deeply nested tables
+        int depth = currentDepth.get();
+        if (depth >= MAX_NESTED_TABLE_DEPTH) {
+            // Exceeded maximum nesting depth - return contents without further table processing
+            return new ArrayList<>(contents);
+        }
+
+        try {
+            currentDepth.set(depth + 1);
+
+            List<IObject> newContents = new ArrayList<>();
+            Set<TableBorder> processedTableBorders = new HashSet<>();
+            for (IObject content : contents) {
+                TableBorder tableBorder = addContentToTableBorder(content);
+                if (tableBorder != null) {
+                    if (!processedTableBorders.contains(tableBorder)) {
+                        processedTableBorders.add(tableBorder);
+                        newContents.add(tableBorder);
                     }
-                    textChunkPart = getTextChunkPartAfterTable(textChunk, tableBorder);
-                    if (textChunkPart != null && !textChunkPart.isEmpty() && !textChunkPart.isWhiteSpaceChunk()) {
-                        newContents.add(textChunkPart);
+                    if (content instanceof TextChunk) {
+                        TextChunk textChunk = (TextChunk) content;
+                        TextChunk textChunkPart = getTextChunkPartBeforeTable(textChunk, tableBorder);
+                        if (textChunkPart != null && !textChunkPart.isEmpty() && !textChunkPart.isWhiteSpaceChunk()) {
+                            newContents.add(textChunkPart);
+                        }
+                        textChunkPart = getTextChunkPartAfterTable(textChunk, tableBorder);
+                        if (textChunkPart != null && !textChunkPart.isEmpty() && !textChunkPart.isWhiteSpaceChunk()) {
+                            newContents.add(textChunkPart);
+                        }
                     }
+                } else {
+                    newContents.add(content);
                 }
+            }
+            for (TableBorder border : processedTableBorders) {
+                StaticContainers.getTableBordersCollection().removeTableBorder(border, pageNumber);
+                processTableBorder(border, pageNumber);
+            }
+            return newContents;
+        } finally {
+            // Reset depth when exiting this level (clean up ThreadLocal)
+            if (depth == 0) {
+                currentDepth.remove();
             } else {
-                newContents.add(content);
+                currentDepth.set(depth);
             }
         }
-        for (TableBorder border : processedTableBorders) {
-            StaticContainers.getTableBordersCollection().removeTableBorder(border, pageNumber);
-            processTableBorder(border, pageNumber);
-        }
-        return newContents;
     }
 
     private static TableBorder addContentToTableBorder(IObject content) {
