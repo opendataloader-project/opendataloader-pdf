@@ -239,6 +239,9 @@ public class MarkdownGenerator implements Closeable {
             } else if (isInsideTable()) {
                 value = value.replace(MarkdownSyntax.LINE_BREAK, getLineBreak());
             }
+        } else if (isInsideTable()) {
+            // Always replace line breaks with space in table cells for proper markdown table formatting
+            value = value.replace(MarkdownSyntax.LINE_BREAK, MarkdownSyntax.SPACE);
         }
 
         markdownWriter.write(getCorrectMarkdownString(value));

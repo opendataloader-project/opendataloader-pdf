@@ -10,6 +10,7 @@ package org.opendataloader.pdf.processors;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.hybrid.DoclingSchemaTransformer;
+import org.opendataloader.pdf.hybrid.HancomSchemaTransformer;
 import org.opendataloader.pdf.hybrid.HybridClient;
 import org.opendataloader.pdf.hybrid.HybridClientFactory;
 import org.opendataloader.pdf.hybrid.HybridClient.HybridRequest;
@@ -358,6 +359,11 @@ public class HybridDocumentProcessor {
         // docling and docling-fast (deprecated) use DoclingSchemaTransformer
         if (Config.HYBRID_DOCLING.equals(hybrid) || Config.HYBRID_DOCLING_FAST.equals(hybrid)) {
             return new DoclingSchemaTransformer();
+        }
+
+        // hancom uses HancomSchemaTransformer
+        if (Config.HYBRID_HANCOM.equals(hybrid)) {
+            return new HancomSchemaTransformer();
         }
 
         throw new IllegalArgumentException("Unsupported hybrid backend: " + hybrid);

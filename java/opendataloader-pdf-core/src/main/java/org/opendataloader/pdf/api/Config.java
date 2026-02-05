@@ -108,7 +108,8 @@ public class Config {
         hybridOptions.add(HYBRID_OFF);
         hybridOptions.add(HYBRID_DOCLING);
         hybridOptions.add(HYBRID_DOCLING_FAST);  // deprecated alias
-        // hancom, azure, google added when implemented
+        hybridOptions.add(HYBRID_HANCOM);
+        // azure, google added when implemented
         hybridModeOptions.add(HYBRID_MODE_AUTO);
         hybridModeOptions.add(HYBRID_MODE_FULL);
     }
