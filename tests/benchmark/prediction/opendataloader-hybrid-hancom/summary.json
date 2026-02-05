@@ -1,0 +1,9 @@
+{
+    "engine_name": "opendataloader-hybrid-hancom",
+    "engine_version": "local+hancom",
+    "processor": "Apple M4",
+    "document_count": 200,
+    "total_elapsed": 1029.9692597389221,
+    "elapsed_per_doc": 5.1498462986946105,
+    "date": "2026-02-05"
+}
