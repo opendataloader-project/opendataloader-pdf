@@ -27,6 +27,9 @@ public class HybridConfig {
     /** Default URL for docling-fast-server. */
     public static final String DOCLING_FAST_DEFAULT_URL = "http://localhost:5002";
 
+    /** Default URL for Hancom Document AI API. */
+    public static final String HANCOM_DEFAULT_URL = "https://dataloader.cloud.hancom.com/studio-lite/api";
+
     private String url;
     private int timeoutMs = DEFAULT_TIMEOUT_MS;
     private boolean fallbackToJava = true;
@@ -139,7 +142,10 @@ public class HybridConfig {
         if ("docling".equals(lowerHybrid) || "docling-fast".equals(lowerHybrid)) {
             return DOCLING_FAST_DEFAULT_URL;
         }
-        // hancom, azure, google require explicit URL
+        if ("hancom".equals(lowerHybrid)) {
+            return HANCOM_DEFAULT_URL;
+        }
+        // azure, google require explicit URL
         return null;
     }
 
