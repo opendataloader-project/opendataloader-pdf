@@ -291,7 +291,7 @@ def _parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser.add_argument(
         "--hybrid",
         default="off",
-        choices=["off", "docling", "docling-fast"],
+        choices=["off", "docling", "docling-fast", "hancom"],  # hancom is experimental (hidden from help)
         help="Hybrid backend: off (default), docling, docling-fast. Requires backend server running.",
     )
     return parser.parse_args(argv)

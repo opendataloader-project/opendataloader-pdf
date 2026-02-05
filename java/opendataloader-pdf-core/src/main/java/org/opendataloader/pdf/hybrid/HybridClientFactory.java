@@ -82,7 +82,7 @@ public class HybridClientFactory {
         if (BACKEND_DOCLING_FAST.equals(hybrid)) {
             return new DoclingFastServerClient(config);
         } else if (BACKEND_HANCOM.equals(hybrid)) {
-            throw new UnsupportedOperationException("Hancom backend is not yet implemented");
+            return new HancomClient(config);
         } else if (BACKEND_AZURE.equals(hybrid)) {
             throw new UnsupportedOperationException("Azure Document Intelligence backend is not yet implemented");
         } else if (BACKEND_GOOGLE.equals(hybrid)) {
@@ -130,6 +130,8 @@ public class HybridClientFactory {
         for (HybridClient client : CLIENT_CACHE.values()) {
             if (client instanceof DoclingFastServerClient) {
                 ((DoclingFastServerClient) client).shutdown();
+            } else if (client instanceof HancomClient) {
+                ((HancomClient) client).shutdown();
             }
         }
         CLIENT_CACHE.clear();
@@ -147,7 +149,7 @@ public class HybridClientFactory {
         }
 
         String lowerHybrid = hybrid.toLowerCase();
-        return BACKEND_DOCLING_FAST.equals(lowerHybrid);
+        return BACKEND_DOCLING_FAST.equals(lowerHybrid) || BACKEND_HANCOM.equals(lowerHybrid);
     }
 
     /**
@@ -156,7 +158,7 @@ public class HybridClientFactory {
      * @return A string listing all supported backends.
      */
     public static String getSupportedBackends() {
-        return BACKEND_DOCLING_FAST;
+        return String.join(", ", BACKEND_DOCLING_FAST, BACKEND_HANCOM);
     }
 
     /**
