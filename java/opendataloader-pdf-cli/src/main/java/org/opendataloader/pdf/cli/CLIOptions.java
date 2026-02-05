@@ -47,7 +47,7 @@ public class CLIOptions {
     // ===== Content Safety =====
     private static final String CONTENT_SAFETY_OFF_LONG_OPTION = "content-safety-off";
     private static final String CONTENT_SAFETY_OFF_DESC = "Disable content safety filters. "
-            + "Values: all, hidden-text, off-page, tiny, hidden-ocg";
+            + "Values: all, hidden-text, off-page, tiny, hidden-ocg, sensitive-data";
 
     // ===== Keep Line Breaks =====
     private static final String KEEP_LINE_BREAKS_LONG_OPTION = "keep-line-breaks";
@@ -311,13 +311,13 @@ public class CLIOptions {
         String[] optionValues = commandLine.getOptionValues(CONTENT_SAFETY_OFF_LONG_OPTION);
         if (optionValues == null || optionValues.length == 0) {
             throw new IllegalArgumentException(
-                    "Option --content-safety-off requires at least one value. Supported values: all, hidden-text, off-page, tiny, hidden-ocg");
+                    "Option --content-safety-off requires at least one value. Supported values: all, hidden-text, off-page, tiny, hidden-ocg, sensitive-data");
         }
 
         Set<String> values = parseOptionValues(optionValues);
         if (values.isEmpty()) {
             throw new IllegalArgumentException(
-                    "Option --content-safety-off requires at least one value. Supported values: all, hidden-text, off-page, tiny, hidden-ocg");
+                    "Option --content-safety-off requires at least one value. Supported values: all, hidden-text, off-page, tiny, hidden-ocg, sensitive-data");
         }
 
         for (String value : values) {
@@ -334,15 +334,19 @@ public class CLIOptions {
                 case "hidden-ocg":
                     config.getFilterConfig().setFilterHiddenOCG(false);
                     break;
+                case "sensitive-data":
+                    config.getFilterConfig().setFilterSensitiveData(false);
+                    break;
                 case "all":
                     config.getFilterConfig().setFilterHiddenText(false);
                     config.getFilterConfig().setFilterOutOfPage(false);
                     config.getFilterConfig().setFilterTinyText(false);
                     config.getFilterConfig().setFilterHiddenOCG(false);
+                    config.getFilterConfig().setFilterSensitiveData(false);
                     break;
                 default:
                     throw new IllegalArgumentException(String.format(
-                            "Unsupported value '%s'. Supported values: all, hidden-text, off-page, tiny, hidden-ocg",
+                            "Unsupported value '%s'. Supported values: all, hidden-text, off-page, tiny, hidden-ocg, sensitive-data",
                             value));
             }
         }

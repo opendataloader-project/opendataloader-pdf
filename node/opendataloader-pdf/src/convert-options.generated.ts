@@ -13,7 +13,7 @@ export interface ConvertOptions {
   format?: string | string[];
   /** Suppress console logging output */
   quiet?: boolean;
-  /** Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg */
+  /** Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg, sensitive-data */
   contentSafetyOff?: string | string[];
   /** Preserve original line breaks in extracted text */
   keepLineBreaks?: boolean;

@@ -38,7 +38,7 @@
       "type": "string",
       "required": false,
       "default": null,
-      "description": "Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg"
+      "description": "Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg, sensitive-data"
     },
     {
       "name": "keep-line-breaks",
