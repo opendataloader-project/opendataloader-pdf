@@ -18,6 +18,7 @@ import org.opendataloader.pdf.html.HtmlGeneratorFactory;
 import org.opendataloader.pdf.pdf.PDFWriter;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.text.TextGenerator;
+import org.opendataloader.pdf.utils.ContentSanitizer;
 import org.opendataloader.pdf.utils.ImagesUtils;
 import org.verapdf.as.ASAtom;
 import org.verapdf.containers.StaticCoreContainers;
@@ -75,6 +76,9 @@ public class DocumentProcessor {
             contents = processDocument(inputPdfName, config, pagesToProcess);
         }
         sortContents(contents, config);
+        ContentSanitizer contentSanitizer = new ContentSanitizer(config.getFilterConfig().getFilterRules(),
+            config.getFilterConfig().isFilterSensitiveData());
+        contentSanitizer.sanitizeContents(contents);
         generateOutputs(inputPdfName, contents, config);
     }
 
