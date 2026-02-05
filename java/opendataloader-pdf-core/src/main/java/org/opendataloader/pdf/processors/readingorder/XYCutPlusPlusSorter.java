@@ -368,9 +368,19 @@ public class XYCutPlusPlusSorter {
 
         if (useHorizontalCut) {
             List<List<IObject>> groups = splitByHorizontalCut(objects, horizontalCut.position);
+            // Safety check: if split didn't actually separate objects, fall back to default sort
+            // This prevents infinite recursion when all objects end up in one group
+            if (groups.size() <= 1) {
+                return sortByYThenX(objects);
+            }
             return flatMapRecursive(groups, preferHorizontalFirst);
         } else {
             List<List<IObject>> groups = splitByVerticalCut(objects, verticalCut.position);
+            // Safety check: if split didn't actually separate objects, fall back to default sort
+            // This prevents infinite recursion when all objects end up in one group
+            if (groups.size() <= 1) {
+                return sortByYThenX(objects);
+            }
             return flatMapRecursive(groups, preferHorizontalFirst);
         }
     }
