@@ -192,7 +192,7 @@ public class ContentSanitizer {
     }
 
     private static boolean doReplacementsOverlap(ReplacementInfo a, ReplacementInfo b) {
-        return Math.max(a.originalStart, b.originalStart) <= Math.min(a.originalEnd, b.originalEnd);
+        return Math.max(a.originalStart, b.originalStart) < Math.min(a.originalEnd, b.originalEnd);
     }
 
     private static void removeOverlappingReplacement(List<ReplacementInfo> replacements) {
