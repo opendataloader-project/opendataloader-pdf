@@ -128,7 +128,7 @@ public class ContentSanitizer {
         int currentChunkIndex = 0;
         int currentPosition = 0;
         replacements.sort(Comparator.comparingInt(a -> a.originalStart));
-
+        removeOverlapingReplacement(replacements);
         for (ReplacementInfo replacement : replacements) {
             while (currentPosition < replacement.originalStart && currentChunkIndex < chunkInfos.size()) {
                 ChunkInfo info = chunkInfos.get(currentChunkIndex);
@@ -189,6 +189,31 @@ public class ContentSanitizer {
         }
 
         return newChunks;
+    }
+
+    private static boolean isReplacementsOverlapsAnother(ReplacementInfo a, ReplacementInfo b) {
+        if (a.originalStart > a.originalEnd || b.originalStart > b.originalEnd) {
+            throw new IllegalArgumentException("start must be <= end");
+        }
+        return Math.max(a.originalStart, b.originalStart) <= Math.min(a.originalEnd, b.originalEnd);
+    }
+
+    public static void removeOverlapingReplacement(List<ReplacementInfo> replacements) {
+        if (replacements == null || replacements.size() <= 1) return;
+
+        int write = 1;
+        ReplacementInfo lastKept = replacements.get(0);
+
+        for (int i = 1; i < replacements.size(); i++) {
+            ReplacementInfo cur = replacements.get(i);
+            if (!isReplacementsOverlapsAnother(lastKept, cur)) {
+                replacements.set(write++, cur);
+                lastKept = cur;
+            }
+        }
+        while (replacements.size() > write) {
+            replacements.remove(replacements.size() - 1);
+        }
     }
 
     private TextChunk createReplacementChunk(List<TextChunk> originalChunks, int currentChunkIndex, String replacementText,
