@@ -127,7 +127,8 @@ public class ContentSanitizer {
         List<ChunkInfo> chunkInfos = getChunkInfos(originalChunks);
         int currentChunkIndex = 0;
         int currentPosition = 0;
-        replacements.sort(Comparator.comparingInt(a -> a.originalStart));
+        replacements.sort(Comparator.comparingInt((ReplacementInfo a) -> a.originalStart)
+            .thenComparing(Comparator.comparingInt((ReplacementInfo a) -> a.originalEnd).reversed()));
         removeOverlappingReplacement(replacements);
         for (ReplacementInfo replacement : replacements) {
             while (currentPosition < replacement.originalStart && currentChunkIndex < chunkInfos.size()) {
