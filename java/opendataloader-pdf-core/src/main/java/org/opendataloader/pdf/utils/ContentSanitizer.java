@@ -17,10 +17,12 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import java.util.Comparator;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 
 public class ContentSanitizer {
-
+    private static final Logger LOGGER = Logger.getLogger(ContentSanitizer.class.getName());
     private final List<SanitizationRule> rules;
     private final boolean contentSafetyEnabled;
 
@@ -127,8 +129,9 @@ public class ContentSanitizer {
         List<ChunkInfo> chunkInfos = getChunkInfos(originalChunks);
         int currentChunkIndex = 0;
         int currentPosition = 0;
-        replacements.sort(Comparator.comparingInt(a -> a.originalStart));
-
+        replacements.sort(Comparator.comparingInt((ReplacementInfo a) -> a.originalStart)
+            .thenComparing(Comparator.comparingInt((ReplacementInfo a) -> a.originalEnd).reversed()));
+        removeOverlappingReplacements(replacements);
         for (ReplacementInfo replacement : replacements) {
             while (currentPosition < replacement.originalStart && currentChunkIndex < chunkInfos.size()) {
                 ChunkInfo info = chunkInfos.get(currentChunkIndex);
@@ -189,6 +192,33 @@ public class ContentSanitizer {
         }
 
         return newChunks;
+    }
+
+    private static boolean doReplacementsOverlap(ReplacementInfo a, ReplacementInfo b) {
+        return Math.max(a.originalStart, b.originalStart) < Math.min(a.originalEnd, b.originalEnd);
+    }
+
+    private static void removeOverlappingReplacements(List<ReplacementInfo> replacements) {
+        if (replacements.size() <= 1) {
+            return;
+        }
+
+        int index = 1;
+        ReplacementInfo lastReplacement = replacements.get(0);
+
+        for (int i = 1; i < replacements.size(); i++) {
+            ReplacementInfo cur = replacements.get(i);
+            if (!doReplacementsOverlap(lastReplacement, cur)) {
+                replacements.set(index++, cur);
+                lastReplacement = cur;
+            } else {
+                LOGGER.log(Level.INFO,"Dropping overlapping replacement: " + cur.replacementText +
+                    " (start = " + cur.originalStart + ", end = " + cur.originalEnd + ") overlaps with "
+                    + lastReplacement.replacementText + " (start = " + lastReplacement.originalStart +
+                    ", end = " + lastReplacement.originalEnd + ")");
+            }
+        }
+        replacements.subList(index, replacements.size()).clear();
     }
 
     private TextChunk createReplacementChunk(List<TextChunk> originalChunks, int currentChunkIndex, String replacementText,
