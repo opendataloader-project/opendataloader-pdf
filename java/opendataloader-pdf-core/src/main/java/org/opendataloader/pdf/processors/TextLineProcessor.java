@@ -71,22 +71,22 @@ public class TextLineProcessor {
 
     private static TextLine getTextLineWithSpaces(TextLine textLine, double threshold) {
         List<TextChunk> textChunks = textLine.getTextChunks();
-        TextChunk prev = textChunks.get(0);
-        double previousEnd = prev.getBoundingBox().getRightX();
+        TextChunk currentTextChunk = textChunks.get(0);
+        double previousEnd = currentTextChunk.getBoundingBox().getRightX();
         TextLine newLine = new TextLine();
-        newLine.add(prev);
+        newLine.add(currentTextChunk);
         for (int i = 1; i < textChunks.size(); i++) {
-            TextChunk curr = textChunks.get(i);
-            double currentStart = curr.getBoundingBox().getLeftX();
+            currentTextChunk = textChunks.get(i);
+            double currentStart = currentTextChunk.getBoundingBox().getLeftX();
             if (currentStart - previousEnd > threshold) {
-                BoundingBox spaceBBox = new BoundingBox(curr.getBoundingBox());
+                BoundingBox spaceBBox = new BoundingBox(currentTextChunk.getBoundingBox());
                 spaceBBox.setLeftX(previousEnd);
                 spaceBBox.setRightX(currentStart);
                 TextChunk spaceChunk = new TextChunk(spaceBBox, " ", textLine.getFontSize(), textLine.getBaseLine());
                 newLine.add(spaceChunk);
             }
-            previousEnd = curr.getBoundingBox().getRightX();
-            newLine.add(curr);
+            previousEnd = currentTextChunk.getBoundingBox().getRightX();
+            newLine.add(currentTextChunk);
         }
 
         return newLine;
