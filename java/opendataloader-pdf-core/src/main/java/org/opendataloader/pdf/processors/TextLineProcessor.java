@@ -20,7 +20,6 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 
 public class TextLineProcessor {
@@ -58,26 +57,26 @@ public class TextLineProcessor {
             }
         }
         for (int i = 0; i < newContents.size(); i++) {
-            if (newContents.get(i) instanceof TextLine) {
-                TextLine textLine = (TextLine) newContents.get(i);
+            IObject content = newContents.get(i);
+            if (content instanceof TextLine) {
+                TextLine textLine = (TextLine) content;
                 textLine.getTextChunks().sort(TEXT_CHUNK_COMPARATOR);
                 double threshold = textLine.getFontSize() * TextChunkUtils.TEXT_LINE_SPACE_RATIO;
-                newContents.set(i, addSpaces(textLine, threshold));
+                newContents.set(i, getTextLineWithSpaces(textLine, threshold));
             }
         }
         linkTextLinesWithConnectedLineArtBullet(newContents);
         return newContents;
     }
 
-    private static TextLine addSpaces(TextLine textLine, double threshold) {
+    private static TextLine getTextLineWithSpaces(TextLine textLine, double threshold) {
         List<TextChunk> textChunks = textLine.getTextChunks();
-        Iterator<TextChunk> validation = textChunks.iterator();
-        TextChunk prev = validation.next();
+        TextChunk prev = textChunks.get(0);
         double previousEnd = prev.getBoundingBox().getRightX();
         TextLine newLine = new TextLine();
         newLine.add(prev);
-        while (validation.hasNext()) {
-            TextChunk curr = validation.next();
+        for (int i = 1; i < textChunks.size(); i++) {
+            TextChunk curr = textChunks.get(i);
             double currentStart = curr.getBoundingBox().getLeftX();
             if (currentStart - previousEnd > threshold) {
                 BoundingBox spaceBBox = new BoundingBox(curr.getBoundingBox());
