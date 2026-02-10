@@ -16,9 +16,11 @@ import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ListUtils;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 
 public class TextLineProcessor {
@@ -55,14 +57,40 @@ public class TextLineProcessor {
                 newContents.add(content);
             }
         }
-        for (IObject content : newContents) {
-            if (content instanceof TextLine) {
-                TextLine textLine = (TextLine) content;
+        for (int i = 0; i < newContents.size(); i++) {
+            if (newContents.get(i) instanceof TextLine) {
+                TextLine textLine = (TextLine) newContents.get(i);
                 textLine.getTextChunks().sort(TEXT_CHUNK_COMPARATOR);
+                double threshold = textLine.getFontSize() * TextChunkUtils.TEXT_LINE_SPACE_RATIO;
+                newContents.set(i, addSpaces(textLine, threshold));
             }
         }
         linkTextLinesWithConnectedLineArtBullet(newContents);
         return newContents;
+    }
+
+    private static TextLine addSpaces(TextLine textLine, double threshold) {
+        List<TextChunk> textChunks = textLine.getTextChunks();
+        Iterator<TextChunk> validation = textChunks.iterator();
+        TextChunk prev = validation.next();
+        double previousEnd = prev.getBoundingBox().getRightX();
+        TextLine newLine = new TextLine();
+        newLine.add(prev);
+        while (validation.hasNext()) {
+            TextChunk curr = validation.next();
+            double currentStart = curr.getBoundingBox().getLeftX();
+            if (currentStart - previousEnd > threshold) {
+                BoundingBox spaceBBox = new BoundingBox(curr.getBoundingBox());
+                spaceBBox.setLeftX(previousEnd);
+                spaceBBox.setRightX(currentStart);
+                TextChunk spaceChunk = new TextChunk(spaceBBox, " ", textLine.getFontSize(), textLine.getBaseLine());
+                newLine.add(spaceChunk);
+            }
+            previousEnd = curr.getBoundingBox().getRightX();
+            newLine.add(curr);
+        }
+
+        return newLine;
     }
 
     private static void linkTextLinesWithConnectedLineArtBullet(List<IObject> contents) {
