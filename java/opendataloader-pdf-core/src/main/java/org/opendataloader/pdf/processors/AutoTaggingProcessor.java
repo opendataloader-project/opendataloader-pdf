@@ -137,12 +137,18 @@ public class AutoTaggingProcessor {
 
     private static void createTableStructElem(TableBorder table, COSObject parent, COSDocument cosDocument) {
         COSObject tableObject = addStructElement(parent, cosDocument, TaggedPDFConstants.TABLE);
-        for (TableBorderRow row : table.getRows()) {
+        for (int rowNumber = 0; rowNumber < table.getNumberOfRows(); rowNumber++) {
+            TableBorderRow row = table.getRow(rowNumber);
             COSObject rowObject = addStructElement(tableObject, cosDocument, TaggedPDFConstants.TR);
-            for (TableBorderCell cell : row.getCells()) {
-                COSObject cellObject = addStructElement(rowObject, cosDocument, TaggedPDFConstants.TD);
-                for (IObject cellContent : cell.getContents()) {
-                    createStructElem(cellContent, cellObject, cosDocument);
+            for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
+                TableBorderCell cell = row.getCell(colNumber);
+                if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
+                    COSObject cellObject = addStructElement(rowObject, cosDocument, TaggedPDFConstants.TD);
+                    cellObject.setKey(ASAtom.COL_SPAN, COSInteger.construct(cell.getColSpan()));
+                    cellObject.setKey(ASAtom.ROW_SPAN, COSInteger.construct(cell.getRowSpan()));
+                    for (IObject cellContent : cell.getContents()) {
+                        createStructElem(cellContent, cellObject, cosDocument);
+                    }
                 }
             }
         }
