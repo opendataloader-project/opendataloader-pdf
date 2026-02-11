@@ -6,6 +6,10 @@ import org.verapdf.cos.*;
 import org.verapdf.pd.*;
 import org.verapdf.tools.TaggedPDFConstants;
 import org.verapdf.wcag.algorithms.entities.*;
+import org.verapdf.wcag.algorithms.entities.lists.PDFList;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -109,8 +113,8 @@ public class AutoTaggingProcessor {
             createCaptionStructElem((SemanticCaption) object, parentStructElem, cosDocument);
 //        } else if (object instanceof PDFList) {
 //            createListStructElem((PDFList) object, parent, cosDocument);
-//        } else if (object instanceof TableBorder) {
-//            createTableStructElem((TableBorder) object, parentStructElem, cosDocument);
+        } else if (object instanceof TableBorder) {
+            createTableStructElem((TableBorder) object, parentStructElem, cosDocument);
 //        } else if (object instanceof ImageChunk) {
 //            createFigureStructElem((ImageChunk) object, parentStructElem, cosDocument);
         }
@@ -129,6 +133,25 @@ public class AutoTaggingProcessor {
     private static void createCaptionStructElem(SemanticCaption caption, COSObject parent, COSDocument cosDocument) {
         COSObject captionObject = addStructElement(parent, cosDocument, TaggedPDFConstants.CAPTION);
 //        processTextNode(caption, captionObject);
+    }
+
+    private static void createTableStructElem(TableBorder table, COSObject parent, COSDocument cosDocument) {
+        COSObject tableObject = addStructElement(parent, cosDocument, TaggedPDFConstants.TABLE);
+        for (int rowNumber = 0; rowNumber < table.getNumberOfRows(); rowNumber++) {
+            TableBorderRow row = table.getRow(rowNumber);
+            COSObject rowObject = addStructElement(tableObject, cosDocument, TaggedPDFConstants.TR);
+            for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
+                TableBorderCell cell = row.getCell(colNumber);
+                if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
+                    COSObject cellObject = addStructElement(rowObject, cosDocument, TaggedPDFConstants.TD);
+                    cellObject.setKey(ASAtom.COL_SPAN, COSInteger.construct(cell.getColSpan()));
+                    cellObject.setKey(ASAtom.ROW_SPAN, COSInteger.construct(cell.getRowSpan()));
+                    for (IObject cellContent : cell.getContents()) {
+                        createStructElem(cellContent, cellObject, cosDocument);
+                    }
+                }
+            }
+        }
     }
 
 //    protected static List<Object> getTokens(PDContentStream pdContentStream) {
