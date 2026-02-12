@@ -330,7 +330,7 @@ for doc in documents:
     print(doc.page_content[:100])
 ```
 
-- [LangChain Documentation](https://python.langchain.com/docs/integrations/document_loaders/opendataloader_pdf/)
+- [LangChain Documentation](https://docs.langchain.com/oss/python/integrations/document_loaders/opendataloader_pdf)
 - [GitHub Repository](https://github.com/opendataloader-project/langchain-opendataloader-pdf)
 - [PyPI Package](https://pypi.org/project/langchain-opendataloader-pdf/)
 
