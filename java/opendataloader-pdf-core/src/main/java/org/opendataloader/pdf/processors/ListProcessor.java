@@ -8,6 +8,7 @@
 package org.opendataloader.pdf.processors;
 
 import org.opendataloader.pdf.utils.BulletedParagraphUtils;
+import org.verapdf.as.ASAtom;
 import org.verapdf.wcag.algorithms.entities.INode;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
@@ -25,6 +26,7 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ListLabelsUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ListUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.listLabelsDetection.ListLabelsDetectionAlgorithm;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.listLabelsDetection.NumberingStyleNames;
 
 import java.util.*;
@@ -41,6 +43,25 @@ public class ListProcessor {
     private static final double LIST_ITEM_BASELINE_DIFFERENCE = 1.2;
     private static final double LIST_ITEM_X_INTERVAL_RATIO = 0.3;
     private static final Pattern ATTACHMENTS_PATTERN = Pattern.compile("^붙\\s*임\\s*(?=.)");
+
+    private static final Map<String, ASAtom> listNumberingMap = new HashMap<>();
+
+    static {
+        listNumberingMap.put(NumberingStyleNames.ENGLISH_LETTERS, ASAtom.ORDERED);
+        listNumberingMap.put(NumberingStyleNames.ENGLISH_LETTERS_UPPER_CASE, ASAtom.UPPER_ALPHA);
+        listNumberingMap.put(NumberingStyleNames.ENGLISH_LETTERS_LOWER_CASE, ASAtom.LOWER_ALPHA);
+        listNumberingMap.put(NumberingStyleNames.ROMAN_NUMBERS_LOWER_CASE, ASAtom.LOWER_ROMAN);
+        listNumberingMap.put(NumberingStyleNames.ROMAN_NUMBERS, ASAtom.ORDERED);
+        listNumberingMap.put(NumberingStyleNames.ROMAN_NUMBERS_UPPER_CASE, ASAtom.UPPER_ROMAN);
+        listNumberingMap.put(NumberingStyleNames.KOREAN_LETTERS, ASAtom.ORDERED);
+        listNumberingMap.put(NumberingStyleNames.ARABIC_NUMBERS, ASAtom.DECIMAL);
+        listNumberingMap.put(NumberingStyleNames.CIRCLED_ARABIC_NUMBERS, ASAtom.ORDERED);
+        listNumberingMap.put(NumberingStyleNames.UNORDERED,ASAtom.UNORDERED);
+    }
+
+    public static ASAtom getListNumbering(String numberingStyle) {
+        return listNumberingMap.get(numberingStyle);
+    }
 
     public static void processLists(List<List<IObject>> contents, boolean isTableCell) {
         List<TextListInterval> intervalsList = getTextLabelListIntervals(contents);
