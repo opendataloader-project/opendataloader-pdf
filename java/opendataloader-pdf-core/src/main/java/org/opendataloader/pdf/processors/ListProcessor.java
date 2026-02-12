@@ -8,6 +8,7 @@
 package org.opendataloader.pdf.processors;
 
 import org.opendataloader.pdf.utils.BulletedParagraphUtils;
+import org.verapdf.as.ASAtom;
 import org.verapdf.wcag.algorithms.entities.INode;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
@@ -43,22 +44,22 @@ public class ListProcessor {
     private static final double LIST_ITEM_X_INTERVAL_RATIO = 0.3;
     private static final Pattern ATTACHMENTS_PATTERN = Pattern.compile("^붙\\s*임\\s*(?=.)");
 
-    private static final Map<String, String> listNumberingMap = new HashMap<>();
+    private static final Map<String, ASAtom> listNumberingMap = new HashMap<>();
 
     static {
-        listNumberingMap.put(NumberingStyleNames.ENGLISH_LETTERS, "Ordered");
-        listNumberingMap.put(NumberingStyleNames.ENGLISH_LETTERS_UPPER_CASE, "UpperAlpha");
-        listNumberingMap.put(NumberingStyleNames.ENGLISH_LETTERS_LOWER_CASE, "LowerAlpha");
-        listNumberingMap.put(NumberingStyleNames.ROMAN_NUMBERS_LOWER_CASE, "LowerRoman");
-        listNumberingMap.put(NumberingStyleNames.ROMAN_NUMBERS, "Ordered");
-        listNumberingMap.put(NumberingStyleNames.ROMAN_NUMBERS_UPPER_CASE, "UpperRoman");
-        listNumberingMap.put(NumberingStyleNames.KOREAN_LETTERS, "Ordered");
-        listNumberingMap.put(NumberingStyleNames.ARABIC_NUMBERS, "Decimal");
-        listNumberingMap.put(NumberingStyleNames.CIRCLED_ARABIC_NUMBERS, "Ordered");
-        listNumberingMap.put(NumberingStyleNames.UNORDERED, "Unordered");
+        listNumberingMap.put(NumberingStyleNames.ENGLISH_LETTERS, ASAtom.ORDERED);
+        listNumberingMap.put(NumberingStyleNames.ENGLISH_LETTERS_UPPER_CASE, ASAtom.UPPER_ALPHA);
+        listNumberingMap.put(NumberingStyleNames.ENGLISH_LETTERS_LOWER_CASE, ASAtom.LOWER_ALPHA);
+        listNumberingMap.put(NumberingStyleNames.ROMAN_NUMBERS_LOWER_CASE, ASAtom.LOWER_ROMAN);
+        listNumberingMap.put(NumberingStyleNames.ROMAN_NUMBERS, ASAtom.ORDERED);
+        listNumberingMap.put(NumberingStyleNames.ROMAN_NUMBERS_UPPER_CASE, ASAtom.UPPER_ROMAN);
+        listNumberingMap.put(NumberingStyleNames.KOREAN_LETTERS, ASAtom.ORDERED);
+        listNumberingMap.put(NumberingStyleNames.ARABIC_NUMBERS, ASAtom.DECIMAL);
+        listNumberingMap.put(NumberingStyleNames.CIRCLED_ARABIC_NUMBERS, ASAtom.ORDERED);
+        listNumberingMap.put(NumberingStyleNames.UNORDERED,ASAtom.UNORDERED);
     }
 
-    public static String getListNumbering(String numberingStyle) {
+    public static ASAtom getListNumbering(String numberingStyle) {
         return listNumberingMap.get(numberingStyle);
     }
 
