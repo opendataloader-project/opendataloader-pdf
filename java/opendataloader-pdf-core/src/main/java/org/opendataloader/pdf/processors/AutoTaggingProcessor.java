@@ -6,6 +6,7 @@ import org.verapdf.cos.*;
 import org.verapdf.pd.*;
 import org.verapdf.tools.TaggedPDFConstants;
 import org.verapdf.wcag.algorithms.entities.*;
+import org.verapdf.wcag.algorithms.entities.lists.ListItem;
 import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
@@ -111,8 +112,8 @@ public class AutoTaggingProcessor {
             createParagraphStructElem((SemanticParagraph) object, parentStructElem, cosDocument);
         } else if (object instanceof SemanticCaption) {
             createCaptionStructElem((SemanticCaption) object, parentStructElem, cosDocument);
-//        } else if (object instanceof PDFList) {
-//            createListStructElem((PDFList) object, parent, cosDocument);
+        } else if (object instanceof PDFList) {
+            createListStructElem((PDFList) object, parentStructElem, cosDocument);
         } else if (object instanceof TableBorder) {
             createTableStructElem((TableBorder) object, parentStructElem, cosDocument);
 //        } else if (object instanceof ImageChunk) {
@@ -133,6 +134,23 @@ public class AutoTaggingProcessor {
     private static void createCaptionStructElem(SemanticCaption caption, COSObject parent, COSDocument cosDocument) {
         COSObject captionObject = addStructElement(parent, cosDocument, TaggedPDFConstants.CAPTION);
 //        processTextNode(caption, captionObject);
+    }
+
+    private static void createListStructElem(PDFList list, COSObject parent, COSDocument cosDocument) {
+        COSObject listObject = addStructElement(parent, cosDocument, TaggedPDFConstants.L);
+        if (list.getNextList() != null) {
+            listObject.setKey(ASAtom.ID, COSString.construct(String.valueOf(list.getRecognizedStructureId()).getBytes()));
+        }
+        if (list.getPreviousList() != null) {
+            listObject.setKey(ASAtom.CONTINUED_LIST, COSBoolean.construct(true));
+            listObject.setKey(ASAtom.CONTINUED_FROM, COSString.construct(String.valueOf(list.getPreviousList().getRecognizedStructureId()).getBytes()));
+        }
+        listObject.setKey(ASAtom.LIST_NUMBERING, COSName.construct(ListProcessor.getListNumbering(list.getNumberingStyle())));
+
+        for (ListItem listItem : list.getListItems()) {
+            COSObject listItemObject = addStructElement(listObject, cosDocument, TaggedPDFConstants.LI);
+            // TODO: Add Lbl, LBody and kids
+        }
     }
 
     private static void createTableStructElem(TableBorder table, COSObject parent, COSDocument cosDocument) {
