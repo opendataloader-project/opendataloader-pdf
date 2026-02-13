@@ -26,7 +26,6 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ListLabelsUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ListUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
-import org.verapdf.wcag.algorithms.semanticalgorithms.utils.listLabelsDetection.ListLabelsDetectionAlgorithm;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.listLabelsDetection.NumberingStyleNames;
 
 import java.util.*;
@@ -57,6 +56,7 @@ public class ListProcessor {
         listNumberingMap.put(NumberingStyleNames.ARABIC_NUMBERS, ASAtom.DECIMAL);
         listNumberingMap.put(NumberingStyleNames.CIRCLED_ARABIC_NUMBERS, ASAtom.ORDERED);
         listNumberingMap.put(NumberingStyleNames.UNORDERED,ASAtom.UNORDERED);
+        listNumberingMap.put(NumberingStyleNames.UNKNOWN, ASAtom.NONE);
     }
 
     public static ASAtom getListNumbering(String numberingStyle) {
