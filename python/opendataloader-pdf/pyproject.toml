@@ -60,6 +60,9 @@ dev = [
 [tool.uv]
 package = true
 
+# Override pillow upper bound from docling to fix CVE-2026-25990
+override-dependencies = ["pillow>=12.1.1"]
+
 [tool.black]
 line-length = 100
 
