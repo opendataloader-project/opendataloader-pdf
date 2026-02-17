@@ -217,9 +217,12 @@ public class ListProcessor {
         PDFList list = new PDFList();
         list.setNumberingStyle(interval.getNumberingStyle());
         list.setCommonPrefix(interval.getCommonPrefix());
+        if (NumberingStyleNames.UNORDERED.equals(interval.getNumberingStyle())) {
+            ListLabelsUtils.setDataToUnorderedInterval(interval);
+        }
         boolean isListSet = false;
         for (int index = startIndex; index <= endIndex; index++) {
-            ListItemInfo currentInfo = interval.getListItemsInfos().get(index);
+            ListItemTextInfo currentInfo = interval.getListItemsInfos().get(index);
             int nextIndex = index != endIndex ? interval.getListItemsInfos().get(index + 1).getIndex() : pageContents.size();
             ListItem listItem = new ListItem(new BoundingBox(), null);
             IObject object = pageContents.get(currentInfo.getIndex());
@@ -243,6 +246,10 @@ public class ListProcessor {
             } else {
                 addContentToLastPageListItem(nextIndex, currentInfo, pageContents, listItem);
             }
+            String commonSuffix = interval.getCommonSuffix();
+            int labelLength = currentInfo.getPrefix().length() + currentInfo.getNumberedPart().length() + commonSuffix.length();
+            TextLine firstLine = listItem.getFirstLine();
+            listItem.setLabel(new TextLine(firstLine, 0, labelLength));
             list.add(listItem);
         }
         if (list.getListItems().isEmpty()) {

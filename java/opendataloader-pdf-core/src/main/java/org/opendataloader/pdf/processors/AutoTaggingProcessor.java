@@ -157,7 +157,15 @@ public class AutoTaggingProcessor {
 
         for (ListItem listItem : list.getListItems()) {
             COSObject listItemObject = addStructElement(listObject, cosDocument, TaggedPDFConstants.LI);
-            // TODO: Add Lbl, LBody and kids
+            if (listItem.getLabel() != null) {
+                COSObject lblObject = addStructElement(listItemObject, cosDocument, TaggedPDFConstants.LBL);
+            }
+            COSObject lBodyObject = addStructElement(listItemObject, cosDocument, TaggedPDFConstants.LBODY);
+            for (IObject content : listItem.getContents()) {
+                createStructElem(content, lBodyObject, cosDocument);
+                //TODO: convert textLines to SemanticTextNode (delete label from first line)
+                //processTextNode(caption, captionObject);
+            }
         }
     }
 
