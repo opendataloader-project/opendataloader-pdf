@@ -80,6 +80,7 @@ public class ListProcessor {
             Integer currentPageNumber = interval.getListItemsInfos().get(0).getPageNumber();
             int index = 0;
             PDFList previousList = null;
+            interval.setCommonSuffixLengthToAllInfos();
             for (int i = 0; i < interval.getNumberOfListItems(); i++) {
                 ListItemInfo currentInfo = interval.getListItemsInfos().get(i);
                 if (!Objects.equals(currentInfo.getPageNumber(), currentPageNumber)) {
@@ -217,10 +218,6 @@ public class ListProcessor {
         PDFList list = new PDFList();
         list.setNumberingStyle(interval.getNumberingStyle());
         list.setCommonPrefix(interval.getCommonPrefix());
-        if (NumberingStyleNames.UNORDERED.equals(interval.getNumberingStyle())) {
-            ListLabelsUtils.setDataToUnorderedInterval(interval);
-        }
-        interval.setCommonSuffixLengthToAllInfos();
         boolean isListSet = false;
         for (int index = startIndex; index <= endIndex; index++) {
             ListItemTextInfo currentInfo = interval.getListItemsInfos().get(index);
@@ -380,6 +377,7 @@ public class ListProcessor {
             if (!isCorrectList(textListInterval)) {
                 continue;
             }
+            textListInterval.setCommonSuffixLengthToAllInfos();
             PDFList list = calculateList(textListInterval, 0, interval.getNumberOfListItems() - 1, contents);
             for (ListItem listItem : list.getListItems()) {
                 processTextNodeListItemContent(listItem.getContents());
