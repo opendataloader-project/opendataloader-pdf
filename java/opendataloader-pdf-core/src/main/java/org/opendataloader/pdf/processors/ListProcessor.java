@@ -94,6 +94,7 @@ public class ListProcessor {
             Integer currentPageNumber = interval.getListItemsInfos().get(0).getPageNumber();
             int index = 0;
             PDFList previousList = null;
+            interval.setCommonSuffixLengthToAllInfos();
             for (int i = 0; i < interval.getNumberOfListItems(); i++) {
                 ListItemInfo currentInfo = interval.getListItemsInfos().get(i);
                 if (!Objects.equals(currentInfo.getPageNumber(), currentPageNumber)) {
@@ -234,7 +235,7 @@ public class ListProcessor {
         list.setCommonPrefix(interval.getCommonPrefix());
         boolean isListSet = false;
         for (int index = startIndex; index <= endIndex; index++) {
-            ListItemInfo currentInfo = interval.getListItemsInfos().get(index);
+            ListItemTextInfo currentInfo = interval.getListItemsInfos().get(index);
             int nextIndex = index != endIndex ? interval.getListItemsInfos().get(index + 1).getIndex() : pageContents.size();
             ListItem listItem = new ListItem(new BoundingBox(), null);
             IObject object = pageContents.get(currentInfo.getIndex());
@@ -258,6 +259,7 @@ public class ListProcessor {
             } else {
                 addContentToLastPageListItem(nextIndex, currentInfo, pageContents, listItem);
             }
+            listItem.setLabelLength(currentInfo.getLabelLength());
             list.add(listItem);
         }
         if (list.getListItems().isEmpty()) {
@@ -390,6 +392,7 @@ public class ListProcessor {
             if (!isCorrectList(textListInterval)) {
                 continue;
             }
+            textListInterval.setCommonSuffixLengthToAllInfos();
             PDFList list = calculateList(textListInterval, 0, interval.getNumberOfListItems() - 1, contents);
             for (ListItem listItem : list.getListItems()) {
                 processTextNodeListItemContent(listItem.getContents());
