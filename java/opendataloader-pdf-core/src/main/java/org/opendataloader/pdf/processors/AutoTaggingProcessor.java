@@ -160,18 +160,19 @@ public class AutoTaggingProcessor {
             COSObject listItemObject = addStructElement(listObject, cosDocument, TaggedPDFConstants.LI);
             if (listItem.getLabelLength() > 0) {
                 COSObject lblObject = addStructElement(listItemObject, cosDocument, TaggedPDFConstants.LBL);
+                SemanticTextNode lblTextNode = new SemanticTextNode();
+                lblTextNode.add(new TextLine(listItem.getFirstLine(), 0, listItem.getLabelLength()));
+                //processTextNode(lblTextNode, lblObject);
             }
             COSObject lBodyObject = addStructElement(listItemObject, cosDocument, TaggedPDFConstants.LBODY);
-            SemanticTextNode textNode = new SemanticTextNode();
-            textNode.add(new TextLine(listItem.getFirstLine(), listItem.getLabelLength(), listItem.getFirstLine().getValue().length()));
-            List<TextLine> lines = listItem.getLines();
-            for (int i = 1; i < lines.size(); i++) {
-                textNode.add(lines.get(i));
+            SemanticTextNode lBodyTextNode = new SemanticTextNode();
+            for (TextLine line : listItem.getLines()) {
+                lBodyTextNode.add(line);
             }
-            //processTextNode(caption, captionObject);
+            lBodyTextNode.setFirstLine(new TextLine(listItem.getFirstLine(), listItem.getLabelLength(), listItem.getFirstLine().getValue().length()));
+            //processTextNode(lBodyTextNode, lBodyObject);
             for (IObject content : listItem.getContents()) {
                 createStructElem(content, lBodyObject, cosDocument);
-                //processTextNode(caption, captionObject);
             }
         }
     }

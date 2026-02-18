@@ -247,7 +247,7 @@ public class ListProcessor {
             } else {
                 addContentToLastPageListItem(nextIndex, currentInfo, pageContents, listItem);
             }
-            listItem.setLabelLength(currentInfo.getCommonLabelLength());
+            listItem.setLabelLength(currentInfo.getLabelLength());
             list.add(listItem);
         }
         if (list.getListItems().isEmpty()) {
