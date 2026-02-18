@@ -7,6 +7,7 @@ import org.verapdf.pd.*;
 import org.verapdf.tools.TaggedPDFConstants;
 import org.verapdf.wcag.algorithms.entities.*;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
+import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
 import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
@@ -157,13 +158,19 @@ public class AutoTaggingProcessor {
 
         for (ListItem listItem : list.getListItems()) {
             COSObject listItemObject = addStructElement(listObject, cosDocument, TaggedPDFConstants.LI);
-            if (listItem.getLabel() != null) {
+            if (listItem.getLabelLength() > 0) {
                 COSObject lblObject = addStructElement(listItemObject, cosDocument, TaggedPDFConstants.LBL);
             }
             COSObject lBodyObject = addStructElement(listItemObject, cosDocument, TaggedPDFConstants.LBODY);
+            SemanticTextNode textNode = new SemanticTextNode();
+            textNode.add(new TextLine(listItem.getFirstLine(), listItem.getLabelLength(), listItem.getFirstLine().getValue().length()));
+            List<TextLine> lines = listItem.getLines();
+            for (int i = 1; i < lines.size(); i++) {
+                textNode.add(lines.get(i));
+            }
+            //processTextNode(caption, captionObject);
             for (IObject content : listItem.getContents()) {
                 createStructElem(content, lBodyObject, cosDocument);
-                //TODO: convert textLines to SemanticTextNode (delete label from first line)
                 //processTextNode(caption, captionObject);
             }
         }

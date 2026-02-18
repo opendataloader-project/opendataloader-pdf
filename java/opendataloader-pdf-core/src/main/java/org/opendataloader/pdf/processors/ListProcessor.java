@@ -220,6 +220,7 @@ public class ListProcessor {
         if (NumberingStyleNames.UNORDERED.equals(interval.getNumberingStyle())) {
             ListLabelsUtils.setDataToUnorderedInterval(interval);
         }
+        interval.setCommonSuffixLengthToAllInfos();
         boolean isListSet = false;
         for (int index = startIndex; index <= endIndex; index++) {
             ListItemTextInfo currentInfo = interval.getListItemsInfos().get(index);
@@ -246,10 +247,7 @@ public class ListProcessor {
             } else {
                 addContentToLastPageListItem(nextIndex, currentInfo, pageContents, listItem);
             }
-            String commonSuffix = interval.getCommonSuffix();
-            int labelLength = currentInfo.getPrefix().length() + currentInfo.getNumberedPart().length() + commonSuffix.length();
-            TextLine firstLine = listItem.getFirstLine();
-            listItem.setLabel(new TextLine(firstLine, 0, labelLength));
+            listItem.setLabelLength(currentInfo.getCommonLabelLength());
             list.add(listItem);
         }
         if (list.getListItems().isEmpty()) {
