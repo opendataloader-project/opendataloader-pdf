@@ -141,7 +141,10 @@ public class AutoTaggingProcessor {
     private static void createFigureStructElem(ImageChunk image, COSObject parent, COSDocument cosDocument) {
         COSObject figureObject = addStructElement(parent, cosDocument, TaggedPDFConstants.FIGURE);
         double[] bbox = {image.getLeftX(), image.getBottomY(), image.getRightX(), image.getTopY()};
-        figureObject.setKey(ASAtom.BBOX, COSArray.construct(4, bbox));
+        COSObject aDictionaryObject = COSDictionary.construct();
+        aDictionaryObject.setKey(ASAtom.O, COSName.construct(ASAtom.LAYOUT));
+        aDictionaryObject.setKey(ASAtom.BBOX, COSArray.construct(4, bbox));
+        figureObject.setKey(ASAtom.A, aDictionaryObject);
         //TODO: process image, add height and width attributes
     }
 
@@ -150,11 +153,14 @@ public class AutoTaggingProcessor {
         if (list.getNextList() != null) {
             listObject.setKey(ASAtom.ID, COSString.construct(String.valueOf(list.getRecognizedStructureId()).getBytes()));
         }
+        COSObject aDictionaryObject = COSDictionary.construct();
+        aDictionaryObject.setKey(ASAtom.O, COSName.construct(ASAtom.LIST));
         if (list.getPreviousList() != null) {
-            listObject.setKey(ASAtom.CONTINUED_LIST, COSBoolean.construct(true));
-            listObject.setKey(ASAtom.CONTINUED_FROM, COSString.construct(String.valueOf(list.getPreviousList().getRecognizedStructureId()).getBytes()));
+            aDictionaryObject.setKey(ASAtom.CONTINUED_LIST, COSBoolean.construct(true));
+            aDictionaryObject.setKey(ASAtom.CONTINUED_FROM, COSString.construct(String.valueOf(list.getPreviousList().getRecognizedStructureId()).getBytes()));
         }
-        listObject.setKey(ASAtom.LIST_NUMBERING, COSName.construct(ListProcessor.getListNumbering(list.getNumberingStyle())));
+        aDictionaryObject.setKey(ASAtom.LIST_NUMBERING, COSName.construct(ListProcessor.getListNumbering(list.getNumberingStyle())));
+        listObject.setKey(ASAtom.A, aDictionaryObject);
 
         for (ListItem listItem : list.getListItems()) {
             COSObject listItemObject = addStructElement(listObject, cosDocument, TaggedPDFConstants.LI);
@@ -186,8 +192,15 @@ public class AutoTaggingProcessor {
                 TableBorderCell cell = row.getCell(colNumber);
                 if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
                     COSObject cellObject = addStructElement(rowObject, cosDocument, TaggedPDFConstants.TD);
-                    cellObject.setKey(ASAtom.COL_SPAN, COSInteger.construct(cell.getColSpan()));
-                    cellObject.setKey(ASAtom.ROW_SPAN, COSInteger.construct(cell.getRowSpan()));
+                    COSObject aDictionaryObject = COSDictionary.construct();
+                    aDictionaryObject.setKey(ASAtom.O, COSName.construct(ASAtom.TABLE));
+                    if (cell.getColSpan() != 1) {
+                        aDictionaryObject.setKey(ASAtom.COL_SPAN, COSInteger.construct(cell.getColSpan()));
+                    }
+                    if (cell.getRowSpan() != 1) {
+                        aDictionaryObject.setKey(ASAtom.ROW_SPAN, COSInteger.construct(cell.getRowSpan()));
+                    }
+                    cellObject.setKey(ASAtom.A, aDictionaryObject);
                     for (IObject cellContent : cell.getContents()) {
                         createStructElem(cellContent, cellObject, cosDocument);
                     }
