@@ -158,7 +158,8 @@ public class AutoTaggingProcessor {
 
         for (ListItem listItem : list.getListItems()) {
             COSObject listItemObject = addStructElement(listObject, cosDocument, TaggedPDFConstants.LI);
-            if (listItem.getLabelLength() > 0) {
+            int labelLength = listItem.getLabelLength();
+            if (labelLength > 0) {
                 COSObject lblObject = addStructElement(listItemObject, cosDocument, TaggedPDFConstants.LBL);
                 SemanticTextNode lblTextNode = new SemanticTextNode();
                 lblTextNode.add(new TextLine(listItem.getFirstLine(), 0, listItem.getLabelLength()));
@@ -169,7 +170,9 @@ public class AutoTaggingProcessor {
             for (TextLine line : listItem.getLines()) {
                 lBodyTextNode.add(line);
             }
-            lBodyTextNode.setFirstLine(new TextLine(listItem.getFirstLine(), listItem.getLabelLength(), listItem.getFirstLine().getValue().length()));
+            if (labelLength > 0) {
+                lBodyTextNode.setFirstLine(new TextLine(listItem.getFirstLine(), listItem.getLabelLength(), listItem.getFirstLine().getValue().length()));
+            }
             //processTextNode(lBodyTextNode, lBodyObject);
             for (IObject content : listItem.getContents()) {
                 createStructElem(content, lBodyObject, cosDocument);
