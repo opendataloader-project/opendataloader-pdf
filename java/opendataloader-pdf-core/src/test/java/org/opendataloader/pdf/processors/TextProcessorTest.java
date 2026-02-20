@@ -20,6 +20,45 @@ import java.util.List;
 public class TextProcessorTest {
 
     @Test
+    public void testReplaceUndefinedCharacters() {
+        // Simulate backend results containing U+FFFD (replacement character)
+        List<IObject> contents = new ArrayList<>();
+        contents.add(new TextChunk(new BoundingBox(1, 10.0, 10.0, 100.0, 20.0),
+            "Hello \uFFFD World", 10, 10.0));
+        contents.add(new TextChunk(new BoundingBox(1, 10.0, 30.0, 100.0, 40.0),
+            "No issues here", 10, 10.0));
+
+        TextProcessor.replaceUndefinedCharacters(contents, "?");
+
+        Assertions.assertEquals("Hello ? World", ((TextChunk) contents.get(0)).getValue());
+        Assertions.assertEquals("No issues here", ((TextChunk) contents.get(1)).getValue());
+    }
+
+    @Test
+    public void testReplaceUndefinedCharactersSkipsWhenDefault() {
+        // When replacement string equals REPLACEMENT_CHARACTER_STRING, should be a no-op
+        List<IObject> contents = new ArrayList<>();
+        contents.add(new TextChunk(new BoundingBox(1, 10.0, 10.0, 100.0, 20.0),
+            "Hello \uFFFD World", 10, 10.0));
+
+        TextProcessor.replaceUndefinedCharacters(contents, "\uFFFD");
+
+        // Should remain unchanged
+        Assertions.assertEquals("Hello \uFFFD World", ((TextChunk) contents.get(0)).getValue());
+    }
+
+    @Test
+    public void testReplaceUndefinedCharactersMultipleOccurrences() {
+        List<IObject> contents = new ArrayList<>();
+        contents.add(new TextChunk(new BoundingBox(1, 10.0, 10.0, 100.0, 20.0),
+            "\uFFFD first \uFFFD second \uFFFD", 10, 10.0));
+
+        TextProcessor.replaceUndefinedCharacters(contents, "*");
+
+        Assertions.assertEquals("* first * second *", ((TextChunk) contents.get(0)).getValue());
+    }
+
+    @Test
     public void testRemoveSameTextChunks() {
         List<IObject> contents = new ArrayList<>();
         contents.add(new TextChunk(new BoundingBox(1, 10.0, 10.0, 20.0, 20.0),
