@@ -45,11 +45,12 @@ Requirements:
 import argparse
 import logging
 import os
+import re
 import tempfile
 import time
 import traceback
 from contextlib import asynccontextmanager
-from typing import Optional
+from typing import Any, Optional
 
 logging.basicConfig(
     level=logging.INFO,
@@ -64,6 +65,35 @@ MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB max file size
 
 # Global converter instance (initialized on startup with CLI options)
 converter = None
+
+# Regex matching lone surrogates (U+D800..U+DFFF) and null characters
+_INVALID_UNICODE_RE = re.compile(r"[\ud800-\udfff\x00]")
+
+
+def sanitize_unicode(data: Any) -> Any:
+    """Recursively replace lone surrogates and null characters with U+FFFD.
+
+    Docling OCR can produce lone surrogates (U+D800-U+DFFF) and null characters
+    from PDFs with malformed font encodings. These pass through json.dumps(ensure_ascii=False)
+    but fail on .encode('utf-8') in Starlette's JSONResponse.render(), causing
+    UnicodeEncodeError and a 500 response.
+
+    This mirrors the Java-side TextProcessor.replaceUndefinedCharacters().
+
+    Args:
+        data: Arbitrary data structure (dict, list, str, or primitive) from
+              Docling's export_to_dict() output.
+
+    Returns:
+        The same structure with problematic characters replaced by U+FFFD.
+    """
+    if isinstance(data, str):
+        return _INVALID_UNICODE_RE.sub("\ufffd", data)
+    if isinstance(data, dict):
+        return {k: sanitize_unicode(v) for k, v in data.items()}
+    if isinstance(data, list):
+        return [sanitize_unicode(item) for item in data]
+    return data
 
 
 def _check_dependencies():
@@ -279,6 +309,10 @@ def create_app(
             # Export to JSON (DoclingDocument format)
             json_content = result.document.export_to_dict()
 
+            # Sanitize lone surrogates and null chars from OCR output to prevent
+            # UnicodeEncodeError in Starlette's JSONResponse.render()
+            json_content = sanitize_unicode(json_content)
+
             # Build response compatible with docling-serve format
             response = {
                 "status": "success",
@@ -293,7 +327,10 @@ def create_app(
         except Exception as e:
             logger.error(f"PDF conversion failed: {e}\n{traceback.format_exc()}")
             return JSONResponse(
-                {"status": "failure", "errors": ["PDF conversion failed"]},
+                {
+                    "status": "failure",
+                    "errors": [f"PDF conversion failed: {type(e).__name__}: {e}"],
+                },
                 status_code=500,
             )
         finally:
