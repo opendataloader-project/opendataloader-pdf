@@ -379,6 +379,18 @@ def main():
     if args.enrich_picture_description:
         enrichments.append("picture-description")
 
+    # Log GPU/CPU detection
+    try:
+        import torch
+        if torch.cuda.is_available():
+            gpu_name = torch.cuda.get_device_name(0)
+            cuda_version = torch.version.cuda
+            logger.info(f"GPU detected: {gpu_name} (CUDA {cuda_version})")
+        else:
+            logger.info("No GPU detected, using CPU.")
+    except ImportError:
+        logger.info("No GPU detected, using CPU. (PyTorch not installed)")
+
     logger.info(f"Starting Docling Fast Server on http://{args.host}:{args.port}")
     logger.info(f"OCR settings: force_ocr={args.force_ocr}, lang={ocr_lang or 'default'}")
     if enrichments:
