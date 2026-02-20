@@ -160,6 +160,123 @@ Hybrid mode is designed with privacy in mind:
 | Maximum accuracy priority | **Hybrid mode** |
 | Air-gapped environments | Hybrid with local Docker backend |
 
+## Docker Deployment
+
+### Quick Start
+
+```bash
+# CPU
+docker run -p 5002:5002 ghcr.io/opendataloader-project/opendataloader-pdf-hybrid
+
+# GPU
+docker run --gpus all -p 5002:5002 ghcr.io/opendataloader-project/opendataloader-pdf-hybrid:latest-gpu
+```
+
+### docker-compose (CPU)
+
+```yaml
+services:
+  hybrid:
+    image: ghcr.io/opendataloader-project/opendataloader-pdf-hybrid:latest
+    ports:
+      - "5002:5002"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5002/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 180s
+
+  cli:
+    image: ghcr.io/opendataloader-project/opendataloader-pdf-cli:latest
+    depends_on:
+      hybrid:
+        condition: service_healthy
+    volumes:
+      - ./input:/input
+      - ./output:/output
+    command: >
+      --hybrid docling-fast
+      --hybrid-url http://hybrid:5002
+      -f markdown
+      -o /output
+      /input/document.pdf
+```
+
+### docker-compose (GPU)
+
+```yaml
+services:
+  hybrid:
+    image: ghcr.io/opendataloader-project/opendataloader-pdf-hybrid:latest-gpu
+    ports:
+      - "5002:5002"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5002/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 180s
+
+  cli:
+    image: ghcr.io/opendataloader-project/opendataloader-pdf-cli:latest
+    depends_on:
+      hybrid:
+        condition: service_healthy
+    volumes:
+      - ./input:/input
+      - ./output:/output
+    command: >
+      --hybrid docling-fast
+      --hybrid-url http://hybrid:5002
+      -f markdown
+      -o /output
+      /input/document.pdf
+```
+
+### Environment Variables
+
+Configure the hybrid server via command arguments in Docker:
+
+```bash
+docker run -p 5002:5002 ghcr.io/opendataloader-project/opendataloader-pdf-hybrid \
+  opendataloader-pdf-hybrid \
+  --port 5002 \
+  --host 0.0.0.0 \
+  --ocr-lang "ko" \
+  --force-ocr
+```
+
+| Option | Description |
+|:-------|:------------|
+| `--port PORT` | Server port (default: 5002) |
+| `--host HOST` | Bind address (default: 0.0.0.0) |
+| `--ocr-lang LANG` | OCR languages, comma-separated (e.g., `ch_sim,en`, `ko`, `ja`) |
+| `--force-ocr` | Force full-page OCR on all pages |
+| `--enrich-formula` | Enable formula enrichment (LaTeX extraction) |
+| `--enrich-picture-description` | Enable picture description (alt text generation) |
+| `--log-level LEVEL` | Log level: `debug`, `info`, `warning`, `error` |
+
+### Custom Dockerfile
+
+Build a custom image with additional OCR languages or models:
+
+```dockerfile
+FROM ghcr.io/opendataloader-project/opendataloader-pdf-hybrid:latest
+
+# Pre-download OCR models for faster startup
+RUN python3 -c "import easyocr; easyocr.Reader(['ko', 'en'])"
+
+CMD ["opendataloader-pdf-hybrid", "--port", "5002", "--host", "0.0.0.0", "--ocr-lang", "ko,en"]
+```
+
 ## Troubleshooting
 
 ### Backend Connection Failed
