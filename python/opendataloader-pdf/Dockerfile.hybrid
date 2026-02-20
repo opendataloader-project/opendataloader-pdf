@@ -1,0 +1,18 @@
+FROM python:3.11-slim
+
+LABEL org.opencontainers.image.title="opendataloader-pdf-hybrid" \
+      org.opencontainers.image.description="OpenDataLoader PDF Hybrid Server (CPU)" \
+      org.opencontainers.image.vendor="Hancom Inc." \
+      org.opencontainers.image.licenses="MPL-2.0"
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl libgl1 libglib2.0-0 && \
+    pip install --no-cache-dir "opendataloader-pdf[hybrid]" && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+EXPOSE 5002
+
+HEALTHCHECK --interval=10s --timeout=5s --retries=10 --start-period=180s \
+    CMD curl -f http://localhost:5002/health || exit 1
+
+CMD ["opendataloader-pdf-hybrid", "--port", "5002", "--host", "0.0.0.0"]
