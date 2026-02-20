@@ -327,6 +327,9 @@ public class HybridDocumentProcessor {
         for (int pageNumber : pageNumbers) {
             if (pageNumber < transformedContents.size()) {
                 List<IObject> pageContents = transformedContents.get(pageNumber);
+                // Apply --replace-invalid-chars to backend results (not applied during filterAllPages
+                // because backend results replace the filtered contents)
+                TextProcessor.replaceUndefinedCharacters(pageContents, config.getReplaceInvalidChars());
                 // Set IDs for backend-generated objects
                 DocumentProcessor.setIDs(pageContents);
                 results.put(pageNumber, pageContents);
