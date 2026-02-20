@@ -141,7 +141,7 @@ public class AutoTaggingProcessor {
     private static void createFigureStructElem(ImageChunk image, COSObject parent, COSDocument cosDocument) {
         COSObject figureObject = addStructElement(parent, cosDocument, TaggedPDFConstants.FIGURE);
         double[] bbox = {image.getLeftX(), image.getBottomY(), image.getRightX(), image.getTopY()};
-        figureObject.setKey(ASAtom.BBOX, COSArray.construct(4, bbox));
+        addAttributeToStructElem(figureObject, ASAtom.LAYOUT, ASAtom.BBOX, COSArray.construct(4, bbox));
         //TODO: process image, add height and width attributes
     }
 
@@ -151,10 +151,10 @@ public class AutoTaggingProcessor {
             listObject.setKey(ASAtom.ID, COSString.construct(String.valueOf(list.getRecognizedStructureId()).getBytes()));
         }
         if (list.getPreviousList() != null) {
-            listObject.setKey(ASAtom.CONTINUED_LIST, COSBoolean.construct(true));
-            listObject.setKey(ASAtom.CONTINUED_FROM, COSString.construct(String.valueOf(list.getPreviousList().getRecognizedStructureId()).getBytes()));
+            addAttributeToStructElem(listObject, ASAtom.LIST, ASAtom.CONTINUED_LIST, COSBoolean.construct(true));
+            addAttributeToStructElem(listObject, ASAtom.LIST, ASAtom.CONTINUED_FROM, COSString.construct(String.valueOf(list.getPreviousList().getRecognizedStructureId()).getBytes()));
         }
-        listObject.setKey(ASAtom.LIST_NUMBERING, COSName.construct(ListProcessor.getListNumbering(list.getNumberingStyle())));
+        addAttributeToStructElem(listObject, ASAtom.LIST, ASAtom.LIST_NUMBERING, COSName.construct(ListProcessor.getListNumbering(list.getNumberingStyle())));
 
         for (ListItem listItem : list.getListItems()) {
             COSObject listItemObject = addStructElement(listObject, cosDocument, TaggedPDFConstants.LI);
@@ -189,14 +189,58 @@ public class AutoTaggingProcessor {
                 TableBorderCell cell = row.getCell(colNumber);
                 if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
                     COSObject cellObject = addStructElement(rowObject, cosDocument, TaggedPDFConstants.TD);
-                    cellObject.setKey(ASAtom.COL_SPAN, COSInteger.construct(cell.getColSpan()));
-                    cellObject.setKey(ASAtom.ROW_SPAN, COSInteger.construct(cell.getRowSpan()));
+                    if (cell.getColSpan() != 1) {
+                        addAttributeToStructElem(cellObject, ASAtom.TABLE, ASAtom.COL_SPAN, COSInteger.construct(cell.getColSpan()));
+                    }
+                    if (cell.getRowSpan() != 1) {
+                        addAttributeToStructElem(cellObject, ASAtom.TABLE, ASAtom.ROW_SPAN, COSInteger.construct(cell.getRowSpan()));
+                    }
                     for (IObject cellContent : cell.getContents()) {
                         createStructElem(cellContent, cellObject, cosDocument);
                     }
                 }
             }
         }
+    }
+
+    private static void addAttributeToStructElem(COSObject structElement, ASAtom ownerASAtom, ASAtom attributeName, COSObject attributeValue) {
+        COSObject aObject = structElement.getKey(ASAtom.A);
+        COSObject owner = COSName.construct(ownerASAtom);
+        if (aObject.empty()) {
+            aObject = COSDictionary.construct();
+            aObject.setKey(ASAtom.O, owner);
+            aObject.setKey(attributeName, attributeValue);
+        } else if (aObject.getType() == COSObjType.COS_DICT) {
+            COSObject ownerObject = aObject.getKey(ASAtom.O);
+            if (owner.equals(ownerObject)) {
+                aObject.setKey(attributeName, attributeValue);
+            } else {
+                COSObject previousADictionary = aObject;
+                aObject = COSArray.construct();
+                aObject.add(previousADictionary);
+                addAttributeDictionaryToArray(owner, attributeName, attributeValue, aObject);
+            }
+        } else if (aObject.getType() == COSObjType.COS_ARRAY) {
+            boolean isAttributeSet = false;
+            for (COSObject dictionary : (COSArray) aObject.getDirectBase()) {
+                if (owner.equals(dictionary.getKey(ASAtom.O))) {
+                    dictionary.setKey(attributeName, attributeValue);
+                    isAttributeSet = true;
+                    break;
+                }
+            }
+            if (!isAttributeSet) {
+                addAttributeDictionaryToArray(owner, attributeName, attributeValue, aObject);
+            }
+        }
+        structElement.setKey(ASAtom.A, aObject);
+    }
+
+    private static void addAttributeDictionaryToArray(COSObject owner, ASAtom attributeName, COSObject attributeValue, COSObject aObject) {
+        COSObject newADictionary = COSDictionary.construct();
+        newADictionary.setKey(ASAtom.O, owner);
+        newADictionary.setKey(attributeName, attributeValue);
+        aObject.add(newADictionary);
     }
 
 //    protected static List<Object> getTokens(PDContentStream pdContentStream) {
