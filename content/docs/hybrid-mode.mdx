@@ -261,7 +261,10 @@ docker run -p 5002:5002 ghcr.io/opendataloader-project/opendataloader-pdf-hybrid
 | `--ocr-lang LANG` | OCR languages, comma-separated (e.g., `ch_sim,en`, `ko`, `ja`) |
 | `--force-ocr` | Force full-page OCR on all pages |
 | `--enrich-formula` | Enable formula enrichment (LaTeX extraction) |
+| `--no-enrich-formula` | Disable formula enrichment |
 | `--enrich-picture-description` | Enable picture description (alt text generation) |
+| `--no-enrich-picture-description` | Disable picture description |
+| `--picture-description-prompt TEXT` | Custom prompt for picture description |
 | `--log-level LEVEL` | Log level: `debug`, `info`, `warning`, `error` |
 
 ### Custom Dockerfile
@@ -271,8 +274,10 @@ Build a custom image with additional OCR languages or models:
 ```dockerfile
 FROM ghcr.io/opendataloader-project/opendataloader-pdf-hybrid:latest
 
+USER root
 # Pre-download OCR models for faster startup
 RUN python3 -c "import easyocr; easyocr.Reader(['ko', 'en'])"
+USER appuser
 
 CMD ["opendataloader-pdf-hybrid", "--port", "5002", "--host", "0.0.0.0", "--ocr-lang", "ko,en"]
 ```
