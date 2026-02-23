@@ -1,18 +1,23 @@
 FROM pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime
 
 ARG VERSION
+RUN test -n "${VERSION}" || (echo "ERROR: --build-arg VERSION=<ver> is required" && exit 1)
 
 LABEL org.opencontainers.image.title="opendataloader-pdf-hybrid-gpu" \
       org.opencontainers.image.description="OpenDataLoader PDF Hybrid Server (GPU)" \
       org.opencontainers.image.vendor="Hancom Inc." \
-      org.opencontainers.image.licenses="MPL-2.0"
+      org.opencontainers.image.licenses="MPL-2.0" \
+      org.opencontainers.image.source="https://github.com/opendataloader-project/opendataloader-pdf" \
+      org.opencontainers.image.version="${VERSION}"
 
+# curl: healthcheck, libgl1/libglib2.0-0: OpenCV dependencies for Docling
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl libgl1 libglib2.0-0 && \
     pip install --no-cache-dir "opendataloader-pdf[hybrid]==${VERSION}" \
-        --extra-index-url https://download.pytorch.org/whl/cu124 && \
+        --index-url https://download.pytorch.org/whl/cu124 \
+        --extra-index-url https://pypi.org/simple && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
-    useradd --no-create-home --shell /bin/false appuser
+    useradd --create-home --shell /bin/false appuser
 
 USER appuser
 
