@@ -1,5 +1,7 @@
 FROM python:3.11-slim
 
+ARG VERSION
+
 LABEL org.opencontainers.image.title="opendataloader-pdf-hybrid" \
       org.opencontainers.image.description="OpenDataLoader PDF Hybrid Server (CPU)" \
       org.opencontainers.image.vendor="Hancom Inc." \
@@ -7,8 +9,10 @@ LABEL org.opencontainers.image.title="opendataloader-pdf-hybrid" \
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl libgl1 libglib2.0-0 && \
-    pip install --no-cache-dir "opendataloader-pdf[hybrid]" && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    pip install --no-cache-dir "opendataloader-pdf[hybrid]==${VERSION}" && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    useradd --no-create-home --shell /bin/false appuser
+USER appuser
 
 EXPOSE 5002
 
