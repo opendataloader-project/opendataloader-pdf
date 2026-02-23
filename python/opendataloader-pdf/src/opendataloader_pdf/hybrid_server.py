@@ -329,7 +329,7 @@ def create_app(
             return JSONResponse(
                 {
                     "status": "failure",
-                    "errors": [f"PDF conversion failed: {type(e).__name__}: {e}"],
+                    "errors": ["PDF conversion failed. Check server logs for details."],
                 },
                 status_code=500,
             )
