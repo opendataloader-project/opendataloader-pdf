@@ -70,6 +70,73 @@ converter = None
 _INVALID_UNICODE_RE = re.compile(r"[\ud800-\udfff\x00]")
 
 
+def build_conversion_response(
+    status_value: str,
+    json_content: dict,
+    processing_time: float,
+    errors: list[str],
+    requested_pages: tuple[int, int] | None,
+    total_pages: int | None = None,
+) -> dict:
+    """Build a structured conversion response with status and failed page info.
+
+    When Docling encounters errors (e.g., Invalid code point in PDF font encoding),
+    it skips the affected pages and returns PARTIAL_SUCCESS. This function detects
+    which pages failed by comparing the requested page range against pages present
+    in the output.
+
+    Args:
+        status_value: Docling ConversionStatus value as string (e.g., "success", "partial_success").
+        json_content: The exported document dict from Docling.
+        processing_time: Time taken for conversion in seconds.
+        errors: List of error message strings from Docling.
+        requested_pages: Tuple of (start, end) 1-indexed page range, or None for all pages.
+        total_pages: Total page count of the input document (from Docling InputDocument).
+                     Used to detect boundary page failures when requested_pages is None.
+
+    Returns:
+        Response dict with status, document, errors, failed_pages, and processing_time.
+    """
+    failed_pages: list[int] = []
+
+    if status_value == "partial_success":
+        # Detect failed pages by finding gaps in the pages dict
+        pages_dict = json_content.get("pages", {})
+        present_pages = set()
+        for k in pages_dict.keys():
+            try:
+                present_pages.add(int(k))
+            except (ValueError, TypeError):
+                logger.warning("Unexpected non-integer page key in Docling output: %r", k)
+
+        if requested_pages:
+            expected_pages = set(range(requested_pages[0], requested_pages[1] + 1))
+        elif total_pages is not None:
+            expected_pages = set(range(1, total_pages + 1))
+        elif present_pages:
+            # Fallback: infer range from min to max of present pages
+            logger.warning(
+                "No page range or total_pages available; boundary page failures cannot be detected"
+            )
+            expected_pages = set(range(min(present_pages), max(present_pages) + 1))
+        else:
+            expected_pages = set()
+
+        failed_pages = sorted(expected_pages - present_pages)
+
+    response: dict[str, Any] = {
+        "status": status_value,
+        "document": {
+            "json_content": json_content,
+        },
+        "processing_time": processing_time,
+        "errors": errors,
+        "failed_pages": failed_pages,
+    }
+
+    return response
+
+
 def sanitize_unicode(data: Any) -> Any:
     """Recursively replace lone surrogates and null characters with U+FFFD.
 
@@ -313,14 +380,29 @@ def create_app(
             # UnicodeEncodeError in Starlette's JSONResponse.render()
             json_content = sanitize_unicode(json_content)
 
-            # Build response compatible with docling-serve format
-            response = {
-                "status": "success",
-                "document": {
-                    "json_content": json_content,
-                },
-                "processing_time": processing_time,
-            }
+            # Extract status and errors from Docling ConversionResult
+            from docling.datamodel.base_models import ConversionStatus
+
+            status_value = result.status.value if hasattr(result.status, "value") else str(result.status)
+            errors = [getattr(e, "error_message", str(e)) for e in result.errors] if result.errors else []
+
+            # Get total page count for accurate failed-page detection
+            input_page_count = getattr(result.input, "page_count", None) if result.input else None
+
+            if result.status == ConversionStatus.PARTIAL_SUCCESS:
+                logger.warning(
+                    "Docling returned partial_success: %d error(s), failed_pages will be reported",
+                    len(errors),
+                )
+
+            response = build_conversion_response(
+                status_value=status_value,
+                json_content=json_content,
+                processing_time=processing_time,
+                errors=errors,
+                requested_pages=page_range_tuple,
+                total_pages=input_page_count,
+            )
 
             return JSONResponse(response)
 

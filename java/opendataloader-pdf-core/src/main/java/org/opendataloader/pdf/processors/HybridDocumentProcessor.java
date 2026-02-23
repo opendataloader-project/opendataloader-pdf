@@ -148,8 +148,9 @@ public class HybridDocumentProcessor {
 
         // Process backend path (synchronous)
         Map<Integer, List<IObject>> backendResults;
+        Set<Integer> backendFailedPages = new HashSet<>();
         try {
-            backendResults = processBackendPath(inputPdfName, backendPages, config);
+            backendResults = processBackendPath(inputPdfName, backendPages, config, backendFailedPages);
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Backend processing failed: {0}", e.getMessage());
             if (config.getHybridConfig().isFallbackToJava()) {
@@ -157,6 +158,24 @@ public class HybridDocumentProcessor {
                 backendResults = processJavaPath(filteredContents, backendPages, config, totalPages);
             } else {
                 throw new IOException("Backend processing failed and fallback is disabled", e);
+            }
+        }
+
+        // Fallback: reprocess backend-failed pages through Java path
+        if (!backendFailedPages.isEmpty()) {
+            // Log 1-indexed page numbers for human readability
+            List<Integer> failedPages1Indexed = backendFailedPages.stream()
+                .map(p -> p + 1).sorted().collect(Collectors.toList());
+            if (config.getHybridConfig().isFallbackToJava()) {
+                LOGGER.log(Level.WARNING, "Backend returned partial_success: {0} page(s) failed (pages {1}), falling back to Java path",
+                    new Object[]{backendFailedPages.size(), failedPages1Indexed});
+                Map<Integer, List<IObject>> fallbackResults = processJavaPath(
+                    filteredContents, backendFailedPages, config, totalPages
+                );
+                backendResults.putAll(fallbackResults);
+            } else {
+                LOGGER.log(Level.WARNING, "Backend returned partial_success: {0} page(s) failed (pages {1}), fallback disabled — skipping failed pages",
+                    new Object[]{backendFailedPages.size(), failedPages1Indexed});
             }
         }
 
@@ -289,11 +308,21 @@ public class HybridDocumentProcessor {
 
     /**
      * Processes pages using the external backend.
+     *
+     * @param inputPdfName     The path to the input PDF file.
+     * @param pageNumbers      Set of 0-indexed page numbers to process.
+     * @param config           The configuration settings.
+     * @param backendFailedPages Output parameter: populated with 0-indexed page numbers that
+     *                           failed during backend processing (e.g., due to Invalid code point).
+     *                           These pages can be retried via the Java processing path.
+     * @return Map of page number to IObject list for successfully processed pages.
+     * @throws IOException If an error occurs during processing.
      */
     private static Map<Integer, List<IObject>> processBackendPath(
             String inputPdfName,
             Set<Integer> pageNumbers,
-            Config config) throws IOException {
+            Config config,
+            Set<Integer> backendFailedPages) throws IOException {
 
         if (pageNumbers.isEmpty()) {
             return new HashMap<>();
@@ -315,6 +344,17 @@ public class HybridDocumentProcessor {
         HybridRequest request = HybridRequest.allPages(pdfBytes, outputFormats);
         HybridResponse response = client.convert(request);
 
+        // Collect failed pages (convert from 1-indexed to 0-indexed)
+        if (response.hasFailedPages()) {
+            for (int failedPage1Indexed : response.getFailedPages()) {
+                int failedPage0Indexed = failedPage1Indexed - 1;
+                if (pageNumbers.contains(failedPage0Indexed)) {
+                    backendFailedPages.add(failedPage0Indexed);
+                }
+            }
+            // Logged by caller when initiating fallback
+        }
+
         // Get page heights for coordinate transformation
         Map<Integer, Double> pageHeights = getPageHeights(pageNumbers);
 
@@ -322,9 +362,12 @@ public class HybridDocumentProcessor {
         HybridSchemaTransformer transformer = createTransformer(config);
         List<List<IObject>> transformedContents = transformer.transform(response, pageHeights);
 
-        // Extract results for requested pages
+        // Extract results for requested pages (excluding failed pages)
         Map<Integer, List<IObject>> results = new HashMap<>();
         for (int pageNumber : pageNumbers) {
+            if (backendFailedPages.contains(pageNumber)) {
+                continue; // Skip failed pages — they will be retried via Java path
+            }
             if (pageNumber < transformedContents.size()) {
                 List<IObject> pageContents = transformedContents.get(pageNumber);
                 // Apply --replace-invalid-chars to backend results (not applied during filterAllPages

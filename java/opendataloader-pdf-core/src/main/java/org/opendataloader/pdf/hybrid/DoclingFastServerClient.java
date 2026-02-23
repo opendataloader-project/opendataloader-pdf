@@ -18,8 +18,11 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -155,10 +158,18 @@ public class DoclingFastServerClient implements HybridClient {
 
         // Check for API error status
         JsonNode statusNode = root.get("status");
-        if (statusNode != null && "failure".equals(statusNode.asText())) {
+        String status = statusNode != null ? statusNode.asText() : "";
+        if ("failure".equals(status)) {
             JsonNode errorsNode = root.get("errors");
             String errorMessage = errorsNode != null ? errorsNode.toString() : "Unknown error";
             throw new IOException("Docling Fast Server processing failed: " + errorMessage);
+        }
+
+        // Log partial_success status
+        if ("partial_success".equals(status)) {
+            JsonNode errorsNode = root.get("errors");
+            LOGGER.log(Level.WARNING, "Backend returned partial_success: {0}",
+                errorsNode != null ? errorsNode.toString() : "no error details");
         }
 
         // Extract document content
@@ -172,7 +183,10 @@ public class DoclingFastServerClient implements HybridClient {
         // Extract per-page content from json_content if available
         Map<Integer, JsonNode> pageContents = extractPageContents(jsonContent);
 
-        return new HybridResponse(null, null, jsonContent, pageContents);
+        // Extract failed pages (1-indexed) from partial_success responses
+        List<Integer> failedPages = extractFailedPages(root);
+
+        return new HybridResponse(null, null, jsonContent, pageContents, failedPages);
     }
 
     /**
@@ -205,6 +219,28 @@ public class DoclingFastServerClient implements HybridClient {
         }
 
         return pageContents;
+    }
+
+    /**
+     * Extracts the list of failed page numbers from the response.
+     *
+     * <p>When the backend returns partial_success, the failed_pages array contains
+     * 1-indexed page numbers that failed during processing (e.g., due to Invalid code point
+     * errors in PDF font encoding).
+     */
+    private List<Integer> extractFailedPages(JsonNode root) {
+        JsonNode failedPagesNode = root.get("failed_pages");
+        if (failedPagesNode == null || !failedPagesNode.isArray() || failedPagesNode.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Integer> failedPages = new ArrayList<>();
+        for (JsonNode pageNode : failedPagesNode) {
+            if (pageNode.isNumber() && pageNode.canConvertToInt()) {
+                failedPages.add(pageNode.asInt());
+            }
+        }
+        return failedPages;
     }
 
     /**
