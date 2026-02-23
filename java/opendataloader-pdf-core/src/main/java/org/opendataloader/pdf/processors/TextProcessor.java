@@ -38,7 +38,7 @@ public class TextProcessor {
             if (object instanceof TextChunk) {
                 TextChunk textChunk = ((TextChunk) object);
                 if (textChunk.getValue().contains(ChunkParser.REPLACEMENT_CHARACTER_STRING)) {
-                    textChunk.setValue(textChunk.getValue().replaceAll(ChunkParser.REPLACEMENT_CHARACTER_STRING, replacementCharacterString));
+                    textChunk.setValue(textChunk.getValue().replace(ChunkParser.REPLACEMENT_CHARACTER_STRING, replacementCharacterString));
                 }
             }
         }
