@@ -45,6 +45,9 @@
     "url": "https://github.com/opendataloader-project/opendataloader-pdf/issues"
   },
   "homepage": "https://github.com/opendataloader-project/opendataloader-pdf#readme",
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "publishConfig": {
     "access": "public"
   },
