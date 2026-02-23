@@ -59,6 +59,31 @@ public class TextProcessorTest {
     }
 
     @Test
+    public void testReplaceUndefinedCharactersWithRegexSpecialChars() {
+        // Verify that regex-special characters in replacement string work correctly
+        List<IObject> contents = new ArrayList<>();
+        contents.add(new TextChunk(new BoundingBox(1, 10.0, 10.0, 100.0, 20.0),
+            "Hello \uFFFD World", 10, 10.0));
+
+        TextProcessor.replaceUndefinedCharacters(contents, "$");
+
+        Assertions.assertEquals("Hello $ World", ((TextChunk) contents.get(0)).getValue());
+    }
+
+    @Test
+    public void testReplaceUndefinedCharactersSkipsNonTextChunks() {
+        List<IObject> contents = new ArrayList<>();
+        contents.add(new ImageChunk(new BoundingBox(1, 10.0, 10.0, 100.0, 20.0)));
+        contents.add(new TextChunk(new BoundingBox(1, 10.0, 30.0, 100.0, 40.0),
+            "Hello \uFFFD", 10, 10.0));
+
+        TextProcessor.replaceUndefinedCharacters(contents, "?");
+
+        Assertions.assertTrue(contents.get(0) instanceof ImageChunk);
+        Assertions.assertEquals("Hello ?", ((TextChunk) contents.get(1)).getValue());
+    }
+
+    @Test
     public void testRemoveSameTextChunks() {
         List<IObject> contents = new ArrayList<>();
         contents.add(new TextChunk(new BoundingBox(1, 10.0, 10.0, 20.0, 20.0),
