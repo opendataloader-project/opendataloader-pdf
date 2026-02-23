@@ -123,6 +123,7 @@ jobs:
           context: ./python/opendataloader-pdf
           file: ./python/opendataloader-pdf/Dockerfile.hybrid
           push: true
+          build-args: VERSION=${{ env.VERSION }}
           tags: |
             ghcr.io/${{ github.repository_owner }}/opendataloader-pdf-hybrid:${{ env.VERSION }}
             ghcr.io/${{ github.repository_owner }}/opendataloader-pdf-hybrid:latest
@@ -134,6 +135,7 @@ jobs:
           context: ./python/opendataloader-pdf
           file: ./python/opendataloader-pdf/Dockerfile.hybrid-gpu
           push: true
+          build-args: VERSION=${{ env.VERSION }}
           tags: |
             ghcr.io/${{ github.repository_owner }}/opendataloader-pdf-hybrid:${{ env.VERSION }}-gpu
             ghcr.io/${{ github.repository_owner }}/opendataloader-pdf-hybrid:latest-gpu
