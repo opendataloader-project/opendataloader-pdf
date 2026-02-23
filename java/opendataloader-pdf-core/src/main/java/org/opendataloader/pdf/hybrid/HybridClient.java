@@ -10,9 +10,11 @@ package org.opendataloader.pdf.hybrid;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -176,6 +178,7 @@ public interface HybridClient {
         private final String html;
         private final JsonNode json;
         private final Map<Integer, JsonNode> pageContents;
+        private final List<Integer> failedPages;
 
         /**
          * Creates a new HybridResponse.
@@ -184,12 +187,29 @@ public interface HybridClient {
          * @param html         The HTML representation of the document.
          * @param json         The full structured JSON output (DoclingDocument format).
          * @param pageContents Per-page JSON content, keyed by 1-indexed page number.
+         * @param failedPages  List of 1-indexed page numbers that failed during backend processing.
          */
-        public HybridResponse(String markdown, String html, JsonNode json, Map<Integer, JsonNode> pageContents) {
+        public HybridResponse(String markdown, String html, JsonNode json,
+                              Map<Integer, JsonNode> pageContents, List<Integer> failedPages) {
             this.markdown = markdown != null ? markdown : "";
             this.html = html != null ? html : "";
             this.json = json;
             this.pageContents = pageContents != null ? pageContents : Collections.emptyMap();
+            this.failedPages = failedPages != null
+                ? Collections.unmodifiableList(new ArrayList<>(failedPages))
+                : Collections.emptyList();
+        }
+
+        /**
+         * Creates a new HybridResponse (backward compatible constructor).
+         *
+         * @param markdown     The markdown representation of the document.
+         * @param html         The HTML representation of the document.
+         * @param json         The full structured JSON output (DoclingDocument format).
+         * @param pageContents Per-page JSON content, keyed by 1-indexed page number.
+         */
+        public HybridResponse(String markdown, String html, JsonNode json, Map<Integer, JsonNode> pageContents) {
+            this(markdown, html, json, pageContents, Collections.emptyList());
         }
 
         /**
@@ -200,7 +220,7 @@ public interface HybridClient {
          * @param pageContents Per-page JSON content, keyed by 1-indexed page number.
          */
         public HybridResponse(String markdown, JsonNode json, Map<Integer, JsonNode> pageContents) {
-            this(markdown, "", json, pageContents);
+            this(markdown, "", json, pageContents, Collections.emptyList());
         }
 
         /**
@@ -228,6 +248,28 @@ public interface HybridClient {
             return pageContents;
         }
 
+        /**
+         * Returns the list of 1-indexed page numbers that failed during backend processing.
+         *
+         * <p>When the backend returns partial_success, some pages may have failed due to
+         * issues like invalid code points in PDF font encoding. These pages can be retried
+         * via the Java processing path as a fallback.
+         *
+         * @return List of failed page numbers (1-indexed), or empty list if all pages succeeded.
+         */
+        public List<Integer> getFailedPages() {
+            return failedPages;
+        }
+
+        /**
+         * Returns whether the backend reported any failed pages.
+         *
+         * @return true if at least one page failed during backend processing.
+         */
+        public boolean hasFailedPages() {
+            return !failedPages.isEmpty();
+        }
+
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
@@ -236,12 +278,13 @@ public interface HybridClient {
             return Objects.equals(markdown, that.markdown) &&
                 Objects.equals(html, that.html) &&
                 Objects.equals(json, that.json) &&
-                Objects.equals(pageContents, that.pageContents);
+                Objects.equals(pageContents, that.pageContents) &&
+                Objects.equals(failedPages, that.failedPages);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(markdown, html, json, pageContents);
+            return Objects.hash(markdown, html, json, pageContents, failedPages);
         }
     }
 
