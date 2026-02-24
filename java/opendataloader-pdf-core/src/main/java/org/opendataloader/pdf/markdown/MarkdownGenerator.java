@@ -295,7 +295,8 @@ public class MarkdownGenerator implements Closeable {
 
     protected void writeHeading(SemanticHeading heading) throws IOException {
         if (!isInsideTable()) {
-            int headingLevel = heading.getHeadingLevel();
+            // Cap heading level to 1-6 per Markdown specification
+            int headingLevel = Math.min(6, Math.max(1, heading.getHeadingLevel()));
             for (int i = 0; i < headingLevel; i++) {
                 markdownWriter.write(MarkdownSyntax.HEADING_LEVEL);
             }
