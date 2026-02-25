@@ -135,7 +135,12 @@ public class AutoTaggingProcessor {
         } else if (object instanceof PDFList) {
             createListStructElem((PDFList) object, parentStructElem, cosDocument);
         } else if (object instanceof TableBorder) {
-            createTableStructElem((TableBorder) object, parentStructElem, cosDocument);
+            TableBorder table = (TableBorder) object;
+            if (table.isTextBlock()) {
+                createPartStructElemForTextBlock(table, parentStructElem, cosDocument);
+            } else {
+                createTableStructElem(table, parentStructElem, cosDocument);
+            }
         } else if (object instanceof ImageChunk) {
             createFigureStructElem((ImageChunk) object, parentStructElem, cosDocument);
         }
@@ -204,10 +209,6 @@ public class AutoTaggingProcessor {
     }
 
     private static void createTableStructElem(TableBorder table, COSObject parent, COSDocument cosDocument) {
-        if (table.isTextBlock()) {
-            createPartStructElemForTextBlock(table, parent, cosDocument);
-            return;
-        }
         COSObject tableObject = addStructElement(parent, cosDocument, TaggedPDFConstants.TABLE, table.getPageNumber());
         for (int rowNumber = 0; rowNumber < table.getNumberOfRows(); rowNumber++) {
             TableBorderRow row = table.getRow(rowNumber);
@@ -231,10 +232,10 @@ public class AutoTaggingProcessor {
     }
 
     private static void createPartStructElemForTextBlock(TableBorder table, COSObject parent, COSDocument cosDocument) {
-        COSObject textBlockObject = addStructElement(parent, cosDocument, TaggedPDFConstants.PART, table.getPageNumber());
+        COSObject partObject = addStructElement(parent, cosDocument, TaggedPDFConstants.PART, table.getPageNumber());
         TableBorderCell cell = table.getCell(0,0);
         for (IObject cellContent : cell.getContents()) {
-            createStructElem(cellContent, textBlockObject, cosDocument);
+            createStructElem(cellContent, partObject, cosDocument);
         }
     }
 
