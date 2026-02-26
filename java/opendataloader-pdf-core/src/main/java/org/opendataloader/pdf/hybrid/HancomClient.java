@@ -58,6 +58,8 @@ public class HancomClient implements HybridClient {
     private static final String DLA_MODE = "ENABLED";
     private static final String OCR_MODE = "FORCE";
 
+    private static final int HEALTH_CHECK_TIMEOUT_MS = 3000;
+
     private final String baseUrl;
     private final OkHttpClient httpClient;
     private final ObjectMapper objectMapper;
@@ -89,6 +91,28 @@ public class HancomClient implements HybridClient {
         this.baseUrl = normalizeUrl(baseUrl);
         this.httpClient = httpClient;
         this.objectMapper = objectMapper;
+    }
+
+    @Override
+    public void checkAvailability() throws IOException {
+        OkHttpClient healthClient = httpClient.newBuilder()
+            .connectTimeout(HEALTH_CHECK_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+            .readTimeout(HEALTH_CHECK_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+            .build();
+
+        Request request = new Request.Builder()
+            .url(baseUrl)
+            .head()
+            .build();
+
+        try (Response response = healthClient.newCall(request).execute()) {
+            // Any response means the server is reachable
+        } catch (IOException e) {
+            throw new IOException(
+                "Hybrid server is not available at " + baseUrl + "\n"
+                + "Please check the server URL and ensure the Hancom API is accessible.\n"
+                + "Or run without --hybrid flag for Java-only processing.", e);
+        }
     }
 
     @Override
