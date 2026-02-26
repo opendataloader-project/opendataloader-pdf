@@ -96,8 +96,10 @@ class HealthCheckTest {
 
         try {
             IOException exception = assertThrows(IOException.class, client::checkAvailability);
-            assertTrue(exception.getMessage().contains("not available"),
-                "Error message should indicate server is not available");
+            assertTrue(exception.getMessage().contains("returned HTTP 503"),
+                "Error message should include the HTTP status code");
+            assertTrue(exception.getMessage().contains("reachable but"),
+                "Error message should indicate server is reachable but unhealthy");
         } finally {
             client.shutdown();
         }
@@ -141,7 +143,9 @@ class HealthCheckTest {
 
     @Test
     void testHealthCheckTimesOutQuickly() throws IOException {
-        // Use a non-routable IP to trigger connect timeout
+        // Uses TEST-NET IP (RFC 5737) to trigger a connect timeout.
+        // Some CI environments may reject packets instantly instead of timing out,
+        // but the upper-bound assertion (< 10s) still holds in either case.
         String baseUrl = "http://192.0.2.1:9999";
         DoclingFastServerClient client = new DoclingFastServerClient(
             baseUrl, new OkHttpClient(), new ObjectMapper());
