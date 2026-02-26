@@ -289,6 +289,16 @@ public interface HybridClient {
     }
 
     /**
+     * Checks if the backend server is available and ready to accept requests.
+     *
+     * <p>This performs a lightweight health check (e.g., HTTP GET to /health) with a short
+     * timeout to verify connectivity before sending actual conversion requests.
+     *
+     * @throws IOException If the server is unreachable or not ready.
+     */
+    void checkAvailability() throws IOException;
+
+    /**
      * Converts a PDF document synchronously.
      *
      * @param request The conversion request containing PDF bytes and options.
