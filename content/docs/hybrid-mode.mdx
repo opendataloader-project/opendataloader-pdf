@@ -160,6 +160,118 @@ Hybrid mode is designed with privacy in mind:
 | Maximum accuracy priority | **Hybrid mode** |
 | Air-gapped environments | Hybrid with local Docker backend |
 
+## Scanned PDFs (OCR)
+
+For image-based or scanned PDFs that contain no selectable text, enable OCR on the hybrid backend with `--force-ocr`.
+
+### CLI
+
+Terminal 1: Start backend with OCR enabled
+
+```bash
+opendataloader-pdf-hybrid --port 5002 --force-ocr
+```
+
+Terminal 2: Process scanned PDF
+
+```bash
+opendataloader-pdf --hybrid docling-fast input-scanned.pdf
+```
+
+For non-English documents, specify the OCR language:
+
+```bash
+opendataloader-pdf-hybrid --port 5002 --ocr-lang "ko,en"
+```
+
+Supported language codes include: `en`, `ko`, `ja`, `zh_sim` (Simplified Chinese), `zh_tra` (Traditional Chinese), `de`, `fr`, and more. Multiple languages can be combined with commas.
+
+### Python
+
+```python
+import opendataloader_pdf
+
+opendataloader_pdf.convert(
+    input_path="scanned.pdf",
+    output_dir="output/",
+    hybrid="docling-fast"
+)
+```
+
+Start the backend server with `--force-ocr` before running the Python conversion.
+
+### Docker
+
+```bash
+docker run -p 5002:5002 ghcr.io/opendataloader-project/opendataloader-pdf-hybrid \
+  opendataloader-pdf-hybrid --port 5002 --host 0.0.0.0 --force-ocr --ocr-lang "ko,en"
+```
+
+> **Note**: Standard digital PDFs do not need `--force-ocr`. Use it only for scanned or image-based PDFs where text cannot be selected.
+
+## Chart and Image Description
+
+Generate AI-powered natural language descriptions for images and charts in your PDFs. This makes visual content searchable in RAG pipelines and produces alt text for accessibility.
+
+> **Important**: Picture description requires `--hybrid-mode full` on the client side. Without it, the enrichment runs on the backend but the descriptions are not included in the output.
+
+### CLI
+
+Terminal 1: Start backend with picture description enabled
+
+```bash
+opendataloader-pdf-hybrid --port 5002 --enrich-picture-description
+```
+
+Terminal 2: Process with full backend mode
+
+```bash
+opendataloader-pdf --hybrid docling-fast --hybrid-mode full input.pdf
+```
+
+### Python
+
+```python
+import opendataloader_pdf
+
+opendataloader_pdf.convert(
+    input_path="document.pdf",
+    output_dir="output/",
+    hybrid="docling-fast",
+    hybrid_mode="full"  # Required for picture description
+)
+```
+
+Start the backend server with `--enrich-picture-description` before running.
+
+### Output
+
+The description appears in the JSON output under `"description"` and as an italic caption in Markdown:
+
+```json
+{
+  "type": "picture",
+  "page number": 1,
+  "bounding box": [72.0, 400.0, 540.0, 650.0],
+  "description": "A bar chart showing waste generation by region from 2016 to 2030..."
+}
+```
+
+```markdown
+![image 1](document_images/imageFile1.png)
+
+*A bar chart showing waste generation by region from 2016 to 2030...*
+```
+
+You can customize the prompt for specific document types:
+
+```bash
+opendataloader-pdf-hybrid --enrich-picture-description \
+  --picture-description-prompt "Describe this scientific figure in detail, including axis labels and data trends."
+```
+
+> **Note**: Picture description uses SmolVLM (256M), a lightweight vision model. Results are suitable for general context but may not capture precise data values from complex charts.
+
 ## Docker Deployment
 
 ### Quick Start
