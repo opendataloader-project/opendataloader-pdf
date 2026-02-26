@@ -77,6 +77,18 @@ Building RAG pipelines? You've probably hit these problems:
 
 <br/>
 
+## Which Mode Should I Use?
+
+| Your Document | Mode | Setup |
+|---------------|------|-------|
+| Standard digital PDF | Fast (default) | `pip install opendataloader-pdf` |
+| Complex or nested tables | Hybrid | + start hybrid server |
+| Scanned / image-based PDF | Hybrid + OCR | + `--force-ocr` on server |
+| Charts / figures needing text description | Hybrid + picture description | + `--enrich-picture-description` on server |
+| Mathematical formulas (LaTeX) | Hybrid + formula | + `--enrich-formula` on server |
+
+<br/>
+
 ## Output Formats
 
 | Format | Use Case |
@@ -258,6 +270,26 @@ Output in HTML (MathJax/KaTeX compatible):
 
 > **Note**: Formula extraction requires `--hybrid-mode full` to route all pages to the backend where the formula enrichment model runs.
 
+### Scanned PDFs (OCR)
+
+For image-based or scanned PDFs that contain no selectable text, enable OCR on the hybrid backend:
+
+```bash
+# Start backend with OCR enabled
+opendataloader-pdf-hybrid --port 5002 --force-ocr
+
+# Process scanned PDF
+opendataloader-pdf --hybrid docling-fast input-scanned.pdf
+```
+
+For non-English documents, specify the OCR language:
+
+```bash
+opendataloader-pdf-hybrid --port 5002 --ocr-lang "ko,en"
+```
+
+> **Note**: Standard digital PDFs do not need `--force-ocr`. Use it only for scanned or image-based PDFs.
+
 ### Picture / Chart Description (Alt Text)
 
 Generate AI-powered descriptions for images and charts in your PDFs. Useful for accessibility (alt text) and making visual content searchable in RAG pipelines.
@@ -408,6 +440,64 @@ This means: consistent output (same input = same output), no GPU required, faste
 ### How do I get better accuracy for complex tables?
 
 Enable hybrid mode with `pip install -U "opendataloader-pdf[hybrid]"`. This routes pages with complex tables to an AI backend (like docling-serve) while keeping simple pages fast and local. Table accuracy improves from 0.49 to 0.93 — matching or exceeding dedicated AI parsers while remaining faster and more cost-effective.
+
+### Does it work with scanned PDFs?
+
+Yes, via hybrid mode with OCR. Start the backend server with `--force-ocr`:
+
+Terminal 1: Start backend with OCR enabled
+
+```bash
+opendataloader-pdf-hybrid --port 5002 --force-ocr
+```
+
+Terminal 2: Process scanned PDF
+
+```bash
+opendataloader-pdf --hybrid docling-fast input-scanned.pdf
+```
+
+Or use in Python:
+
+```python
+opendataloader_pdf.convert(
+    input_path="scanned.pdf",
+    output_dir="output/",
+    hybrid="docling-fast"
+)
+```
+
+(Start the backend with `--force-ocr` before running.)
+
+For non-English documents, add `--ocr-lang`:
+
+```bash
+opendataloader-pdf-hybrid --port 5002 --ocr-lang "ko,en"
+```
+
+### Does it work with images and charts?
+
+Two levels of support:
+
+1. **Image extraction** (all modes): Embedded images are extracted to the output folder with bounding boxes. Use `--image-output external` (the default):
+
+```python
+opendataloader_pdf.convert(
+    input_path="document.pdf",
+    output_dir="output/",
+    image_output="external"  # Saves images as files with bounding boxes in JSON
+)
+```
+
+2. **AI chart descriptions** (hybrid only): Generate natural language descriptions of charts and figures for RAG search:
+
+```bash
+# Start backend with picture description enabled
+opendataloader-pdf-hybrid --port 5002 --enrich-picture-description
+
+# Process with full backend mode (required for picture description)
+opendataloader-pdf --hybrid docling-fast --hybrid-mode full input.pdf
+```
 
 <br/>
 
