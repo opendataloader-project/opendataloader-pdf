@@ -285,7 +285,7 @@ opendataloader-pdf --hybrid docling-fast input-scanned.pdf
 For non-English documents, specify the OCR language:
 
 ```bash
-opendataloader-pdf-hybrid --port 5002 --ocr-lang "ko,en"
+opendataloader-pdf-hybrid --port 5002 --force-ocr --ocr-lang "ko,en"
 ```
 
 > **Note**: Standard digital PDFs do not need `--force-ocr`. Use it only for scanned or image-based PDFs.
