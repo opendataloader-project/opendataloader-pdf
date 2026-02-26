@@ -290,6 +290,8 @@ opendataloader-pdf-hybrid --port 5002 --ocr-lang "ko,en"
 
 > **Note**: Standard digital PDFs do not need `--force-ocr`. Use it only for scanned or image-based PDFs.
 
+> **Timeout**: OCR is CPU-intensive. For large scanned documents, increase the timeout: `opendataloader-pdf --hybrid docling-fast --hybrid-timeout 120000 input-scanned.pdf`
+
 ### Picture / Chart Description (Alt Text)
 
 Generate AI-powered descriptions for images and charts in your PDFs. Useful for accessibility (alt text) and making visual content searchable in RAG pipelines.
