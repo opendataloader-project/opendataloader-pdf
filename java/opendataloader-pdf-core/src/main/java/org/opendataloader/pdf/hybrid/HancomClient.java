@@ -106,7 +106,9 @@ public class HancomClient implements HybridClient {
             .build();
 
         try (Response response = healthClient.newCall(request).execute()) {
-            // Any response means the server is reachable
+            // Any HTTP response (including 4xx/5xx) means the server is reachable.
+            // Hancom API requires authentication for all endpoints, so a 401/403
+            // is expected and still proves connectivity.
         } catch (IOException e) {
             throw new IOException(
                 "Hybrid server is not available at " + baseUrl + "\n"

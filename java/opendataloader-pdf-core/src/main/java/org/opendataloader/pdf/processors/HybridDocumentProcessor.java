@@ -98,9 +98,10 @@ public class HybridDocumentProcessor {
         int totalPages = StaticContainers.getDocument().getNumberOfPages();
         LOGGER.log(Level.INFO, "Starting hybrid processing for {0} pages", totalPages);
 
-        // Phase 0: Check backend availability before any processing
-        HybridClient client = getClient(config);
-        client.checkAvailability();
+        // Phase 0: Check backend availability before any processing.
+        // Runs before triage intentionally — if the user explicitly requested hybrid mode,
+        // they expect the server to be available regardless of how pages would be routed.
+        getClient(config).checkAvailability();
 
         // Phase 1: Filter all pages and collect filtered contents
         Map<Integer, List<IObject>> filteredContents = filterAllPages(inputPdfName, config, pagesToProcess, totalPages);
