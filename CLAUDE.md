@@ -1,149 +1,18 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## Gotchas
 
-## Project Overview
+After changing CLI options in Java, **must** run `npm run sync` — this regenerates `options.json` and all Python/Node.js bindings. Forgetting this silently breaks the wrappers.
 
-OpenDataLoader PDF is a PDF parsing library for RAG pipelines. Converts PDFs to Markdown, JSON, HTML, and annotated PDF. Java core with Python and Node.js wrappers.
+When using `--enrich-formula` or `--enrich-picture-description` on the hybrid server, the client **must** use `--hybrid-mode full`. Otherwise enrichments are silently skipped (they only run on the backend, not in Java).
 
-## Build Commands
+## Conventions
 
-### Java (Core)
-
-```bash
-# Run tests (local development)
-./scripts/test-java.sh
-
-# Build with release profile (CI/CD)
-./scripts/build-java.sh
-
-# Run a single test class
-cd java && mvn test -Dtest=TextLineProcessorTest
-
-# Run a single test method
-cd java && mvn test -Dtest=TextLineProcessorTest#testMethodName
-```
-
-### Sync Generated Files
-
-After changing CLI options in Java, sync to Python/Node.js:
-```bash
-npm run sync
-```
-
-This exports options from the Java CLI and regenerates `options.json`, `schema.json`, and language-specific bindings.
-
-### Hybrid Server (Local Testing)
-
-```bash
-# Install Python dependencies with hybrid extra
-cd python/opendataloader-pdf && pip install -e ".[hybrid]"
-
-# Run hybrid server (default: http://localhost:5002)
-opendataloader-pdf-hybrid
-
-# Custom port
-opendataloader-pdf-hybrid --port 5003
-
-# With debug logging
-opendataloader-pdf-hybrid --log-level debug
-
-# With OCR language configuration (for scanned PDFs)
-opendataloader-pdf-hybrid --ocr-lang "ch_sim,en"  # Chinese + English
-opendataloader-pdf-hybrid --ocr-lang "ko"          # Korean
-opendataloader-pdf-hybrid --ocr-lang "ja" --force-ocr  # Japanese with forced OCR
-```
-
-**OCR Options:**
-- `--ocr-lang`: Comma-separated [EasyOCR language codes](https://www.jaided.ai/easyocr/) (default: EasyOCR default languages)
-- `--force-ocr`: Force full-page OCR on all pages regardless of embedded text
-
-**Enrichment Options:**
-```bash
-# With formula enrichment (LaTeX extraction)
-opendataloader-pdf-hybrid --enrich-formula
-
-# With picture description (alt text generation)
-opendataloader-pdf-hybrid --enrich-picture-description
-
-# Combined: OCR + enrichments
-opendataloader-pdf-hybrid --ocr-lang "en" --enrich-formula --enrich-picture-description
-```
-
-- `--enrich-formula / --no-enrich-formula`: Enable formula recognition (extracts LaTeX representation)
-- `--enrich-picture-description / --no-enrich-picture-description`: Enable picture description (generates alt text using SmolVLM)
-- `--picture-description-prompt "..."`: Custom prompt for picture description (default: optimized for charts and data extraction)
-
-**Enrichment Processing Note:**
-When using `--enrich-formula` or `--enrich-picture-description`, use `--hybrid-mode full` on the client side to route all pages to the backend:
-```bash
-# Server
-opendataloader-pdf-hybrid --enrich-formula --enrich-picture-description
-
-# Client
-opendataloader-pdf --hybrid docling-fast --hybrid-mode full input.pdf
-```
-This is required because the enrichment models run on the backend, not in Java processing.
-
-## Architecture
-
-```
-java/opendataloader-pdf-core/    # Core PDF processing engine
-java/opendataloader-pdf-cli/     # CLI wrapper (shaded JAR)
-python/opendataloader-pdf/       # Python wrapper (subprocess)
-node/opendataloader-pdf/         # Node.js wrapper (TypeScript)
-```
-
-## Commit Message Format
-
-```
-<type>: <short summary>
-```
-
-Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`
-
-## Documentation
-
-The `content/docs/` directory contains documentation that is automatically synced to the homepage (opendataloader.org) on release.
-
-## AI Issue Workflow
-
-GitHub Actions automatically process issues: Triage → Analyze → Fix (see `ai-issue-*.yml`).
-
-Manual triggers via issue comment: `@ai-issue analyze` or `@ai-issue fix` (CODEOWNERS only).
-
-Use `/ai-issue` skill locally to process issues.
+`content/docs/` auto-syncs to opendataloader.org on release. Edits here go live.
 
 ## Benchmark
 
-### Running
-
-```bash
-./scripts/bench.sh                      # Full benchmark
-./scripts/bench.sh --doc-id 01030...    # Specific document only
-./scripts/bench.sh --check-regression   # Include regression test (for CI)
-```
-
-### Evaluation Metrics
-
-- **NID**: Reading order accuracy (Normalized Indel Distance)
-- **TEDS**: Table structure accuracy (Tree Edit Distance Similarity)
-- **MHS**: Heading structure accuracy (Markdown Heading Similarity)
-- **Table Detection F1**: Table presence detection accuracy
-- **Speed**: Processing time per document (seconds/doc)
-
-### Claude Commands
-
-- `/bench` - Run benchmark and analyze results
-- `/bench-debug <doc_id>` - Analyze failure causes for a specific document
-
-### Regression Testing
-
-Benchmark runs automatically before PR merge.
-CI fails if scores fall below thresholds in `tests/benchmark/thresholds.json`.
-
-### Benchmark Data
-
-- `tests/benchmark/pdfs/` - 200 test PDFs (Git LFS)
-- `tests/benchmark/ground-truth/` - Ground-truth markdown
-- `tests/benchmark/prediction/` - Prediction results
+- `/bench` — Run benchmark and analyze results
+- `/bench-debug <doc_id>` — Debug specific document failures
+- CI fails if scores drop below `tests/benchmark/thresholds.json`
+- Metrics: **NID** (reading order), **TEDS** (table structure), **MHS** (heading structure), **Table Detection F1**, **Speed**
