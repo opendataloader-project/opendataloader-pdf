@@ -50,6 +50,8 @@ public class DoclingFastServerClient implements HybridClient {
     public static final String DEFAULT_URL = "http://localhost:5002";
 
     private static final String CONVERT_ENDPOINT = "/v1/convert/file";
+    private static final String HEALTH_ENDPOINT = "/health";
+    private static final int HEALTH_CHECK_TIMEOUT_MS = 3000;
     private static final String DEFAULT_FILENAME = "document.pdf";
     private static final MediaType MEDIA_TYPE_PDF = MediaType.parse("application/pdf");
 
@@ -83,6 +85,30 @@ public class DoclingFastServerClient implements HybridClient {
         this.baseUrl = baseUrl;
         this.httpClient = httpClient;
         this.objectMapper = objectMapper;
+    }
+
+    @Override
+    public void checkAvailability() throws IOException {
+        OkHttpClient healthClient = httpClient.newBuilder()
+            .connectTimeout(HEALTH_CHECK_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+            .readTimeout(HEALTH_CHECK_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+            .build();
+
+        Request healthRequest = new Request.Builder()
+            .url(baseUrl + HEALTH_ENDPOINT)
+            .get()
+            .build();
+
+        try (Response response = healthClient.newCall(healthRequest).execute()) {
+            if (!response.isSuccessful()) {
+                throw new IOException("Hybrid server health check failed with status " + response.code());
+            }
+        } catch (IOException e) {
+            throw new IOException(
+                "Hybrid server is not available at " + baseUrl + "\n"
+                + "Please start the server with: opendataloader-pdf-hybrid\n"
+                + "Or run without --hybrid flag for Java-only processing.", e);
+        }
     }
 
     @Override
