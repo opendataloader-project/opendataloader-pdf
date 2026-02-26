@@ -99,15 +99,22 @@ public class DoclingFastServerClient implements HybridClient {
             .get()
             .build();
 
-        try (Response response = healthClient.newCall(healthRequest).execute()) {
-            if (!response.isSuccessful()) {
-                throw new IOException("Hybrid server health check failed with status " + response.code());
-            }
+        Response response;
+        try {
+            response = healthClient.newCall(healthRequest).execute();
         } catch (IOException e) {
             throw new IOException(
                 "Hybrid server is not available at " + baseUrl + "\n"
                 + "Please start the server with: opendataloader-pdf-hybrid\n"
                 + "Or run without --hybrid flag for Java-only processing.", e);
+        }
+        try (response) {
+            if (!response.isSuccessful()) {
+                throw new IOException(
+                    "Hybrid server at " + baseUrl + " returned HTTP " + response.code()
+                    + " during health check.\n"
+                    + "The server is reachable but may be starting up or unhealthy.");
+            }
         }
     }
 
