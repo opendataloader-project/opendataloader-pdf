@@ -210,7 +210,66 @@ opendataloader_pdf.convert(
 
 ### Does it work with scanned PDFs?
 
-Yes! OCR for scanned PDFs is available via hybrid mode. Start the hybrid server with `--ocr-lang` to enable multi-language OCR. See [Hybrid Mode](/docs/hybrid-mode) for setup instructions.
+Yes, via hybrid mode with OCR. Install the hybrid extra, then start the backend with `--force-ocr`:
+
+Terminal 1: Start backend with OCR enabled
+
+```bash
+pip install -U "opendataloader-pdf[hybrid]"
+opendataloader-pdf-hybrid --port 5002 --force-ocr
+```
+
+Terminal 2: Process scanned PDF
+
+```bash
+opendataloader-pdf --hybrid docling-fast input-scanned.pdf
+```
+
+Or use in Python:
+
+```python
+import opendataloader_pdf
+
+opendataloader_pdf.convert(
+    input_path="scanned.pdf",
+    output_dir="output/",
+    hybrid="docling-fast"
+)
+```
+
+For non-English scanned documents, specify the OCR language:
+
+```bash
+opendataloader-pdf-hybrid --port 5002 --ocr-lang "ko,en"
+```
+
+See [Hybrid Mode → Scanned PDFs (OCR)](/docs/hybrid-mode#scanned-pdfs-ocr) for details.
+
+### Does it work with images and charts?
+
+Two levels of support:
+
+1. **Image extraction** (all modes): Embedded images are extracted with bounding boxes. Enable with `image_output="external"` (the default):
+
+```python
+opendataloader_pdf.convert(
+    input_path="document.pdf",
+    output_dir="output/",
+    image_output="external"  # Saves images as files; bounding boxes in JSON
+)
+```
+
+2. **AI chart descriptions** (hybrid only): Generate natural language descriptions of charts and figures, useful for RAG pipelines where visual content needs to be searchable:
+
+```bash
+# Start backend with picture description enabled
+opendataloader-pdf-hybrid --port 5002 --enrich-picture-description
+
+# Process with full backend mode (required for picture description)
+opendataloader-pdf --hybrid docling-fast --hybrid-mode full input.pdf
+```
+
+The description appears in the JSON output under `"description"` and as a caption in Markdown. See [Hybrid Mode → Chart and Image Description](/docs/hybrid-mode#chart-and-image-description) for details.
 
 ## Tagged PDF
 
