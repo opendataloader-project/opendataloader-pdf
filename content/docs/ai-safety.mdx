@@ -57,7 +57,6 @@ Attackers can encode ASCII characters by tweaking the least significant bit (LSB
 | Command                | Description                                      | Example                                     |
 | ---------------------- | ------------------------------------------------ | ------------------------------------------- |
 | `--content-safety-off` | Disable one or more filters (comma-separated).   | `--content-safety-off hidden-text,off-page` |
-| `--exclude-patterns`   | Drop content that matches custom regex patterns. | `--exclude-patterns <regex>`                |
 
 ### Available filters
 
@@ -68,6 +67,7 @@ Attackers can encode ASCII characters by tweaking the least significant bit (LSB
 | `off-page`       | Removes text located outside the visible page bounds.   | ✅          |
 | `tiny`           | Filters extremely small fonts.                          | ✅          |
 | `hidden-ocg`     | Drops content hidden in Optional Content Groups.        | ✅          |
+| `sensitive-data` | Filters emails, IPs, phone numbers, and credit cards.   | ✅          |
 | `patterns`       | Detects repeating visual patterns that encode prompts.  | 🚀 Upcoming |
 | `malicious-font` | Detects manipulated font `cmap` tables.                 | 🚀 Upcoming |
 | `noised-figure`  | Detects steganographic prompts in images.               | 🚀 Upcoming |

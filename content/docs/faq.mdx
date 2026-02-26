@@ -48,7 +48,7 @@ This means: consistent output (same input = same output), no GPU required, faste
 
 - **Java 11 or higher** (must be installed and in PATH)
 - **Python 3.9+** (for Python package)
-- **Node.js 18+** (for Node.js package)
+- **Node.js 20+** (for Node.js package)
 - No GPU required
 - Works on Linux, macOS, and Windows
 
@@ -210,7 +210,7 @@ opendataloader_pdf.convert(
 
 ### Does it work with scanned PDFs?
 
-OCR support for scanned PDFs is **coming soon** (scheduled for December 2025). Currently, OpenDataLoader works best with digital PDFs that have embedded text.
+Yes! OCR for scanned PDFs is available via hybrid mode. Start the hybrid server with `--ocr-lang` to enable multi-language OCR. See [Hybrid Mode](/docs/hybrid-mode) for setup instructions.
 
 ## Tagged PDF
 
