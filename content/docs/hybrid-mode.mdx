@@ -209,6 +209,11 @@ docker run -p 5002:5002 ghcr.io/opendataloader-project/opendataloader-pdf-hybrid
 
 > **Note**: Standard digital PDFs do not need `--force-ocr`. Use it only for scanned or image-based PDFs where text cannot be selected.
 
+> **Timeout**: OCR is CPU-intensive. For large scanned documents, increase the timeout (default is 30s per batch):
+> ```bash
+> opendataloader-pdf --hybrid docling-fast --hybrid-timeout 120000 input-scanned.pdf
+> ```
+
 ## Chart and Image Description
 
 Generate AI-powered natural language descriptions for images and charts in your PDFs. This makes visual content searchable in RAG pipelines and produces alt text for accessibility.
