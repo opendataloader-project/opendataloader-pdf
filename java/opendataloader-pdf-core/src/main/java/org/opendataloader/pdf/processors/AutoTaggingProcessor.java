@@ -59,23 +59,24 @@ public class AutoTaggingProcessor {
             COSBase base = (contentsObject != null) ? contentsObject.getDirectBase() : null;
             byte[] res = new PDFStreamWriter().write(processTokens(getTokens(page.getContent()), pageNumber));
             if (base instanceof COSStream) {
-                setUpContents(contentsObject, res, page, cosDocument);
+                setUpContents(contentsObject, res);
+                cosDocument.addChangedObject(contentsObject);
             } else {
-                COSObject newContentsObj = COSIndirect.construct(COSStream.construct(), cosDocument);
-                setUpContents(newContentsObj, res, page, cosDocument);
-                page.getObject().setKey(ASAtom.CONTENTS, newContentsObj);
+                COSObject newContentsObject = COSIndirect.construct(COSStream.construct(), cosDocument);
+                setUpContents(newContentsObject, res);
+                page.getObject().setKey(ASAtom.CONTENTS, newContentsObject);
+                cosDocument.addObject(newContentsObject);
             }
         }
     }
 
-    private static void setUpContents(COSObject contentsObj, byte[] res, PDPage page, COSDocument cosDocument) throws IOException {
+    private static void setUpContents(COSObject contentsObj, byte[] res) throws IOException {
         try (InputStream inStream = new ByteArrayInputStream(res)) {
             contentsObj.setData(new ASMemoryInStream(inStream));
         }
         contentsObj.setKey(ASAtom.FILTER, new COSObject());
         COSStream newStream = (COSStream) contentsObj.getDirectBase();
         newStream.setFilters(new COSFilters(COSName.construct(ASAtom.FLATE_DECODE)));
-        cosDocument.addChangedObject(contentsObj);
     }
 
     private static COSObject createStructTreeRoot(PDCatalog catalog, COSDocument cosDocument, PDDocument document) {
