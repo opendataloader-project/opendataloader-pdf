@@ -63,6 +63,7 @@ public class AutoTaggingProcessor {
             } else {
                 COSObject newContentsObj = COSIndirect.construct(COSStream.construct(), cosDocument);
                 setUpContents(newContentsObj, res, page, cosDocument);
+                page.getObject().setKey(ASAtom.CONTENTS, newContentsObj);
             }
         }
     }
@@ -74,8 +75,6 @@ public class AutoTaggingProcessor {
         contentsObj.setKey(ASAtom.FILTER, new COSObject());
         COSStream newStream = (COSStream) contentsObj.getDirectBase();
         newStream.setFilters(new COSFilters(COSName.construct(ASAtom.FLATE_DECODE)));
-
-        page.getObject().setKey(ASAtom.CONTENTS, contentsObj);
         cosDocument.addChangedObject(contentsObj);
     }
 
