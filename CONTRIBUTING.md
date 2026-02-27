@@ -70,15 +70,27 @@ To suggest a new feature:
    git checkout -b my-feature
    ```
 
-4. Make your changes and commit them.
-5. **Push** your branch:
+4. **Build** the project:
+
+   **Prerequisites:** Java 11+, Maven, Node.js, pnpm, uv
+
+   ```bash
+   # Build Java packages
+   npm run build-java
+
+   # If you changed CLI options in Java, sync bindings (regenerates options.json, Python/Node.js wrappers)
+   npm run sync
+   ```
+
+5. Make your changes and commit them.
+6. **Push** your branch:
 
    ```bash
    git push origin my-feature
    ```
 
-6. **Open a Pull Request** (PR) against the `develop` branch.
-7. Respond to review comments and update your PR as needed.
+7. **Open a Pull Request** (PR) against the `develop` branch.
+8. Respond to review comments and update your PR as needed.
 
 ---
 
@@ -87,6 +99,7 @@ To suggest a new feature:
 - Follow existing code conventions.
 - Run linters/formatters before committing.
 - Write unit tests for any new or changed logic.
+- Run `./scripts/bench.sh` before submitting a PR — CI will fail if benchmark scores drop below thresholds.
 - Keep your changes minimal and focused.
 
 ## ✅ Commit Message Guidelines
