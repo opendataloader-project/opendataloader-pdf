@@ -56,9 +56,8 @@ public class AutoTaggingProcessor {
             page.getObject().setKey(ASAtom.STRUCT_PARENTS, COSInteger.construct(page.getPageNumber()));
             cosDocument.addChangedObject(page.getObject());
             COSObject contentsObject = page.getKey(ASAtom.CONTENTS);
-            COSBase base = (contentsObject != null) ? contentsObject.getDirectBase() : null;
             byte[] res = new PDFStreamWriter().write(processTokens(getTokens(page.getContent()), pageNumber));
-            if (base instanceof COSStream) {
+            if (contentsObject != null && contentsObject.isIndirect()) {
                 setUpContents(contentsObject, res);
                 cosDocument.addChangedObject(contentsObject);
             } else {
