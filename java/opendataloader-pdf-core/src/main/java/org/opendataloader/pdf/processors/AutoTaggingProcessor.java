@@ -35,7 +35,7 @@ public class AutoTaggingProcessor {
     public static void createTaggedPDF(File inputPDF, String outputFolder, PDDocument document, List<List<IObject>> contents) throws IOException {
         operatorIndexes.clear();
         structParents.clear();
-        if (document.getVersion() == 2.0) {
+        if (document.getVersion() == 2.0F) {
             isPDF2_0 = true;
         }
         COSDocument cosDocument = document.getDocument();
