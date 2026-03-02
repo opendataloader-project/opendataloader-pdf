@@ -30,10 +30,14 @@ public class AutoTaggingProcessor {
     private static Map<Integer, List<Integer>> operatorIndexes = new HashMap<>();
     private static Map<Integer, List<COSObject>> structParents = new HashMap<>();
     private static final Set<String> operatorsForContents = new HashSet<>();
+    private static boolean isPDF2_0 = false;
 
     public static void createTaggedPDF(File inputPDF, String outputFolder, PDDocument document, List<List<IObject>> contents) throws IOException {
         operatorIndexes.clear();
         structParents.clear();
+        if (document.getVersion() == 2.0) {
+            isPDF2_0 = true;
+        }
         COSDocument cosDocument = document.getDocument();
         PDCatalog catalog = document.getCatalog();
         COSObject structTreeRoot = createStructTreeRoot(catalog, cosDocument, document);
@@ -159,7 +163,8 @@ public class AutoTaggingProcessor {
     }
 
     private static void createHeadingStructElem(SemanticHeading heading, COSObject parent, COSDocument cosDocument) {
-        COSObject headingObject = addStructElement(parent, cosDocument, TaggedPDFConstants.H + heading.getHeadingLevel(),
+        COSObject headingObject = addStructElement(parent, cosDocument,
+            isPDF2_0 ? TaggedPDFConstants.H + heading.getHeadingLevel() : TaggedPDFConstants.H,
             heading.getPageNumber());
         processTextNode(heading, headingObject);
     }
