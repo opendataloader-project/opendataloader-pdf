@@ -183,6 +183,14 @@
       "required": false,
       "default": true,
       "description": "Fallback to Java processing on hybrid backend error. Default: true"
+    },
+    {
+      "name": "parallel",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": "1",
+      "description": "Number of files to process in parallel (separate process per file). Default: 1 (sequential)"
     }
   ]
 }

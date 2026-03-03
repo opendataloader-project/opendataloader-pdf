@@ -31,12 +31,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -140,35 +143,50 @@ public class HybridDocumentProcessor {
         LOGGER.log(Level.INFO, "Routing: {0} pages to Java, {1} pages to Backend",
             new Object[]{javaPages.size(), backendPages.size()});
 
-        // Phase 4: Process sequentially (Java first, then backend)
+        // Phase 4: Process Java path and Backend path concurrently
         List<List<IObject>> contents = new ArrayList<>();
         for (int i = 0; i < totalPages; i++) {
             contents.add(new ArrayList<>());
         }
 
-        // Process Java path first
+        // Start backend fetch FIRST as async (pure IO, no StaticContainers dependency)
+        CompletableFuture<BackendFetchResult> backendFuture;
+        if (!backendPages.isEmpty()) {
+            backendFuture = CompletableFuture.supplyAsync(() -> {
+                try {
+                    return fetchFromBackend(inputPdfName, backendPages, config);
+                } catch (IOException e) {
+                    throw new CompletionException(e);
+                }
+            });
+        } else {
+            backendFuture = CompletableFuture.completedFuture(BackendFetchResult.empty());
+        }
+
+        // Run Java path on the MAIN thread (preserves StaticContainers state)
         Map<Integer, List<IObject>> javaResults = processJavaPath(
             filteredContents, javaPages, config, totalPages
         );
 
-        // Process backend path (synchronous)
+        // Join backend result on main thread, then process response
         Map<Integer, List<IObject>> backendResults;
         Set<Integer> backendFailedPages = new HashSet<>();
         try {
-            backendResults = processBackendPath(inputPdfName, backendPages, config, backendFailedPages);
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Backend processing failed: {0}", e.getMessage());
+            BackendFetchResult fetchResult = backendFuture.join();
+            backendResults = processBackendResponse(fetchResult, config, backendFailedPages);
+        } catch (CompletionException e) {
+            Throwable cause = e.getCause() != null ? e.getCause() : e;
+            LOGGER.log(Level.WARNING, "Backend processing failed: {0}", cause.getMessage());
             if (config.getHybridConfig().isFallbackToJava()) {
                 LOGGER.log(Level.INFO, "Falling back to Java processing for backend pages");
                 backendResults = processJavaPath(filteredContents, backendPages, config, totalPages);
             } else {
-                throw new IOException("Backend processing failed and fallback is disabled", e);
+                throw new IOException("Backend processing failed and fallback is disabled", cause);
             }
         }
 
         // Fallback: reprocess backend-failed pages through Java path
         if (!backendFailedPages.isEmpty()) {
-            // Log 1-indexed page numbers for human readability
             List<Integer> failedPages1Indexed = backendFailedPages.stream()
                 .map(p -> p + 1).sorted().collect(Collectors.toList());
             if (config.getHybridConfig().isFallbackToJava()) {
@@ -265,8 +283,7 @@ public class HybridDocumentProcessor {
             new ClusterTableProcessor().processTables(workingContents);
         }
 
-        // Process each page through the standard Java pipeline
-        // Note: Sequential processing is required because StaticContainers uses ThreadLocal
+        // Phase A-1: Table borders — sequential (shared TableBordersCollection state)
         for (int pageNumber : pageNumbers) {
             try {
                 List<IObject> pageContents = workingContents.get(pageNumber);
@@ -274,11 +291,31 @@ public class HybridDocumentProcessor {
                 pageContents = pageContents.stream()
                     .filter(x -> !(x instanceof LineChunk))
                     .collect(Collectors.toList());
-                pageContents = TextLineProcessor.processTextLines(pageContents);
-                pageContents = SpecialTableProcessor.detectSpecialTables(pageContents);
                 workingContents.set(pageNumber, pageContents);
             } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "Error processing page {0}: {1}",
+                LOGGER.log(Level.WARNING, "Error processing table borders for page {0}: {1}",
+                    new Object[]{pageNumber, e.getMessage()});
+            }
+        }
+
+        // Phase A-2: Text line processing — parallel (independent per page, most expensive)
+        pageNumbers.parallelStream().forEach(pageNumber -> {
+            try {
+                workingContents.set(pageNumber,
+                    TextLineProcessor.processTextLines(workingContents.get(pageNumber)));
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, "Error processing text lines for page {0}: {1}",
+                    new Object[]{pageNumber, e.getMessage()});
+            }
+        });
+
+        // Phase A-3: Special tables — sequential (calls TableBorderProcessor internally)
+        for (int pageNumber : pageNumbers) {
+            try {
+                workingContents.set(pageNumber,
+                    SpecialTableProcessor.detectSpecialTables(workingContents.get(pageNumber)));
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, "Error detecting special tables for page {0}: {1}",
                     new Object[]{pageNumber, e.getMessage()});
             }
         }
@@ -297,13 +334,21 @@ public class HybridDocumentProcessor {
 
     /**
      * Applies post-processing to Java-processed pages.
+     * Paragraph and list processing run in parallel; heading, ID, and caption
+     * processing run sequentially due to ThreadLocal order dependencies.
      */
     private static void applyJavaPagePostProcessing(List<List<IObject>> contents, Set<Integer> pageNumbers) {
-        // Process paragraphs, lists, and headings for each page
-        for (int pageNumber : pageNumbers) {
+        // Phase B-1: Paragraph + List — parallel (independent per page)
+        pageNumbers.parallelStream().forEach(pageNumber -> {
             List<IObject> pageContents = contents.get(pageNumber);
             pageContents = ParagraphProcessor.processParagraphs(pageContents);
             pageContents = ListProcessor.processListsFromTextNodes(pageContents);
+            contents.set(pageNumber, pageContents);
+        });
+
+        // Phase B-2: Headings + IDs + Captions — sequential (ThreadLocal order dependency)
+        for (int pageNumber : pageNumbers) {
+            List<IObject> pageContents = contents.get(pageNumber);
             HeadingProcessor.processHeadings(pageContents, false);
             DocumentProcessor.setIDs(pageContents);
             CaptionProcessor.processCaptions(pageContents);
@@ -312,82 +357,147 @@ public class HybridDocumentProcessor {
     }
 
     /**
-     * Processes pages using the external backend.
+     * Fetches conversion results from the backend. Thread-safe — only performs IO.
      *
-     * @param inputPdfName     The path to the input PDF file.
-     * @param pageNumbers      Set of 0-indexed page numbers to process.
-     * @param config           The configuration settings.
-     * @param backendFailedPages Output parameter: populated with 0-indexed page numbers that
-     *                           failed during backend processing (e.g., due to Invalid code point).
-     *                           These pages can be retried via the Java processing path.
-     * @return Map of page number to IObject list for successfully processed pages.
-     * @throws IOException If an error occurs during processing.
+     * <p>When the number of pages exceeds maxConcurrentRequests, pages are split into
+     * chunks and sent as concurrent HTTP requests for better throughput.
+     *
+     * @param inputPdfName The path to the input PDF file.
+     * @param pageNumbers  Set of 0-indexed page numbers to process.
+     * @param config       The configuration settings.
+     * @return The backend fetch result containing the response(s).
+     * @throws IOException If an error occurs during the request.
      */
-    private static Map<Integer, List<IObject>> processBackendPath(
+    private static BackendFetchResult fetchFromBackend(
             String inputPdfName,
             Set<Integer> pageNumbers,
-            Config config,
-            Set<Integer> backendFailedPages) throws IOException {
+            Config config) throws IOException {
 
         if (pageNumbers.isEmpty()) {
-            return new HashMap<>();
+            return BackendFetchResult.empty();
         }
 
         LOGGER.log(Level.INFO, "Processing {0} pages via {1} backend",
             new Object[]{pageNumbers.size(), config.getHybrid()});
 
-        // Get or create cached client
         HybridClient client = getClient(config);
-
-        // Read PDF bytes
         byte[] pdfBytes = Files.readAllBytes(Path.of(inputPdfName));
-
-        // Determine required output formats based on config
         Set<OutputFormat> outputFormats = determineOutputFormats(config);
 
-        // Make API request for all pages (avoids per-chunk overhead)
-        HybridRequest request = HybridRequest.allPages(pdfBytes, outputFormats);
-        HybridResponse response = client.convert(request);
+        int maxConcurrent = config.getHybridConfig().getMaxConcurrentRequests();
 
-        // Collect failed pages (convert from 1-indexed to 0-indexed)
-        if (response.hasFailedPages()) {
-            for (int failedPage1Indexed : response.getFailedPages()) {
-                int failedPage0Indexed = failedPage1Indexed - 1;
-                if (pageNumbers.contains(failedPage0Indexed)) {
-                    backendFailedPages.add(failedPage0Indexed);
+        if (pageNumbers.size() <= maxConcurrent) {
+            // Single request for small page sets
+            HybridRequest request = HybridRequest.allPages(pdfBytes, outputFormats);
+            HybridResponse response = client.convert(request);
+            return new BackendFetchResult(List.of(response), pageNumbers);
+        }
+
+        // Split pages into chunks and send concurrent requests
+        List<Set<Integer>> chunks = splitIntoChunks(pageNumbers, maxConcurrent);
+        LOGGER.log(Level.INFO, "Splitting {0} backend pages into {1} concurrent requests",
+            new Object[]{pageNumbers.size(), chunks.size()});
+
+        List<CompletableFuture<HybridResponse>> futures = new ArrayList<>();
+        for (Set<Integer> chunk : chunks) {
+            // Convert 0-indexed to 1-indexed for HybridRequest
+            Set<Integer> chunk1Indexed = chunk.stream()
+                .map(p -> p + 1)
+                .collect(Collectors.toSet());
+            HybridRequest request = HybridRequest.forPages(pdfBytes, chunk1Indexed, outputFormats);
+            futures.add(client.convertAsync(request));
+        }
+
+        // Wait for all chunk requests to complete
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+        List<HybridResponse> responses = new ArrayList<>();
+        for (CompletableFuture<HybridResponse> future : futures) {
+            responses.add(future.join());
+        }
+
+        return new BackendFetchResult(responses, pageNumbers);
+    }
+
+    /**
+     * Splits a set of page numbers into N approximately equal chunks.
+     */
+    private static List<Set<Integer>> splitIntoChunks(Set<Integer> pageNumbers, int numChunks) {
+        List<Integer> sorted = pageNumbers.stream().sorted().collect(Collectors.toList());
+        List<Set<Integer>> chunks = new ArrayList<>();
+        int chunkSize = Math.max(1, (sorted.size() + numChunks - 1) / numChunks);
+
+        for (int i = 0; i < sorted.size(); i += chunkSize) {
+            Set<Integer> chunk = new HashSet<>(sorted.subList(i, Math.min(i + chunkSize, sorted.size())));
+            chunks.add(chunk);
+        }
+        return chunks;
+    }
+
+    /**
+     * Processes the backend fetch result into IObjects. Must run on the main thread
+     * because setIDs() uses StaticLayoutContainers (ThreadLocal).
+     *
+     * @param fetchResult        The result from fetchFromBackend().
+     * @param config             The configuration settings.
+     * @param backendFailedPages Output parameter: populated with 0-indexed page numbers
+     *                           that failed during backend processing.
+     * @return Map of page number to IObject list for successfully processed pages.
+     */
+    private static Map<Integer, List<IObject>> processBackendResponse(
+            BackendFetchResult fetchResult,
+            Config config,
+            Set<Integer> backendFailedPages) {
+
+        if (fetchResult.isEmpty()) {
+            return new HashMap<>();
+        }
+
+        Set<Integer> pageNumbers = fetchResult.getPageNumbers();
+
+        // Collect failed pages from all responses (convert from 1-indexed to 0-indexed)
+        for (HybridResponse response : fetchResult.getResponses()) {
+            if (response.hasFailedPages()) {
+                for (int failedPage1Indexed : response.getFailedPages()) {
+                    int failedPage0Indexed = failedPage1Indexed - 1;
+                    if (pageNumbers.contains(failedPage0Indexed)) {
+                        backendFailedPages.add(failedPage0Indexed);
+                    }
                 }
             }
-            // Logged by caller when initiating fallback
         }
 
         // Get page heights for coordinate transformation
         Map<Integer, Double> pageHeights = getPageHeights(pageNumbers);
 
-        // Transform response to IObjects
+        // Transform each response and merge results
         HybridSchemaTransformer transformer = createTransformer(config);
-        List<List<IObject>> transformedContents = transformer.transform(response, pageHeights);
-
-        // Extract results for requested pages (excluding failed pages)
         Map<Integer, List<IObject>> results = new HashMap<>();
-        for (int pageNumber : pageNumbers) {
-            if (backendFailedPages.contains(pageNumber)) {
-                continue; // Skip failed pages — they will be retried via Java path
-            }
-            if (pageNumber < transformedContents.size()) {
-                List<IObject> pageContents = transformedContents.get(pageNumber);
-                // Apply --replace-invalid-chars to backend results (not applied during filterAllPages
-                // because backend results replace the filtered contents)
-                TextProcessor.replaceUndefinedCharacters(pageContents, config.getReplaceInvalidChars());
-                // Set IDs for backend-generated objects
-                DocumentProcessor.setIDs(pageContents);
-                results.put(pageNumber, pageContents);
-            } else {
-                results.put(pageNumber, new ArrayList<>());
+
+        for (HybridResponse response : fetchResult.getResponses()) {
+            List<List<IObject>> transformedContents = transformer.transform(response, pageHeights);
+
+            for (int pageNumber : pageNumbers) {
+                if (results.containsKey(pageNumber) || backendFailedPages.contains(pageNumber)) {
+                    continue;
+                }
+                if (pageNumber < transformedContents.size()) {
+                    List<IObject> pageContents = transformedContents.get(pageNumber);
+                    if (pageContents != null && !pageContents.isEmpty()) {
+                        TextProcessor.replaceUndefinedCharacters(pageContents, config.getReplaceInvalidChars());
+                        DocumentProcessor.setIDs(pageContents);
+                        results.put(pageNumber, pageContents);
+                    }
+                }
             }
         }
 
-        // Note: Client is cached and reused across documents.
-        // HybridClientFactory.shutdown() should be called at CLI exit.
+        // Fill missing pages with empty lists
+        for (int pageNumber : pageNumbers) {
+            if (!results.containsKey(pageNumber) && !backendFailedPages.contains(pageNumber)) {
+                results.put(pageNumber, new ArrayList<>());
+            }
+        }
 
         return results;
     }
@@ -549,6 +659,36 @@ public class HybridDocumentProcessor {
             triageLogger.logToFile(outputDir, documentName, hybridBackend, triageResults);
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Failed to write triage log: {0}", e.getMessage());
+        }
+    }
+
+    /**
+     * Holds the result of fetching from the backend, which may include multiple
+     * responses when pages are split into concurrent chunk requests.
+     */
+    private static class BackendFetchResult {
+        private final List<HybridResponse> responses;
+        private final Set<Integer> pageNumbers;
+
+        BackendFetchResult(List<HybridResponse> responses, Set<Integer> pageNumbers) {
+            this.responses = responses;
+            this.pageNumbers = pageNumbers;
+        }
+
+        static BackendFetchResult empty() {
+            return new BackendFetchResult(Collections.emptyList(), Collections.emptySet());
+        }
+
+        boolean isEmpty() {
+            return responses.isEmpty() || pageNumbers.isEmpty();
+        }
+
+        List<HybridResponse> getResponses() {
+            return responses;
+        }
+
+        Set<Integer> getPageNumbers() {
+            return pageNumbers;
         }
     }
 }

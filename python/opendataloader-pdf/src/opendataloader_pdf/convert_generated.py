@@ -34,6 +34,7 @@ def convert(
     hybrid_url: Optional[str] = None,
     hybrid_timeout: Optional[str] = None,
     hybrid_fallback: bool = True,
+    parallel: Optional[str] = None,
 ) -> None:
     """
     Convert PDF(s) into the requested output format(s).
@@ -63,6 +64,7 @@ def convert(
         hybrid_url: Hybrid backend server URL (overrides default)
         hybrid_timeout: Hybrid backend request timeout in milliseconds. Default: 30000
         hybrid_fallback: Fallback to Java processing on hybrid backend error. Default: true
+        parallel: Number of files to process in parallel (separate process per file). Default: 1 (sequential)
     """
     args: List[str] = []
 
@@ -126,5 +128,7 @@ def convert(
         args.extend(["--hybrid-timeout", hybrid_timeout])
     if hybrid_fallback:
         args.append("--hybrid-fallback")
+    if parallel:
+        args.extend(["--parallel", parallel])
 
     run_jar(args, quiet)

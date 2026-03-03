@@ -216,6 +216,15 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "default": True,
         "description": "Fallback to Java processing on hybrid backend error. Default: true",
     },
+    {
+        "name": "parallel",
+        "python_name": "parallel",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": "1",
+        "description": "Number of files to process in parallel (separate process per file). Default: 1 (sequential)",
+    },
 ]
 
 

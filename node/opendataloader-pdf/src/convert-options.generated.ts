@@ -51,6 +51,8 @@ export interface ConvertOptions {
   hybridTimeout?: string;
   /** Fallback to Java processing on hybrid backend error. Default: true */
   hybridFallback?: boolean;
+  /** Number of files to process in parallel (separate process per file). Default: 1 (sequential) */
+  parallel?: string;
 }
 
 /**
@@ -80,6 +82,7 @@ export interface CliOptions {
   hybridUrl?: string;
   hybridTimeout?: string;
   hybridFallback?: boolean;
+  parallel?: string;
 }
 
 /**
@@ -156,6 +159,9 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   }
   if (cliOptions.hybridFallback) {
     convertOptions.hybridFallback = true;
+  }
+  if (cliOptions.parallel) {
+    convertOptions.parallel = cliOptions.parallel;
   }
 
   return convertOptions;
@@ -247,6 +253,9 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.hybridFallback) {
     args.push('--hybrid-fallback');
+  }
+  if (options.parallel) {
+    args.push('--parallel', options.parallel);
   }
 
   return args;

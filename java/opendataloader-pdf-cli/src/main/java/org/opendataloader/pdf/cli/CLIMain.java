@@ -13,6 +13,8 @@ import org.opendataloader.pdf.api.OpenDataLoaderPDF;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -50,22 +52,39 @@ public class CLIMain {
         String[] arguments = commandLine.getArgs();
         Config config;
         boolean quiet;
+        int parallelism;
         try {
             config = CLIOptions.createConfigFromCommandLine(commandLine);
             quiet = commandLine.hasOption(CLIOptions.QUIET_OPTION) || commandLine.hasOption("quiet");
+            parallelism = parseParallelism(commandLine);
         } catch (IllegalArgumentException exception) {
             System.out.println(exception.getMessage());
             formatter.printHelp(HELP, options);
             return;
         }
         configureLogging(quiet);
-        try {
-            for (String argument : arguments) {
-                processPath(new File(argument), config);
+
+        if (parallelism > 1) {
+            // Parallel mode: collect all PDF files, then process via subprocesses
+            List<File> pdfFiles = collectPdfFiles(arguments);
+            if (pdfFiles.isEmpty()) {
+                LOGGER.log(Level.WARNING, "No PDF files found in the specified paths");
+                return;
             }
-        } finally {
-            // Release resources (e.g., hybrid client thread pools)
-            OpenDataLoaderPDF.shutdown();
+            ParallelFileProcessor processor = new ParallelFileProcessor(parallelism, args);
+            int failCount = processor.processFiles(pdfFiles);
+            if (failCount > 0) {
+                LOGGER.log(Level.WARNING, "{0} file(s) failed during parallel processing", failCount);
+            }
+        } else {
+            // Sequential mode (existing behavior)
+            try {
+                for (String argument : arguments) {
+                    processPath(new File(argument), config);
+                }
+            } finally {
+                OpenDataLoaderPDF.shutdown();
+            }
         }
     }
 
@@ -125,5 +144,50 @@ public class CLIMain {
         }
         String name = file.getName();
         return name.toLowerCase(Locale.ROOT).endsWith(".pdf");
+    }
+
+    private static int parseParallelism(CommandLine commandLine) {
+        if (!commandLine.hasOption(CLIOptions.PARALLEL_LONG_OPTION)) {
+            return 1;
+        }
+        String value = commandLine.getOptionValue(CLIOptions.PARALLEL_LONG_OPTION);
+        if (value == null || value.trim().isEmpty()) {
+            return 1;
+        }
+        try {
+            int n = Integer.parseInt(value.trim());
+            if (n < 1) {
+                throw new IllegalArgumentException(
+                    "Invalid --parallel value '" + value + "'. Must be a positive integer.");
+            }
+            return n;
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(
+                "Invalid --parallel value '" + value + "'. Must be a positive integer.");
+        }
+    }
+
+    private static List<File> collectPdfFiles(String[] arguments) {
+        List<File> pdfFiles = new ArrayList<>();
+        for (String argument : arguments) {
+            collectPdfFilesRecursive(new File(argument), pdfFiles);
+        }
+        return pdfFiles;
+    }
+
+    private static void collectPdfFilesRecursive(File file, List<File> pdfFiles) {
+        if (!file.exists()) {
+            return;
+        }
+        if (file.isDirectory()) {
+            File[] children = file.listFiles();
+            if (children != null) {
+                for (File child : children) {
+                    collectPdfFilesRecursive(child, pdfFiles);
+                }
+            }
+        } else if (isPdfFile(file)) {
+            pdfFiles.add(file);
+        }
     }
 }

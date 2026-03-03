@@ -117,6 +117,10 @@ public class CLIOptions {
     private static final String HYBRID_FALLBACK_LONG_OPTION = "hybrid-fallback";
     private static final String HYBRID_FALLBACK_DESC = "Fallback to Java processing on hybrid backend error. Default: true";
 
+    // ===== Parallel Processing =====
+    public static final String PARALLEL_LONG_OPTION = "parallel";
+    private static final String PARALLEL_DESC = "Number of files to process in parallel (separate process per file). Default: 1 (sequential)";
+
     // ===== Export Options (internal) =====
     public static final String EXPORT_OPTIONS_LONG_OPTION = "export-options";
 
@@ -161,6 +165,7 @@ public class CLIOptions {
             new OptionDefinition(HYBRID_URL_LONG_OPTION, null, "string", null, HYBRID_URL_DESC, true),
             new OptionDefinition(HYBRID_TIMEOUT_LONG_OPTION, null, "string", "30000", HYBRID_TIMEOUT_DESC, true),
             new OptionDefinition(HYBRID_FALLBACK_LONG_OPTION, null, "boolean", true, HYBRID_FALLBACK_DESC, true),
+            new OptionDefinition(PARALLEL_LONG_OPTION, null, "string", "1", PARALLEL_DESC, true),
             new OptionDefinition(EXPORT_OPTIONS_LONG_OPTION, null, "boolean", null, null, false),
 
             // Legacy options (not exported, for backward compatibility)
