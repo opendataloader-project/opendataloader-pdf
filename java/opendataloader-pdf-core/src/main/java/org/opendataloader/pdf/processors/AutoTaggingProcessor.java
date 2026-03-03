@@ -31,6 +31,7 @@ public class AutoTaggingProcessor {
     private static Map<Integer, List<COSObject>> structParents = new HashMap<>();
     private static final Set<String> operatorsForContents = new HashSet<>();
     private static boolean isPDF2_0 = false;
+    private static final int MAX_TOKENS_PER_STREAM = 100_000;
 
     public static void createTaggedPDF(File inputPDF, String outputFolder, PDDocument document, List<List<IObject>> contents) throws IOException {
         operatorIndexes.clear();
@@ -60,20 +61,37 @@ public class AutoTaggingProcessor {
             page.getObject().setKey(ASAtom.STRUCT_PARENTS, COSInteger.construct(page.getPageNumber()));
             cosDocument.addChangedObject(page.getObject());
             COSObject contentsObject = page.getKey(ASAtom.CONTENTS);
-            byte[] res = new PDFStreamWriter().write(processTokens(getTokens(page.getContent()), pageNumber));
-            if (contentsObject != null && contentsObject.isIndirect() != null && contentsObject.isIndirect()) {
-                setUpContents(contentsObject, res);
-                cosDocument.addChangedObject(contentsObject);
+            List<Object> processedTokens = processTokens(getTokens(page.getContent()), pageNumber);
+
+            if (processedTokens.size() <= MAX_TOKENS_PER_STREAM) {
+                if (contentsObject != null && contentsObject.isIndirect() != null && contentsObject.isIndirect()) {
+                    setUpContents(contentsObject, processedTokens);
+                    cosDocument.addChangedObject(contentsObject);
+                } else {
+                    createContentsIndirect(cosDocument, processedTokens);
+                }
             } else {
-                COSObject newContentsObject = COSIndirect.construct(COSStream.construct(), cosDocument);
-                setUpContents(newContentsObject, res);
-                page.getObject().setKey(ASAtom.CONTENTS, newContentsObject);
-                cosDocument.addObject(newContentsObject);
+                COSObject streamsArray = COSArray.construct();
+                for (int start = 0; start < processedTokens.size(); start += MAX_TOKENS_PER_STREAM) {
+                    int end = Math.min(start + MAX_TOKENS_PER_STREAM, processedTokens.size());
+                    List<Object> chunk = processedTokens.subList(start, end);
+                    COSObject streamIndirect = createContentsIndirect(cosDocument, chunk);
+                    streamsArray.add(streamIndirect);
+                }
+                page.getObject().setKey(ASAtom.CONTENTS, streamsArray);
             }
         }
     }
 
-    private static void setUpContents(COSObject contentsObj, byte[] res) throws IOException {
+    private static COSObject createContentsIndirect(COSDocument cosDocument, List<Object> tokens) throws IOException {
+        COSObject streamObj = COSIndirect.construct(COSStream.construct(), cosDocument);
+        setUpContents(streamObj, tokens);
+        cosDocument.addObject(streamObj);
+        return streamObj;
+    }
+
+    private static void setUpContents(COSObject contentsObj, List<Object> tokens) throws IOException {
+        byte[] res = new PDFStreamWriter().write(tokens);
         try (InputStream inStream = new ByteArrayInputStream(res)) {
             contentsObj.setData(new ASMemoryInStream(inStream));
         }
