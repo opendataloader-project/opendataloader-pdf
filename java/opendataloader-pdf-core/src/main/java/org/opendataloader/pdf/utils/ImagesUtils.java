@@ -111,6 +111,7 @@ public class ImagesUtils {
             File outputFile = new File(fileName);
             BufferedImage targetImage = contrastRatioConsumer != null ? contrastRatioConsumer.getPageSubImage(imageBox) : null;
             if (targetImage == null) {
+                LOGGER.log(Level.WARNING, "Image could not be rendered and will be skipped (source key absent in output): " + fileName);
                 return;
             }
             ImageIO.write(targetImage, imageFormat, outputFile);

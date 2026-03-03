@@ -111,6 +111,16 @@ List items include text properties plus:
 | `data`   | `string` | No       | Base64 data URI (when image-output is "embedded") |
 | `format` | `string` | No       | Image format (`png`, `jpeg`)                      |
 
+### When `source` is absent
+
+The `source` field is present only when the image is successfully extracted to a file. It will be absent when:
+
+- **`--image-output embedded`**: The `data` field (Base64) is used instead of `source`.
+- **`--image-output off`**: Image extraction is disabled entirely.
+- **Image rendering failed**: The image is detected in the PDF (bbox is present) but could not be rendered. This can happen with certain PDF image encodings or when the page cannot be rendered. A `WARNING` is logged in this case — check the tool output for `"Image could not be rendered and will be skipped"`.
+
+> **Note:** The `--content-safety-off` option controls text filtering only and has no effect on image extraction or the presence of `source`.
+
 ## Headers and footers
 
 | Field  | Type     | Required | Description                                  |

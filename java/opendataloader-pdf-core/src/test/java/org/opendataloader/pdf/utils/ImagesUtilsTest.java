@@ -7,6 +7,7 @@
  */
 package org.opendataloader.pdf.utils;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
@@ -17,10 +18,54 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class ImagesUtilsTest {
+
+    @AfterEach
+    void tearDown() {
+        StaticLayoutContainers.clearContainers();
+    }
+
+    @Test
+    void testWriteImageLogsWarningWhenImageCannotBeRendered() throws IOException {
+        StaticLayoutContainers.clearContainers();
+        Path tempDir = Files.createTempDirectory("imgutils-warn-test");
+        List<LogRecord> records = new ArrayList<>();
+        Handler handler = new Handler() {
+            public void publish(LogRecord r) { records.add(r); }
+            public void flush() {}
+            public void close() throws SecurityException {}
+        };
+        Logger logger = Logger.getLogger(ImagesUtils.class.getCanonicalName());
+        logger.addHandler(handler);
+        logger.setLevel(Level.WARNING);
+        try {
+            StaticLayoutContainers.setImagesDirectory(tempDir.toString());
+            // Use an invalid PDF path so contrastRatioConsumer will be null
+            ImagesUtils imagesUtils = new ImagesUtils();
+            ImageChunk chunk = new ImageChunk(new BoundingBox(0));
+            imagesUtils.writeImage(chunk, "/nonexistent/path/file.pdf", "");
+            // Verify ImagesUtils logs a warning when the image cannot be rendered
+            boolean hasImageRenderWarning = records.stream()
+                    .anyMatch(r -> r.getLevel() == Level.WARNING
+                            && r.getLoggerName().equals(ImagesUtils.class.getCanonicalName())
+                            && r.getMessage().toLowerCase().contains("image"));
+            assertTrue(hasImageRenderWarning, "Should log a warning when image rendering fails (source key will be absent)");
+        } finally {
+            logger.removeHandler(handler);
+            Files.walk(tempDir).sorted((a, b) -> b.compareTo(a)).forEach(p -> {
+                try { Files.deleteIfExists(p); } catch (IOException e) { /* ignore */ }
+            });
+        }
+    }
 
     @Test
     void testCreateImagesDirectory() throws IOException {
