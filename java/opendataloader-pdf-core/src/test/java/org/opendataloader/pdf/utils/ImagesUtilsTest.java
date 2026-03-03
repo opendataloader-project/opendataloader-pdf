@@ -19,11 +19,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -35,8 +37,7 @@ class ImagesUtilsTest {
     }
 
     @Test
-    void testWriteImageLogsWarningWhenImageCannotBeRendered() throws IOException {
-        StaticLayoutContainers.clearContainers();
+    void testWriteImageLogsWarningWhenRendererIsUnavailable() throws IOException {
         Path tempDir = Files.createTempDirectory("imgutils-warn-test");
         List<LogRecord> records = new ArrayList<>();
         Handler handler = new Handler() {
@@ -45,6 +46,7 @@ class ImagesUtilsTest {
             public void close() throws SecurityException {}
         };
         Logger logger = Logger.getLogger(ImagesUtils.class.getCanonicalName());
+        Level originalLevel = logger.getLevel();
         logger.addHandler(handler);
         logger.setLevel(Level.WARNING);
         try {
@@ -53,17 +55,20 @@ class ImagesUtilsTest {
             ImagesUtils imagesUtils = new ImagesUtils();
             ImageChunk chunk = new ImageChunk(new BoundingBox(0));
             imagesUtils.writeImage(chunk, "/nonexistent/path/file.pdf", "");
-            // Verify ImagesUtils logs a warning when the image cannot be rendered
-            boolean hasImageRenderWarning = records.stream()
+            // Verify ImagesUtils logs the specific "PDF renderer unavailable" warning
+            boolean hasRendererWarning = records.stream()
                     .anyMatch(r -> r.getLevel() == Level.WARNING
                             && r.getLoggerName().equals(ImagesUtils.class.getCanonicalName())
-                            && r.getMessage().toLowerCase().contains("image"));
-            assertTrue(hasImageRenderWarning, "Should log a warning when image rendering fails (source key will be absent)");
+                            && r.getMessage().contains("PDF renderer unavailable"));
+            assertTrue(hasRendererWarning, "Should log a warning when PDF renderer is unavailable (source key will be absent)");
         } finally {
+            logger.setLevel(originalLevel);
             logger.removeHandler(handler);
-            Files.walk(tempDir).sorted((a, b) -> b.compareTo(a)).forEach(p -> {
-                try { Files.deleteIfExists(p); } catch (IOException e) { /* ignore */ }
-            });
+            try (Stream<Path> walk = Files.walk(tempDir)) {
+                walk.sorted(Comparator.reverseOrder()).forEach(p -> {
+                    try { Files.deleteIfExists(p); } catch (IOException e) { /* ignore */ }
+                });
+            }
         }
     }
 

@@ -113,11 +113,11 @@ List items include text properties plus:
 
 ### When `source` is absent
 
-The `source` field is present only when the image is successfully extracted to a file. It will be absent when:
+The `source` field is only written when `--image-output external` (the default) is active and the image is successfully rendered. It will be absent in these cases:
 
-- **`--image-output embedded`**: The `data` field (Base64) is used instead of `source`.
-- **`--image-output off`**: Image extraction is disabled entirely.
-- **Image rendering failed**: The image is detected in the PDF (bbox is present) but could not be rendered. This can happen with certain PDF image encodings or when the page cannot be rendered. A `WARNING` is logged in this case — check the tool output for `"Image could not be rendered and will be skipped"`.
+- **`--image-output embedded`**: `source` is intentionally omitted; the `data` field (Base64 URI) is written instead. If Base64 encoding fails (e.g. image exceeds 10 MB or an IO error occurs), neither `source` nor `data` will be present.
+- **`--image-output off`**: Image extraction is disabled entirely; no image fields are written.
+- **Image rendering failed**: The image is detected in the PDF (bbox is present) but could not be rendered to a file. Check tool output for `"Image could not be rendered"` or `"PDF renderer unavailable"` warnings.
 
 > **Note:** The `--content-safety-off` option controls text filtering only and has no effect on image extraction or the presence of `source`.
 

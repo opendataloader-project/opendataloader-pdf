@@ -109,14 +109,18 @@ public class ImagesUtils {
     private void createImageFile(BoundingBox imageBox, String fileName, String imageFormat) {
         try {
             File outputFile = new File(fileName);
-            BufferedImage targetImage = contrastRatioConsumer != null ? contrastRatioConsumer.getPageSubImage(imageBox) : null;
+            if (contrastRatioConsumer == null) {
+                LOGGER.log(Level.WARNING, "Image skipped (PDF renderer unavailable, source key absent in output): {0}", fileName);
+                return;
+            }
+            BufferedImage targetImage = contrastRatioConsumer.getPageSubImage(imageBox);
             if (targetImage == null) {
-                LOGGER.log(Level.WARNING, "Image could not be rendered and will be skipped (source key absent in output): " + fileName);
+                LOGGER.log(Level.WARNING, "Image could not be rendered and will be skipped (source key absent in output): {0}", fileName);
                 return;
             }
             ImageIO.write(targetImage, imageFormat, outputFile);
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Unable to create image files: " + e.getMessage());
+            LOGGER.log(Level.WARNING, "Unable to create image files: {0}", e.getMessage());
         }
     }
 
