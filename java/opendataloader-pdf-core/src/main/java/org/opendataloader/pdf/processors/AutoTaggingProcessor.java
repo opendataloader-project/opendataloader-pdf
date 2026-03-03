@@ -154,7 +154,7 @@ public class AutoTaggingProcessor {
             TableBorder table = (TableBorder) object;
             if (table.isTextBlock()) {
                 createPartStructElemForTextBlock(table, parentStructElem, cosDocument);
-            } else {
+            } else if (!table.isOneCellTable()) {
                 createTableStructElem(table, parentStructElem, cosDocument);
             }
         } else if (object instanceof ImageChunk) {
