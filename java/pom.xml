@@ -53,7 +53,7 @@
         <verapdf.version>[1.31.0,1.32.0-RC)</verapdf.version>
         <junit.jupiter.version>5.14.2</junit.jupiter.version>
         <assertj.version>3.27.7</assertj.version>
-        <commons.cli.version>1.10.0</commons.cli.version>
+        <commons.cli.version>1.11.0</commons.cli.version>
         <maven-compiler.plugin.version>3.14.1</maven-compiler.plugin.version>
         <flatten.plugin.version>1.7.3</flatten.plugin.version>
         <jacoco.plugin.version>0.8.14</jacoco.plugin.version>
