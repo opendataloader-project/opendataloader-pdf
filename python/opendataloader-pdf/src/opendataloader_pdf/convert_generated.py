@@ -35,6 +35,7 @@ def convert(
     hybrid_timeout: Optional[str] = None,
     hybrid_fallback: bool = True,
     parallel: Optional[str] = None,
+    min_pages_parallel: Optional[str] = None,
 ) -> None:
     """
     Convert PDF(s) into the requested output format(s).
@@ -65,6 +66,7 @@ def convert(
         hybrid_timeout: Hybrid backend request timeout in milliseconds. Default: 30000
         hybrid_fallback: Fallback to Java processing on hybrid backend error. Default: true
         parallel: Number of files to process in parallel (separate process per file). Default: 1 (sequential)
+        min_pages_parallel: Minimum page count to enable parallel page processing within a document. Default: 8
     """
     args: List[str] = []
 
@@ -130,5 +132,7 @@ def convert(
         args.append("--hybrid-fallback")
     if parallel:
         args.extend(["--parallel", parallel])
+    if min_pages_parallel:
+        args.extend(["--min-pages-parallel", min_pages_parallel])
 
     run_jar(args, quiet)

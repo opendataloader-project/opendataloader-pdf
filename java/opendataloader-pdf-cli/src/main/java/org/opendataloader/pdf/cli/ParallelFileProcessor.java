@@ -217,7 +217,8 @@ public class ParallelFileProcessor {
             || option.equals("--hybrid")
             || option.equals("--hybrid-mode")
             || option.equals("--hybrid-url")
-            || option.equals("--hybrid-timeout");
+            || option.equals("--hybrid-timeout")
+            || option.equals("--min-pages-parallel");
     }
 
     private static class ProcessResult {

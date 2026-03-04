@@ -74,6 +74,10 @@ public class Config {
     private String hybrid = HYBRID_OFF;
     private final HybridConfig hybridConfig = new HybridConfig();
     private boolean includeHeaderFooter = false;
+    private int minPagesForParallel = DEFAULT_MIN_PAGES_FOR_PARALLEL;
+
+    /** Default minimum page count to enable parallel page processing. */
+    public static final int DEFAULT_MIN_PAGES_FOR_PARALLEL = 8;
 
     /** Table detection method: default (border-based detection). */
     public static final String TABLE_METHOD_DEFAULT = "default";
@@ -836,6 +840,29 @@ public class Config {
      */
     public void setIncludeHeaderFooter(boolean includeHeaderFooter) {
         this.includeHeaderFooter = includeHeaderFooter;
+    }
+
+    /**
+     * Gets the minimum page count to enable parallel page processing.
+     *
+     * @return the minimum page count threshold.
+     */
+    public int getMinPagesForParallel() {
+        return minPagesForParallel;
+    }
+
+    /**
+     * Sets the minimum page count to enable parallel page processing.
+     *
+     * @param minPagesForParallel the minimum page count (must be >= 1).
+     * @throws IllegalArgumentException if the value is less than 1.
+     */
+    public void setMinPagesForParallel(int minPagesForParallel) {
+        if (minPagesForParallel < 1) {
+            throw new IllegalArgumentException(
+                "Invalid --min-pages-parallel value '" + minPagesForParallel + "'. Must be >= 1.");
+        }
+        this.minPagesForParallel = minPagesForParallel;
     }
 
 }

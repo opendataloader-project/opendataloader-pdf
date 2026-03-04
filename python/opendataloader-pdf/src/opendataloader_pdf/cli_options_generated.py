@@ -225,6 +225,15 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "default": "1",
         "description": "Number of files to process in parallel (separate process per file). Default: 1 (sequential)",
     },
+    {
+        "name": "min-pages-parallel",
+        "python_name": "min_pages_parallel",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": "8",
+        "description": "Minimum page count to enable parallel page processing within a document. Default: 8",
+    },
 ]
 
 

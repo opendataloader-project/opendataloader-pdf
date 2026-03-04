@@ -191,6 +191,14 @@
       "required": false,
       "default": "1",
       "description": "Number of files to process in parallel (separate process per file). Default: 1 (sequential)"
+    },
+    {
+      "name": "min-pages-parallel",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": "8",
+      "description": "Minimum page count to enable parallel page processing within a document. Default: 8"
     }
   ]
 }

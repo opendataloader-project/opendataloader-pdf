@@ -121,6 +121,10 @@ public class CLIOptions {
     public static final String PARALLEL_LONG_OPTION = "parallel";
     private static final String PARALLEL_DESC = "Number of files to process in parallel (separate process per file). Default: 1 (sequential)";
 
+    // ===== Min Pages for Parallel =====
+    public static final String MIN_PAGES_PARALLEL_LONG_OPTION = "min-pages-parallel";
+    private static final String MIN_PAGES_PARALLEL_DESC = "Minimum page count to enable parallel page processing within a document. Default: 8";
+
     // ===== Export Options (internal) =====
     public static final String EXPORT_OPTIONS_LONG_OPTION = "export-options";
 
@@ -166,6 +170,7 @@ public class CLIOptions {
             new OptionDefinition(HYBRID_TIMEOUT_LONG_OPTION, null, "string", "30000", HYBRID_TIMEOUT_DESC, true),
             new OptionDefinition(HYBRID_FALLBACK_LONG_OPTION, null, "boolean", true, HYBRID_FALLBACK_DESC, true),
             new OptionDefinition(PARALLEL_LONG_OPTION, null, "string", "1", PARALLEL_DESC, true),
+            new OptionDefinition(MIN_PAGES_PARALLEL_LONG_OPTION, null, "string", "8", MIN_PAGES_PARALLEL_DESC, true),
             new OptionDefinition(EXPORT_OPTIONS_LONG_OPTION, null, "boolean", null, null, false),
 
             // Legacy options (not exported, for backward compatibility)
@@ -247,6 +252,10 @@ public class CLIOptions {
         applyImageOptions(config, commandLine);
         applyPagesOption(config, commandLine);
         applyHybridOptions(config, commandLine);
+        if (commandLine.hasOption(MIN_PAGES_PARALLEL_LONG_OPTION)) {
+            config.setMinPagesForParallel(
+                Integer.parseInt(commandLine.getOptionValue(MIN_PAGES_PARALLEL_LONG_OPTION)));
+        }
         return config;
     }
 

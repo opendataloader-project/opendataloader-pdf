@@ -154,10 +154,16 @@ public class DocumentProcessor {
             contents.set(pageNumber, pageContents);
         }
 
-        // Phase A-2: Text line processing — parallel (independent per page, most expensive)
-        processablePages.parallelStream().forEach(pageNumber -> {
-            contents.set(pageNumber, TextLineProcessor.processTextLines(contents.get(pageNumber)));
-        });
+        // Phase A-2: Text line processing (independent per page, most expensive)
+        if (processablePages.size() >= config.getMinPagesForParallel()) {
+            processablePages.parallelStream().forEach(pageNumber -> {
+                contents.set(pageNumber, TextLineProcessor.processTextLines(contents.get(pageNumber)));
+            });
+        } else {
+            for (int pageNumber : processablePages) {
+                contents.set(pageNumber, TextLineProcessor.processTextLines(contents.get(pageNumber)));
+            }
+        }
 
         // Phase A-3: Special tables — sequential (calls TableBorderProcessor internally)
         for (int pageNumber : processablePages) {
@@ -167,13 +173,22 @@ public class DocumentProcessor {
         HeaderFooterProcessor.processHeadersAndFooters(contents, false);
         ListProcessor.processLists(contents, false);
 
-        // Phase B-1: Paragraph + List — parallel (independent per page)
-        processablePages.parallelStream().forEach(pageNumber -> {
-            List<IObject> pageContents = contents.get(pageNumber);
-            pageContents = ParagraphProcessor.processParagraphs(pageContents);
-            pageContents = ListProcessor.processListsFromTextNodes(pageContents);
-            contents.set(pageNumber, pageContents);
-        });
+        // Phase B-1: Paragraph + List (independent per page)
+        if (processablePages.size() >= config.getMinPagesForParallel()) {
+            processablePages.parallelStream().forEach(pageNumber -> {
+                List<IObject> pageContents = contents.get(pageNumber);
+                pageContents = ParagraphProcessor.processParagraphs(pageContents);
+                pageContents = ListProcessor.processListsFromTextNodes(pageContents);
+                contents.set(pageNumber, pageContents);
+            });
+        } else {
+            for (int pageNumber : processablePages) {
+                List<IObject> pageContents = contents.get(pageNumber);
+                pageContents = ParagraphProcessor.processParagraphs(pageContents);
+                pageContents = ListProcessor.processListsFromTextNodes(pageContents);
+                contents.set(pageNumber, pageContents);
+            }
+        }
 
         // Phase B-2: Headings + IDs + Captions — sequential (ThreadLocal order dependency)
         for (int pageNumber : processablePages) {

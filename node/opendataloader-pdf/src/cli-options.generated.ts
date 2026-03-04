@@ -31,4 +31,5 @@ export function registerCliOptions(program: Command): void {
   program.option('--hybrid-timeout <value>', 'Hybrid backend request timeout in milliseconds. Default: 30000');
   program.option('--hybrid-fallback', 'Fallback to Java processing on hybrid backend error. Default: true');
   program.option('--parallel <value>', 'Number of files to process in parallel (separate process per file). Default: 1 (sequential)');
+  program.option('--min-pages-parallel <value>', 'Minimum page count to enable parallel page processing within a document. Default: 8');
 }

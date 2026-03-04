@@ -53,6 +53,8 @@ export interface ConvertOptions {
   hybridFallback?: boolean;
   /** Number of files to process in parallel (separate process per file). Default: 1 (sequential) */
   parallel?: string;
+  /** Minimum page count to enable parallel page processing within a document. Default: 8 */
+  minPagesParallel?: string;
 }
 
 /**
@@ -83,6 +85,7 @@ export interface CliOptions {
   hybridTimeout?: string;
   hybridFallback?: boolean;
   parallel?: string;
+  minPagesParallel?: string;
 }
 
 /**
@@ -162,6 +165,9 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   }
   if (cliOptions.parallel) {
     convertOptions.parallel = cliOptions.parallel;
+  }
+  if (cliOptions.minPagesParallel) {
+    convertOptions.minPagesParallel = cliOptions.minPagesParallel;
   }
 
   return convertOptions;
@@ -256,6 +262,9 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.parallel) {
     args.push('--parallel', options.parallel);
+  }
+  if (options.minPagesParallel) {
+    args.push('--min-pages-parallel', options.minPagesParallel);
   }
 
   return args;

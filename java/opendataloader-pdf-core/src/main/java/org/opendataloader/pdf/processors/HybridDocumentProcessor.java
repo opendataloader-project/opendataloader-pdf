@@ -149,40 +149,53 @@ public class HybridDocumentProcessor {
             contents.add(new ArrayList<>());
         }
 
-        // Start backend fetch FIRST as async (pure IO, no StaticContainers dependency)
-        CompletableFuture<BackendFetchResult> backendFuture;
-        if (!backendPages.isEmpty()) {
-            backendFuture = CompletableFuture.supplyAsync(() -> {
+        // Process Java path and Backend path (concurrently only when both have pages)
+        Map<Integer, List<IObject>> javaResults;
+        Map<Integer, List<IObject>> backendResults;
+        Set<Integer> backendFailedPages = new HashSet<>();
+
+        if (!backendPages.isEmpty() && !javaPages.isEmpty()) {
+            // Both paths have pages — run concurrently
+            CompletableFuture<BackendFetchResult> backendFuture = CompletableFuture.supplyAsync(() -> {
                 try {
                     return fetchFromBackend(inputPdfName, backendPages, config);
                 } catch (IOException e) {
                     throw new CompletionException(e);
                 }
             });
-        } else {
-            backendFuture = CompletableFuture.completedFuture(BackendFetchResult.empty());
-        }
-
-        // Run Java path on the MAIN thread (preserves StaticContainers state)
-        Map<Integer, List<IObject>> javaResults = processJavaPath(
-            filteredContents, javaPages, config, totalPages
-        );
-
-        // Join backend result on main thread, then process response
-        Map<Integer, List<IObject>> backendResults;
-        Set<Integer> backendFailedPages = new HashSet<>();
-        try {
-            BackendFetchResult fetchResult = backendFuture.join();
-            backendResults = processBackendResponse(fetchResult, config, backendFailedPages);
-        } catch (CompletionException e) {
-            Throwable cause = e.getCause() != null ? e.getCause() : e;
-            LOGGER.log(Level.WARNING, "Backend processing failed: {0}", cause.getMessage());
-            if (config.getHybridConfig().isFallbackToJava()) {
-                LOGGER.log(Level.INFO, "Falling back to Java processing for backend pages");
-                backendResults = processJavaPath(filteredContents, backendPages, config, totalPages);
-            } else {
-                throw new IOException("Backend processing failed and fallback is disabled", cause);
+            javaResults = processJavaPath(filteredContents, javaPages, config, totalPages);
+            try {
+                BackendFetchResult fetchResult = backendFuture.join();
+                backendResults = processBackendResponse(fetchResult, config, backendFailedPages);
+            } catch (CompletionException e) {
+                Throwable cause = e.getCause() != null ? e.getCause() : e;
+                LOGGER.log(Level.WARNING, "Backend processing failed: {0}", cause.getMessage());
+                if (config.getHybridConfig().isFallbackToJava()) {
+                    LOGGER.log(Level.INFO, "Falling back to Java processing for backend pages");
+                    backendResults = processJavaPath(filteredContents, backendPages, config, totalPages);
+                } else {
+                    throw new IOException("Backend processing failed and fallback is disabled", cause);
+                }
             }
+        } else if (!backendPages.isEmpty()) {
+            // Backend only — synchronous
+            javaResults = new HashMap<>();
+            try {
+                BackendFetchResult fetchResult = fetchFromBackend(inputPdfName, backendPages, config);
+                backendResults = processBackendResponse(fetchResult, config, backendFailedPages);
+            } catch (IOException e) {
+                LOGGER.log(Level.WARNING, "Backend processing failed: {0}", e.getMessage());
+                if (config.getHybridConfig().isFallbackToJava()) {
+                    LOGGER.log(Level.INFO, "Falling back to Java processing for backend pages");
+                    backendResults = processJavaPath(filteredContents, backendPages, config, totalPages);
+                } else {
+                    throw new IOException("Backend processing failed and fallback is disabled", e);
+                }
+            }
+        } else {
+            // Java only — synchronous
+            javaResults = processJavaPath(filteredContents, javaPages, config, totalPages);
+            backendResults = new HashMap<>();
         }
 
         // Fallback: reprocess backend-failed pages through Java path
@@ -298,16 +311,28 @@ public class HybridDocumentProcessor {
             }
         }
 
-        // Phase A-2: Text line processing — parallel (independent per page, most expensive)
-        pageNumbers.parallelStream().forEach(pageNumber -> {
-            try {
-                workingContents.set(pageNumber,
-                    TextLineProcessor.processTextLines(workingContents.get(pageNumber)));
-            } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "Error processing text lines for page {0}: {1}",
-                    new Object[]{pageNumber, e.getMessage()});
+        // Phase A-2: Text line processing (independent per page, most expensive)
+        if (pageNumbers.size() >= config.getMinPagesForParallel()) {
+            pageNumbers.parallelStream().forEach(pageNumber -> {
+                try {
+                    workingContents.set(pageNumber,
+                        TextLineProcessor.processTextLines(workingContents.get(pageNumber)));
+                } catch (Exception e) {
+                    LOGGER.log(Level.WARNING, "Error processing text lines for page {0}: {1}",
+                        new Object[]{pageNumber, e.getMessage()});
+                }
+            });
+        } else {
+            for (int pageNumber : pageNumbers) {
+                try {
+                    workingContents.set(pageNumber,
+                        TextLineProcessor.processTextLines(workingContents.get(pageNumber)));
+                } catch (Exception e) {
+                    LOGGER.log(Level.WARNING, "Error processing text lines for page {0}: {1}",
+                        new Object[]{pageNumber, e.getMessage()});
+                }
             }
-        });
+        }
 
         // Phase A-3: Special tables — sequential (calls TableBorderProcessor internally)
         for (int pageNumber : pageNumbers) {
@@ -321,7 +346,7 @@ public class HybridDocumentProcessor {
         }
 
         // Apply cross-page processing for Java pages only
-        applyJavaPagePostProcessing(workingContents, pageNumbers);
+        applyJavaPagePostProcessing(workingContents, pageNumbers, config);
 
         // Extract results
         Map<Integer, List<IObject>> results = new HashMap<>();
@@ -337,14 +362,23 @@ public class HybridDocumentProcessor {
      * Paragraph and list processing run in parallel; heading, ID, and caption
      * processing run sequentially due to ThreadLocal order dependencies.
      */
-    private static void applyJavaPagePostProcessing(List<List<IObject>> contents, Set<Integer> pageNumbers) {
-        // Phase B-1: Paragraph + List — parallel (independent per page)
-        pageNumbers.parallelStream().forEach(pageNumber -> {
-            List<IObject> pageContents = contents.get(pageNumber);
-            pageContents = ParagraphProcessor.processParagraphs(pageContents);
-            pageContents = ListProcessor.processListsFromTextNodes(pageContents);
-            contents.set(pageNumber, pageContents);
-        });
+    private static void applyJavaPagePostProcessing(List<List<IObject>> contents, Set<Integer> pageNumbers, Config config) {
+        // Phase B-1: Paragraph + List (independent per page)
+        if (pageNumbers.size() >= config.getMinPagesForParallel()) {
+            pageNumbers.parallelStream().forEach(pageNumber -> {
+                List<IObject> pageContents = contents.get(pageNumber);
+                pageContents = ParagraphProcessor.processParagraphs(pageContents);
+                pageContents = ListProcessor.processListsFromTextNodes(pageContents);
+                contents.set(pageNumber, pageContents);
+            });
+        } else {
+            for (int pageNumber : pageNumbers) {
+                List<IObject> pageContents = contents.get(pageNumber);
+                pageContents = ParagraphProcessor.processParagraphs(pageContents);
+                pageContents = ListProcessor.processListsFromTextNodes(pageContents);
+                contents.set(pageNumber, pageContents);
+            }
+        }
 
         // Phase B-2: Headings + IDs + Captions — sequential (ThreadLocal order dependency)
         for (int pageNumber : pageNumbers) {
