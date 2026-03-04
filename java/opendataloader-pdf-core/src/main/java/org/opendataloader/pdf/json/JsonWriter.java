@@ -21,6 +21,7 @@ import org.verapdf.gf.model.impl.cos.GFCosInfo;
 import org.verapdf.pd.PDDocument;
 import org.verapdf.tools.StaticResources;
 import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
 import java.io.File;
@@ -47,7 +48,9 @@ public class JsonWriter {
             jsonGenerator.writeArrayFieldStart(JsonName.KIDS);
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 for (IObject content : contents.get(pageNumber)) {
-                    jsonGenerator.writePOJO(content);
+                    if (!(content instanceof LineArtChunk)) {
+                        jsonGenerator.writePOJO(content);
+                    }
                 }
             }
 

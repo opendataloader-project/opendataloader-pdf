@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import org.opendataloader.pdf.json.JsonName;
 import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
 
 import java.io.IOException;
@@ -35,7 +36,9 @@ public class ListItemSerializer extends StdSerializer<ListItem> {
         jsonGenerator.writeStringField(JsonName.CONTENT, item.toString());
         jsonGenerator.writeArrayFieldStart(JsonName.KIDS);
         for (IObject content : item.getContents()) {
-            jsonGenerator.writePOJO(content);
+            if (!(content instanceof LineArtChunk)) {
+                jsonGenerator.writePOJO(content);
+            }
         }
         jsonGenerator.writeEndArray();
         jsonGenerator.writeEndObject();

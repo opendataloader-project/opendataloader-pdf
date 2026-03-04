@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import org.opendataloader.pdf.json.JsonName;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter;
+import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
 
 import java.io.IOException;
 
@@ -38,7 +39,9 @@ public class HeaderFooterSerializer extends StdSerializer<SemanticHeaderOrFooter
         SerializerUtil.writeEssentialInfo(jsonGenerator, header, header.getSemanticType().getValue().toLowerCase());
         jsonGenerator.writeArrayFieldStart(JsonName.KIDS);
         for (IObject content : header.getContents()) {
-            jsonGenerator.writePOJO(content);
+            if (!(content instanceof LineArtChunk)) {
+                jsonGenerator.writePOJO(content);
+            }
         }
         jsonGenerator.writeEndArray();
         jsonGenerator.writeEndObject();

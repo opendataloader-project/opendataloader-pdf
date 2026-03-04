@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import org.opendataloader.pdf.json.JsonName;
 import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 
 import java.io.IOException;
@@ -33,7 +34,9 @@ public class TableCellSerializer extends StdSerializer<TableBorderCell> {
         jsonGenerator.writeNumberField(JsonName.COLUMN_SPAN, cell.getColSpan());
         jsonGenerator.writeArrayFieldStart(JsonName.KIDS);
         for (IObject content : cell.getContents()) {
-            jsonGenerator.writePOJO(content);
+            if (!(content instanceof LineArtChunk)) {
+                jsonGenerator.writePOJO(content);
+            }
         }
         jsonGenerator.writeEndArray();
         jsonGenerator.writeEndObject();
