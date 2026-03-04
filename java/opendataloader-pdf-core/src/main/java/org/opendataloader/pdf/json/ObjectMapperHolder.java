@@ -41,9 +41,6 @@ public class ObjectMapperHolder {
         ImageSerializer imageSerializer = new ImageSerializer(ImageChunk.class);
         module.addSerializer(ImageChunk.class, imageSerializer);
 
-        LineArtSerializer lineArtSerializer = new LineArtSerializer(LineArtChunk.class);
-        module.addSerializer(LineArtChunk.class, lineArtSerializer);
-
         TableSerializer tableSerializer = new TableSerializer(TableBorder.class);
         module.addSerializer(TableBorder.class, tableSerializer);
 

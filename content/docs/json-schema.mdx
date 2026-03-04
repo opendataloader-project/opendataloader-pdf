@@ -111,6 +111,7 @@ List items include text properties plus:
 | `data`   | `string` | No       | Base64 data URI (when image-output is "embedded") |
 | `format` | `string` | No       | Image format (`png`, `jpeg`)                      |
 
+> **Note:** Vector graphics (PDF path operators / line art) are **not** included in JSON output. They are silently dropped, consistent with Markdown and HTML output. To extract vector charts as images, use `--hybrid-mode full`.
 ## Headers and footers
 
 | Field  | Type     | Required | Description                                  |
