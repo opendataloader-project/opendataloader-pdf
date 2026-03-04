@@ -57,7 +57,7 @@ Building RAG pipelines? You've probably hit these problems:
 - **Bounding Boxes** — Every element includes `[x1, y1, x2, y2]` coordinates for citations
 - **Reading Order** — XY-Cut++ algorithm handles multi-column layouts correctly
 - **Noise Filtering** — Headers, footers, hidden text, watermarks auto-removed
-- **LangChain Integration** — [Official document loader](https://python.langchain.com/docs/integrations/document_loaders/opendataloader_pdf/)
+- **LangChain Integration** — [Official document loader](https://docs.langchain.com/oss/python/integrations/document_loaders/opendataloader_pdf)
 
 ### Performance & Privacy
 
