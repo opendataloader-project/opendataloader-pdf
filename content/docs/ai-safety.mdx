@@ -72,4 +72,19 @@ Attackers can encode ASCII characters by tweaking the least significant bit (LSB
 | `malicious-font` | Detects manipulated font `cmap` tables.                 | 🚀 Upcoming |
 | `noised-figure`  | Detects steganographic prompts in images.               | 🚀 Upcoming |
 
+When `sensitive-data` is enabled, extracted emails/URLs may be replaced with placeholders (for example, `email@example.com` or `https://example.com`) in Markdown output.
+
+To preserve original links and email addresses for trusted documents, disable only that filter:
+
+```bash
+opendataloader-pdf input.pdf --content-safety-off sensitive-data
+```
+
+```python
+opendataloader_pdf.convert(
+    input_path="input.pdf",
+    content_safety_off=["sensitive-data"],
+)
+```
+
 Leave filters enabled whenever possible; only disable them with `--content-safety-off` when you fully trust the source documents and understand the trade-offs.
