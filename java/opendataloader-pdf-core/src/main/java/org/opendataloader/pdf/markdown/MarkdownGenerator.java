@@ -34,6 +34,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MarkdownGenerator implements Closeable {
 
@@ -46,6 +48,9 @@ public class MarkdownGenerator implements Closeable {
     protected boolean embedImages = false;
     protected String imageFormat = Config.IMAGE_FORMAT_PNG;
     protected boolean includeHeaderFooter = false;
+    private static final Pattern NUMBERED_HEADING_RE = Pattern.compile("^(\\d+(?:\\.\\d+)+\\.?)\\s+(.+)$");
+    private static final Pattern FUSED_SUBTITLE_RE =
+        Pattern.compile("^(.+?)\\s+([A-Z][A-Za-z0-9]+(?:-[A-Za-z0-9]+)+:\\s+.+)$");
 
     MarkdownGenerator(File inputPdf, Config config) throws IOException {
         String cutPdfFileName = inputPdf.getName();
@@ -294,6 +299,17 @@ public class MarkdownGenerator implements Closeable {
     }
 
     protected void writeHeading(SemanticHeading heading) throws IOException {
+        String value = heading.getValue();
+        if (StaticContainers.isKeepLineBreaks()) {
+            value = value.replace(MarkdownSyntax.LINE_BREAK, MarkdownSyntax.SPACE);
+        } else if (isInsideTable()) {
+            value = value.replace(MarkdownSyntax.LINE_BREAK, MarkdownSyntax.SPACE);
+        }
+
+        String[] headingParts = splitFusedNumberedHeadingSubtitle(value);
+        String headingText = headingParts[0] == null ? "" : headingParts[0];
+        String subtitleText = headingParts[1];
+
         if (!isInsideTable()) {
             // Cap heading level to 1-6 per Markdown specification
             int headingLevel = Math.min(6, Math.max(1, heading.getHeadingLevel()));
@@ -302,7 +318,51 @@ public class MarkdownGenerator implements Closeable {
             }
             markdownWriter.write(MarkdownSyntax.SPACE);
         }
-        writeSemanticTextNode(heading);
+
+        markdownWriter.write(getCorrectMarkdownString(headingText));
+
+        // Preserve a likely subtitle that was fused into the same heading line during extraction
+        // (e.g. "1.1. ContributionsPost-Training: ..." in some academic PDFs).
+        if (!isInsideTable() && subtitleText != null && !subtitleText.isEmpty()) {
+            writeLineBreak();
+            writeLineBreak();
+            markdownWriter.write(getCorrectMarkdownString(subtitleText));
+        }
+    }
+
+    static String[] splitFusedNumberedHeadingSubtitle(String input) {
+        String text = input == null ? "" : input.replaceAll("\\s+", " ").trim();
+        if (text.isEmpty()) {
+            return new String[]{text, null};
+        }
+
+        Matcher numbered = NUMBERED_HEADING_RE.matcher(text);
+        if (!numbered.matches()) {
+            return new String[]{text, null};
+        }
+
+        String sectionNumber = numbered.group(1).trim();
+        String remainder = numbered.group(2)
+            .replaceAll("([a-z])(Post|Pre|Self|Co)-", "$1 $2-")
+            .trim();
+
+        Matcher fused = FUSED_SUBTITLE_RE.matcher(remainder);
+        if (!fused.matches()) {
+            return new String[]{text, null};
+        }
+
+        String headingTail = fused.group(1).trim();
+        String subtitle = fused.group(2).trim();
+        if (headingTail.isEmpty() || subtitle.length() < 10 || subtitle.length() > 240) {
+            return new String[]{text, null};
+        }
+
+        int headingWordCount = headingTail.split("\\s+").length;
+        if (headingWordCount < 1 || headingWordCount > 4) {
+            return new String[]{text, null};
+        }
+
+        return new String[]{sectionNumber + " " + headingTail, subtitle};
     }
 
     protected void enterTable() {
