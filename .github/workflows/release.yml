@@ -13,7 +13,6 @@ jobs:
       VERSION: '0.0.0'
     permissions:
       contents: write
-      packages: write
       id-token: write
 
     steps:
@@ -95,60 +94,8 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       # =================================================================
-      # 4. GITHUB & DOCKER RELEASE (only on tag push)
+      # 4. GITHUB RELEASE (only on tag push)
       # =================================================================
-      - name: Log in to GitHub Container Registry
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push CLI Docker image
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-        uses: docker/build-push-action@v5
-        with:
-          context: ./java/opendataloader-pdf-cli
-          file: ./java/opendataloader-pdf-cli/Dockerfile
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/opendataloader-pdf-cli:${{ env.VERSION }}
-            ghcr.io/${{ github.repository_owner }}/opendataloader-pdf-cli:latest
-
-      - name: Wait for PyPI package availability
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-        run: |
-          for i in $(seq 1 12); do
-            pip index versions opendataloader-pdf 2>/dev/null | grep -q "${{ env.VERSION }}" && exit 0
-            echo "Waiting for PyPI propagation... ($i/12)"; sleep 15
-          done
-          echo "WARNING: PyPI propagation timed out, proceeding anyway"
-
-      - name: Build and push Hybrid Server Docker image (CPU)
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-        uses: docker/build-push-action@v5
-        with:
-          context: ./python/opendataloader-pdf
-          file: ./python/opendataloader-pdf/Dockerfile.hybrid
-          push: true
-          build-args: VERSION=${{ env.VERSION }}
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/opendataloader-pdf-hybrid:${{ env.VERSION }}
-            ghcr.io/${{ github.repository_owner }}/opendataloader-pdf-hybrid:latest
-
-      - name: Build and push Hybrid Server Docker image (GPU)
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-        uses: docker/build-push-action@v5
-        with:
-          context: ./python/opendataloader-pdf
-          file: ./python/opendataloader-pdf/Dockerfile.hybrid-gpu
-          push: true
-          build-args: VERSION=${{ env.VERSION }}
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/opendataloader-pdf-hybrid:${{ env.VERSION }}-gpu
-            ghcr.io/${{ github.repository_owner }}/opendataloader-pdf-hybrid:latest-gpu
-
       - name: Package CLI as ZIP
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         run: |
@@ -156,6 +103,9 @@ jobs:
           mkdir -p release
           cp "opendataloader-pdf-cli-${{ env.VERSION }}.jar" release/
           cp ../../../README.md release/
+          cp ../../../LICENSE release/
+          cp ../../../NOTICE.md release/
+          cp -r ../../../THIRD_PARTY release/
           cd release
           zip "../opendataloader-pdf-cli-${{ env.VERSION }}.zip" *
           cd ../..
