@@ -52,16 +52,6 @@ opendataloader_pdf.convert(
 )
 ```
 
-### Docker
-
-```bash
-# Run the hybrid backend
-docker run -p 5002:5002 ghcr.io/opendataloader-project/opendataloader-pdf-hybrid
-
-# Process with hybrid mode
-opendataloader-pdf --hybrid docling-fast --hybrid-url http://localhost:5002 input.pdf
-```
-
 ## How It Works
 
 ```
@@ -135,7 +125,7 @@ opendataloader-pdf \
 | Backend | Status | Description |
 |:--------|:-------|:------------|
 | `off` | Default | Java-only, no external calls |
-| `docling-fast` | Available | Docling-serve backend (local/Docker) |
+| `docling-fast` | Available | Docling-serve backend (local) |
 | `hancom` | Planned | Hancom Document AI |
 | `azure` | Planned | Azure Document Intelligence |
 | `google` | Planned | Google Document AI |
@@ -145,7 +135,7 @@ opendataloader-pdf \
 Hybrid mode is designed with privacy in mind:
 
 - **Local-first**: Simple pages never leave your machine
-- **On-premise backend**: Run docling-serve locally in Docker
+- **On-premise backend**: Run docling-serve locally
 - **Fallback**: If backend is unavailable, processing continues with Java-only
 - **No cloud dependency**: Default configuration requires no external services
 
@@ -158,7 +148,7 @@ Hybrid mode is designed with privacy in mind:
 | OCR-heavy scanned documents | **Hybrid mode** |
 | Maximum speed priority | Java-only |
 | Maximum accuracy priority | **Hybrid mode** |
-| Air-gapped environments | Hybrid with local Docker backend |
+| Air-gapped environments | Hybrid with local backend |
 
 ## Scanned PDFs (OCR)
 
@@ -207,13 +197,6 @@ opendataloader_pdf.convert(
 ```
 
 Start the backend server with `--force-ocr` before running the Python conversion.
-
-### Docker
-
-```bash
-docker run -p 5002:5002 ghcr.io/opendataloader-project/opendataloader-pdf-hybrid \
-  opendataloader-pdf-hybrid --port 5002 --host 0.0.0.0 --force-ocr --ocr-lang "ko,en"
-```
 
 > **Note**: Standard digital PDFs do not need `--force-ocr`. Use it only for scanned or image-based PDFs where text cannot be selected.
 
@@ -285,99 +268,7 @@ opendataloader-pdf-hybrid --enrich-picture-description \
 
 > **Note**: Picture description uses SmolVLM (256M), a lightweight vision model. Results are suitable for general context but may not capture precise data values from complex charts.
 
-## Docker Deployment
-
-### Quick Start
-
-```bash
-# CPU
-docker run -p 5002:5002 ghcr.io/opendataloader-project/opendataloader-pdf-hybrid
-
-# GPU
-docker run --gpus all -p 5002:5002 ghcr.io/opendataloader-project/opendataloader-pdf-hybrid:latest-gpu
-```
-
-### docker-compose (CPU)
-
-```yaml
-services:
-  hybrid:
-    image: ghcr.io/opendataloader-project/opendataloader-pdf-hybrid:latest
-    ports:
-      - "5002:5002"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5002/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 180s
-
-  cli:
-    image: ghcr.io/opendataloader-project/opendataloader-pdf-cli:latest
-    depends_on:
-      hybrid:
-        condition: service_healthy
-    volumes:
-      - ./input:/input
-      - ./output:/output
-    command: >
-      --hybrid docling-fast
-      --hybrid-url http://hybrid:5002
-      -f markdown
-      -o /output
-      /input/document.pdf
-```
-
-### docker-compose (GPU)
-
-```yaml
-services:
-  hybrid:
-    image: ghcr.io/opendataloader-project/opendataloader-pdf-hybrid:latest-gpu
-    ports:
-      - "5002:5002"
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5002/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 180s
-
-  cli:
-    image: ghcr.io/opendataloader-project/opendataloader-pdf-cli:latest
-    depends_on:
-      hybrid:
-        condition: service_healthy
-    volumes:
-      - ./input:/input
-      - ./output:/output
-    command: >
-      --hybrid docling-fast
-      --hybrid-url http://hybrid:5002
-      -f markdown
-      -o /output
-      /input/document.pdf
-```
-
-### Server Options
-
-Configure the hybrid server via command-line arguments in Docker:
-
-```bash
-docker run -p 5002:5002 ghcr.io/opendataloader-project/opendataloader-pdf-hybrid \
-  opendataloader-pdf-hybrid \
-  --port 5002 \
-  --host 0.0.0.0 \
-  --ocr-lang "ko" \
-  --force-ocr
-```
+## Server Options
 
 | Option | Description |
 |:-------|:------------|
@@ -392,21 +283,6 @@ docker run -p 5002:5002 ghcr.io/opendataloader-project/opendataloader-pdf-hybrid
 | `--picture-description-prompt TEXT` | Custom prompt for picture description |
 | `--log-level LEVEL` | Log level: `debug`, `info`, `warning`, `error` |
 
-### Custom Dockerfile
-
-Build a custom image with additional OCR languages or models:
-
-```dockerfile
-FROM ghcr.io/opendataloader-project/opendataloader-pdf-hybrid:latest
-
-USER root
-# Pre-download OCR models for faster startup
-RUN python3 -c "import easyocr; easyocr.Reader(['ko', 'en'])"
-USER appuser
-
-CMD ["opendataloader-pdf-hybrid", "--port", "5002", "--host", "0.0.0.0", "--ocr-lang", "ko,en"]
-```
-
 ## Troubleshooting
 
 ### Backend Connection Failed
@@ -418,7 +294,7 @@ Error: Could not connect to hybrid backend at http://localhost:5002
 **Solution**: Start the backend server first:
 
 ```bash
-opendataloader-pdf-hybrid  # or use Docker
+opendataloader-pdf-hybrid
 ```
 
 ### Slow Processing

@@ -6,7 +6,6 @@
 [![PyPI version](https://img.shields.io/pypi/v/opendataloader-pdf.svg)](https://pypi.org/project/opendataloader-pdf/)
 [![npm version](https://img.shields.io/npm/v/@opendataloader/pdf.svg)](https://www.npmjs.com/package/@opendataloader/pdf)
 [![Maven Central](https://img.shields.io/maven-central/v/org.opendataloader/opendataloader-pdf-core.svg)](https://search.maven.org/artifact/org.opendataloader/opendataloader-pdf-core)
-[![GHCR Version](https://ghcr-badge.egpl.dev/opendataloader-project/opendataloader-pdf-cli/latest_tag?trim=major&label=docker)](https://github.com/opendataloader-project/opendataloader-pdf/pkgs/container/opendataloader-pdf-cli)
 [![Java](https://img.shields.io/badge/Java-11%2B-blue.svg)](https://github.com/opendataloader-project/opendataloader-pdf#java)
 
 Convert PDFs into **LLM-ready Markdown and JSON** with accurate reading order, table extraction, and bounding boxes — all running locally on your machine.
@@ -64,7 +63,7 @@ Building RAG pipelines? You've probably hit these problems:
 - **No GPU** — Fast, rule-based heuristics
 - **Local-First** — Your documents never leave your machine
 - **High Throughput** — Process thousands of PDFs efficiently
-- **Multi-Language SDK** — Python, Node.js, Java, Docker
+- **Multi-Language SDK** — Python, Node.js, Java
 
 ### Document Understanding
 
@@ -135,7 +134,6 @@ Building RAG pipelines? You've probably hit these problems:
 
 - [Python](https://opendataloader.org/docs/quick-start-python)
 - [Node.js / TypeScript](https://opendataloader.org/docs/quick-start-nodejs)
-- [Docker](https://opendataloader.org/docs/quick-start-docker)
 - [Java](https://opendataloader.org/docs/quick-start-java)
 
 <br/>
@@ -232,7 +230,7 @@ opendataloader_pdf.convert(
 
 - **Local-first**: Simple pages processed locally, complex pages routed to backend
 - **Fallback**: If backend unavailable, gracefully falls back to local processing
-- **Privacy**: Run the backend locally in Docker for 100% on-premise
+- **Privacy**: Run the backend locally for 100% on-premise
 
 ### Formula Extraction (LaTeX)
 
