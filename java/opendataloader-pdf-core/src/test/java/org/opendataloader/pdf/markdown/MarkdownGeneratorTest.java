@@ -79,6 +79,24 @@ public class MarkdownGeneratorTest {
         assertEquals("# ", generateHeadingPrefix(-1));
     }
 
+    @Test
+    void testSplitFusedNumberedHeadingSubtitle() {
+        String input = "1.1. ContributionsPost-Training: Large-Scale Reinforcement Learning on the Base Model";
+        String[] split = MarkdownGenerator.splitFusedNumberedHeadingSubtitle(input);
+
+        assertEquals("1.1. Contributions", split[0]);
+        assertEquals("Post-Training: Large-Scale Reinforcement Learning on the Base Model", split[1]);
+    }
+
+    @Test
+    void testSplitFusedNumberedHeadingSubtitleNoSplitForNormalHeading() {
+        String input = "2.2.1 Reinforcement Learning Algorithm";
+        String[] split = MarkdownGenerator.splitFusedNumberedHeadingSubtitle(input);
+
+        assertEquals(input, split[0]);
+        assertNull(split[1]);
+    }
+
     /**
      * Helper method that mirrors the heading prefix generation logic in
      * MarkdownGenerator.writeHeading().
