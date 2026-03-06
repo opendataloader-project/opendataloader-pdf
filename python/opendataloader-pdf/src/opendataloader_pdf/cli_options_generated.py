@@ -52,7 +52,7 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "type": "string",
         "required": False,
         "default": None,
-        "description": "Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg, sensitive-data. Note: sensitive-data may replace emails/URLs with placeholders unless disabled.",
+        "description": "Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg, sensitive-data",
     },
     {
         "name": "keep-line-breaks",
