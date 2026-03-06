@@ -56,6 +56,7 @@ public class ContentFilterProcessor {
             filterOutOfPageContents(pageNumber, pageContents);
             pageContents = DocumentProcessor.removeNullObjectsFromList(pageContents);
         }
+        fixAbnormalTextChunkBoundingBoxes(pageContents);
         TextProcessor.mergeCloseTextChunks(pageContents);
         pageContents = DocumentProcessor.removeNullObjectsFromList(pageContents);
         TextProcessor.trimTextChunksWhiteSpaces(pageContents);
@@ -97,6 +98,34 @@ public class ContentFilterProcessor {
         for (IObject object : pageContents) {
             if (object instanceof TextChunk) {
                 ((TextChunk) object).compressSpaces();
+            }
+        }
+    }
+
+    private static void fixAbnormalTextChunkBoundingBoxes(List<IObject> pageContents) {
+        for (IObject object : pageContents) {
+            if (!(object instanceof TextChunk)) {
+                continue;
+            }
+            TextChunk textChunk = (TextChunk) object;
+            String value = textChunk.getValue();
+            if (value == null) {
+                continue;
+            }
+            int charCount = value.length();
+            if (charCount < 1 || charCount > 3) {
+                continue;
+            }
+            BoundingBox boundingBox = textChunk.getBoundingBox();
+            double height = boundingBox.getHeight();
+            if (height <= 0) {
+                continue;
+            }
+            double expectedWidth = charCount * height * 0.7;
+            double maxWidth = expectedWidth * 3;
+            if (boundingBox.getWidth() > maxWidth) {
+                boundingBox.setRightX(boundingBox.getLeftX() + expectedWidth);
+                textChunk.adjustSymbolEndsToBoundingBox(null);
             }
         }
     }
