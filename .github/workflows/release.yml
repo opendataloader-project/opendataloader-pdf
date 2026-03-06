@@ -107,7 +107,7 @@ jobs:
           cp ../../../NOTICE.md release/
           cp -r ../../../THIRD_PARTY release/
           cd release
-          zip "../opendataloader-pdf-cli-${{ env.VERSION }}.zip" *
+          zip -r "../opendataloader-pdf-cli-${{ env.VERSION }}.zip" .
           cd ../..
 
       - name: Create GitHub Release
