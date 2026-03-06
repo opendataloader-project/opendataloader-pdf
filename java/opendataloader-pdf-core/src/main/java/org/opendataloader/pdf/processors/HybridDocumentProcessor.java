@@ -265,10 +265,12 @@ public class HybridDocumentProcessor {
             new ClusterTableProcessor().processTables(workingContents);
         }
 
-        // Process each page through the standard Java pipeline
-        // Note: Sequential processing is required because StaticContainers uses ThreadLocal
-        for (int pageNumber : pageNumbers) {
+        // Process each page through the standard Java pipeline.
+        // StaticContainers uses ThreadLocal fields, so worker threads must inherit context explicitly.
+        StaticContainersThreadContext.Snapshot threadContext = StaticContainersThreadContext.capture();
+        pageNumbers.parallelStream().forEach(pageNumber -> {
             try {
+                StaticContainersThreadContext.apply(threadContext);
                 List<IObject> pageContents = workingContents.get(pageNumber);
                 pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber);
                 pageContents = pageContents.stream()
@@ -281,7 +283,7 @@ public class HybridDocumentProcessor {
                 LOGGER.log(Level.WARNING, "Error processing page {0}: {1}",
                     new Object[]{pageNumber, e.getMessage()});
             }
-        }
+        });
 
         // Apply cross-page processing for Java pages only
         applyJavaPagePostProcessing(workingContents, pageNumbers);
