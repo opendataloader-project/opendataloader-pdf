@@ -18,12 +18,16 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Table processor that uses clustering algorithms to detect tables.
  * Identifies tables by analyzing spatial relationships between text chunks.
  */
 public class ClusterTableProcessor extends AbstractTableProcessor {
+
+    private static final Logger LOGGER = Logger.getLogger(ClusterTableProcessor.class.getCanonicalName());
 
     @Override
     protected List<List<TableBorder>> getTables(List<List<IObject>> contents, List<Integer> pageNumbers) {
@@ -61,9 +65,14 @@ public class ClusterTableProcessor extends AbstractTableProcessor {
         clusterTableConsumer.processEnd();
         List<TableBorder> result = new ArrayList<>();
         for (Table table : clusterTableConsumer.getTables()) {
-            TableBorder tableBorder = table.createTableBorderFromTable();
-            if (tableBorder != null) {
-                result.add(tableBorder);
+            try {
+                TableBorder tableBorder = table.createTableBorderFromTable();
+                if (tableBorder != null) {
+                    result.add(tableBorder);
+                }
+            } catch (IndexOutOfBoundsException ex) {
+                LOGGER.log(Level.WARNING,
+                    "Skipping malformed cluster-detected table due to invalid border index access", ex);
             }
         }
         return result;
