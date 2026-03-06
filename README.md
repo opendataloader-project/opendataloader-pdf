@@ -169,15 +169,11 @@ PDFs can contain hidden prompt injection attacks. OpenDataLoader automatically f
 - Off-page content
 - Suspicious invisible layers
 
-When the `sensitive-data` safety filter is enabled (default), extracted emails/URLs may be replaced with placeholders such as `email@example.com` or `https://example.com`.
+When the `sensitive-data` safety filter is enabled, extracted emails/URLs may be replaced with placeholders such as `email@example.com` or `https://example.com`.
 
-To preserve raw links and email addresses for trusted documents:
+This filter is **disabled by default** so visible content is preserved as extracted.
 
-```bash
-opendataloader-pdf input.pdf --content-safety-off sensitive-data
-```
-
-This is **enabled by default**. [Learn more →](https://opendataloader.org/docs/ai-safety)
+[Learn more →](https://opendataloader.org/docs/ai-safety)
 
 <br/>
 
