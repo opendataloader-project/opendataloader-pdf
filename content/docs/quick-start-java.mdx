@@ -60,7 +60,7 @@ public class Sample {
                 OpenDataLoaderPDF.processFile(pdf, config);
             }
         } finally {
-            // Always call shutdown when done
+            // Releases internal thread pools; call once when your application is done processing
             OpenDataLoaderPDF.shutdown();
         }
     }
