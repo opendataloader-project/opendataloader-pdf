@@ -171,13 +171,13 @@ Process multiple PDFs in a single command to avoid repeated Java startup overhea
 
 ```bash
 # Multiple files — one JVM invocation
-opendataloader-pdf file1.pdf file2.pdf file3.pdf --format json,markdown
+opendataloader-pdf file1.pdf file2.pdf file3.pdf --format json,markdown --output-dir ./output/
 
 # Entire directory — recursively finds all PDFs
 opendataloader-pdf ./contracts/ --format json --output-dir ./output/
 
 # Mix files and directories
-opendataloader-pdf report.pdf ./invoices/ ./receipts/ --format markdown
+opendataloader-pdf report.pdf ./invoices/ ./receipts/ --format markdown --output-dir ./output/
 ```
 
 ### Python
