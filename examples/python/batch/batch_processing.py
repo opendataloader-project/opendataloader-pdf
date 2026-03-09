@@ -51,7 +51,7 @@ def summarize_results(json_files: list[Path]) -> None:
     total_pages = 0
     total_elements = 0
 
-    print(f"\n{'Document':<40} {'Pages':>6} {'Elements':>9}")
+    print(f"\n{'Document':<40} {'Pages':>6} {'Top-level':>9}")
     print("-" * 58)
 
     for json_path in json_files:
