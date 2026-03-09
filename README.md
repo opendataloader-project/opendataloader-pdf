@@ -23,13 +23,15 @@ pip install -U opendataloader-pdf
 ```python
 import opendataloader_pdf
 
-# PDF to Markdown for RAG
+# PDFs to Markdown for RAG — pass multiple files or a directory
 opendataloader_pdf.convert(
-    input_path="document.pdf",
+    input_path=["report.pdf", "contract.pdf"],
     output_dir="output/",
     format="markdown,json"
 )
 ```
+
+[Batch Processing Guide →](#batch-processing) — CLI, Node.js, directory input, and performance tips
 
 <br/>
 
@@ -158,6 +160,65 @@ opendataloader_pdf.convert(
 ```
 
 [Full CLI Options Reference →](https://opendataloader.org/docs/cli-options-reference)
+
+<br/>
+
+## Batch Processing
+
+Process multiple PDFs in a single command to avoid repeated Java startup overhead. All wrappers support multiple files and directories natively.
+
+### CLI
+
+```bash
+# Multiple files — one JVM invocation
+opendataloader-pdf file1.pdf file2.pdf file3.pdf --format json,markdown
+
+# Entire directory — recursively finds all PDFs
+opendataloader-pdf ./contracts/ --format json --output-dir ./output/
+
+# Mix files and directories
+opendataloader-pdf report.pdf ./invoices/ ./receipts/ --format markdown
+```
+
+### Python
+
+```python
+import opendataloader_pdf
+
+# List of files
+opendataloader_pdf.convert(
+    input_path=["file1.pdf", "file2.pdf", "file3.pdf"],
+    output_dir="output/",
+    format="json,markdown"
+)
+
+# Directory
+opendataloader_pdf.convert(
+    input_path="./documents/",
+    output_dir="output/",
+    format="json"
+)
+```
+
+### Node.js
+
+```javascript
+import { convert } from '@opendataloader/pdf';
+
+// Array of files
+await convert(['file1.pdf', 'file2.pdf', 'file3.pdf'], {
+  format: ['json', 'markdown'],
+  outputDir: 'output/'
+});
+
+// Directory
+await convert('./documents/', {
+  format: ['json'],
+  outputDir: 'output/'
+});
+```
+
+> **Performance tip:** Processing 100 files in one command is significantly faster than running the CLI 100 times, because the Java runtime initializes only once. For large-scale pipelines, always pass all files in a single invocation.
 
 <br/>
 

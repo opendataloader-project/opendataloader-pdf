@@ -193,15 +193,31 @@ OpenDataLoader processes **100+ pages per second** on typical hardware (CPU only
 
 ### Can I process multiple PDFs at once?
 
-Yes. Point to a folder instead of a single file:
+Yes. Pass a list of files, a directory, or both:
 
 ```python
+# List of files — single JVM invocation
 opendataloader_pdf.convert(
-    input_path="documents/",  # Folder containing PDFs
+    input_path=["report.pdf", "contract.pdf", "invoice.pdf"],
+    output_dir="output/",
+    format="json,markdown"
+)
+
+# Or a folder (recursively finds all PDFs)
+opendataloader_pdf.convert(
+    input_path="documents/",
     output_dir="output/",
     format="json,markdown"
 )
 ```
+
+CLI equivalent:
+
+```bash
+opendataloader-pdf report.pdf contract.pdf ./invoices/ -o ./output -f json,markdown
+```
+
+> **Performance tip:** Always pass all files in a single call. Each separate CLI invocation starts a new Java process (~1-2s overhead), so batching is significantly faster for large document collections.
 
 ### Does it work with scanned PDFs?
 
