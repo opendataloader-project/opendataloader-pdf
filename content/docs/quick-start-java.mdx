@@ -54,13 +54,15 @@ public class Sample {
         config.setGenerateMarkdown(true);
         config.setGenerateHtml(true);
 
-        // Process multiple files in one JVM invocation
-        for (String pdf : new String[]{"report.pdf", "contract.pdf"}) {
-            OpenDataLoaderPDF.processFile(pdf, config);
+        try {
+            // Process multiple files in one JVM invocation
+            for (String pdf : new String[]{"report.pdf", "contract.pdf"}) {
+                OpenDataLoaderPDF.processFile(pdf, config);
+            }
+        } finally {
+            // Always call shutdown when done
+            OpenDataLoaderPDF.shutdown();
         }
-
-        // Always call shutdown when done
-        OpenDataLoaderPDF.shutdown();
     }
 }
 ```
