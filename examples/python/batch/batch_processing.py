@@ -100,6 +100,8 @@ def main():
         print(f"Time: {elapsed:.2f}s (single JVM invocation)")
 
     # --- Method 2: Pass a directory ---
+    # Note: directory input recursively finds PDFs in subdirectories,
+    # so the file count may differ from Method 1 (which uses top-level glob).
     print("\n" + "=" * 58)
     print("Method 2: Convert entire directory")
     print("=" * 58)
