@@ -1,7 +1,6 @@
-
 # THIRD-PARTY LICENSES
 
-This project includes third-party libraries and components, licensed under their respective open source licenses. 
+This project includes third-party libraries and components, licensed under their respective open source licenses.
 Hancom, Inc. distributes the veraPDF components under the Mozilla Public License 2.0 (MPL-2.0), chosen from dual-licensed options.
 
 | Component | Version | License | Download URL |
