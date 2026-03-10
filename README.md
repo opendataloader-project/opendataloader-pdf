@@ -578,7 +578,9 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 
-[Mozilla Public License 2.0](LICENSE)
+[Apache License 2.0](https://github.com/opendataloader-project/opendataloader-pdf/blob/main/LICENSE)
+
+> **Note:** Versions prior to 2.0 are licensed under the [Mozilla Public License 2.0](https://www.mozilla.org/MPL/2.0/).
 
 ---
 
