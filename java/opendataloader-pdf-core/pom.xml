@@ -90,7 +90,7 @@
                 <directory>${project.basedir}/../../</directory>
                 <includes>
                     <include>LICENSE</include>
-                    <include>NOTICE.md</include>
+                    <include>NOTICE</include>
                 </includes>
                 <targetPath>META-INF</targetPath>
                 <filtering>false</filtering>

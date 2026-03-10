@@ -38,7 +38,7 @@ packages = ["src/opendataloader_pdf"]
 artifacts = [
     "src/opendataloader_pdf/jar/*.jar",
     "src/opendataloader_pdf/LICENSE",
-    "src/opendataloader_pdf/NOTICE.md",
+    "src/opendataloader_pdf/NOTICE",
     "src/opendataloader_pdf/THIRD_PARTY/**",
 ]
 

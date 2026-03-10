@@ -104,7 +104,7 @@ jobs:
           cp "opendataloader-pdf-cli-${{ env.VERSION }}.jar" release/
           cp ../../../README.md release/
           cp ../../../LICENSE release/
-          cp ../../../NOTICE.md release/
+          cp ../../../NOTICE release/
           cp -r ../../../THIRD_PARTY release/
           cd release
           zip -r "../opendataloader-pdf-cli-${{ env.VERSION }}.zip" .
