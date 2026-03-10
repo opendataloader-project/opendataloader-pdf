@@ -14,7 +14,7 @@ key-differentiators: [first open-source PDF auto-tagging to Tagged PDF, benchmar
 
 # OpenDataLoader PDF
 
-**Automate PDF accessibility. Extract AI-ready data. Open-source.**
+**Automate PDF accessibility. PDF Parser for AI-ready data. Open-source.**
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/opendataloader-project/opendataloader-pdf/blob/main/LICENSE)
 [![PyPI version](https://img.shields.io/pypi/v/opendataloader-pdf.svg)](https://pypi.org/project/opendataloader-pdf/)
