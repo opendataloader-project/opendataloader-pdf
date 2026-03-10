@@ -28,7 +28,7 @@ key-differentiators: [first open-source PDF auto-tagging to Tagged PDF, benchmar
 - **What's free?** — Layout analysis + auto-tagging (Q2 2026, Apache 2.0). Untagged PDF in → Tagged PDF out. No proprietary SDK dependency ([auto-tagging preview](#auto-tagging-preview-coming-q2-2026))
 - **Can it scale?** — Batch processing API handles folders of PDFs in a single call. No per-document manual intervention ([quick start](#get-started-in-30-seconds))
 - **What about PDF/UA compliance?** — Converting Tagged PDF to PDF/UA-1 or PDF/UA-2 is an enterprise add-on. Auto-tagging generates the Tagged PDF; PDF/UA export is the final step ([pipeline](#accessibility-pipeline))
-- **Why trust this?** — The same layout analysis engine already ranks #1 in PDF extraction benchmarks (0.90 overall, 0.93 table accuracy) ([benchmarks](#benchmarks))
+- **Why trust this?** — Built in collaboration with [PDF Association](https://pdfa.org), [Dual Lab](https://duallab.com) (veraPDF developers), and validated against Well-Tagged PDF specifications. The same engine ranks #1 in PDF extraction benchmarks (0.90 overall) ([collaboration](https://opendataloader.org/docs/tagged-pdf-collaboration) | [benchmarks](#benchmarks))
 
 🔍 **AI data extraction** — The layout analysis engine that powers auto-tagging → Tagged PDF is already shipped and battle-tested. Extract Markdown, JSON (with bounding boxes), and HTML from any PDF.
 
@@ -307,7 +307,7 @@ Combine formats: `format="json,markdown"`
 
 **Problem**: Millions of existing PDFs lack structure tags, failing accessibility regulations (EAA, ADA/Section 508, Korea Digital Inclusion Act). Manual remediation costs $50–200 per document and doesn't scale.
 
-**OpenDataLoader's approach**: The same layout analysis engine that ranks #1 in extraction benchmarks powers auto-tagging → Tagged PDF. No existing open-source tool generates Tagged PDFs end-to-end — most rely on proprietary SDKs for the tag-writing step. OpenDataLoader does it all under Apache 2.0.
+**OpenDataLoader's approach**: Built in collaboration with [PDF Association](https://pdfa.org) and [Dual Lab](https://duallab.com) (veraPDF developers). Auto-tagging follows the Well-Tagged PDF specification and is validated using veraPDF. No existing open-source tool generates Tagged PDFs end-to-end — most rely on proprietary SDKs for the tag-writing step. OpenDataLoader does it all under Apache 2.0. ([collaboration details](https://opendataloader.org/docs/tagged-pdf-collaboration))
 
 | Regulation | Deadline | Requirement |
 |------------|----------|-------------|
