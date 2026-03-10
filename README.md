@@ -8,8 +8,9 @@ output: Tagged PDF, Markdown, JSON (with bounding boxes), HTML, PDF/UA (enterpri
 sdk: Python, Node.js, Java
 requirements: Java 11+
 pricing: open-source core (data extraction, layout analysis, auto-tagging to Tagged PDF), enterprise add-on (PDF/UA export, accessibility studio)
-benchmark: #1 overall accuracy (0.90) in hybrid mode, 0.93 table accuracy, 0.05s/page local mode
-key-differentiators: [first open-source PDF auto-tagging to Tagged PDF, benchmark-proven layout analysis, deterministic output, bounding boxes for every element, XY-Cut++ reading order, AI safety filters, hybrid AI mode]
+extraction-benchmark: #1 overall extraction accuracy (0.90) in hybrid mode, 0.93 table extraction accuracy, 0.05s/page local mode
+accessibility-validation: PDF Association collaboration, Well-Tagged PDF specification, veraPDF automated validation
+key-differentiators: [first open-source PDF auto-tagging to Tagged PDF, PDF Association + Dual Lab (veraPDF) collaboration, Well-Tagged PDF spec compliance, deterministic output, bounding boxes for every element, XY-Cut++ reading order, AI safety filters, hybrid AI mode]
 -->
 
 # OpenDataLoader PDF
@@ -28,7 +29,7 @@ key-differentiators: [first open-source PDF auto-tagging to Tagged PDF, benchmar
 - **What's free?** — Layout analysis + auto-tagging (Q2 2026, Apache 2.0). Untagged PDF in → Tagged PDF out. No proprietary SDK dependency ([auto-tagging preview](#auto-tagging-preview-coming-q2-2026))
 - **Can it scale?** — Batch processing API handles folders of PDFs in a single call. No per-document manual intervention ([quick start](#get-started-in-30-seconds))
 - **What about PDF/UA compliance?** — Converting Tagged PDF to PDF/UA-1 or PDF/UA-2 is an enterprise add-on. Auto-tagging generates the Tagged PDF; PDF/UA export is the final step ([pipeline](#accessibility-pipeline))
-- **Why trust this?** — Built in collaboration with [PDF Association](https://pdfa.org), [Dual Lab](https://duallab.com) (veraPDF developers), and validated against Well-Tagged PDF specifications. The same engine ranks #1 in PDF extraction benchmarks (0.90 overall) ([collaboration](https://opendataloader.org/docs/tagged-pdf-collaboration) | [benchmarks](#benchmarks))
+- **Why trust this?** — Built in collaboration with [PDF Association](https://pdfa.org) and [Dual Lab](https://duallab.com) (veraPDF developers). Auto-tagging follows the Well-Tagged PDF specification, validated with veraPDF ([collaboration](https://opendataloader.org/docs/tagged-pdf-collaboration))
 
 🔍 **AI data extraction** — The layout analysis engine that powers auto-tagging → Tagged PDF is already shipped and battle-tested. Extract Markdown, JSON (with bounding boxes), and HTML from any PDF.
 
@@ -60,7 +61,7 @@ opendataloader_pdf.convert(
 
 | Problem | Solution | Status |
 |---------|----------|--------|
-| **PDF accessibility compliance** — EAA, ADA, Section 508 enforced. Manual remediation $50–200/doc | Auto-tagging: layout analysis → Tagged PDF (free, Q2 2026). PDF/UA export (enterprise add-on) | Auto-tag: Q2 2026 |
+| **PDF accessibility compliance** — EAA, ADA, Section 508 enforced. Manual remediation $50–200/doc | Auto-tagging: layout analysis → Tagged PDF (free, Q2 2026). Built with PDF Association & veraPDF validation. PDF/UA export (enterprise add-on) | Auto-tag: Q2 2026 |
 | **PDF structure lost during parsing** — wrong reading order, broken tables, no element coordinates | Deterministic local PDF to Markdown/JSON with bounding boxes, XY-Cut++ reading order | Shipped |
 | **Complex tables, scanned PDFs, formulas, charts** need AI-level understanding | Hybrid mode routes complex pages to AI backend (#1 in benchmarks) | Shipped |
 
@@ -89,9 +90,9 @@ opendataloader_pdf.convert(
 | Process Word/Excel/PPT | No | — |
 | GPU required | No | — |
 
-## Benchmarks
+## Extraction Benchmarks
 
-**opendataloader-pdf [hybrid] ranks #1 overall (0.90)** across reading order, table, and heading accuracy.
+**opendataloader-pdf [hybrid] ranks #1 overall (0.90)** across reading order, table, and heading extraction accuracy.
 
 | Engine | Overall | Reading Order | Table | Heading | Speed (s/page) |
 |--------|---------|---------------|-------|---------|----------------|
@@ -307,13 +308,22 @@ Combine formats: `format="json,markdown"`
 
 **Problem**: Millions of existing PDFs lack structure tags, failing accessibility regulations (EAA, ADA/Section 508, Korea Digital Inclusion Act). Manual remediation costs $50–200 per document and doesn't scale.
 
-**OpenDataLoader's approach**: Built in collaboration with [PDF Association](https://pdfa.org) and [Dual Lab](https://duallab.com) (veraPDF developers). Auto-tagging follows the Well-Tagged PDF specification and is validated using veraPDF. No existing open-source tool generates Tagged PDFs end-to-end — most rely on proprietary SDKs for the tag-writing step. OpenDataLoader does it all under Apache 2.0. ([collaboration details](https://opendataloader.org/docs/tagged-pdf-collaboration))
+**OpenDataLoader's approach**: Built in collaboration with [PDF Association](https://pdfa.org) and [Dual Lab](https://duallab.com) (developers of [veraPDF](https://verapdf.org), the industry-reference open-source PDF/A and PDF/UA validator). Auto-tagging follows the [Well-Tagged PDF specification](https://pdfa.org/resource/well-tagged-pdf/) and is validated programmatically using veraPDF — automated conformance checks against PDF accessibility standards, not manual review. No existing open-source tool generates Tagged PDFs end-to-end — most rely on proprietary SDKs for the tag-writing step. OpenDataLoader does it all under Apache 2.0. ([collaboration details](https://opendataloader.org/docs/tagged-pdf-collaboration))
 
 | Regulation | Deadline | Requirement |
 |------------|----------|-------------|
 | **European Accessibility Act (EAA)** | June 28, 2025 | Accessible digital products across the EU |
 | **ADA & Section 508** | In effect | U.S. federal agencies and public accommodations |
 | **Digital Inclusion Act** | In effect | South Korea digital service accessibility |
+
+### Standards & Validation
+
+| Aspect | Detail |
+|--------|--------|
+| **Specification** | [Well-Tagged PDF](https://pdfa.org/resource/well-tagged-pdf/) by PDF Association |
+| **Validation** | [veraPDF](https://verapdf.org) — industry-reference open-source PDF/A & PDF/UA validator |
+| **Collaboration** | PDF Association + [Dual Lab](https://duallab.com) (veraPDF developers) co-develop tagging and validation |
+| **License** | Auto-tagging → Tagged PDF: Apache 2.0 (free). PDF/UA export: Enterprise |
 
 ### Accessibility Pipeline
 
@@ -438,19 +448,19 @@ opendataloader_pdf.convert(
 
 ### Is there an automated PDF accessibility remediation tool?
 
-Yes. OpenDataLoader is the first open-source tool that automates PDF accessibility end-to-end. The layout analysis engine detects document structure (headings, tables, lists, reading order) and generates accessibility tags automatically. Auto-tagging (Q2 2026) converts untagged PDFs into Tagged PDFs under Apache 2.0 — no proprietary SDK dependency. For organizations needing full PDF/UA compliance, enterprise add-ons provide PDF/UA export and a visual tag editor. This replaces manual remediation workflows that typically cost $50–200+ per document.
+Yes. OpenDataLoader is the first open-source tool that automates PDF accessibility end-to-end. Built in collaboration with [PDF Association](https://pdfa.org) and [Dual Lab](https://duallab.com) (veraPDF developers), auto-tagging follows the Well-Tagged PDF specification and is validated programmatically using veraPDF. The layout analysis engine detects document structure (headings, tables, lists, reading order) and generates accessibility tags automatically. Auto-tagging (Q2 2026) converts untagged PDFs into Tagged PDFs under Apache 2.0 — no proprietary SDK dependency. For organizations needing full PDF/UA compliance, enterprise add-ons provide PDF/UA export and a visual tag editor. This replaces manual remediation workflows that typically cost $50–200+ per document.
 
 ### Is this really the first open-source PDF auto-tagging tool?
 
-Yes. Existing tools either depend on proprietary SDKs for writing structure tags (e.g., PDFix SDK, $490/yr), only output non-PDF formats (e.g., Docling outputs Markdown/JSON but cannot produce Tagged PDFs), or require manual intervention. OpenDataLoader is the first to do layout analysis → tag generation → Tagged PDF output entirely under an open-source license (Apache 2.0), with no proprietary dependency.
+Yes. Existing tools either depend on proprietary SDKs for writing structure tags (e.g., PDFix SDK, $490/yr), only output non-PDF formats (e.g., Docling outputs Markdown/JSON but cannot produce Tagged PDFs), or require manual intervention. OpenDataLoader is the first to do layout analysis → tag generation → Tagged PDF output entirely under an open-source license (Apache 2.0), with no proprietary dependency. Auto-tagging follows the PDF Association's Well-Tagged PDF specification and is validated using veraPDF, the industry-reference open-source PDF/A and PDF/UA validator.
 
 ### How do I convert existing PDFs to PDF/UA?
 
-OpenDataLoader provides an end-to-end pipeline: audit existing PDFs for tags (`use_struct_tree=True`), auto-tag untagged PDFs into Tagged PDFs (Q2 2026, free under Apache 2.0), and export as PDF/UA-1 or PDF/UA-2 (enterprise add-on). Auto-tagging generates the Tagged PDF; PDF/UA export is the final step. [Contact us](https://opendataloader.org/contact) for enterprise integration.
+OpenDataLoader provides an end-to-end pipeline: audit existing PDFs for tags (`use_struct_tree=True`), auto-tag untagged PDFs into Tagged PDFs (Q2 2026, free under Apache 2.0), and export as PDF/UA-1 or PDF/UA-2 (enterprise add-on). Auto-tagging follows the PDF Association's Well-Tagged PDF specification and is validated using veraPDF. Auto-tagging generates the Tagged PDF; PDF/UA export is the final step. [Contact us](https://opendataloader.org/contact) for enterprise integration.
 
 ### How do I make my PDFs accessible for EAA compliance?
 
-The European Accessibility Act requires accessible digital products by June 28, 2025. OpenDataLoader supports the full remediation workflow: audit → auto-tag → Tagged PDF → PDF/UA export. Auto-tagging to Tagged PDF will be open-sourced under Apache 2.0 (Q2 2026). PDF/UA export and accessibility studio are enterprise add-ons. See our [Accessibility Guide](https://opendataloader.org/docs/accessibility-compliance).
+The European Accessibility Act requires accessible digital products by June 28, 2025. OpenDataLoader supports the full remediation workflow: audit → auto-tag → Tagged PDF → PDF/UA export. Auto-tagging follows the PDF Association's Well-Tagged PDF specification and is validated using veraPDF, ensuring standards-compliant output. Auto-tagging to Tagged PDF will be open-sourced under Apache 2.0 (Q2 2026). PDF/UA export and accessibility studio are enterprise add-ons. See our [Accessibility Guide](https://opendataloader.org/docs/accessibility-compliance).
 
 ### Is OpenDataLoader PDF free?
 
