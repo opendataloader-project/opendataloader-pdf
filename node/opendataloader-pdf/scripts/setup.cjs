@@ -33,15 +33,15 @@ const destJarPath = path.join(destJarDir, 'opendataloader-pdf-cli.jar').replace(
 console.log(`Copying JAR to ${destJarPath}`);
 fs.copyFileSync(sourceJarPath, destJarPath);
 
-// Copy README.md, LICENSE, NOTICE.md, and THIRD_PARTY
+// Copy README.md, LICENSE, NOTICE, and THIRD_PARTY
 const readmeSrc = path.resolve(rootDir, '../../README.md');
 const licenseSrc = path.resolve(rootDir, '../../LICENSE');
-const noticeSrc = path.resolve(rootDir, '../../NOTICE.md');
+const noticeSrc = path.resolve(rootDir, '../../NOTICE');
 const thirdPartySrc = path.resolve(rootDir, '../../THIRD_PARTY');
 
 const readmeDest = path.join(rootDir, 'README.md').replace(/\\/g, '/');
 const licenseDest = path.join(rootDir, 'LICENSE').replace(/\\/g, '/');
-const noticeDest = path.join(rootDir, 'NOTICE.md').replace(/\\/g, '/');
+const noticeDest = path.join(rootDir, 'NOTICE').replace(/\\/g, '/');
 const thirdPartyDest = path.join(rootDir, 'THIRD_PARTY').replace(/\\/g, '/');
 
 console.log(`Copying README.md to ${readmeDest}`);
@@ -50,7 +50,7 @@ fs.copyFileSync(readmeSrc, readmeDest);
 console.log(`Copying LICENSE to ${licenseDest}`);
 fs.copyFileSync(licenseSrc, licenseDest);
 
-console.log(`Copying NOTICE.md to ${noticeDest}`);
+console.log(`Copying NOTICE to ${noticeDest}`);
 fs.copyFileSync(noticeSrc, noticeDest);
 
 console.log(`Copying THIRD_PARTY directory to ${thirdPartyDest}`);

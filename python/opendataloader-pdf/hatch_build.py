@@ -14,7 +14,7 @@ class CustomBuildHook(BuildHookInterface):
         dest_jar_dir = pkg_dir / "jar"
         dest_jar_path = dest_jar_dir / "opendataloader-pdf-cli.jar"
         license_path = pkg_dir / "LICENSE"
-        notice_path = pkg_dir / "NOTICE.md"
+        notice_path = pkg_dir / "NOTICE"
         third_party_dest = pkg_dir / "THIRD_PARTY"
 
         readme_path = root_dir / "README.md"
@@ -54,7 +54,7 @@ class CustomBuildHook(BuildHookInterface):
 
         # --- Copy LICENSE, NOTICE, README ---
         shutil.copy(root_dir / "../../LICENSE", license_path)
-        shutil.copy(root_dir / "../../NOTICE.md", notice_path)
+        shutil.copy(root_dir / "../../NOTICE", notice_path)
         shutil.copy(root_dir / "../../README.md", readme_path)
         third_party_src = root_dir / "../../THIRD_PARTY"
         print(f"Copying THIRD_PARTY directory to {third_party_dest}")

@@ -33,6 +33,6 @@ tsconfig.tsbuildinfo
 
 # docs
 THIRD_PARTY
-NOTICE.md
+NOTICE
 README.md
 LICENSE

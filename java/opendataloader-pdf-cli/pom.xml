@@ -82,6 +82,12 @@
                                         <exclude>META-INF/*.DSA</exclude>
                                         <exclude>META-INF/*.RSA</exclude>
                                         <exclude>META-INF/versions/**</exclude>
+                                        <exclude>META-INF/LICENSE</exclude>
+                                        <exclude>META-INF/LICENSE.txt</exclude>
+                                        <exclude>META-INF/LICENSE.md</exclude>
+                                        <exclude>META-INF/NOTICE</exclude>
+                                        <exclude>META-INF/NOTICE.txt</exclude>
+                                        <exclude>META-INF/NOTICE.md</exclude>
                                     </excludes>
                                 </filter>
                                 <filter>
@@ -107,10 +113,6 @@
                                 <transformer
                                     implementation="org.apache.maven.plugins.shade.resource.ComponentsXmlResourceTransformer"/>
                                 <transformer
-                                    implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer"/>
-                                <transformer
-                                    implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer"/>
-                                <transformer
                                     implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>META-INF/DEPENDENCIES</resource>
                                 </transformer>
@@ -121,8 +123,8 @@
                                 </transformer>
                                 <transformer
                                     implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
-                                    <resource>META-INF/NOTICE.md</resource>
-                                    <file>${project.basedir}/../../NOTICE.md</file>
+                                    <resource>META-INF/NOTICE</resource>
+                                    <file>${project.basedir}/../../NOTICE</file>
                                 </transformer>
                             </transformers>
                         </configuration>
