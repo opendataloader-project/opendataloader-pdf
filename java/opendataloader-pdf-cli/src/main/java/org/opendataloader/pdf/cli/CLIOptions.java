@@ -350,9 +350,9 @@ public class CLIOptions {
                     config.getFilterConfig().setFilterHiddenOCG(false);
                     break;
                 case "sensitive-data":
-                    System.err.println("Warning: '--content-safety-off sensitive-data' is deprecated. "
-                            + "Sensitive data sanitization is disabled by default. "
-                            + "Use '--sanitize' to enable it.");
+                    System.err.println("Warning: '--content-safety-off sensitive-data' is deprecated and has no effect. "
+                            + "Sensitive data sanitization is now opt-in. "
+                            + "Use '--sanitize' to enable masking.");
                     break;
                 case "all":
                     config.getFilterConfig().setFilterHiddenText(false);
