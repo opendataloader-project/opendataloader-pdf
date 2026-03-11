@@ -57,6 +57,10 @@ class TestCLIOptions:
         for expected in expected_options:
             assert expected in option_names, f"Expected option not found: {expected}"
 
+    def test_sanitize_option_exists(self):
+        option_names = [opt["name"] for opt in CLI_OPTIONS]
+        assert "sanitize" in option_names
+
 
 
 class TestAddOptionsToParser:
