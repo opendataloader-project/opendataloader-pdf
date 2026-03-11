@@ -17,7 +17,8 @@ This page documents all available CLI options for opendataloader-pdf.
 | `--password`                | `-p`  | `string`  | -            | Password for encrypted PDF files                                                                                                   |
 | `--format`                  | `-f`  | `string`  | -            | Output formats (comma-separated). Values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images. Default: json |
 | `--quiet`                   | `-q`  | `boolean` | `false`      | Suppress console logging output                                                                                                    |
-| `--content-safety-off`      | -     | `string`  | -            | Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg, sensitive-data                               |
+| `--content-safety-off`      | -     | `string`  | -            | Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg                                               |
+| `--sanitize`                | -     | `boolean` | `false`      | Enable sensitive data sanitization. Replaces emails, phone numbers, IPs, credit cards, and URLs with placeholders                  |
 | `--keep-line-breaks`        | -     | `boolean` | `false`      | Preserve original line breaks in extracted text                                                                                    |
 | `--replace-invalid-chars`   | -     | `string`  | `" "`        | Replacement character for invalid/unrecognized characters. Default: space                                                          |
 | `--use-struct-tree`         | -     | `boolean` | `false`      | Use PDF structure tree (tagged PDF) for reading order and semantic structure                                                       |
@@ -45,22 +46,10 @@ This page documents all available CLI options for opendataloader-pdf.
 opendataloader-pdf document.pdf -o ./output -f json,markdown
 ```
 
-### Multiple files (single JVM invocation)
-
-```bash
-opendataloader-pdf report.pdf contract.pdf invoice.pdf -o ./output -f json,markdown
-```
-
 ### Convert entire folder
 
 ```bash
 opendataloader-pdf ./pdf-folder -o ./output -f json
-```
-
-### Mix files and directories
-
-```bash
-opendataloader-pdf report.pdf ./invoices/ ./receipts/ -o ./output -f markdown
 ```
 
 ### Save images as external files

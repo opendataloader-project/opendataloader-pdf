@@ -52,7 +52,16 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "type": "string",
         "required": False,
         "default": None,
-        "description": "Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg, sensitive-data",
+        "description": "Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg",
+    },
+    {
+        "name": "sanitize",
+        "python_name": "sanitize",
+        "short_name": None,
+        "type": "boolean",
+        "required": False,
+        "default": False,
+        "description": "Enable sensitive data sanitization. Replaces emails, phone numbers, IPs, credit cards, and URLs with placeholders",
     },
     {
         "name": "keep-line-breaks",
