@@ -3,7 +3,7 @@ name = "opendataloader-pdf"
 version = "0.0.0"
 description = "A Python wrapper for the opendataloader-pdf Java CLI."
 readme = "README.md"
-license = "MPL-2.0"
+license = "Apache-2.0"
 requires-python = ">=3.10"
 authors = [
     { name = "opendataloader-project", email = "open.dataloader@hancom.com" }
@@ -38,7 +38,7 @@ packages = ["src/opendataloader_pdf"]
 artifacts = [
     "src/opendataloader_pdf/jar/*.jar",
     "src/opendataloader_pdf/LICENSE",
-    "src/opendataloader_pdf/NOTICE.md",
+    "src/opendataloader_pdf/NOTICE",
     "src/opendataloader_pdf/THIRD_PARTY/**",
 ]
 

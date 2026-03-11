@@ -45,10 +45,22 @@ This page documents all available CLI options for opendataloader-pdf.
 opendataloader-pdf document.pdf -o ./output -f json,markdown
 ```
 
+### Multiple files (single JVM invocation)
+
+```bash
+opendataloader-pdf report.pdf contract.pdf invoice.pdf -o ./output -f json,markdown
+```
+
 ### Convert entire folder
 
 ```bash
 opendataloader-pdf ./pdf-folder -o ./output -f json
+```
+
+### Mix files and directories
+
+```bash
+opendataloader-pdf report.pdf ./invoices/ ./receipts/ -o ./output -f markdown
 ```
 
 ### Save images as external files

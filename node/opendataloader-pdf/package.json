@@ -40,7 +40,7 @@
     "pdf-to-html"
   ],
   "author": "opendataloader-project",
-  "license": "MPL-2.0",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/opendataloader-project/opendataloader-pdf/issues"
   },
@@ -77,7 +77,7 @@
     "dist",
     "lib",
     "LICENSE",
-    "NOTICE.md",
+    "NOTICE",
     "README.md",
     "THIRD_PARTY"
   ]

@@ -307,19 +307,39 @@ opendataloader_pdf.convert(
 
 ### Batch Processing
 
-Process multiple files efficiently:
+Process multiple files in a single call to avoid repeated Java startup overhead:
 
 ```python
 import opendataloader_pdf
 
-# Process entire folder
+# List of specific files — single JVM invocation
 opendataloader_pdf.convert(
-    input_path="documents/",  # Folder path
+    input_path=["report1.pdf", "report2.pdf", "report3.pdf"],
+    output_dir="output/",
+    format="json,markdown",
+    quiet=True,
+)
+
+# Or process an entire folder (recursive)
+opendataloader_pdf.convert(
+    input_path="documents/",
     output_dir="output/",
     format="json,markdown",
     quiet=True,
 )
 ```
+
+CLI equivalent:
+
+```bash
+# Multiple files
+opendataloader-pdf report1.pdf report2.pdf report3.pdf --format json,markdown --output-dir output/
+
+# Directory
+opendataloader-pdf ./documents/ --format json,markdown --output-dir output/
+```
+
+> **Why batch matters:** Each CLI invocation starts a new Java process (~1-2s overhead). Passing all files in one command processes them in a single JVM, which is significantly faster for large document collections.
 
 ### Output Format Selection
 

@@ -40,7 +40,7 @@ Check [Maven Central](https://search.maven.org/artifact/org.opendataloader/opend
 
 Sample Gradle and Maven projects live in [opendataloader-pdf-examples](https://github.com/opendataloader-project/opendataloader-pdf-examples).
 
-## Process a PDF
+## Process PDFs
 
 ```java
 import org.opendataloader.pdf.api.Config;
@@ -54,10 +54,20 @@ public class Sample {
         config.setGenerateMarkdown(true);
         config.setGenerateHtml(true);
 
-        OpenDataLoaderPDF.processFile("path/to/document.pdf", config);
+        try {
+            // Process multiple files in one JVM invocation
+            for (String pdf : new String[]{"report.pdf", "contract.pdf"}) {
+                OpenDataLoaderPDF.processFile(pdf, config);
+            }
+        } finally {
+            // Releases internal thread pools; call once at application exit, not between batches
+            OpenDataLoaderPDF.shutdown();
+        }
     }
 }
 ```
+
+> **Performance tip:** Process all files within a single JVM session. Each `processFile()` call reuses the initialized runtime, so batching hundreds of files is significantly faster than launching separate processes.
 
 For all `Config` options, see the [Config Javadoc](https://javadoc.io/doc/org.opendataloader/opendataloader-pdf-core/latest/org/opendataloader/pdf/api/Config.html).
 
@@ -65,11 +75,11 @@ For all `Config` options, see the [Config Javadoc](https://javadoc.io/doc/org.op
 
 Download CLI JAR from the [releases page](https://github.com/opendataloader-project/opendataloader-pdf/releases).
 
-and run the CLI:
+Pass multiple files or directories in a single command:
 
 ```bash
 java -jar opendataloader-pdf-cli-<VERSION>.jar \
-  path/to/document.pdf \
+  report.pdf contract.pdf ./invoices/ \
   -o path/to/output \
   -f json,html,pdf,markdown
 ```
