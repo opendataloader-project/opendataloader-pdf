@@ -60,6 +60,9 @@ class TestCLIOptions:
     def test_sanitize_option_exists(self):
         option_names = [opt["name"] for opt in CLI_OPTIONS]
         assert "sanitize" in option_names
+        sanitize_opt = next(opt for opt in CLI_OPTIONS if opt["name"] == "sanitize")
+        assert sanitize_opt["type"] == "boolean"
+        assert sanitize_opt["default"] == False
 
 
 
