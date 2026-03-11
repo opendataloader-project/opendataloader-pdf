@@ -251,6 +251,7 @@ public class CLIOptions {
             config.setOutputFolder(file.isDirectory() ? file.getAbsolutePath() : file.getParent());
         }
         applyContentSafetyOption(config, commandLine);
+        applySanitizeOption(config, commandLine);
         applyFormatOption(config, commandLine);
         applyTableMethodOption(config, commandLine);
         applyImageOptions(config, commandLine);
@@ -325,13 +326,13 @@ public class CLIOptions {
         String[] optionValues = commandLine.getOptionValues(CONTENT_SAFETY_OFF_LONG_OPTION);
         if (optionValues == null || optionValues.length == 0) {
             throw new IllegalArgumentException(
-                    "Option --content-safety-off requires at least one value. Supported values: all, hidden-text, off-page, tiny, hidden-ocg, sensitive-data");
+                    "Option --content-safety-off requires at least one value. Supported values: all, hidden-text, off-page, tiny, hidden-ocg");
         }
 
         Set<String> values = parseOptionValues(optionValues);
         if (values.isEmpty()) {
             throw new IllegalArgumentException(
-                    "Option --content-safety-off requires at least one value. Supported values: all, hidden-text, off-page, tiny, hidden-ocg, sensitive-data");
+                    "Option --content-safety-off requires at least one value. Supported values: all, hidden-text, off-page, tiny, hidden-ocg");
         }
 
         for (String value : values) {
@@ -349,20 +350,27 @@ public class CLIOptions {
                     config.getFilterConfig().setFilterHiddenOCG(false);
                     break;
                 case "sensitive-data":
-                    config.getFilterConfig().setFilterSensitiveData(false);
+                    System.err.println("Warning: '--content-safety-off sensitive-data' is deprecated. "
+                            + "Sensitive data sanitization is disabled by default. "
+                            + "Use '--sanitize' to enable it.");
                     break;
                 case "all":
                     config.getFilterConfig().setFilterHiddenText(false);
                     config.getFilterConfig().setFilterOutOfPage(false);
                     config.getFilterConfig().setFilterTinyText(false);
                     config.getFilterConfig().setFilterHiddenOCG(false);
-                    config.getFilterConfig().setFilterSensitiveData(false);
                     break;
                 default:
                     throw new IllegalArgumentException(String.format(
-                            "Unsupported value '%s'. Supported values: all, hidden-text, off-page, tiny, hidden-ocg, sensitive-data",
+                            "Unsupported value '%s'. Supported values: all, hidden-text, off-page, tiny, hidden-ocg",
                             value));
             }
+        }
+    }
+
+    private static void applySanitizeOption(Config config, CommandLine commandLine) {
+        if (commandLine.hasOption(SANITIZE_LONG_OPTION)) {
+            config.getFilterConfig().setFilterSensitiveData(true);
         }
     }
 
