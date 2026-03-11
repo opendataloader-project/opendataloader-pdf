@@ -55,7 +55,12 @@ public class CLIOptions {
     // ===== Content Safety =====
     private static final String CONTENT_SAFETY_OFF_LONG_OPTION = "content-safety-off";
     private static final String CONTENT_SAFETY_OFF_DESC = "Disable content safety filters. "
-            + "Values: all, hidden-text, off-page, tiny, hidden-ocg, sensitive-data";
+            + "Values: all, hidden-text, off-page, tiny, hidden-ocg";
+
+    // ===== Sanitize =====
+    private static final String SANITIZE_LONG_OPTION = "sanitize";
+    private static final String SANITIZE_DESC = "Enable sensitive data sanitization. "
+            + "Replaces emails, phone numbers, IPs, credit cards, and URLs with placeholders";
 
     // ===== Keep Line Breaks =====
     private static final String KEEP_LINE_BREAKS_LONG_OPTION = "keep-line-breaks";
@@ -148,6 +153,7 @@ public class CLIOptions {
             new OptionDefinition(FORMAT_LONG_OPTION, FORMAT_OPTION, "string", null, FORMAT_DESC, true),
             new OptionDefinition(QUIET_LONG_OPTION, QUIET_OPTION, "boolean", false, QUIET_DESC, true),
             new OptionDefinition(CONTENT_SAFETY_OFF_LONG_OPTION, null, "string", null, CONTENT_SAFETY_OFF_DESC, true),
+            new OptionDefinition(SANITIZE_LONG_OPTION, null, "boolean", false, SANITIZE_DESC, true),
             new OptionDefinition(KEEP_LINE_BREAKS_LONG_OPTION, null, "boolean", false, KEEP_LINE_BREAKS_DESC, true),
             new OptionDefinition(REPLACE_INVALID_CHARS_LONG_OPTION, null, "string", " ", REPLACE_INVALID_CHARS_DESC,
                     true),
