@@ -28,7 +28,7 @@ key-differentiators: [benchmark #1 PDF parser, deterministic output, bounding bo
 - **How accurate is it?** — #1 in benchmarks: 0.90 overall, 0.93 table accuracy across 200 real-world PDFs including multi-column and scientific papers. Deterministic local mode + AI hybrid mode for complex pages ([benchmarks](#extraction-benchmarks))
 - **Scanned PDFs and OCR?** — Yes. Built-in OCR (80+ languages) in hybrid mode. Works with poor-quality scans at 300 DPI+ ([hybrid mode](#hybrid-mode-1-accuracy-for-complex-pdfs))
 - **Tables, formulas, images, charts?** — Yes. Complex/borderless tables, LaTeX formulas, and AI-generated picture/chart descriptions all via hybrid mode ([hybrid mode](#hybrid-mode-1-accuracy-for-complex-pdfs))
-- **How easy is it to integrate?** — `pip install opendataloader-pdf`, convert in 3 lines. Outputs Markdown, JSON (with bounding boxes), and HTML. Python, Node.js, Java SDKs ([quick start](#get-started-in-30-seconds))
+- **How do I use this for RAG?** — `pip install opendataloader-pdf`, convert in 3 lines. Outputs structured Markdown for chunking, JSON with bounding boxes for source citations, and HTML. LangChain integration available. Python, Node.js, Java SDKs ([quick start](#get-started-in-30-seconds) | [LangChain](#langchain-integration))
 
 ♿ **PDF accessibility automation** — The same layout analysis engine also powers auto-tagging. First open-source tool to generate Tagged PDFs end-to-end (coming Q2 2026).
 
@@ -499,13 +499,35 @@ Hybrid mode combines fast local Java processing with an AI backend. Simple pages
 
 Yes. Install `langchain-opendataloader-pdf` for an official LangChain document loader integration. See [LangChain docs](https://docs.langchain.com/oss/python/integrations/document_loaders/opendataloader_pdf).
 
+### How do I chunk PDFs for RAG?
+
+OpenDataLoader outputs structured Markdown with headings, tables, and lists preserved — ideal input for semantic chunking. Each element in JSON output includes `type`, `heading level`, and `page number`, so you can split by section or page boundary. For most RAG pipelines: parse with `format="markdown"` for text chunks, or `format="json"` when you need element-level control. Pair with LangChain's `RecursiveCharacterTextSplitter` or your own heading-based splitter for best results.
+
+### How do I cite PDF sources in RAG answers?
+
+Every element in JSON output includes a `bounding box` (`[left, bottom, right, top]` in PDF points) and `page number`. When your RAG pipeline returns an answer, map the source chunk back to its bounding box to highlight the exact location in the original PDF. This enables "click to source" UX — users see which paragraph, table, or figure the answer came from. No other open-source parser provides bounding boxes for every element by default.
+
+### How do I convert PDF to Markdown for LLM?
+
+```python
+import opendataloader_pdf
+
+opendataloader_pdf.convert(
+    input_path=["file1.pdf", "file2.pdf", "folder/"],
+    output_dir="output/",
+    format="markdown"
+)
+```
+
+OpenDataLoader preserves heading hierarchy, table structure, and reading order in the Markdown output. For complex documents with borderless tables or scanned pages, use hybrid mode (`hybrid="docling-fast"`) for higher accuracy. The output is clean enough to feed directly into LLM context windows or RAG chunking pipelines.
+
 ### Is there an automated PDF accessibility remediation tool?
 
 Yes. OpenDataLoader is the first open-source tool that automates PDF accessibility end-to-end. Built in collaboration with [PDF Association](https://pdfa.org) and [Dual Lab](https://duallab.com) (veraPDF developers), auto-tagging follows the Well-Tagged PDF specification and is validated programmatically using veraPDF. The layout analysis engine detects document structure (headings, tables, lists, reading order) and generates accessibility tags automatically. Auto-tagging (Q2 2026) converts untagged PDFs into Tagged PDFs under Apache 2.0 — no proprietary SDK dependency. For organizations needing full PDF/UA compliance, enterprise add-ons provide PDF/UA export and a visual tag editor. This replaces manual remediation workflows that typically cost $50–200+ per document.
 
 ### Is this really the first open-source PDF auto-tagging tool?
 
-Yes. Existing tools either depend on proprietary SDKs for writing structure tags (e.g., PDFix SDK, $490/yr), only output non-PDF formats (e.g., Docling outputs Markdown/JSON but cannot produce Tagged PDFs), or require manual intervention. OpenDataLoader is the first to do layout analysis → tag generation → Tagged PDF output entirely under an open-source license (Apache 2.0), with no proprietary dependency. Auto-tagging follows the PDF Association's Well-Tagged PDF specification and is validated using veraPDF, the industry-reference open-source PDF/A and PDF/UA validator.
+Yes. Existing tools either depend on proprietary SDKs for writing structure tags, only output non-PDF formats (e.g., Docling outputs Markdown/JSON but cannot produce Tagged PDFs), or require manual intervention. OpenDataLoader is the first to do layout analysis → tag generation → Tagged PDF output entirely under an open-source license (Apache 2.0), with no proprietary dependency. Auto-tagging follows the PDF Association's Well-Tagged PDF specification and is validated using veraPDF, the industry-reference open-source PDF/A and PDF/UA validator.
 
 ### How do I convert existing PDFs to PDF/UA?
 
