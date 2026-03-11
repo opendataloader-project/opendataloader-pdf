@@ -25,6 +25,7 @@ class StaticContainersThreadContextTest {
     void shouldApplyStaticContainersContextOnWorkerThread() throws Exception {
         StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
         StaticContainers.setIsDataLoader(true);
+        StaticContainers.setKeepLineBreaks(false);
 
         StaticContainersThreadContext.Snapshot snapshot = StaticContainersThreadContext.capture();
 
@@ -34,13 +35,26 @@ class StaticContainersThreadContextTest {
 
         try (ForkJoinPool pool = new ForkJoinPool(1)) {
             List<IObject> processed = pool.submit(() -> {
-                StaticContainersThreadContext.apply(snapshot);
-                return TextLineProcessor.processTextLines(contents);
+                try {
+                    StaticContainersThreadContext.apply(snapshot);
+                    return TextLineProcessor.processTextLines(contents);
+                } finally {
+                    StaticContainersThreadContext.clear();
+                }
             }).get();
 
             Assertions.assertEquals(1, processed.size());
             Assertions.assertTrue(processed.get(0) instanceof TextLine);
             Assertions.assertEquals("testtest", ((TextLine) processed.get(0)).getValue());
+
+            Boolean[] residualValues = pool.submit(() -> new Boolean[]{
+                StaticContainers.getIsIgnoreCharactersWithoutUnicode(),
+                StaticContainers.getIsDataLoader(),
+                StaticContainers.isKeepLineBreaks()
+            }).get();
+            Assertions.assertEquals(Boolean.FALSE, residualValues[0]);
+            Assertions.assertEquals(Boolean.FALSE, residualValues[1]);
+            Assertions.assertEquals(Boolean.FALSE, residualValues[2]);
         }
     }
 }

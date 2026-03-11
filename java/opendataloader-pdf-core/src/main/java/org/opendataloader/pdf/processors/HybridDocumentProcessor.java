@@ -37,6 +37,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -265,25 +266,42 @@ public class HybridDocumentProcessor {
             new ClusterTableProcessor().processTables(workingContents);
         }
 
-        // Process each page through the standard Java pipeline.
-        // StaticContainers uses ThreadLocal fields, so worker threads must inherit context explicitly.
+        // Stage 1 (sequential): table-border processing mutates shared table-border collections.
+        // Keep it on the main thread to avoid concurrent mutation of shared verapdf state.
+        for (int pageNumber : pageNumbers) {
+            List<IObject> pageContents = workingContents.get(pageNumber);
+            pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber);
+            pageContents = pageContents.stream()
+                .filter(x -> !(x instanceof LineChunk))
+                .collect(Collectors.toList());
+            workingContents.set(pageNumber, pageContents);
+        }
+
+        // Stage 2 (parallel): text-line processing with ThreadLocal flag propagation.
+        // Results are collected in a concurrent map instead of mutating ArrayList from worker threads.
         StaticContainersThreadContext.Snapshot threadContext = StaticContainersThreadContext.capture();
+        Map<Integer, List<IObject>> textLineResults = new ConcurrentHashMap<>();
         pageNumbers.parallelStream().forEach(pageNumber -> {
             try {
                 StaticContainersThreadContext.apply(threadContext);
                 List<IObject> pageContents = workingContents.get(pageNumber);
-                pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber);
-                pageContents = pageContents.stream()
-                    .filter(x -> !(x instanceof LineChunk))
-                    .collect(Collectors.toList());
                 pageContents = TextLineProcessor.processTextLines(pageContents);
-                pageContents = SpecialTableProcessor.detectSpecialTables(pageContents);
-                workingContents.set(pageNumber, pageContents);
+                textLineResults.put(pageNumber, pageContents);
             } catch (Exception e) {
                 LOGGER.log(Level.WARNING, "Error processing page {0}: {1}",
                     new Object[]{pageNumber, e.getMessage()});
+                textLineResults.put(pageNumber, workingContents.get(pageNumber));
+            } finally {
+                StaticContainersThreadContext.clear();
             }
         });
+
+        // Stage 3 (sequential): special-table detection touches table-border structures.
+        for (int pageNumber : pageNumbers) {
+            List<IObject> pageContents = textLineResults.getOrDefault(pageNumber, workingContents.get(pageNumber));
+            pageContents = SpecialTableProcessor.detectSpecialTables(pageContents);
+            workingContents.set(pageNumber, pageContents);
+        }
 
         // Apply cross-page processing for Java pages only
         applyJavaPagePostProcessing(workingContents, pageNumbers);

@@ -7,9 +7,9 @@
  */
 package org.opendataloader.pdf.processors;
 
-import org.verapdf.wcag.algorithms.entities.IDocument;
-import org.verapdf.wcag.algorithms.entities.tables.TableBordersCollection;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
+
+import java.util.Objects;
 
 /**
  * Captures and reapplies verapdf StaticContainers ThreadLocal state.
@@ -26,51 +26,55 @@ final class StaticContainersThreadContext {
     }
 
     static Snapshot capture() {
-        return new Snapshot(
+        boolean isIgnoreCharactersWithoutUnicode = Objects.requireNonNull(
             StaticContainers.getIsIgnoreCharactersWithoutUnicode(),
+            "StaticContainers.isIgnoreCharactersWithoutUnicode is not initialized"
+        );
+        boolean isDataLoader = Objects.requireNonNull(
             StaticContainers.getIsDataLoader(),
+            "StaticContainers.isDataLoader is not initialized"
+        );
+        boolean keepLineBreaks = Objects.requireNonNull(
             StaticContainers.isKeepLineBreaks(),
-            StaticContainers.getDocument(),
-            StaticContainers.getTableBordersCollection()
+            "StaticContainers.keepLineBreaks is not initialized"
+        );
+
+        return new Snapshot(
+            isIgnoreCharactersWithoutUnicode,
+            isDataLoader,
+            keepLineBreaks
         );
     }
 
     static void apply(Snapshot snapshot) {
-        if (snapshot.document != null) {
-            StaticContainers.setDocument(snapshot.document);
-        }
-        if (snapshot.tableBordersCollection != null) {
-            StaticContainers.setTableBordersCollection(snapshot.tableBordersCollection);
-        }
-        if (snapshot.keepLineBreaks != null) {
-            StaticContainers.setKeepLineBreaks(snapshot.keepLineBreaks);
-        }
-        if (snapshot.isDataLoader != null) {
-            StaticContainers.setIsDataLoader(snapshot.isDataLoader);
-        }
-        if (snapshot.isIgnoreCharactersWithoutUnicode != null) {
-            StaticContainers.setIsIgnoreCharactersWithoutUnicode(snapshot.isIgnoreCharactersWithoutUnicode);
-        }
+        StaticContainers.setIsIgnoreCharactersWithoutUnicode(snapshot.isIgnoreCharactersWithoutUnicode);
+        StaticContainers.setIsDataLoader(snapshot.isDataLoader);
+        StaticContainers.setKeepLineBreaks(snapshot.keepLineBreaks);
+    }
+
+    /**
+     * Clears worker-thread ThreadLocal values to avoid leaking state across reused pool threads.
+     */
+    static void clear() {
+        StaticContainers.setDocument(null);
+        StaticContainers.setTableBordersCollection(null);
+        StaticContainers.setKeepLineBreaks(false);
+        StaticContainers.setIsDataLoader(false);
+        StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
     }
 
     static final class Snapshot {
-        private final Boolean isIgnoreCharactersWithoutUnicode;
-        private final Boolean isDataLoader;
-        private final Boolean keepLineBreaks;
-        private final IDocument document;
-        private final TableBordersCollection tableBordersCollection;
+        private final boolean isIgnoreCharactersWithoutUnicode;
+        private final boolean isDataLoader;
+        private final boolean keepLineBreaks;
 
         private Snapshot(
-                Boolean isIgnoreCharactersWithoutUnicode,
-                Boolean isDataLoader,
-                Boolean keepLineBreaks,
-                IDocument document,
-                TableBordersCollection tableBordersCollection) {
+                boolean isIgnoreCharactersWithoutUnicode,
+                boolean isDataLoader,
+                boolean keepLineBreaks) {
             this.isIgnoreCharactersWithoutUnicode = isIgnoreCharactersWithoutUnicode;
             this.isDataLoader = isDataLoader;
             this.keepLineBreaks = keepLineBreaks;
-            this.document = document;
-            this.tableBordersCollection = tableBordersCollection;
         }
     }
 }
