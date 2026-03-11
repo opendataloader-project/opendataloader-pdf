@@ -16,6 +16,7 @@ def convert(
     format: Optional[Union[str, List[str]]] = None,
     quiet: bool = False,
     content_safety_off: Optional[Union[str, List[str]]] = None,
+    sanitize: bool = False,
     keep_line_breaks: bool = False,
     replace_invalid_chars: Optional[str] = None,
     use_struct_tree: bool = False,
@@ -44,7 +45,8 @@ def convert(
         password: Password for encrypted PDF files
         format: Output formats (comma-separated). Values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images. Default: json
         quiet: Suppress console logging output
-        content_safety_off: Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg, sensitive-data
+        content_safety_off: Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg
+        sanitize: Enable sensitive data sanitization. Replaces emails, phone numbers, IPs, credit cards, and URLs with placeholders
         keep_line_breaks: Preserve original line breaks in extracted text
         replace_invalid_chars: Replacement character for invalid/unrecognized characters. Default: space
         use_struct_tree: Use PDF structure tree (tagged PDF) for reading order and semantic structure
@@ -90,6 +92,8 @@ def convert(
                 args.extend(["--content-safety-off", ",".join(content_safety_off)])
         else:
             args.extend(["--content-safety-off", content_safety_off])
+    if sanitize:
+        args.append("--sanitize")
     if keep_line_breaks:
         args.append("--keep-line-breaks")
     if replace_invalid_chars:

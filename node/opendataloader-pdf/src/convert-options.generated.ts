@@ -13,8 +13,10 @@ export interface ConvertOptions {
   format?: string | string[];
   /** Suppress console logging output */
   quiet?: boolean;
-  /** Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg, sensitive-data */
+  /** Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg */
   contentSafetyOff?: string | string[];
+  /** Enable sensitive data sanitization. Replaces emails, phone numbers, IPs, credit cards, and URLs with placeholders */
+  sanitize?: boolean;
   /** Preserve original line breaks in extracted text */
   keepLineBreaks?: boolean;
   /** Replacement character for invalid/unrecognized characters. Default: space */
@@ -62,6 +64,7 @@ export interface CliOptions {
   format?: string;
   quiet?: boolean;
   contentSafetyOff?: string;
+  sanitize?: boolean;
   keepLineBreaks?: boolean;
   replaceInvalidChars?: string;
   useStructTree?: boolean;
@@ -102,6 +105,9 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   }
   if (cliOptions.contentSafetyOff) {
     convertOptions.contentSafetyOff = cliOptions.contentSafetyOff;
+  }
+  if (cliOptions.sanitize) {
+    convertOptions.sanitize = true;
   }
   if (cliOptions.keepLineBreaks) {
     convertOptions.keepLineBreaks = true;
@@ -193,6 +199,9 @@ export function buildArgs(options: ConvertOptions): string[] {
     } else {
       args.push('--content-safety-off', options.contentSafetyOff);
     }
+  }
+  if (options.sanitize) {
+    args.push('--sanitize');
   }
   if (options.keepLineBreaks) {
     args.push('--keep-line-breaks');
