@@ -22,6 +22,9 @@ import org.apache.commons.cli.Options;
 import org.junit.jupiter.api.Test;
 import org.opendataloader.pdf.api.Config;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class CLIOptionsContentSafetyTest {
@@ -74,5 +77,26 @@ class CLIOptionsContentSafetyTest {
         Config config = parseArgs("--output-dir", "/tmp", "--content-safety-off", "sensitive-data");
         assertFalse(config.getFilterConfig().isFilterSensitiveData(),
                 "Deprecated sensitive-data value should not enable sanitization");
+    }
+
+    @Test
+    void deprecatedSensitiveDataValuePrintsWarning() throws Exception {
+        PrintStream originalErr = System.err;
+        ByteArrayOutputStream errContent = new ByteArrayOutputStream();
+        System.setErr(new PrintStream(errContent));
+        try {
+            parseArgs("--output-dir", "/tmp", "--content-safety-off", "sensitive-data");
+            assertTrue(errContent.toString().contains("deprecated"),
+                    "Should print a deprecation warning to stderr");
+        } finally {
+            System.setErr(originalErr);
+        }
+    }
+
+    @Test
+    void sanitizeWithDeprecatedSensitiveDataStillEnablesSanitize() throws Exception {
+        Config config = parseArgs("--output-dir", "/tmp", "--content-safety-off", "sensitive-data", "--sanitize");
+        assertTrue(config.getFilterConfig().isFilterSensitiveData(),
+                "--sanitize should win over deprecated --content-safety-off sensitive-data");
     }
 }
