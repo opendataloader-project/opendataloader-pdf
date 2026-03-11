@@ -328,10 +328,10 @@ PDFs can contain hidden prompt injection attacks. OpenDataLoader automatically f
 - Off-page content
 - Suspicious invisible layers
 
-The `sensitive-data` safety filter is **enabled by default**, replacing extracted emails/URLs with placeholders. To preserve raw links for trusted documents:
+To sanitize sensitive data (emails, URLs, phone numbers → placeholders), enable it explicitly:
 
 ```bash
-opendataloader-pdf file1.pdf file2.pdf folder/ --content-safety-off sensitive-data
+opendataloader-pdf input.pdf --sanitize
 ```
 
 [AI Safety Guide](https://opendataloader.org/docs/ai-safety)
