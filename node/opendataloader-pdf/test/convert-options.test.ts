@@ -40,6 +40,18 @@ describe('buildArgs()', () => {
     ]);
   });
 
+  it('should handle sanitize boolean', () => {
+    const options: ConvertOptions = { sanitize: true };
+    const args = buildArgs(options);
+    expect(args).toEqual(['--sanitize']);
+  });
+
+  it('should not include sanitize when false', () => {
+    const options: ConvertOptions = { sanitize: false };
+    const args = buildArgs(options);
+    expect(args).toEqual([]);
+  });
+
   it('should handle list options with string value', () => {
     const args = buildArgs({
       format: 'json,markdown',
@@ -79,6 +91,7 @@ describe('buildArgs()', () => {
       htmlPageSeparator: '<hr>',
       imageOutput: 'external',
       imageFormat: 'jpeg',
+      sanitize: true,
     };
 
     const args = buildArgs(options);
@@ -106,6 +119,7 @@ describe('buildArgs()', () => {
     expect(args).toContain('external');
     expect(args).toContain('--image-format');
     expect(args).toContain('jpeg');
+    expect(args).toContain('--sanitize');
   });
 
   it('should not include undefined options', () => {
