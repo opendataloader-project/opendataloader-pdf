@@ -54,37 +54,65 @@ Attackers can encode ASCII characters by tweaking the least significant bit (LSB
 
 ### Configuration
 
-| Command                | Description                                      | Example                                     |
-| ---------------------- | ------------------------------------------------ | ------------------------------------------- |
-| `--content-safety-off` | Disable one or more filters (comma-separated).   | `--content-safety-off hidden-text,off-page` |
+| Command                | Description                                                  | Example                                     |
+| ---------------------- | ------------------------------------------------------------ | ------------------------------------------- |
+| `--content-safety-off` | Disable rendering-mismatch filters (comma-separated).        | `--content-safety-off hidden-text,off-page` |
+| `--sanitize`           | Enable sensitive data sanitization (disabled by default).    | `--sanitize`                                |
 
-### Available filters
+### Rendering-mismatch filters (enabled by default)
 
-| Filter           | Purpose                                                 | Status      |
-| ---------------- | ------------------------------------------------------- | ----------- |
-| `all`            | Enables every safety filter (default).                  | ✅          |
-| `hidden-text`    | Blocks transparent, low-contrast, or invisible strokes. | ✅          |
-| `off-page`       | Removes text located outside the visible page bounds.   | ✅          |
-| `tiny`           | Filters extremely small fonts.                          | ✅          |
-| `hidden-ocg`     | Drops content hidden in Optional Content Groups.        | ✅          |
-| `sensitive-data` | Filters emails, IPs, phone numbers, and credit cards.   | ✅          |
-| `patterns`       | Detects repeating visual patterns that encode prompts.  | 🚀 Upcoming |
-| `malicious-font` | Detects manipulated font `cmap` tables.                 | 🚀 Upcoming |
-| `noised-figure`  | Detects steganographic prompts in images.               | 🚀 Upcoming |
+These filters remove content that is invisible to humans but readable by machines — the primary vector for prompt injection attacks.
 
-When `sensitive-data` is enabled, extracted emails/URLs may be replaced with placeholders (for example, `email@example.com` or `https://example.com`) in Markdown output.
+| Filter        | Purpose                                                 |
+| ------------- | ------------------------------------------------------- |
+| `hidden-text` | Blocks transparent, low-contrast, or invisible strokes. |
+| `off-page`    | Removes text located outside the visible page bounds.   |
+| `tiny`        | Filters extremely small fonts (≤ 1pt).                  |
+| `hidden-ocg`  | Drops content hidden in Optional Content Groups.        |
 
-To preserve original links and email addresses for trusted documents, disable only that filter:
+To disable a specific filter for trusted documents:
 
 ```bash
-opendataloader-pdf input.pdf --content-safety-off sensitive-data
+opendataloader-pdf input.pdf --content-safety-off hidden-text
+```
+
+`--content-safety-off all` disables all four rendering-mismatch filters.
+
+### Sensitive data sanitization (disabled by default)
+
+The `--sanitize` flag replaces personally identifiable information with placeholders. This is **disabled by default** because it modifies visible, legitimate content.
+
+```bash
+opendataloader-pdf input.pdf --sanitize
 ```
 
 ```python
 opendataloader_pdf.convert(
     input_path="input.pdf",
-    content_safety_off=["sensitive-data"],
+    sanitize=True,
 )
 ```
 
-Leave filters enabled whenever possible; only disable them with `--content-safety-off` when you fully trust the source documents and understand the trade-offs.
+```typescript
+import { convert } from 'opendataloader-pdf';
+await convert('input.pdf', { sanitize: true });
+```
+
+| Data type     | Example replacement        |
+| ------------- | -------------------------- |
+| Email         | `email@example.com`        |
+| Phone         | `+00-0000-0000`            |
+| Credit card   | `0000-0000-0000-0000`      |
+| IPv4/IPv6     | `0.0.0.0`                  |
+| URL           | `https://example.com`      |
+| MAC address   | `00:00:00:00:00:00`        |
+
+### Upcoming filters
+
+| Filter           | Purpose                                                |
+| ---------------- | ------------------------------------------------------ |
+| `patterns`       | Detects repeating visual patterns that encode prompts.  |
+| `malicious-font` | Detects manipulated font `cmap` tables.                 |
+| `noised-figure`  | Detects steganographic prompts in images.               |
+
+Leave rendering filters enabled whenever possible; only disable them with `--content-safety-off` when you fully trust the source documents and understand the trade-offs.
