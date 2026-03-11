@@ -71,7 +71,8 @@ class CLIOptionsContentSafetyTest {
 
     @Test
     void deprecatedSensitiveDataValueIsAccepted() throws Exception {
-        assertDoesNotThrow(() -> parseArgs("--output-dir", "/tmp", "--content-safety-off", "sensitive-data"),
-                "--content-safety-off sensitive-data should be accepted without throwing");
+        Config config = parseArgs("--output-dir", "/tmp", "--content-safety-off", "sensitive-data");
+        assertFalse(config.getFilterConfig().isFilterSensitiveData(),
+                "Deprecated sensitive-data value should not enable sanitization");
     }
 }
