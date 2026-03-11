@@ -30,7 +30,7 @@ public class FilterConfig {
     private boolean filterOutOfPage = true;
     private boolean filterTinyText = true;
     private boolean filterHiddenOCG = true;
-    private boolean filterSensitiveData = true;
+    private boolean filterSensitiveData = false;
     private final List<SanitizationRule> filterRules;
 
     /** Default rules */
