@@ -34,7 +34,7 @@ def convert(
     hybrid_mode: Optional[str] = None,
     hybrid_url: Optional[str] = None,
     hybrid_timeout: Optional[str] = None,
-    hybrid_fallback: bool = True,
+    hybrid_fallback: bool = False,
 ) -> None:
     """
     Convert PDF(s) into the requested output format(s).
@@ -64,7 +64,7 @@ def convert(
         hybrid_mode: Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)
         hybrid_url: Hybrid backend server URL (overrides default)
         hybrid_timeout: Hybrid backend request timeout in milliseconds. Default: 30000
-        hybrid_fallback: Fallback to Java processing on hybrid backend error. Default: true
+        hybrid_fallback: Opt in to Java fallback on hybrid backend error (default: disabled)
     """
     args: List[str] = []
 

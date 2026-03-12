@@ -222,8 +222,8 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "short_name": None,
         "type": "boolean",
         "required": False,
-        "default": True,
-        "description": "Fallback to Java processing on hybrid backend error. Default: true",
+        "default": False,
+        "description": "Opt in to Java fallback on hybrid backend error (default: disabled)",
     },
 ]
 
