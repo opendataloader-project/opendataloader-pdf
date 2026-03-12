@@ -442,4 +442,26 @@ class CLIOptionsTest {
         assertEquals("docling", config.getHybrid());
         assertTrue(config.isHybridEnabled());
     }
+
+    @Test
+    void testCreateConfig_defaultHybridFallbackIsFalse() throws ParseException {
+        String[] args = {"--hybrid", "docling", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertFalse(config.getHybridConfig().isFallbackToJava(),
+            "hybrid fallback should be disabled by default to fail-fast when server is unavailable");
+    }
+
+    @Test
+    void testCreateConfig_withHybridFallbackExplicit() throws ParseException {
+        String[] args = {"--hybrid", "docling", "--hybrid-fallback", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertTrue(config.getHybridConfig().isFallbackToJava(),
+            "hybrid fallback should be enabled when explicitly passed");
+    }
 }

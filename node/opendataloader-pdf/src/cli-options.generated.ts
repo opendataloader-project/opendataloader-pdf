@@ -30,5 +30,5 @@ export function registerCliOptions(program: Command): void {
   program.option('--hybrid-mode <value>', 'Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)');
   program.option('--hybrid-url <value>', 'Hybrid backend server URL (overrides default)');
   program.option('--hybrid-timeout <value>', 'Hybrid backend request timeout in milliseconds. Default: 30000');
-  program.option('--hybrid-fallback', 'Fallback to Java processing on hybrid backend error. Default: true');
+  program.option('--hybrid-fallback', 'Opt in to Java fallback on hybrid backend error (default: disabled)');
 }

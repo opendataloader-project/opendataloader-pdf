@@ -33,4 +33,4 @@ description: Options for the Python convert function
 | `hybrid_mode`             | `str`                | `"auto"`     | Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)                               |
 | `hybrid_url`              | `str`                | -            | Hybrid backend server URL (overrides default)                                                                                      |
 | `hybrid_timeout`          | `str`                | `"30000"`    | Hybrid backend request timeout in milliseconds. Default: 30000                                                                     |
-| `hybrid_fallback`         | `bool`               | `True`       | Fallback to Java processing on hybrid backend error. Default: true                                                                 |
+| `hybrid_fallback`         | `bool`               | `False`      | Opt in to Java fallback on hybrid backend error (default: disabled)                                                                |

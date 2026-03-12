@@ -189,8 +189,8 @@
       "shortName": null,
       "type": "boolean",
       "required": false,
-      "default": true,
-      "description": "Fallback to Java processing on hybrid backend error. Default: true"
+      "default": false,
+      "description": "Opt in to Java fallback on hybrid backend error (default: disabled)"
     }
   ]
 }

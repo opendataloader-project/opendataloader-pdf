@@ -182,6 +182,32 @@ class DoclingFastServerClientTest {
     }
 
     @Test
+    void testCheckAvailabilitySucceeds() throws IOException {
+        server.enqueue(new MockResponse().setResponseCode(200).setBody("ok"));
+
+        // Should not throw
+        client.checkAvailability();
+    }
+
+    @Test
+    void testCheckAvailabilityFailsWhenServerUnavailable() throws IOException {
+        // Shut down the server to simulate unavailability
+        server.shutdown();
+
+        IOException exception = assertThrows(IOException.class, () -> client.checkAvailability());
+        assertTrue(exception.getMessage().contains("Hybrid server is not available"));
+    }
+
+    @Test
+    void testCheckAvailabilityFailsOnUnhealthyServer() {
+        server.enqueue(new MockResponse().setResponseCode(503));
+
+        IOException exception = assertThrows(IOException.class, () -> client.checkAvailability());
+        assertTrue(exception.getMessage().contains("returned HTTP 503"));
+        assertTrue(exception.getMessage().contains("starting up or unhealthy"));
+    }
+
+    @Test
     void testPartialSuccessAllPagesFailed() throws IOException {
         String responseJson = "{"
             + "\"status\": \"partial_success\","

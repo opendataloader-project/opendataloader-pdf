@@ -40,7 +40,7 @@ public class HybridConfig {
 
     private String url;
     private int timeoutMs = DEFAULT_TIMEOUT_MS;
-    private boolean fallbackToJava = true;
+    private boolean fallbackToJava = false;
     private int maxConcurrentRequests = DEFAULT_MAX_CONCURRENT_REQUESTS;
     /** Hybrid triage mode: auto (dynamic triage based on page content). */
     public static final String MODE_AUTO = "auto";

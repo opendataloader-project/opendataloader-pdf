@@ -71,7 +71,7 @@ public class HybridDocumentProcessorTest {
 
         Assertions.assertEquals(HybridConfig.DEFAULT_TIMEOUT_MS, config.getTimeoutMs());
         Assertions.assertEquals(HybridConfig.DEFAULT_MAX_CONCURRENT_REQUESTS, config.getMaxConcurrentRequests());
-        Assertions.assertTrue(config.isFallbackToJava());
+        Assertions.assertFalse(config.isFallbackToJava(), "fallback should be disabled by default to fail-fast when hybrid server is unavailable");
         Assertions.assertNull(config.getUrl());
     }
 
@@ -199,17 +199,17 @@ public class HybridDocumentProcessorTest {
     }
 
     @Test
-    public void testHybridConfigFallback() {
+    public void testHybridConfigFallbackToggle() {
         HybridConfig config = new HybridConfig();
 
-        // Default is true
-        Assertions.assertTrue(config.isFallbackToJava());
-
-        config.setFallbackToJava(false);
+        // Default is false (fail-fast when hybrid server is unavailable)
         Assertions.assertFalse(config.isFallbackToJava());
 
         config.setFallbackToJava(true);
         Assertions.assertTrue(config.isFallbackToJava());
+
+        config.setFallbackToJava(false);
+        Assertions.assertFalse(config.isFallbackToJava());
     }
 
     // Helper method matching HybridDocumentProcessor logic
