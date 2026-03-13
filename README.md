@@ -260,7 +260,7 @@ Output in JSON:
 
 ### Hancom Data Loader Integration — Coming Soon
 
-Enterprise-grade AI document analysis via [Hancom Data Loader](https://sdk.hancom.com/en/services/1?utm_source=github&utm_medium=readme&utm_campaign=opendataloader-pdf) — customer-customized models trained on your domain-specific documents. 30+ element types (tables, charts, formulas, captions, footnotes, etc.), VLM-based image/chart understanding, complex table extraction (merged cells, nested tables), and native HWP/HWPX support. Supports PDF, DOCX, XLSX, PPTX, HWP, PNG, JPG. [Live demo](https://livedemo.sdk.hancom.com/en/dataloader?utm_source=github&utm_medium=readme&utm_campaign=opendataloader-pdf)
+Enterprise-grade AI document analysis via [Hancom Data Loader](https://sdk.hancom.com/en/services/1?utm_source=github&utm_medium=readme&utm_campaign=opendataloader-pdf) — customer-customized models trained on your domain-specific documents. 30+ element types (tables, charts, formulas, captions, footnotes, etc.), VLM-based image/chart understanding, complex table extraction (merged cells, nested tables), SLA-backed OCR for scanned documents, and native HWP/HWPX support. Supports PDF, DOCX, XLSX, PPTX, HWP, PNG, JPG. [Live demo](https://livedemo.sdk.hancom.com/en/dataloader?utm_source=github&utm_medium=readme&utm_campaign=opendataloader-pdf)
 
 [Hybrid Mode Guide](https://opendataloader.org/docs/hybrid-mode)
 
@@ -439,7 +439,7 @@ Existing PDFs (untagged)
 | Feature | Timeline | Tier |
 |---------|----------|------|
 | **Auto-tagging → Tagged PDF** — Generate Tagged PDFs from untagged PDFs | Q2 2026 | Free |
-| **[Hancom Data Loader](https://sdk.hancom.com/en/services/1?utm_source=github&utm_medium=readme&utm_campaign=opendataloader-pdf)** — Enterprise AI document analysis, customer-customized models, VLM-based chart/image understanding | Q2-Q3 2026 | Free |
+| **[Hancom Data Loader](https://sdk.hancom.com/en/services/1?utm_source=github&utm_medium=readme&utm_campaign=opendataloader-pdf)** — Enterprise AI document analysis, customer-customized models, VLM-based chart/image understanding, production-grade OCR | Q2-Q3 2026 | Free |
 | **Structure validation** — Verify PDF tag trees | Q2 2026 | Planned |
 
 [Full Roadmap](https://opendataloader.org/docs/upcoming-roadmap)
@@ -481,7 +481,7 @@ Yes, via hybrid mode. Install with `pip install "opendataloader-pdf[hybrid]"`, s
 
 ### Does it work with Korean, Japanese, or Chinese documents?
 
-Yes. For digital PDFs, text extraction works out of the box. For scanned PDFs, use hybrid mode with `--force-ocr --ocr-lang "ko,en"` (or `ja`, `ch_sim`, `ch_tra`). Coming soon: [Hancom Data Loader](https://sdk.hancom.com/en/services/1?utm_source=github&utm_medium=readme&utm_campaign=opendataloader-pdf) integration — enterprise-grade AI document analysis with customer-customized models optimized for your specific document types and workflows.
+Yes. For digital PDFs, text extraction works out of the box. For scanned PDFs, use hybrid mode with `--force-ocr --ocr-lang "ko,en"` (or `ja`, `ch_sim`, `ch_tra`). Coming soon: [Hancom Data Loader](https://sdk.hancom.com/en/services/1?utm_source=github&utm_medium=readme&utm_campaign=opendataloader-pdf) integration — enterprise-grade AI document analysis with built-in production-grade OCR and customer-customized models optimized for your specific document types and workflows.
 
 ### How fast is it?
 
