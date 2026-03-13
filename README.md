@@ -56,6 +56,10 @@ opendataloader_pdf.convert(
 )
 ```
 
+![OpenDataLoader PDF layout analysis — headings, tables, images detected with bounding boxes](https://raw.githubusercontent.com/opendataloader-project/opendataloader-pdf/main/samples/image/example_annotated_pdf.png)
+
+*Annotated PDF output — each element (heading, paragraph, table, image) detected with bounding boxes and semantic type.*
+
 ## What Problems Does This Solve?
 
 | Problem | Solution | Status |
