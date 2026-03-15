@@ -1,14 +1,16 @@
 package org.opendataloader.pdf.processors;
 
+import org.opendataloader.pdf.autotagging.ChunksWriter;
+import org.opendataloader.pdf.autotagging.OperatorStreamKey;
 import org.verapdf.as.ASAtom;
-import org.verapdf.as.io.ASInputStream;
 import org.verapdf.as.io.ASMemoryInStream;
 import org.verapdf.cos.*;
 
-import org.verapdf.operator.Operator;
-import org.verapdf.parser.Operators;
-import org.verapdf.parser.PDFStreamParser;
+import org.verapdf.gf.model.factory.chunks.GraphicsState;
+import org.verapdf.gf.model.impl.sa.util.ResourceHandler;
 import org.verapdf.pd.*;
+import org.verapdf.pd.images.PDXObject;
+import org.verapdf.tools.StaticResources;
 import org.verapdf.tools.TaggedPDFConstants;
 import org.verapdf.wcag.algorithms.entities.*;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
@@ -20,22 +22,23 @@ import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
-import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.StreamInfo;
 
 import java.io.*;
 import java.util.*;
 
 public class AutoTaggingProcessor {
 
-    private static Map<Integer, List<Integer>> operatorIndexes = new HashMap<>();
-    private static Map<Integer, List<COSObject>> structParents = new HashMap<>();
-    private static final Set<String> operatorsForContents = new HashSet<>();
+    private static final Map<OperatorStreamKey, Map<Integer, Set<StreamInfo>>> operatorIndexesToStreamInfosMap = new HashMap<>();
+    private static final Map<OperatorStreamKey, List<COSObject>> structParents = new HashMap<>();
+    private static final Map<OperatorStreamKey, Integer> structParentsIntegers = new HashMap<>();
     private static boolean isPDF2_0 = false;
     private static final int MAX_TOKENS_PER_STREAM = 100_000;
 
     public static void createTaggedPDF(File inputPDF, String outputFolder, PDDocument document, List<List<IObject>> contents) throws IOException {
-        operatorIndexes.clear();
+        operatorIndexesToStreamInfosMap.clear();
         structParents.clear();
+        structParentsIntegers.clear();
         if (document.getVersion() == 2.0F) {
             isPDF2_0 = true;
         }
@@ -55,14 +58,24 @@ public class AutoTaggingProcessor {
     }
 
     private static void updatePages(PDDocument document, COSDocument cosDocument) throws IOException {
+        int currentStructParent = 0;
+        for (OperatorStreamKey operatorStreamKey : structParents.keySet()) {
+            structParentsIntegers.put(operatorStreamKey, currentStructParent++);
+        }
         List<org.verapdf.pd.PDPage> rawPages = document.getPages();
         for (int pageNumber = 0; pageNumber < rawPages.size(); pageNumber++) {
             PDPage page = rawPages.get(pageNumber);
-            page.getObject().setKey(ASAtom.STRUCT_PARENTS, COSInteger.construct(page.getPageNumber()));
+            OperatorStreamKey operatorStreamKey = new OperatorStreamKey(pageNumber, null);
+            Integer structParent = structParentsIntegers.get(operatorStreamKey);
+            if (structParent == null) {
+                continue;
+            }
+            page.getObject().setKey(ASAtom.STRUCT_PARENTS, COSInteger.construct(structParent));
             cosDocument.addChangedObject(page.getObject());
             COSObject contentsObject = page.getKey(ASAtom.CONTENTS);
-            List<Object> processedTokens = processTokens(getTokens(page.getContent()), pageNumber);
-
+            ResourceHandler resourceHandler = ResourceHandler.getInstance(page.getResources());
+            List<Object> processedTokens = new ChunksWriter(new GraphicsState(resourceHandler),
+                resourceHandler).processTokens(ChunksWriter.getTokens(page.getContent()), operatorStreamKey);
             if (processedTokens.size() <= MAX_TOKENS_PER_STREAM) {
                 if (contentsObject != null && contentsObject.isIndirect() != null && contentsObject.isIndirect()) {
                     setUpContents(contentsObject, processedTokens);
@@ -90,7 +103,7 @@ public class AutoTaggingProcessor {
         return streamObj;
     }
 
-    private static void setUpContents(COSObject contentsObj, List<Object> tokens) throws IOException {
+    public static void setUpContents(COSObject contentsObj, List<Object> tokens) throws IOException {
         byte[] res = new PDFStreamWriter().write(tokens);
         try (InputStream inStream = new ByteArrayInputStream(res)) {
             contentsObj.setData(new ASMemoryInStream(inStream));
@@ -116,14 +129,11 @@ public class AutoTaggingProcessor {
         structTreeRoot.setKey(ASAtom.PARENT_TREE, parentTree);
         COSObject nums = COSArray.construct();
         parentTree.setKey(ASAtom.NUMS, nums);
-        for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
-            nums.add(COSInteger.construct(pageNumber));
+        for (Map.Entry<OperatorStreamKey, List<COSObject>> entry : structParents.entrySet()) {
+            nums.add(COSInteger.construct(structParentsIntegers.get(entry.getKey())));
             COSObject array = COSArray.construct();
-            List<COSObject> pageStructParents = structParents.get(pageNumber);
-            if (pageStructParents != null) {
-                for (COSObject structParent : pageStructParents) {
-                    array.add(structParent);
-                }
+            for (COSObject structParent : entry.getValue()) {
+                array.add(structParent);
             }
             nums.add(array);
         }
@@ -316,110 +326,79 @@ public class AutoTaggingProcessor {
         aObject.add(newADictionary);
     }
 
-    protected static List<Object> getTokens(PDContentStream pdContentStream) {
-        if (pdContentStream != null) {
-            try {
-                COSObject contentStream = pdContentStream.getContents();
-                if (contentStream.getType() == COSObjType.COS_STREAM || contentStream.getType() == COSObjType.COS_ARRAY) {
-                    try (ASInputStream opStream = contentStream.getDirectBase().getData(COSStream.FilterFlags.DECODE)) {
-                        try (PDFStreamParser streamParser = new PDFStreamParser(opStream)) {
-                            streamParser.parseTokens();
-                            return streamParser.getTokens();
-                        }
-                    }
-                }
-            } catch (IOException e) {
-            }
-        }
-        return Collections.emptyList();
-    }
-
     private static void processTextNode(SemanticTextNode textNode, COSObject cosObject) {
-        Set<Integer> operatorIndexes = new LinkedHashSet<>();
+        List<StreamInfo> streamInfos = new ArrayList<>();
         for (TextColumn textColumn : textNode.getColumns()) {
             for (TextLine textLine : textColumn.getLines()) {
                 for (TextChunk textChunk : textLine.getTextChunks()) {
-                    operatorIndexes.addAll(textChunk.getOperatorIndexes());
+                    streamInfos.addAll(textChunk.getStreamInfos());
                 }
             }
         }
-        addMcidChildren(operatorIndexes, textNode.getPageNumber(), cosObject);
+        addMcidChildren(streamInfos, textNode.getPageNumber(), cosObject);
     }
 
     private static void processImageNode(ImageChunk imageChunk, COSObject cosObject) {
-        addMcidChildren(new LinkedHashSet<>(imageChunk.getOperatorIndexes()), imageChunk.getPageNumber(), cosObject);
+        addMcidChildren(imageChunk.getStreamInfos(), imageChunk.getPageNumber(), cosObject);
     }
 
-    private static void addMcidChildren(Set<Integer> operatorIndexes, Integer pageNumber, COSObject cosObject) {
-        List<Integer> pageOperatorIndexes = AutoTaggingProcessor.operatorIndexes.computeIfAbsent(pageNumber, x -> new ArrayList<>());
-        pageOperatorIndexes.addAll(operatorIndexes);
-        for (int index : operatorIndexes) {
-            structParents.computeIfAbsent(pageNumber, x -> new ArrayList<>()).add(cosObject);
+    private static void addMcidChildren(List<StreamInfo> streamInfos, Integer pageNumber, COSObject cosObject) {
+        COSObject array = COSArray.construct();
+        if (streamInfos.isEmpty()) {
+            return;
         }
-        if (!operatorIndexes.isEmpty()) {
-            COSObject array = COSArray.construct();
-            cosObject.setKey(ASAtom.K, array);
-            for (Integer operatorIndex : operatorIndexes) {
-                array.add(COSInteger.construct(pageOperatorIndexes.indexOf(operatorIndex)));
+        cosObject.setKey(ASAtom.K, array);
+        List<StreamInfo> streamInfoList = getMergedStreamInfos(streamInfos);
+        for (StreamInfo streamInfo : streamInfoList) {
+            OperatorStreamKey operatorStreamKey = new OperatorStreamKey(pageNumber, streamInfo.getXObjectName());
+            List<COSObject> list = structParents.computeIfAbsent(operatorStreamKey, x -> new ArrayList<>());
+            int mcid = list.size();
+            COSObject mcidObject = COSInteger.construct(mcid);
+            streamInfo.setMcid(mcid);
+            operatorIndexesToStreamInfosMap.computeIfAbsent(operatorStreamKey, x -> new HashMap<>())
+                .computeIfAbsent(streamInfo.getOperatorIndex(), x -> new TreeSet<>()).add(streamInfo);
+            list.add(cosObject);
+            if (streamInfo.getXObjectName() != null) {
+                PDXObject pdxObject = StaticResources.getDocument().getPage(pageNumber).getResources()
+                    .getXObject(ASAtom.getASAtom(streamInfo.getXObjectName()));
+                COSObject mcrDictionary = COSDictionary.construct();
+                mcrDictionary.setKey(ASAtom.TYPE, COSName.construct(ASAtom.MCR));
+                mcrDictionary.setKey(ASAtom.MCID, mcidObject);
+                mcrDictionary.setKey(ASAtom.STM, pdxObject.getObject());
+                array.add(mcrDictionary);
+            } else {
+                array.add(mcidObject);
             }
         }
     }
 
-    protected static List<Object> processTokens(List<Object> processTokens, int pageNumber) {
-        List<Integer> pageOperatorIndexes = operatorIndexes.computeIfAbsent(pageNumber, x -> new ArrayList<>());
-        List<Object> result = new ArrayList<>();
-        List<Object> arguments = new ArrayList<>();
-        for (int index = 0; index < processTokens.size(); index++) {
-            Object token = processTokens.get(index);
-            if (token instanceof COSBase) {
-                arguments.add(token);
-            } else if (token instanceof Operator) {
-                String operatorName = ((Operator) token).getOperator();
-                if (Operators.BDC.equals(operatorName) || Operators.EMC.equals(operatorName) ||
-                    Operators.BMC.equals(operatorName)) {
-                    arguments.clear();
-                    continue;
-                }
-                if (operatorsForContents.contains(operatorName)) {
-                    if (pageOperatorIndexes.contains(index)) {
-                        if (Operators.BI.equals(operatorName) || Operators.DO.equals(operatorName)) {
-                            result.add(COSName.construct(TaggedPDFConstants.FIGURE).getDirectBase());
-                        } else {
-                            result.add(COSName.construct(TaggedPDFConstants.SPAN).getDirectBase());
-                        }
-                        COSObject dictionary = COSDictionary.construct();
-                        dictionary.setKey(ASAtom.MCID, COSInteger.construct(pageOperatorIndexes.indexOf(index)));
-                        result.add(dictionary.getDirectBase());
-                        result.add(Operator.getOperator(Operators.BDC));
-                    } else {
-                        result.add(COSName.construct(TaggedPDFConstants.ARTIFACT).getDirectBase());
-                        result.add(Operator.getOperator(Operators.BMC));
-                    }
-                }
-                result.addAll(arguments);
-                arguments.clear();
-                result.add(token);
-                if (operatorsForContents.contains(operatorName)) {
-                    result.add(Operator.getOperator(Operators.EMC));
-                }
+    private static List<StreamInfo> getMergedStreamInfos(List<StreamInfo> streamInfos) {
+        List<StreamInfo> streamInfoList = new ArrayList<>();
+        Iterator<StreamInfo> streamInfoIterator = streamInfos.iterator();
+        StreamInfo previousInfo = streamInfoIterator.next();
+        streamInfoList.add(previousInfo);
+        while (streamInfoIterator.hasNext()) {
+            StreamInfo currentStreamInfo = streamInfoIterator.next();
+            if (previousInfo.getOperatorIndex() == currentStreamInfo.getOperatorIndex() &&
+                previousInfo.getEndIndex() == currentStreamInfo.getStartIndex()) {
+                previousInfo.setEndIndex(currentStreamInfo.getEndIndex());
+            } else {
+                streamInfoList.add(currentStreamInfo);
+                previousInfo = currentStreamInfo;
             }
         }
-        return result;
+        return streamInfoList;
     }
 
-    static {
-        operatorsForContents.add(Operators.TJ_SHOW);
-        operatorsForContents.add(Operators.TJ_SHOW_POS);
-        operatorsForContents.add(Operators.QUOTE);
-        operatorsForContents.add(Operators.DOUBLE_QUOTE);
-        operatorsForContents.add(Operators.BI);
-        operatorsForContents.add(Operators.DO);//image or form?
-        operatorsForContents.add(Operators.F_FILL);
-        operatorsForContents.add(Operators.F_FILL_OBSOLETE);
-        operatorsForContents.add(Operators.F_STAR_FILL);
-        operatorsForContents.add(Operators.B_CLOSEPATH_FILL_STROKE);
-        operatorsForContents.add(Operators.B_STAR_CLOSEPATH_EOFILL_STROKE);
-        operatorsForContents.add(Operators.S_CLOSE_STROKE);
-        operatorsForContents.add(Operators.S_STROKE);
+    public static Map<OperatorStreamKey, Integer> getStructParentsIntegers() {
+        return structParentsIntegers;
+    }
+
+    public static Map<OperatorStreamKey, List<COSObject>> getStructParents() {
+        return structParents;
+    }
+
+    public static Map<OperatorStreamKey, Map<Integer, Set<StreamInfo>>> getOperatorIndexesToStreamInfosMap() {
+        return operatorIndexesToStreamInfosMap;
     }
 }
