@@ -21,8 +21,10 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioCon
 
 import java.awt.*;
 import java.io.File;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -38,6 +40,7 @@ public class StaticLayoutContainers {
     private static final ThreadLocal<String> imagesDirectory = new ThreadLocal<>();
     private static final ThreadLocal<Boolean> embedImages = new ThreadLocal<>();
     private static final ThreadLocal<String> imageFormat = new ThreadLocal<>();
+    private static final ThreadLocal<Map<Integer, Double>> replacementCharRatios = ThreadLocal.withInitial(HashMap::new);
 
     public static void clearContainers() {
         currentContentId.set(1L);
@@ -49,6 +52,7 @@ public class StaticLayoutContainers {
         imagesDirectory.set("");
         embedImages.set(false);
         imageFormat.set(Config.IMAGE_FORMAT_PNG);
+        replacementCharRatios.get().clear();
     }
 
     public static long getCurrentContentId() {
@@ -142,5 +146,13 @@ public class StaticLayoutContainers {
 
     public static void setImageFormat(String format) {
         StaticLayoutContainers.imageFormat.set(format);
+    }
+
+    public static void setReplacementCharRatio(int pageNumber, double ratio) {
+        replacementCharRatios.get().put(pageNumber, ratio);
+    }
+
+    public static double getReplacementCharRatio(int pageNumber) {
+        return replacementCharRatios.get().getOrDefault(pageNumber, 0.0);
     }
 }
