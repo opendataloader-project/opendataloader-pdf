@@ -4,7 +4,7 @@ Working examples demonstrating how to use OpenDataLoader PDF in RAG (Retrieval-A
 
 ## Prerequisites
 
-- Python 3.9+
+- Python 3.10+
 - Java 11+ (on PATH)
 
 ## Sample PDF

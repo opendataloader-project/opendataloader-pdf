@@ -72,7 +72,8 @@ To suggest a new feature:
 
 4. **Build** the project:
 
-   **Prerequisites:** Java 11+, Maven, Node.js, pnpm, uv
+   **Prerequisites:** Java 11+, Maven, Python 3.10+, uv, Node.js 20+, pnpm
+   See the [Development Workflow guide](https://opendataloader.org/docs/development-workflow) for OS-specific install instructions.
 
    ```bash
    # Build Java packages
@@ -81,6 +82,8 @@ To suggest a new feature:
    # If you changed CLI options in Java, sync bindings (regenerates options.json, Python/Node.js wrappers)
    npm run sync
    ```
+
+   > **Important**: If you modified any CLI options in Java, you **must** run `npm run sync` before committing. This regenerates `options.json` and all Python/Node.js bindings. Forgetting this silently breaks the wrappers.
 
 5. Make your changes and commit them.
 6. **Push** your branch:

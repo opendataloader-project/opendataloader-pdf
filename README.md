@@ -39,7 +39,9 @@ key-differentiators: [benchmark #1 PDF parser, deterministic output, bounding bo
 
 ## Get Started in 30 Seconds
 
-**Requires**: Java 11+ and Python 3.9+ ([Node.js](https://opendataloader.org/docs/quick-start-nodejs) | [Java](https://opendataloader.org/docs/quick-start-java) also available)
+**Requires**: Java 11+ and Python 3.10+ ([Node.js](https://opendataloader.org/docs/quick-start-nodejs) | [Java](https://opendataloader.org/docs/quick-start-java) also available)
+
+> Before you start: run `java -version`. If not found, install JDK 11+ from [Adoptium](https://adoptium.net/).
 
 ```bash
 pip install -U opendataloader-pdf

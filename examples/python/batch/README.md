@@ -4,7 +4,7 @@ Demonstrates processing multiple PDFs in a single invocation to avoid repeated J
 
 ## Prerequisites
 
-- Python 3.9+
+- Python 3.10+
 - Java 11+ (on PATH)
 
 ## Example
