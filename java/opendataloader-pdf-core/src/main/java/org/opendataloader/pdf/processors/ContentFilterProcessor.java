@@ -16,6 +16,7 @@
 package org.opendataloader.pdf.processors;
 
 import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.content.IChunk;
 import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
@@ -71,6 +72,15 @@ public class ContentFilterProcessor {
         pageContents = splitTextChunksByWhiteSpacesInPageContents(pageContents);
         pageContents = HiddenTextProcessor.findHiddenText(inputPdfName, pageContents,
             config.getFilterConfig().isFilterHiddenText(), config.getPassword());
+        double replacementCharRatio = TextProcessor.measureReplacementCharRatio(pageContents);
+        StaticLayoutContainers.setReplacementCharRatio(pageNumber, replacementCharRatio);
+        if (replacementCharRatio >= 0.3) {
+            LOGGER.log(Level.WARNING,
+                "Page {0}: {1,number,#.#%} of characters are replacement characters (U+FFFD). "
+                + "This PDF likely contains CID-keyed fonts without ToUnicode mappings. "
+                + "Text extraction may be incomplete. Consider using --hybrid-mode for OCR fallback.",
+                new Object[]{pageNumber + 1, replacementCharRatio});
+        }
         TextProcessor.replaceUndefinedCharacters(pageContents, config.getReplaceInvalidChars());
         processBackgrounds(pageNumber, pageContents);
         return pageContents;
