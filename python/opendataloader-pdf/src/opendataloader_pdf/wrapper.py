@@ -1,15 +1,31 @@
 import argparse
+import inspect
 import subprocess
 import sys
 import warnings
+from functools import wraps
 from typing import List, Optional
 
 from .cli_options_generated import add_options_to_parser
-from .convert_generated import convert
+from .convert_generated import convert as _convert_generated
+from .markdown_fallback import repair_markdown_outputs
 from .runner import run_jar
 
 # Re-export for backward compatibility
 __all__ = ["convert", "run", "run_jar", "main"]
+_CONVERT_SIGNATURE = inspect.signature(_convert_generated)
+
+
+@wraps(_convert_generated)
+def convert(*args, **kwargs):
+    bound = _CONVERT_SIGNATURE.bind_partial(*args, **kwargs)
+    bound.apply_defaults()
+    _convert_generated(*args, **kwargs)
+    repair_markdown_outputs(
+        input_path=bound.arguments.get("input_path"),
+        output_dir=bound.arguments.get("output_dir"),
+        format_value=bound.arguments.get("format"),
+    )
 
 
 # Deprecated : Use `convert()` instead. This function will be removed in a future version.
