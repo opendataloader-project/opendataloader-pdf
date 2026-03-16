@@ -52,6 +52,27 @@ public class TextProcessor {
         }
     }
 
+    public static double measureReplacementCharRatio(List<IObject> contents) {
+        char replacementChar = ChunkParser.REPLACEMENT_CHARACTER_STRING.charAt(0);
+        int totalChars = 0;
+        int replacementChars = 0;
+        for (IObject object : contents) {
+            if (object instanceof TextChunk) {
+                String value = ((TextChunk) object).getValue();
+                totalChars += value.length();
+                for (int i = 0; i < value.length(); i++) {
+                    if (value.charAt(i) == replacementChar) {
+                        replacementChars++;
+                    }
+                }
+            }
+        }
+        if (totalChars == 0) {
+            return 0.0;
+        }
+        return (double) replacementChars / totalChars;
+    }
+
     public static void filterTinyText(List<IObject> contents) {
         for (int i = 0; i < contents.size(); i++) {
             IObject object = contents.get(i);

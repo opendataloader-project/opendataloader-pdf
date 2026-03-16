@@ -199,4 +199,55 @@ public class TextProcessorTest {
             "Adjacent text chunks should be merged");
         Assertions.assertEquals("Hello", ((TextChunk) contents.get(0)).getValue());
     }
+
+    @Test
+    public void testMeasureReplacementCharRatioAllReplacement() {
+        List<IObject> contents = new ArrayList<>();
+        contents.add(new TextChunk(new BoundingBox(1, 10.0, 10.0, 100.0, 20.0),
+            "\uFFFD\uFFFD\uFFFD", 10, 10.0));
+
+        double ratio = TextProcessor.measureReplacementCharRatio(contents);
+        Assertions.assertEquals(1.0, ratio, 0.001);
+    }
+
+    @Test
+    public void testMeasureReplacementCharRatioNoReplacement() {
+        List<IObject> contents = new ArrayList<>();
+        contents.add(new TextChunk(new BoundingBox(1, 10.0, 10.0, 100.0, 20.0),
+            "Hello World", 10, 10.0));
+
+        double ratio = TextProcessor.measureReplacementCharRatio(contents);
+        Assertions.assertEquals(0.0, ratio, 0.001);
+    }
+
+    @Test
+    public void testMeasureReplacementCharRatioMixed() {
+        List<IObject> contents = new ArrayList<>();
+        // 3 replacement chars out of 10 total = 0.3
+        contents.add(new TextChunk(new BoundingBox(1, 10.0, 10.0, 100.0, 20.0),
+            "\uFFFD\uFFFD\uFFFDAbcdefg", 10, 10.0));
+
+        double ratio = TextProcessor.measureReplacementCharRatio(contents);
+        Assertions.assertEquals(0.3, ratio, 0.001);
+    }
+
+    @Test
+    public void testMeasureReplacementCharRatioEmptyContents() {
+        List<IObject> contents = new ArrayList<>();
+
+        double ratio = TextProcessor.measureReplacementCharRatio(contents);
+        Assertions.assertEquals(0.0, ratio, 0.001);
+    }
+
+    @Test
+    public void testMeasureReplacementCharRatioNonTextChunksIgnored() {
+        List<IObject> contents = new ArrayList<>();
+        contents.add(new ImageChunk(new BoundingBox(1, 10.0, 10.0, 100.0, 20.0)));
+        contents.add(new TextChunk(new BoundingBox(1, 10.0, 30.0, 100.0, 40.0),
+            "\uFFFD\uFFFD\uFFFD\uFFFD\uFFFD", 10, 10.0));
+
+        double ratio = TextProcessor.measureReplacementCharRatio(contents);
+        // Only TextChunks counted: 5/5 = 1.0
+        Assertions.assertEquals(1.0, ratio, 0.001);
+    }
 }
