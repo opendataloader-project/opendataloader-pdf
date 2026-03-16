@@ -33,6 +33,19 @@ public class CLIMain {
     private static final String HELP = "[options] <INPUT FILE OR FOLDER>...\n Options:";
 
     public static void main(String[] args) {
+        int exitCode = run(args);
+        if (exitCode != 0) {
+            System.exit(exitCode);
+        }
+    }
+
+    /**
+     * Runs the CLI with the given arguments and returns the exit code.
+     *
+     * @param args command-line arguments
+     * @return 0 on success, non-zero on failure
+     */
+    static int run(String[] args) {
         Options options = CLIOptions.defineOptions();
         HelpFormatter formatter = new HelpFormatter();
         CommandLine commandLine;
@@ -41,18 +54,18 @@ public class CLIMain {
         } catch (ParseException e) {
             System.out.println(e.getMessage());
             formatter.printHelp(HELP, options);
-            return;
+            return 0;
         }
 
         // Handle --export-options before requiring input files
         if (commandLine.hasOption(CLIOptions.EXPORT_OPTIONS_LONG_OPTION)) {
             CLIOptions.exportOptionsAsJson(System.out);
-            return;
+            return 0;
         }
 
         if (commandLine.getArgs().length < 1) {
             formatter.printHelp(HELP, options);
-            return;
+            return 0;
         }
 
         String[] arguments = commandLine.getArgs();
@@ -64,17 +77,21 @@ public class CLIMain {
         } catch (IllegalArgumentException exception) {
             System.out.println(exception.getMessage());
             formatter.printHelp(HELP, options);
-            return;
+            return 0;
         }
         configureLogging(quiet);
+        boolean hasFailure = false;
         try {
             for (String argument : arguments) {
-                processPath(new File(argument), config);
+                if (!processPath(new File(argument), config)) {
+                    hasFailure = true;
+                }
             }
         } finally {
             // Release resources (e.g., hybrid client thread pools)
             OpenDataLoaderPDF.shutdown();
         }
+        return hasFailure ? 1 : 0;
     }
 
     private static void configureLogging(boolean quiet) {
@@ -89,39 +106,54 @@ public class CLIMain {
         LOGGER.setLevel(Level.OFF);
     }
 
-    private static void processPath(File file, Config config) {
+    /**
+     * Processes a file or directory, returning true if all files succeeded.
+     */
+    private static boolean processPath(File file, Config config) {
         if (!file.exists()) {
             LOGGER.log(Level.WARNING, "File or folder " + file.getAbsolutePath() + " not found.");
-            return;
+            return true;
         }
         if (file.isDirectory()) {
-            processDirectory(file, config);
+            return processDirectory(file, config);
         } else if (file.isFile()) {
-            processFile(file, config);
+            return processFile(file, config);
         }
+        return true;
     }
 
-    private static void processDirectory(File file, Config config) {
+    private static boolean processDirectory(File file, Config config) {
         File[] children = file.listFiles();
         if (children == null) {
             LOGGER.log(Level.WARNING, "Unable to read folder " + file.getAbsolutePath());
-            return;
+            return true;
         }
+        boolean allSucceeded = true;
         for (File child : children) {
-            processPath(child, config);
+            if (!processPath(child, config)) {
+                allSucceeded = false;
+            }
         }
+        return allSucceeded;
     }
 
-    private static void processFile(File file, Config config) {
+    /**
+     * Processes a single PDF file.
+     *
+     * @return true if processing succeeded, false if an error occurred.
+     */
+    private static boolean processFile(File file, Config config) {
         if (!isPdfFile(file)) {
             LOGGER.log(Level.FINE, "Skipping non-PDF file " + file.getAbsolutePath());
-            return;
+            return true;
         }
         try {
             OpenDataLoaderPDF.processFile(file.getAbsolutePath(), config);
+            return true;
         } catch (Exception exception) {
             LOGGER.log(Level.SEVERE, "Exception during processing file " + file.getAbsolutePath() + ": " +
                 exception.getMessage(), exception);
+            return false;
         } finally {
             StaticLayoutContainers.closeContrastRatioConsumer();
         }
