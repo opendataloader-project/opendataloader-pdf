@@ -49,6 +49,7 @@ public class TriageProcessorTest {
     public void setUp() {
         StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
         StaticContainers.setIsDataLoader(true);
+        StaticLayoutContainers.clearContainers();
         StaticLayoutContainers.setCurrentContentId(1L);
         StaticContainers.setTableBordersCollection(new TableBordersCollection());
     }
@@ -319,6 +320,47 @@ public class TriageProcessorTest {
         Assertions.assertEquals(1, signals.getLineChunkCount());
         Assertions.assertEquals(1, signals.getTextChunkCount());
         Assertions.assertEquals(0.5, signals.getLineToTextRatio(), 0.01);
+    }
+
+    @Test
+    public void testClassifyPageHighReplacementRatioRoutesToBackend() {
+        StaticLayoutContainers.clearContainers();
+        StaticLayoutContainers.setReplacementCharRatio(0, 0.5);
+
+        List<IObject> contents = new ArrayList<>();
+        contents.add(createTextChunk(10, 100, 200, 120, "text"));
+
+        TriageResult result = TriageProcessor.classifyPage(contents, 0, new HybridConfig());
+
+        Assertions.assertEquals(TriageDecision.BACKEND, result.getDecision());
+        Assertions.assertEquals(1.0, result.getConfidence(), 0.001);
+    }
+
+    @Test
+    public void testClassifyPageLowReplacementRatioNoEffect() {
+        StaticLayoutContainers.clearContainers();
+        StaticLayoutContainers.setReplacementCharRatio(0, 0.1);
+
+        List<IObject> contents = new ArrayList<>();
+        contents.add(createTextChunk(10, 100, 200, 120, "normal text"));
+
+        TriageResult result = TriageProcessor.classifyPage(contents, 0, new HybridConfig());
+
+        Assertions.assertEquals(TriageDecision.JAVA, result.getDecision());
+    }
+
+    @Test
+    public void testClassifyPageExactThresholdRoutesToBackend() {
+        StaticLayoutContainers.clearContainers();
+        StaticLayoutContainers.setReplacementCharRatio(0, 0.3);
+
+        List<IObject> contents = new ArrayList<>();
+        contents.add(createTextChunk(10, 100, 200, 120, "text"));
+
+        TriageResult result = TriageProcessor.classifyPage(contents, 0, new HybridConfig());
+
+        Assertions.assertEquals(TriageDecision.BACKEND, result.getDecision());
+        Assertions.assertEquals(1.0, result.getConfidence(), 0.001);
     }
 
     // Helper methods
