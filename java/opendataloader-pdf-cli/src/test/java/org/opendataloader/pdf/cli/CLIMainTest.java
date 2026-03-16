@@ -88,4 +88,24 @@ class CLIMainTest {
         int exitCode = CLIMain.run(new String[]{});
         assertEquals(0, exitCode);
     }
+
+    /**
+     * Invalid CLI arguments (e.g., unrecognized option) must return exit code 2,
+     * following POSIX convention for command-line usage errors.
+     */
+    @Test
+    void testInvalidArgumentsReturnsExitCode2() {
+        int exitCode = CLIMain.run(new String[]{"--no-such-option"});
+        assertEquals(2, exitCode);
+    }
+
+    /**
+     * Non-existent input file must return non-zero exit code.
+     */
+    @Test
+    void testNonExistentFileReturnsNonZeroExitCode() {
+        int exitCode = CLIMain.run(new String[]{"/nonexistent/path/file.pdf"});
+        assertNotEquals(0, exitCode,
+            "Exit code must be non-zero when input file does not exist");
+    }
 }

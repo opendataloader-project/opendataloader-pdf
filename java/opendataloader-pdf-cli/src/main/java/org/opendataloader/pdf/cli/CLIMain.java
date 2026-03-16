@@ -54,7 +54,7 @@ public class CLIMain {
         } catch (ParseException e) {
             System.out.println(e.getMessage());
             formatter.printHelp(HELP, options);
-            return 0;
+            return 2;
         }
 
         // Handle --export-options before requiring input files
@@ -77,7 +77,7 @@ public class CLIMain {
         } catch (IllegalArgumentException exception) {
             System.out.println(exception.getMessage());
             formatter.printHelp(HELP, options);
-            return 0;
+            return 2;
         }
         configureLogging(quiet);
         boolean hasFailure = false;
@@ -112,7 +112,7 @@ public class CLIMain {
     private static boolean processPath(File file, Config config) {
         if (!file.exists()) {
             LOGGER.log(Level.WARNING, "File or folder " + file.getAbsolutePath() + " not found.");
-            return true;
+            return false;
         }
         if (file.isDirectory()) {
             return processDirectory(file, config);
@@ -126,7 +126,7 @@ public class CLIMain {
         File[] children = file.listFiles();
         if (children == null) {
             LOGGER.log(Level.WARNING, "Unable to read folder " + file.getAbsolutePath());
-            return true;
+            return false;
         }
         boolean allSucceeded = true;
         for (File child : children) {
