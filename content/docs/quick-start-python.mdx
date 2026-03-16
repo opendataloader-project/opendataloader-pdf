@@ -1,13 +1,14 @@
 ---
 title: Quick Start with Python
-description: Install and use opendataloader-pdf from Python or its CLI
+description: Install opendataloader-pdf and extract text, tables, and headings from PDF files using Python. Requires Java 11+ and Python 3.10+.
+keywords: [PDF parsing Python, PDF to Markdown, PDF table extraction, opendataloader-pdf, PDF text extraction, PDF accessibility]
 ---
 
 Python is the fastest way to get started. The package bundles bindings, a CLI entrypoint, and AI-safety filters that run locally.
 
 ## Requirements
 
-- Python 3.9 or later
+- Python 3.10 or later
 - Java 11+ available on the system `PATH`
 
 Verify Java once before installing:
@@ -15,6 +16,16 @@ Verify Java once before installing:
 ```bash
 java -version
 ```
+
+If `java` is not found, install a JDK:
+
+| OS | Install Command |
+|----|-----------------|
+| macOS | `brew install --cask temurin` or download from [Adoptium](https://adoptium.net/) |
+| Ubuntu/Debian | `sudo apt install openjdk-17-jdk` |
+| Windows | Download installer from [Adoptium](https://adoptium.net/) (adds to PATH automatically) |
+
+> **Windows PATH tip**: If `java -version` fails after installing, close and reopen your terminal. If it still fails, add `C:\Program Files\Eclipse Adoptium\jdk-<version>\bin` to your system PATH manually.
 
 ## Install
 
