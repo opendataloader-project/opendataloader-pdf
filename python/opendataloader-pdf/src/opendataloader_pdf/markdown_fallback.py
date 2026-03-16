@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from itertools import islice
 import re
 import subprocess
 from pathlib import Path
@@ -15,11 +16,12 @@ def repair_markdown_outputs(
         return
 
     formats = _normalize_formats(format_value)
-    if "markdown" not in formats:
+    if not _should_repair_markdown(formats):
         return
 
+    base_dir = _resolve_base_output_dir(input_path, output_dir)
     for pdf_path in _iter_pdf_paths(input_path):
-        markdown_path = _resolve_markdown_path(pdf_path, output_dir)
+        markdown_path = _resolve_markdown_path(pdf_path, base_dir)
         if not markdown_path.exists():
             continue
         if not _looks_like_collapsed_markdown(markdown_path):
@@ -34,11 +36,11 @@ def _normalize_formats(format_value: str | List[str] | None) -> set[str]:
     if format_value is None:
         return {"json"}
     if isinstance(format_value, str):
-        return {item.strip() for item in format_value.split(",") if item.strip()}
+        return {item.strip().lower() for item in format_value.split(",") if item.strip()}
 
     normalized: set[str] = set()
     for item in format_value:
-        normalized.update(part.strip() for part in str(item).split(",") if part.strip())
+        normalized.update(part.strip().lower() for part in str(item).split(",") if part.strip())
     return normalized
 
 
@@ -52,17 +54,29 @@ def _iter_pdf_paths(input_path: str | List[str]) -> Iterable[Path]:
             yield path
 
 
-def _resolve_markdown_path(pdf_path: Path, output_dir: str | None) -> Path:
-    base_dir = Path(output_dir) if output_dir else pdf_path.parent
+def _should_repair_markdown(formats: set[str]) -> bool:
+    return "markdown" in formats
+
+
+def _resolve_base_output_dir(input_path: str | List[str], output_dir: str | None) -> Path:
+    if output_dir:
+        return Path(output_dir)
+
+    paths = input_path if isinstance(input_path, list) else [input_path]
+    first_path = Path(paths[0]).resolve()
+    return first_path if first_path.is_dir() else first_path.parent
+
+
+def _resolve_markdown_path(pdf_path: Path, base_dir: Path) -> Path:
     return base_dir / f"{pdf_path.stem}.md"
 
 
 def _looks_like_collapsed_markdown(markdown_path: Path) -> bool:
-    content = markdown_path.read_text(encoding="utf-8", errors="ignore")
-    return any(
-        line.count("<br>") >= 8 and line.count("|") >= 5
-        for line in content.splitlines()[:80]
-    )
+    with markdown_path.open(encoding="utf-8", errors="ignore") as handle:
+        return any(
+            line.count("<br>") >= 8 and line.count("|") >= 5
+            for line in islice(handle, 80)
+        )
 
 
 def _rebuild_markdown_from_layout(pdf_path: Path) -> str | None:

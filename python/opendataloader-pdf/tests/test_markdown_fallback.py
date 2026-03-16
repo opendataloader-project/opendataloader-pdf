@@ -2,7 +2,11 @@ from pathlib import Path
 from subprocess import CompletedProcess
 
 import opendataloader_pdf.wrapper as wrapper
-from opendataloader_pdf.markdown_fallback import repair_markdown_outputs
+from opendataloader_pdf.markdown_fallback import (
+    _normalize_formats,
+    _resolve_base_output_dir,
+    repair_markdown_outputs,
+)
 
 
 COLLAPSED_MARKDOWN = """|CONTO ECONOMICO|2015 2016 2017 2018|2015 2016 2017 2018|2015 2016 2017 2018|2015 2016 2017 2018|
@@ -71,3 +75,23 @@ def test_wrapper_convert_calls_fallback(monkeypatch):
         ("convert", (), {"input_path": "sample.pdf", "output_dir": "out", "format": "markdown", "quiet": True}),
         ("repair", (), {"input_path": "sample.pdf", "output_dir": "out", "format_value": "markdown"}),
     ]
+
+
+def test_normalize_formats_is_case_insensitive_and_keeps_markdown_variants():
+    assert _normalize_formats(["Markdown", "markdown-with-html", "MARKDOWN-WITH-IMAGES"]) == {
+        "markdown",
+        "markdown-with-html",
+        "markdown-with-images",
+    }
+
+
+def test_resolve_base_output_dir_matches_java_cli_default_for_directory(tmp_path):
+    nested = tmp_path / "nested"
+    nested.mkdir()
+    assert _resolve_base_output_dir(str(nested), None) == nested.resolve()
+
+
+def test_resolve_base_output_dir_matches_java_cli_default_for_file(tmp_path):
+    pdf_path = tmp_path / "sample.pdf"
+    pdf_path.write_bytes(b"%PDF-1.4")
+    assert _resolve_base_output_dir(str(pdf_path), None) == tmp_path.resolve()
