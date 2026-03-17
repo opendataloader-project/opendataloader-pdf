@@ -1,6 +1,7 @@
 ---
 title: Hybrid Mode
-description: Route complex pages to AI backends while keeping simple pages fast and local
+description: Route complex PDF pages to AI backends for OCR, formula extraction, and chart description while keeping simple pages fast and local.
+keywords: [PDF OCR, PDF AI extraction, hybrid PDF parsing, complex table extraction, scanned PDF]
 ---
 
 ## Overview
@@ -23,6 +24,15 @@ pip install -U "opendataloader-pdf[hybrid]"
 ```
 
 This installs the hybrid dependencies including docling and the backend server.
+
+### System Requirements
+
+| Resource | Requirement |
+|----------|-------------|
+| **RAM** | ~2–4 GB for the backend server (docling models are loaded into memory) |
+| **Disk** | ~1–2 GB for model downloads (cached after first run) |
+| **GPU** | Optional — CPU-only works fine; GPU accelerates OCR and table detection |
+| **Port** | Default `5002` (configurable with `--port`). Ensure it is not blocked by a firewall |
 
 ## Quick Start
 
