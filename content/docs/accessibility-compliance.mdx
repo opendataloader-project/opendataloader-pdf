@@ -46,11 +46,11 @@ Use existing PDF structure tags to understand document organization:
 ```python
 import opendataloader_pdf
 
-# Extract using native structure tags
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
 opendataloader_pdf.convert(
-    input_path="document.pdf",
+    input_path=["file1.pdf", "file2.pdf", "folder/"],
     output_dir="output/",
-    use_struct_tree=True  # Use native PDF structure tags
+    use_struct_tree=True                # Use native PDF structure tags
 )
 ```
 
@@ -61,45 +61,42 @@ This preserves the author's intended reading order and semantic structure.
 If the PDF lacks structure tags, OpenDataLoader falls back to visual heuristics (XY-Cut++ algorithm).
 
 ```bash
-opendataloader-pdf document.pdf --output-dir output/ --use-struct-tree
+# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
+opendataloader-pdf file1.pdf file2.pdf folder/ --output-dir output/ --use-struct-tree
 ```
 
-### 3. Future: Auto-Tagging Engine (Q1 2026)
+### 3. Future: Auto-Tagging Engine (Q2 2026)
 
 Generate accessible Tagged PDFs automatically from untagged documents:
 
 ```python
-# Coming Q1 2026
+# API shape preview — available Q2 2026
 opendataloader_pdf.convert(
-    input_path="legacy-document.pdf",
+    input_path=["file1.pdf", "file2.pdf", "folder/"],
     output_dir="output/",
-    auto_tag=True  # Generate structure tags
+    auto_tag=True                       # Generate structure tags
 )
 ```
 
-### 4. Future: PDF/UA Validation (Q2 2026)
+### 4. Export PDF/UA (Enterprise)
 
-Validate documents against PDF/UA standards:
+Convert Tagged PDF to PDF/UA-1 or PDF/UA-2 compliant output. Available now as an enterprise add-on.
 
-```python
-# Coming Q2 2026
-result = opendataloader_pdf.validate(
-    input_path="document.pdf",
-    standard="pdf-ua-2"
-)
-```
+### 5. Accessibility Studio (Enterprise)
+
+Visual editor to review, adjust, and approve tags before export. Available now as an enterprise add-on.
 
 ## Compliance Workflow
 
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│  Audit PDFs     │───▶│  Remediate      │───▶│  Validate       │
-│  (check tags)   │    │  (auto-tag)     │    │  (PDF/UA)       │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-        │                      │                      │
-        ▼                      ▼                      ▼
-  use_struct_tree         auto_tag              validate()
-  (Available now)      (Q1 2026)              (Q2 2026)
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│  1. Audit       │───▶│  2. Auto-Tag    │───▶│  3. Export       │───▶│  4. Studio       │
+│  (check tags)   │    │  (→ Tagged PDF) │    │  (PDF/UA)        │    │  (visual editor) │
+└─────────────────┘    └─────────────────┘    └─────────────────┘    └─────────────────┘
+        │                      │                      │                      │
+        ▼                      ▼                      ▼                      ▼
+  use_struct_tree         auto_tag              PDF/UA export       Accessibility Studio
+  (Available now)    (Q2 2026, Apache 2.0)    (Enterprise)          (Enterprise)
 ```
 
 ## Best Practices

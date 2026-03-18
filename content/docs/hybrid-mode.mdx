@@ -47,7 +47,8 @@ opendataloader-pdf-hybrid --port 5002
 Process PDFs with hybrid mode (second terminal)
 
 ```bash
-opendataloader-pdf --hybrid docling-fast input.pdf
+# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
+opendataloader-pdf --hybrid docling-fast file1.pdf file2.pdf folder/
 ```
 
 ### Python
@@ -55,10 +56,11 @@ opendataloader-pdf --hybrid docling-fast input.pdf
 ```python
 import opendataloader_pdf
 
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
 opendataloader_pdf.convert(
-    input_path="complex_tables.pdf",
+    input_path=["file1.pdf", "file2.pdf", "folder/"],
     output_dir="output/",
-    hybrid="docling-fast"  # Routes complex pages to AI backend
+    hybrid="docling-fast"           # Routes complex pages to AI backend
 )
 ```
 
@@ -109,8 +111,9 @@ The triage processor uses a **conservative strategy**: it routes uncertain pages
 ### Python Options
 
 ```python
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
 opendataloader_pdf.convert(
-    input_path="document.pdf",
+    input_path=["file1.pdf", "file2.pdf", "folder/"],
     output_dir="output/",
     hybrid="docling-fast",
     hybrid_url="http://localhost:5002",  # Custom backend URL
@@ -122,12 +125,13 @@ opendataloader_pdf.convert(
 ### CLI Options
 
 ```bash
+# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
 opendataloader-pdf \
     --hybrid docling-fast \
     --hybrid-url http://localhost:5002 \
     --hybrid-timeout 60000 \
     --hybrid-fallback \
-    input.pdf
+    file1.pdf file2.pdf folder/
 ```
 
 ## Supported Backends
@@ -175,7 +179,8 @@ opendataloader-pdf-hybrid --port 5002 --force-ocr
 Terminal 2: Process scanned PDF
 
 ```bash
-opendataloader-pdf --hybrid docling-fast input-scanned.pdf
+# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
+opendataloader-pdf --hybrid docling-fast file1.pdf file2.pdf folder/
 ```
 
 For non-English documents, specify the OCR language:
@@ -199,8 +204,9 @@ opendataloader-pdf-hybrid --port 5002 --force-ocr --ocr-lang "ar,en"
 ```python
 import opendataloader_pdf
 
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
 opendataloader_pdf.convert(
-    input_path="scanned.pdf",
+    input_path=["file1.pdf", "file2.pdf", "folder/"],
     output_dir="output/",
     hybrid="docling-fast"
 )
@@ -212,7 +218,8 @@ Start the backend server with `--force-ocr` before running the Python conversion
 
 > **Timeout**: OCR is CPU-intensive. For large scanned documents, increase the timeout (default is 30s per batch):
 > ```bash
-> opendataloader-pdf --hybrid docling-fast --hybrid-timeout 120000 input-scanned.pdf
+> # Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
+> opendataloader-pdf --hybrid docling-fast --hybrid-timeout 120000 file1.pdf file2.pdf folder/
 > ```
 
 ## Chart and Image Description
@@ -232,7 +239,8 @@ opendataloader-pdf-hybrid --port 5002 --enrich-picture-description
 Terminal 2: Process with full backend mode
 
 ```bash
-opendataloader-pdf --hybrid docling-fast --hybrid-mode full input.pdf
+# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
+opendataloader-pdf --hybrid docling-fast --hybrid-mode full file1.pdf file2.pdf folder/
 ```
 
 ### Python
@@ -240,11 +248,12 @@ opendataloader-pdf --hybrid docling-fast --hybrid-mode full input.pdf
 ```python
 import opendataloader_pdf
 
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
 opendataloader_pdf.convert(
-    input_path="document.pdf",
+    input_path=["file1.pdf", "file2.pdf", "folder/"],
     output_dir="output/",
     hybrid="docling-fast",
-    hybrid_mode="full"  # Required for picture description
+    hybrid_mode="full"              # Required for picture description
 )
 ```
 

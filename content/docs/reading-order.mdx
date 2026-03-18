@@ -85,8 +85,9 @@ XY-Cut++ is **enabled by default**. No configuration needed:
 ```python
 import opendataloader_pdf
 
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
 opendataloader_pdf.convert(
-    input_path="two-column-paper.pdf",
+    input_path=["file1.pdf", "file2.pdf", "folder/"],
     output_dir="output/",
     format="markdown,json",
 )
@@ -95,7 +96,8 @@ opendataloader_pdf.convert(
 To disable reading order sorting (use raw PDF order):
 
 ```bash
-opendataloader-pdf --reading-order off input.pdf
+# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
+opendataloader-pdf --reading-order off file1.pdf file2.pdf folder/
 ```
 
 ## Comparison with Other Approaches

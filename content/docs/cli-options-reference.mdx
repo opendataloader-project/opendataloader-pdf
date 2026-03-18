@@ -43,35 +43,34 @@ This page documents all available CLI options for opendataloader-pdf.
 ### Basic conversion
 
 ```bash
-opendataloader-pdf document.pdf -o ./output -f json,markdown
-```
-
-### Convert entire folder
-
-```bash
-opendataloader-pdf ./pdf-folder -o ./output -f json
+# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
+opendataloader-pdf file1.pdf file2.pdf folder/ -o ./output -f json,markdown
 ```
 
 ### Save images as external files
 
 ```bash
-opendataloader-pdf document.pdf -f markdown --image-output external
+# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
+opendataloader-pdf file1.pdf file2.pdf folder/ -f markdown --image-output external
 ```
 
 ### Disable reading order sorting
 
 ```bash
-opendataloader-pdf document.pdf -f json --reading-order off
+# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
+opendataloader-pdf file1.pdf file2.pdf folder/ -f json --reading-order off
 ```
 
 ### Add page separators in output
 
 ```bash
-opendataloader-pdf document.pdf -f markdown --markdown-page-separator "--- Page %page-number% ---"
+# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
+opendataloader-pdf file1.pdf file2.pdf folder/ -f markdown --markdown-page-separator "--- Page %page-number% ---"
 ```
 
 ### Encrypted PDF
 
 ```bash
-opendataloader-pdf encrypted.pdf -p mypassword -o ./output
+# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
+opendataloader-pdf encrypted1.pdf encrypted2.pdf -p mypassword -o ./output
 ```

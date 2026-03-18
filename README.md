@@ -137,6 +137,7 @@ pip install -U opendataloader-pdf
 ```python
 import opendataloader_pdf
 
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
 opendataloader_pdf.convert(
     input_path=["file1.pdf", "file2.pdf", "folder/"],
     output_dir="output/",
@@ -187,12 +188,14 @@ opendataloader-pdf-hybrid --port 5002
 **Terminal 2** — Process PDFs:
 
 ```bash
+# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
 opendataloader-pdf --hybrid docling-fast file1.pdf file2.pdf folder/
 ```
 
 **Python:**
 
 ```python
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
 opendataloader_pdf.convert(
     input_path=["file1.pdf", "file2.pdf", "folder/"],
     output_dir="output/",
@@ -224,7 +227,7 @@ Extract mathematical formulas as LaTeX from scientific PDFs:
 # Server: enable formula enrichment
 opendataloader-pdf-hybrid --enrich-formula
 
-# Client: must use full mode for enrichments
+# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
 opendataloader-pdf --hybrid docling-fast --hybrid-mode full file1.pdf file2.pdf folder/
 ```
 
@@ -248,7 +251,7 @@ Generate AI descriptions for charts and images — useful for RAG search and acc
 # Server
 opendataloader-pdf-hybrid --enrich-picture-description
 
-# Client (must use full mode)
+# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
 opendataloader-pdf --hybrid docling-fast --hybrid-mode full file1.pdf file2.pdf folder/
 ```
 
@@ -317,6 +320,7 @@ Combine formats: `format="json,markdown"`
 When a PDF has structure tags, OpenDataLoader extracts the **exact layout** the author intended — no guessing, no heuristics. Headings, lists, tables, and reading order are preserved from the source.
 
 ```python
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
 opendataloader_pdf.convert(
     input_path=["file1.pdf", "file2.pdf", "folder/"],
     output_dir="output/",
@@ -337,7 +341,8 @@ PDFs can contain hidden prompt injection attacks. OpenDataLoader automatically f
 To sanitize sensitive data (emails, URLs, phone numbers → placeholders), enable it explicitly:
 
 ```bash
-opendataloader-pdf input.pdf --sanitize
+# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
+opendataloader-pdf file1.pdf file2.pdf folder/ --sanitize
 ```
 
 [AI Safety Guide](https://opendataloader.org/docs/ai-safety)
@@ -363,6 +368,7 @@ documents = loader.load()
 ### Advanced Options
 
 ```python
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
 opendataloader_pdf.convert(
     input_path=["file1.pdf", "file2.pdf", "folder/"],
     output_dir="output/",
@@ -424,18 +430,14 @@ opendataloader_pdf.convert(
 Existing PDFs (untagged)
     │
     ▼
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│  1. Audit       │───>│  2. Remediate   │───>│  3. Export       │
-│  (check tags)   │    │  (auto-tag)     │    │  (PDF/UA)        │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-        │                      │                      │
-        ▼                      ▼                      ▼
-  use_struct_tree         auto_tag              PDF/UA export
-  (Available now)    (Q2 2026, Apache 2.0)   (Enterprise)
-                                                      │
-                                                      ▼
-                                            PDF/UA-1 or PDF/UA-2
-                                            compliant output
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│  1. Audit       │───>│  2. Auto-Tag    │───>│  3. Export       │───>│  4. Studio       │
+│  (check tags)   │    │  (→ Tagged PDF) │    │  (PDF/UA)        │    │  (visual editor) │
+└─────────────────┘    └─────────────────┘    └─────────────────┘    └─────────────────┘
+        │                      │                      │                      │
+        ▼                      ▼                      ▼                      ▼
+  use_struct_tree         auto_tag              PDF/UA export       Accessibility Studio
+  (Available now)    (Q2 2026, Apache 2.0)    (Enterprise)          (Enterprise)
 ```
 
 [PDF Accessibility Guide](https://opendataloader.org/docs/accessibility-compliance)
@@ -465,6 +467,7 @@ OpenDataLoader PDF is the only open-source parser that combines: rule-based dete
 OpenDataLoader detects tables using border analysis and text clustering, preserving row/column structure. For complex tables, enable hybrid mode for +90% accuracy improvement (0.49 to 0.93 TEDS score):
 
 ```python
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
 opendataloader_pdf.convert(
     input_path=["file1.pdf", "file2.pdf", "folder/"],
     output_dir="output/",
@@ -518,6 +521,7 @@ Every element in JSON output includes a `bounding box` (`[left, bottom, right, t
 ```python
 import opendataloader_pdf
 
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
 opendataloader_pdf.convert(
     input_path=["file1.pdf", "file2.pdf", "folder/"],
     output_dir="output/",

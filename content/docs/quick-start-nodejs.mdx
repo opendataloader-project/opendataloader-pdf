@@ -59,8 +59,9 @@ import NodeConvertOptions from './_generated/node-convert-options.mdx';
 ## CLI usage
 
 ```bash
-npx @opendataloader/pdf path/to/document.pdf path/to/folder \
-  -o path/to/output \
+# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
+npx @opendataloader/pdf file1.pdf file2.pdf folder/ \
+  -o output/ \
   -f json,html,pdf,markdown
 ```
 

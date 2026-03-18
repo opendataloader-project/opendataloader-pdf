@@ -73,7 +73,8 @@ These filters remove content that is invisible to humans but readable by machine
 To disable a specific filter for trusted documents:
 
 ```bash
-opendataloader-pdf input.pdf --content-safety-off hidden-text
+# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
+opendataloader-pdf file1.pdf file2.pdf folder/ --content-safety-off hidden-text
 ```
 
 `--content-safety-off all` disables all four rendering-mismatch filters. It does not affect `--sanitize`.
@@ -83,12 +84,15 @@ opendataloader-pdf input.pdf --content-safety-off hidden-text
 The `--sanitize` flag replaces personally identifiable information with placeholders. This is **disabled by default** because it modifies visible, legitimate content.
 
 ```bash
-opendataloader-pdf input.pdf --sanitize
+# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
+opendataloader-pdf file1.pdf file2.pdf folder/ --sanitize
 ```
 
 ```python
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
 opendataloader_pdf.convert(
-    input_path="input.pdf",
+    input_path=["file1.pdf", "file2.pdf", "folder/"],
+    output_dir="output/",
     sanitize=True,
 )
 ```

@@ -26,10 +26,11 @@ Enable Tagged PDF extraction with the `use_struct_tree` option:
 ```python
 import opendataloader_pdf
 
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
 opendataloader_pdf.convert(
-    input_path="accessible-document.pdf",
+    input_path=["file1.pdf", "file2.pdf", "folder/"],
     output_dir="output/",
-    use_struct_tree=True  # Use native PDF structure tags
+    use_struct_tree=True                # Use native PDF structure tags
 )
 ```
 
@@ -38,7 +39,8 @@ Most PDF parsers ignore structure tags entirely. OpenDataLoader is one of the fe
 ### CLI Usage
 
 ```bash
-opendataloader-pdf document.pdf \
+# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
+opendataloader-pdf file1.pdf file2.pdf folder/ \
   --output-dir output/ \
   --use-struct-tree
 ```
@@ -56,7 +58,7 @@ WARN: Document lacks structure tree, falling back to visual heuristics
 | Feature | Purpose | Status |
 |:--------|:--------|:-------|
 | Tag extraction | Use existing tags to determine document structure | Available |
-| Auto-Tagging Engine | Generate structure tags for untagged PDFs | Q1 2026 |
+| Auto-Tagging Engine | Generate structure tags for untagged PDFs | Q2 2026 |
 | Tag validation | Validate tags against PDF Association recommendations | In progress |
 | PDF/UA Validation | Verify compliance with PDF/UA standards | Q2 2026 |
 | Hybrid extraction | Combine tags with visual heuristics for best results | In progress |

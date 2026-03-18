@@ -78,9 +78,10 @@ Download CLI JAR from the [releases page](https://github.com/opendataloader-proj
 Pass multiple files or directories in a single command:
 
 ```bash
+# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
 java -jar opendataloader-pdf-cli-<VERSION>.jar \
-  report.pdf contract.pdf ./invoices/ \
-  -o path/to/output \
+  file1.pdf file2.pdf folder/ \
+  -o output/ \
   -f json,html,pdf,markdown
 ```
 

@@ -40,9 +40,10 @@ Upgrade regularly to pick up model, parser, and safety improvements.
 ```python
 import opendataloader_pdf
 
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
 opendataloader_pdf.convert(
-    input_path=["path/to/document.pdf", "path/to/folder"],
-    output_dir="path/to/output",
+    input_path=["file1.pdf", "file2.pdf", "folder/"],
+    output_dir="output/",
     format="json,html,pdf,markdown",
 )
 ```
@@ -58,8 +59,9 @@ import PythonConvertOptions from './_generated/python-convert-options.mdx';
 Use the same installation to drive conversions from the terminal:
 
 ```bash
-opendataloader-pdf path/to/document.pdf \
-  -o path/to/output \
+# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
+opendataloader-pdf file1.pdf file2.pdf folder/ \
+  -o output/ \
   -f json,html,pdf,markdown
 ```
 
@@ -77,7 +79,7 @@ pip install -U langchain-opendataloader-pdf
 from langchain_opendataloader_pdf import OpenDataLoaderPDFLoader
 
 loader = OpenDataLoaderPDFLoader(
-    file_path=["document.pdf"],
+    file_path=["file1.pdf", "file2.pdf", "folder/"],
     format="text"
 )
 documents = loader.load()

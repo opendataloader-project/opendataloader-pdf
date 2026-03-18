@@ -77,10 +77,11 @@ OpenDataLoader detects tables using both border analysis and text clustering, pr
 ```python
 import opendataloader_pdf
 
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
 opendataloader_pdf.convert(
-    input_path="document.pdf",
+    input_path=["file1.pdf", "file2.pdf", "folder/"],
     output_dir="output/",
-    format="json"  # JSON preserves table structure
+    format="json"                       # JSON preserves table structure
 )
 ```
 
@@ -91,8 +92,11 @@ Tables are exported as structured data with rows, columns, and cell content pres
 Reading order is enabled by default using the XY-Cut++ algorithm. No configuration needed:
 
 ```python
+import opendataloader_pdf
+
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
 opendataloader_pdf.convert(
-    input_path="two-column-paper.pdf",
+    input_path=["file1.pdf", "file2.pdf", "folder/"],
     output_dir="output/",
 )
 ```
@@ -104,8 +108,9 @@ This ensures text is extracted in the order humans would read it, not left-to-ri
 Use JSON output format. Every element includes a `bounding box` field:
 
 ```python
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
 opendataloader_pdf.convert(
-    input_path="document.pdf",
+    input_path=["file1.pdf", "file2.pdf", "folder/"],
     output_dir="output/",
     format="json"
 )
@@ -147,7 +152,7 @@ pip install -U langchain-opendataloader-pdf
 from langchain_opendataloader_pdf import OpenDataLoaderPDFLoader
 
 loader = OpenDataLoaderPDFLoader(
-    file_path=["document.pdf"],
+    file_path=["file1.pdf", "file2.pdf", "folder/"],
     format="text"
 )
 documents = loader.load()
@@ -186,7 +191,7 @@ Yes. OpenDataLoader:
 
 ### How fast is OpenDataLoader?
 
-OpenDataLoader processes **100+ pages per second** on typical hardware (CPU only, no GPU). See our [benchmark results](/docs/benchmark) for details. Exact speed depends on:
+OpenDataLoader processes **20+ pages per second** on typical hardware (CPU only, no GPU). See our [benchmark results](/docs/benchmark) for details. Exact speed depends on:
 - Document complexity
 - Number of tables/images
 - Output formats selected
@@ -196,7 +201,7 @@ OpenDataLoader processes **100+ pages per second** on typical hardware (CPU only
 Yes. Pass a list of files, a directory, or both:
 
 ```python
-# List of files — single JVM invocation
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
 opendataloader_pdf.convert(
     input_path=["report.pdf", "contract.pdf", "invoice.pdf"],
     output_dir="output/",
@@ -214,6 +219,7 @@ opendataloader_pdf.convert(
 CLI equivalent:
 
 ```bash
+# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
 opendataloader-pdf report.pdf contract.pdf ./invoices/ -o ./output -f json,markdown
 ```
 
@@ -233,7 +239,8 @@ opendataloader-pdf-hybrid --port 5002 --force-ocr
 Terminal 2: Process scanned PDF
 
 ```bash
-opendataloader-pdf --hybrid docling-fast input-scanned.pdf
+# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
+opendataloader-pdf --hybrid docling-fast file1.pdf file2.pdf folder/
 ```
 
 Or use in Python:
@@ -241,8 +248,9 @@ Or use in Python:
 ```python
 import opendataloader_pdf
 
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
 opendataloader_pdf.convert(
-    input_path="scanned.pdf",
+    input_path=["file1.pdf", "file2.pdf", "folder/"],
     output_dir="output/",
     hybrid="docling-fast"
 )
@@ -263,10 +271,11 @@ Two levels of support:
 1. **Image extraction** (all modes): Embedded images are extracted with bounding boxes. Enable with `image_output="external"` (the default):
 
 ```python
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
 opendataloader_pdf.convert(
-    input_path="document.pdf",
+    input_path=["file1.pdf", "file2.pdf", "folder/"],
     output_dir="output/",
-    image_output="external"  # Saves images as files; bounding boxes in JSON
+    image_output="external"             # Saves images as files; bounding boxes in JSON
 )
 ```
 
@@ -276,8 +285,8 @@ opendataloader_pdf.convert(
 # Start backend with picture description enabled
 opendataloader-pdf-hybrid --port 5002 --enrich-picture-description
 
-# Process with full backend mode (required for picture description)
-opendataloader-pdf --hybrid docling-fast --hybrid-mode full input.pdf
+# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
+opendataloader-pdf --hybrid docling-fast --hybrid-mode full file1.pdf file2.pdf folder/
 ```
 
 The description appears in the JSON output under `"description"` and as a caption in Markdown. See [Hybrid Mode → Chart and Image Description](/docs/hybrid-mode#chart-and-image-description) for details.
@@ -295,10 +304,11 @@ The [European Accessibility Act (EAA)](https://commission.europa.eu/strategy-and
 ### How do I use Tagged PDF features?
 
 ```python
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
 opendataloader_pdf.convert(
-    input_path="accessible-document.pdf",
+    input_path=["file1.pdf", "file2.pdf", "folder/"],
     output_dir="output/",
-    use_struct_tree=True  # Use native PDF structure tags
+    use_struct_tree=True                # Use native PDF structure tags
 )
 ```
 
@@ -327,16 +337,18 @@ opendataloader-pdf-hybrid --port 5002
 Terminal 2: Process PDFs with hybrid mode
 
 ```bash
-opendataloader-pdf --hybrid docling-fast input.pdf
+# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
+opendataloader-pdf --hybrid docling-fast file1.pdf file2.pdf folder/
 ```
 
 Or use in Python:
 
 ```python
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
 opendataloader_pdf.convert(
-    input_path="document.pdf",
+    input_path=["file1.pdf", "file2.pdf", "folder/"],
     output_dir="output/",
-    hybrid="docling-fast"  # Routes complex pages to AI backend
+    hybrid="docling-fast"               # Routes complex pages to AI backend
 )
 ```
 

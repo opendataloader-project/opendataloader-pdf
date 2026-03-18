@@ -50,12 +50,12 @@ Not all PDFs have structure tags. OpenDataLoader automatically detects and uses 
 ```python
 import opendataloader_pdf
 
-# Extract with structure tree (if available)
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
 opendataloader_pdf.convert(
-    input_path="document.pdf",
+    input_path=["file1.pdf", "file2.pdf", "folder/"],
     output_dir="output/",
     format="json,markdown",
-    use_struct_tree=True  # Use tags if present
+    use_struct_tree=True                # Use tags if present
 )
 ```
 
@@ -64,7 +64,8 @@ If the PDF lacks structure tags, OpenDataLoader logs a warning and falls back to
 ### CLI Usage
 
 ```bash
-opendataloader-pdf document.pdf \
+# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
+opendataloader-pdf file1.pdf file2.pdf folder/ \
   --output-dir output/ \
   -f json,markdown \
   --use-struct-tree
@@ -175,18 +176,14 @@ Real-world PDF collections contain both tagged and untagged documents. OpenDataL
 
 ```python
 import opendataloader_pdf
-import os
 
-def process_pdf_collection(pdf_dir, output_dir):
-    """Process PDFs using tags when available."""
-    for filename in os.listdir(pdf_dir):
-        if filename.endswith(".pdf"):
-            opendataloader_pdf.convert(
-                input_path=os.path.join(pdf_dir, filename),
-                output_dir=output_dir,
-                format="json,markdown",
-                use_struct_tree=True  # Auto-fallback if no tags
-            )
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
+opendataloader_pdf.convert(
+    input_path=["file1.pdf", "file2.pdf", "folder/"],
+    output_dir="output/",
+    format="json,markdown",
+    use_struct_tree=True                # Auto-fallback if no tags
+)
 ```
 
 **Behavior:**
@@ -196,14 +193,14 @@ def process_pdf_collection(pdf_dir, output_dir):
 
 ## Future: Auto-Tagging Untagged PDFs
 
-Many legacy PDFs lack structure tags. Our upcoming Auto-Tagging Engine (Q1 2026) will generate tags automatically:
+Many legacy PDFs lack structure tags. Our upcoming Auto-Tagging Engine (Q2 2026) will generate tags automatically:
 
 ```python
-# Coming Q1 2026
+# API shape preview — available Q2 2026
 opendataloader_pdf.convert(
-    input_path="legacy-untagged.pdf",
+    input_path=["file1.pdf", "file2.pdf", "folder/"],
     output_dir="output/",
-    auto_tag=True  # Generate structure tags
+    auto_tag=True                       # Generate structure tags
 )
 ```
 
@@ -217,7 +214,7 @@ This enables RAG-quality extraction even for older documents.
 from langchain_opendataloader_pdf import OpenDataLoaderPDFLoader
 
 loader = OpenDataLoaderPDFLoader(
-    file_path=["documents/"],
+    file_path=["file1.pdf", "file2.pdf", "folder/"],
     format="text",
     use_struct_tree=True,
 )

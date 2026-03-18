@@ -207,9 +207,11 @@ A PDF that contains a structure tree with tags identifying the semantic role of 
 
 **In OpenDataLoader:**
 ```python
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
 opendataloader_pdf.convert(
-    input_path="document.pdf",
-    use_struct_tree=True  # Use structure tags
+    input_path=["file1.pdf", "file2.pdf", "folder/"],
+    output_dir="output/",
+    use_struct_tree=True                # Use structure tags
 )
 ```
 

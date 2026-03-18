@@ -53,9 +53,9 @@ See [examples/python/rag](https://github.com/opendataloader-project/opendataload
 ```python
 import opendataloader_pdf
 
-# Convert to both Markdown (for chunking) and JSON (for metadata)
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
 opendataloader_pdf.convert(
-    input_path="documents/",
+    input_path=["file1.pdf", "file2.pdf", "folder/"],
     output_dir="output/",
     format="json,markdown",
     quiet=True,
@@ -260,8 +260,10 @@ for element in doc["kids"]:
 ### Academic Papers (Multi-Column)
 
 ```python
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
 opendataloader_pdf.convert(
-    input_path="paper.pdf",
+    input_path=["paper1.pdf", "paper2.pdf", "papers/"],
+    output_dir="output/",
     format="json,markdown",
 )
 ```
@@ -269,20 +271,22 @@ opendataloader_pdf.convert(
 ### Financial Reports (Tables Heavy)
 
 ```python
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
 opendataloader_pdf.convert(
-    input_path="report.pdf",
-    format="json",  # JSON preserves table structure
-    # Tables automatically detected with border + cluster methods
+    input_path=["report1.pdf", "report2.pdf", "reports/"],
+    output_dir="output/",
+    format="json",                      # JSON preserves table structure
 )
 ```
 
 ### Legal Documents (Long Text)
 
 ```python
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
 opendataloader_pdf.convert(
-    input_path="contract.pdf",
+    input_path=["contract1.pdf", "contract2.pdf", "contracts/"],
+    output_dir="output/",
     format="markdown",
-    # Headers/footers auto-filtered to reduce noise
 )
 ```
 
@@ -297,9 +301,11 @@ OpenDataLoader automatically filters content that would pollute your RAG context
 This is enabled by default. To disable (not recommended for RAG):
 
 ```python
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
 opendataloader_pdf.convert(
-    input_path="document.pdf",
-    content_safety_off="all"  # Disable all filters
+    input_path=["file1.pdf", "file2.pdf", "folder/"],
+    output_dir="output/",
+    content_safety_off="all"            # Disable all filters
 )
 ```
 
@@ -312,7 +318,7 @@ Process multiple files in a single call to avoid repeated Java startup overhead:
 ```python
 import opendataloader_pdf
 
-# List of specific files — single JVM invocation
+# Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
 opendataloader_pdf.convert(
     input_path=["report1.pdf", "report2.pdf", "report3.pdf"],
     output_dir="output/",
@@ -332,11 +338,8 @@ opendataloader_pdf.convert(
 CLI equivalent:
 
 ```bash
-# Multiple files
-opendataloader-pdf report1.pdf report2.pdf report3.pdf --format json,markdown --output-dir output/
-
-# Directory
-opendataloader-pdf ./documents/ --format json,markdown --output-dir output/
+# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
+opendataloader-pdf report1.pdf report2.pdf report3.pdf folder/ --format json,markdown --output-dir output/
 ```
 
 > **Why batch matters:** Each CLI invocation starts a new Java process (~1-2s overhead). Passing all files in one command processes them in a single JVM, which is significantly faster for large document collections.
