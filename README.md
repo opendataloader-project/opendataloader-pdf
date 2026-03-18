@@ -494,7 +494,7 @@ Yes. For digital PDFs, text extraction works out of the box. For scanned PDFs, u
 
 ### How fast is it?
 
-Local mode processes 20+ pages per second on CPU (0.05s/page). Hybrid mode processes 2+ pages per second (0.43s/page) with significantly higher accuracy for complex documents. No GPU required. Benchmarked on Apple M4. [Full benchmark details](https://github.com/opendataloader-project/opendataloader-bench)
+Local mode processes 20+ pages per second on CPU (0.05s/page). Hybrid mode processes 2+ pages per second (0.43s/page) with significantly higher accuracy for complex documents. No GPU required. Benchmarked on Apple M4. [Full benchmark details](https://github.com/opendataloader-project/opendataloader-bench). With multi-process batch processing, throughput exceeds 100 pages per second on 8+ core machines.
 
 ### Does it handle multi-column layouts?
 
