@@ -71,7 +71,6 @@ public class AutoTaggingProcessor {
                 continue;
             }
             page.getObject().setKey(ASAtom.STRUCT_PARENTS, COSInteger.construct(structParent));
-            cosDocument.addChangedObject(page.getObject());
             COSObject contentsObject = page.getKey(ASAtom.CONTENTS);
             ResourceHandler resourceHandler = ResourceHandler.getInstance(page.getResources());
             List<Object> processedTokens = new ChunksWriter(new GraphicsState(resourceHandler),
@@ -81,7 +80,8 @@ public class AutoTaggingProcessor {
                     setUpContents(contentsObject, processedTokens);
                     cosDocument.addChangedObject(contentsObject);
                 } else {
-                    createContentsIndirect(cosDocument, processedTokens);
+                    page.getObject().setKey(ASAtom.CONTENTS, createContentsIndirect(cosDocument, processedTokens));
+                    cosDocument.addChangedObject(page.getObject());
                 }
             } else {
                 COSObject streamsArray = COSArray.construct();
@@ -92,6 +92,7 @@ public class AutoTaggingProcessor {
                     streamsArray.add(streamIndirect);
                 }
                 page.getObject().setKey(ASAtom.CONTENTS, streamsArray);
+                cosDocument.addChangedObject(page.getObject());
             }
         }
     }
