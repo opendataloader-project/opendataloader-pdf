@@ -6,6 +6,7 @@ import org.opendataloader.pdf.api.FilterConfig;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.StreamInfo;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,6 +25,7 @@ class ContentSanitizerTest {
 
     TextChunk createTextChunk(String value, double left, double bottom, double right, double top) {
         TextChunk chunk = new TextChunk(new BoundingBox(left, bottom, right, top), value,10, 10);
+        chunk.getStreamInfos().add(new StreamInfo(0, null, 0, value.length()));
         chunk.adjustSymbolEndsToBoundingBox(null);
         return chunk;
     }
