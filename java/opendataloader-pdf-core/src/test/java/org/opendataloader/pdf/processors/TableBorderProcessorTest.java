@@ -28,7 +28,6 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
-
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.StreamInfo;
 
 import java.time.Duration;
@@ -72,6 +71,7 @@ public class TableBorderProcessorTest {
         tableBorder.calculateCoordinatesUsingBoundingBoxesOfRowsAndColumns();
         TextChunk textChunk = new TextChunk(new BoundingBox(0, 11.0, 21.0, 29.0, 29.0),
             "test", 10, 21.0);
+        // xObjectName is null because test TextChunks are not backed by a real PDF stream
         textChunk.getStreamInfos().add(new StreamInfo(0, null, 0, "test".length()));
         contents.add(textChunk);
         textChunk.adjustSymbolEndsToBoundingBox(null);
