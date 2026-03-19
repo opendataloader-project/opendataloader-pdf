@@ -82,6 +82,7 @@ public class Config {
     private String hybrid = HYBRID_OFF;
     private final HybridConfig hybridConfig = new HybridConfig();
     private boolean includeHeaderFooter = false;
+    private boolean detectStrikethrough = false;
 
     /** Table detection method: default (border-based detection). */
     public static final String TABLE_METHOD_DEFAULT = "default";
@@ -844,6 +845,14 @@ public class Config {
      */
     public void setIncludeHeaderFooter(boolean includeHeaderFooter) {
         this.includeHeaderFooter = includeHeaderFooter;
+    }
+
+    public boolean isDetectStrikethrough() {
+        return detectStrikethrough;
+    }
+
+    public void setDetectStrikethrough(boolean detectStrikethrough) {
+        this.detectStrikethrough = detectStrikethrough;
     }
 
 }

@@ -43,6 +43,8 @@ export interface ConvertOptions {
   pages?: string;
   /** Include page headers and footers in output */
   includeHeaderFooter?: boolean;
+  /** Detect strikethrough text and wrap with ~~ in Markdown output (experimental) */
+  detectStrikethrough?: boolean;
   /** Hybrid backend for AI processing. Values: off (default), docling-fast */
   hybrid?: string;
   /** Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend) */
@@ -78,6 +80,7 @@ export interface CliOptions {
   imageDir?: string;
   pages?: string;
   includeHeaderFooter?: boolean;
+  detectStrikethrough?: boolean;
   hybrid?: string;
   hybridMode?: string;
   hybridUrl?: string;
@@ -147,6 +150,9 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   }
   if (cliOptions.includeHeaderFooter) {
     convertOptions.includeHeaderFooter = true;
+  }
+  if (cliOptions.detectStrikethrough) {
+    convertOptions.detectStrikethrough = true;
   }
   if (cliOptions.hybrid) {
     convertOptions.hybrid = cliOptions.hybrid;
@@ -241,6 +247,9 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.includeHeaderFooter) {
     args.push('--include-header-footer');
+  }
+  if (options.detectStrikethrough) {
+    args.push('--detect-strikethrough');
   }
   if (options.hybrid) {
     args.push('--hybrid', options.hybrid);

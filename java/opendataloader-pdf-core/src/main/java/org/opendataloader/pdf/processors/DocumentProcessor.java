@@ -152,6 +152,9 @@ public class DocumentProcessor {
                 continue;
             }
             List<IObject> pageContents = TableBorderProcessor.processTableBorders(contents.get(pageNumber), pageNumber);
+            if (config.isDetectStrikethrough()) {
+                StrikethroughProcessor.processStrikethroughs(pageContents);
+            }
             pageContents = pageContents.stream().filter(x -> !(x instanceof LineChunk)).collect(Collectors.toList());
             pageContents = TextLineProcessor.processTextLines(pageContents);
             pageContents = SpecialTableProcessor.detectSpecialTables(pageContents);

@@ -181,6 +181,15 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "description": "Include page headers and footers in output",
     },
     {
+        "name": "detect-strikethrough",
+        "python_name": "detect_strikethrough",
+        "short_name": None,
+        "type": "boolean",
+        "required": False,
+        "default": False,
+        "description": "Detect strikethrough text and wrap with ~~ in Markdown output (experimental)",
+    },
+    {
         "name": "hybrid",
         "python_name": "hybrid",
         "short_name": None,
