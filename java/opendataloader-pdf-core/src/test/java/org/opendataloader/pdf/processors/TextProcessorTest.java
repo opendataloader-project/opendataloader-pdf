@@ -116,19 +116,11 @@ public class TextProcessorTest {
     }
 
     /**
-     * Regression test for issue #150: physically distant text chunks should not be merged.
-     *
-     * When PDF streams have text rendered in non-sequential order, textEnd/textStart values
-     * can be close even though the text chunks are physically far apart (different bounding
-     * box positions). mergeCloseTextChunks should verify physical proximity, not just
-     * textEnd/textStart closeness.
-     *
-     * KNOWN BUG: Currently areNeighborsTextChunks() only checks textEnd/textStart without
-     * physical position verification (commit 21b7d64 fix not merged to main).
-     * TODO: When fix is applied, flip assertion: expect size==2 with separate "4" and "6".
+     * Regression test for issue #150: text chunks with a large horizontal gap
+     * should remain separate.
      */
     @Test
-    public void testMergeCloseTextChunksPhysicallyDistantNotMerged() {
+    public void testMergeCloseTextChunksSeparatedByLargeGapNotMerged() {
         List<IObject> contents = new ArrayList<>();
         String fontName = "Arial";
 
@@ -138,16 +130,13 @@ public class TextProcessorTest {
         chunk1.adjustSymbolEndsToBoundingBox(null);
         chunk1.setFontName(fontName);
         chunk1.setFontWeight(400);
-        chunk1.setTextEnd(190.0);
 
-        // Second chunk: "6" at x=350, physically in a different table cell (far away)
-        // But textStart is set close to chunk1's textEnd (simulating non-sequential PDF rendering)
+        // Second chunk: "6" at x=350, physically in a different table cell
         TextChunk chunk2 = new TextChunk(new BoundingBox(0, 350.0, 100.0, 360.0, 110.0),
             "6", 10, 100.0);
         chunk2.adjustSymbolEndsToBoundingBox(null);
         chunk2.setFontName(fontName);
         chunk2.setFontWeight(400);
-        chunk2.setTextStart(190.5);
 
         contents.add(chunk1);
         contents.add(chunk2);
@@ -155,13 +144,10 @@ public class TextProcessorTest {
         TextProcessor.mergeCloseTextChunks(contents);
         contents = DocumentProcessor.removeNullObjectsFromList(contents);
 
-        // KNOWN BUG (#150): chunks are 160 units apart but get merged because only
-        // textEnd/textStart proximity is checked, not physical bounding box distance.
-        // Current (broken) behavior: merged into 1 chunk
-        // Correct behavior after fix: should remain as 2 separate chunks
-        Assertions.assertEquals(1, contents.size(),
-            "KNOWN BUG #150: distant chunks are incorrectly merged. "
-            + "When areNeighborsTextChunks physical check is added, flip to assertEquals(2)");
+        Assertions.assertEquals(2, contents.size(),
+            "Text chunks separated by a large gap should not be merged");
+        Assertions.assertEquals("4", ((TextChunk) contents.get(0)).getValue());
+        Assertions.assertEquals("6", ((TextChunk) contents.get(1)).getValue());
     }
 
     /**
