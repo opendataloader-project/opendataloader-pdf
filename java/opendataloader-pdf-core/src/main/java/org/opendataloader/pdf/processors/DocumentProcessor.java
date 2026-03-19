@@ -76,10 +76,10 @@ public class DocumentProcessor {
         calculateDocumentInfo();
         Set<Integer> pagesToProcess = getValidPageNumbers(config);
         List<List<IObject>> contents;
-        if (StaticLayoutContainers.isUseStructTree()) {
-            contents = TaggedDocumentProcessor.processDocument(inputPdfName, config, pagesToProcess);
-        } else if (config.isHybridEnabled()) {
+        if (shouldUseHybridProcessing(config)) {
             contents = HybridDocumentProcessor.processDocument(inputPdfName, config, pagesToProcess);
+        } else if (StaticLayoutContainers.isUseStructTree()) {
+            contents = TaggedDocumentProcessor.processDocument(inputPdfName, config, pagesToProcess);
         } else {
             contents = processDocument(inputPdfName, config, pagesToProcess);
         }
@@ -88,6 +88,18 @@ public class DocumentProcessor {
             config.getFilterConfig().isFilterSensitiveData());
         contentSanitizer.sanitizeContents(contents);
         generateOutputs(inputPdfName, contents, config);
+    }
+
+    /**
+     * Hybrid full mode must take precedence over struct-tree processing.
+     *
+     * <p>Backend-only enrichments such as formula reconstruction run only on the hybrid server.
+     * If we keep routing tagged PDFs through {@link TaggedDocumentProcessor}, hybrid full mode is
+     * silently ignored and the output matches Java-only extraction.
+     */
+    private static boolean shouldUseHybridProcessing(Config config) {
+        return config.isHybridEnabled()
+            && (!StaticLayoutContainers.isUseStructTree() || config.getHybridConfig().isFullMode());
     }
 
     /**
