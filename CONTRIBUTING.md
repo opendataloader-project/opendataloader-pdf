@@ -23,7 +23,7 @@ We appreciate various kinds of contributions, including but not limited to:
 If you have questions:
 
 1. Check the [README](./README.md) and
-   existing [issues](https://github.com/hancom-inc/opendataloader-pdf/issues) first.
+   existing [issues](https://github.com/opendataloader-project/opendataloader-pdf/issues) first.
 2. If your question hasn't been addressed, open a new issue using the `Question` label.
 
 ---
@@ -60,8 +60,8 @@ To suggest a new feature:
 2. **Clone** your fork:
 
    ```bash
-   git clone https://github.com/your-username/your-repo.git
-   cd your-repo
+   git clone https://github.com/your-username/opendataloader-pdf.git
+   cd opendataloader-pdf
    ```
 
 3. **Create a feature branch:**
@@ -92,7 +92,7 @@ To suggest a new feature:
    git push origin my-feature
    ```
 
-7. **Open a Pull Request** (PR) against the `develop` branch.
+7. **Open a Pull Request** (PR) against the `main` branch.
 8. Respond to review comments and update your PR as needed.
 
 ---
