@@ -62,6 +62,11 @@ public class XYCutPlusPlusSorter {
      *  Prevents splitting on insignificant gaps (e.g., 1-pixel gaps). */
     static final double MIN_GAP_THRESHOLD = 5.0;
 
+    /** Width ratio threshold for narrow outlier filtering.
+     *  Elements narrower than this fraction of the region width are considered
+     *  potential outliers that may bridge column gaps (e.g., page numbers, footnote markers). */
+    static final double NARROW_ELEMENT_WIDTH_RATIO = 0.1;
+
     private XYCutPlusPlusSorter() {
         // Utility class - prevent instantiation
     }
@@ -374,12 +379,14 @@ public class XYCutPlusPlusSorter {
 
         if (useHorizontalCut) {
             List<List<IObject>> groups = splitByHorizontalCut(objects, horizontalCut.position);
+            // Safety: if split produced only one group, fall back to prevent infinite recursion
             if (groups.size() <= 1) {
                 return sortByYThenX(objects);
             }
             return flatMapRecursive(groups, preferHorizontalFirst);
         } else {
             List<List<IObject>> groups = splitByVerticalCut(objects, verticalCut.position);
+            // Safety: if split produced only one group, fall back to prevent infinite recursion
             if (groups.size() <= 1) {
                 return sortByYThenX(objects);
             }
@@ -437,7 +444,7 @@ public class XYCutPlusPlusSorter {
             BoundingBox region = calculateBoundingRegion(objects);
             if (region != null) {
                 double regionWidth = region.getRightX() - region.getLeftX();
-                double narrowThreshold = regionWidth * 0.1;
+                double narrowThreshold = regionWidth * NARROW_ELEMENT_WIDTH_RATIO;
                 List<IObject> filtered = new ArrayList<>();
                 for (IObject obj : objects) {
                     BoundingBox bbox = obj.getBoundingBox();
@@ -459,7 +466,7 @@ public class XYCutPlusPlusSorter {
     }
 
     /**
-     * Find vertical cut by edge gaps (original algorithm).
+     * Find vertical cut by edge gaps.
      * Finds the largest gap between rightX of one element and leftX of the next.
      */
     private static CutInfo findVerticalCutByEdges(List<IObject> objects) {
