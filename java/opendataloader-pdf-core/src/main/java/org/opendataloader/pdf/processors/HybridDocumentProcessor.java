@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -356,6 +357,10 @@ public class HybridDocumentProcessor {
         // Determine required output formats based on config
         Set<OutputFormat> outputFormats = determineOutputFormats(config);
 
+        if (usesDoclingBackend(config)) {
+            return processDoclingBackendPath(client, pdfBytes, pageNumbers, config, backendFailedPages, outputFormats);
+        }
+
         // Make API request for all pages (avoids per-chunk overhead)
         HybridRequest request = HybridRequest.allPages(pdfBytes, outputFormats);
         HybridResponse response = client.convert(request);
@@ -401,6 +406,110 @@ public class HybridDocumentProcessor {
         // HybridClientFactory.shutdown() should be called at CLI exit.
 
         return results;
+    }
+
+    private static Map<Integer, List<IObject>> processDoclingBackendPath(
+            HybridClient client,
+            byte[] pdfBytes,
+            Set<Integer> pageNumbers,
+            Config config,
+            Set<Integer> backendFailedPages,
+            Set<OutputFormat> outputFormats) throws IOException {
+
+        Map<Integer, List<IObject>> results = new HashMap<>();
+        for (Set<Integer> contiguousPages : splitIntoContiguousRanges(pageNumbers)) {
+            Set<Integer> oneIndexedPages = toOneIndexedPages(contiguousPages);
+            HybridRequest request = HybridRequest.forPages(pdfBytes, oneIndexedPages, outputFormats);
+            HybridResponse response = client.convert(request);
+            results.putAll(extractBackendResults(response, contiguousPages, config, backendFailedPages));
+        }
+        return results;
+    }
+
+    private static Map<Integer, List<IObject>> extractBackendResults(
+            HybridResponse response,
+            Set<Integer> pageNumbers,
+            Config config,
+            Set<Integer> backendFailedPages) {
+
+        collectFailedPages(response, pageNumbers, backendFailedPages);
+
+        Map<Integer, Double> pageHeights = getPageHeights(pageNumbers);
+        HybridSchemaTransformer transformer = createTransformer(config);
+        List<List<IObject>> transformedContents = transformer.transform(response, pageHeights);
+
+        Map<Integer, List<IObject>> results = new HashMap<>();
+        for (int pageNumber : pageNumbers) {
+            if (backendFailedPages.contains(pageNumber)) {
+                continue;
+            }
+            if (pageNumber < transformedContents.size()) {
+                List<IObject> pageContents = transformedContents.get(pageNumber);
+                TextProcessor.replaceUndefinedCharacters(pageContents, config.getReplaceInvalidChars());
+                DocumentProcessor.setIDs(pageContents);
+                results.put(pageNumber, pageContents);
+            } else {
+                results.put(pageNumber, new ArrayList<>());
+            }
+        }
+
+        return results;
+    }
+
+    private static void collectFailedPages(
+            HybridResponse response,
+            Set<Integer> requestedPages,
+            Set<Integer> backendFailedPages) {
+
+        if (!response.hasFailedPages()) {
+            return;
+        }
+
+        for (int failedPage1Indexed : response.getFailedPages()) {
+            int failedPage0Indexed = failedPage1Indexed - 1;
+            if (requestedPages.contains(failedPage0Indexed)) {
+                backendFailedPages.add(failedPage0Indexed);
+            }
+        }
+    }
+
+    private static boolean usesDoclingBackend(Config config) {
+        return Config.HYBRID_DOCLING.equals(config.getHybrid())
+            || Config.HYBRID_DOCLING_FAST.equals(config.getHybrid());
+    }
+
+    private static Set<Integer> toOneIndexedPages(Set<Integer> zeroIndexedPages) {
+        Set<Integer> oneIndexedPages = new LinkedHashSet<>();
+        for (int pageNumber : zeroIndexedPages) {
+            oneIndexedPages.add(pageNumber + 1);
+        }
+        return oneIndexedPages;
+    }
+
+    private static List<Set<Integer>> splitIntoContiguousRanges(Set<Integer> pageNumbers) {
+        List<Integer> sortedPages = pageNumbers.stream().sorted().collect(Collectors.toList());
+        List<Set<Integer>> ranges = new ArrayList<>();
+        if (sortedPages.isEmpty()) {
+            return ranges;
+        }
+
+        Set<Integer> currentRange = new LinkedHashSet<>();
+        currentRange.add(sortedPages.get(0));
+
+        for (int i = 1; i < sortedPages.size(); i++) {
+            int previous = sortedPages.get(i - 1);
+            int current = sortedPages.get(i);
+            if (current == previous + 1) {
+                currentRange.add(current);
+            } else {
+                ranges.add(currentRange);
+                currentRange = new LinkedHashSet<>();
+                currentRange.add(current);
+            }
+        }
+
+        ranges.add(currentRange);
+        return ranges;
     }
 
     /**
