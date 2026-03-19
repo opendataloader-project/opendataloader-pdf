@@ -47,6 +47,7 @@ import logging
 import os
 import re
 import tempfile
+import threading
 import time
 import traceback
 from contextlib import asynccontextmanager
@@ -65,6 +66,7 @@ MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB max file size
 
 # Global converter instance (initialized on startup with CLI options)
 converter = None
+_CONVERSION_LOCK = threading.Lock()
 
 # Regex matching lone surrogates (U+D800..U+DFFF) and null characters
 _INVALID_UNICODE_RE = re.compile(r"[\ud800-\udfff\x00]")
@@ -161,6 +163,23 @@ def sanitize_unicode(data: Any) -> Any:
     if isinstance(data, list):
         return [sanitize_unicode(item) for item in data]
     return data
+
+
+def convert_document(
+    input_path: str, requested_pages: tuple[int, int] | None
+):
+    """Run a single Docling conversion while keeping converter access serialized.
+
+    The FastAPI endpoint offloads this work to a worker thread so health checks stay
+    responsive during long-running conversions. Access to the singleton converter
+    remains serialized because Docling's DocumentConverter is reused across requests.
+    """
+    global converter
+
+    with _CONVERSION_LOCK:
+        if requested_pages:
+            return converter.convert(input_path, page_range=requested_pages)
+        return converter.convert(input_path)
 
 
 def _check_dependencies():
@@ -270,6 +289,7 @@ def create_app(
     """
     from fastapi import FastAPI, File, Form, UploadFile
     from fastapi.responses import JSONResponse
+    from starlette.concurrency import run_in_threadpool
 
     @asynccontextmanager
     async def lifespan(_app: FastAPI):
@@ -367,10 +387,7 @@ def create_app(
 
         try:
             start = time.perf_counter()
-            if page_range_tuple:
-                result = converter.convert(tmp_path, page_range=page_range_tuple)
-            else:
-                result = converter.convert(tmp_path)
+            result = await run_in_threadpool(convert_document, tmp_path, page_range_tuple)
             processing_time = time.perf_counter() - start
 
             # Export to JSON (DoclingDocument format)
