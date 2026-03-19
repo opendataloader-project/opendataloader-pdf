@@ -75,6 +75,7 @@ public class DocumentProcessor {
         } else {
             contents = processDocument(inputPdfName, config, pagesToProcess);
         }
+        PdfBoxTextFallbackProcessor.backfillIfDocumentEmpty(inputPdfName, contents, pagesToProcess);
         sortContents(contents, config);
         ContentSanitizer contentSanitizer = new ContentSanitizer(config.getFilterConfig().getFilterRules(),
             config.getFilterConfig().isFilterSensitiveData());
