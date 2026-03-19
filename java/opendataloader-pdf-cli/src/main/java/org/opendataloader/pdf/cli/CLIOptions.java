@@ -65,6 +65,10 @@ public class CLIOptions {
     private static final String TABLE_METHOD_LONG_OPTION = "table-method";
     private static final String TABLE_METHOD_DESC = "Table detection method. Values: default (border-based), cluster (border + cluster). Default: default";
 
+    // ===== Markdown Table Output =====
+    private static final String MARKDOWN_TABLE_OUTPUT_LONG_OPTION = "markdown-table-output";
+    private static final String MARKDOWN_TABLE_OUTPUT_DESC = "Markdown table output mode. Values: full, caption_only, off. Default: full";
+
     // ===== Reading Order =====
     private static final String READING_ORDER_LONG_OPTION = "reading-order";
     private static final String READING_ORDER_DESC = "Reading order algorithm. Values: off, xycut. Default: xycut";
@@ -145,6 +149,8 @@ public class CLIOptions {
                     true),
             new OptionDefinition(USE_STRUCT_TREE_LONG_OPTION, null, "boolean", false, USE_STRUCT_TREE_DESC, true),
             new OptionDefinition(TABLE_METHOD_LONG_OPTION, null, "string", "default", TABLE_METHOD_DESC, true),
+            new OptionDefinition(MARKDOWN_TABLE_OUTPUT_LONG_OPTION, null, "string", "full", MARKDOWN_TABLE_OUTPUT_DESC,
+                    true),
             new OptionDefinition(READING_ORDER_LONG_OPTION, null, "string", "xycut", READING_ORDER_DESC, true),
             new OptionDefinition(MARKDOWN_PAGE_SEPARATOR_LONG_OPTION, null, "string", null,
                     MARKDOWN_PAGE_SEPARATOR_DESC, true),
@@ -239,6 +245,7 @@ public class CLIOptions {
         applyContentSafetyOption(config, commandLine);
         applyFormatOption(config, commandLine);
         applyTableMethodOption(config, commandLine);
+        applyMarkdownTableOutputOption(config, commandLine);
         applyImageOptions(config, commandLine);
         applyPagesOption(config, commandLine);
         applyHybridOptions(config, commandLine);
@@ -300,6 +307,24 @@ public class CLIOptions {
                                 method, Config.getTableMethodOptions(", ")));
             }
             config.setTableMethod(method);
+        }
+    }
+
+    private static void applyMarkdownTableOutputOption(Config config, CommandLine commandLine) {
+        if (commandLine.hasOption(MARKDOWN_TABLE_OUTPUT_LONG_OPTION)) {
+            String modeValue = commandLine.getOptionValue(MARKDOWN_TABLE_OUTPUT_LONG_OPTION);
+            if (modeValue == null || modeValue.trim().isEmpty()) {
+                throw new IllegalArgumentException(
+                        String.format("Option --markdown-table-output requires a value. Supported values: %s",
+                                Config.getMarkdownTableOutputOptions(", ")));
+            }
+            String mode = modeValue.trim().toLowerCase(Locale.ROOT);
+            if (!Config.isValidMarkdownTableOutput(mode)) {
+                throw new IllegalArgumentException(
+                        String.format("Unsupported markdown table output '%s'. Supported values: %s",
+                                mode, Config.getMarkdownTableOutputOptions(", ")));
+            }
+            config.setMarkdownTableOutput(mode);
         }
     }
 

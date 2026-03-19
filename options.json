@@ -73,6 +73,14 @@
       "description": "Table detection method. Values: default (border-based), cluster (border + cluster). Default: default"
     },
     {
+      "name": "markdown-table-output",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": "full",
+      "description": "Markdown table output mode. Values: full, caption_only, off. Default: full"
+    },
+    {
       "name": "reading-order",
       "shortName": null,
       "type": "string",

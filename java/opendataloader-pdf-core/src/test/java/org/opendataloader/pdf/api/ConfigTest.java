@@ -26,7 +26,62 @@ class ConfigTest {
         assertFalse(config.isImageOutputOff());
         assertEquals(Config.IMAGE_OUTPUT_EXTERNAL, config.getImageOutput());
         assertEquals(Config.IMAGE_FORMAT_PNG, config.getImageFormat());
+        assertEquals(Config.MARKDOWN_TABLE_OUTPUT_FULL, config.getMarkdownTableOutput());
         assertEquals(Config.READING_ORDER_XYCUT, config.getReadingOrder());
+    }
+
+    @Test
+    void testSetMarkdownTableOutput() {
+        Config config = new Config();
+
+        config.setMarkdownTableOutput(Config.MARKDOWN_TABLE_OUTPUT_CAPTION_ONLY);
+        assertEquals(Config.MARKDOWN_TABLE_OUTPUT_CAPTION_ONLY, config.getMarkdownTableOutput());
+        assertTrue(config.isMarkdownTableCaptionOnly());
+        assertFalse(config.isMarkdownTableOutputOff());
+
+        config.setMarkdownTableOutput(Config.MARKDOWN_TABLE_OUTPUT_OFF);
+        assertEquals(Config.MARKDOWN_TABLE_OUTPUT_OFF, config.getMarkdownTableOutput());
+        assertFalse(config.isMarkdownTableCaptionOnly());
+        assertTrue(config.isMarkdownTableOutputOff());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"full", "FULL", "caption_only", "CAPTION_ONLY", "off", "OFF"})
+    void testIsValidMarkdownTableOutput_withValidModes(String mode) {
+        assertTrue(Config.isValidMarkdownTableOutput(mode));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"caption-only", "none", "invalid", ""})
+    void testIsValidMarkdownTableOutput_withInvalidModes(String mode) {
+        assertFalse(Config.isValidMarkdownTableOutput(mode));
+    }
+
+    @Test
+    void testSetMarkdownTableOutputNormalizesToLowercase() {
+        Config config = new Config();
+
+        config.setMarkdownTableOutput("CAPTION_ONLY");
+        assertEquals(Config.MARKDOWN_TABLE_OUTPUT_CAPTION_ONLY, config.getMarkdownTableOutput());
+    }
+
+    @Test
+    void testSetMarkdownTableOutputWithNullDefaultsToFull() {
+        Config config = new Config();
+
+        config.setMarkdownTableOutput(null);
+        assertEquals(Config.MARKDOWN_TABLE_OUTPUT_FULL, config.getMarkdownTableOutput());
+    }
+
+    @Test
+    void testSetMarkdownTableOutputThrowsExceptionForInvalidMode() {
+        Config config = new Config();
+
+        IllegalArgumentException exception = assertThrows(
+            IllegalArgumentException.class,
+            () -> config.setMarkdownTableOutput("caption-only")
+        );
+        assertTrue(exception.getMessage().contains("Unsupported markdown table output"));
     }
 
     @Test

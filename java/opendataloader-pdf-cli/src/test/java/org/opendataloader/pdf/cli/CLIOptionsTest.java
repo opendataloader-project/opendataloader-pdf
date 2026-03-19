@@ -55,6 +55,11 @@ class CLIOptionsTest {
     }
 
     @Test
+    void testDefineOptions_containsMarkdownTableOutputOption() {
+        assertTrue(options.hasOption("markdown-table-output"));
+    }
+
+    @Test
     void testCreateConfig_withImageOutputEmbedded() throws ParseException {
         String[] args = {"--image-output", "embedded", testPdf.getAbsolutePath()};
         CommandLine cmd = parser.parse(options, args);
@@ -224,6 +229,46 @@ class CLIOptionsTest {
         Config config = CLIOptions.createConfigFromCommandLine(cmd);
 
         assertEquals(Config.READING_ORDER_OFF, config.getReadingOrder());
+    }
+
+    @Test
+    void testCreateConfig_defaultMarkdownTableOutput() throws ParseException {
+        String[] args = {testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertEquals(Config.MARKDOWN_TABLE_OUTPUT_FULL, config.getMarkdownTableOutput());
+    }
+
+    @Test
+    void testCreateConfig_withMarkdownTableOutputCaptionOnly() throws ParseException {
+        String[] args = {"--markdown-table-output", "caption_only", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertEquals(Config.MARKDOWN_TABLE_OUTPUT_CAPTION_ONLY, config.getMarkdownTableOutput());
+        assertTrue(config.isMarkdownTableCaptionOnly());
+    }
+
+    @Test
+    void testCreateConfig_withMarkdownTableOutputOff() throws ParseException {
+        String[] args = {"--markdown-table-output", "off", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertEquals(Config.MARKDOWN_TABLE_OUTPUT_OFF, config.getMarkdownTableOutput());
+        assertTrue(config.isMarkdownTableOutputOff());
+    }
+
+    @Test
+    void testCreateConfig_withInvalidMarkdownTableOutput() throws ParseException {
+        String[] args = {"--markdown-table-output", "caption-only", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        assertThrows(IllegalArgumentException.class, () -> CLIOptions.createConfigFromCommandLine(cmd));
     }
 
     // ===== Pages Option Tests =====

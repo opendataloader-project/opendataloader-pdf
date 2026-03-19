@@ -23,6 +23,8 @@ export interface ConvertOptions {
   useStructTree?: boolean;
   /** Table detection method. Values: default (border-based), cluster (border + cluster). Default: default */
   tableMethod?: string;
+  /** Markdown table output mode. Values: full, caption_only, off. Default: full */
+  markdownTableOutput?: string;
   /** Reading order algorithm. Values: off, xycut. Default: xycut */
   readingOrder?: string;
   /** Separator between pages in Markdown output. Use %page-number% for page numbers. Default: none */
@@ -66,6 +68,7 @@ export interface CliOptions {
   replaceInvalidChars?: string;
   useStructTree?: boolean;
   tableMethod?: string;
+  markdownTableOutput?: string;
   readingOrder?: string;
   markdownPageSeparator?: string;
   textPageSeparator?: string;
@@ -114,6 +117,9 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   }
   if (cliOptions.tableMethod) {
     convertOptions.tableMethod = cliOptions.tableMethod;
+  }
+  if (cliOptions.markdownTableOutput) {
+    convertOptions.markdownTableOutput = cliOptions.markdownTableOutput;
   }
   if (cliOptions.readingOrder) {
     convertOptions.readingOrder = cliOptions.readingOrder;
@@ -205,6 +211,9 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.tableMethod) {
     args.push('--table-method', options.tableMethod);
+  }
+  if (options.markdownTableOutput) {
+    args.push('--markdown-table-output', options.markdownTableOutput);
   }
   if (options.readingOrder) {
     args.push('--reading-order', options.readingOrder);

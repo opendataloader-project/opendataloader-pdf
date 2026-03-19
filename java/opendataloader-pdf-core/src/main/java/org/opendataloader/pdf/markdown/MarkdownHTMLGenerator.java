@@ -25,6 +25,9 @@ public class MarkdownHTMLGenerator extends MarkdownGenerator {
 
     @Override
     protected void writeTable(TableBorder table) throws IOException {
+        if (!shouldWriteTableBody()) {
+            return;
+        }
         enterTable();
         markdownWriter.write(MarkdownSyntax.HTML_TABLE_TAG);
         markdownWriter.write(MarkdownSyntax.LINE_BREAK);

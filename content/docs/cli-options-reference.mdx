@@ -22,6 +22,7 @@ This page documents all available CLI options for opendataloader-pdf.
 | `--replace-invalid-chars`   | -     | `string`  | `" "`        | Replacement character for invalid/unrecognized characters. Default: space                                                          |
 | `--use-struct-tree`         | -     | `boolean` | `false`      | Use PDF structure tree (tagged PDF) for reading order and semantic structure                                                       |
 | `--table-method`            | -     | `string`  | `"default"`  | Table detection method. Values: default (border-based), cluster (border + cluster). Default: default                               |
+| `--markdown-table-output`   | -     | `string`  | `"full"`     | Markdown table output mode. Values: full, caption\_only, off. Default: full                                                        |
 | `--reading-order`           | -     | `string`  | `"xycut"`    | Reading order algorithm. Values: off, xycut. Default: xycut                                                                        |
 | `--markdown-page-separator` | -     | `string`  | -            | Separator between pages in Markdown output. Use %page-number% for page numbers. Default: none                                      |
 | `--text-page-separator`     | -     | `string`  | -            | Separator between pages in text output. Use %page-number% for page numbers. Default: none                                          |

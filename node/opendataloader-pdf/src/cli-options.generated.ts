@@ -16,6 +16,7 @@ export function registerCliOptions(program: Command): void {
   program.option('--replace-invalid-chars <value>', 'Replacement character for invalid/unrecognized characters. Default: space');
   program.option('--use-struct-tree', 'Use PDF structure tree (tagged PDF) for reading order and semantic structure');
   program.option('--table-method <value>', 'Table detection method. Values: default (border-based), cluster (border + cluster). Default: default');
+  program.option('--markdown-table-output <value>', 'Markdown table output mode. Values: full, caption_only, off. Default: full');
   program.option('--reading-order <value>', 'Reading order algorithm. Values: off, xycut. Default: xycut');
   program.option('--markdown-page-separator <value>', 'Separator between pages in Markdown output. Use %page-number% for page numbers. Default: none');
   program.option('--text-page-separator <value>', 'Separator between pages in text output. Use %page-number% for page numbers. Default: none');

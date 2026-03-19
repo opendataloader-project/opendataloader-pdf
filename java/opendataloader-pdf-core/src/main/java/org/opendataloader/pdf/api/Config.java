@@ -61,6 +61,7 @@ public class Config {
     private String replaceInvalidChars = " ";
     private String outputFolder;
     private String tableMethod = TABLE_METHOD_DEFAULT;
+    private String markdownTableOutput = MARKDOWN_TABLE_OUTPUT_FULL;
     private String readingOrder = READING_ORDER_XYCUT;
     private String markdownPageSeparator = "";
     private String textPageSeparator = "";
@@ -81,6 +82,14 @@ public class Config {
     public static final String TABLE_METHOD_CLUSTER = "cluster";
     private static Set<String> tableMethodOptions = new HashSet<>();
 
+    /** Markdown table output: include full table body. */
+    public static final String MARKDOWN_TABLE_OUTPUT_FULL = "full";
+    /** Markdown table output: omit table body but keep captions. */
+    public static final String MARKDOWN_TABLE_OUTPUT_CAPTION_ONLY = "caption_only";
+    /** Markdown table output: omit tables from markdown output. */
+    public static final String MARKDOWN_TABLE_OUTPUT_OFF = "off";
+    private static Set<String> markdownTableOutputOptions = new HashSet<>();
+
     /** Image format: PNG. */
     public static final String IMAGE_FORMAT_PNG = "png";
     /** Image format: JPEG. */
@@ -100,6 +109,9 @@ public class Config {
         readingOrderOptions.add(READING_ORDER_XYCUT);
         tableMethodOptions.add(TABLE_METHOD_DEFAULT);
         tableMethodOptions.add(TABLE_METHOD_CLUSTER);
+        markdownTableOutputOptions.add(MARKDOWN_TABLE_OUTPUT_FULL);
+        markdownTableOutputOptions.add(MARKDOWN_TABLE_OUTPUT_CAPTION_ONLY);
+        markdownTableOutputOptions.add(MARKDOWN_TABLE_OUTPUT_OFF);
         imageFormatOptions.add(IMAGE_FORMAT_PNG);
         imageFormatOptions.add(IMAGE_FORMAT_JPEG);
         imageOutputOptions.add(IMAGE_OUTPUT_OFF);
@@ -402,6 +414,70 @@ public class Config {
      */
     public static boolean isValidTableMethod(String method) {
         return method != null && tableMethodOptions.contains(method.toLowerCase(Locale.ROOT));
+    }
+
+    /**
+     * Gets the markdown table output mode.
+     *
+     * @return The markdown table output mode (full, caption_only, or off).
+     */
+    public String getMarkdownTableOutput() {
+        return markdownTableOutput;
+    }
+
+    /**
+     * Sets how tables should be emitted in markdown output.
+     *
+     * @param markdownTableOutput The markdown table output mode.
+     * @throws IllegalArgumentException if the mode is not supported.
+     */
+    public void setMarkdownTableOutput(String markdownTableOutput) {
+        if (markdownTableOutput != null && !isValidMarkdownTableOutput(markdownTableOutput)) {
+            throw new IllegalArgumentException(
+                String.format("Unsupported markdown table output '%s'. Supported values: %s",
+                    markdownTableOutput, getMarkdownTableOutputOptions(", ")));
+        }
+        this.markdownTableOutput = markdownTableOutput != null
+            ? markdownTableOutput.toLowerCase(Locale.ROOT)
+            : MARKDOWN_TABLE_OUTPUT_FULL;
+    }
+
+    /**
+     * Gets the supported markdown table output modes.
+     *
+     * @param delimiter the delimiter to use between options
+     * @return the string with modes separated by the delimiter
+     */
+    public static String getMarkdownTableOutputOptions(CharSequence delimiter) {
+        return String.join(delimiter, markdownTableOutputOptions);
+    }
+
+    /**
+     * Checks if the given markdown table output mode is valid.
+     *
+     * @param mode The mode to check.
+     * @return true if the mode is valid, false otherwise.
+     */
+    public static boolean isValidMarkdownTableOutput(String mode) {
+        return mode != null && markdownTableOutputOptions.contains(mode.toLowerCase(Locale.ROOT));
+    }
+
+    /**
+     * Checks if markdown table bodies should be omitted while preserving captions.
+     *
+     * @return true when markdown should keep captions only.
+     */
+    public boolean isMarkdownTableCaptionOnly() {
+        return MARKDOWN_TABLE_OUTPUT_CAPTION_ONLY.equals(markdownTableOutput);
+    }
+
+    /**
+     * Checks if markdown tables should be omitted completely.
+     *
+     * @return true when markdown should omit tables.
+     */
+    public boolean isMarkdownTableOutputOff() {
+        return MARKDOWN_TABLE_OUTPUT_OFF.equals(markdownTableOutput);
     }
 
     /**

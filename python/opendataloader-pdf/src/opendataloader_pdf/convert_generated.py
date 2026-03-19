@@ -20,6 +20,7 @@ def convert(
     replace_invalid_chars: Optional[str] = None,
     use_struct_tree: bool = False,
     table_method: Optional[str] = None,
+    markdown_table_output: Optional[str] = None,
     reading_order: Optional[str] = None,
     markdown_page_separator: Optional[str] = None,
     text_page_separator: Optional[str] = None,
@@ -49,6 +50,7 @@ def convert(
         replace_invalid_chars: Replacement character for invalid/unrecognized characters. Default: space
         use_struct_tree: Use PDF structure tree (tagged PDF) for reading order and semantic structure
         table_method: Table detection method. Values: default (border-based), cluster (border + cluster). Default: default
+        markdown_table_output: Markdown table output mode. Values: full, caption_only, off. Default: full
         reading_order: Reading order algorithm. Values: off, xycut. Default: xycut
         markdown_page_separator: Separator between pages in Markdown output. Use %page-number% for page numbers. Default: none
         text_page_separator: Separator between pages in text output. Use %page-number% for page numbers. Default: none
@@ -98,6 +100,8 @@ def convert(
         args.append("--use-struct-tree")
     if table_method:
         args.extend(["--table-method", table_method])
+    if markdown_table_output:
+        args.extend(["--markdown-table-output", markdown_table_output])
     if reading_order:
         args.extend(["--reading-order", reading_order])
     if markdown_page_separator:

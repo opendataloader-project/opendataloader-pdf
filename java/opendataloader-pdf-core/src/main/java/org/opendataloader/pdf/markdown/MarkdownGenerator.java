@@ -31,9 +31,12 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 public class MarkdownGenerator implements Closeable {
 
@@ -46,6 +49,30 @@ public class MarkdownGenerator implements Closeable {
     protected boolean embedImages = false;
     protected String imageFormat = Config.IMAGE_FORMAT_PNG;
     protected boolean includeHeaderFooter = false;
+    protected String markdownTableOutput = Config.MARKDOWN_TABLE_OUTPUT_FULL;
+    private static final Pattern TABLE_CAPTION_PATTERN = Pattern.compile("^table\\s+\\d+\\s+\\|", Pattern.CASE_INSENSITIVE);
+    private static final Pattern PIPE_ROW_PATTERN = Pattern.compile("^\\|.*\\|\\s*$");
+    private static final Pattern NUMERIC_ONLY_PATTERN = Pattern.compile("^\\d+$");
+    private static final Pattern TABLE_HEADER_TEXT_PATTERN = Pattern.compile(
+        "^(benchmark \\(metric\\)|model|architecture|# activated params|# total params|english|code|math|chinese)$",
+        Pattern.CASE_INSENSITIVE
+    );
+    private static final Pattern TABLE_HEADER_PREFIX_PATTERN = Pattern.compile(
+        "^(architecture\\b|#\\s*activated params|#\\s*total params)",
+        Pattern.CASE_INSENSITIVE
+    );
+    private static final Pattern PASS_COLUMN_PATTERN = Pattern.compile(
+        "^(pass@1|cons@\\d+|rating)(?:\\s+(pass@1|cons@\\d+|rating))+\\s*$",
+        Pattern.CASE_INSENSITIVE
+    );
+    private static final Pattern BENCHMARK_PATTERN = Pattern.compile(
+        "(AIME 2024|MATH-500|CNMO 2024|GPQA(?: Diamond)?|LiveCodeBench|Codeforces|SWE Verified|Aider-Polyglot|MMLU(?:-Redux|-Pro)?|DROP|IF-Eval|SimpleQA|FRAMES|AlpacaEval2\\.0|ArenaHard|CLUEWSC|C-Eval|C-SimpleQA)",
+        Pattern.CASE_INSENSITIVE
+    );
+    private static final Pattern MODEL_NAME_PATTERN = Pattern.compile(
+        "^(?:[A-Za-z]+-\\d[\\w.-]*|\\d{3,4}|[A-Z]\\d(?:[\\w.-]+)?|o1-\\d+|R1|V\\d|QwQ-\\d+[A-Za-z-]*|GPT-\\d\\w*|Claude(?:-\\w+)?|Sonnet-\\d+)$"
+    );
+    private static final Pattern MODELISH_LINE_PATTERN = Pattern.compile("(?:DeepSeek|OpenAI|Claude|QwQ|GPT-4o)");
 
     MarkdownGenerator(File inputPdf, Config config) throws IOException {
         String cutPdfFileName = inputPdf.getName();
@@ -56,13 +83,20 @@ public class MarkdownGenerator implements Closeable {
         this.embedImages = config.isEmbedImages();
         this.imageFormat = config.getImageFormat();
         this.includeHeaderFooter = config.isIncludeHeaderFooter();
+        this.markdownTableOutput = config.getMarkdownTableOutput();
     }
 
     public void writeToMarkdown(List<List<IObject>> contents) {
         try {
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 writePageSeparator(pageNumber);
-                for (IObject content : contents.get(pageNumber)) {
+                List<IObject> pageContents = contents.get(pageNumber);
+                Set<Integer> skipIndices = collectTableArtifactIndices(pageContents);
+                for (int contentIndex = 0; contentIndex < pageContents.size(); contentIndex++) {
+                    if (skipIndices.contains(contentIndex)) {
+                        continue;
+                    }
+                    IObject content = pageContents.get(contentIndex);
                     if (!isSupportedContent(content)) {
                         continue;
                     }
@@ -248,6 +282,9 @@ public class MarkdownGenerator implements Closeable {
     }
 
     protected void writeTable(TableBorder table) throws IOException {
+        if (!shouldWriteTableBody()) {
+            return;
+        }
         enterTable();
         for (TableBorderRow row : table.getRows()) {
             markdownWriter.write(MarkdownSyntax.TABLE_COLUMN_SEPARATOR);
@@ -317,6 +354,157 @@ public class MarkdownGenerator implements Closeable {
 
     protected boolean isInsideTable() {
         return tableNesting > 0;
+    }
+
+    protected boolean shouldWriteTableBody() {
+        return Config.MARKDOWN_TABLE_OUTPUT_FULL.equals(markdownTableOutput);
+    }
+
+    protected Set<Integer> collectTableArtifactIndices(List<IObject> pageContents) {
+        Set<Integer> skip = new HashSet<>();
+        if (Config.MARKDOWN_TABLE_OUTPUT_FULL.equals(markdownTableOutput)) {
+            return skip;
+        }
+
+        for (int index = 0; index < pageContents.size(); index++) {
+            IObject content = pageContents.get(index);
+            String text = normalizeContentText(content);
+
+            if (isTableOutputOff() && isTableCaptionText(text)) {
+                skip.add(index);
+                walkTableArtifactRange(pageContents, skip, index, -1);
+                walkTableArtifactRange(pageContents, skip, index, 1);
+                continue;
+            }
+
+            if (!isTableCaptionText(text)) {
+                continue;
+            }
+            walkTableArtifactRange(pageContents, skip, index, -1);
+            walkTableArtifactRange(pageContents, skip, index, 1);
+        }
+
+        return skip;
+    }
+
+    protected void walkTableArtifactRange(List<IObject> pageContents, Set<Integer> skip, int startIndex, int direction) {
+        int index = startIndex + direction;
+        while (index >= 0 && index < pageContents.size()) {
+            IObject content = pageContents.get(index);
+            String text = normalizeContentText(content);
+
+            if (isHeadingContent(content) || isTableCaptionText(text)) {
+                break;
+            }
+            if (content instanceof TableBorder) {
+                skip.add(index);
+                index += direction;
+                continue;
+            }
+            if (text.isEmpty()) {
+                index += direction;
+                continue;
+            }
+            if (looksTableArtifactText(text)) {
+                skip.add(index);
+                index += direction;
+                continue;
+            }
+            if (looksNarrativeText(text)) {
+                break;
+            }
+            break;
+        }
+    }
+
+    protected boolean isHeadingContent(IObject content) {
+        return content instanceof SemanticHeading;
+    }
+
+    protected boolean isTableOutputOff() {
+        return Config.MARKDOWN_TABLE_OUTPUT_OFF.equals(markdownTableOutput);
+    }
+
+    protected String normalizeContentText(IObject content) {
+        if (!(content instanceof SemanticTextNode)) {
+            return "";
+        }
+        String value = ((SemanticTextNode) content).getValue();
+        if (value == null) {
+            return "";
+        }
+        return value.replaceAll("\\s+", " ").trim();
+    }
+
+    protected boolean isTableCaptionText(String text) {
+        return TABLE_CAPTION_PATTERN.matcher(text).find();
+    }
+
+    protected boolean looksNarrativeText(String text) {
+        if (text.isEmpty()) {
+            return false;
+        }
+        if (text.matches(".*[.?!][)\"'\\]]?(?:\\s|$).*")) {
+            return true;
+        }
+        int lowerWordCount = 0;
+        for (String token : text.split("\\s+")) {
+            if (token.matches("[a-z]{3,}")) {
+                lowerWordCount++;
+            }
+        }
+        return lowerWordCount >= 6;
+    }
+
+    protected boolean looksTableArtifactText(String text) {
+        if (text.isEmpty() || isTableCaptionText(text)) {
+            return false;
+        }
+        if (PIPE_ROW_PATTERN.matcher(text).matches()) {
+            return true;
+        }
+        if (NUMERIC_ONLY_PATTERN.matcher(text).matches()) {
+            return true;
+        }
+        if (TABLE_HEADER_TEXT_PATTERN.matcher(text).matches()) {
+            return true;
+        }
+        if (TABLE_HEADER_PREFIX_PATTERN.matcher(text).find()) {
+            return true;
+        }
+        if (PASS_COLUMN_PATTERN.matcher(text).matches()) {
+            return true;
+        }
+        int benchmarkMatches = 0;
+        java.util.regex.Matcher matcher = BENCHMARK_PATTERN.matcher(text);
+        while (matcher.find()) {
+            benchmarkMatches++;
+        }
+        if (benchmarkMatches >= 2) {
+            return true;
+        }
+        if (text.matches("(?:.*\\b\\d+(?:\\.\\d+)?\\b.*){4,}") && !looksNarrativeText(text)) {
+            return true;
+        }
+        if (benchmarkMatches >= 1 && !looksNarrativeText(text)) {
+            return true;
+        }
+        if (!looksNarrativeText(text) && MODELISH_LINE_PATTERN.matcher(text).find() && text.matches(".*\\b\\d.*")) {
+            return true;
+        }
+        if (!looksNarrativeText(text)) {
+            String[] tokens = text.split("\\s+");
+            int modelishTokenCount = 0;
+            for (String token : tokens) {
+                if (MODEL_NAME_PATTERN.matcher(token).matches()) {
+                    modelishTokenCount++;
+                }
+            }
+            if (tokens.length >= 4 && modelishTokenCount >= Math.max(3, (int) Math.floor(tokens.length * 0.6))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     protected String getLineBreak() {

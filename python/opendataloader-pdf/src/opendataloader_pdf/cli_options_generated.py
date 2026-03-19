@@ -91,6 +91,15 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "description": "Table detection method. Values: default (border-based), cluster (border + cluster). Default: default",
     },
     {
+        "name": "markdown-table-output",
+        "python_name": "markdown_table_output",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": "full",
+        "description": "Markdown table output mode. Values: full, caption_only, off. Default: full",
+    },
+    {
         "name": "reading-order",
         "python_name": "reading_order",
         "short_name": None,
