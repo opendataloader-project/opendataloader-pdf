@@ -21,6 +21,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.hybrid.HybridClientFactory;
 import org.opendataloader.pdf.processors.DocumentProcessor;
 
 import java.io.File;
@@ -30,6 +31,7 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -54,6 +56,7 @@ class PagesOptionIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        HybridClientFactory.shutdown();
         samplePdf = new File(SAMPLE_PDF);
         assumeTrue(samplePdf.exists(), "Sample PDF not found at " + samplePdf.getAbsolutePath());
     }
@@ -219,6 +222,29 @@ class PagesOptionIntegrationTest {
         Set<Integer> pagesInOutput = getPageNumbersFromKids(root);
 
         assertTrue(pagesInOutput.isEmpty(), "No pages should have content when all requested pages don't exist");
+    }
+
+    @Test
+    void testPagesOptionAllPagesExceedDocumentInHybridMode() throws IOException {
+        Config config = new Config();
+        config.setOutputFolder(tempDir.toString());
+        config.setGenerateJSON(true);
+        config.setImageOutput(Config.IMAGE_OUTPUT_OFF);
+        config.setHybrid(Config.HYBRID_DOCLING_FAST);
+        config.getHybridConfig().setUrl("http://127.0.0.1:1");
+        config.setPages("100,200"); // All pages don't exist
+
+        assertDoesNotThrow(() -> DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config),
+            "Hybrid mode should not require backend availability when no valid pages remain");
+
+        Path jsonOutput = tempDir.resolve(OUTPUT_BASENAME + JSON_EXT);
+        assertTrue(Files.exists(jsonOutput), JSON_OUTPUT_EXISTS_MSG);
+
+        JsonNode root = parseJson(jsonOutput);
+        Set<Integer> pagesInOutput = getPageNumbersFromKids(root);
+
+        assertTrue(pagesInOutput.isEmpty(),
+            "No pages should have content when all requested pages don't exist, even in hybrid mode");
     }
 
     // ===== Tagged PDF Tests (using struct-tree) =====
