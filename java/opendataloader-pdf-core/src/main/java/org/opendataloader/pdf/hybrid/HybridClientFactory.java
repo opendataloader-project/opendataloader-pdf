@@ -54,7 +54,7 @@ public class HybridClientFactory {
     /** Backend type constant for Google (not yet implemented). */
     public static final String BACKEND_GOOGLE = "google";
 
-    /** Cache of created clients, keyed by backend type. */
+    /** Cache of created clients, keyed by backend type and client-affecting config. */
     private static final Map<String, HybridClient> CLIENT_CACHE = new ConcurrentHashMap<>();
 
     private HybridClientFactory() {
@@ -79,8 +79,21 @@ public class HybridClientFactory {
         }
 
         String lowerHybrid = hybrid.toLowerCase();
+        String cacheKey = buildCacheKey(lowerHybrid, config);
 
-        return CLIENT_CACHE.computeIfAbsent(lowerHybrid, key -> createClient(key, config));
+        return CLIENT_CACHE.computeIfAbsent(cacheKey, key -> createClient(lowerHybrid, config));
+    }
+
+    private static String buildCacheKey(String hybrid, HybridConfig config) {
+        String effectiveUrl = config != null ? config.getEffectiveUrl(hybrid) : null;
+        return hybrid + "|" + normalizeUrl(effectiveUrl) + "|" + (config != null ? config.getTimeoutMs() : 0);
+    }
+
+    private static String normalizeUrl(String url) {
+        if (url != null && url.endsWith("/")) {
+            return url.substring(0, url.length() - 1);
+        }
+        return url;
     }
 
     /**

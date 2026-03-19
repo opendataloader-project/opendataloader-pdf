@@ -15,6 +15,7 @@
  */
 package org.opendataloader.pdf.hybrid;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -26,6 +27,11 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class HybridClientFactoryTest {
 
+    @AfterEach
+    void tearDown() {
+        HybridClientFactory.shutdown();
+    }
+
     @Test
     void testCreateDoclingFastClient() {
         HybridConfig config = new HybridConfig();
@@ -33,9 +39,6 @@ class HybridClientFactoryTest {
 
         assertNotNull(client);
         assertInstanceOf(DoclingFastServerClient.class, client);
-
-        // Cleanup
-        ((DoclingFastServerClient) client).shutdown();
     }
 
     @Test
@@ -44,11 +47,10 @@ class HybridClientFactoryTest {
 
         HybridClient client1 = HybridClientFactory.create("DOCLING-FAST", config);
         assertInstanceOf(DoclingFastServerClient.class, client1);
-        ((DoclingFastServerClient) client1).shutdown();
 
         HybridClient client2 = HybridClientFactory.create("Docling-Fast", config);
         assertInstanceOf(DoclingFastServerClient.class, client2);
-        ((DoclingFastServerClient) client2).shutdown();
+        assertSame(client1, client2);
     }
 
     @Test
@@ -58,9 +60,6 @@ class HybridClientFactoryTest {
 
         assertNotNull(client);
         assertInstanceOf(HancomClient.class, client);
-
-        // Cleanup
-        ((HancomClient) client).shutdown();
     }
 
     @Test
@@ -69,11 +68,57 @@ class HybridClientFactoryTest {
 
         HybridClient client1 = HybridClientFactory.create("HANCOM", config);
         assertInstanceOf(HancomClient.class, client1);
-        ((HancomClient) client1).shutdown();
 
         HybridClient client2 = HybridClientFactory.create("Hancom", config);
         assertInstanceOf(HancomClient.class, client2);
-        ((HancomClient) client2).shutdown();
+        assertSame(client1, client2);
+    }
+
+    @Test
+    void testGetOrCreateReusesClientForSameDoclingConfig() {
+        HybridConfig config1 = new HybridConfig();
+        config1.setUrl("http://localhost:5002");
+
+        HybridConfig config2 = new HybridConfig();
+        config2.setUrl("http://localhost:5002/");
+
+        HybridClient client1 = HybridClientFactory.getOrCreate("docling-fast", config1);
+        HybridClient client2 = HybridClientFactory.getOrCreate("docling-fast", config2);
+
+        assertSame(client1, client2, "Equivalent docling URLs should reuse the same cached client");
+        assertEquals("http://localhost:5002", ((DoclingFastServerClient) client1).getBaseUrl());
+    }
+
+    @Test
+    void testGetOrCreateCreatesDifferentDoclingClientsForDifferentUrls() {
+        HybridConfig config1 = new HybridConfig();
+        config1.setUrl("http://localhost:5002");
+
+        HybridConfig config2 = new HybridConfig();
+        config2.setUrl("http://localhost:5003");
+
+        HybridClient client1 = HybridClientFactory.getOrCreate("docling-fast", config1);
+        HybridClient client2 = HybridClientFactory.getOrCreate("docling-fast", config2);
+
+        assertNotSame(client1, client2, "Different docling URLs must not share the same cached client");
+        assertEquals("http://localhost:5002", ((DoclingFastServerClient) client1).getBaseUrl());
+        assertEquals("http://localhost:5003", ((DoclingFastServerClient) client2).getBaseUrl());
+    }
+
+    @Test
+    void testGetOrCreateCreatesDifferentDoclingClientsForDifferentTimeouts() {
+        HybridConfig config1 = new HybridConfig();
+        config1.setUrl("http://localhost:5002");
+        config1.setTimeoutMs(5_000);
+
+        HybridConfig config2 = new HybridConfig();
+        config2.setUrl("http://localhost:5002");
+        config2.setTimeoutMs(10_000);
+
+        HybridClient client1 = HybridClientFactory.getOrCreate("docling-fast", config1);
+        HybridClient client2 = HybridClientFactory.getOrCreate("docling-fast", config2);
+
+        assertNotSame(client1, client2, "Different timeouts must not reuse the same cached client");
     }
 
     @Test
