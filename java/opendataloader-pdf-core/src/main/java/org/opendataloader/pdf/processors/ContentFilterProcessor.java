@@ -38,6 +38,9 @@ import java.util.logging.Logger;
 public class ContentFilterProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(ContentFilterProcessor.class.getCanonicalName());
+    private static final int MAX_SHORT_TEXT_LENGTH = 3;
+    private static final double SHORT_TEXT_WIDTH_FACTOR = 0.7;
+    private static final double ABNORMAL_WIDTH_THRESHOLD_MULTIPLIER = 3.0;
 
     /**
      * Filters and cleans page contents based on configuration.
@@ -64,6 +67,7 @@ public class ContentFilterProcessor {
             filterOutOfPageContents(pageNumber, pageContents);
             pageContents = DocumentProcessor.removeNullObjectsFromList(pageContents);
         }
+        fixAbnormalShortTextBoundingBoxes(pageContents);
         TextProcessor.mergeCloseTextChunks(pageContents);
         pageContents = DocumentProcessor.removeNullObjectsFromList(pageContents);
         TextProcessor.trimTextChunksWhiteSpaces(pageContents);
@@ -107,6 +111,42 @@ public class ContentFilterProcessor {
                 ((TextChunk) object).compressSpaces();
             }
         }
+    }
+
+    static void fixAbnormalShortTextBoundingBoxes(List<IObject> contents) {
+        for (IObject object : contents) {
+            if (object instanceof TextChunk) {
+                fixAbnormalShortTextBoundingBox((TextChunk) object);
+            }
+        }
+    }
+
+    private static void fixAbnormalShortTextBoundingBox(TextChunk textChunk) {
+        if (!textChunk.isHorizontalText()) {
+            return;
+        }
+        BoundingBox boundingBox = textChunk.getBoundingBox();
+        String value = textChunk.getValue();
+        if (boundingBox == null || value == null || boundingBox.getHeight() <= 0) {
+            return;
+        }
+        int visibleCharacters = (int) value.codePoints()
+            .filter(ch -> !Character.isWhitespace(ch))
+            .count();
+        if (visibleCharacters == 0 || visibleCharacters > MAX_SHORT_TEXT_LENGTH) {
+            return;
+        }
+        double expectedMaxWidth = visibleCharacters * boundingBox.getHeight() * SHORT_TEXT_WIDTH_FACTOR *
+            ABNORMAL_WIDTH_THRESHOLD_MULTIPLIER;
+        if (boundingBox.getWidth() <= expectedMaxWidth) {
+            return;
+        }
+        if (textChunk.isRightLeftHorizontalText()) {
+            boundingBox.setLeftX(boundingBox.getRightX() - expectedMaxWidth);
+        } else {
+            boundingBox.setRightX(boundingBox.getLeftX() + expectedMaxWidth);
+        }
+        textChunk.adjustSymbolEndsToBoundingBox(null);
     }
 
     private static boolean isBackground(IObject content, BoundingBox pageBoundingBox) {

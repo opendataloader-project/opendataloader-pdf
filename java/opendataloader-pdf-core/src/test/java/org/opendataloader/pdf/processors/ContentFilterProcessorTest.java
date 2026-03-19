@@ -51,15 +51,16 @@ public class ContentFilterProcessorTest {
             new BoundingBox(0, leftX, 100.0, abnormalRightX, 100.0 + height),
             "4", height, 100.0);
 
-        double actualWidth = textChunk.getBoundingBox().getWidth();
         double expectedMaxWidth = 1 * height * 0.7 * 3; // char_count * height * 0.7 * threshold(3x)
+        List<IObject> contents = new ArrayList<>();
+        contents.add(textChunk);
 
-        // This assertion documents the bug: the width is abnormally large
-        // When fixAbnormalTextChunkBoundingBoxes() is implemented, this should be corrected
-        Assertions.assertTrue(actualWidth > expectedMaxWidth,
-            "This test documents that the bounding box width (" + actualWidth +
-            ") is abnormally large compared to expected max (" + expectedMaxWidth +
-            ") for a single character. A fix should correct this.");
+        ContentFilterProcessor.fixAbnormalShortTextBoundingBoxes(contents);
+
+        Assertions.assertEquals(expectedMaxWidth, textChunk.getBoundingBox().getWidth(), 0.01,
+            "Abnormally wide short text should be clamped to the expected maximum width");
+        Assertions.assertEquals(leftX, textChunk.getBoundingBox().getLeftX(), 0.01,
+            "Width correction should preserve the original left edge for left-to-right text");
     }
 
     /**
@@ -78,13 +79,16 @@ public class ContentFilterProcessorTest {
             new BoundingBox(0, leftX, 100.0, normalRightX, 100.0 + height),
             "AB", height, 100.0);
 
-        double actualWidth = textChunk.getBoundingBox().getWidth();
+        List<IObject> contents = new ArrayList<>();
+        contents.add(textChunk);
         double expectedMaxWidth = 2 * height * 0.7 * 3; // char_count * height * 0.7 * threshold(3x)
 
-        // Normal width should be within expected range
-        Assertions.assertTrue(actualWidth <= expectedMaxWidth,
-            "Normal text chunk width (" + actualWidth + ") should not exceed threshold (" +
-            expectedMaxWidth + ")");
+        ContentFilterProcessor.fixAbnormalShortTextBoundingBoxes(contents);
+
+        Assertions.assertEquals(15.0, textChunk.getBoundingBox().getWidth(), 0.01,
+            "Normal text chunk width should remain unchanged");
+        Assertions.assertTrue(textChunk.getBoundingBox().getWidth() <= expectedMaxWidth,
+            "Normal text chunk width should still be within the abnormal-width threshold");
     }
 
     /**
@@ -102,6 +106,11 @@ public class ContentFilterProcessorTest {
         TextChunk textChunk = new TextChunk(
             new BoundingBox(0, leftX, 100.0, rightX, 100.0 + height),
             "Hello", height, 100.0);
+
+        List<IObject> contents = new ArrayList<>();
+        contents.add(textChunk);
+
+        ContentFilterProcessor.fixAbnormalShortTextBoundingBoxes(contents);
 
         // For text with more than 3 characters, the fix should not apply
         // regardless of the width-to-height ratio
