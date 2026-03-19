@@ -63,6 +63,7 @@
         <assertj.version>3.27.7</assertj.version>
         <commons.cli.version>1.11.0</commons.cli.version>
         <maven-compiler.plugin.version>3.14.1</maven-compiler.plugin.version>
+        <maven-surefire.plugin.version>3.5.4</maven-surefire.plugin.version>
         <flatten.plugin.version>1.7.3</flatten.plugin.version>
         <jacoco.plugin.version>0.8.14</jacoco.plugin.version>
         <maven-source.plugin.version>3.4.0</maven-source.plugin.version>
@@ -134,6 +135,11 @@
                     </configuration>
                 </plugin>
                 <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven-surefire.plugin.version}</version>
+                </plugin>
+                <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>flatten-maven-plugin</artifactId>
                     <version>${flatten.plugin.version}</version>
@@ -193,6 +199,10 @@
             </plugins>
         </pluginManagement>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-deploy-plugin</artifactId>
