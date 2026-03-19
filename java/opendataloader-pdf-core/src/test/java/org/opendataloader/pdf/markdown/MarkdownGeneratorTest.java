@@ -10,6 +10,7 @@ package org.opendataloader.pdf.markdown;
 import org.junit.jupiter.api.io.TempDir;
 import org.opendataloader.pdf.api.Config;
 import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
@@ -17,6 +18,8 @@ import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
+import org.verapdf.wcag.algorithms.entities.lists.ListItem;
+import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -152,6 +155,30 @@ public class MarkdownGeneratorTest {
         assertTrue(markdown.contains("This paragraph should remain after the caption because it is narrative."));
     }
 
+    @Test
+    void testCaptionOnlySkipsFootnotePlaceholderListsAndDanglingLowercaseFragments() throws IOException {
+        Config config = new Config();
+        config.setOutputFolder(tempDir.toString());
+        config.setMarkdownTableOutput(Config.MARKDOWN_TABLE_OUTPUT_CAPTION_ONLY);
+        File inputPdf = tempDir.resolve("dangling.pdf").toFile();
+        Files.writeString(inputPdf.toPath(), "");
+
+        try (TestMarkdownGenerator generator = new TestMarkdownGenerator(inputPdf, config)) {
+            generator.writePage(List.of(
+                createFootnoteList("1https://example.com", "2https://example.com"),
+                createCaption("Table 4 | Comparison between models."),
+                createCaption("performance of the model will improve soon."),
+                createHeading("3.2. Distilled Model Evaluation", 5)
+            ));
+        }
+
+        String markdown = Files.readString(tempDir.resolve("dangling.md"));
+        assertFalse(markdown.contains("1https://example.com"));
+        assertFalse(markdown.contains("performance of the model will improve soon."));
+        assertTrue(markdown.contains("Table 4 | Comparison between models."));
+        assertTrue(markdown.contains("##### 3.2. Distilled Model Evaluation"));
+    }
+
     /**
      * Helper method that mirrors the heading prefix generation logic in
      * MarkdownGenerator.writeHeading().
@@ -227,6 +254,33 @@ public class MarkdownGeneratorTest {
         List<IObject> contents = cell.getContents();
         contents.add(paragraph);
         return cell;
+    }
+
+    private SemanticHeading createHeading(String text, int level) {
+        SemanticHeading heading = new SemanticHeading(createCaption(text));
+        heading.setHeadingLevel(level);
+        return heading;
+    }
+
+    private PDFList createFootnoteList(String... items) {
+        PDFList list = new PDFList();
+        for (String itemText : items) {
+            ListItem item = new ListItem(new BoundingBox(), null);
+            item.add(new TextLine(new TextChunk(
+                new BoundingBox(0, 10.0, 10.0, 20.0, 20.0),
+                itemText,
+                "Font1",
+                10,
+                700,
+                0,
+                20.0,
+                new double[]{0.0},
+                null,
+                0
+            )));
+            list.add(item);
+        }
+        return list;
     }
 
     private static class TestMarkdownGenerator extends MarkdownGenerator {

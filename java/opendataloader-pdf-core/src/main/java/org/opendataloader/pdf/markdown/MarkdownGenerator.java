@@ -65,6 +65,10 @@ public class MarkdownGenerator implements Closeable {
         "^(pass@1|cons@\\d+|rating)(?:\\s+(pass@1|cons@\\d+|rating))+\\s*$",
         Pattern.CASE_INSENSITIVE
     );
+    private static final Pattern FOOTNOTE_PLACEHOLDER_PATTERN = Pattern.compile(
+        "^(?:\\d+https?://\\S+)(?:\\s+\\d+https?://\\S+)*$",
+        Pattern.CASE_INSENSITIVE
+    );
     private static final Pattern BENCHMARK_PATTERN = Pattern.compile(
         "(AIME 2024|MATH-500|CNMO 2024|GPQA(?: Diamond)?|LiveCodeBench|Codeforces|SWE Verified|Aider-Polyglot|MMLU(?:-Redux|-Pro)?|DROP|IF-Eval|SimpleQA|FRAMES|AlpacaEval2\\.0|ArenaHard|CLUEWSC|C-Eval|C-SimpleQA)",
         Pattern.CASE_INSENSITIVE
@@ -88,10 +92,15 @@ public class MarkdownGenerator implements Closeable {
 
     public void writeToMarkdown(List<List<IObject>> contents) {
         try {
+            List<Set<Integer>> pageSkipIndices = new java.util.ArrayList<>(contents.size());
+            for (List<IObject> pageContents : contents) {
+                pageSkipIndices.add(collectTableArtifactIndices(pageContents));
+            }
+            extendCrossPageTableArtifactSkips(contents, pageSkipIndices);
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 writePageSeparator(pageNumber);
                 List<IObject> pageContents = contents.get(pageNumber);
-                Set<Integer> skipIndices = collectTableArtifactIndices(pageContents);
+                Set<Integer> skipIndices = pageSkipIndices.get(pageNumber);
                 for (int contentIndex = 0; contentIndex < pageContents.size(); contentIndex++) {
                     if (skipIndices.contains(contentIndex)) {
                         continue;
@@ -360,6 +369,26 @@ public class MarkdownGenerator implements Closeable {
         return Config.MARKDOWN_TABLE_OUTPUT_FULL.equals(markdownTableOutput);
     }
 
+    protected void extendCrossPageTableArtifactSkips(List<List<IObject>> contents, List<Set<Integer>> pageSkipIndices) {
+        if (Config.MARKDOWN_TABLE_OUTPUT_FULL.equals(markdownTableOutput)) {
+            return;
+        }
+        for (int pageNumber = 0; pageNumber < contents.size(); pageNumber++) {
+            List<IObject> pageContents = contents.get(pageNumber);
+            Set<Integer> pageSkips = pageSkipIndices.get(pageNumber);
+
+            int firstMeaningful = findFirstMeaningfulContentIndex(pageContents, pageSkips);
+            if (firstMeaningful >= 0 && isTableCaptionText(normalizeContentText(pageContents.get(firstMeaningful))) && pageNumber > 0) {
+                walkTableArtifactRange(contents.get(pageNumber - 1), pageSkipIndices.get(pageNumber - 1), contents.get(pageNumber - 1).size(), -1);
+            }
+
+            int lastMeaningful = findLastMeaningfulContentIndex(pageContents, pageSkips);
+            if (lastMeaningful >= 0 && isTableCaptionText(normalizeContentText(pageContents.get(lastMeaningful))) && pageNumber + 1 < contents.size()) {
+                walkTableArtifactRange(contents.get(pageNumber + 1), pageSkipIndices.get(pageNumber + 1), -1, 1);
+            }
+        }
+    }
+
     protected Set<Integer> collectTableArtifactIndices(List<IObject> pageContents) {
         Set<Integer> skip = new HashSet<>();
         if (Config.MARKDOWN_TABLE_OUTPUT_FULL.equals(markdownTableOutput)) {
@@ -411,6 +440,11 @@ public class MarkdownGenerator implements Closeable {
                 continue;
             }
             if (looksNarrativeText(text)) {
+                if (direction > 0 && shouldSkipDanglingNarrativeFragment(pageContents, index, text)) {
+                    skip.add(index);
+                    index += direction;
+                    continue;
+                }
                 break;
             }
             break;
@@ -421,11 +455,51 @@ public class MarkdownGenerator implements Closeable {
         return content instanceof SemanticHeading;
     }
 
+    protected int findFirstMeaningfulContentIndex(List<IObject> pageContents, Set<Integer> skip) {
+        for (int index = 0; index < pageContents.size(); index++) {
+            if (skip.contains(index)) {
+                continue;
+            }
+            String text = normalizeContentText(pageContents.get(index));
+            if (!text.isEmpty() || pageContents.get(index) instanceof TableBorder) {
+                return index;
+            }
+        }
+        return -1;
+    }
+
+    protected int findLastMeaningfulContentIndex(List<IObject> pageContents, Set<Integer> skip) {
+        for (int index = pageContents.size() - 1; index >= 0; index--) {
+            if (skip.contains(index)) {
+                continue;
+            }
+            String text = normalizeContentText(pageContents.get(index));
+            if (!text.isEmpty() || pageContents.get(index) instanceof TableBorder) {
+                return index;
+            }
+        }
+        return -1;
+    }
+
     protected boolean isTableOutputOff() {
         return Config.MARKDOWN_TABLE_OUTPUT_OFF.equals(markdownTableOutput);
     }
 
     protected String normalizeContentText(IObject content) {
+        if (content instanceof PDFList) {
+            StringBuilder builder = new StringBuilder();
+            for (ListItem item : ((PDFList) content).getListItems()) {
+                String value = String.valueOf(item).replaceAll("\\s+", " ").trim();
+                if (value.isEmpty()) {
+                    continue;
+                }
+                if (builder.length() > 0) {
+                    builder.append(' ');
+                }
+                builder.append(value);
+            }
+            return builder.toString();
+        }
         if (!(content instanceof SemanticTextNode)) {
             return "";
         }
@@ -466,6 +540,9 @@ public class MarkdownGenerator implements Closeable {
         if (NUMERIC_ONLY_PATTERN.matcher(text).matches()) {
             return true;
         }
+        if (FOOTNOTE_PLACEHOLDER_PATTERN.matcher(text).matches()) {
+            return true;
+        }
         if (TABLE_HEADER_TEXT_PATTERN.matcher(text).matches()) {
             return true;
         }
@@ -502,6 +579,26 @@ public class MarkdownGenerator implements Closeable {
             }
             if (tokens.length >= 4 && modelishTokenCount >= Math.max(3, (int) Math.floor(tokens.length * 0.6))) {
                 return true;
+            }
+        }
+        return false;
+    }
+
+    protected boolean shouldSkipDanglingNarrativeFragment(List<IObject> pageContents, int index, String text) {
+        if (text.isEmpty() || !Character.isLowerCase(text.charAt(0))) {
+            return false;
+        }
+        for (int nextIndex = index + 1; nextIndex < pageContents.size(); nextIndex++) {
+            IObject next = pageContents.get(nextIndex);
+            String nextText = normalizeContentText(next);
+            if (nextText.isEmpty()) {
+                continue;
+            }
+            if (isHeadingContent(next) || isTableCaptionText(nextText)) {
+                return true;
+            }
+            if (looksNarrativeText(nextText) && !looksTableArtifactText(nextText)) {
+                return false;
             }
         }
         return false;
