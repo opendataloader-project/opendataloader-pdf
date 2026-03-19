@@ -110,6 +110,10 @@ public class CLIOptions {
     private static final String INCLUDE_HEADER_FOOTER_LONG_OPTION = "include-header-footer";
     private static final String INCLUDE_HEADER_FOOTER_DESC = "Include page headers and footers in output";
 
+    // ===== Detect Strikethrough =====
+    private static final String DETECT_STRIKETHROUGH_LONG_OPTION = "detect-strikethrough";
+    private static final String DETECT_STRIKETHROUGH_DESC = "Detect strikethrough text and wrap with ~~ in Markdown output (experimental)";
+
     // ===== Hybrid Mode =====
     private static final String HYBRID_LONG_OPTION = "hybrid";
     private static final String HYBRID_DESC = "Hybrid backend for AI processing. Values: off (default), docling-fast";
@@ -170,6 +174,8 @@ public class CLIOptions {
             new OptionDefinition(PAGES_LONG_OPTION, null, "string", null, PAGES_DESC, true),
             new OptionDefinition(INCLUDE_HEADER_FOOTER_LONG_OPTION, null, "boolean", false,
                     INCLUDE_HEADER_FOOTER_DESC, true),
+            new OptionDefinition(DETECT_STRIKETHROUGH_LONG_OPTION, null, "boolean", false,
+                    DETECT_STRIKETHROUGH_DESC, true),
             new OptionDefinition(HYBRID_LONG_OPTION, null, "string", "off", HYBRID_DESC, true),
             new OptionDefinition(HYBRID_MODE_LONG_OPTION, null, "string", "auto", HYBRID_MODE_DESC, true),
             new OptionDefinition(HYBRID_URL_LONG_OPTION, null, "string", null, HYBRID_URL_DESC, true),
@@ -229,6 +235,9 @@ public class CLIOptions {
         }
         if (commandLine.hasOption(INCLUDE_HEADER_FOOTER_LONG_OPTION)) {
             config.setIncludeHeaderFooter(true);
+        }
+        if (commandLine.hasOption(DETECT_STRIKETHROUGH_LONG_OPTION)) {
+            config.setDetectStrikethrough(true);
         }
         if (commandLine.hasOption(CLIOptions.READING_ORDER_LONG_OPTION)) {
             config.setReadingOrder(commandLine.getOptionValue(CLIOptions.READING_ORDER_LONG_OPTION));

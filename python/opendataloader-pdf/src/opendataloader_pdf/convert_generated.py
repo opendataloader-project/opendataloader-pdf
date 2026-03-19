@@ -30,6 +30,7 @@ def convert(
     image_dir: Optional[str] = None,
     pages: Optional[str] = None,
     include_header_footer: bool = False,
+    detect_strikethrough: bool = False,
     hybrid: Optional[str] = None,
     hybrid_mode: Optional[str] = None,
     hybrid_url: Optional[str] = None,
@@ -60,6 +61,7 @@ def convert(
         image_dir: Directory for extracted images
         pages: Pages to extract (e.g., "1,3,5-7"). Default: all pages
         include_header_footer: Include page headers and footers in output
+        detect_strikethrough: Detect strikethrough text and wrap with ~~ in Markdown output (experimental)
         hybrid: Hybrid backend for AI processing. Values: off (default), docling-fast
         hybrid_mode: Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)
         hybrid_url: Hybrid backend server URL (overrides default)
@@ -120,6 +122,8 @@ def convert(
         args.extend(["--pages", pages])
     if include_header_footer:
         args.append("--include-header-footer")
+    if detect_strikethrough:
+        args.append("--detect-strikethrough")
     if hybrid:
         args.extend(["--hybrid", hybrid])
     if hybrid_mode:

@@ -28,6 +28,7 @@ description: Options for the Node.js convert function
 | `imageDir`              | `string`             | -            | Directory for extracted images                                                                                                     |
 | `pages`                 | `string`             | -            | Pages to extract (e.g., "1,3,5-7"). Default: all pages                                                                             |
 | `includeHeaderFooter`   | `boolean`            | `false`      | Include page headers and footers in output                                                                                         |
+| `detectStrikethrough`   | `boolean`            | `false`      | Detect strikethrough text and wrap with ~~ in Markdown output (experimental)                                                       |
 | `hybrid`                | `string`             | `"off"`      | Hybrid backend for AI processing. Values: off (default), docling-fast                                                              |
 | `hybridMode`            | `string`             | `"auto"`     | Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)                               |
 | `hybridUrl`             | `string`             | -            | Hybrid backend server URL (overrides default)                                                                                      |

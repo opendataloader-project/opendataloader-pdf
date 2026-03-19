@@ -32,6 +32,7 @@ This page documents all available CLI options for opendataloader-pdf.
 | `--image-dir`               | -     | `string`  | -            | Directory for extracted images                                                                                                     |
 | `--pages`                   | -     | `string`  | -            | Pages to extract (e.g., "1,3,5-7"). Default: all pages                                                                             |
 | `--include-header-footer`   | -     | `boolean` | `false`      | Include page headers and footers in output                                                                                         |
+| `--detect-strikethrough`    | -     | `boolean` | `false`      | Detect strikethrough text and wrap with ~~ in Markdown output (experimental)                                                       |
 | `--hybrid`                  | -     | `string`  | `"off"`      | Hybrid backend for AI processing. Values: off (default), docling-fast                                                              |
 | `--hybrid-mode`             | -     | `string`  | `"auto"`     | Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)                               |
 | `--hybrid-url`              | -     | `string`  | -            | Hybrid backend server URL (overrides default)                                                                                      |
@@ -43,34 +44,35 @@ This page documents all available CLI options for opendataloader-pdf.
 ### Basic conversion
 
 ```bash
-# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
-opendataloader-pdf file1.pdf file2.pdf folder/ -o ./output -f json,markdown
+opendataloader-pdf document.pdf -o ./output -f json,markdown
+```
+
+### Convert entire folder
+
+```bash
+opendataloader-pdf ./pdf-folder -o ./output -f json
 ```
 
 ### Save images as external files
 
 ```bash
-# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
-opendataloader-pdf file1.pdf file2.pdf folder/ -f markdown --image-output external
+opendataloader-pdf document.pdf -f markdown --image-output external
 ```
 
 ### Disable reading order sorting
 
 ```bash
-# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
-opendataloader-pdf file1.pdf file2.pdf folder/ -f json --reading-order off
+opendataloader-pdf document.pdf -f json --reading-order off
 ```
 
 ### Add page separators in output
 
 ```bash
-# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
-opendataloader-pdf file1.pdf file2.pdf folder/ -f markdown --markdown-page-separator "--- Page %page-number% ---"
+opendataloader-pdf document.pdf -f markdown --markdown-page-separator "--- Page %page-number% ---"
 ```
 
 ### Encrypted PDF
 
 ```bash
-# Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
-opendataloader-pdf encrypted1.pdf encrypted2.pdf -p mypassword -o ./output
+opendataloader-pdf encrypted.pdf -p mypassword -o ./output
 ```

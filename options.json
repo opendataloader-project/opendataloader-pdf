@@ -153,6 +153,14 @@
       "description": "Include page headers and footers in output"
     },
     {
+      "name": "detect-strikethrough",
+      "shortName": null,
+      "type": "boolean",
+      "required": false,
+      "default": false,
+      "description": "Detect strikethrough text and wrap with ~~ in Markdown output (experimental)"
+    },
+    {
       "name": "hybrid",
       "shortName": null,
       "type": "string",

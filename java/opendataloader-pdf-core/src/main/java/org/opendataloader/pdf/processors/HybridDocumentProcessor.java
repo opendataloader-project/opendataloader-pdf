@@ -279,6 +279,9 @@ public class HybridDocumentProcessor {
             try {
                 List<IObject> pageContents = workingContents.get(pageNumber);
                 pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber);
+                if (config.isDetectStrikethrough()) {
+                    StrikethroughProcessor.processStrikethroughs(pageContents);
+                }
                 pageContents = pageContents.stream()
                     .filter(x -> !(x instanceof LineChunk))
                     .collect(Collectors.toList());
