@@ -27,6 +27,30 @@ import static org.junit.jupiter.api.Assertions.*;
 class HybridClientFactoryTest {
 
     @Test
+    void testCreateDoclingClient() {
+        HybridConfig config = new HybridConfig();
+        HybridClient client = HybridClientFactory.create("docling", config);
+
+        assertNotNull(client);
+        assertInstanceOf(DoclingFastServerClient.class, client);
+
+        ((DoclingFastServerClient) client).shutdown();
+    }
+
+    @Test
+    void testCreateDoclingClientCaseInsensitive() {
+        HybridConfig config = new HybridConfig();
+
+        HybridClient client1 = HybridClientFactory.create("DOCLING", config);
+        assertInstanceOf(DoclingFastServerClient.class, client1);
+        ((DoclingFastServerClient) client1).shutdown();
+
+        HybridClient client2 = HybridClientFactory.create("Docling", config);
+        assertInstanceOf(DoclingFastServerClient.class, client2);
+        ((DoclingFastServerClient) client2).shutdown();
+    }
+
+    @Test
     void testCreateDoclingFastClient() {
         HybridConfig config = new HybridConfig();
         HybridClient client = HybridClientFactory.create("docling-fast", config);
@@ -138,6 +162,13 @@ class HybridClientFactoryTest {
     }
 
     @Test
+    void testIsSupportedDocling() {
+        assertTrue(HybridClientFactory.isSupported("docling"));
+        assertTrue(HybridClientFactory.isSupported("DOCLING"));
+        assertTrue(HybridClientFactory.isSupported("Docling"));
+    }
+
+    @Test
     void testIsSupportedHancom() {
         assertTrue(HybridClientFactory.isSupported("hancom"));
         assertTrue(HybridClientFactory.isSupported("HANCOM"));
@@ -146,7 +177,6 @@ class HybridClientFactoryTest {
 
     @Test
     void testIsSupportedUnsupportedBackends() {
-        assertFalse(HybridClientFactory.isSupported("docling"));
         assertFalse(HybridClientFactory.isSupported("azure"));
         assertFalse(HybridClientFactory.isSupported("google"));
         assertFalse(HybridClientFactory.isSupported("unknown"));
@@ -162,15 +192,16 @@ class HybridClientFactoryTest {
     void testGetSupportedBackends() {
         String supported = HybridClientFactory.getSupportedBackends();
 
+        assertTrue(supported.contains("docling"));
         assertTrue(supported.contains("docling-fast"));
         assertTrue(supported.contains("hancom"));
-        assertFalse(supported.contains("docling,"));
     }
 
     @Test
     void testGetAllKnownBackends() {
         String allKnown = HybridClientFactory.getAllKnownBackends();
 
+        assertTrue(allKnown.contains("docling"));
         assertTrue(allKnown.contains("docling-fast"));
         assertTrue(allKnown.contains("hancom"));
         assertTrue(allKnown.contains("azure"));
@@ -179,6 +210,7 @@ class HybridClientFactoryTest {
 
     @Test
     void testBackendConstants() {
+        assertEquals("docling", HybridClientFactory.BACKEND_DOCLING);
         assertEquals("docling-fast", HybridClientFactory.BACKEND_DOCLING_FAST);
         assertEquals("hancom", HybridClientFactory.BACKEND_HANCOM);
         assertEquals("azure", HybridClientFactory.BACKEND_AZURE);
