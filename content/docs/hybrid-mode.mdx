@@ -105,8 +105,8 @@ The triage processor uses a **conservative strategy**: it routes uncertain pages
 |:-------|:-----|:--------|:------------|
 | `hybrid` | string | `"off"` | Backend name: `off`, `docling-fast` |
 | `hybrid_url` | string | auto | Backend server URL |
-| `hybrid_timeout` | int | 30000 | Request timeout in milliseconds |
-| `hybrid_fallback` | bool | true | Fallback to Java on backend error |
+| `hybrid_timeout` | str | `"30000"` | Request timeout in milliseconds |
+| `hybrid_fallback` | bool | false | Fallback to Java on backend error |
 
 ### Python Options
 
@@ -117,8 +117,8 @@ opendataloader_pdf.convert(
     output_dir="output/",
     hybrid="docling-fast",
     hybrid_url="http://localhost:5002",  # Custom backend URL
-    hybrid_timeout=60000,                 # 60 second timeout
-    hybrid_fallback=True                  # Fallback to Java on error
+    hybrid_timeout="60000",               # 60 second timeout
+    hybrid_fallback=True                  # Opt in to Java fallback on error
 )
 ```
 
