@@ -525,6 +525,57 @@ class XYCutPlusPlusSorterTest {
         assertEquals("Right3", getText(result.get(5)));
     }
 
+    // ========== NARROW BRIDGE ELEMENT TEST (Issue #294) ==========
+
+    /**
+     * Test two-column layout where a narrow element (e.g., page number) bridges the gap
+     * between columns. The narrow outlier filter should detect the column gap despite
+     * the bridge element.
+     *
+     * Layout (X axis):
+     *   Left column: [50-300] with 2 paragraphs
+     *   Right column: [320-560] with 2 paragraphs
+     *   Bridge element: [302-318] (narrow marker in the column gap, same Y range)
+     *
+     * All elements share the same Y band (550-600) so no horizontal cut is available.
+     * Without filtering, edge vertical gap = 2 (300→302 and 318→320), below MIN_GAP_THRESHOLD.
+     * Without filtering, the algorithm falls through to sortByYThenX which interleaves columns.
+     * With narrow outlier filtering, bridge (width=16) is removed (< 10% of region width=510),
+     * revealing gap = 20 (300→320), enabling correct column detection via vertical cut.
+     */
+    @Test
+    void sort_twoColumnsWithNarrowBridge_leftColumnFirst() {
+        List<IObject> objects = new ArrayList<>();
+
+        // Left column paragraphs — overlapping Y ranges, no horizontal gap possible
+        objects.add(createTextLine(50, 600, 300, 570, "L1"));
+        objects.add(createTextLine(50, 572, 300, 550, "L2"));
+
+        // Right column paragraphs — same Y range as left, overlapping
+        objects.add(createTextLine(320, 600, 560, 570, "R1"));
+        objects.add(createTextLine(320, 572, 560, 550, "R2"));
+
+        // Narrow bridge element in the column gap, within the same Y range.
+        // Spans 302-318, making edge gaps: 300→302=2pt and 318→320=2pt (both < 5pt threshold)
+        objects.add(createTextLine(302, 585, 318, 575, "PageNum"));
+
+        List<IObject> result = XYCutPlusPlusSorter.sort(objects);
+
+        assertEquals(5, result.size());
+
+        int l1 = findPosition(result, "L1");
+        int l2 = findPosition(result, "L2");
+        int r1 = findPosition(result, "R1");
+        int r2 = findPosition(result, "R2");
+
+        // Left column should come before right column
+        assertTrue(l2 < r1, "Left column should come before right column. L2@" + l2 + " R1@" + r1);
+
+        // Internal order within each column
+        assertTrue(l1 < l2, "L1 before L2");
+        assertTrue(r1 < r2, "R1 before R2");
+    }
+
     // ========== 1901.03003.pdf READING ORDER TEST ==========
 
     /**

@@ -355,8 +355,6 @@ public class XYCutPlusPlusSorter {
         CutInfo verticalCut = findBestVerticalCutWithProjection(objects);
 
         // Choose cut direction based on gap sizes
-        // For column layouts, vertical cuts (column separation) take priority
-        // Use horizontal cut only when horizontal gap is larger than vertical gap
         // Apply minimum gap threshold to avoid splitting on insignificant gaps
         boolean hasValidHorizontalCut = horizontalCut.gap >= MIN_GAP_THRESHOLD;
         boolean hasValidVerticalCut = verticalCut.gap >= MIN_GAP_THRESHOLD;
@@ -376,16 +374,12 @@ public class XYCutPlusPlusSorter {
 
         if (useHorizontalCut) {
             List<List<IObject>> groups = splitByHorizontalCut(objects, horizontalCut.position);
-            // Safety check: if split didn't actually separate objects, fall back to default sort
-            // This prevents infinite recursion when all objects end up in one group
             if (groups.size() <= 1) {
                 return sortByYThenX(objects);
             }
             return flatMapRecursive(groups, preferHorizontalFirst);
         } else {
             List<List<IObject>> groups = splitByVerticalCut(objects, verticalCut.position);
-            // Safety check: if split didn't actually separate objects, fall back to default sort
-            // This prevents infinite recursion when all objects end up in one group
             if (groups.size() <= 1) {
                 return sortByYThenX(objects);
             }
@@ -429,7 +423,46 @@ public class XYCutPlusPlusSorter {
             return new CutInfo(0, 0);
         }
 
-        // Sort by leftX ascending (left to right)
+        CutInfo edgeCut = findVerticalCutByEdges(objects);
+
+        // If the edge gap is already significant, use it directly.
+        if (edgeCut.gap >= MIN_GAP_THRESHOLD) {
+            return edgeCut;
+        }
+
+        // When edge gap is small, narrow outlier elements (e.g., page numbers,
+        // footnote markers) may bridge an otherwise clear column gap.
+        // Retry without elements narrower than 10% of the region width.
+        if (objects.size() >= 4) {
+            BoundingBox region = calculateBoundingRegion(objects);
+            if (region != null) {
+                double regionWidth = region.getRightX() - region.getLeftX();
+                double narrowThreshold = regionWidth * 0.1;
+                List<IObject> filtered = new ArrayList<>();
+                for (IObject obj : objects) {
+                    BoundingBox bbox = obj.getBoundingBox();
+                    double width = bbox.getRightX() - bbox.getLeftX();
+                    if (width >= narrowThreshold) {
+                        filtered.add(obj);
+                    }
+                }
+                if (filtered.size() >= 2 && filtered.size() < objects.size()) {
+                    CutInfo filteredCut = findVerticalCutByEdges(filtered);
+                    if (filteredCut.gap > edgeCut.gap) {
+                        return filteredCut;
+                    }
+                }
+            }
+        }
+
+        return edgeCut;
+    }
+
+    /**
+     * Find vertical cut by edge gaps (original algorithm).
+     * Finds the largest gap between rightX of one element and leftX of the next.
+     */
+    private static CutInfo findVerticalCutByEdges(List<IObject> objects) {
         List<IObject> sorted = new ArrayList<>(objects);
         sorted.sort(Comparator.comparingDouble((IObject o) -> o.getBoundingBox().getLeftX())
                 .thenComparingDouble(o -> o.getBoundingBox().getRightX()));
