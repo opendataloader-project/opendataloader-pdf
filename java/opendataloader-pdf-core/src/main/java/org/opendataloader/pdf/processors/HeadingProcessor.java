@@ -34,12 +34,15 @@ import org.verapdf.wcag.algorithms.entities.text.TextStyle;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Processor for detecting and classifying headings in PDF content.
  * Uses font size, weight, and position to identify potential headings.
  */
 public class HeadingProcessor {
+    private static final Logger LOGGER = Logger.getLogger(HeadingProcessor.class.getName());
     private static final double HEADING_PROBABILITY = 0.75;
     private static final double BULLETED_HEADING_PROBABILITY = 0.1;
 
@@ -68,7 +71,15 @@ public class HeadingProcessor {
             }
             SemanticTextNode prevNode = index != 0 ? textNodes.get(index - 1) : null;
             SemanticTextNode nextNode = index + 1 < textNodesCount ? textNodes.get(index + 1) : null;
-            double probability = NodeUtils.headingProbability(textNode, prevNode, nextNode, textNode);
+            double probability;
+            try {
+                probability = NodeUtils.headingProbability(textNode, prevNode, nextNode, textNode);
+            } catch (NullPointerException e) {
+                // Hybrid backend may produce text nodes without color info;
+                // skip heading detection for these nodes.
+                LOGGER.log(Level.FINE, "Skipping heading probability for node with incomplete style info", e);
+                continue;
+            }
 
             probability += textNodeStatistics.fontSizeRarityBoost(textNode);
             probability += textNodeStatistics.fontWeightRarityBoost(textNode);
@@ -192,8 +203,14 @@ public class HeadingProcessor {
         SortedMap<TextStyle, Set<SemanticHeading>> map = new TreeMap<>();
         List<SemanticHeading> headings = StaticLayoutContainers.getHeadings();
         for (SemanticHeading heading : headings) {
-            TextStyle textStyle = TextStyle.getTextStyle(heading);
-            map.computeIfAbsent(textStyle, k -> new HashSet<>()).add(heading);
+            try {
+                TextStyle textStyle = TextStyle.getTextStyle(heading);
+                map.computeIfAbsent(textStyle, k -> new HashSet<>()).add(heading);
+            } catch (NullPointerException e) {
+                // Hybrid backend may produce text nodes without color info;
+                // skip style-based level detection for these headings.
+                LOGGER.log(Level.FINE, "Skipping heading level detection for node with incomplete style info", e);
+            }
         }
         int level = 1;
         TextStyle previousTextStyle = null;
