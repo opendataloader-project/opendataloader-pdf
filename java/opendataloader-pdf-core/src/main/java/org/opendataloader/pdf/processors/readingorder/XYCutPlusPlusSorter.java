@@ -440,7 +440,7 @@ public class XYCutPlusPlusSorter {
         // When edge gap is small, narrow outlier elements (e.g., page numbers,
         // footnote markers) may bridge an otherwise clear column gap.
         // Retry without elements narrower than 10% of the region width.
-        if (objects.size() >= 4) {
+        if (objects.size() >= 3) {
             BoundingBox region = calculateBoundingRegion(objects);
             if (region != null) {
                 double regionWidth = region.getRightX() - region.getLeftX();
@@ -455,7 +455,7 @@ public class XYCutPlusPlusSorter {
                 }
                 if (filtered.size() >= 2 && filtered.size() < objects.size()) {
                     CutInfo filteredCut = findVerticalCutByEdges(filtered);
-                    if (filteredCut.gap > edgeCut.gap) {
+                    if (filteredCut.gap > edgeCut.gap && filteredCut.gap >= MIN_GAP_THRESHOLD) {
                         return filteredCut;
                     }
                 }
