@@ -152,6 +152,7 @@ public class StrikethroughProcessorTest {
 
         TextChunk textChunk = new TextChunk(new BoundingBox(0, 10.0, 100.0, 60.0, 120.0),
             "~~already~~", 12, 100.0);
+        textChunk.setIsStrikethroughText();
         contents.add(textChunk);
 
         LineChunk line = LineChunk.createLineChunk(0, 10.0, 110.0, 60.0, 110.0, 1.0,

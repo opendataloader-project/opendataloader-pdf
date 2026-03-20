@@ -156,7 +156,7 @@ public class XYCutPlusPlusSorter {
         for (IObject obj : objects) {
             BoundingBox bbox = obj.getBoundingBox();
             if (bbox != null) {
-                double width = bbox.getRightX() - bbox.getLeftX();
+                double width = bbox.getWidth();
                 maxWidth = Math.max(maxWidth, width);
             }
         }
@@ -171,7 +171,7 @@ public class XYCutPlusPlusSorter {
                 continue;
             }
 
-            double width = bbox.getRightX() - bbox.getLeftX();
+            double width = bbox.getWidth();
 
             // Criterion 1: Width exceeds threshold (close to max width)
             if (width >= threshold) {
@@ -239,8 +239,8 @@ public class XYCutPlusPlusSorter {
             return 0;
         }
 
-        double width1 = box1.getRightX() - box1.getLeftX();
-        double width2 = box2.getRightX() - box2.getLeftX();
+        double width1 = box1.getWidth();
+        double width2 = box2.getWidth();
         double smallerWidth = Math.min(width1, width2);
 
         return smallerWidth > 0 ? overlapWidth / smallerWidth : 0;
@@ -267,9 +267,7 @@ public class XYCutPlusPlusSorter {
             return 1.0;
         }
 
-        double regionWidth = regionBounds.getRightX() - regionBounds.getLeftX();
-        double regionHeight = regionBounds.getTopY() - regionBounds.getBottomY();
-        double regionArea = regionWidth * regionHeight;
+        double regionArea = regionBounds.getArea();
 
         if (regionArea <= 0) {
             return 1.0;
@@ -286,32 +284,14 @@ public class XYCutPlusPlusSorter {
      * @return Bounding box encompassing all objects, or null if no valid objects
      */
     static BoundingBox calculateBoundingRegion(List<IObject> objects) {
-        double minX = Double.MAX_VALUE;
-        double maxX = Double.MIN_VALUE;
-        double minY = Double.MAX_VALUE;
-        double maxY = Double.MIN_VALUE;
-        int pageNumber = 0;
-        boolean found = false;
+        BoundingBox boundingBox = new BoundingBox();
 
         for (IObject obj : objects) {
             BoundingBox bbox = obj.getBoundingBox();
-            if (bbox == null) {
-                continue;
-            }
-
-            found = true;
-            pageNumber = bbox.getPageNumber();
-            minX = Math.min(minX, bbox.getLeftX());
-            maxX = Math.max(maxX, bbox.getRightX());
-            minY = Math.min(minY, bbox.getBottomY());
-            maxY = Math.max(maxY, bbox.getTopY());
+            boundingBox.union(bbox);
         }
 
-        if (!found) {
-            return null;
-        }
-
-        return new BoundingBox(pageNumber, minX, minY, maxX, maxY);
+        return boundingBox.isEmpty() ? null : boundingBox;
     }
 
     /**
@@ -325,9 +305,7 @@ public class XYCutPlusPlusSorter {
         for (IObject obj : objects) {
             BoundingBox bbox = obj.getBoundingBox();
             if (bbox != null) {
-                double width = bbox.getRightX() - bbox.getLeftX();
-                double height = bbox.getTopY() - bbox.getBottomY();
-                totalArea += width * height;
+                totalArea += bbox.getArea();
             }
         }
         return totalArea;
@@ -443,12 +421,12 @@ public class XYCutPlusPlusSorter {
         if (objects.size() >= 3) {
             BoundingBox region = calculateBoundingRegion(objects);
             if (region != null) {
-                double regionWidth = region.getRightX() - region.getLeftX();
+                double regionWidth = region.getWidth();
                 double narrowThreshold = regionWidth * NARROW_ELEMENT_WIDTH_RATIO;
                 List<IObject> filtered = new ArrayList<>();
                 for (IObject obj : objects) {
                     BoundingBox bbox = obj.getBoundingBox();
-                    double width = bbox.getRightX() - bbox.getLeftX();
+                    double width = bbox.getWidth();
                     if (width >= narrowThreshold) {
                         filtered.add(obj);
                     }
@@ -479,9 +457,8 @@ public class XYCutPlusPlusSorter {
         Double prevRight = null;
 
         for (IObject obj : sorted) {
-            BoundingBox bbox = obj.getBoundingBox();
-            double left = bbox.getLeftX();
-            double right = bbox.getRightX();
+            double left = obj.getLeftX();
+            double right = obj.getRightX();
 
             if (prevRight != null && left > prevRight) {
                 double gap = left - prevRight;
@@ -519,9 +496,8 @@ public class XYCutPlusPlusSorter {
         Double prevBottom = null;
 
         for (IObject obj : sorted) {
-            BoundingBox bbox = obj.getBoundingBox();
-            double top = bbox.getTopY();
-            double bottom = bbox.getBottomY();
+            double top = obj.getTopY();
+            double bottom = obj.getBottomY();
 
             if (prevBottom != null && prevBottom > top) {
                 double gap = prevBottom - top;
@@ -550,9 +526,8 @@ public class XYCutPlusPlusSorter {
         List<IObject> below = new ArrayList<>();
 
         for (IObject obj : objects) {
-            BoundingBox bbox = obj.getBoundingBox();
             // Use center Y to determine which group
-            double centerY = (bbox.getTopY() + bbox.getBottomY()) / 2.0;
+            double centerY = obj.getCenterY();
             if (centerY > cutY) {
                 above.add(obj);
             } else {
@@ -583,9 +558,8 @@ public class XYCutPlusPlusSorter {
         List<IObject> right = new ArrayList<>();
 
         for (IObject obj : objects) {
-            BoundingBox bbox = obj.getBoundingBox();
             // Use center X to determine which group
-            double centerX = (bbox.getLeftX() + bbox.getRightX()) / 2.0;
+            double centerX = obj.getCenterX();
             if (centerX < cutX) {
                 left.add(obj);
             } else {
@@ -641,8 +615,8 @@ public class XYCutPlusPlusSorter {
                 IObject mainObj = sortedMain.get(mainIndex);
                 IObject crossObj = sortedCrossLayout.get(crossIndex);
 
-                double mainTopY = mainObj.getBoundingBox().getTopY();
-                double crossTopY = crossObj.getBoundingBox().getTopY();
+                double mainTopY = mainObj.getTopY();
+                double crossTopY = crossObj.getTopY();
 
                 if (crossTopY >= mainTopY) {
                     // Cross-layout element is above or at same level, add it first
