@@ -46,6 +46,7 @@ import argparse
 import logging
 import os
 import re
+import sys
 import tempfile
 import time
 import traceback
@@ -161,6 +162,17 @@ def sanitize_unicode(data: Any) -> Any:
     if isinstance(data, list):
         return [sanitize_unicode(item) for item in data]
     return data
+
+
+def _get_loop_setting() -> str:
+    """Return the uvicorn event loop setting appropriate for the current platform.
+
+    uvloop is not supported on Windows, so we force 'asyncio' there.
+    On other platforms, 'auto' lets uvicorn use uvloop if available.
+    """
+    if sys.platform == "win32":
+        return "asyncio"
+    return "auto"
 
 
 def _check_dependencies():
@@ -527,6 +539,7 @@ def main():
         host=args.host,
         port=args.port,
         log_level=args.log_level,
+        loop=_get_loop_setting(),
     )
 
 
