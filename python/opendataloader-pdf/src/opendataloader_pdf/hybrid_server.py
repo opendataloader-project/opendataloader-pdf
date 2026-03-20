@@ -49,6 +49,7 @@ import os
 import re
 import sys
 import tempfile
+import threading
 import time
 import traceback
 from contextlib import asynccontextmanager
@@ -67,6 +68,11 @@ MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB max file size
 
 # Global converter instance (initialized on startup with CLI options)
 converter = None
+
+# Serialize converter.convert() calls. The converter singleton was designed for
+# sequential use; this lock keeps that guarantee while allowing the event loop
+# to stay responsive via asyncio.to_thread().
+_convert_lock = threading.Lock()
 
 # Regex matching lone surrogates (U+D800..U+DFFF) and null characters
 _INVALID_UNICODE_RE = re.compile(r"[\ud800-\udfff\x00]")
@@ -379,13 +385,14 @@ def create_app(
             tmp_path = tmp.name
 
         try:
+            def _do_convert():
+                with _convert_lock:
+                    return converter.convert(
+                        tmp_path, page_range=page_range_tuple
+                    ) if page_range_tuple else converter.convert(tmp_path)
+
             start = time.perf_counter()
-            if page_range_tuple:
-                result = await asyncio.to_thread(
-                    converter.convert, tmp_path, page_range=page_range_tuple
-                )
-            else:
-                result = await asyncio.to_thread(converter.convert, tmp_path)
+            result = await asyncio.to_thread(_do_convert)
             processing_time = time.perf_counter() - start
 
             # Export to JSON (DoclingDocument format)

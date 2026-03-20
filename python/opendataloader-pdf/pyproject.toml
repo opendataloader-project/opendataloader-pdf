@@ -55,6 +55,8 @@ path = "hatch_build.py"
 [dependency-groups]
 dev = [
     "pytest>=7.0",
+    "pytest-asyncio>=0.23",
+    "httpx>=0.27",
 ]
 
 [tool.uv]
