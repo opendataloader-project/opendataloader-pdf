@@ -68,7 +68,13 @@ public class HeadingProcessor {
             }
             SemanticTextNode prevNode = index != 0 ? textNodes.get(index - 1) : null;
             SemanticTextNode nextNode = index + 1 < textNodesCount ? textNodes.get(index + 1) : null;
-            double probability = NodeUtils.headingProbability(textNode, prevNode, nextNode, textNode);
+            double probability;
+            try {
+                probability = NodeUtils.headingProbability(textNode, prevNode, nextNode, textNode);
+            } catch (NullPointerException e) {
+                // textColor not available for hybrid mode generated content
+                continue;
+            }
 
             probability += textNodeStatistics.fontSizeRarityBoost(textNode);
             probability += textNodeStatistics.fontWeightRarityBoost(textNode);
@@ -192,7 +198,13 @@ public class HeadingProcessor {
         SortedMap<TextStyle, Set<SemanticHeading>> map = new TreeMap<>();
         List<SemanticHeading> headings = StaticLayoutContainers.getHeadings();
         for (SemanticHeading heading : headings) {
-            TextStyle textStyle = TextStyle.getTextStyle(heading);
+            TextStyle textStyle;
+            try {
+                textStyle = TextStyle.getTextStyle(heading);
+            } catch (NullPointerException e) {
+                // textColor not available for hybrid mode generated content
+                continue;
+            }
             map.computeIfAbsent(textStyle, k -> new HashSet<>()).add(heading);
         }
         int level = 1;
