@@ -17,6 +17,7 @@ package org.opendataloader.pdf.json.serializers;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import org.opendataloader.pdf.json.JsonName;
+import org.opendataloader.pdf.processors.HeadingProcessor;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 
@@ -45,13 +46,9 @@ public class SerializerUtil {
     public static void writeTextInfo(JsonGenerator jsonGenerator, SemanticTextNode textNode) throws IOException {
         jsonGenerator.writeStringField(JsonName.FONT_TYPE, textNode.getFontName());
         jsonGenerator.writePOJOField(JsonName.FONT_SIZE, textNode.getFontSize());
-        try {
-            double[] textColor = textNode.getTextColor();
-            if (textColor != null) {
-                jsonGenerator.writeStringField(JsonName.TEXT_COLOR, Arrays.toString(textColor));
-            }
-        } catch (NullPointerException e) {
-            // Ignore - textColor not available for hybrid mode generated content
+        double[] textColor = HeadingProcessor.safeGetTextColor(textNode);
+        if (textColor != null) {
+            jsonGenerator.writeStringField(JsonName.TEXT_COLOR, Arrays.toString(textColor));
         }
         jsonGenerator.writeStringField(JsonName.CONTENT, textNode.getValue());
         if (textNode.isHiddenText()) {
