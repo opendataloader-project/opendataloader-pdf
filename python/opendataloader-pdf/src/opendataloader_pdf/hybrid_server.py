@@ -43,6 +43,7 @@ Requirements:
 """
 
 import argparse
+import asyncio
 import logging
 import os
 import re
@@ -380,9 +381,11 @@ def create_app(
         try:
             start = time.perf_counter()
             if page_range_tuple:
-                result = converter.convert(tmp_path, page_range=page_range_tuple)
+                result = await asyncio.to_thread(
+                    converter.convert, tmp_path, page_range=page_range_tuple
+                )
             else:
-                result = converter.convert(tmp_path)
+                result = await asyncio.to_thread(converter.convert, tmp_path)
             processing_time = time.perf_counter() - start
 
             # Export to JSON (DoclingDocument format)
