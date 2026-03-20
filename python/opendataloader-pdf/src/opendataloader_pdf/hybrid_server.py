@@ -387,13 +387,14 @@ def create_app(
         try:
             def _do_convert():
                 with _convert_lock:
-                    return converter.convert(
-                        tmp_path, page_range=page_range_tuple
-                    ) if page_range_tuple else converter.convert(tmp_path)
+                    t0 = time.perf_counter()
+                    if page_range_tuple:
+                        res = converter.convert(tmp_path, page_range=page_range_tuple)
+                    else:
+                        res = converter.convert(tmp_path)
+                    return res, time.perf_counter() - t0
 
-            start = time.perf_counter()
-            result = await asyncio.to_thread(_do_convert)
-            processing_time = time.perf_counter() - start
+            result, processing_time = await asyncio.to_thread(_do_convert)
 
             # Export to JSON (DoclingDocument format)
             json_content = result.document.export_to_dict()

@@ -32,7 +32,7 @@ def mock_docling():
 
     def tracking_convert(path, page_range=None):
         convert_thread_name["thread"] = threading.current_thread().name
-        time.sleep(0.5)
+        time.sleep(2)
         return mock_result
 
     mock_converter.convert = tracking_convert
@@ -106,13 +106,13 @@ async def test_health_responds_during_conversion(app_with_converter):
 
     This is the user-facing symptom of issue #301: the Java CLI gets
     SocketTimeoutException when the hybrid server is busy processing
-    another document.
+    another document. Mock sleep is 2s; health must respond under 0.2s.
     """
     from httpx import ASGITransport, AsyncClient
 
     transport = ASGITransport(app=app_with_converter)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        # Start conversion (takes 0.5s in mock)
+        # Start conversion (takes 2s in mock)
         convert_task = asyncio.create_task(
             client.post(
                 "/v1/convert/file",
@@ -120,19 +120,19 @@ async def test_health_responds_during_conversion(app_with_converter):
             )
         )
 
-        # Small delay for conversion to start
-        await asyncio.sleep(0.05)
+        # Wait for conversion to start in the worker thread
+        await asyncio.sleep(0.3)
 
-        # Health check should respond quickly
+        # Health check should respond quickly — well under the 2s conversion
         start = time.monotonic()
         health_response = await client.get("/health")
         health_time = time.monotonic() - start
 
         assert health_response.status_code == 200
         assert health_response.json() == {"status": "ok"}
-        assert health_time < 0.5, (
+        assert health_time < 0.2, (
             f"Health endpoint took {health_time:.2f}s during conversion. "
-            f"Expected < 0.5s. The event loop is likely blocked."
+            f"Expected < 0.2s. The event loop is likely blocked."
         )
 
         convert_response = await convert_task
