@@ -47,6 +47,22 @@ public class HeadingProcessor {
     private static final double BULLETED_HEADING_PROBABILITY = 0.1;
 
     /**
+     * Safely retrieves text color from a semantic text node, returning null if not available.
+     * Defensive wrapper for verapdf's getTextColor() which may throw NPE on incomplete font data.
+     *
+     * @param textNode the text node to get color from
+     * @return the text color array, or null if not available
+     */
+    public static double[] safeGetTextColor(SemanticTextNode textNode) {
+        try {
+            return textNode.getTextColor();
+        } catch (NullPointerException e) {
+            LOGGER.log(Level.FINE, "textColor not available for node", e);
+            return null;
+        }
+    }
+
+    /**
      * Processes content to identify and mark headings.
      *
      * @param contents the list of content objects to process
@@ -69,17 +85,12 @@ public class HeadingProcessor {
             if (textNode.getSemanticType() == SemanticType.HEADING) {
                 continue;
             }
-            SemanticTextNode prevNode = index != 0 ? textNodes.get(index - 1) : null;
-            SemanticTextNode nextNode = index + 1 < textNodesCount ? textNodes.get(index + 1) : null;
-            double probability;
-            try {
-                probability = NodeUtils.headingProbability(textNode, prevNode, nextNode, textNode);
-            } catch (NullPointerException e) {
-                // Hybrid backend may produce text nodes without color info;
-                // skip heading detection for these nodes.
-                LOGGER.log(Level.FINE, "Skipping heading probability for node with incomplete style info", e);
+            if (safeGetTextColor(textNode) == null) {
                 continue;
             }
+            SemanticTextNode prevNode = index != 0 ? textNodes.get(index - 1) : null;
+            SemanticTextNode nextNode = index + 1 < textNodesCount ? textNodes.get(index + 1) : null;
+            double probability = NodeUtils.headingProbability(textNode, prevNode, nextNode, textNode);
 
             probability += textNodeStatistics.fontSizeRarityBoost(textNode);
             probability += textNodeStatistics.fontWeightRarityBoost(textNode);

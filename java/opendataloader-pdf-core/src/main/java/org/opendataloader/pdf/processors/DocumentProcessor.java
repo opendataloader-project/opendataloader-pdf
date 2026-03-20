@@ -357,15 +357,9 @@ public class DocumentProcessor {
      * @return a string with font, size, color, and content information
      */
     public static String getContentsValueForTextNode(SemanticTextNode textNode) {
-        double[] textColor = null;
-        try {
-            textColor = textNode.getTextColor();
-        } catch (NullPointerException e) {
-            // textColor not available for hybrid mode generated content
-        }
         return String.format("%s: font %s, text size %.2f, text color %s, text content \"%s\"",
                 textNode.getSemanticType().getValue(), textNode.getFontName(),
-                textNode.getFontSize(), Arrays.toString(textColor),
+                textNode.getFontSize(), Arrays.toString(HeadingProcessor.safeGetTextColor(textNode)),
                 textNode.getValue().length() > 15 ? textNode.getValue().substring(0, 15) + "..." : textNode.getValue());
     }
 
