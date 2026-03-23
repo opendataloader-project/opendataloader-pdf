@@ -29,7 +29,7 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -68,7 +68,7 @@ public class TableBorderProcessor {
             currentDepth.set(depth + 1);
 
             List<IObject> newContents = new ArrayList<>();
-            Set<TableBorder> processedTableBorders = new HashSet<>();
+            Set<TableBorder> processedTableBorders = new LinkedHashSet<>();
             for (IObject content : contents) {
                 TableBorder tableBorder = addContentToTableBorder(content);
                 if (tableBorder != null) {
@@ -94,7 +94,11 @@ public class TableBorderProcessor {
             Map<TableBorder, TableBorder> normalizedTables = new HashMap<>();
             for (TableBorder border : processedTableBorders) {
                 StaticContainers.getTableBordersCollection().removeTableBorder(border, pageNumber);
-                normalizedTables.put(border, normalizeAndProcessTableBorder(contents, border, pageNumber));
+                TableBorder normalizedTable = normalizeAndProcessTableBorder(contents, border, pageNumber);
+                normalizedTables.put(border, normalizedTable);
+                // Remove the outer table while processing its contents, then restore the page index
+                // with the final instance so later lookups still see the normalized table.
+                StaticContainers.getTableBordersCollection().getTableBorders(pageNumber).add(normalizedTable);
             }
             for (int index = 0; index < newContents.size(); index++) {
                 IObject content = newContents.get(index);

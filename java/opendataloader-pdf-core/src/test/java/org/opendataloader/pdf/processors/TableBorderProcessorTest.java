@@ -80,6 +80,8 @@ public class TableBorderProcessorTest {
         Assertions.assertEquals(1, contents.size());
         Assertions.assertTrue(contents.get(0) instanceof TableBorder);
         TableBorder resultBorder = (TableBorder) contents.get(0);
+        Assertions.assertSame(resultBorder,
+            tableBordersCollection.getTableBorder(resultBorder.getBoundingBox()));
         List<IObject> cellContents = resultBorder.getRow(0).getCell(0).getContents();
         Assertions.assertEquals(1, cellContents.size());
         Assertions.assertTrue(cellContents.get(0) instanceof SemanticParagraph);
@@ -202,6 +204,8 @@ public class TableBorderProcessorTest {
         TableBorder resultBorder = getSingleResultTable(contents, 0);
 
         Assertions.assertEquals(8, resultBorder.getNumberOfRows());
+        Assertions.assertSame(resultBorder,
+            tableBordersCollection.getTableBorder(resultBorder.getBoundingBox()));
         Assertions.assertEquals("r1c1", ((SemanticParagraph) resultBorder.getCell(0, 0).getContents().get(0)).getValue());
         Assertions.assertEquals("r3c3", ((SemanticParagraph) resultBorder.getCell(2, 2).getContents().get(0)).getValue());
         Assertions.assertEquals("r8c5", ((SemanticParagraph) resultBorder.getCell(7, 4).getContents().get(0)).getValue());
@@ -225,6 +229,23 @@ public class TableBorderProcessorTest {
 
         Assertions.assertSame(tableBorder, normalizedTable);
         Assertions.assertEquals(2, normalizedTable.getNumberOfRows());
+    }
+
+    @Test
+    public void testTextBlockTableIsNeverNormalized() {
+        TableBorder tableBorder = createTable(0, 10.0, 10.0, 110.0, 50.0, 1, 1, 60L);
+        List<IObject> cellContents = new ArrayList<>();
+        cellContents.add(createTextChunk(0, 15.0, 20.0, 90.0, 30.0, "single cell text"));
+        tableBorder.getCell(0, 0).setContents(cellContents);
+
+        List<IObject> rawPageContents = new ArrayList<>();
+        rawPageContents.add(createTextChunk(0, 15.0, 20.0, 90.0, 30.0, "single cell text"));
+        rawPageContents.add(createTextChunk(0, 15.0, 32.0, 90.0, 42.0, "more text"));
+
+        TableBorder normalizedTable = TableStructureNormalizer.normalize(rawPageContents, tableBorder);
+
+        Assertions.assertSame(tableBorder, normalizedTable);
+        Assertions.assertTrue(normalizedTable.isTextBlock());
     }
 
     // ========== RECURSION DEPTH LIMIT TESTS ==========
