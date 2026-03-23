@@ -28,8 +28,10 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class TableBorderProcessor {
@@ -89,9 +91,16 @@ public class TableBorderProcessor {
                     newContents.add(content);
                 }
             }
+            Map<TableBorder, TableBorder> normalizedTables = new HashMap<>();
             for (TableBorder border : processedTableBorders) {
                 StaticContainers.getTableBordersCollection().removeTableBorder(border, pageNumber);
-                processTableBorder(border, pageNumber);
+                normalizedTables.put(border, processTableBorder(contents, border, pageNumber));
+            }
+            for (int index = 0; index < newContents.size(); index++) {
+                IObject content = newContents.get(index);
+                if (content instanceof TableBorder && normalizedTables.containsKey(content)) {
+                    newContents.set(index, normalizedTables.get(content));
+                }
             }
             return newContents;
         } finally {
@@ -145,16 +154,22 @@ public class TableBorderProcessor {
         return null;
     }
 
-    public static void processTableBorder(TableBorder tableBorder, int pageNumber) {
-        for (int rowNumber = 0; rowNumber < tableBorder.getNumberOfRows(); rowNumber++) {
-            TableBorderRow row = tableBorder.getRow(rowNumber);
-            for (int colNumber = 0; colNumber < tableBorder.getNumberOfColumns(); colNumber++) {
+    public static TableBorder processTableBorder(TableBorder tableBorder, int pageNumber) {
+        return processTableBorder(flattenCellContents(tableBorder), tableBorder, pageNumber);
+    }
+
+    static TableBorder processTableBorder(List<IObject> rawPageContents, TableBorder tableBorder, int pageNumber) {
+        TableBorder normalizedTable = TableStructureNormalizer.normalize(rawPageContents, tableBorder);
+        for (int rowNumber = 0; rowNumber < normalizedTable.getNumberOfRows(); rowNumber++) {
+            TableBorderRow row = normalizedTable.getRow(rowNumber);
+            for (int colNumber = 0; colNumber < normalizedTable.getNumberOfColumns(); colNumber++) {
                 TableBorderCell tableBorderCell = row.getCell(colNumber);
                 if (tableBorderCell.getRowNumber() == rowNumber && tableBorderCell.getColNumber() == colNumber) {
                     tableBorderCell.setContents(processTableCellContent(tableBorderCell.getContents(), pageNumber));
                 }
             }
         }
+        return normalizedTable;
     }
 
     private static List<IObject> processTableCellContent(List<IObject> contents, int pageNumber) {
@@ -213,12 +228,12 @@ public class TableBorderProcessor {
         currentTable.setPreviousTable(previousTable);
     }
 
-    private static TextChunk getTextChunkPartForTableCell(TextChunk textChunk, TableBorderCell cell) {
-        Integer start = textChunk.getSymbolStartIndexByCoordinate(cell.getLeftX());
+    static TextChunk getTextChunkPartForRange(TextChunk textChunk, double leftX, double rightX) {
+        Integer start = textChunk.getSymbolStartIndexByCoordinate(leftX);
         if (start == null) {
             return null;
         }
-        Integer end = textChunk.getSymbolEndIndexByCoordinate(cell.getRightX());
+        Integer end = textChunk.getSymbolEndIndexByCoordinate(rightX);
         if (end == null) {
             return null;
         }
@@ -227,6 +242,10 @@ public class TableBorderProcessor {
         }
         TextChunk result = TextChunk.getTextChunk(textChunk, start, end);
         return ChunksMergeUtils.getTrimTextChunk(result);
+    }
+
+    private static TextChunk getTextChunkPartForTableCell(TextChunk textChunk, TableBorderCell cell) {
+        return getTextChunkPartForRange(textChunk, cell.getLeftX(), cell.getRightX());
     }
 
     public static TextChunk getTextChunkPartBeforeTable(TextChunk textChunk, TableBorder table) {
@@ -248,5 +267,20 @@ public class TableBorderProcessor {
         }
         TextChunk result = TextChunk.getTextChunk(textChunk, start, textChunk.getValue().length());
         return ChunksMergeUtils.getTrimTextChunk(result);
+    }
+
+    private static List<IObject> flattenCellContents(TableBorder tableBorder) {
+        List<IObject> flattenedContents = new ArrayList<>();
+        for (int rowNumber = 0; rowNumber < tableBorder.getNumberOfRows(); rowNumber++) {
+            TableBorderRow row = tableBorder.getRow(rowNumber);
+            for (int columnNumber = 0; columnNumber < tableBorder.getNumberOfColumns(); columnNumber++) {
+                TableBorderCell cell = row.getCell(columnNumber);
+                if (cell != null && cell.getRowNumber() == rowNumber && cell.getColNumber() == columnNumber &&
+                        cell.getContents() != null) {
+                    flattenedContents.addAll(cell.getContents());
+                }
+            }
+        }
+        return flattenedContents;
     }
 }

@@ -148,6 +148,85 @@ public class TableBorderProcessorTest {
         Assertions.assertEquals(1l, ((TableBorder) contents.get(1).get(0)).getPreviousTableId());
     }
 
+    @Test
+    public void testNormalSmallTableDoesNotTriggerStructuralNormalization() {
+        StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
+        StaticContainers.setIsDataLoader(true);
+        StaticLayoutContainers.setCurrentContentId(300L);
+        TableBordersCollection tableBordersCollection = new TableBordersCollection();
+        StaticContainers.setTableBordersCollection(tableBordersCollection);
+
+        TableBorder tableBorder = createTable(0, 10.0, 10.0, 110.0, 70.0, 2, 2, 30L);
+        SortedSet<TableBorder> tables = new TreeSet<>(new TableBorder.TableBordersComparator());
+        tables.add(tableBorder);
+        tableBordersCollection.getTableBorders().add(tables);
+
+        List<IObject> contents = new ArrayList<>();
+        contents.add(createTextChunk(0, 15.0, 48.0, 45.0, 58.0, "r1c1"));
+        contents.add(createTextChunk(0, 65.0, 48.0, 95.0, 58.0, "r1c2"));
+        contents.add(createTextChunk(0, 15.0, 22.0, 45.0, 32.0, "r2c1"));
+        contents.add(createTextChunk(0, 65.0, 22.0, 95.0, 32.0, "r2c2"));
+
+        TableBorder resultBorder = getSingleResultTable(contents, 0);
+
+        Assertions.assertEquals(2, resultBorder.getNumberOfRows());
+        Assertions.assertEquals("r1c1", ((SemanticParagraph) resultBorder.getCell(0, 0).getContents().get(0)).getValue());
+        Assertions.assertEquals("r2c2", ((SemanticParagraph) resultBorder.getCell(1, 1).getContents().get(0)).getValue());
+    }
+
+    @Test
+    public void testUndersegmentedFiveColumnTableIsRebuiltFromRawPageContents() {
+        StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
+        StaticContainers.setIsDataLoader(true);
+        StaticLayoutContainers.setCurrentContentId(400L);
+        TableBordersCollection tableBordersCollection = new TableBordersCollection();
+        StaticContainers.setTableBordersCollection(tableBordersCollection);
+
+        TableBorder tableBorder = createTable(0, 10.0, 10.0, 260.0, 110.0, 2, 5, 40L);
+        SortedSet<TableBorder> tables = new TreeSet<>(new TableBorder.TableBordersComparator());
+        tables.add(tableBorder);
+        tableBordersCollection.getTableBorders().add(tables);
+
+        List<IObject> contents = new ArrayList<>();
+        double[] rowBottoms = {94.0, 84.0, 74.0, 64.0, 54.0, 44.0, 34.0, 24.0};
+        for (int rowIndex = 0; rowIndex < rowBottoms.length; rowIndex++) {
+            double bottomY = rowBottoms[rowIndex];
+            double topY = bottomY + 6.0;
+            for (int columnNumber = 0; columnNumber < 5; columnNumber++) {
+                double leftX = 15.0 + (columnNumber * 50.0);
+                contents.add(createTextChunk(0, leftX, bottomY, leftX + 25.0, topY,
+                    "r" + (rowIndex + 1) + "c" + (columnNumber + 1)));
+            }
+        }
+
+        TableBorder resultBorder = getSingleResultTable(contents, 0);
+
+        Assertions.assertEquals(8, resultBorder.getNumberOfRows());
+        Assertions.assertEquals("r1c1", ((SemanticParagraph) resultBorder.getCell(0, 0).getContents().get(0)).getValue());
+        Assertions.assertEquals("r3c3", ((SemanticParagraph) resultBorder.getCell(2, 2).getContents().get(0)).getValue());
+        Assertions.assertEquals("r8c5", ((SemanticParagraph) resultBorder.getCell(7, 4).getContents().get(0)).getValue());
+    }
+
+    @Test
+    public void testNormalizationKeepsOriginalTableWhenRebuildLosesColumns() {
+        TableBorder tableBorder = createTable(0, 10.0, 10.0, 260.0, 110.0, 2, 5, 50L);
+        populateOriginalTableContents(tableBorder);
+
+        List<IObject> rawPageContents = new ArrayList<>();
+        double[] rowBottoms = {94.0, 84.0, 74.0, 64.0, 54.0, 44.0, 34.0, 24.0};
+        for (int rowIndex = 0; rowIndex < rowBottoms.length; rowIndex++) {
+            double bottomY = rowBottoms[rowIndex];
+            double topY = bottomY + 6.0;
+            rawPageContents.add(createTextChunk(0, 15.0, bottomY, 40.0, topY, "left-" + rowIndex));
+            rawPageContents.add(createTextChunk(0, 65.0, bottomY, 90.0, topY, "mid-" + rowIndex));
+        }
+
+        TableBorder normalizedTable = TableStructureNormalizer.normalize(rawPageContents, tableBorder);
+
+        Assertions.assertSame(tableBorder, normalizedTable);
+        Assertions.assertEquals(2, normalizedTable.getNumberOfRows());
+    }
+
     // ========== RECURSION DEPTH LIMIT TESTS ==========
 
     /**
@@ -228,32 +307,62 @@ public class TableBorderProcessorTest {
      */
     private TableBorder createSimpleTable(int pageNumber, double leftX, double bottomY,
                                           double rightX, double topY, long structureId) {
-        TableBorder table = new TableBorder(2, 2);
+        return createTable(pageNumber, leftX, bottomY, rightX, topY, 2, 2, structureId);
+    }
+
+    private TableBorder createTable(int pageNumber, double leftX, double bottomY,
+                                    double rightX, double topY, int rows, int columns, long structureId) {
+        TableBorder table = new TableBorder(rows, columns);
         table.setRecognizedStructureId(structureId);
         table.setBoundingBox(new BoundingBox(pageNumber, leftX, bottomY, rightX, topY));
 
-        double midX = (leftX + rightX) / 2;
-        double midY = (bottomY + topY) / 2;
+        double columnWidth = (rightX - leftX) / columns;
+        double rowHeight = (topY - bottomY) / rows;
+        for (int rowNumber = 0; rowNumber < rows; rowNumber++) {
+            double rowTopY = topY - (rowNumber * rowHeight);
+            double rowBottomY = rowTopY - rowHeight;
+            TableBorderRow row = new TableBorderRow(rowNumber, columns, 0L);
+            row.setBoundingBox(new BoundingBox(pageNumber, leftX, rowBottomY, rightX, rowTopY));
+            table.getRows()[rowNumber] = row;
 
-        // Row 0 (top)
-        TableBorderRow row0 = new TableBorderRow(0, 2, 0L);
-        row0.setBoundingBox(new BoundingBox(pageNumber, leftX, midY, rightX, topY));
-        row0.getCells()[0] = new TableBorderCell(0, 0, 1, 1, 0L);
-        row0.getCells()[0].setBoundingBox(new BoundingBox(pageNumber, leftX, midY, midX, topY));
-        row0.getCells()[1] = new TableBorderCell(0, 1, 1, 1, 0L);
-        row0.getCells()[1].setBoundingBox(new BoundingBox(pageNumber, midX, midY, rightX, topY));
-        table.getRows()[0] = row0;
-
-        // Row 1 (bottom)
-        TableBorderRow row1 = new TableBorderRow(1, 2, 0L);
-        row1.setBoundingBox(new BoundingBox(pageNumber, leftX, bottomY, rightX, midY));
-        row1.getCells()[0] = new TableBorderCell(1, 0, 1, 1, 0L);
-        row1.getCells()[0].setBoundingBox(new BoundingBox(pageNumber, leftX, bottomY, midX, midY));
-        row1.getCells()[1] = new TableBorderCell(1, 1, 1, 1, 0L);
-        row1.getCells()[1].setBoundingBox(new BoundingBox(pageNumber, midX, bottomY, rightX, midY));
-        table.getRows()[1] = row1;
+            for (int columnNumber = 0; columnNumber < columns; columnNumber++) {
+                double cellLeftX = leftX + (columnNumber * columnWidth);
+                double cellRightX = cellLeftX + columnWidth;
+                TableBorderCell cell = new TableBorderCell(rowNumber, columnNumber, 1, 1, 0L);
+                cell.setBoundingBox(new BoundingBox(pageNumber, cellLeftX, rowBottomY, cellRightX, rowTopY));
+                row.getCells()[columnNumber] = cell;
+            }
+        }
 
         table.calculateCoordinatesUsingBoundingBoxesOfRowsAndColumns();
         return table;
     }
+
+    private void populateOriginalTableContents(TableBorder table) {
+        for (int rowNumber = 0; rowNumber < table.getNumberOfRows(); rowNumber++) {
+            for (int columnNumber = 0; columnNumber < table.getNumberOfColumns(); columnNumber++) {
+                TableBorderCell cell = table.getCell(rowNumber, columnNumber);
+                cell.setContents(new ArrayList<>(List.of(createTextChunk(0,
+                    cell.getLeftX() + 2.0, cell.getBottomY() + 5.0, cell.getLeftX() + 28.0,
+                    cell.getBottomY() + 15.0, "orig-" + rowNumber + "-" + columnNumber))));
+            }
+        }
+    }
+
+    private TableBorder getSingleResultTable(List<IObject> contents, int pageNumber) {
+        List<IObject> processedContents = TableBorderProcessor.processTableBorders(contents, pageNumber);
+        Assertions.assertEquals(1, processedContents.size());
+        Assertions.assertTrue(processedContents.get(0) instanceof TableBorder);
+        return (TableBorder) processedContents.get(0);
+    }
+
+    private TextChunk createTextChunk(int pageNumber, double leftX, double bottomY, double rightX,
+                                      double topY, String value) {
+        TextChunk textChunk = new TextChunk(new BoundingBox(pageNumber, leftX, bottomY, rightX, topY),
+            value, topY - bottomY, bottomY);
+        textChunk.getStreamInfos().add(new StreamInfo(0, null, 0, value.length()));
+        textChunk.adjustSymbolEndsToBoundingBox(null);
+        return textChunk;
+    }
+
 }
