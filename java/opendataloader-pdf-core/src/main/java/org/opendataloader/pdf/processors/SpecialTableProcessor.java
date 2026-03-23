@@ -91,7 +91,6 @@ public class SpecialTableProcessor {
             tableBorderRow.setBoundingBox(box);
             table.getBoundingBox().union(box);
         }
-        TableBorderProcessor.processTableBorder(table, table.getPageNumber());
-        return table;
+        return TableBorderProcessor.processTableBorder(new ArrayList<>(lines), table, table.getPageNumber());
     }
 }
