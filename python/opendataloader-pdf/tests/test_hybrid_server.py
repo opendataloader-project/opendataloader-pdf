@@ -1,6 +1,7 @@
-"""Tests for hybrid_server GPU detection logging."""
+"""Tests for hybrid_server."""
 
 import logging
+import sys
 from unittest.mock import MagicMock, patch
 
 
@@ -69,3 +70,22 @@ def test_no_pytorch_logging(caplog):
                 )
 
     assert "No GPU detected, using CPU. (PyTorch not installed)" in caplog.text
+
+
+def test_get_loop_setting_returns_asyncio_on_windows():
+    """On Windows, should return 'asyncio' to avoid uvloop errors (#323)."""
+    from opendataloader_pdf.hybrid_server import _get_loop_setting
+
+    with patch("sys.platform", "win32"):
+        assert _get_loop_setting() == "asyncio"
+
+
+def test_get_loop_setting_returns_auto_on_non_windows():
+    """On non-Windows platforms, should return 'auto' (uvloop if available)."""
+    from opendataloader_pdf.hybrid_server import _get_loop_setting
+
+    with patch("sys.platform", "darwin"):
+        assert _get_loop_setting() == "auto"
+
+    with patch("sys.platform", "linux"):
+        assert _get_loop_setting() == "auto"

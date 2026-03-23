@@ -94,9 +94,10 @@ public class StrikethroughProcessor {
 
             if (!matchingChunks.isEmpty() && matchingChunks.size() <= MAX_TEXT_CHUNKS_PER_LINE) {
                 for (TextChunk chunk : matchingChunks) {
-                    String value = chunk.getValue();
-                    if (!value.startsWith("~~")) {
+                    if (!chunk.getIsStrikethroughText()) {
+                        String value = chunk.getValue();
                         chunk.setValue("~~" + value + "~~");
+                        chunk.setIsStrikethroughText();
                     }
                 }
             }
@@ -121,10 +122,7 @@ public class StrikethroughProcessor {
      * Determines whether a horizontal line is a strikethrough for the given text chunk.
      */
     static boolean isStrikethroughLine(LineChunk line, TextChunk textChunk) {
-        BoundingBox textBox = textChunk.getBoundingBox();
-        double textBottomY = textBox.getBottomY();
-        double textTopY = textBox.getTopY();
-        double textHeight = textTopY - textBottomY;
+        double textHeight = textChunk.getHeight();
 
         if (textHeight <= 0) {
             return false;
@@ -137,8 +135,8 @@ public class StrikethroughProcessor {
         }
 
         // Check vertical position: the line's Y should be near the vertical center of the text
-        double textCenterY = (textBottomY + textTopY) / 2.0;
-        double lineY = line.getStartY();
+        double textCenterY = textChunk.getCenterY();
+        double lineY = line.getCenterY();
         double tolerance = textHeight * VERTICAL_CENTER_TOLERANCE;
 
         if (Math.abs(lineY - textCenterY) > tolerance) {
@@ -146,10 +144,10 @@ public class StrikethroughProcessor {
         }
 
         // Check horizontal overlap
-        double textLeftX = textBox.getLeftX();
-        double textRightX = textBox.getRightX();
-        double lineLeftX = Math.min(line.getStartX(), line.getEndX());
-        double lineRightX = Math.max(line.getStartX(), line.getEndX());
+        double textLeftX = textChunk.getLeftX();
+        double textRightX = textChunk.getRightX();
+        double lineLeftX = line.getLeftX();
+        double lineRightX = line.getRightX();
 
         double overlapLeft = Math.max(textLeftX, lineLeftX);
         double overlapRight = Math.min(textRightX, lineRightX);
@@ -159,13 +157,13 @@ public class StrikethroughProcessor {
             return false;
         }
 
-        double textWidth = textRightX - textLeftX;
+        double textWidth = textChunk.getWidth();
         if (textWidth <= 0 || (overlapWidth / textWidth) < MIN_HORIZONTAL_OVERLAP_RATIO) {
             return false;
         }
 
         // Reject lines that extend far beyond the text
-        double lineWidth = lineRightX - lineLeftX;
+        double lineWidth = line.getBoundingBox().getWidth();
         if (lineWidth / textWidth > MAX_LINE_TO_TEXT_WIDTH_RATIO) {
             return false;
         }

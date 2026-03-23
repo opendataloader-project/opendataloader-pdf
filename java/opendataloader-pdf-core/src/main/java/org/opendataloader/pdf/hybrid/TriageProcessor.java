@@ -23,6 +23,7 @@ import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
+import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.processors.DocumentProcessor;
 
 import java.util.ArrayList;
@@ -617,6 +618,7 @@ public class TriageProcessor {
      * <p>Uses a conservative strategy that biases toward BACKEND when uncertain.
      * Signals are evaluated in priority order:
      * <ol>
+     *   <li>CID font extraction failure (replacement char ratio >= 30%)</li>
      *   <li>TableBorder presence (most reliable)</li>
      *   <li>Suspicious text patterns</li>
      *   <li>High LineChunk ratio</li>
@@ -650,6 +652,13 @@ public class TriageProcessor {
 
         // Extract signals from content
         TriageSignals signals = extractSignals(filteredContents, pageNumber, thresholds);
+
+        // Signal 0: CID font extraction failure (highest priority)
+        // Only fires in hybrid mode (classifyPage is only called from HybridDocumentProcessor)
+        double replacementRatio = StaticLayoutContainers.getReplacementCharRatio(pageNumber);
+        if (replacementRatio >= 0.3) {
+            return TriageResult.backend(pageNumber, 1.0, signals);
+        }
 
         // Signal 1: TableBorder presence (highest priority, most reliable)
         if (signals.hasTableBorder()) {

@@ -43,10 +43,13 @@ Requirements:
 """
 
 import argparse
+import asyncio
 import logging
 import os
 import re
+import sys
 import tempfile
+import threading
 import time
 import traceback
 from contextlib import asynccontextmanager
@@ -65,6 +68,11 @@ MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB max file size
 
 # Global converter instance (initialized on startup with CLI options)
 converter = None
+
+# Serialize converter.convert() calls. The converter singleton was designed for
+# sequential use; this lock keeps that guarantee while allowing the event loop
+# to stay responsive via asyncio.to_thread().
+_convert_lock = threading.Lock()
 
 # Regex matching lone surrogates (U+D800..U+DFFF) and null characters
 _INVALID_UNICODE_RE = re.compile(r"[\ud800-\udfff\x00]")
@@ -161,6 +169,17 @@ def sanitize_unicode(data: Any) -> Any:
     if isinstance(data, list):
         return [sanitize_unicode(item) for item in data]
     return data
+
+
+def _get_loop_setting() -> str:
+    """Return the uvicorn event loop setting appropriate for the current platform.
+
+    uvloop is not supported on Windows, so we force 'asyncio' there.
+    On other platforms, 'auto' lets uvicorn use uvloop if available.
+    """
+    if sys.platform == "win32":
+        return "asyncio"
+    return "auto"
 
 
 def _check_dependencies():
@@ -366,12 +385,16 @@ def create_app(
             tmp_path = tmp.name
 
         try:
-            start = time.perf_counter()
-            if page_range_tuple:
-                result = converter.convert(tmp_path, page_range=page_range_tuple)
-            else:
-                result = converter.convert(tmp_path)
-            processing_time = time.perf_counter() - start
+            def _do_convert():
+                with _convert_lock:
+                    t0 = time.perf_counter()
+                    if page_range_tuple:
+                        res = converter.convert(tmp_path, page_range=page_range_tuple)
+                    else:
+                        res = converter.convert(tmp_path)
+                    return res, time.perf_counter() - t0
+
+            result, processing_time = await asyncio.to_thread(_do_convert)
 
             # Export to JSON (DoclingDocument format)
             json_content = result.document.export_to_dict()
@@ -527,6 +550,7 @@ def main():
         host=args.host,
         port=args.port,
         log_level=args.log_level,
+        loop=_get_loop_setting(),
     )
 
 
