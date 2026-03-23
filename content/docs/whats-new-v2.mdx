@@ -1,0 +1,64 @@
+---
+title: OpenDataLoader PDF v2.0 – PDF to Markdown for RAG, 100+ pages/sec, no GPU
+description: OpenDataLoader PDF v2.0 release highlights: top benchmark performance, four free AI Add-ons, Apache 2.0 license, LangChain integration
+---
+
+# OpenDataLoader PDF v2.0 is out!
+
+OpenDataLoader PDF v2.0 features a hybrid engine that combines AI-based and deterministic extraction methods. This results in both high quality in data extraction and high performance. OpenDataLoader can be used free of charge in a fully airgapped local environment, eliminating any risk of data leakage to external servers.
+
+It has achieved the No. [1 benchmark performance](https://github.com/opendataloader-project/opendataloader-bench) in the open-source PDF data extraction category. This benchmark (ODL-Bench) has been **openly released** on GitHub so that users can **reproduce and verify** results independently.
+
+## What's New 
+
+### Four Free AI Add-ons, Out of the Box
+
+OpenDataLoader PDF v2.0 includes the following four AI features as add-ons at no additional cost:
+- **OCR** - improves text recognition on image-based and scanned PDFs  
+- **Table Extraction** - a lightweight AI model that handles merged cells and complex table structures with precision  
+- **Formula Extraction** - recognizes mathematical and scientific notation locally, without a cloud call  
+- **Chart Analysis** - converts chart visuals into natural-language descriptions
+
+### Retire MPL 2.0 license in favor of more permissive Apache 2.0 license
+
+Apache License 2.0 has officially been adopted for [OpenDataLoader](https://opendataloader.org/) PDF 2.0. Initially ODL used the MPL-2.0 (Mozilla Public License 2.0) license. The license change is not just a legal update. It is a conscious move to strengthen the brand through technological openness.
+
+### Ecosystem Expansion: LangChain Is In  
+
+OpenDataLoader PDF has an official LangChain integration. Install langchain-opendataloader-pdf for an official LangChain document loader integration. See [LangChain docs](https://docs.langchain.com/oss/python/integrations/document_loaders/opendataloader_pdf).
+
+
+## What makes OpenDataLoader unique?
+OpenDataLoader takes a different approach from many PDF parsers:
+
+- Rule-based extraction - Deterministic output without GPU requirements
+- Bounding boxes for all elements - Essential for citation systems
+- XY-Cut++ reading order - Handles multi-column layouts correctly
+- Built-in AI safety filters - Protects against prompt injection
+- Native Tagged PDF support - Leverages accessibility metadata
+
+This means: consistent output (same input = same output), no GPU required, faster processing, and no model hallucinations.
+
+## How to start
+
+Check our [Quick Start](https://github.com/opendataloader-project/opendataloader-pdf#get-started-in-30-seconds) guide, [Advanced Features](https://github.com/opendataloader-project/opendataloader-pdf#advanced-features), [Frequently Asked Questions](https://github.com/opendataloader-project/opendataloader-pdf#frequently-asked-questions) and other technical documentation at [GitHub](https://github.com/opendataloader-project/opendataloader-pdf).
+
+## Looking Ahead. AI based auto-tagging to Tagged PDF
+  
+OpenDataLoader PDF plans to relases auto-tagging functionality in 2026 Q2 based on its layout analysis engine. It will become the first open-source PDF tool that implements AI-generated accessibility auto-tagging and will be able to produce Tagged PDF output entirely under an open-source license (Apache 2.0), with no proprietary dependency. 
+
+Auto-tagging follows the PDF Association's [Well-Tagged PDF specification](https://pdfa.org/wtpdf/) and is validated using [veraPDF](https://verapdf.org), the industry-reference open-source PDF/A and PDF/UA validator.
+
+This is the first forward-looking item on the roadmap of OpenDataLoader towards PDF accessibility. With the European Accessibility Act (EAA) now in force, South Korea's anti-discrimination legislation tightening, and accessibility regulations expanding globally, compliance has become a real operational burden for enterprises. 
+
+## Acknowledgments and Collaboration
+
+The development of OpenDataLoader PDF v2.0 has been made possible through the contributions, feedback, and support of our community. 
+
+We thank the open-source community for their continued engagement through code contributions, issue reporting, testing, and thoughtful discussions. Your collaboration has been essential in improving the reliability, usability, and performance of OpenDataLoader PDF.
+
+We welcome you to help in improving OpenDataLoader PDF by joining us on [GitHub.](https://github.com/opendataloader-project/opendataloader-pdf?utm_source=HackersNews)
+
+You can send issues, review pull requests, submit test PRs based on [open issues](https://github.com/opendataloader-project/opendataloader-pdf/issues?utm_source=HackersNews), or help others in [discussions](https://github.com/opendataloader-project/opendataloader-pdf/discussions?utm_source=HackersNews). If you have any questions, feel free to contact us  [opendataloader@hancom.com](mailto:opendataloader@hancom.com)
+
+Stay updated and connect with others following us on [X](https://x.com/opendatalo51205) and [Linkedin](https://www.linkedin.com/company/%ED%95%9C%EA%B8%80%EA%B3%BC%EC%BB%B4%ED%93%A8%ED%84%B0/posts/?feedView=all).
