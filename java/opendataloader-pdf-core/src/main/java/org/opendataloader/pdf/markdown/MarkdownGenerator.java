@@ -257,16 +257,22 @@ public class MarkdownGenerator implements Closeable {
 
     protected void writeTable(TableBorder table) throws IOException {
         enterTable();
-        for (TableBorderRow row : table.getRows()) {
+        for (int rowNumber = 0; rowNumber < table.getNumberOfRows(); rowNumber++) {
+            TableBorderRow row = table.getRow(rowNumber);
             markdownWriter.write(MarkdownSyntax.TABLE_COLUMN_SEPARATOR);
-            for (TableBorderCell cell : row.getCells()) {
-                List<IObject> cellContents = cell.getContents();
-                writeContents(cellContents, true);
+            for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
+                TableBorderCell cell = row.getCell(colNumber);
+                if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
+                    List<IObject> cellContents = cell.getContents();
+                    writeContents(cellContents, true);
+                } else {
+                    writeSpace();
+                }
                 markdownWriter.write(MarkdownSyntax.TABLE_COLUMN_SEPARATOR);
             }
             markdownWriter.write(MarkdownSyntax.LINE_BREAK);
             //Due to markdown syntax we have to separate column headers
-            if (row.getRowNumber() == 0) {
+            if (rowNumber == 0) {
                 markdownWriter.write(MarkdownSyntax.TABLE_COLUMN_SEPARATOR);
                 for (int i = 0; i < table.getNumberOfColumns(); i++) {
                     markdownWriter.write(MarkdownSyntax.TABLE_HEADER_SEPARATOR);
