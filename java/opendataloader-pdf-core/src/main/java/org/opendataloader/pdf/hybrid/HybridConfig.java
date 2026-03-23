@@ -24,7 +24,7 @@ package org.opendataloader.pdf.hybrid;
 public class HybridConfig {
 
     /** Default timeout for backend requests in milliseconds. */
-    public static final int DEFAULT_TIMEOUT_MS = 30000;
+    public static final int DEFAULT_TIMEOUT_MS = 0;
 
     /** Default maximum concurrent requests to the backend. */
     public static final int DEFAULT_MAX_CONCURRENT_REQUESTS = 4;
@@ -83,14 +83,14 @@ public class HybridConfig {
     }
 
     /**
-     * Sets the request timeout in milliseconds.
+     * Sets the request timeout in milliseconds. Use 0 for no timeout.
      *
-     * @param timeoutMs The timeout in milliseconds.
-     * @throws IllegalArgumentException if timeout is not positive.
+     * @param timeoutMs The timeout in milliseconds (0 = no timeout).
+     * @throws IllegalArgumentException if timeout is negative.
      */
     public void setTimeoutMs(int timeoutMs) {
-        if (timeoutMs <= 0) {
-            throw new IllegalArgumentException("Timeout must be positive: " + timeoutMs);
+        if (timeoutMs < 0) {
+            throw new IllegalArgumentException("Timeout must be non-negative: " + timeoutMs);
         }
         this.timeoutMs = timeoutMs;
     }

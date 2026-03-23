@@ -129,7 +129,7 @@ public class CLIOptions {
     private static final String HYBRID_URL_DESC = "Hybrid backend server URL (overrides default)";
 
     private static final String HYBRID_TIMEOUT_LONG_OPTION = "hybrid-timeout";
-    private static final String HYBRID_TIMEOUT_DESC = "Hybrid backend request timeout in milliseconds. Default: 30000";
+    private static final String HYBRID_TIMEOUT_DESC = "Hybrid backend request timeout in milliseconds (0 = no timeout). Default: 0";
 
     private static final String HYBRID_FALLBACK_LONG_OPTION = "hybrid-fallback";
     private static final String HYBRID_FALLBACK_DESC = "Opt in to Java fallback on hybrid backend error (default: disabled)";
@@ -179,7 +179,7 @@ public class CLIOptions {
             new OptionDefinition(HYBRID_LONG_OPTION, null, "string", "off", HYBRID_DESC, true),
             new OptionDefinition(HYBRID_MODE_LONG_OPTION, null, "string", "auto", HYBRID_MODE_DESC, true),
             new OptionDefinition(HYBRID_URL_LONG_OPTION, null, "string", null, HYBRID_URL_DESC, true),
-            new OptionDefinition(HYBRID_TIMEOUT_LONG_OPTION, null, "string", "30000", HYBRID_TIMEOUT_DESC, true),
+            new OptionDefinition(HYBRID_TIMEOUT_LONG_OPTION, null, "string", "0", HYBRID_TIMEOUT_DESC, true),
             new OptionDefinition(HYBRID_FALLBACK_LONG_OPTION, null, "boolean", false, HYBRID_FALLBACK_DESC, true),
             new OptionDefinition(EXPORT_OPTIONS_LONG_OPTION, null, "boolean", null, null, false),
 

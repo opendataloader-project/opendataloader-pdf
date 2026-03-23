@@ -189,8 +189,8 @@
       "shortName": null,
       "type": "string",
       "required": false,
-      "default": "30000",
-      "description": "Hybrid backend request timeout in milliseconds. Default: 30000"
+      "default": "0",
+      "description": "Hybrid backend request timeout in milliseconds (0 = no timeout). Default: 0"
     },
     {
       "name": "hybrid-fallback",
