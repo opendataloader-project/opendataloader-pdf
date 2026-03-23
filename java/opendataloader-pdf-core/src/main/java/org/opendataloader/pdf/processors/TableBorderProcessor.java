@@ -94,7 +94,7 @@ public class TableBorderProcessor {
             Map<TableBorder, TableBorder> normalizedTables = new HashMap<>();
             for (TableBorder border : processedTableBorders) {
                 StaticContainers.getTableBordersCollection().removeTableBorder(border, pageNumber);
-                normalizedTables.put(border, processTableBorder(contents, border, pageNumber));
+                normalizedTables.put(border, normalizeAndProcessTableBorder(contents, border, pageNumber));
             }
             for (int index = 0; index < newContents.size(); index++) {
                 IObject content = newContents.get(index);
@@ -154,22 +154,26 @@ public class TableBorderProcessor {
         return null;
     }
 
-    public static TableBorder processTableBorder(TableBorder tableBorder, int pageNumber) {
-        return processTableBorder(flattenCellContents(tableBorder), tableBorder, pageNumber);
+    public static void processTableBorder(TableBorder tableBorder, int pageNumber) {
+        processTableBorderContents(tableBorder, pageNumber);
     }
 
-    static TableBorder processTableBorder(List<IObject> rawPageContents, TableBorder tableBorder, int pageNumber) {
+    static TableBorder normalizeAndProcessTableBorder(List<IObject> rawPageContents, TableBorder tableBorder, int pageNumber) {
         TableBorder normalizedTable = TableStructureNormalizer.normalize(rawPageContents, tableBorder);
-        for (int rowNumber = 0; rowNumber < normalizedTable.getNumberOfRows(); rowNumber++) {
-            TableBorderRow row = normalizedTable.getRow(rowNumber);
-            for (int colNumber = 0; colNumber < normalizedTable.getNumberOfColumns(); colNumber++) {
+        processTableBorderContents(normalizedTable, pageNumber);
+        return normalizedTable;
+    }
+
+    private static void processTableBorderContents(TableBorder tableBorder, int pageNumber) {
+        for (int rowNumber = 0; rowNumber < tableBorder.getNumberOfRows(); rowNumber++) {
+            TableBorderRow row = tableBorder.getRow(rowNumber);
+            for (int colNumber = 0; colNumber < tableBorder.getNumberOfColumns(); colNumber++) {
                 TableBorderCell tableBorderCell = row.getCell(colNumber);
                 if (tableBorderCell.getRowNumber() == rowNumber && tableBorderCell.getColNumber() == colNumber) {
                     tableBorderCell.setContents(processTableCellContent(tableBorderCell.getContents(), pageNumber));
                 }
             }
         }
-        return normalizedTable;
     }
 
     private static List<IObject> processTableCellContent(List<IObject> contents, int pageNumber) {
@@ -267,20 +271,5 @@ public class TableBorderProcessor {
         }
         TextChunk result = TextChunk.getTextChunk(textChunk, start, textChunk.getValue().length());
         return ChunksMergeUtils.getTrimTextChunk(result);
-    }
-
-    private static List<IObject> flattenCellContents(TableBorder tableBorder) {
-        List<IObject> flattenedContents = new ArrayList<>();
-        for (int rowNumber = 0; rowNumber < tableBorder.getNumberOfRows(); rowNumber++) {
-            TableBorderRow row = tableBorder.getRow(rowNumber);
-            for (int columnNumber = 0; columnNumber < tableBorder.getNumberOfColumns(); columnNumber++) {
-                TableBorderCell cell = row.getCell(columnNumber);
-                if (cell != null && cell.getRowNumber() == rowNumber && cell.getColNumber() == columnNumber &&
-                        cell.getContents() != null) {
-                    flattenedContents.addAll(cell.getContents());
-                }
-            }
-        }
-        return flattenedContents;
     }
 }

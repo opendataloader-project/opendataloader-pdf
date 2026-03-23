@@ -261,13 +261,11 @@ class TableStructureNormalizer {
             return false;
         }
 
-        int originalOversizedCells = countOversizedCells(originalTable);
-        int rebuiltOversizedCells = countOversizedCells(rebuiltTable);
-        int originalMaxCellLineCount = getMaxMeaningfulTextLinesInCell(originalTable);
-        int rebuiltMaxCellLineCount = getMaxMeaningfulTextLinesInCell(rebuiltTable);
+        TableLineStats originalLineStats = collectTableLineStats(originalTable);
+        TableLineStats rebuiltLineStats = collectTableLineStats(rebuiltTable);
 
-        return rebuiltOversizedCells < originalOversizedCells ||
-            rebuiltMaxCellLineCount < originalMaxCellLineCount;
+        return rebuiltLineStats.oversizedCellCount < originalLineStats.oversizedCellCount ||
+            rebuiltLineStats.maxMeaningfulTextLines < originalLineStats.maxMeaningfulTextLines;
     }
 
     private static int countNonEmptyRows(TableBorder tableBorder) {
@@ -346,31 +344,22 @@ class TableStructureNormalizer {
         return true;
     }
 
-    private static int countOversizedCells(TableBorder tableBorder) {
-        int count = 0;
-        for (int rowNumber = 0; rowNumber < tableBorder.getNumberOfRows(); rowNumber++) {
-            for (int columnNumber = 0; columnNumber < tableBorder.getNumberOfColumns(); columnNumber++) {
-                TableBorderCell cell = tableBorder.getRow(rowNumber).getCell(columnNumber);
-                if (cell != null && cell.getRowNumber() == rowNumber && cell.getColNumber() == columnNumber &&
-                        countMeaningfulTextLines(cell.getContents()) >= OVERSIZED_CELL_LINE_COUNT) {
-                    count++;
-                }
-            }
-        }
-        return count;
-    }
-
-    private static int getMaxMeaningfulTextLinesInCell(TableBorder tableBorder) {
-        int maxCount = 0;
+    private static TableLineStats collectTableLineStats(TableBorder tableBorder) {
+        int oversizedCellCount = 0;
+        int maxMeaningfulTextLines = 0;
         for (int rowNumber = 0; rowNumber < tableBorder.getNumberOfRows(); rowNumber++) {
             for (int columnNumber = 0; columnNumber < tableBorder.getNumberOfColumns(); columnNumber++) {
                 TableBorderCell cell = tableBorder.getRow(rowNumber).getCell(columnNumber);
                 if (cell != null && cell.getRowNumber() == rowNumber && cell.getColNumber() == columnNumber) {
-                    maxCount = Math.max(maxCount, countMeaningfulTextLines(cell.getContents()));
+                    int meaningfulTextLines = countMeaningfulTextLines(cell.getContents());
+                    if (meaningfulTextLines >= OVERSIZED_CELL_LINE_COUNT) {
+                        oversizedCellCount++;
+                    }
+                    maxMeaningfulTextLines = Math.max(maxMeaningfulTextLines, meaningfulTextLines);
                 }
             }
         }
-        return maxCount;
+        return new TableLineStats(oversizedCellCount, maxMeaningfulTextLines);
     }
 
     private static int countMeaningfulTextLines(List<IObject> contents) {
@@ -419,6 +408,17 @@ class TableStructureNormalizer {
                     }
                 }
             }
+        }
+    }
+
+    private static final class TableLineStats {
+
+        private final int oversizedCellCount;
+        private final int maxMeaningfulTextLines;
+
+        private TableLineStats(int oversizedCellCount, int maxMeaningfulTextLines) {
+            this.oversizedCellCount = oversizedCellCount;
+            this.maxMeaningfulTextLines = maxMeaningfulTextLines;
         }
     }
 
