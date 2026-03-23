@@ -29,10 +29,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class Issue336IntegrationTest {
 
@@ -47,7 +47,7 @@ class Issue336IntegrationTest {
     @BeforeEach
     void setUp() {
         samplePdf = new File(SAMPLE_PDF);
-        assumeTrue(samplePdf.exists(), "Sample PDF not found at " + samplePdf.getAbsolutePath());
+        assertTrue(samplePdf.exists(), "Sample PDF not found at " + samplePdf.getAbsolutePath());
     }
 
     @Test
@@ -129,10 +129,18 @@ class Issue336IntegrationTest {
 
     private static void assertHtmlTableContainsExpectedRow(Path htmlOutput) throws IOException {
         String html = Files.readString(htmlOutput);
-        String escapedLabel = Pattern.quote(expectedFinancialRow().get(0));
-        String rowPattern = "(?s)<tr>.*?" + escapedLabel + ".*?1\\.942\\.000.*?117\\.000.*?2\\.538\\.000.*?-3\\.970\\.000.*?</tr>";
+        Matcher rowMatcher = Pattern.compile("(?is)<tr\\b[^>]*>.*?</tr>").matcher(html);
+        List<String> expectedRow = expectedFinancialRow();
+        boolean found = false;
+        while (rowMatcher.find()) {
+            String rowText = normalizeText(rowMatcher.group().replaceAll("(?is)<[^>]+>", " "));
+            if (containsExpectedValues(rowText, expectedRow)) {
+                found = true;
+                break;
+            }
+        }
 
-        assertTrue(Pattern.compile(rowPattern).matcher(html).find(),
+        assertTrue(found,
             "Expected the financial statement row to remain a single HTML table row");
     }
 
@@ -152,6 +160,15 @@ class Issue336IntegrationTest {
             "2.538.000",
             "-3.970.000"
         );
+    }
+
+    private static boolean containsExpectedValues(String value, List<String> expectedValues) {
+        for (String expectedValue : expectedValues) {
+            if (!value.contains(expectedValue)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static List<List<String>> extractTableRows(JsonNode root) {
