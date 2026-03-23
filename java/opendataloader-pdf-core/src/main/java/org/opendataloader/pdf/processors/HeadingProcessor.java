@@ -90,6 +90,12 @@ public class HeadingProcessor {
             }
             SemanticTextNode prevNode = index != 0 ? textNodes.get(index - 1) : null;
             SemanticTextNode nextNode = index + 1 < textNodesCount ? textNodes.get(index + 1) : null;
+            if (prevNode != null && safeGetTextColor(prevNode) == null) {
+                prevNode = null;
+            }
+            if (nextNode != null && safeGetTextColor(nextNode) == null) {
+                nextNode = null;
+            }
             double probability = NodeUtils.headingProbability(textNode, prevNode, nextNode, textNode);
 
             probability += textNodeStatistics.fontSizeRarityBoost(textNode);
