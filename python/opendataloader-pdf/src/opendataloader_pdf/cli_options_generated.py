@@ -222,8 +222,8 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "short_name": None,
         "type": "string",
         "required": False,
-        "default": "30000",
-        "description": "Hybrid backend request timeout in milliseconds. Default: 30000",
+        "default": "0",
+        "description": "Hybrid backend request timeout in milliseconds (0 = no timeout). Default: 0",
     },
     {
         "name": "hybrid-fallback",

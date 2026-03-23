@@ -51,7 +51,7 @@ export interface ConvertOptions {
   hybridMode?: string;
   /** Hybrid backend server URL (overrides default) */
   hybridUrl?: string;
-  /** Hybrid backend request timeout in milliseconds. Default: 30000 */
+  /** Hybrid backend request timeout in milliseconds (0 = no timeout). Default: 0 */
   hybridTimeout?: string;
   /** Opt in to Java fallback on hybrid backend error (default: disabled) */
   hybridFallback?: boolean;

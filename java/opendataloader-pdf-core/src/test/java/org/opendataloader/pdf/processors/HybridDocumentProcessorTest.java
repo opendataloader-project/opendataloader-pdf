@@ -178,9 +178,8 @@ public class HybridDocumentProcessorTest {
         config.setTimeoutMs(60000);
         Assertions.assertEquals(60000, config.getTimeoutMs());
 
-        Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            config.setTimeoutMs(0);
-        });
+        config.setTimeoutMs(0);
+        Assertions.assertEquals(0, config.getTimeoutMs());
 
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
             config.setTimeoutMs(-1000);

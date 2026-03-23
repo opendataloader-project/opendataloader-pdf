@@ -65,7 +65,7 @@ def convert(
         hybrid: Hybrid backend for AI processing. Values: off (default), docling-fast
         hybrid_mode: Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)
         hybrid_url: Hybrid backend server URL (overrides default)
-        hybrid_timeout: Hybrid backend request timeout in milliseconds. Default: 30000
+        hybrid_timeout: Hybrid backend request timeout in milliseconds (0 = no timeout). Default: 0
         hybrid_fallback: Opt in to Java fallback on hybrid backend error (default: disabled)
     """
     args: List[str] = []

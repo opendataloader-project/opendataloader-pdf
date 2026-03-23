@@ -32,5 +32,5 @@ description: Options for the Node.js convert function
 | `hybrid`                | `string`             | `"off"`      | Hybrid backend for AI processing. Values: off (default), docling-fast                                                              |
 | `hybridMode`            | `string`             | `"auto"`     | Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)                               |
 | `hybridUrl`             | `string`             | -            | Hybrid backend server URL (overrides default)                                                                                      |
-| `hybridTimeout`         | `string`             | `"30000"`    | Hybrid backend request timeout in milliseconds. Default: 30000                                                                     |
+| `hybridTimeout`         | `string`             | `"0"`        | Hybrid backend request timeout in milliseconds (0 = no timeout). Default: 0                                                        |
 | `hybridFallback`        | `boolean`            | `false`      | Opt in to Java fallback on hybrid backend error (default: disabled)                                                                |
