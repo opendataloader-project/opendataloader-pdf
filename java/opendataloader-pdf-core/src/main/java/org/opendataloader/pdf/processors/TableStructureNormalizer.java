@@ -51,6 +51,9 @@ class TableStructureNormalizer {
         if (rawPageContents == null || rawPageContents.isEmpty()) {
             return tableBorder;
         }
+        if (tableBorder.isTextBlock()) {
+            return tableBorder;
+        }
         if (tableBorder.getNumberOfRows() > MAX_UNDERSEGMENTED_ROWS ||
                 tableBorder.getNumberOfColumns() < MIN_UNDERSEGMENTED_COLUMNS) {
             return tableBorder;
@@ -223,6 +226,11 @@ class TableStructureNormalizer {
         TableBorder rebuiltTable = new TableBorder(rowBands.size(), originalTable.getNumberOfColumns());
         rebuiltTable.setRecognizedStructureId(originalTable.getRecognizedStructureId());
         rebuiltTable.setBoundingBox(new BoundingBox(originalTable.getBoundingBox()));
+        rebuiltTable.setNode(originalTable.getNode());
+        rebuiltTable.setIndex(originalTable.getIndex());
+        rebuiltTable.setLevel(originalTable.getLevel());
+        rebuiltTable.setPreviousTable(originalTable.getPreviousTable());
+        rebuiltTable.setNextTable(originalTable.getNextTable());
 
         for (int rowNumber = 0; rowNumber < rowBands.size(); rowNumber++) {
             RowBand rowBand = rowBands.get(rowNumber);
