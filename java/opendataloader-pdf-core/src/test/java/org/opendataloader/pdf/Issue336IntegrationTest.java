@@ -29,6 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -50,30 +51,107 @@ class Issue336IntegrationTest {
     }
 
     @Test
-    void testSpreadsheetExportedTableKeepsFinancialRowsSeparated() throws IOException {
+    void testSpreadsheetExportedTableKeepsFinancialRowsSeparatedAcrossStandardOutputs() throws IOException {
         Config config = new Config();
         config.setOutputFolder(tempDir.toString());
         config.setGenerateJSON(true);
-        config.setGenerateMarkdown(false);
+        config.setGenerateMarkdown(true);
+        config.setGenerateHtml(true);
+        config.setGenerateText(true);
+        config.setGeneratePDF(true);
 
         DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
 
         Path jsonOutput = tempDir.resolve(OUTPUT_BASENAME + ".json");
-        assertTrue(Files.exists(jsonOutput), "JSON output should exist");
+        Path markdownOutput = tempDir.resolve(OUTPUT_BASENAME + ".md");
+        Path htmlOutput = tempDir.resolve(OUTPUT_BASENAME + ".html");
+        Path textOutput = tempDir.resolve(OUTPUT_BASENAME + ".txt");
+        Path annotatedPdfOutput = tempDir.resolve(OUTPUT_BASENAME + "_annotated.pdf");
 
+        assertTrue(Files.exists(jsonOutput), "JSON output should exist");
+        assertTrue(Files.exists(markdownOutput), "Markdown output should exist");
+        assertTrue(Files.exists(htmlOutput), "HTML output should exist");
+        assertTrue(Files.exists(textOutput), "Text output should exist");
+        assertTrue(Files.exists(annotatedPdfOutput), "Annotated PDF output should exist");
+        assertTrue(Files.size(annotatedPdfOutput) > 0, "Annotated PDF output should not be empty");
+
+        assertJsonContainsExpectedRow(jsonOutput);
+        assertMarkdownTableContainsExpectedRow(markdownOutput);
+        assertHtmlTableContainsExpectedRow(htmlOutput);
+        assertTextContainsExpectedRow(textOutput);
+    }
+
+    @Test
+    void testSpreadsheetExportedTableKeepsFinancialRowsSeparatedInMarkdownHtmlOutput() throws IOException {
+        Config config = new Config();
+        config.setOutputFolder(tempDir.toString());
+        config.setGenerateJSON(false);
+        config.setUseHTMLInMarkdown(true);
+
+        DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
+
+        Path markdownOutput = tempDir.resolve(OUTPUT_BASENAME + ".md");
+        assertTrue(Files.exists(markdownOutput), "Markdown-with-HTML output should exist");
+        assertHtmlTableContainsExpectedRow(markdownOutput);
+    }
+
+    @Test
+    void testSpreadsheetExportedTableKeepsFinancialRowsSeparatedInMarkdownImageMode() throws IOException {
+        Config config = new Config();
+        config.setOutputFolder(tempDir.toString());
+        config.setGenerateJSON(false);
+        config.setAddImageToMarkdown(true);
+
+        DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
+
+        Path markdownOutput = tempDir.resolve(OUTPUT_BASENAME + ".md");
+        assertTrue(Files.exists(markdownOutput), "Markdown-with-images output should exist");
+        assertMarkdownTableContainsExpectedRow(markdownOutput);
+    }
+
+    private static void assertJsonContainsExpectedRow(Path jsonOutput) throws IOException {
         JsonNode root = new ObjectMapper().readTree(Files.readString(jsonOutput));
         List<List<String>> rows = extractTableRows(root);
 
-        List<String> expectedRow = List.of(
+        assertTrue(rows.contains(expectedFinancialRow()),
+            "Expected the financial statement row to be extracted as its own table row");
+    }
+
+    private static void assertMarkdownTableContainsExpectedRow(Path markdownOutput) throws IOException {
+        String markdown = Files.readString(markdownOutput);
+        String escapedLabel = Pattern.quote(expectedFinancialRow().get(0));
+        String rowPattern = "(?m)^\\|\\s*" + escapedLabel
+            + "\\s*\\|\\s*1\\.942\\.000\\s*\\|\\s*117\\.000\\s*\\|\\s*2\\.538\\.000\\s*\\|\\s*-3\\.970\\.000\\s*\\|\\s*$";
+
+        assertTrue(Pattern.compile(rowPattern).matcher(markdown).find(),
+            "Expected the financial statement row to remain a single Markdown table row");
+    }
+
+    private static void assertHtmlTableContainsExpectedRow(Path htmlOutput) throws IOException {
+        String html = Files.readString(htmlOutput);
+        String escapedLabel = Pattern.quote(expectedFinancialRow().get(0));
+        String rowPattern = "(?s)<tr>.*?" + escapedLabel + ".*?1\\.942\\.000.*?117\\.000.*?2\\.538\\.000.*?-3\\.970\\.000.*?</tr>";
+
+        assertTrue(Pattern.compile(rowPattern).matcher(html).find(),
+            "Expected the financial statement row to remain a single HTML table row");
+    }
+
+    private static void assertTextContainsExpectedRow(Path textOutput) throws IOException {
+        String text = Files.readString(textOutput);
+        String expectedLine = String.join("\t", expectedFinancialRow());
+
+        assertTrue(text.contains(expectedLine),
+            "Expected the financial statement row to remain a single plain-text table row");
+    }
+
+    private static List<String> expectedFinancialRow() {
+        return List.of(
             "2) Variazione rimanenze prodotti in corso di lavor., semilavorati e finiti",
             "1.942.000",
             "117.000",
             "2.538.000",
             "-3.970.000"
         );
-
-        assertTrue(rows.contains(expectedRow),
-            "Expected the financial statement row to be extracted as its own table row");
     }
 
     private static List<List<String>> extractTableRows(JsonNode root) {
