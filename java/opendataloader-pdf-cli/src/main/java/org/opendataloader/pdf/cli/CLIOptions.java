@@ -500,7 +500,7 @@ public class CLIOptions {
                     config.getHybridConfig().setTimeoutMs(timeout);
                 } catch (NumberFormatException e) {
                     throw new IllegalArgumentException(
-                            String.format("Invalid timeout value '%s'. Must be a positive integer.", timeoutValue));
+                            String.format("Invalid timeout value '%s'. Must be a non-negative integer.", timeoutValue));
                 }
             }
         }
