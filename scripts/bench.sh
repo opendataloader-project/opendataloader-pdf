@@ -30,10 +30,22 @@ for arg in "$@"; do
     fi
 done
 
+# Find CLI JAR (shaded first, then regular, excluding sources/javadoc/original)
+find_jar() {
+    local target_dir="$PROJECT_ROOT/java/opendataloader-pdf-cli/target"
+    local jar
+    jar=$(find "$target_dir" -name "opendataloader-pdf-cli-*-shaded.jar" 2>/dev/null | head -1)
+    if [[ -z "$jar" ]]; then
+        jar=$(find "$target_dir" -name "opendataloader-pdf-cli-*.jar" \
+            ! -name "*-sources.jar" ! -name "*-javadoc.jar" ! -name "original-*" \
+            2>/dev/null | head -1)
+    fi
+    echo "$jar"
+}
+
 # Step 1: Build Java if needed
 if [[ "$SKIP_BUILD" == "false" ]]; then
-    JAR_PATH=$(find "$PROJECT_ROOT/java/opendataloader-pdf-cli/target" \
-        -name "opendataloader-pdf-cli-*-shaded.jar" 2>/dev/null | head -1)
+    JAR_PATH=$(find_jar)
     if [[ -z "$JAR_PATH" ]]; then
         echo "Building Java..."
         "$SCRIPT_DIR/build-java.sh"
@@ -52,8 +64,7 @@ else
 fi
 
 # Step 3: Find JAR path
-JAR_PATH=$(find "$PROJECT_ROOT/java/opendataloader-pdf-cli/target" \
-    -name "opendataloader-pdf-cli-*-shaded.jar" 2>/dev/null | head -1)
+JAR_PATH=$(find_jar)
 if [[ -z "$JAR_PATH" ]]; then
     echo "Error: No JAR found. Run ./scripts/build-java.sh first."
     exit 1
