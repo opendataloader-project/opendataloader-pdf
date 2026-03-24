@@ -12,7 +12,8 @@ When using `--enrich-formula` or `--enrich-picture-description` on the hybrid se
 
 ## Benchmark
 
-- `/bench` — Run benchmark and analyze results
-- `/bench-debug <doc_id>` — Debug specific document failures
-- CI fails if scores drop below `tests/benchmark/thresholds.json`
+- `./scripts/bench.sh` — Run benchmark (auto-clones opendataloader-bench for PDFs and evaluation logic)
+- `./scripts/bench.sh --doc-id <id>` — Debug specific document
+- `./scripts/bench.sh --check-regression` — CI mode with threshold check
+- Benchmark code lives in [opendataloader-bench](https://github.com/opendataloader-project/opendataloader-bench)
 - Metrics: **NID** (reading order), **TEDS** (table structure), **MHS** (heading structure), **Table Detection F1**, **Speed**
