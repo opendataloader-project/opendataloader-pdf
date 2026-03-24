@@ -70,7 +70,8 @@
   },
   "pnpm": {
     "overrides": {
-      "minimatch@<10.2.3": ">=10.2.3"
+      "minimatch@<10.2.3": ">=10.2.3",
+      "flatted@<3.4.2": ">=3.4.2"
     }
   },
   "files": [
