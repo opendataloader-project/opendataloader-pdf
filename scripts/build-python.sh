@@ -22,8 +22,8 @@ cp "$ROOT_DIR/README.md" "$PACKAGE_DIR/README.md"
 # Build wheel package
 uv build --wheel
 
-# Install and run tests
-uv sync
+# Install and run tests (include hybrid extras for full test coverage)
+uv sync --extra hybrid
 uv run pytest tests -v -s
 
 echo "Build completed successfully."
