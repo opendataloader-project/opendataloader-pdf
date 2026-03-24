@@ -19,6 +19,11 @@ class TestConvertPdfValidation:
         with pytest.raises(FileNotFoundError):
             convert_pdf(input_path=str(tmp_path))
 
+    def test_unsupported_format_raises_error(self, input_pdf):
+        """Should raise ValueError for unsupported formats."""
+        with pytest.raises(ValueError, match="Unsupported format"):
+            convert_pdf(input_path=str(input_pdf), format="docx")
+
 
 class TestConvertPdfFormats:
     """Tests for output format support."""
@@ -64,18 +69,19 @@ class TestConvertPdfOptions:
         result_page1 = convert_pdf(input_path=str(input_pdf_academic), format="text", pages="1")
         assert len(result_page1) < len(result_all)
 
-    def test_quiet_is_always_true(self, input_pdf):
+    def test_quiet_is_always_true(self, input_pdf, tmp_path):
         """convert() should always be called with quiet=True."""
-        with patch("opendataloader_pdf_mcp.server.opendataloader_pdf.convert") as mock_convert:
-            # Create a fake output file so read doesn't fail
-            convert_pdf.__wrapped__ if hasattr(convert_pdf, '__wrapped__') else None
-            try:
-                convert_pdf(input_path=str(input_pdf))
-            except Exception:
-                pass
-            if mock_convert.called:
-                kwargs = mock_convert.call_args[1]
-                assert kwargs.get("quiet") is True
+        fake_output = tmp_path / "lorem.md"
+        fake_output.write_text("mocked")
+
+        with patch("opendataloader_pdf_mcp.server.opendataloader_pdf.convert") as mock_convert, \
+             patch("opendataloader_pdf_mcp.server.tempfile.TemporaryDirectory") as mock_tmpdir:
+            mock_tmpdir.return_value.__enter__ = lambda self: str(tmp_path)
+            mock_tmpdir.return_value.__exit__ = lambda *args: None
+            result = convert_pdf(input_path=str(input_pdf))
+            mock_convert.assert_called_once()
+            kwargs = mock_convert.call_args[1]
+            assert kwargs["quiet"] is True
 
 
 class TestMcpToolRegistration:
