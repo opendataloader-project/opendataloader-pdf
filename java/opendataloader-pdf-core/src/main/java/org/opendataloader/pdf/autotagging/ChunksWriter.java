@@ -215,7 +215,7 @@ public class ChunksWriter {
                 int length = streamInfoQueue.peek().getEndIndex() - currentStringIndex;
                 currentStringIndex += value.length();
                 if (length <= value.length()) {
-                    COSObject cosString = COSString.construct(Arrays.copyOfRange(bytes, currentBytesIndex, currentBytesIndex + dif));
+                    COSObject cosString = COSString.construct(Arrays.copyOfRange(bytes, currentBytesIndex, currentBytesIndex + dif), string.isHexadecimal());
                     if (array != null) {
                         array.add(cosString);
                         map.put(streamInfoQueue.peek(), new COSObject(new COSArray(array)));
@@ -235,7 +235,7 @@ public class ChunksWriter {
         } catch (IOException e) {
         }
         if (array != null && dif > 0) {
-            array.add(COSString.construct(Arrays.copyOfRange(bytes, currentBytesIndex, currentBytesIndex + dif)));
+            array.add(COSString.construct(Arrays.copyOfRange(bytes, currentBytesIndex, currentBytesIndex + dif), string.isHexadecimal()));
         }
         return currentStringIndex;
     }
