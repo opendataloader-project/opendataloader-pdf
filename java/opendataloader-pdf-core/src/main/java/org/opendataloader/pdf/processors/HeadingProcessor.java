@@ -18,6 +18,7 @@ package org.opendataloader.pdf.processors;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.utils.BulletedParagraphUtils;
 import org.opendataloader.pdf.utils.TextNodeStatistics;
+import org.opendataloader.pdf.utils.TextNodeUtils;
 import org.verapdf.wcag.algorithms.entities.INode;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
@@ -34,33 +35,14 @@ import org.verapdf.wcag.algorithms.entities.text.TextStyle;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Processor for detecting and classifying headings in PDF content.
  * Uses font size, weight, and position to identify potential headings.
  */
 public class HeadingProcessor {
-    private static final Logger LOGGER = Logger.getLogger(HeadingProcessor.class.getName());
     private static final double HEADING_PROBABILITY = 0.75;
     private static final double BULLETED_HEADING_PROBABILITY = 0.1;
-
-    /**
-     * Safely retrieves text color from a semantic text node, returning null if not available.
-     * Defensive wrapper for verapdf's getTextColor() which may throw NPE on incomplete font data.
-     *
-     * @param textNode the text node to get color from
-     * @return the text color array, or null if not available
-     */
-    public static double[] safeGetTextColor(SemanticTextNode textNode) {
-        try {
-            return textNode.getTextColor();
-        } catch (NullPointerException e) {
-            LOGGER.log(Level.FINE, "textColor not available for node", e);
-            return null;
-        }
-    }
 
     /**
      * Processes content to identify and mark headings.
@@ -85,17 +67,8 @@ public class HeadingProcessor {
             if (textNode.getSemanticType() == SemanticType.HEADING) {
                 continue;
             }
-            if (safeGetTextColor(textNode) == null) {
-                continue;
-            }
             SemanticTextNode prevNode = index != 0 ? textNodes.get(index - 1) : null;
             SemanticTextNode nextNode = index + 1 < textNodesCount ? textNodes.get(index + 1) : null;
-            if (prevNode != null && safeGetTextColor(prevNode) == null) {
-                prevNode = null;
-            }
-            if (nextNode != null && safeGetTextColor(nextNode) == null) {
-                nextNode = null;
-            }
             double probability = NodeUtils.headingProbability(textNode, prevNode, nextNode, textNode);
 
             probability += textNodeStatistics.fontSizeRarityBoost(textNode);
@@ -219,15 +192,14 @@ public class HeadingProcessor {
     public static void detectHeadingsLevels() {
         SortedMap<TextStyle, Set<SemanticHeading>> map = new TreeMap<>();
         List<SemanticHeading> headings = StaticLayoutContainers.getHeadings();
+        List<SemanticHeading> colorlessHeadings = new ArrayList<>();
         for (SemanticHeading heading : headings) {
-            try {
-                TextStyle textStyle = TextStyle.getTextStyle(heading);
-                map.computeIfAbsent(textStyle, k -> new HashSet<>()).add(heading);
-            } catch (NullPointerException e) {
-                // Hybrid backend may produce text nodes without color info;
-                // skip style-based level detection for these headings.
-                LOGGER.log(Level.FINE, "Skipping heading level detection for node with incomplete style info", e);
+            if (TextNodeUtils.getTextColorOrNull(heading) == null) {
+                colorlessHeadings.add(heading);
+                continue;
             }
+            TextStyle textStyle = TextStyle.getTextStyle(heading);
+            map.computeIfAbsent(textStyle, k -> new HashSet<>()).add(heading);
         }
         int level = 1;
         TextStyle previousTextStyle = null;
@@ -240,5 +212,33 @@ public class HeadingProcessor {
                 heading.setHeadingLevel(level);
             }
         }
+        // Headings without color info get level based on font size relative to existing levels
+        for (SemanticHeading heading : colorlessHeadings) {
+            heading.setHeadingLevel(findClosestLevel(heading, map));
+        }
+    }
+
+    private static int findClosestLevel(SemanticHeading heading, SortedMap<TextStyle, Set<SemanticHeading>> map) {
+        if (map.isEmpty()) {
+            return 1;
+        }
+        double fontSize = heading.getFontSize();
+        int bestLevel = 1;
+        double bestDiff = Double.MAX_VALUE;
+        int level = 1;
+        TextStyle previousStyle = null;
+        for (Map.Entry<TextStyle, Set<SemanticHeading>> entry : map.entrySet()) {
+            if (previousStyle != null && previousStyle.compareTo(entry.getKey()) != 0) {
+                level++;
+            }
+            previousStyle = entry.getKey();
+            SemanticHeading representative = entry.getValue().iterator().next();
+            double diff = Math.abs(representative.getFontSize() - fontSize);
+            if (diff < bestDiff) {
+                bestDiff = diff;
+                bestLevel = level;
+            }
+        }
+        return bestLevel;
     }
 }
