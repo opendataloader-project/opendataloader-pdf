@@ -105,7 +105,7 @@ The triage processor uses a **conservative strategy**: it routes uncertain pages
 |:-------|:-----|:--------|:------------|
 | `hybrid` | string | `"off"` | Backend name: `off`, `docling-fast` |
 | `hybrid_url` | string | auto | Backend server URL |
-| `hybrid_timeout` | str | `"30000"` | Request timeout in milliseconds |
+| `hybrid_timeout` | str | `"0"` | Request timeout in milliseconds (0 = no timeout) |
 | `hybrid_fallback` | bool | false | Fallback to Java on backend error |
 
 ### Python Options
@@ -216,7 +216,7 @@ Start the backend server with `--force-ocr` before running the Python conversion
 
 > **Note**: Standard digital PDFs do not need `--force-ocr`. Use it only for scanned or image-based PDFs where text cannot be selected.
 
-> **Timeout**: OCR is CPU-intensive. For large scanned documents, increase the timeout (default is 30s per batch):
+> **Timeout**: OCR is CPU-intensive. By default there is no timeout, but you can set one explicitly:
 > ```bash
 > # Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
 > opendataloader-pdf --hybrid docling-fast --hybrid-timeout 120000 file1.pdf file2.pdf folder/

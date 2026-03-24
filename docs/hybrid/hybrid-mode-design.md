@@ -40,7 +40,7 @@ opendataloader-pdf --hybrid hancom input.pdf
 |--------|-------------|
 | `--hybrid <name>` | Hybrid backend: `off` (default), `docling`, `hancom`, etc. |
 | `--hybrid-url <url>` | Backend server URL (overrides default) |
-| `--hybrid-timeout <ms>` | Request timeout in milliseconds (default: 30000) |
+| `--hybrid-timeout <ms>` | Request timeout in milliseconds (default: 0, no timeout) |
 | `--hybrid-fallback` | Fallback to Java on backend error (default: true) |
 
 ## Supported Backends

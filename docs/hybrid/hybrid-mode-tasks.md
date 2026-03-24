@@ -518,7 +518,7 @@ Add configuration classes for hybrid processing.
 // HybridConfig.java
 public class HybridConfig {
     private String url;                  // null = use backend default
-    private int timeoutMs = 30000;
+    private int timeoutMs = 0;  // 0 = no timeout
     private boolean fallbackToJava = true;
     private int maxConcurrentRequests = 4;
     // getters, setters, builder pattern
@@ -592,7 +592,7 @@ Add CLI options to enable hybrid processing.
 New options:
   --hybrid <off|docling|hancom|...> Hybrid backend to use (default: off)
   --hybrid-url <url>                Backend server URL (default: backend-specific)
-  --hybrid-timeout <ms>             Request timeout in ms (default: 30000)
+  --hybrid-timeout <ms>             Request timeout in ms (default: 0, no timeout)
   --hybrid-fallback                 Fallback to Java on error (default: true)
 ```
 
@@ -602,8 +602,8 @@ new OptionDefinition("hybrid", null, "string", "off",
     "Hybrid backend for AI processing. Values: off (default), docling, hancom", true),
 new OptionDefinition("hybrid-url", null, "string", null,
     "Hybrid backend server URL (overrides default)", true),
-new OptionDefinition("hybrid-timeout", null, "string", "30000",
-    "Hybrid backend request timeout in milliseconds", true),
+new OptionDefinition("hybrid-timeout", null, "string", "0",
+    "Hybrid backend request timeout in milliseconds (0 = no timeout)", true),
 new OptionDefinition("hybrid-fallback", null, "boolean", true,
     "Fallback to Java on hybrid backend error", true),
 ```
