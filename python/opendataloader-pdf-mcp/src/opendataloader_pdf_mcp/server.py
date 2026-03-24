@@ -155,14 +155,18 @@ def convert_pdf(
         stem = input_file.stem
         output_file = Path(tmp_dir) / f"{stem}{ext}"
 
-        if not output_file.exists():
-            # Fallback: find the first output file in the tmp dir
+        if not output_file.is_file():
             files = [f for f in Path(tmp_dir).iterdir() if f.is_file()]
             if not files:
                 raise RuntimeError(
                     "Conversion completed but no output file was generated."
                 )
-            output_file = files[0]
+            matching_ext = sorted(f for f in files if f.suffix == ext)
+            if not matching_ext:
+                raise RuntimeError(
+                    f"Conversion completed but no '{ext}' output file was generated."
+                )
+            output_file = matching_ext[0]
 
         return output_file.read_text(encoding="utf-8")
 
