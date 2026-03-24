@@ -40,7 +40,14 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Tests for Markdown table generation, specifically verifying correct handling
  * of merged cells (colspan/rowspan).
- * Regression test for issue #336.
+ *
+ * <p>Merged cells occur in practice via:
+ * <ul>
+ *   <li>SpecialTableProcessor: Korean document tables (수신/경유/제목) always create colspan</li>
+ *   <li>DoclingSchemaTransformer: Hybrid mode with Docling backend</li>
+ *   <li>HancomSchemaTransformer: Hybrid mode with Hancom backend</li>
+ *   <li>TaggedDocumentProcessor: Tagged PDFs with explicit merge attributes</li>
+ * </ul>
  */
 public class MarkdownTableTest {
 
@@ -50,6 +57,61 @@ public class MarkdownTableTest {
     @BeforeAll
     static void initStaticContainers() {
         StaticContainers.updateContainers(null);
+    }
+
+    /**
+     * Simulates the exact table structure created by SpecialTableProcessor
+     * for Korean documents. When a row has no ':' separator (e.g., "수신"),
+     * the processor creates a single cell with the same object assigned to
+     * both column positions — producing a colspan-like merged cell.
+     *
+     * <p>Before fix: content was written twice (e.g., "|수신|수신|").
+     * After fix: content written once, spanned column gets empty space (e.g., "|수신| |").
+     *
+     * @see org.opendataloader.pdf.processors.SpecialTableProcessor
+     */
+    @Test
+    void testKoreanSpecialTableMergedRow() throws IOException {
+        // Reproduce SpecialTableProcessor: 3 rows, 2 columns
+        // "수신" (no colon → one cell spanning 2 columns)
+        // "경유" (no colon → one cell spanning 2 columns)
+        // "제목: 테스트" (has colon → two separate cells)
+        TableBorderRow row0 = new TableBorderRow(0, 2, null);
+        TableBorderCell cell00 = new TableBorderCell(0, 0, 1, 2, null);
+        addTextContent(cell00, "수신");
+        row0.getCells()[0] = cell00;
+        row0.getCells()[1] = cell00; // same object, like SpecialTableProcessor
+
+        TableBorderRow row1 = new TableBorderRow(1, 2, null);
+        TableBorderCell cell10 = new TableBorderCell(1, 0, 1, 2, null);
+        addTextContent(cell10, "경유");
+        row1.getCells()[0] = cell10;
+        row1.getCells()[1] = cell10;
+
+        TableBorderRow row2 = new TableBorderRow(2, 2, null);
+        TableBorderCell cell20 = new TableBorderCell(2, 0, 1, 1, null);
+        addTextContent(cell20, "제목");
+        TableBorderCell cell21 = new TableBorderCell(2, 1, 1, 1, null);
+        addTextContent(cell21, "테스트");
+        row2.getCells()[0] = cell20;
+        row2.getCells()[1] = cell21;
+
+        TableBorder table = new TableBorder(null, new TableBorderRow[]{row0, row1, row2}, 3, 2);
+        String markdown = generateMarkdownTable(table);
+        String[] lines = markdown.split("\n");
+
+        // Row 0 (header): "수신" must appear exactly once
+        assertEquals(1, countOccurrences(lines[0], "수신"),
+            "Merged cell '수신' should appear once. Got: " + lines[0]);
+
+        // Row 1 (after header + separator): "경유" must appear exactly once
+        assertEquals(1, countOccurrences(lines[2], "경유"),
+            "Merged cell '경유' should appear once. Got: " + lines[2]);
+
+        // Row 2: "제목" and "테스트" in separate cells
+        String row2Line = lines[3];
+        assertTrue(row2Line.contains("제목") && row2Line.contains("테스트"),
+            "Split row should contain both cells. Got: " + row2Line);
     }
 
     /**
