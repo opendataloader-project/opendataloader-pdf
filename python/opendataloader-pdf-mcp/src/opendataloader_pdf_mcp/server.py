@@ -37,6 +37,7 @@ def convert_pdf(
     hybrid_url: str | None = None,
     hybrid_timeout: str | None = None,
     hybrid_fallback: bool = False,
+    image_dir: str | None = None,
 ) -> str:
     """Convert a PDF file to the specified format.
 
@@ -67,6 +68,7 @@ def convert_pdf(
         hybrid_url: Hybrid backend server URL.
         hybrid_timeout: Hybrid backend timeout in milliseconds.
         hybrid_fallback: Enable Java fallback on hybrid backend error.
+        image_dir: Directory path to save extracted images.
 
     Returns:
         The converted content as text.
@@ -84,7 +86,12 @@ def convert_pdf(
         "markdown-with-html": ".md",
         "markdown-with-images": ".md",
     }
-    ext = ext_map.get(format, ".json")
+    if format not in ext_map:
+        raise ValueError(
+            f"Unsupported format: {format!r}. "
+            f"Supported formats: {', '.join(ext_map)}"
+        )
+    ext = ext_map[format]
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         kwargs: dict[str, Any] = {
@@ -137,6 +144,8 @@ def convert_pdf(
             kwargs["hybrid_timeout"] = hybrid_timeout
         if hybrid_fallback:
             kwargs["hybrid_fallback"] = True
+        if image_dir is not None:
+            kwargs["image_dir"] = image_dir
 
         opendataloader_pdf.convert(**kwargs)
 
@@ -145,16 +154,19 @@ def convert_pdf(
         output_file = Path(tmp_dir) / f"{stem}{ext}"
 
         if not output_file.exists():
-            # Fallback: return the first file found in the tmp dir
-            files = list(Path(tmp_dir).iterdir())
+            # Fallback: find the first output file in the tmp dir
+            files = [f for f in Path(tmp_dir).iterdir() if f.is_file()]
             if not files:
-                return "Conversion completed but no output file was generated."
+                raise RuntimeError(
+                    "Conversion completed but no output file was generated."
+                )
             output_file = files[0]
 
         return output_file.read_text(encoding="utf-8")
 
 
 def main():
+    """Run the MCP server."""
     mcp.run()
 
 
