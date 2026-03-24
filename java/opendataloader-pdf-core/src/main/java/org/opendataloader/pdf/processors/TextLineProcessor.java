@@ -47,13 +47,7 @@ public class TextLineProcessor {
                     continue;
                 }
                 TextLine currentLine = new TextLine(textChunk);
-                double oneLineProbability;
-                try {
-                    oneLineProbability = ChunksMergeUtils.countOneLineProbability(new SemanticTextNode(), previousLine, currentLine);
-                } catch (NullPointerException e) {
-                    // textColor not available for hybrid mode generated content
-                    oneLineProbability = 0;
-                }
+                double oneLineProbability = ChunksMergeUtils.countOneLineProbability(new SemanticTextNode(), previousLine, currentLine);
                 isSeparateLine |= (oneLineProbability < ONE_LINE_PROBABILITY) || previousLine.isHiddenText() != currentLine.isHiddenText();
                 if (isSeparateLine) {
                     previousLine.setBoundingBox(new BoundingBox(previousLine.getBoundingBox()));

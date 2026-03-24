@@ -28,6 +28,7 @@ import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.text.TextGenerator;
 import org.opendataloader.pdf.utils.ContentSanitizer;
 import org.opendataloader.pdf.utils.ImagesUtils;
+import org.opendataloader.pdf.utils.TextNodeUtils;
 import org.verapdf.as.ASAtom;
 import org.verapdf.containers.StaticCoreContainers;
 import org.verapdf.cos.COSDictionary;
@@ -359,7 +360,7 @@ public class DocumentProcessor {
     public static String getContentsValueForTextNode(SemanticTextNode textNode) {
         return String.format("%s: font %s, text size %.2f, text color %s, text content \"%s\"",
                 textNode.getSemanticType().getValue(), textNode.getFontName(),
-                textNode.getFontSize(), Arrays.toString(HeadingProcessor.safeGetTextColor(textNode)),
+                textNode.getFontSize(), Arrays.toString(TextNodeUtils.getTextColorOrDefault(textNode)),
                 textNode.getValue().length() > 15 ? textNode.getValue().substring(0, 15) + "..." : textNode.getValue());
     }
 
