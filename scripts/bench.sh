@@ -83,3 +83,4 @@ uv sync --quiet
 OPENDATALOADER_JAR="$JAR_PATH" uv run python src/run.py \
     --engine opendataloader \
     "${ARGS[@]}"
+# CI fork PR test
