@@ -48,7 +48,7 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           files: java/opendataloader-pdf-core/target/site/jacoco/jacoco.xml
-          fail_ci_if_error: true
+          fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload build artifacts
