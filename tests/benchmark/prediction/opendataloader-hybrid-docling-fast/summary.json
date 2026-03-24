@@ -1,9 +1,0 @@
-{
-    "engine_name": "opendataloader-hybrid-docling-fast",
-    "engine_version": "local+docling-fast",
-    "processor": "Apple M4",
-    "document_count": 200,
-    "total_elapsed": 86.69829893112183,
-    "elapsed_per_doc": 0.43349149465560916,
-    "date": "2026-02-03"
-}
