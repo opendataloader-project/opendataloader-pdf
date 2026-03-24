@@ -1,7 +1,7 @@
 """Tests for the convert_pdf MCP tool."""
 
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from opendataloader_pdf_mcp.server import convert_pdf, mcp
 
@@ -89,5 +89,7 @@ class TestMcpToolRegistration:
 
     def test_convert_pdf_tool_is_registered(self):
         """convert_pdf should be registered as an MCP tool."""
+        # FastMCP does not expose a public tool-listing API as of v1.x;
+        # _tool_manager is the only way to introspect registered tools.
         tool_names = [tool.name for tool in mcp._tool_manager.list_tools()]
         assert "convert_pdf" in tool_names

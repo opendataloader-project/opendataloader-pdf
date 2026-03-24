@@ -1,6 +1,5 @@
 """MCP server for OpenDataLoader PDF."""
 
-import os
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -126,7 +125,10 @@ def convert_pdf(
             kwargs["text_page_separator"] = text_page_separator
         if html_page_separator is not None:
             kwargs["html_page_separator"] = html_page_separator
-        if image_output is not None:
+        if format == "markdown-with-images" and image_output is None:
+            # Force embedded images so they survive the temp directory cleanup
+            kwargs["image_output"] = "embedded"
+        elif image_output is not None:
             kwargs["image_output"] = image_output
         if image_format is not None:
             kwargs["image_format"] = image_format
