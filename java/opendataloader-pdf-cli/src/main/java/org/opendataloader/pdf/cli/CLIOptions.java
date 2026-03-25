@@ -116,7 +116,9 @@ public class CLIOptions {
 
     // ===== Hybrid Mode =====
     private static final String HYBRID_LONG_OPTION = "hybrid";
-    private static final String HYBRID_DESC = "Hybrid backend for AI processing. Values: off (default), docling-fast";
+    private static final String HYBRID_DESC = "Hybrid backend (requires a running server). "
+            + "Quick start: pip install \"opendataloader-pdf[hybrid]\" && opendataloader-pdf-hybrid --port 5002. "
+            + "For remote servers use --hybrid-url. Values: off (default), docling-fast";
 
     private static final String HYBRID_MODE_LONG_OPTION = "hybrid-mode";
     private static final String HYBRID_MODE_DESC = "Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)";

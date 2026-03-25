@@ -45,7 +45,7 @@ export interface ConvertOptions {
   includeHeaderFooter?: boolean;
   /** Detect strikethrough text and wrap with ~~ in Markdown output (experimental) */
   detectStrikethrough?: boolean;
-  /** Hybrid backend for AI processing. Values: off (default), docling-fast */
+  /** Hybrid backend (requires a running server). Quick start: pip install "opendataloader-pdf[hybrid]" && opendataloader-pdf-hybrid --port 5002. For remote servers use --hybrid-url. Values: off (default), docling-fast */
   hybrid?: string;
   /** Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend) */
   hybridMode?: string;
