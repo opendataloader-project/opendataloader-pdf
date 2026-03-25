@@ -35,12 +35,15 @@ import org.verapdf.wcag.algorithms.entities.text.TextStyle;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Processor for detecting and classifying headings in PDF content.
  * Uses font size, weight, and position to identify potential headings.
  */
 public class HeadingProcessor {
+    private static final Logger LOGGER = Logger.getLogger(HeadingProcessor.class.getName());
     private static final double HEADING_PROBABILITY = 0.75;
     private static final double BULLETED_HEADING_PROBABILITY = 0.1;
 
@@ -69,7 +72,15 @@ public class HeadingProcessor {
             }
             SemanticTextNode prevNode = index != 0 ? textNodes.get(index - 1) : null;
             SemanticTextNode nextNode = index + 1 < textNodesCount ? textNodes.get(index + 1) : null;
-            double probability = NodeUtils.headingProbability(textNode, prevNode, nextNode, textNode);
+            double probability;
+            try {
+                probability = NodeUtils.headingProbability(textNode, prevNode, nextNode, textNode);
+            } catch (NullPointerException e) {
+                // Hybrid backend nodes may lack color info, causing NPE in calculateTextColor()
+                // Use a default probability based on font size statistics
+                LOGGER.log(Level.FINE, "headingProbability threw NPE for textNode, using fallback", e);
+                probability = 0.5;
+            }
 
             probability += textNodeStatistics.fontSizeRarityBoost(textNode);
             probability += textNodeStatistics.fontWeightRarityBoost(textNode);
