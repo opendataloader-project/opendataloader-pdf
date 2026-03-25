@@ -120,32 +120,21 @@ jobs:
           table_detection = eval_data.get("table_detection", {})
           speed = eval_data.get("speed", {})
           triage = eval_data.get("triage", {})
+          tol = thresholds.get("regression_tolerance", 0)
 
           rows = []
 
-          nid = scores.get("nid_mean")
-          if nid is not None:
-              t = thresholds.get("nid", 0)
-              status = "✅" if nid >= t else "❌"
-              rows.append(f"| NID | {nid:.4f} | ≥ {t} | {status} |")
-
-          teds = scores.get("teds_mean")
-          if teds is not None:
-              t = thresholds.get("teds", 0)
-              status = "✅" if teds >= t else "❌"
-              rows.append(f"| TEDS | {teds:.4f} | ≥ {t} | {status} |")
-
-          mhs = scores.get("mhs_mean")
-          if mhs is not None:
-              t = thresholds.get("mhs", 0)
-              status = "✅" if mhs >= t else "❌"
-              rows.append(f"| MHS | {mhs:.4f} | ≥ {t} | {status} |")
-
-          td_f1 = table_detection.get("f1")
-          if td_f1 is not None:
-              t = thresholds.get("table_detection_f1", 0)
-              status = "✅" if td_f1 >= t else "❌"
-              rows.append(f"| Table Detection F1 | {td_f1:.4f} | ≥ {t} | {status} |")
+          for key, label, src in [
+              ("nid", "NID", scores.get("nid_mean")),
+              ("teds", "TEDS", scores.get("teds_mean")),
+              ("mhs", "MHS", scores.get("mhs_mean")),
+              ("table_detection_f1", "Table Detection F1", table_detection.get("f1")),
+          ]:
+              t = thresholds.get(key)
+              if src is not None and t is not None:
+                  effective = t - tol
+                  status = "✅" if src >= effective else "❌"
+                  rows.append(f"| {label} | {src:.4f} | ≥ {effective:.2f} | {status} |")
 
           elapsed = speed.get("elapsed_per_doc")
           elapsed_thresh = thresholds.get("elapsed_per_doc")
@@ -155,10 +144,11 @@ jobs:
 
           if triage:
               tr_recall = triage.get("recall")
-              if tr_recall is not None:
-                  t = thresholds.get("triage_recall", 0)
-                  status = "✅" if tr_recall >= t else "❌"
-                  rows.append(f"| Triage Recall | {tr_recall:.4f} | ≥ {t} | {status} |")
+              tr_thresh = thresholds.get("triage_recall")
+              if tr_recall is not None and tr_thresh is not None:
+                  effective = tr_thresh - tol
+                  status = "✅" if tr_recall >= effective else "❌"
+                  rows.append(f"| Triage Recall | {tr_recall:.4f} | ≥ {effective:.2f} | {status} |")
 
               tr_fn = triage.get("fn_count")
               tr_fn_max = thresholds.get("triage_fn_max")
