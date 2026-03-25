@@ -8,6 +8,7 @@ on:
       - 'python/**'
       - 'node/**'
       - 'scripts/**'
+      - '.github/workflows/**'
   workflow_dispatch:
 
 concurrency:
@@ -87,6 +88,94 @@ jobs:
 
       - name: Run benchmark
         run: ./scripts/bench.sh --skip-build --check-regression
+
+      - name: Benchmark summary
+        if: always()
+        run: |
+          python3 << 'PYEOF'
+          import json, os, sys
+          from pathlib import Path
+
+          eval_path = Path("/tmp/opendataloader-bench/prediction/opendataloader/evaluation.json")
+          thresh_path = Path("/tmp/opendataloader-bench/thresholds.json")
+
+          summary_file = os.environ.get("GITHUB_STEP_SUMMARY", "/dev/null")
+
+          if not eval_path.exists() or not thresh_path.exists():
+              with open(summary_file, "a") as f:
+                  f.write("## Benchmark Results\n\nBenchmark did not produce evaluation results.\n")
+              sys.exit(0)
+
+          try:
+              with open(eval_path) as f:
+                  eval_data = json.load(f)
+              with open(thresh_path) as f:
+                  thresholds = json.load(f)
+          except json.JSONDecodeError as e:
+              with open(summary_file, "a") as f:
+                  f.write(f"## Benchmark Results\n\nFailed to parse results: {e}\n")
+              sys.exit(0)
+
+          scores = eval_data.get("metrics", {}).get("score", {})
+          table_detection = eval_data.get("table_detection", {})
+          speed = eval_data.get("speed", {})
+          triage = eval_data.get("triage", {})
+
+          rows = []
+
+          nid = scores.get("nid_mean")
+          if nid is not None:
+              t = thresholds.get("nid", 0)
+              status = "✅" if nid >= t else "❌"
+              rows.append(f"| NID | {nid:.4f} | ≥ {t} | {status} |")
+
+          teds = scores.get("teds_mean")
+          if teds is not None:
+              t = thresholds.get("teds", 0)
+              status = "✅" if teds >= t else "❌"
+              rows.append(f"| TEDS | {teds:.4f} | ≥ {t} | {status} |")
+
+          mhs = scores.get("mhs_mean")
+          if mhs is not None:
+              t = thresholds.get("mhs", 0)
+              status = "✅" if mhs >= t else "❌"
+              rows.append(f"| MHS | {mhs:.4f} | ≥ {t} | {status} |")
+
+          td_f1 = table_detection.get("f1")
+          if td_f1 is not None:
+              t = thresholds.get("table_detection_f1", 0)
+              status = "✅" if td_f1 >= t else "❌"
+              rows.append(f"| Table Detection F1 | {td_f1:.4f} | ≥ {t} | {status} |")
+
+          elapsed = speed.get("elapsed_per_doc")
+          elapsed_thresh = thresholds.get("elapsed_per_doc")
+          if elapsed is not None and elapsed_thresh is not None:
+              status = "✅" if elapsed <= elapsed_thresh else "❌"
+              rows.append(f"| Speed | {elapsed:.2f}s/doc | ≤ {elapsed_thresh}s/doc | {status} |")
+
+          if triage:
+              tr_recall = triage.get("recall")
+              if tr_recall is not None:
+                  t = thresholds.get("triage_recall", 0)
+                  status = "✅" if tr_recall >= t else "❌"
+                  rows.append(f"| Triage Recall | {tr_recall:.4f} | ≥ {t} | {status} |")
+
+              tr_fn = triage.get("fn_count")
+              tr_fn_max = thresholds.get("triage_fn_max")
+              if tr_fn is not None and tr_fn_max is not None:
+                  status = "✅" if tr_fn <= tr_fn_max else "❌"
+                  rows.append(f"| Triage FN | {tr_fn} | ≤ {tr_fn_max} | {status} |")
+
+          with open(summary_file, "a") as f:
+              f.write("## Benchmark Results\n\n")
+              f.write("| Metric | Score | Threshold | Status |\n")
+              f.write("|--------|-------|-----------|--------|\n")
+              for row in rows:
+                  f.write(row + "\n")
+
+              if not rows:
+                  f.write("| (no metrics found) | | | |\n")
+          PYEOF
 
       - name: Upload evaluation results
         uses: actions/upload-artifact@v7
