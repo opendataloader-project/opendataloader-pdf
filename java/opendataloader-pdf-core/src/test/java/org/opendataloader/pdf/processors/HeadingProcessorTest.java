@@ -16,6 +16,7 @@
 package org.opendataloader.pdf.processors;
 
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.verapdf.wcag.algorithms.entities.IObject;
@@ -30,6 +31,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class HeadingProcessorTest {
+
+    @AfterEach
+    void resetStaticState() {
+        StaticContainers.setIsDataLoader(false);
+        StaticLayoutContainers.setHeadings(new ArrayList<>());
+    }
 
     @Test
     public void testProcessHeadings() {
@@ -77,7 +84,8 @@ public class HeadingProcessorTest {
      * nodes lack color information.
      * 
      * Simulates a SemanticTextNode with null color fields (as returned by
-     * Docling/Hancom hybrid backends) and ensures processHeadings() does not throw.
+     * Docling/Hancom hybrid backends) and ensures processHeadings() does not throw
+     * and does not incorrectly promote the node to a heading.
      */
     @Test
     public void testProcessHeadingsWithNullColorDoesNotThrow() {
@@ -113,6 +121,11 @@ public class HeadingProcessorTest {
         
         // Verify content is still processable
         Assertions.assertEquals(1, contents.size());
+        
+        // Verify null-color node is NOT incorrectly promoted to heading
+        // The fallback probability (0.5) plus boosts should stay below 0.75 threshold
+        Assertions.assertFalse(contents.get(0) instanceof SemanticHeading,
+            "Null-color node should not be promoted to heading by fallback path");
     }
 
     /**
@@ -150,5 +163,10 @@ public class HeadingProcessorTest {
         }, "processHeadings should handle multiple nodes with null color");
         
         Assertions.assertEquals(3, contents.size());
+        
+        // Verify none of the null-color nodes are incorrectly promoted to headings
+        Assertions.assertTrue(
+            contents.stream().noneMatch(node -> node instanceof SemanticHeading),
+            "Null-color nodes should not be promoted to headings by fallback path");
     }
 }
