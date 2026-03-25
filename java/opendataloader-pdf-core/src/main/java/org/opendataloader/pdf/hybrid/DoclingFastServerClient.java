@@ -113,7 +113,10 @@ public class DoclingFastServerClient implements HybridClient {
         } catch (IOException e) {
             throw new IOException(
                 "Hybrid server is not available at " + baseUrl + "\n"
-                + "Please start the server with: opendataloader-pdf-hybrid\n"
+                + "To start the local hybrid server:\n"
+                + "  1. Install: pip install \"opendataloader-pdf[hybrid]\"\n"
+                + "  2. Start:   opendataloader-pdf-hybrid --port 5002\n"
+                + "To use a remote server or custom port: --hybrid-url http://host:port\n"
                 + "Or run without --hybrid flag for Java-only processing.", e);
         }
         try (response) {

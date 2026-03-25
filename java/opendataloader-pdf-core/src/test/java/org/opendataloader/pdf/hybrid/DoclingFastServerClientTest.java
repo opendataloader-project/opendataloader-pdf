@@ -196,6 +196,10 @@ class DoclingFastServerClientTest {
 
         IOException exception = assertThrows(IOException.class, () -> client.checkAvailability());
         assertTrue(exception.getMessage().contains("Hybrid server is not available"));
+        assertTrue(exception.getMessage().contains("pip install"),
+            "Error message should include install instructions for self-service resolution");
+        assertTrue(exception.getMessage().contains("opendataloader-pdf-hybrid --port 5002"),
+            "Error message should include server start command");
     }
 
     @Test
