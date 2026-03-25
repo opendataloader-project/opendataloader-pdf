@@ -71,4 +71,84 @@ public class HeadingProcessorTest {
         Assertions.assertEquals(1, headings.get(0).getHeadingLevel());
         Assertions.assertEquals(2, headings.get(1).getHeadingLevel());
     }
+
+    /**
+     * Regression test for Issue #353: NullPointerException when hybrid backend
+     * nodes lack color information.
+     * 
+     * Simulates a SemanticTextNode with null color fields (as returned by
+     * Docling/Hancom hybrid backends) and ensures processHeadings() does not throw.
+     */
+    @Test
+    public void testProcessHeadingsWithNullColorDoesNotThrow() {
+        StaticContainers.setIsDataLoader(true);
+        StaticLayoutContainers.setHeadings(new ArrayList<>());
+        List<IObject> contents = new ArrayList<>();
+        
+        // Create a paragraph with null color (simulates hybrid backend node)
+        SemanticParagraph paragraph = new SemanticParagraph();
+        contents.add(paragraph);
+        
+        // TextChunk with null color array - this triggers the NPE in
+        // NodeUtils.headingProbability -> getTextColor -> calculateTextColor
+        TextChunk textChunk = new TextChunk(
+            new BoundingBox(0, 10.0, 30.0, 20.0, 40.0),
+            "Test Heading",
+            "Font1",
+            20,      // fontSize
+            700,     // fontWeight
+            0,       // angle
+            30.0,    // baseLine
+            null,    // color - NULL to simulate hybrid backend
+            null,    // fontWeightName
+            0        // textType
+        );
+        paragraph.add(new TextLine(textChunk));
+        
+        // This should NOT throw NullPointerException
+        // The fix catches NPE and uses a fallback probability
+        Assertions.assertDoesNotThrow(() -> {
+            HeadingProcessor.processHeadings(contents, false);
+        }, "processHeadings should handle null color without throwing NPE");
+        
+        // Verify content is still processable
+        Assertions.assertEquals(1, contents.size());
+    }
+
+    /**
+     * Tests that multiple nodes with null color can be processed together.
+     * This covers the case where prev/next nodes in headingProbability also have null color.
+     */
+    @Test
+    public void testProcessHeadingsWithMultipleNullColorNodesDoesNotThrow() {
+        StaticContainers.setIsDataLoader(true);
+        StaticLayoutContainers.setHeadings(new ArrayList<>());
+        List<IObject> contents = new ArrayList<>();
+        
+        // Create multiple paragraphs with null color
+        for (int i = 0; i < 3; i++) {
+            SemanticParagraph paragraph = new SemanticParagraph();
+            TextChunk textChunk = new TextChunk(
+                new BoundingBox(0, 10.0 + i * 20, 30.0, 20.0, 40.0 + i * 10),
+                "Paragraph " + i,
+                "Font1",
+                i == 0 ? 20 : 10,  // First one has larger font (potential heading)
+                700,
+                0,
+                30.0,
+                null,    // null color
+                null,
+                0
+            );
+            paragraph.add(new TextLine(textChunk));
+            contents.add(paragraph);
+        }
+        
+        // Should not throw when prev/next nodes also have null color
+        Assertions.assertDoesNotThrow(() -> {
+            HeadingProcessor.processHeadings(contents, false);
+        }, "processHeadings should handle multiple nodes with null color");
+        
+        Assertions.assertEquals(3, contents.size());
+    }
 }
