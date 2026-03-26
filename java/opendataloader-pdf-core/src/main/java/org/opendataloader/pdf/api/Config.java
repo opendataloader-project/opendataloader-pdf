@@ -855,4 +855,13 @@ public class Config {
         this.detectStrikethrough = detectStrikethrough;
     }
 
+    /**
+     * Returns true if any output format requires structured content
+     * (reading order, heading levels, list detection, etc.).
+     * Text-only output does not need these expensive processing steps.
+     */
+    public boolean needsStructuredProcessing() {
+        return isGenerateMarkdown() || isGenerateHtml() || isGenerateJSON() || isGeneratePDF();
+    }
+
 }

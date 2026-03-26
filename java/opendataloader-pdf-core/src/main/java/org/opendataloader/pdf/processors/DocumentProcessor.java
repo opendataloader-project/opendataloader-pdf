@@ -87,7 +87,9 @@ public class DocumentProcessor {
         } else {
             contents = processDocument(inputPdfName, config, pagesToProcess);
         }
-        sortContents(contents, config);
+        if (config.needsStructuredProcessing()) {
+            sortContents(contents, config);
+        }
         ContentSanitizer contentSanitizer = new ContentSanitizer(config.getFilterConfig().getFilterRules(),
             config.getFilterConfig().isFilterSensitiveData());
         contentSanitizer.sanitizeContents(contents);
@@ -212,61 +214,66 @@ public class DocumentProcessor {
                 }
             }
 
-            // ClusterTableProcessor: whole-document (must be sequential)
-            if (config.isClusterTableMethod()) {
-                new ClusterTableProcessor().processTables(contents);
-            }
-
-            // Loop 2: TableBorder + TextLine per-page
-            pool.submit(() ->
-                IntStream.range(0, totalPages).parallel().forEach(pageNumber -> {
-                    if (!shouldProcessPage(pageNumber, pagesToProcess)) {
-                        return;
-                    }
-                    propagateState.run();
-                    List<IObject> pageContents = TableBorderProcessor.processTableBorders(contents.get(pageNumber), pageNumber);
-                    if (config.isDetectStrikethrough()) {
-                        StrikethroughProcessor.processStrikethroughs(pageContents);
-                    }
-                    pageContents = pageContents.stream().filter(x -> !(x instanceof LineChunk)).collect(Collectors.toList());
-                    pageContents = TextLineProcessor.processTextLines(pageContents);
-                    pageContents = SpecialTableProcessor.detectSpecialTables(pageContents);
-                    contents.set(pageNumber, pageContents);
-                })
-            ).get();
-
-            // Cross-page operations (must be sequential)
-            HeaderFooterProcessor.processHeadersAndFooters(contents, false);
-            ListProcessor.processLists(contents, false);
-
-            // Loop 3: Paragraph + Heading per-page (setIDs deferred to sequential pass)
-            pool.submit(() ->
-                IntStream.range(0, totalPages).parallel().forEach(pageNumber -> {
-                    if (!shouldProcessPage(pageNumber, pagesToProcess)) {
-                        return;
-                    }
-                    propagateState.run();
-                    List<IObject> pageContents = contents.get(pageNumber);
-                    pageContents = ParagraphProcessor.processParagraphs(pageContents);
-                    pageContents = ListProcessor.processListsFromTextNodes(pageContents);
-                    HeadingProcessor.processHeadings(pageContents, false);
-                    CaptionProcessor.processCaptions(pageContents);
-                    contents.set(pageNumber, pageContents);
-                })
-            ).get();
-
-            // Sequential ID assignment (must be in page order)
-            for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
-                if (shouldProcessPage(pageNumber, pagesToProcess)) {
-                    setIDs(contents.get(pageNumber));
+            // Structured processing: only needed for markdown/html/json/pdf output.
+            // Text-only output uses raw extracted content without reading order,
+            // heading levels, list detection, or caption processing.
+            if (config.needsStructuredProcessing()) {
+                // ClusterTableProcessor: whole-document (must be sequential)
+                if (config.isClusterTableMethod()) {
+                    new ClusterTableProcessor().processTables(contents);
                 }
-            }
 
-            // Cross-page post-processing (must be sequential)
-            ListProcessor.checkNeighborLists(contents);
-            TableBorderProcessor.checkNeighborTables(contents);
-            HeadingProcessor.detectHeadingsLevels();
-            LevelProcessor.detectLevels(contents);
+                // Loop 2: TableBorder + TextLine per-page
+                pool.submit(() ->
+                    IntStream.range(0, totalPages).parallel().forEach(pageNumber -> {
+                        if (!shouldProcessPage(pageNumber, pagesToProcess)) {
+                            return;
+                        }
+                        propagateState.run();
+                        List<IObject> pageContents = TableBorderProcessor.processTableBorders(contents.get(pageNumber), pageNumber);
+                        if (config.isDetectStrikethrough()) {
+                            StrikethroughProcessor.processStrikethroughs(pageContents);
+                        }
+                        pageContents = pageContents.stream().filter(x -> !(x instanceof LineChunk)).collect(Collectors.toList());
+                        pageContents = TextLineProcessor.processTextLines(pageContents);
+                        pageContents = SpecialTableProcessor.detectSpecialTables(pageContents);
+                        contents.set(pageNumber, pageContents);
+                    })
+                ).get();
+
+                // Cross-page operations (must be sequential)
+                HeaderFooterProcessor.processHeadersAndFooters(contents, false);
+                ListProcessor.processLists(contents, false);
+
+                // Loop 3: Paragraph + Heading per-page (setIDs deferred to sequential pass)
+                pool.submit(() ->
+                    IntStream.range(0, totalPages).parallel().forEach(pageNumber -> {
+                        if (!shouldProcessPage(pageNumber, pagesToProcess)) {
+                            return;
+                        }
+                        propagateState.run();
+                        List<IObject> pageContents = contents.get(pageNumber);
+                        pageContents = ParagraphProcessor.processParagraphs(pageContents);
+                        pageContents = ListProcessor.processListsFromTextNodes(pageContents);
+                        HeadingProcessor.processHeadings(pageContents, false);
+                        CaptionProcessor.processCaptions(pageContents);
+                        contents.set(pageNumber, pageContents);
+                    })
+                ).get();
+
+                // Sequential ID assignment (must be in page order)
+                for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
+                    if (shouldProcessPage(pageNumber, pagesToProcess)) {
+                        setIDs(contents.get(pageNumber));
+                    }
+                }
+
+                // Cross-page post-processing (must be sequential)
+                ListProcessor.checkNeighborLists(contents);
+                TableBorderProcessor.checkNeighborTables(contents);
+                HeadingProcessor.detectHeadingsLevels();
+                LevelProcessor.detectLevels(contents);
+            }
         } catch (Exception e) {
             throw new IOException("Parallel page processing failed", e);
         } finally {
