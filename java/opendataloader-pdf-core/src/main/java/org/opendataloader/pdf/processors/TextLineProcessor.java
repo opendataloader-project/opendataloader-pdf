@@ -80,12 +80,16 @@ public class TextLineProcessor {
     private static TextLine getTextLineWithSpaces(TextLine textLine, double threshold) {
         List<TextChunk> textChunks = textLine.getTextChunks();
         TextChunk currentTextChunk = textChunks.get(0);
-        double previousEnd = currentTextChunk.getBoundingBox().getRightX();
+
+        // Use textStart/textEnd when available to avoid missing word gaps when
+        // bounding boxes are overly wide (common with some PDFs/fonts).
+        double previousEnd = getEffectiveEndX(currentTextChunk);
+
         TextLine newLine = new TextLine();
         newLine.add(currentTextChunk);
         for (int i = 1; i < textChunks.size(); i++) {
             currentTextChunk = textChunks.get(i);
-            double currentStart = currentTextChunk.getBoundingBox().getLeftX();
+            double currentStart = getEffectiveStartX(currentTextChunk);
             if (currentStart - previousEnd > threshold) {
                 BoundingBox spaceBBox = new BoundingBox(currentTextChunk.getBoundingBox());
                 spaceBBox.setLeftX(previousEnd);
@@ -93,11 +97,33 @@ public class TextLineProcessor {
                 TextChunk spaceChunk = new TextChunk(spaceBBox, " ", textLine.getFontSize(), textLine.getBaseLine());
                 newLine.add(spaceChunk);
             }
-            previousEnd = currentTextChunk.getBoundingBox().getRightX();
+            previousEnd = getEffectiveEndX(currentTextChunk);
             newLine.add(currentTextChunk);
         }
 
         return newLine;
+    }
+
+    private static double getEffectiveStartX(TextChunk chunk) {
+        BoundingBox bbox = chunk.getBoundingBox();
+        double left = bbox.getLeftX();
+        double right = bbox.getRightX();
+        double start = chunk.getTextStart();
+        if (Double.isFinite(start) && start >= left - 1e-3 && start <= right + 1e-3) {
+            return start;
+        }
+        return left;
+    }
+
+    private static double getEffectiveEndX(TextChunk chunk) {
+        BoundingBox bbox = chunk.getBoundingBox();
+        double left = bbox.getLeftX();
+        double right = bbox.getRightX();
+        double end = chunk.getTextEnd();
+        if (Double.isFinite(end) && end >= left - 1e-3 && end <= right + 1e-3) {
+            return end;
+        }
+        return right;
     }
 
     private static void linkTextLinesWithConnectedLineArtBullet(List<IObject> contents) {
