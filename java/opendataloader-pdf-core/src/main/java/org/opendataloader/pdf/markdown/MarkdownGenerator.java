@@ -46,7 +46,7 @@ import java.util.logging.Logger;
 public class MarkdownGenerator implements Closeable {
 
     protected static final Logger LOGGER = Logger.getLogger(MarkdownGenerator.class.getCanonicalName());
-    protected final FileWriter markdownWriter;
+    protected final java.io.Writer markdownWriter;
     protected final String markdownFileName;
     protected int tableNesting = 0;
     protected boolean isImageSupported;
@@ -62,6 +62,19 @@ public class MarkdownGenerator implements Closeable {
         this.isImageSupported = !config.isImageOutputOff() && config.isGenerateMarkdown();
         this.markdownPageSeparator = config.getMarkdownPageSeparator();
         this.embedImages = config.isEmbedImages();
+        this.imageFormat = config.getImageFormat();
+        this.includeHeaderFooter = config.isIncludeHeaderFooter();
+    }
+
+    /**
+     * Creates a MarkdownGenerator that writes to an arbitrary Writer (e.g., stdout).
+     */
+    public MarkdownGenerator(java.io.Writer writer, Config config) {
+        this.markdownFileName = null;
+        this.markdownWriter = writer;
+        this.isImageSupported = false;
+        this.markdownPageSeparator = config.getMarkdownPageSeparator();
+        this.embedImages = false;
         this.imageFormat = config.getImageFormat();
         this.includeHeaderFooter = config.isIncludeHeaderFooter();
     }
