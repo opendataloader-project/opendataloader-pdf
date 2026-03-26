@@ -77,9 +77,10 @@ public class HeadingProcessor {
                 probability = NodeUtils.headingProbability(textNode, prevNode, nextNode, textNode);
             } catch (NullPointerException e) {
                 // Hybrid backend nodes may lack color info, causing NPE in calculateTextColor()
-                // Use a default probability based on font size statistics
+                // Use a very low fallback probability - null-color nodes have insufficient
+                // information for reliable heading detection, so default to NOT a heading
                 LOGGER.log(Level.FINE, "headingProbability threw NPE for textNode, using fallback", e);
-                probability = 0.5;
+                probability = 0.0;
             }
 
             probability += textNodeStatistics.fontSizeRarityBoost(textNode);
