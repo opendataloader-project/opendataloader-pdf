@@ -6,6 +6,10 @@ After changing CLI options in Java, **must** run `npm run sync` — this regener
 
 When using `--enrich-formula` or `--enrich-picture-description` on the hybrid server, the client **must** use `--hybrid-mode full`. Otherwise enrichments are silently skipped (they only run on the backend, not in Java).
 
+Processing uses `ForkJoinPool(availableProcessors)` for per-page parallelism. All `StaticContainers` and `StaticLayoutContainers` ThreadLocal state must be propagated to worker threads via `propagateState.run()` — missing a ThreadLocal causes silent data loss or NPE in parallel mode.
+
+Hidden text detection (`--filter-hidden-text`) is **off by default** — it requires per-page PDF rendering via `ContrastRatioConsumer` which cannot be parallelized safely.
+
 ## Conventions
 
 `content/docs/` auto-syncs to opendataloader.org on release. Edits here go live.

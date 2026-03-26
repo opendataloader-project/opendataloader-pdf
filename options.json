@@ -199,6 +199,14 @@
       "required": false,
       "default": false,
       "description": "Opt in to Java fallback on hybrid backend error (default: disabled)"
+    },
+    {
+      "name": "to-stdout",
+      "shortName": null,
+      "type": "boolean",
+      "required": false,
+      "default": false,
+      "description": "Write output to stdout instead of file (single format only)"
     }
   ]
 }

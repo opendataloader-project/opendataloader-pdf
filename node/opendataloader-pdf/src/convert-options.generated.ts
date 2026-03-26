@@ -55,6 +55,8 @@ export interface ConvertOptions {
   hybridTimeout?: string;
   /** Opt in to Java fallback on hybrid backend error (default: disabled) */
   hybridFallback?: boolean;
+  /** Write output to stdout instead of file (single format only) */
+  toStdout?: boolean;
 }
 
 /**
@@ -86,6 +88,7 @@ export interface CliOptions {
   hybridUrl?: string;
   hybridTimeout?: string;
   hybridFallback?: boolean;
+  toStdout?: boolean;
 }
 
 /**
@@ -168,6 +171,9 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   }
   if (cliOptions.hybridFallback) {
     convertOptions.hybridFallback = true;
+  }
+  if (cliOptions.toStdout) {
+    convertOptions.toStdout = true;
   }
 
   return convertOptions;
@@ -265,6 +271,9 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.hybridFallback) {
     args.push('--hybrid-fallback');
+  }
+  if (options.toStdout) {
+    args.push('--to-stdout');
   }
 
   return args;
