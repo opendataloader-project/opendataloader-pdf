@@ -136,6 +136,10 @@ public class CLIOptions {
     private static final String HYBRID_FALLBACK_LONG_OPTION = "hybrid-fallback";
     private static final String HYBRID_FALLBACK_DESC = "Opt in to Java fallback on hybrid backend error (default: disabled)";
 
+    // ===== Stdout Output =====
+    private static final String TO_STDOUT_LONG_OPTION = "to-stdout";
+    private static final String TO_STDOUT_DESC = "Write output to stdout instead of file (single format only)";
+
     // ===== Export Options (internal) =====
     public static final String EXPORT_OPTIONS_LONG_OPTION = "export-options";
 
@@ -183,6 +187,7 @@ public class CLIOptions {
             new OptionDefinition(HYBRID_URL_LONG_OPTION, null, "string", null, HYBRID_URL_DESC, true),
             new OptionDefinition(HYBRID_TIMEOUT_LONG_OPTION, null, "string", "0", HYBRID_TIMEOUT_DESC, true),
             new OptionDefinition(HYBRID_FALLBACK_LONG_OPTION, null, "boolean", false, HYBRID_FALLBACK_DESC, true),
+            new OptionDefinition(TO_STDOUT_LONG_OPTION, null, "boolean", false, TO_STDOUT_DESC, true),
             new OptionDefinition(EXPORT_OPTIONS_LONG_OPTION, null, "boolean", null, null, false),
 
             // Legacy options (not exported, for backward compatibility)
@@ -508,6 +513,9 @@ public class CLIOptions {
         }
         if (commandLine.hasOption(HYBRID_FALLBACK_LONG_OPTION)) {
             config.getHybridConfig().setFallbackToJava(true);
+        }
+        if (commandLine.hasOption(TO_STDOUT_LONG_OPTION)) {
+            config.setOutputStdout(true);
         }
     }
 

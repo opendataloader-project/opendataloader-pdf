@@ -855,6 +855,16 @@ public class Config {
         this.detectStrikethrough = detectStrikethrough;
     }
 
+    private boolean outputStdout = false;
+
+    public boolean isOutputStdout() {
+        return outputStdout;
+    }
+
+    public void setOutputStdout(boolean outputStdout) {
+        this.outputStdout = outputStdout;
+    }
+
     /**
      * Returns true if any output format requires structured content
      * (reading order, heading levels, list detection, etc.).

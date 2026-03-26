@@ -47,7 +47,7 @@ public class TextGenerator implements Closeable {
     private static final Logger LOGGER = Logger.getLogger(TextGenerator.class.getCanonicalName());
     private static final String INDENT = "  ";
 
-    private final FileWriter textWriter;
+    private final java.io.Writer textWriter;
     private final String textFileName;
     private final String lineSeparator = System.lineSeparator();
     private final String textPageSeparator;
@@ -57,6 +57,16 @@ public class TextGenerator implements Closeable {
         String cutPdfFileName = inputPdf.getName();
         this.textFileName = config.getOutputFolder() + File.separator + cutPdfFileName.substring(0, cutPdfFileName.length() - 3) + "txt";
         this.textWriter = new FileWriter(textFileName, StandardCharsets.UTF_8);
+        this.textPageSeparator = config.getTextPageSeparator();
+        this.includeHeaderFooter = config.isIncludeHeaderFooter();
+    }
+
+    /**
+     * Creates a TextGenerator that writes to an arbitrary Writer (e.g., stdout).
+     */
+    public TextGenerator(java.io.Writer writer, Config config) {
+        this.textFileName = null;
+        this.textWriter = writer;
         this.textPageSeparator = config.getTextPageSeparator();
         this.includeHeaderFooter = config.isIncludeHeaderFooter();
     }
