@@ -234,6 +234,15 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "default": False,
         "description": "Opt in to Java fallback on hybrid backend error (default: disabled)",
     },
+    {
+        "name": "to-stdout",
+        "python_name": "to_stdout",
+        "short_name": None,
+        "type": "boolean",
+        "required": False,
+        "default": False,
+        "description": "Write output to stdout instead of file (single format only)",
+    },
 ]
 
 
