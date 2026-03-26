@@ -115,4 +115,39 @@ public class TextLineProcessorTest {
             "There should be a space between chunks when there is a physical gap");
     }
 
+    /**
+     * Regression test for issue #358: some PDFs produce overly-wide text chunk bounding boxes.
+     * When this happens, using bbox right/left to detect gaps can miss real word spacing and
+     * concatenate words.
+     */
+    @Test
+    public void testProcessTextLinesAddsSpacesUsingTextStartEndWhenBBoxesOverlap() {
+        StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
+        StaticContainers.setIsDataLoader(true);
+        List<IObject> contents = new ArrayList<>();
+
+        // Simulate two words on the same baseline where the first chunk's bbox extends too far
+        // to the right (overlapping the next chunk), even though the actual glyph end (textEnd)
+        // leaves a clear word gap.
+        TextChunk chunk1 = new TextChunk(new BoundingBox(0, 10.0, 300.0, 140.0, 310.0),
+            "Evolution", 10, 300.0);
+        chunk1.setTextEnd(100.0);
+
+        TextChunk chunk2 = new TextChunk(new BoundingBox(0, 130.0, 300.0, 200.0, 310.0),
+            "Of", 10, 300.0);
+        chunk2.setTextStart(130.0);
+
+        contents.add(chunk1);
+        contents.add(chunk2);
+
+        contents = TextLineProcessor.processTextLines(contents);
+
+        Assertions.assertEquals(1, contents.size());
+        Assertions.assertTrue(contents.get(0) instanceof TextLine);
+
+        TextLine textLine = (TextLine) contents.get(0);
+        Assertions.assertTrue(textLine.getValue().contains("Evolution Of"),
+            "Expected a space between words, got: " + textLine.getValue());
+    }
+
 }
