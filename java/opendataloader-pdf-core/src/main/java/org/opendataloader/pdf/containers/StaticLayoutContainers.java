@@ -21,10 +21,11 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioCon
 
 import java.awt.*;
 import java.io.File;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,11 +41,11 @@ public class StaticLayoutContainers {
     private static final ThreadLocal<String> imagesDirectory = new ThreadLocal<>();
     private static final ThreadLocal<Boolean> embedImages = new ThreadLocal<>();
     private static final ThreadLocal<String> imageFormat = new ThreadLocal<>();
-    private static final ThreadLocal<Map<Integer, Double>> replacementCharRatios = ThreadLocal.withInitial(HashMap::new);
+    private static final ThreadLocal<Map<Integer, Double>> replacementCharRatios = ThreadLocal.withInitial(ConcurrentHashMap::new);
 
     public static void clearContainers() {
         currentContentId.set(1L);
-        headings.set(new LinkedList<>());
+        headings.set(Collections.synchronizedList(new LinkedList<>()));
         imageIndex.set(1);
         isUseStructTree.set(false);
         contrastRatioConsumer.remove();
@@ -84,7 +85,7 @@ public class StaticLayoutContainers {
 
     public static ContrastRatioConsumer getContrastRatioConsumer(String sourcePdfPath, String password, boolean enableAntialias, Float imagePixelSize) {
         try {
-            if (contrastRatioConsumer.get() == null && !isContrastRatioConsumerFailedToCreate.get()) {
+            if (contrastRatioConsumer.get() == null && !Boolean.TRUE.equals(isContrastRatioConsumerFailedToCreate.get())) {
                 contrastRatioConsumer.set(new ContrastRatioConsumer(sourcePdfPath, password, enableAntialias, imagePixelSize));
             }
         } catch (Exception e) {
