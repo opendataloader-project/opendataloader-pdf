@@ -73,14 +73,19 @@ public class HeadingProcessor {
             SemanticTextNode prevNode = index != 0 ? textNodes.get(index - 1) : null;
             SemanticTextNode nextNode = index + 1 < textNodesCount ? textNodes.get(index + 1) : null;
             double probability;
-            try {
-                probability = NodeUtils.headingProbability(textNode, prevNode, nextNode, textNode);
-            } catch (NullPointerException e) {
-                // Hybrid backend nodes may lack color info, causing NPE in calculateTextColor()
-                // Use a very low fallback probability - null-color nodes have insufficient
-                // information for reliable heading detection, so default to NOT a heading
-                LOGGER.log(Level.FINE, "headingProbability threw NPE for textNode, using fallback", e);
+            // Pre-check for null color info - hybrid backend nodes may lack color data
+            // which causes NPE in NodeUtils.headingProbability() internally
+            if (TextNodeUtils.getTextColorOrNull(textNode) == null) {
+                // Insufficient color information for reliable heading detection
                 probability = 0.0;
+            } else {
+                try {
+                    probability = NodeUtils.headingProbability(textNode, prevNode, nextNode, textNode);
+                } catch (NullPointerException e) {
+                    // Defensive fallback for unexpected NPEs from other causes
+                    LOGGER.log(Level.FINE, "headingProbability threw unexpected NPE, using fallback", e);
+                    probability = 0.0;
+                }
             }
 
             probability += textNodeStatistics.fontSizeRarityBoost(textNode);
