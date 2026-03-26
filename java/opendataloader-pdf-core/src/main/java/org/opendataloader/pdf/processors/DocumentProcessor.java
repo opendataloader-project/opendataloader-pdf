@@ -200,6 +200,18 @@ public class DocumentProcessor {
                 })
             ).get();
 
+            // Hidden text detection: sequential post-processing (requires ContrastRatioConsumer
+            // which renders PDF pages — not safe to parallelize due to per-thread PDF file I/O)
+            if (config.getFilterConfig().isFilterHiddenText()) {
+                for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
+                    if (shouldProcessPage(pageNumber, pagesToProcess)) {
+                        List<IObject> pageContents = HiddenTextProcessor.findHiddenText(
+                            inputPdfName, contents.get(pageNumber), true, config.getPassword());
+                        contents.set(pageNumber, pageContents);
+                    }
+                }
+            }
+
             // ClusterTableProcessor: whole-document (must be sequential)
             if (config.isClusterTableMethod()) {
                 new ClusterTableProcessor().processTables(contents);

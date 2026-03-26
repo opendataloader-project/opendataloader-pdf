@@ -70,8 +70,8 @@ public class ContentFilterProcessor {
         TextProcessor.trimTextChunksWhiteSpaces(pageContents);
         filterConsecutiveSpaces(pageContents);
         pageContents = splitTextChunksByWhiteSpacesInPageContents(pageContents);
-        pageContents = HiddenTextProcessor.findHiddenText(inputPdfName, pageContents,
-            config.getFilterConfig().isFilterHiddenText(), config.getPassword());
+        // HiddenText detection moved to DocumentProcessor (sequential post-processing)
+        // to avoid ContrastRatioConsumer per-thread PDF rendering overhead
         double replacementCharRatio = TextProcessor.measureReplacementCharRatio(pageContents);
         StaticLayoutContainers.setReplacementCharRatio(pageNumber, replacementCharRatio);
         if (replacementCharRatio >= 0.3) {

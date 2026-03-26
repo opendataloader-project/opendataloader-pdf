@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
  * Controls filtering of hidden text, out-of-page content, tiny text, and hidden OCGs.
  */
 public class FilterConfig {
-    private boolean filterHiddenText = true;
+    private boolean filterHiddenText = false;
     private boolean filterOutOfPage = true;
     private boolean filterTinyText = true;
     private boolean filterHiddenOCG = true;

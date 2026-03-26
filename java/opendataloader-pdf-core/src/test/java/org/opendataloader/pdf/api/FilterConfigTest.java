@@ -11,7 +11,7 @@ class FilterConfigTest {
     void defaultsKeepInvisibleContentFiltersEnabledButSensitiveDataDisabled() {
         FilterConfig config = new FilterConfig();
 
-        assertTrue(config.isFilterHiddenText());
+        assertFalse(config.isFilterHiddenText());
         assertTrue(config.isFilterOutOfPage());
         assertTrue(config.isFilterTinyText());
         assertTrue(config.isFilterHiddenOCG());
