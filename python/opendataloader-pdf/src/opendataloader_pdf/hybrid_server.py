@@ -66,6 +66,16 @@ logger = logging.getLogger(__name__)
 DEFAULT_HOST = "0.0.0.0"
 DEFAULT_PORT = 5002
 MAX_FILE_SIZE = 0  # No file size limit by default (0 = unlimited)
+UPLOAD_CHUNK_SIZE = 1024 * 1024  # 1MB chunks for streaming upload
+
+
+def _non_negative_int(value: str) -> int:
+    """Argparse type validator that rejects negative integers."""
+    parsed = int(value)
+    if parsed < 0:
+        raise argparse.ArgumentTypeError("--max-file-size must be >= 0")
+    return parsed
+
 
 # Global converter instance (initialized on startup with CLI options)
 converter = None
@@ -370,22 +380,27 @@ def create_app(
             except ValueError:
                 pass
 
-        # Read and validate file size
-        content = await files.read()
-        if max_file_size > 0 and len(content) > max_file_size:
-            return JSONResponse(
-                {
-                    "status": "failure",
-                    "errors": [f"File size exceeds maximum allowed ({max_file_size // (1024*1024)}MB)"],
-                },
-                status_code=413,
-            )
-
-        # Save uploaded file to temp location
+        # Stream upload to temp file and enforce size incrementally
         tmp_path = None
+        total_size = 0
         with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
-            tmp.write(content)
             tmp_path = tmp.name
+            while True:
+                chunk = await files.read(UPLOAD_CHUNK_SIZE)
+                if not chunk:
+                    break
+                total_size += len(chunk)
+                if max_file_size > 0 and total_size > max_file_size:
+                    tmp.close()
+                    os.unlink(tmp_path)
+                    return JSONResponse(
+                        {
+                            "status": "failure",
+                            "errors": [f"File size exceeds maximum allowed ({max_file_size // (1024*1024)}MB)"],
+                        },
+                        status_code=413,
+                    )
+                tmp.write(chunk)
 
         try:
             def _do_convert():
@@ -512,7 +527,7 @@ def main():
     )
     parser.add_argument(
         "--max-file-size",
-        type=int,
+        type=_non_negative_int,
         default=MAX_FILE_SIZE,
         help="Maximum upload file size in MB. 0 means no limit (default: 0).",
     )
