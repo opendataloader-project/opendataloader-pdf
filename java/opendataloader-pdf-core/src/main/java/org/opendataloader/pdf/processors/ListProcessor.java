@@ -50,6 +50,12 @@ public class ListProcessor {
     private static final double LIST_ITEM_X_INTERVAL_RATIO = 0.3;
     private static final Pattern ATTACHMENTS_PATTERN = Pattern.compile("^붙\\s*임\\s*(?=.)");
 
+    /**
+     * Maximum number of intervals to scan backward when matching a TextLine to an existing list.
+     * Prevents O(n²) scaling on large documents. A higher value is safer but slower.
+     */
+    private static final int MAX_LIST_INTERVAL_LOOKBACK = 500;
+
     public static void processLists(List<List<IObject>> contents, boolean isTableCell) {
         List<TextListInterval> intervalsList = getTextLabelListIntervals(contents);
         for (TextListInterval interval : intervalsList) {
@@ -143,7 +149,8 @@ public class ListProcessor {
         boolean shouldHaveSameLeftDifference = false;
         boolean isUnordered = true;
         Double previousLeftDifference = null;
-        for (int index = listIntervals.size() - 1; index >= 0; index--) {
+        int minIndex = Math.max(0, listIntervals.size() - MAX_LIST_INTERVAL_LOOKBACK);
+        for (int index = listIntervals.size() - 1; index >= minIndex; index--) {
             TextListInterval interval = listIntervals.get(index);
             ListItemTextInfo preivousListItemTextInfo = interval.getLastListItemInfo();
             double leftDifference = listItemTextInfo.getListItemValue().getLeftX() -
