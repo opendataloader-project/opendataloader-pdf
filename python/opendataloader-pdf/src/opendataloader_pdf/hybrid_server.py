@@ -8,6 +8,7 @@ A lightweight FastAPI server optimized for hybrid PDF processing:
 Usage:
     opendataloader-pdf-hybrid [--port PORT] [--host HOST] [--ocr-lang LANG] [--force-ocr]
                               [--enrich-formula] [--enrich-picture-description]
+                              [--max-file-size MB]
 
     # Default: http://localhost:5002
     opendataloader-pdf-hybrid
@@ -64,7 +65,7 @@ logger = logging.getLogger(__name__)
 # Configuration
 DEFAULT_HOST = "0.0.0.0"
 DEFAULT_PORT = 5002
-MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB max file size
+MAX_FILE_SIZE = 0  # No file size limit by default (0 = unlimited)
 
 # Global converter instance (initialized on startup with CLI options)
 converter = None
@@ -277,6 +278,7 @@ def create_app(
     enrich_formula: bool = False,
     enrich_picture_description: bool = False,
     picture_description_prompt: str | None = None,
+    max_file_size: int = MAX_FILE_SIZE,
 ):
     """Create and configure the FastAPI application.
 
@@ -286,6 +288,7 @@ def create_app(
         enrich_formula: If True, enable formula enrichment (LaTeX extraction).
         enrich_picture_description: If True, enable picture description (alt text generation).
         picture_description_prompt: Custom prompt for picture description.
+        max_file_size: Maximum file size in bytes. 0 means no limit (default).
     """
     from fastapi import FastAPI, File, Form, UploadFile
     from fastapi.responses import JSONResponse
@@ -369,11 +372,11 @@ def create_app(
 
         # Read and validate file size
         content = await files.read()
-        if len(content) > MAX_FILE_SIZE:
+        if max_file_size > 0 and len(content) > max_file_size:
             return JSONResponse(
                 {
                     "status": "failure",
-                    "errors": [f"File size exceeds maximum allowed ({MAX_FILE_SIZE // (1024*1024)}MB)"],
+                    "errors": [f"File size exceeds maximum allowed ({max_file_size // (1024*1024)}MB)"],
                 },
                 status_code=413,
             )
@@ -507,6 +510,12 @@ def main():
         default=None,
         help="Custom prompt for picture description. If not set, uses default prompt optimized for charts and images.",
     )
+    parser.add_argument(
+        "--max-file-size",
+        type=int,
+        default=MAX_FILE_SIZE,
+        help="Maximum upload file size in MB. 0 means no limit (default: 0).",
+    )
     args = parser.parse_args()
 
     # Parse ocr_lang
@@ -533,8 +542,15 @@ def main():
     except ImportError:
         logger.info("No GPU detected, using CPU. (PyTorch not installed)")
 
+    # Convert MB to bytes (0 stays 0 = unlimited)
+    max_file_size_bytes = args.max_file_size * 1024 * 1024 if args.max_file_size > 0 else 0
+
     logger.info(f"Starting Docling Fast Server on http://{args.host}:{args.port}")
     logger.info(f"OCR settings: force_ocr={args.force_ocr}, lang={ocr_lang or 'default'}")
+    if max_file_size_bytes > 0:
+        logger.info(f"Max file size: {args.max_file_size}MB")
+    else:
+        logger.info("Max file size: unlimited")
     if enrichments:
         logger.info(f"Enrichments enabled: {', '.join(enrichments)}")
 
@@ -544,6 +560,7 @@ def main():
         enrich_formula=args.enrich_formula,
         enrich_picture_description=args.enrich_picture_description,
         picture_description_prompt=args.picture_description_prompt,
+        max_file_size=max_file_size_bytes,
     )
     uvicorn.run(
         app,
