@@ -104,12 +104,13 @@ opendataloader_pdf.convert(
 
 | Engine | Overall | Reading Order | Table | Heading | Speed (s/page) |
 |--------|---------|---------------|-------|---------|----------------|
-| **opendataloader [hybrid]** | **0.90** | **0.94** | **0.93** | **0.83** | 0.43 |
-| opendataloader | 0.72 | 0.91 | 0.49 | 0.76 | **0.05** |
+| **opendataloader [hybrid]** | **0.90** | **0.94** | **0.93** | **0.81** | 0.46 |
+| opendataloader | 0.84 | 0.91 | 0.49 | 0.74 | **0.05** |
 | docling | 0.86 | 0.90 | 0.89 | 0.80 | 0.73 |
 | marker | 0.83 | 0.89 | 0.81 | 0.80 | 53.93 |
 | mineru | 0.82 | 0.86 | 0.87 | 0.74 | 5.96 |
 | pymupdf4llm | 0.57 | 0.89 | 0.40 | 0.41 | 0.09 |
+| liteparse | 0.57 | 0.86 | 0.00 | 0.00 | 0.19 |
 | markitdown | 0.29 | 0.88 | 0.00 | 0.00 | **0.04** |
 
 > Scores normalized to [0, 1]. Higher is better for accuracy; lower is better for speed. **Bold** = best. [Full benchmark details](https://github.com/opendataloader-project/opendataloader-bench)
@@ -496,7 +497,7 @@ Yes. For digital PDFs, text extraction works out of the box. For scanned PDFs, u
 
 ### How fast is it?
 
-Local mode processes 20+ pages per second on CPU (0.05s/page). Hybrid mode processes 2+ pages per second (0.43s/page) with significantly higher accuracy for complex documents. No GPU required. Benchmarked on Apple M4. [Full benchmark details](https://github.com/opendataloader-project/opendataloader-bench). With multi-process batch processing, throughput exceeds 100 pages per second on 8+ core machines.
+Local mode processes 20+ pages per second on CPU (0.05s/page). Hybrid mode processes 2+ pages per second (0.46s/page) with significantly higher accuracy for complex documents. No GPU required. Benchmarked on Apple M4. [Full benchmark details](https://github.com/opendataloader-project/opendataloader-bench). With multi-process batch processing, throughput exceeds 100 pages per second on 8+ core machines.
 
 ### Does it handle multi-column layouts?
 
