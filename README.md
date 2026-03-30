@@ -106,12 +106,12 @@ opendataloader_pdf.convert(
 |--------|---------|---------------|-------|---------|----------------|
 | **opendataloader [hybrid]** | **0.90** | **0.94** | **0.93** | **0.81** | 0.46 |
 | opendataloader | 0.84 | 0.91 | 0.49 | 0.74 | **0.05** |
-| docling | 0.86 | 0.90 | 0.89 | 0.80 | 0.73 |
-| marker | 0.83 | 0.89 | 0.81 | 0.80 | 53.93 |
-| mineru | 0.82 | 0.86 | 0.87 | 0.74 | 5.96 |
-| pymupdf4llm | 0.57 | 0.89 | 0.40 | 0.41 | 0.09 |
+| docling | 0.88 | 0.90 | 0.89 | 0.80 | 0.73 |
+| marker | 0.86 | 0.89 | 0.81 | 0.80 | 53.93 |
+| mineru | 0.83 | 0.86 | 0.87 | 0.74 | 5.96 |
+| pymupdf4llm | 0.73 | 0.89 | 0.40 | 0.41 | 0.09 |
 | liteparse | 0.57 | 0.86 | 0.00 | 0.00 | 0.19 |
-| markitdown | 0.29 | 0.88 | 0.00 | 0.00 | **0.04** |
+| markitdown | 0.58 | 0.88 | 0.00 | 0.00 | **0.04** |
 
 > Scores normalized to [0, 1]. Higher is better for accuracy; lower is better for speed. **Bold** = best. [Full benchmark details](https://github.com/opendataloader-project/opendataloader-bench)
 
