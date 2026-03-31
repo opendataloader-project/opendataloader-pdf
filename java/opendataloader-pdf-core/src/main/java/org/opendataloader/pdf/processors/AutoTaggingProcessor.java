@@ -179,17 +179,90 @@ public class AutoTaggingProcessor {
     public static COSObject createStructureTreeElements(List<List<IObject>> contents, COSObject structTreeRoot, COSDocument cosDocument) {
         COSObject seDocument = addStructElement(structTreeRoot, cosDocument, TaggedPDFConstants.DOCUMENT, null);
         Map<SemanticHeading, Integer> normalizedLevels = buildNormalizedHeadingLevels(contents);
+        // Flatten all top-level content into a single ordered list for caption association.
+        List<IObject> flat = new ArrayList<>();
         for (List<IObject> pageContents : contents) {
-            for (IObject content : pageContents) {
-                if (content instanceof SemanticHeading) {
-                    createHeadingStructElem((SemanticHeading) content, seDocument, cosDocument,
-                            normalizedLevels.get(content));
+            flat.addAll(pageContents);
+        }
+        // Pre-compute which Caption maps to which float (Table/Figure) and whether it's
+        // a pre-caption (goes first) or post-caption (goes last).
+        // PDF/UA-2 §8.2.5.27: Caption must be first or last child of its parent.
+        // §Table5: Document must not directly contain Caption.
+        // Map each Caption index to its nearest adjacent float (Table/Figure) index.
+        // Captions will be attached as last child of their float parent regardless of
+        // source order, satisfying §8.2.5.27 (first or last child).
+        Map<Integer, Integer> captionToFloat = new HashMap<>();  // caption index → float index
+        for (int i = 0; i < flat.size(); i++) {
+            if (!(flat.get(i) instanceof SemanticCaption)) continue;
+            // Look ahead for next Table/Figure (within 2 items, skipping other captions)
+            for (int j = i + 1; j < flat.size() && j <= i + 2; j++) {
+                IObject next = flat.get(j);
+                if (isFloatElement(next)) { captionToFloat.put(i, j); break; }
+                if (!(next instanceof SemanticCaption)) break;
+            }
+            if (captionToFloat.containsKey(i)) continue;
+            // Look behind for previous Table/Figure
+            for (int j = i - 1; j >= 0 && j >= i - 2; j--) {
+                IObject prev = flat.get(j);
+                if (isFloatElement(prev)) { captionToFloat.put(i, j); break; }
+                if (!(prev instanceof SemanticCaption)) break;
+            }
+        }
+        // Build float index → struct element map (created on demand during iteration)
+        Map<Integer, COSObject> floatStructElems = new HashMap<>();
+        // First pass: create all non-Caption elements; defer Captions
+        for (int i = 0; i < flat.size(); i++) {
+            IObject content = flat.get(i);
+            if (content instanceof SemanticCaption) {
+                continue; // deferred — handled after its float is created
+            }
+            COSObject elem;
+            if (content instanceof SemanticHeading) {
+                elem = null;
+                createHeadingStructElem((SemanticHeading) content, seDocument, cosDocument,
+                        normalizedLevels.get(content));
+            } else if (content instanceof ImageChunk) {
+                elem = createFigureStructElemReturning((ImageChunk) content, seDocument, cosDocument);
+                floatStructElems.put(i, elem);
+            } else if (content instanceof TableBorder) {
+                TableBorder table = (TableBorder) content;
+                if (table.isTextBlock()) {
+                    createPartStructElemForTextBlock(table, seDocument, cosDocument);
+                    elem = null;
+                } else if (!table.isOneCellTable()) {
+                    elem = createTableStructElemReturning(table, seDocument, cosDocument);
+                    floatStructElems.put(i, elem);
                 } else {
-                    createStructElem(content, seDocument, cosDocument);
+                    elem = null;
                 }
+            } else {
+                createStructElem(content, seDocument, cosDocument);
+                elem = null;
+            }
+        }
+        // Second pass: attach Captions to their float parent
+        for (int i = 0; i < flat.size(); i++) {
+            IObject content = flat.get(i);
+            if (!(content instanceof SemanticCaption)) continue;
+            Integer floatIdx = captionToFloat.get(i);
+            COSObject floatElem = floatIdx != null ? floatStructElems.get(floatIdx) : null;
+            if (floatElem != null) {
+                createCaptionStructElem((SemanticCaption) content, floatElem, cosDocument);
+            } else {
+                // No adjacent float found — add directly to Document as fallback
+                createCaptionStructElem((SemanticCaption) content, seDocument, cosDocument);
             }
         }
         return seDocument;
+    }
+
+    private static boolean isFloatElement(IObject obj) {
+        if (obj instanceof ImageChunk) return true;
+        if (obj instanceof TableBorder) {
+            TableBorder t = (TableBorder) obj;
+            return !t.isTextBlock() && !t.isOneCellTable();
+        }
+        return false;
     }
 
     /**
@@ -268,6 +341,11 @@ public class AutoTaggingProcessor {
                 // Assign StructParent integer to annotation and register in parent tree
                 int structParentInt = annotStructParentKey++;
                 annotObj.setKey(ASAtom.STRUCT_PARENT, COSInteger.construct(structParentInt));
+                // Set Contents on annotation if absent — do both key writes before addChangedObject
+                if (annotation.getContents() == null || annotation.getContents().isEmpty()) {
+                    annotObj.setKey(ASAtom.CONTENTS,
+                        COSString.construct(altText.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+                }
                 annotationStructParents.put(structParentInt, linkElem);
                 cosDocument.addChangedObject(annotObj);
                 // Create OBJR pointing to the annotation
@@ -279,11 +357,6 @@ public class AutoTaggingProcessor {
                 kArray.add(objr);
                 linkElem.setKey(ASAtom.K, kArray);
                 cosDocument.addObject(linkElem);
-                // Set Contents on annotation if absent
-                if (annotation.getContents() == null || annotation.getContents().isEmpty()) {
-                    annotObj.setKey(ASAtom.CONTENTS,
-                        COSString.construct(altText.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
-                }
             }
         }
     }
@@ -333,11 +406,15 @@ public class AutoTaggingProcessor {
     }
 
     private static void createFigureStructElem(ImageChunk image, COSObject parent, COSDocument cosDocument) {
+        createFigureStructElemReturning(image, parent, cosDocument);
+    }
+
+    private static COSObject createFigureStructElemReturning(ImageChunk image, COSObject parent, COSDocument cosDocument) {
         COSObject figureObject = addStructElement(parent, cosDocument, TaggedPDFConstants.FIGURE, image.getPageNumber());
         double[] bbox = {image.getLeftX(), image.getBottomY(), image.getRightX(), image.getTopY()};
         addAttributeToStructElem(figureObject, ASAtom.LAYOUT, ASAtom.BBOX, COSArray.construct(4, bbox));
         processImageNode(image, figureObject);
-        //TODO: add height and width attributes
+        return figureObject;
     }
 
     private static void createListStructElem(PDFList list, COSObject parent, COSDocument cosDocument) {
@@ -379,6 +456,10 @@ public class AutoTaggingProcessor {
     }
 
     private static void createTableStructElem(TableBorder table, COSObject parent, COSDocument cosDocument) {
+        createTableStructElemReturning(table, parent, cosDocument);
+    }
+
+    private static COSObject createTableStructElemReturning(TableBorder table, COSObject parent, COSDocument cosDocument) {
         COSObject tableObject = addStructElement(parent, cosDocument, TaggedPDFConstants.TABLE, table.getPageNumber());
         for (int rowNumber = 0; rowNumber < table.getNumberOfRows(); rowNumber++) {
             TableBorderRow row = table.getRow(rowNumber);
@@ -399,6 +480,7 @@ public class AutoTaggingProcessor {
                 }
             }
         }
+        return tableObject;
     }
 
     private static void createPartStructElemForTextBlock(TableBorder table, COSObject parent, COSDocument cosDocument) {
