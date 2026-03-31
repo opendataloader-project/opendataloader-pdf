@@ -181,13 +181,16 @@ public class AutoTaggingProcessor {
             if (annotations == null) continue;
             for (PDAnnotation annotation : annotations) {
                 if (!ASAtom.getASAtom("Link").equals(annotation.getSubtype())) continue;
+                COSObject annotObj = annotation.getObject();
+                if (annotObj == null || annotObj.empty()) continue;
                 // Get URI from action if available
                 String uriString = null;
                 try {
                     PDAction action = annotation.getA();
-                    if (action != null && ASAtom.getASAtom("URI").equals(action.getSubtype())) {
+                    if (action != null && action.getObject() != null && !action.getObject().empty()
+                            && ASAtom.getASAtom("URI").equals(action.getSubtype())) {
                         COSObject uriObj = action.getObject().getKey(ASAtom.URI);
-                        if (!uriObj.empty()) {
+                        if (uriObj != null && !uriObj.empty()) {
                             uriString = uriObj.getString();
                         }
                     }
@@ -202,7 +205,7 @@ public class AutoTaggingProcessor {
                 // Create OBJR pointing to the annotation
                 COSObject objr = COSDictionary.construct();
                 objr.setKey(ASAtom.TYPE, COSName.construct(ASAtom.getASAtom("OBJR")));
-                objr.setKey(ASAtom.OBJ, annotation.getObject());
+                objr.setKey(ASAtom.OBJ, annotObj);
                 objr.setKey(ASAtom.PG, page.getObject());
                 COSObject kArray = COSArray.construct();
                 kArray.add(objr);
@@ -210,9 +213,9 @@ public class AutoTaggingProcessor {
                 cosDocument.addObject(linkElem);
                 // Set Contents on annotation if absent
                 if (annotation.getContents() == null || annotation.getContents().isEmpty()) {
-                    annotation.getObject().setKey(ASAtom.CONTENTS,
+                    annotObj.setKey(ASAtom.CONTENTS,
                         COSString.construct(altText.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
-                    cosDocument.addChangedObject(annotation.getObject());
+                    cosDocument.addChangedObject(annotObj);
                 }
             }
         }

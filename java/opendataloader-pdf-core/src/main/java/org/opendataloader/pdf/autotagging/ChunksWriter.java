@@ -83,11 +83,13 @@ public class ChunksWriter {
                 break;
             case Operators.DO:
                 OperatorStreamKey xObjectOperatorStreamKey = new OperatorStreamKey(operatorStreamKey.getPageNumber(), arguments.get(0).getString());
-                if (AutoTaggingProcessor.getOperatorIndexesToStreamInfosMap().containsKey(xObjectOperatorStreamKey)) {
+                Integer xObjectStructParent = AutoTaggingProcessor.getStructParentsIntegers().get(xObjectOperatorStreamKey);
+                if (AutoTaggingProcessor.getOperatorIndexesToStreamInfosMap().containsKey(xObjectOperatorStreamKey)
+                        && xObjectStructParent != null) {
                     COSName xObjectName = getLastCOSName(arguments);
                     PDXObject pdxObject = resourceHandler.getXObject(xObjectName);
                     pdxObject.setKey(ASAtom.STRUCT_PARENTS,
-                        COSInteger.construct(AutoTaggingProcessor.getStructParentsIntegers().get(xObjectOperatorStreamKey)));
+                        COSInteger.construct(xObjectStructParent));
                     StaticResources.getDocument().getDocument().addChangedObject(pdxObject.getObject());
                     PDXForm pdxForm = (PDXForm)pdxObject;
                     GraphicsState xFormGraphicsState = graphicsState.clone();
