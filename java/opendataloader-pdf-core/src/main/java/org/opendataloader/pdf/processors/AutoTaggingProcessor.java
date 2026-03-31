@@ -262,8 +262,11 @@ public class AutoTaggingProcessor {
     }
 
     private static void createHeadingStructElem(SemanticHeading heading, COSObject parent, COSDocument cosDocument) {
+        // Always use H1-H6 — PDF/UA-1 §7.4.4 requires H to be the only child of
+        // its parent, which is violated when multiple headings share a parent.
+        // H1-H6 are valid in both PDF 1.x (via role map) and PDF 2.0.
         COSObject headingObject = addStructElement(parent, cosDocument,
-            isPDF2_0 ? TaggedPDFConstants.H + heading.getHeadingLevel() : TaggedPDFConstants.H,
+            TaggedPDFConstants.H + heading.getHeadingLevel(),
             heading.getPageNumber());
         processTextNode(heading, headingObject);
     }
