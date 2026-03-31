@@ -19,12 +19,19 @@ import org.opendataloader.pdf.hybrid.HybridClientFactory;
 import org.opendataloader.pdf.processors.DocumentProcessor;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * The main entry point for the opendataloader-pdf library.
  * Use the static method {@link #processFile(String, Config)} to process a PDF.
  */
 public final class OpenDataLoaderPDF {
+
+    private static final Logger LOGGER = Logger.getLogger(OpenDataLoaderPDF.class.getCanonicalName());
 
     private OpenDataLoaderPDF() {
     }
@@ -37,7 +44,43 @@ public final class OpenDataLoaderPDF {
      * @throws IOException If an error occurs during file reading or processing.
      */
     public static void processFile(String inputPdfName, Config config) throws IOException {
+        if (!isValidInputFile(inputPdfName)) return;
+
         DocumentProcessor.processFile(inputPdfName, config);
+    }
+
+    /**
+     * Validates whether the given path refers to a valid PDF file.
+     *
+     * @param inputPdfName the path to the input file
+     * @return {@code true} if the path is non-null, points to an existing
+     *         regular file, and has a .pdf extension; {@code false} otherwise
+     */
+    private static boolean isValidInputFile(String inputPdfName) {
+
+        if (inputPdfName == null || inputPdfName.isBlank()) {
+            LOGGER.log(Level.WARNING, "Input file path is null or empty");
+            return false;
+        }
+
+        Path path = Paths.get(inputPdfName);
+
+        if (!Files.exists(path)) {
+            LOGGER.log(Level.WARNING, () -> "File does not exist: " + inputPdfName);
+            return false;
+        }
+
+        if (!Files.isRegularFile(path)) {
+            LOGGER.log(Level.WARNING, () -> "Not a valid file: " + inputPdfName);
+            return false;
+        }
+
+        if (!inputPdfName.toLowerCase().endsWith(".pdf")) {
+            LOGGER.log(Level.WARNING, () -> "Not a PDF file: " + inputPdfName);
+            return false;
+        }
+
+        return true;
     }
 
     /**
