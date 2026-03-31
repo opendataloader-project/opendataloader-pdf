@@ -72,10 +72,10 @@ public class AutoTaggingProcessor {
             PDPage page = rawPages.get(pageNumber);
             OperatorStreamKey operatorStreamKey = new OperatorStreamKey(pageNumber, null);
             Integer structParent = structParentsIntegers.get(operatorStreamKey);
-            if (structParent == null) {
-                continue;
+            if (structParent != null) {
+                page.getObject().setKey(ASAtom.STRUCT_PARENTS, COSInteger.construct(structParent));
+                cosDocument.addChangedObject(page.getObject());
             }
-            page.getObject().setKey(ASAtom.STRUCT_PARENTS, COSInteger.construct(structParent));
             COSObject contentsObject = page.getKey(ASAtom.CONTENTS);
             ResourceHandler resourceHandler = ResourceHandler.getInstance(page.getResources());
             List<Object> processedTokens = new ChunksWriter(new GraphicsState(resourceHandler),
