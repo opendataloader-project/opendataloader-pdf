@@ -20,8 +20,10 @@ import org.opendataloader.pdf.processors.DocumentProcessor;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -54,7 +56,7 @@ public final class OpenDataLoaderPDF {
      *
      * @param inputPdfName the path to the input file
      * @return {@code true} if the path is non-null, points to an existing
-     *         regular file, and has a .pdf extension; {@code false} otherwise
+     * regular file, and has a .pdf extension; {@code false} otherwise
      */
     private static boolean isValidInputFile(String inputPdfName) {
 
@@ -63,7 +65,14 @@ public final class OpenDataLoaderPDF {
             return false;
         }
 
-        Path path = Paths.get(inputPdfName);
+        final Path path;
+
+        try {
+            path = Paths.get(inputPdfName);
+        } catch (InvalidPathException ex) {
+            LOGGER.log(Level.WARNING, () -> "Invalid file path: " + inputPdfName);
+            return false;
+        }
 
         if (!Files.exists(path)) {
             LOGGER.log(Level.WARNING, () -> "File does not exist: " + inputPdfName);
@@ -75,7 +84,7 @@ public final class OpenDataLoaderPDF {
             return false;
         }
 
-        if (!inputPdfName.toLowerCase().endsWith(".pdf")) {
+        if (!path.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".pdf")) {
             LOGGER.log(Level.WARNING, () -> "Not a PDF file: " + inputPdfName);
             return false;
         }
