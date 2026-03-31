@@ -314,7 +314,20 @@ public class TaggedDocumentProcessor {
     }
 
     private static void processTableCell(TableBorderCell cell, INode elem) {
-        processChildContents(elem, cell.getContents());
+        List<IObject> rawContents = new ArrayList<>();
+        processChildContents(elem, rawContents);
+        List<IObject> processed = TextLineProcessor.processTextLines(rawContents);
+        TextBlock textBlock = new TextBlock(new MultiBoundingBox());
+        for (IObject content : processed) {
+            if (content instanceof TextLine) {
+                textBlock.add((TextLine) content);
+            } else {
+                cell.getContents().add(content);
+            }
+        }
+        if (!textBlock.isEmpty()) {
+            cell.getContents().add(ParagraphProcessor.createParagraphFromTextBlock(textBlock));
+        }
         BoundingBox cellBoundingBox = new MultiBoundingBox();
         for (IObject content : cell.getContents()) {
             cellBoundingBox.union(content.getBoundingBox());
