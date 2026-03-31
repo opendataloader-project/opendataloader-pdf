@@ -9,6 +9,7 @@ import org.verapdf.cos.*;
 import org.verapdf.gf.model.factory.chunks.GraphicsState;
 import org.verapdf.gf.model.impl.sa.util.ResourceHandler;
 import org.verapdf.pd.*;
+import org.verapdf.pd.actions.PDAction;
 import org.verapdf.pd.images.PDXObject;
 import org.verapdf.tools.StaticResources;
 import org.verapdf.tools.TaggedPDFConstants;
@@ -45,7 +46,8 @@ public class AutoTaggingProcessor {
         COSDocument cosDocument = document.getDocument();
         PDCatalog catalog = document.getCatalog();
         COSObject structTreeRoot = createStructTreeRoot(catalog, cosDocument, document);
-        createStructureTreeElements(contents, structTreeRoot, cosDocument);
+        COSObject seDocument = createStructureTreeElements(contents, structTreeRoot, cosDocument);
+        createLinkAnnotationStructElements(document, cosDocument, seDocument);
         updatePages(document, cosDocument);
         createParentTree(cosDocument, structTreeRoot);
         String outputFileName = outputFolder + File.separator +
@@ -161,11 +163,57 @@ public class AutoTaggingProcessor {
     }
 
 
-    public static void createStructureTreeElements(List<List<IObject>> contents, COSObject structTreeRoot, COSDocument cosDocument) {
+    public static COSObject createStructureTreeElements(List<List<IObject>> contents, COSObject structTreeRoot, COSDocument cosDocument) {
         COSObject seDocument = addStructElement(structTreeRoot, cosDocument, TaggedPDFConstants.DOCUMENT, null);
         for (List<IObject> pageContents : contents) {
             for (IObject content : pageContents) {
                 createStructElem(content, seDocument, cosDocument);
+            }
+        }
+        return seDocument;
+    }
+
+    private static void createLinkAnnotationStructElements(PDDocument document, COSDocument cosDocument, COSObject seDocument) {
+        List<PDPage> pages = document.getPages();
+        for (int pageNum = 0; pageNum < pages.size(); pageNum++) {
+            PDPage page = pages.get(pageNum);
+            List<PDAnnotation> annotations = page.getAnnotations();
+            if (annotations == null) continue;
+            for (PDAnnotation annotation : annotations) {
+                if (!ASAtom.getASAtom("Link").equals(annotation.getSubtype())) continue;
+                // Get URI from action if available
+                String uriString = null;
+                try {
+                    PDAction action = annotation.getA();
+                    if (action != null && ASAtom.getASAtom("URI").equals(action.getSubtype())) {
+                        COSObject uriObj = action.getObject().getKey(ASAtom.URI);
+                        if (!uriObj.empty()) {
+                            uriString = uriObj.getString();
+                        }
+                    }
+                } catch (Exception e) {
+                    // ignore — URI not critical
+                }
+                // Create Link struct element
+                COSObject linkElem = addStructElement(seDocument, cosDocument, TaggedPDFConstants.LINK, pageNum);
+                // Set Alt text to URI or "Link"
+                String altText = uriString != null ? uriString : "Link";
+                linkElem.setKey(ASAtom.ALT, COSString.construct(altText.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+                // Create OBJR pointing to the annotation
+                COSObject objr = COSDictionary.construct();
+                objr.setKey(ASAtom.TYPE, COSName.construct(ASAtom.getASAtom("OBJR")));
+                objr.setKey(ASAtom.OBJ, annotation.getObject());
+                objr.setKey(ASAtom.PG, page.getObject());
+                COSObject kArray = COSArray.construct();
+                kArray.add(objr);
+                linkElem.setKey(ASAtom.K, kArray);
+                cosDocument.addObject(linkElem);
+                // Set Contents on annotation if absent
+                if (annotation.getContents() == null || annotation.getContents().isEmpty()) {
+                    annotation.getObject().setKey(ASAtom.CONTENTS,
+                        COSString.construct(altText.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+                    cosDocument.addChangedObject(annotation.getObject());
+                }
             }
         }
     }

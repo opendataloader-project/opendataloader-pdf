@@ -55,6 +55,9 @@ public class ChunksWriter {
 
     public List<Object> processTokens(List<Object> processTokens, OperatorStreamKey operatorStreamKey) throws IOException {
         Map<Integer, Set<StreamInfo>> operatorIndexesToStreamInfosMap = AutoTaggingProcessor.getOperatorIndexesToStreamInfosMap().get(operatorStreamKey);
+        if (operatorIndexesToStreamInfosMap == null) {
+            operatorIndexesToStreamInfosMap = Collections.emptyMap();
+        }
         List<Object> result = new ArrayList<>();
         List<COSBase> arguments = new ArrayList<>();
         for (int index = 0; index < processTokens.size(); index++) {
