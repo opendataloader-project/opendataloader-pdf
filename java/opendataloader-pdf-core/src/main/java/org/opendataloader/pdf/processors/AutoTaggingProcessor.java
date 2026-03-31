@@ -178,12 +178,60 @@ public class AutoTaggingProcessor {
 
     public static COSObject createStructureTreeElements(List<List<IObject>> contents, COSObject structTreeRoot, COSDocument cosDocument) {
         COSObject seDocument = addStructElement(structTreeRoot, cosDocument, TaggedPDFConstants.DOCUMENT, null);
+        Map<SemanticHeading, Integer> normalizedLevels = buildNormalizedHeadingLevels(contents);
         for (List<IObject> pageContents : contents) {
             for (IObject content : pageContents) {
-                createStructElem(content, seDocument, cosDocument);
+                if (content instanceof SemanticHeading) {
+                    createHeadingStructElem((SemanticHeading) content, seDocument, cosDocument,
+                            normalizedLevels.get(content));
+                } else {
+                    createStructElem(content, seDocument, cosDocument);
+                }
             }
         }
         return seDocument;
+    }
+
+    /**
+     * Normalizes heading levels across the document so that:
+     * - The first heading is always H1.
+     * - A heading may not skip levels going down (e.g., H1→H3 becomes H1→H2).
+     * - A heading may jump back up freely (e.g., H3→H1 is fine).
+     * This satisfies PDF/UA-1 §7.4.2 (strict descending sequence, no skipping).
+     */
+    private static Map<SemanticHeading, Integer> buildNormalizedHeadingLevels(List<List<IObject>> contents) {
+        // Collect headings in document order
+        List<SemanticHeading> headings = new ArrayList<>();
+        for (List<IObject> page : contents) {
+            for (IObject obj : page) {
+                if (obj instanceof SemanticHeading) {
+                    headings.add((SemanticHeading) obj);
+                }
+            }
+        }
+        Map<SemanticHeading, Integer> result = new IdentityHashMap<>();
+        if (headings.isEmpty()) {
+            return result;
+        }
+        // Two-pass: first map original levels to a dense 1-based sequence,
+        // then assign normalized levels avoiding skips.
+        int currentNormalized = 1;
+        int prevOriginal = headings.get(0).getHeadingLevel();
+        result.put(headings.get(0), 1);
+        for (int i = 1; i < headings.size(); i++) {
+            int orig = headings.get(i).getHeadingLevel();
+            if (orig > prevOriginal) {
+                // Going deeper — allow only one step at a time
+                currentNormalized = Math.min(currentNormalized + 1, 6);
+            } else if (orig < prevOriginal) {
+                // Going back up — allow freely, but don't go below 1
+                currentNormalized = Math.max(currentNormalized - (prevOriginal - orig), 1);
+            }
+            // else same level — keep currentNormalized
+            result.put(headings.get(i), currentNormalized);
+            prevOriginal = orig;
+        }
+        return result;
     }
 
     private static void createLinkAnnotationStructElements(PDDocument document, COSDocument cosDocument, COSObject seDocument) {
@@ -242,7 +290,9 @@ public class AutoTaggingProcessor {
 
     private static void createStructElem(IObject object, COSObject parentStructElem, COSDocument cosDocument) {
         if (object instanceof SemanticHeading) {
-            createHeadingStructElem((SemanticHeading) object, parentStructElem, cosDocument);
+            // Fallback: heading inside a nested context (list/table) — use original level
+            createHeadingStructElem((SemanticHeading) object, parentStructElem, cosDocument,
+                    ((SemanticHeading) object).getHeadingLevel());
         } else if (object instanceof SemanticParagraph) {
             createParagraphStructElem((SemanticParagraph) object, parentStructElem, cosDocument);
         } else if (object instanceof SemanticCaption) {
@@ -261,12 +311,13 @@ public class AutoTaggingProcessor {
         }
     }
 
-    private static void createHeadingStructElem(SemanticHeading heading, COSObject parent, COSDocument cosDocument) {
-        // Always use H1-H6 — PDF/UA-1 §7.4.4 requires H to be the only child of
-        // its parent, which is violated when multiple headings share a parent.
-        // H1-H6 are valid in both PDF 1.x (via role map) and PDF 2.0.
+    private static void createHeadingStructElem(SemanticHeading heading, COSObject parent, COSDocument cosDocument,
+                                                int normalizedLevel) {
+        // Use the normalized level (1–6) so that:
+        // - PDF/UA-1 §7.4.4: H is the only child of its parent (satisfied by H1-H6)
+        // - PDF/UA-1 §7.4.2: heading levels do not skip (satisfied by normalization)
         COSObject headingObject = addStructElement(parent, cosDocument,
-            TaggedPDFConstants.H + heading.getHeadingLevel(),
+            TaggedPDFConstants.H + normalizedLevel,
             heading.getPageNumber());
         processTextNode(heading, headingObject);
     }
