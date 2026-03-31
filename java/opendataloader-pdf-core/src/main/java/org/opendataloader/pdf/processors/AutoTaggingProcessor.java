@@ -33,6 +33,8 @@ public class AutoTaggingProcessor {
     private static final Map<OperatorStreamKey, Map<Integer, Set<StreamInfo>>> operatorIndexesToStreamInfosMap = new HashMap<>();
     private static final Map<OperatorStreamKey, List<COSObject>> structParents = new HashMap<>();
     private static final Map<OperatorStreamKey, Integer> structParentsIntegers = new HashMap<>();
+    // annotation StructParent entries: int key -> single struct element (Link)
+    private static final Map<Integer, COSObject> annotationStructParents = new HashMap<>();
     private static boolean isPDF2_0 = false;
     private static final int MAX_TOKENS_PER_STREAM = 100_000;
 
@@ -40,6 +42,7 @@ public class AutoTaggingProcessor {
         operatorIndexesToStreamInfosMap.clear();
         structParents.clear();
         structParentsIntegers.clear();
+        annotationStructParents.clear();
         if (document.getVersion() == 2.0F) {
             isPDF2_0 = true;
         }
@@ -132,14 +135,24 @@ public class AutoTaggingProcessor {
         structTreeRoot.setKey(ASAtom.PARENT_TREE, parentTree);
         COSObject nums = COSArray.construct();
         parentTree.setKey(ASAtom.NUMS, nums);
+        int nextKey = 0;
         for (Map.Entry<OperatorStreamKey, List<COSObject>> entry : structParents.entrySet()) {
-            nums.add(COSInteger.construct(structParentsIntegers.get(entry.getKey())));
+            int key = structParentsIntegers.get(entry.getKey());
+            nums.add(COSInteger.construct(key));
             COSObject array = COSArray.construct();
             for (COSObject structParent : entry.getValue()) {
                 array.add(structParent);
             }
             nums.add(array);
+            if (key >= nextKey) nextKey = key + 1;
         }
+        // Add single-entry annotations (Link annotations) to parent tree
+        for (Map.Entry<Integer, COSObject> entry : annotationStructParents.entrySet()) {
+            nums.add(COSInteger.construct(entry.getKey()));
+            nums.add(entry.getValue());
+            if (entry.getKey() >= nextKey) nextKey = entry.getKey() + 1;
+        }
+        structTreeRoot.setKey(ASAtom.PARENT_TREE_NEXT_KEY, COSInteger.construct(nextKey));
     }
 
     private static COSObject addStructElement(COSObject parent, COSDocument cosDocument, String type, Integer pageNumber) {
@@ -175,6 +188,8 @@ public class AutoTaggingProcessor {
 
     private static void createLinkAnnotationStructElements(PDDocument document, COSDocument cosDocument, COSObject seDocument) {
         List<PDPage> pages = document.getPages();
+        // Annotation StructParent integers start after the page range
+        int annotStructParentKey = document.getNumberOfPages();
         for (int pageNum = 0; pageNum < pages.size(); pageNum++) {
             PDPage page = pages.get(pageNum);
             List<PDAnnotation> annotations = page.getAnnotations();
@@ -202,6 +217,11 @@ public class AutoTaggingProcessor {
                 // Set Alt text to URI or "Link"
                 String altText = uriString != null ? uriString : "Link";
                 linkElem.setKey(ASAtom.ALT, COSString.construct(altText.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+                // Assign StructParent integer to annotation and register in parent tree
+                int structParentInt = annotStructParentKey++;
+                annotObj.setKey(ASAtom.STRUCT_PARENT, COSInteger.construct(structParentInt));
+                annotationStructParents.put(structParentInt, linkElem);
+                cosDocument.addChangedObject(annotObj);
                 // Create OBJR pointing to the annotation
                 COSObject objr = COSDictionary.construct();
                 objr.setKey(ASAtom.TYPE, COSName.construct(ASAtom.getASAtom("OBJR")));
@@ -215,7 +235,6 @@ public class AutoTaggingProcessor {
                 if (annotation.getContents() == null || annotation.getContents().isEmpty()) {
                     annotObj.setKey(ASAtom.CONTENTS,
                         COSString.construct(altText.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
-                    cosDocument.addChangedObject(annotObj);
                 }
             }
         }
