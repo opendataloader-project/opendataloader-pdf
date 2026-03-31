@@ -81,4 +81,40 @@ public class SemanticPicture extends BaseObject {
     public boolean hasDescription() {
         return description != null && !description.isEmpty();
     }
+
+    /**
+     * Returns a sanitized version of the description safe for use as alt text
+     * across all output formats (Markdown, HTML, JSON) without format-specific escaping.
+     *
+     * <p>Removes characters that are structurally significant in at least one output format:
+     * <ul>
+     *   <li>{@code "} — HTML attribute delimiter</li>
+     *   <li>{@code [}, {@code ]} — Markdown alt text delimiters</li>
+     *   <li>{@code <}, {@code >} — HTML tag delimiters</li>
+     *   <li>{@code &} — HTML entity prefix</li>
+     *   <li>{@code \u0000} — null character</li>
+     *   <li>Newlines ({@code \n}, {@code \r}) — replaced with a space</li>
+     * </ul>
+     * Consecutive whitespace is collapsed to a single space and the result is trimmed.
+     *
+     * @return sanitized description string, or empty string if no description
+     */
+    public String sanitizeDescription() {
+        if (!hasDescription()) {
+            return "";
+        }
+        return description
+                .replace("\r\n", " ")
+                .replace("\n", " ")
+                .replace("\r", " ")
+                .replace("\"", "")
+                .replace("[", "")
+                .replace("]", "")
+                .replace("<", "")
+                .replace(">", "")
+                .replace("&", "")
+                .replace("\u0000", "")
+                .replaceAll("\\s{2,}", " ")
+                .trim();
+    }
 }

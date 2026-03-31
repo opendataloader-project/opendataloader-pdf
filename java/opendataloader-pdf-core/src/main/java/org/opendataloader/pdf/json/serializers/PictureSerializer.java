@@ -51,7 +51,7 @@ public class PictureSerializer extends StdSerializer<SemanticPicture> {
 
         // Write description if available
         if (picture.hasDescription()) {
-            jsonGenerator.writeStringField(JsonName.DESCRIPTION, picture.getDescription());
+            jsonGenerator.writeStringField(JsonName.DESCRIPTION, picture.sanitizeDescription());
         }
 
         if (ImagesUtils.isImageFileExists(absolutePath)) {
