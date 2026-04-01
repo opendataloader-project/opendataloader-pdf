@@ -50,8 +50,8 @@ public class AutoTaggingProcessor {
         PDCatalog catalog = document.getCatalog();
         COSObject structTreeRoot = createStructTreeRoot(catalog, cosDocument, document);
         COSObject seDocument = createStructureTreeElements(contents, structTreeRoot, cosDocument);
-        createLinkAnnotationStructElements(document, cosDocument, seDocument);
         updatePages(document, cosDocument);
+        createLinkAnnotationStructElements(document, cosDocument, seDocument);
         createParentTree(cosDocument, structTreeRoot);
         String outputFileName = outputFolder + File.separator +
             inputPDF.getName().substring(0, inputPDF.getName().length() - 4) + "_tagged.pdf";
@@ -309,16 +309,28 @@ public class AutoTaggingProcessor {
 
     private static void createLinkAnnotationStructElements(PDDocument document, COSDocument cosDocument, COSObject seDocument) {
         List<PDPage> pages = document.getPages();
-        // Annotation StructParent integers start after the page range
-        int annotStructParentKey = document.getNumberOfPages();
+        // Annotation StructParent integers must start after all page StructParents.
+        // structParentsIntegers is populated by updatePages() which runs before this method.
+        int annotStructParentKey = structParentsIntegers.isEmpty() ? 0
+                : structParentsIntegers.values().stream().mapToInt(Integer::intValue).max().getAsInt() + 1;
         for (int pageNum = 0; pageNum < pages.size(); pageNum++) {
             PDPage page = pages.get(pageNum);
             List<PDAnnotation> annotations = page.getAnnotations();
             if (annotations == null) continue;
+            boolean pageChanged = false;
             for (PDAnnotation annotation : annotations) {
                 if (!ASAtom.getASAtom("Link").equals(annotation.getSubtype())) continue;
                 COSObject annotObj = annotation.getObject();
                 if (annotObj == null || annotObj.empty()) continue;
+                // For indirect annotations, resolve the canonical COSObject via its key
+                // so that setKey writes go to the same instance that the writer will flush.
+                org.verapdf.cos.COSKey cosKey = annotObj.getObjectKey();
+                if (cosKey != null) {
+                    COSObject canonical = cosDocument.getObject(cosKey);
+                    if (canonical != null && !canonical.empty()) {
+                        annotObj = canonical;
+                    }
+                }
                 // Get URI from action if available
                 String uriString = null;
                 try {
@@ -341,13 +353,14 @@ public class AutoTaggingProcessor {
                 // Assign StructParent integer to annotation and register in parent tree
                 int structParentInt = annotStructParentKey++;
                 annotObj.setKey(ASAtom.STRUCT_PARENT, COSInteger.construct(structParentInt));
-                // Set Contents on annotation if absent — do both key writes before addChangedObject
+                // Set Contents on annotation if absent.
                 if (annotation.getContents() == null || annotation.getContents().isEmpty()) {
                     annotObj.setKey(ASAtom.CONTENTS,
                         COSString.construct(altText.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
                 }
                 annotationStructParents.put(structParentInt, linkElem);
                 cosDocument.addChangedObject(annotObj);
+                pageChanged = true;
                 // Create OBJR pointing to the annotation
                 COSObject objr = COSDictionary.construct();
                 objr.setKey(ASAtom.TYPE, COSName.construct(ASAtom.getASAtom("OBJR")));
@@ -357,6 +370,15 @@ public class AutoTaggingProcessor {
                 kArray.add(objr);
                 linkElem.setKey(ASAtom.K, kArray);
                 cosDocument.addObject(linkElem);
+            }
+            // Flush the Annots array (may be an indirect object separate from the page)
+            // so that direct-object annotation dicts inside it (StructParent + Contents) are saved.
+            if (pageChanged) {
+                COSObject annotsObj = page.getKey(ASAtom.ANNOTS);
+                if (annotsObj != null && !annotsObj.empty()) {
+                    cosDocument.addChangedObject(annotsObj);
+                }
+                cosDocument.addChangedObject(page.getObject());
             }
         }
     }
@@ -568,11 +590,15 @@ public class AutoTaggingProcessor {
             if (streamInfo.getXObjectName() != null) {
                 PDXObject pdxObject = StaticResources.getDocument().getPage(pageNumber).getResources()
                     .getXObject(ASAtom.getASAtom(streamInfo.getXObjectName()));
-                COSObject mcrDictionary = COSDictionary.construct();
-                mcrDictionary.setKey(ASAtom.TYPE, COSName.construct(ASAtom.MCR));
-                mcrDictionary.setKey(ASAtom.MCID, mcidObject);
-                mcrDictionary.setKey(ASAtom.STM, pdxObject.getObject());
-                array.add(mcrDictionary);
+                if (pdxObject != null) {
+                    COSObject mcrDictionary = COSDictionary.construct();
+                    mcrDictionary.setKey(ASAtom.TYPE, COSName.construct(ASAtom.MCR));
+                    mcrDictionary.setKey(ASAtom.MCID, mcidObject);
+                    mcrDictionary.setKey(ASAtom.STM, pdxObject.getObject());
+                    array.add(mcrDictionary);
+                } else {
+                    array.add(mcidObject);
+                }
             } else {
                 array.add(mcidObject);
             }
