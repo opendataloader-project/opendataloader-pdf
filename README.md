@@ -449,7 +449,7 @@ Existing PDFs (untagged)
 | Feature | Timeline | Tier |
 |---------|----------|------|
 | **Auto-tagging → Tagged PDF** — Generate Tagged PDFs from untagged PDFs | Q2 2026 | Free |
-| **[Hancom Data Loader](https://sdk.hancom.com/en/services/1?utm_source=github&utm_medium=readme&utm_campaign=opendataloader-pdf)** — Enterprise AI document analysis, customer-customized models, VLM-based chart/image understanding, production-grade OCR | Q2-Q3 2026 | Free |
+| **[Hancom Data Loader](https://sdk.hancom.com/en/services/1?utm_source=github&utm_medium=readme&utm_campaign=opendataloader-pdf)** — Enterprise AI document analysis, customer-customized models, VLM-based chart/image understanding, production-grade OCR | Q2-Q3 2026 | Planned |
 | **Structure validation** — Verify PDF tag trees | Q2 2026 | Planned |
 
 [Full Roadmap](https://opendataloader.org/docs/upcoming-roadmap)
