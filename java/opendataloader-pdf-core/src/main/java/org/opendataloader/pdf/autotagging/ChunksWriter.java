@@ -155,10 +155,19 @@ public class ChunksWriter {
         }
     }
 
+    private static final java.util.logging.Logger CHUNKS_LOGGER = java.util.logging.Logger.getLogger(ChunksWriter.class.getName());
+
     private static String getStructureType(Integer mcid, OperatorStreamKey operatorStreamKey) {
         if (mcid == null || operatorStreamKey == null) return null;
         List<COSObject> parents = AutoTaggingProcessor.getStructParents().get(operatorStreamKey);
-        if (parents == null || mcid >= parents.size()) return null;
+        if (parents == null) {
+            CHUNKS_LOGGER.warning("structParents: no entry for key page=" + operatorStreamKey.getPageNumber() + " xobj=" + operatorStreamKey.getXObjectName() + " (available keys: " + AutoTaggingProcessor.getStructParents().keySet().stream().map(k -> "p"+k.getPageNumber()+"x"+k.getXObjectName()).collect(java.util.stream.Collectors.joining(",")) + ")");
+            return null;
+        }
+        if (mcid >= parents.size()) {
+            CHUNKS_LOGGER.warning("structParents: mcid=" + mcid + " out of range (size=" + parents.size() + ") for key page=" + operatorStreamKey.getPageNumber() + " xobj=" + operatorStreamKey.getXObjectName());
+            return null;
+        }
         COSObject structElem = parents.get(mcid);
         if (structElem == null) return null;
         COSObject typeObj = structElem.getKey(ASAtom.S);
