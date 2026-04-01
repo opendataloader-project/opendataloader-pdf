@@ -18,6 +18,7 @@ package org.opendataloader.pdf.processors;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.entities.EnrichedImageChunk;
+import org.opendataloader.pdf.entities.SemanticFormula;
 import org.opendataloader.pdf.entities.SemanticPicture;
 import org.opendataloader.pdf.hybrid.DoclingSchemaTransformer;
 import org.opendataloader.pdf.hybrid.HancomSchemaTransformer;
@@ -569,9 +570,11 @@ public class HybridDocumentProcessor {
                 entry.setValue(enriched);
             }
 
-            // Replace backend TextChunks with Java TextChunks that carry StreamInfo
+            // Replace backend TextChunks with Java TextChunks that carry StreamInfo,
+            // and copy StreamInfos to SemanticFormula objects
             if (!javaTextChunks.isEmpty()) {
                 enrichTextStreamInfos(backendPage, javaTextChunks);
+                enrichFormulaStreamInfos(backendPage, javaTextChunks);
             }
         }
     }
@@ -650,6 +653,40 @@ public class HybridDocumentProcessor {
                     newCol.add(new TextLine(tc));
                 }
                 textNode.getColumns().add(newCol);
+            }
+        }
+    }
+
+    /**
+     * Copies StreamInfos from Java TextChunks to SemanticFormula objects by bbox overlap.
+     *
+     * <p>SemanticFormula (from backend) has no StreamInfo. We find all Java TextChunks
+     * whose centers fall within the formula's bbox and copy their StreamInfos directly
+     * to the formula's StreamInfo list (inherited from BaseObject).
+     */
+    private static void enrichFormulaStreamInfos(List<IObject> backendPage, List<TextChunk> javaTextChunks) {
+        // Collect indices already used by enrichTextStreamInfos — we need a fresh scan
+        // because formulas may overlap with text regions that were already assigned.
+        // However, for formulas we allow reuse since formula content often IS the text content.
+        for (IObject obj : backendPage) {
+            if (!(obj instanceof SemanticFormula)) continue;
+            SemanticFormula formula = (SemanticFormula) obj;
+            if (!formula.getStreamInfos().isEmpty()) continue;
+
+            double fLeft = formula.getLeftX();
+            double fRight = formula.getRightX();
+            double fBottom = formula.getBottomY();
+            double fTop = formula.getTopY();
+            double tol = 5.0;
+
+            for (TextChunk javaChunk : javaTextChunks) {
+                if (javaChunk.getStreamInfos().isEmpty()) continue;
+                double jCx = (javaChunk.getLeftX() + javaChunk.getRightX()) / 2.0;
+                double jCy = (javaChunk.getBottomY() + javaChunk.getTopY()) / 2.0;
+
+                if (jCx >= fLeft - tol && jCx <= fRight + tol && jCy >= fBottom - tol && jCy <= fTop + tol) {
+                    formula.getStreamInfos().addAll(javaChunk.getStreamInfos());
+                }
             }
         }
     }
