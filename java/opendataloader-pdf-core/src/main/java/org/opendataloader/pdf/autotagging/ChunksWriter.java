@@ -88,6 +88,10 @@ public class ChunksWriter {
                         && xObjectStructParent != null) {
                     COSName xObjectName = getLastCOSName(arguments);
                     PDXObject pdxObject = resourceHandler.getXObject(xObjectName);
+                    if (pdxObject == null) {
+                        processContentOperator(result, rawOperator, arguments, operatorIndex, operatorIndexesToStreamInfosMap, operatorName, operatorStreamKey);
+                        break;
+                    }
                     pdxObject.setKey(ASAtom.STRUCT_PARENTS,
                         COSInteger.construct(xObjectStructParent));
                     StaticResources.getDocument().getDocument().addChangedObject(pdxObject.getObject());
