@@ -37,6 +37,11 @@ import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.content.LineChunk;
+import org.verapdf.wcag.algorithms.entities.lists.PDFList;
+import org.verapdf.wcag.algorithms.entities.lists.ListItem;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextColumn;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
@@ -616,44 +621,74 @@ public class HybridDocumentProcessor {
         if (javaTextChunks.isEmpty()) return;
 
         Set<Integer> usedJavaIndices = new HashSet<>();
+        enrichTextStreamInfosRecursive(backendPage, javaTextChunks, usedJavaIndices);
+    }
 
-        for (IObject obj : backendPage) {
-            if (!(obj instanceof SemanticTextNode)) continue;
-            SemanticTextNode textNode = (SemanticTextNode) obj;
+    /**
+     * Recursively walks the IObject tree and replaces TextChunks in SemanticTextNodes
+     * with Java TextChunks that carry StreamInfo. Handles TableBorder cells, PDFList items,
+     * and any other container that holds nested IObjects.
+     */
+    private static void enrichTextStreamInfosRecursive(
+            List<IObject> objects, List<TextChunk> javaTextChunks, Set<Integer> usedJavaIndices) {
 
-            // Get the bounding box of the entire SemanticTextNode
-            double nLeft = textNode.getLeftX();
-            double nRight = textNode.getRightX();
-            double nBottom = textNode.getBottomY();
-            double nTop = textNode.getTopY();
-
-            // Find all Java TextChunks whose center is within this node's bbox
-            List<TextChunk> matched = new ArrayList<>();
-            double tol = 5.0;
-            for (int i = 0; i < javaTextChunks.size(); i++) {
-                if (usedJavaIndices.contains(i)) continue;
-                TextChunk javaChunk = javaTextChunks.get(i);
-                if (javaChunk.getStreamInfos().isEmpty()) continue;
-
-                double jCx = (javaChunk.getLeftX() + javaChunk.getRightX()) / 2.0;
-                double jCy = (javaChunk.getBottomY() + javaChunk.getTopY()) / 2.0;
-
-                if (jCx >= nLeft - tol && jCx <= nRight + tol && jCy >= nBottom - tol && jCy <= nTop + tol) {
-                    matched.add(javaChunk);
-                    usedJavaIndices.add(i);
+        for (IObject obj : objects) {
+            if (obj instanceof SemanticTextNode) {
+                enrichSingleTextNode((SemanticTextNode) obj, javaTextChunks, usedJavaIndices);
+            } else if (obj instanceof TableBorder) {
+                TableBorder table = (TableBorder) obj;
+                for (int r = 0; r < table.getNumberOfRows(); r++) {
+                    TableBorderRow row = table.getRow(r);
+                    for (int c = 0; c < table.getNumberOfColumns(); c++) {
+                        TableBorderCell cell = row.getCell(c);
+                        if (cell.getRowNumber() == r && cell.getColNumber() == c) {
+                            enrichTextStreamInfosRecursive(cell.getContents(), javaTextChunks, usedJavaIndices);
+                        }
+                    }
+                }
+            } else if (obj instanceof PDFList) {
+                PDFList list = (PDFList) obj;
+                for (ListItem item : list.getListItems()) {
+                    enrichTextStreamInfosRecursive(item.getContents(), javaTextChunks, usedJavaIndices);
                 }
             }
+        }
+    }
 
-            if (!matched.isEmpty()) {
-                // Replace the node's columns with a single column containing
-                // the matched Java TextChunks (each as its own TextLine)
-                textNode.getColumns().clear();
-                TextColumn newCol = new TextColumn();
-                for (TextChunk tc : matched) {
-                    newCol.add(new TextLine(tc));
-                }
-                textNode.getColumns().add(newCol);
+    /**
+     * Replaces a single SemanticTextNode's TextChunks with matching Java TextChunks.
+     */
+    private static void enrichSingleTextNode(
+            SemanticTextNode textNode, List<TextChunk> javaTextChunks, Set<Integer> usedJavaIndices) {
+
+        double nLeft = textNode.getLeftX();
+        double nRight = textNode.getRightX();
+        double nBottom = textNode.getBottomY();
+        double nTop = textNode.getTopY();
+
+        List<TextChunk> matched = new ArrayList<>();
+        double tol = 5.0;
+        for (int i = 0; i < javaTextChunks.size(); i++) {
+            if (usedJavaIndices.contains(i)) continue;
+            TextChunk javaChunk = javaTextChunks.get(i);
+            if (javaChunk.getStreamInfos().isEmpty()) continue;
+
+            double jCx = (javaChunk.getLeftX() + javaChunk.getRightX()) / 2.0;
+            double jCy = (javaChunk.getBottomY() + javaChunk.getTopY()) / 2.0;
+
+            if (jCx >= nLeft - tol && jCx <= nRight + tol && jCy >= nBottom - tol && jCy <= nTop + tol) {
+                matched.add(javaChunk);
+                usedJavaIndices.add(i);
             }
+        }
+
+        if (!matched.isEmpty()) {
+            textNode.getColumns().clear();
+            TextColumn newCol = new TextColumn();
+            for (TextChunk tc : matched) {
+                newCol.add(new TextLine(tc));
+            }
+            textNode.getColumns().add(newCol);
         }
     }
 
