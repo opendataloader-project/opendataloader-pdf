@@ -97,7 +97,7 @@ public class ChunksWriter {
                         resourceHandler.getExtendedResources(pdxForm.getResources())).processTokens(
                             ChunksWriter.getTokens(pdxForm), xObjectOperatorStreamKey));
                 } else {
-                    processContentOperator(result, rawOperator, arguments, operatorIndex, operatorIndexesToStreamInfosMap, operatorName);
+                    processContentOperator(result, rawOperator, arguments, operatorIndex, operatorIndexesToStreamInfosMap, operatorName, operatorStreamKey);
                 }
                 break;
             case Operators.TJ_SHOW:
@@ -112,7 +112,7 @@ public class ChunksWriter {
             case Operators.B_STAR_CLOSEPATH_EOFILL_STROKE:
             case Operators.S_CLOSE_STROKE:
             case Operators.S_STROKE:
-                processContentOperator(result, rawOperator, arguments, operatorIndex, operatorIndexesToStreamInfosMap, operatorName);
+                processContentOperator(result, rawOperator, arguments, operatorIndex, operatorIndexesToStreamInfosMap, operatorName, operatorStreamKey);
                 break;
             case org.verapdf.model.tools.constants.Operators.GS:
                 PDExtGState extGState = this.resourceHandler.getExtGState(getLastCOSName(arguments));
@@ -135,35 +135,51 @@ public class ChunksWriter {
     }
 
     private void processContentOperator(List<Object> result, Operator rawOperator, List<COSBase> arguments, int operatorIndex,
-                                        Map<Integer, Set<StreamInfo>> operatorIndexesToStreamInfosMap, String operatorName) {
+                                        Map<Integer, Set<StreamInfo>> operatorIndexesToStreamInfosMap, String operatorName,
+                                        OperatorStreamKey operatorStreamKey) {
         Set<StreamInfo> streamInfos = operatorIndexesToStreamInfosMap.get(operatorIndex);
         if (streamInfos == null || streamInfos.isEmpty()) {
-            writeMarkedContent(result, arguments, rawOperator, operatorName, null);
+            writeMarkedContent(result, arguments, rawOperator, operatorName, null, null);
         } else {
             if (streamInfos.size() == 1) {
-                writeMarkedContent(result, arguments, rawOperator, operatorName, streamInfos.iterator().next().getMcid());
+                Integer mcid = streamInfos.iterator().next().getMcid();
+                writeMarkedContent(result, arguments, rawOperator, operatorName, mcid, operatorStreamKey);
             } else {
                 List<StreamInfo> streamInfosList = updateStreamInfos(streamInfos);
                 Map<StreamInfo, COSObject> newArguments = getArguments(arguments.get(arguments.size() - 1), streamInfosList);
                 for (Map.Entry<StreamInfo, COSObject> entry : newArguments.entrySet()) {
                     arguments.set(arguments.size() - 1, entry.getValue().get());
-                    writeMarkedContent(result, arguments, rawOperator, operatorName, entry.getKey().getMcid());
+                    writeMarkedContent(result, arguments, rawOperator, operatorName, entry.getKey().getMcid(), operatorStreamKey);
                 }
             }
         }
     }
 
+    private static String getStructureType(Integer mcid, OperatorStreamKey operatorStreamKey) {
+        if (mcid == null || operatorStreamKey == null) return null;
+        List<COSObject> parents = AutoTaggingProcessor.getStructParents().get(operatorStreamKey);
+        if (parents == null || mcid >= parents.size()) return null;
+        COSObject structElem = parents.get(mcid);
+        if (structElem == null) return null;
+        COSObject typeObj = structElem.getKey(ASAtom.S);
+        if (typeObj == null || typeObj.empty()) return null;
+        return typeObj.getString();
+    }
+
     private static void writeMarkedContent(List<Object> result, List<COSBase> arguments, Operator token,
-                                           String operatorName, Integer mcid) {
+                                           String operatorName, Integer mcid, OperatorStreamKey operatorStreamKey) {
         if (mcid == null) {
             result.add(COSName.construct(TaggedPDFConstants.ARTIFACT).getDirectBase());
             result.add(Operator.getOperator(Operators.BMC));
         } else {
+            String tagName;
             if (Operators.BI.equals(operatorName) || Operators.DO.equals(operatorName)) {
-                result.add(COSName.construct(TaggedPDFConstants.FIGURE).getDirectBase());
+                tagName = TaggedPDFConstants.FIGURE;
             } else {
-                result.add(COSName.construct(TaggedPDFConstants.SPAN).getDirectBase());
+                String structType = getStructureType(mcid, operatorStreamKey);
+                tagName = (structType != null) ? structType : TaggedPDFConstants.SPAN;
             }
+            result.add(COSName.construct(tagName).getDirectBase());
             COSObject dictionary = COSDictionary.construct();
             dictionary.setKey(ASAtom.MCID, COSInteger.construct(mcid));
             result.add(dictionary.getDirectBase());
