@@ -17,6 +17,8 @@ package org.opendataloader.pdf.processors;
 
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
+import org.opendataloader.pdf.entities.EnrichedImageChunk;
+import org.opendataloader.pdf.entities.SemanticPicture;
 import org.opendataloader.pdf.hybrid.DoclingSchemaTransformer;
 import org.opendataloader.pdf.hybrid.HancomSchemaTransformer;
 import org.opendataloader.pdf.hybrid.HybridClient;
@@ -31,8 +33,14 @@ import org.opendataloader.pdf.hybrid.TriageProcessor;
 import org.opendataloader.pdf.hybrid.TriageProcessor.TriageDecision;
 import org.opendataloader.pdf.hybrid.TriageProcessor.TriageResult;
 import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
+import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.content.LineChunk;
+import org.verapdf.wcag.algorithms.entities.content.TextChunk;
+import org.verapdf.wcag.algorithms.entities.content.TextColumn;
+import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.StreamInfo;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
 import java.io.IOException;
@@ -181,6 +189,8 @@ public class HybridDocumentProcessor {
         Set<Integer> backendFailedPages = new HashSet<>();
         try {
             backendResults = processBackendPath(inputPdfName, backendPages, config, backendFailedPages);
+            // Enrich backend results: copy StreamInfos from Java-extracted content for MCID linkage
+            enrichBackendResults(backendResults, filteredContents);
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Backend processing failed: {0}", e.getMessage());
             if (config.getHybridConfig().isFallbackToJava()) {
@@ -515,6 +525,165 @@ public class HybridDocumentProcessor {
     /**
      * Merges Java and backend results into the final contents list.
      */
+    /**
+     * Enriches backend results with MCID/StreamInfo data from Java-extracted content.
+     *
+     * <p>Backend-generated IObjects (from docling) lack StreamInfo, which is required
+     * for PDF struct-tree tagging. This method:
+     * <ol>
+     *   <li>Replaces SemanticPicture with EnrichedImageChunk (copies StreamInfo + description)</li>
+     *   <li>Copies StreamInfo from Java TextChunks to backend TextChunks by bbox overlap</li>
+     * </ol>
+     */
+    private static void enrichBackendResults(
+            Map<Integer, List<IObject>> backendResults,
+            Map<Integer, List<IObject>> filteredContents) {
+
+        for (Map.Entry<Integer, List<IObject>> entry : backendResults.entrySet()) {
+            int pageNumber = entry.getKey();
+            List<IObject> backendPage = entry.getValue();
+
+            List<IObject> javaPage = filteredContents.getOrDefault(pageNumber, List.of());
+
+            // Collect Java-extracted ImageChunks and TextChunks for matching
+            List<ImageChunk> javaImageChunks = new ArrayList<>();
+            List<TextChunk> javaTextChunks = new ArrayList<>();
+            collectJavaChunks(javaPage, javaImageChunks, javaTextChunks);
+
+            // Replace SemanticPicture entries with matched EnrichedImageChunk
+            if (!javaImageChunks.isEmpty()) {
+                List<IObject> enriched = new ArrayList<>(backendPage.size());
+                for (IObject obj : backendPage) {
+                    if (obj instanceof SemanticPicture) {
+                        SemanticPicture picture = (SemanticPicture) obj;
+                        ImageChunk matched = findMatchingImageChunk(picture, javaImageChunks);
+                        if (matched != null) {
+                            enriched.add(new EnrichedImageChunk(matched, picture.getDescription()));
+                        }
+                        // If no match: drop (vector graphic not in filteredContents)
+                    } else {
+                        enriched.add(obj);
+                    }
+                }
+                backendPage = enriched;
+                entry.setValue(enriched);
+            }
+
+            // Replace backend TextChunks with Java TextChunks that carry StreamInfo
+            if (!javaTextChunks.isEmpty()) {
+                enrichTextStreamInfos(backendPage, javaTextChunks);
+            }
+        }
+    }
+
+    /**
+     * Collects ImageChunks and TextChunks from Java-filtered page contents.
+     */
+    private static void collectJavaChunks(List<IObject> javaPage,
+                                           List<ImageChunk> imageChunks,
+                                           List<TextChunk> textChunks) {
+        for (IObject obj : javaPage) {
+            if (obj instanceof ImageChunk) {
+                imageChunks.add((ImageChunk) obj);
+            } else if (obj instanceof TextChunk) {
+                // Raw TextChunk from ContentFilterProcessor (pre-paragraph processing)
+                textChunks.add((TextChunk) obj);
+            } else if (obj instanceof SemanticTextNode) {
+                // TextChunks wrapped in SemanticTextNode (post-paragraph processing)
+                SemanticTextNode textNode = (SemanticTextNode) obj;
+                for (TextColumn col : textNode.getColumns()) {
+                    for (TextLine line : col.getLines()) {
+                        textChunks.addAll(line.getTextChunks());
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Replaces backend TextChunks with Java TextChunks that have StreamInfo.
+     *
+     * <p>Backend-generated TextChunks lack StreamInfo (needed for MCID/struct-tree).
+     * For each backend SemanticTextNode, we find Java TextChunks whose centers fall
+     * within the node's bbox and replace the backend TextChunk with the Java ones.
+     * This preserves the backend's structural decisions (heading/paragraph/reading order)
+     * while using the Java TextChunks that carry StreamInfo.
+     */
+    private static void enrichTextStreamInfos(List<IObject> backendPage, List<TextChunk> javaTextChunks) {
+        if (javaTextChunks.isEmpty()) return;
+
+        Set<Integer> usedJavaIndices = new HashSet<>();
+
+        for (IObject obj : backendPage) {
+            if (!(obj instanceof SemanticTextNode)) continue;
+            SemanticTextNode textNode = (SemanticTextNode) obj;
+
+            // Get the bounding box of the entire SemanticTextNode
+            double nLeft = textNode.getLeftX();
+            double nRight = textNode.getRightX();
+            double nBottom = textNode.getBottomY();
+            double nTop = textNode.getTopY();
+
+            // Find all Java TextChunks whose center is within this node's bbox
+            List<TextChunk> matched = new ArrayList<>();
+            double tol = 5.0;
+            for (int i = 0; i < javaTextChunks.size(); i++) {
+                if (usedJavaIndices.contains(i)) continue;
+                TextChunk javaChunk = javaTextChunks.get(i);
+                if (javaChunk.getStreamInfos().isEmpty()) continue;
+
+                double jCx = (javaChunk.getLeftX() + javaChunk.getRightX()) / 2.0;
+                double jCy = (javaChunk.getBottomY() + javaChunk.getTopY()) / 2.0;
+
+                if (jCx >= nLeft - tol && jCx <= nRight + tol && jCy >= nBottom - tol && jCy <= nTop + tol) {
+                    matched.add(javaChunk);
+                    usedJavaIndices.add(i);
+                }
+            }
+
+            if (!matched.isEmpty()) {
+                // Replace the node's columns with a single column containing
+                // the matched Java TextChunks (each as its own TextLine)
+                textNode.getColumns().clear();
+                TextColumn newCol = new TextColumn();
+                for (TextChunk tc : matched) {
+                    newCol.add(new TextLine(tc));
+                }
+                textNode.getColumns().add(newCol);
+            }
+        }
+    }
+
+    /**
+     * Finds the ImageChunk whose center point lies within the SemanticPicture's bounding box.
+     * Falls back to the closest ImageChunk by center-to-center distance if none is contained.
+     */
+    private static ImageChunk findMatchingImageChunk(SemanticPicture picture, List<ImageChunk> candidates) {
+        double picLeft = picture.getLeftX();
+        double picRight = picture.getRightX();
+        double picBottom = picture.getBottomY();
+        double picTop = picture.getTopY();
+
+        ImageChunk best = null;
+        double bestDist = Double.MAX_VALUE;
+        double picCx = (picLeft + picRight) / 2.0;
+        double picCy = (picBottom + picTop) / 2.0;
+
+        for (ImageChunk chunk : candidates) {
+            double cx = (chunk.getLeftX() + chunk.getRightX()) / 2.0;
+            double cy = (chunk.getBottomY() + chunk.getTopY()) / 2.0;
+            // Center-point containment (with 1pt tolerance)
+            if (cx >= picLeft - 1 && cx <= picRight + 1 && cy >= picBottom - 1 && cy <= picTop + 1) {
+                double dist = Math.hypot(cx - picCx, cy - picCy);
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    best = chunk;
+                }
+            }
+        }
+        return best;
+    }
+
     private static void mergeResults(
             List<List<IObject>> contents,
             Map<Integer, List<IObject>> javaResults,

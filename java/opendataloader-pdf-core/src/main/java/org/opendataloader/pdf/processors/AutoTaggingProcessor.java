@@ -2,6 +2,8 @@ package org.opendataloader.pdf.processors;
 
 import org.opendataloader.pdf.autotagging.ChunksWriter;
 import org.opendataloader.pdf.autotagging.OperatorStreamKey;
+import org.opendataloader.pdf.entities.EnrichedImageChunk;
+import org.opendataloader.pdf.entities.SemanticPicture;
 import org.verapdf.as.ASAtom;
 import org.verapdf.as.io.ASMemoryInStream;
 import org.verapdf.cos.*;
@@ -26,6 +28,7 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.StreamInfo;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class AutoTaggingProcessor {
@@ -43,6 +46,7 @@ public class AutoTaggingProcessor {
         structParents.clear();
         structParentsIntegers.clear();
         annotationStructParents.clear();
+        imageChunkFigureCounter = 0;
         if (document.getVersion() == 2.0F) {
             isPDF2_0 = true;
         }
@@ -431,10 +435,20 @@ public class AutoTaggingProcessor {
         createFigureStructElemReturning(image, parent, cosDocument);
     }
 
+    // imageChunkCounter is per-call; tracked via the figureObject index across a document
+    private static int imageChunkFigureCounter = 0;
+
     private static COSObject createFigureStructElemReturning(ImageChunk image, COSObject parent, COSDocument cosDocument) {
         COSObject figureObject = addStructElement(parent, cosDocument, TaggedPDFConstants.FIGURE, image.getPageNumber());
         double[] bbox = {image.getLeftX(), image.getBottomY(), image.getRightX(), image.getTopY()};
         addAttributeToStructElem(figureObject, ASAtom.LAYOUT, ASAtom.BBOX, COSArray.construct(4, bbox));
+        // Use enriched description if available, otherwise fallback "image N"
+        String altText = (image instanceof EnrichedImageChunk && ((EnrichedImageChunk) image).hasDescription())
+                ? ((EnrichedImageChunk) image).sanitizeDescription()
+                : "image " + (++imageChunkFigureCounter);
+        figureObject.setKey(ASAtom.ALT,
+                COSString.construct(altText.getBytes(StandardCharsets.UTF_16), false));
+        cosDocument.addChangedObject(figureObject);
         processImageNode(image, figureObject);
         return figureObject;
     }
@@ -486,10 +500,16 @@ public class AutoTaggingProcessor {
         for (int rowNumber = 0; rowNumber < table.getNumberOfRows(); rowNumber++) {
             TableBorderRow row = table.getRow(rowNumber);
             COSObject rowObject = addStructElement(tableObject, cosDocument, TaggedPDFConstants.TR, row.getPageNumber());
+            boolean isHeaderRow = (rowNumber == 0);
             for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
                 TableBorderCell cell = row.getCell(colNumber);
                 if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
-                    COSObject cellObject = addStructElement(rowObject, cosDocument, TaggedPDFConstants.TD, cell.getPageNumber());
+                    String cellTag = isHeaderRow ? "TH" : TaggedPDFConstants.TD;
+                    COSObject cellObject = addStructElement(rowObject, cosDocument, cellTag, cell.getPageNumber());
+                    if (isHeaderRow) {
+                        addAttributeToStructElem(cellObject, ASAtom.TABLE,
+                            ASAtom.getASAtom("Scope"), COSName.construct(ASAtom.getASAtom("Column")));
+                    }
                     if (cell.getColSpan() != 1) {
                         addAttributeToStructElem(cellObject, ASAtom.TABLE, ASAtom.COL_SPAN, COSInteger.construct(cell.getColSpan()));
                     }
