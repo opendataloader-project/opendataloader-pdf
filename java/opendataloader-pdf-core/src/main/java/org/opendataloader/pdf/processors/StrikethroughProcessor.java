@@ -27,8 +27,8 @@ import java.util.List;
 
 /**
  * Detects strikethrough text by finding horizontal lines that pass through
- * the vertical center of text chunks. Marks affected TextChunks by wrapping
- * their values with ~~ markdown strikethrough syntax.
+ * the vertical center of text chunks. Marks affected TextChunks by setting
+ * their isStrikethroughText field to true.
  *
  * Filters to avoid false positives:
  * 1. Table border membership (via TableBordersCollection)
@@ -52,8 +52,8 @@ public class StrikethroughProcessor {
     private static final double MAX_STROKE_TO_TEXT_HEIGHT_RATIO = 1.3;
 
     /**
-     * Detects strikethrough lines among page contents and wraps affected
-     * TextChunk values with ~~ markdown syntax.
+     * Detects strikethrough lines among page contents and sets affected
+     * TextChunk isStrikethroughText field to true.
      *
      * @param pageContents the list of content objects for a page
      * @return the page contents (modified in place)
