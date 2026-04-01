@@ -223,9 +223,6 @@ def _check_dependencies():
         )
 
 
-DEFAULT_PICTURE_DESCRIPTION_PROMPT = "Describe what you see in this image. Include any text, numbers, labels, and data values visible."
-
-
 def create_converter(
     force_full_page_ocr: bool = False,
     ocr_lang: list[str] | None = None,
@@ -250,6 +247,7 @@ def create_converter(
     from docling.datamodel.accelerator_options import AcceleratorOptions
     from docling.datamodel.base_models import InputFormat
     from docling.datamodel.pipeline_options import (
+        AcceleratorOptions,
         EasyOcrOptions,
         PdfPipelineOptions,
         PictureDescriptionVlmOptions,
@@ -265,11 +263,8 @@ def create_converter(
     # Configure picture description options with custom prompt
     picture_description_options = None
     if enrich_picture_description:
-        prompt = picture_description_prompt or DEFAULT_PICTURE_DESCRIPTION_PROMPT
         picture_description_options = PictureDescriptionVlmOptions(
             repo_id="HuggingFaceTB/SmolVLM-256M-Instruct",
-            prompt=prompt,
-            generation_config={"max_new_tokens": 300, "do_sample": False},
         )
 
     pipeline_kwargs = {
@@ -284,6 +279,9 @@ def create_converter(
     }
     if picture_description_options is not None:
         pipeline_kwargs["picture_description_options"] = picture_description_options
+
+    if device != "auto":
+        pipeline_kwargs["accelerator_options"] = AcceleratorOptions(device=device)
 
     pipeline_options = PdfPipelineOptions(**pipeline_kwargs)
 
