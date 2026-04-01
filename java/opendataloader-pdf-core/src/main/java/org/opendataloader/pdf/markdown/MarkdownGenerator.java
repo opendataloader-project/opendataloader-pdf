@@ -234,7 +234,9 @@ public class MarkdownGenerator implements Closeable {
                 markdownWriter.write(MarkdownSyntax.LIST_ITEM);
                 markdownWriter.write(MarkdownSyntax.SPACE);
             }
-            markdownWriter.write(getCorrectMarkdownString(item.toString()));
+            StringBuilder stringBuilder = new StringBuilder();
+            getTextFromLines(item.getLines(), stringBuilder);
+            markdownWriter.write(getCorrectMarkdownString(stringBuilder.toString()));
             writeLineBreak();
 
             List<IObject> itemContents = item.getContents();
@@ -246,7 +248,14 @@ public class MarkdownGenerator implements Closeable {
     }
 
     protected void writeSemanticTextNode(SemanticTextNode textNode) throws IOException {
-        String value = textNode.getValue();
+        StringBuilder stringBuilder = new StringBuilder();
+        for (TextColumn column : textNode.getColumns()) {
+            getTextFromLines(column.getLines(), stringBuilder);
+            if (!textNode.getLastColumn().equals(column)) {
+                stringBuilder.append(" ");
+            }
+        }
+        String value = stringBuilder.toString();
         if (StaticContainers.isKeepLineBreaks()) {
             if (textNode instanceof SemanticHeading) {
                 value = value.replace(MarkdownSyntax.LINE_BREAK, MarkdownSyntax.SPACE);
@@ -259,6 +268,21 @@ public class MarkdownGenerator implements Closeable {
         }
 
         markdownWriter.write(getCorrectMarkdownString(value));
+    }
+
+    protected void getTextFromLines(List<TextLine> textLines, StringBuilder stringBuilder) {
+        for (TextLine line : textLines) {
+            for (TextChunk chunk : line.getTextChunks()) {
+                if (chunk.getIsStrikethroughText()) {
+                    stringBuilder.append("~~").append(chunk.getValue()).append("~~");
+                } else {
+                    stringBuilder.append(chunk.getValue());
+                }
+            }
+            if (!textLines.get(textLines.size() - 1).equals(line)) {
+                stringBuilder.append(" ");
+            }
+        }
     }
 
     protected void writeTable(TableBorder table) throws IOException {

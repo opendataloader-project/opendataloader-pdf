@@ -95,8 +95,6 @@ public class StrikethroughProcessor {
             if (!matchingChunks.isEmpty() && matchingChunks.size() <= MAX_TEXT_CHUNKS_PER_LINE) {
                 for (TextChunk chunk : matchingChunks) {
                     if (!chunk.getIsStrikethroughText()) {
-                        String value = chunk.getValue();
-                        chunk.setValue("~~" + value + "~~");
                         chunk.setIsStrikethroughText();
                     }
                 }

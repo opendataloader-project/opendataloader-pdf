@@ -28,6 +28,9 @@ import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
+import org.verapdf.wcag.algorithms.entities.content.TextChunk;
+import org.verapdf.wcag.algorithms.entities.content.TextColumn;
+import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
 import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
@@ -286,7 +289,9 @@ public class HtmlGenerator implements Closeable {
             htmlWriter.write(HtmlSyntax.HTML_LIST_ITEM_TAG);
 
             htmlWriter.write(HtmlSyntax.HTML_PARAGRAPH_TAG);
-            htmlWriter.write(getCorrectString(item.toString()));
+            StringBuilder stringBuilder = new StringBuilder();
+            getTextFromLines(item.getLines(), stringBuilder);
+            htmlWriter.write(getCorrectString(stringBuilder.toString()));
             htmlWriter.write(HtmlSyntax.HTML_PARAGRAPH_CLOSE_TAG);
 
             for (IObject object : item.getContents()) {
@@ -307,9 +312,35 @@ public class HtmlGenerator implements Closeable {
      */
     protected void writeSemanticTextNode(SemanticTextNode textNode) throws IOException {
         htmlWriter.write(HtmlSyntax.HTML_FIGURE_CAPTION_TAG);
-        htmlWriter.write(getCorrectString(textNode.getValue()));
+        htmlWriter.write(getCorrectString(getTextFromColumns(textNode)));
         htmlWriter.write(HtmlSyntax.HTML_FIGURE_CAPTION_CLOSE_TAG);
         htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
+    }
+
+    protected void getTextFromLines(List<TextLine> textLines, StringBuilder stringBuilder) {
+        for (TextLine line : textLines) {
+            for (TextChunk chunk : line.getTextChunks()) {
+                if (chunk.getIsStrikethroughText()) {
+                    stringBuilder.append("<del>").append(chunk.getValue()).append("</del>");
+                } else {
+                    stringBuilder.append(chunk.getValue());
+                }
+            }
+            if (!textLines.get(textLines.size() - 1).equals(line)) {
+                stringBuilder.append(" ");
+            }
+        }
+    }
+
+    protected String getTextFromColumns(SemanticTextNode node) {
+        StringBuilder  stringBuilder = new StringBuilder();
+        for (TextColumn column : node.getColumns()) {
+            getTextFromLines(column.getLines(), stringBuilder);
+            if (!node.getLastColumn().equals(column)) {
+                stringBuilder.append(" ");
+            }
+        }
+        return stringBuilder.toString();
     }
 
     /**
@@ -362,13 +393,13 @@ public class HtmlGenerator implements Closeable {
      * @throws IOException if unable to write to the output
      */
     protected void writeParagraph(SemanticParagraph paragraph) throws IOException {
-        String paragraphValue = paragraph.getValue();
         double paragraphIndent = paragraph.getColumns().get(0).getBlocks().get(0).getFirstLineIndent();
 
         htmlWriter.write(HtmlSyntax.HTML_PARAGRAPH_TAG);
         if (paragraphIndent > 0) {
             htmlWriter.write(HtmlSyntax.HTML_INDENT);
         }
+        String paragraphValue = getTextFromColumns(paragraph);
 
         if (isInsideTable() && StaticContainers.isKeepLineBreaks()) {
             paragraphValue = paragraphValue.replace(HtmlSyntax.HTML_LINE_BREAK, HtmlSyntax.HTML_LINE_BREAK_TAG);
@@ -388,7 +419,7 @@ public class HtmlGenerator implements Closeable {
     protected void writeHeading(SemanticHeading heading) throws IOException {
         int headingLevel = Math.min(6, Math.max(1, heading.getHeadingLevel()));
         htmlWriter.write("<h" + headingLevel + ">");
-        htmlWriter.write(getCorrectString(heading.getValue()));
+        htmlWriter.write(getCorrectString(getTextFromColumns(heading)));
         htmlWriter.write("</h" + headingLevel + ">");
         htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
     }
