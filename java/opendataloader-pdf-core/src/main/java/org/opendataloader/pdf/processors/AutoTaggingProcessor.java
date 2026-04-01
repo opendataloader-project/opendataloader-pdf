@@ -3,6 +3,7 @@ package org.opendataloader.pdf.processors;
 import org.opendataloader.pdf.autotagging.ChunksWriter;
 import org.opendataloader.pdf.autotagging.OperatorStreamKey;
 import org.opendataloader.pdf.entities.EnrichedImageChunk;
+import org.opendataloader.pdf.entities.SemanticFormula;
 import org.opendataloader.pdf.entities.SemanticPicture;
 import org.verapdf.as.ASAtom;
 import org.verapdf.as.io.ASMemoryInStream;
@@ -405,6 +406,8 @@ public class AutoTaggingProcessor {
             } else if (!table.isOneCellTable()) {
                 createTableStructElem(table, parentStructElem, cosDocument);
             }
+        } else if (object instanceof SemanticFormula) {
+            createFormulaStructElem((SemanticFormula) object, parentStructElem, cosDocument);
         } else if (object instanceof ImageChunk) {
             createFigureStructElem((ImageChunk) object, parentStructElem, cosDocument);
         }
@@ -451,6 +454,17 @@ public class AutoTaggingProcessor {
         cosDocument.addChangedObject(figureObject);
         processImageNode(image, figureObject);
         return figureObject;
+    }
+
+    private static void createFormulaStructElem(SemanticFormula formula, COSObject parent, COSDocument cosDocument) {
+        COSObject formulaObject = addStructElement(parent, cosDocument, "Formula", formula.getPageNumber());
+        double[] bbox = {formula.getLeftX(), formula.getBottomY(), formula.getRightX(), formula.getTopY()};
+        addAttributeToStructElem(formulaObject, ASAtom.LAYOUT, ASAtom.BBOX, COSArray.construct(4, bbox));
+        String altText = formula.getLatex().isEmpty() ? "formula" : formula.getLatex();
+        formulaObject.setKey(ASAtom.ALT,
+                COSString.construct(altText.getBytes(StandardCharsets.UTF_16), false));
+        cosDocument.addChangedObject(formulaObject);
+        addMcidChildren(formula.getStreamInfos(), formula.getPageNumber(), formulaObject);
     }
 
     private static void createListStructElem(PDFList list, COSObject parent, COSDocument cosDocument) {
