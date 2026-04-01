@@ -52,8 +52,7 @@ public class StrikethroughProcessorTest {
 
         StrikethroughProcessor.processStrikethroughs(contents);
 
-        Assertions.assertEquals("~~apple~~", textChunk.getValue(),
-            "Text chunk should be wrapped with strikethrough markers");
+        Assertions.assertTrue(textChunk.getIsStrikethroughText(), "Text chunk should have isStrikethroughText set to true");
     }
 
     @Test
@@ -71,8 +70,7 @@ public class StrikethroughProcessorTest {
 
         StrikethroughProcessor.processStrikethroughs(contents);
 
-        Assertions.assertEquals("apple", textChunk.getValue(),
-            "Underline should not be detected as strikethrough");
+        Assertions.assertFalse(textChunk.getIsStrikethroughText(), "Underline should not be detected as strikethrough");
     }
 
     @Test
@@ -90,8 +88,7 @@ public class StrikethroughProcessorTest {
 
         StrikethroughProcessor.processStrikethroughs(contents);
 
-        Assertions.assertEquals("apple", textChunk.getValue(),
-            "Line above text should not be detected as strikethrough");
+        Assertions.assertFalse(textChunk.getIsStrikethroughText(), "Line above text should not be detected as strikethrough");
     }
 
     @Test
@@ -109,8 +106,7 @@ public class StrikethroughProcessorTest {
 
         StrikethroughProcessor.processStrikethroughs(contents);
 
-        Assertions.assertEquals("apple", textChunk.getValue(),
-            "Partial horizontal overlap should not be detected as strikethrough");
+        Assertions.assertFalse(textChunk.getIsStrikethroughText(), "Partial horizontal overlap should not be detected as strikethrough");
     }
 
     @Test
@@ -123,8 +119,7 @@ public class StrikethroughProcessorTest {
 
         StrikethroughProcessor.processStrikethroughs(contents);
 
-        Assertions.assertEquals("hello", textChunk.getValue(),
-            "Text should remain unchanged when no lines exist");
+        Assertions.assertFalse(textChunk.getIsStrikethroughText(), "Text should remain unchanged when no lines exist");
     }
 
     @Test
@@ -142,27 +137,7 @@ public class StrikethroughProcessorTest {
 
         StrikethroughProcessor.processStrikethroughs(contents);
 
-        Assertions.assertEquals("hello", textChunk.getValue(),
-            "Vertical line should not trigger strikethrough");
-    }
-
-    @Test
-    public void testDoubleWrappingPrevented() {
-        List<IObject> contents = new ArrayList<>();
-
-        TextChunk textChunk = new TextChunk(new BoundingBox(0, 10.0, 100.0, 60.0, 120.0),
-            "~~already~~", 12, 100.0);
-        textChunk.setIsStrikethroughText();
-        contents.add(textChunk);
-
-        LineChunk line = LineChunk.createLineChunk(0, 10.0, 110.0, 60.0, 110.0, 1.0,
-            LineChunk.BUTT_CAP_STYLE);
-        contents.add(line);
-
-        StrikethroughProcessor.processStrikethroughs(contents);
-
-        Assertions.assertEquals("~~already~~", textChunk.getValue(),
-            "Already wrapped text should not be double-wrapped");
+        Assertions.assertFalse(textChunk.getIsStrikethroughText(), "Vertical line should not trigger strikethrough");
     }
 
     @Test
@@ -184,10 +159,8 @@ public class StrikethroughProcessorTest {
 
         StrikethroughProcessor.processStrikethroughs(contents);
 
-        Assertions.assertEquals("apple", chunk1.getValue(),
-            "Wide line matching multiple chunks should be rejected as structural separator");
-        Assertions.assertEquals("orange", chunk2.getValue(),
-            "Wide line matching multiple chunks should be rejected as structural separator");
+        Assertions.assertFalse(chunk1.getIsStrikethroughText(), "Wide line matching multiple chunks should be rejected as structural separator");
+        Assertions.assertFalse(chunk2.getIsStrikethroughText(), "Wide line matching multiple chunks should be rejected as structural separator");
     }
 
     @Test
@@ -206,8 +179,7 @@ public class StrikethroughProcessorTest {
 
         StrikethroughProcessor.processStrikethroughs(contents);
 
-        Assertions.assertEquals("hi", textChunk.getValue(),
-            "Line much wider than text should be rejected as structural separator");
+        Assertions.assertFalse(textChunk.getIsStrikethroughText(), "Line much wider than text should be rejected as structural separator");
     }
 
     @Test
@@ -227,8 +199,7 @@ public class StrikethroughProcessorTest {
 
         StrikethroughProcessor.processStrikethroughs(contents);
 
-        Assertions.assertEquals("hello", textChunk.getValue(),
-            "Thick line (stroke > 1.3x text height) should be rejected");
+        Assertions.assertFalse(textChunk.getIsStrikethroughText(), "Thick line (stroke > 1.3x text height) should be rejected");
     }
 
     @Test
