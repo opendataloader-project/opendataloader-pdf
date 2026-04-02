@@ -60,11 +60,7 @@ public class AutoTaggingProcessor {
         createParentTree(cosDocument, structTreeRoot);
         String outputFileName = outputFolder + File.separator +
             inputPDF.getName().substring(0, inputPDF.getName().length() - 4) + "_tagged.pdf";
-        try (OutputStream output = new FileOutputStream(outputFileName)) {
-            document.saveTo(output);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        document.saveAs(outputFileName);
     }
 
     private static void updatePages(PDDocument document, COSDocument cosDocument) throws IOException {
