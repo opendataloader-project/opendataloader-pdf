@@ -27,8 +27,11 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ListUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Set;
 
 public class TextLineProcessor {
 
@@ -38,13 +41,27 @@ public class TextLineProcessor {
 
     public static List<IObject> processTextLines(List<IObject> contents) {
         List<IObject> newContents = new ArrayList<>();
+        // Track which TextChunk immediately follows a whitespace chunk in stream order,
+        // using reference identity so lookups are immune to TextChunk.equals() semantics.
+        // Stream order may differ from visual (leftX) order in rare PDFs, but whitespace
+        // chunks originate from the same PDF text operator as their adjacent text chunks,
+        // so stream-order adjacency is reliable for this signal.
+        Set<TextChunk> chunksAfterWhitespace = Collections.newSetFromMap(new IdentityHashMap<>());
         TextLine previousLine = new TextLine(new TextChunk(""));
         boolean isSeparateLine = false;
+        boolean pendingWhitespace = false;
         for (IObject content : contents) {
             if (content instanceof TextChunk) {
                 TextChunk textChunk = (TextChunk) content;
                 if (textChunk.isWhiteSpaceChunk() || textChunk.isEmpty()) {
+                    if (textChunk.isWhiteSpaceChunk()) {
+                        pendingWhitespace = true;
+                    }
                     continue;
+                }
+                if (pendingWhitespace) {
+                    chunksAfterWhitespace.add(textChunk);
+                    pendingWhitespace = false;
                 }
                 TextLine currentLine = new TextLine(textChunk);
                 double oneLineProbability = ChunksMergeUtils.countOneLineProbability(new SemanticTextNode(), previousLine, currentLine);
@@ -62,6 +79,7 @@ public class TextLineProcessor {
                     isSeparateLine = true;
                 }
                 newContents.add(content);
+                pendingWhitespace = false;
             }
         }
         for (int i = 0; i < newContents.size(); i++) {
@@ -70,14 +88,15 @@ public class TextLineProcessor {
                 TextLine textLine = (TextLine) content;
                 textLine.getTextChunks().sort(TEXT_CHUNK_COMPARATOR);
                 double threshold = textLine.getFontSize() * TextChunkUtils.TEXT_LINE_SPACE_RATIO;
-                newContents.set(i, getTextLineWithSpaces(textLine, threshold));
+                newContents.set(i, getTextLineWithSpaces(textLine, threshold, chunksAfterWhitespace));
             }
         }
         linkTextLinesWithConnectedLineArtBullet(newContents);
         return newContents;
     }
 
-    private static TextLine getTextLineWithSpaces(TextLine textLine, double threshold) {
+    private static TextLine getTextLineWithSpaces(TextLine textLine, double threshold,
+                                                   Set<TextChunk> chunksAfterWhitespace) {
         List<TextChunk> textChunks = textLine.getTextChunks();
         TextChunk currentTextChunk = textChunks.get(0);
         double previousEnd = currentTextChunk.getBoundingBox().getRightX();
@@ -86,10 +105,14 @@ public class TextLineProcessor {
         for (int i = 1; i < textChunks.size(); i++) {
             currentTextChunk = textChunks.get(i);
             double currentStart = currentTextChunk.getBoundingBox().getLeftX();
-            if (currentStart - previousEnd > threshold) {
+            boolean hasGap = currentStart - previousEnd > threshold;
+            boolean hadWhitespace = chunksAfterWhitespace.contains(currentTextChunk);
+            if (hasGap || hadWhitespace) {
+                double spaceLeft = Math.min(previousEnd, currentStart);
+                double spaceRight = Math.max(previousEnd, currentStart);
                 BoundingBox spaceBBox = new BoundingBox(currentTextChunk.getBoundingBox());
-                spaceBBox.setLeftX(previousEnd);
-                spaceBBox.setRightX(currentStart);
+                spaceBBox.setLeftX(spaceLeft);
+                spaceBBox.setRightX(spaceRight);
                 TextChunk spaceChunk = new TextChunk(spaceBBox, " ", textLine.getFontSize(), textLine.getBaseLine());
                 newLine.add(spaceChunk);
             }
