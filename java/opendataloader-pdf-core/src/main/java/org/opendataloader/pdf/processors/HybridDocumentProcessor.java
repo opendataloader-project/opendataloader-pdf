@@ -45,6 +45,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -66,6 +67,17 @@ import java.util.stream.Collectors;
 public class HybridDocumentProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(HybridDocumentProcessor.class.getCanonicalName());
+
+    /**
+     * Maximum number of pages to send to the backend in a single request.
+     * Large scanned PDFs (100+ pages) cause the backend to hang when sent all at once
+     * due to non-linear memory/processing scaling in the AI pipeline.
+     * Chunking into smaller batches avoids this while adding negligible overhead
+     * (the model is loaded once at server startup, not per-request).
+     *
+     * @see <a href="https://github.com/opendataloader-project/opendataloader-pdf/issues/352">#352</a>
+     */
+    static final int BACKEND_CHUNK_SIZE = 50;
 
     private HybridDocumentProcessor() {
         // Static utility class
@@ -369,44 +381,84 @@ public class HybridDocumentProcessor {
         // Determine required output formats based on config
         Set<OutputFormat> outputFormats = determineOutputFormats(config);
 
-        // Make API request for all pages (avoids per-chunk overhead)
-        HybridRequest request = HybridRequest.allPages(pdfBytes, outputFormats);
-        HybridResponse response = client.convert(request);
-
-        // Collect failed pages (convert from 1-indexed to 0-indexed)
-        if (response.hasFailedPages()) {
-            for (int failedPage1Indexed : response.getFailedPages()) {
-                int failedPage0Indexed = failedPage1Indexed - 1;
-                if (pageNumbers.contains(failedPage0Indexed)) {
-                    backendFailedPages.add(failedPage0Indexed);
-                }
-            }
-            // Logged by caller when initiating fallback
-        }
-
         // Get page heights for coordinate transformation
         Map<Integer, Double> pageHeights = getPageHeights(pageNumbers);
 
-        // Transform response to IObjects
         HybridSchemaTransformer transformer = createTransformer(config);
-        List<List<IObject>> transformedContents = transformer.transform(response, pageHeights);
-
-        // Extract results for requested pages (excluding failed pages)
         Map<Integer, List<IObject>> results = new HashMap<>();
-        for (int pageNumber : pageNumbers) {
-            if (backendFailedPages.contains(pageNumber)) {
-                continue; // Skip failed pages — they will be retried via Java path
+
+        // Split backend pages into chunks to prevent hang on large documents (#352).
+        // Pages are sorted so that page_ranges sent to the server are contiguous.
+        List<Integer> sortedPages = new ArrayList<>(new TreeSet<>(pageNumbers));
+
+        for (int chunkStart = 0; chunkStart < sortedPages.size(); chunkStart += BACKEND_CHUNK_SIZE) {
+            int chunkEnd = Math.min(chunkStart + BACKEND_CHUNK_SIZE, sortedPages.size());
+            List<Integer> chunkPages = sortedPages.subList(chunkStart, chunkEnd);
+
+            // Convert 0-indexed page numbers to 1-indexed for the server API
+            Set<Integer> chunkPages1Indexed = new HashSet<>();
+            for (int page0 : chunkPages) {
+                chunkPages1Indexed.add(page0 + 1);
             }
-            if (pageNumber < transformedContents.size()) {
-                List<IObject> pageContents = transformedContents.get(pageNumber);
-                // Apply --replace-invalid-chars to backend results (not applied during filterAllPages
-                // because backend results replace the filtered contents)
-                TextProcessor.replaceUndefinedCharacters(pageContents, config.getReplaceInvalidChars());
-                // Set IDs for backend-generated objects
-                DocumentProcessor.setIDs(pageContents);
-                results.put(pageNumber, pageContents);
-            } else {
-                results.put(pageNumber, new ArrayList<>());
+
+            if (sortedPages.size() > BACKEND_CHUNK_SIZE) {
+                LOGGER.log(Level.INFO, "Sending pages {0}-{1} of {2} backend pages",
+                    new Object[]{chunkPages.get(0) + 1, chunkPages.get(chunkPages.size() - 1) + 1,
+                                 sortedPages.size()});
+            }
+
+            try {
+                HybridRequest request = HybridRequest.forPages(pdfBytes, chunkPages1Indexed, outputFormats);
+                HybridResponse response = client.convert(request);
+
+                // Collect failed pages (convert from 1-indexed to 0-indexed)
+                if (response.hasFailedPages()) {
+                    for (int failedPage1Indexed : response.getFailedPages()) {
+                        int failedPage0Indexed = failedPage1Indexed - 1;
+                        if (pageNumbers.contains(failedPage0Indexed)) {
+                            backendFailedPages.add(failedPage0Indexed);
+                        }
+                    }
+                }
+
+                // Build page heights subset for this chunk (1-indexed keys, matching getPageHeights)
+                Map<Integer, Double> chunkPageHeights = new HashMap<>();
+                for (int page1 : chunkPages1Indexed) {
+                    Double height = pageHeights.get(page1);
+                    if (height != null) {
+                        chunkPageHeights.put(page1, height);
+                    }
+                }
+
+                // Transform response to IObjects.
+                // Contract: transform() returns a list indexed by absolute page number (pageNo - 1).
+                // For chunk pages 51-100, the list has 100 entries with content at indices 50-99.
+                // This matches page0 values used below for extraction.
+                List<List<IObject>> transformedContents = transformer.transform(response, chunkPageHeights);
+
+                // Extract results for this chunk's pages (excluding failed pages)
+                for (int page0 : chunkPages) {
+                    if (backendFailedPages.contains(page0)) {
+                        continue; // Skip failed pages — they will be retried via Java path
+                    }
+                    if (page0 < transformedContents.size()) {
+                        List<IObject> pageContents = transformedContents.get(page0);
+                        TextProcessor.replaceUndefinedCharacters(pageContents, config.getReplaceInvalidChars());
+                        DocumentProcessor.setIDs(pageContents);
+                        results.put(page0, pageContents);
+                    } else {
+                        results.put(page0, new ArrayList<>());
+                    }
+                }
+            } catch (IOException e) {
+                // Isolate chunk failures — mark pages as failed so they can be retried
+                // via the Java path, and continue processing remaining chunks.
+                LOGGER.log(Level.WARNING, "Backend chunk failed (pages {0}-{1}): {2}",
+                    new Object[]{chunkPages.get(0) + 1, chunkPages.get(chunkPages.size() - 1) + 1,
+                                 e.getMessage()});
+                for (int page0 : chunkPages) {
+                    backendFailedPages.add(page0);
+                }
             }
         }
 

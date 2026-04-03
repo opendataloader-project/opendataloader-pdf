@@ -63,8 +63,8 @@ import java.util.logging.Logger;
  * When Docling uses TOPLEFT origin, coordinates are converted appropriately.
  *
  * <h2>Thread Safety</h2>
- * <p>This class is NOT thread-safe. The {@code transform()} method resets
- * internal state (pictureIndex) at the start of each call. Concurrent calls
+ * <p>This class is NOT thread-safe. The {@code transform()} method updates
+ * internal state (pictureIndex) during each call. Concurrent calls
  * to transform() on the same instance may produce incorrect results.
  * Use separate instances for concurrent transformations.
  */
@@ -74,7 +74,8 @@ public class DoclingSchemaTransformer implements HybridSchemaTransformer {
 
     private static final String BACKEND_TYPE = "docling";
 
-    // Picture index counter (reset per transform call)
+    // Picture index counter — accumulates across transform() calls on the same instance
+    // to ensure document-unique indices when processing chunked responses (#352).
     private int pictureIndex;
 
     // Docling text labels
@@ -104,8 +105,10 @@ public class DoclingSchemaTransformer implements HybridSchemaTransformer {
             return Collections.emptyList();
         }
 
-        // Reset picture index for each transform call
-        pictureIndex = 0;
+        // Note: pictureIndex is NOT reset here — it must accumulate across
+        // multiple transform() calls when processing chunked responses (#352).
+        // Each transformer instance starts with pictureIndex=0 (field default),
+        // so single-call usage is unaffected.
 
         // Determine number of pages from page info or content
         int numPages = determinePageCount(json, pageHeights);
