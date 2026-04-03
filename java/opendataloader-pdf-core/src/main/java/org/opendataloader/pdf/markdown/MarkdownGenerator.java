@@ -33,6 +33,7 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
 
 import java.io.Closeable;
 import java.io.File;
@@ -250,9 +251,8 @@ public class MarkdownGenerator implements Closeable {
     protected void writeSemanticTextNode(SemanticTextNode textNode) throws IOException {
         StringBuilder stringBuilder = new StringBuilder();
         for (TextColumn column : textNode.getColumns()) {
-            getTextFromLines(column.getLines(), stringBuilder);
-            if (!textNode.getLastColumn().equals(column)) {
-                stringBuilder.append(" ");
+            for (TextBlock block : column.getBlocks()) {
+                getTextFromLines(block.getLines(), stringBuilder);
             }
         }
         String value = stringBuilder.toString();
@@ -271,16 +271,20 @@ public class MarkdownGenerator implements Closeable {
     }
 
     protected void getTextFromLines(List<TextLine> textLines, StringBuilder stringBuilder) {
-        for (TextLine line : textLines) {
-            for (TextChunk chunk : line.getTextChunks()) {
-                if (chunk.getIsStrikethroughText()) {
-                    stringBuilder.append("~~").append(chunk.getValue()).append("~~");
-                } else {
-                    stringBuilder.append(chunk.getValue());
-                }
-            }
-            if (!textLines.get(textLines.size() - 1).equals(line)) {
-                stringBuilder.append(" ");
+        for (int i = 0; i < textLines.size() - 1; i++) {
+            TextLine line = textLines.get(i);
+            getTextFromLine(line, stringBuilder);
+            TextChunkUtils.formatLineEnd(stringBuilder);
+        }
+        getTextFromLine(textLines.get(textLines.size() - 1), stringBuilder);
+    }
+
+    protected void getTextFromLine(TextLine line, StringBuilder stringBuilder) {
+        for (TextChunk chunk : line.getTextChunks()) {
+            if (chunk.getIsStrikethroughText()) {
+                stringBuilder.append("~~").append(chunk.getValue()).append("~~");
+            } else {
+                stringBuilder.append(chunk.getValue());
             }
         }
     }
