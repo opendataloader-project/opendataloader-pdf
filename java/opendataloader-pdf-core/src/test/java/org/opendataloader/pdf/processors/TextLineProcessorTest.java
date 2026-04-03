@@ -84,6 +84,42 @@ public class TextLineProcessorTest {
     }
 
     /**
+     * Regression test for issue #358: when a whitespace chunk exists between two text chunks
+     * but the physical gap is smaller than the threshold, a space should still be inserted
+     * because the PDF explicitly contains a space character at that position.
+     */
+    @Test
+    public void testProcessTextLinesPreservesSpaceFromWhitespaceChunk() {
+        StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
+        StaticContainers.setIsDataLoader(true);
+        List<IObject> contents = new ArrayList<>();
+
+        // "Evolution" at x=46..85.5, font size 9.5 (threshold = 9.5*0.17 = 1.615)
+        TextChunk chunk1 = new TextChunk(new BoundingBox(0, 46.0, 300.0, 85.5, 310.0),
+            "Evolution", 9.5, 300.0);
+        // Whitespace chunk at x=85.5..87.9 — will be dropped by isWhiteSpaceChunk()
+        TextChunk spaceChunk = new TextChunk(new BoundingBox(0, 85.5, 300.0, 87.9, 310.0),
+            " ", 9.5, 300.0);
+        // "Of" at x=86.0..94.4 — gap from chunk1 = 0.5 < threshold 1.615, so no gap-based space
+        TextChunk chunk2 = new TextChunk(new BoundingBox(0, 86.0, 300.0, 94.4, 310.0),
+            "Of", 9.5, 300.0);
+
+        contents.add(chunk1);
+        contents.add(spaceChunk);
+        contents.add(chunk2);
+
+        contents = TextLineProcessor.processTextLines(contents);
+
+        Assertions.assertEquals(1, contents.size());
+        Assertions.assertTrue(contents.get(0) instanceof TextLine);
+
+        TextLine textLine = (TextLine) contents.get(0);
+        // Space must be preserved even though the physical gap is below threshold
+        Assertions.assertEquals("Evolution Of", textLine.getValue(),
+            "Space from whitespace chunk should be preserved, but got: " + textLine.getValue());
+    }
+
+    /**
      * Regression test for issue #150: spaces should be inserted between sorted chunks
      * when there is a physical gap between them.
      */
