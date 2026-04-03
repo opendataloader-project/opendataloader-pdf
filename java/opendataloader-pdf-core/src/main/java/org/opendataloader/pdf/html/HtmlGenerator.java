@@ -21,6 +21,7 @@ import org.opendataloader.pdf.entities.SemanticFormula;
 import org.opendataloader.pdf.entities.SemanticPicture;
 import org.opendataloader.pdf.markdown.MarkdownSyntax;
 import org.opendataloader.pdf.utils.Base64ImageUtils;
+import org.opendataloader.pdf.utils.GeneratorUtils;
 import org.opendataloader.pdf.utils.ImagesUtils;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter;
@@ -34,7 +35,6 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
-import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
 
 import java.io.Closeable;
 import java.io.File;
@@ -75,6 +75,8 @@ public class HtmlGenerator implements Closeable {
     protected String imageFormat = Config.IMAGE_FORMAT_PNG;
     /** Whether to include page headers and footers in output. */
     protected boolean includeHeaderFooter = false;
+    protected static final String strikethroughTextOpeningTag = "<del>";
+    protected static final String strikethroughTextClosingTag = "</del>";
 
     /**
      * Creates a new HtmlGenerator for the specified PDF file.
@@ -287,9 +289,8 @@ public class HtmlGenerator implements Closeable {
             htmlWriter.write(HtmlSyntax.HTML_LIST_ITEM_TAG);
 
             htmlWriter.write(HtmlSyntax.HTML_PARAGRAPH_TAG);
-            StringBuilder stringBuilder = new StringBuilder();
-            getTextFromLines(item.getLines(), stringBuilder);
-            htmlWriter.write(getCorrectString(stringBuilder.toString()));
+            String value = GeneratorUtils.getTextFromLines(item.getLines(), strikethroughTextOpeningTag, strikethroughTextClosingTag);
+            htmlWriter.write(getCorrectString(value));
             htmlWriter.write(HtmlSyntax.HTML_PARAGRAPH_CLOSE_TAG);
 
             for (IObject object : item.getContents()) {
@@ -310,38 +311,9 @@ public class HtmlGenerator implements Closeable {
      */
     protected void writeSemanticTextNode(SemanticTextNode textNode) throws IOException {
         htmlWriter.write(HtmlSyntax.HTML_FIGURE_CAPTION_TAG);
-        htmlWriter.write(getCorrectString(getTextFromColumns(textNode)));
+        htmlWriter.write(getCorrectString(GeneratorUtils.getTextFromTextNode(textNode, strikethroughTextOpeningTag, strikethroughTextClosingTag)));
         htmlWriter.write(HtmlSyntax.HTML_FIGURE_CAPTION_CLOSE_TAG);
         htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
-    }
-
-    protected void getTextFromLines(List<TextLine> textLines, StringBuilder stringBuilder) {
-        for (int i = 0; i < textLines.size() - 1; i++) {
-            TextLine line = textLines.get(i);
-            getTextFromLine(line, stringBuilder);
-            TextChunkUtils.formatLineEnd(stringBuilder);
-        }
-        getTextFromLine(textLines.get(textLines.size() - 1), stringBuilder);
-    }
-
-    protected void getTextFromLine(TextLine line, StringBuilder stringBuilder) {
-        for (TextChunk chunk : line.getTextChunks()) {
-            if (chunk.getIsStrikethroughText()) {
-                stringBuilder.append("<del>").append(chunk.getValue()).append("</del>");
-            } else {
-                stringBuilder.append(chunk.getValue());
-            }
-        }
-    }
-
-    protected String getTextFromColumns(SemanticTextNode node) {
-        StringBuilder  stringBuilder = new StringBuilder();
-        for (TextColumn column : node.getColumns()) {
-            for (TextBlock block : column.getBlocks()) {
-                getTextFromLines(block.getLines(), stringBuilder);
-            }
-        }
-        return stringBuilder.toString();
     }
 
     /**
@@ -400,7 +372,7 @@ public class HtmlGenerator implements Closeable {
         if (paragraphIndent > 0) {
             htmlWriter.write(HtmlSyntax.HTML_INDENT);
         }
-        String paragraphValue = getTextFromColumns(paragraph);
+        String paragraphValue = GeneratorUtils.getTextFromTextNode(paragraph, strikethroughTextOpeningTag, strikethroughTextClosingTag);
 
         if (isInsideTable() && StaticContainers.isKeepLineBreaks()) {
             paragraphValue = paragraphValue.replace(HtmlSyntax.HTML_LINE_BREAK, HtmlSyntax.HTML_LINE_BREAK_TAG);
@@ -420,7 +392,7 @@ public class HtmlGenerator implements Closeable {
     protected void writeHeading(SemanticHeading heading) throws IOException {
         int headingLevel = Math.min(6, Math.max(1, heading.getHeadingLevel()));
         htmlWriter.write("<h" + headingLevel + ">");
-        htmlWriter.write(getCorrectString(getTextFromColumns(heading)));
+        htmlWriter.write(getCorrectString(GeneratorUtils.getTextFromTextNode(heading, strikethroughTextOpeningTag, strikethroughTextClosingTag)));
         htmlWriter.write("</h" + headingLevel + ">");
         htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
     }

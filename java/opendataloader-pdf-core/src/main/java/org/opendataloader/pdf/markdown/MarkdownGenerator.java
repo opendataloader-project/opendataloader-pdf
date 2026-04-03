@@ -20,6 +20,7 @@ import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.entities.SemanticFormula;
 import org.opendataloader.pdf.entities.SemanticPicture;
 import org.opendataloader.pdf.utils.Base64ImageUtils;
+import org.opendataloader.pdf.utils.GeneratorUtils;
 import org.opendataloader.pdf.utils.ImagesUtils;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter;
@@ -33,7 +34,6 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
-import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
 
 import java.io.Closeable;
 import java.io.File;
@@ -55,6 +55,7 @@ public class MarkdownGenerator implements Closeable {
     protected boolean embedImages = false;
     protected String imageFormat = Config.IMAGE_FORMAT_PNG;
     protected boolean includeHeaderFooter = false;
+    protected static final String strikethroughTextSyntax = "~~";
 
     MarkdownGenerator(File inputPdf, Config config) throws IOException {
         String cutPdfFileName = inputPdf.getName();
@@ -235,9 +236,7 @@ public class MarkdownGenerator implements Closeable {
                 markdownWriter.write(MarkdownSyntax.LIST_ITEM);
                 markdownWriter.write(MarkdownSyntax.SPACE);
             }
-            StringBuilder stringBuilder = new StringBuilder();
-            getTextFromLines(item.getLines(), stringBuilder);
-            markdownWriter.write(getCorrectMarkdownString(stringBuilder.toString()));
+            markdownWriter.write(getCorrectMarkdownString(GeneratorUtils.getTextFromLines(item.getLines(), strikethroughTextSyntax, strikethroughTextSyntax)));
             writeLineBreak();
 
             List<IObject> itemContents = item.getContents();
@@ -249,13 +248,7 @@ public class MarkdownGenerator implements Closeable {
     }
 
     protected void writeSemanticTextNode(SemanticTextNode textNode) throws IOException {
-        StringBuilder stringBuilder = new StringBuilder();
-        for (TextColumn column : textNode.getColumns()) {
-            for (TextBlock block : column.getBlocks()) {
-                getTextFromLines(block.getLines(), stringBuilder);
-            }
-        }
-        String value = stringBuilder.toString();
+        String value = GeneratorUtils.getTextFromTextNode(textNode, strikethroughTextSyntax, strikethroughTextSyntax);
         if (StaticContainers.isKeepLineBreaks()) {
             if (textNode instanceof SemanticHeading) {
                 value = value.replace(MarkdownSyntax.LINE_BREAK, MarkdownSyntax.SPACE);
@@ -270,24 +263,7 @@ public class MarkdownGenerator implements Closeable {
         markdownWriter.write(getCorrectMarkdownString(value));
     }
 
-    protected void getTextFromLines(List<TextLine> textLines, StringBuilder stringBuilder) {
-        for (int i = 0; i < textLines.size() - 1; i++) {
-            TextLine line = textLines.get(i);
-            getTextFromLine(line, stringBuilder);
-            TextChunkUtils.formatLineEnd(stringBuilder);
-        }
-        getTextFromLine(textLines.get(textLines.size() - 1), stringBuilder);
-    }
 
-    protected void getTextFromLine(TextLine line, StringBuilder stringBuilder) {
-        for (TextChunk chunk : line.getTextChunks()) {
-            if (chunk.getIsStrikethroughText()) {
-                stringBuilder.append("~~").append(chunk.getValue()).append("~~");
-            } else {
-                stringBuilder.append(chunk.getValue());
-            }
-        }
-    }
 
     protected void writeTable(TableBorder table) throws IOException {
         enterTable();
