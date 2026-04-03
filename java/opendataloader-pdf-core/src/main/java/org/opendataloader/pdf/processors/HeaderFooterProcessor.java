@@ -147,6 +147,14 @@ public class HeaderFooterProcessor {
         return newContents;
     }
 
+    /**
+     * Maximum vertical gap (in points) allowed between consecutive footer/header elements.
+     * If a candidate element is farther than this from the previously accepted element,
+     * it is not included in the header/footer region. This prevents body text that happens
+     * to repeat across pages from being absorbed into the footer.
+     */
+    private static final double MAX_HEADER_FOOTER_GAP = 30.0;
+
     private static List<Integer> getNumberOfHeaderOrFooterContentsForEachPage(List<List<IObject>> sortedContents, boolean isHeaderDetection) {
         List<Integer> numberOfHeaderOrFooterContentsForEachPage = new ArrayList<>(sortedContents.size());
         for (int pageNumber = 0; pageNumber < sortedContents.size(); pageNumber++) {
@@ -163,7 +171,13 @@ public class HeaderFooterProcessor {
                 List<IObject> pageContents = sortedContents.get(pageNumber);
                 int index = isHeaderDetection ? currentIndex : pageContents.size() - 1 - currentIndex;
                 if (index >= 0 && index < pageContents.size()) {
-                    contents.add(pageContents.get(index));
+                    IObject candidate = pageContents.get(index);
+                    if (currentIndex > 0 && !isAdjacentToExistingHeaderOrFooter(
+                            pageContents, currentIndex, isHeaderDetection, candidate)) {
+                        contents.add(null);
+                    } else {
+                        contents.add(candidate);
+                    }
                 } else {
                     contents.add(null);
                 }
@@ -178,6 +192,22 @@ public class HeaderFooterProcessor {
             currentIndex++;
         }
         return numberOfHeaderOrFooterContentsForEachPage;
+    }
+
+    private static boolean isAdjacentToExistingHeaderOrFooter(
+            List<IObject> pageContents, int currentIndex, boolean isHeaderDetection, IObject candidate) {
+        int previousIndex = isHeaderDetection ? currentIndex - 1 : pageContents.size() - currentIndex;
+        if (previousIndex < 0 || previousIndex >= pageContents.size()) {
+            return true;
+        }
+        IObject previousElement = pageContents.get(previousIndex);
+        double gap;
+        if (isHeaderDetection) {
+            gap = previousElement.getTopY() - candidate.getBottomY();
+        } else {
+            gap = candidate.getTopY() - previousElement.getBottomY();
+        }
+        return gap <= MAX_HEADER_FOOTER_GAP;
     }
 
     private static Set<Integer> getIndexesOfHeaderOrFootersContents(List<IObject> contents) {
