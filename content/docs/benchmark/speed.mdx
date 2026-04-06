@@ -17,18 +17,18 @@ Average seconds per page across the benchmark corpus, covering the full pipeline
 
 | Engine                      | Speed (s/page) | Rank | Notes                          |
 |-----------------------------|----------------|------|--------------------------------|
-| Edgeparse                   | 0.04           | #1   | Fast with decent accuracy      |
-| MarkItDown                  | 0.04           | #1   | No table/heading extraction    |
-| OpenDataLoader              | 0.05           | #3   | Best speed/accuracy balance    |
-| Unstructured                | 0.08           | #4   | No table extraction            |
-| PyMuPDF4LLM                 | 0.09           | #5   | Moderate speed                 |
-| Nutrient                    | 0.23           | #6   | Proprietary, good accuracy     |
-| OpenDataLoader [hybrid]     | 0.46           | #7   | Best accuracy, moderate speed  |
-| Docling                     | 0.73           | #8   | 14x slower than OpenDataLoader |
-| LiteParse                   | 1.06           | #9   | No table/heading extraction    |
-| Unstructured [hi_res]       | 3.01           | #10  | ML-based, good accuracy        |
-| MinerU                      | 5.96           | #11  | GPU recommended                |
-| Marker                      | 53.93          | #12  | GPU required for practical use |
+| OpenDataLoader              | 0.015          | #1   | Best speed/accuracy balance    |
+| Edgeparse                   | 0.036          | #2   | Fast with decent accuracy      |
+| Unstructured                | 0.077          | #3   | No table extraction            |
+| PyMuPDF4LLM                 | 0.091          | #4   | Moderate speed                 |
+| MarkItDown                  | 0.114          | #5   | Basic table extraction         |
+| Nutrient                    | 0.230          | #6   | Proprietary, good accuracy     |
+| OpenDataLoader [hybrid]     | 0.463          | #7   | Best accuracy, moderate speed  |
+| Docling                     | 0.762          | #8   | Strong accuracy, slower        |
+| LiteParse                   | 1.061          | #9   | No table/heading extraction    |
+| Unstructured [hi_res]       | 3.008          | #10  | ML-based, good accuracy        |
+| MinerU                      | 5.962          | #11  | GPU recommended                |
+| Marker                      | 53.932         | #12  | GPU required for practical use |
 
 ## When to Prioritize Speed
 
