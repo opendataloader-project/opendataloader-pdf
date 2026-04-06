@@ -156,4 +156,46 @@ public class HeaderFooterProcessorTest {
                 "Page " + page + ": repeated note text should remain in body, not be absorbed into footer");
         }
     }
+
+    /**
+     * Positive control: two closely spaced footer lines (gap < 30pt) should be
+     * grouped into a single footer. Ensures the proximity check does not reject
+     * legitimate multi-line footers.
+     */
+    @Test
+    public void testCloseFooterLinesAreGrouped() {
+        initContainers();
+        List<List<IObject>> contents = new ArrayList<>();
+        for (int page = 0; page < 3; page++) {
+            List<IObject> pageContents = new ArrayList<>();
+            // Body text at top
+            pageContents.add(new TextLine(new TextChunk(
+                new BoundingBox(page, 37.0, 500.0, 300.0, 530.0),
+                "Body text page " + (page + 1), 10, 530.0)));
+
+            // Two footer lines close together (11pt gap between nearest edges)
+            // Line 1: y=[55, 67]  Line 2: y=[35, 44]  gap = 55-44 = 11pt
+            pageContents.add(new TextLine(new TextChunk(
+                new BoundingBox(page, 37.0, 55.0, 280.0, 67.0),
+                "Copyright 2026", 7.5, 67.0)));
+            pageContents.add(new TextLine(new TextChunk(
+                new BoundingBox(page, 37.0, 35.0, 280.0, 44.0),
+                "Company Footer", 7.5, 44.0)));
+
+            contents.add(pageContents);
+        }
+
+        HeaderFooterProcessor.processHeadersAndFooters(contents, false);
+
+        for (int page = 0; page < 3; page++) {
+            List<IObject> pageContent = contents.get(page);
+            IObject lastElement = pageContent.get(pageContent.size() - 1);
+            Assertions.assertTrue(lastElement instanceof SemanticHeaderOrFooter,
+                "Page " + page + ": last element should be footer");
+            SemanticHeaderOrFooter footer = (SemanticHeaderOrFooter) lastElement;
+            Assertions.assertEquals(SemanticType.FOOTER, footer.getSemanticType());
+            Assertions.assertEquals(2, footer.getContents().size(),
+                "Page " + page + ": footer should contain both close footer lines (gap=11pt < 30pt)");
+        }
+    }
 }

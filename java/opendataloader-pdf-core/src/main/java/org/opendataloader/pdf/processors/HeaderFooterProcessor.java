@@ -203,9 +203,9 @@ public class HeaderFooterProcessor {
         IObject previousElement = pageContents.get(previousIndex);
         double gap;
         if (isHeaderDetection) {
-            gap = previousElement.getTopY() - candidate.getBottomY();
+            gap = previousElement.getBottomY() - candidate.getTopY();
         } else {
-            gap = candidate.getTopY() - previousElement.getBottomY();
+            gap = candidate.getBottomY() - previousElement.getTopY();
         }
         return gap <= MAX_HEADER_FOOTER_GAP;
     }
