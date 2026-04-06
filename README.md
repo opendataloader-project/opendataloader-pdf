@@ -121,6 +121,8 @@ opendataloader_pdf.convert(
 
 [![Benchmark](https://github.com/opendataloader-project/opendataloader-bench/raw/refs/heads/main/charts/benchmark.png)](https://github.com/opendataloader-project/opendataloader-bench)
 
+[![Quality Breakdown](https://github.com/opendataloader-project/opendataloader-bench/raw/refs/heads/main/charts/benchmark_quality.png)](https://github.com/opendataloader-project/opendataloader-bench)
+
 ## Which Mode Should I Use?
 
 | Your Document | Mode | Install | Server Command | Client Command |
