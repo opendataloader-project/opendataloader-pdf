@@ -8,14 +8,14 @@ keywords: [PDF OCR, PDF AI extraction, hybrid PDF parsing, complex table extract
 
 Hybrid mode combines the speed of local Java processing with the accuracy of AI backends. Instead of sending every page to an AI service, OpenDataLoader intelligently routes only complex pages (tables, OCR) to the backend while processing simple text pages locally.
 
-**Results**: Table accuracy jumps from 0.49 → 0.93 (+90%) with acceptable speed trade-off.
+**Results**: Table accuracy jumps from 0.489 → 0.928 (+90%) with acceptable speed trade-off.
 
 | Metric | Java-only | Hybrid | Improvement |
 |:-------|:----------|:-------|:------------|
-| Table accuracy (TEDS) | 0.49 | **0.93** | +90% |
-| Heading accuracy (MHS) | 0.74 | **0.81** | +9% |
-| Reading order (NID) | 0.91 | **0.94** | +3% |
-| Speed | 0.05s/doc | 0.46s/doc | 9x slower |
+| Table accuracy (TEDS) | 0.489 | **0.928** | +90% |
+| Heading accuracy (MHS) | 0.739 | **0.821** | +11% |
+| Reading order (NID) | 0.902 | **0.934** | +4% |
+| Speed | 0.015s/doc | 0.463s/doc | 31x slower |
 
 ## Installation
 
@@ -78,7 +78,7 @@ PDF Input
     ▼                    ▼
 ┌─────────────┐    ┌─────────────────┐
 │  JAVA Path  │    │  BACKEND Path   │
-│  (0.05s)    │    │  (AI processing)│
+│  (0.015s)   │    │  (AI processing)│
 │  Simple     │    │  Complex tables │
 │  text pages │    │  OCR pages      │
 └─────────────┘    └─────────────────┘
