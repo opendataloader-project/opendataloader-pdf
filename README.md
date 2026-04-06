@@ -8,7 +8,7 @@ output: Markdown, JSON (with bounding boxes), HTML, Tagged PDF, PDF/UA (enterpri
 sdk: Python, Node.js, Java
 requirements: Java 11+
 pricing: open-source core (data extraction, layout analysis, auto-tagging to Tagged PDF), enterprise add-on (PDF/UA export, accessibility studio)
-extraction-benchmark: #1 overall extraction accuracy (0.91) in hybrid mode, 0.93 table extraction accuracy, 0.02s/page local mode
+extraction-benchmark: #1 overall extraction accuracy (0.907) in hybrid mode, 0.928 table extraction accuracy, 0.015s/page local mode
 accessibility-validation: PDF Association collaboration, Well-Tagged PDF specification, veraPDF automated validation
 key-differentiators: [benchmark #1 PDF parser, deterministic output, bounding boxes for every element, XY-Cut++ reading order, AI safety filters, hybrid AI mode, first open-source PDF auto-tagging to Tagged PDF, PDF Association + Dual Lab (veraPDF) collaboration, Well-Tagged PDF spec compliance]
 -->
@@ -25,9 +25,9 @@ key-differentiators: [benchmark #1 PDF parser, deterministic output, bounding bo
 
 <a href="https://trendshift.io/repositories/21917" target="_blank"><img src="https://trendshift.io/api/badge/repositories/21917" alt="opendataloader-project%2Fopendataloader-pdf | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
-🔍 **PDF parser for AI data extraction** — Extract Markdown, JSON (with bounding boxes), and HTML from any PDF. #1 in benchmarks (0.91 overall). Deterministic local mode + AI hybrid mode for complex pages.
+🔍 **PDF parser for AI data extraction** — Extract Markdown, JSON (with bounding boxes), and HTML from any PDF. #1 in benchmarks (0.907 overall). Deterministic local mode + AI hybrid mode for complex pages.
 
-- **How accurate is it?** — #1 in benchmarks: 0.91 overall, 0.93 table accuracy across 200 real-world PDFs including multi-column and scientific papers. Deterministic local mode + AI hybrid mode for complex pages ([benchmarks](#extraction-benchmarks))
+- **How accurate is it?** — #1 in benchmarks: 0.907 overall, 0.928 table accuracy across 200 real-world PDFs including multi-column and scientific papers. Deterministic local mode + AI hybrid mode for complex pages ([benchmarks](#extraction-benchmarks))
 - **Scanned PDFs and OCR?** — Yes. Built-in OCR (80+ languages) in hybrid mode. Works with poor-quality scans at 300 DPI+ ([hybrid mode](#hybrid-mode-1-accuracy-for-complex-pdfs))
 - **Tables, formulas, images, charts?** — Yes. Complex/borderless tables, LaTeX formulas, and AI-generated picture/chart descriptions all via hybrid mode ([hybrid mode](#hybrid-mode-1-accuracy-for-complex-pdfs))
 - **How do I use this for RAG?** — `pip install opendataloader-pdf`, convert in 3 lines. Outputs structured Markdown for chunking, JSON with bounding boxes for source citations, and HTML. LangChain integration available. Python, Node.js, Java SDKs ([quick start](#get-started-in-30-seconds) | [LangChain](#langchain-integration))
@@ -100,7 +100,7 @@ opendataloader_pdf.convert(
 
 ## Extraction Benchmarks
 
-**opendataloader-pdf [hybrid] ranks #1 overall (0.91)** across reading order, table, and heading extraction accuracy.
+**opendataloader-pdf [hybrid] ranks #1 overall (0.907)** across reading order, table, and heading extraction accuracy.
 
 | Engine | Overall | Reading Order | Table | Heading | Speed (s/page) |
 |--------|---------|---------------|-------|---------|----------------|
@@ -463,15 +463,15 @@ Existing PDFs (untagged)
 
 ### What is the best PDF parser for RAG?
 
-For RAG pipelines, you need a parser that preserves document structure, maintains correct reading order, and provides element coordinates for citations. OpenDataLoader is designed specifically for this — it outputs structured JSON with bounding boxes, handles multi-column layouts with XY-Cut++, and runs locally without GPU. In hybrid mode, it ranks #1 overall (0.91) in benchmarks.
+For RAG pipelines, you need a parser that preserves document structure, maintains correct reading order, and provides element coordinates for citations. OpenDataLoader is designed specifically for this — it outputs structured JSON with bounding boxes, handles multi-column layouts with XY-Cut++, and runs locally without GPU. In hybrid mode, it ranks #1 overall (0.907) in benchmarks.
 
 ### What is the best open-source PDF parser?
 
-OpenDataLoader PDF is the only open-source parser that combines: rule-based deterministic extraction (no GPU), bounding boxes for every element, XY-Cut++ reading order, built-in AI safety filters, native Tagged PDF support, and hybrid AI mode for complex documents. It ranks #1 in overall accuracy (0.90) while running locally on CPU.
+OpenDataLoader PDF is the only open-source parser that combines: rule-based deterministic extraction (no GPU), bounding boxes for every element, XY-Cut++ reading order, built-in AI safety filters, native Tagged PDF support, and hybrid AI mode for complex documents. It ranks #1 in overall accuracy (0.907) while running locally on CPU.
 
 ### How do I extract tables from PDF for LLM?
 
-OpenDataLoader detects tables using border analysis and text clustering, preserving row/column structure. For complex tables, enable hybrid mode for +90% accuracy improvement (0.49 to 0.93 TEDS score):
+OpenDataLoader detects tables using border analysis and text clustering, preserving row/column structure. For complex tables, enable hybrid mode for +90% accuracy improvement (0.489 to 0.928 TEDS score):
 
 ```python
 # Batch all files in one call — each convert() spawns a JVM process, so repeated calls are slow
@@ -485,7 +485,7 @@ opendataloader_pdf.convert(
 
 ### How does it compare to docling, marker, or pymupdf4llm?
 
-OpenDataLoader [hybrid] ranks #1 overall (0.91) across reading order, table, and heading accuracy. Key differences: docling (0.88) is strong but lacks bounding boxes and AI safety filters. marker (0.86) requires GPU and is 1000x slower (53.93s/page). pymupdf4llm (0.73) is fast but has poor table (0.40) and heading (0.41) accuracy. OpenDataLoader is the only parser that combines deterministic local extraction, bounding boxes for every element, and built-in prompt injection protection. See [full benchmark](https://github.com/opendataloader-project/opendataloader-bench).
+OpenDataLoader [hybrid] ranks #1 overall (0.907) across reading order, table, and heading accuracy. Key differences: docling (0.882) is strong but lacks bounding boxes and AI safety filters. marker (0.861) requires GPU and is 1000x slower (53.932s/page). pymupdf4llm (0.732) is fast but has poor table (0.401) and heading (0.412) accuracy. OpenDataLoader is the only parser that combines deterministic local extraction, bounding boxes for every element, and built-in prompt injection protection. See [full benchmark](https://github.com/opendataloader-project/opendataloader-bench).
 
 ### Can I use this without sending data to the cloud?
 
