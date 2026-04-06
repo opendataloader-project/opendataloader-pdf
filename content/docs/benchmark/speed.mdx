@@ -17,13 +17,17 @@ Average seconds per page across the benchmark corpus, covering the full pipeline
 
 | Engine                      | Speed (s/page) | Rank | Notes                          |
 |-----------------------------|----------------|------|--------------------------------|
+| Edgeparse                   | 0.04           | #1   | Fast with decent accuracy      |
 | MarkItDown                  | 0.04           | #1   | No table/heading extraction    |
-| OpenDataLoader              | 0.05           | #1   | Best speed/accuracy balance    |
-| PyMuPDF4LLM                 | 0.09           | #2   | Moderate speed                 |
-| OpenDataLoader [hybrid]     | 0.46           | #3   | Best accuracy, moderate speed  |
-| Docling                     | 0.73           | #4   | 14x slower than OpenDataLoader |
-| MinerU                      | 5.96           | #5   | GPU recommended                |
-| Marker                      | 53.93          | #6   | GPU required for practical use |
+| OpenDataLoader              | 0.05           | #3   | Best speed/accuracy balance    |
+| Unstructured                | 0.08           | #4   | No table extraction            |
+| PyMuPDF4LLM                 | 0.09           | #5   | Moderate speed                 |
+| Nutrient                    | 0.23           | #6   | Proprietary, good accuracy     |
+| OpenDataLoader [hybrid]     | 0.46           | #7   | Best accuracy, moderate speed  |
+| Docling                     | 0.73           | #8   | 14x slower than OpenDataLoader |
+| LiteParse                   | 1.06           | #9   | No table/heading extraction    |
+| MinerU                      | 5.96           | #10  | GPU recommended                |
+| Marker                      | 53.93          | #11  | GPU required for practical use |
 
 ## When to Prioritize Speed
 

@@ -105,12 +105,16 @@ opendataloader_pdf.convert(
 | Engine | Overall | Reading Order | Table | Heading | Speed (s/page) |
 |--------|---------|---------------|-------|---------|----------------|
 | **opendataloader [hybrid]** | **0.90** | **0.94** | **0.93** | **0.81** | 0.46 |
-| opendataloader | 0.84 | 0.91 | 0.49 | 0.74 | **0.05** |
+| nutrient | 0.88 | 0.92 | 0.66 | **0.81** | 0.23 |
 | docling | 0.88 | 0.90 | 0.89 | 0.80 | 0.73 |
 | marker | 0.86 | 0.89 | 0.81 | 0.80 | 53.93 |
+| opendataloader | 0.84 | 0.91 | 0.49 | 0.74 | 0.05 |
+| edgeparse | 0.84 | 0.89 | 0.72 | 0.71 | **0.04** |
 | mineru | 0.83 | 0.86 | 0.87 | 0.74 | 5.96 |
 | pymupdf4llm | 0.73 | 0.89 | 0.40 | 0.41 | 0.09 |
+| unstructured | 0.69 | 0.88 | 0.00 | 0.39 | 0.08 |
 | markitdown | 0.58 | 0.88 | 0.00 | 0.00 | **0.04** |
+| liteparse | 0.58 | 0.87 | 0.00 | 0.00 | 1.06 |
 
 > Scores normalized to [0, 1]. Higher is better for accuracy; lower is better for speed. **Bold** = best. [Full benchmark details](https://github.com/opendataloader-project/opendataloader-bench)
 
@@ -480,7 +484,7 @@ opendataloader_pdf.convert(
 
 ### How does it compare to docling, marker, or pymupdf4llm?
 
-OpenDataLoader [hybrid] ranks #1 overall (0.90) across reading order, table, and heading accuracy. Key differences: docling (0.86) is strong but lacks bounding boxes and AI safety filters. marker (0.83) requires GPU and is 100x slower (53.93s/page). pymupdf4llm (0.57) is fast but has poor table (0.40) and heading (0.41) accuracy. OpenDataLoader is the only parser that combines deterministic local extraction, bounding boxes for every element, and built-in prompt injection protection. See [full benchmark](https://github.com/opendataloader-project/opendataloader-bench).
+OpenDataLoader [hybrid] ranks #1 overall (0.90) across reading order, table, and heading accuracy. Key differences: docling (0.88) is strong but lacks bounding boxes and AI safety filters. marker (0.86) requires GPU and is 100x slower (53.93s/page). pymupdf4llm (0.73) is fast but has poor table (0.40) and heading (0.41) accuracy. OpenDataLoader is the only parser that combines deterministic local extraction, bounding boxes for every element, and built-in prompt injection protection. See [full benchmark](https://github.com/opendataloader-project/opendataloader-bench).
 
 ### Can I use this without sending data to the cloud?
 
