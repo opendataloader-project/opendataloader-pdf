@@ -56,6 +56,7 @@ public class MarkdownGenerator implements Closeable {
     protected boolean embedImages = false;
     protected String imageFormat = Config.IMAGE_FORMAT_PNG;
     protected boolean includeHeaderFooter = false;
+    protected static final String strikethroughTextMD = "~~";
 
     MarkdownGenerator(File inputPdf, Config config) throws IOException {
         String cutPdfFileName = inputPdf.getName();
@@ -364,6 +365,18 @@ public class MarkdownGenerator implements Closeable {
             return value.replace("\u0000", " ");
         }
         return null;
+    }
+
+    public static void getTextFromLineForMarkdown(TextLine line, StringBuilder stringBuilder) {
+        for (TextChunk chunk : line.getTextChunks()) {
+            if (chunk.getIsStrikethroughText()) {
+                stringBuilder.append(strikethroughTextMD);
+            }
+            stringBuilder.append(chunk.getValue());
+            if (chunk.getIsStrikethroughText()) {
+                stringBuilder.append(strikethroughTextMD);
+            }
+        }
     }
 
     @Override

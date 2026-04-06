@@ -112,7 +112,7 @@ public class CLIOptions {
 
     // ===== Detect Strikethrough =====
     private static final String DETECT_STRIKETHROUGH_LONG_OPTION = "detect-strikethrough";
-    private static final String DETECT_STRIKETHROUGH_DESC = "Detect strikethrough text and wrap with ~~ in Markdown output (experimental)";
+    private static final String DETECT_STRIKETHROUGH_DESC = "Detect strikethrough text and wrap with ~~ in Markdown output or <del></del> tag in HTML output (experimental)";
 
     // ===== Hybrid Mode =====
     private static final String HYBRID_LONG_OPTION = "hybrid";

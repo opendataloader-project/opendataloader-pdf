@@ -76,6 +76,10 @@ public class HtmlGenerator implements Closeable {
     protected String imageFormat = Config.IMAGE_FORMAT_PNG;
     /** Whether to include page headers and footers in output. */
     protected boolean includeHeaderFooter = false;
+    /** Opening tag for strikethrough text*/
+    protected static final String strikethroughTextHtmlOpeningTag = "<del>";
+    /** Closing tag for strikethrough text*/
+    protected static final String strikethroughTextHtmlClosingTag = "</del>";;
 
     /**
      * Creates a new HtmlGenerator for the specified PDF file.
@@ -468,6 +472,18 @@ public class HtmlGenerator implements Closeable {
             .replace(">", "&gt;")
             .replace("\n", " ")
             .replace("\r", "");
+    }
+
+    public static void getTextFromLineForHTML(TextLine line, StringBuilder stringBuilder) {
+        for (TextChunk chunk : line.getTextChunks()) {
+            if (chunk.getIsStrikethroughText()) {
+                stringBuilder.append(strikethroughTextHtmlOpeningTag);
+            }
+            stringBuilder.append(chunk.getValue());
+            if (chunk.getIsStrikethroughText()) {
+                stringBuilder.append(strikethroughTextHtmlClosingTag);
+            }
+        }
     }
 
     @Override

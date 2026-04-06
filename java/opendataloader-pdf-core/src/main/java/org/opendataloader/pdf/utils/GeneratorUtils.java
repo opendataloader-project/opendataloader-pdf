@@ -1,8 +1,9 @@
 package org.opendataloader.pdf.utils;
 
+import org.opendataloader.pdf.html.HtmlGenerator;
+import org.opendataloader.pdf.markdown.MarkdownGenerator;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.TextBlock;
-import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextColumn;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
@@ -10,9 +11,6 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
 import java.util.List;
 
 public class GeneratorUtils {
-    protected static final String strikethroughTextMD = "~~";
-    protected static final String strikethroughTextHtmlOpeningTag = "<del>";
-    protected static final String strikethroughTextHtmlClosingTag = "</del>";;
 
     public static String getTextFromTextNode(SemanticTextNode textNode, OutputType outputType) {
         StringBuilder stringBuilder = new StringBuilder();
@@ -34,46 +32,22 @@ public class GeneratorUtils {
             TextLine line = textLines.get(i);
             switch (outputType) {
                 case MD:
-                    getTextFromLineForMarkdown(line,  stringBuilder);
+                    MarkdownGenerator.getTextFromLineForMarkdown(line,  stringBuilder);
                     break;
                 case HTML:
-                    getTextFromLineForHTML(line, stringBuilder);
+                    HtmlGenerator.getTextFromLineForHTML(line, stringBuilder);
                     break;
             }
             TextChunkUtils.formatLineEnd(stringBuilder);
         }
         switch (outputType) {
             case MD:
-                getTextFromLineForMarkdown(textLines.get(textLines.size() - 1),  stringBuilder);
+                MarkdownGenerator.getTextFromLineForMarkdown(textLines.get(textLines.size() - 1),  stringBuilder);
                 break;
             case HTML:
-                getTextFromLineForHTML(textLines.get(textLines.size() - 1), stringBuilder);
+                HtmlGenerator.getTextFromLineForHTML(textLines.get(textLines.size() - 1), stringBuilder);
                 break;
         }
         return stringBuilder.toString();
-    }
-
-    public static void getTextFromLineForMarkdown(TextLine line, StringBuilder stringBuilder) {
-        for (TextChunk chunk : line.getTextChunks()) {
-            if (chunk.getIsStrikethroughText()) {
-                stringBuilder.append(strikethroughTextMD);
-            }
-            stringBuilder.append(chunk.getValue());
-            if (chunk.getIsStrikethroughText()) {
-                stringBuilder.append(strikethroughTextMD);
-            }
-        }
-    }
-
-    public static void getTextFromLineForHTML(TextLine line, StringBuilder stringBuilder) {
-        for (TextChunk chunk : line.getTextChunks()) {
-            if (chunk.getIsStrikethroughText()) {
-                stringBuilder.append(strikethroughTextHtmlOpeningTag);
-            }
-            stringBuilder.append(chunk.getValue());
-            if (chunk.getIsStrikethroughText()) {
-                stringBuilder.append(strikethroughTextHtmlClosingTag);
-            }
-        }
     }
 }
