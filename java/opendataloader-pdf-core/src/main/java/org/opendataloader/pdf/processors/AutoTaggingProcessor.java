@@ -58,6 +58,7 @@ public class AutoTaggingProcessor {
         updatePages(document, cosDocument);
         createLinkAnnotationStructElements(document, cosDocument, seDocument);
         createParentTree(cosDocument, structTreeRoot);
+        cosDocument.getTrailer().removeKey(ASAtom.ENCRYPT);
         String outputFileName = outputFolder + File.separator +
             inputPDF.getName().substring(0, inputPDF.getName().length() - 4) + "_tagged.pdf";
         document.saveAs(outputFileName);
@@ -87,7 +88,6 @@ public class AutoTaggingProcessor {
                     cosDocument.addChangedObject(contentsObject);
                 } else {
                     page.getObject().setKey(ASAtom.CONTENTS, createContentsIndirect(cosDocument, processedTokens));
-                    cosDocument.addChangedObject(page.getObject());
                 }
             } else {
                 COSObject streamsArray = COSArray.construct();
@@ -98,7 +98,6 @@ public class AutoTaggingProcessor {
                     streamsArray.add(streamIndirect);
                 }
                 page.getObject().setKey(ASAtom.CONTENTS, streamsArray);
-                cosDocument.addChangedObject(page.getObject());
             }
         }
     }
