@@ -91,6 +91,8 @@ public class ChunksWriter {
                     AutoTaggingProcessor.setUpContents(pdxForm.getObject(), new ChunksWriter(xFormGraphicsState,
                         resourceHandler.getExtendedResources(pdxForm.getResources())).processTokens(
                             ChunksWriter.getTokens(pdxForm), xObjectOperatorStreamKey));
+                    result.addAll(arguments);
+                    result.add(rawOperator);
                 } else {
                     processContentOperator(result, rawOperator, arguments, operatorIndex, operatorIndexesToStreamInfosMap, operatorName);
                 }
