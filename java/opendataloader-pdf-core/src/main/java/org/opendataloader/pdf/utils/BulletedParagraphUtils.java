@@ -19,7 +19,10 @@ import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Utility class for detecting and processing bulleted paragraphs and list items.
@@ -32,6 +35,7 @@ public class BulletedParagraphUtils {
             "❒❖➔➙➛➜➝➞➟➠➡➢➣➤➥➦➧➨➩➪➭➮➯➱⬛⬜⬝⬞⬟⬠⬡⬢⬣⬤⬥⬦⬧⬨⬩⬪⬫⬬⬭⬮⬯⭐⭑⭒⭓⭔⭕⭖⭗⭘⭙⯀⯁⯂⯃⯄⯅⯆⯇⯈⯌⯍⯎⯏⯐〇" +
             "󰁾󰋪󰋫󰋬󰋭󰋮󰋯󰋰󰋱󰋲󰋳󰋴󰋵󰋶󰋷󰋸󰋹󰋺󰋻󰋼";
     private static final Set<String> BULLET_REGEXES = new HashSet<>();
+    private static final Map<String, Pattern> COMPILED_BULLET_REGEXES = new LinkedHashMap<>();
     private static final Set<String> ARABIC_NUMBER_REGEXES = new HashSet<>();
     private static final String KOREAN_NUMBERS_REGEX = "[가나다라마바사아자차카타파하거너더러머버서어저처커터퍼허고노도로모보소오조초코토포호구누두루무부수우주추쿠투푸후그느드르므브스으즈츠크트프흐기니디리미비시이지치키티피히]";
     /** Regular expression for Korean chapter patterns like 제1장, 제2조, 제3절. */
@@ -88,8 +92,8 @@ public class BulletedParagraphUtils {
         if (textLine.getConnectedLineArtLabel() != null) {
             return true;
         }
-        for (String regex : BULLET_REGEXES) {
-            if (value.matches(regex)) {
+        for (Pattern pattern : COMPILED_BULLET_REGEXES.values()) {
+            if (pattern.matcher(value).matches()) {
                 return true;
             }
         }
@@ -114,9 +118,9 @@ public class BulletedParagraphUtils {
      */
     public static String getLabelRegex(SemanticTextNode textNode) {
         String value = textNode.getFirstLine().getValue();
-        for (String regex : BULLET_REGEXES) {
-            if (value.matches(regex)) {
-                return regex;
+        for (Map.Entry<String, Pattern> regexEntry : COMPILED_BULLET_REGEXES.entrySet()) {
+            if (regexEntry.getValue().matcher(value).matches()) {
+                return regexEntry.getKey();
             }
         }
         return null;
@@ -156,5 +160,8 @@ public class BulletedParagraphUtils {
         BULLET_REGEXES.add("^[\u326E-\u327B].*");//"^[㉮-㉻]"
         BULLET_REGEXES.add("^[\uF081-\uF08A].*");//"^[-]"
         BULLET_REGEXES.add("^[\uF08C-\uF095].*");//"^[-]"
+        for (String bulletRegex : BULLET_REGEXES) {
+            COMPILED_BULLET_REGEXES.put(bulletRegex, Pattern.compile(bulletRegex));
+        }
     }
 }

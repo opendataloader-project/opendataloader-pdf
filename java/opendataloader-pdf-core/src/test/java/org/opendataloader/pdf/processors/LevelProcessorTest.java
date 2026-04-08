@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LevelProcessorTest {
+    private static final int MAX_LEVEL_RECURSION_DEPTH = 50;
 
     @Test
     public void testDetectLevelsForParagraphs() {
@@ -155,5 +156,49 @@ public class LevelProcessorTest {
         LevelProcessor.detectLevels(contents);
         Assertions.assertEquals("1", contents.get(0).get(0).getLevel());
         Assertions.assertEquals("2", contents.get(1).get(0).getLevel());
+    }
+
+    @Test
+    public void testDetectLevelsForDeeplyNestedTables() {
+        StaticContainers.setIsDataLoader(true);
+        StaticLayoutContainers.setHeadings(new ArrayList<>());
+        TableBorder rootTable = createTable();
+        TableBorder currentTable = rootTable;
+        for (int index = 0; index < MAX_LEVEL_RECURSION_DEPTH + 10; index++) {
+            TableBorder nestedTable = createTable();
+            currentTable.getRow(0).getCell(0).getContents().add(nestedTable);
+            currentTable = nestedTable;
+        }
+        List<List<IObject>> contents = new ArrayList<>();
+        List<IObject> pageContents = new ArrayList<>();
+        pageContents.add(rootTable);
+        contents.add(pageContents);
+
+        Assertions.assertDoesNotThrow(() -> LevelProcessor.detectLevels(contents));
+        Assertions.assertEquals("1", rootTable.getLevel());
+    }
+
+    @Test
+    public void testDetectLevelsForCyclicTables() {
+        StaticContainers.setIsDataLoader(true);
+        StaticLayoutContainers.setHeadings(new ArrayList<>());
+        TableBorder rootTable = createTable();
+        rootTable.getRow(0).getCell(0).getContents().add(rootTable);
+        List<List<IObject>> contents = new ArrayList<>();
+        List<IObject> pageContents = new ArrayList<>();
+        pageContents.add(rootTable);
+        contents.add(pageContents);
+
+        Assertions.assertDoesNotThrow(() -> LevelProcessor.detectLevels(contents));
+        Assertions.assertEquals("1", rootTable.getLevel());
+    }
+
+    private static TableBorder createTable() {
+        TableBorder tableBorder = new TableBorder(1, 1);
+        tableBorder.setRecognizedStructureId(1L);
+        TableBorderRow row = new TableBorderRow(0, 1, 0L);
+        row.getCells()[0] = new TableBorderCell(0, 0, 1, 1, 0L);
+        tableBorder.getRows()[0] = row;
+        return tableBorder;
     }
 }
