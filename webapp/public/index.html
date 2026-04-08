@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PDF to Markdown — OpenDataLoader</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>PDF &rarr; Markdown</h1>
+        <p class="tagline">
+          Powered by
+          <a href="https://github.com/opendataloader-project/opendataloader-pdf" target="_blank" rel="noopener">
+            opendataloader-pdf
+          </a>
+          — local, deterministic PDF parsing.
+        </p>
+      </header>
+
+      <section class="uploader" id="dropZone">
+        <form id="uploadForm">
+          <label for="fileInput" class="drop-label">
+            <strong>Drop a PDF here</strong>
+            <span>or click to browse</span>
+            <input id="fileInput" type="file" name="pdf" accept="application/pdf,.pdf" required />
+          </label>
+          <div id="fileInfo" class="file-info" hidden></div>
+          <div class="actions">
+            <button type="submit" id="convertBtn" disabled>Convert</button>
+          </div>
+        </form>
+        <p id="status" class="status" role="status"></p>
+      </section>
+
+      <section class="result" id="result" hidden>
+        <div class="result-header">
+          <h2 id="resultTitle">Markdown output</h2>
+          <div class="result-actions">
+            <button type="button" id="copyBtn">Copy</button>
+            <button type="button" id="downloadBtn">Download .md</button>
+          </div>
+        </div>
+        <pre><code id="markdownOut"></code></pre>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

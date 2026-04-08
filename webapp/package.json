@@ -1,0 +1,17 @@
+{
+  "name": "opendataloader-pdf-webapp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Simple web UI for converting PDF to Markdown using opendataloader-pdf.",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.1",
+    "multer": "^1.4.5-lts.1"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
