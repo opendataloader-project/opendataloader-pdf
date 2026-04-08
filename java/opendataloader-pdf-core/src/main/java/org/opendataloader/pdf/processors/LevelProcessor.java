@@ -37,6 +37,8 @@ import java.util.logging.Logger;
 public class LevelProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(LevelProcessor.class.getCanonicalName());
+    // Depth cap prevents stack exhaustion on pathological nested table/list structures.
+    // Once exceeded, deeper descendants are skipped and a warning is logged.
     private static final int MAX_RECURSION_DEPTH = 50;
 
     private static boolean isDocTitleSet = false;

@@ -164,7 +164,7 @@ public class LevelProcessorTest {
         StaticLayoutContainers.setHeadings(new ArrayList<>());
         TableBorder rootTable = createTable();
         TableBorder currentTable = rootTable;
-        for (int index = 0; index < MAX_LEVEL_RECURSION_DEPTH + 10; index++) {
+        for (int nestingDepth = 0; nestingDepth < MAX_LEVEL_RECURSION_DEPTH + 10; nestingDepth++) {
             TableBorder nestedTable = createTable();
             currentTable.getRow(0).getCell(0).getContents().add(nestedTable);
             currentTable = nestedTable;
