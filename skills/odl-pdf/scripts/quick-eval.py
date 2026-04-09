@@ -22,7 +22,7 @@ from pathlib import Path
 # Optional rapidfuzz import — used for NID scoring when available
 # ---------------------------------------------------------------------------
 try:
-    from rapidfuzz.distance import Levenshtein
+    from rapidfuzz.distance import Indel
 
     _RAPIDFUZZ_AVAILABLE = True
 except ImportError:
@@ -68,18 +68,15 @@ def compute_similarity_stdlib(extracted: str, ground_truth: str) -> float:
 
 
 def compute_similarity_rapidfuzz(extracted: str, ground_truth: str) -> float:
-    """Return a similarity score in [0, 1] using rapidfuzz Levenshtein distance.
+    """Return a similarity score in [0, 1] using rapidfuzz Indel distance.
 
     Computes Normalized Indel Distance:
-        NID = edit_distance / max(len(a), len(b))
+        NID = indel_distance / (len(a) + len(b))
     The similarity score returned is 1 - NID, so higher is better.
     """
-    max_len = max(len(extracted), len(ground_truth))
-    if max_len == 0:
+    if not extracted and not ground_truth:
         return 1.0
-    distance = Levenshtein.distance(extracted, ground_truth)
-    nid = distance / max_len
-    return max(0.0, 1.0 - nid)
+    return max(0.0, 1.0 - float(Indel.normalized_distance(extracted, ground_truth)))
 
 
 def compute_similarity(extracted: str, ground_truth: str) -> tuple[float, str]:
