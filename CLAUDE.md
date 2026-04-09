@@ -21,3 +21,15 @@ Hidden text detection (`--filter-hidden-text`) is **off by default** — it requ
 - `./scripts/bench.sh --check-regression` — CI mode with threshold check
 - Benchmark code lives in [opendataloader-bench](https://github.com/opendataloader-project/opendataloader-bench)
 - Metrics: **NID** (reading order), **TEDS** (table structure), **MHS** (heading structure), **Table Detection F1**, **Speed**
+
+## Agent Skills
+
+`skills/odl-pdf/` contains the public agent skill shipped with this project.
+
+When adding or changing CLI options in Java:
+1. Run `npm run sync` (regenerates options.json + Python/Node bindings)
+2. Update `skills/odl-pdf/references/options-matrix.md` with the new option
+3. CI (`skill-drift-check.yml`) will warn if step 2 is missed
+
+The skill is written in English for external users. Do not include internal
+team terminology or company-specific policies.

@@ -1,0 +1,111 @@
+{
+  "version": "1.0",
+  "skill": "odl-pdf",
+  "evals": [
+    {
+      "id": "eval-001",
+      "scenario": "A data engineer is building a RAG pipeline over 500 scientific papers and needs to preserve source citations (page and region) for each retrieved chunk. They ask which mode and format to use.",
+      "user_input": "I need to process 500 scientific papers for a RAG pipeline. I need to know exactly which page and region each chunk came from for source citation. What's the best setup?",
+      "expected_recommendations": [
+        "Use hybrid mode for best accuracy on scientific papers",
+        "Use json format (or json combined with markdown) because JSON output includes bounding boxes per element",
+        "Mention bounding boxes as the mechanism for source citation",
+        "Recommend batching all files in a single convert() call rather than looping"
+      ],
+      "must_mention": [
+        "hybrid",
+        "json",
+        "bounding box",
+        "batch"
+      ],
+      "must_not_mention": [
+        "text format as primary recommendation",
+        "loop convert() for each file separately without warning"
+      ]
+    },
+    {
+      "id": "eval-002",
+      "scenario": "A developer on an M1 Mac needs to process Korean government PDFs, which are scanned image-based documents with mixed Korean and English text. They do not specify their OS or hardware unless asked.",
+      "user_input": "I'm on an M1 Mac and need to parse Korean government PDFs. They're scanned documents with both Korean and English text.",
+      "expected_recommendations": [
+        "Use hybrid mode with OCR enabled (--force-ocr) because the documents are scanned",
+        "Set --ocr-lang to 'ko,en' for mixed-language OCR",
+        "Confirm Java is installed (java -version) as a prerequisite",
+        "Two terminals required: one for the hybrid server, one for the client"
+      ],
+      "must_mention": [
+        "hybrid",
+        "--force-ocr",
+        "--ocr-lang",
+        "ko,en",
+        "java"
+      ],
+      "must_not_mention": [
+        "local mode as sufficient for scanned PDFs",
+        "GPU required"
+      ]
+    },
+    {
+      "id": "eval-003",
+      "scenario": "A user reports that tables in their extracted output are broken — cells are merged incorrectly and some borderless tables are completely missing. They are currently using local mode with default settings.",
+      "user_input": "The tables in my extracted output look broken. Cells are getting merged together and some tables are missing entirely. I'm using the default settings.",
+      "expected_recommendations": [
+        "Diagnose using the TEDS metric to confirm it is a table quality issue",
+        "First escalation: try --table-method cluster for borderless table detection",
+        "Second escalation: switch to hybrid mode (--hybrid docling-fast) with auto triage",
+        "Third escalation: use --hybrid-mode full to force all pages through the AI backend"
+      ],
+      "must_mention": [
+        "--table-method cluster",
+        "hybrid",
+        "TEDS"
+      ],
+      "must_not_mention": [
+        "this is a known limitation with no workaround",
+        "--use-struct-tree as a table fix"
+      ]
+    },
+    {
+      "id": "eval-004",
+      "scenario": "A Node.js developer on Windows wants to use hybrid mode. They are unfamiliar with the two-process architecture and expect a single npm install to be sufficient.",
+      "user_input": "I'm using Node.js on Windows and want to set up hybrid mode. I installed @opendataloader/pdf but I'm not sure what else I need.",
+      "expected_recommendations": [
+        "Explain that hybrid mode requires a separate Python server process (opendataloader-pdf-hybrid)",
+        "Provide a two-terminal setup: Terminal 1 for the Python hybrid server, Terminal 2 for the Node.js client",
+        "Include the pip install command for the server component",
+        "Confirm Java 11+ is required as a prerequisite"
+      ],
+      "must_mention": [
+        "pip install",
+        "opendataloader-pdf-hybrid",
+        "two terminals",
+        "java"
+      ],
+      "must_not_mention": [
+        "hybrid mode works with npm install alone",
+        "GPU required for basic hybrid setup"
+      ]
+    },
+    {
+      "id": "eval-005",
+      "scenario": "A researcher processing math-heavy academic papers wants both LaTeX formula extraction and AI-generated descriptions of charts and figures. They ask what settings are needed.",
+      "user_input": "I'm processing academic papers with math formulas and charts. I need the formulas extracted as LaTeX and I want AI descriptions of the charts and figures. How do I set this up?",
+      "expected_recommendations": [
+        "Start the hybrid server with both --enrich-formula and --enrich-picture-description flags",
+        "Run the client with --hybrid-mode full (required for enrichments to apply)",
+        "Warn that enrichments are silently skipped if --hybrid-mode full is omitted from the client command",
+        "Use --hybrid docling-fast as the backend"
+      ],
+      "must_mention": [
+        "--enrich-formula",
+        "--enrich-picture-description",
+        "--hybrid-mode full",
+        "hybrid"
+      ],
+      "must_not_mention": [
+        "enrichments work in auto mode",
+        "enrichments are client-side options"
+      ]
+    }
+  ]
+}

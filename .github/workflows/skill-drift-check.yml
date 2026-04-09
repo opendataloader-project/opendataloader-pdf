@@ -1,0 +1,34 @@
+# skill-drift-check.yml
+# Ensures skill references stay in sync with options.json when CLI options change.
+# Runs sync-skill-refs.py and fails the check if drift is detected (exit code 1).
+
+name: Skill Drift Check
+
+on:
+  push:
+    paths:
+      - 'options.json'
+  pull_request:
+    paths:
+      - 'options.json'
+  workflow_dispatch:
+
+jobs:
+  check-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Check skill drift
+        run: |
+          python skills/odl-pdf/scripts/sync-skill-refs.py
+          if [ $? -ne 0 ]; then
+            echo ""
+            echo "Drift detected: skill references are out of sync with options.json."
+            echo "Run 'python skills/odl-pdf/scripts/sync-skill-refs.py --fix' locally to update them."
+            exit 1
+          fi

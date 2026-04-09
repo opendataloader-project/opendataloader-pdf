@@ -451,6 +451,31 @@ Existing PDFs (untagged)
 
 [PDF Accessibility Guide](https://opendataloader.org/docs/accessibility-compliance)
 
+## Agent Skills
+
+Your AI coding agent knows how to use opendataloader-pdf — optimal options,
+hybrid mode setup, and quality diagnostics, all handled automatically.
+
+Works with **Claude Code**, **Codex**, **Gemini CLI**, **Cursor**, **VS Code**, and 26+ platforms via [agentskills.io](https://agentskills.io) spec.
+
+### What the Skill Does
+
+| Phase | Description |
+|-------|-------------|
+| **Discover** | Detects your OS, Java, Python, Node.js, and ODL installation |
+| **Prescribe** | Recommends optimal install method, options, format, and mode |
+| **Execute** | Generates ready-to-run commands or runs conversions directly |
+| **Diagnose** | Identifies quality issues and escalates (local → cluster → hybrid) |
+| **Optimize** | Tunes batch processing, RAG integration, and performance |
+
+### Install
+
+```bash
+npx skills add opendataloader-project/opendataloader-pdf --skill odl-pdf
+```
+
+Or use the `/odl-pdf` slash command in Claude Code after installing the plugin.
+
 ## Roadmap
 
 | Feature | Timeline | Tier |
