@@ -33,9 +33,9 @@ Choose your format based on what you're building:
 
 These options affect output when using image-bearing or multi-page formats:
 
-- `image-output` — Controls whether images are embedded (base64) or written to files (`dir`).
-- `image-format` — Image encoding format for extracted images (e.g., `png`, `jpeg`).
-- `image-dir` — Directory path for externalized images when `image-output=dir`.
+- `image-output` — Controls whether images are off, embedded (base64), or written to external files. Values: `off`, `embedded`, `external` (default).
+- `image-format` — Image encoding format for extracted images. Values: `png` (default), `jpeg`.
+- `image-dir` — Directory path for externalized images when `image-output=external`.
 - `*-page-separator` — Format-specific option to insert a custom separator between pages (e.g., `markdown-page-separator`, `text-page-separator`).
 
 ## Tips

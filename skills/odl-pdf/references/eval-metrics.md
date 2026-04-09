@@ -6,7 +6,7 @@ This document explains the metrics used in opendataloader-pdf benchmarks, how to
 
 ## Metrics
 
-### NID — Normalized Information Distance
+### NID — Normalized Indel Distance
 
 **What it measures:** Reading order accuracy. Quantifies how well the extracted text preserves the correct reading sequence compared to the ground truth.
 
@@ -180,7 +180,7 @@ Additional flags:
 ### Quick eval on your own documents
 
 ```bash
-python skills/odl-pdf/scripts/quick-eval.py
+python skills/odl-pdf/scripts/quick-eval.py extracted.md ground-truth.md
 ```
 
-This script runs a subset evaluation suitable for rapid iteration. It processes a small representative sample and reports per-metric scores without requiring the full benchmark corpus.
+This script compares an extracted file against a ground truth reference using text similarity (difflib by default, rapidfuzz if available). It reports a similarity score with pass/fail against a configurable threshold (default 0.85). Use `--verbose` for diff snippets.

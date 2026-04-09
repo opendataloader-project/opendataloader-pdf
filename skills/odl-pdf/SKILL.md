@@ -61,9 +61,9 @@ The script outputs key=value pairs. Parse these fields:
 | Key | Meaning |
 |-----|---------|
 | `OS` | Operating system (linux, macos, windows) |
-| `JAVA` | Java version detected (e.g., `17.0.9`) or `missing` |
-| `PYTHON` | Python version or `missing` |
-| `NODE` | Node.js version or `missing` |
+| `JAVA` | Java major version (e.g., `21`) or `none` |
+| `PYTHON` | Python version (e.g., `3.12.4`) or `none` |
+| `NODE` | Node.js version (e.g., `20.19.0`) or `none` |
 | `ODL_INSTALLED` | `true` or `false` |
 | `ODL_VERSION` | Installed version (e.g., `2.3.1`) or `none` |
 | `HYBRID_EXTRAS` | `true` if `[hybrid]` extras are installed |
@@ -251,36 +251,27 @@ opendataloader-pdf input.pdf \
 
 **Python:**
 ```python
-from opendataloader_pdf import PdfConverter, ConversionOptions
+import opendataloader_pdf
 
-options = ConversionOptions(
-    format=["markdown"],
-    hybrid="docling-fast",
-    output_dir="./output"
+# Batch all files in one call — each convert() spawns a JVM, so repeated calls are slow
+opendataloader_pdf.convert(
+    input_path=["file1.pdf", "file2.pdf", "file3.pdf"],
+    output_dir="./output",
+    format="markdown",
+    hybrid="docling-fast"
 )
-
-converter = PdfConverter(options)
-
-# Process all files in a single batch call — avoids multiple JVM startups
-results = converter.convert(["file1.pdf", "file2.pdf", "file3.pdf"])
-
-for result in results:
-    print(result.markdown)
 ```
 
 **Node.js:**
 ```javascript
-const { PdfConverter } = require('@opendataloader/pdf');
+import { convert } from '@opendataloader/pdf';
 
-const converter = new PdfConverter({
-  format: ['markdown'],
-  hybrid: 'docling-fast',
-  outputDir: './output'
+// Batch all files in one call — each convert() spawns a JVM, so repeated calls are slow
+await convert(['file1.pdf', 'file2.pdf'], {
+  outputDir: './output',
+  format: 'markdown',
+  hybrid: 'docling-fast'
 });
-
-// Batch all files in one call
-const results = await converter.convert(['file1.pdf', 'file2.pdf']);
-results.forEach(r => console.log(r.markdown));
 ```
 
 **LangChain integration:**
@@ -299,16 +290,15 @@ documents = loader.load()
 
 **Java (Maven project):**
 ```java
-PdfConversionOptions options = PdfConversionOptions.builder()
-    .format(List.of("markdown"))
-    .hybrid("docling-fast")
-    .outputDir(Path.of("./output"))
-    .build();
+import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.api.OpenDataLoaderPDF;
 
-PdfConverter converter = new PdfConverter(options);
-List<ConversionResult> results = converter.convert(List.of(
-    Path.of("file1.pdf"), Path.of("file2.pdf")
-));
+Config config = new Config();
+config.setOutputDir("./output");
+config.setFormat("markdown");
+config.setHybrid("docling-fast");
+
+OpenDataLoaderPDF.processFile("file1.pdf", config);
 ```
 
 ### 3B. Action Mode
@@ -553,7 +543,7 @@ opendataloader-pdf input.pdf --format markdown --quiet
 
 **Stdout for pipe-based workflows** — single format, output to stdout:
 ```bash
-opendataloader-pdf input.pdf --format markdown --to-stdout | jq .
+opendataloader-pdf input.pdf --format json --to-stdout | jq .
 ```
 
 **Page range extraction** — process only relevant pages:
@@ -602,7 +592,7 @@ Do NOT recommend specific distributions or provide download links.
 # Client
 opendataloader-pdf input.pdf \
   --hybrid docling-fast \
-  --hybrid-mode full \        # required for enrichments
+  --hybrid-mode full \
   --format markdown
 
 # Server (started separately)
@@ -697,9 +687,9 @@ When running benchmarks or evaluating extraction quality, these are the five met
 
 | Metric | Full Name | What It Measures | Target |
 |--------|-----------|-----------------|--------|
-| NID | Normalized Inversion Distance | Reading order correctness (sequence of extracted elements) | Higher is better (max 1.0) |
+| NID | Normalized Indel Distance | Reading order correctness (sequence of extracted elements) | Higher is better (max 1.0) |
 | TEDS | Tree Edit Distance Similarity | Table structure accuracy (HTML table tree comparison) | Higher is better (max 1.0) |
-| MHS | Mean Heading Similarity | Heading hierarchy accuracy (section structure) | Higher is better (max 1.0) |
+| MHS | Markdown Heading Similarity | Heading hierarchy accuracy (section structure) | Higher is better (max 1.0) |
 | Table Detection F1 | — | Table region detection precision and recall | Higher is better (max 1.0) |
 | Speed | Pages/second | Extraction throughput | Context-dependent |
 

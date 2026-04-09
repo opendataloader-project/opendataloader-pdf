@@ -6,7 +6,7 @@ Hybrid mode extends opendataloader-pdf by routing complex PDF pages to an extern
 
 ## Overview
 
-By default, opendataloader-pdf processes everything locally in Java. Hybrid mode adds a second processing path — a Python-based server running [docling-serve](https://github.com/DS4SD/docling-serve) — and routes pages between the two based on complexity.
+By default, opendataloader-pdf processes everything locally in Java. Hybrid mode adds a second processing path — a built-in Python server (`opendataloader-pdf-hybrid`) that uses the docling library internally — and routes pages between the two based on complexity.
 
 **When you need hybrid mode:**
 
@@ -25,10 +25,10 @@ Hybrid mode requires two running processes: the server and the client.
 **Terminal 1 — Start the hybrid server:**
 
 ```bash
-# Install the server component
-pip install opendataloader-pdf-hybrid
+# Install with hybrid extras (includes the server)
+pip install "opendataloader-pdf[hybrid]"
 
-# Start with defaults (port 5002)
+# Start the hybrid server (port 5002)
 opendataloader-pdf-hybrid --port 5002
 ```
 
@@ -81,7 +81,7 @@ Expected throughput with `full`: approximately 0.5 s/page (depends on backend an
 | `--hybrid <name>` | `off`, `docling-fast` | `off` | Select the backend. `off` disables hybrid mode entirely. |
 | `--hybrid-mode <mode>` | `auto`, `full` | `auto` | Page routing strategy. |
 | `--hybrid-url <url>` | Any URL | `http://localhost:5002` | Override the server URL for remote or non-default setups. |
-| `--hybrid-timeout <ms>` | Integer | — | Request timeout in milliseconds. Set to `0` to disable timeout. |
+| `--hybrid-timeout <ms>` | Integer | `0` (no timeout) | Request timeout in milliseconds. `0` means no timeout. |
 | `--hybrid-fallback` | Flag | Disabled | Fall back to the Java path if the backend returns an error. |
 
 ---

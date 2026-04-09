@@ -65,22 +65,22 @@ Add to your `pom.xml`:
 
 ```xml
 <dependency>
-    <groupId>io.opendataloader</groupId>
-    <artifactId>opendataloader-pdf</artifactId>
+    <groupId>org.opendataloader</groupId>
+    <artifactId>opendataloader-pdf-core</artifactId>
     <version>LATEST</version>
 </dependency>
 ```
 
-Replace `LATEST` with the specific version you want to pin. Check the [releases page](https://github.com/opendataloader/opendataloader-pdf/releases) for available versions.
+Replace `LATEST` with the specific version you want to pin. Check the [releases page](https://github.com/opendataloader-project/opendataloader-pdf/releases) for available versions.
 
 ## Version Compatibility
 
 | Method | Minimum Runtime | CLI Included |
 |---|---|---|
-| pip | Python 3.8+ | Yes |
-| pip [hybrid] | Python 3.8+ | Yes |
-| pip langchain | Python 3.8+, LangChain 0.1+ | Yes |
-| npm | Node.js 16+ | Yes |
+| pip | Python 3.10+ | Yes |
+| pip [hybrid] | Python 3.10+ | Yes |
+| pip langchain | Python 3.10+, LangChain 0.1+ | Yes |
+| npm | Node.js 20.19+ | Yes |
 | Maven | Java 11+ | No (library only) |
 
 All methods also require **Java 11+** regardless of the primary runtime.

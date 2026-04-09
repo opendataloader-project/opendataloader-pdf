@@ -15,7 +15,7 @@ detect_os() {
     Darwin*)          echo "macos"   ;;
     Linux*)           echo "linux"   ;;
     MINGW*|MSYS*|CYGWIN*) echo "windows" ;;
-    *)                echo "linux"   ;;  # best-effort fallback
+    *)                echo "unknown" ;;
   esac
 }
 
@@ -34,7 +34,7 @@ detect_java() {
   #   java version "1.8.0_401" ...
   #   openjdk version "11.0.22" ...
   local ver
-  ver="$(printf '%s' "${raw}" | grep -oE '"[^"]+"' | tr -d '"' | head -1)"
+  ver="$(printf '%s' "${raw}" | grep -oE '"[^"]+"' | tr -d '"' | head -1 || true)"
   if [[ -z "${ver}" ]]; then
     echo "none"
     return
@@ -45,7 +45,7 @@ detect_java() {
   else
     # Extract leading integer(s) before the first dot
     local major
-    major="$(printf '%s' "${ver}" | grep -oE '^[0-9]+')"
+    major="$(printf '%s' "${ver}" | grep -oE '^[0-9]+' || true)"
     echo "${major:-none}"
   fi
 }
@@ -67,7 +67,7 @@ detect_python() {
   raw="$("${cmd}" --version 2>&1 | head -1)"
   # e.g. "Python 3.12.4"
   local ver
-  ver="$(printf '%s' "${raw}" | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?'| head -1)"
+  ver="$(printf '%s' "${raw}" | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?' | head -1 || true)"
   echo "${ver:-none}"
 }
 
@@ -111,7 +111,7 @@ detect_odl() {
 
   if [[ -n "${cli_ver}" ]]; then
     installed="true"
-    version="$(printf '%s' "${cli_ver}" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)"
+    version="$(printf '%s' "${cli_ver}" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)"
     version="${version:-none}"
   elif [[ -n "${pycmd}" ]]; then
     # Try python -m opendataloader_pdf --version
@@ -119,7 +119,7 @@ detect_odl() {
     mod_ver="$("${pycmd}" -m opendataloader_pdf --version 2>/dev/null || true)"
     if [[ -n "${mod_ver}" ]]; then
       installed="true"
-      version="$(printf '%s' "${mod_ver}" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)"
+      version="$(printf '%s' "${mod_ver}" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)"
       version="${version:-none}"
     else
       # Last resort: importlib.metadata
@@ -137,7 +137,7 @@ detect_odl() {
 }
 
 # ---------------------------------------------------------------------------
-# Hybrid extras — check for docling_serve (primary indicator)
+# Hybrid extras — check for docling (primary indicator)
 # ---------------------------------------------------------------------------
 detect_hybrid_extras() {
   local pycmd=""
@@ -153,7 +153,7 @@ detect_hybrid_extras() {
   fi
 
   local result
-  result="$("${pycmd}" -c "import docling_serve; print('ok')" 2>/dev/null || true)"
+  result="$("${pycmd}" -c "import docling; print('ok')" 2>/dev/null || true)"
   if [[ "${result}" == "ok" ]]; then
     echo "HYBRID_EXTRAS=true"
   else

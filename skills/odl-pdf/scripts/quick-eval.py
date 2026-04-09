@@ -3,7 +3,7 @@
 
 Compares extracted text against a ground truth file and reports a similarity
 score. Uses difflib.SequenceMatcher from the Python standard library by default.
-If rapidfuzz is installed, it computes a more accurate Normalized Information
+If rapidfuzz is installed, it computes a more accurate Normalized Indel
 Distance (NID) score instead.
 
 Usage:
@@ -70,7 +70,7 @@ def compute_similarity_stdlib(extracted: str, ground_truth: str) -> float:
 def compute_similarity_rapidfuzz(extracted: str, ground_truth: str) -> float:
     """Return a similarity score in [0, 1] using rapidfuzz Levenshtein distance.
 
-    Computes Normalized Information Distance:
+    Computes Normalized Indel Distance:
         NID = edit_distance / max(len(a), len(b))
     The similarity score returned is 1 - NID, so higher is better.
     """

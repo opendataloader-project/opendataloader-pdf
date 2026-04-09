@@ -13,6 +13,10 @@ HYBRID_URL="${DEFAULT_URL}"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --url)
+      if [[ $# -lt 2 ]]; then
+        echo "Error: --url requires a value" >&2
+        exit 1
+      fi
       HYBRID_URL="$2"
       shift 2
       ;;
@@ -52,7 +56,7 @@ if [[ -z "${HTTP_STATUS}" || "${HTTP_STATUS}" == "000" || "${HTTP_STATUS}" == "n
   echo "HYBRID_URL=${HYBRID_URL}"
   echo "HYBRID_STATUS=none"
   echo ""
-  echo "Hybrid server is not running. Start it with: opendataloader-pdf-hybrid --port 5002"
+  echo "Hybrid server is not running at ${HYBRID_URL}. Start it with: opendataloader-pdf-hybrid"
   exit 0
 fi
 
