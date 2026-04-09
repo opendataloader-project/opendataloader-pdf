@@ -137,7 +137,7 @@ detect_odl() {
 }
 
 # ---------------------------------------------------------------------------
-# Hybrid extras — check for docling (primary indicator)
+# Hybrid extras — check for docling + fastapi + uvicorn (all required for hybrid server)
 # ---------------------------------------------------------------------------
 detect_hybrid_extras() {
   local pycmd=""
@@ -153,7 +153,7 @@ detect_hybrid_extras() {
   fi
 
   local result
-  result="$("${pycmd}" -c "import docling; print('ok')" 2>/dev/null || true)"
+  result="$("${pycmd}" -c "import docling, fastapi, uvicorn; print('ok')" 2>/dev/null || true)"
   if [[ "${result}" == "ok" ]]; then
     echo "HYBRID_EXTRAS=true"
   else
