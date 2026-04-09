@@ -42,8 +42,10 @@ function executeJar(args: string[], executionOptions: JarExecutionOptions = {}):
       const chunk = data.toString();
       if (streamOutput) {
         process.stdout.write(chunk);
+      } else {
+        // Only accumulate when not streaming to avoid double-write by the caller
+        stdout += chunk;
       }
-      stdout += chunk;
     });
 
     javaProcess.stderr.on('data', (data) => {
@@ -56,7 +58,9 @@ function executeJar(args: string[], executionOptions: JarExecutionOptions = {}):
 
     javaProcess.on('close', (code) => {
       if (code === 0) {
-        resolve(stdout);
+        // When streamOutput=true, content was already written to process.stdout in real-time.
+        // Return empty string to prevent callers from double-writing the same output.
+        resolve(streamOutput ? '' : stdout);
       } else {
         const errorOutput = stderr || stdout;
         const error = new Error(
