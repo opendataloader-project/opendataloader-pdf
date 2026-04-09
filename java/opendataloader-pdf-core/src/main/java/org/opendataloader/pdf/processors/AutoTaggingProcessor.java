@@ -198,7 +198,6 @@ public class AutoTaggingProcessor {
             isPDF2_0 ? TaggedPDFConstants.H + heading.getHeadingLevel() : TaggedPDFConstants.H,
             heading.getPageNumber());
         processTextNode(heading, headingObject);
-        addCaptionIfPresent(heading, headingObject, cosDocument);
     }
 
     private static void createParagraphStructElem(SemanticParagraph paragraph, COSObject parent, COSDocument cosDocument) {
@@ -407,7 +406,7 @@ public class AutoTaggingProcessor {
     private static void addKids(List<IObject> contents, COSObject parentStructElem, COSDocument cosDocument) {
         for (IObject content : contents) {
             if (content instanceof SemanticCaption) {
-                structElementIdToCaptionMap.put(((SemanticCaption) content).getLinkedContentId(),(SemanticCaption) content);
+                structElementIdToCaptionMap.put(((SemanticCaption) content).getLinkedContentId(), (SemanticCaption) content);
             }
         }
         for (IObject content : contents) {
@@ -424,9 +423,9 @@ public class AutoTaggingProcessor {
     }
 
     public static boolean isCaptionFirstChild(BoundingBox caption, BoundingBox parent) {
-        if (caption.getCenterY() > parent.getCenterY()) {
+        if (caption.getCenterY() > parent.getTopY()) {
             return true;
-        } else if (caption.getCenterY() < parent.getCenterY()) {
+        } else if (caption.getCenterY() < parent.getBottomY()) {
             return false;
         } else {
             return caption.getCenterX() < parent.getCenterX();
