@@ -8,9 +8,11 @@ on:
   push:
     paths:
       - 'options.json'
+      - 'skills/odl-pdf/scripts/sync-skill-refs.py'
   pull_request:
     paths:
       - 'options.json'
+      - 'skills/odl-pdf/scripts/sync-skill-refs.py'
   workflow_dispatch:
 
 permissions:
@@ -31,9 +33,13 @@ jobs:
           set +e
           python skills/odl-pdf/scripts/sync-skill-refs.py
           EXIT_CODE=$?
-          if [ $EXIT_CODE -ne 0 ]; then
+          if [ $EXIT_CODE -eq 1 ]; then
             echo ""
             echo "Drift detected: skill references are out of sync with options.json."
             echo "Update skills/odl-pdf/references/options-matrix.md to match options.json."
             exit 1
+          elif [ $EXIT_CODE -ne 0 ]; then
+            echo ""
+            echo "Drift check failed due to an input/script error (exit $EXIT_CODE)."
+            exit $EXIT_CODE
           fi
