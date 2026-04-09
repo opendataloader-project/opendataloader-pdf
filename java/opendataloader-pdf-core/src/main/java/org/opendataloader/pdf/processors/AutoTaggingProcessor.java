@@ -642,7 +642,7 @@ public class AutoTaggingProcessor {
         while (streamInfoIterator.hasNext()) {
             StreamInfo currentStreamInfo = streamInfoIterator.next();
             if (previousInfo.getOperatorIndex() == currentStreamInfo.getOperatorIndex() &&
-                previousInfo.getEndIndex() == currentStreamInfo.getStartIndex()) {
+                previousInfo.getEndIndex() <= currentStreamInfo.getStartIndex()) {
                 previousInfo.setEndIndex(currentStreamInfo.getEndIndex());
             } else {
                 streamInfoList.add(currentStreamInfo);
