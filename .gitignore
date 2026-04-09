@@ -75,5 +75,3 @@ logs/
 # Configuration files
 .claude/settings.local.json
 .claude/plans/
-
-skills/odl-pdf/scripts/__pycache__/

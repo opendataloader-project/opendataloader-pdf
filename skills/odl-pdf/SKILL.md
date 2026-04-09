@@ -363,9 +363,7 @@ When extraction quality is inadequate. Start with measurement, then escalate.
 Run the quick evaluation script against your output:
 
 ```bash
-python skills/odl-pdf/scripts/quick-eval.py \
-  --input output/document.json \
-  --reference ground-truth.json
+python skills/odl-pdf/scripts/quick-eval.py output/document.md ground-truth.md
 ```
 
 Or run the full benchmark to get NID, TEDS, and MHS scores:
@@ -686,6 +684,7 @@ Load these files progressively — only when entering the relevant topic. Do not
 | `references/options-matrix.md` | User needs detailed option documentation, defaults, or interactions |
 | `references/hybrid-guide.md` | User needs hybrid server setup, server-side flags, or remote deployment |
 | `references/format-guide.md` | User needs output format comparison, format-specific behavior, or format selection |
+| `references/eval-metrics.md` | User needs detailed metric definitions (NID, TEDS, MHS), benchmark scores, or diagnostic steps by metric |
 | `scripts/detect-env.sh` | Phase 1 environment detection — run at session start |
 | `scripts/quick-eval.py` | Phase 4 quality measurement — run when diagnosing extraction quality |
 | `evals/` | Benchmark baselines and regression thresholds |
