@@ -37,11 +37,17 @@ function executeJar(args: string[], executionOptions: JarExecutionOptions = {}):
 
     let stdout = '';
     let stderr = '';
+    let streamedStdoutTail = '';
+    const MAX_STDOUT_TAIL = 64 * 1024;
 
     javaProcess.stdout.on('data', (data) => {
       const chunk = data.toString();
       if (streamOutput) {
         process.stdout.write(chunk);
+        streamedStdoutTail += chunk;
+        if (streamedStdoutTail.length > MAX_STDOUT_TAIL) {
+          streamedStdoutTail = streamedStdoutTail.slice(-MAX_STDOUT_TAIL);
+        }
       } else {
         // Only accumulate when not streaming to avoid double-write by the caller
         stdout += chunk;
@@ -62,7 +68,7 @@ function executeJar(args: string[], executionOptions: JarExecutionOptions = {}):
         // Return empty string to prevent callers from double-writing the same output.
         resolve(streamOutput ? '' : stdout);
       } else {
-        const errorOutput = stderr || stdout;
+        const errorOutput = stderr || (streamOutput ? streamedStdoutTail : stdout);
         const error = new Error(
           `The opendataloader-pdf CLI exited with code ${code}.\n\n${errorOutput}`,
         );
