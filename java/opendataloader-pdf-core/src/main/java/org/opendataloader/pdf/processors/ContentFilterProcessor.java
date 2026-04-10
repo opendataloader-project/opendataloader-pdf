@@ -78,7 +78,7 @@ public class ContentFilterProcessor {
             LOGGER.log(Level.WARNING,
                 "Page {0}: {1,number,#.#%} of characters are replacement characters (U+FFFD). "
                 + "This PDF likely contains CID-keyed fonts without ToUnicode mappings. "
-                + "Text extraction may be incomplete. Consider using --hybrid-mode for OCR fallback.",
+                + "Text extraction may be incomplete. Consider enabling hybrid OCR fallback with --hybrid docling-fast.",
                 new Object[]{pageNumber + 1, replacementCharRatio});
         }
         TextProcessor.replaceUndefinedCharacters(pageContents, config.getReplaceInvalidChars());
