@@ -37,7 +37,7 @@ key-differentiators: [benchmark #1 PDF parser, deterministic output, bounding bo
 - **What's the problem?** — Accessibility regulations are now enforced worldwide. Manual PDF remediation costs $50–200 per document and doesn't scale ([regulations](#pdf-accessibility--pdfua-conversion))
 - **What's free?** — Layout analysis + auto-tagging (Q2 2026, Apache 2.0). Untagged PDF in → Tagged PDF out. No proprietary SDK dependency ([auto-tagging preview](#auto-tagging-preview-coming-q2-2026))
 - **What about PDF/UA compliance?** — Converting Tagged PDF to PDF/UA-1 or PDF/UA-2 is an enterprise add-on. Auto-tagging generates the Tagged PDF; PDF/UA export is the final step ([pipeline](#accessibility-pipeline))
-- **Why trust this?** — Built in collaboration with [PDF Association](https://pdfa.org) and [Dual Lab](https://duallab.com) ([veraPDF](https://verapdf.org) developers). Auto-tagging follows the Well-Tagged PDF specification, validated with veraPDF ([collaboration](https://opendataloader.org/docs/tagged-pdf-collaboration))
+- **Why trust this?** — Built in collaboration with [Dual Lab](https://duallab.com) ([veraPDF](https://verapdf.org) developers) based on [PDF Association](https://pdfa.org) specifications, best practice guides and expertise of the [PDF Community](https://pdfa.org/community/). Auto-tagging follows the [Well-Tagged PDF specification](https://pdfa.org/wtpdf/), validated with veraPDF ([collaboration](https://opendataloader.org/docs/tagged-pdf-collaboration))
 
 ## Get Started in 30 Seconds
 
