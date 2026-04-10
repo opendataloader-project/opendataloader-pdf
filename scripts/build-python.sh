@@ -4,7 +4,6 @@
 # For local development, use test-python.sh instead
 
 set -e
-
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$SCRIPT_DIR/.."
 PACKAGE_DIR="$ROOT_DIR/python/opendataloader-pdf"
