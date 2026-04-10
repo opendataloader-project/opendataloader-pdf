@@ -41,6 +41,7 @@ public class AutoTaggingProcessor {
         operatorIndexesToStreamInfosMap.clear();
         structParents.clear();
         structParentsIntegers.clear();
+        structElementIdToCaptionMap.clear();
         if (document.getVersion() == 2.0F) {
             isPDF2_0 = true;
         }
