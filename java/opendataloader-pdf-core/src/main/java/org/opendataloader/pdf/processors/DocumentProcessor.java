@@ -325,7 +325,7 @@ public class DocumentProcessor {
                 imagesDirectory = config.getImageDir();
             } else {
                 String fileName = Paths.get(inputPdfName).getFileName().toString();
-                String baseName = fileName.substring(0, fileName.length() - 4);
+                String baseName = fileName.substring(0, fileName.length() - 4).replace(" ", "_");
                 imagesDirectory = config.getOutputFolder() + File.separator + baseName + MarkdownSyntax.IMAGES_DIRECTORY_SUFFIX;
             }
             StaticLayoutContainers.setImagesDirectory(imagesDirectory);
