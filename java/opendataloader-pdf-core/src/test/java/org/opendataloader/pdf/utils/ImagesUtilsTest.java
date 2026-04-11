@@ -23,6 +23,8 @@ import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -96,6 +98,9 @@ class ImagesUtilsTest {
 
                 Path pngPath = Path.of(StaticLayoutContainers.getImagesDirectory(), "imageFile1.png");
                 assertTrue(Files.exists(pngPath), "PNG file created successfully");
+                BufferedImage image = ImageIO.read(pngPath.toFile());
+                assertNotNull(image, "PNG file should be readable");
+                assertTrue(image.getWidth() > 0 && image.getHeight() > 0, "PNG file should contain pixels");
             }
         } finally {
             Files.walk(tempDir)

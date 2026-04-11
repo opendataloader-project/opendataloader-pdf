@@ -275,14 +275,10 @@ public class ImagesUtils implements AutoCloseable {
     }
 
     @Override
-    public void close() {
+    public void close() throws IOException {
         releaseAllPageImages();
         if (pdfBoxDocument != null) {
-            try {
-                closePdfDocument();
-            } catch (IOException e) {
-                LOGGER.log(Level.WARNING, "Unable to close image extraction document: " + e.getMessage());
-            }
+            closePdfDocument();
         }
     }
 
