@@ -325,7 +325,6 @@ public class DocumentProcessor {
                 imagesDirectory = config.getImageDir();
             } else {
                 String fileName = Paths.get(inputPdfName).getFileName().toString();
-                String baseName = fileName.substring(0, fileName.length() - 4).replace(" ", "_");
 +               int dotIndex = fileName.lastIndexOf('.');
 +               String rawBaseName = dotIndex > 0 ? fileName.substring(0, dotIndex) : fileName;
 +               String baseName = rawBaseName.replace(" ", "_");
