@@ -329,8 +329,9 @@ public class DocumentProcessor {
                 imagesDirectory = config.getOutputFolder() + File.separator + baseName + MarkdownSyntax.IMAGES_DIRECTORY_SUFFIX;
             }
             StaticLayoutContainers.setImagesDirectory(imagesDirectory);
-            ImagesUtils imagesUtils = new ImagesUtils();
-            imagesUtils.write(contents, inputPdfName, config.getPassword());
+            try (ImagesUtils imagesUtils = new ImagesUtils()) {
+                imagesUtils.write(contents, inputPdfName, config.getPassword());
+            }
         }
         if (config.isGeneratePDF()) {
             PDFWriter pdfWriter = new PDFWriter();

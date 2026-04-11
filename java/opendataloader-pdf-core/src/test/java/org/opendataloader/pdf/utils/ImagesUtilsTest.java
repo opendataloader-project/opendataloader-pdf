@@ -15,6 +15,9 @@
  */
 package org.opendataloader.pdf.utils;
 
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.junit.jupiter.api.Test;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
@@ -65,31 +68,35 @@ class ImagesUtilsTest {
     }
 
     @Test
-    void testWriteImageInitializesContrastRatioConsumer() throws IOException {
+    void testWriteImageExtractsImageObject() throws IOException {
         StaticLayoutContainers.clearContainers();
         // Given
         Path tempDir = Files.createTempDirectory("htmlgen-test");
-        File testPdf = new File("../../samples/pdf/lorem.pdf");
+        File testPdf = new File("../../samples/pdf/chinese_scan.pdf");
         String outputFolder = tempDir.toString();
         // When
         try {
-            // Then - if ContrastRatioConsumer wasn't initialized,
-            // it would be null and cause NPE when used
             Path path = Paths.get(testPdf.getAbsolutePath());
-            ImagesUtils imagesUtils = new ImagesUtils();
-            assertNull(imagesUtils.getContrastRatioConsumer());
-            StaticLayoutContainers.setImagesDirectory(outputFolder + File.separator + path.getFileName().toString().substring(0, path.getFileName().toString().length() - 4) + "_images");
-            ImageChunk imageChunk = new ImageChunk(new BoundingBox(0));
-            // Initializing contrastRatioConsumer in writeImage()
-            imagesUtils.writeImage(imageChunk, testPdf.getAbsolutePath(),"");
-            assertNotNull(imagesUtils.getContrastRatioConsumer());
-            // Verify file was created
-            Path pngPath = Path.of(StaticLayoutContainers.getImagesDirectory(), "imageFile1.png");
-            // PNG file is created
-            assertTrue(Files.exists(pngPath), "PNG file created successfully");
+            try (ImagesUtils imagesUtils = new ImagesUtils()) {
+                StaticLayoutContainers.setImagesDirectory(outputFolder + File.separator + path.getFileName().toString().substring(0, path.getFileName().toString().length() - 4) + "_images");
+                BoundingBox pageImageBoundingBox;
+                try (PDDocument pdfDocument = Loader.loadPDF(testPdf)) {
+                    PDRectangle cropBox = pdfDocument.getPage(0).getCropBox();
+                    pageImageBoundingBox = new BoundingBox(
+                        0,
+                        cropBox.getLowerLeftX(),
+                        cropBox.getLowerLeftY(),
+                        cropBox.getUpperRightX(),
+                        cropBox.getUpperRightY()
+                    );
+                }
+                ImageChunk imageChunk = new ImageChunk(pageImageBoundingBox);
+                imagesUtils.writeImage(imageChunk, testPdf.getAbsolutePath(),"");
+
+                Path pngPath = Path.of(StaticLayoutContainers.getImagesDirectory(), "imageFile1.png");
+                assertTrue(Files.exists(pngPath), "PNG file created successfully");
+            }
         } finally {
-            // Cleanup
-            StaticLayoutContainers.closeContrastRatioConsumer();
             Files.walk(tempDir)
                 .sorted((a, b) -> b.compareTo(a))
                 .forEach(p -> {
