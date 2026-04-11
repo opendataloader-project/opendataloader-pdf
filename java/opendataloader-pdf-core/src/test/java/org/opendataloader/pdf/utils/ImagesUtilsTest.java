@@ -78,6 +78,7 @@ class ImagesUtilsTest {
         try {
             Path path = Paths.get(testPdf.getAbsolutePath());
             try (ImagesUtils imagesUtils = new ImagesUtils()) {
+                StaticLayoutContainers.setImageFormat("png");
                 StaticLayoutContainers.setImagesDirectory(outputFolder + File.separator + path.getFileName().toString().substring(0, path.getFileName().toString().length() - 4) + "_images");
                 BoundingBox pageImageBoundingBox;
                 try (PDDocument pdfDocument = Loader.loadPDF(testPdf)) {

@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -52,6 +53,8 @@ public class ImagesUtils implements AutoCloseable {
 
     private org.apache.pdfbox.pdmodel.PDDocument pdfBoxDocument;
     private final Map<Integer, List<PageImageReference>> pageImagesByNumber = new HashMap<>();
+    private String loadedPdfFilePath;
+    private String loadedPassword;
 
     public void createImagesDirectory(String path) {
         File directory = new File(path);
@@ -62,8 +65,12 @@ public class ImagesUtils implements AutoCloseable {
 
     public void write(List<List<IObject>> contents, String pdfFilePath, String password) {
         for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
-            for (IObject content : contents.get(pageNumber)) {
-                writeFromContents(content, pdfFilePath, password);
+            try {
+                for (IObject content : contents.get(pageNumber)) {
+                    writeFromContents(content, pdfFilePath, password);
+                }
+            } finally {
+                releasePageImages(pageNumber);
             }
         }
     }
@@ -216,12 +223,50 @@ public class ImagesUtils implements AutoCloseable {
 
     private void ensurePdfDocument(String pdfFilePath, String password) throws IOException {
         if (pdfBoxDocument != null) {
-            return;
+            if (Objects.equals(loadedPdfFilePath, pdfFilePath) && Objects.equals(loadedPassword, password)) {
+                return;
+            }
+            releaseAllPageImages();
+            closePdfDocument();
         }
         File pdfFile = new File(pdfFilePath);
         pdfBoxDocument = password != null && !password.isEmpty()
             ? Loader.loadPDF(pdfFile, password)
             : Loader.loadPDF(pdfFile);
+        loadedPdfFilePath = pdfFilePath;
+        loadedPassword = password;
+    }
+
+    private void releasePageImages(int pageIndex) {
+        List<PageImageReference> pageImages = pageImagesByNumber.remove(pageIndex);
+        if (pageImages == null) {
+            return;
+        }
+        for (PageImageReference pageImage : pageImages) {
+            pageImage.release();
+        }
+    }
+
+    private void releaseAllPageImages() {
+        for (List<PageImageReference> pageImages : pageImagesByNumber.values()) {
+            for (PageImageReference pageImage : pageImages) {
+                pageImage.release();
+            }
+        }
+        pageImagesByNumber.clear();
+    }
+
+    private void closePdfDocument() throws IOException {
+        if (pdfBoxDocument == null) {
+            return;
+        }
+        try {
+            pdfBoxDocument.close();
+        } finally {
+            pdfBoxDocument = null;
+            loadedPdfFilePath = null;
+            loadedPassword = null;
+        }
     }
 
     public static boolean isImageFileExists(String fileName) {
@@ -231,14 +276,12 @@ public class ImagesUtils implements AutoCloseable {
 
     @Override
     public void close() {
-        pageImagesByNumber.clear();
+        releaseAllPageImages();
         if (pdfBoxDocument != null) {
             try {
-                pdfBoxDocument.close();
+                closePdfDocument();
             } catch (IOException e) {
                 LOGGER.log(Level.WARNING, "Unable to close image extraction document: " + e.getMessage());
-            } finally {
-                pdfBoxDocument = null;
             }
         }
     }
@@ -275,6 +318,13 @@ public class ImagesUtils implements AutoCloseable {
                 }
             }
             return bufferedImage;
+        }
+
+        private void release() {
+            if (bufferedImage != null) {
+                bufferedImage.flush();
+                bufferedImage = null;
+            }
         }
     }
 
