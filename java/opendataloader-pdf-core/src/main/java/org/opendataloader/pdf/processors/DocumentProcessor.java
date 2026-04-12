@@ -93,7 +93,7 @@ public class DocumentProcessor {
         ContentSanitizer contentSanitizer = new ContentSanitizer(config.getFilterConfig().getFilterRules(),
             config.getFilterConfig().isFilterSensitiveData());
         contentSanitizer.sanitizeContents(contents);
-        generateOutputs(inputPdfName, contents, config);
+        generateOutputs(inputPdfName, contents, config, pagesToProcess);
     }
 
     /**
@@ -299,10 +299,10 @@ public class DocumentProcessor {
         return pagesToProcess == null || pagesToProcess.contains(pageNumber);
     }
 
-    private static void generateOutputs(String inputPdfName, List<List<IObject>> contents, Config config) throws IOException {
+    private static void generateOutputs(String inputPdfName, List<List<IObject>> contents, Config config, Set<Integer> pagesToProcess) throws IOException {
         // Dry-run mode: print extraction summary, skip all file I/O
         if (config.isDryRun()) {
-            printDryRunSummary(inputPdfName, contents, config);
+            printDryRunSummary(inputPdfName, contents, config, pagesToProcess);
             return;
         }
 
@@ -363,9 +363,9 @@ public class DocumentProcessor {
         }
     }
 
-    private static void printDryRunSummary(String inputPdfName, List<List<IObject>> contents, Config config) {
+    private static void printDryRunSummary(String inputPdfName, List<List<IObject>> contents, Config config, Set<Integer> pagesToProcess) {
         int totalPages = StaticContainers.getDocument().getNumberOfPages();
-        int processedPages = contents.size();
+        int processedPages = pagesToProcess == null ? totalPages : pagesToProcess.size();
         int totalElements = contents.stream().mapToInt(List::size).sum();
 
         List<String> formats = new java.util.ArrayList<>();
