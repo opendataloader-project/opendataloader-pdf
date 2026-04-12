@@ -243,6 +243,15 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "default": False,
         "description": "Write output to stdout instead of file (single format only)",
     },
+    {
+        "name": "dry-run",
+        "python_name": "dry_run",
+        "short_name": None,
+        "type": "boolean",
+        "required": False,
+        "default": False,
+        "description": "Parse and analyze the PDF without writing any output files. Prints a summary of what would be extracted (page count, element count, output formats)",
+    },
 ]
 
 

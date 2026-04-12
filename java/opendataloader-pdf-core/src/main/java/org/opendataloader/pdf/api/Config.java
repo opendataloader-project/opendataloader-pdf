@@ -865,6 +865,16 @@ public class Config {
         this.outputStdout = outputStdout;
     }
 
+    private boolean dryRun = false;
+
+    public boolean isDryRun() {
+        return dryRun;
+    }
+
+    public void setDryRun(boolean dryRun) {
+        this.dryRun = dryRun;
+    }
+
     /**
      * Returns true if any output format requires structured content
      * (reading order, heading levels, list detection, etc.).

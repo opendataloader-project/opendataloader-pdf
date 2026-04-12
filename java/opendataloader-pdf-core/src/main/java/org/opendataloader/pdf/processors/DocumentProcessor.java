@@ -300,6 +300,12 @@ public class DocumentProcessor {
     }
 
     private static void generateOutputs(String inputPdfName, List<List<IObject>> contents, Config config) throws IOException {
+        // Dry-run mode: print extraction summary, skip all file I/O
+        if (config.isDryRun()) {
+            printDryRunSummary(inputPdfName, contents, config);
+            return;
+        }
+
         // Stdout mode: write primary format to stdout, skip file I/O
         if (config.isOutputStdout()) {
             java.io.Writer stdoutWriter = new java.io.BufferedWriter(
@@ -355,6 +361,32 @@ public class DocumentProcessor {
                 textGenerator.writeToText(contents);
             }
         }
+    }
+
+    private static void printDryRunSummary(String inputPdfName, List<List<IObject>> contents, Config config) {
+        int totalPages = StaticContainers.getDocument().getNumberOfPages();
+        int processedPages = contents.size();
+        int totalElements = contents.stream().mapToInt(List::size).sum();
+
+        List<String> formats = new java.util.ArrayList<>();
+        if (config.isGenerateJSON()) formats.add("json");
+        if (config.isGenerateMarkdown()) formats.add("markdown");
+        if (config.isGenerateHtml()) formats.add("html");
+        if (config.isGenerateText()) formats.add("text");
+        if (config.isGeneratePDF()) formats.add("pdf");
+
+        String pagesDesc = (config.getPages() != null && !config.getPages().isEmpty())
+                ? config.getPages() + " (" + processedPages + " pages)"
+                : "all (" + totalPages + " pages)";
+
+        System.out.println("[dry-run] " + inputPdfName);
+        System.out.println("  Pages:         " + pagesDesc);
+        System.out.println("  Elements:      " + totalElements);
+        System.out.println("  Reading order: " + config.getReadingOrder());
+        System.out.println("  Table method:  " + config.getTableMethod());
+        System.out.println("  Formats:       " + (formats.isEmpty() ? "(none)" : String.join(", ", formats)));
+        System.out.println("  Output dir:    " + config.getOutputFolder());
+        System.out.println("No files written.");
     }
 
     /**

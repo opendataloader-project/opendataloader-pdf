@@ -140,6 +140,11 @@ public class CLIOptions {
     private static final String TO_STDOUT_LONG_OPTION = "to-stdout";
     private static final String TO_STDOUT_DESC = "Write output to stdout instead of file (single format only)";
 
+    // ===== Dry Run =====
+    private static final String DRY_RUN_LONG_OPTION = "dry-run";
+    private static final String DRY_RUN_DESC = "Parse and analyze the PDF without writing any output files. "
+            + "Prints a summary of what would be extracted (page count, element count, output formats)";
+
     // ===== Export Options (internal) =====
     public static final String EXPORT_OPTIONS_LONG_OPTION = "export-options";
 
@@ -188,6 +193,7 @@ public class CLIOptions {
             new OptionDefinition(HYBRID_TIMEOUT_LONG_OPTION, null, "string", "0", HYBRID_TIMEOUT_DESC, true),
             new OptionDefinition(HYBRID_FALLBACK_LONG_OPTION, null, "boolean", false, HYBRID_FALLBACK_DESC, true),
             new OptionDefinition(TO_STDOUT_LONG_OPTION, null, "boolean", false, TO_STDOUT_DESC, true),
+            new OptionDefinition(DRY_RUN_LONG_OPTION, null, "boolean", false, DRY_RUN_DESC, true),
             new OptionDefinition(EXPORT_OPTIONS_LONG_OPTION, null, "boolean", null, null, false),
 
             // Legacy options (not exported, for backward compatibility)
@@ -516,6 +522,9 @@ public class CLIOptions {
         }
         if (commandLine.hasOption(TO_STDOUT_LONG_OPTION)) {
             config.setOutputStdout(true);
+        }
+        if (commandLine.hasOption(DRY_RUN_LONG_OPTION)) {
+            config.setDryRun(true);
         }
     }
 

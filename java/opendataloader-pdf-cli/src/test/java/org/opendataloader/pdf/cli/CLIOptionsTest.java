@@ -464,4 +464,29 @@ class CLIOptionsTest {
         assertTrue(config.getHybridConfig().isFallbackToJava(),
             "hybrid fallback should be enabled when explicitly passed");
     }
+
+    @Test
+    void testDefineOptions_containsDryRunOption() {
+        assertTrue(options.hasOption("dry-run"));
+    }
+
+    @Test
+    void testCreateConfig_dryRunDefaultsFalse() throws ParseException {
+        String[] args = {testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertFalse(config.isDryRun(), "dry-run should be false by default");
+    }
+
+    @Test
+    void testCreateConfig_withDryRun() throws ParseException {
+        String[] args = {"--dry-run", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertTrue(config.isDryRun(), "dry-run should be true when flag is passed");
+    }
 }

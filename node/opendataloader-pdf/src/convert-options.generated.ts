@@ -57,6 +57,8 @@ export interface ConvertOptions {
   hybridFallback?: boolean;
   /** Write output to stdout instead of file (single format only) */
   toStdout?: boolean;
+  /** Parse and analyze the PDF without writing any output files. Prints a summary of what would be extracted (page count, element count, output formats) */
+  dryRun?: boolean;
 }
 
 /**
@@ -89,6 +91,7 @@ export interface CliOptions {
   hybridTimeout?: string;
   hybridFallback?: boolean;
   toStdout?: boolean;
+  dryRun?: boolean;
 }
 
 /**
@@ -174,6 +177,9 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   }
   if (cliOptions.toStdout) {
     convertOptions.toStdout = true;
+  }
+  if (cliOptions.dryRun) {
+    convertOptions.dryRun = true;
   }
 
   return convertOptions;
@@ -274,6 +280,9 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.toStdout) {
     args.push('--to-stdout');
+  }
+  if (options.dryRun) {
+    args.push('--dry-run');
   }
 
   return args;

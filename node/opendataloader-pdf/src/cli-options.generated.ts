@@ -33,4 +33,5 @@ export function registerCliOptions(program: Command): void {
   program.option('--hybrid-timeout <value>', 'Hybrid backend request timeout in milliseconds (0 = no timeout). Default: 0');
   program.option('--hybrid-fallback', 'Opt in to Java fallback on hybrid backend error (default: disabled)');
   program.option('--to-stdout', 'Write output to stdout instead of file (single format only)');
+  program.option('--dry-run', 'Parse and analyze the PDF without writing any output files. Prints a summary of what would be extracted (page count, element count, output formats)');
 }

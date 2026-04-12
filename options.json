@@ -207,6 +207,14 @@
       "required": false,
       "default": false,
       "description": "Write output to stdout instead of file (single format only)"
+    },
+    {
+      "name": "dry-run",
+      "shortName": null,
+      "type": "boolean",
+      "required": false,
+      "default": false,
+      "description": "Parse and analyze the PDF without writing any output files. Prints a summary of what would be extracted (page count, element count, output formats)"
     }
   ]
 }
