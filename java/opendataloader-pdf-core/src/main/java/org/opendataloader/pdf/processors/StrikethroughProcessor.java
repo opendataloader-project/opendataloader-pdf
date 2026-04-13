@@ -78,9 +78,9 @@ public class StrikethroughProcessor {
         }
 
         for (LineChunk line : horizontalLines) {
-            if (isTableBorderLine(line)) {
-                continue;
-            }
+//            if (isTableBorderLine(line)) {
+//                continue;
+//            }
 
             List<TextChunk> matchingChunks = new ArrayList<>();
             for (TextChunk textChunk : textChunks) {

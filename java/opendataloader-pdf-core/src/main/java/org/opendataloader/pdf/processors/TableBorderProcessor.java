@@ -72,6 +72,9 @@ public class TableBorderProcessor {
             for (IObject content : contents) {
                 TableBorder tableBorder = addContentToTableBorder(content);
                 if (tableBorder != null) {
+                    if (content instanceof LineChunk && tableBorder.isOneCellTable()) {
+                        continue;
+                    }
                     if (!processedTableBorders.contains(tableBorder)) {
                         processedTableBorders.add(tableBorder);
                         newContents.add(tableBorder);
@@ -98,7 +101,7 @@ public class TableBorderProcessor {
                 normalizedTables.put(border, normalizedTable);
                 // Remove the outer table while processing its contents, then restore the page index
                 // with the final instance so later lookups still see the normalized table.
-                StaticContainers.getTableBordersCollection().getTableBorders(pageNumber).add(normalizedTable);
+//                StaticContainers.getTableBordersCollection().getTableBorders(pageNumber).add(normalizedTable);
             }
             for (int index = 0; index < newContents.size(); index++) {
                 IObject content = newContents.get(index);
@@ -124,7 +127,7 @@ public class TableBorderProcessor {
         TableBorder tableBorder = StaticContainers.getTableBordersCollection().getTableBorder(content.getBoundingBox());
         if (tableBorder != null) {
             if (content instanceof LineChunk) {
-                return tableBorder.isOneCellTable() ? null : tableBorder;
+                return tableBorder;
             }
             if (content instanceof LineArtChunk && BoundingBox.areSameBoundingBoxes(tableBorder.getBoundingBox(), content.getBoundingBox())) {
                 return tableBorder;
