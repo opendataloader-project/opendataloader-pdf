@@ -71,7 +71,7 @@ async function main(): Promise<number> {
   }
 }
 
-main().then((code) => {
+await main().then((code) => {
   if (code !== 0) {
     process.exit(code);
   }
