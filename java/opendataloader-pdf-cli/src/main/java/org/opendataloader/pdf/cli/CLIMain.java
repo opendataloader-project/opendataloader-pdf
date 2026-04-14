@@ -16,10 +16,8 @@
 package org.opendataloader.pdf.cli;
 
 import org.apache.commons.cli.*;
-import org.opendataloader.pdf.api.AutoTagger;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.api.OpenDataLoaderPDF;
-import org.opendataloader.pdf.api.TaggingResult;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 
 import java.io.File;
@@ -71,36 +69,6 @@ public class CLIMain {
         }
 
         String[] arguments = commandLine.getArgs();
-
-        // Handle --format tagged-pdf as a standalone format before normal processing
-        String format = commandLine.getOptionValue(CLIOptions.FORMAT_LONG_OPTION);
-        if (format != null && format.trim().equalsIgnoreCase("tagged-pdf")) {
-            Config tagConfig;
-            try {
-                tagConfig = CLIOptions.createConfigFromCommandLine(commandLine);
-            } catch (IllegalArgumentException exception) {
-                System.out.println(exception.getMessage());
-                formatter.printHelp(HELP, options);
-                return 2;
-            }
-            for (String argument : arguments) {
-                try (TaggingResult result = AutoTagger.tag(argument, tagConfig)) {
-                    String baseName = new File(argument).getName();
-                    int dotIndex = baseName.lastIndexOf('.');
-                    baseName = dotIndex > 0 ? baseName.substring(0, dotIndex) : baseName;
-                    String outputDir = tagConfig.getOutputFolder() != null && !tagConfig.getOutputFolder().isEmpty()
-                            ? tagConfig.getOutputFolder()
-                            : new File(argument).getParent();
-                    new File(outputDir).mkdirs();
-                    result.saveTo(outputDir + File.separator + baseName + "_tagged.pdf");
-                } catch (Exception exception) {
-                    LOGGER.log(Level.SEVERE, "Exception during tagged-pdf processing of " + argument + ": " +
-                            exception.getMessage(), exception);
-                }
-            }
-            AutoTagger.shutdown();
-            return 0;
-        }
 
         Config config;
         boolean quiet;

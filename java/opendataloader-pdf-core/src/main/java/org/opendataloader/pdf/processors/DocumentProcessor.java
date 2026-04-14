@@ -89,7 +89,31 @@ public class DocumentProcessor {
      * @throws IOException if unable to process the file
      */
     public static ProcessingResult processFileWithResult(String inputPdfName, Config config) throws IOException {
-        // --- Extraction (steps 1-5): parsing + layout analysis + content extraction ---
+        // Phase 1: Extract
+        ExtractionResult extraction = extractContents(inputPdfName, config);
+
+        // Phase 2: Output (JSON/MD/HTML/PDF/Text)
+        long t0 = System.nanoTime();
+        generateOutputs(inputPdfName, extraction.getContents(), config);
+        long outputNs = System.nanoTime() - t0;
+
+        return new ProcessingResult(extraction.getHybridTimings(), extraction.getExtractionNs(), outputNs);
+    }
+
+    /**
+     * Run the extraction pipeline only (preprocessing + content extraction + sanitization).
+     * Does not generate any output files. The returned {@link ExtractionResult} can be
+     * passed to {@link org.opendataloader.pdf.api.AutoTagger} or used to generate
+     * specific output formats.
+     *
+     * <p>Structured processing (headings, lists, tables, captions) is always enabled
+     * because auto-tagging and all structured output formats depend on it.
+     *
+     * @param inputPdfName path to the input PDF file
+     * @param config       configuration
+     * @return extraction result with contents and timing metadata
+     */
+    public static ExtractionResult extractContents(String inputPdfName, Config config) throws IOException {
         long t0 = System.nanoTime();
         preprocessing(inputPdfName, config);
         calculateDocumentInfo();
@@ -102,62 +126,13 @@ public class DocumentProcessor {
         } else {
             contents = processDocument(inputPdfName, config, pagesToProcess);
         }
-        if (config.needsStructuredProcessing()) {
-            sortContents(contents, config);
-        }
+        sortContents(contents, config);
         ContentSanitizer contentSanitizer = new ContentSanitizer(config.getFilterConfig().getFilterRules(),
             config.getFilterConfig().isFilterSensitiveData());
         contentSanitizer.sanitizeContents(contents);
         long extractionNs = System.nanoTime() - t0;
 
-        // --- Output (step 6): auto-tagging + JSON/MD/HTML export ---
-        t0 = System.nanoTime();
-        generateOutputs(inputPdfName, contents, config);
-        long outputNs = System.nanoTime() - t0;
-
-        return new ProcessingResult(HybridDocumentProcessor.getLastHybridTimings(), extractionNs, outputNs);
-    }
-
-    /**
-     * Run the extraction pipeline only (preprocessing + content extraction + sanitization).
-     * Does not generate any output files. Used by {@link org.opendataloader.pdf.api.AutoTagger}.
-     *
-     * @param inputPdfName path to the input PDF file
-     * @param config       configuration
-     * @return extraction result with contents and timing metadata
-     */
-    public static ExtractionResult extractContents(String inputPdfName, Config config) throws IOException {
-        // Auto-tagging always needs structured processing (headings, lists, tables, captions).
-        // Temporarily enable a structured output flag so processDocument() runs HeadingProcessor etc.
-        boolean hadStructured = config.needsStructuredProcessing();
-        if (!hadStructured) {
-            config.setGenerateJSON(true);
-        }
-        try {
-            long t0 = System.nanoTime();
-            preprocessing(inputPdfName, config);
-            calculateDocumentInfo();
-            Set<Integer> pagesToProcess = getValidPageNumbers(config);
-            List<List<IObject>> contents;
-            if (StaticLayoutContainers.isUseStructTree()) {
-                contents = TaggedDocumentProcessor.processDocument(inputPdfName, config, pagesToProcess);
-            } else if (config.isHybridEnabled()) {
-                contents = HybridDocumentProcessor.processDocument(inputPdfName, config, pagesToProcess);
-            } else {
-                contents = processDocument(inputPdfName, config, pagesToProcess);
-            }
-            sortContents(contents, config);
-            ContentSanitizer contentSanitizer = new ContentSanitizer(config.getFilterConfig().getFilterRules(),
-                config.getFilterConfig().isFilterSensitiveData());
-            contentSanitizer.sanitizeContents(contents);
-            long extractionNs = System.nanoTime() - t0;
-
-            return new ExtractionResult(contents, extractionNs, HybridDocumentProcessor.getLastHybridTimings());
-        } finally {
-            if (!hadStructured) {
-                config.setGenerateJSON(false);
-            }
-        }
+        return new ExtractionResult(contents, extractionNs, HybridDocumentProcessor.getLastHybridTimings());
     }
 
     /**
@@ -278,7 +253,9 @@ public class DocumentProcessor {
                 }
             }
 
-            boolean structured = config.needsStructuredProcessing();
+            // Structured processing is always enabled — auto-tagging needs headings,
+            // lists, tables, and captions regardless of output format flags.
+            boolean structured = true;
 
             // ClusterTableProcessor: whole-document (must be sequential)
             if (structured && config.isClusterTableMethod()) {
@@ -404,6 +381,10 @@ public class DocumentProcessor {
             StaticLayoutContainers.setImagesDirectory(imagesDirectory);
             ImagesUtils imagesUtils = new ImagesUtils();
             imagesUtils.write(contents, inputPdfName, config.getPassword());
+        }
+        if (config.isGenerateTaggedPDF()) {
+            AutoTaggingProcessor.createTaggedPDF(inputPDF, config.getOutputFolder(),
+                StaticResources.getDocument(), contents);
         }
         if (config.isGeneratePDF()) {
             PDFWriter pdfWriter = new PDFWriter();

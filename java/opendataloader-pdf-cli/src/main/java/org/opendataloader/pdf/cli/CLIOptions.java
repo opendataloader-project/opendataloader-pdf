@@ -433,7 +433,7 @@ public class CLIOptions {
                     config.setAddImageToMarkdown(true);
                     break;
                 case "tagged-pdf":
-                    // Handled as a standalone format in CLIMain before config creation
+                    config.setGenerateTaggedPDF(true);
                     break;
                 default:
                     throw new IllegalArgumentException(String.format(
