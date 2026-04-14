@@ -4,7 +4,6 @@ import org.opendataloader.pdf.autotagging.ChunksWriter;
 import org.opendataloader.pdf.autotagging.OperatorStreamKey;
 import org.opendataloader.pdf.entities.EnrichedImageChunk;
 import org.opendataloader.pdf.entities.SemanticFormula;
-import org.opendataloader.pdf.entities.SemanticPicture;
 import org.verapdf.as.ASAtom;
 import org.verapdf.as.io.ASMemoryInStream;
 import org.verapdf.cos.*;
@@ -44,6 +43,8 @@ public class AutoTaggingProcessor {
     private static final Map<Long, SemanticCaption> structElementIdToCaptionMap = new HashMap<>();
     private static boolean isPDF2_0 = false;
     private static final int MAX_TOKENS_PER_STREAM = 100_000;
+    // imageChunkCounter is per-call; tracked via the figureObject index across a document
+    private static int imageChunkFigureCounter = 0;
 
     /**
      * Tag a PDF document in-memory without saving to disk.
@@ -319,40 +320,27 @@ public class AutoTaggingProcessor {
         // structParentsIntegers is populated by updatePages() which runs before this method.
         int annotStructParentKey = structParentsIntegers.isEmpty() ? 0
                 : structParentsIntegers.values().stream().mapToInt(Integer::intValue).max().getAsInt() + 1;
-        for (int pageNum = 0; pageNum < pages.size(); pageNum++) {
-            PDPage page = pages.get(pageNum);
+        for (int pageNumber = 0; pageNumber < pages.size(); pageNumber++) {
+            PDPage page = pages.get(pageNumber);
             List<PDAnnotation> annotations = page.getAnnotations();
             if (annotations == null) continue;
             boolean pageChanged = false;
             for (PDAnnotation annotation : annotations) {
-                if (!ASAtom.getASAtom("Link").equals(annotation.getSubtype())) continue;
                 COSObject annotObj = annotation.getObject();
                 if (annotObj == null || annotObj.empty()) continue;
-                // For indirect annotations, resolve the canonical COSObject via its key
-                // so that setKey writes go to the same instance that the writer will flush.
-                org.verapdf.cos.COSKey cosKey = annotObj.getObjectKey();
-                if (cosKey != null) {
-                    COSObject canonical = cosDocument.getObject(cosKey);
-                    if (canonical != null && !canonical.empty()) {
-                        annotObj = canonical;
-                    }
-                }
+                if (!ASAtom.LINK.equals(annotation.getSubtype())) continue;
                 // Get URI from action if available
                 String uriString = null;
                 try {
                     PDAction action = annotation.getA();
-                    if (action != null && action.getObject() != null && !action.getObject().empty()
-                            && ASAtom.getASAtom("URI").equals(action.getSubtype())) {
-                        COSObject uriObj = action.getObject().getKey(ASAtom.URI);
-                        if (uriObj != null && !uriObj.empty()) {
-                            uriString = uriObj.getString();
-                        }
+                    if (action != null && action.getObject() != null && ASAtom.URI.equals(action.getSubtype())) {
+                        uriString = action.getStringKey(ASAtom.URI);
                     }
                 } catch (Exception e) {
                     // ignore — URI not critical
                 }
                 // Create Link struct element
-                COSObject linkElem = addStructElement(seDocument, cosDocument, TaggedPDFConstants.LINK, pageNum);
+                COSObject linkElem = addStructElement(seDocument, cosDocument, TaggedPDFConstants.LINK, pageNumber);
                 // Set Alt text to URI or "Link"
                 String altText = uriString != null ? uriString : "Link";
                 linkElem.setKey(ASAtom.ALT, COSString.construct(altText.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
@@ -360,7 +348,8 @@ public class AutoTaggingProcessor {
                 int structParentInt = annotStructParentKey++;
                 annotObj.setKey(ASAtom.STRUCT_PARENT, COSInteger.construct(structParentInt));
                 // Set Contents on annotation if absent.
-                if (annotation.getContents() == null || annotation.getContents().isEmpty()) {
+                String contents = annotation.getContents();
+                if (contents == null || contents.isEmpty()) {
                     annotObj.setKey(ASAtom.CONTENTS,
                         COSString.construct(altText.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
                 }
@@ -369,7 +358,7 @@ public class AutoTaggingProcessor {
                 pageChanged = true;
                 // Create OBJR pointing to the annotation
                 COSObject objr = COSDictionary.construct();
-                objr.setKey(ASAtom.TYPE, COSName.construct(ASAtom.getASAtom("OBJR")));
+                objr.setKey(ASAtom.TYPE, COSName.construct(ASAtom.OBJR));
                 objr.setKey(ASAtom.OBJ, annotObj);
                 objr.setKey(ASAtom.PG, page.getObject());
                 COSObject kArray = COSArray.construct();
@@ -401,7 +390,7 @@ public class AutoTaggingProcessor {
         } else if (object instanceof TableBorder) {
             TableBorder table = (TableBorder) object;
             if (table.isTextBlock()) {
-                createAsideStructElemForTextBlock(table, parentStructElem, cosDocument);
+                createStructElemForTextBlock(table, parentStructElem, cosDocument);
             } else if (!table.isOneCellTable()) {
                 createTableStructElem(table, parentStructElem, cosDocument);
             }
@@ -437,8 +426,6 @@ public class AutoTaggingProcessor {
         createFigureStructElemReturning(image, parent, cosDocument);
     }
 
-    // imageChunkCounter is per-call; tracked via the figureObject index across a document
-    private static int imageChunkFigureCounter = 0;
 
     private static COSObject createFigureStructElemReturning(ImageChunk image, COSObject parent, COSDocument cosDocument) {
         COSObject figureObject = addStructElement(parent, cosDocument, TaggedPDFConstants.FIGURE, image.getPageNumber());
@@ -457,7 +444,7 @@ public class AutoTaggingProcessor {
     }
 
     private static void createFormulaStructElem(SemanticFormula formula, COSObject parent, COSDocument cosDocument) {
-        COSObject formulaObject = addStructElement(parent, cosDocument, "Formula", formula.getPageNumber());
+        COSObject formulaObject = addStructElement(parent, cosDocument, TaggedPDFConstants.FORMULA, formula.getPageNumber());
         double[] bbox = {formula.getLeftX(), formula.getBottomY(), formula.getRightX(), formula.getTopY()};
         addAttributeToStructElem(formulaObject, ASAtom.LAYOUT, ASAtom.BBOX, COSArray.construct(4, bbox));
         String altText = formula.getLatex().isEmpty() ? "formula" : formula.getLatex();
@@ -517,11 +504,11 @@ public class AutoTaggingProcessor {
             for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
                 TableBorderCell cell = row.getCell(colNumber);
                 if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
-                    String cellTag = isHeaderRow ? "TH" : TaggedPDFConstants.TD;
+                    String cellTag = isHeaderRow ? TaggedPDFConstants.TH : TaggedPDFConstants.TD;
                     COSObject cellObject = addStructElement(rowObject, cosDocument, cellTag, cell.getPageNumber());
                     if (isHeaderRow) {
                         addAttributeToStructElem(cellObject, ASAtom.TABLE,
-                            ASAtom.getASAtom("Scope"), COSName.construct(ASAtom.getASAtom("Column")));
+                            ASAtom.SCOPE, COSName.construct(ASAtom.getASAtom("Column")));
                     }
                     if (cell.getColSpan() != 1) {
                         addAttributeToStructElem(cellObject, ASAtom.TABLE, ASAtom.COL_SPAN, COSInteger.construct(cell.getColSpan()));
@@ -537,8 +524,8 @@ public class AutoTaggingProcessor {
         return tableObject;
     }
 
-    private static void createAsideStructElemForTextBlock(TableBorder table, COSObject parent, COSDocument cosDocument) {
-        COSObject partObject = addStructElement(parent, cosDocument, TaggedPDFConstants.ASIDE, table.getPageNumber());
+    private static void createStructElemForTextBlock(TableBorder table, COSObject parent, COSDocument cosDocument) {
+        COSObject partObject = addStructElement(parent, cosDocument, isPDF2_0 ? TaggedPDFConstants.ASIDE : TaggedPDFConstants.ART, table.getPageNumber());
         TableBorderCell cell = table.getCell(0,0);
         addKids(cell.getContents(), partObject, cosDocument);
         addCaptionIfPresent(table, partObject, cosDocument);

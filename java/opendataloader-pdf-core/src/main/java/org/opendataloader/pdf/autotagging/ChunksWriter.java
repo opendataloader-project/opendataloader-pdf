@@ -1,7 +1,6 @@
 package org.opendataloader.pdf.autotagging;
 
 import org.opendataloader.pdf.processors.AutoTaggingProcessor;
-import org.opendataloader.pdf.processors.PDFStreamWriter;
 import org.verapdf.as.ASAtom;
 import org.verapdf.as.io.ASInputStream;
 import org.verapdf.cos.*;
@@ -26,6 +25,8 @@ import java.io.InputStream;
 import java.util.*;
 
 public class ChunksWriter {
+
+    private static final java.util.logging.Logger CHUNKS_LOGGER = java.util.logging.Logger.getLogger(ChunksWriter.class.getName());
 
     private final ResourceHandler resourceHandler;
     private final GraphicsState graphicsState;
@@ -163,8 +164,6 @@ public class ChunksWriter {
         }
     }
 
-    private static final java.util.logging.Logger CHUNKS_LOGGER = java.util.logging.Logger.getLogger(ChunksWriter.class.getName());
-
     private static String getStructureType(Integer mcid, OperatorStreamKey operatorStreamKey) {
         if (mcid == null || operatorStreamKey == null) return null;
         List<COSObject> parents = AutoTaggingProcessor.getStructParents().get(operatorStreamKey);
@@ -226,11 +225,13 @@ public class ChunksWriter {
             if (!array.isEmpty()) {
                 StreamInfo peekInfo = streamInfoQueue.peek();
                 COSObject target = peekInfo != null ? map.get(peekInfo) : null;
-                if (target != null && target.get() instanceof COSArray) {
+                if (target != null && target.getType() == COSObjType.COS_ARRAY) {
                     COSArray currentArray = (COSArray) target.get();
                     for (COSObject element : array) {
                         currentArray.add(element);
                     }
+                } else {
+                    CHUNKS_LOGGER.warning("Issue during text operator processing");
                 }
             }
         }
