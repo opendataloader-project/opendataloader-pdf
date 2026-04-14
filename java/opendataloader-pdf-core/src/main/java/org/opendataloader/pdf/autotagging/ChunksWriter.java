@@ -48,6 +48,7 @@ public class ChunksWriter {
                     }
                 }
             } catch (IOException e) {
+                CHUNKS_LOGGER.warning("Failed to read content stream tokens: " + e.getMessage());
             }
         }
         return Collections.emptyList();
@@ -274,6 +275,7 @@ public class ChunksWriter {
                 }
             }
         } catch (IOException e) {
+            CHUNKS_LOGGER.warning("Failed to process font string: " + e.getMessage());
         }
         if (array != null && dif > 0) {
             array.add(COSString.construct(Arrays.copyOfRange(bytes, currentBytesIndex, currentBytesIndex + dif), string.isHexadecimal()));

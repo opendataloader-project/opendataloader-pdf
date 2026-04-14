@@ -21,6 +21,9 @@ public class TaggingResult implements AutoCloseable {
     private final JsonNode hybridTimings;
 
     public TaggingResult(PDDocument document, long extractionNs, long taggingNs, JsonNode hybridTimings) {
+        if (document == null) {
+            throw new IllegalArgumentException("document must not be null");
+        }
         this.document = document;
         this.extractionNs = extractionNs;
         this.taggingNs = taggingNs;

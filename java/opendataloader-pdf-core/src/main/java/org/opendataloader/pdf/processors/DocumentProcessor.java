@@ -128,36 +128,36 @@ public class DocumentProcessor {
      */
     public static ExtractionResult extractContents(String inputPdfName, Config config) throws IOException {
         // Auto-tagging always needs structured processing (headings, lists, tables, captions).
-        // Force a structured output flag so processDocument() runs HeadingProcessor etc.
+        // Temporarily enable a structured output flag so processDocument() runs HeadingProcessor etc.
         boolean hadStructured = config.needsStructuredProcessing();
         if (!hadStructured) {
             config.setGenerateJSON(true);
         }
+        try {
+            long t0 = System.nanoTime();
+            preprocessing(inputPdfName, config);
+            calculateDocumentInfo();
+            Set<Integer> pagesToProcess = getValidPageNumbers(config);
+            List<List<IObject>> contents;
+            if (StaticLayoutContainers.isUseStructTree()) {
+                contents = TaggedDocumentProcessor.processDocument(inputPdfName, config, pagesToProcess);
+            } else if (config.isHybridEnabled()) {
+                contents = HybridDocumentProcessor.processDocument(inputPdfName, config, pagesToProcess);
+            } else {
+                contents = processDocument(inputPdfName, config, pagesToProcess);
+            }
+            sortContents(contents, config);
+            ContentSanitizer contentSanitizer = new ContentSanitizer(config.getFilterConfig().getFilterRules(),
+                config.getFilterConfig().isFilterSensitiveData());
+            contentSanitizer.sanitizeContents(contents);
+            long extractionNs = System.nanoTime() - t0;
 
-        long t0 = System.nanoTime();
-        preprocessing(inputPdfName, config);
-        calculateDocumentInfo();
-        Set<Integer> pagesToProcess = getValidPageNumbers(config);
-        List<List<IObject>> contents;
-        if (StaticLayoutContainers.isUseStructTree()) {
-            contents = TaggedDocumentProcessor.processDocument(inputPdfName, config, pagesToProcess);
-        } else if (config.isHybridEnabled()) {
-            contents = HybridDocumentProcessor.processDocument(inputPdfName, config, pagesToProcess);
-        } else {
-            contents = processDocument(inputPdfName, config, pagesToProcess);
+            return new ExtractionResult(contents, extractionNs, HybridDocumentProcessor.getLastHybridTimings());
+        } finally {
+            if (!hadStructured) {
+                config.setGenerateJSON(false);
+            }
         }
-        sortContents(contents, config);
-
-        // Restore config
-        if (!hadStructured) {
-            config.setGenerateJSON(false);
-        }
-        ContentSanitizer contentSanitizer = new ContentSanitizer(config.getFilterConfig().getFilterRules(),
-            config.getFilterConfig().isFilterSensitiveData());
-        contentSanitizer.sanitizeContents(contents);
-        long extractionNs = System.nanoTime() - t0;
-
-        return new ExtractionResult(contents, extractionNs, HybridDocumentProcessor.getLastHybridTimings());
     }
 
     /**
