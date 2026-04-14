@@ -664,11 +664,11 @@ public class HybridDocumentProcessor {
                 enrichSingleTextNode((SemanticTextNode) obj, javaTextChunks, usedJavaIndices);
             } else if (obj instanceof TableBorder) {
                 TableBorder table = (TableBorder) obj;
-                for (int r = 0; r < table.getNumberOfRows(); r++) {
-                    TableBorderRow row = table.getRow(r);
-                    for (int c = 0; c < table.getNumberOfColumns(); c++) {
-                        TableBorderCell cell = row.getCell(c);
-                        if (cell.getRowNumber() == r && cell.getColNumber() == c) {
+                for (int rowNumber = 0; rowNumber < table.getNumberOfRows(); rowNumber++) {
+                    TableBorderRow row = table.getRow(rowNumber);
+                    for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
+                        TableBorderCell cell = row.getCell(colNumber);
+                        if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
                             enrichTextStreamInfosRecursive(cell.getContents(), javaTextChunks, usedJavaIndices);
                         }
                     }
@@ -700,8 +700,8 @@ public class HybridDocumentProcessor {
             TextChunk javaChunk = javaTextChunks.get(i);
             if (javaChunk.getStreamInfos().isEmpty()) continue;
 
-            double jCx = (javaChunk.getLeftX() + javaChunk.getRightX()) / 2.0;
-            double jCy = (javaChunk.getBottomY() + javaChunk.getTopY()) / 2.0;
+            double jCx = javaChunk.getCenterX();
+            double jCy = javaChunk.getCenterY();
 
             if (jCx >= nLeft - tol && jCx <= nRight + tol && jCy >= nBottom - tol && jCy <= nTop + tol) {
                 matched.add(javaChunk);
@@ -746,8 +746,8 @@ public class HybridDocumentProcessor {
 
             for (TextChunk javaChunk : javaTextChunks) {
                 if (javaChunk.getStreamInfos().isEmpty()) continue;
-                double jCx = (javaChunk.getLeftX() + javaChunk.getRightX()) / 2.0;
-                double jCy = (javaChunk.getBottomY() + javaChunk.getTopY()) / 2.0;
+                double jCx = javaChunk.getCenterX();
+                double jCy = javaChunk.getCenterY();
 
                 if (jCx >= fLeft - tol && jCx <= fRight + tol && jCy >= fBottom - tol && jCy <= fTop + tol) {
                     formula.getStreamInfos().addAll(javaChunk.getStreamInfos());
@@ -768,15 +768,13 @@ public class HybridDocumentProcessor {
 
         ImageChunk best = null;
         double bestDist = Double.MAX_VALUE;
-        double picCx = (picLeft + picRight) / 2.0;
-        double picCy = (picBottom + picTop) / 2.0;
 
         for (ImageChunk chunk : candidates) {
-            double cx = (chunk.getLeftX() + chunk.getRightX()) / 2.0;
-            double cy = (chunk.getBottomY() + chunk.getTopY()) / 2.0;
+            double cx = chunk.getCenterX();
+            double cy = chunk.getCenterY();
             // Center-point containment (with 1pt tolerance)
             if (cx >= picLeft - 1 && cx <= picRight + 1 && cy >= picBottom - 1 && cy <= picTop + 1) {
-                double dist = Math.hypot(cx - picCx, cy - picCy);
+                double dist = Math.hypot(cx - picture.getCenterX(), cy - picture.getCenterY());
                 if (dist < bestDist) {
                     bestDist = dist;
                     best = chunk;
