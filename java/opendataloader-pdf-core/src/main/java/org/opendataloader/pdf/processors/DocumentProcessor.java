@@ -324,16 +324,25 @@ public class DocumentProcessor {
                     if (structured) {
                         pageContents = ListProcessor.processListsFromTextNodes(pageContents);
                         HeadingProcessor.processHeadings(pageContents, false);
-                        CaptionProcessor.processCaptions(pageContents);
                     }
                     contents.set(pageNumber, pageContents);
                 })
             ).get();
 
-            // Sequential ID assignment (must be in page order)
+            // Sequential ID assignment (must be in page order, before CaptionProcessor)
             for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
                 if (shouldProcessPage(pageNumber, pagesToProcess)) {
                     setIDs(contents.get(pageNumber));
+                }
+            }
+
+            // Caption detection runs after setIDs so that recognizedStructureId is available
+            // for linking captions to figures/tables
+            if (structured) {
+                for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
+                    if (shouldProcessPage(pageNumber, pagesToProcess)) {
+                        CaptionProcessor.processCaptions(contents.get(pageNumber));
+                    }
                 }
             }
 
