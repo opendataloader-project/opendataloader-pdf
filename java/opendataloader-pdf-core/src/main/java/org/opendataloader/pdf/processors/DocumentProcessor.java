@@ -127,6 +127,13 @@ public class DocumentProcessor {
      * @return extraction result with contents and timing metadata
      */
     public static ExtractionResult extractContents(String inputPdfName, Config config) throws IOException {
+        // Auto-tagging always needs structured processing (headings, lists, tables, captions).
+        // Force a structured output flag so processDocument() runs HeadingProcessor etc.
+        boolean hadStructured = config.needsStructuredProcessing();
+        if (!hadStructured) {
+            config.setGenerateJSON(true);
+        }
+
         long t0 = System.nanoTime();
         preprocessing(inputPdfName, config);
         calculateDocumentInfo();
@@ -139,8 +146,11 @@ public class DocumentProcessor {
         } else {
             contents = processDocument(inputPdfName, config, pagesToProcess);
         }
-        if (config.needsStructuredProcessing()) {
-            sortContents(contents, config);
+        sortContents(contents, config);
+
+        // Restore config
+        if (!hadStructured) {
+            config.setGenerateJSON(false);
         }
         ContentSanitizer contentSanitizer = new ContentSanitizer(config.getFilterConfig().getFilterRules(),
             config.getFilterConfig().isFilterSensitiveData());
