@@ -35,9 +35,9 @@ import java.util.*;
 
 public class AutoTaggingProcessor {
 
-    private static final Map<OperatorStreamKey, Map<Integer, Set<StreamInfo>>> operatorIndexesToStreamInfosMap = new HashMap<>();
-    private static final Map<OperatorStreamKey, List<COSObject>> structParents = new HashMap<>();
-    private static final Map<OperatorStreamKey, Integer> structParentsIntegers = new HashMap<>();
+    private static final Map<OperatorStreamKey, Map<Integer, Set<StreamInfo>>> operatorIndexesToStreamInfosMap = new LinkedHashMap<>();
+    private static final Map<OperatorStreamKey, List<COSObject>> structParents = new LinkedHashMap<>();
+    private static final Map<OperatorStreamKey, Integer> structParentsIntegers = new LinkedHashMap<>();
     // annotation StructParent entries: int key -> single struct element (Link)
     private static final Map<Integer, COSObject> annotationStructParents = new HashMap<>();
     // Caption elements keyed by their linked content ID (Raman's approach from #377)
@@ -60,9 +60,7 @@ public class AutoTaggingProcessor {
         annotationStructParents.clear();
         structElementIdToCaptionMap.clear();
         imageChunkFigureCounter = 0;
-        if (document.getVersion() == 2.0F) {
-            isPDF2_0 = true;
-        }
+        isPDF2_0 = document.getVersion() == 2.0F;
         COSDocument cosDocument = document.getDocument();
         PDCatalog catalog = document.getCatalog();
         COSObject structTreeRoot = createStructTreeRoot(catalog, cosDocument, document);

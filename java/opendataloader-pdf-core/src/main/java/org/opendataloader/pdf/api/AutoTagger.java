@@ -60,14 +60,8 @@ public final class AutoTagger {
      * @throws IOException if unable to read or process the PDF
      */
     public static TaggingResult tag(String inputPdf, Config config) throws IOException {
-        // Force tag-only mode
-        config.setGenerateJSON(false);
-        config.setGenerateMarkdown(false);
-        config.setGenerateHtml(false);
-        config.setGenerateText(false);
-        config.setGeneratePDF(false);
-
-        // Extraction
+        // extractContents() handles structured processing internally;
+        // no need to mutate the caller's config — output flags are not used.
         ExtractionResult extraction = DocumentProcessor.extractContents(inputPdf, config);
 
         // Tagging (no save)

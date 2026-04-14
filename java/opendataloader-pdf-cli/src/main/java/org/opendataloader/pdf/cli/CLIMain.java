@@ -74,11 +74,7 @@ public class CLIMain {
 
         // Handle --format tagged-pdf as a standalone format before normal processing
         String format = commandLine.getOptionValue(CLIOptions.FORMAT_LONG_OPTION);
-        if (format != null && format.contains("tagged-pdf")) {
-            if (format.contains(",")) {
-                System.err.println("Error: --format tagged-pdf cannot be combined with other formats.");
-                System.exit(1);
-            }
+        if (format != null && format.trim().equalsIgnoreCase("tagged-pdf")) {
             Config tagConfig;
             try {
                 tagConfig = CLIOptions.createConfigFromCommandLine(commandLine);
@@ -90,7 +86,8 @@ public class CLIMain {
             for (String argument : arguments) {
                 try (TaggingResult result = AutoTagger.tag(argument, tagConfig)) {
                     String baseName = new File(argument).getName();
-                    baseName = baseName.substring(0, baseName.length() - 4);
+                    int dotIndex = baseName.lastIndexOf('.');
+                    baseName = dotIndex > 0 ? baseName.substring(0, dotIndex) : baseName;
                     String outputDir = tagConfig.getOutputFolder() != null && !tagConfig.getOutputFolder().isEmpty()
                             ? tagConfig.getOutputFolder()
                             : new File(argument).getParent();
