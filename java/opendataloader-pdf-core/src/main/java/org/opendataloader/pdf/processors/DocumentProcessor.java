@@ -119,6 +119,38 @@ public class DocumentProcessor {
     }
 
     /**
+     * Run the extraction pipeline only (preprocessing + content extraction + sanitization).
+     * Does not generate any output files. Used by {@link org.opendataloader.pdf.api.AutoTagger}.
+     *
+     * @param inputPdfName path to the input PDF file
+     * @param config       configuration
+     * @return extraction result with contents and timing metadata
+     */
+    public static ExtractionResult extractContents(String inputPdfName, Config config) throws IOException {
+        long t0 = System.nanoTime();
+        preprocessing(inputPdfName, config);
+        calculateDocumentInfo();
+        Set<Integer> pagesToProcess = getValidPageNumbers(config);
+        List<List<IObject>> contents;
+        if (StaticLayoutContainers.isUseStructTree()) {
+            contents = TaggedDocumentProcessor.processDocument(inputPdfName, config, pagesToProcess);
+        } else if (config.isHybridEnabled()) {
+            contents = HybridDocumentProcessor.processDocument(inputPdfName, config, pagesToProcess);
+        } else {
+            contents = processDocument(inputPdfName, config, pagesToProcess);
+        }
+        if (config.needsStructuredProcessing()) {
+            sortContents(contents, config);
+        }
+        ContentSanitizer contentSanitizer = new ContentSanitizer(config.getFilterConfig().getFilterRules(),
+            config.getFilterConfig().isFilterSensitiveData());
+        contentSanitizer.sanitizeContents(contents);
+        long extractionNs = System.nanoTime() - t0;
+
+        return new ExtractionResult(contents, extractionNs, HybridDocumentProcessor.getLastHybridTimings());
+    }
+
+    /**
      * Validates and filters page numbers from config against actual document pages.
      * Logs warnings for pages that don't exist in the document.
      *
