@@ -585,8 +585,10 @@ public class HybridDocumentProcessor {
                         ImageChunk matched = findMatchingImageChunk(picture, javaImageChunks);
                         if (matched != null) {
                             enriched.add(new EnrichedImageChunk(matched, picture.getDescription()));
+                        } else {
+                            LOGGER.fine(() -> "Page " + pageNumber + ": dropped SemanticPicture (no matching ImageChunk) at bbox ["
+                                + String.format("%.1f,%.1f,%.1f,%.1f", picture.getLeftX(), picture.getBottomY(), picture.getRightX(), picture.getTopY()) + "]");
                         }
-                        // If no match: drop (vector graphic not in filteredContents)
                     } else {
                         enriched.add(obj);
                     }
@@ -601,6 +603,11 @@ public class HybridDocumentProcessor {
                 enrichTextStreamInfos(backendPage, javaTextChunks);
                 enrichFormulaStreamInfos(backendPage, javaTextChunks);
             }
+
+            final int pg = pageNumber;
+            final int javaTotal = javaTextChunks.size();
+            LOGGER.fine(() -> "Page " + pg + ": enrichment complete — "
+                + javaTotal + " Java TextChunks available");
         }
     }
 
@@ -709,6 +716,9 @@ public class HybridDocumentProcessor {
                 newCol.add(new TextLine(tc));
             }
             textNode.getColumns().add(newCol);
+        } else {
+            LOGGER.fine(() -> "enrichSingleTextNode: no Java TextChunk matched for backend node at bbox ["
+                + String.format("%.1f,%.1f,%.1f,%.1f", nLeft, nBottom, nRight, nTop) + "]");
         }
     }
 
