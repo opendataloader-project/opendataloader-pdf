@@ -386,7 +386,6 @@ public class DocumentProcessor {
             ImagesUtils imagesUtils = new ImagesUtils();
             imagesUtils.write(contents, inputPdfName, config.getPassword());
         }
-        AutoTaggingProcessor.createTaggedPDF(inputPDF, config.getOutputFolder(), StaticResources.getDocument(), contents);
         if (config.isGeneratePDF()) {
             PDFWriter pdfWriter = new PDFWriter();
             pdfWriter.updatePDF(inputPDF, config.getPassword(), config.getOutputFolder(), contents);
