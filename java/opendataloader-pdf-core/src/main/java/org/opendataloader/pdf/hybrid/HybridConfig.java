@@ -38,6 +38,9 @@ public class HybridConfig {
     /** Default URL for Hancom Document AI API. */
     public static final String HANCOM_DEFAULT_URL = "https://dataloader.cloud.hancom.com/studio-lite/api";
 
+    /** Default URL for Hancom AI HOCR SDK API. */
+    public static final String HANCOM_AI_DEFAULT_URL = "http://localhost:18008/api/v1";
+
     private String url;
     private int timeoutMs = DEFAULT_TIMEOUT_MS;
     private boolean fallbackToJava = false;
@@ -152,6 +155,9 @@ public class HybridConfig {
         }
         if ("hancom".equals(lowerHybrid)) {
             return HANCOM_DEFAULT_URL;
+        }
+        if ("hancom-ai".equals(lowerHybrid)) {
+            return HANCOM_AI_DEFAULT_URL;
         }
         // azure, google require explicit URL
         return null;
