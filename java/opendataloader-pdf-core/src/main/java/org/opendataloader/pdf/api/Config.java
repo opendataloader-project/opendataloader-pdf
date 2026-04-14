@@ -63,6 +63,7 @@ public class Config {
     private boolean keepLineBreaks = false;
     private boolean isGenerateJSON = true;
     private boolean isGenerateText = false;
+    private boolean isGenerateTaggedPDF = false;
     private boolean useStructTree = false;
     private boolean useHTMLInMarkdown = false;
     private boolean addImageToMarkdown = false;
@@ -265,6 +266,14 @@ public class Config {
      */
     public void setGenerateText(boolean generateText) {
         isGenerateText = generateText;
+    }
+
+    public boolean isGenerateTaggedPDF() {
+        return isGenerateTaggedPDF;
+    }
+
+    public void setGenerateTaggedPDF(boolean generateTaggedPDF) {
+        isGenerateTaggedPDF = generateTaggedPDF;
     }
 
     /**

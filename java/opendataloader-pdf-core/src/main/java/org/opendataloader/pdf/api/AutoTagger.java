@@ -60,11 +60,22 @@ public final class AutoTagger {
      * @throws IOException if unable to read or process the PDF
      */
     public static TaggingResult tag(String inputPdf, Config config) throws IOException {
-        // extractContents() handles structured processing internally;
-        // no need to mutate the caller's config — output flags are not used.
         ExtractionResult extraction = DocumentProcessor.extractContents(inputPdf, config);
+        return tag(inputPdf, extraction);
+    }
 
-        // Tagging (no save)
+    /**
+     * Tag a PDF document from a previously computed {@link ExtractionResult}.
+     * Use this when you need both tagged PDF and other output formats from the
+     * same extraction — call {@link DocumentProcessor#extractContents} once,
+     * then pass the result here and to other output generators.
+     *
+     * @param inputPdf   path to the input PDF file (used for metadata)
+     * @param extraction pre-computed extraction result
+     * @return result containing the tagged PDDocument and timing metadata
+     * @throws IOException if unable to tag the document
+     */
+    public static TaggingResult tag(String inputPdf, ExtractionResult extraction) throws IOException {
         long t0 = System.nanoTime();
         PDDocument document = StaticResources.getDocument();
         AutoTaggingProcessor.tagDocument(new File(inputPdf), document, extraction.getContents());
