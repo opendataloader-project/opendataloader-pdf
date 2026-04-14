@@ -45,7 +45,15 @@ public class AutoTaggingProcessor {
     private static boolean isPDF2_0 = false;
     private static final int MAX_TOKENS_PER_STREAM = 100_000;
 
-    public static synchronized void createTaggedPDF(File inputPDF, String outputFolder, PDDocument document, List<List<IObject>> contents) throws IOException {
+    /**
+     * Tag a PDF document in-memory without saving to disk.
+     * Adds structure tree, marked content references, and parent tree to the document.
+     *
+     * @param inputPDF  the original PDF file (used for metadata only)
+     * @param document  the PDDocument to tag (modified in place)
+     * @param contents  extracted content by page
+     */
+    public static synchronized void tagDocument(File inputPDF, PDDocument document, List<List<IObject>> contents) throws IOException {
         operatorIndexesToStreamInfosMap.clear();
         structParents.clear();
         structParentsIntegers.clear();
@@ -63,6 +71,13 @@ public class AutoTaggingProcessor {
         createLinkAnnotationStructElements(document, cosDocument, seDocument);
         createParentTree(cosDocument, structTreeRoot);
         cosDocument.getTrailer().removeKey(ASAtom.ENCRYPT);
+    }
+
+    /**
+     * Tag a PDF document and save to disk. Existing behavior preserved.
+     */
+    public static synchronized void createTaggedPDF(File inputPDF, String outputFolder, PDDocument document, List<List<IObject>> contents) throws IOException {
+        tagDocument(inputPDF, document, contents);
         String outputFileName = outputFolder + File.separator +
             inputPDF.getName().substring(0, inputPDF.getName().length() - 4) + "_tagged.pdf";
         document.saveAs(outputFileName);
