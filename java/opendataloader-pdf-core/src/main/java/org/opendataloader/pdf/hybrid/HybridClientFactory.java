@@ -48,6 +48,9 @@ public class HybridClientFactory {
     /** Backend type constant for Hancom (not yet implemented). */
     public static final String BACKEND_HANCOM = "hancom";
 
+    /** Backend type constant for Hancom AI (HOCR SDK individual modules). */
+    public static final String BACKEND_HANCOM_AI = "hancom-ai";
+
     /** Backend type constant for Azure (not yet implemented). */
     public static final String BACKEND_AZURE = "azure";
 
@@ -91,6 +94,8 @@ public class HybridClientFactory {
             return new DoclingFastServerClient(config);
         } else if (BACKEND_HANCOM.equals(hybrid)) {
             return new HancomClient(config);
+        } else if (BACKEND_HANCOM_AI.equals(hybrid)) {
+            return new HancomAIClient(config);
         } else if (BACKEND_AZURE.equals(hybrid)) {
             throw new UnsupportedOperationException("Azure Document Intelligence backend is not yet implemented");
         } else if (BACKEND_GOOGLE.equals(hybrid)) {
@@ -140,6 +145,8 @@ public class HybridClientFactory {
                 ((DoclingFastServerClient) client).shutdown();
             } else if (client instanceof HancomClient) {
                 ((HancomClient) client).shutdown();
+            } else if (client instanceof HancomAIClient) {
+                ((HancomAIClient) client).shutdown();
             }
         }
         CLIENT_CACHE.clear();
@@ -157,7 +164,8 @@ public class HybridClientFactory {
         }
 
         String lowerHybrid = hybrid.toLowerCase();
-        return BACKEND_DOCLING_FAST.equals(lowerHybrid) || BACKEND_HANCOM.equals(lowerHybrid);
+        return BACKEND_DOCLING_FAST.equals(lowerHybrid) || BACKEND_HANCOM.equals(lowerHybrid)
+            || BACKEND_HANCOM_AI.equals(lowerHybrid);
     }
 
     /**
@@ -166,7 +174,7 @@ public class HybridClientFactory {
      * @return A string listing all supported backends.
      */
     public static String getSupportedBackends() {
-        return String.join(", ", BACKEND_DOCLING_FAST, BACKEND_HANCOM);
+        return String.join(", ", BACKEND_DOCLING_FAST, BACKEND_HANCOM, BACKEND_HANCOM_AI);
     }
 
     /**

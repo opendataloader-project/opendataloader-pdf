@@ -42,6 +42,8 @@ public class Config {
     public static final String HYBRID_DOCLING_FAST = "docling-fast";
     /** Hybrid mode: hancom backend (Hancom Document AI). */
     public static final String HYBRID_HANCOM = "hancom";
+    /** Hybrid mode: hancom-ai backend (Hancom AI HOCR SDK — individual modules). */
+    public static final String HYBRID_HANCOM_AI = "hancom-ai";
     /** Hybrid mode: azure backend (Azure Document Intelligence). */
     public static final String HYBRID_AZURE = "azure";
     /** Hybrid mode: google backend (Google Document AI). */
@@ -119,6 +121,7 @@ public class Config {
         hybridOptions.add(HYBRID_DOCLING);
         hybridOptions.add(HYBRID_DOCLING_FAST);  // deprecated alias
         hybridOptions.add(HYBRID_HANCOM);
+        hybridOptions.add(HYBRID_HANCOM_AI);
         // azure, google added when implemented
         hybridModeOptions.add(HYBRID_MODE_AUTO);
         hybridModeOptions.add(HYBRID_MODE_FULL);
