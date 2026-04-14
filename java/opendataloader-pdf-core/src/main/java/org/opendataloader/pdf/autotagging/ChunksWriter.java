@@ -223,9 +223,13 @@ public class ChunksWriter {
                 }
             }
             if (!array.isEmpty()) {
-                COSArray currentArray = ((COSArray)map.get(streamInfoQueue.peek()).get());
-                for (COSObject element : array) {
-                    currentArray.add(element);
+                StreamInfo peekInfo = streamInfoQueue.peek();
+                COSObject target = peekInfo != null ? map.get(peekInfo) : null;
+                if (target != null && target.get() instanceof COSArray) {
+                    COSArray currentArray = (COSArray) target.get();
+                    for (COSObject element : array) {
+                        currentArray.add(element);
+                    }
                 }
             }
         }

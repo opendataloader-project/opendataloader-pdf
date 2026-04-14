@@ -21,12 +21,14 @@ import org.opendataloader.pdf.entities.EnrichedImageChunk;
 import org.opendataloader.pdf.entities.SemanticFormula;
 import org.opendataloader.pdf.entities.SemanticPicture;
 import org.opendataloader.pdf.hybrid.DoclingSchemaTransformer;
+import org.opendataloader.pdf.hybrid.HancomAISchemaTransformer;
 import org.opendataloader.pdf.hybrid.HancomSchemaTransformer;
 import org.opendataloader.pdf.hybrid.HybridClient;
 import org.opendataloader.pdf.hybrid.HybridClientFactory;
 import org.opendataloader.pdf.hybrid.HybridClient.HybridRequest;
 import org.opendataloader.pdf.hybrid.HybridClient.HybridResponse;
 import org.opendataloader.pdf.hybrid.HybridClient.OutputFormat;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.opendataloader.pdf.hybrid.HybridConfig;
 import org.opendataloader.pdf.hybrid.HybridSchemaTransformer;
 import org.opendataloader.pdf.hybrid.TriageLogger;
@@ -83,6 +85,17 @@ public class HybridDocumentProcessor {
     private static final Logger LOGGER = Logger.getLogger(HybridDocumentProcessor.class.getCanonicalName());
 
     /**
+     * Stores the last hybrid server timings collected during {@link #processBackendPath}.
+     * Accumulated across all chunks. Reset at the start of each {@code processDocument} call.
+     */
+    private static volatile JsonNode lastHybridTimings;
+
+    /** Returns the hybrid server timings from the most recent {@link #processDocument} call. */
+    public static JsonNode getLastHybridTimings() {
+        return lastHybridTimings;
+    }
+
+    /**
      * Maximum number of pages to send to the backend in a single request.
      * Large scanned PDFs (100+ pages) cause the backend to hang when sent all at once
      * due to non-linear memory/processing scaling in the AI pipeline.
@@ -128,6 +141,8 @@ public class HybridDocumentProcessor {
             Config config,
             Set<Integer> pagesToProcess,
             Path outputDir) throws IOException {
+
+        lastHybridTimings = null; // Reset for this processing run
 
         int totalPages = StaticContainers.getDocument().getNumberOfPages();
         LOGGER.log(Level.INFO, "Starting hybrid processing for {0} pages", totalPages);
@@ -427,6 +442,12 @@ public class HybridDocumentProcessor {
                 HybridRequest request = HybridRequest.forPages(pdfBytes, chunkPages1Indexed, outputFormats);
                 HybridResponse response = client.convert(request);
 
+                // Capture hybrid server pipeline timings (last chunk wins for now;
+                // in single-chunk documents this is exact)
+                if (response.getTimings() != null) {
+                    lastHybridTimings = response.getTimings();
+                }
+
                 // Collect failed pages (convert from 1-indexed to 0-indexed)
                 if (response.hasFailedPages()) {
                     for (int failedPage1Indexed : response.getFailedPages()) {
@@ -507,6 +528,11 @@ public class HybridDocumentProcessor {
         // hancom uses HancomSchemaTransformer
         if (Config.HYBRID_HANCOM.equals(hybrid)) {
             return new HancomSchemaTransformer();
+        }
+
+        // hancom-ai uses HancomAISchemaTransformer
+        if (Config.HYBRID_HANCOM_AI.equals(hybrid)) {
+            return new HancomAISchemaTransformer();
         }
 
         throw new IllegalArgumentException("Unsupported hybrid backend: " + hybrid);

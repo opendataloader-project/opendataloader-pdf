@@ -76,6 +76,21 @@ public class DocumentProcessor {
      * @throws IOException if unable to process the file
      */
     public static void processFile(String inputPdfName, Config config) throws IOException {
+        processFileWithResult(inputPdfName, config);
+    }
+
+    /**
+     * Processes a PDF file and returns a {@link ProcessingResult} containing
+     * metadata collected during processing (e.g., hybrid server timings).
+     *
+     * @param inputPdfName the path to the input PDF file
+     * @param config the configuration settings
+     * @return processing result with optional metadata
+     * @throws IOException if unable to process the file
+     */
+    public static ProcessingResult processFileWithResult(String inputPdfName, Config config) throws IOException {
+        // --- Extraction (steps 1-5): parsing + layout analysis + content extraction ---
+        long t0 = System.nanoTime();
         preprocessing(inputPdfName, config);
         calculateDocumentInfo();
         Set<Integer> pagesToProcess = getValidPageNumbers(config);
@@ -93,7 +108,14 @@ public class DocumentProcessor {
         ContentSanitizer contentSanitizer = new ContentSanitizer(config.getFilterConfig().getFilterRules(),
             config.getFilterConfig().isFilterSensitiveData());
         contentSanitizer.sanitizeContents(contents);
+        long extractionNs = System.nanoTime() - t0;
+
+        // --- Output (step 6): auto-tagging + JSON/MD/HTML export ---
+        t0 = System.nanoTime();
         generateOutputs(inputPdfName, contents, config);
+        long outputNs = System.nanoTime() - t0;
+
+        return new ProcessingResult(HybridDocumentProcessor.getLastHybridTimings(), extractionNs, outputNs);
     }
 
     /**
