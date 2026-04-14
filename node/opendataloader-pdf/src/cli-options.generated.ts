@@ -9,7 +9,7 @@ import { Command } from 'commander';
 export function registerCliOptions(program: Command): void {
   program.option('-o, --output-dir <value>', 'Directory where output files are written. Default: input file directory');
   program.option('-p, --password <value>', 'Password for encrypted PDF files');
-  program.option('-f, --format <value>', 'Output formats (comma-separated). Values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images. Default: json');
+  program.option('-f, --format <value>', 'Output formats (comma-separated). Values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images, tagged-pdf. Default: json');
   program.option('-q, --quiet', 'Suppress console logging output');
   program.option('--content-safety-off <value>', 'Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg');
   program.option('--sanitize', 'Enable sensitive data sanitization. Replaces emails, phone numbers, IPs, credit cards, and URLs with placeholders');
