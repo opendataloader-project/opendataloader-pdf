@@ -403,7 +403,7 @@ public class AutoTaggingProcessor {
         } else if (object instanceof TableBorder) {
             TableBorder table = (TableBorder) object;
             if (table.isTextBlock()) {
-                createPartStructElemForTextBlock(table, parentStructElem, cosDocument);
+                createAsideStructElemForTextBlock(table, parentStructElem, cosDocument);
             } else if (!table.isOneCellTable()) {
                 createTableStructElem(table, parentStructElem, cosDocument);
             }
@@ -539,8 +539,8 @@ public class AutoTaggingProcessor {
         return tableObject;
     }
 
-    private static void createPartStructElemForTextBlock(TableBorder table, COSObject parent, COSDocument cosDocument) {
-        COSObject partObject = addStructElement(parent, cosDocument, TaggedPDFConstants.PART, table.getPageNumber());
+    private static void createAsideStructElemForTextBlock(TableBorder table, COSObject parent, COSDocument cosDocument) {
+        COSObject partObject = addStructElement(parent, cosDocument, TaggedPDFConstants.ASIDE, table.getPageNumber());
         TableBorderCell cell = table.getCell(0,0);
         addKids(cell.getContents(), partObject, cosDocument);
         addCaptionIfPresent(table, partObject, cosDocument);
