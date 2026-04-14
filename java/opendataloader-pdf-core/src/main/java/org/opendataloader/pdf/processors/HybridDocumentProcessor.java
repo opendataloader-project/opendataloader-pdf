@@ -21,7 +21,6 @@ import org.opendataloader.pdf.entities.EnrichedImageChunk;
 import org.opendataloader.pdf.entities.SemanticFormula;
 import org.opendataloader.pdf.entities.SemanticPicture;
 import org.opendataloader.pdf.hybrid.DoclingSchemaTransformer;
-import org.opendataloader.pdf.hybrid.HancomAISchemaTransformer;
 import org.opendataloader.pdf.hybrid.HancomSchemaTransformer;
 import org.opendataloader.pdf.hybrid.HybridClient;
 import org.opendataloader.pdf.hybrid.HybridClientFactory;
@@ -528,11 +527,6 @@ public class HybridDocumentProcessor {
         // hancom uses HancomSchemaTransformer
         if (Config.HYBRID_HANCOM.equals(hybrid)) {
             return new HancomSchemaTransformer();
-        }
-
-        // hancom-ai uses HancomAISchemaTransformer
-        if (Config.HYBRID_HANCOM_AI.equals(hybrid)) {
-            return new HancomAISchemaTransformer();
         }
 
         throw new IllegalArgumentException("Unsupported hybrid backend: " + hybrid);
