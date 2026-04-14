@@ -230,7 +230,10 @@ public class DoclingFastServerClient implements HybridClient {
         // Extract failed pages (1-indexed) from partial_success responses
         List<Integer> failedPages = extractFailedPages(root);
 
-        return new HybridResponse(null, null, jsonContent, pageContents, failedPages);
+        // Extract per-step pipeline timings (layout, ocr, table_structure, etc.)
+        JsonNode timingsNode = root.get("timings");
+
+        return new HybridResponse(null, null, jsonContent, pageContents, failedPages, timingsNode);
     }
 
     /**
