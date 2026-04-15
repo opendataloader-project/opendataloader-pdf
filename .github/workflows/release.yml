@@ -128,6 +128,7 @@ jobs:
       - name: Generate reference docs
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         run: |
+          mkdir -p content/docs/reference
           node scripts/generate-options.mjs
           node scripts/generate-schema.mjs
 
