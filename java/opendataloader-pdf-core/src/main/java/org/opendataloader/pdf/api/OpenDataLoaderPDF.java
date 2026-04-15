@@ -55,6 +55,8 @@ public final class OpenDataLoaderPDF {
      * Validates whether the given path refers to a valid PDF file.
      *
      * @param inputPdfName the path to the input file
+     * @throws IllegalArgumentException if the path is null or blank, syntactically
+     * invalid, does not exist, is not a regular file,or does not end with {@code .pdf}
      */
     private static void validateInputFile(String inputPdfName) {
 
