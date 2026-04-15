@@ -320,7 +320,7 @@ Combine formats: `format="json,markdown"`
 | `heading level` | Heading depth (1+) |
 | `content` | Extracted text |
 
-[Full JSON Schema](https://opendataloader.org/docs/json-schema)
+[Full JSON Schema](https://opendataloader.org/docs/reference/json-schema)
 
 ## Advanced Features
 
@@ -388,7 +388,7 @@ opendataloader_pdf.convert(
 )
 ```
 
-[Full CLI Options Reference](https://opendataloader.org/docs/cli-options-reference)
+[Full CLI Options Reference](https://opendataloader.org/docs/reference/cli-options)
 
 ## PDF Accessibility & PDF/UA Conversion
 
@@ -569,8 +569,8 @@ MPL 2.0 requires file-level copyleft, which often triggers legal review before e
 - [Quick Start (Python)](https://opendataloader.org/docs/quick-start-python)
 - [Quick Start (Node.js)](https://opendataloader.org/docs/quick-start-nodejs)
 - [Quick Start (Java)](https://opendataloader.org/docs/quick-start-java)
-- [JSON Schema Reference](https://opendataloader.org/docs/json-schema)
-- [CLI Options](https://opendataloader.org/docs/cli-options-reference)
+- [JSON Schema Reference](https://opendataloader.org/docs/reference/json-schema)
+- [CLI Options](https://opendataloader.org/docs/reference/cli-options)
 - [Hybrid Mode Guide](https://opendataloader.org/docs/hybrid-mode)
 - [Tagged PDF Support](https://opendataloader.org/docs/tagged-pdf)
 - [AI Safety Features](https://opendataloader.org/docs/ai-safety)
