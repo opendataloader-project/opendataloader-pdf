@@ -660,7 +660,10 @@ public class HybridDocumentProcessor {
             List<IObject> objects, List<TextChunk> javaTextChunks, Set<Integer> usedJavaIndices) {
 
         for (IObject obj : objects) {
-            if (obj instanceof SemanticTextNode) {
+            if (obj instanceof SemanticFormula) {
+                // Formula inside table/list — enrich StreamInfos by bbox overlap
+                enrichSingleFormula((SemanticFormula) obj, javaTextChunks);
+            } else if (obj instanceof SemanticTextNode) {
                 enrichSingleTextNode((SemanticTextNode) obj, javaTextChunks, usedJavaIndices);
             } else if (obj instanceof TableBorder) {
                 TableBorder table = (TableBorder) obj;
@@ -763,35 +766,40 @@ public class HybridDocumentProcessor {
      * to the formula's StreamInfo list (inherited from BaseObject).
      */
     private static void enrichFormulaStreamInfos(List<IObject> backendPage, List<TextChunk> javaTextChunks) {
-        // Collect indices already used by enrichTextStreamInfos — we need a fresh scan
-        // because formulas may overlap with text regions that were already assigned.
-        // However, for formulas we allow reuse since formula content often IS the text content.
         for (IObject obj : backendPage) {
-            if (!(obj instanceof SemanticFormula)) continue;
-            SemanticFormula formula = (SemanticFormula) obj;
-            if (!formula.getStreamInfos().isEmpty()) continue;
+            if (obj instanceof SemanticFormula) {
+                enrichSingleFormula((SemanticFormula) obj, javaTextChunks);
+            }
+        }
+    }
 
-            double fLeft = formula.getLeftX();
-            double fRight = formula.getRightX();
-            double fBottom = formula.getBottomY();
-            double fTop = formula.getTopY();
-            double tol = 5.0;
+    /**
+     * Copies StreamInfos from Java TextChunks to a SemanticFormula by bbox overlap.
+     * Allows reuse of Java chunks since formula content often IS the text content.
+     */
+    private static void enrichSingleFormula(SemanticFormula formula, List<TextChunk> javaTextChunks) {
+        if (!formula.getStreamInfos().isEmpty()) return;
 
-            for (TextChunk javaChunk : javaTextChunks) {
-                if (javaChunk.getStreamInfos().isEmpty()) continue;
-                double jCx = javaChunk.getCenterX();
-                double jCy = javaChunk.getCenterY();
+        double fLeft = formula.getLeftX();
+        double fRight = formula.getRightX();
+        double fBottom = formula.getBottomY();
+        double fTop = formula.getTopY();
+        double tol = 5.0;
 
-                if (jCx >= fLeft - tol && jCx <= fRight + tol && jCy >= fBottom - tol && jCy <= fTop + tol) {
-                    formula.getStreamInfos().addAll(javaChunk.getStreamInfos());
-                }
+        for (TextChunk javaChunk : javaTextChunks) {
+            if (javaChunk.getStreamInfos().isEmpty()) continue;
+            double jCx = javaChunk.getCenterX();
+            double jCy = javaChunk.getCenterY();
+
+            if (jCx >= fLeft - tol && jCx <= fRight + tol && jCy >= fBottom - tol && jCy <= fTop + tol) {
+                formula.getStreamInfos().addAll(javaChunk.getStreamInfos());
             }
         }
     }
 
     /**
      * Finds the ImageChunk whose center point lies within the SemanticPicture's bounding box.
-     * Falls back to the closest ImageChunk by center-to-center distance if none is contained.
+     * Returns null if no candidate's center is contained (with 1pt tolerance).
      */
     private static ImageChunk findMatchingImageChunk(SemanticPicture picture, List<ImageChunk> candidates) {
         double picLeft = picture.getLeftX();

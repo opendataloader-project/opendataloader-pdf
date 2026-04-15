@@ -106,6 +106,7 @@ public class AutoTaggingProcessor {
                     cosDocument.addChangedObject(contentsObject);
                 } else {
                     page.getObject().setKey(ASAtom.CONTENTS, createContentsIndirect(cosDocument, processedTokens));
+                    cosDocument.addChangedObject(page.getObject());
                 }
             } else {
                 COSObject streamsArray = COSArray.construct();
@@ -116,6 +117,7 @@ public class AutoTaggingProcessor {
                     streamsArray.add(streamIndirect);
                 }
                 page.getObject().setKey(ASAtom.CONTENTS, streamsArray);
+                cosDocument.addChangedObject(page.getObject());
             }
         }
     }
