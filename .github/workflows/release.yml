@@ -125,15 +125,22 @@ jobs:
       # =================================================================
       # 5. SYNC DOCS TO HOMEPAGE (only on tag push)
       # =================================================================
-      - name: Sync docs to homepage repo
+      - name: Generate reference docs
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        run: |
+          mkdir -p content/docs/reference
+          node scripts/generate-options.mjs
+          node scripts/generate-schema.mjs
+
+      - name: Push reference docs to homepage
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         # Pinned to v1.7.3 for security - verify before updating
         uses: cpina/github-action-push-to-another-repository@55306faa4ed53b815ae49e564af8cfb359d32ae2  # v1.7.3
         with:
-          source-directory: 'content/docs'
+          source-directory: 'content/docs/reference'
           destination-github-username: 'opendataloader-project'
           destination-repository-name: 'opendataloader.org'
-          target-directory: 'apps/v1/content/docs'
+          target-directory: 'apps/v1/content/docs/reference'
           target-branch: main
         env:
           API_TOKEN_GITHUB: ${{ secrets.HOMEPAGE_SYNC_TOKEN }}

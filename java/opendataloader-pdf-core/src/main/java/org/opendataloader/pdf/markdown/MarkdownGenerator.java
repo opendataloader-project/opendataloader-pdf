@@ -18,9 +18,12 @@ package org.opendataloader.pdf.markdown;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.entities.SemanticFormula;
+import org.opendataloader.pdf.entities.EnrichedImageChunk;
 import org.opendataloader.pdf.entities.SemanticPicture;
 import org.opendataloader.pdf.utils.Base64ImageUtils;
+import org.opendataloader.pdf.utils.GeneratorUtils;
 import org.opendataloader.pdf.utils.ImagesUtils;
+import org.opendataloader.pdf.utils.OutputType;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
@@ -54,6 +57,7 @@ public class MarkdownGenerator implements Closeable {
     protected boolean embedImages = false;
     protected String imageFormat = Config.IMAGE_FORMAT_PNG;
     protected boolean includeHeaderFooter = false;
+    protected static final String strikethroughTextMD = "~~";
 
     MarkdownGenerator(File inputPdf, Config config) throws IOException {
         String cutPdfFileName = inputPdf.getName();
@@ -163,7 +167,10 @@ public class MarkdownGenerator implements Closeable {
                     imageSource = relativePath;
                 }
                 if (imageSource != null) {
-                    String imageString = String.format(MarkdownSyntax.IMAGE_FORMAT, "image " + image.getIndex(), imageSource);
+                    String altText = (image instanceof EnrichedImageChunk && ((EnrichedImageChunk) image).hasDescription())
+                            ? ((EnrichedImageChunk) image).sanitizeDescription()
+                            : "image " + image.getIndex();
+                    String imageString = String.format(MarkdownSyntax.IMAGE_FORMAT, altText, imageSource);
                     markdownWriter.write(getCorrectMarkdownString(imageString));
                 }
             }
@@ -234,7 +241,7 @@ public class MarkdownGenerator implements Closeable {
                 markdownWriter.write(MarkdownSyntax.LIST_ITEM);
                 markdownWriter.write(MarkdownSyntax.SPACE);
             }
-            markdownWriter.write(getCorrectMarkdownString(item.toString()));
+            markdownWriter.write(getCorrectMarkdownString(GeneratorUtils.getTextFromLines(item.getLines(), OutputType.MD)));
             writeLineBreak();
 
             List<IObject> itemContents = item.getContents();
@@ -246,7 +253,7 @@ public class MarkdownGenerator implements Closeable {
     }
 
     protected void writeSemanticTextNode(SemanticTextNode textNode) throws IOException {
-        String value = textNode.getValue();
+        String value = GeneratorUtils.getTextFromTextNode(textNode, OutputType.MD);
         if (StaticContainers.isKeepLineBreaks()) {
             if (textNode instanceof SemanticHeading) {
                 value = value.replace(MarkdownSyntax.LINE_BREAK, MarkdownSyntax.SPACE);
@@ -260,6 +267,8 @@ public class MarkdownGenerator implements Closeable {
 
         markdownWriter.write(getCorrectMarkdownString(value));
     }
+
+
 
     protected void writeTable(TableBorder table) throws IOException {
         enterTable();
@@ -360,6 +369,18 @@ public class MarkdownGenerator implements Closeable {
             return value.replace("\u0000", " ");
         }
         return null;
+    }
+
+    public static void getTextFromLineForMarkdown(TextLine line, StringBuilder stringBuilder) {
+        for (TextChunk chunk : line.getTextChunks()) {
+            if (chunk.getIsStrikethroughText()) {
+                stringBuilder.append(strikethroughTextMD);
+            }
+            stringBuilder.append(chunk.getValue());
+            if (chunk.getIsStrikethroughText()) {
+                stringBuilder.append(strikethroughTextMD);
+            }
+        }
     }
 
     @Override

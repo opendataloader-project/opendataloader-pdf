@@ -25,11 +25,14 @@ import org.opendataloader.pdf.hybrid.TriageProcessor.TriageDecision;
 import org.opendataloader.pdf.hybrid.TriageProcessor.TriageResult;
 import org.opendataloader.pdf.hybrid.TriageProcessor.TriageSignals;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Unit tests for HybridDocumentProcessor.
@@ -347,5 +350,112 @@ public class HybridDocumentProcessorTest {
         // docling uses same URL as docling-fast
         Assertions.assertEquals(HybridConfig.DOCLING_FAST_DEFAULT_URL, config.getEffectiveUrl("docling"));
         Assertions.assertEquals(HybridConfig.DOCLING_FAST_DEFAULT_URL, config.getEffectiveUrl("docling-fast"));
+    }
+
+    // ===== Backend Chunk Splitting Tests =====
+
+    /** Helper that mirrors the chunk-splitting logic in processBackendPath. */
+    private static List<List<Integer>> splitIntoChunks(Set<Integer> pageNumbers, int chunkSize) {
+        List<Integer> sorted = new ArrayList<>(new TreeSet<>(pageNumbers));
+        List<List<Integer>> chunks = new ArrayList<>();
+        for (int i = 0; i < sorted.size(); i += chunkSize) {
+            chunks.add(sorted.subList(i, Math.min(i + chunkSize, sorted.size())));
+        }
+        return chunks;
+    }
+
+    @Test
+    public void testChunkSplitting_zeroPages() {
+        List<List<Integer>> chunks = splitIntoChunks(new HashSet<>(),
+                HybridDocumentProcessor.BACKEND_CHUNK_SIZE);
+        Assertions.assertTrue(chunks.isEmpty());
+    }
+
+    @Test
+    public void testChunkSplitting_exactlyChunkSize() {
+        Set<Integer> pages = new HashSet<>();
+        for (int i = 0; i < HybridDocumentProcessor.BACKEND_CHUNK_SIZE; i++) {
+            pages.add(i);
+        }
+        List<List<Integer>> chunks = splitIntoChunks(pages,
+                HybridDocumentProcessor.BACKEND_CHUNK_SIZE);
+
+        Assertions.assertEquals(1, chunks.size());
+        Assertions.assertEquals(HybridDocumentProcessor.BACKEND_CHUNK_SIZE, chunks.get(0).size());
+    }
+
+    @Test
+    public void testChunkSplitting_chunkSizePlusOne() {
+        int size = HybridDocumentProcessor.BACKEND_CHUNK_SIZE + 1;
+        Set<Integer> pages = new HashSet<>();
+        for (int i = 0; i < size; i++) {
+            pages.add(i);
+        }
+        List<List<Integer>> chunks = splitIntoChunks(pages,
+                HybridDocumentProcessor.BACKEND_CHUNK_SIZE);
+
+        Assertions.assertEquals(2, chunks.size());
+        Assertions.assertEquals(HybridDocumentProcessor.BACKEND_CHUNK_SIZE, chunks.get(0).size());
+        Assertions.assertEquals(1, chunks.get(1).size());
+    }
+
+    @Test
+    public void testChunkSplitting_singlePage() {
+        Set<Integer> pages = new HashSet<>();
+        pages.add(42);
+        List<List<Integer>> chunks = splitIntoChunks(pages,
+                HybridDocumentProcessor.BACKEND_CHUNK_SIZE);
+
+        Assertions.assertEquals(1, chunks.size());
+        Assertions.assertEquals(1, chunks.get(0).size());
+        Assertions.assertEquals(42, (int) chunks.get(0).get(0));
+    }
+
+    @Test
+    public void testChunkSplitting_nonContiguousPages() {
+        // Simulate triage routing every 5th page to backend
+        Set<Integer> pages = new HashSet<>();
+        for (int i = 0; i < 300; i += 5) {
+            pages.add(i);
+        }
+        // 60 pages total → 2 chunks (50 + 10)
+        List<List<Integer>> chunks = splitIntoChunks(pages,
+                HybridDocumentProcessor.BACKEND_CHUNK_SIZE);
+
+        Assertions.assertEquals(2, chunks.size());
+        Assertions.assertEquals(HybridDocumentProcessor.BACKEND_CHUNK_SIZE, chunks.get(0).size());
+        Assertions.assertEquals(10, chunks.get(1).size());
+
+        // Verify sorted order
+        for (List<Integer> chunk : chunks) {
+            for (int i = 1; i < chunk.size(); i++) {
+                Assertions.assertTrue(chunk.get(i) > chunk.get(i - 1),
+                        "Pages within chunk should be sorted");
+            }
+        }
+    }
+
+    @Test
+    public void testChunkSplitting_largeDocument() {
+        // 154 pages like the reporter's PDF
+        Set<Integer> pages = new HashSet<>();
+        for (int i = 0; i < 154; i++) {
+            pages.add(i);
+        }
+        List<List<Integer>> chunks = splitIntoChunks(pages,
+                HybridDocumentProcessor.BACKEND_CHUNK_SIZE);
+
+        Assertions.assertEquals(4, chunks.size()); // 50 + 50 + 50 + 4
+        Assertions.assertEquals(50, chunks.get(0).size());
+        Assertions.assertEquals(50, chunks.get(1).size());
+        Assertions.assertEquals(50, chunks.get(2).size());
+        Assertions.assertEquals(4, chunks.get(3).size());
+
+        // All pages accounted for
+        Set<Integer> allChunked = new HashSet<>();
+        for (List<Integer> chunk : chunks) {
+            allChunked.addAll(chunk);
+        }
+        Assertions.assertEquals(pages, allChunked);
     }
 }

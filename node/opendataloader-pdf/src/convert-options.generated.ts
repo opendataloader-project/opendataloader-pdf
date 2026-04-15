@@ -9,7 +9,7 @@ export interface ConvertOptions {
   outputDir?: string;
   /** Password for encrypted PDF files */
   password?: string;
-  /** Output formats (comma-separated). Values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images. Default: json */
+  /** Output formats (comma-separated). Values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images, tagged-pdf. Default: json */
   format?: string | string[];
   /** Suppress console logging output */
   quiet?: boolean;
@@ -43,7 +43,7 @@ export interface ConvertOptions {
   pages?: string;
   /** Include page headers and footers in output */
   includeHeaderFooter?: boolean;
-  /** Detect strikethrough text and wrap with ~~ in Markdown output (experimental) */
+  /** Detect strikethrough text and wrap with ~~ in Markdown output or <del></del> tag in HTML output (experimental) */
   detectStrikethrough?: boolean;
   /** Hybrid backend (requires a running server). Quick start: pip install "opendataloader-pdf[hybrid]" && opendataloader-pdf-hybrid --port 5002. For remote servers use --hybrid-url. Values: off (default), docling-fast */
   hybrid?: string;

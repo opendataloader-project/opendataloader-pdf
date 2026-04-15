@@ -45,7 +45,7 @@ def convert(
         input_path: One or more input PDF file paths or directories
         output_dir: Directory where output files are written. Default: input file directory
         password: Password for encrypted PDF files
-        format: Output formats (comma-separated). Values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images. Default: json
+        format: Output formats (comma-separated). Values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images, tagged-pdf. Default: json
         quiet: Suppress console logging output
         content_safety_off: Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg
         sanitize: Enable sensitive data sanitization. Replaces emails, phone numbers, IPs, credit cards, and URLs with placeholders
@@ -62,7 +62,7 @@ def convert(
         image_dir: Directory for extracted images
         pages: Pages to extract (e.g., "1,3,5-7"). Default: all pages
         include_header_footer: Include page headers and footers in output
-        detect_strikethrough: Detect strikethrough text and wrap with ~~ in Markdown output (experimental)
+        detect_strikethrough: Detect strikethrough text and wrap with ~~ in Markdown output or <del></del> tag in HTML output (experimental)
         hybrid: Hybrid backend (requires a running server). Quick start: pip install "opendataloader-pdf[hybrid]" && opendataloader-pdf-hybrid --port 5002. For remote servers use --hybrid-url. Values: off (default), docling-fast
         hybrid_mode: Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)
         hybrid_url: Hybrid backend server URL (overrides default)

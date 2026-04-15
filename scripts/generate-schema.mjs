@@ -249,7 +249,7 @@ function generateJsonSchemaMdx() {
   );
   lines.push('');
 
-  const outputPath = join(ROOT_DIR, 'content/docs/json-schema.mdx');
+  const outputPath = join(ROOT_DIR, 'content/docs/reference/json-schema.mdx');
   mkdirSync(dirname(outputPath), { recursive: true });
   writeFileSync(outputPath, lines.join('\n'));
   console.log(`Generated: ${outputPath}`);

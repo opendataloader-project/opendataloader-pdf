@@ -187,6 +187,7 @@ public interface HybridClient {
         private final JsonNode json;
         private final Map<Integer, JsonNode> pageContents;
         private final List<Integer> failedPages;
+        private final JsonNode timings;
 
         /**
          * Creates a new HybridResponse.
@@ -196,9 +197,11 @@ public interface HybridClient {
          * @param json         The full structured JSON output (DoclingDocument format).
          * @param pageContents Per-page JSON content, keyed by 1-indexed page number.
          * @param failedPages  List of 1-indexed page numbers that failed during backend processing.
+         * @param timings      Per-step pipeline timings from the hybrid server (may be null).
          */
         public HybridResponse(String markdown, String html, JsonNode json,
-                              Map<Integer, JsonNode> pageContents, List<Integer> failedPages) {
+                              Map<Integer, JsonNode> pageContents, List<Integer> failedPages,
+                              JsonNode timings) {
             this.markdown = markdown != null ? markdown : "";
             this.html = html != null ? html : "";
             this.json = json;
@@ -206,6 +209,15 @@ public interface HybridClient {
             this.failedPages = failedPages != null
                 ? Collections.unmodifiableList(new ArrayList<>(failedPages))
                 : Collections.emptyList();
+            this.timings = timings;
+        }
+
+        /**
+         * Creates a new HybridResponse (without timings, backward compatible).
+         */
+        public HybridResponse(String markdown, String html, JsonNode json,
+                              Map<Integer, JsonNode> pageContents, List<Integer> failedPages) {
+            this(markdown, html, json, pageContents, failedPages, null);
         }
 
         /**
@@ -257,6 +269,18 @@ public interface HybridClient {
         }
 
         /**
+         * Returns per-step pipeline timings from the hybrid server.
+         *
+         * <p>Keys are step names (e.g. "layout", "ocr", "table_structure",
+         * "picture_description"). Each value contains "total_s", "avg_s", and "count".
+         *
+         * @return Timings JSON node, or null if profiling was not enabled on the server.
+         */
+        public JsonNode getTimings() {
+            return timings;
+        }
+
+        /**
          * Returns the list of 1-indexed page numbers that failed during backend processing.
          *
          * <p>When the backend returns partial_success, some pages may have failed due to
@@ -287,12 +311,13 @@ public interface HybridClient {
                 Objects.equals(html, that.html) &&
                 Objects.equals(json, that.json) &&
                 Objects.equals(pageContents, that.pageContents) &&
-                Objects.equals(failedPages, that.failedPages);
+                Objects.equals(failedPages, that.failedPages) &&
+                Objects.equals(timings, that.timings);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(markdown, html, json, pageContents, failedPages);
+            return Objects.hash(markdown, html, json, pageContents, failedPages, timings);
         }
     }
 

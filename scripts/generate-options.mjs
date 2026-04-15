@@ -406,7 +406,7 @@ function generatePythonConvertOptionsMdx() {
   lines.push(...formatTable(['Parameter', 'Type', 'Default', 'Description'], rows));
   lines.push('');
 
-  const outputPath = join(ROOT_DIR, 'content/docs/_generated/python-convert-options.mdx');
+  const outputPath = join(ROOT_DIR, 'content/docs/reference/python-convert-options.mdx');
   mkdirSync(dirname(outputPath), { recursive: true });
   writeFileSync(outputPath, lines.join('\n'));
   console.log(`Generated: ${outputPath}`);
@@ -447,7 +447,7 @@ function generateNodeConvertOptionsMdx() {
   lines.push(...formatTable(['Option', 'Type', 'Default', 'Description'], rows));
   lines.push('');
 
-  const outputPath = join(ROOT_DIR, 'content/docs/_generated/node-convert-options.mdx');
+  const outputPath = join(ROOT_DIR, 'content/docs/reference/node-convert-options.mdx');
   mkdirSync(dirname(outputPath), { recursive: true });
   writeFileSync(outputPath, lines.join('\n'));
   console.log(`Generated: ${outputPath}`);
@@ -527,7 +527,7 @@ function generateOptionsReferenceMdx() {
     '',
   ];
 
-  const outputPath = join(ROOT_DIR, 'content/docs/cli-options-reference.mdx');
+  const outputPath = join(ROOT_DIR, 'content/docs/reference/cli-options.mdx');
   mkdirSync(dirname(outputPath), { recursive: true });
   writeFileSync(outputPath, lines.join('\n'));
   console.log(`Generated: ${outputPath}`);
