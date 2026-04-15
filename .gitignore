@@ -72,6 +72,9 @@ logs/
 # Git worktrees
 .worktrees/
 
+# Auto-generated reference docs (CI-only, not tracked)
+content/docs/
+
 # Configuration files
 .claude/settings.local.json
 .claude/plans/
