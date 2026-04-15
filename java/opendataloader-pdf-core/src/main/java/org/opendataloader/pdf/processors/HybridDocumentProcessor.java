@@ -676,6 +676,15 @@ public class HybridDocumentProcessor {
             } else if (obj instanceof PDFList) {
                 PDFList list = (PDFList) obj;
                 for (ListItem item : list.getListItems()) {
+                    // Enrich ListItem's own text lines (used by AutoTaggingProcessor for Lbl/LBody)
+                    for (TextLine line : item.getLines()) {
+                        for (TextChunk backendChunk : line.getTextChunks()) {
+                            if (backendChunk.getStreamInfos().isEmpty()) {
+                                matchAndReplaceStreamInfos(backendChunk, javaTextChunks, usedJavaIndices);
+                            }
+                        }
+                    }
+                    // Enrich nested contents (images, paragraphs, sub-lists)
                     enrichTextStreamInfosRecursive(item.getContents(), javaTextChunks, usedJavaIndices);
                 }
             }
@@ -719,6 +728,30 @@ public class HybridDocumentProcessor {
         } else {
             LOGGER.fine(() -> "enrichSingleTextNode: no Java TextChunk matched for backend node at bbox ["
                 + String.format("%.1f,%.1f,%.1f,%.1f", nLeft, nBottom, nRight, nTop) + "]");
+        }
+    }
+
+    /**
+     * Copies StreamInfos from matching Java TextChunks to a backend TextChunk that lacks them.
+     * Used for ListItem lines where the text is stored directly in TextLine/TextChunk
+     * rather than in a SemanticTextNode wrapper.
+     */
+    private static void matchAndReplaceStreamInfos(
+            TextChunk backendChunk, List<TextChunk> javaTextChunks, Set<Integer> usedJavaIndices) {
+        double bCx = backendChunk.getCenterX();
+        double bCy = backendChunk.getCenterY();
+        double tol = 5.0;
+        for (int i = 0; i < javaTextChunks.size(); i++) {
+            if (usedJavaIndices.contains(i)) continue;
+            TextChunk javaChunk = javaTextChunks.get(i);
+            if (javaChunk.getStreamInfos().isEmpty()) continue;
+            double jCx = javaChunk.getCenterX();
+            double jCy = javaChunk.getCenterY();
+            if (Math.abs(bCx - jCx) <= tol && Math.abs(bCy - jCy) <= tol) {
+                backendChunk.getStreamInfos().addAll(javaChunk.getStreamInfos());
+                usedJavaIndices.add(i);
+                return;
+            }
         }
     }
 
