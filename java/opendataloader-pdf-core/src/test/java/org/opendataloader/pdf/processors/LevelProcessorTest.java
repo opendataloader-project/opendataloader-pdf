@@ -156,4 +156,40 @@ public class LevelProcessorTest {
         Assertions.assertEquals("1", contents.get(0).get(0).getLevel());
         Assertions.assertEquals("2", contents.get(1).get(0).getLevel());
     }
+
+    @Test
+    public void testDeeplyNestedTablesDoNotCauseStackOverflow() {
+        StaticContainers.setIsDataLoader(true);
+        StaticLayoutContainers.setHeadings(new ArrayList<>());
+        List<List<IObject>> contents = new ArrayList<>();
+        List<IObject> pageContents = new ArrayList<>();
+        contents.add(pageContents);
+
+        // Build a chain of 100 nested tables (table -> cell -> table -> cell -> ...)
+        TableBorder outerTable = createSingleCellTable(0, 10.0, 10.0, 200.0, 200.0);
+        TableBorder current = outerTable;
+        for (int i = 1; i <= 100; i++) {
+            TableBorder innerTable = createSingleCellTable(0,
+                    10.0 + i, 10.0 + i, 200.0 - i, 200.0 - i);
+            current.getRow(0).getCell(0).getContents().add(innerTable);
+            current = innerTable;
+        }
+        pageContents.add(outerTable);
+
+        Assertions.assertDoesNotThrow(() -> LevelProcessor.detectLevels(contents));
+    }
+
+    private TableBorder createSingleCellTable(int pageNumber,
+                                               double leftX, double bottomY,
+                                               double rightX, double topY) {
+        TableBorder table = new TableBorder(1, 1);
+        table.setRecognizedStructureId(0l);
+        table.setBoundingBox(new BoundingBox(pageNumber, leftX, bottomY, rightX, topY));
+        TableBorderRow row = new TableBorderRow(0, 1, 0l);
+        row.setBoundingBox(new BoundingBox(pageNumber, leftX, bottomY, rightX, topY));
+        row.getCells()[0] = new TableBorderCell(0, 0, 1, 1, 0l);
+        row.getCells()[0].setBoundingBox(new BoundingBox(pageNumber, leftX, bottomY, rightX, topY));
+        table.getRows()[0] = row;
+        return table;
+    }
 }

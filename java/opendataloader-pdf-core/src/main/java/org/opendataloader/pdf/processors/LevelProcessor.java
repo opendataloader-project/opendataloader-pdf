@@ -36,13 +36,19 @@ public class LevelProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(LevelProcessor.class.getCanonicalName());
 
+    private static final int MAX_DEPTH = 50;
+
     private static boolean isDocTitleSet = false;
 
     public static void detectLevels(List<List<IObject>> contents) {
-        setLevels(contents, new Stack<>());
+        setLevels(contents, new Stack<>(), 0);
     }
 
-    private static void setLevels(List<List<IObject>> contents, Stack<LevelInfo> levelInfos) {
+    private static void setLevels(List<List<IObject>> contents, Stack<LevelInfo> levelInfos, int depth) {
+        if (depth > MAX_DEPTH) {
+            LOGGER.log(Level.WARNING, "Maximum nesting depth exceeded in setLevels, skipping further processing");
+            return;
+        }
         int levelInfosSize = levelInfos.size();
         for (List<IObject> pageContents : contents) {
             for (IObject content : pageContents) {
@@ -75,7 +81,7 @@ public class LevelProcessor {
                     }
                     if (index == null) {
                         TableBorder table = (TableBorder) content;
-                        setLevelForTable(table);
+                        setLevelForTable(table, depth + 1);
                         if (!table.isTextBlock()) {
                             levelInfo = new TableLevelInfo(table);
                         }
@@ -106,7 +112,7 @@ public class LevelProcessor {
                 }
                 if (content instanceof PDFList) {
                     for (ListItem listItem : ((PDFList) content).getListItems()) {
-                        setLevels(Collections.singletonList(listItem.getContents()), levelInfos);
+                        setLevels(Collections.singletonList(listItem.getContents()), levelInfos, depth + 1);
                     }
                 }
             }
@@ -133,13 +139,13 @@ public class LevelProcessor {
         return null;
     }
 
-    private static void setLevelForTable(TableBorder tableBorder) {
+    private static void setLevelForTable(TableBorder tableBorder, int depth) {
         for (int rowNumber = 0; rowNumber < tableBorder.getNumberOfRows(); rowNumber++) {
             TableBorderRow row = tableBorder.getRow(rowNumber);
             for (int colNumber = 0; colNumber < tableBorder.getNumberOfColumns(); colNumber++) {
                 TableBorderCell tableBorderCell = row.getCell(colNumber);
                 if (tableBorderCell.getRowNumber() == rowNumber && tableBorderCell.getColNumber() == colNumber) {
-                    setLevels(Collections.singletonList(tableBorderCell.getContents()), new Stack<>());
+                    setLevels(Collections.singletonList(tableBorderCell.getContents()), new Stack<>(), depth);
                 }
             }
         }
