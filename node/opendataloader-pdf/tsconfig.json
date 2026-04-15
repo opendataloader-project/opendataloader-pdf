@@ -8,7 +8,9 @@
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
     "skipLibCheck": true,
-    "strict": true
+    "strict": true,
+    "types": ["node"],
+    "ignoreDeprecations": "6.0"
   },
   "include": ["src/**/*.ts"]
 }

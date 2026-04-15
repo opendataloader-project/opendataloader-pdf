@@ -593,7 +593,7 @@ def create_app(
         except Exception as e:
             logger.error(f"Profile failed: {e}\n{traceback.format_exc()}")
             return JSONResponse(
-                {"status": "failure", "errors": [str(e)]},
+                {"status": "failure", "errors": ["Internal server error"]},
                 status_code=500,
             )
         finally:

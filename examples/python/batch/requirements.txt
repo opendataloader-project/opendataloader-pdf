@@ -1,2 +1,2 @@
 # Requires Python 3.10+
-opendataloader-pdf>=1.4.0
+opendataloader-pdf>=2.2.1
