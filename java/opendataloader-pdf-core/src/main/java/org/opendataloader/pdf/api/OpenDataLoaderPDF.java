@@ -45,13 +45,10 @@ public final class OpenDataLoaderPDF {
      * @param config       The configuration object specifying output formats and other options.
      *
      */
-    public static void processFile(String inputPdfName, Config config) {
-        try {
-            validateInputFile(inputPdfName);
-            DocumentProcessor.processFile(inputPdfName, config);
-        } catch (IllegalArgumentException | IOException ex) {
-            LOGGER.log(Level.WARNING, ex.getMessage());
-        }
+    public static void processFile(String inputPdfName, Config config) throws IOException {
+        validateInputFile(inputPdfName);
+        DocumentProcessor.processFile(inputPdfName, config);
+
     }
 
     /**
@@ -62,6 +59,7 @@ public final class OpenDataLoaderPDF {
     private static void validateInputFile(String inputPdfName) {
 
         if (inputPdfName == null || inputPdfName.isBlank()) {
+            LOGGER.log(Level.WARNING,"Input PDF name is null or Empty");
             throw new IllegalArgumentException("Input PDF name is null or Empty");
         }
 
@@ -70,18 +68,22 @@ public final class OpenDataLoaderPDF {
         try {
             path = Paths.get(inputPdfName);
         } catch (InvalidPathException ex) {
+            LOGGER.log(Level.WARNING,"Invalid Path: " + inputPdfName);
             throw new IllegalArgumentException("Invalid Path: " + inputPdfName);
         }
 
         if (!Files.exists(path)) {
-            throw new IllegalArgumentException("File not fount at " + inputPdfName + " location");
+            LOGGER.log(Level.WARNING,"File not found at " + inputPdfName + " location");
+            throw new IllegalArgumentException("File not found at " + inputPdfName + " location");
         }
 
         if (!Files.isRegularFile(path)) {
+            LOGGER.log(Level.WARNING,"Not a valid file " + inputPdfName);
             throw new IllegalArgumentException("Not a valid file " + inputPdfName);
         }
 
         if (!path.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".pdf")) {
+            LOGGER.log(Level.WARNING,"Not a PDF file");
             throw new IllegalArgumentException("Not a PDF file");
         }
 
