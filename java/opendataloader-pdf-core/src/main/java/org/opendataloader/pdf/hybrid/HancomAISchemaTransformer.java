@@ -24,6 +24,7 @@ import org.opendataloader.pdf.entities.SemanticPicture;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticCaption;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
+import org.verapdf.wcag.algorithms.entities.SemanticNode;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
@@ -329,6 +330,12 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
             default:
                 iobj = text.isEmpty() ? null : createParagraph(text, bbox);
                 break;
+        }
+
+        // Map confidence to correctSemanticScore (only for SemanticNode subtypes)
+        if (iobj instanceof SemanticNode) {
+            double confidence = obj.has("confidence") ? obj.get("confidence").asDouble(1.0) : 1.0;
+            ((SemanticNode) iobj).setCorrectSemanticScore(confidence);
         }
 
         return iobj;

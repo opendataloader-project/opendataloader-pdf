@@ -501,6 +501,25 @@ public class HancomAISchemaTransformerTest {
     }
 
     /**
+     * Creates an object node with a specific confidence value.
+     */
+    private ObjectNode createObjectWithConfidence(int label, String text, double left, double top,
+                                                   double right, double bottom, double confidence) {
+        ObjectNode obj = objectMapper.createObjectNode();
+        obj.put("label", label);
+        obj.put("ocrtext", text);
+        obj.put("confidence", confidence);
+
+        ArrayNode bbox = obj.putArray("bbox");
+        bbox.add(left);
+        bbox.add(top);
+        bbox.add(right);
+        bbox.add(bottom);
+
+        return obj;
+    }
+
+    /**
      * Creates Hancom AI JSON with a single page containing given objects.
      */
     private ObjectNode createHancomAIJson(ObjectNode... objects) {
@@ -911,6 +930,51 @@ public class HancomAISchemaTransformerTest {
         List<List<IObject>> result = transform(json);
 
         assertThat(result.get(0)).isEmpty();
+    }
+
+    // --- Task 8: confidence → correctSemanticScore ---
+
+    @Test
+    void confidence_mappedToCorrectSemanticScore() {
+        // object with confidence 0.85 → correctSemanticScore = 0.85
+        ObjectNode obj = createObjectWithConfidence(2, "Test paragraph", 100, 100, 500, 130, 0.85);
+        ObjectNode json = createHancomAIJson(obj);
+
+        List<List<IObject>> result = transform(json);
+
+        assertThat(result.get(0)).hasSize(1);
+        SemanticParagraph para = (SemanticParagraph) result.get(0).get(0);
+        assertThat(para.getCorrectSemanticScore()).isEqualTo(0.85);
+    }
+
+    @Test
+    void confidence_defaultsTo1WhenMissing() {
+        // object without confidence field → correctSemanticScore = 1.0
+        ObjectNode obj = objectMapper.createObjectNode();
+        obj.put("label", 2);
+        obj.put("ocrtext", "No confidence field");
+        ArrayNode bbox = obj.putArray("bbox");
+        bbox.add(100); bbox.add(100); bbox.add(500); bbox.add(130);
+
+        ObjectNode json = createHancomAIJson(obj);
+
+        List<List<IObject>> result = transform(json);
+
+        assertThat(result.get(0)).hasSize(1);
+        SemanticParagraph para = (SemanticParagraph) result.get(0).get(0);
+        assertThat(para.getCorrectSemanticScore()).isEqualTo(1.0);
+    }
+
+    @Test
+    void confidence_appliedToHeading() {
+        // heading with confidence 0.72 → correctSemanticScore = 0.72
+        ObjectNode obj = createObjectWithConfidence(0, "Title", 100, 50, 500, 100, 0.72);
+        ObjectNode json = createHancomAIJson(obj);
+
+        List<List<IObject>> result = transform(json);
+
+        SemanticHeading heading = (SemanticHeading) result.get(0).get(0);
+        assertThat(heading.getCorrectSemanticScore()).isEqualTo(0.72);
     }
 
     @Test
