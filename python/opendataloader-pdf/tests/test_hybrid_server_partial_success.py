@@ -166,7 +166,7 @@ class TestBuildConversionResponse:
         assert response["failed_pages"] == []
 
     def test_partial_success_missing_pages_key(self):
-        """json_content without 'pages' key should produce empty failed_pages."""
+        """json_content without 'pages' key should mark all requested pages as failed."""
         response = build_conversion_response(
             status_value="partial_success",
             json_content={"body": {"text": "hello"}},
