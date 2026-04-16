@@ -21,6 +21,7 @@ import org.opendataloader.pdf.hybrid.HybridClient.HybridResponse;
 import org.opendataloader.pdf.entities.SemanticFormula;
 import org.opendataloader.pdf.entities.SemanticPicture;
 import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.SemanticCaption;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
@@ -62,9 +63,10 @@ import java.util.regex.Pattern;
  *   4  → Subheading (SemanticHeading level 3)
  *   6  → Author/Meta (SemanticParagraph)
  *   7  → Table region (handled via TABLE_STRUCTURE_RECOGNITION)
+ *   8  → TableName (SemanticCaption linked to nearest Table)
  *   9  → Figure (SemanticPicture)
  *  10  → Figure with caption (SemanticPicture)
- *  11  → Caption (SemanticParagraph)
+ *  11  → FigureName (SemanticCaption linked to nearest Figure)
  *  12  → Formula (SemanticFormula)
  *  13  → Footnote (SemanticParagraph)
  *  14  → Page header (filtered)
@@ -91,6 +93,7 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
     private static final int LABEL_SUBHEADING = 4;
     private static final int LABEL_AUTHOR = 6;
     private static final int LABEL_TABLE = 7;
+    private static final int LABEL_TABLE_NAME = 8;
     private static final int LABEL_FIGURE = 9;
     private static final int LABEL_FIGURE_CAPTION = 10;
     private static final int LABEL_CAPTION = 11;
@@ -219,6 +222,11 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
             result.set(i, groupListItems(result.get(i)));
         }
 
+        // Post-process: link SemanticCaption objects to nearest Table/Picture
+        for (List<IObject> pageContents : result) {
+            linkCaptionsToFloats(pageContents);
+        }
+
         return result;
     }
 
@@ -267,10 +275,13 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
             case LABEL_LIST_ITEM:
                 return text.isEmpty() ? null : createListItem(text, bbox);
 
+            case LABEL_TABLE_NAME:
+            case LABEL_CAPTION:
+                return text.isEmpty() ? null : createCaption(text, bbox);
+
             case LABEL_PARAGRAPH:
             case LABEL_AUTHOR:
             case LABEL_FOOTNOTE:
-            case LABEL_CAPTION:
                 return text.isEmpty() ? null : createParagraph(text, bbox);
 
             case LABEL_TABLE:
@@ -676,6 +687,17 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
         return formula;
     }
 
+    private SemanticCaption createCaption(String text, BoundingBox bbox) {
+        TextChunk textChunk = new TextChunk(bbox, text, 12.0, 12.0);
+        textChunk.adjustSymbolEndsToBoundingBox(null);
+        TextLine textLine = new TextLine(textChunk);
+        SemanticCaption caption = new SemanticCaption();
+        caption.add(textLine);
+        caption.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+        caption.setCorrectSemanticScore(1.0);
+        return caption;
+    }
+
     private ListItem createListItem(String text, BoundingBox bbox) {
         TextChunk textChunk = new TextChunk(bbox, text, 12.0, 12.0);
         textChunk.adjustSymbolEndsToBoundingBox(null);
@@ -685,6 +707,52 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
         item.add(textLine);
         item.setLabelLength(detectBulletPrefixLength(text));
         return item;
+    }
+
+    // --- Helper: caption-float linking post-processing ---
+
+    /**
+     * Links each {@link SemanticCaption} to the nearest Table or Picture on the same page
+     * by setting {@code linkedContentId} to the float's {@code recognizedStructureId}.
+     */
+    private void linkCaptionsToFloats(List<IObject> pageContents) {
+        List<SemanticCaption> captions = new ArrayList<>();
+        List<IObject> floats = new ArrayList<>();
+        for (IObject obj : pageContents) {
+            if (obj instanceof SemanticCaption) {
+                captions.add((SemanticCaption) obj);
+            }
+            if (obj instanceof TableBorder || obj instanceof SemanticPicture) {
+                floats.add(obj);
+            }
+        }
+        for (SemanticCaption cap : captions) {
+            IObject nearest = findNearestFloat(cap, floats);
+            if (nearest != null) {
+                cap.setLinkedContentId(nearest.getRecognizedStructureId());
+            }
+        }
+    }
+
+    /**
+     * Finds the float (Table or Picture) nearest to the caption by center Y distance.
+     */
+    private IObject findNearestFloat(SemanticCaption caption, List<IObject> floats) {
+        if (floats.isEmpty() || caption.getBoundingBox() == null) {
+            return null;
+        }
+        double captionCenterY = caption.getBoundingBox().getCenterY();
+        IObject nearest = null;
+        double minDist = Double.MAX_VALUE;
+        for (IObject f : floats) {
+            if (f.getBoundingBox() == null) continue;
+            double dist = Math.abs(f.getBoundingBox().getCenterY() - captionCenterY);
+            if (dist < minDist) {
+                minDist = dist;
+                nearest = f;
+            }
+        }
+        return nearest;
     }
 
     // --- Helper: list grouping post-processing ---
