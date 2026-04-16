@@ -86,7 +86,12 @@ public final class OpenDataLoaderPDF {
             throw new IllegalArgumentException("Invalid file path: " + ex.getReason(), ex);
         }
 
-        final String fileName = path.getFileName().toString();
+        final Path fileNamePath = path.getFileName();
+        if (fileNamePath == null) {
+            LOGGER.log(Level.WARNING, "Path has no file name component (root path not allowed)");
+            throw new IllegalArgumentException("Path has no file name component: " + path);
+        }
+        final String fileName = fileNamePath.toString();
 
         if (!Files.exists(path)) {
             LOGGER.log(Level.WARNING, "PDF file does not exist: {0}", fileName);
