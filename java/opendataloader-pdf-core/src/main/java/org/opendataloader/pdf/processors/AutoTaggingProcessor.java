@@ -3,6 +3,7 @@ package org.opendataloader.pdf.processors;
 import org.opendataloader.pdf.autotagging.ChunksWriter;
 import org.opendataloader.pdf.autotagging.OperatorStreamKey;
 import org.opendataloader.pdf.entities.EnrichedImageChunk;
+import org.opendataloader.pdf.entities.SemanticFootnote;
 import org.opendataloader.pdf.entities.SemanticFormula;
 import org.verapdf.as.ASAtom;
 import org.verapdf.as.io.ASMemoryInStream;
@@ -385,6 +386,8 @@ public class AutoTaggingProcessor {
             // Fallback: heading inside a nested context (list/table) — use original level
             createHeadingStructElem((SemanticHeading) object, parentStructElem, cosDocument,
                     ((SemanticHeading) object).getHeadingLevel());
+        } else if (object instanceof SemanticFootnote) {
+            createFootnoteStructElem((SemanticFootnote) object, parentStructElem, cosDocument);
         } else if (object instanceof SemanticParagraph) {
             createParagraphStructElem((SemanticParagraph) object, parentStructElem, cosDocument);
         } else if (object instanceof PDFList) {
@@ -417,6 +420,12 @@ public class AutoTaggingProcessor {
     private static void createParagraphStructElem(SemanticParagraph paragraph, COSObject parent, COSDocument cosDocument) {
         COSObject paragraphObject = addStructElement(parent, cosDocument, TaggedPDFConstants.P, paragraph.getPageNumber());
         processTextNode(paragraph, paragraphObject);
+    }
+
+    private static void createFootnoteStructElem(SemanticFootnote footnote, COSObject parent, COSDocument cosDocument) {
+        COSObject noteObject = addStructElement(parent, cosDocument, TaggedPDFConstants.FENOTE, footnote.getPageNumber());
+        noteObject.setKey(ASAtom.NOTE_TYPE, COSName.construct(ASAtom.getASAtom("Footnote")));
+        processTextNode(footnote, noteObject);
     }
 
     private static void createCaptionStructElem(SemanticCaption caption, COSObject parent, COSDocument cosDocument, boolean isFirstChild) {

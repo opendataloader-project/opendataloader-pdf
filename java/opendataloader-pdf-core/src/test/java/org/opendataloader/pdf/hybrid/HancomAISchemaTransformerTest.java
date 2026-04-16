@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
+import org.opendataloader.pdf.entities.SemanticFootnote;
 import org.opendataloader.pdf.entities.SemanticPicture;
 import org.opendataloader.pdf.hybrid.HybridClient.HybridResponse;
 import org.verapdf.wcag.algorithms.entities.IObject;
@@ -817,6 +818,23 @@ public class HancomAISchemaTransformerTest {
         assertThat(caption).isNotNull();
         assertThat(table).isNotNull();
         assertThat(caption.getLinkedContentId()).isEqualTo(table.getRecognizedStructureId());
+    }
+
+    // --- Task 6: Footnote (label 13) ---
+
+    @Test
+    void footnote_becomesSemanticFootnote() {
+        // label 13 → SemanticFootnote (not SemanticParagraph)
+        ObjectNode json = createHancomAIJson(
+            createObject(13, "1. See reference [3].", 100, 700, 500, 720)
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        assertThat(result.get(0)).hasSize(1);
+        assertThat(result.get(0).get(0)).isInstanceOf(SemanticFootnote.class);
+        SemanticFootnote footnote = (SemanticFootnote) result.get(0).get(0);
+        assertThat(footnote.getValue()).isEqualTo("1. See reference [3].");
     }
 
     @Test
