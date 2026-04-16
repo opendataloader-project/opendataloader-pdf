@@ -86,19 +86,21 @@ public final class OpenDataLoaderPDF {
             throw new IllegalArgumentException("Invalid file path: " + ex.getReason(), ex);
         }
 
+        final String fileName = path.getFileName().toString();
+
         if (!Files.exists(path)) {
-            LOGGER.log(Level.WARNING, "PDF file does not exist: {0}", path.getFileName());
-            throw new IllegalArgumentException("File does not exist: " + inputPdfName);
+            LOGGER.log(Level.WARNING, "PDF file does not exist: {0}", fileName);
+            throw new IllegalArgumentException("File does not exist: " + fileName);
         }
 
         if (!Files.isRegularFile(path)) {
-            LOGGER.log(Level.WARNING, "Path does not point to a regular file: {0}", path.getFileName());
-            throw new IllegalArgumentException("Path is not a regular file: " + inputPdfName);
+            LOGGER.log(Level.WARNING, "Path does not point to a regular file: {0}", fileName);
+            throw new IllegalArgumentException("Path is not a regular file: " + fileName);
         }
 
-        if (!path.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".pdf")) {
-            LOGGER.log(Level.WARNING, "File does not have a .pdf extension: {0}", path.getFileName());
-            throw new IllegalArgumentException("File must have a .pdf extension: " + inputPdfName);
+        if (!fileName.toLowerCase(Locale.ROOT).endsWith(".pdf")) {
+            LOGGER.log(Level.WARNING, "File does not have a .pdf extension: {0}", fileName);
+            throw new IllegalArgumentException("File must have a .pdf extension: " + fileName);
         }
     }
 
