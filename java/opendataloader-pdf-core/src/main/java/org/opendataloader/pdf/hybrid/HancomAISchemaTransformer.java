@@ -26,6 +26,8 @@ import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
+import org.verapdf.wcag.algorithms.entities.lists.ListItem;
+import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
@@ -38,6 +40,8 @@ import java.util.Map;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Transforms Hancom AI HOCR SDK API responses into IObject hierarchy.
@@ -98,6 +102,10 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
 
     // DPI conversion: API renders at 300 DPI, PDF uses 72 DPI
     private static final double PIXEL_TO_POINT = 72.0 / 300.0;
+
+    // Bullet/number prefix pattern for list items
+    private static final Pattern BULLET_PREFIX_PATTERN = Pattern.compile(
+        "^(\u2022|\u2013|\u2014|-|\\d+[.)::]|[a-zA-Z][.):])(\\s+)");
 
     private int pictureIndex;
 
@@ -186,6 +194,11 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
             });
         }
 
+        // Post-process: group consecutive ListItem objects into PDFList instances
+        for (int i = 0; i < result.size(); i++) {
+            result.set(i, groupListItems(result.get(i)));
+        }
+
         return result;
     }
 
@@ -231,8 +244,10 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
                 return createHeading(text, bbox, level);
             }
 
-            case LABEL_PARAGRAPH:
             case LABEL_LIST_ITEM:
+                return text.isEmpty() ? null : createListItem(text, bbox);
+
+            case LABEL_PARAGRAPH:
             case LABEL_AUTHOR:
             case LABEL_FOOTNOTE:
             case LABEL_CAPTION:
@@ -511,5 +526,94 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
         SemanticFormula formula = new SemanticFormula(bbox, text);
         formula.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
         return formula;
+    }
+
+    private ListItem createListItem(String text, BoundingBox bbox) {
+        TextChunk textChunk = new TextChunk(bbox, text, 12.0, 12.0);
+        textChunk.adjustSymbolEndsToBoundingBox(null);
+        TextLine textLine = new TextLine(textChunk);
+
+        ListItem item = new ListItem(bbox, StaticLayoutContainers.incrementContentId());
+        item.add(textLine);
+        item.setLabelLength(detectBulletPrefixLength(text));
+        return item;
+    }
+
+    // --- Helper: list grouping post-processing ---
+
+    /**
+     * Groups consecutive {@link ListItem} objects into {@link PDFList} instances.
+     * Any non-ListItem object breaks the current run and starts a new list.
+     */
+    private List<IObject> groupListItems(List<IObject> pageContents) {
+        List<IObject> grouped = new ArrayList<>();
+        List<ListItem> currentRun = new ArrayList<>();
+
+        for (IObject obj : pageContents) {
+            if (obj instanceof ListItem) {
+                currentRun.add((ListItem) obj);
+            } else {
+                if (!currentRun.isEmpty()) {
+                    grouped.add(buildPDFList(currentRun));
+                    currentRun = new ArrayList<>();
+                }
+                grouped.add(obj);
+            }
+        }
+
+        // Flush remaining run
+        if (!currentRun.isEmpty()) {
+            grouped.add(buildPDFList(currentRun));
+        }
+
+        return grouped;
+    }
+
+    /**
+     * Builds a {@link PDFList} from a run of {@link ListItem} objects.
+     * Computes union bounding box and assigns a structure ID.
+     */
+    private PDFList buildPDFList(List<ListItem> items) {
+        PDFList list = new PDFList();
+        list.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+
+        double minLeft = Double.MAX_VALUE;
+        double minBottom = Double.MAX_VALUE;
+        double maxRight = -Double.MAX_VALUE;
+        double maxTop = -Double.MAX_VALUE;
+        int pageNumber = 0;
+
+        for (ListItem item : items) {
+            list.add(item);
+            BoundingBox itemBbox = item.getBoundingBox();
+            if (itemBbox != null) {
+                pageNumber = itemBbox.getPageNumber();
+                minLeft = Math.min(minLeft, itemBbox.getLeftX());
+                minBottom = Math.min(minBottom, itemBbox.getBottomY());
+                maxRight = Math.max(maxRight, itemBbox.getRightX());
+                maxTop = Math.max(maxTop, itemBbox.getTopY());
+            }
+        }
+
+        if (minLeft != Double.MAX_VALUE) {
+            list.setBoundingBox(new BoundingBox(pageNumber, minLeft, minBottom, maxRight, maxTop));
+        }
+
+        return list;
+    }
+
+    /**
+     * Detects bullet/number prefix in text and returns its length (including trailing space).
+     * Returns 0 if no bullet prefix is found.
+     */
+    static int detectBulletPrefixLength(String text) {
+        if (text == null || text.isEmpty()) {
+            return 0;
+        }
+        Matcher matcher = BULLET_PREFIX_PATTERN.matcher(text);
+        if (matcher.find()) {
+            return matcher.end();
+        }
+        return 0;
     }
 }

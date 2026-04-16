@@ -24,6 +24,9 @@ import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.hybrid.HybridClient.HybridResponse;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
+import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
+import org.verapdf.wcag.algorithms.entities.lists.ListItem;
+import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 
 import java.util.HashMap;
 import java.util.List;
@@ -310,6 +313,157 @@ public class HancomAISchemaTransformerTest {
         assertThat(tiny.getHeadingLevel()).isEqualTo(4);       // shortest → H4
 
         // No skipping: levels are 2, 3, 4 (no gap)
+    }
+
+    // --- List grouping (label 3) ---
+
+    @Test
+    void consecutiveLabel3_groupedIntoSinglePDFList() {
+        ObjectNode json = createHancomAIJson(
+            createObject(3, "First item", 100, 100, 500, 130),
+            createObject(3, "Second item", 100, 150, 500, 180),
+            createObject(3, "Third item", 100, 200, 500, 230)
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        assertThat(result.get(0)).hasSize(1);
+        assertThat(result.get(0).get(0)).isInstanceOf(PDFList.class);
+
+        PDFList list = (PDFList) result.get(0).get(0);
+        assertThat(list.getListItems()).hasSize(3);
+        assertThat(list.getListItems().get(0).getFirstLine().getValue()).isEqualTo("First item");
+        assertThat(list.getListItems().get(1).getFirstLine().getValue()).isEqualTo("Second item");
+        assertThat(list.getListItems().get(2).getFirstLine().getValue()).isEqualTo("Third item");
+    }
+
+    @Test
+    void nonLabel3_breaksListIntoSeparateInstances() {
+        ObjectNode json = createHancomAIJson(
+            createObject(3, "Item A", 100, 100, 500, 130),
+            createObject(3, "Item B", 100, 150, 500, 180),
+            createObject(2, "A paragraph", 100, 200, 500, 230),   // label 2 breaks the run
+            createObject(3, "Item C", 100, 250, 500, 280),
+            createObject(3, "Item D", 100, 300, 500, 330)
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        assertThat(result.get(0)).hasSize(3);  // PDFList, paragraph, PDFList
+        assertThat(result.get(0).get(0)).isInstanceOf(PDFList.class);
+        assertThat(result.get(0).get(1)).isInstanceOf(SemanticParagraph.class);
+        assertThat(result.get(0).get(2)).isInstanceOf(PDFList.class);
+
+        PDFList list1 = (PDFList) result.get(0).get(0);
+        PDFList list2 = (PDFList) result.get(0).get(2);
+        assertThat(list1.getListItems()).hasSize(2);
+        assertThat(list2.getListItems()).hasSize(2);
+    }
+
+    @Test
+    void singleLabel3_stillWrappedInPDFList() {
+        ObjectNode json = createHancomAIJson(
+            createObject(3, "Solo item", 100, 100, 500, 130)
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        assertThat(result.get(0)).hasSize(1);
+        assertThat(result.get(0).get(0)).isInstanceOf(PDFList.class);
+
+        PDFList list = (PDFList) result.get(0).get(0);
+        assertThat(list.getListItems()).hasSize(1);
+    }
+
+    @Test
+    void bulletPrefix_setsLabelLength() {
+        ObjectNode json = createHancomAIJson(
+            createObject(3, "\u2022 Bullet item", 100, 100, 500, 130),  // bullet char + space = 2
+            createObject(3, "1. Numbered item", 100, 150, 500, 180),    // "1. " = 3
+            createObject(3, "a) Letter item", 100, 200, 500, 230)       // "a) " = 3
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        PDFList list = (PDFList) result.get(0).get(0);
+        assertThat(list.getListItems()).hasSize(3);
+        assertThat(list.getListItems().get(0).getLabelLength()).isEqualTo(2);
+        assertThat(list.getListItems().get(1).getLabelLength()).isEqualTo(3);
+        assertThat(list.getListItems().get(2).getLabelLength()).isEqualTo(3);
+    }
+
+    @Test
+    void noBulletPrefix_labelLengthZero() {
+        ObjectNode json = createHancomAIJson(
+            createObject(3, "Plain text item", 100, 100, 500, 130)
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        PDFList list = (PDFList) result.get(0).get(0);
+        assertThat(list.getListItems().get(0).getLabelLength()).isEqualTo(0);
+    }
+
+    @Test
+    void dashBulletPrefix_setsLabelLength() {
+        ObjectNode json = createHancomAIJson(
+            createObject(3, "- Dash item", 100, 100, 500, 130),
+            createObject(3, "\u2013 En-dash item", 100, 150, 500, 180),
+            createObject(3, "\u2014 Em-dash item", 100, 200, 500, 230)
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        PDFList list = (PDFList) result.get(0).get(0);
+        assertThat(list.getListItems().get(0).getLabelLength()).isEqualTo(2);  // "- "
+        assertThat(list.getListItems().get(1).getLabelLength()).isEqualTo(2);  // "\u2013 "
+        assertThat(list.getListItems().get(2).getLabelLength()).isEqualTo(2);  // "\u2014 "
+    }
+
+    @Test
+    void pdfList_hasBoundingBoxUnion() {
+        ObjectNode json = createHancomAIJson(
+            createObject(3, "Item 1", 100, 100, 500, 130),
+            createObject(3, "Item 2", 80, 150, 520, 180)
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        PDFList list = (PDFList) result.get(0).get(0);
+        assertThat(list.getBoundingBox()).isNotNull();
+        // Union bbox should encompass both items
+        // After coordinate conversion: leftX should be min(100, 80)*0.24 = 19.2
+        // rightX should be max(500, 520)*0.24 = 124.8
+        assertThat(list.getBoundingBox().getLeftX()).isLessThanOrEqualTo(
+            list.getListItems().get(0).getBoundingBox().getLeftX());
+        assertThat(list.getBoundingBox().getRightX()).isGreaterThanOrEqualTo(
+            list.getListItems().get(1).getBoundingBox().getRightX());
+    }
+
+    @Test
+    void pdfList_hasRecognizedStructureId() {
+        ObjectNode json = createHancomAIJson(
+            createObject(3, "Item", 100, 100, 500, 130)
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        PDFList list = (PDFList) result.get(0).get(0);
+        assertThat(list.getRecognizedStructureId()).isNotNull();
+    }
+
+    @Test
+    void multiDigitNumberBullet_setsLabelLength() {
+        ObjectNode json = createHancomAIJson(
+            createObject(3, "12. Twelfth item", 100, 100, 500, 130),
+            createObject(3, "3) Third item", 100, 150, 500, 180)
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        PDFList list = (PDFList) result.get(0).get(0);
+        assertThat(list.getListItems().get(0).getLabelLength()).isEqualTo(4);  // "12. "
+        assertThat(list.getListItems().get(1).getLabelLength()).isEqualTo(3);  // "3) "
     }
 
     // --- Helper methods ---
