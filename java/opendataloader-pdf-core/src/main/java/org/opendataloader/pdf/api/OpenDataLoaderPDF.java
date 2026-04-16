@@ -89,7 +89,7 @@ public final class OpenDataLoaderPDF {
         final Path fileNamePath = path.getFileName();
         if (fileNamePath == null) {
             LOGGER.log(Level.WARNING, "Path has no file name component (root path not allowed)");
-            throw new IllegalArgumentException("Path has no file name component: " + path);
+            throw new IllegalArgumentException("Path has no file name component (root paths are not allowed)");
         }
         final String fileName = fileNamePath.toString();
 
