@@ -499,31 +499,45 @@ public class AutoTaggingProcessor {
 
     private static COSObject createTableStructElemReturning(TableBorder table, COSObject parent, COSDocument cosDocument) {
         COSObject tableObject = addStructElement(parent, cosDocument, TaggedPDFConstants.TABLE, table.getPageNumber());
-        for (int rowNumber = 0; rowNumber < table.getNumberOfRows(); rowNumber++) {
-            TableBorderRow row = table.getRow(rowNumber);
-            COSObject rowObject = addStructElement(tableObject, cosDocument, TaggedPDFConstants.TR, row.getPageNumber());
-            boolean isHeaderRow = (rowNumber == 0);
-            for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
-                TableBorderCell cell = row.getCell(colNumber);
-                if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
-                    String cellTag = isHeaderRow ? TaggedPDFConstants.TH : TaggedPDFConstants.TD;
-                    COSObject cellObject = addStructElement(rowObject, cosDocument, cellTag, cell.getPageNumber());
-                    if (isHeaderRow) {
-                        addAttributeToStructElem(cellObject, ASAtom.TABLE,
-                            ASAtom.SCOPE, COSName.construct(ASAtom.getASAtom("Column")));
-                    }
-                    if (cell.getColSpan() != 1) {
-                        addAttributeToStructElem(cellObject, ASAtom.TABLE, ASAtom.COL_SPAN, COSInteger.construct(cell.getColSpan()));
-                    }
-                    if (cell.getRowSpan() != 1) {
-                        addAttributeToStructElem(cellObject, ASAtom.TABLE, ASAtom.ROW_SPAN, COSInteger.construct(cell.getRowSpan()));
-                    }
-                    addKids(cell.getContents(), cellObject, cosDocument);
-                }
+
+        // THead wraps the first row (row 0)
+        COSObject theadObject = addStructElement(tableObject, cosDocument, "THead", table.getPageNumber());
+        addTableRow(table, 0, theadObject, cosDocument, true);
+
+        // TBody wraps remaining rows (row 1+), only if data rows exist
+        if (table.getNumberOfRows() > 1) {
+            COSObject tbodyObject = addStructElement(tableObject, cosDocument, "TBody", table.getPageNumber());
+            for (int rowNumber = 1; rowNumber < table.getNumberOfRows(); rowNumber++) {
+                addTableRow(table, rowNumber, tbodyObject, cosDocument, false);
             }
         }
+
         addCaptionIfPresent(table, tableObject, cosDocument);
         return tableObject;
+    }
+
+    private static void addTableRow(TableBorder table, int rowNumber, COSObject parent,
+                                    COSDocument cosDocument, boolean isHeaderRow) {
+        TableBorderRow row = table.getRow(rowNumber);
+        COSObject rowObject = addStructElement(parent, cosDocument, TaggedPDFConstants.TR, row.getPageNumber());
+        for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
+            TableBorderCell cell = row.getCell(colNumber);
+            if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
+                String cellTag = isHeaderRow ? TaggedPDFConstants.TH : TaggedPDFConstants.TD;
+                COSObject cellObject = addStructElement(rowObject, cosDocument, cellTag, cell.getPageNumber());
+                if (isHeaderRow) {
+                    addAttributeToStructElem(cellObject, ASAtom.TABLE,
+                        ASAtom.SCOPE, COSName.construct(ASAtom.getASAtom("Column")));
+                }
+                if (cell.getColSpan() != 1) {
+                    addAttributeToStructElem(cellObject, ASAtom.TABLE, ASAtom.COL_SPAN, COSInteger.construct(cell.getColSpan()));
+                }
+                if (cell.getRowSpan() != 1) {
+                    addAttributeToStructElem(cellObject, ASAtom.TABLE, ASAtom.ROW_SPAN, COSInteger.construct(cell.getRowSpan()));
+                }
+                addKids(cell.getContents(), cellObject, cosDocument);
+            }
+        }
     }
 
     private static void createStructElemForTextBlock(TableBorder table, COSObject parent, COSDocument cosDocument) {
