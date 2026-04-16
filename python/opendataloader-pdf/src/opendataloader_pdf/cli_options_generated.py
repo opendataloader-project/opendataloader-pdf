@@ -34,7 +34,7 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "type": "string",
         "required": False,
         "default": None,
-        "description": "Output formats (comma-separated). Values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images. Default: json",
+        "description": "Output formats (comma-separated). Values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images, tagged-pdf. Default: json",
     },
     {
         "name": "quiet",

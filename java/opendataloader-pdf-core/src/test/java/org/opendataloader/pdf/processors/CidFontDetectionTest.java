@@ -120,9 +120,11 @@ public class CidFontDetectionTest {
             );
 
             boolean hasReplacementWarning = warnings.stream()
-                .anyMatch(w -> w.contains("replacement characters"));
+                .anyMatch(w -> w.contains("replacement characters")
+                    && w.contains("--hybrid docling-fast")
+                    && !w.contains("--hybrid-mode for OCR fallback"));
             Assertions.assertTrue(hasReplacementWarning,
-                "Expected WARNING log about replacement characters");
+                "Expected WARNING log about replacement characters with actionable hybrid guidance");
         } finally {
             logger.removeHandler(handler);
         }

@@ -69,6 +69,7 @@ public class CLIMain {
         }
 
         String[] arguments = commandLine.getArgs();
+
         Config config;
         boolean quiet;
         try {

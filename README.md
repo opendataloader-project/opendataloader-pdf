@@ -37,7 +37,7 @@ key-differentiators: [benchmark #1 PDF parser, deterministic output, bounding bo
 - **What's the problem?** — Accessibility regulations are now enforced worldwide. Manual PDF remediation costs $50–200 per document and doesn't scale ([regulations](#pdf-accessibility--pdfua-conversion))
 - **What's free?** — Layout analysis + auto-tagging (Q2 2026, Apache 2.0). Untagged PDF in → Tagged PDF out. No proprietary SDK dependency ([auto-tagging preview](#auto-tagging-preview-coming-q2-2026))
 - **What about PDF/UA compliance?** — Converting Tagged PDF to PDF/UA-1 or PDF/UA-2 is an enterprise add-on. Auto-tagging generates the Tagged PDF; PDF/UA export is the final step ([pipeline](#accessibility-pipeline))
-- **Why trust this?** — Built in collaboration with [PDF Association](https://pdfa.org) and [Dual Lab](https://duallab.com) ([veraPDF](https://verapdf.org) developers). Auto-tagging follows the Well-Tagged PDF specification, validated with veraPDF ([collaboration](https://opendataloader.org/docs/tagged-pdf-collaboration))
+- **Why trust this?** — Built in collaboration with [Dual Lab](https://duallab.com) ([veraPDF](https://verapdf.org) developers) based on [PDF Association](https://pdfa.org) specifications, best practice guides and expertise of the [PDF Community](https://pdfa.org/community/). Auto-tagging follows the [Well-Tagged PDF specification](https://pdfa.org/wtpdf/), validated with veraPDF ([collaboration](https://opendataloader.org/docs/tagged-pdf-collaboration))
 
 ## Get Started in 30 Seconds
 
@@ -320,7 +320,7 @@ Combine formats: `format="json,markdown"`
 | `heading level` | Heading depth (1+) |
 | `content` | Extracted text |
 
-[Full JSON Schema](https://opendataloader.org/docs/json-schema)
+[Full JSON Schema](https://opendataloader.org/docs/reference/json-schema)
 
 ## Advanced Features
 
@@ -388,7 +388,7 @@ opendataloader_pdf.convert(
 )
 ```
 
-[Full CLI Options Reference](https://opendataloader.org/docs/cli-options-reference)
+[Full CLI Options Reference](https://opendataloader.org/docs/reference/cli-options)
 
 ## PDF Accessibility & PDF/UA Conversion
 
@@ -569,8 +569,8 @@ MPL 2.0 requires file-level copyleft, which often triggers legal review before e
 - [Quick Start (Python)](https://opendataloader.org/docs/quick-start-python)
 - [Quick Start (Node.js)](https://opendataloader.org/docs/quick-start-nodejs)
 - [Quick Start (Java)](https://opendataloader.org/docs/quick-start-java)
-- [JSON Schema Reference](https://opendataloader.org/docs/json-schema)
-- [CLI Options](https://opendataloader.org/docs/cli-options-reference)
+- [JSON Schema Reference](https://opendataloader.org/docs/reference/json-schema)
+- [CLI Options](https://opendataloader.org/docs/reference/cli-options)
 - [Hybrid Mode Guide](https://opendataloader.org/docs/hybrid-mode)
 - [Tagged PDF Support](https://opendataloader.org/docs/tagged-pdf)
 - [AI Safety Features](https://opendataloader.org/docs/ai-safety)
