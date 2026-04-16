@@ -35,6 +35,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -137,6 +138,9 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
         // Map table structures by page number
         Map<Integer, JsonNode> tableByPage = extractTablePages(tables);
 
+        // Collect all heading heights (label 1 and 4) across all pages for level inference
+        Map<Double, Integer> headingHeightToLevel = buildHeadingHeightToLevelMap(dlaPages);
+
         // Process DLA+OCR objects
         for (int i = 0; i < dlaPages.size(); i++) {
             JsonNode page = dlaPages.get(i);
@@ -151,7 +155,8 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
             if (objects == null || !objects.isArray()) continue;
 
             for (JsonNode obj : objects) {
-                IObject iobj = transformObject(obj, pageNumber, pageHeight, figureCaptionMap);
+                IObject iobj = transformObject(obj, pageNumber, pageHeight, figureCaptionMap,
+                    headingHeightToLevel);
 
                 if (iobj != null) {
                     result.get(pageNumber).add(iobj);
@@ -199,7 +204,8 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
      * Transforms a single DLA object to an IObject based on its label.
      */
     private IObject transformObject(JsonNode obj, int pageIndex, double pageHeight,
-                                     Map<String, String> figureCaptionMap) {
+                                     Map<String, String> figureCaptionMap,
+                                     Map<Double, Integer> headingHeightToLevel) {
         int label = obj.has("label") ? obj.get("label").asInt() : -1;
 
         // Skip furniture
@@ -219,9 +225,11 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
             case LABEL_TITLE:
                 return createHeading(text, bbox, 1);
             case LABEL_HEADING:
-                return createHeading(text, bbox, 2);
-            case LABEL_SUBHEADING:
-                return createHeading(text, bbox, 3);
+            case LABEL_SUBHEADING: {
+                double pixelHeight = bboxNode.get(3).asDouble() - bboxNode.get(1).asDouble();
+                int level = headingHeightToLevel.getOrDefault(pixelHeight, 2);
+                return createHeading(text, bbox, level);
+            }
 
             case LABEL_PARAGRAPH:
             case LABEL_LIST_ITEM:
@@ -332,6 +340,52 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
         }
 
         return table;
+    }
+
+    // --- Helper: heading level inference ---
+
+    /**
+     * Collects all label 1 (heading) and label 4 (subheading) bbox heights across all pages,
+     * then assigns heading levels H2~H6 based on descending height order.
+     *
+     * <p>Taller bbox = bigger font = higher level (H2).
+     * Shorter bbox = smaller font = lower level (H3, H4, ...).
+     * Same height = same level. Capped at H6.
+     * Single unique height defaults to H2.
+     *
+     * @return map from pixel height to heading level (2~6)
+     */
+    private Map<Double, Integer> buildHeadingHeightToLevelMap(List<JsonNode> dlaPages) {
+        // Collect unique heights using TreeSet (natural descending order via reverseOrder)
+        TreeSet<Double> uniqueHeights = new TreeSet<>(Collections.reverseOrder());
+
+        for (JsonNode page : dlaPages) {
+            JsonNode objects = page.get("objects");
+            if (objects == null || !objects.isArray()) continue;
+
+            for (JsonNode obj : objects) {
+                int label = obj.has("label") ? obj.get("label").asInt() : -1;
+                if (label != LABEL_HEADING && label != LABEL_SUBHEADING) continue;
+
+                JsonNode bboxNode = obj.get("bbox");
+                if (bboxNode == null || !bboxNode.isArray() || bboxNode.size() < 4) continue;
+
+                double pixelHeight = bboxNode.get(3).asDouble() - bboxNode.get(1).asDouble();
+                if (pixelHeight > 0) {
+                    uniqueHeights.add(pixelHeight);
+                }
+            }
+        }
+
+        // Assign levels: tallest → H2, next → H3, ... capped at H6
+        Map<Double, Integer> heightToLevel = new HashMap<>();
+        int level = 2;
+        for (Double height : uniqueHeights) {
+            heightToLevel.put(height, Math.min(level, 6));
+            level++;
+        }
+
+        return heightToLevel;
     }
 
     // --- Helper: extract pages from RESULT ---
