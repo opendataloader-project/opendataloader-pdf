@@ -253,6 +253,17 @@ class TestBuildConversionResponseErrorParsing:
         )
         assert response["failed_pages"] == [2, 4, 5]
 
+    def test_overlap_between_gap_and_error_is_deduplicated(self):
+        """Same page from gap and error parsing should appear once."""
+        response = build_conversion_response(
+            status_value="partial_success",
+            json_content={"pages": {"1": {}, "3": {}}},
+            processing_time=1.0,
+            errors=["Page 2: std::bad_alloc"],
+            requested_pages=(1, 3),
+        )
+        assert response["failed_pages"] == [2]
+
     def test_duplicate_page_in_errors(self):
         """Duplicate page numbers in error messages should be deduplicated."""
         errors = [
