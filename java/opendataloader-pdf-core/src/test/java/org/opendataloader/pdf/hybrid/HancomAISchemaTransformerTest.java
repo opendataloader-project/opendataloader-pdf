@@ -837,6 +837,82 @@ public class HancomAISchemaTransformerTest {
         assertThat(footnote.getValue()).isEqualTo("1. See reference [3].");
     }
 
+    // --- Task 7: Regionlist (label 7) → Table/List ---
+
+    @Test
+    void regionlist_withTsrOverlap_returnsNull() {
+        // label 7 with overlapping TSR → null (table handled separately by transformTablePage)
+        // DLA object at [100, 100, 500, 300] (label 7), TSR table covers same area
+        ObjectNode regionObj = createObject(7, "Table data here", 100, 100, 500, 300);
+
+        ObjectNode tsrCell = createTsrCell(0, 0, 1, 1, "cell", 100, 100, 500, 300);
+        double[] tableBbox = {100, 100, 500, 300};
+        ObjectNode json = createHancomAIJsonWithTable(
+            new ObjectNode[]{regionObj},
+            tableBbox,
+            new ObjectNode[]{tsrCell}
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        // label 7 region should be skipped (null), only the TSR table should appear
+        for (IObject obj : result.get(0)) {
+            // No PDFList or SemanticParagraph from label 7 — only the TableBorder from TSR
+            assertThat(obj).isNotInstanceOf(PDFList.class);
+            assertThat(obj).isNotInstanceOf(SemanticParagraph.class);
+        }
+        // TSR table should still be present
+        assertThat(result.get(0).stream().anyMatch(o -> o instanceof TableBorder)).isTrue();
+    }
+
+    @Test
+    void regionlist_withoutTsr_becomesList() {
+        // label 7 without any TSR data → PDFList from newline-split text
+        ObjectNode json = createHancomAIJson(
+            createObject(7, "First line\nSecond line\nThird line", 100, 100, 500, 200)
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        assertThat(result.get(0)).hasSize(1);
+        assertThat(result.get(0).get(0)).isInstanceOf(PDFList.class);
+
+        PDFList list = (PDFList) result.get(0).get(0);
+        assertThat(list.getListItems()).hasSize(3);
+        assertThat(list.getListItems().get(0).getFirstLine().getValue()).isEqualTo("First line");
+        assertThat(list.getListItems().get(1).getFirstLine().getValue()).isEqualTo("Second line");
+        assertThat(list.getListItems().get(2).getFirstLine().getValue()).isEqualTo("Third line");
+    }
+
+    @Test
+    void regionlist_withoutTsr_singleLine_becomesSingleItemList() {
+        // label 7 with single line text → PDFList with one item
+        ObjectNode json = createHancomAIJson(
+            createObject(7, "Solo table text", 100, 100, 500, 130)
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        assertThat(result.get(0)).hasSize(1);
+        assertThat(result.get(0).get(0)).isInstanceOf(PDFList.class);
+
+        PDFList list = (PDFList) result.get(0).get(0);
+        assertThat(list.getListItems()).hasSize(1);
+        assertThat(list.getListItems().get(0).getFirstLine().getValue()).isEqualTo("Solo table text");
+    }
+
+    @Test
+    void regionlist_withoutTsr_emptyText_returnsNull() {
+        // label 7 with empty text → null
+        ObjectNode json = createHancomAIJson(
+            createObject(7, "", 100, 100, 500, 200)
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        assertThat(result.get(0)).isEmpty();
+    }
+
     @Test
     void tableCellText_pageHeaderFooterWords_excluded() {
         // Words with label 14 (page header), 15 (page footer), 17 (page number) should not
