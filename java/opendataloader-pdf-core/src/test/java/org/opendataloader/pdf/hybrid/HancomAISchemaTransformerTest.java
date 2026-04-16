@@ -21,8 +21,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
+import org.opendataloader.pdf.entities.SemanticPicture;
 import org.opendataloader.pdf.hybrid.HybridClient.HybridResponse;
 import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.SemanticCaption;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
@@ -750,6 +752,71 @@ public class HancomAISchemaTransformerTest {
 
         // Words should be sorted: First (higher) then Second (lower)
         assertThat(getCellText(table, 0, 0)).isEqualTo("First Second");
+    }
+
+    // --- Task 5: Caption mapping (label 8 and 11) ---
+
+    @Test
+    void caption_tableName_becomesSemanticCaption() {
+        // label 8 (TableName) → SemanticCaption
+        ObjectNode json = createHancomAIJson(
+            createObject(8, "Table 1: Revenue", 100, 300, 500, 330)
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        assertThat(result.get(0)).hasSize(1);
+        assertThat(result.get(0).get(0)).isInstanceOf(SemanticCaption.class);
+        SemanticCaption caption = (SemanticCaption) result.get(0).get(0);
+        assertThat(caption.getValue()).isEqualTo("Table 1: Revenue");
+    }
+
+    @Test
+    void caption_figureName_becomesSemanticCaption() {
+        // label 11 (FigureName) → SemanticCaption
+        ObjectNode json = createHancomAIJson(
+            createObject(11, "Figure 3: Architecture", 100, 400, 500, 430)
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        assertThat(result.get(0)).hasSize(1);
+        assertThat(result.get(0).get(0)).isInstanceOf(SemanticCaption.class);
+        SemanticCaption caption = (SemanticCaption) result.get(0).get(0);
+        assertThat(caption.getValue()).isEqualTo("Figure 3: Architecture");
+    }
+
+    @Test
+    void caption_linkedToNearestFloat() {
+        // label 8 near a table → linkedContentId matches table's recognizedStructureId
+        // Table at pixel [100, 100, 500, 300], caption label 8 at [100, 310, 500, 340]
+        // Also a figure far away at [100, 800, 500, 1000]
+        ObjectNode[] dlaObjects = {
+            createObject(8, "Table 1: Data", 100, 310, 500, 340),
+            createObject(9, "", 100, 800, 500, 1000)
+        };
+
+        ObjectNode tsrCell = createTsrCell(0, 0, 1, 1, "cell", 100, 100, 500, 300);
+        double[] tableBbox = {100, 100, 500, 300};
+        ObjectNode json = createHancomAIJsonWithTable(
+            dlaObjects,
+            tableBbox,
+            new ObjectNode[]{tsrCell}
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        // Find caption and table
+        SemanticCaption caption = null;
+        TableBorder table = null;
+        for (IObject obj : result.get(0)) {
+            if (obj instanceof SemanticCaption) caption = (SemanticCaption) obj;
+            if (obj instanceof TableBorder) table = (TableBorder) obj;
+        }
+
+        assertThat(caption).isNotNull();
+        assertThat(table).isNotNull();
+        assertThat(caption.getLinkedContentId()).isEqualTo(table.getRecognizedStructureId());
     }
 
     @Test
