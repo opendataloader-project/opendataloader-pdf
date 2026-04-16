@@ -182,12 +182,22 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
 
             double pageHeight = getPageHeight(pageNumber, pageHeights, page);
 
+            // Collect TSR table bboxes for this page (used by label 7 overlap check)
+            List<BoundingBox> tsrTableBboxes = new ArrayList<>();
+            JsonNode tsrPage = tableByPage.get(pageNumber);
+            if (tsrPage != null) {
+                JsonNode tBbox = tsrPage.get("table_bbox");
+                if (tBbox != null && tBbox.isArray() && tBbox.size() >= 4) {
+                    tsrTableBboxes.add(extractBoundingBox(tBbox, pageNumber, pageHeight));
+                }
+            }
+
             JsonNode objects = page.get("objects");
             if (objects == null || !objects.isArray()) continue;
 
             for (JsonNode obj : objects) {
                 IObject iobj = transformObject(obj, pageNumber, pageHeight, figureCaptionMap,
-                    headingHeightToLevel);
+                    headingHeightToLevel, tsrTableBboxes);
 
                 if (iobj != null) {
                     result.get(pageNumber).add(iobj);
@@ -247,7 +257,8 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
      */
     private IObject transformObject(JsonNode obj, int pageIndex, double pageHeight,
                                      Map<String, String> figureCaptionMap,
-                                     Map<Double, Integer> headingHeightToLevel) {
+                                     Map<Double, Integer> headingHeightToLevel,
+                                     List<BoundingBox> tsrTableBboxes) {
         int label = obj.has("label") ? obj.get("label").asInt() : -1;
 
         // Skip furniture
@@ -263,33 +274,43 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
         BoundingBox bbox = extractBoundingBox(bboxNode, pageIndex, pageHeight);
         String text = obj.has("ocrtext") ? obj.get("ocrtext").asText("") : "";
 
+        IObject iobj;
         switch (label) {
             case LABEL_TITLE:
-                return createHeading(text, bbox, 1);
+                iobj = createHeading(text, bbox, 1);
+                break;
             case LABEL_HEADING:
             case LABEL_SUBHEADING: {
                 double pixelHeight = bboxNode.get(3).asDouble() - bboxNode.get(1).asDouble();
                 int level = headingHeightToLevel.getOrDefault(pixelHeight, 2);
-                return createHeading(text, bbox, level);
+                iobj = createHeading(text, bbox, level);
+                break;
             }
 
             case LABEL_LIST_ITEM:
-                return text.isEmpty() ? null : createListItem(text, bbox);
+                iobj = text.isEmpty() ? null : createListItem(text, bbox);
+                break;
 
             case LABEL_TABLE_NAME:
             case LABEL_CAPTION:
-                return text.isEmpty() ? null : createCaption(text, bbox);
+                iobj = text.isEmpty() ? null : createCaption(text, bbox);
+                break;
 
             case LABEL_FOOTNOTE:
-                return text.isEmpty() ? null : createFootnote(text, bbox);
+                iobj = text.isEmpty() ? null : createFootnote(text, bbox);
+                break;
 
             case LABEL_PARAGRAPH:
             case LABEL_AUTHOR:
-                return text.isEmpty() ? null : createParagraph(text, bbox);
+                iobj = text.isEmpty() ? null : createParagraph(text, bbox);
+                break;
 
             case LABEL_TABLE:
-                // Table region detected by DLA — treat as paragraph with table-like text
-                return text.isEmpty() ? null : createParagraph(text, bbox);
+                // Table region detected by DLA — if TSR covers it, skip (table handled separately)
+                if (hasOverlappingTsr(bbox, tsrTableBboxes)) return null;
+                // No TSR data — treat as list (parse text by newlines into ListItems)
+                iobj = text.isEmpty() ? null : createListFromText(text, bbox);
+                break;
 
             case LABEL_FIGURE:
             case LABEL_FIGURE_CAPTION: {
@@ -297,15 +318,20 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
                 int objectId = obj.has("object_id") ? obj.get("object_id").asInt() : -1;
                 String key = pageIndex + ":" + objectId;
                 String caption = figureCaptionMap.get(key);
-                return createPicture(bbox, caption);
+                iobj = createPicture(bbox, caption);
+                break;
             }
 
             case LABEL_FORMULA:
-                return createFormula(text, bbox);
+                iobj = createFormula(text, bbox);
+                break;
 
             default:
-                return text.isEmpty() ? null : createParagraph(text, bbox);
+                iobj = text.isEmpty() ? null : createParagraph(text, bbox);
+                break;
         }
+
+        return iobj;
     }
 
     /**
@@ -517,6 +543,67 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
         double w = b.getRightX() - b.getLeftX();
         double h = b.getTopY() - b.getBottomY();
         return (w > 0 && h > 0) ? w * h : 0.0;
+    }
+
+    // --- Helper: TSR overlap check for label 7 ---
+
+    /**
+     * Checks if any TSR table bbox overlaps with the given region bbox by more than 50%.
+     * Used to determine if a label 7 (Regionlist/Table) region is already covered by TSR data.
+     */
+    private boolean hasOverlappingTsr(BoundingBox regionBbox, List<BoundingBox> tsrTableBboxes) {
+        if (tsrTableBboxes == null || tsrTableBboxes.isEmpty()) return false;
+
+        double regionArea = bboxArea(regionBbox);
+        if (regionArea <= 0) return false;
+
+        for (BoundingBox tsrBbox : tsrTableBboxes) {
+            double intersection = bboxIntersectionArea(regionBbox, tsrBbox);
+            if (intersection / regionArea > WORD_CELL_OVERLAP_THRESHOLD) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Creates a PDFList from text by splitting on newlines.
+     * Each non-empty line becomes a ListItem with bullet detection.
+     */
+    private PDFList createListFromText(String text, BoundingBox bbox) {
+        String[] lines = text.split("\n");
+        List<ListItem> items = new ArrayList<>();
+
+        int lineCount = 0;
+        for (String line : lines) {
+            String trimmed = line.trim();
+            if (trimmed.isEmpty()) continue;
+            lineCount++;
+        }
+
+        // Compute approximate per-item height
+        double itemHeight = (lineCount > 0 && bbox != null)
+            ? (bbox.getTopY() - bbox.getBottomY()) / lineCount : 0;
+
+        int index = 0;
+        for (String line : lines) {
+            String trimmed = line.trim();
+            if (trimmed.isEmpty()) continue;
+
+            // Approximate per-line bbox
+            BoundingBox itemBbox = bbox != null
+                ? new BoundingBox(bbox.getPageNumber(),
+                    bbox.getLeftX(), bbox.getTopY() - (index + 1) * itemHeight,
+                    bbox.getRightX(), bbox.getTopY() - index * itemHeight)
+                : new BoundingBox();
+
+            items.add(createListItem(trimmed, itemBbox));
+            index++;
+        }
+
+        if (items.isEmpty()) return null;
+
+        return buildPDFList(items);
     }
 
     // --- Helper: heading level inference ---
