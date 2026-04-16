@@ -103,9 +103,25 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
     // DPI conversion: API renders at 300 DPI, PDF uses 72 DPI
     private static final double PIXEL_TO_POINT = 72.0 / 300.0;
 
+    // Minimum intersection-over-word-area ratio for bbox matching
+    private static final double WORD_CELL_OVERLAP_THRESHOLD = 0.5;
+
     // Bullet/number prefix pattern for list items
     private static final Pattern BULLET_PREFIX_PATTERN = Pattern.compile(
         "^(\u2022|\u2013|\u2014|-|\\d+[.)::]|[a-zA-Z][.):])(\\s+)");
+
+    /**
+     * Holds text and bounding box for a DLA+OCR word-level object.
+     */
+    private static class WordInfo {
+        final String text;
+        final BoundingBox bbox;
+
+        WordInfo(String text, BoundingBox bbox) {
+            this.text = text;
+            this.bbox = bbox;
+        }
+    }
 
     private int pictureIndex;
 
@@ -149,6 +165,9 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
         // Collect all heading heights (label 1 and 4) across all pages for level inference
         Map<Double, Integer> headingHeightToLevel = buildHeadingHeightToLevelMap(dlaPages);
 
+        // Collect per-page word info for cell-word bbox matching
+        Map<Integer, List<WordInfo>> wordsByPage = collectWordsByPage(dlaPages, pageHeights);
+
         // Process DLA+OCR objects
         for (int i = 0; i < dlaPages.size(); i++) {
             JsonNode page = dlaPages.get(i);
@@ -174,7 +193,8 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
             // Add table from TABLE_STRUCTURE_RECOGNITION if available
             JsonNode tablePage = tableByPage.get(pageNumber);
             if (tablePage != null && tablePage.has("num_cells") && tablePage.get("num_cells").asInt() > 0) {
-                IObject table = transformTablePage(tablePage, pageNumber, pageHeight);
+                List<WordInfo> pageWords = wordsByPage.getOrDefault(pageNumber, Collections.emptyList());
+                IObject table = transformTablePage(tablePage, pageNumber, pageHeight, pageWords);
                 if (table != null) {
                     result.get(pageNumber).add(table);
                 }
@@ -276,8 +296,12 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
 
     /**
      * Transforms a TABLE_STRUCTURE_RECOGNITION page result to a TableBorder.
+     * Uses bbox intersection matching between TSR cells and DLA+OCR words to determine cell content.
+     *
+     * @param pageWords DLA+OCR word-level objects from the page for bbox matching
      */
-    private IObject transformTablePage(JsonNode tablePage, int pageIndex, double pageHeight) {
+    private IObject transformTablePage(JsonNode tablePage, int pageIndex, double pageHeight,
+                                        List<WordInfo> pageWords) {
         JsonNode cellsNode = tablePage.get("cells");
         if (cellsNode == null || !cellsNode.isArray() || cellsNode.size() == 0) {
             return null;
@@ -330,24 +354,41 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
             }
         }
 
-        // Fill cells from API
+        // Fill cells from API with bbox-matched word content
         for (JsonNode cellNode : cellsNode) {
             int row = cellNode.has("row") ? cellNode.get("row").asInt() : 0;
             int col = cellNode.has("col") ? cellNode.get("col").asInt() : 0;
             int rowspan = cellNode.has("rowspan") ? cellNode.get("rowspan").asInt() : 1;
             int colspan = cellNode.has("colspan") ? cellNode.get("colspan").asInt() : 1;
-            String cellText = cellNode.has("text") ? cellNode.get("text").asText("") : "";
 
             if (row < numRows && col < numCols) {
                 TableBorderCell cell = new TableBorderCell(row, col, rowspan, colspan, 0L);
-                double cellLeft = tableBbox.getLeftX() + col * colWidth;
-                double cellRight = cellLeft + colspan * colWidth;
-                double cellTop = tableBbox.getTopY() - row * rowHeight;
-                double cellBottom = cellTop - rowspan * rowHeight;
-                cell.setBoundingBox(new BoundingBox(pageIndex, cellLeft, cellBottom, cellRight, cellTop));
 
-                if (!cellText.isEmpty()) {
-                    cell.addContentObject(createParagraph(cellText, cell.getBoundingBox()));
+                // Compute cell bbox: use TSR cell bbox if available, otherwise fall back to grid
+                BoundingBox cellBbox;
+                JsonNode cellBboxNode = cellNode.get("bbox");
+                if (cellBboxNode != null && cellBboxNode.isArray() && cellBboxNode.size() >= 4) {
+                    cellBbox = extractBoundingBox(cellBboxNode, pageIndex, pageHeight);
+                } else {
+                    double cellLeft = tableBbox.getLeftX() + col * colWidth;
+                    double cellRight = cellLeft + colspan * colWidth;
+                    double cellTop = tableBbox.getTopY() - row * rowHeight;
+                    double cellBottom = cellTop - rowspan * rowHeight;
+                    cellBbox = new BoundingBox(pageIndex, cellLeft, cellBottom, cellRight, cellTop);
+                }
+                cell.setBoundingBox(cellBbox);
+
+                // Match words to this cell via bbox intersection
+                String matchedText = matchWordsToCell(cellBbox, pageWords);
+
+                // Fallback to TSR text field if no words matched
+                if (matchedText.isEmpty()) {
+                    String tsrText = cellNode.has("text") ? cellNode.get("text").asText("") : "";
+                    if (!tsrText.isEmpty()) {
+                        cell.addContentObject(createParagraph(tsrText, cellBbox));
+                    }
+                } else {
+                    cell.addContentObject(createParagraph(matchedText, cellBbox));
                 }
 
                 table.getRows()[row].getCells()[col] = cell;
@@ -355,6 +396,113 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
         }
 
         return table;
+    }
+
+    // --- Helper: cell-word bbox matching ---
+
+    /**
+     * Collects per-page word info (text + bbox in PDF points) from all DLA+OCR objects.
+     * Excludes furniture labels (14, 15, 17) and objects without text.
+     */
+    private Map<Integer, List<WordInfo>> collectWordsByPage(List<JsonNode> dlaPages,
+                                                             Map<Integer, Double> pageHeights) {
+        Map<Integer, List<WordInfo>> wordsByPage = new HashMap<>();
+
+        for (int i = 0; i < dlaPages.size(); i++) {
+            JsonNode page = dlaPages.get(i);
+            int pageNumber = page.has("page_number") ? page.get("page_number").asInt() : i;
+            double pageHeight = getPageHeight(pageNumber, pageHeights, page);
+
+            JsonNode objects = page.get("objects");
+            if (objects == null || !objects.isArray()) continue;
+
+            List<WordInfo> words = new ArrayList<>();
+            for (JsonNode obj : objects) {
+                int label = obj.has("label") ? obj.get("label").asInt() : -1;
+                // Skip furniture labels
+                if (label == LABEL_PAGE_HEADER || label == LABEL_PAGE_FOOTER || label == LABEL_PAGE_NUMBER) {
+                    continue;
+                }
+
+                String text = obj.has("ocrtext") ? obj.get("ocrtext").asText("") : "";
+                if (text.isEmpty()) continue;
+
+                JsonNode bboxNode = obj.get("bbox");
+                if (bboxNode == null || !bboxNode.isArray() || bboxNode.size() < 4) continue;
+
+                BoundingBox bbox = extractBoundingBox(bboxNode, pageNumber, pageHeight);
+                words.add(new WordInfo(text, bbox));
+            }
+
+            if (!words.isEmpty()) {
+                wordsByPage.put(pageNumber, words);
+            }
+        }
+
+        return wordsByPage;
+    }
+
+    /**
+     * Matches DLA+OCR words to a cell by bbox intersection.
+     * A word belongs to a cell if intersection_area / word_area > 0.5.
+     * Matched words are sorted by reading order (top-to-bottom, left-to-right) and joined with space.
+     *
+     * @return joined text of matched words, or empty string if no matches
+     */
+    private String matchWordsToCell(BoundingBox cellBbox, List<WordInfo> pageWords) {
+        if (pageWords == null || pageWords.isEmpty()) {
+            return "";
+        }
+
+        List<WordInfo> matched = new ArrayList<>();
+        for (WordInfo word : pageWords) {
+            double wordArea = bboxArea(word.bbox);
+            if (wordArea <= 0) continue;
+
+            double intersection = bboxIntersectionArea(cellBbox, word.bbox);
+            if (intersection / wordArea > WORD_CELL_OVERLAP_THRESHOLD) {
+                matched.add(word);
+            }
+        }
+
+        if (matched.isEmpty()) {
+            return "";
+        }
+
+        // Sort by reading order: top-to-bottom (descending topY), then left-to-right
+        matched.sort((a, b) -> {
+            int cmp = Double.compare(b.bbox.getTopY(), a.bbox.getTopY()); // higher topY = higher on page
+            if (cmp != 0) return cmp;
+            return Double.compare(a.bbox.getLeftX(), b.bbox.getLeftX());
+        });
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < matched.size(); i++) {
+            if (i > 0) sb.append(' ');
+            sb.append(matched.get(i).text);
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Computes the intersection area of two bounding boxes (both in PDF points, bottom-left origin).
+     */
+    private double bboxIntersectionArea(BoundingBox a, BoundingBox b) {
+        double left = Math.max(a.getLeftX(), b.getLeftX());
+        double right = Math.min(a.getRightX(), b.getRightX());
+        double bottom = Math.max(a.getBottomY(), b.getBottomY());
+        double top = Math.min(a.getTopY(), b.getTopY());
+        if (left >= right || bottom >= top) return 0.0;
+        return (right - left) * (top - bottom);
+    }
+
+    /**
+     * Computes the area of a bounding box.
+     */
+    private double bboxArea(BoundingBox b) {
+        double w = b.getRightX() - b.getLeftX();
+        double h = b.getTopY() - b.getBottomY();
+        return (w > 0 && h > 0) ? w * h : 0.0;
     }
 
     // --- Helper: heading level inference ---

@@ -27,6 +27,8 @@ import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
 import org.verapdf.wcag.algorithms.entities.lists.PDFList;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 
 import java.util.HashMap;
 import java.util.List;
@@ -534,5 +536,251 @@ public class HancomAISchemaTransformerTest {
         }
 
         return json;
+    }
+
+    // --- Cell-word bbox intersection matching (Task 4) ---
+
+    /**
+     * Helper: creates a Hancom AI JSON with DLA+OCR objects AND TABLE_STRUCTURE_RECOGNITION data.
+     * DLA objects and TSR cells use Hancom AI pixel coordinates [left, top, right, bottom].
+     */
+    private ObjectNode createHancomAIJsonWithTable(ObjectNode[] dlaObjects,
+                                                    double[] tableBbox,
+                                                    ObjectNode[] tsrCells) {
+        ObjectNode json = objectMapper.createObjectNode();
+
+        // DLA+OCR
+        ArrayNode dlaOcr = json.putArray("DOCUMENT_LAYOUT_WITH_OCR");
+        ArrayNode dlaPages = dlaOcr.addArray();
+        ObjectNode dlaPage = dlaPages.addObject();
+        dlaPage.put("page_number", 0);
+        dlaPage.put("image_height", 3508);
+        ArrayNode objectsArray = dlaPage.putArray("objects");
+        for (ObjectNode obj : dlaObjects) {
+            objectsArray.add(obj);
+        }
+
+        // TABLE_STRUCTURE_RECOGNITION
+        ArrayNode tsr = json.putArray("TABLE_STRUCTURE_RECOGNITION");
+        ArrayNode tsrPages = tsr.addArray();
+        ObjectNode tsrPage = tsrPages.addObject();
+        tsrPage.put("page_number", 0);
+        tsrPage.put("num_cells", tsrCells.length);
+
+        ArrayNode tbbox = tsrPage.putArray("table_bbox");
+        for (double v : tableBbox) tbbox.add(v);
+
+        ArrayNode cellsArray = tsrPage.putArray("cells");
+        for (ObjectNode cell : tsrCells) {
+            cellsArray.add(cell);
+        }
+
+        return json;
+    }
+
+    /**
+     * Helper: creates a TSR cell node.
+     */
+    private ObjectNode createTsrCell(int row, int col, int rowspan, int colspan,
+                                      String text, double left, double top,
+                                      double right, double bottom) {
+        ObjectNode cell = objectMapper.createObjectNode();
+        cell.put("row", row);
+        cell.put("col", col);
+        cell.put("rowspan", rowspan);
+        cell.put("colspan", colspan);
+        cell.put("text", text);
+        ArrayNode bbox = cell.putArray("bbox");
+        bbox.add(left);
+        bbox.add(top);
+        bbox.add(right);
+        bbox.add(bottom);
+        return cell;
+    }
+
+    /**
+     * Helper: extract text from a TableBorderCell's first content object (SemanticParagraph).
+     */
+    private String getCellText(TableBorder table, int row, int col) {
+        TableBorderCell cell = table.getCell(row, col);
+        if (cell == null || cell.getContents() == null || cell.getContents().isEmpty()) {
+            return "";
+        }
+        IObject content = cell.getContents().get(0);
+        if (content instanceof SemanticParagraph) {
+            return ((SemanticParagraph) content).getValue();
+        }
+        return "";
+    }
+
+    @Test
+    void tableCellText_comesFromBboxWordMatching_notTsrTextField() {
+        // DLA+OCR words positioned inside specific cells
+        // Table at pixel coords [100, 100, 500, 300] (2 rows x 2 cols)
+        // Cell (0,0): [100,100,300,200], Cell (0,1): [300,100,500,200]
+        // Cell (1,0): [100,200,300,300], Cell (1,1): [300,200,500,300]
+        ObjectNode word1 = createObject(2, "Hello", 120, 120, 280, 180);   // inside cell (0,0)
+        ObjectNode word2 = createObject(2, "World", 320, 120, 480, 180);   // inside cell (0,1)
+        ObjectNode word3 = createObject(2, "Foo", 120, 220, 280, 280);     // inside cell (1,0)
+        ObjectNode word4 = createObject(2, "Bar", 320, 220, 480, 280);     // inside cell (1,1)
+
+        // TSR cells have WRONG text (to prove we use bbox matching, not TSR text)
+        ObjectNode tsrCell00 = createTsrCell(0, 0, 1, 1, "WRONG0", 100, 100, 300, 200);
+        ObjectNode tsrCell01 = createTsrCell(0, 1, 1, 1, "WRONG1", 300, 100, 500, 200);
+        ObjectNode tsrCell10 = createTsrCell(1, 0, 1, 1, "WRONG2", 100, 200, 300, 300);
+        ObjectNode tsrCell11 = createTsrCell(1, 1, 1, 1, "WRONG3", 300, 200, 500, 300);
+
+        double[] tableBbox = {100, 100, 500, 300};
+        ObjectNode json = createHancomAIJsonWithTable(
+            new ObjectNode[]{word1, word2, word3, word4},
+            tableBbox,
+            new ObjectNode[]{tsrCell00, tsrCell01, tsrCell10, tsrCell11}
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        // Find the TableBorder in results
+        TableBorder table = null;
+        for (IObject obj : result.get(0)) {
+            if (obj instanceof TableBorder) {
+                table = (TableBorder) obj;
+                break;
+            }
+        }
+        assertThat(table).isNotNull();
+
+        // Cell text should come from DLA words, NOT TSR text field
+        assertThat(getCellText(table, 0, 0)).isEqualTo("Hello");
+        assertThat(getCellText(table, 0, 1)).isEqualTo("World");
+        assertThat(getCellText(table, 1, 0)).isEqualTo("Foo");
+        assertThat(getCellText(table, 1, 1)).isEqualTo("Bar");
+    }
+
+    @Test
+    void tableCellText_wordStraddlingTwoCells_assignedToMajorityOverlap() {
+        // Word bbox straddles cell (0,0) and cell (0,1), but majority is in (0,0)
+        // Table: [100, 100, 500, 300], 1 row x 2 cols
+        // Cell (0,0): [100,100,300,300], Cell (0,1): [300,100,500,300]
+        // Word at [120, 120, 310, 280] → overlaps (0,0) by 180x160=28800, (0,1) by 10x160=1600
+        // 28800/(190*160)=0.947 > 0.5 → assigned to (0,0)
+        // 1600/(190*160)=0.053 < 0.5 → NOT assigned to (0,1)
+        ObjectNode word = createObject(2, "Straddler", 120, 120, 310, 280);
+
+        ObjectNode tsrCell0 = createTsrCell(0, 0, 1, 1, "TSR0", 100, 100, 300, 300);
+        ObjectNode tsrCell1 = createTsrCell(0, 1, 1, 1, "TSR1", 300, 100, 500, 300);
+
+        double[] tableBbox = {100, 100, 500, 300};
+        ObjectNode json = createHancomAIJsonWithTable(
+            new ObjectNode[]{word},
+            tableBbox,
+            new ObjectNode[]{tsrCell0, tsrCell1}
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        TableBorder table = null;
+        for (IObject obj : result.get(0)) {
+            if (obj instanceof TableBorder) {
+                table = (TableBorder) obj;
+                break;
+            }
+        }
+        assertThat(table).isNotNull();
+
+        // Word assigned to cell (0,0) where majority overlap is
+        assertThat(getCellText(table, 0, 0)).isEqualTo("Straddler");
+        // Cell (0,1) should fall back to TSR text since no matching words
+        assertThat(getCellText(table, 0, 1)).isEqualTo("TSR1");
+    }
+
+    @Test
+    void tableCellText_noMatchingWords_fallsBackToTsrText() {
+        // No DLA words on this page — cells should use TSR text field as fallback
+        ObjectNode tsrCell0 = createTsrCell(0, 0, 1, 1, "Fallback Text", 100, 100, 300, 200);
+        ObjectNode tsrCell1 = createTsrCell(0, 1, 1, 1, "Also Fallback", 300, 100, 500, 200);
+
+        double[] tableBbox = {100, 100, 500, 200};
+        ObjectNode json = createHancomAIJsonWithTable(
+            new ObjectNode[]{},   // no DLA words
+            tableBbox,
+            new ObjectNode[]{tsrCell0, tsrCell1}
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        TableBorder table = null;
+        for (IObject obj : result.get(0)) {
+            if (obj instanceof TableBorder) {
+                table = (TableBorder) obj;
+                break;
+            }
+        }
+        assertThat(table).isNotNull();
+
+        assertThat(getCellText(table, 0, 0)).isEqualTo("Fallback Text");
+        assertThat(getCellText(table, 0, 1)).isEqualTo("Also Fallback");
+    }
+
+    @Test
+    void tableCellText_multipleWordsInCell_sortedByReadingOrder() {
+        // Two words in cell (0,0): one higher up, one lower
+        // They should be joined in reading order (top-to-bottom, left-to-right)
+        ObjectNode word1 = createObject(2, "First", 120, 120, 280, 150);   // higher (top=120)
+        ObjectNode word2 = createObject(2, "Second", 120, 160, 280, 190);  // lower (top=160)
+
+        ObjectNode tsrCell = createTsrCell(0, 0, 1, 1, "WRONG", 100, 100, 300, 200);
+        double[] tableBbox = {100, 100, 300, 200};
+
+        ObjectNode json = createHancomAIJsonWithTable(
+            new ObjectNode[]{word2, word1},  // intentionally reversed to test sorting
+            tableBbox,
+            new ObjectNode[]{tsrCell}
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        TableBorder table = null;
+        for (IObject obj : result.get(0)) {
+            if (obj instanceof TableBorder) {
+                table = (TableBorder) obj;
+                break;
+            }
+        }
+        assertThat(table).isNotNull();
+
+        // Words should be sorted: First (higher) then Second (lower)
+        assertThat(getCellText(table, 0, 0)).isEqualTo("First Second");
+    }
+
+    @Test
+    void tableCellText_pageHeaderFooterWords_excluded() {
+        // Words with label 14 (page header), 15 (page footer), 17 (page number) should not
+        // be matched to cells even if their bbox overlaps
+        ObjectNode headerWord = createObject(14, "HEADER", 120, 120, 280, 180);
+        ObjectNode footerWord = createObject(15, "FOOTER", 120, 120, 280, 180);
+        ObjectNode pageNumWord = createObject(17, "42", 120, 120, 280, 180);
+
+        ObjectNode tsrCell = createTsrCell(0, 0, 1, 1, "Fallback", 100, 100, 300, 200);
+        double[] tableBbox = {100, 100, 300, 200};
+
+        ObjectNode json = createHancomAIJsonWithTable(
+            new ObjectNode[]{headerWord, footerWord, pageNumWord},
+            tableBbox,
+            new ObjectNode[]{tsrCell}
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        TableBorder table = null;
+        for (IObject obj : result.get(0)) {
+            if (obj instanceof TableBorder) {
+                table = (TableBorder) obj;
+                break;
+            }
+        }
+        assertThat(table).isNotNull();
+
+        // Furniture words excluded, so falls back to TSR text
+        assertThat(getCellText(table, 0, 0)).isEqualTo("Fallback");
     }
 }
