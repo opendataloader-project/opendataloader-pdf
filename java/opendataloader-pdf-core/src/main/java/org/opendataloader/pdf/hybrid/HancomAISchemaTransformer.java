@@ -18,6 +18,7 @@ package org.opendataloader.pdf.hybrid;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.hybrid.HybridClient.HybridResponse;
+import org.opendataloader.pdf.entities.SemanticFootnote;
 import org.opendataloader.pdf.entities.SemanticFormula;
 import org.opendataloader.pdf.entities.SemanticPicture;
 import org.verapdf.wcag.algorithms.entities.IObject;
@@ -68,7 +69,7 @@ import java.util.regex.Pattern;
  *  10  → Figure with caption (SemanticPicture)
  *  11  → FigureName (SemanticCaption linked to nearest Figure)
  *  12  → Formula (SemanticFormula)
- *  13  → Footnote (SemanticParagraph)
+ *  13  → Footnote (SemanticFootnote → FENote)
  *  14  → Page header (filtered)
  *  15  → Page footer (filtered)
  *  17  → Page number (filtered)
@@ -279,9 +280,11 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
             case LABEL_CAPTION:
                 return text.isEmpty() ? null : createCaption(text, bbox);
 
+            case LABEL_FOOTNOTE:
+                return text.isEmpty() ? null : createFootnote(text, bbox);
+
             case LABEL_PARAGRAPH:
             case LABEL_AUTHOR:
-            case LABEL_FOOTNOTE:
                 return text.isEmpty() ? null : createParagraph(text, bbox);
 
             case LABEL_TABLE:
@@ -696,6 +699,17 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
         caption.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
         caption.setCorrectSemanticScore(1.0);
         return caption;
+    }
+
+    private SemanticFootnote createFootnote(String text, BoundingBox bbox) {
+        TextChunk textChunk = new TextChunk(bbox, text, 12.0, 12.0);
+        textChunk.adjustSymbolEndsToBoundingBox(null);
+        TextLine textLine = new TextLine(textChunk);
+        SemanticFootnote footnote = new SemanticFootnote();
+        footnote.add(textLine);
+        footnote.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+        footnote.setCorrectSemanticScore(1.0);
+        return footnote;
     }
 
     private ListItem createListItem(String text, BoundingBox bbox) {
