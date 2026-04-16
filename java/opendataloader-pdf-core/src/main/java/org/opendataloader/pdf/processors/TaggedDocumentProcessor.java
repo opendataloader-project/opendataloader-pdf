@@ -401,11 +401,8 @@ public class TaggedDocumentProcessor {
         List<ImageChunk> images = image.getImages();
         if (!images.isEmpty()) {
             String alt = parentNode.getStructElem().getStructElemDictionary().getAlternateDescription();
-            if (alt == null) {
-                addObjectToContent(images.get(0));
-            } else {
-                addObjectToContent(new EnrichedImageChunk(images.get(0), alt));
-            }
+            ImageChunk imageChunk = images.get(0);
+            addObjectToContent(alt == null ? imageChunk : new EnrichedImageChunk(imageChunk, alt));
         }
     }
 
