@@ -52,6 +52,13 @@ public class HybridConfig {
 
     private String mode = MODE_AUTO;
 
+    /** Regionlist strategy: table-first (default) — check TSR overlap, skip if TSR exists. */
+    public static final String REGIONLIST_TABLE_FIRST = "table-first";
+    /** Regionlist strategy: list-only — always treat label 7 as list, skip TSR check. */
+    public static final String REGIONLIST_LIST_ONLY = "list-only";
+
+    private String regionlistStrategy = REGIONLIST_TABLE_FIRST;
+
     /**
      * Default constructor initializing the configuration with default values.
      */
@@ -202,5 +209,37 @@ public class HybridConfig {
      */
     public boolean isFullMode() {
         return MODE_FULL.equals(mode);
+    }
+
+    /**
+     * Gets the regionlist strategy for label 7 (Table region) handling.
+     *
+     * @return The regionlist strategy (table-first or list-only).
+     */
+    public String getRegionlistStrategy() {
+        return regionlistStrategy;
+    }
+
+    /**
+     * Sets the regionlist strategy for label 7 (Table region) handling.
+     *
+     * <ul>
+     *   <li>{@code "table-first"} (default): check TSR overlap, skip if TSR exists, else treat as list</li>
+     *   <li>{@code "list-only"}: always treat as list, skip TSR check entirely</li>
+     * </ul>
+     *
+     * @param regionlistStrategy The regionlist strategy to use.
+     */
+    public void setRegionlistStrategy(String regionlistStrategy) {
+        this.regionlistStrategy = regionlistStrategy;
+    }
+
+    /**
+     * Checks if regionlist strategy is list-only (always treat label 7 as list).
+     *
+     * @return true if strategy is list-only, false otherwise.
+     */
+    public boolean isRegionlistListOnly() {
+        return REGIONLIST_LIST_ONLY.equals(regionlistStrategy);
     }
 }

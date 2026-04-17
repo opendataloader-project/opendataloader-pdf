@@ -932,6 +932,68 @@ public class HancomAISchemaTransformerTest {
         assertThat(result.get(0)).isEmpty();
     }
 
+    // --- Task E: regionlistStrategy ---
+
+    @Test
+    void regionlistStrategy_listOnly_withTsrOverlap_stillBecomesList() {
+        // list-only strategy: label 7 with overlapping TSR should NOT be skipped
+        // — it should become a PDFList regardless of TSR presence
+        transformer.setRegionlistStrategy(HybridConfig.REGIONLIST_LIST_ONLY);
+
+        ObjectNode regionObj = createObject(7, "Row 1\nRow 2\nRow 3", 100, 100, 500, 300);
+
+        ObjectNode tsrCell = createTsrCell(0, 0, 1, 1, "cell", 100, 100, 500, 300);
+        double[] tableBbox = {100, 100, 500, 300};
+        ObjectNode json = createHancomAIJsonWithTable(
+            new ObjectNode[]{regionObj},
+            tableBbox,
+            new ObjectNode[]{tsrCell}
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        // Should find a PDFList from label 7 (not skipped despite TSR overlap)
+        boolean hasList = result.get(0).stream().anyMatch(o -> o instanceof PDFList);
+        assertThat(hasList).isTrue();
+
+        PDFList list = (PDFList) result.get(0).stream()
+            .filter(o -> o instanceof PDFList).findFirst().orElse(null);
+        assertThat(list).isNotNull();
+        assertThat(list.getListItems()).hasSize(3);
+        assertThat(list.getListItems().get(0).getFirstLine().getValue()).isEqualTo("Row 1");
+    }
+
+    @Test
+    void regionlistStrategy_tableFirst_withTsrOverlap_skipsLabel7() {
+        // table-first (default): label 7 with TSR overlap is skipped (existing behavior)
+        transformer.setRegionlistStrategy(HybridConfig.REGIONLIST_TABLE_FIRST);
+
+        ObjectNode regionObj = createObject(7, "Table data here", 100, 100, 500, 300);
+
+        ObjectNode tsrCell = createTsrCell(0, 0, 1, 1, "cell", 100, 100, 500, 300);
+        double[] tableBbox = {100, 100, 500, 300};
+        ObjectNode json = createHancomAIJsonWithTable(
+            new ObjectNode[]{regionObj},
+            tableBbox,
+            new ObjectNode[]{tsrCell}
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        // No PDFList from label 7 — only the TableBorder from TSR
+        for (IObject obj : result.get(0)) {
+            assertThat(obj).isNotInstanceOf(PDFList.class);
+        }
+        assertThat(result.get(0).stream().anyMatch(o -> o instanceof TableBorder)).isTrue();
+    }
+
+    @Test
+    void regionlistStrategy_defaultIsTableFirst() {
+        // Default strategy should be table-first
+        HancomAISchemaTransformer freshTransformer = new HancomAISchemaTransformer();
+        assertThat(freshTransformer.getRegionlistStrategy()).isEqualTo(HybridConfig.REGIONLIST_TABLE_FIRST);
+    }
+
     // --- Task 8: confidence → correctSemanticScore ---
 
     @Test
