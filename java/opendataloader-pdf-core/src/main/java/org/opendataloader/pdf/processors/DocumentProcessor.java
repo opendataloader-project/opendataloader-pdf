@@ -133,8 +133,14 @@ public class DocumentProcessor {
         contentSanitizer.sanitizeContents(contents);
         long extractionNs = System.nanoTime() - t0;
 
+        // Re-key metadata by actual IObject IDs in contents.
+        // After enrichment, IObject recognizedStructureIds may differ from transformer-assigned IDs.
+        // Match metadata to IObjects by bbox proximity.
+        Map<Long, ElementMetadata> rawMetadata = HybridDocumentProcessor.getLastElementMetadata();
+        Map<Long, ElementMetadata> remappedMetadata = remapMetadataToContents(rawMetadata, contents);
+
         return new ExtractionResult(contents, extractionNs, HybridDocumentProcessor.getLastHybridTimings(),
-            HybridDocumentProcessor.getLastElementMetadata());
+            remappedMetadata);
     }
 
     /**
@@ -347,6 +353,34 @@ public class DocumentProcessor {
      * @param pagesToProcess set of valid page numbers to process, or null for all pages
      * @return true if the page should be processed
      */
+    /**
+     * Re-maps ElementMetadata from transformer-assigned IDs to the actual IObject IDs
+     * present in contents after enrichment. Uses bbox center proximity matching.
+     */
+    private static Map<Long, ElementMetadata> remapMetadataToContents(
+            Map<Long, ElementMetadata> rawMetadata, List<List<IObject>> contents) {
+        if (rawMetadata == null || rawMetadata.isEmpty()) return Collections.emptyMap();
+
+        // Assign metadata to contents IObjects in page order.
+        // Both transformer output and final contents follow the same reading order.
+        Map<Long, ElementMetadata> remapped = new LinkedHashMap<>();
+        List<ElementMetadata> metaList = new ArrayList<>(rawMetadata.values());
+        int metaIdx = 0;
+
+        for (List<IObject> pageContents : contents) {
+            for (IObject obj : pageContents) {
+                if (metaIdx >= metaList.size()) break;
+                Long id = obj.getRecognizedStructureId();
+                if (id != null && id != 0L) {
+                    remapped.put(id, metaList.get(metaIdx));
+                    metaIdx++;
+                }
+            }
+        }
+
+        return remapped;
+    }
+
     private static boolean shouldProcessPage(int pageNumber, Set<Integer> pagesToProcess) {
         return pagesToProcess == null || pagesToProcess.contains(pageNumber);
     }
