@@ -72,12 +72,14 @@ public class HancomAIClient implements HybridClient {
     private static final MediaType MEDIA_TYPE_PDF = MediaType.parse("application/pdf");
     private static final MediaType MEDIA_TYPE_PNG = MediaType.parse("image/png");
 
-    // DLA label 7 = Table / Regionlist (may be actual table or a list region)
-    private static final int LABEL_TABLE = 7;
+    // DLA label 7 = Regionlist (may be actual table or a list region)
+    private static final int LABEL_REGIONLIST = 7;
 
-    // DLA labels for Figure regions
-    private static final int LABEL_FIGURE = 9;
-    private static final int LABEL_FIGURE_CAPTION = 10;
+    // DLA label 9 = Table
+    private static final int LABEL_TABLE = 9;
+
+    // DLA label 10 = Figure
+    private static final int LABEL_FIGURE = 10;
 
     /** Padding (pixels) added around table crops before sending to TSR. */
     private static final int TSR_CROP_PADDING = 20;
@@ -206,7 +208,7 @@ public class HancomAIClient implements HybridClient {
     /**
      * Captions each Figure found by DLA:
      * 1. Get page images via pdf2img
-     * 2. Find Figure objects (label 9, 10) from DLA results
+     * 2. Find Figure objects (label 10) from DLA results
      * 3. Crop each Figure from page image
      * 4. Send cropped image to IMAGE_CAPTIONING
      *
@@ -231,7 +233,7 @@ public class HancomAIClient implements HybridClient {
 
             for (JsonNode obj : objects) {
                 int label = obj.has("label") ? obj.get("label").asInt() : -1;
-                if (label == LABEL_FIGURE || label == LABEL_FIGURE_CAPTION) {
+                if (label == LABEL_FIGURE) {
                     figuresByPage.computeIfAbsent(pageNum, k -> new ArrayList<>()).add(obj);
                 }
             }
@@ -349,11 +351,11 @@ public class HancomAIClient implements HybridClient {
             JsonNode objects = page.get("objects");
             if (objects == null || !objects.isArray()) continue;
 
-            // Check if any table objects exist on this page
+            // Check if any table/regionlist objects exist on this page
             boolean needsPageImage = false;
             for (JsonNode obj : objects) {
                 int label = obj.has("label") ? obj.get("label").asInt() : -1;
-                if (label == LABEL_TABLE) {
+                if (label == LABEL_REGIONLIST || label == LABEL_TABLE) {
                     needsPageImage = true;
                     break;
                 }
@@ -376,7 +378,7 @@ public class HancomAIClient implements HybridClient {
 
             for (JsonNode obj : objects) {
                 int label = obj.has("label") ? obj.get("label").asInt() : -1;
-                if (label != LABEL_TABLE) continue;
+                if (label != LABEL_REGIONLIST && label != LABEL_TABLE) continue;
 
                 JsonNode bboxNode = obj.get("bbox");
                 if (bboxNode == null || !bboxNode.isArray() || bboxNode.size() < 4) continue;

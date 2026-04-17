@@ -64,10 +64,10 @@ import java.util.regex.Pattern;
  *   3  → List item (SemanticParagraph)
  *   4  → Subheading (SemanticHeading level 3)
  *   6  → Author/Meta (SemanticParagraph)
- *   7  → Table region (handled via TABLE_STRUCTURE_RECOGNITION)
+ *   7  → Regionlist (Table/List region, handled via TABLE_STRUCTURE_RECOGNITION or as list)
  *   8  → TableName (SemanticCaption linked to nearest Table)
- *   9  → Figure (SemanticPicture)
- *  10  → Figure with caption (SemanticPicture)
+ *   9  → Table (handled via TABLE_STRUCTURE_RECOGNITION)
+ *  10  → Figure (SemanticPicture)
  *  11  → FigureName (SemanticCaption linked to nearest Figure)
  *  12  → Formula (SemanticFormula)
  *  13  → Footnote (SemanticFootnote → FENote)
@@ -94,11 +94,11 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
     private static final int LABEL_LIST_ITEM = 3;
     private static final int LABEL_SUBHEADING = 4;
     private static final int LABEL_AUTHOR = 6;
-    private static final int LABEL_TABLE = 7;
+    private static final int LABEL_REGIONLIST = 7;
     private static final int LABEL_TABLE_NAME = 8;
-    private static final int LABEL_FIGURE = 9;
-    private static final int LABEL_FIGURE_CAPTION = 10;
-    private static final int LABEL_CAPTION = 11;
+    private static final int LABEL_TABLE = 9;
+    private static final int LABEL_FIGURE = 10;
+    private static final int LABEL_FIGURE_NAME = 11;
     private static final int LABEL_FORMULA = 12;
     private static final int LABEL_FOOTNOTE = 13;
     private static final int LABEL_PAGE_HEADER = 14;
@@ -312,7 +312,7 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
                 break;
 
             case LABEL_TABLE_NAME:
-            case LABEL_CAPTION:
+            case LABEL_FIGURE_NAME:
                 iobj = text.isEmpty() ? null : createCaption(text, bbox);
                 break;
 
@@ -325,7 +325,7 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
                 iobj = text.isEmpty() ? null : createParagraph(text, bbox);
                 break;
 
-            case LABEL_TABLE:
+            case LABEL_REGIONLIST:
                 if (HybridConfig.REGIONLIST_LIST_ONLY.equals(regionlistStrategy)) {
                     // list-only: always treat as list, skip TSR check
                     iobj = text.isEmpty() ? null : createListFromText(text, bbox);
@@ -337,8 +337,11 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
                 }
                 break;
 
-            case LABEL_FIGURE:
-            case LABEL_FIGURE_CAPTION: {
+            case LABEL_TABLE:
+                // Table regions are handled separately by transformTablePage() via TSR
+                return null;
+
+            case LABEL_FIGURE: {
                 // Look up per-figure caption from IMAGE_CAPTIONING
                 int objectId = obj.has("object_id") ? obj.get("object_id").asInt() : -1;
                 String key = pageIndex + ":" + objectId;
