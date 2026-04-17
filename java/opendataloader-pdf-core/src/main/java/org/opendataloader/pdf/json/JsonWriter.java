@@ -28,13 +28,17 @@ import org.verapdf.cos.COSTrailer;
 import org.verapdf.gf.model.impl.cos.GFCosInfo;
 import org.verapdf.pd.PDDocument;
 import org.verapdf.tools.StaticResources;
+import org.opendataloader.pdf.hybrid.ElementMetadata;
+import org.opendataloader.pdf.json.serializers.SerializerUtil;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -48,26 +52,55 @@ public class JsonWriter {
     }
 
     public static void writeToJson(File inputPDF, String outputFolder, List<List<IObject>> contents) throws IOException {
+        writeToJson(inputPDF, outputFolder, contents, Collections.emptyMap(), null);
+    }
+
+    public static void writeToJson(File inputPDF, String outputFolder, List<List<IObject>> contents,
+                                   Map<Long, ElementMetadata> elementMetadata) throws IOException {
+        writeToJson(inputPDF, outputFolder, contents, elementMetadata, null);
+    }
+
+    public static void writeToJson(File inputPDF, String outputFolder, List<List<IObject>> contents,
+                                   Map<Long, ElementMetadata> elementMetadata,
+                                   Map<String, Object> hybridInfo) throws IOException {
         StaticLayoutContainers.resetImageIndex();
         String jsonFileName = outputFolder + File.separator + inputPDF.getName().substring(0, inputPDF.getName().length() - 3) + "json";
         try (JsonGenerator jsonGenerator = getJsonGenerator(jsonFileName)) {
             jsonGenerator.writeStartObject();
             writeDocumentInfo(jsonGenerator, inputPDF.getName());
-            jsonGenerator.writeArrayFieldStart(JsonName.KIDS);
-            for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
-                for (IObject content : contents.get(pageNumber)) {
-                    if (!(content instanceof LineArtChunk)) {
-                        jsonGenerator.writePOJO(content);
-                    }
-                }
+
+            if (hybridInfo != null && !hybridInfo.isEmpty()) {
+                writeHybridBlock(jsonGenerator, hybridInfo);
             }
 
-            jsonGenerator.writeEndArray();
+            SerializerUtil.setElementMetadata(elementMetadata);
+            try {
+                jsonGenerator.writeArrayFieldStart(JsonName.KIDS);
+                for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
+                    for (IObject content : contents.get(pageNumber)) {
+                        if (!(content instanceof LineArtChunk)) {
+                            jsonGenerator.writePOJO(content);
+                        }
+                    }
+                }
+                jsonGenerator.writeEndArray();
+            } finally {
+                SerializerUtil.clearElementMetadata();
+            }
+
             jsonGenerator.writeEndObject();
             LOGGER.log(Level.INFO, "Created {0}", jsonFileName);
         } catch (Exception ex) {
             LOGGER.log(Level.WARNING, "Unable to create JSON output: " + ex.getMessage());
         }
+    }
+
+    private static void writeHybridBlock(JsonGenerator generator, Map<String, Object> hybridInfo) throws IOException {
+        generator.writeObjectFieldStart(JsonName.HYBRID);
+        for (Map.Entry<String, Object> entry : hybridInfo.entrySet()) {
+            generator.writePOJOField(entry.getKey(), entry.getValue());
+        }
+        generator.writeEndObject();
     }
 
     private static void writeDocumentInfo(JsonGenerator generator, String pdfName) throws IOException {

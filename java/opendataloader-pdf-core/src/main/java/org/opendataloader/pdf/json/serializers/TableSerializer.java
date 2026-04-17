@@ -60,6 +60,7 @@ public class TableSerializer extends StdSerializer<TableBorder> {
             }
             jsonGenerator.writeEndArray();
         }
+        SerializerUtil.writeMetadataIfPresent(jsonGenerator, table);
         jsonGenerator.writeEndObject();
     }
 }

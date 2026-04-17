@@ -49,6 +49,7 @@ public class ListSerializer extends StdSerializer<PDFList> {
         }
 
         jsonGenerator.writeEndArray();
+        SerializerUtil.writeMetadataIfPresent(jsonGenerator, list);
         jsonGenerator.writeEndObject();
     }
 }
