@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.opendataloader.pdf.hybrid.HybridClient.HybridResponse;
 import org.verapdf.wcag.algorithms.entities.IObject;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -67,4 +68,14 @@ public interface HybridSchemaTransformer {
      * @return The backend name (e.g., "docling", "hancom").
      */
     String getBackendType();
+
+    /**
+     * Returns per-element metadata produced during the last {@link #transform} call.
+     * Keys are {@code IObject.recognizedStructureId} values.
+     *
+     * @return unmodifiable map of element metadata, empty by default
+     */
+    default Map<Long, ElementMetadata> getElementMetadata() {
+        return Collections.emptyMap();
+    }
 }

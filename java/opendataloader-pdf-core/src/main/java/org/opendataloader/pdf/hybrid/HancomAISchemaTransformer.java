@@ -131,6 +131,12 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
 
     private int pictureIndex;
     private String regionlistStrategy = HybridConfig.REGIONLIST_TABLE_FIRST;
+    private Map<Long, ElementMetadata> elementMetadataMap = new LinkedHashMap<>();
+
+    @Override
+    public Map<Long, ElementMetadata> getElementMetadata() {
+        return Collections.unmodifiableMap(elementMetadataMap);
+    }
 
     /**
      * Sets the regionlist strategy for label 7 handling.
@@ -164,6 +170,7 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
         }
 
         pictureIndex = 0;
+        elementMetadataMap.clear();
 
         // Get DLA+OCR results (primary source for layout + text)
         JsonNode dlaOcr = json.get("DOCUMENT_LAYOUT_WITH_OCR");
@@ -403,6 +410,44 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
             ((SemanticNode) iobj).setCorrectSemanticScore(confidence);
         }
 
+        // Produce ElementMetadata for this IObject
+        if (iobj != null && iobj.getRecognizedStructureId() != null) {
+            double confidence = obj.has("confidence") ? obj.get("confidence").asDouble(1.0) : 1.0;
+            ElementMetadata meta = new ElementMetadata()
+                .setConfidence(confidence)
+                .setSourceLabel(label);
+
+            if (label == LABEL_HEADING || label == LABEL_SUBHEADING) {
+                double pixelHeight = bboxNode.get(3).asDouble() - bboxNode.get(1).asDouble();
+                meta.setHeadingInferenceMethod("bbox-height")
+                    .setBboxHeightPx(pixelHeight);
+            } else if (label == LABEL_TITLE) {
+                meta.setHeadingInferenceMethod("fixed");
+            } else if (label == LABEL_FIGURE) {
+                int objectId = obj.has("object_id") ? obj.get("object_id").asInt() : -1;
+                String key = pageIndex + ":" + objectId;
+                String captionText = figureCaptionMap.get(key);
+                if (captionText != null) {
+                    ElementMetadata.CaptionMetadata capMeta = new ElementMetadata.CaptionMetadata();
+                    capMeta.setText(captionText);
+                    capMeta.setLanguage(detectLanguage(captionText));
+                    meta.setCaption(capMeta);
+                }
+            } else if (label == LABEL_REGIONLIST) {
+                ElementMetadata.RegionlistResolution rlRes = new ElementMetadata.RegionlistResolution();
+                rlRes.setStrategy(regionlistStrategy);
+                if (HybridConfig.REGIONLIST_LIST_ONLY.equals(regionlistStrategy)) {
+                    rlRes.setTsrAttempted(false);
+                } else {
+                    rlRes.setTsrAttempted(true);
+                    rlRes.setTsrResult(hasOverlappingTsr(bbox, tsrTableBboxes) ? "success" : "no-cells");
+                }
+                meta.setRegionlistResolution(rlRes);
+            }
+
+            elementMetadataMap.put(iobj.getRecognizedStructureId(), meta);
+        }
+
         return iobj;
     }
 
@@ -576,6 +621,18 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
                 table.getRows()[startRow].getCells()[startCol] = cell;
             }
         }
+
+        // Produce ElementMetadata for the table
+        ElementMetadata tableMeta = new ElementMetadata()
+            .setSourceLabel(tableEntry.has("label") ? tableEntry.get("label").asInt() : LABEL_TABLE);
+        if (tsr != null) {
+            ElementMetadata.TsrMetadata tsrMeta = new ElementMetadata.TsrMetadata();
+            tsrMeta.setNumCells(tsr.has("num_cells") ? tsr.get("num_cells").asInt() : 0);
+            tsrMeta.setHtml(tsr.has("html") ? tsr.get("html").asText("") : "");
+            tsrMeta.setRunTimeMs(tsr.has("run_time") ? tsr.get("run_time").asLong() : 0);
+            tableMeta.setTsr(tsrMeta);
+        }
+        elementMetadataMap.put(table.getRecognizedStructureId(), tableMeta);
 
         return table;
     }
@@ -1063,6 +1120,24 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
         }
 
         return list;
+    }
+
+    /**
+     * Simple language detection heuristic: if the text contains any CJK character, returns "ko";
+     * otherwise returns "en".
+     */
+    static String detectLanguage(String text) {
+        if (text == null) return "en";
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (Character.UnicodeScript.of(c) == Character.UnicodeScript.HANGUL
+                || Character.UnicodeScript.of(c) == Character.UnicodeScript.HAN
+                || Character.UnicodeScript.of(c) == Character.UnicodeScript.HIRAGANA
+                || Character.UnicodeScript.of(c) == Character.UnicodeScript.KATAKANA) {
+                return "ko";
+            }
+        }
+        return "en";
     }
 
     /**

@@ -1367,6 +1367,177 @@ public class HancomAISchemaTransformerTest {
         assertThat(tableCount).isEqualTo(2);
     }
 
+    // --- Task G: ElementMetadata ---
+
+    @Test
+    void metadata_paragraphHasConfidenceAndSourceLabel() {
+        ObjectNode obj = createObjectWithConfidence(2, "Test paragraph", 100, 100, 500, 130, 0.88);
+        ObjectNode json = createHancomAIJson(obj);
+
+        List<List<IObject>> result = transform(json);
+
+        assertThat(result.get(0)).hasSize(1);
+        IObject iobj = result.get(0).get(0);
+        assertThat(iobj.getRecognizedStructureId()).isNotNull();
+
+        Map<Long, ElementMetadata> metadata = transformer.getElementMetadata();
+        assertThat(metadata).containsKey(iobj.getRecognizedStructureId());
+
+        ElementMetadata meta = metadata.get(iobj.getRecognizedStructureId());
+        assertThat(meta.getConfidence()).isEqualTo(0.88);
+        assertThat(meta.getSourceLabel()).isEqualTo(2);
+        assertThat(meta.getHeadingInferenceMethod()).isNull();
+    }
+
+    @Test
+    void metadata_headingHasBboxHeightInference() {
+        ObjectNode json = createHancomAIJson(
+            createObjectWithConfidence(1, "Section Title", 100, 100, 500, 160, 0.92)
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        SemanticHeading heading = (SemanticHeading) result.get(0).get(0);
+        Map<Long, ElementMetadata> metadata = transformer.getElementMetadata();
+        ElementMetadata meta = metadata.get(heading.getRecognizedStructureId());
+
+        assertThat(meta).isNotNull();
+        assertThat(meta.getSourceLabel()).isEqualTo(1);
+        assertThat(meta.getHeadingInferenceMethod()).isEqualTo("bbox-height");
+        assertThat(meta.getBboxHeightPx()).isEqualTo(60.0);  // 160 - 100
+    }
+
+    @Test
+    void metadata_titleHasFixedInference() {
+        ObjectNode json = createHancomAIJson(
+            createObject(0, "Document Title", 100, 50, 500, 100)
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        SemanticHeading heading = (SemanticHeading) result.get(0).get(0);
+        Map<Long, ElementMetadata> metadata = transformer.getElementMetadata();
+        ElementMetadata meta = metadata.get(heading.getRecognizedStructureId());
+
+        assertThat(meta).isNotNull();
+        assertThat(meta.getHeadingInferenceMethod()).isEqualTo("fixed");
+        assertThat(meta.getBboxHeightPx()).isNull();
+    }
+
+    @Test
+    void metadata_tableHasTsrMetadata() {
+        ObjectNode tsrCell = createTsrCell(0, 0, 1, 1, "cell", 100, 100, 300, 200);
+        double[] tableBbox = {100, 100, 300, 200};
+        ObjectNode json = createHancomAIJsonWithTable(
+            new ObjectNode[]{},
+            tableBbox,
+            new ObjectNode[]{tsrCell}
+        );
+
+        // Add num_cells to the tsr object
+        // The helper already sets num_cells = tsrCells.length
+
+        List<List<IObject>> result = transform(json);
+
+        TableBorder table = null;
+        for (IObject obj : result.get(0)) {
+            if (obj instanceof TableBorder) {
+                table = (TableBorder) obj;
+                break;
+            }
+        }
+        assertThat(table).isNotNull();
+
+        Map<Long, ElementMetadata> metadata = transformer.getElementMetadata();
+        ElementMetadata meta = metadata.get(table.getRecognizedStructureId());
+
+        assertThat(meta).isNotNull();
+        assertThat(meta.getSourceLabel()).isEqualTo(9);
+        assertThat(meta.getTsr()).isNotNull();
+        assertThat(meta.getTsr().getNumCells()).isEqualTo(1);
+    }
+
+    @Test
+    void metadata_figureHasCaptionMetadata() {
+        // Create figure with caption from FIGURE_CAPTIONS
+        ObjectNode json = objectMapper.createObjectNode();
+
+        // DLA+OCR with a figure object
+        ArrayNode dlaOcr = json.putArray("DOCUMENT_LAYOUT_WITH_OCR");
+        ArrayNode dlaPages = dlaOcr.addArray();
+        ObjectNode page = dlaPages.addObject();
+        page.put("page_number", 0);
+        page.put("image_height", 3508);
+        ArrayNode objects = page.putArray("objects");
+        ObjectNode figObj = objects.addObject();
+        figObj.put("label", 10);
+        figObj.put("ocrtext", "");
+        figObj.put("confidence", 0.91);
+        figObj.put("object_id", 5);
+        ArrayNode bbox = figObj.putArray("bbox");
+        bbox.add(100); bbox.add(100); bbox.add(500); bbox.add(400);
+
+        // FIGURE_CAPTIONS
+        ArrayNode figureCaptions = json.putArray("FIGURE_CAPTIONS");
+        ObjectNode cap = figureCaptions.addObject();
+        cap.put("page_number", 0);
+        cap.put("object_id", 5);
+        cap.put("caption", "A beautiful chart");
+
+        List<List<IObject>> result = transform(json);
+
+        SemanticPicture pic = (SemanticPicture) result.get(0).get(0);
+        Map<Long, ElementMetadata> metadata = transformer.getElementMetadata();
+        ElementMetadata meta = metadata.get(pic.getRecognizedStructureId());
+
+        assertThat(meta).isNotNull();
+        assertThat(meta.getSourceLabel()).isEqualTo(10);
+        assertThat(meta.getCaption()).isNotNull();
+        assertThat(meta.getCaption().getText()).isEqualTo("A beautiful chart");
+        assertThat(meta.getCaption().getLanguage()).isEqualTo("en");
+    }
+
+    @Test
+    void metadata_regionlistHasResolution() {
+        // label 7 without TSR → list-only style resolution
+        ObjectNode json = createHancomAIJson(
+            createObjectWithConfidence(7, "Line one\nLine two", 100, 100, 500, 200, 0.80)
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        assertThat(result.get(0)).hasSize(1);
+        IObject iobj = result.get(0).get(0);
+
+        Map<Long, ElementMetadata> metadata = transformer.getElementMetadata();
+        ElementMetadata meta = metadata.get(iobj.getRecognizedStructureId());
+
+        assertThat(meta).isNotNull();
+        assertThat(meta.getSourceLabel()).isEqualTo(7);
+        assertThat(meta.getRegionlistResolution()).isNotNull();
+        assertThat(meta.getRegionlistResolution().getStrategy()).isEqualTo("table-first");
+        assertThat(meta.getRegionlistResolution().isTsrAttempted()).isTrue();
+        assertThat(meta.getRegionlistResolution().getTsrResult()).isEqualTo("no-cells");
+    }
+
+    @Test
+    void metadata_clearedBetweenTransformCalls() {
+        // First transform
+        ObjectNode json1 = createHancomAIJson(
+            createObject(2, "First call", 100, 100, 500, 130)
+        );
+        transform(json1);
+        assertThat(transformer.getElementMetadata()).hasSize(1);
+
+        // Second transform should clear previous metadata
+        ObjectNode json2 = createHancomAIJson(
+            createObject(2, "Second call A", 100, 100, 500, 130),
+            createObject(2, "Second call B", 100, 200, 500, 230)
+        );
+        transform(json2);
+        assertThat(transformer.getElementMetadata()).hasSize(2);
+    }
+
     @Test
     void tableCellText_pageHeaderFooterWords_excluded() {
         // Words with label 14 (page header), 15 (page footer), 17 (page number) should not
