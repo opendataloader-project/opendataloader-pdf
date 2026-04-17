@@ -82,7 +82,7 @@ public final class AutoTagger {
         long taggingNs = System.nanoTime() - t0;
 
         return new TaggingResult(document, extraction.getExtractionNs(), taggingNs,
-            extraction.getHybridTimings());
+            extraction.getHybridTimings(), extraction.getElementMetadata());
     }
 
     /**

@@ -132,7 +132,8 @@ public class DocumentProcessor {
         contentSanitizer.sanitizeContents(contents);
         long extractionNs = System.nanoTime() - t0;
 
-        return new ExtractionResult(contents, extractionNs, HybridDocumentProcessor.getLastHybridTimings());
+        return new ExtractionResult(contents, extractionNs, HybridDocumentProcessor.getLastHybridTimings(),
+            HybridDocumentProcessor.getLastElementMetadata());
     }
 
     /**

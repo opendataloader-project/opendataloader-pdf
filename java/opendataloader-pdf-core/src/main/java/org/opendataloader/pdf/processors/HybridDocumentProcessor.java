@@ -21,6 +21,7 @@ import org.opendataloader.pdf.entities.EnrichedImageChunk;
 import org.opendataloader.pdf.entities.SemanticFormula;
 import org.opendataloader.pdf.entities.SemanticPicture;
 import org.opendataloader.pdf.hybrid.DoclingSchemaTransformer;
+import org.opendataloader.pdf.hybrid.ElementMetadata;
 import org.opendataloader.pdf.hybrid.HancomAISchemaTransformer;
 import org.opendataloader.pdf.hybrid.HancomSchemaTransformer;
 import org.opendataloader.pdf.hybrid.HybridClient;
@@ -90,9 +91,20 @@ public class HybridDocumentProcessor {
      */
     private static volatile JsonNode lastHybridTimings;
 
+    /**
+     * Stores element metadata from the most recent hybrid backend processing.
+     * Reset at the start of each {@code processDocument} call.
+     */
+    private static volatile Map<Long, ElementMetadata> lastElementMetadata;
+
     /** Returns the hybrid server timings from the most recent {@link #processDocument} call. */
     public static JsonNode getLastHybridTimings() {
         return lastHybridTimings;
+    }
+
+    /** Returns the element metadata from the most recent {@link #processDocument} call. */
+    public static Map<Long, ElementMetadata> getLastElementMetadata() {
+        return lastElementMetadata;
     }
 
     /**
@@ -143,6 +155,7 @@ public class HybridDocumentProcessor {
             Path outputDir) throws IOException {
 
         lastHybridTimings = null; // Reset for this processing run
+        lastElementMetadata = null;
 
         int totalPages = StaticContainers.getDocument().getNumberOfPages();
         LOGGER.log(Level.INFO, "Starting hybrid processing for {0} pages", totalPages);
@@ -498,6 +511,9 @@ public class HybridDocumentProcessor {
                 }
             }
         }
+
+        // Capture element metadata from the transformer (e.g., HancomAISchemaTransformer)
+        lastElementMetadata = transformer.getElementMetadata();
 
         // Note: Client is cached and reused across documents.
         // HybridClientFactory.shutdown() should be called at CLI exit.
