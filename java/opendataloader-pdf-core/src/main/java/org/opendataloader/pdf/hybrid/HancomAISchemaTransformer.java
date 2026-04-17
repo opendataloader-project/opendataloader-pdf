@@ -611,9 +611,9 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
                 // Fallback to TSR text field if no words matched
                 if (matchedText.isEmpty()) {
                     String tsrText = cellNode.has("text") ? cellNode.get("text").asText("") : "";
-                    if (!tsrText.isEmpty()) {
-                        cell.addContentObject(createParagraph(tsrText, cellBbox));
-                    }
+                    // Always add a paragraph (even empty) so the cell has a /K child.
+                    // Adobe Acrobat ignores table structure when cells lack children.
+                    cell.addContentObject(createParagraph(tsrText.isEmpty() ? "" : tsrText, cellBbox));
                 } else {
                     cell.addContentObject(createParagraph(matchedText, cellBbox));
                 }
