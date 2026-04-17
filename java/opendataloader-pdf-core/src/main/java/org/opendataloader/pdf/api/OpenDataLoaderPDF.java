@@ -35,6 +35,7 @@ public final class OpenDataLoaderPDF {
 
     private static final Logger LOGGER = Logger.getLogger(OpenDataLoaderPDF.class.getName());
 
+    /** Utility class; do not instantiate. */
     private OpenDataLoaderPDF() {
     }
 
