@@ -59,6 +59,15 @@ public class HybridConfig {
 
     private String regionlistStrategy = REGIONLIST_TABLE_FIRST;
 
+    /** Page image cache strategy: "memory" (default) or "disk". */
+    private String imageCache = "memory";
+
+    /** Whether to save cropped figure images to disk for debugging. */
+    private boolean saveCrops = false;
+
+    /** Output directory for saved crops (set by CLI when --save-crops is used). */
+    private String cropOutputDir = null;
+
     /**
      * Default constructor initializing the configuration with default values.
      */
@@ -241,5 +250,59 @@ public class HybridConfig {
      */
     public boolean isRegionlistListOnly() {
         return REGIONLIST_LIST_ONLY.equals(regionlistStrategy);
+    }
+
+    /**
+     * Gets the page image cache strategy.
+     *
+     * @return "memory" or "disk".
+     */
+    public String getImageCache() {
+        return imageCache;
+    }
+
+    /**
+     * Sets the page image cache strategy.
+     *
+     * @param imageCache "memory" (in-heap HashMap) or "disk" (temp PNG files).
+     */
+    public void setImageCache(String imageCache) {
+        this.imageCache = imageCache;
+    }
+
+    /**
+     * Checks if cropped figure images should be saved to disk.
+     *
+     * @return true if save-crops is enabled.
+     */
+    public boolean isSaveCrops() {
+        return saveCrops;
+    }
+
+    /**
+     * Sets whether to save cropped figure images to disk.
+     *
+     * @param saveCrops true to save crops.
+     */
+    public void setSaveCrops(boolean saveCrops) {
+        this.saveCrops = saveCrops;
+    }
+
+    /**
+     * Gets the output directory for saved crops.
+     *
+     * @return the crop output directory path, or null if not set.
+     */
+    public String getCropOutputDir() {
+        return cropOutputDir;
+    }
+
+    /**
+     * Sets the output directory for saved crops.
+     *
+     * @param cropOutputDir the directory path.
+     */
+    public void setCropOutputDir(String cropOutputDir) {
+        this.cropOutputDir = cropOutputDir;
     }
 }

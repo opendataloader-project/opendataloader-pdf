@@ -77,8 +77,10 @@ public class HancomAIClient implements HybridClient {
     private final String baseUrl;
     private final OkHttpClient httpClient;
     private final ObjectMapper objectMapper;
+    private final HybridConfig config;
 
     public HancomAIClient(HybridConfig config) {
+        this.config = config;
         this.baseUrl = config.getEffectiveUrl("hancom-ai");
         this.objectMapper = new ObjectMapper();
         this.httpClient = new OkHttpClient.Builder()
@@ -90,6 +92,7 @@ public class HancomAIClient implements HybridClient {
 
     // Visible for testing
     HancomAIClient(String baseUrl, OkHttpClient httpClient, ObjectMapper objectMapper) {
+        this.config = new HybridConfig();
         this.baseUrl = baseUrl;
         this.httpClient = httpClient;
         this.objectMapper = objectMapper;
@@ -124,40 +127,52 @@ public class HancomAIClient implements HybridClient {
         byte[] pdfBytes = request.getPdfBytes();
         LOGGER.log(Level.INFO, "Hancom AI: processing PDF ({0} bytes)", pdfBytes.length);
 
-        ObjectNode merged = objectMapper.createObjectNode();
-        ObjectNode timingsNode = objectMapper.createObjectNode();
+        try (PageImageCache pageImageCache = createPageImageCache()) {
+            ObjectNode merged = objectMapper.createObjectNode();
+            ObjectNode timingsNode = objectMapper.createObjectNode();
 
-        // Step 1: DLA + OCR
-        JsonNode dlaOcrResult = callModule(pdfBytes, "DOCUMENT_LAYOUT_WITH_OCR");
-        merged.set("DOCUMENT_LAYOUT_WITH_OCR", dlaOcrResult);
-        addTimings(timingsNode, "DOCUMENT_LAYOUT_WITH_OCR", dlaOcrResult);
+            // Step 1: DLA + OCR
+            JsonNode dlaOcrResult = callModule(pdfBytes, "DOCUMENT_LAYOUT_WITH_OCR");
+            merged.set("DOCUMENT_LAYOUT_WITH_OCR", dlaOcrResult);
+            addTimings(timingsNode, "DOCUMENT_LAYOUT_WITH_OCR", dlaOcrResult);
 
-        // Step 2: Table Structure
-        JsonNode tableResult = callModule(pdfBytes, "TABLE_STRUCTURE_RECOGNITION");
-        merged.set("TABLE_STRUCTURE_RECOGNITION", tableResult);
-        addTimings(timingsNode, "TABLE_STRUCTURE_RECOGNITION", tableResult);
+            // Step 2: Table Structure
+            JsonNode tableResult = callModule(pdfBytes, "TABLE_STRUCTURE_RECOGNITION");
+            merged.set("TABLE_STRUCTURE_RECOGNITION", tableResult);
+            addTimings(timingsNode, "TABLE_STRUCTURE_RECOGNITION", tableResult);
 
-        // Step 3: Figure captioning — pdf2img → crop figures → caption each
-        long captionStartMs = System.currentTimeMillis();
-        ArrayNode figureCaptions = captionFigures(pdfBytes, dlaOcrResult);
-        long captionMs = System.currentTimeMillis() - captionStartMs;
-        merged.set("FIGURE_CAPTIONS", figureCaptions);
+            // Step 3: Figure captioning — pdf2img → crop figures → caption each
+            long captionStartMs = System.currentTimeMillis();
+            ArrayNode figureCaptions = captionFigures(pdfBytes, dlaOcrResult, pageImageCache);
+            long captionMs = System.currentTimeMillis() - captionStartMs;
+            merged.set("FIGURE_CAPTIONS", figureCaptions);
 
-        ObjectNode captionTiming = objectMapper.createObjectNode();
-        captionTiming.put("total_ms", captionMs);
-        captionTiming.put("count", figureCaptions.size());
-        if (figureCaptions.size() > 0) {
-            captionTiming.put("avg_ms", captionMs / figureCaptions.size());
+            ObjectNode captionTiming = objectMapper.createObjectNode();
+            captionTiming.put("total_ms", captionMs);
+            captionTiming.put("count", figureCaptions.size());
+            if (figureCaptions.size() > 0) {
+                captionTiming.put("avg_ms", captionMs / figureCaptions.size());
+            }
+            timingsNode.set("IMAGE_CAPTIONING", captionTiming);
+
+            merged.set("timings", timingsNode);
+
+            LOGGER.log(Level.INFO, "Hancom AI: completed — {0} figure captions generated",
+                figureCaptions.size());
+
+            return new HybridResponse(null, null, merged, Collections.emptyMap(),
+                Collections.emptyList(), timingsNode);
         }
-        timingsNode.set("IMAGE_CAPTIONING", captionTiming);
+    }
 
-        merged.set("timings", timingsNode);
-
-        LOGGER.log(Level.INFO, "Hancom AI: completed — {0} figure captions generated",
-            figureCaptions.size());
-
-        return new HybridResponse(null, null, merged, Collections.emptyMap(),
-            Collections.emptyList(), timingsNode);
+    /**
+     * Creates a PageImageCache based on config.
+     */
+    private PageImageCache createPageImageCache() throws IOException {
+        if ("disk".equalsIgnoreCase(config.getImageCache())) {
+            return new DiskPageImageCache();
+        }
+        return new MemoryPageImageCache();
     }
 
     @Override
@@ -180,7 +195,8 @@ public class HancomAIClient implements HybridClient {
      *
      * @return ArrayNode of {page_number, object_id, bbox, caption}
      */
-    private ArrayNode captionFigures(byte[] pdfBytes, JsonNode dlaResult) {
+    private ArrayNode captionFigures(byte[] pdfBytes, JsonNode dlaResult,
+                                     PageImageCache pageImageCache) {
         ArrayNode captions = objectMapper.createArrayNode();
 
         // Extract pages from DLA result
@@ -213,24 +229,19 @@ public class HancomAIClient implements HybridClient {
             new Object[]{figuresByPage.values().stream().mapToInt(List::size).sum(),
                           figuresByPage.size()});
 
-        // Get page images and crop figures
-        Map<Integer, BufferedImage> pageImages = new HashMap<>();
-
         for (Map.Entry<Integer, List<JsonNode>> entry : figuresByPage.entrySet()) {
             int pageNum = entry.getKey();
             List<JsonNode> figures = entry.getValue();
 
-            // Get page image (cached)
-            BufferedImage pageImage = pageImages.get(pageNum);
-            if (pageImage == null) {
-                try {
-                    pageImage = fetchPageImage(pdfBytes, pageNum);
-                    pageImages.put(pageNum, pageImage);
-                } catch (IOException e) {
-                    LOGGER.log(Level.WARNING, "Failed to get page {0} image: {1}",
-                        new Object[]{pageNum, e.getMessage()});
-                    continue;
-                }
+            // Get page image via cache
+            BufferedImage pageImage;
+            try {
+                pageImage = pageImageCache.getOrFetch(pageNum,
+                    idx -> fetchPageImage(pdfBytes, idx));
+            } catch (IOException e) {
+                LOGGER.log(Level.WARNING, "Failed to get page {0} image: {1}",
+                    new Object[]{pageNum, e.getMessage()});
+                continue;
             }
 
             // Caption each figure
@@ -273,6 +284,9 @@ public class HancomAIClient implements HybridClient {
                         new Object[]{pageNum, e.getMessage()});
                 }
             }
+
+            // Done with this page — allow cache to reclaim memory
+            pageImageCache.evict(pageNum);
         }
 
         return captions;
