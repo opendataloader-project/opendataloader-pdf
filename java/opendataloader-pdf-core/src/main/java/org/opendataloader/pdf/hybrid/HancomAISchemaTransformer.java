@@ -38,6 +38,7 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
@@ -183,8 +184,45 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
         // Build per-figure caption lookup: "pageNum:objectId" → caption
         Map<String, String> figureCaptionMap = buildFigureCaptionMap(figureCaptions);
 
-        // Map table structures by page number
-        Map<Integer, JsonNode> tableByPage = extractTablePages(tables);
+        // Build map: page_number -> list of TSR table entries
+        // New format: TSR is an ArrayNode of per-table entries with dla_bbox + tsr sub-object
+        Map<Integer, List<JsonNode>> tablesByPage = new LinkedHashMap<>();
+        JsonNode tsrArray = json.get("TABLE_STRUCTURE_RECOGNITION");
+        if (tsrArray != null && tsrArray.isArray()) {
+            // Check if this is new format (array of table entries with "tsr" sub-object)
+            // or old format (nested array of pages with "cells" directly)
+            boolean isNewFormat = false;
+            if (tsrArray.size() > 0) {
+                JsonNode first = tsrArray.get(0);
+                isNewFormat = first.isObject() && (first.has("tsr") || first.has("dla_bbox"));
+            }
+
+            if (isNewFormat) {
+                for (JsonNode entry : tsrArray) {
+                    int pageNum = entry.has("page_number") ? entry.get("page_number").asInt() : -1;
+                    if (pageNum >= 0) {
+                        tablesByPage.computeIfAbsent(pageNum, k -> new ArrayList<>()).add(entry);
+                    }
+                }
+            } else {
+                // Legacy format: extract pages and wrap each in a synthetic entry
+                Map<Integer, JsonNode> legacyTableByPage = extractTablePages(tsrArray);
+                for (Map.Entry<Integer, JsonNode> e : legacyTableByPage.entrySet()) {
+                    JsonNode legacyPage = e.getValue();
+                    // Wrap legacy page as a table entry with tsr = the page itself
+                    // and dla_bbox derived from table_bbox (page-level coords in legacy format)
+                    com.fasterxml.jackson.databind.node.ObjectNode syntheticEntry =
+                        new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode();
+                    syntheticEntry.put("page_number", e.getKey());
+                    JsonNode legacyTableBbox = legacyPage.get("table_bbox");
+                    if (legacyTableBbox != null) {
+                        syntheticEntry.set("dla_bbox", legacyTableBbox);
+                    }
+                    syntheticEntry.set("tsr", legacyPage);
+                    tablesByPage.computeIfAbsent(e.getKey(), k -> new ArrayList<>()).add(syntheticEntry);
+                }
+            }
+        }
 
         // Collect all heading heights (label 1 and 4) across all pages for level inference
         Map<Double, Integer> headingHeightToLevel = buildHeadingHeightToLevelMap(dlaPages);
@@ -203,12 +241,13 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
             double pageHeight = getPageHeight(pageNumber, pageHeights, page);
 
             // Collect TSR table bboxes for this page (used by label 7 overlap check)
+            // Use dla_bbox (page-level coords) for overlap check, not tsr.table_bbox (crop-relative)
             List<BoundingBox> tsrTableBboxes = new ArrayList<>();
-            JsonNode tsrPage = tableByPage.get(pageNumber);
-            if (tsrPage != null) {
-                JsonNode tBbox = tsrPage.get("table_bbox");
-                if (tBbox != null && tBbox.isArray() && tBbox.size() >= 4) {
-                    tsrTableBboxes.add(extractBoundingBox(tBbox, pageNumber, pageHeight));
+            List<JsonNode> pageTables = tablesByPage.getOrDefault(pageNumber, Collections.emptyList());
+            for (JsonNode tableEntry : pageTables) {
+                JsonNode dlaBbox = tableEntry.get("dla_bbox");
+                if (dlaBbox != null && dlaBbox.isArray() && dlaBbox.size() >= 4) {
+                    tsrTableBboxes.add(extractBoundingBox(dlaBbox, pageNumber, pageHeight));
                 }
             }
 
@@ -224,11 +263,10 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
                 }
             }
 
-            // Add table from TABLE_STRUCTURE_RECOGNITION if available
-            JsonNode tablePage = tableByPage.get(pageNumber);
-            if (tablePage != null && tablePage.has("num_cells") && tablePage.get("num_cells").asInt() > 0) {
-                List<WordInfo> pageWords = wordsByPage.getOrDefault(pageNumber, Collections.emptyList());
-                IObject table = transformTablePage(tablePage, pageNumber, pageHeight, pageWords);
+            // Add tables from TABLE_STRUCTURE_RECOGNITION if available
+            List<WordInfo> pageWords = wordsByPage.getOrDefault(pageNumber, Collections.emptyList());
+            for (JsonNode tableEntry : pageTables) {
+                IObject table = transformTableEntry(tableEntry, pageNumber, pageHeight, pageWords);
                 if (table != null) {
                     result.get(pageNumber).add(table);
                 }
@@ -369,36 +407,72 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
     }
 
     /**
-     * Transforms a TABLE_STRUCTURE_RECOGNITION page result to a TableBorder.
-     * Uses bbox intersection matching between TSR cells and DLA+OCR words to determine cell content.
+     * Transforms a single TSR table entry to a TableBorder.
+     * Accepts the new per-table entry format with {@code dla_bbox} (crop origin in page pixels)
+     * and {@code tsr} sub-object containing cells with array-format rowspan/colspan.
      *
+     * <p>Cell bboxes are relative to the crop image. They are converted to page-level coordinates
+     * by adding the crop origin ({@code dla_bbox} left/top).
+     *
+     * @param tableEntry a TSR table entry with {@code dla_bbox} and {@code tsr} fields
      * @param pageWords DLA+OCR word-level objects from the page for bbox matching
      */
-    private IObject transformTablePage(JsonNode tablePage, int pageIndex, double pageHeight,
-                                        List<WordInfo> pageWords) {
-        JsonNode cellsNode = tablePage.get("cells");
+    private IObject transformTableEntry(JsonNode tableEntry, int pageIndex, double pageHeight,
+                                         List<WordInfo> pageWords) {
+        JsonNode tsr = tableEntry.get("tsr");
+        if (tsr == null || tsr.isEmpty()) return null;
+
+        JsonNode cellsNode = tsr.get("cells");
         if (cellsNode == null || !cellsNode.isArray() || cellsNode.size() == 0) {
             return null;
         }
 
-        JsonNode tableBboxNode = tablePage.get("table_bbox");
-        BoundingBox tableBbox;
-        if (tableBboxNode != null && tableBboxNode.isArray() && tableBboxNode.size() >= 4) {
-            tableBbox = extractBoundingBox(tableBboxNode, pageIndex, pageHeight);
-        } else {
-            return null;
+        // DLA bbox = crop origin in page pixels (300DPI, top-left origin)
+        JsonNode dlaBbox = tableEntry.get("dla_bbox");
+        double cropOriginLeft = 0;
+        double cropOriginTop = 0;
+        if (dlaBbox != null && dlaBbox.isArray() && dlaBbox.size() >= 4) {
+            cropOriginLeft = dlaBbox.get(0).asDouble();
+            cropOriginTop = dlaBbox.get(1).asDouble();
         }
 
-        // Determine dimensions
+        // Compute table bbox in page coordinates from dla_bbox
+        BoundingBox tableBbox;
+        if (dlaBbox != null && dlaBbox.isArray() && dlaBbox.size() >= 4) {
+            tableBbox = extractBoundingBox(dlaBbox, pageIndex, pageHeight);
+        } else {
+            // Fallback: use tsr.table_bbox offset by crop origin
+            JsonNode tsrTableBbox = tsr.get("table_bbox");
+            if (tsrTableBbox != null && tsrTableBbox.isArray() && tsrTableBbox.size() >= 4) {
+                tableBbox = extractBoundingBox(tsrTableBbox, pageIndex, pageHeight);
+            } else {
+                return null;
+            }
+        }
+
+        // Determine dimensions from array rowspan/colspan
         int numRows = 0;
         int numCols = 0;
         for (JsonNode cell : cellsNode) {
-            int row = cell.has("row") ? cell.get("row").asInt() : 0;
-            int col = cell.has("col") ? cell.get("col").asInt() : 0;
-            int rowspan = cell.has("rowspan") ? cell.get("rowspan").asInt() : 1;
-            int colspan = cell.has("colspan") ? cell.get("colspan").asInt() : 1;
-            numRows = Math.max(numRows, row + rowspan);
-            numCols = Math.max(numCols, col + colspan);
+            JsonNode rs = cell.get("rowspan");
+            JsonNode cs = cell.get("colspan");
+            if (rs != null && rs.isArray()) {
+                for (int i = 0; i < rs.size(); i++) {
+                    numRows = Math.max(numRows, rs.get(i).asInt() + 1);
+                }
+            } else if (rs != null && rs.isNumber()) {
+                // backward compat: integer format
+                int row = cell.has("row") ? cell.get("row").asInt() : 0;
+                numRows = Math.max(numRows, row + rs.asInt());
+            }
+            if (cs != null && cs.isArray()) {
+                for (int i = 0; i < cs.size(); i++) {
+                    numCols = Math.max(numCols, cs.get(i).asInt() + 1);
+                }
+            } else if (cs != null && cs.isNumber()) {
+                int col = cell.has("col") ? cell.get("col").asInt() : 0;
+                numCols = Math.max(numCols, col + cs.asInt());
+            }
         }
 
         if (numRows == 0 || numCols == 0) return null;
@@ -430,23 +504,57 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
 
         // Fill cells from API with bbox-matched word content
         for (JsonNode cellNode : cellsNode) {
-            int row = cellNode.has("row") ? cellNode.get("row").asInt() : 0;
-            int col = cellNode.has("col") ? cellNode.get("col").asInt() : 0;
-            int rowspan = cellNode.has("rowspan") ? cellNode.get("rowspan").asInt() : 1;
-            int colspan = cellNode.has("colspan") ? cellNode.get("colspan").asInt() : 1;
+            JsonNode rowspanArr = cellNode.get("rowspan");
+            JsonNode colspanArr = cellNode.get("colspan");
 
-            if (row < numRows && col < numCols) {
-                TableBorderCell cell = new TableBorderCell(row, col, rowspan, colspan, 0L);
+            int startRow, rowspan, startCol, colspan;
+
+            if (rowspanArr != null && rowspanArr.isArray() && rowspanArr.size() > 0) {
+                startRow = rowspanArr.get(0).asInt();
+                rowspan = rowspanArr.size();
+            } else if (rowspanArr != null && rowspanArr.isNumber()) {
+                // backward compat: integer format
+                startRow = cellNode.has("row") ? cellNode.get("row").asInt() : 0;
+                rowspan = rowspanArr.asInt();
+            } else {
+                startRow = 0;
+                rowspan = 1;
+            }
+
+            if (colspanArr != null && colspanArr.isArray() && colspanArr.size() > 0) {
+                startCol = colspanArr.get(0).asInt();
+                colspan = colspanArr.size();
+            } else if (colspanArr != null && colspanArr.isNumber()) {
+                startCol = cellNode.has("col") ? cellNode.get("col").asInt() : 0;
+                colspan = colspanArr.asInt();
+            } else {
+                startCol = 0;
+                colspan = 1;
+            }
+
+            if (startRow < numRows && startCol < numCols) {
+                TableBorderCell cell = new TableBorderCell(startRow, startCol, rowspan, colspan, 0L);
 
                 // Compute cell bbox: use TSR cell bbox if available, otherwise fall back to grid
                 BoundingBox cellBbox;
                 JsonNode cellBboxNode = cellNode.get("bbox");
                 if (cellBboxNode != null && cellBboxNode.isArray() && cellBboxNode.size() >= 4) {
-                    cellBbox = extractBoundingBox(cellBboxNode, pageIndex, pageHeight);
+                    // Convert cell bbox from crop coords to page coords by adding crop origin
+                    double pageCellLeft = cropOriginLeft + cellBboxNode.get(0).asDouble();
+                    double pageCellTop = cropOriginTop + cellBboxNode.get(1).asDouble();
+                    double pageCellRight = cropOriginLeft + cellBboxNode.get(2).asDouble();
+                    double pageCellBottom = cropOriginTop + cellBboxNode.get(3).asDouble();
+
+                    // Convert page pixels (300DPI, top-left) → PDF points (72DPI, bottom-left)
+                    double left = pageCellLeft * PIXEL_TO_POINT;
+                    double right = pageCellRight * PIXEL_TO_POINT;
+                    double topY = pageHeight - (pageCellTop * PIXEL_TO_POINT);
+                    double bottomY = pageHeight - (pageCellBottom * PIXEL_TO_POINT);
+                    cellBbox = new BoundingBox(pageIndex, left, bottomY, right, topY);
                 } else {
-                    double cellLeft = tableBbox.getLeftX() + col * colWidth;
+                    double cellLeft = tableBbox.getLeftX() + startCol * colWidth;
                     double cellRight = cellLeft + colspan * colWidth;
-                    double cellTop = tableBbox.getTopY() - row * rowHeight;
+                    double cellTop = tableBbox.getTopY() - startRow * rowHeight;
                     double cellBottom = cellTop - rowspan * rowHeight;
                     cellBbox = new BoundingBox(pageIndex, cellLeft, cellBottom, cellRight, cellTop);
                 }
@@ -465,7 +573,7 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
                     cell.addContentObject(createParagraph(matchedText, cellBbox));
                 }
 
-                table.getRows()[row].getCells()[col] = cell;
+                table.getRows()[startRow].getCells()[startCol] = cell;
             }
         }
 
@@ -722,6 +830,10 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
         return map;
     }
 
+    /**
+     * Extracts table pages from legacy TSR format (nested array).
+     * Used only for backward compatibility with old TSR format.
+     */
     private Map<Integer, JsonNode> extractTablePages(JsonNode tableResult) {
         Map<Integer, JsonNode> map = new HashMap<>();
         if (tableResult == null) return map;
