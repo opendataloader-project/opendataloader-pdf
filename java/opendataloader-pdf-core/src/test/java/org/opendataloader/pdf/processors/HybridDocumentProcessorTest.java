@@ -18,9 +18,11 @@ package org.opendataloader.pdf.processors;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.hybrid.HancomAISchemaTransformer;
 import org.opendataloader.pdf.hybrid.HybridClient.HybridRequest;
 import org.opendataloader.pdf.hybrid.HybridClient.OutputFormat;
 import org.opendataloader.pdf.hybrid.HybridConfig;
+import org.opendataloader.pdf.hybrid.HybridSchemaTransformer;
 import org.opendataloader.pdf.hybrid.TriageProcessor.TriageDecision;
 import org.opendataloader.pdf.hybrid.TriageProcessor.TriageResult;
 import org.opendataloader.pdf.hybrid.TriageProcessor.TriageSignals;
@@ -350,6 +352,29 @@ public class HybridDocumentProcessorTest {
         // docling uses same URL as docling-fast
         Assertions.assertEquals(HybridConfig.DOCLING_FAST_DEFAULT_URL, config.getEffectiveUrl("docling"));
         Assertions.assertEquals(HybridConfig.DOCLING_FAST_DEFAULT_URL, config.getEffectiveUrl("docling-fast"));
+    }
+
+    @Test
+    public void testHancomAIBackendEnabled() {
+        Config config = new Config();
+        config.setHybrid("hancom-ai");
+
+        Assertions.assertTrue(config.isHybridEnabled());
+        Assertions.assertEquals("hancom-ai", config.getHybrid());
+    }
+
+    @Test
+    public void testCreateTransformerReturnsHancomAISchemaTransformer() throws Exception {
+        Config config = new Config();
+        config.setHybrid("hancom-ai");
+
+        // createTransformer is private static — use reflection to verify it returns the correct type
+        java.lang.reflect.Method method = HybridDocumentProcessor.class.getDeclaredMethod("createTransformer", Config.class);
+        method.setAccessible(true);
+        HybridSchemaTransformer transformer = (HybridSchemaTransformer) method.invoke(null, config);
+
+        Assertions.assertNotNull(transformer);
+        Assertions.assertInstanceOf(HancomAISchemaTransformer.class, transformer);
     }
 
     // ===== Backend Chunk Splitting Tests =====
