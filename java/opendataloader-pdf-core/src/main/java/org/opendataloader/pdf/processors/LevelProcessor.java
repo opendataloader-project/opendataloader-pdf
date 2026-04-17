@@ -27,7 +27,9 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -35,14 +37,26 @@ import java.util.logging.Logger;
 public class LevelProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(LevelProcessor.class.getCanonicalName());
+    // Depth cap prevents stack exhaustion on pathological nested table/list structures.
+    // Once exceeded, deeper descendants are skipped and a warning is logged.
+    private static final int MAX_RECURSION_DEPTH = 50;
 
     private static boolean isDocTitleSet = false;
 
     public static void detectLevels(List<List<IObject>> contents) {
-        setLevels(contents, new Stack<>());
+        try {
+            setLevels(contents, new Stack<>(), 0, Collections.newSetFromMap(new IdentityHashMap<>()));
+        } finally {
+            isDocTitleSet = false;
+        }
     }
 
-    private static void setLevels(List<List<IObject>> contents, Stack<LevelInfo> levelInfos) {
+    private static void setLevels(List<List<IObject>> contents, Stack<LevelInfo> levelInfos, int depth,
+                                  Set<TableBorder> currentPathTables) {
+        if (depth > MAX_RECURSION_DEPTH) {
+            LOGGER.log(Level.WARNING, "Max recursion depth reached during level detection: {0}", MAX_RECURSION_DEPTH);
+            return;
+        }
         int levelInfosSize = levelInfos.size();
         for (List<IObject> pageContents : contents) {
             for (IObject content : pageContents) {
@@ -75,7 +89,7 @@ public class LevelProcessor {
                     }
                     if (index == null) {
                         TableBorder table = (TableBorder) content;
-                        setLevelForTable(table);
+                        setLevelForTable(table, depth, currentPathTables);
                         if (!table.isTextBlock()) {
                             levelInfo = new TableLevelInfo(table);
                         }
@@ -106,12 +120,12 @@ public class LevelProcessor {
                 }
                 if (content instanceof PDFList) {
                     for (ListItem listItem : ((PDFList) content).getListItems()) {
-                        setLevels(Collections.singletonList(listItem.getContents()), levelInfos);
+                        setLevels(Collections.singletonList(listItem.getContents()), levelInfos, depth + 1,
+                            currentPathTables);
                     }
                 }
             }
         }
-        isDocTitleSet = false;
     }
 
     private static void setLevelForHeading(SemanticHeading heading) {
@@ -133,15 +147,24 @@ public class LevelProcessor {
         return null;
     }
 
-    private static void setLevelForTable(TableBorder tableBorder) {
-        for (int rowNumber = 0; rowNumber < tableBorder.getNumberOfRows(); rowNumber++) {
-            TableBorderRow row = tableBorder.getRow(rowNumber);
-            for (int colNumber = 0; colNumber < tableBorder.getNumberOfColumns(); colNumber++) {
-                TableBorderCell tableBorderCell = row.getCell(colNumber);
-                if (tableBorderCell.getRowNumber() == rowNumber && tableBorderCell.getColNumber() == colNumber) {
-                    setLevels(Collections.singletonList(tableBorderCell.getContents()), new Stack<>());
+    private static void setLevelForTable(TableBorder tableBorder, int depth, Set<TableBorder> currentPathTables) {
+        if (!currentPathTables.add(tableBorder)) {
+            LOGGER.log(Level.WARNING, "Table cycle detected while detecting levels. Skipping recursive descent.");
+            return;
+        }
+        try {
+            for (int rowNumber = 0; rowNumber < tableBorder.getNumberOfRows(); rowNumber++) {
+                TableBorderRow row = tableBorder.getRow(rowNumber);
+                for (int colNumber = 0; colNumber < tableBorder.getNumberOfColumns(); colNumber++) {
+                    TableBorderCell tableBorderCell = row.getCell(colNumber);
+                    if (tableBorderCell.getRowNumber() == rowNumber && tableBorderCell.getColNumber() == colNumber) {
+                        setLevels(Collections.singletonList(tableBorderCell.getContents()), new Stack<>(), depth + 1,
+                            currentPathTables);
+                    }
                 }
             }
+        } finally {
+            currentPathTables.remove(tableBorder);
         }
     }
 
