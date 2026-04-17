@@ -817,6 +817,7 @@ public class HybridDocumentProcessor {
      * Replaces a single SemanticTextNode's TextChunks with matching Java TextChunks.
      * In OCR auto mode, compares stream vs OCR text similarity before deciding.
      * In OCR force mode, always keeps OCR text (backend TextChunks).
+     * Records the text source decision in ElementMetadata.
      */
     private static void enrichSingleTextNode(
             SemanticTextNode textNode, List<TextChunk> javaTextChunks, Set<Integer> usedJavaIndices,
@@ -824,6 +825,7 @@ public class HybridDocumentProcessor {
 
         // Force mode: always keep OCR text, don't replace with stream
         if (config != null && config.isOcrForce()) {
+            recordTextSource(textNode, "ocr", null);
             return;
         }
 
@@ -851,6 +853,7 @@ public class HybridDocumentProcessor {
         if (matched.isEmpty()) {
             LOGGER.fine(() -> "enrichSingleTextNode: no Java TextChunk matched for backend node at bbox ["
                 + String.format("%.1f,%.1f,%.1f,%.1f", nLeft, nBottom, nRight, nTop) + "]");
+            recordTextSource(textNode, "ocr-fallback", null);
             return;
         }
 
@@ -858,15 +861,20 @@ public class HybridDocumentProcessor {
         if (config != null && config.isOcrAuto()) {
             String streamText = extractTextFromChunks(matched);
             String ocrText = extractTextFromNode(textNode);
+            double sim = TextSimilarity.similarity(streamText, ocrText);
 
             if (!TextSimilarity.trustStream(streamText, ocrText, TextSimilarity.DEFAULT_THRESHOLD)) {
                 // Stream text is corrupted — keep OCR text (backend TextChunks)
                 LOGGER.fine(() -> "OCR auto: stream text untrusted (sim="
-                    + String.format("%.2f", TextSimilarity.similarity(streamText, ocrText))
+                    + String.format("%.2f", sim)
                     + "), keeping OCR for node at ["
                     + String.format("%.1f,%.1f,%.1f,%.1f", nLeft, nBottom, nRight, nTop) + "]");
+                recordTextSource(textNode, "ocr", sim);
                 return;
             }
+            recordTextSource(textNode, "stream", sim);
+        } else {
+            recordTextSource(textNode, "stream", null);
         }
 
         // Off mode or auto mode with trusted stream: replace with Java TextChunks
@@ -876,6 +884,23 @@ public class HybridDocumentProcessor {
             newCol.add(new TextLine(tc));
         }
         textNode.getColumns().add(newCol);
+    }
+
+    /**
+     * Records the text source decision in ElementMetadata for a SemanticTextNode.
+     *
+     * @param textNode   the text node whose metadata to update
+     * @param source     "stream", "ocr", or "ocr-fallback"
+     * @param similarity the stream-OCR similarity score, or null if not applicable
+     */
+    private static void recordTextSource(SemanticTextNode textNode, String source, Double similarity) {
+        if (lastElementMetadata == null || textNode.getRecognizedStructureId() == null) return;
+        ElementMetadata meta = lastElementMetadata.get(textNode.getRecognizedStructureId());
+        if (meta == null) return;
+        meta.setTextSource(source);
+        if (similarity != null) {
+            meta.setStreamOcrSimilarity(similarity);
+        }
     }
 
     /**

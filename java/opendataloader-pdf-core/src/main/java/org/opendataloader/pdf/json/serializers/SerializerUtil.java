@@ -110,6 +110,13 @@ public class SerializerUtil {
             gen.writeNumberField("matched words", meta.getMatchedWordCount());
             gen.writeEndObject();
         }
+
+        if (meta.getTextSource() != null) {
+            gen.writeStringField("text source", meta.getTextSource());
+        }
+        if (meta.getStreamOcrSimilarity() != null) {
+            gen.writeNumberField("stream ocr similarity", meta.getStreamOcrSimilarity());
+        }
     }
 
     public static void writeEssentialInfo(JsonGenerator jsonGenerator, IObject object, String type) throws IOException {
