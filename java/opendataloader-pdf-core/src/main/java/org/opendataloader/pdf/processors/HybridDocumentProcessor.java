@@ -32,6 +32,7 @@ import org.opendataloader.pdf.hybrid.HybridClient.OutputFormat;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.opendataloader.pdf.hybrid.HybridConfig;
 import org.opendataloader.pdf.hybrid.HybridSchemaTransformer;
+import org.opendataloader.pdf.hybrid.OcrWordInfo;
 import org.opendataloader.pdf.hybrid.TriageLogger;
 import org.opendataloader.pdf.hybrid.TriageProcessor;
 import org.opendataloader.pdf.hybrid.TriageProcessor.TriageDecision;
@@ -97,6 +98,13 @@ public class HybridDocumentProcessor {
      */
     private static volatile Map<Long, ElementMetadata> lastElementMetadata;
 
+    /**
+     * Stores per-page OCR word data from the most recent hybrid backend processing.
+     * Used for OCR enrichment fallback when Java TextChunks are not available.
+     * Reset at the start of each {@code processDocument} call.
+     */
+    private static volatile Map<Integer, List<OcrWordInfo>> lastOcrWordsByPage;
+
     /** Returns the hybrid server timings from the most recent {@link #processDocument} call. */
     public static JsonNode getLastHybridTimings() {
         return lastHybridTimings;
@@ -105,6 +113,11 @@ public class HybridDocumentProcessor {
     /** Returns the element metadata from the most recent {@link #processDocument} call. */
     public static Map<Long, ElementMetadata> getLastElementMetadata() {
         return lastElementMetadata;
+    }
+
+    /** Returns the OCR word data from the most recent {@link #processDocument} call. */
+    public static Map<Integer, List<OcrWordInfo>> getLastOcrWordsByPage() {
+        return lastOcrWordsByPage;
     }
 
     /**
@@ -156,6 +169,7 @@ public class HybridDocumentProcessor {
 
         lastHybridTimings = null; // Reset for this processing run
         lastElementMetadata = null;
+        lastOcrWordsByPage = null;
 
         int totalPages = StaticContainers.getDocument().getNumberOfPages();
         LOGGER.log(Level.INFO, "Starting hybrid processing for {0} pages", totalPages);
@@ -224,7 +238,7 @@ public class HybridDocumentProcessor {
         try {
             backendResults = processBackendPath(inputPdfName, backendPages, config, backendFailedPages);
             // Enrich backend results: copy StreamInfos from Java-extracted content for MCID linkage
-            enrichBackendResults(backendResults, filteredContents);
+            enrichBackendResults(backendResults, filteredContents, config.getHybridConfig());
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Backend processing failed: {0}", e.getMessage());
             if (config.getHybridConfig().isFallbackToJava()) {
@@ -512,8 +526,9 @@ public class HybridDocumentProcessor {
             }
         }
 
-        // Capture element metadata from the transformer (e.g., HancomAISchemaTransformer)
+        // Capture element metadata and OCR words from the transformer (e.g., HancomAISchemaTransformer)
         lastElementMetadata = transformer.getElementMetadata();
+        lastOcrWordsByPage = transformer.getOcrWordsByPage();
 
         // Note: Client is cached and reused across documents.
         // HybridClientFactory.shutdown() should be called at CLI exit.
@@ -585,7 +600,8 @@ public class HybridDocumentProcessor {
      */
     private static void enrichBackendResults(
             Map<Integer, List<IObject>> backendResults,
-            Map<Integer, List<IObject>> filteredContents) {
+            Map<Integer, List<IObject>> filteredContents,
+            HybridConfig hybridConfig) {
 
         for (Map.Entry<Integer, List<IObject>> entry : backendResults.entrySet()) {
             int pageNumber = entry.getKey();
@@ -626,10 +642,86 @@ public class HybridDocumentProcessor {
                 enrichFormulaStreamInfos(backendPage, javaTextChunks);
             }
 
+            // OCR fallback: log elements that still lack StreamInfo after enrichment
+            if (hybridConfig.isOcrAuto() || hybridConfig.isOcrForce()) {
+                Map<Integer, List<OcrWordInfo>> ocrWords = lastOcrWordsByPage;
+                if (ocrWords != null) {
+                    List<OcrWordInfo> pageOcrWords = ocrWords.getOrDefault(pageNumber, List.of());
+                    logOcrFallbackCandidates(backendPage, pageNumber, pageOcrWords);
+                }
+            }
+
             final int pg = pageNumber;
             final int javaTotal = javaTextChunks.size();
             LOGGER.fine(() -> "Page " + pg + ": enrichment complete — "
                 + javaTotal + " Java TextChunks available");
+        }
+    }
+
+    /**
+     * Logs backend elements that still lack StreamInfo after enrichment and could
+     * benefit from OCR fallback. Walks the IObject tree recursively to find
+     * SemanticTextNodes with no StreamInfo in any of their TextChunks.
+     *
+     * <p>This is Phase A (logging only). Phase B will actually insert invisible
+     * text operators into the content stream for these elements.
+     */
+    private static void logOcrFallbackCandidates(
+            List<IObject> backendPage, int pageNumber, List<OcrWordInfo> ocrWords) {
+        int candidateCount = 0;
+        int ocrWordMatchCount = 0;
+
+        for (IObject obj : backendPage) {
+            if (obj instanceof SemanticTextNode) {
+                SemanticTextNode textNode = (SemanticTextNode) obj;
+                boolean hasStreamInfo = false;
+                for (TextColumn col : textNode.getColumns()) {
+                    for (TextLine line : col.getLines()) {
+                        for (TextChunk chunk : line.getTextChunks()) {
+                            if (!chunk.getStreamInfos().isEmpty()) {
+                                hasStreamInfo = true;
+                                break;
+                            }
+                        }
+                        if (hasStreamInfo) break;
+                    }
+                    if (hasStreamInfo) break;
+                }
+                if (!hasStreamInfo) {
+                    candidateCount++;
+                    // Count OCR words that overlap with this text node's bbox
+                    double nLeft = textNode.getLeftX();
+                    double nRight = textNode.getRightX();
+                    double nBottom = textNode.getBottomY();
+                    double nTop = textNode.getTopY();
+                    double tol = 5.0;
+                    int matchedWords = 0;
+                    for (OcrWordInfo word : ocrWords) {
+                        BoundingBox wb = word.getBbox();
+                        double cx = (wb.getLeftX() + wb.getRightX()) / 2.0;
+                        double cy = (wb.getBottomY() + wb.getTopY()) / 2.0;
+                        if (cx >= nLeft - tol && cx <= nRight + tol
+                                && cy >= nBottom - tol && cy <= nTop + tol) {
+                            matchedWords++;
+                        }
+                    }
+                    if (matchedWords > 0) {
+                        ocrWordMatchCount += matchedWords;
+                        final int mw = matchedWords;
+                        LOGGER.fine(() -> "Page " + pageNumber + ": OCR fallback candidate — "
+                            + "SemanticTextNode at ["
+                            + String.format("%.1f,%.1f,%.1f,%.1f", nLeft, nBottom, nRight, nTop)
+                            + "] has " + mw + " matching OCR words");
+                    }
+                }
+            }
+        }
+
+        if (candidateCount > 0) {
+            final int cc = candidateCount;
+            final int owm = ocrWordMatchCount;
+            LOGGER.info(() -> "Page " + pageNumber + ": " + cc
+                + " element(s) need OCR fallback, " + owm + " OCR words available");
         }
     }
 
