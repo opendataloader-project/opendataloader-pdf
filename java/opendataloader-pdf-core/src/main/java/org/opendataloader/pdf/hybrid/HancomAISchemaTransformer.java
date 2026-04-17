@@ -129,6 +129,25 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
     }
 
     private int pictureIndex;
+    private String regionlistStrategy = HybridConfig.REGIONLIST_TABLE_FIRST;
+
+    /**
+     * Sets the regionlist strategy for label 7 handling.
+     *
+     * @param regionlistStrategy the strategy ("table-first" or "list-only")
+     */
+    public void setRegionlistStrategy(String regionlistStrategy) {
+        this.regionlistStrategy = regionlistStrategy;
+    }
+
+    /**
+     * Gets the regionlist strategy.
+     *
+     * @return the current regionlist strategy
+     */
+    public String getRegionlistStrategy() {
+        return regionlistStrategy;
+    }
 
     @Override
     public String getBackendType() {
@@ -307,10 +326,15 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
                 break;
 
             case LABEL_TABLE:
-                // Table region detected by DLA — if TSR covers it, skip (table handled separately)
-                if (hasOverlappingTsr(bbox, tsrTableBboxes)) return null;
-                // No TSR data — treat as list (parse text by newlines into ListItems)
-                iobj = text.isEmpty() ? null : createListFromText(text, bbox);
+                if (HybridConfig.REGIONLIST_LIST_ONLY.equals(regionlistStrategy)) {
+                    // list-only: always treat as list, skip TSR check
+                    iobj = text.isEmpty() ? null : createListFromText(text, bbox);
+                } else {
+                    // table-first (default): if TSR covers it, skip (table handled separately)
+                    if (hasOverlappingTsr(bbox, tsrTableBboxes)) return null;
+                    // No TSR data — treat as list (parse text by newlines into ListItems)
+                    iobj = text.isEmpty() ? null : createListFromText(text, bbox);
+                }
                 break;
 
             case LABEL_FIGURE:
