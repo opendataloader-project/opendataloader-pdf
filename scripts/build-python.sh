@@ -16,11 +16,18 @@ command -v uv >/dev/null || { echo "Error: uv not found. Install with: curl -LsS
 # Clean previous build
 rm -rf dist/
 
-# Copy README.md from root (gitignored in package dir)
+# Copy README.md from repo root *before* build. hatchling validates [project.readme]
+# during metadata parsing, which runs BEFORE hatch_build.py's build hook — so we
+# cannot rely on the hook to provide it. Clean up on exit so branch switches
+# don't leave a stale copy in the package dir.
 cp "$ROOT_DIR/README.md" "$PACKAGE_DIR/README.md"
+trap 'rm -f "$PACKAGE_DIR/README.md"' EXIT
 
-# Build wheel package
-uv build --wheel
+# Build sdist and wheel packages (hatch_build.py copies JAR/LICENSE/NOTICE/THIRD_PARTY)
+uv build
+
+# Verify sdist contains required artifacts (JAR, LICENSE, NOTICE, THIRD_PARTY)
+"$SCRIPT_DIR/verify-python-sdist.sh"
 
 # Install and run tests (include hybrid extras for full test coverage)
 uv sync --extra hybrid

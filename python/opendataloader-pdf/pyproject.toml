@@ -33,14 +33,18 @@ Homepage = "https://github.com/opendataloader-project/opendataloader-pdf"
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.hatch.build.targets.wheel]
-packages = ["src/opendataloader_pdf"]
+# Shared by wheel and sdist: force-include gitignored build outputs
+# (JAR, LICENSE, NOTICE, THIRD_PARTY) that hatch_build.py copies at build time.
+[tool.hatch.build]
 artifacts = [
     "src/opendataloader_pdf/jar/*.jar",
     "src/opendataloader_pdf/LICENSE",
     "src/opendataloader_pdf/NOTICE",
     "src/opendataloader_pdf/THIRD_PARTY/**",
 ]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/opendataloader_pdf"]
 
 [tool.hatch.build.targets.sdist]
 include = [
