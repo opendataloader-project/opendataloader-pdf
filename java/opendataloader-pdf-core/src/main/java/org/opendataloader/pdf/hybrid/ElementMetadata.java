@@ -52,6 +52,12 @@ public class ElementMetadata {
     /** Regionlist resolution metadata for label 7. */
     private RegionlistResolution regionlistResolution;
 
+    /** Text source decision: "stream", "ocr", or "ocr-fallback". */
+    private String textSource;
+
+    /** Stream vs OCR text similarity score (auto mode only). */
+    private Double streamOcrSimilarity;
+
     public double getConfidence() {
         return confidence;
     }
@@ -130,6 +136,24 @@ public class ElementMetadata {
 
     public ElementMetadata setRegionlistResolution(RegionlistResolution regionlistResolution) {
         this.regionlistResolution = regionlistResolution;
+        return this;
+    }
+
+    public String getTextSource() {
+        return textSource;
+    }
+
+    public ElementMetadata setTextSource(String textSource) {
+        this.textSource = textSource;
+        return this;
+    }
+
+    public Double getStreamOcrSimilarity() {
+        return streamOcrSimilarity;
+    }
+
+    public ElementMetadata setStreamOcrSimilarity(Double streamOcrSimilarity) {
+        this.streamOcrSimilarity = streamOcrSimilarity;
         return this;
     }
 
