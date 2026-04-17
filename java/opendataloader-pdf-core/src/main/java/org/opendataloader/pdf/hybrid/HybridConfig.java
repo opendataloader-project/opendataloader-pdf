@@ -59,6 +59,15 @@ public class HybridConfig {
 
     private String regionlistStrategy = REGIONLIST_TABLE_FIRST;
 
+    /** OCR strategy: off (stream only, no OCR fallback). */
+    public static final String OCR_OFF = "off";
+    /** OCR strategy: auto (stream first, OCR fallback when enrichment fails). */
+    public static final String OCR_AUTO = "auto";
+    /** OCR strategy: force (OCR only, skip stream-based enrichment). */
+    public static final String OCR_FORCE = "force";
+
+    private String ocrStrategy = OCR_OFF;
+
     /** Page image cache strategy: "memory" (default) or "disk". */
     private String imageCache = "memory";
 
@@ -304,5 +313,47 @@ public class HybridConfig {
      */
     public void setCropOutputDir(String cropOutputDir) {
         this.cropOutputDir = cropOutputDir;
+    }
+
+    /**
+     * Gets the OCR strategy for enrichment fallback.
+     *
+     * @return The OCR strategy (off, auto, or force).
+     */
+    public String getOcrStrategy() {
+        return ocrStrategy;
+    }
+
+    /**
+     * Sets the OCR strategy for enrichment fallback.
+     *
+     * <ul>
+     *   <li>{@code "off"} (default): stream-based enrichment only, no OCR fallback</li>
+     *   <li>{@code "auto"}: try stream enrichment first, fall back to OCR words when no match</li>
+     *   <li>{@code "force"}: skip stream enrichment, always use OCR words</li>
+     * </ul>
+     *
+     * @param ocrStrategy The OCR strategy to use.
+     */
+    public void setOcrStrategy(String ocrStrategy) {
+        this.ocrStrategy = ocrStrategy;
+    }
+
+    /**
+     * Checks if OCR strategy is auto (stream first, OCR fallback).
+     *
+     * @return true if strategy is auto, false otherwise.
+     */
+    public boolean isOcrAuto() {
+        return OCR_AUTO.equals(ocrStrategy);
+    }
+
+    /**
+     * Checks if OCR strategy is force (OCR only).
+     *
+     * @return true if strategy is force, false otherwise.
+     */
+    public boolean isOcrForce() {
+        return OCR_FORCE.equals(ocrStrategy);
     }
 }

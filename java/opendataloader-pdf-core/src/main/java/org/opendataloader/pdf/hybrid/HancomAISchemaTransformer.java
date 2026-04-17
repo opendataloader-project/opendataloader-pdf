@@ -132,10 +132,16 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
     private int pictureIndex;
     private String regionlistStrategy = HybridConfig.REGIONLIST_TABLE_FIRST;
     private Map<Long, ElementMetadata> elementMetadataMap = new LinkedHashMap<>();
+    private Map<Integer, List<OcrWordInfo>> ocrWordsByPage = new HashMap<>();
 
     @Override
     public Map<Long, ElementMetadata> getElementMetadata() {
         return Collections.unmodifiableMap(elementMetadataMap);
+    }
+
+    @Override
+    public Map<Integer, List<OcrWordInfo>> getOcrWordsByPage() {
+        return Collections.unmodifiableMap(ocrWordsByPage);
     }
 
     /**
@@ -171,6 +177,7 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
 
         pictureIndex = 0;
         elementMetadataMap.clear();
+        ocrWordsByPage.clear();
 
         // Get DLA+OCR results (primary source for layout + text)
         JsonNode dlaOcr = json.get("DOCUMENT_LAYOUT_WITH_OCR");
@@ -236,6 +243,15 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
 
         // Collect per-page word info for cell-word bbox matching
         Map<Integer, List<WordInfo>> wordsByPage = collectWordsByPage(dlaPages, pageHeights);
+
+        // Expose OCR word data for enrichment fallback
+        for (Map.Entry<Integer, List<WordInfo>> entry : wordsByPage.entrySet()) {
+            List<OcrWordInfo> ocrWords = new ArrayList<>(entry.getValue().size());
+            for (WordInfo wi : entry.getValue()) {
+                ocrWords.add(new OcrWordInfo(wi.text, wi.bbox));
+            }
+            ocrWordsByPage.put(entry.getKey(), ocrWords);
+        }
 
         // Process DLA+OCR objects
         for (int i = 0; i < dlaPages.size(); i++) {
