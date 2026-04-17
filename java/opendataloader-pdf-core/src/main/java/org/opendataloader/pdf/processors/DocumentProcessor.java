@@ -16,6 +16,7 @@
 package org.opendataloader.pdf.processors;
 
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
+import org.opendataloader.pdf.hybrid.ElementMetadata;
 import org.opendataloader.pdf.processors.readingorder.XYCutPlusPlusSorter;
 import org.opendataloader.pdf.json.JsonWriter;
 import org.opendataloader.pdf.markdown.MarkdownGenerator;
@@ -94,7 +95,7 @@ public class DocumentProcessor {
 
         // Phase 2: Output (JSON/MD/HTML/PDF/Text)
         long t0 = System.nanoTime();
-        generateOutputs(inputPdfName, extraction.getContents(), config);
+        generateOutputs(inputPdfName, extraction.getContents(), config, extraction.getElementMetadata());
         long outputNs = System.nanoTime() - t0;
 
         return new ProcessingResult(extraction.getHybridTimings(), extraction.getExtractionNs(), outputNs);
@@ -350,7 +351,8 @@ public class DocumentProcessor {
         return pagesToProcess == null || pagesToProcess.contains(pageNumber);
     }
 
-    private static void generateOutputs(String inputPdfName, List<List<IObject>> contents, Config config) throws IOException {
+    private static void generateOutputs(String inputPdfName, List<List<IObject>> contents, Config config,
+                                           Map<Long, ElementMetadata> elementMetadata) throws IOException {
         // Stdout mode: write primary format to stdout, skip file I/O
         if (config.isOutputStdout()) {
             java.io.Writer stdoutWriter = new java.io.BufferedWriter(
@@ -392,7 +394,7 @@ public class DocumentProcessor {
             pdfWriter.updatePDF(inputPDF, config.getPassword(), config.getOutputFolder(), contents);
         }
         if (config.isGenerateJSON()) {
-            JsonWriter.writeToJson(inputPDF, config.getOutputFolder(), contents);
+            JsonWriter.writeToJson(inputPDF, config.getOutputFolder(), contents, elementMetadata);
         }
         if (config.isGenerateMarkdown()) {
             try (MarkdownGenerator markdownGenerator = MarkdownGeneratorFactory.getMarkdownGenerator(inputPDF,
