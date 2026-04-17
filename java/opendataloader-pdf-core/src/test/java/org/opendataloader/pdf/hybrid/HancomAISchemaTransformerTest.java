@@ -564,11 +564,48 @@ public class HancomAISchemaTransformerTest {
 
     /**
      * Helper: creates a Hancom AI JSON with DLA+OCR objects AND TABLE_STRUCTURE_RECOGNITION data.
-     * DLA objects and TSR cells use Hancom AI pixel coordinates [left, top, right, bottom].
+     * Uses the new per-table entry format with dla_bbox and tsr sub-object.
+     *
+     * <p>For backward-compat with existing tests where cell bboxes are in page pixels:
+     * dla_bbox is set to tableBbox (so overlap checks work correctly), and the cell bboxes
+     * are adjusted by subtracting the table origin so they become crop-relative.
+     * The tsr.table_bbox is set to a zero-origin version of tableBbox.
      */
     private ObjectNode createHancomAIJsonWithTable(ObjectNode[] dlaObjects,
                                                     double[] tableBbox,
                                                     ObjectNode[] tsrCells) {
+        // Make cell bboxes crop-relative by subtracting table origin
+        double originLeft = tableBbox[0];
+        double originTop = tableBbox[1];
+        ObjectNode[] adjustedCells = new ObjectNode[tsrCells.length];
+        for (int i = 0; i < tsrCells.length; i++) {
+            adjustedCells[i] = tsrCells[i].deepCopy();
+            com.fasterxml.jackson.databind.node.ArrayNode cellBbox =
+                (com.fasterxml.jackson.databind.node.ArrayNode) adjustedCells[i].get("bbox");
+            if (cellBbox != null && cellBbox.size() >= 4) {
+                double l = cellBbox.get(0).asDouble() - originLeft;
+                double t = cellBbox.get(1).asDouble() - originTop;
+                double r = cellBbox.get(2).asDouble() - originLeft;
+                double b = cellBbox.get(3).asDouble() - originTop;
+                cellBbox.removeAll();
+                cellBbox.add(l); cellBbox.add(t); cellBbox.add(r); cellBbox.add(b);
+            }
+        }
+        // tsr.table_bbox in crop coords (zero-origin)
+        double[] cropTableBbox = {0, 0, tableBbox[2] - tableBbox[0], tableBbox[3] - tableBbox[1]};
+        return createHancomAIJsonWithTableAndOffset(dlaObjects, tableBbox, cropTableBbox, adjustedCells);
+    }
+
+    /**
+     * Helper: creates Hancom AI JSON with separate dla_bbox (page coords) and crop-relative cells.
+     * @param dlaBbox the padded DLA bbox in page pixels [left, top, right, bottom]
+     * @param tsrTableBbox the table_bbox in crop-image coords
+     * @param tsrCells cells with crop-relative bboxes
+     */
+    private ObjectNode createHancomAIJsonWithTableAndOffset(ObjectNode[] dlaObjects,
+                                                             double[] dlaBbox,
+                                                             double[] tsrTableBbox,
+                                                             ObjectNode[] tsrCells) {
         ObjectNode json = objectMapper.createObjectNode();
 
         // DLA+OCR
@@ -582,17 +619,24 @@ public class HancomAISchemaTransformerTest {
             objectsArray.add(obj);
         }
 
-        // TABLE_STRUCTURE_RECOGNITION
+        // TABLE_STRUCTURE_RECOGNITION — new per-table entry format
         ArrayNode tsr = json.putArray("TABLE_STRUCTURE_RECOGNITION");
-        ArrayNode tsrPages = tsr.addArray();
-        ObjectNode tsrPage = tsrPages.addObject();
-        tsrPage.put("page_number", 0);
-        tsrPage.put("num_cells", tsrCells.length);
+        ObjectNode tableEntry = tsr.addObject();
+        tableEntry.put("page_number", 0);
+        tableEntry.put("object_id", 0);
+        tableEntry.put("label", 9);
 
-        ArrayNode tbbox = tsrPage.putArray("table_bbox");
-        for (double v : tableBbox) tbbox.add(v);
+        ArrayNode dlaBboxArr = tableEntry.putArray("dla_bbox");
+        for (double v : dlaBbox) dlaBboxArr.add(v);
 
-        ArrayNode cellsArray = tsrPage.putArray("cells");
+        ObjectNode tsrObj = tableEntry.putObject("tsr");
+        tsrObj.put("page_number", 0);
+        tsrObj.put("num_cells", tsrCells.length);
+
+        ArrayNode tbbox = tsrObj.putArray("table_bbox");
+        for (double v : tsrTableBbox) tbbox.add(v);
+
+        ArrayNode cellsArray = tsrObj.putArray("cells");
         for (ObjectNode cell : tsrCells) {
             cellsArray.add(cell);
         }
@@ -601,17 +645,24 @@ public class HancomAISchemaTransformerTest {
     }
 
     /**
-     * Helper: creates a TSR cell node.
+     * Helper: creates a TSR cell node with array-format rowspan/colspan (real API format).
+     * rowspan/colspan are arrays of row/col indices this cell spans.
      */
     private ObjectNode createTsrCell(int row, int col, int rowspan, int colspan,
                                       String text, double left, double top,
                                       double right, double bottom) {
         ObjectNode cell = objectMapper.createObjectNode();
-        cell.put("row", row);
-        cell.put("col", col);
-        cell.put("rowspan", rowspan);
-        cell.put("colspan", colspan);
+        cell.put("cell_id", row * 10 + col);  // synthetic cell_id
         cell.put("text", text);
+
+        // Array-format rowspan: [startRow, startRow+1, ..., startRow+rowspan-1]
+        ArrayNode rsArr = cell.putArray("rowspan");
+        for (int i = 0; i < rowspan; i++) rsArr.add(row + i);
+
+        // Array-format colspan: [startCol, startCol+1, ..., startCol+colspan-1]
+        ArrayNode csArr = cell.putArray("colspan");
+        for (int i = 0; i < colspan; i++) csArr.add(col + i);
+
         ArrayNode bbox = cell.putArray("bbox");
         bbox.add(left);
         bbox.add(top);
@@ -1066,6 +1117,254 @@ public class HancomAISchemaTransformerTest {
 
         SemanticHeading heading = (SemanticHeading) result.get(0).get(0);
         assertThat(heading.getCorrectSemanticScore()).isEqualTo(0.72);
+    }
+
+    // --- Task D: Array rowspan/colspan and crop-to-page bbox conversion ---
+
+    @Test
+    void arrayRowspan_parsedCorrectly() {
+        // rowspan [1, 2] → startRow=1, rowspan=2
+        // colspan [0] → startCol=0, colspan=1
+        // This cell spans rows 1 and 2, column 0 only
+        ObjectNode cell = objectMapper.createObjectNode();
+        cell.put("cell_id", 3);
+        ArrayNode rs = cell.putArray("rowspan");
+        rs.add(1); rs.add(2);
+        ArrayNode cs = cell.putArray("colspan");
+        cs.add(0);
+        ArrayNode bbox = cell.putArray("bbox");
+        bbox.add(21); bbox.add(126); bbox.add(143); bbox.add(237);
+
+        // Also need a cell at (0,0) to make a valid table
+        ObjectNode cell00 = objectMapper.createObjectNode();
+        cell00.put("cell_id", 0);
+        ArrayNode rs00 = cell00.putArray("rowspan");
+        rs00.add(0);
+        ArrayNode cs00 = cell00.putArray("colspan");
+        cs00.add(0);
+        ArrayNode bbox00 = cell00.putArray("bbox");
+        bbox00.add(21); bbox00.add(15); bbox00.add(143); bbox00.add(126);
+
+        // Build TSR entry
+        ObjectNode json = objectMapper.createObjectNode();
+        ArrayNode dlaOcr = json.putArray("DOCUMENT_LAYOUT_WITH_OCR");
+        ArrayNode dlaPages = dlaOcr.addArray();
+        ObjectNode dlaPage = dlaPages.addObject();
+        dlaPage.put("page_number", 0);
+        dlaPage.put("image_height", 3508);
+        dlaPage.putArray("objects");
+
+        ArrayNode tsr = json.putArray("TABLE_STRUCTURE_RECOGNITION");
+        ObjectNode tableEntry = tsr.addObject();
+        tableEntry.put("page_number", 0);
+        ArrayNode dlaBbox = tableEntry.putArray("dla_bbox");
+        dlaBbox.add(183); dlaBbox.add(607); dlaBbox.add(1590); dlaBbox.add(1533);
+        ObjectNode tsrObj = tableEntry.putObject("tsr");
+        tsrObj.put("page_number", 0);
+        tsrObj.put("num_cells", 2);
+        ArrayNode tbbox = tsrObj.putArray("table_bbox");
+        tbbox.add(21); tbbox.add(13); tbbox.add(1349); tbbox.add(875);
+        ArrayNode cellsArray = tsrObj.putArray("cells");
+        cellsArray.add(cell00);
+        cellsArray.add(cell);
+
+        List<List<IObject>> result = transform(json);
+
+        TableBorder table = null;
+        for (IObject obj : result.get(0)) {
+            if (obj instanceof TableBorder) {
+                table = (TableBorder) obj;
+                break;
+            }
+        }
+        assertThat(table).isNotNull();
+        // Table should have 3 rows (indices 0, 1, 2) and 1 column
+        assertThat(table.getNumberOfRows()).isEqualTo(3);
+        assertThat(table.getNumberOfColumns()).isEqualTo(1);
+
+        // Cell at (1, 0) should span 2 rows
+        TableBorderCell spanCell = table.getCell(1, 0);
+        assertThat(spanCell).isNotNull();
+        assertThat(spanCell.getRowSpan()).isEqualTo(2);
+        assertThat(spanCell.getColSpan()).isEqualTo(1);
+    }
+
+    @Test
+    void cropToPageBboxConversion_withKnownOffset() {
+        // DLA bbox (crop origin): [100, 200, 500, 600] in page pixels
+        // Cell bbox in crop coords: [10, 20, 90, 80]
+        // Expected page-level pixel coords: [110, 220, 190, 280]
+        // Expected PDF points: [110*0.24, pageH - 280*0.24, 190*0.24, pageH - 220*0.24]
+        double[] dlaBbox = {100, 200, 500, 600};
+        double[] tsrTableBbox = {0, 0, 400, 400};  // crop-relative
+
+        ObjectNode cell = objectMapper.createObjectNode();
+        cell.put("cell_id", 0);
+        ArrayNode rs = cell.putArray("rowspan");
+        rs.add(0);
+        ArrayNode cs = cell.putArray("colspan");
+        cs.add(0);
+        ArrayNode bbox = cell.putArray("bbox");
+        bbox.add(10); bbox.add(20); bbox.add(90); bbox.add(80);
+
+        ObjectNode json = createHancomAIJsonWithTableAndOffset(
+            new ObjectNode[]{},
+            dlaBbox,
+            tsrTableBbox,
+            new ObjectNode[]{cell}
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        TableBorder table = null;
+        for (IObject obj : result.get(0)) {
+            if (obj instanceof TableBorder) {
+                table = (TableBorder) obj;
+                break;
+            }
+        }
+        assertThat(table).isNotNull();
+
+        // Cell bbox should be converted from crop to page coords
+        TableBorderCell c = table.getCell(0, 0);
+        assertThat(c).isNotNull();
+        assertThat(c.getBoundingBox()).isNotNull();
+
+        // Page pixel coords: left=110, top=220, right=190, bottom=280
+        // PDF points: left=110*0.24=26.4, right=190*0.24=45.6
+        // topY = 842 - 220*0.24 = 842 - 52.8 = 789.2
+        // bottomY = 842 - 280*0.24 = 842 - 67.2 = 774.8
+        double pageHeight = 842.0;
+        double expectedLeft = 110.0 * 72.0 / 300.0;
+        double expectedRight = 190.0 * 72.0 / 300.0;
+        double expectedTopY = pageHeight - (220.0 * 72.0 / 300.0);
+        double expectedBottomY = pageHeight - (280.0 * 72.0 / 300.0);
+
+        assertThat(c.getBoundingBox().getLeftX()).isEqualTo(expectedLeft, org.assertj.core.api.Assertions.within(0.01));
+        assertThat(c.getBoundingBox().getRightX()).isEqualTo(expectedRight, org.assertj.core.api.Assertions.within(0.01));
+        assertThat(c.getBoundingBox().getTopY()).isEqualTo(expectedTopY, org.assertj.core.api.Assertions.within(0.01));
+        assertThat(c.getBoundingBox().getBottomY()).isEqualTo(expectedBottomY, org.assertj.core.api.Assertions.within(0.01));
+    }
+
+    @Test
+    void backwardCompat_integerRowspanColspan_stillWorks() {
+        // Test backward compatibility with integer rowspan/colspan format
+        ObjectNode cell = objectMapper.createObjectNode();
+        cell.put("row", 0);
+        cell.put("col", 0);
+        cell.put("rowspan", 2);
+        cell.put("colspan", 1);
+        cell.put("text", "Merged cell");
+        ArrayNode bbox = cell.putArray("bbox");
+        bbox.add(100); bbox.add(100); bbox.add(300); bbox.add(300);
+
+        ObjectNode cell2 = objectMapper.createObjectNode();
+        cell2.put("row", 0);
+        cell2.put("col", 1);
+        cell2.put("rowspan", 1);
+        cell2.put("colspan", 1);
+        cell2.put("text", "Normal cell");
+        ArrayNode bbox2 = cell2.putArray("bbox");
+        bbox2.add(300); bbox2.add(100); bbox2.add(500); bbox2.add(200);
+
+        double[] dlaBbox = {100, 100, 500, 300};
+
+        ObjectNode json = objectMapper.createObjectNode();
+        ArrayNode dlaOcr = json.putArray("DOCUMENT_LAYOUT_WITH_OCR");
+        ArrayNode dlaPages = dlaOcr.addArray();
+        ObjectNode dlaPage = dlaPages.addObject();
+        dlaPage.put("page_number", 0);
+        dlaPage.put("image_height", 3508);
+        dlaPage.putArray("objects");
+
+        ArrayNode tsr = json.putArray("TABLE_STRUCTURE_RECOGNITION");
+        ObjectNode tableEntry = tsr.addObject();
+        tableEntry.put("page_number", 0);
+        ArrayNode dlaBboxArr = tableEntry.putArray("dla_bbox");
+        for (double v : dlaBbox) dlaBboxArr.add(v);
+        ObjectNode tsrObj = tableEntry.putObject("tsr");
+        tsrObj.put("page_number", 0);
+        tsrObj.put("num_cells", 2);
+        ArrayNode tbbox = tsrObj.putArray("table_bbox");
+        tbbox.add(0); tbbox.add(0); tbbox.add(400); tbbox.add(200);
+        ArrayNode cellsArray = tsrObj.putArray("cells");
+        cellsArray.add(cell);
+        cellsArray.add(cell2);
+
+        List<List<IObject>> result = transform(json);
+
+        TableBorder table = null;
+        for (IObject obj : result.get(0)) {
+            if (obj instanceof TableBorder) {
+                table = (TableBorder) obj;
+                break;
+            }
+        }
+        assertThat(table).isNotNull();
+        assertThat(table.getNumberOfRows()).isEqualTo(2);
+        assertThat(table.getNumberOfColumns()).isEqualTo(2);
+
+        TableBorderCell mergedCell = table.getCell(0, 0);
+        assertThat(mergedCell).isNotNull();
+        assertThat(mergedCell.getRowSpan()).isEqualTo(2);
+        assertThat(mergedCell.getColSpan()).isEqualTo(1);
+    }
+
+    @Test
+    void multipleTablesPerPage_allProduced() {
+        // Two tables on the same page
+        ObjectNode json = objectMapper.createObjectNode();
+        ArrayNode dlaOcr = json.putArray("DOCUMENT_LAYOUT_WITH_OCR");
+        ArrayNode dlaPages = dlaOcr.addArray();
+        ObjectNode dlaPage = dlaPages.addObject();
+        dlaPage.put("page_number", 0);
+        dlaPage.put("image_height", 3508);
+        dlaPage.putArray("objects");
+
+        ArrayNode tsr = json.putArray("TABLE_STRUCTURE_RECOGNITION");
+
+        // Table 1
+        ObjectNode entry1 = tsr.addObject();
+        entry1.put("page_number", 0);
+        entry1.put("object_id", 1);
+        ArrayNode dlaBbox1 = entry1.putArray("dla_bbox");
+        dlaBbox1.add(100); dlaBbox1.add(100); dlaBbox1.add(500); dlaBbox1.add(300);
+        ObjectNode tsr1 = entry1.putObject("tsr");
+        tsr1.put("page_number", 0);
+        tsr1.put("num_cells", 1);
+        ArrayNode tbbox1 = tsr1.putArray("table_bbox");
+        tbbox1.add(0); tbbox1.add(0); tbbox1.add(400); tbbox1.add(200);
+        ArrayNode cells1 = tsr1.putArray("cells");
+        ObjectNode c1 = cells1.addObject();
+        c1.put("cell_id", 0);
+        ArrayNode rs1 = c1.putArray("rowspan"); rs1.add(0);
+        ArrayNode cs1 = c1.putArray("colspan"); cs1.add(0);
+        ArrayNode b1 = c1.putArray("bbox");
+        b1.add(0); b1.add(0); b1.add(400); b1.add(200);
+
+        // Table 2
+        ObjectNode entry2 = tsr.addObject();
+        entry2.put("page_number", 0);
+        entry2.put("object_id", 2);
+        ArrayNode dlaBbox2 = entry2.putArray("dla_bbox");
+        dlaBbox2.add(100); dlaBbox2.add(500); dlaBbox2.add(500); dlaBbox2.add(700);
+        ObjectNode tsr2 = entry2.putObject("tsr");
+        tsr2.put("page_number", 0);
+        tsr2.put("num_cells", 1);
+        ArrayNode tbbox2 = tsr2.putArray("table_bbox");
+        tbbox2.add(0); tbbox2.add(0); tbbox2.add(400); tbbox2.add(200);
+        ArrayNode cells2 = tsr2.putArray("cells");
+        ObjectNode c2 = cells2.addObject();
+        c2.put("cell_id", 0);
+        ArrayNode rs2 = c2.putArray("rowspan"); rs2.add(0);
+        ArrayNode cs2 = c2.putArray("colspan"); cs2.add(0);
+        ArrayNode b2 = c2.putArray("bbox");
+        b2.add(0); b2.add(0); b2.add(400); b2.add(200);
+
+        List<List<IObject>> result = transform(json);
+
+        long tableCount = result.get(0).stream().filter(o -> o instanceof TableBorder).count();
+        assertThat(tableCount).isEqualTo(2);
     }
 
     @Test
