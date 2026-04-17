@@ -66,7 +66,7 @@ public class HybridConfig {
     /** OCR strategy: force (OCR only, skip stream-based enrichment). */
     public static final String OCR_FORCE = "force";
 
-    private String ocrStrategy = OCR_OFF;
+    private String ocrStrategy = OCR_AUTO;
 
     /** Page image cache strategy: "memory" (default) or "disk". */
     private String imageCache = "memory";
