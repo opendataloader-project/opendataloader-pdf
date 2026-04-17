@@ -641,7 +641,13 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
 
     /**
      * Collects per-page word info (text + bbox in PDF points) from all DLA+OCR objects.
-     * Excludes furniture labels (14, 15, 17) and objects without text.
+     * Uses individual word-level entries from the {@code words[]} array when available,
+     * falling back to object-level ocrtext + bbox otherwise.
+     * Excludes furniture labels (14, 15, 17).
+     *
+     * <p>Word-level collection is critical for table cell-word bbox matching:
+     * object-level bbox covers the entire table, but individual word bboxes
+     * can be matched to specific cells.
      */
     private Map<Integer, List<WordInfo>> collectWordsByPage(List<JsonNode> dlaPages,
                                                              Map<Integer, Double> pageHeights) {
@@ -663,14 +669,34 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
                     continue;
                 }
 
-                String text = obj.has("ocrtext") ? obj.get("ocrtext").asText("") : "";
-                if (text.isEmpty()) continue;
+                // Prefer individual words from words[] array (each has its own bbox)
+                JsonNode wordsArr = obj.get("words");
+                if (wordsArr != null && wordsArr.isArray() && wordsArr.size() > 0) {
+                    for (JsonNode word : wordsArr) {
+                        String wordText = word.has("text") ? word.get("text").asText("") : "";
+                        if (wordText.isEmpty()) continue;
 
-                JsonNode bboxNode = obj.get("bbox");
-                if (bboxNode == null || !bboxNode.isArray() || bboxNode.size() < 4) continue;
+                        JsonNode wordBbox = word.get("bbox");
+                        if (wordBbox == null || !wordBbox.isArray() || wordBbox.size() < 4) continue;
 
-                BoundingBox bbox = extractBoundingBox(bboxNode, pageNumber, pageHeight);
-                words.add(new WordInfo(text, bbox));
+                        // Word bbox is 8-point polygon [x1,y1,x2,y2,x3,y3,x4,y4] or 4-point [l,t,r,b]
+                        // Convert to [left, top, right, bottom] in 300DPI pixels
+                        double[] ltrb = wordBboxToLTRB(wordBbox);
+                        JsonNode syntheticBbox = createBboxNode(ltrb);
+                        BoundingBox bbox = extractBoundingBox(syntheticBbox, pageNumber, pageHeight);
+                        words.add(new WordInfo(wordText, bbox));
+                    }
+                } else {
+                    // Fallback: use object-level ocrtext + bbox
+                    String text = obj.has("ocrtext") ? obj.get("ocrtext").asText("") : "";
+                    if (text.isEmpty()) continue;
+
+                    JsonNode bboxNode = obj.get("bbox");
+                    if (bboxNode == null || !bboxNode.isArray() || bboxNode.size() < 4) continue;
+
+                    BoundingBox bbox = extractBoundingBox(bboxNode, pageNumber, pageHeight);
+                    words.add(new WordInfo(text, bbox));
+                }
             }
 
             if (!words.isEmpty()) {
@@ -679,6 +705,40 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
         }
 
         return wordsByPage;
+    }
+
+    /**
+     * Converts word bbox from 8-point polygon [x1,y1,x2,y2,x3,y3,x4,y4] or
+     * 4-point [left,top,right,bottom] to [left, top, right, bottom].
+     */
+    private static double[] wordBboxToLTRB(JsonNode wordBbox) {
+        if (wordBbox.size() >= 8) {
+            // 8-point polygon: find min/max of x and y coordinates
+            double minX = Double.MAX_VALUE, minY = Double.MAX_VALUE;
+            double maxX = Double.MIN_VALUE, maxY = Double.MIN_VALUE;
+            for (int j = 0; j < wordBbox.size(); j += 2) {
+                double x = wordBbox.get(j).asDouble();
+                double y = wordBbox.get(j + 1).asDouble();
+                minX = Math.min(minX, x);
+                minY = Math.min(minY, y);
+                maxX = Math.max(maxX, x);
+                maxY = Math.max(maxY, y);
+            }
+            return new double[]{minX, minY, maxX, maxY};
+        } else {
+            // 4-point: [left, top, right, bottom]
+            return new double[]{
+                wordBbox.get(0).asDouble(), wordBbox.get(1).asDouble(),
+                wordBbox.get(2).asDouble(), wordBbox.get(3).asDouble()
+            };
+        }
+    }
+
+    private JsonNode createBboxNode(double[] ltrb) {
+        com.fasterxml.jackson.databind.node.ArrayNode arr =
+            new com.fasterxml.jackson.databind.ObjectMapper().createArrayNode();
+        for (double v : ltrb) arr.add(v);
+        return arr;
     }
 
     /**
