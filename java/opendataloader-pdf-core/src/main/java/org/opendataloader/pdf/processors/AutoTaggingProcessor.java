@@ -509,16 +509,11 @@ public class AutoTaggingProcessor {
     private static COSObject createTableStructElemReturning(TableBorder table, COSObject parent, COSDocument cosDocument) {
         COSObject tableObject = addStructElement(parent, cosDocument, TaggedPDFConstants.TABLE, table.getPageNumber());
 
-        // THead wraps the first row (row 0)
-        COSObject theadObject = addStructElement(tableObject, cosDocument, "THead", table.getPageNumber());
-        addTableRow(table, 0, theadObject, cosDocument, true);
-
-        // TBody wraps remaining rows (row 1+), only if data rows exist
-        if (table.getNumberOfRows() > 1) {
-            COSObject tbodyObject = addStructElement(tableObject, cosDocument, "TBody", table.getPageNumber());
-            for (int rowNumber = 1; rowNumber < table.getNumberOfRows(); rowNumber++) {
-                addTableRow(table, rowNumber, tbodyObject, cosDocument, false);
-            }
+        // Flat structure: Table > TR > TH/TD (no THead/TBody wrappers)
+        // First row uses TH + Scope="Column" for header identification.
+        // This is compatible with both Adobe Acrobat and veraPDF PDF/UA-2 validation.
+        for (int rowNumber = 0; rowNumber < table.getNumberOfRows(); rowNumber++) {
+            addTableRow(table, rowNumber, tableObject, cosDocument, rowNumber == 0);
         }
 
         addCaptionIfPresent(table, tableObject, cosDocument);
