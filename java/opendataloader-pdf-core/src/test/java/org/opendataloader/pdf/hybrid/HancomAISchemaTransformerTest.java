@@ -813,7 +813,7 @@ public class HancomAISchemaTransformerTest {
         // Also a figure far away at [100, 800, 500, 1000]
         ObjectNode[] dlaObjects = {
             createObject(8, "Table 1: Data", 100, 310, 500, 340),
-            createObject(9, "", 100, 800, 500, 1000)
+            createObject(10, "", 100, 800, 500, 1000)
         };
 
         ObjectNode tsrCell = createTsrCell(0, 0, 1, 1, "cell", 100, 100, 500, 300);
@@ -992,6 +992,35 @@ public class HancomAISchemaTransformerTest {
         // Default strategy should be table-first
         HancomAISchemaTransformer freshTransformer = new HancomAISchemaTransformer();
         assertThat(freshTransformer.getRegionlistStrategy()).isEqualTo(HybridConfig.REGIONLIST_TABLE_FIRST);
+    }
+
+    // --- Label 9 (Table) handled by TSR, returns null from transformObject ---
+
+    @Test
+    void label9_table_returnsNull() {
+        // label 9 = Table → handled by transformTablePage(), transformObject returns null
+        ObjectNode json = createHancomAIJson(
+            createObject(9, "Some table text", 100, 100, 500, 300)
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        assertThat(result.get(0)).isEmpty();
+    }
+
+    // --- Label 10 (Figure) creates SemanticPicture ---
+
+    @Test
+    void label10_figure_createsPicture() {
+        // label 10 = Figure → SemanticPicture
+        ObjectNode json = createHancomAIJson(
+            createObject(10, "", 100, 100, 500, 400)
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        assertThat(result.get(0)).hasSize(1);
+        assertThat(result.get(0).get(0)).isInstanceOf(SemanticPicture.class);
     }
 
     // --- Task 8: confidence → correctSemanticScore ---
