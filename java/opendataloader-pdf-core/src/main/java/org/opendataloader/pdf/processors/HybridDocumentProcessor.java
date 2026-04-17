@@ -32,6 +32,7 @@ import org.opendataloader.pdf.hybrid.HybridClient.OutputFormat;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.opendataloader.pdf.hybrid.HybridConfig;
 import org.opendataloader.pdf.hybrid.HybridSchemaTransformer;
+import org.opendataloader.pdf.hybrid.TextSimilarity;
 import org.opendataloader.pdf.hybrid.OcrWordInfo;
 import org.opendataloader.pdf.hybrid.TriageLogger;
 import org.opendataloader.pdf.hybrid.TriageProcessor;
@@ -638,7 +639,7 @@ public class HybridDocumentProcessor {
             // Replace backend TextChunks with Java TextChunks that carry StreamInfo,
             // and copy StreamInfos to SemanticFormula objects
             if (!javaTextChunks.isEmpty()) {
-                enrichTextStreamInfos(backendPage, javaTextChunks);
+                enrichTextStreamInfos(backendPage, javaTextChunks, hybridConfig);
                 enrichFormulaStreamInfos(backendPage, javaTextChunks);
             }
 
@@ -758,11 +759,12 @@ public class HybridDocumentProcessor {
      * This preserves the backend's structural decisions (heading/paragraph/reading order)
      * while using the Java TextChunks that carry StreamInfo.
      */
-    private static void enrichTextStreamInfos(List<IObject> backendPage, List<TextChunk> javaTextChunks) {
+    private static void enrichTextStreamInfos(List<IObject> backendPage, List<TextChunk> javaTextChunks,
+                                               HybridConfig config) {
         if (javaTextChunks.isEmpty()) return;
 
         Set<Integer> usedJavaIndices = new HashSet<>();
-        enrichTextStreamInfosRecursive(backendPage, javaTextChunks, usedJavaIndices);
+        enrichTextStreamInfosRecursive(backendPage, javaTextChunks, usedJavaIndices, config);
     }
 
     /**
@@ -771,14 +773,15 @@ public class HybridDocumentProcessor {
      * and any other container that holds nested IObjects.
      */
     private static void enrichTextStreamInfosRecursive(
-            List<IObject> objects, List<TextChunk> javaTextChunks, Set<Integer> usedJavaIndices) {
+            List<IObject> objects, List<TextChunk> javaTextChunks, Set<Integer> usedJavaIndices,
+            HybridConfig config) {
 
         for (IObject obj : objects) {
             if (obj instanceof SemanticFormula) {
                 // Formula inside table/list — enrich StreamInfos by bbox overlap
                 enrichSingleFormula((SemanticFormula) obj, javaTextChunks);
             } else if (obj instanceof SemanticTextNode) {
-                enrichSingleTextNode((SemanticTextNode) obj, javaTextChunks, usedJavaIndices);
+                enrichSingleTextNode((SemanticTextNode) obj, javaTextChunks, usedJavaIndices, config);
             } else if (obj instanceof TableBorder) {
                 TableBorder table = (TableBorder) obj;
                 for (int rowNumber = 0; rowNumber < table.getNumberOfRows(); rowNumber++) {
@@ -786,7 +789,7 @@ public class HybridDocumentProcessor {
                     for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
                         TableBorderCell cell = row.getCell(colNumber);
                         if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
-                            enrichTextStreamInfosRecursive(cell.getContents(), javaTextChunks, usedJavaIndices);
+                            enrichTextStreamInfosRecursive(cell.getContents(), javaTextChunks, usedJavaIndices, config);
                         }
                     }
                 }
@@ -794,15 +797,17 @@ public class HybridDocumentProcessor {
                 PDFList list = (PDFList) obj;
                 for (ListItem item : list.getListItems()) {
                     // Enrich ListItem's own text lines (used by AutoTaggingProcessor for Lbl/LBody)
-                    for (TextLine line : item.getLines()) {
-                        for (TextChunk backendChunk : line.getTextChunks()) {
-                            if (backendChunk.getStreamInfos().isEmpty()) {
-                                matchAndReplaceStreamInfos(backendChunk, javaTextChunks, usedJavaIndices);
+                    if (config == null || !config.isOcrForce()) {
+                        for (TextLine line : item.getLines()) {
+                            for (TextChunk backendChunk : line.getTextChunks()) {
+                                if (backendChunk.getStreamInfos().isEmpty()) {
+                                    matchAndReplaceStreamInfos(backendChunk, javaTextChunks, usedJavaIndices, config);
+                                }
                             }
                         }
                     }
                     // Enrich nested contents (images, paragraphs, sub-lists)
-                    enrichTextStreamInfosRecursive(item.getContents(), javaTextChunks, usedJavaIndices);
+                    enrichTextStreamInfosRecursive(item.getContents(), javaTextChunks, usedJavaIndices, config);
                 }
             }
         }
@@ -810,9 +815,17 @@ public class HybridDocumentProcessor {
 
     /**
      * Replaces a single SemanticTextNode's TextChunks with matching Java TextChunks.
+     * In OCR auto mode, compares stream vs OCR text similarity before deciding.
+     * In OCR force mode, always keeps OCR text (backend TextChunks).
      */
     private static void enrichSingleTextNode(
-            SemanticTextNode textNode, List<TextChunk> javaTextChunks, Set<Integer> usedJavaIndices) {
+            SemanticTextNode textNode, List<TextChunk> javaTextChunks, Set<Integer> usedJavaIndices,
+            HybridConfig config) {
+
+        // Force mode: always keep OCR text, don't replace with stream
+        if (config != null && config.isOcrForce()) {
+            return;
+        }
 
         double nLeft = textNode.getLeftX();
         double nRight = textNode.getRightX();
@@ -835,26 +848,73 @@ public class HybridDocumentProcessor {
             }
         }
 
-        if (!matched.isEmpty()) {
-            textNode.getColumns().clear();
-            TextColumn newCol = new TextColumn();
-            for (TextChunk tc : matched) {
-                newCol.add(new TextLine(tc));
-            }
-            textNode.getColumns().add(newCol);
-        } else {
+        if (matched.isEmpty()) {
             LOGGER.fine(() -> "enrichSingleTextNode: no Java TextChunk matched for backend node at bbox ["
                 + String.format("%.1f,%.1f,%.1f,%.1f", nLeft, nBottom, nRight, nTop) + "]");
+            return;
         }
+
+        // Auto mode: compare stream vs OCR text similarity
+        if (config != null && config.isOcrAuto()) {
+            String streamText = extractTextFromChunks(matched);
+            String ocrText = extractTextFromNode(textNode);
+
+            if (!TextSimilarity.trustStream(streamText, ocrText, TextSimilarity.DEFAULT_THRESHOLD)) {
+                // Stream text is corrupted — keep OCR text (backend TextChunks)
+                LOGGER.fine(() -> "OCR auto: stream text untrusted (sim="
+                    + String.format("%.2f", TextSimilarity.similarity(streamText, ocrText))
+                    + "), keeping OCR for node at ["
+                    + String.format("%.1f,%.1f,%.1f,%.1f", nLeft, nBottom, nRight, nTop) + "]");
+                return;
+            }
+        }
+
+        // Off mode or auto mode with trusted stream: replace with Java TextChunks
+        textNode.getColumns().clear();
+        TextColumn newCol = new TextColumn();
+        for (TextChunk tc : matched) {
+            newCol.add(new TextLine(tc));
+        }
+        textNode.getColumns().add(newCol);
+    }
+
+    /**
+     * Extracts concatenated text from a list of TextChunks.
+     */
+    private static String extractTextFromChunks(List<TextChunk> chunks) {
+        StringBuilder sb = new StringBuilder();
+        for (TextChunk tc : chunks) {
+            if (sb.length() > 0) sb.append(' ');
+            sb.append(tc.getValue());
+        }
+        return sb.toString().trim();
+    }
+
+    /**
+     * Extracts concatenated text from a SemanticTextNode's columns/lines/chunks.
+     */
+    private static String extractTextFromNode(SemanticTextNode node) {
+        StringBuilder sb = new StringBuilder();
+        for (TextColumn col : node.getColumns()) {
+            for (TextLine line : col.getLines()) {
+                for (TextChunk chunk : line.getTextChunks()) {
+                    if (sb.length() > 0) sb.append(' ');
+                    sb.append(chunk.getValue());
+                }
+            }
+        }
+        return sb.toString().trim();
     }
 
     /**
      * Copies StreamInfos from matching Java TextChunks to a backend TextChunk that lacks them.
      * Used for ListItem lines where the text is stored directly in TextLine/TextChunk
      * rather than in a SemanticTextNode wrapper.
+     * In OCR auto mode, compares stream vs OCR text similarity before copying.
      */
     private static void matchAndReplaceStreamInfos(
-            TextChunk backendChunk, List<TextChunk> javaTextChunks, Set<Integer> usedJavaIndices) {
+            TextChunk backendChunk, List<TextChunk> javaTextChunks, Set<Integer> usedJavaIndices,
+            HybridConfig config) {
         double bCx = backendChunk.getCenterX();
         double bCy = backendChunk.getCenterY();
         double tol = 5.0;
@@ -865,6 +925,15 @@ public class HybridDocumentProcessor {
             double jCx = javaChunk.getCenterX();
             double jCy = javaChunk.getCenterY();
             if (Math.abs(bCx - jCx) <= tol && Math.abs(bCy - jCy) <= tol) {
+                // In auto mode, check if stream text is trustworthy
+                if (config != null && config.isOcrAuto()) {
+                    String streamText = javaChunk.getValue();
+                    String ocrText = backendChunk.getValue();
+                    if (!TextSimilarity.trustStream(streamText, ocrText, TextSimilarity.DEFAULT_THRESHOLD)) {
+                        LOGGER.fine(() -> "OCR auto: stream text untrusted for ListItem chunk, keeping OCR");
+                        return;
+                    }
+                }
                 backendChunk.getStreamInfos().addAll(javaChunk.getStreamInfos());
                 usedJavaIndices.add(i);
                 return;

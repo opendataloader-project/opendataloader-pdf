@@ -44,9 +44,9 @@ public class OcrStrategyTest {
     class HybridConfigOcrStrategy {
 
         @Test
-        void defaultOcrStrategy_isOff() {
+        void defaultOcrStrategy_isAuto() {
             HybridConfig config = new HybridConfig();
-            assertThat(config.getOcrStrategy()).isEqualTo(HybridConfig.OCR_OFF);
+            assertThat(config.getOcrStrategy()).isEqualTo(HybridConfig.OCR_AUTO);
         }
 
         @Test
