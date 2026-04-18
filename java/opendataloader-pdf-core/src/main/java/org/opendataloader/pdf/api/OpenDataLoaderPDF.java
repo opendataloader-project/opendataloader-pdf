@@ -19,12 +19,21 @@ import org.opendataloader.pdf.hybrid.HybridClientFactory;
 import org.opendataloader.pdf.processors.DocumentProcessor;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * The main entry point for the opendataloader-pdf library.
  * Use the static method {@link #processFile(String, Config)} to process a PDF.
  */
 public final class OpenDataLoaderPDF {
+
+    private static final Logger LOGGER = Logger.getLogger(OpenDataLoaderPDF.class.getCanonicalName());
 
     private OpenDataLoaderPDF() {
     }
@@ -34,10 +43,52 @@ public final class OpenDataLoaderPDF {
      *
      * @param inputPdfName The path to the input PDF file.
      * @param config       The configuration object specifying output formats and other options.
-     * @throws IOException If an error occurs during file reading or processing.
+     *
      */
     public static void processFile(String inputPdfName, Config config) throws IOException {
+        validateInputFile(inputPdfName);
         DocumentProcessor.processFile(inputPdfName, config);
+
+    }
+
+    /**
+     * Validates whether the given path refers to a valid PDF file.
+     *
+     * @param inputPdfName the path to the input file
+     * @throws IllegalArgumentException if the path is null or blank, syntactically
+     * invalid, does not exist, is not a regular file,or does not end with {@code .pdf}
+     */
+    private static void validateInputFile(String inputPdfName) {
+
+        if (inputPdfName == null || inputPdfName.isBlank()) {
+            LOGGER.log(Level.WARNING,"Input PDF name is null or Empty");
+            throw new IllegalArgumentException("Input PDF name is null or Empty");
+        }
+
+        final Path path;
+
+        try {
+            path = Paths.get(inputPdfName);
+        } catch (InvalidPathException ex) {
+            LOGGER.log(Level.WARNING,"Invalid Path: " + inputPdfName);
+            throw new IllegalArgumentException("Invalid Path: " + inputPdfName);
+        }
+
+        if (!Files.exists(path)) {
+            LOGGER.log(Level.WARNING,"File not found at " + inputPdfName + " location");
+            throw new IllegalArgumentException("File not found at " + inputPdfName + " location");
+        }
+
+        if (!Files.isRegularFile(path)) {
+            LOGGER.log(Level.WARNING,"Not a valid file " + inputPdfName);
+            throw new IllegalArgumentException("Not a valid file " + inputPdfName);
+        }
+
+        if (!path.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".pdf")) {
+            LOGGER.log(Level.WARNING,"Not a PDF file");
+            throw new IllegalArgumentException("Not a PDF file");
+        }
+
     }
 
     /**
