@@ -42,6 +42,8 @@ public class AutoTaggingProcessor {
     private static final Map<Integer, COSObject> annotationStructParents = new HashMap<>();
     // First created struct element per page, used to rewrite page destinations to structure destinations.
     private static final Map<Integer, COSObject> pageNumberToFirstStructElement = new HashMap<>();
+    // Namespace for PDF 2.0-only structure types (FENote, etc.), created in createStructTreeRoot.
+    private static COSObject pdf2_0Namespace;
     // Caption elements keyed by their linked content ID (Raman's approach from #377)
     private static final Map<Long, SemanticCaption> structElementIdToCaptionMap = new HashMap<>();
     private static boolean isPDF2_0 = false;
@@ -149,6 +151,16 @@ public class AutoTaggingProcessor {
         structTreeRoot.setKey(ASAtom.TYPE, COSName.construct(ASAtom.STRUCT_TREE_ROOT));
         cosDocument.addObject(structTreeRoot);
         structTreeRoot.setKey(ASAtom.PARENT_TREE_NEXT_KEY, COSInteger.construct(document.getNumberOfPages()));
+        // Create the PDF 2.0 namespace (pdf2/ssn) so PDF 2.0-only structure types (FENote, ...)
+        // can be tagged with an explicit /NS. PDF/UA-2 clause 8.2.4.1 rejects non-standard types
+        // under the default pdf/ssn namespace; inheritance alone isn't enough for veraPDF.
+        pdf2_0Namespace = COSDictionary.construct(ASAtom.NS, TaggedPDFConstants.PDF2_NAMESPACE);
+        pdf2_0Namespace.setNameKey(ASAtom.TYPE, ASAtom.NAMESPACE);
+        pdf2_0Namespace = COSIndirect.construct(pdf2_0Namespace, cosDocument);
+        cosDocument.addObject(pdf2_0Namespace);
+        COSObject namespaces = COSArray.construct();
+        namespaces.add(pdf2_0Namespace);
+        structTreeRoot.setKey(ASAtom.NAMESPACES, namespaces);
         cosDocument.addChangedObject(catalog.getObject());
         return structTreeRoot;
     }
@@ -503,6 +515,10 @@ public class AutoTaggingProcessor {
 
     private static void createFootnoteStructElem(SemanticFootnote footnote, COSObject parent, COSDocument cosDocument) {
         COSObject noteObject = addStructElement(parent, cosDocument, TaggedPDFConstants.FENOTE, footnote.getPageNumber());
+        // FENote is a PDF 2.0-only type; explicit /NS is required for PDF/UA-2 validators.
+        if (pdf2_0Namespace != null) {
+            noteObject.setKey(ASAtom.NS, pdf2_0Namespace);
+        }
         noteObject.setKey(ASAtom.NOTE_TYPE, COSName.construct(ASAtom.getASAtom("Footnote")));
         processTextNode(footnote, noteObject);
     }
