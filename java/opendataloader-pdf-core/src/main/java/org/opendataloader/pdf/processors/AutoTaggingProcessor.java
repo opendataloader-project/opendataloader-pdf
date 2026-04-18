@@ -348,18 +348,23 @@ public class AutoTaggingProcessor {
                 }
                 // Create Link struct element
                 COSObject linkElem = addStructElement(seDocument, cosDocument, TaggedPDFConstants.LINK, pageNumber);
-                // Set Alt text to URI or "Link"
-                String altText = uriString != null ? uriString : "Link";
+                // PDF/UA-2 clause 8.9.4.2.1 requires the annotation's Contents and the enclosing
+                // struct element's Alt to be identical when both are present. Prefer any existing
+                // Contents authored on the annotation (accessibility text the author already
+                // wrote), otherwise fall back to URI, then to "Link".
+                String existingContents = annotation.getContents();
+                String altText;
+                if (existingContents != null && !existingContents.isEmpty()) {
+                    altText = existingContents;
+                } else {
+                    altText = uriString != null ? uriString : "Link";
+                    annotObj.setKey(ASAtom.CONTENTS,
+                        COSString.construct(altText.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+                }
                 linkElem.setKey(ASAtom.ALT, COSString.construct(altText.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
                 // Assign StructParent integer to annotation and register in parent tree
                 int structParentInt = annotStructParentKey++;
                 annotObj.setKey(ASAtom.STRUCT_PARENT, COSInteger.construct(structParentInt));
-                // Set Contents on annotation if absent.
-                String contents = annotation.getContents();
-                if (contents == null || contents.isEmpty()) {
-                    annotObj.setKey(ASAtom.CONTENTS,
-                        COSString.construct(altText.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
-                }
                 annotationStructParents.put(structParentInt, linkElem);
                 rewriteDestinationToStructDestination(annotObj, document, pageNumber);
                 cosDocument.addChangedObject(annotObj);
