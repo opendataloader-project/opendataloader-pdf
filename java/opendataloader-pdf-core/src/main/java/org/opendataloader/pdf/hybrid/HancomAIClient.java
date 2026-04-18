@@ -89,6 +89,35 @@ public class HancomAIClient implements HybridClient {
     private final ObjectMapper objectMapper;
     private final HybridConfig config;
 
+    private String sourcePdfShaShort = "unknown";
+
+    private static final java.util.Map<String, String> MODULE_SHORT;
+    static {
+        java.util.Map<String, String> m = new java.util.HashMap<>();
+        m.put("DOCUMENT_LAYOUT_WITH_OCR", "dla-ocr");
+        m.put("DOCUMENT_LAYOUT_ANALYSIS", "dla");
+        m.put("TEXT_RECOGNITION", "ocr");
+        m.put("TABLE_STRUCTURE_RECOGNITION", "tsr");
+        m.put("IMAGE_CAPTIONING", "caption");
+        m.put("CHART_IMAGE_UNDERSTANDING", "chart");
+        MODULE_SHORT = java.util.Collections.unmodifiableMap(m);
+    }
+
+    private static String sha256ShortHex(byte[] data) {
+        try {
+            java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest(data);
+            StringBuilder sb = new StringBuilder(12);
+            for (int i = 0; i < 6; i++) sb.append(String.format("%02x", hash[i]));
+            return sb.toString();
+        } catch (java.security.NoSuchAlgorithmException e) {
+            return "nohash000000";
+        }
+    }
+
+    // Test hook
+    void setSourcePdfShaShort(String s) { this.sourcePdfShaShort = s; }
+
     public HancomAIClient(HybridConfig config) {
         this.config = config;
         this.baseUrl = config.getEffectiveUrl("hancom-ai");
@@ -135,6 +164,7 @@ public class HancomAIClient implements HybridClient {
     @Override
     public HybridResponse convert(HybridRequest request) throws IOException {
         byte[] pdfBytes = request.getPdfBytes();
+        this.sourcePdfShaShort = sha256ShortHex(pdfBytes);
         LOGGER.log(Level.INFO, "Hancom AI: processing PDF ({0} bytes)", pdfBytes.length);
 
         try (PageImageCache pageImageCache = createPageImageCache()) {
@@ -291,7 +321,8 @@ public class HancomAIClient implements HybridClient {
                         saveCropFile(config.getCropOutputDir(), pageNum, objId, "figure", croppedPng);
                     }
 
-                    String caption = callImageCaptioning(croppedPng);
+                    int objIdForCaption = fig.has("object_id") ? fig.get("object_id").asInt() : -1;
+                    String caption = callImageCaptioning(croppedPng, pageNum, objIdForCaption);
 
                     ObjectNode capNode = objectMapper.createObjectNode();
                     capNode.put("page_number", pageNum);
@@ -407,7 +438,8 @@ public class HancomAIClient implements HybridClient {
                     }
 
                     // Call TSR with crop image
-                    JsonNode tsrResult = callModuleImage(cropPng, "TABLE_STRUCTURE_RECOGNITION");
+                    int objId = obj.has("object_id") ? obj.get("object_id").asInt() : -1;
+                    JsonNode tsrResult = callModuleImage(cropPng, "TABLE_STRUCTURE_RECOGNITION", pageNum, objId);
 
                     // Build result entry
                     ObjectNode entry = objectMapper.createObjectNode();
@@ -448,10 +480,12 @@ public class HancomAIClient implements HybridClient {
      * Calls a single HOCR SDK module with image (PNG) input.
      * Similar to {@link #callModule} but sends image data instead of PDF.
      */
-    private JsonNode callModuleImage(byte[] pngBytes, String moduleName) throws IOException {
+    private JsonNode callModuleImage(byte[] pngBytes, String moduleName, int pageNum, int objectId) throws IOException {
+        String moduleShort = MODULE_SHORT.getOrDefault(moduleName, moduleName);
+        String requestId = "odl-" + sourcePdfShaShort + "-p" + pageNum + "-o" + objectId + "-" + moduleShort;
         MultipartBody body = new MultipartBody.Builder()
             .setType(MultipartBody.FORM)
-            .addFormDataPart("REQUEST_ID", "odl-" + moduleName)
+            .addFormDataPart("REQUEST_ID", requestId)
             .addFormDataPart("OPEN_API_NAME", moduleName)
             .addFormDataPart("DATA_FORMAT", "image")
             .addFormDataPart("FILE", "crop.png",
@@ -463,7 +497,8 @@ public class HancomAIClient implements HybridClient {
             .post(body)
             .build();
 
-        LOGGER.log(Level.FINE, "Calling Hancom AI module (image): {0}", moduleName);
+        LOGGER.log(Level.FINE, "Calling Hancom AI module (image): {0} [{1}]",
+            new Object[]{moduleName, requestId});
 
         try (Response response = httpClient.newCall(httpRequest).execute()) {
             if (!response.isSuccessful()) {
@@ -513,7 +548,8 @@ public class HancomAIClient implements HybridClient {
     private BufferedImage fetchPageImage(byte[] pdfBytes, int pageIndex) throws IOException {
         MultipartBody body = new MultipartBody.Builder()
             .setType(MultipartBody.FORM)
-            .addFormDataPart("REQUEST_ID", "odl-pdf2img-" + pageIndex)
+            .addFormDataPart("REQUEST_ID",
+                "odl-" + sourcePdfShaShort + "-pdf2img-p" + pageIndex)
             .addFormDataPart("PAGE_INDEX", String.valueOf(pageIndex))
             .addFormDataPart("FILE", DEFAULT_FILENAME,
                 RequestBody.create(pdfBytes, MEDIA_TYPE_PDF))
@@ -561,10 +597,11 @@ public class HancomAIClient implements HybridClient {
     /**
      * Sends a cropped image to IMAGE_CAPTIONING and returns the caption text.
      */
-    private String callImageCaptioning(byte[] pngBytes) throws IOException {
+    private String callImageCaptioning(byte[] pngBytes, int pageNum, int objectId) throws IOException {
+        String requestId = "odl-" + sourcePdfShaShort + "-p" + pageNum + "-o" + objectId + "-caption";
         MultipartBody body = new MultipartBody.Builder()
             .setType(MultipartBody.FORM)
-            .addFormDataPart("REQUEST_ID", "odl-caption")
+            .addFormDataPart("REQUEST_ID", requestId)
             .addFormDataPart("OPEN_API_NAME", "IMAGE_CAPTIONING")
             .addFormDataPart("DATA_FORMAT", "image")
             .addFormDataPart("FILE", "figure.png",
@@ -601,7 +638,8 @@ public class HancomAIClient implements HybridClient {
     private JsonNode callModule(byte[] pdfBytes, String moduleName) throws IOException {
         MultipartBody body = new MultipartBody.Builder()
             .setType(MultipartBody.FORM)
-            .addFormDataPart("REQUEST_ID", "odl-" + moduleName)
+            .addFormDataPart("REQUEST_ID",
+                "odl-" + sourcePdfShaShort + "-" + MODULE_SHORT.getOrDefault(moduleName, moduleName))
             .addFormDataPart("OPEN_API_NAME", moduleName)
             .addFormDataPart("DATA_FORMAT", "pdf")
             .addFormDataPart("FILE", DEFAULT_FILENAME,
@@ -690,5 +728,16 @@ public class HancomAIClient implements HybridClient {
         if (httpClient.cache() != null) {
             try { httpClient.cache().close(); } catch (Exception ignored) { }
         }
+    }
+
+    // --- Test hooks (package-private) ---
+
+    void invokeCallModule(byte[] pdfBytes, String moduleName) throws IOException {
+        this.sourcePdfShaShort = sha256ShortHex(pdfBytes);
+        callModule(pdfBytes, moduleName);
+    }
+
+    void invokeCallImageCaptioning(byte[] pngBytes, int pageNum, int objectId) throws IOException {
+        callImageCaptioning(pngBytes, pageNum, objectId);
     }
 }
