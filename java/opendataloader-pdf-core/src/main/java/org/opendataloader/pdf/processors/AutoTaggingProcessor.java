@@ -40,6 +40,8 @@ public class AutoTaggingProcessor {
     private static final Map<OperatorStreamKey, Integer> structParentsIntegers = new LinkedHashMap<>();
     // annotation StructParent entries: int key -> single struct element (Link)
     private static final Map<Integer, COSObject> annotationStructParents = new HashMap<>();
+    // First created struct element per page, used to rewrite page destinations to structure destinations.
+    private static final Map<Integer, COSObject> pageNumberToFirstStructElement = new HashMap<>();
     // Caption elements keyed by their linked content ID (Raman's approach from #377)
     private static final Map<Long, SemanticCaption> structElementIdToCaptionMap = new HashMap<>();
     private static boolean isPDF2_0 = false;
@@ -60,6 +62,7 @@ public class AutoTaggingProcessor {
         structParents.clear();
         structParentsIntegers.clear();
         annotationStructParents.clear();
+        pageNumberToFirstStructElement.clear();
         structElementIdToCaptionMap.clear();
         imageChunkFigureCounter = 0;
         isPDF2_0 = document.getVersion() == 2.0F;
@@ -199,6 +202,7 @@ public class AutoTaggingProcessor {
         structElement.setKey(ASAtom.P, parent);
         if (pageNumber != null) {
             structElement.setKey(ASAtom.PG, cosDocument.getPDDocument().getPages().get(pageNumber).getObject());
+            pageNumberToFirstStructElement.putIfAbsent(pageNumber, structElement);
         }
         cosDocument.addObject(structElement);
         return structElement;
@@ -357,6 +361,7 @@ public class AutoTaggingProcessor {
                         COSString.construct(altText.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
                 }
                 annotationStructParents.put(structParentInt, linkElem);
+                rewriteDestinationToStructDestination(annotObj, document, pageNumber);
                 cosDocument.addChangedObject(annotObj);
                 pageChanged = true;
                 // Create OBJR pointing to the annotation
@@ -379,6 +384,75 @@ public class AutoTaggingProcessor {
                 cosDocument.addChangedObject(page.getObject());
             }
         }
+    }
+
+    /**
+     * Make a Link annotation's destination compliant with PDF/UA-2 clause 8.8 (all internal
+     * destinations must be structure destinations).
+     *
+     * <p>Behaviour differs between annotation {@code /Dest} and action {@code /A /D}:
+     * <ul>
+     *   <li>For annotation {@code /Dest}: veraPDF checks the array's first element is a struct
+     *       element (via {@code at(0).knownKey(S)}), so rewrite the first slot to a struct elem ref.
+     *   <li>For a GoTo action: veraPDF first checks {@code /SD} on the action dict itself, so add
+     *       an {@code /SD [structElem /Fit]} entry alongside (or instead of) the existing {@code /D}.
+     * </ul>
+     */
+    private static void rewriteDestinationToStructDestination(COSObject annotObj, PDDocument document, int annotPageNumber) {
+        COSDocument cosDocument = document.getDocument();
+        COSObject dest = annotObj.getKey(ASAtom.DEST);
+        if (dest != null && !dest.empty()) {
+            COSObject structDestArray = buildStructDestArray(dest, document, annotPageNumber);
+            if (structDestArray != null) {
+                annotObj.setKey(ASAtom.DEST, structDestArray);
+            }
+        }
+        COSObject action = annotObj.getKey(ASAtom.A);
+        if (action == null || action.empty() || action.getType() != COSObjType.COS_DICT) {
+            return;
+        }
+        if (!ASAtom.GO_TO.equals(action.getNameKey(ASAtom.S))) {
+            return;
+        }
+        COSObject d = action.getKey(ASAtom.D);
+        COSObject structDestArray = buildStructDestArray(d, document, annotPageNumber);
+        if (structDestArray != null) {
+            action.setKey(ASAtom.getASAtom("SD"), structDestArray);
+            cosDocument.addChangedObject(action);
+        }
+    }
+
+    /**
+     * Build a {@code [structElem /Fit]} array suitable as a structure destination. Uses the
+     * target page from an array-form page destination when available, otherwise falls back to
+     * the annotation's own page.
+     */
+    private static COSObject buildStructDestArray(COSObject originalDest, PDDocument document, int annotPageNumber) {
+        COSObject target = null;
+        if (originalDest != null && !originalDest.empty()
+                && originalDest.getType() == COSObjType.COS_ARRAY && originalDest.size() >= 1) {
+            COSObject first = originalDest.at(0);
+            if (first != null && !first.empty() && first.getType() == COSObjType.COS_DICT
+                    && ASAtom.PAGE.equals(first.getNameKey(ASAtom.TYPE))) {
+                List<PDPage> pages = document.getPages();
+                for (int i = 0; i < pages.size(); i++) {
+                    if (pages.get(i).getObject().getObjectKey().equals(first.getObjectKey())) {
+                        target = pageNumberToFirstStructElement.get(i);
+                        break;
+                    }
+                }
+            }
+        }
+        if (target == null) {
+            target = pageNumberToFirstStructElement.get(annotPageNumber);
+        }
+        if (target == null) {
+            return null;
+        }
+        COSObject arr = COSArray.construct();
+        arr.add(target);
+        arr.add(COSName.construct(ASAtom.getASAtom("Fit")));
+        return arr;
     }
 
     private static void createStructElem(IObject object, COSObject parentStructElem, COSDocument cosDocument) {
