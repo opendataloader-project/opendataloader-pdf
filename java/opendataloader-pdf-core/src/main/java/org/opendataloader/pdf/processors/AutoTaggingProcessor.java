@@ -564,8 +564,11 @@ public class AutoTaggingProcessor {
         if (altText.isEmpty()) {
             altText = "image " + (++imageChunkFigureCounter);
         }
+        // Write as hex string (isHex=true). UTF-16BE code units whose low byte is 0x5C (e.g. U+D55C "한")
+        // would be misparsed as a backslash escape inside a PDF literal string, shifting all subsequent
+        // bytes by one and producing PUA code points that fail PDF/UA-2 clause 8.4.3.3.
         figureObject.setKey(ASAtom.ALT,
-                COSString.construct(altText.getBytes(StandardCharsets.UTF_16), false));
+                COSString.construct(altText.getBytes(StandardCharsets.UTF_16), true));
         cosDocument.addChangedObject(figureObject);
         processImageNode(image, figureObject);
         addCaptionIfPresent(image, figureObject, cosDocument);
@@ -578,7 +581,7 @@ public class AutoTaggingProcessor {
         addAttributeToStructElem(formulaObject, ASAtom.LAYOUT, ASAtom.BBOX, COSArray.construct(4, bbox));
         String altText = formula.getLatex().isEmpty() ? "formula" : formula.getLatex();
         formulaObject.setKey(ASAtom.ALT,
-                COSString.construct(altText.getBytes(StandardCharsets.UTF_16), false));
+                COSString.construct(altText.getBytes(StandardCharsets.UTF_16), true));
         cosDocument.addChangedObject(formulaObject);
         addMcidChildren(formula.getStreamInfos(), formula.getPageNumber(), formulaObject);
     }
