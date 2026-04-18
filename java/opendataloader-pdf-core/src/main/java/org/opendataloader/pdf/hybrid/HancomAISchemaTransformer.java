@@ -635,6 +635,20 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
                 }
 
                 table.getRows()[startRow].getCells()[startCol] = cell;
+
+                // Mark all positions covered by this cell's span with the same instance so the
+                // PDF emission loop in AutoTaggingProcessor.addTableRow (which skips slots where
+                // cell.getRowNumber()/getColNumber() don't match the current row/col) omits them.
+                // Otherwise the empty 1x1 placeholders at those slots would be emitted as TR
+                // children, producing rows whose effective column count exceeds the table's
+                // numCols — PDF/UA-2 clause 8.2.5.26 "Table rows shall have the same number of
+                // columns (taking into account column spans)".
+                for (int r = startRow; r < startRow + rowspan && r < numRows; r++) {
+                    for (int c = startCol; c < startCol + colspan && c < numCols; c++) {
+                        if (r == startRow && c == startCol) continue;
+                        table.getRows()[r].getCells()[c] = cell;
+                    }
+                }
             }
         }
 
