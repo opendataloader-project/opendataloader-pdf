@@ -36,6 +36,7 @@ def convert_pdf(
     hybrid_url: str | None = None,
     hybrid_timeout: str | None = None,
     hybrid_fallback: bool = False,
+    hybrid_heading_offset: str | None = None,
     image_dir: str | None = None,
 ) -> str:
     """Convert a PDF file to the specified format.
@@ -67,6 +68,7 @@ def convert_pdf(
         hybrid_url: Hybrid backend server URL.
         hybrid_timeout: Hybrid backend timeout in milliseconds.
         hybrid_fallback: Enable Java fallback on hybrid backend error.
+        hybrid_heading_offset: Heading level offset for hybrid backend headings.
         image_dir: Directory path to save extracted images.
 
     Returns:
@@ -146,6 +148,8 @@ def convert_pdf(
             kwargs["hybrid_timeout"] = hybrid_timeout
         if hybrid_fallback:
             kwargs["hybrid_fallback"] = True
+        if hybrid_heading_offset is not None:
+            kwargs["hybrid_heading_offset"] = hybrid_heading_offset
         if image_dir is not None:
             kwargs["image_dir"] = image_dir
 

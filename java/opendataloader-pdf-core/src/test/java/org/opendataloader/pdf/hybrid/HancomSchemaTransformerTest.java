@@ -124,6 +124,30 @@ public class HancomSchemaTransformerTest {
 
         SemanticHeading heading = (SemanticHeading) result.get(0).get(0);
         Assertions.assertEquals("Introduction", heading.getValue());
+        Assertions.assertEquals(1, heading.getHeadingLevel());
+    }
+
+    @Test
+    void testTransformHeadingWithOffsetAppliedAndClamped() {
+        transformer = new HancomSchemaTransformer(5);
+
+        ObjectNode json = createVisualInfoDto();
+        ArrayNode elements = (ArrayNode) json.get("elements");
+
+        addElement(elements, "HEADING", "heading", "Introduction", 0, 100, 62, 200, 30);
+
+        HybridResponse response = new HybridResponse("", json, null);
+        Map<Integer, Double> pageHeights = new HashMap<>();
+        pageHeights.put(1, 842.0);
+
+        List<List<IObject>> result = transformer.transform(response, pageHeights);
+
+        Assertions.assertEquals(1, result.size());
+        Assertions.assertEquals(1, result.get(0).size());
+        Assertions.assertTrue(result.get(0).get(0) instanceof SemanticHeading);
+
+        SemanticHeading heading = (SemanticHeading) result.get(0).get(0);
+        Assertions.assertEquals(6, heading.getHeadingLevel());
     }
 
     @Test

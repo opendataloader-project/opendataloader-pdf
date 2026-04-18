@@ -374,6 +374,11 @@ class CLIOptionsTest {
     }
 
     @Test
+    void testDefineOptions_containsHybridHeadingOffsetOption() {
+        assertTrue(options.hasOption("hybrid-heading-offset"));
+    }
+
+    @Test
     void testDefineOptions_containsHybridOcrOption() {
         // --hybrid-ocr is deprecated but still accepted for backward compatibility
         assertTrue(options.hasOption("hybrid-ocr"));
@@ -463,5 +468,25 @@ class CLIOptionsTest {
 
         assertTrue(config.getHybridConfig().isFallbackToJava(),
             "hybrid fallback should be enabled when explicitly passed");
+    }
+
+    @Test
+    void testCreateConfig_withHybridHeadingOffset() throws ParseException {
+        String[] args = {"--hybrid", "docling", "--hybrid-heading-offset", "2", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertEquals(2, config.getHybridHeadingOffset());
+    }
+
+    @Test
+    void testCreateConfig_withHybridHeadingOffsetOutOfRange() throws ParseException {
+        String[] args = {"--hybrid", "docling", "--hybrid-heading-offset", "10", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+            () -> CLIOptions.createConfigFromCommandLine(cmd));
+        assertTrue(ex.getMessage().contains("Supported range is -5 to 5"));
     }
 }

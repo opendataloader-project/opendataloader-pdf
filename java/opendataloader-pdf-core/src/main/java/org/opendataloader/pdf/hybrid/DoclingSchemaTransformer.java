@@ -39,6 +39,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Transforms Docling JSON output to OpenDataLoader IObject hierarchy.
@@ -91,6 +93,18 @@ public class DoclingSchemaTransformer implements HybridSchemaTransformer {
     // Docling coordinate origins
     private static final String COORD_ORIGIN_BOTTOMLEFT = "BOTTOMLEFT";
     private static final String COORD_ORIGIN_TOPLEFT = "TOPLEFT";
+    private static final Pattern HEADING_NUMBERING_PATTERN =
+        Pattern.compile("^\\s*(\\d+(?:\\.\\d+)*)(?:[\\.)])?\\s+.*$");
+
+    private final int headingLevelOffset;
+
+    public DoclingSchemaTransformer() {
+        this(0);
+    }
+
+    public DoclingSchemaTransformer(int headingLevelOffset) {
+        this.headingLevelOffset = headingLevelOffset;
+    }
 
     @Override
     public String getBackendType() {
@@ -301,13 +315,7 @@ public class DoclingSchemaTransformer implements HybridSchemaTransformer {
      * Creates a SemanticHeading from Docling section_header.
      */
     private SemanticHeading createHeading(String text, BoundingBox bbox, JsonNode textNode) {
-        int level = 1; // Default level
-
-        // Try to extract level from node metadata
-        JsonNode meta = textNode.get("meta");
-        if (meta != null && meta.has("level")) {
-            level = meta.get("level").asInt(1);
-        }
+        int level = inferHeadingLevel(text, textNode);
 
         // Create a text chunk and wrap in TextLine
         TextChunk textChunk = new TextChunk(bbox, text, 12.0, 12.0);
@@ -318,9 +326,56 @@ public class DoclingSchemaTransformer implements HybridSchemaTransformer {
         SemanticHeading heading = new SemanticHeading();
         heading.add(textLine);
         heading.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
-        heading.setHeadingLevel(level);
+        heading.setHeadingLevel(applyHeadingOffset(level));
 
         return heading;
+    }
+
+    private int inferHeadingLevel(String text, JsonNode textNode) {
+        Integer numberingLevel = extractNumberingLevel(text);
+        if (numberingLevel != null) {
+            return numberingLevel;
+        }
+
+        JsonNode meta = textNode.get("meta");
+        if (meta != null && meta.has("level")) {
+            return Math.max(1, meta.get("level").asInt(1));
+        }
+
+        return 1;
+    }
+
+    private Integer extractNumberingLevel(String text) {
+        if (text == null) {
+            return null;
+        }
+        Matcher matcher = HEADING_NUMBERING_PATTERN.matcher(text);
+        if (!matcher.matches()) {
+            return null;
+        }
+
+        String numbering = matcher.group(1);
+        if (!numbering.contains(".")) {
+            return null;
+        }
+        int dots = 0;
+        for (int i = 0; i < numbering.length(); i++) {
+            if (numbering.charAt(i) == '.') {
+                dots++;
+            }
+        }
+        return dots + 1;
+    }
+
+    private int applyHeadingOffset(int level) {
+        long adjusted = (long) level + (long) headingLevelOffset;
+        if (adjusted < 1L) {
+            return 1;
+        }
+        if (adjusted > 6L) {
+            return 6;
+        }
+        return (int) adjusted;
     }
 
     /**

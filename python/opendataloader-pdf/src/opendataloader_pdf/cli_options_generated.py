@@ -235,6 +235,15 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "description": "Opt in to Java fallback on hybrid backend error (default: disabled)",
     },
     {
+        "name": "hybrid-heading-offset",
+        "python_name": "hybrid_heading_offset",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": "0",
+        "description": "Heading level offset for hybrid backend headings. Positive values demote (H1->H2), negative values promote. Default: 0",
+    },
+    {
         "name": "to-stdout",
         "python_name": "to_stdout",
         "short_name": None,

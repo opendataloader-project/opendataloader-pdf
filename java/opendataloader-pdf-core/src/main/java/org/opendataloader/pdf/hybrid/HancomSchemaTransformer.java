@@ -76,6 +76,7 @@ public class HancomSchemaTransformer implements HybridSchemaTransformer {
 
     // Picture index counter (reset per transform call)
     private int pictureIndex;
+    private final int headingLevelOffset;
 
     // Hancom element types
     private static final String TYPE_PARAGRAPH = "PARAGRAPH";
@@ -86,6 +87,14 @@ public class HancomSchemaTransformer implements HybridSchemaTransformer {
     private static final String TYPE_LIST_ITEM = "LIST_ITEM";
     private static final String TYPE_PAGE_HEADER = "PAGE_HEADER";
     private static final String TYPE_PAGE_FOOTER = "PAGE_FOOTER";
+
+    public HancomSchemaTransformer() {
+        this(0);
+    }
+
+    public HancomSchemaTransformer(int headingLevelOffset) {
+        this.headingLevelOffset = headingLevelOffset;
+    }
 
     @Override
     public String getBackendType() {
@@ -307,11 +316,22 @@ public class HancomSchemaTransformer implements HybridSchemaTransformer {
         SemanticHeading heading = new SemanticHeading();
         heading.add(textLine);
         heading.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
-        heading.setHeadingLevel(1);  // Default level
+        heading.setHeadingLevel(applyHeadingOffset(1));
         // Set semantic score to avoid NullPointerException in ListUtils.isContainsHeading()
         heading.setCorrectSemanticScore(1.0);
 
         return heading;
+    }
+
+    private int applyHeadingOffset(int level) {
+        long adjusted = (long) level + (long) headingLevelOffset;
+        if (adjusted < 1L) {
+            return 1;
+        }
+        if (adjusted > 6L) {
+            return 6;
+        }
+        return (int) adjusted;
     }
 
     /**

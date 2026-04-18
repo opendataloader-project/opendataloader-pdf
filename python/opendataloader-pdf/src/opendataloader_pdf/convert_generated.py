@@ -36,6 +36,7 @@ def convert(
     hybrid_url: Optional[str] = None,
     hybrid_timeout: Optional[str] = None,
     hybrid_fallback: bool = False,
+    hybrid_heading_offset: Optional[str] = None,
     to_stdout: bool = False,
 ) -> None:
     """
@@ -68,6 +69,7 @@ def convert(
         hybrid_url: Hybrid backend server URL (overrides default)
         hybrid_timeout: Hybrid backend request timeout in milliseconds (0 = no timeout). Default: 0
         hybrid_fallback: Opt in to Java fallback on hybrid backend error (default: disabled)
+        hybrid_heading_offset: Heading level offset for hybrid backend headings. Positive values demote (H1->H2), negative values promote. Default: 0
         to_stdout: Write output to stdout instead of file (single format only)
     """
     args: List[str] = []
@@ -136,6 +138,8 @@ def convert(
         args.extend(["--hybrid-timeout", hybrid_timeout])
     if hybrid_fallback:
         args.append("--hybrid-fallback")
+    if hybrid_heading_offset:
+        args.extend(["--hybrid-heading-offset", hybrid_heading_offset])
     if to_stdout:
         args.append("--to-stdout")
 

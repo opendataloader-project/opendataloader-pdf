@@ -32,5 +32,6 @@ export function registerCliOptions(program: Command): void {
   program.option('--hybrid-url <value>', 'Hybrid backend server URL (overrides default)');
   program.option('--hybrid-timeout <value>', 'Hybrid backend request timeout in milliseconds (0 = no timeout). Default: 0');
   program.option('--hybrid-fallback', 'Opt in to Java fallback on hybrid backend error (default: disabled)');
+  program.option('--hybrid-heading-offset <value>', 'Heading level offset for hybrid backend headings. Positive values demote (H1->H2), negative values promote. Default: 0');
   program.option('--to-stdout', 'Write output to stdout instead of file (single format only)');
 }

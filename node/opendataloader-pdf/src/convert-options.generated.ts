@@ -55,6 +55,8 @@ export interface ConvertOptions {
   hybridTimeout?: string;
   /** Opt in to Java fallback on hybrid backend error (default: disabled) */
   hybridFallback?: boolean;
+  /** Heading level offset for hybrid backend headings. Positive values demote (H1->H2), negative values promote. Default: 0 */
+  hybridHeadingOffset?: string;
   /** Write output to stdout instead of file (single format only) */
   toStdout?: boolean;
 }
@@ -88,6 +90,7 @@ export interface CliOptions {
   hybridUrl?: string;
   hybridTimeout?: string;
   hybridFallback?: boolean;
+  hybridHeadingOffset?: string;
   toStdout?: boolean;
 }
 
@@ -171,6 +174,9 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   }
   if (cliOptions.hybridFallback) {
     convertOptions.hybridFallback = true;
+  }
+  if (cliOptions.hybridHeadingOffset) {
+    convertOptions.hybridHeadingOffset = cliOptions.hybridHeadingOffset;
   }
   if (cliOptions.toStdout) {
     convertOptions.toStdout = true;
@@ -271,6 +277,9 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.hybridFallback) {
     args.push('--hybrid-fallback');
+  }
+  if (options.hybridHeadingOffset) {
+    args.push('--hybrid-heading-offset', options.hybridHeadingOffset);
   }
   if (options.toStdout) {
     args.push('--to-stdout');

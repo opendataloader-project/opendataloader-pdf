@@ -136,6 +136,10 @@ public class CLIOptions {
     private static final String HYBRID_FALLBACK_LONG_OPTION = "hybrid-fallback";
     private static final String HYBRID_FALLBACK_DESC = "Opt in to Java fallback on hybrid backend error (default: disabled)";
 
+    private static final String HYBRID_HEADING_OFFSET_LONG_OPTION = "hybrid-heading-offset";
+    private static final String HYBRID_HEADING_OFFSET_DESC =
+            "Heading level offset for hybrid backend headings. Positive values demote (H1->H2), negative values promote. Default: 0";
+
     // ===== Stdout Output =====
     private static final String TO_STDOUT_LONG_OPTION = "to-stdout";
     private static final String TO_STDOUT_DESC = "Write output to stdout instead of file (single format only)";
@@ -187,6 +191,7 @@ public class CLIOptions {
             new OptionDefinition(HYBRID_URL_LONG_OPTION, null, "string", null, HYBRID_URL_DESC, true),
             new OptionDefinition(HYBRID_TIMEOUT_LONG_OPTION, null, "string", "0", HYBRID_TIMEOUT_DESC, true),
             new OptionDefinition(HYBRID_FALLBACK_LONG_OPTION, null, "boolean", false, HYBRID_FALLBACK_DESC, true),
+            new OptionDefinition(HYBRID_HEADING_OFFSET_LONG_OPTION, null, "string", "0", HYBRID_HEADING_OFFSET_DESC, true),
             new OptionDefinition(TO_STDOUT_LONG_OPTION, null, "boolean", false, TO_STDOUT_DESC, true),
             new OptionDefinition(EXPORT_OPTIONS_LONG_OPTION, null, "boolean", null, null, false),
 
@@ -516,6 +521,25 @@ public class CLIOptions {
         }
         if (commandLine.hasOption(HYBRID_FALLBACK_LONG_OPTION)) {
             config.getHybridConfig().setFallbackToJava(true);
+        }
+        if (commandLine.hasOption(HYBRID_HEADING_OFFSET_LONG_OPTION)) {
+            String offsetValue = commandLine.getOptionValue(HYBRID_HEADING_OFFSET_LONG_OPTION);
+            if (offsetValue != null && !offsetValue.trim().isEmpty()) {
+                try {
+                    int offset = Integer.parseInt(offsetValue.trim());
+                    if (offset < -5 || offset > 5) {
+                        throw new IllegalArgumentException(
+                                String.format(
+                                        "Invalid hybrid heading offset '%d'. Supported range is -5 to 5 "
+                                                + "(Docling heading levels are clamped to 1..6).",
+                                        offset));
+                    }
+                    config.setHybridHeadingOffset(offset);
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException(
+                            String.format("Invalid hybrid heading offset '%s'. Must be an integer.", offsetValue));
+                }
+            }
         }
         if (commandLine.hasOption(TO_STDOUT_LONG_OPTION)) {
             config.setOutputStdout(true);

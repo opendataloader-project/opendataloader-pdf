@@ -125,6 +125,118 @@ public class DoclingSchemaTransformerTest {
 
         SemanticHeading heading = (SemanticHeading) result.get(0).get(0);
         Assertions.assertEquals("Introduction", heading.getValue());
+        Assertions.assertEquals(1, heading.getHeadingLevel());
+    }
+
+    @Test
+    void testTransformSectionHeaderInfersLevelFromNumbering() {
+        ObjectNode json = createDoclingDocument();
+        ArrayNode texts = json.putArray("texts");
+
+        ObjectNode headerNode = texts.addObject();
+        headerNode.put("label", "section_header");
+        headerNode.put("text", "3.2.1 Document Processing Service");
+        addProvenance(headerNode, 1, 100, 750, 300, 780);
+
+        HybridResponse response = new HybridResponse("", json, null);
+        Map<Integer, Double> pageHeights = new HashMap<>();
+        pageHeights.put(1, 842.0);
+
+        List<List<IObject>> result = transformer.transform(response, pageHeights);
+
+        Assertions.assertEquals(1, result.size());
+        Assertions.assertEquals(1, result.get(0).size());
+        Assertions.assertTrue(result.get(0).get(0) instanceof SemanticHeading);
+
+        SemanticHeading heading = (SemanticHeading) result.get(0).get(0);
+        Assertions.assertEquals(3, heading.getHeadingLevel());
+    }
+
+    @Test
+    void testTransformSectionHeaderWithOffset() {
+        transformer = new DoclingSchemaTransformer(2);
+
+        ObjectNode json = createDoclingDocument();
+        ArrayNode texts = json.putArray("texts");
+
+        ObjectNode headerNode = texts.addObject();
+        headerNode.put("label", "section_header");
+        headerNode.put("text", "2.4 Service Layer");
+        addProvenance(headerNode, 1, 100, 750, 300, 780);
+
+        HybridResponse response = new HybridResponse("", json, null);
+        Map<Integer, Double> pageHeights = new HashMap<>();
+        pageHeights.put(1, 842.0);
+
+        List<List<IObject>> result = transformer.transform(response, pageHeights);
+
+        Assertions.assertEquals(1, result.size());
+        Assertions.assertEquals(1, result.get(0).size());
+        Assertions.assertTrue(result.get(0).get(0) instanceof SemanticHeading);
+
+        SemanticHeading heading = (SemanticHeading) result.get(0).get(0);
+        Assertions.assertEquals(4, heading.getHeadingLevel());
+    }
+
+    @Test
+    void testTransformSectionHeaderOffsetClampedAtUpperBound() {
+        transformer = new DoclingSchemaTransformer(5);
+
+        ObjectNode json = createDoclingDocument();
+        ArrayNode texts = json.putArray("texts");
+
+        ObjectNode headerNode = texts.addObject();
+        headerNode.put("label", "section_header");
+        headerNode.put("text", "3.2.1 Deep Section");
+        addProvenance(headerNode, 1, 100, 750, 300, 780);
+
+        HybridResponse response = new HybridResponse("", json, null);
+        Map<Integer, Double> pageHeights = new HashMap<>();
+        pageHeights.put(1, 842.0);
+
+        List<List<IObject>> result = transformer.transform(response, pageHeights);
+        SemanticHeading heading = (SemanticHeading) result.get(0).get(0);
+        Assertions.assertEquals(6, heading.getHeadingLevel());
+    }
+
+    @Test
+    void testTransformSectionHeaderOffsetClampedAtLowerBound() {
+        transformer = new DoclingSchemaTransformer(-5);
+
+        ObjectNode json = createDoclingDocument();
+        ArrayNode texts = json.putArray("texts");
+
+        ObjectNode headerNode = texts.addObject();
+        headerNode.put("label", "section_header");
+        headerNode.put("text", "2.4 Service Layer");
+        addProvenance(headerNode, 1, 100, 750, 300, 780);
+
+        HybridResponse response = new HybridResponse("", json, null);
+        Map<Integer, Double> pageHeights = new HashMap<>();
+        pageHeights.put(1, 842.0);
+
+        List<List<IObject>> result = transformer.transform(response, pageHeights);
+        SemanticHeading heading = (SemanticHeading) result.get(0).get(0);
+        Assertions.assertEquals(1, heading.getHeadingLevel());
+    }
+
+    @Test
+    void testTransformSectionHeaderNumericPrefixWithoutDotFallsBackToLevelOne() {
+        ObjectNode json = createDoclingDocument();
+        ArrayNode texts = json.putArray("texts");
+
+        ObjectNode headerNode = texts.addObject();
+        headerNode.put("label", "section_header");
+        headerNode.put("text", "2024 Annual Report");
+        addProvenance(headerNode, 1, 100, 750, 300, 780);
+
+        HybridResponse response = new HybridResponse("", json, null);
+        Map<Integer, Double> pageHeights = new HashMap<>();
+        pageHeights.put(1, 842.0);
+
+        List<List<IObject>> result = transformer.transform(response, pageHeights);
+        SemanticHeading heading = (SemanticHeading) result.get(0).get(0);
+        Assertions.assertEquals(1, heading.getHeadingLevel());
     }
 
     @Test

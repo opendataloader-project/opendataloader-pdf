@@ -35,6 +35,14 @@ class ConfigTest {
         assertEquals(Config.IMAGE_OUTPUT_EXTERNAL, config.getImageOutput());
         assertEquals(Config.IMAGE_FORMAT_PNG, config.getImageFormat());
         assertEquals(Config.READING_ORDER_XYCUT, config.getReadingOrder());
+        assertEquals(0, config.getHybridHeadingOffset());
+    }
+
+    @Test
+    void testSetHybridHeadingOffset() {
+        Config config = new Config();
+        config.setHybridHeadingOffset(2);
+        assertEquals(2, config.getHybridHeadingOffset());
     }
 
     @Test

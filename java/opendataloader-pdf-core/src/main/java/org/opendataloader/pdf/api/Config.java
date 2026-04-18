@@ -82,6 +82,7 @@ public class Config {
     private final FilterConfig filterConfig = new FilterConfig();
     private String hybrid = HYBRID_OFF;
     private final HybridConfig hybridConfig = new HybridConfig();
+    private int hybridHeadingOffset = 0;
     private boolean includeHeaderFooter = false;
     private boolean detectStrikethrough = false;
 
@@ -816,6 +817,26 @@ public class Config {
      */
     public HybridConfig getHybridConfig() {
         return hybridConfig;
+    }
+
+    /**
+     * Gets the heading level offset applied to hybrid backend headings.
+     *
+     * <p>Positive values demote headings (e.g., H1 -> H2). Negative values promote headings.
+     *
+     * @return heading level offset, default 0.
+     */
+    public int getHybridHeadingOffset() {
+        return hybridHeadingOffset;
+    }
+
+    /**
+     * Sets the heading level offset applied to hybrid backend headings.
+     *
+     * @param hybridHeadingOffset heading level offset.
+     */
+    public void setHybridHeadingOffset(int hybridHeadingOffset) {
+        this.hybridHeadingOffset = hybridHeadingOffset;
     }
 
     /**

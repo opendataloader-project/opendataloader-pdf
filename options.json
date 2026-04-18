@@ -201,6 +201,14 @@
       "description": "Opt in to Java fallback on hybrid backend error (default: disabled)"
     },
     {
+      "name": "hybrid-heading-offset",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": "0",
+      "description": "Heading level offset for hybrid backend headings. Positive values demote (H1->H2), negative values promote. Default: 0"
+    },
+    {
       "name": "to-stdout",
       "shortName": null,
       "type": "boolean",

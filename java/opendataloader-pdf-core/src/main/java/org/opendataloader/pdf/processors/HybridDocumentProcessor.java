@@ -521,12 +521,12 @@ public class HybridDocumentProcessor {
 
         // docling and docling-fast (deprecated) use DoclingSchemaTransformer
         if (Config.HYBRID_DOCLING.equals(hybrid) || Config.HYBRID_DOCLING_FAST.equals(hybrid)) {
-            return new DoclingSchemaTransformer();
+            return new DoclingSchemaTransformer(config.getHybridHeadingOffset());
         }
 
         // hancom uses HancomSchemaTransformer
         if (Config.HYBRID_HANCOM.equals(hybrid)) {
-            return new HancomSchemaTransformer();
+            return new HancomSchemaTransformer(config.getHybridHeadingOffset());
         }
 
         throw new IllegalArgumentException("Unsupported hybrid backend: " + hybrid);
