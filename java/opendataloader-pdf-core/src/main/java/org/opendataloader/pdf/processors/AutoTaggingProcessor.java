@@ -513,6 +513,25 @@ public class AutoTaggingProcessor {
         processTextNode(paragraph, paragraphObject);
     }
 
+    /**
+     * Remove Unicode Private Use Area code points. PDF/UA-2 clause 8.4.3.3 forbids PUA chars in
+     * /Alt entries. Iterates by code point so surrogate pairs for supplementary PUA are handled.
+     */
+    private static String stripPuaCodePoints(String in) {
+        if (in == null || in.isEmpty()) return in;
+        StringBuilder sb = new StringBuilder(in.length());
+        int i = 0;
+        while (i < in.length()) {
+            int cp = in.codePointAt(i);
+            boolean isPua = (cp >= 0xE000 && cp <= 0xF8FF)
+                    || (cp >= 0xF0000 && cp <= 0xFFFFD)
+                    || (cp >= 0x100000 && cp <= 0x10FFFD);
+            if (!isPua) sb.appendCodePoint(cp);
+            i += Character.charCount(cp);
+        }
+        return sb.toString();
+    }
+
     private static void createFootnoteStructElem(SemanticFootnote footnote, COSObject parent, COSDocument cosDocument) {
         COSObject noteObject = addStructElement(parent, cosDocument, TaggedPDFConstants.FENOTE, footnote.getPageNumber());
         // FENote is a PDF 2.0-only type; explicit /NS is required for PDF/UA-2 validators.
@@ -541,6 +560,10 @@ public class AutoTaggingProcessor {
         String altText = (image instanceof EnrichedImageChunk && ((EnrichedImageChunk) image).hasDescription())
                 ? ((EnrichedImageChunk) image).sanitizeDescription()
                 : "image " + (++imageChunkFigureCounter);
+        altText = stripPuaCodePoints(altText);
+        if (altText.isEmpty()) {
+            altText = "image " + (++imageChunkFigureCounter);
+        }
         figureObject.setKey(ASAtom.ALT,
                 COSString.construct(altText.getBytes(StandardCharsets.UTF_16), false));
         cosDocument.addChangedObject(figureObject);
