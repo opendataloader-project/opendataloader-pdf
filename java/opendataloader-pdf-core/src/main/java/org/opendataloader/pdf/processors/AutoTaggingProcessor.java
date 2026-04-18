@@ -366,14 +366,26 @@ public class AutoTaggingProcessor {
                 // wrote), otherwise fall back to URI, then to "Link".
                 String existingContents = annotation.getContents();
                 String altText;
+                byte[] altBytes;
                 if (existingContents != null && !existingContents.isEmpty()) {
                     altText = existingContents;
+                    // Preserve the annotation's raw Contents bytes so /Alt is byte-identical to
+                    // /Contents (PDF/UA-2 clause 8.9.4.2.1 requires identity). Re-encoding via
+                    // String would change the PDF literal-vs-hex form and fail the equality check.
+                    COSObject contentsObj = annotObj.getKey(ASAtom.CONTENTS);
+                    if (contentsObj != null && contentsObj.getType() == COSObjType.COS_STRING) {
+                        altBytes = contentsObj.getString().getBytes(StandardCharsets.UTF_16);
+                    } else {
+                        altBytes = altText.getBytes(StandardCharsets.UTF_16);
+                    }
                 } else {
                     altText = uriString != null ? uriString : "Link";
-                    annotObj.setKey(ASAtom.CONTENTS,
-                        COSString.construct(altText.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+                    // UTF-16 with BOM. Without BOM, PDF readers interpret a COSString as
+                    // PDFDocEncoding and silently corrupt non-ASCII (e.g. NBSP 0xA0 → €).
+                    altBytes = altText.getBytes(StandardCharsets.UTF_16);
+                    annotObj.setKey(ASAtom.CONTENTS, COSString.construct(altBytes));
                 }
-                linkElem.setKey(ASAtom.ALT, COSString.construct(altText.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+                linkElem.setKey(ASAtom.ALT, COSString.construct(altBytes));
                 // Assign StructParent integer to annotation and register in parent tree
                 int structParentInt = annotStructParentKey++;
                 annotObj.setKey(ASAtom.STRUCT_PARENT, COSInteger.construct(structParentInt));
