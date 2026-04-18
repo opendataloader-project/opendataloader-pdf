@@ -475,8 +475,17 @@ public class AutoTaggingProcessor {
             addAttributeToStructElem(listObject, ASAtom.LIST, ASAtom.CONTINUED_FROM,
                 COSString.construct(String.valueOf(list.getPreviousList().getRecognizedStructureId()).getBytes()));
         }
-        addAttributeToStructElem(listObject, ASAtom.LIST, ASAtom.LIST_NUMBERING,
-            COSName.construct(ListProcessor.getListNumbering(list.getNumberingStyle())));
+        ASAtom numbering = ListProcessor.getListNumbering(list.getNumberingStyle());
+        if (numbering == ASAtom.NONE) {
+            boolean hasLabel = false;
+            for (ListItem item : list.getListItems()) {
+                if (item.getLabelLength() > 0) { hasLabel = true; break; }
+            }
+            if (hasLabel) {
+                numbering = ASAtom.ORDERED;
+            }
+        }
+        addAttributeToStructElem(listObject, ASAtom.LIST, ASAtom.LIST_NUMBERING, COSName.construct(numbering));
 
         for (ListItem listItem : list.getListItems()) {
             COSObject listItemObject = addStructElement(listObject, cosDocument, TaggedPDFConstants.LI, listItem.getPageNumber());
