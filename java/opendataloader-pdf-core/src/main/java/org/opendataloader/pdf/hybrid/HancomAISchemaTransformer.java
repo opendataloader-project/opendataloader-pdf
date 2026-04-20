@@ -602,7 +602,20 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
                 colspan = 1;
             }
 
-            if (startRow < numRows && startCol < numCols) {
+            // Guard against malformed TSR JSON: negative indices or non-positive spans
+            // would otherwise crash TableBorderCell construction or index table.getRows()
+            // out of bounds below.
+            if (startRow < 0 || startCol < 0 || rowspan <= 0 || colspan <= 0
+                    || startRow >= numRows || startCol >= numCols) {
+                LOGGER.log(Level.FINE,
+                    "Skipping TSR cell with invalid span: row={0}, col={1}, rowspan={2}, colspan={3}",
+                    new Object[]{startRow, startCol, rowspan, colspan});
+                continue;
+            }
+            // Clamp spans so the fill loop below never writes past the grid edge.
+            rowspan = Math.min(rowspan, numRows - startRow);
+            colspan = Math.min(colspan, numCols - startCol);
+            {
                 TableBorderCell cell = new TableBorderCell(startRow, startCol, rowspan, colspan, 0L);
 
                 // Compute cell bbox: use TSR cell bbox if available, otherwise fall back to grid

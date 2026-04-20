@@ -605,7 +605,15 @@ public class HancomAIClient implements HybridClient {
                 throw new IOException("pdf2img PAGE_PNG_DATA is empty");
             }
 
-            byte[] pngBytes = Base64.getDecoder().decode(pngBase64);
+            byte[] pngBytes;
+            try {
+                pngBytes = Base64.getDecoder().decode(pngBase64);
+            } catch (IllegalArgumentException e) {
+                // fetchPageImage is declared to throw IOException and callers catch
+                // only IOException. Escaping IAE would abort the whole conversion
+                // instead of skipping the failed page.
+                throw new IOException("pdf2img PAGE_PNG_DATA is not valid Base64", e);
+            }
             BufferedImage image = ImageIO.read(new ByteArrayInputStream(pngBytes));
             if (image == null) {
                 throw new IOException("pdf2img PAGE_PNG_DATA is not a readable image");
