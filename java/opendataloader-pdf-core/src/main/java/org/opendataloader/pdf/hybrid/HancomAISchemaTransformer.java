@@ -16,6 +16,9 @@
 package org.opendataloader.pdf.hybrid;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.hybrid.HybridClient.HybridResponse;
 import org.opendataloader.pdf.entities.SemanticFootnote;
@@ -324,11 +327,28 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
 
     @Override
     public List<IObject> transformPage(int pageNumber, JsonNode pageContent, double pageHeight) {
+        int idx = pageNumber - 1;
         Map<Integer, Double> heights = new HashMap<>();
         heights.put(pageNumber, pageHeight);
-        HybridResponse wrapper = new HybridResponse("", pageContent, Collections.emptyMap());
+
+        // transform() consumes the merged Hancom shape keyed by DOCUMENT_LAYOUT_WITH_OCR.
+        // When the caller passes a raw single-page DLA node (no wrapper), rewrap it so
+        // extractPages() can find it; otherwise transform() sees no pages and returns empty.
+        JsonNode wrapped = pageContent;
+        if (pageContent != null && pageContent.get("DOCUMENT_LAYOUT_WITH_OCR") == null) {
+            ObjectNode page = pageContent.isObject()
+                ? ((ObjectNode) pageContent).deepCopy()
+                : JsonNodeFactory.instance.objectNode();
+            page.put("page_number", idx);
+            ArrayNode pages = JsonNodeFactory.instance.arrayNode();
+            pages.add(page);
+            ObjectNode root = JsonNodeFactory.instance.objectNode();
+            root.set("DOCUMENT_LAYOUT_WITH_OCR", pages);
+            wrapped = root;
+        }
+
+        HybridResponse wrapper = new HybridResponse("", wrapped, Collections.emptyMap());
         List<List<IObject>> all = transform(wrapper, heights);
-        int idx = pageNumber - 1;
         if (idx >= 0 && idx < all.size()) return all.get(idx);
         return all.isEmpty() ? Collections.emptyList() : all.get(0);
     }
@@ -1208,6 +1228,21 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
     private PDFList buildPDFList(List<ListItem> items) {
         PDFList list = new PDFList();
         list.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+
+        // Carry forward item-level metadata to the new PDFList ID. DocumentProcessor
+        // .remapMetadataToContents() keys on top-level content IDs, and grouping
+        // replaces top-level ListItems with this PDFList — without this copy, the
+        // list's source label / confidence / regionlist-resolution provenance is
+        // dropped from the final JSON.
+        if (!items.isEmpty()) {
+            Long firstItemId = items.get(0).getRecognizedStructureId();
+            ElementMetadata firstItemMeta = firstItemId != null
+                ? elementMetadataMap.get(firstItemId)
+                : null;
+            if (firstItemMeta != null) {
+                elementMetadataMap.put(list.getRecognizedStructureId(), firstItemMeta);
+            }
+        }
 
         double minLeft = Double.MAX_VALUE;
         double minBottom = Double.MAX_VALUE;
