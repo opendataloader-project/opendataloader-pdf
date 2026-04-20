@@ -45,7 +45,7 @@ public class HybridClientFactory {
     /** Backend type constant for Docling Fast Server. */
     public static final String BACKEND_DOCLING_FAST = "docling-fast";
 
-    /** Backend type constant for Hancom (not yet implemented). */
+    /** Backend type constant for Hancom (Studio Lite API). */
     public static final String BACKEND_HANCOM = "hancom";
 
     /** Backend type constant for Hancom AI (HOCR SDK individual modules). */

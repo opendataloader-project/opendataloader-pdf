@@ -98,6 +98,12 @@ public class OcrStrategyTest {
             StaticLayoutContainers.setCurrentContentId(1L);
         }
 
+        @org.junit.jupiter.api.AfterEach
+        void tearDown() {
+            // Reset shared static state so later tests don't inherit our content IDs.
+            StaticLayoutContainers.setCurrentContentId(1L);
+        }
+
         @Test
         void ocrWordsByPage_populatedAfterTransform() {
             // Create a page with two DLA+OCR paragraph objects

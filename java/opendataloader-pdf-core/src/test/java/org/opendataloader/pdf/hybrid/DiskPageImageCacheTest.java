@@ -49,7 +49,7 @@ class DiskPageImageCacheTest {
     }
 
     @Test
-    void getOrFetch_secondCallReadesFromDisk(@TempDir Path tempDir) throws IOException {
+    void getOrFetch_secondCallReadsFromDisk(@TempDir Path tempDir) throws IOException {
         try (DiskPageImageCache cache = new DiskPageImageCache(tempDir)) {
             AtomicInteger fetchCount = new AtomicInteger(0);
 
