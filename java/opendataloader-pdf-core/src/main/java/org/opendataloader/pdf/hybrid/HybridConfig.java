@@ -249,6 +249,13 @@ public class HybridConfig {
      * @param regionlistStrategy The regionlist strategy to use.
      */
     public void setRegionlistStrategy(String regionlistStrategy) {
+        if (regionlistStrategy != null
+                && !REGIONLIST_TABLE_FIRST.equals(regionlistStrategy)
+                && !REGIONLIST_LIST_ONLY.equals(regionlistStrategy)) {
+            throw new IllegalArgumentException("Invalid regionlistStrategy: "
+                + regionlistStrategy + " (expected " + REGIONLIST_TABLE_FIRST
+                + " or " + REGIONLIST_LIST_ONLY + ")");
+        }
         this.regionlistStrategy = regionlistStrategy;
     }
 
@@ -276,6 +283,11 @@ public class HybridConfig {
      * @param imageCache "memory" (in-heap HashMap) or "disk" (temp PNG files).
      */
     public void setImageCache(String imageCache) {
+        if (imageCache != null
+                && !"memory".equals(imageCache) && !"disk".equals(imageCache)) {
+            throw new IllegalArgumentException("Invalid imageCache: "
+                + imageCache + " (expected \"memory\" or \"disk\")");
+        }
         this.imageCache = imageCache;
     }
 
@@ -328,14 +340,22 @@ public class HybridConfig {
      * Sets the OCR strategy for enrichment fallback.
      *
      * <ul>
-     *   <li>{@code "off"} (default): stream-based enrichment only, no OCR fallback</li>
-     *   <li>{@code "auto"}: try stream enrichment first, fall back to OCR words when no match</li>
+     *   <li>{@code "off"}: stream-based enrichment only, no OCR fallback</li>
+     *   <li>{@code "auto"} (default): try stream enrichment first, fall back to OCR words when no match</li>
      *   <li>{@code "force"}: skip stream enrichment, always use OCR words</li>
      * </ul>
      *
      * @param ocrStrategy The OCR strategy to use.
      */
     public void setOcrStrategy(String ocrStrategy) {
+        if (ocrStrategy != null
+                && !OCR_OFF.equals(ocrStrategy)
+                && !OCR_AUTO.equals(ocrStrategy)
+                && !OCR_FORCE.equals(ocrStrategy)) {
+            throw new IllegalArgumentException("Invalid ocrStrategy: "
+                + ocrStrategy + " (expected " + OCR_OFF + ", " + OCR_AUTO
+                + ", or " + OCR_FORCE + ")");
+        }
         this.ocrStrategy = ocrStrategy;
     }
 
