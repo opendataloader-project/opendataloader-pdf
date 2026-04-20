@@ -48,10 +48,21 @@ public class DiskPageImageCache implements PageImageCache {
     public BufferedImage getOrFetch(int pageIndex, PageImageFetcher fetcher) throws IOException {
         Path file = tempDir.resolve("page-" + pageIndex + ".png");
         if (Files.exists(file)) {
-            return ImageIO.read(file.toFile());
+            BufferedImage cached = ImageIO.read(file.toFile());
+            if (cached != null) {
+                return cached;
+            }
+            // Cached file is unreadable (corrupt or no ImageReader) — re-fetch.
+            LOGGER.log(Level.WARNING, "Cached page image is unreadable, re-fetching: {0}", file);
+            Files.deleteIfExists(file);
         }
         BufferedImage image = fetcher.fetch(pageIndex);
-        ImageIO.write(image, "png", file.toFile());
+        if (image == null) {
+            throw new IOException("Page image fetcher returned null for page " + pageIndex);
+        }
+        if (!ImageIO.write(image, "png", file.toFile())) {
+            throw new IOException("No ImageIO writer accepted PNG output for page " + pageIndex);
+        }
         return image;
     }
 

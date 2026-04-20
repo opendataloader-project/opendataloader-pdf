@@ -171,8 +171,16 @@ public class HancomAIClient implements HybridClient {
             ObjectNode merged = objectMapper.createObjectNode();
             ObjectNode timingsNode = objectMapper.createObjectNode();
 
-            // Step 1: DLA + OCR
+            // Step 1: DLA + OCR. This is required — downstream steps have nothing
+            // to process without it, so treat an empty response as a failure so the
+            // caller can fall back to the Java pipeline instead of silently emitting
+            // an empty document.
             JsonNode dlaOcrResult = callModule(pdfBytes, "DOCUMENT_LAYOUT_WITH_OCR");
+            if (dlaOcrResult == null || !dlaOcrResult.isArray() || dlaOcrResult.size() == 0) {
+                throw new IOException(
+                    "Hancom AI DOCUMENT_LAYOUT_WITH_OCR returned empty result — "
+                    + "backend unavailable or rejected the document");
+            }
             merged.set("DOCUMENT_LAYOUT_WITH_OCR", dlaOcrResult);
             addTimings(timingsNode, "DOCUMENT_LAYOUT_WITH_OCR", dlaOcrResult);
 
@@ -590,7 +598,11 @@ public class HancomAIClient implements HybridClient {
             }
 
             byte[] pngBytes = Base64.getDecoder().decode(pngBase64);
-            return ImageIO.read(new ByteArrayInputStream(pngBytes));
+            BufferedImage image = ImageIO.read(new ByteArrayInputStream(pngBytes));
+            if (image == null) {
+                throw new IOException("pdf2img PAGE_PNG_DATA is not a readable image");
+            }
+            return image;
         }
     }
 

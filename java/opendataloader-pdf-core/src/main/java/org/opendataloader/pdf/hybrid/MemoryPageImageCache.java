@@ -33,6 +33,9 @@ public class MemoryPageImageCache implements PageImageCache {
         BufferedImage image = cache.get(pageIndex);
         if (image == null) {
             image = fetcher.fetch(pageIndex);
+            if (image == null) {
+                throw new IOException("Page image fetcher returned null for page " + pageIndex);
+            }
             cache.put(pageIndex, image);
         }
         return image;
