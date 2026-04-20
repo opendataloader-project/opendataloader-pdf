@@ -374,10 +374,14 @@ public class HancomAIClient implements HybridClient {
                                                 PageImageCache pageImageCache) {
         ArrayNode results = objectMapper.createArrayNode();
 
-        // If regionlist strategy is list-only, skip TSR entirely
-        if (config.isRegionlistListOnly()) {
-            LOGGER.log(Level.INFO, "Hancom AI: regionlist strategy is list-only, skipping TSR");
-            return results;
+        // In list-only mode, LABEL_REGIONLIST is always rendered as a list and
+        // does not need TSR. LABEL_TABLE still needs TSR — without it the
+        // transformer's LABEL_TABLE branch returns null and real tables drop out
+        // of the structured output entirely.
+        boolean skipRegionlistTsr = config.isRegionlistListOnly();
+        if (skipRegionlistTsr) {
+            LOGGER.log(Level.INFO, "Hancom AI: regionlist strategy is list-only, "
+                + "skipping TSR for Regionlist (label 7); Table (label 9) TSR still runs");
         }
 
         List<JsonNode> dlaPages = extractPages(dlaResult);
@@ -394,7 +398,8 @@ public class HancomAIClient implements HybridClient {
             boolean needsPageImage = false;
             for (JsonNode obj : objects) {
                 int label = obj.has("label") ? obj.get("label").asInt() : -1;
-                if (label == LABEL_REGIONLIST || label == LABEL_TABLE) {
+                if (label == LABEL_TABLE
+                        || (label == LABEL_REGIONLIST && !skipRegionlistTsr)) {
                     needsPageImage = true;
                     break;
                 }
@@ -418,6 +423,7 @@ public class HancomAIClient implements HybridClient {
             for (JsonNode obj : objects) {
                 int label = obj.has("label") ? obj.get("label").asInt() : -1;
                 if (label != LABEL_REGIONLIST && label != LABEL_TABLE) continue;
+                if (label == LABEL_REGIONLIST && skipRegionlistTsr) continue;
 
                 JsonNode bboxNode = obj.get("bbox");
                 if (bboxNode == null || !bboxNode.isArray() || bboxNode.size() < 4) continue;
@@ -475,9 +481,11 @@ public class HancomAIClient implements HybridClient {
                         new Object[]{pageNum, e.getMessage()});
                 }
             }
-
-            // Evict page image after processing all objects on this page
-            pageImageCache.evict(pageNum);
+            // Do NOT evict the page image here — captionFigures() runs next and
+            // reuses the same cache. Evicting per-page during TSR would force
+            // pdf2img to re-render pages that contain both tables and figures.
+            // The try-with-resources in convert() closes the cache at the end
+            // of the request.
         }
 
         LOGGER.log(Level.INFO, "Hancom AI: TSR processed {0} table crops", results.size());

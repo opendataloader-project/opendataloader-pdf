@@ -497,18 +497,27 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
             cropOriginTop = dlaBbox.get(1).asDouble();
         }
 
-        // Compute table bbox in page coordinates from dla_bbox
+        // Compute table bbox in page coordinates. dla_bbox is the padded crop
+        // rectangle written by HancomAIClient (after TSR_CROP_PADDING expansion
+        // and image-bounds clamping), so using it directly inflates the table
+        // and its fallback grid cells by the padding. Prefer tsr.table_bbox
+        // (the table's true extent in crop-local coordinates) offset by the
+        // crop origin; fall back to padded dla_bbox only when TSR did not
+        // report its own table_bbox.
         BoundingBox tableBbox;
-        if (dlaBbox != null && dlaBbox.isArray() && dlaBbox.size() >= 4) {
+        JsonNode tsrTableBbox = tsr.get("table_bbox");
+        if (tsrTableBbox != null && tsrTableBbox.isArray() && tsrTableBbox.size() >= 4) {
+            double[] pageBbox = new double[] {
+                cropOriginLeft + tsrTableBbox.get(0).asDouble(),
+                cropOriginTop + tsrTableBbox.get(1).asDouble(),
+                cropOriginLeft + tsrTableBbox.get(2).asDouble(),
+                cropOriginTop + tsrTableBbox.get(3).asDouble()
+            };
+            tableBbox = extractBoundingBox(createBboxNode(pageBbox), pageIndex, pageHeight);
+        } else if (dlaBbox != null && dlaBbox.isArray() && dlaBbox.size() >= 4) {
             tableBbox = extractBoundingBox(dlaBbox, pageIndex, pageHeight);
         } else {
-            // Fallback: use tsr.table_bbox offset by crop origin
-            JsonNode tsrTableBbox = tsr.get("table_bbox");
-            if (tsrTableBbox != null && tsrTableBbox.isArray() && tsrTableBbox.size() >= 4) {
-                tableBbox = extractBoundingBox(tsrTableBbox, pageIndex, pageHeight);
-            } else {
-                return null;
-            }
+            return null;
         }
 
         // Determine dimensions from array rowspan/colspan

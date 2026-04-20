@@ -365,27 +365,31 @@ public class AutoTaggingProcessor {
                 // Contents authored on the annotation (accessibility text the author already
                 // wrote), otherwise fall back to URI, then to "Link".
                 String existingContents = annotation.getContents();
-                String altText;
-                byte[] altBytes;
+                // Build a single COSString object and use it for both /Contents and
+                // /Alt so PDF/UA-2 clause 8.9.4.2.1 (byte-identity) holds. Hex form
+                // (isHex=true) is required because UTF-16BE code units whose low
+                // byte is 0x5C would be misparsed as a backslash escape inside a
+                // PDF literal string, corrupting non-ASCII text. UTF-16 with BOM
+                // keeps readers from interpreting the string as PDFDocEncoding.
+                COSObject linkTextObject;
                 if (existingContents != null && !existingContents.isEmpty()) {
-                    altText = existingContents;
-                    // Preserve the annotation's raw Contents bytes so /Alt is byte-identical to
-                    // /Contents (PDF/UA-2 clause 8.9.4.2.1 requires identity). Re-encoding via
-                    // String would change the PDF literal-vs-hex form and fail the equality check.
+                    // Preserve the annotation's existing COSString reference when
+                    // present — re-encoding would change literal/hex form and
+                    // break the equality check.
                     COSObject contentsObj = annotObj.getKey(ASAtom.CONTENTS);
                     if (contentsObj != null && contentsObj.getType() == COSObjType.COS_STRING) {
-                        altBytes = contentsObj.getString().getBytes(StandardCharsets.UTF_16);
+                        linkTextObject = contentsObj;
                     } else {
-                        altBytes = altText.getBytes(StandardCharsets.UTF_16);
+                        linkTextObject = COSString.construct(
+                                existingContents.getBytes(StandardCharsets.UTF_16), true);
                     }
                 } else {
-                    altText = uriString != null ? uriString : "Link";
-                    // UTF-16 with BOM. Without BOM, PDF readers interpret a COSString as
-                    // PDFDocEncoding and silently corrupt non-ASCII (e.g. NBSP 0xA0 → €).
-                    altBytes = altText.getBytes(StandardCharsets.UTF_16);
-                    annotObj.setKey(ASAtom.CONTENTS, COSString.construct(altBytes));
+                    String altText = uriString != null ? uriString : "Link";
+                    linkTextObject = COSString.construct(
+                            altText.getBytes(StandardCharsets.UTF_16), true);
+                    annotObj.setKey(ASAtom.CONTENTS, linkTextObject);
                 }
-                linkElem.setKey(ASAtom.ALT, COSString.construct(altBytes));
+                linkElem.setKey(ASAtom.ALT, linkTextObject);
                 // Assign StructParent integer to annotation and register in parent tree
                 int structParentInt = annotStructParentKey++;
                 annotObj.setKey(ASAtom.STRUCT_PARENT, COSInteger.construct(structParentInt));
