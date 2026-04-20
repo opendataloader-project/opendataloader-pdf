@@ -380,8 +380,12 @@ public class AutoTaggingProcessor {
                     if (contentsObj != null && contentsObj.getType() == COSObjType.COS_STRING) {
                         linkTextObject = contentsObj;
                     } else {
+                        // Non-string /Contents (rare, e.g. indirect/array shape). Build a hex
+                        // UTF-16 COSString from the parsed text and write it back to /Contents
+                        // too so the annotation and /Alt remain byte-identical per §8.9.4.2.1.
                         linkTextObject = COSString.construct(
                                 existingContents.getBytes(StandardCharsets.UTF_16), true);
+                        annotObj.setKey(ASAtom.CONTENTS, linkTextObject);
                     }
                 } else {
                     String altText = uriString != null ? uriString : "Link";
@@ -620,14 +624,15 @@ public class AutoTaggingProcessor {
                 COSString.construct(String.valueOf(list.getPreviousList().getRecognizedStructureId()).getBytes()));
         }
         ASAtom numbering = ListProcessor.getListNumbering(list.getNumberingStyle());
-        if (numbering == ASAtom.NONE) {
+        // ListProcessor.getListNumbering returns null for unmapped styles. Fold
+        // null into NONE so the hasLabel promotion and COSName.construct below
+        // never receive null.
+        if (numbering == null || numbering == ASAtom.NONE) {
             boolean hasLabel = false;
             for (ListItem item : list.getListItems()) {
                 if (item.getLabelLength() > 0) { hasLabel = true; break; }
             }
-            if (hasLabel) {
-                numbering = ASAtom.ORDERED;
-            }
+            numbering = hasLabel ? ASAtom.ORDERED : ASAtom.NONE;
         }
         addAttributeToStructElem(listObject, ASAtom.LIST, ASAtom.LIST_NUMBERING, COSName.construct(numbering));
 
