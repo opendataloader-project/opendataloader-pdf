@@ -562,9 +562,17 @@ public class HybridDocumentProcessor {
             return new HancomSchemaTransformer();
         }
 
-        // hancom-ai uses HancomAISchemaTransformer
+        // hancom-ai uses HancomAISchemaTransformer. Thread the regionlist strategy
+        // from HybridConfig so --regionlist-strategy is honoured instead of silently
+        // falling back to the transformer's default.
         if (Config.HYBRID_HANCOM_AI.equals(hybrid)) {
-            return new HancomAISchemaTransformer();
+            HancomAISchemaTransformer transformer = new HancomAISchemaTransformer();
+            String regionlistStrategy = config.getHybridConfig() != null
+                ? config.getHybridConfig().getRegionlistStrategy() : null;
+            if (regionlistStrategy != null) {
+                transformer.setRegionlistStrategy(regionlistStrategy);
+            }
+            return transformer;
         }
 
         throw new IllegalArgumentException("Unsupported hybrid backend: " + hybrid);
@@ -641,6 +649,12 @@ public class HybridDocumentProcessor {
             if (!javaTextChunks.isEmpty()) {
                 enrichTextStreamInfos(backendPage, javaTextChunks, hybridConfig);
                 enrichFormulaStreamInfos(backendPage, javaTextChunks);
+            } else if (hybridConfig.isOcrAuto() || hybridConfig.isOcrForce()) {
+                // OCR-only (scanned) page: no Java TextChunks to compare against,
+                // so text_source cannot be inferred from stream/OCR similarity.
+                // Record "ocr" for every SemanticTextNode so the JSON output still
+                // reflects that the text came from OCR rather than the PDF stream.
+                markAllTextSourcesAsOcr(backendPage);
             }
 
             // OCR fallback: log elements that still lack StreamInfo after enrichment
@@ -884,6 +898,38 @@ public class HybridDocumentProcessor {
             newCol.add(new TextLine(tc));
         }
         textNode.getColumns().add(newCol);
+    }
+
+    /**
+     * Records "ocr" as the text source for every SemanticTextNode in the page,
+     * used on scanned pages where there are no Java TextChunks to compare with.
+     * Mirrors {@link #enrichTextStreamInfosRecursive} in how it descends into
+     * TableBorder/PDFList — the shared IObject tree has no generic children API,
+     * so both walks enumerate the containers they know about.
+     */
+    private static void markAllTextSourcesAsOcr(List<IObject> objects) {
+        if (objects == null) return;
+        for (IObject obj : objects) {
+            if (obj instanceof SemanticTextNode) {
+                recordTextSource((SemanticTextNode) obj, "ocr", null);
+            } else if (obj instanceof TableBorder) {
+                TableBorder table = (TableBorder) obj;
+                for (int rowNumber = 0; rowNumber < table.getNumberOfRows(); rowNumber++) {
+                    TableBorderRow row = table.getRow(rowNumber);
+                    for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
+                        TableBorderCell cell = row.getCell(colNumber);
+                        if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
+                            markAllTextSourcesAsOcr(cell.getContents());
+                        }
+                    }
+                }
+            } else if (obj instanceof PDFList) {
+                PDFList list = (PDFList) obj;
+                for (ListItem item : list.getListItems()) {
+                    markAllTextSourcesAsOcr(item.getContents());
+                }
+            }
+        }
     }
 
     /**

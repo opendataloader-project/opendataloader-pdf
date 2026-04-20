@@ -354,30 +354,28 @@ public class DocumentProcessor {
      * @return true if the page should be processed
      */
     /**
-     * Re-maps ElementMetadata from transformer-assigned IDs to the actual IObject IDs
-     * present in contents after enrichment. Uses bbox center proximity matching.
+     * Filters ElementMetadata down to entries whose transformer-assigned ID still
+     * matches an IObject in the post-enrichment contents. This is deliberately
+     * ID-based (not positional): sorting, filtering, and enrichment can reorder
+     * or drop IObjects, so positional matching would attach the wrong
+     * confidence/source label to an element. IObjects whose ID was rewritten
+     * during enrichment simply lose their metadata — preferable to a wrong one.
      */
     private static Map<Long, ElementMetadata> remapMetadataToContents(
             Map<Long, ElementMetadata> rawMetadata, List<List<IObject>> contents) {
         if (rawMetadata == null || rawMetadata.isEmpty()) return Collections.emptyMap();
 
-        // Assign metadata to contents IObjects in page order.
-        // Both transformer output and final contents follow the same reading order.
         Map<Long, ElementMetadata> remapped = new LinkedHashMap<>();
-        List<ElementMetadata> metaList = new ArrayList<>(rawMetadata.values());
-        int metaIdx = 0;
-
         for (List<IObject> pageContents : contents) {
             for (IObject obj : pageContents) {
-                if (metaIdx >= metaList.size()) break;
                 Long id = obj.getRecognizedStructureId();
-                if (id != null && id != 0L) {
-                    remapped.put(id, metaList.get(metaIdx));
-                    metaIdx++;
+                if (id == null || id == 0L) continue;
+                ElementMetadata meta = rawMetadata.get(id);
+                if (meta != null) {
+                    remapped.put(id, meta);
                 }
             }
         }
-
         return remapped;
     }
 

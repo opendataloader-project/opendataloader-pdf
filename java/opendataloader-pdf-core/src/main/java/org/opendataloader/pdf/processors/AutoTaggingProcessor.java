@@ -458,8 +458,10 @@ public class AutoTaggingProcessor {
      */
     private static COSObject buildStructDestArray(COSObject originalDest, PDDocument document, int annotPageNumber) {
         COSObject target = null;
-        if (originalDest != null && !originalDest.empty()
-                && originalDest.getType() == COSObjType.COS_ARRAY && originalDest.size() >= 1) {
+        boolean destIsPresent = originalDest != null && !originalDest.empty();
+        boolean destIsResolvableArray = destIsPresent
+            && originalDest.getType() == COSObjType.COS_ARRAY && originalDest.size() >= 1;
+        if (destIsResolvableArray) {
             COSObject first = originalDest.at(0);
             if (first != null && !first.empty() && first.getType() == COSObjType.COS_DICT
                     && ASAtom.PAGE.equals(first.getNameKey(ASAtom.TYPE))) {
@@ -472,7 +474,12 @@ public class AutoTaggingProcessor {
                 }
             }
         }
-        if (target == null) {
+        // Fallback to the annotation's own page only when the destination is entirely
+        // absent. If a destination is present but unresolvable (named destination,
+        // non-array form, or page not found) we must NOT rewrite it to the link's own
+        // page — that silently redirects cross-page GoTo links. Return null so the
+        // caller can leave the destination untouched.
+        if (target == null && !destIsPresent) {
             target = pageNumberToFirstStructElement.get(annotPageNumber);
         }
         if (target == null) {
