@@ -151,16 +151,20 @@ public class AutoTaggingProcessor {
         structTreeRoot.setKey(ASAtom.TYPE, COSName.construct(ASAtom.STRUCT_TREE_ROOT));
         cosDocument.addObject(structTreeRoot);
         structTreeRoot.setKey(ASAtom.PARENT_TREE_NEXT_KEY, COSInteger.construct(document.getNumberOfPages()));
-        // Create the PDF 2.0 namespace (pdf2/ssn) so PDF 2.0-only structure types (FENote, ...)
-        // can be tagged with an explicit /NS. PDF/UA-2 clause 8.2.4.1 rejects non-standard types
-        // under the default pdf/ssn namespace; inheritance alone isn't enough for veraPDF.
-        pdf2_0Namespace = COSDictionary.construct(ASAtom.NS, TaggedPDFConstants.PDF2_NAMESPACE);
-        pdf2_0Namespace.setNameKey(ASAtom.TYPE, ASAtom.NAMESPACE);
-        pdf2_0Namespace = COSIndirect.construct(pdf2_0Namespace, cosDocument);
-        cosDocument.addObject(pdf2_0Namespace);
-        COSObject namespaces = COSArray.construct();
-        namespaces.add(pdf2_0Namespace);
-        structTreeRoot.setKey(ASAtom.NAMESPACES, namespaces);
+        // Only emit the PDF 2.0 namespace (pdf2/ssn) when the output is PDF 2.0.
+        // The namespace gates PDF 2.0-only structure types like FENote (tagged
+        // with an explicit /NS to satisfy PDF/UA-2 clause 8.2.4.1). Attaching
+        // /Namespaces on a PDF 1.x file would produce invalid output.
+        pdf2_0Namespace = null;
+        if (isPDF2_0) {
+            pdf2_0Namespace = COSDictionary.construct(ASAtom.NS, TaggedPDFConstants.PDF2_NAMESPACE);
+            pdf2_0Namespace.setNameKey(ASAtom.TYPE, ASAtom.NAMESPACE);
+            pdf2_0Namespace = COSIndirect.construct(pdf2_0Namespace, cosDocument);
+            cosDocument.addObject(pdf2_0Namespace);
+            COSObject namespaces = COSArray.construct();
+            namespaces.add(pdf2_0Namespace);
+            structTreeRoot.setKey(ASAtom.NAMESPACES, namespaces);
+        }
         cosDocument.addChangedObject(catalog.getObject());
         return structTreeRoot;
     }
@@ -461,8 +465,11 @@ public class AutoTaggingProcessor {
 
     /**
      * Build a {@code [structElem /Fit]} array suitable as a structure destination. Uses the
-     * target page from an array-form page destination when available, otherwise falls back to
-     * the annotation's own page.
+     * target page from an array-form page destination when available. Falls back to the
+     * annotation's own page only when the destination is entirely absent — a present-but-
+     * unresolvable destination (named, non-array, or an unmatched page) returns {@code null}
+     * so the caller leaves the original destination untouched rather than silently
+     * redirecting a cross-page link to the annotation's own page.
      */
     private static COSObject buildStructDestArray(COSObject originalDest, PDDocument document, int annotPageNumber) {
         COSObject target = null;
@@ -560,12 +567,17 @@ public class AutoTaggingProcessor {
     }
 
     private static void createFootnoteStructElem(SemanticFootnote footnote, COSObject parent, COSDocument cosDocument) {
-        COSObject noteObject = addStructElement(parent, cosDocument, TaggedPDFConstants.FENOTE, footnote.getPageNumber());
-        // FENote is a PDF 2.0-only type; explicit /NS is required for PDF/UA-2 validators.
-        if (pdf2_0Namespace != null) {
+        // FENote + /NS + /NoteType is the PDF 2.0 path (PDF/UA-2 clause 8.2.4.1).
+        // For PDF 1.x output, fall back to the Note standard structure type so the
+        // result is valid for PDF 1.7 tagged-PDF consumers.
+        boolean usePdf2Footnote = isPDF2_0 && pdf2_0Namespace != null;
+        COSObject noteObject = addStructElement(parent, cosDocument,
+                usePdf2Footnote ? TaggedPDFConstants.FENOTE : TaggedPDFConstants.NOTE,
+                footnote.getPageNumber());
+        if (usePdf2Footnote) {
             noteObject.setKey(ASAtom.NS, pdf2_0Namespace);
+            noteObject.setKey(ASAtom.NOTE_TYPE, COSName.construct(ASAtom.getASAtom("Footnote")));
         }
-        noteObject.setKey(ASAtom.NOTE_TYPE, COSName.construct(ASAtom.getASAtom("Footnote")));
         processTextNode(footnote, noteObject);
     }
 

@@ -399,7 +399,7 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
                 break;
 
             case LABEL_TABLE:
-                // Table regions are handled separately by transformTablePage() via TSR
+                // Table regions are handled separately by transformTableEntry() via TSR
                 return null;
 
             case LABEL_FIGURE: {

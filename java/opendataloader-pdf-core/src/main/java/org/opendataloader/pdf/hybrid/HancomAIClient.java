@@ -481,11 +481,23 @@ public class HancomAIClient implements HybridClient {
                         new Object[]{pageNum, e.getMessage()});
                 }
             }
-            // Do NOT evict the page image here — captionFigures() runs next and
-            // reuses the same cache. Evicting per-page during TSR would force
-            // pdf2img to re-render pages that contain both tables and figures.
-            // The try-with-resources in convert() closes the cache at the end
-            // of the request.
+            // Evict the page image here only if captionFigures() will not revisit
+            // this page. captionFigures() iterates pages that contain at least one
+            // LABEL_FIGURE object; for table-only pages (no figures) the cached
+            // full-resolution image would otherwise sit in memory until the
+            // try-with-resources in convert() closes the cache — ~25MB per page
+            // for the memory cache, which is costly on large table-heavy PDFs.
+            boolean hasFigure = false;
+            for (JsonNode obj : objects) {
+                int objLabel = obj.has("label") ? obj.get("label").asInt() : -1;
+                if (objLabel == LABEL_FIGURE) {
+                    hasFigure = true;
+                    break;
+                }
+            }
+            if (!hasFigure) {
+                pageImageCache.evict(pageNum);
+            }
         }
 
         LOGGER.log(Level.INFO, "Hancom AI: TSR processed {0} table crops", results.size());
