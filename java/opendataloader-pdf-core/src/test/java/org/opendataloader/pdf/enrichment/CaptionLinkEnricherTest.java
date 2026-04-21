@@ -65,7 +65,6 @@ public class CaptionLinkEnricherTest {
 
         // Table candidate (rawId=10) — same distance, kind="table"
         BoundingBox tableBbox = new BoundingBox(0, 100.0, 100.0, 400.0, 190.0);
-        CaptionNode tableCaption = GraphFixtures.captionNode(1, captionBbox, "Figure 2: A chart", 99L);
         TextNode tableCandidate = new TextNode("table content", 1, tableBbox, 10L, null);
 
         // Figure candidate (rawId=20) — same bounding box position (equidistant)
