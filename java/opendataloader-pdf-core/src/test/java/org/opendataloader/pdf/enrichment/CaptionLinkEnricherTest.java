@@ -96,10 +96,7 @@ public class CaptionLinkEnricherTest {
         CaptionNode enriched = (CaptionNode) result.get(0);
         Assertions.assertNull(enriched.getTargetId());
         Assertions.assertNotNull(enriched.getUnresolvedReason());
-        if (enriched.getConfidence() != null) {
-            Assertions.assertTrue(enriched.getConfidence() < CaptionLinkEnricher.SCORE_THRESHOLD,
-                "unresolved confidence should be < threshold");
-        }
+        Assertions.assertNull(enriched.getConfidence());
     }
 
     // Result list must be immutable

@@ -17,6 +17,7 @@ package org.opendataloader.pdf.enrichment;
 
 import org.opendataloader.pdf.graph.CaptionNode;
 import org.opendataloader.pdf.graph.GraphNode;
+import org.opendataloader.pdf.graph.TextNode;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 
 import java.util.ArrayList;
@@ -146,8 +147,8 @@ public class CaptionLinkEnricher {
     }
 
     private String extractText(GraphNode node) {
-        if (node instanceof org.opendataloader.pdf.graph.TextNode) {
-            return ((org.opendataloader.pdf.graph.TextNode) node).getText();
+        if (node instanceof TextNode) {
+            return ((TextNode) node).getText();
         }
         return null;
     }
