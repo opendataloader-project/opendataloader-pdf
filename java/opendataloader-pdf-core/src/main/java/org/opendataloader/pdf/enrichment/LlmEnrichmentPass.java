@@ -20,6 +20,7 @@ import org.opendataloader.pdf.llm.LlmFallback;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public final class LlmEnrichmentPass {
 
@@ -43,8 +44,8 @@ public final class LlmEnrichmentPass {
             boolean lowConfidence = node.getConfidence() == null || node.getConfidence() < confidenceThreshold;
             boolean unresolved = node.getUnresolvedReason() != null;
             if (lowConfidence || unresolved) {
-                GraphNode resolved = fallback.resolve(node, nodes).orElse(node);
-                result.add(resolved);
+                Optional<GraphNode> replacement = fallback.resolve(node, nodes);
+                result.add(replacement != null ? replacement.orElse(node) : node);
             } else {
                 result.add(node);
             }

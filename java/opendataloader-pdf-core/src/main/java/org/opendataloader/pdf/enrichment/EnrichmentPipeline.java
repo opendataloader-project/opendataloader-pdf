@@ -20,6 +20,7 @@ import org.opendataloader.pdf.llm.LlmFallback;
 import org.opendataloader.pdf.llm.NoOpLlmFallback;
 
 import java.util.List;
+import java.util.Objects;
 
 public final class EnrichmentPipeline {
 
@@ -30,6 +31,7 @@ public final class EnrichmentPipeline {
     }
 
     public static List<GraphNode> run(List<GraphNode> nodes, LlmFallback llmFallback) {
+        Objects.requireNonNull(llmFallback, "llmFallback must not be null");
         List<GraphNode> result = new EquationNumberEnricher().enrich(nodes == null ? List.of() : nodes);
         result = new CaptionLinkEnricher().enrich(result);
         result = new ReferenceZoneEnricher().enrich(result);

@@ -25,6 +25,7 @@ public interface LlmFallback {
     /**
      * Attempt to resolve a low-confidence node using an LLM.
      * Returns an Optional containing a replacement node, or empty if the LLM cannot help.
+     * Implementors MUST NOT return null; return Optional.empty() to indicate no replacement.
      */
     Optional<GraphNode> resolve(GraphNode node, List<GraphNode> context);
 }
