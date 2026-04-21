@@ -125,4 +125,28 @@ public class EquationNumberEnricherTest {
         Assertions.assertSame(originalEquation, nodes.get(0));
         Assertions.assertNull(((EquationNode) originalEquation).getNumber());
     }
+
+    @Test
+    void testAlphabeticSuffixTokenBindsNumber() {
+        EquationNode eq = GraphFixtures.equationNode(0, new BoundingBox(0, 100, 300, 300, 350), "E=mc^2");
+        GraphNode tokenNode = GraphFixtures.inlineText(0, new BoundingBox(0, 320, 300, 360, 320), "(12a)");
+
+        List<GraphNode> result = new EquationNumberEnricher().enrich(GraphFixtures.graphWith(eq, tokenNode));
+
+        EquationNode enriched = (EquationNode) result.get(0);
+        Assertions.assertEquals("12a", enriched.getNumber());
+        Assertions.assertNull(enriched.getUnresolvedReason());
+    }
+
+    @Test
+    void testBareNumberTokenBindsNumber() {
+        EquationNode eq = GraphFixtures.equationNode(0, new BoundingBox(0, 100, 300, 300, 350), "a+b=c");
+        GraphNode tokenNode = GraphFixtures.inlineText(0, new BoundingBox(0, 320, 300, 360, 320), "42");
+
+        List<GraphNode> result = new EquationNumberEnricher().enrich(GraphFixtures.graphWith(eq, tokenNode));
+
+        EquationNode enriched = (EquationNode) result.get(0);
+        Assertions.assertEquals("42", enriched.getNumber());
+        Assertions.assertNull(enriched.getUnresolvedReason());
+    }
 }

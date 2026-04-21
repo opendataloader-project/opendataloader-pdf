@@ -22,6 +22,7 @@ import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -77,7 +78,7 @@ public class EquationNumberEnricher {
             if (cBox == null) {
                 continue;
             }
-            if (!candidate.getPage().equals(equation.getPage())) {
+            if (!Objects.equals(candidate.getPage(), equation.getPage())) {
                 continue;
             }
             double score = score(eqBox, cBox);
