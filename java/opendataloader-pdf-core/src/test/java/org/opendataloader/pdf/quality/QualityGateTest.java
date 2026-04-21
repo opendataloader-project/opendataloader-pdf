@@ -15,7 +15,7 @@
  */
 package org.opendataloader.pdf.quality;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
 
 import java.util.List;
