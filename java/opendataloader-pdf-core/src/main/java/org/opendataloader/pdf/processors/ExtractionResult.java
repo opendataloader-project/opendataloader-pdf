@@ -16,6 +16,8 @@
 package org.opendataloader.pdf.processors;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.opendataloader.pdf.graph.GraphBuilder;
+import org.opendataloader.pdf.graph.GraphNode;
 import org.verapdf.wcag.algorithms.entities.IObject;
 
 import java.util.List;
@@ -27,17 +29,23 @@ import java.util.List;
 public class ExtractionResult {
 
     private final List<List<IObject>> contents;
+    private final List<GraphNode> graphNodes;
     private final long extractionNs;
     private final JsonNode hybridTimings;
 
     public ExtractionResult(List<List<IObject>> contents, long extractionNs, JsonNode hybridTimings) {
         this.contents = contents;
+        this.graphNodes = GraphBuilder.build(contents);
         this.extractionNs = extractionNs;
         this.hybridTimings = hybridTimings;
     }
 
     public List<List<IObject>> getContents() {
         return contents;
+    }
+
+    public List<GraphNode> getGraphNodes() {
+        return graphNodes;
     }
 
     public long getExtractionNs() {
