@@ -83,6 +83,15 @@ public class CitationResolver {
             try {
                 int start = Integer.parseInt(parts[0].trim());
                 int end = Integer.parseInt(parts[1].trim());
+                if (start > end) {
+                    // inverted range — treat as comma-separated tokens
+                    String[] commaparts = inner.split(",");
+                    for (String part : commaparts) {
+                        String t = part.trim();
+                        if (!t.isEmpty()) markers.add(t);
+                    }
+                    return markers;
+                }
                 for (int i = start; i <= end; i++) {
                     markers.add(String.valueOf(i));
                 }

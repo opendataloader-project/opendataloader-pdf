@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import org.opendataloader.pdf.graph.CitationNode;
 import org.opendataloader.pdf.json.JsonName;
+import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 
 import java.io.IOException;
 
@@ -40,6 +41,15 @@ public class CitationSerializer extends StdSerializer<CitationNode> {
         if (node.getPage() != null) {
             gen.writeNumberField(JsonName.PAGE_NUMBER, node.getPage());
         }
+        BoundingBox bbox = node.getBbox();
+        if (bbox != null) {
+            gen.writeArrayFieldStart(JsonName.BOUNDING_BOX);
+            gen.writeNumber(bbox.getLeftX());
+            gen.writeNumber(bbox.getBottomY());
+            gen.writeNumber(bbox.getRightX());
+            gen.writeNumber(bbox.getTopY());
+            gen.writeEndArray();
+        }
 
         gen.writeArrayFieldStart(JsonName.MARKERS);
         for (String marker : node.getMarkers()) {
@@ -53,7 +63,9 @@ public class CitationSerializer extends StdSerializer<CitationNode> {
         }
         gen.writeEndArray();
 
-        gen.writeStringField(JsonName.SPAN, node.getSpan());
+        if (node.getSpan() != null) {
+            gen.writeStringField(JsonName.SPAN, node.getSpan());
+        }
 
         if (node.getUnresolvedReason() != null) {
             gen.writeStringField(JsonName.UNRESOLVED_REASON, node.getUnresolvedReason());

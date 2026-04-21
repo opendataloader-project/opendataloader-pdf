@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import org.opendataloader.pdf.graph.ReferenceEntryNode;
 import org.opendataloader.pdf.json.JsonName;
+import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 
 import java.io.IOException;
 
@@ -40,7 +41,18 @@ public class ReferenceEntrySerializer extends StdSerializer<ReferenceEntryNode> 
         if (node.getPage() != null) {
             gen.writeNumberField(JsonName.PAGE_NUMBER, node.getPage());
         }
-        gen.writeStringField(JsonName.REF_ID, node.getRefId());
+        BoundingBox bbox = node.getBbox();
+        if (bbox != null) {
+            gen.writeArrayFieldStart(JsonName.BOUNDING_BOX);
+            gen.writeNumber(bbox.getLeftX());
+            gen.writeNumber(bbox.getBottomY());
+            gen.writeNumber(bbox.getRightX());
+            gen.writeNumber(bbox.getTopY());
+            gen.writeEndArray();
+        }
+        if (node.getRefId() != null) {
+            gen.writeStringField(JsonName.REF_ID, node.getRefId());
+        }
         gen.writeStringField(JsonName.CONTENT, node.getText());
         if (node.getConfidence() != null) {
             gen.writeNumberField(JsonName.CONFIDENCE, node.getConfidence());
