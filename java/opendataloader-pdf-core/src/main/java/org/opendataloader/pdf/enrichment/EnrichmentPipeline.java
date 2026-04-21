@@ -16,6 +16,8 @@
 package org.opendataloader.pdf.enrichment;
 
 import org.opendataloader.pdf.graph.GraphNode;
+import org.opendataloader.pdf.llm.LlmFallback;
+import org.opendataloader.pdf.llm.NoOpLlmFallback;
 
 import java.util.List;
 
@@ -24,11 +26,15 @@ public final class EnrichmentPipeline {
     private EnrichmentPipeline() {}
 
     public static List<GraphNode> run(List<GraphNode> nodes) {
-        if (nodes == null) return List.of();
-        List<GraphNode> result = new EquationNumberEnricher().enrich(nodes);
+        return run(nodes, new NoOpLlmFallback());
+    }
+
+    public static List<GraphNode> run(List<GraphNode> nodes, LlmFallback llmFallback) {
+        List<GraphNode> result = new EquationNumberEnricher().enrich(nodes == null ? List.of() : nodes);
         result = new CaptionLinkEnricher().enrich(result);
         result = new ReferenceZoneEnricher().enrich(result);
         result = new CitationResolver().resolve(result);
+        result = new LlmEnrichmentPass(llmFallback).enrich(result);
         return result;
     }
 }
