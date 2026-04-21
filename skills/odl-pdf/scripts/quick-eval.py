@@ -18,8 +18,19 @@ import re
 import sys
 from pathlib import Path
 
+# Ensure stdout can print non-ASCII report content on Windows consoles
+# (cp1252 / cp949 default). Without this, a single non-ASCII character
+# crashes the script with UnicodeEncodeError -- including under
+# `windows-latest` in GitHub Actions.
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, OSError):
+        pass
+
 # ---------------------------------------------------------------------------
-# Optional rapidfuzz import — used for NID scoring when available
+# Optional rapidfuzz import -- used for NID scoring when available
 # ---------------------------------------------------------------------------
 try:
     from rapidfuzz.distance import Indel
@@ -35,8 +46,8 @@ except ImportError:
 SCORE_LEVELS = [
     (0.95, "Excellent", "Output closely matches the ground truth."),
     (0.85, "Good", "Minor differences; output is usable as-is."),
-    (0.70, "Fair", "Noticeable differences — consider hybrid mode or different options."),
-    (0.00, "Poor", "Significant quality issues — review extraction settings."),
+    (0.70, "Fair", "Noticeable differences - consider hybrid mode or different options."),
+    (0.00, "Poor", "Significant quality issues - review extraction settings."),
 ]
 
 
@@ -178,22 +189,37 @@ def build_report(
         f"Method:       {method}",
         "-" * 60,
         f"Score:        {score:.4f}  [{label}]",
-        f"Threshold:    {threshold:.2f}",
+        f"Threshold:    {threshold:.4f}",
         f"Result:       {status}",
         "-" * 60,
         f"Interpretation: {description}",
     ]
 
     if not passed:
-        lines.append("")
-        lines.append("Suggestions:")
+        suggestions: list[str] = []
         if score < 0.70:
-            lines.append("  - Try --hybrid docling-fast for better OCR coverage.")
-            lines.append("  - Check --format is appropriate for this document type.")
-            lines.append("  - Inspect whether the PDF is scanned (image-only) vs. native.")
+            suggestions.extend([
+                "  - Try --hybrid docling-fast for better OCR coverage.",
+                "  - Check --format is appropriate for this document type.",
+                "  - Inspect whether the PDF is scanned (image-only) vs. native.",
+            ])
         elif score < 0.85:
-            lines.append("  - Consider --hybrid docling-fast or --table-method cluster.")
-            lines.append("  - Try --use-struct-tree if the PDF is tagged (accessible).")
+            suggestions.extend([
+                "  - Consider --hybrid docling-fast or --table-method cluster.",
+                "  - Try --use-struct-tree if the PDF is tagged (accessible).",
+            ])
+        else:
+            # Score is above the general-quality bar but below the caller's
+            # custom threshold. Generic guidance only.
+            suggestions.append(
+                "  - Score is above the usable-quality bar but below your custom threshold; "
+                "tighten input quality or relax --threshold if appropriate."
+            )
+
+        if suggestions:
+            lines.append("")
+            lines.append("Suggestions:")
+            lines.extend(suggestions)
 
     if verbose:
         lines.append("")
