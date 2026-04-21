@@ -68,4 +68,5 @@ public class JsonName {
     public static final String EQUATION_NUMBER = "equation number";
     public static final String CONFIDENCE = "confidence";
     public static final String UNRESOLVED_REASON = "unresolved reason";
+    public static final String LINKED_CONTENT_ID = "linked content id";
 }

@@ -35,6 +35,17 @@ public class CaptionNode extends GraphNode {
         this.span = span;
     }
 
+    public CaptionNode(String kind, String label, Long targetId, String text, String span,
+                       Integer page, BoundingBox bbox, Long rawId, Double confidence,
+                       String unresolvedReason) {
+        super(page, bbox, rawId, confidence, unresolvedReason);
+        this.kind = kind;
+        this.label = label;
+        this.targetId = targetId;
+        this.text = text;
+        this.span = span;
+    }
+
     public String getKind() {
         return kind;
     }

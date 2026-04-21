@@ -33,6 +33,10 @@ public final class GraphFixtures {
         return new TextNode(text, page, bbox, null, null);
     }
 
+    public static CaptionNode captionNode(int page, BoundingBox bbox, String text, Long rawId) {
+        return new CaptionNode(null, null, null, text, null, page, bbox, rawId, null);
+    }
+
     public static List<GraphNode> graphWith(GraphNode... nodes) {
         return List.copyOf(Arrays.asList(nodes));
     }
