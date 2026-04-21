@@ -24,8 +24,8 @@ import org.verapdf.wcag.algorithms.entities.IObject;
 import java.util.List;
 
 /**
- * Internal result of the extraction pipeline (preprocessing + content extraction + sanitization).
- * Carries the extracted contents and timing metadata for use by AutoTagger.
+ * Internal result of the extraction pipeline (preprocessing + content extraction + sanitization + enrichment).
+ * Carries the extracted contents, raw graph nodes, enriched graph nodes, and timing metadata.
  */
 public class ExtractionResult {
 
@@ -51,6 +51,7 @@ public class ExtractionResult {
         return graphNodes;
     }
 
+    /** Returns graph nodes after running the full enrichment pipeline (equation numbers, caption links, references, citations). */
     public List<GraphNode> getEnrichedGraphNodes() {
         return enrichedGraphNodes;
     }

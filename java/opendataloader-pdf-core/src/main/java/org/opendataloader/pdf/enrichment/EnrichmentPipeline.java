@@ -24,6 +24,7 @@ public final class EnrichmentPipeline {
     private EnrichmentPipeline() {}
 
     public static List<GraphNode> run(List<GraphNode> nodes) {
+        if (nodes == null) return List.of();
         List<GraphNode> result = new EquationNumberEnricher().enrich(nodes);
         result = new CaptionLinkEnricher().enrich(result);
         result = new ReferenceZoneEnricher().enrich(result);

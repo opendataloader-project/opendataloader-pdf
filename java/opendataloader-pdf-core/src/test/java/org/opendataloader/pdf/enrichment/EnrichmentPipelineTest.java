@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.opendataloader.pdf.graph.CitationNode;
 import org.opendataloader.pdf.graph.CaptionNode;
+import org.opendataloader.pdf.graph.TextNode;
 import org.opendataloader.pdf.graph.EquationNode;
 import org.opendataloader.pdf.graph.GraphFixtures;
 import org.opendataloader.pdf.graph.GraphNode;
@@ -73,6 +74,7 @@ public class EnrichmentPipelineTest {
         Assertions.assertEquals(2, result.size());
         CaptionNode enrichedCaption = (CaptionNode) result.get(0);
         Assertions.assertNotNull(enrichedCaption.getConfidence());
+        Assertions.assertTrue(enrichedCaption.getConfidence() >= 0.5);
     }
 
     @Test
@@ -105,6 +107,7 @@ public class EnrichmentPipelineTest {
         List<GraphNode> result = EnrichmentPipeline.run(nodes);
 
         Assertions.assertEquals(3, result.size());
+        Assertions.assertInstanceOf(TextNode.class, result.get(0));
         Assertions.assertTrue(result.get(1) instanceof ReferenceEntryNode);
         Assertions.assertTrue(result.get(2) instanceof CitationNode);
         CitationNode citation = (CitationNode) result.get(2);
