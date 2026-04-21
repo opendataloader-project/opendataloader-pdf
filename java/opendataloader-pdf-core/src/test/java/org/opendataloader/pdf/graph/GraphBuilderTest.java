@@ -33,6 +33,66 @@ import java.util.List;
 public class GraphBuilderTest {
 
     @Test
+    public void testBuildReturnsEmptyForNullAndEmptyInput() {
+        List<GraphNode> fromNull = GraphBuilder.build(null);
+        List<GraphNode> fromEmpty = GraphBuilder.build(Collections.emptyList());
+
+        Assertions.assertTrue(fromNull.isEmpty());
+        Assertions.assertTrue(fromEmpty.isEmpty());
+    }
+
+    @Test
+    public void testBuildSkipsNullPagesAndNullObjects() {
+        SemanticHeading heading = new SemanticHeading();
+        heading.add(new TextLine(new TextChunk(new BoundingBox(0, 1.0, 2.0, 3.0, 4.0),
+            "heading", 12.0, 12.0)));
+        heading.setHeadingLevel(1);
+
+        List<IObject> pageZero = new ArrayList<>();
+        pageZero.add(null);
+        pageZero.add(heading);
+
+        List<List<IObject>> contents = new ArrayList<>();
+        contents.add(null);
+        contents.add(pageZero);
+
+        List<GraphNode> nodes = GraphBuilder.build(contents);
+
+        Assertions.assertEquals(1, nodes.size());
+        Assertions.assertTrue(nodes.get(0) instanceof HeadingNode);
+    }
+
+    @Test
+    public void testBuildReturnsImmutableList() {
+        SemanticHeading heading = new SemanticHeading();
+        heading.add(new TextLine(new TextChunk(new BoundingBox(0, 5.0, 6.0, 7.0, 8.0),
+            "immutable", 12.0, 12.0)));
+        heading.setHeadingLevel(1);
+
+        List<GraphNode> nodes = GraphBuilder.build(Collections.singletonList(Collections.singletonList(heading)));
+
+        Assertions.assertThrows(UnsupportedOperationException.class,
+            () -> nodes.add(new GraphNode(0, null, null, null, null)));
+    }
+
+    @Test
+    public void testBuildDefensivelyCopiesBoundingBox() {
+        BoundingBox sourceBbox = new BoundingBox(0, 10.0, 20.0, 110.0, 40.0);
+        SemanticHeading heading = new SemanticHeading();
+        heading.add(new TextLine(new TextChunk(sourceBbox, "Introduction", 12.0, 12.0)));
+        heading.setHeadingLevel(1);
+
+        List<GraphNode> nodes = GraphBuilder.build(Collections.singletonList(Collections.singletonList(heading)));
+        GraphNode node = nodes.get(0);
+
+        Assertions.assertNotSame(sourceBbox, node.getBbox());
+        Assertions.assertEquals(sourceBbox.getLeftX(), node.getBbox().getLeftX());
+        Assertions.assertEquals(sourceBbox.getTopY(), node.getBbox().getTopY());
+        Assertions.assertEquals(sourceBbox.getRightX(), node.getBbox().getRightX());
+        Assertions.assertEquals(sourceBbox.getBottomY(), node.getBbox().getBottomY());
+    }
+
+    @Test
     public void testBuildMapsKnownAndUnknownNodes() {
         List<IObject> pageZero = new ArrayList<>();
 

@@ -50,7 +50,7 @@ public final class GraphBuilder {
                 nodes.add(buildNode(object));
             }
         }
-        return nodes;
+        return List.copyOf(nodes);
     }
 
     private static GraphNode buildNode(IObject object) {
