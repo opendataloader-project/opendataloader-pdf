@@ -69,4 +69,10 @@ public class JsonName {
     public static final String CONFIDENCE = "confidence";
     public static final String UNRESOLVED_REASON = "unresolved reason";
     public static final String LINKED_CONTENT_ID = "linked content id";
+    public static final String REFERENCE_ENTRY_TYPE = "reference entry";
+    public static final String REF_ID = "ref id";
+    public static final String CITATION_TYPE = "citation";
+    public static final String RESOLVED_REF_IDS = "resolved ref ids";
+    public static final String MARKERS = "markers";
+    public static final String SPAN = "span";
 }

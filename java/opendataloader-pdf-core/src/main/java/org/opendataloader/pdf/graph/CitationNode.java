@@ -29,7 +29,13 @@ public class CitationNode extends GraphNode {
 
     public CitationNode(List<String> markers, List<String> resolvedRefIds, String span,
                         Integer page, BoundingBox bbox, Long rawId, Double confidence) {
-        super(page, bbox, rawId, confidence, null);
+        this(markers, resolvedRefIds, span, page, bbox, rawId, confidence, null);
+    }
+
+    public CitationNode(List<String> markers, List<String> resolvedRefIds, String span,
+                        Integer page, BoundingBox bbox, Long rawId, Double confidence,
+                        String unresolvedReason) {
+        super(page, bbox, rawId, confidence, unresolvedReason);
         this.markers = markers == null ? Collections.emptyList() : Collections.unmodifiableList(new ArrayList<>(markers));
         this.resolvedRefIds = resolvedRefIds == null ? Collections.emptyList() :
             Collections.unmodifiableList(new ArrayList<>(resolvedRefIds));

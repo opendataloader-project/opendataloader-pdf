@@ -18,6 +18,7 @@ package org.opendataloader.pdf.graph;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public final class GraphFixtures {
@@ -31,6 +32,14 @@ public final class GraphFixtures {
 
     public static TextNode inlineText(int page, BoundingBox bbox, String text) {
         return new TextNode(text, page, bbox, null, null);
+    }
+
+    public static TextNode textNode(int page, BoundingBox bbox, String text) {
+        return new TextNode(text, page, bbox, null, null);
+    }
+
+    public static ReferenceEntryNode referenceEntryNode(int page, BoundingBox bbox, String refId, String text) {
+        return new ReferenceEntryNode(refId, text, Collections.emptyMap(), page, bbox, null, null);
     }
 
     public static CaptionNode captionNode(int page, BoundingBox bbox, String text, Long rawId) {

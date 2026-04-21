@@ -20,6 +20,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.opendataloader.pdf.entities.SemanticFormula;
 import org.opendataloader.pdf.entities.SemanticPicture;
+import org.opendataloader.pdf.graph.CitationNode;
+import org.opendataloader.pdf.graph.ReferenceEntryNode;
 import org.opendataloader.pdf.json.serializers.*;
 import org.verapdf.wcag.algorithms.entities.SemanticCaption;
 import org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter;
@@ -87,6 +89,12 @@ public class ObjectMapperHolder {
 
         PictureSerializer pictureSerializer = new PictureSerializer(SemanticPicture.class);
         module.addSerializer(SemanticPicture.class, pictureSerializer);
+
+        ReferenceEntrySerializer referenceEntrySerializer = new ReferenceEntrySerializer(ReferenceEntryNode.class);
+        module.addSerializer(ReferenceEntryNode.class, referenceEntrySerializer);
+
+        CitationSerializer citationSerializer = new CitationSerializer(CitationNode.class);
+        module.addSerializer(CitationNode.class, citationSerializer);
 
         //ParagraphSerializer paragraphSerializer = new ParagraphSerializer(SemanticParagraph.class);
         //module.addSerializer(SemanticParagraph.class, paragraphSerializer);
