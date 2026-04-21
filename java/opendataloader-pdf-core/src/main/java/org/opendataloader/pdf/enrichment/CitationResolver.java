@@ -84,9 +84,7 @@ public class CitationResolver {
                 int start = Integer.parseInt(parts[0].trim());
                 int end = Integer.parseInt(parts[1].trim());
                 if (start > end) {
-                    // inverted range — treat as comma-separated tokens
-                    String[] commaparts = inner.split(",");
-                    for (String part : commaparts) {
+                    for (String part : parts) {
                         String t = part.trim();
                         if (!t.isEmpty()) markers.add(t);
                     }
