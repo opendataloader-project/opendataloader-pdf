@@ -148,6 +148,7 @@ public class GraphBuilderTest {
         Assertions.assertFalse(nodes.get(3) instanceof EquationNode);
         Assertions.assertFalse(nodes.get(3) instanceof CaptionNode);
         Assertions.assertEquals(404L, nodes.get(3).getRawId());
-        Assertions.assertEquals("Unsupported type: SemanticParagraph", nodes.get(3).getUnresolvedReason());
+        Assertions.assertTrue(nodes.get(3) instanceof TextNode);
+        Assertions.assertEquals("plain paragraph", ((TextNode) nodes.get(3)).getText().trim());
     }
 }

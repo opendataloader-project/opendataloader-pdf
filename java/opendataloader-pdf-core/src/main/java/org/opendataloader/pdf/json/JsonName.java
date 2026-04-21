@@ -65,4 +65,7 @@ public class JsonName {
     public static final String IMAGE_FORMAT = "format";
     public static final String FORMULA_TYPE = "formula";
     public static final String DESCRIPTION = "description";
+    public static final String EQUATION_NUMBER = "equation number";
+    public static final String CONFIDENCE = "confidence";
+    public static final String UNRESOLVED_REASON = "unresolved reason";
 }

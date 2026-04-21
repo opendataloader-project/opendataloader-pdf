@@ -33,6 +33,16 @@ public class EquationNode extends GraphNode {
         this.span = span;
     }
 
+    public EquationNode(String latex, boolean displayMode, String number, String span,
+                        Integer page, BoundingBox bbox, Long rawId, Double confidence,
+                        String unresolvedReason) {
+        super(page, bbox, rawId, confidence, unresolvedReason);
+        this.latex = latex;
+        this.displayMode = displayMode;
+        this.number = number;
+        this.span = span;
+    }
+
     public String getLatex() {
         return latex;
     }

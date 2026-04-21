@@ -19,6 +19,7 @@ import org.opendataloader.pdf.entities.SemanticFormula;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticCaption;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
+import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 
 import java.util.ArrayList;
@@ -63,12 +64,25 @@ public final class GraphBuilder {
         if (object instanceof SemanticCaption) {
             return buildCaptionNode((SemanticCaption) object);
         }
+        if (object instanceof SemanticTextNode) {
+            return buildTextNode((SemanticTextNode) object);
+        }
         return new GraphNode(
             object.getPageNumber(),
             copy(object.getBoundingBox()),
             object.getRecognizedStructureId(),
             null,
             "Unsupported type: " + object.getClass().getSimpleName()
+        );
+    }
+
+    private static TextNode buildTextNode(SemanticTextNode textNode) {
+        return new TextNode(
+            textNode.getValue(),
+            textNode.getPageNumber(),
+            copy(textNode.getBoundingBox()),
+            textNode.getRecognizedStructureId(),
+            null
         );
     }
 

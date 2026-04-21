@@ -29,6 +29,9 @@ import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 public class SemanticFormula extends BaseObject {
 
     private final String latex;
+    private String equationNumber;
+    private Double enrichmentConfidence;
+    private String unresolvedReason;
 
     /**
      * Creates a SemanticFormula with the given bounding box and LaTeX content.
@@ -48,5 +51,29 @@ public class SemanticFormula extends BaseObject {
      */
     public String getLatex() {
         return latex != null ? latex : "";
+    }
+
+    public String getEquationNumber() {
+        return equationNumber;
+    }
+
+    public void setEquationNumber(String equationNumber) {
+        this.equationNumber = equationNumber;
+    }
+
+    public Double getEnrichmentConfidence() {
+        return enrichmentConfidence;
+    }
+
+    public void setEnrichmentConfidence(Double enrichmentConfidence) {
+        this.enrichmentConfidence = enrichmentConfidence;
+    }
+
+    public String getUnresolvedReason() {
+        return unresolvedReason;
+    }
+
+    public void setUnresolvedReason(String unresolvedReason) {
+        this.unresolvedReason = unresolvedReason;
     }
 }
