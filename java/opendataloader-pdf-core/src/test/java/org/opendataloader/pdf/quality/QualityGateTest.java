@@ -16,6 +16,7 @@
 package org.opendataloader.pdf.quality;
 
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
 
 import java.util.List;
 
@@ -70,5 +71,14 @@ public class QualityGateTest {
         ParityReport report = new ParityReport(10, 4, 10, 4, 10, 5, 0);
         assertEquals(defaultGate.passes(report), explicitGate.passes(report));
         assertEquals(defaultGate.failureReasons(report), explicitGate.failureReasons(report));
+    }
+
+    @Test
+    public void failureReasonsListIsUnmodifiable() {
+        QualityGate gate = new QualityGate(1.0, 1.0, 1.0);
+        // Force a failure to get a non-empty list
+        ParityReport failing = new ParityReport(2, 2, 2, 2, 2, 2, 0); // all unresolved
+        List<String> reasons = gate.failureReasons(failing);
+        Assertions.assertThrows(UnsupportedOperationException.class, () -> reasons.add("x"));
     }
 }

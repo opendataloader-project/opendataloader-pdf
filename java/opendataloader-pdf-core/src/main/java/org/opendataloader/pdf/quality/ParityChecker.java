@@ -31,6 +31,7 @@ public class ParityChecker {
     }
 
     public ParityReport check(List<GraphNode> enrichedNodes) {
+        if (enrichedNodes == null) return check(List.of());
         int totalEquations = 0, unresolvedEquations = 0;
         int totalCaptions = 0, unresolvedCaptions = 0;
         int totalCitations = 0, unresolvedCitations = 0;
@@ -39,7 +40,8 @@ public class ParityChecker {
         for (GraphNode node : enrichedNodes) {
             if (node instanceof EquationNode) {
                 totalEquations++;
-                if (((EquationNode) node).getNumber() == null) {
+                EquationNode eq = (EquationNode) node;
+                if (eq.isDisplayMode() && eq.getNumber() == null) {
                     unresolvedEquations++;
                 }
             } else if (node instanceof CaptionNode) {

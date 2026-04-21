@@ -16,6 +16,7 @@
 package org.opendataloader.pdf.quality;
 
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
 import org.opendataloader.pdf.graph.CaptionNode;
 import org.opendataloader.pdf.graph.CitationNode;
 import org.opendataloader.pdf.graph.EquationNode;
@@ -108,5 +109,13 @@ public class ParityCheckerTest {
 
         ParityReport report = checker.check(nodes);
         assertEquals(2, report.getTotalReferences());
+    }
+
+    @Test
+    public void nullInputReturnsZeroReport() {
+        ParityChecker checker = new ParityChecker();
+        ParityReport report = checker.check((List<GraphNode>) null);
+        Assertions.assertEquals(0, report.getTotalEquations());
+        Assertions.assertEquals(1.0, report.equationResolvedRate(), 0.001);
     }
 }

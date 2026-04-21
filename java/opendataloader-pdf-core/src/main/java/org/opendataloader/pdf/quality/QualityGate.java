@@ -34,6 +34,12 @@ public final class QualityGate {
     }
 
     public QualityGate(double equationThreshold, double captionThreshold, double citationThreshold) {
+        if (equationThreshold < 0.0 || equationThreshold > 1.0)
+            throw new IllegalArgumentException("equationThreshold must be in [0, 1]: " + equationThreshold);
+        if (captionThreshold < 0.0 || captionThreshold > 1.0)
+            throw new IllegalArgumentException("captionThreshold must be in [0, 1]: " + captionThreshold);
+        if (citationThreshold < 0.0 || citationThreshold > 1.0)
+            throw new IllegalArgumentException("citationThreshold must be in [0, 1]: " + citationThreshold);
         this.equationThreshold = equationThreshold;
         this.captionThreshold = captionThreshold;
         this.citationThreshold = citationThreshold;
