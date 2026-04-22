@@ -1,13 +1,16 @@
 ---
 name: odl-pdf
 description: >
-  Expert PDF extraction guidance for opendataloader-pdf. Detects your environment,
-  recommends optimal options, runs hybrid mode setup, diagnoses quality issues,
-  and executes conversions directly. Use when: 'PDF extraction', 'PDF to markdown',
-  'PDF to JSON', 'PDF to HTML', 'opendataloader', 'ODL', 'hybrid mode',
-  'scanned PDF', 'OCR', 'PDF tables', 'RAG pipeline with PDF', 'PDF accessibility',
-  'PDF/UA'. Do NOT use for: PDF merge/split/rotate, Word/Excel conversion,
-  PDF form filling.
+  Expert PDF extraction guidance for opendataloader-pdf. For developers picking
+  install path, mode, format, and option combinations, diagnosing extraction
+  quality, and avoiding silent failure modes (enrichments skipped without
+  --hybrid-mode full, slow batches from per-file JVM startup) that the README
+  does not surface up-front. Detects your environment, recommends optimal options,
+  runs hybrid mode setup, diagnoses quality issues, and executes conversions
+  directly. Use when: 'PDF extraction', 'PDF to markdown', 'PDF to JSON',
+  'PDF to HTML', 'opendataloader', 'ODL', 'hybrid mode', 'scanned PDF', 'OCR',
+  'PDF tables', 'RAG pipeline with PDF', 'PDF accessibility', 'PDF/UA'.
+  Do NOT use for: PDF merge/split/rotate, Word/Excel conversion, PDF form filling.
 ---
 
 # Targets: opendataloader-pdf >= 2.2.0

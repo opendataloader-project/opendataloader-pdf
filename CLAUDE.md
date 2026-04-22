@@ -26,10 +26,36 @@ Hidden text detection (`--filter-hidden-text`) is **off by default** — it requ
 
 `skills/odl-pdf/` contains the public agent skill shipped with this project.
 
-When adding or changing CLI options in Java:
-1. Run `npm run sync` (regenerates options.json + Python/Node bindings)
-2. Update `skills/odl-pdf/references/options-matrix.md` with the new option
-3. CI (`skill-drift-check.yml`) will warn if step 2 is missed
+When adding or changing CLI options in Java, the following files may need
+manual updates. The drift CI (`skill-drift-check.yml`) only enforces step 2;
+the others are NOT auto-checked and will silently go stale if missed:
+
+1. Run `npm run sync` (regenerates `options.json` + Python/Node bindings)
+2. **Always**: update `skills/odl-pdf/references/options-matrix.md` to add /
+   rename / remove the row matching `options.json`. Drift CI enforces option
+   **names** here; description text is not auto-checked.
+3. **If the option is hybrid-related** (`--hybrid-*`, server flags like
+   `--enrich-*`, `--force-ocr`, `--ocr-lang`): also update
+   `skills/odl-pdf/references/hybrid-guide.md` — Client Options table, Server
+   Configuration table, or both.
+4. **If the option is a new output format or affects format selection** (touches
+   the `--format` enum, image handling, page separators): also update
+   `skills/odl-pdf/references/format-guide.md` and the Output Pipeline section
+   of `skills/odl-pdf/references/integration-examples.md`.
+5. **If the option introduces a silent failure mode, an unsafe default, or a
+   prerequisite**: also add it to the **Critical Gotchas** section of
+   `skills/odl-pdf/SKILL.md`. Silent failures (e.g., enrichments skipped in
+   `--hybrid-mode auto`, JVM cold-start cost on per-file calls) are the class
+   of issue the skill exists to surface — keep the gotchas list current.
+6. **If the option changes the recommended escalation path** for a quality
+   metric (NID / TEDS / MHS / Table Detection F1): also update the
+   corresponding Low-* section of `skills/odl-pdf/references/eval-metrics.md`.
+
+After substantive skill changes, manually trigger the
+`skill-evals.yml` workflow (Actions → Run workflow) to re-run the multi-model
+evaluation suite. The smoke-test workflow (`skill-smoke-test.yml`) runs
+automatically on push and verifies cross-platform shell + Python script
+behavior, but does not exercise model behavior.
 
 The skill is written in English for external users. Do not include internal
 team terminology or company-specific policies.

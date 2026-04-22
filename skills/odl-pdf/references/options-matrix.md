@@ -3,7 +3,8 @@
 This file contains a built-in summary of all 26 CLI options for the `opendataloader-pdf` tool.
 If `options.json` is present in the project root, that file is the authoritative source — always
 prefer it over the descriptions here. This document exists so the agent skill can reason about
-options without loading the full JSON on every invocation.
+options without loading the full JSON on every invocation, and adds **category groupings**,
+**Interaction Rules**, and **Common Combinations** that the raw schema does not express.
 
 ---
 
