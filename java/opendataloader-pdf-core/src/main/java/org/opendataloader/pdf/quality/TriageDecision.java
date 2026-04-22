@@ -18,6 +18,7 @@ package org.opendataloader.pdf.quality;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public final class TriageDecision {
 
@@ -32,10 +33,12 @@ public final class TriageDecision {
     public TriageDecision(Outcome outcome, double compositeScore,
                           List<String> gateFailureReasons, List<String> hardFailReasons,
                           ParityReport report) {
-        this.outcome = outcome;
+        this.outcome = Objects.requireNonNull(outcome, "outcome must not be null");
         this.compositeScore = compositeScore;
-        this.gateFailureReasons = Collections.unmodifiableList(new ArrayList<>(gateFailureReasons));
-        this.hardFailReasons = Collections.unmodifiableList(new ArrayList<>(hardFailReasons));
+        this.gateFailureReasons = Collections.unmodifiableList(new ArrayList<>(
+                gateFailureReasons != null ? gateFailureReasons : Collections.emptyList()));
+        this.hardFailReasons = Collections.unmodifiableList(new ArrayList<>(
+                hardFailReasons != null ? hardFailReasons : Collections.emptyList()));
         this.report = report;
     }
 

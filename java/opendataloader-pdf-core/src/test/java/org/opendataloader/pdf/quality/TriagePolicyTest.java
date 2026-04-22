@@ -87,8 +87,8 @@ public class TriagePolicyTest {
 
         assertEquals(TriageDecision.Outcome.HARD_FAIL, decision.getOutcome());
         assertTrue(decision.hardFailed());
-        // gate failure reasons should still be non-null (populated)
-        assertNotNull(decision.getGateFailureReasons());
+        // gate failure reasons should be non-empty (gate also fails on wipeout)
+        assertFalse(decision.getGateFailureReasons().isEmpty());
         assertFalse(decision.getHardFailReasons().isEmpty());
     }
 
