@@ -42,7 +42,12 @@
       ],
       "must_not_mention": [
         "local mode as sufficient for scanned PDFs",
-        "GPU required"
+        "GPU required",
+        "Adoptium",
+        "Temurin",
+        "Zulu",
+        "SDKMAN",
+        "brew install --cask"
       ]
     },
     {
@@ -78,7 +83,8 @@
       "must_mention": [
         "pip install",
         "opendataloader-pdf-hybrid",
-        "two terminals",
+        "Terminal 1",
+        "Terminal 2",
         "java"
       ],
       "must_not_mention": [
@@ -104,7 +110,55 @@
       ],
       "must_not_mention": [
         "enrichments work in auto mode",
-        "enrichments are client-side options"
+        "enrichments are client-side options",
+        "SmolVLM",
+        "--picture-description-prompt",
+        "--enrich-formula-model",
+        "--enrich-picture-model"
+      ]
+    },
+    {
+      "id": "eval-006",
+      "scenario": "A user installed opendataloader-pdf via pip on a fresh machine without a JDK, ran their first conversion, and got an UnsupportedClassVersionError. They paste the error and ask what is wrong. This is the Java-missing failure mode the skill's first Critical Gotcha exists to handle.",
+      "user_input": "I just ran `pip install opendataloader-pdf` and then `opendataloader-pdf input.pdf` and got `java.lang.UnsupportedClassVersionError`. What's wrong?",
+      "expected_recommendations": [
+        "Identify the root cause: Java 11 or higher is required, and the installed Java is missing or below version 11",
+        "Tell the user to verify with `java -version`",
+        "Tell the user to install a JDK 11 or higher for their platform",
+        "Do NOT recommend a specific JDK distribution (Adoptium, Temurin, Zulu, OpenJDK download URLs, brew/apt one-liners) — neutral guidance only"
+      ],
+      "must_mention": [
+        "Java 11",
+        "java -version"
+      ],
+      "must_not_mention": [
+        "Adoptium",
+        "Temurin",
+        "Zulu",
+        "OpenJDK download",
+        "brew install --cask",
+        "apt install openjdk",
+        "this is a bug in opendataloader-pdf"
+      ]
+    },
+    {
+      "id": "eval-007",
+      "scenario": "A user has a password-protected PDF and asks how to extract it. This exercises the `--password` / `-p` option. The correct answer must surface the option without claiming the tool cannot handle encrypted PDFs.",
+      "user_input": "I have a password-protected PDF I need to extract. The password is 'secret123'.",
+      "expected_recommendations": [
+        "Surface the --password (short: -p) CLI option as the correct mechanism",
+        "Show a concrete command example using --password or -p with the supplied value",
+        "Do NOT claim the tool cannot extract encrypted PDFs"
+      ],
+      "must_mention": [
+        "--password",
+        "secret123"
+      ],
+      "must_not_mention": [
+        "cannot extract encrypted PDFs",
+        "encrypted PDFs are not supported",
+        "decryption is not supported",
+        "you need to remove the password first"
       ]
     }
   ]

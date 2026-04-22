@@ -1,0 +1,60 @@
+# skill-evals.yml
+# Runs the odl-pdf skill scenario evaluations against multiple Claude models.
+# Manual trigger only — each run consumes Anthropic API credits.
+#
+# Required repo secret: ANTHROPIC_API_KEY
+
+name: Skill Evaluations
+
+on:
+  workflow_dispatch:
+    inputs:
+      models:
+        description: "Comma-separated model IDs (blank = Haiku 4.5, Sonnet 4.6, Opus 4.7)"
+        required: false
+        default: ""
+      max_tokens:
+        description: "Max output tokens per call"
+        required: false
+        default: "2048"
+
+permissions:
+  contents: read
+
+jobs:
+  run-evals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install anthropic SDK
+        run: pip install anthropic
+
+      - name: Run skill evaluations
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          MODEL_ARGS=""
+          if [ -n "${{ inputs.models }}" ]; then
+            IFS=',' read -ra MODELS <<< "${{ inputs.models }}"
+            for m in "${MODELS[@]}"; do
+              MODEL_ARGS="$MODEL_ARGS --model $(echo $m | xargs)"
+            done
+          fi
+          python skills/odl-pdf/scripts/run-evals.py \
+            --max-tokens "${{ inputs.max_tokens }}" \
+            $MODEL_ARGS
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skill-evals-report
+          path: skills/odl-pdf/evals/runs/*.json
+          if-no-files-found: warn
+          retention-days: 30

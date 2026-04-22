@@ -1,0 +1,122 @@
+# skill-smoke-test.yml
+# Cross-platform smoke test for the odl-pdf skill's executable assets.
+# Runs the shell scripts and Python scripts on ubuntu / windows / macos
+# to catch platform-specific regressions (line endings, console encoding,
+# shell portability) BEFORE a PR merges.
+#
+# Does NOT hit the Anthropic API; for that, see skill-evals.yml (manual).
+
+name: Skill Smoke Test
+
+on:
+  push:
+    paths:
+      - 'skills/odl-pdf/scripts/**'
+      - 'skills/odl-pdf/SKILL.md'
+      - 'skills/odl-pdf/references/**'
+      - '.github/workflows/skill-smoke-test.yml'
+  pull_request:
+    paths:
+      - 'skills/odl-pdf/scripts/**'
+      - 'skills/odl-pdf/SKILL.md'
+      - 'skills/odl-pdf/references/**'
+      - '.github/workflows/skill-smoke-test.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+
+    defaults:
+      run:
+        # Use bash on every platform. Windows runners have Git Bash pre-installed.
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Show runner info
+        run: |
+          echo "OS: ${{ matrix.os }}"
+          bash --version | head -1
+          python --version
+
+      # --- detect-env.sh -------------------------------------------------
+      - name: detect-env.sh emits all 7 keys
+        run: |
+          out=$(bash skills/odl-pdf/scripts/detect-env.sh)
+          echo "$out"
+          for key in OS JAVA PYTHON NODE ODL_INSTALLED ODL_VERSION HYBRID_EXTRAS; do
+            echo "$out" | grep -q "^${key}=" \
+              || { echo "MISSING KEY: $key"; exit 1; }
+          done
+          echo "all 7 keys present"
+
+      # --- hybrid-health.sh (no server running is expected) --------------
+      - name: hybrid-health.sh handles no-server gracefully
+        run: |
+          out=$(bash skills/odl-pdf/scripts/hybrid-health.sh)
+          echo "$out"
+          echo "$out" | grep -q "HYBRID_SERVER=" \
+            || { echo "missing HYBRID_SERVER key"; exit 1; }
+
+      # --- quick-eval.py -------------------------------------------------
+      - name: quick-eval.py --help
+        run: python skills/odl-pdf/scripts/quick-eval.py --help
+
+      - name: quick-eval.py identical files -> PASS
+        run: |
+          tmp=$(mktemp -d)
+          printf '# Test\n\nSample paragraph one.\nSample paragraph two.\n' > "$tmp/a.md"
+          cp "$tmp/a.md" "$tmp/b.md"
+          python skills/odl-pdf/scripts/quick-eval.py "$tmp/a.md" "$tmp/b.md"
+          rm -rf "$tmp"
+
+      - name: quick-eval.py different files -> FAIL (exit 1)
+        run: |
+          tmp=$(mktemp -d)
+          printf 'apple pie recipe\n' > "$tmp/a.md"
+          printf 'quantum physics lecture\n' > "$tmp/b.md"
+          set +e
+          python skills/odl-pdf/scripts/quick-eval.py "$tmp/a.md" "$tmp/b.md"
+          rc=$?
+          set -e
+          rm -rf "$tmp"
+          [ "$rc" = "1" ] || { echo "expected exit 1, got $rc"; exit 1; }
+
+      - name: quick-eval.py prints em-dash-free output on cp1252 locale (Windows regression)
+        if: matrix.os == 'windows-latest'
+        shell: cmd
+        run: |
+          chcp 1252
+          python skills\odl-pdf\scripts\quick-eval.py skills\odl-pdf\evals\evals.json skills\odl-pdf\evals\evals.json
+
+      # --- sync-skill-refs.py --------------------------------------------
+      - name: sync-skill-refs.py reports no drift
+        run: python skills/odl-pdf/scripts/sync-skill-refs.py
+
+      # --- run-evals.py (no API) -----------------------------------------
+      - name: run-evals.py --help
+        run: python skills/odl-pdf/scripts/run-evals.py --help
+
+      - name: run-evals.py missing-key exits 2
+        env:
+          ANTHROPIC_API_KEY: ""
+        run: |
+          set +e
+          python skills/odl-pdf/scripts/run-evals.py
+          rc=$?
+          set -e
+          [ "$rc" = "2" ] || { echo "expected exit 2, got $rc"; exit 1; }
