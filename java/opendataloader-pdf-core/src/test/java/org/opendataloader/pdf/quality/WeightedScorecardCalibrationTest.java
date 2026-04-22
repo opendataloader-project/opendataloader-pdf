@@ -46,7 +46,7 @@ public class WeightedScorecardCalibrationTest {
         String badJson = "not valid json {{{";
 
         assertThatThrownBy(() -> WeightedScorecard.fromJson(badJson))
-                .isInstanceOfAny(UncheckedIOException.class, RuntimeException.class);
+                .isInstanceOf(UncheckedIOException.class);
     }
 
     @Test

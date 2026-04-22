@@ -76,12 +76,13 @@ public final class WeightedScorecard {
              + citationWeight * report.citationResolvedRate();
     }
 
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
     /** Parses JSON text and returns a WeightedScorecard with the configured weights. */
     public static WeightedScorecard fromJson(String jsonText) {
         Objects.requireNonNull(jsonText, "jsonText must not be null");
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree(jsonText);
+            JsonNode root = MAPPER.readTree(jsonText);
             double eq  = root.get("equationWeight").asDouble();
             double cap = root.get("captionWeight").asDouble();
             double cit = root.get("citationWeight").asDouble();
