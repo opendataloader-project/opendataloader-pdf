@@ -95,15 +95,22 @@ Pin `LATEST` to a specific released version from the [releases page](https://git
 
 ## Version Compatibility
 
-| Method | Minimum Runtime | CLI Included |
-|---|---|---|
-| pip | Python 3.10+ | Yes |
-| pip [hybrid] | Python 3.10+ | Yes |
-| pip langchain | Python 3.10+, LangChain 0.1+ | Yes |
-| npm | Node.js 20.19+ | Yes |
-| Maven | Java 11+ | No (library only) |
+Minimum runtime requirements are declared in each package's manifest. Consult
+the manifest for the authoritative current floor — the wrappers and build tools
+enforce it at install time:
 
-All methods also require **Java 11+** regardless of the primary runtime.
+| Method | Runtime requirement (source of truth) | CLI Included |
+|---|---|---|
+| pip (all variants) | `python/opendataloader-pdf/pyproject.toml` → `requires-python` | Yes |
+| pip langchain | above, plus the LangChain floor declared by `langchain-opendataloader-pdf` | Yes |
+| npm | `node/opendataloader-pdf/package.json` → `engines.node` | Yes |
+| Maven | `java/pom.xml` → `maven.compiler.source` | No (library only) |
+
+`pip` / `npm` / `mvn` each validate against the manifest's declared floor and
+fail with a clear error if the environment is below it.
+
+All methods additionally require **Java 11 or higher** at runtime; the pip and
+npm wrappers spawn a JVM internally. See Critical Gotcha 1 in `SKILL.md`.
 
 ## Post-Install Verification
 
