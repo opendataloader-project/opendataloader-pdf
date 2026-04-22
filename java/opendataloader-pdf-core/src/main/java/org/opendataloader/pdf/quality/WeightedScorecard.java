@@ -15,6 +15,12 @@
  */
 package org.opendataloader.pdf.quality;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Objects;
 
 public final class WeightedScorecard {
@@ -44,6 +50,18 @@ public final class WeightedScorecard {
         this.citationWeight = citationWeight;
     }
 
+    public double getEquationWeight() {
+        return equationWeight;
+    }
+
+    public double getCaptionWeight() {
+        return captionWeight;
+    }
+
+    public double getCitationWeight() {
+        return citationWeight;
+    }
+
     /**
      * Computes the composite score:
      * score = equationWeight * report.equationResolvedRate()
@@ -56,5 +74,31 @@ public final class WeightedScorecard {
         return equationWeight * report.equationResolvedRate()
              + captionWeight  * report.captionResolvedRate()
              + citationWeight * report.citationResolvedRate();
+    }
+
+    /** Parses JSON text and returns a WeightedScorecard with the configured weights. */
+    public static WeightedScorecard fromJson(String jsonText) {
+        Objects.requireNonNull(jsonText, "jsonText must not be null");
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(jsonText);
+            double eq  = root.get("equationWeight").asDouble();
+            double cap = root.get("captionWeight").asDouble();
+            double cit = root.get("citationWeight").asDouble();
+            return new WeightedScorecard(eq, cap, cit);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    /** Reads a JSON weight file and returns a WeightedScorecard. */
+    public static WeightedScorecard fromFile(Path filePath) {
+        Objects.requireNonNull(filePath, "filePath must not be null");
+        try {
+            String json = Files.readString(filePath);
+            return fromJson(json);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 }
