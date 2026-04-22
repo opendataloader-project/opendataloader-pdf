@@ -43,9 +43,9 @@ public class CLIOptions {
 
     // ===== Format =====
     public static final String FORMAT_OPTION = "f";
-    private static final String FORMAT_LONG_OPTION = "format";
+    public static final String FORMAT_LONG_OPTION = "format";
     private static final String FORMAT_DESC = "Output formats (comma-separated). "
-            + "Values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images. Default: json";
+            + "Values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images, tagged-pdf. Default: json";
 
     // ===== Quiet =====
     public static final String QUIET_OPTION = "q";
@@ -398,13 +398,13 @@ public class CLIOptions {
         String[] optionValues = commandLine.getOptionValues(FORMAT_OPTION);
         if (optionValues == null || optionValues.length == 0) {
             throw new IllegalArgumentException(
-                    "Option --format requires at least one value. Supported values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images");
+                    "Option --format requires at least one value. Supported values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images, tagged-pdf");
         }
 
         Set<String> values = parseOptionValues(optionValues);
         if (values.isEmpty()) {
             throw new IllegalArgumentException(
-                    "Option --format requires at least one value. Supported values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images");
+                    "Option --format requires at least one value. Supported values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images, tagged-pdf");
         }
 
         config.setGenerateJSON(false);
@@ -432,9 +432,12 @@ public class CLIOptions {
                 case "markdown-with-images":
                     config.setAddImageToMarkdown(true);
                     break;
+                case "tagged-pdf":
+                    config.setGenerateTaggedPDF(true);
+                    break;
                 default:
                     throw new IllegalArgumentException(String.format(
-                            "Unsupported format '%s'. Supported values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images",
+                            "Unsupported format '%s'. Supported values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images, tagged-pdf",
                             value));
             }
         }

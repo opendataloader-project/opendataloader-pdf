@@ -19,8 +19,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.opendataloader.pdf.hybrid.HybridClient.HybridResponse;
 import org.verapdf.wcag.algorithms.entities.IObject;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 /**
  * Interface for transforming hybrid backend responses to IObject hierarchy.
@@ -67,4 +69,28 @@ public interface HybridSchemaTransformer {
      * @return The backend name (e.g., "docling", "hancom").
      */
     String getBackendType();
+
+    /**
+     * Returns per-element metadata produced during the last {@link #transform} call.
+     * Keys are {@code IObject.recognizedStructureId} values.
+     *
+     * @return unmodifiable map of element metadata, empty by default
+     */
+    default Map<Long, ElementMetadata> getElementMetadata() {
+        return Collections.emptyMap();
+    }
+
+    /**
+     * Returns per-page OCR word data collected during the last {@link #transform} call.
+     * Keys are 0-indexed page numbers. Each list contains word-level OCR data with
+     * text and bounding box in PDF coordinate space.
+     *
+     * <p>Only populated by backends that perform OCR (e.g., hancom-ai).
+     * Used by OCR enrichment fallback when Java TextChunks are not available.
+     *
+     * @return unmodifiable map of page number to OCR words, empty by default
+     */
+    default Map<Integer, List<OcrWordInfo>> getOcrWordsByPage() {
+        return Collections.emptyMap();
+    }
 }

@@ -42,6 +42,8 @@ public class Config {
     public static final String HYBRID_DOCLING_FAST = "docling-fast";
     /** Hybrid mode: hancom backend (Hancom Document AI). */
     public static final String HYBRID_HANCOM = "hancom";
+    /** Hybrid mode: hancom-ai backend (Hancom AI HOCR SDK — individual modules). */
+    public static final String HYBRID_HANCOM_AI = "hancom-ai";
     /** Hybrid mode: azure backend (Azure Document Intelligence). */
     public static final String HYBRID_AZURE = "azure";
     /** Hybrid mode: google backend (Google Document AI). */
@@ -63,6 +65,7 @@ public class Config {
     private boolean keepLineBreaks = false;
     private boolean isGenerateJSON = true;
     private boolean isGenerateText = false;
+    private boolean isGenerateTaggedPDF = false;
     private boolean useStructTree = false;
     private boolean useHTMLInMarkdown = false;
     private boolean addImageToMarkdown = false;
@@ -118,6 +121,7 @@ public class Config {
         hybridOptions.add(HYBRID_DOCLING);
         hybridOptions.add(HYBRID_DOCLING_FAST);  // deprecated alias
         hybridOptions.add(HYBRID_HANCOM);
+        hybridOptions.add(HYBRID_HANCOM_AI);
         // azure, google added when implemented
         hybridModeOptions.add(HYBRID_MODE_AUTO);
         hybridModeOptions.add(HYBRID_MODE_FULL);
@@ -265,6 +269,14 @@ public class Config {
      */
     public void setGenerateText(boolean generateText) {
         isGenerateText = generateText;
+    }
+
+    public boolean isGenerateTaggedPDF() {
+        return isGenerateTaggedPDF;
+    }
+
+    public void setGenerateTaggedPDF(boolean generateTaggedPDF) {
+        isGenerateTaggedPDF = generateTaggedPDF;
     }
 
     /**

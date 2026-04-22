@@ -19,7 +19,11 @@ class CustomBuildHook(BuildHookInterface):
 
         readme_path = root_dir / "README.md"
 
-        # Check if all required files already exist (building from sdist)
+        # sdist-install code path: when users `pip install <sdist>.tar.gz`,
+        # the extracted sdist already contains JAR/LICENSE/NOTICE/THIRD_PARTY
+        # (force-included via [tool.hatch.build] artifacts in pyproject.toml),
+        # and there is no java/ tree to rebuild from. Do not remove — sdist
+        # installs would break with a spurious "mvn package" error.
         if (
             dest_jar_path.exists()
             and license_path.exists()
@@ -52,10 +56,12 @@ class CustomBuildHook(BuildHookInterface):
         print(f"Copying JAR to {dest_jar_path}")
         shutil.copy(source_jar_path, dest_jar_path)
 
-        # --- Copy LICENSE, NOTICE, README ---
+        # --- Copy LICENSE, NOTICE ---
+        # README is copied by build-python.sh before this hook runs, because
+        # hatchling validates [project.readme] during metadata parsing, which
+        # happens before build hooks. Do not copy README here.
         shutil.copy(root_dir / "../../LICENSE", license_path)
         shutil.copy(root_dir / "../../NOTICE", notice_path)
-        shutil.copy(root_dir / "../../README.md", readme_path)
         third_party_src = root_dir / "../../THIRD_PARTY"
         print(f"Copying THIRD_PARTY directory to {third_party_dest}")
         if third_party_dest.exists():

@@ -9,7 +9,7 @@ export interface ConvertOptions {
   outputDir?: string;
   /** Password for encrypted PDF files */
   password?: string;
-  /** Output formats (comma-separated). Values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images. Default: json */
+  /** Output formats (comma-separated). Values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images, tagged-pdf. Default: json */
   format?: string | string[];
   /** Suppress console logging output */
   quiet?: boolean;

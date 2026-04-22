@@ -60,6 +60,10 @@ import tempfile
 import threading
 import time
 import traceback
+
+# Enable docling per-step pipeline profiling (layout, ocr, table_structure, etc.)
+# Must be set before docling settings singleton is instantiated.
+os.environ.setdefault("DOCLING_DEBUG_PROFILE_PIPELINE_TIMINGS", "true")
 from contextlib import asynccontextmanager
 from typing import Any, Optional
 
@@ -96,6 +100,30 @@ _convert_lock = threading.Lock()
 _INVALID_UNICODE_RE = re.compile(r"[\ud800-\udfff\x00]")
 
 
+def extract_timings(result: Any) -> dict[str, Any]:
+    """Extract per-step pipeline timings from a Docling ConversionResult.
+
+    Requires DOCLING_DEBUG_PROFILE_PIPELINE_TIMINGS=true (set at module level).
+    Returns a dict keyed by step name (e.g. "layout", "ocr", "table_structure")
+    with total_s, avg_s, and count for each step.
+    """
+    timings_out: dict[str, Any] = {}
+    raw_timings = getattr(result, "timings", None)
+    if not raw_timings:
+        return timings_out
+    for name, item in raw_timings.items():
+        try:
+            timings_out[name] = {
+                "total_s": round(item.total(), 4),
+                "avg_s": round(item.avg(), 4) if item.count > 0 else 0.0,
+                "count": item.count,
+            }
+        except Exception:
+            # Gracefully skip if ProfilingItem API changes
+            pass
+    return timings_out
+
+
 def build_conversion_response(
     status_value: str,
     json_content: dict,
@@ -103,6 +131,7 @@ def build_conversion_response(
     errors: list[str],
     requested_pages: tuple[int, int] | None,
     total_pages: int | None = None,
+    timings: dict[str, Any] | None = None,
 ) -> dict:
     """Build a structured conversion response with status and failed page info.
 
@@ -159,6 +188,9 @@ def build_conversion_response(
         "errors": errors,
         "failed_pages": failed_pages,
     }
+
+    if timings:
+        response["timings"] = timings
 
     return response
 
@@ -223,9 +255,6 @@ def _check_dependencies():
         )
 
 
-DEFAULT_PICTURE_DESCRIPTION_PROMPT = "Describe what you see in this image. Include any text, numbers, labels, and data values visible."
-
-
 def create_converter(
     force_full_page_ocr: bool = False,
     ocr_lang: list[str] | None = None,
@@ -250,6 +279,7 @@ def create_converter(
     from docling.datamodel.accelerator_options import AcceleratorOptions
     from docling.datamodel.base_models import InputFormat
     from docling.datamodel.pipeline_options import (
+        AcceleratorOptions,
         EasyOcrOptions,
         PdfPipelineOptions,
         PictureDescriptionVlmOptions,
@@ -265,11 +295,8 @@ def create_converter(
     # Configure picture description options with custom prompt
     picture_description_options = None
     if enrich_picture_description:
-        prompt = picture_description_prompt or DEFAULT_PICTURE_DESCRIPTION_PROMPT
         picture_description_options = PictureDescriptionVlmOptions(
             repo_id="HuggingFaceTB/SmolVLM-256M-Instruct",
-            prompt=prompt,
-            generation_config={"max_new_tokens": 300, "do_sample": False},
         )
 
     pipeline_kwargs = {
@@ -284,6 +311,9 @@ def create_converter(
     }
     if picture_description_options is not None:
         pipeline_kwargs["picture_description_options"] = picture_description_options
+
+    if device != "auto":
+        pipeline_kwargs["accelerator_options"] = AcceleratorOptions(device=device)
 
     pipeline_options = PdfPipelineOptions(**pipeline_kwargs)
 
@@ -316,6 +346,9 @@ def create_app(
     """
     from fastapi import FastAPI, File, Form, UploadFile
     from fastapi.responses import JSONResponse
+
+    # Profile converters: initialized lazily on first /v1/profile/file request
+    profile_converters: dict[str, Any] = {}
 
     @asynccontextmanager
     async def lifespan(_app: FastAPI):
@@ -451,6 +484,9 @@ def create_app(
                     len(errors),
                 )
 
+            # Extract per-step pipeline timings (layout, ocr, table_structure, etc.)
+            step_timings = extract_timings(result)
+
             response = build_conversion_response(
                 status_value=status_value,
                 json_content=json_content,
@@ -458,6 +494,7 @@ def create_app(
                 errors=errors,
                 requested_pages=page_range_tuple,
                 total_pages=input_page_count,
+                timings=step_timings,
             )
 
             return JSONResponse(response)
@@ -469,6 +506,94 @@ def create_app(
                     "status": "failure",
                     "errors": ["PDF conversion failed. Check server logs for details."],
                 },
+                status_code=500,
+            )
+        finally:
+            if tmp_path and os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+
+    def _ensure_profile_converters():
+        """Lazily initialize profile converters on first use."""
+        if profile_converters:
+            return
+        profiles = {
+            "base": dict(enrich_formula=False, enrich_picture_description=False),
+            "picture": dict(enrich_formula=False, enrich_picture_description=True),
+            "formula": dict(enrich_formula=True, enrich_picture_description=False),
+        }
+        for name, opts in profiles.items():
+            logger.info(f"Initializing profile converter: {name} ({opts})")
+            t0 = time.perf_counter()
+            profile_converters[name] = create_converter(
+                force_full_page_ocr=force_ocr,
+                ocr_lang=ocr_lang,
+                picture_description_prompt=picture_description_prompt,
+                device=device,
+                **opts,
+            )
+            logger.info(f"  {name} initialized in {time.perf_counter() - t0:.2f}s")
+
+    @app.post("/v1/profile/file")
+    async def profile_file(
+        files: UploadFile = File(...),
+    ):
+        """Run the same PDF through base / +picture / +picture+formula converters.
+
+        Returns per-profile timings for cost comparison.
+        """
+        _ensure_profile_converters()
+
+        # Stream upload to temp file
+        tmp_path = None
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+            tmp_path = tmp.name
+            while True:
+                chunk = await files.read(UPLOAD_CHUNK_SIZE)
+                if not chunk:
+                    break
+                tmp.write(chunk)
+
+        try:
+            results = {}
+            for profile_name, conv in profile_converters.items():
+                def _run(c=conv):
+                    with _convert_lock:
+                        t0 = time.perf_counter()
+                        res = c.convert(tmp_path)
+                        return res, time.perf_counter() - t0
+
+                result, wall_time = await asyncio.to_thread(_run)
+                timings = extract_timings(result)
+
+                # Count pictures and formulas
+                json_content = result.document.export_to_dict()
+                pictures = json_content.get("pictures", [])
+                pics_total = len(pictures)
+                pics_described = sum(
+                    1 for p in pictures
+                    if p.get("captions") or p.get("annotations")
+                )
+                texts = json_content.get("texts", [])
+                formulas_total = sum(1 for t in texts if t.get("label") == "formula")
+                tables_total = len(json_content.get("tables", []))
+
+                results[profile_name] = {
+                    "wall_time_s": round(wall_time, 3),
+                    "timings": timings,
+                    "pictures": {
+                        "total": pics_total,
+                        "with_description": pics_described,
+                    },
+                    "formulas": formulas_total,
+                    "tables": tables_total,
+                }
+
+            return JSONResponse({"status": "success", "profiles": results})
+
+        except Exception as e:
+            logger.error(f"Profile failed: {e}\n{traceback.format_exc()}")
+            return JSONResponse(
+                {"status": "failure", "errors": ["Internal server error"]},
                 status_code=500,
             )
         finally:

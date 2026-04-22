@@ -49,6 +49,7 @@ public class FormulaSerializer extends StdSerializer<SemanticFormula> {
         jsonGenerator.writeStartObject();
         SerializerUtil.writeEssentialInfo(jsonGenerator, formula, JsonName.FORMULA_TYPE);
         jsonGenerator.writeStringField(JsonName.CONTENT, formula.getLatex());
+        SerializerUtil.writeMetadataIfPresent(jsonGenerator, formula);
         jsonGenerator.writeEndObject();
     }
 }

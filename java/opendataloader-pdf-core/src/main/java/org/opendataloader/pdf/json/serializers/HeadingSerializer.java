@@ -45,6 +45,7 @@ public class HeadingSerializer extends StdSerializer<SemanticHeading> {
         SerializerUtil.writeEssentialInfo(jsonGenerator, heading, JsonName.HEADING_TYPE);
         jsonGenerator.writeNumberField(JsonName.HEADING_LEVEL, heading.getHeadingLevel());
         SerializerUtil.writeTextInfo(jsonGenerator, heading);
+        SerializerUtil.writeMetadataIfPresent(jsonGenerator, heading);
         jsonGenerator.writeEndObject();
     }
 }

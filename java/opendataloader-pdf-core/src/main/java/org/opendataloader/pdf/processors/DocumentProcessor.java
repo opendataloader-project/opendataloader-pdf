@@ -16,6 +16,7 @@
 package org.opendataloader.pdf.processors;
 
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
+import org.opendataloader.pdf.hybrid.ElementMetadata;
 import org.opendataloader.pdf.processors.readingorder.XYCutPlusPlusSorter;
 import org.opendataloader.pdf.json.JsonWriter;
 import org.opendataloader.pdf.markdown.MarkdownGenerator;
@@ -76,6 +77,45 @@ public class DocumentProcessor {
      * @throws IOException if unable to process the file
      */
     public static void processFile(String inputPdfName, Config config) throws IOException {
+        processFileWithResult(inputPdfName, config);
+    }
+
+    /**
+     * Processes a PDF file and returns a {@link ProcessingResult} containing
+     * metadata collected during processing (e.g., hybrid server timings).
+     *
+     * @param inputPdfName the path to the input PDF file
+     * @param config the configuration settings
+     * @return processing result with optional metadata
+     * @throws IOException if unable to process the file
+     */
+    public static ProcessingResult processFileWithResult(String inputPdfName, Config config) throws IOException {
+        // Phase 1: Extract
+        ExtractionResult extraction = extractContents(inputPdfName, config);
+
+        // Phase 2: Output (JSON/MD/HTML/PDF/Text)
+        long t0 = System.nanoTime();
+        generateOutputs(inputPdfName, extraction.getContents(), config, extraction.getElementMetadata());
+        long outputNs = System.nanoTime() - t0;
+
+        return new ProcessingResult(extraction.getHybridTimings(), extraction.getExtractionNs(), outputNs);
+    }
+
+    /**
+     * Run the extraction pipeline only (preprocessing + content extraction + sanitization).
+     * Does not generate any output files. The returned {@link ExtractionResult} can be
+     * passed to {@link org.opendataloader.pdf.api.AutoTagger} or used to generate
+     * specific output formats.
+     *
+     * <p>Structured processing (headings, lists, tables, captions) is always enabled
+     * because auto-tagging and all structured output formats depend on it.
+     *
+     * @param inputPdfName path to the input PDF file
+     * @param config       configuration
+     * @return extraction result with contents and timing metadata
+     */
+    public static ExtractionResult extractContents(String inputPdfName, Config config) throws IOException {
+        long t0 = System.nanoTime();
         preprocessing(inputPdfName, config);
         calculateDocumentInfo();
         Set<Integer> pagesToProcess = getValidPageNumbers(config);
@@ -87,13 +127,20 @@ public class DocumentProcessor {
         } else {
             contents = processDocument(inputPdfName, config, pagesToProcess);
         }
-        if (config.needsStructuredProcessing()) {
-            sortContents(contents, config);
-        }
+        sortContents(contents, config);
         ContentSanitizer contentSanitizer = new ContentSanitizer(config.getFilterConfig().getFilterRules(),
             config.getFilterConfig().isFilterSensitiveData());
         contentSanitizer.sanitizeContents(contents);
-        generateOutputs(inputPdfName, contents, config);
+        long extractionNs = System.nanoTime() - t0;
+
+        // Re-key metadata by actual IObject IDs in contents.
+        // After enrichment, IObject recognizedStructureIds may differ from transformer-assigned IDs.
+        // Match metadata to IObjects by bbox proximity.
+        Map<Long, ElementMetadata> rawMetadata = HybridDocumentProcessor.getLastElementMetadata();
+        Map<Long, ElementMetadata> remappedMetadata = remapMetadataToContents(rawMetadata, contents);
+
+        return new ExtractionResult(contents, extractionNs, HybridDocumentProcessor.getLastHybridTimings(),
+            remappedMetadata);
     }
 
     /**
@@ -214,7 +261,9 @@ public class DocumentProcessor {
                 }
             }
 
-            boolean structured = config.needsStructuredProcessing();
+            // Structured processing is always enabled — auto-tagging needs headings,
+            // lists, tables, and captions regardless of output format flags.
+            boolean structured = true;
 
             // ClusterTableProcessor: whole-document (must be sequential)
             if (structured && config.isClusterTableMethod()) {
@@ -260,16 +309,25 @@ public class DocumentProcessor {
                     if (structured) {
                         pageContents = ListProcessor.processListsFromTextNodes(pageContents);
                         HeadingProcessor.processHeadings(pageContents, false);
-                        CaptionProcessor.processCaptions(pageContents);
                     }
                     contents.set(pageNumber, pageContents);
                 })
             ).get();
 
-            // Sequential ID assignment (must be in page order)
+            // Sequential ID assignment (must be in page order, before CaptionProcessor)
             for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
                 if (shouldProcessPage(pageNumber, pagesToProcess)) {
                     setIDs(contents.get(pageNumber));
+                }
+            }
+
+            // Caption detection runs after setIDs so that recognizedStructureId is available
+            // for linking captions to figures/tables
+            if (structured) {
+                for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
+                    if (shouldProcessPage(pageNumber, pagesToProcess)) {
+                        CaptionProcessor.processCaptions(contents.get(pageNumber));
+                    }
                 }
             }
 
@@ -295,11 +353,38 @@ public class DocumentProcessor {
      * @param pagesToProcess set of valid page numbers to process, or null for all pages
      * @return true if the page should be processed
      */
+    /**
+     * Filters ElementMetadata down to entries whose transformer-assigned ID still
+     * matches an IObject in the post-enrichment contents. This is deliberately
+     * ID-based (not positional): sorting, filtering, and enrichment can reorder
+     * or drop IObjects, so positional matching would attach the wrong
+     * confidence/source label to an element. IObjects whose ID was rewritten
+     * during enrichment simply lose their metadata — preferable to a wrong one.
+     */
+    private static Map<Long, ElementMetadata> remapMetadataToContents(
+            Map<Long, ElementMetadata> rawMetadata, List<List<IObject>> contents) {
+        if (rawMetadata == null || rawMetadata.isEmpty()) return Collections.emptyMap();
+
+        Map<Long, ElementMetadata> remapped = new LinkedHashMap<>();
+        for (List<IObject> pageContents : contents) {
+            for (IObject obj : pageContents) {
+                Long id = obj.getRecognizedStructureId();
+                if (id == null || id == 0L) continue;
+                ElementMetadata meta = rawMetadata.get(id);
+                if (meta != null) {
+                    remapped.put(id, meta);
+                }
+            }
+        }
+        return remapped;
+    }
+
     private static boolean shouldProcessPage(int pageNumber, Set<Integer> pagesToProcess) {
         return pagesToProcess == null || pagesToProcess.contains(pageNumber);
     }
 
-    private static void generateOutputs(String inputPdfName, List<List<IObject>> contents, Config config) throws IOException {
+    private static void generateOutputs(String inputPdfName, List<List<IObject>> contents, Config config,
+                                           Map<Long, ElementMetadata> elementMetadata) throws IOException {
         // Stdout mode: write primary format to stdout, skip file I/O
         if (config.isOutputStdout()) {
             java.io.Writer stdoutWriter = new java.io.BufferedWriter(
@@ -332,12 +417,16 @@ public class DocumentProcessor {
             ImagesUtils imagesUtils = new ImagesUtils();
             imagesUtils.write(contents, inputPdfName, config.getPassword());
         }
+        if (config.isGenerateTaggedPDF()) {
+            AutoTaggingProcessor.createTaggedPDF(inputPDF, config.getOutputFolder(),
+                StaticResources.getDocument(), contents);
+        }
         if (config.isGeneratePDF()) {
             PDFWriter pdfWriter = new PDFWriter();
             pdfWriter.updatePDF(inputPDF, config.getPassword(), config.getOutputFolder(), contents);
         }
         if (config.isGenerateJSON()) {
-            JsonWriter.writeToJson(inputPDF, config.getOutputFolder(), contents);
+            JsonWriter.writeToJson(inputPDF, config.getOutputFolder(), contents, elementMetadata);
         }
         if (config.isGenerateMarkdown()) {
             try (MarkdownGenerator markdownGenerator = MarkdownGeneratorFactory.getMarkdownGenerator(inputPDF,

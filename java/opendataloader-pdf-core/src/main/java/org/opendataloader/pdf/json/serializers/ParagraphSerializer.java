@@ -35,6 +35,7 @@ public class ParagraphSerializer extends StdSerializer<SemanticParagraph> {
         jsonGenerator.writeStartObject();
         SerializerUtil.writeEssentialInfo(jsonGenerator, textParagraph, JsonName.PARAGRAPH_TYPE);
         SerializerUtil.writeTextInfo(jsonGenerator, textParagraph);
+        SerializerUtil.writeMetadataIfPresent(jsonGenerator, textParagraph);
         jsonGenerator.writeEndObject();
     }
 }

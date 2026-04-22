@@ -18,6 +18,7 @@ package org.opendataloader.pdf.html;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.entities.SemanticFormula;
+import org.opendataloader.pdf.entities.EnrichedImageChunk;
 import org.opendataloader.pdf.entities.SemanticPicture;
 import org.opendataloader.pdf.markdown.MarkdownSyntax;
 import org.opendataloader.pdf.utils.Base64ImageUtils;
@@ -228,7 +229,10 @@ public class HtmlGenerator implements Closeable {
                 }
                 if (imageSource != null) {
                     String escapedSource = escapeHtmlAttribute(imageSource);
-                    String imageString = String.format("<img src=\"%s\" alt=\"figure%d\">", escapedSource, image.getIndex());
+                    String altText = (image instanceof EnrichedImageChunk && ((EnrichedImageChunk) image).hasDescription())
+                            ? ((EnrichedImageChunk) image).sanitizeDescription()
+                            : "figure" + image.getIndex();
+                    String imageString = String.format("<img src=\"%s\" alt=\"%s\">", escapedSource, altText);
                     htmlWriter.write(imageString);
                     htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
                 }

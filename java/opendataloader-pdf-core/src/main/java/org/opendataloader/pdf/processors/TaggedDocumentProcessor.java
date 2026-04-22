@@ -1,6 +1,7 @@
 package org.opendataloader.pdf.processors;
 
 import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.entities.EnrichedImageChunk;
 import org.verapdf.gf.model.impl.sa.GFSANode;
 import org.verapdf.wcag.algorithms.entities.*;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
@@ -35,7 +36,7 @@ public class TaggedDocumentProcessor {
             contents.add(new ArrayList<>());
         }
         ITree tree = StaticContainers.getDocument().getTree();
-        processStructElem(tree.getRoot());
+        processStructElem(tree.getRoot(), null);
         List<List<IObject>> artifacts = collectArtifacts(totalPages);
         for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
             if (!shouldProcessPage(pageNumber)) {
@@ -92,9 +93,9 @@ public class TaggedDocumentProcessor {
         return pagesToProcess == null || pagesToProcess.contains(pageNumber);
     }
 
-    private static void processStructElem(INode node) {
+    private static void processStructElem(INode node, INode parent) {
         if (node instanceof SemanticFigure) {
-            processImage((SemanticFigure) node);
+            processImage((SemanticFigure) node, parent);
             return;
         }
         if (node instanceof SemanticSpan) {
@@ -102,7 +103,7 @@ public class TaggedDocumentProcessor {
         }
         if (node.getInitialSemanticType() == null) {
             for (INode child : node.getChildren()) {
-                processStructElem(child);
+                processStructElem(child, node);
             }
             return;
         }
@@ -133,7 +134,7 @@ public class TaggedDocumentProcessor {
                 break;
             default:
                 for (INode child : node.getChildren()) {
-                    processStructElem(child);
+                    processStructElem(child, node);
                 }
         }
     }
@@ -194,7 +195,7 @@ public class TaggedDocumentProcessor {
                     list.add(listItem);
                 }
             } else {
-                processStructElem(child);
+                processStructElem(child, node);
             }
         }
         addObjectToContent(list);
@@ -280,11 +281,11 @@ public class TaggedDocumentProcessor {
                         listTR.add(child);
                         processTableRowsChildren(child);
                     } else {
-                        processStructElem(child);
+                        processStructElem(child, elem);
                     }
                 }
             } else {
-                processStructElem(elem);
+                processStructElem(elem, table);
             }
         }
         return listTR;
@@ -294,7 +295,7 @@ public class TaggedDocumentProcessor {
         for (INode tableCell : tableRow.getChildren()) {
             SemanticType tableCellType = tableCell.getInitialSemanticType();
             if (SemanticType.TABLE_CELL != tableCellType && SemanticType.TABLE_HEADER != tableCellType) {
-                processStructElem(tableCell);
+                processStructElem(tableCell, tableRow);
             }
         }
     }
@@ -338,7 +339,7 @@ public class TaggedDocumentProcessor {
     private static void processChildContents(INode elem, List<IObject> contents) {
         contentsStack.add(contents);
         for (INode childChild : elem.getChildren()) {
-            processStructElem(childChild);
+            processStructElem(childChild, elem);
         }
         contentsStack.pop();
     }
@@ -395,10 +396,13 @@ public class TaggedDocumentProcessor {
 
     }
 
-    private static void processImage(SemanticFigure image) {
+    private static void processImage(SemanticFigure image, INode parent) {
+        GFSANode parentNode = (GFSANode) parent;
         List<ImageChunk> images = image.getImages();
         if (!images.isEmpty()) {
-            addObjectToContent(images.get(0));
+            String alt = parentNode.getStructElem().getStructElemDictionary().getAlternateDescription();
+            ImageChunk imageChunk = images.get(0);
+            addObjectToContent(alt == null ? imageChunk : new EnrichedImageChunk(imageChunk, alt));
         }
     }
 
@@ -412,7 +416,7 @@ public class TaggedDocumentProcessor {
             if (child instanceof SemanticSpan) {
                 result.add(((SemanticSpan)child).getColumns().get(0).getFirstLine().getFirstTextChunk());
             } else if (child instanceof SemanticFigure) {
-                processImage((SemanticFigure)child);
+                processImage((SemanticFigure)child, node);
             } else {
                 result.addAll(getContents(child));
             }

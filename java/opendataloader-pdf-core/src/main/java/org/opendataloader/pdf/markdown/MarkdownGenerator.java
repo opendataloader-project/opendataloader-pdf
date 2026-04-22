@@ -18,6 +18,7 @@ package org.opendataloader.pdf.markdown;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.entities.SemanticFormula;
+import org.opendataloader.pdf.entities.EnrichedImageChunk;
 import org.opendataloader.pdf.entities.SemanticPicture;
 import org.opendataloader.pdf.utils.Base64ImageUtils;
 import org.opendataloader.pdf.utils.GeneratorUtils;
@@ -166,7 +167,10 @@ public class MarkdownGenerator implements Closeable {
                     imageSource = relativePath;
                 }
                 if (imageSource != null) {
-                    String imageString = String.format(MarkdownSyntax.IMAGE_FORMAT, "image " + image.getIndex(), imageSource);
+                    String altText = (image instanceof EnrichedImageChunk && ((EnrichedImageChunk) image).hasDescription())
+                            ? ((EnrichedImageChunk) image).sanitizeDescription()
+                            : "image " + image.getIndex();
+                    String imageString = String.format(MarkdownSyntax.IMAGE_FORMAT, altText, imageSource);
                     markdownWriter.write(getCorrectMarkdownString(imageString));
                 }
             }

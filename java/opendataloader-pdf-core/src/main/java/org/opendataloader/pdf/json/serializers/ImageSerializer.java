@@ -19,6 +19,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
+import org.opendataloader.pdf.entities.EnrichedImageChunk;
 import org.opendataloader.pdf.json.JsonName;
 import org.opendataloader.pdf.markdown.MarkdownSyntax;
 import org.opendataloader.pdf.utils.Base64ImageUtils;
@@ -42,6 +43,12 @@ public class ImageSerializer extends StdSerializer<ImageChunk> {
         String relativePath = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectoryName(), "/", imageChunk.getIndex(), imageFormat);
         jsonGenerator.writeStartObject();
         SerializerUtil.writeEssentialInfo(jsonGenerator, imageChunk, JsonName.IMAGE_CHUNK_TYPE);
+        if (imageChunk instanceof EnrichedImageChunk) {
+            String alt = ((EnrichedImageChunk) imageChunk).sanitizeDescription();
+            if (!alt.isEmpty()) {
+                jsonGenerator.writeStringField("alt", alt);
+            }
+        }
         if (ImagesUtils.isImageFileExists(absolutePath)) {
             if (StaticLayoutContainers.isEmbedImages()) {
                 File imageFile = new File(absolutePath);

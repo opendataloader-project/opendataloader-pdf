@@ -17,22 +17,41 @@ package org.opendataloader.pdf.processors;
 
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
+import org.opendataloader.pdf.entities.EnrichedImageChunk;
+import org.opendataloader.pdf.entities.SemanticFormula;
+import org.opendataloader.pdf.entities.SemanticPicture;
 import org.opendataloader.pdf.hybrid.DoclingSchemaTransformer;
+import org.opendataloader.pdf.hybrid.ElementMetadata;
+import org.opendataloader.pdf.hybrid.HancomAISchemaTransformer;
 import org.opendataloader.pdf.hybrid.HancomSchemaTransformer;
 import org.opendataloader.pdf.hybrid.HybridClient;
 import org.opendataloader.pdf.hybrid.HybridClientFactory;
 import org.opendataloader.pdf.hybrid.HybridClient.HybridRequest;
 import org.opendataloader.pdf.hybrid.HybridClient.HybridResponse;
 import org.opendataloader.pdf.hybrid.HybridClient.OutputFormat;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.opendataloader.pdf.hybrid.HybridConfig;
 import org.opendataloader.pdf.hybrid.HybridSchemaTransformer;
+import org.opendataloader.pdf.hybrid.TextSimilarity;
+import org.opendataloader.pdf.hybrid.OcrWordInfo;
 import org.opendataloader.pdf.hybrid.TriageLogger;
 import org.opendataloader.pdf.hybrid.TriageProcessor;
 import org.opendataloader.pdf.hybrid.TriageProcessor.TriageDecision;
 import org.opendataloader.pdf.hybrid.TriageProcessor.TriageResult;
 import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
+import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.content.LineChunk;
+import org.verapdf.wcag.algorithms.entities.lists.PDFList;
+import org.verapdf.wcag.algorithms.entities.lists.ListItem;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
+import org.verapdf.wcag.algorithms.entities.content.TextChunk;
+import org.verapdf.wcag.algorithms.entities.content.TextColumn;
+import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.StreamInfo;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
 import java.io.IOException;
@@ -67,6 +86,40 @@ import java.util.stream.Collectors;
 public class HybridDocumentProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(HybridDocumentProcessor.class.getCanonicalName());
+
+    /**
+     * Stores the last hybrid server timings collected during {@link #processBackendPath}.
+     * Accumulated across all chunks. Reset at the start of each {@code processDocument} call.
+     */
+    private static volatile JsonNode lastHybridTimings;
+
+    /**
+     * Stores element metadata from the most recent hybrid backend processing.
+     * Reset at the start of each {@code processDocument} call.
+     */
+    private static volatile Map<Long, ElementMetadata> lastElementMetadata;
+
+    /**
+     * Stores per-page OCR word data from the most recent hybrid backend processing.
+     * Used for OCR enrichment fallback when Java TextChunks are not available.
+     * Reset at the start of each {@code processDocument} call.
+     */
+    private static volatile Map<Integer, List<OcrWordInfo>> lastOcrWordsByPage;
+
+    /** Returns the hybrid server timings from the most recent {@link #processDocument} call. */
+    public static JsonNode getLastHybridTimings() {
+        return lastHybridTimings;
+    }
+
+    /** Returns the element metadata from the most recent {@link #processDocument} call. */
+    public static Map<Long, ElementMetadata> getLastElementMetadata() {
+        return lastElementMetadata;
+    }
+
+    /** Returns the OCR word data from the most recent {@link #processDocument} call. */
+    public static Map<Integer, List<OcrWordInfo>> getLastOcrWordsByPage() {
+        return lastOcrWordsByPage;
+    }
 
     /**
      * Maximum number of pages to send to the backend in a single request.
@@ -114,6 +167,10 @@ public class HybridDocumentProcessor {
             Config config,
             Set<Integer> pagesToProcess,
             Path outputDir) throws IOException {
+
+        lastHybridTimings = null; // Reset for this processing run
+        lastElementMetadata = null;
+        lastOcrWordsByPage = null;
 
         int totalPages = StaticContainers.getDocument().getNumberOfPages();
         LOGGER.log(Level.INFO, "Starting hybrid processing for {0} pages", totalPages);
@@ -181,6 +238,8 @@ public class HybridDocumentProcessor {
         Set<Integer> backendFailedPages = new HashSet<>();
         try {
             backendResults = processBackendPath(inputPdfName, backendPages, config, backendFailedPages);
+            // Enrich backend results: copy StreamInfos from Java-extracted content for MCID linkage
+            enrichBackendResults(backendResults, filteredContents, config.getHybridConfig());
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Backend processing failed: {0}", e.getMessage());
             if (config.getHybridConfig().isFallbackToJava()) {
@@ -411,6 +470,12 @@ public class HybridDocumentProcessor {
                 HybridRequest request = HybridRequest.forPages(pdfBytes, chunkPages1Indexed, outputFormats);
                 HybridResponse response = client.convert(request);
 
+                // Capture hybrid server pipeline timings (last chunk wins for now;
+                // in single-chunk documents this is exact)
+                if (response.getTimings() != null) {
+                    lastHybridTimings = response.getTimings();
+                }
+
                 // Collect failed pages (convert from 1-indexed to 0-indexed)
                 if (response.hasFailedPages()) {
                     for (int failedPage1Indexed : response.getFailedPages()) {
@@ -462,6 +527,10 @@ public class HybridDocumentProcessor {
             }
         }
 
+        // Capture element metadata and OCR words from the transformer (e.g., HancomAISchemaTransformer)
+        lastElementMetadata = transformer.getElementMetadata();
+        lastOcrWordsByPage = transformer.getOcrWordsByPage();
+
         // Note: Client is cached and reused across documents.
         // HybridClientFactory.shutdown() should be called at CLI exit.
 
@@ -493,6 +562,19 @@ public class HybridDocumentProcessor {
             return new HancomSchemaTransformer();
         }
 
+        // hancom-ai uses HancomAISchemaTransformer. Thread the regionlist strategy
+        // from HybridConfig so --regionlist-strategy is honoured instead of silently
+        // falling back to the transformer's default.
+        if (Config.HYBRID_HANCOM_AI.equals(hybrid)) {
+            HancomAISchemaTransformer transformer = new HancomAISchemaTransformer();
+            String regionlistStrategy = config.getHybridConfig() != null
+                ? config.getHybridConfig().getRegionlistStrategy() : null;
+            if (regionlistStrategy != null) {
+                transformer.setRegionlistStrategy(regionlistStrategy);
+            }
+            return transformer;
+        }
+
         throw new IllegalArgumentException("Unsupported hybrid backend: " + hybrid);
     }
 
@@ -515,6 +597,488 @@ public class HybridDocumentProcessor {
     /**
      * Merges Java and backend results into the final contents list.
      */
+    /**
+     * Enriches backend results with MCID/StreamInfo data from Java-extracted content.
+     *
+     * <p>Backend-generated IObjects (from docling) lack StreamInfo, which is required
+     * for PDF struct-tree tagging. This method:
+     * <ol>
+     *   <li>Replaces SemanticPicture with EnrichedImageChunk (copies StreamInfo + description)</li>
+     *   <li>Copies StreamInfo from Java TextChunks to backend TextChunks by bbox overlap</li>
+     * </ol>
+     */
+    private static void enrichBackendResults(
+            Map<Integer, List<IObject>> backendResults,
+            Map<Integer, List<IObject>> filteredContents,
+            HybridConfig hybridConfig) {
+
+        for (Map.Entry<Integer, List<IObject>> entry : backendResults.entrySet()) {
+            int pageNumber = entry.getKey();
+            List<IObject> backendPage = entry.getValue();
+
+            List<IObject> javaPage = filteredContents.getOrDefault(pageNumber, List.of());
+
+            // Collect Java-extracted ImageChunks and TextChunks for matching
+            List<ImageChunk> javaImageChunks = new ArrayList<>();
+            List<TextChunk> javaTextChunks = new ArrayList<>();
+            collectJavaChunks(javaPage, javaImageChunks, javaTextChunks);
+
+            // Replace SemanticPicture entries with matched EnrichedImageChunk
+            if (!javaImageChunks.isEmpty()) {
+                List<IObject> enriched = new ArrayList<>(backendPage.size());
+                for (IObject obj : backendPage) {
+                    if (obj instanceof SemanticPicture) {
+                        SemanticPicture picture = (SemanticPicture) obj;
+                        ImageChunk matched = findMatchingImageChunk(picture, javaImageChunks);
+                        if (matched != null) {
+                            enriched.add(new EnrichedImageChunk(matched, picture.getDescription()));
+                        } else {
+                            LOGGER.fine(() -> "Page " + pageNumber + ": dropped SemanticPicture (no matching ImageChunk) at bbox ["
+                                + String.format("%.1f,%.1f,%.1f,%.1f", picture.getLeftX(), picture.getBottomY(), picture.getRightX(), picture.getTopY()) + "]");
+                        }
+                    } else {
+                        enriched.add(obj);
+                    }
+                }
+                backendPage = enriched;
+                entry.setValue(enriched);
+            }
+
+            // Replace backend TextChunks with Java TextChunks that carry StreamInfo,
+            // and copy StreamInfos to SemanticFormula objects
+            if (!javaTextChunks.isEmpty()) {
+                enrichTextStreamInfos(backendPage, javaTextChunks, hybridConfig);
+                enrichFormulaStreamInfos(backendPage, javaTextChunks);
+            } else if (hybridConfig.isOcrAuto() || hybridConfig.isOcrForce()) {
+                // OCR-only (scanned) page: no Java TextChunks to compare against,
+                // so text_source cannot be inferred from stream/OCR similarity.
+                // Record "ocr" for every SemanticTextNode so the JSON output still
+                // reflects that the text came from OCR rather than the PDF stream.
+                markAllTextSourcesAsOcr(backendPage);
+            }
+
+            // OCR fallback: log elements that still lack StreamInfo after enrichment
+            if (hybridConfig.isOcrAuto() || hybridConfig.isOcrForce()) {
+                Map<Integer, List<OcrWordInfo>> ocrWords = lastOcrWordsByPage;
+                if (ocrWords != null) {
+                    List<OcrWordInfo> pageOcrWords = ocrWords.getOrDefault(pageNumber, List.of());
+                    logOcrFallbackCandidates(backendPage, pageNumber, pageOcrWords);
+                }
+            }
+
+            final int pg = pageNumber;
+            final int javaTotal = javaTextChunks.size();
+            LOGGER.fine(() -> "Page " + pg + ": enrichment complete — "
+                + javaTotal + " Java TextChunks available");
+        }
+    }
+
+    /**
+     * Logs backend elements that still lack StreamInfo after enrichment and could
+     * benefit from OCR fallback. Walks the IObject tree recursively to find
+     * SemanticTextNodes with no StreamInfo in any of their TextChunks.
+     *
+     * <p>This is Phase A (logging only). Phase B will actually insert invisible
+     * text operators into the content stream for these elements.
+     */
+    private static void logOcrFallbackCandidates(
+            List<IObject> backendPage, int pageNumber, List<OcrWordInfo> ocrWords) {
+        int candidateCount = 0;
+        int ocrWordMatchCount = 0;
+
+        for (IObject obj : backendPage) {
+            if (obj instanceof SemanticTextNode) {
+                SemanticTextNode textNode = (SemanticTextNode) obj;
+                boolean hasStreamInfo = false;
+                for (TextColumn col : textNode.getColumns()) {
+                    for (TextLine line : col.getLines()) {
+                        for (TextChunk chunk : line.getTextChunks()) {
+                            if (!chunk.getStreamInfos().isEmpty()) {
+                                hasStreamInfo = true;
+                                break;
+                            }
+                        }
+                        if (hasStreamInfo) break;
+                    }
+                    if (hasStreamInfo) break;
+                }
+                if (!hasStreamInfo) {
+                    candidateCount++;
+                    // Count OCR words that overlap with this text node's bbox
+                    double nLeft = textNode.getLeftX();
+                    double nRight = textNode.getRightX();
+                    double nBottom = textNode.getBottomY();
+                    double nTop = textNode.getTopY();
+                    double tol = 5.0;
+                    int matchedWords = 0;
+                    for (OcrWordInfo word : ocrWords) {
+                        BoundingBox wb = word.getBbox();
+                        double cx = (wb.getLeftX() + wb.getRightX()) / 2.0;
+                        double cy = (wb.getBottomY() + wb.getTopY()) / 2.0;
+                        if (cx >= nLeft - tol && cx <= nRight + tol
+                                && cy >= nBottom - tol && cy <= nTop + tol) {
+                            matchedWords++;
+                        }
+                    }
+                    if (matchedWords > 0) {
+                        ocrWordMatchCount += matchedWords;
+                        final int mw = matchedWords;
+                        LOGGER.fine(() -> "Page " + pageNumber + ": OCR fallback candidate — "
+                            + "SemanticTextNode at ["
+                            + String.format("%.1f,%.1f,%.1f,%.1f", nLeft, nBottom, nRight, nTop)
+                            + "] has " + mw + " matching OCR words");
+                    }
+                }
+            }
+        }
+
+        if (candidateCount > 0) {
+            final int cc = candidateCount;
+            final int owm = ocrWordMatchCount;
+            LOGGER.info(() -> "Page " + pageNumber + ": " + cc
+                + " element(s) need OCR fallback, " + owm + " OCR words available");
+        }
+    }
+
+    /**
+     * Collects ImageChunks and TextChunks from Java-filtered page contents.
+     */
+    private static void collectJavaChunks(List<IObject> javaPage,
+                                           List<ImageChunk> imageChunks,
+                                           List<TextChunk> textChunks) {
+        for (IObject obj : javaPage) {
+            if (obj instanceof ImageChunk) {
+                imageChunks.add((ImageChunk) obj);
+            } else if (obj instanceof TextChunk) {
+                // Raw TextChunk from ContentFilterProcessor (pre-paragraph processing)
+                textChunks.add((TextChunk) obj);
+            } else if (obj instanceof SemanticTextNode) {
+                // TextChunks wrapped in SemanticTextNode (post-paragraph processing)
+                SemanticTextNode textNode = (SemanticTextNode) obj;
+                for (TextColumn col : textNode.getColumns()) {
+                    for (TextLine line : col.getLines()) {
+                        textChunks.addAll(line.getTextChunks());
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Replaces backend TextChunks with Java TextChunks that have StreamInfo.
+     *
+     * <p>Backend-generated TextChunks lack StreamInfo (needed for MCID/struct-tree).
+     * For each backend SemanticTextNode, we find Java TextChunks whose centers fall
+     * within the node's bbox and replace the backend TextChunk with the Java ones.
+     * This preserves the backend's structural decisions (heading/paragraph/reading order)
+     * while using the Java TextChunks that carry StreamInfo.
+     */
+    private static void enrichTextStreamInfos(List<IObject> backendPage, List<TextChunk> javaTextChunks,
+                                               HybridConfig config) {
+        if (javaTextChunks.isEmpty()) return;
+
+        Set<Integer> usedJavaIndices = new HashSet<>();
+        enrichTextStreamInfosRecursive(backendPage, javaTextChunks, usedJavaIndices, config);
+    }
+
+    /**
+     * Recursively walks the IObject tree and replaces TextChunks in SemanticTextNodes
+     * with Java TextChunks that carry StreamInfo. Handles TableBorder cells, PDFList items,
+     * and any other container that holds nested IObjects.
+     */
+    private static void enrichTextStreamInfosRecursive(
+            List<IObject> objects, List<TextChunk> javaTextChunks, Set<Integer> usedJavaIndices,
+            HybridConfig config) {
+
+        for (IObject obj : objects) {
+            if (obj instanceof SemanticFormula) {
+                // Formula inside table/list — enrich StreamInfos by bbox overlap
+                enrichSingleFormula((SemanticFormula) obj, javaTextChunks);
+            } else if (obj instanceof SemanticTextNode) {
+                enrichSingleTextNode((SemanticTextNode) obj, javaTextChunks, usedJavaIndices, config);
+            } else if (obj instanceof TableBorder) {
+                TableBorder table = (TableBorder) obj;
+                for (int rowNumber = 0; rowNumber < table.getNumberOfRows(); rowNumber++) {
+                    TableBorderRow row = table.getRow(rowNumber);
+                    for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
+                        TableBorderCell cell = row.getCell(colNumber);
+                        if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
+                            enrichTextStreamInfosRecursive(cell.getContents(), javaTextChunks, usedJavaIndices, config);
+                        }
+                    }
+                }
+            } else if (obj instanceof PDFList) {
+                PDFList list = (PDFList) obj;
+                for (ListItem item : list.getListItems()) {
+                    // Enrich ListItem's own text lines (used by AutoTaggingProcessor for Lbl/LBody)
+                    if (config == null || !config.isOcrForce()) {
+                        for (TextLine line : item.getLines()) {
+                            for (TextChunk backendChunk : line.getTextChunks()) {
+                                if (backendChunk.getStreamInfos().isEmpty()) {
+                                    matchAndReplaceStreamInfos(backendChunk, javaTextChunks, usedJavaIndices, config);
+                                }
+                            }
+                        }
+                    }
+                    // Enrich nested contents (images, paragraphs, sub-lists)
+                    enrichTextStreamInfosRecursive(item.getContents(), javaTextChunks, usedJavaIndices, config);
+                }
+            }
+        }
+    }
+
+    /**
+     * Replaces a single SemanticTextNode's TextChunks with matching Java TextChunks.
+     * In OCR auto mode, compares stream vs OCR text similarity before deciding.
+     * In OCR force mode, always keeps OCR text (backend TextChunks).
+     * Records the text source decision in ElementMetadata.
+     */
+    private static void enrichSingleTextNode(
+            SemanticTextNode textNode, List<TextChunk> javaTextChunks, Set<Integer> usedJavaIndices,
+            HybridConfig config) {
+
+        // Force mode: always keep OCR text, don't replace with stream
+        if (config != null && config.isOcrForce()) {
+            recordTextSource(textNode, "ocr", null);
+            return;
+        }
+
+        double nLeft = textNode.getLeftX();
+        double nRight = textNode.getRightX();
+        double nBottom = textNode.getBottomY();
+        double nTop = textNode.getTopY();
+
+        List<TextChunk> matched = new ArrayList<>();
+        double tol = 5.0;
+        for (int i = 0; i < javaTextChunks.size(); i++) {
+            if (usedJavaIndices.contains(i)) continue;
+            TextChunk javaChunk = javaTextChunks.get(i);
+            if (javaChunk.getStreamInfos().isEmpty()) continue;
+
+            double jCx = javaChunk.getCenterX();
+            double jCy = javaChunk.getCenterY();
+
+            if (jCx >= nLeft - tol && jCx <= nRight + tol && jCy >= nBottom - tol && jCy <= nTop + tol) {
+                matched.add(javaChunk);
+                usedJavaIndices.add(i);
+            }
+        }
+
+        if (matched.isEmpty()) {
+            LOGGER.fine(() -> "enrichSingleTextNode: no Java TextChunk matched for backend node at bbox ["
+                + String.format("%.1f,%.1f,%.1f,%.1f", nLeft, nBottom, nRight, nTop) + "]");
+            recordTextSource(textNode, "ocr-fallback", null);
+            return;
+        }
+
+        // Auto mode: compare stream vs OCR text similarity
+        if (config != null && config.isOcrAuto()) {
+            String streamText = extractTextFromChunks(matched);
+            String ocrText = extractTextFromNode(textNode);
+            double sim = TextSimilarity.similarity(streamText, ocrText);
+
+            if (!TextSimilarity.trustStream(streamText, ocrText, TextSimilarity.DEFAULT_THRESHOLD)) {
+                // Stream text is corrupted — keep OCR text (backend TextChunks)
+                LOGGER.fine(() -> "OCR auto: stream text untrusted (sim="
+                    + String.format("%.2f", sim)
+                    + "), keeping OCR for node at ["
+                    + String.format("%.1f,%.1f,%.1f,%.1f", nLeft, nBottom, nRight, nTop) + "]");
+                recordTextSource(textNode, "ocr", sim);
+                return;
+            }
+            recordTextSource(textNode, "stream", sim);
+        } else {
+            recordTextSource(textNode, "stream", null);
+        }
+
+        // Off mode or auto mode with trusted stream: replace with Java TextChunks
+        textNode.getColumns().clear();
+        TextColumn newCol = new TextColumn();
+        for (TextChunk tc : matched) {
+            newCol.add(new TextLine(tc));
+        }
+        textNode.getColumns().add(newCol);
+    }
+
+    /**
+     * Records "ocr" as the text source for every SemanticTextNode in the page,
+     * used on scanned pages where there are no Java TextChunks to compare with.
+     * Mirrors {@link #enrichTextStreamInfosRecursive} in how it descends into
+     * TableBorder/PDFList — the shared IObject tree has no generic children API,
+     * so both walks enumerate the containers they know about.
+     */
+    private static void markAllTextSourcesAsOcr(List<IObject> objects) {
+        if (objects == null) return;
+        for (IObject obj : objects) {
+            if (obj instanceof SemanticTextNode) {
+                recordTextSource((SemanticTextNode) obj, "ocr", null);
+            } else if (obj instanceof TableBorder) {
+                TableBorder table = (TableBorder) obj;
+                for (int rowNumber = 0; rowNumber < table.getNumberOfRows(); rowNumber++) {
+                    TableBorderRow row = table.getRow(rowNumber);
+                    for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
+                        TableBorderCell cell = row.getCell(colNumber);
+                        if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
+                            markAllTextSourcesAsOcr(cell.getContents());
+                        }
+                    }
+                }
+            } else if (obj instanceof PDFList) {
+                PDFList list = (PDFList) obj;
+                for (ListItem item : list.getListItems()) {
+                    markAllTextSourcesAsOcr(item.getContents());
+                }
+            }
+        }
+    }
+
+    /**
+     * Records the text source decision in ElementMetadata for a SemanticTextNode.
+     *
+     * @param textNode   the text node whose metadata to update
+     * @param source     "stream", "ocr", or "ocr-fallback"
+     * @param similarity the stream-OCR similarity score, or null if not applicable
+     */
+    private static void recordTextSource(SemanticTextNode textNode, String source, Double similarity) {
+        if (lastElementMetadata == null || textNode.getRecognizedStructureId() == null) return;
+        ElementMetadata meta = lastElementMetadata.get(textNode.getRecognizedStructureId());
+        if (meta == null) return;
+        meta.setTextSource(source);
+        if (similarity != null) {
+            meta.setStreamOcrSimilarity(similarity);
+        }
+    }
+
+    /**
+     * Extracts concatenated text from a list of TextChunks.
+     */
+    private static String extractTextFromChunks(List<TextChunk> chunks) {
+        StringBuilder sb = new StringBuilder();
+        for (TextChunk tc : chunks) {
+            if (sb.length() > 0) sb.append(' ');
+            sb.append(tc.getValue());
+        }
+        return sb.toString().trim();
+    }
+
+    /**
+     * Extracts concatenated text from a SemanticTextNode's columns/lines/chunks.
+     */
+    private static String extractTextFromNode(SemanticTextNode node) {
+        StringBuilder sb = new StringBuilder();
+        for (TextColumn col : node.getColumns()) {
+            for (TextLine line : col.getLines()) {
+                for (TextChunk chunk : line.getTextChunks()) {
+                    if (sb.length() > 0) sb.append(' ');
+                    sb.append(chunk.getValue());
+                }
+            }
+        }
+        return sb.toString().trim();
+    }
+
+    /**
+     * Copies StreamInfos from matching Java TextChunks to a backend TextChunk that lacks them.
+     * Used for ListItem lines where the text is stored directly in TextLine/TextChunk
+     * rather than in a SemanticTextNode wrapper.
+     * In OCR auto mode, compares stream vs OCR text similarity before copying.
+     */
+    private static void matchAndReplaceStreamInfos(
+            TextChunk backendChunk, List<TextChunk> javaTextChunks, Set<Integer> usedJavaIndices,
+            HybridConfig config) {
+        double bCx = backendChunk.getCenterX();
+        double bCy = backendChunk.getCenterY();
+        double tol = 5.0;
+        for (int i = 0; i < javaTextChunks.size(); i++) {
+            if (usedJavaIndices.contains(i)) continue;
+            TextChunk javaChunk = javaTextChunks.get(i);
+            if (javaChunk.getStreamInfos().isEmpty()) continue;
+            double jCx = javaChunk.getCenterX();
+            double jCy = javaChunk.getCenterY();
+            if (Math.abs(bCx - jCx) <= tol && Math.abs(bCy - jCy) <= tol) {
+                // In auto mode, check if stream text is trustworthy
+                if (config != null && config.isOcrAuto()) {
+                    String streamText = javaChunk.getValue();
+                    String ocrText = backendChunk.getValue();
+                    if (!TextSimilarity.trustStream(streamText, ocrText, TextSimilarity.DEFAULT_THRESHOLD)) {
+                        LOGGER.fine(() -> "OCR auto: stream text untrusted for ListItem chunk, keeping OCR");
+                        return;
+                    }
+                }
+                backendChunk.getStreamInfos().addAll(javaChunk.getStreamInfos());
+                usedJavaIndices.add(i);
+                return;
+            }
+        }
+    }
+
+    /**
+     * Copies StreamInfos from Java TextChunks to SemanticFormula objects by bbox overlap.
+     *
+     * <p>SemanticFormula (from backend) has no StreamInfo. We find all Java TextChunks
+     * whose centers fall within the formula's bbox and copy their StreamInfos directly
+     * to the formula's StreamInfo list (inherited from BaseObject).
+     */
+    private static void enrichFormulaStreamInfos(List<IObject> backendPage, List<TextChunk> javaTextChunks) {
+        for (IObject obj : backendPage) {
+            if (obj instanceof SemanticFormula) {
+                enrichSingleFormula((SemanticFormula) obj, javaTextChunks);
+            }
+        }
+    }
+
+    /**
+     * Copies StreamInfos from Java TextChunks to a SemanticFormula by bbox overlap.
+     * Allows reuse of Java chunks since formula content often IS the text content.
+     */
+    private static void enrichSingleFormula(SemanticFormula formula, List<TextChunk> javaTextChunks) {
+        if (!formula.getStreamInfos().isEmpty()) return;
+
+        double fLeft = formula.getLeftX();
+        double fRight = formula.getRightX();
+        double fBottom = formula.getBottomY();
+        double fTop = formula.getTopY();
+        double tol = 5.0;
+
+        for (TextChunk javaChunk : javaTextChunks) {
+            if (javaChunk.getStreamInfos().isEmpty()) continue;
+            double jCx = javaChunk.getCenterX();
+            double jCy = javaChunk.getCenterY();
+
+            if (jCx >= fLeft - tol && jCx <= fRight + tol && jCy >= fBottom - tol && jCy <= fTop + tol) {
+                formula.getStreamInfos().addAll(javaChunk.getStreamInfos());
+            }
+        }
+    }
+
+    /**
+     * Finds the ImageChunk whose center point lies within the SemanticPicture's bounding box.
+     * Returns null if no candidate's center is contained (with 1pt tolerance).
+     */
+    private static ImageChunk findMatchingImageChunk(SemanticPicture picture, List<ImageChunk> candidates) {
+        double picLeft = picture.getLeftX();
+        double picRight = picture.getRightX();
+        double picBottom = picture.getBottomY();
+        double picTop = picture.getTopY();
+
+        ImageChunk best = null;
+        double bestDist = Double.MAX_VALUE;
+
+        for (ImageChunk chunk : candidates) {
+            double cx = chunk.getCenterX();
+            double cy = chunk.getCenterY();
+            // Center-point containment (with 1pt tolerance)
+            if (cx >= picLeft - 1 && cx <= picRight + 1 && cy >= picBottom - 1 && cy <= picTop + 1) {
+                double dist = Math.hypot(cx - picture.getCenterX(), cy - picture.getCenterY());
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    best = chunk;
+                }
+            }
+        }
+        return best;
+    }
+
     private static void mergeResults(
             List<List<IObject>> contents,
             Map<Integer, List<IObject>> javaResults,
