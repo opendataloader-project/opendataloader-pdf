@@ -30,11 +30,14 @@ public final class BenchmarkQualityCheck {
     }
 
     public DocumentCheckResult check(String docId, ParityReport report) {
+        Objects.requireNonNull(docId, "docId must not be null");
+        Objects.requireNonNull(report, "report must not be null");
         List<String> reasons = gate.failureReasons(report);
         return new DocumentCheckResult(docId, reasons.isEmpty(), reasons, report);
     }
 
     public AggregateResult aggregate(List<DocumentCheckResult> results) {
+        Objects.requireNonNull(results, "results must not be null");
         int passed = 0;
         List<String> failedDocIds = new ArrayList<>();
         for (DocumentCheckResult r : results) {

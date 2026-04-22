@@ -15,6 +15,7 @@
  */
 package org.opendataloader.pdf.quality;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -111,5 +112,18 @@ public class BenchmarkQualityCheckTest {
 
         assertTrue(report.contains("doc-bad"));
         assertTrue(report.contains("equation"));
+    }
+
+    @Test
+    void checkThrowsOnNullDocId() {
+        BenchmarkQualityCheck bench = new BenchmarkQualityCheck(new QualityGate());
+        ParityReport report = new ParityReport(0, 0, 0, 0, 0, 0, 0);
+        Assertions.assertThrows(NullPointerException.class, () -> bench.check(null, report));
+    }
+
+    @Test
+    void aggregateThrowsOnNullList() {
+        BenchmarkQualityCheck bench = new BenchmarkQualityCheck(new QualityGate());
+        Assertions.assertThrows(NullPointerException.class, () -> bench.aggregate(null));
     }
 }
