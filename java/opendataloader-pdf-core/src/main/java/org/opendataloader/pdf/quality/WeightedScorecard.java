@@ -15,6 +15,8 @@
  */
 package org.opendataloader.pdf.quality;
 
+import java.util.Objects;
+
 public final class WeightedScorecard {
 
     public static final double DEFAULT_EQUATION_WEIGHT = 0.4;
@@ -50,6 +52,7 @@ public final class WeightedScorecard {
      * Returns value in [0.0, 1.0].
      */
     public double score(ParityReport report) {
+        Objects.requireNonNull(report, "report must not be null");
         return equationWeight * report.equationResolvedRate()
              + captionWeight  * report.captionResolvedRate()
              + citationWeight * report.citationResolvedRate();

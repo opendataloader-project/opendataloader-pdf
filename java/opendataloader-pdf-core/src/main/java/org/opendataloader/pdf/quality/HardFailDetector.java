@@ -15,6 +15,8 @@
  */
 package org.opendataloader.pdf.quality;
 
+import java.util.Objects;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -31,6 +33,7 @@ public final class HardFailDetector {
      * Returns empty list if no hard-fail triggered.
      */
     public List<String> detect(ParityReport report) {
+        Objects.requireNonNull(report, "report must not be null");
         List<String> failures = new ArrayList<>();
         if (report.getTotalEquations() > 0 && report.equationResolvedRate() == 0.0) {
             failures.add("equation total wipeout: " + report.getTotalEquations()
