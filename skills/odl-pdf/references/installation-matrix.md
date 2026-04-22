@@ -73,6 +73,26 @@ Add to your `pom.xml`:
 
 Replace `LATEST` with the specific version you want to pin. Check the [releases page](https://github.com/opendataloader-project/opendataloader-pdf/releases) for available versions.
 
+### Gradle (Java/Kotlin)
+
+Add to your `build.gradle` (Groovy DSL):
+
+```groovy
+dependencies {
+    implementation 'org.opendataloader:opendataloader-pdf-core:LATEST'
+}
+```
+
+Or `build.gradle.kts` (Kotlin DSL):
+
+```kotlin
+dependencies {
+    implementation("org.opendataloader:opendataloader-pdf-core:LATEST")
+}
+```
+
+Pin `LATEST` to a specific released version from the [releases page](https://github.com/opendataloader-project/opendataloader-pdf/releases).
+
 ## Version Compatibility
 
 | Method | Minimum Runtime | CLI Included |

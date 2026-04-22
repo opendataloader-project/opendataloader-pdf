@@ -74,12 +74,12 @@ Speed is not normalized to 0–1. It is an absolute wall-clock measurement avera
 
 **200 real-world PDFs including multi-column layouts and scientific papers.**
 
-| Engine | Overall | NID (Reading Order) | TEDS (Table) | MHS (Heading) | Speed (s/page) |
-|--------|---------|---------------------|--------------|---------------|----------------|
-| **opendataloader [hybrid]** | **0.907** | **0.934** | **0.928** | 0.821 | 0.463 |
-| opendataloader [local] | 0.831 | 0.902 | 0.489 | 0.739 | **0.015** |
+| Engine | Overall | NID (Reading Order) | TEDS (Table) | MHS (Heading) | Table Detection F1 | Speed (s/page) |
+|--------|---------|---------------------|--------------|---------------|--------------------|----------------|
+| **opendataloader [hybrid]** | **0.907** | **0.934** | **0.928** | 0.821 | see bench | 0.463 |
+| opendataloader [local] | 0.831 | 0.902 | 0.489 | 0.739 | see bench | **0.015** |
 
-Full benchmark results and methodology: [opendataloader-bench](https://github.com/opendataloader-project/opendataloader-bench)
+> The `Overall` column is an average of NID / TEDS / MHS. Table Detection F1 is reported per-document by `scripts/bench.sh` but is not currently folded into the Overall average; run the bench for the F1 numbers on the current snapshot. See [opendataloader-bench](https://github.com/opendataloader-project/opendataloader-bench) for methodology.
 
 ---
 
@@ -154,6 +154,26 @@ Use this guide when extraction quality is below expectations. Start by identifyi
    ```
 
 3. If the PDF is untagged and headings are simulated with bold text, the heading structure cannot be recovered reliably from layout alone. Consider whether hybrid mode improves detection for your specific document class.
+
+---
+
+### Low Table Detection F1 — Table Region Problems
+
+**Symptoms:** Tables are missed entirely (low recall) or non-table regions such as dense text blocks are incorrectly flagged as tables (low precision).
+
+**Steps:**
+
+1. **Inspect with an annotated PDF** to see which regions are being detected as tables and which real tables are being missed. The `pdf` output format overlays bounding boxes on a copy of the input.
+
+   ```bash
+   opendataloader-pdf input.pdf --format json,pdf
+   ```
+
+   Combine with `json` so you can correlate each visual box with its element data.
+
+2. **If real tables are being missed (low recall):** enable borderless detection and, if needed, escalate to the hybrid backend. See the Low TEDS steps above — the same escalation path (`--table-method cluster` → `--hybrid docling-fast` → `--hybrid-mode full`) improves region detection as well as internal structure.
+
+3. **If non-table regions are being detected (low precision):** this usually indicates dense multi-column text is being classified as tabular. Check that `--reading-order xycut` is active (it is the default) so column structure is recognised before table detection runs.
 
 ---
 

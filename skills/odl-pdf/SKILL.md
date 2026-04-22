@@ -238,9 +238,8 @@ Two modes of operation depending on user intent.
 
 When the user wants ready-to-run commands but will execute them manually.
 
-Generate complete, copy-pasteable commands for the relevant interface.
+Generate a complete, copy-pasteable command for the interface they are using. The CLI pattern is:
 
-**CLI:**
 ```bash
 opendataloader-pdf input.pdf \
   --format markdown \
@@ -249,57 +248,7 @@ opendataloader-pdf input.pdf \
   --quiet
 ```
 
-**Python:**
-```python
-import opendataloader_pdf
-
-# Batch all files in one call — each convert() spawns a JVM, so repeated calls are slow
-opendataloader_pdf.convert(
-    input_path=["file1.pdf", "file2.pdf", "file3.pdf"],
-    output_dir="./output",
-    format="markdown",
-    hybrid="docling-fast"
-)
-```
-
-**Node.js:**
-```javascript
-import { convert } from '@opendataloader/pdf';
-
-// Batch all files in one call — each convert() spawns a JVM, so repeated calls are slow
-await convert(['file1.pdf', 'file2.pdf'], {
-  outputDir: './output',
-  format: 'markdown',
-  hybrid: 'docling-fast'
-});
-```
-
-**LangChain integration:**
-```python
-from langchain_opendataloader_pdf import OpenDataLoaderPDFLoader
-
-loader = OpenDataLoaderPDFLoader(
-    file_path="document.pdf",
-    format="text",
-    hybrid="docling-fast"   # optional: enable for scanned PDFs
-)
-
-documents = loader.load()
-# documents is a list of LangChain Document objects with page_content and metadata
-```
-
-**Java (Maven project):**
-```java
-import org.opendataloader.pdf.api.Config;
-import org.opendataloader.pdf.api.OpenDataLoaderPDF;
-
-Config config = new Config();
-config.setOutputDir("./output");
-config.setFormat("markdown");
-config.setHybrid("docling-fast");
-
-OpenDataLoaderPDF.processFile("file1.pdf", config);
-```
+For Python, Node.js, LangChain, or Java (Maven), load `references/integration-examples.md` and return the matching snippet. That file contains batch-safe patterns for each language (each `convert()` spawns a JVM — see Gotcha 3).
 
 ### 3B. Action Mode
 
@@ -504,60 +453,18 @@ opendataloader-pdf input.pdf \
 
 ### 5C. LangChain RAG Pipeline
 
-**Recommended architecture for RAG:**
+The recommended RAG architecture is load → chunk on structural separators (`\n## `, `\n### `) → embed → index. Use `format="json"` instead of `"text"` when you need bounding boxes in metadata for source citation.
 
-```python
-from langchain_opendataloader_pdf import OpenDataLoaderPDFLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import Chroma
-from langchain.embeddings import OpenAIEmbeddings
-
-# 1. Load PDFs with bounding-box metadata for source citation
-loader = OpenDataLoaderPDFLoader(
-    file_path="document.pdf",
-    format="text",          # returns LangChain Documents with metadata
-    hybrid="docling-fast"   # enable for scanned or complex PDFs
-)
-documents = loader.load()
-
-# 2. Chunk with overlap — ODL markdown headings are natural split points
-splitter = RecursiveCharacterTextSplitter(
-    chunk_size=1000,
-    chunk_overlap=200,
-    separators=["\n## ", "\n### ", "\n\n", "\n", " "]
-)
-chunks = splitter.split_documents(documents)
-
-# 3. Index
-vectorstore = Chroma.from_documents(chunks, OpenAIEmbeddings())
-```
-
-**Tip:** Use `format="json"` instead of `format="text"` when you need bounding boxes in metadata for source citation (linking a RAG answer back to a specific page region).
+Full pipeline code (loader + splitter + vector store): see `references/integration-examples.md` § LangChain § Full RAG pipeline.
 
 ### 5D. Output Pipeline Options
 
-**Quiet mode for automated pipelines** — suppress progress output:
-```bash
-opendataloader-pdf input.pdf --format markdown --quiet
-```
+Common operational flags (details in `references/integration-examples.md` § Output Pipeline Patterns):
 
-**Stdout for pipe-based workflows** — single format, output to stdout:
-```bash
-opendataloader-pdf input.pdf --format json --to-stdout | jq .
-```
-
-**Page range extraction** — process only relevant pages:
-```bash
-# Pages 1, 3, and 5 through 10
-opendataloader-pdf input.pdf --pages "1,3,5-10" --format markdown
-```
-
-**Custom page separators** — for downstream splitting:
-```bash
-opendataloader-pdf input.pdf \
-  --format markdown \
-  --markdown-page-separator "---PAGE %page-number%---"
-```
+- `--quiet` — suppress progress output for automated pipelines
+- `--to-stdout` — write a single format to stdout for piping
+- `--pages "1,3,5-10"` — restrict processing to a page range
+- `--markdown-page-separator` / `--text-page-separator` / `--html-page-separator` — inject a custom marker between pages for downstream splitting (supports `%page-number%`)
 
 ---
 
@@ -624,43 +531,12 @@ For CLI batch processing, prefer a glob pattern or a file list argument over she
 
 ## Option Reference
 
-This skill contains a working knowledge of all 26 options from `options.json`. The table below covers the most commonly used options. For the complete, authoritative option list, see:
+This skill reasons about all 26 CLI options without loading their full descriptions. When the user needs option details, defaults, or interactions, load `references/options-matrix.md` (grouped by IO / Quality / Safety / Hybrid / Output / Text categories, with common combination recipes).
 
-- `options.json` in the project root (authoritative — always current)
-- `references/options-matrix.md` (annotated reference with examples and use-case guidance)
+Authoritative source order:
 
-Options in `options.json` that are not yet documented in `references/options-matrix.md` are newly added — treat `options.json` as the source of truth.
-
-### Commonly Used Options Quick Reference
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `--format` / `-f` | string | json | Output format(s). Values: `json`, `text`, `html`, `pdf`, `markdown`, `markdown-with-html`, `markdown-with-images`. Comma-separate for multiple. |
-| `--output-dir` / `-o` | string | input dir | Directory for output files. |
-| `--quiet` / `-q` | boolean | false | Suppress progress output. |
-| `--pages` | string | all | Pages to extract. Format: `"1,3,5-7"` |
-| `--table-method` | string | default | Table detection. Values: `default` (border-based), `cluster` (border + spatial clustering). |
-| `--reading-order` | string | xycut | Reading order algorithm. Values: `off`, `xycut`. |
-| `--use-struct-tree` | boolean | false | Use PDF structure tree (tagged PDF) for reading order. |
-| `--hybrid` | string | off | Hybrid backend. Values: `off`, `docling-fast`. |
-| `--hybrid-mode` | string | auto | Triage mode. Values: `auto` (dynamic triage), `full` (all pages to backend). |
-| `--hybrid-url` | string | null | Remote hybrid server URL. |
-| `--hybrid-timeout` | string | 0 | Request timeout in ms. 0 = no timeout. |
-| `--hybrid-fallback` | boolean | false | Fall back to Java on backend error. |
-| `--image-output` | string | external | Image handling. Values: `off`, `embedded` (Base64), `external` (file refs). |
-| `--image-format` | string | png | Image format. Values: `png`, `jpeg`. |
-| `--image-dir` | string | null | Directory for extracted images. |
-| `--include-header-footer` | boolean | false | Include page headers and footers. |
-| `--keep-line-breaks` | boolean | false | Preserve original line breaks. |
-| `--sanitize` | boolean | false | Replace emails, phones, IPs, credit cards, URLs with placeholders. |
-| `--password` / `-p` | string | null | Password for encrypted PDFs. |
-| `--content-safety-off` | string | null | Disable safety filters. Values: `all`, `hidden-text`, `off-page`, `tiny`, `hidden-ocg`. |
-| `--replace-invalid-chars` | string | space | Replacement for unrecognized characters. |
-| `--markdown-page-separator` | string | null | Separator between pages in Markdown. Use `%page-number%` for page number. |
-| `--text-page-separator` | string | null | Separator between pages in text output. |
-| `--html-page-separator` | string | null | Separator between pages in HTML output. |
-| `--to-stdout` | boolean | false | Write output to stdout (single format only). |
-| `--detect-strikethrough` | boolean | false | Detect strikethrough text. Experimental. |
+1. `options.json` in the project root — always current, regenerated by `npm run sync` when CLI options change
+2. `references/options-matrix.md` — annotated reference with examples. Options in `options.json` not yet in the matrix are newly added; treat `options.json` as ground truth
 
 ---
 
@@ -675,7 +551,9 @@ Load these files progressively — only when entering the relevant topic. Do not
 | `references/hybrid-guide.md` | User needs hybrid server setup, server-side flags, or remote deployment |
 | `references/format-guide.md` | User needs output format comparison, format-specific behavior, or format selection |
 | `references/eval-metrics.md` | User needs detailed metric definitions (NID, TEDS, MHS), benchmark scores, or diagnostic steps by metric |
+| `references/integration-examples.md` | User needs copy-pasteable code for CLI / Python / Node.js / LangChain / Java / remote hybrid server |
 | `scripts/detect-env.sh` | Phase 1 environment detection — run at session start |
+| `scripts/hybrid-health.sh` | Phase 2B / Phase 5B — confirm the hybrid server is reachable before running a hybrid conversion |
 | `scripts/quick-eval.py` | Phase 4 quality measurement — run when diagnosing extraction quality |
 | `evals/` | Benchmark baselines and regression thresholds |
 
@@ -683,31 +561,16 @@ Load these files progressively — only when entering the relevant topic. Do not
 
 ## Quality Metrics Reference
 
-When running benchmarks or evaluating extraction quality, these are the five metrics reported by `scripts/bench.sh`:
+Five metrics are reported by `scripts/bench.sh`: **NID** (reading order), **TEDS** (table structure), **MHS** (heading hierarchy), **Table Detection F1** (table region precision/recall), and **Speed** (pages/second). All four quality metrics range 0–1, higher is better.
 
-| Metric | Full Name | What It Measures | Target |
-|--------|-----------|-----------------|--------|
-| NID | Normalized Indel Distance | Reading order correctness (sequence of extracted elements) | Higher is better (max 1.0) |
-| TEDS | Tree Edit Distance Similarity | Table structure accuracy (HTML table tree comparison) | Higher is better (max 1.0) |
-| MHS | Markdown Heading Similarity | Heading hierarchy accuracy (section structure) | Higher is better (max 1.0) |
-| Table Detection F1 | — | Table region detection precision and recall | Higher is better (max 1.0) |
-| Speed | Pages/second | Extraction throughput | Context-dependent |
+Full definitions, failure modes, and metric-specific escalation paths: `references/eval-metrics.md`.
 
-**Interpreting weak metrics:**
+Bench commands:
 
-- Low NID → reading order problem. Try `--use-struct-tree` for tagged PDFs, or hybrid mode for scanned.
-- Low TEDS → table structure problem. Try `--table-method cluster`, then `--hybrid docling-fast`.
-- Low MHS → heading detection problem. Review if the PDF uses visual formatting (font size) instead of tagged headings. `--use-struct-tree` may help for tagged PDFs.
-- Low Table Detection F1 → tables are being missed or extra regions are detected as tables. Inspect with `--format pdf` (annotated output) to see bounding boxes.
-
-To debug a specific document:
 ```bash
-bash scripts/bench.sh --doc-id <document-id>
-```
-
-To check regressions in CI:
-```bash
-bash scripts/bench.sh --check-regression
+bash scripts/bench.sh                          # full suite
+bash scripts/bench.sh --doc-id <document-id>   # debug one document
+bash scripts/bench.sh --check-regression       # CI threshold check
 ```
 
 ---
