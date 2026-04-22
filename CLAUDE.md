@@ -51,11 +51,9 @@ the others are NOT auto-checked and will silently go stale if missed:
    metric (NID / TEDS / MHS / Table Detection F1): also update the
    corresponding Low-* section of `skills/odl-pdf/references/eval-metrics.md`.
 
-After substantive skill changes, manually trigger the
-`skill-evals.yml` workflow (Actions → Run workflow) to re-run the multi-model
-evaluation suite. The smoke-test workflow (`skill-smoke-test.yml`) runs
-automatically on push and verifies cross-platform shell + Python script
-behavior, but does not exercise model behavior.
+The `skill-smoke-test.yml` workflow runs automatically on push and
+verifies cross-platform shell and Python script behavior on
+ubuntu/windows/macos; it does not exercise model behavior.
 
 The skill is written in English for external users. Do not include internal
 team terminology or company-specific policies.

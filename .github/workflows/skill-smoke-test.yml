@@ -2,9 +2,7 @@
 # Cross-platform smoke test for the odl-pdf skill's executable assets.
 # Runs the shell scripts and Python scripts on ubuntu / windows / macos
 # to catch platform-specific regressions (line endings, console encoding,
-# shell portability) BEFORE a PR merges.
-#
-# Does NOT hit the Anthropic API; for that, see skill-evals.yml (manual).
+# shell portability) BEFORE a PR merges. Does NOT hit any external API.
 
 name: Skill Smoke Test
 
@@ -106,17 +104,3 @@ jobs:
       # --- sync-skill-refs.py --------------------------------------------
       - name: sync-skill-refs.py reports no drift
         run: python skills/odl-pdf/scripts/sync-skill-refs.py
-
-      # --- run-evals.py (no API) -----------------------------------------
-      - name: run-evals.py --help
-        run: python skills/odl-pdf/scripts/run-evals.py --help
-
-      - name: run-evals.py missing-key exits 2
-        env:
-          ANTHROPIC_API_KEY: ""
-        run: |
-          set +e
-          python skills/odl-pdf/scripts/run-evals.py
-          rc=$?
-          set -e
-          [ "$rc" = "2" ] || { echo "expected exit 2, got $rc"; exit 1; }
