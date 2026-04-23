@@ -32,9 +32,11 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.utils.StreamInfo;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.logging.Logger;
 
 public class AutoTaggingProcessor {
 
+    private static final Logger LOGGER = Logger.getLogger(AutoTaggingProcessor.class.getCanonicalName());
     private static final Map<OperatorStreamKey, Map<Integer, Set<StreamInfo>>> operatorIndexesToStreamInfosMap = new LinkedHashMap<>();
     private static final Map<OperatorStreamKey, List<COSObject>> structParents = new LinkedHashMap<>();
     private static final Map<OperatorStreamKey, Integer> structParentsIntegers = new LinkedHashMap<>();
@@ -364,37 +366,35 @@ public class AutoTaggingProcessor {
                 }
                 // Create Link struct element
                 COSObject linkElem = addStructElement(seDocument, cosDocument, TaggedPDFConstants.LINK, pageNumber);
-                // PDF/UA-2 clause 8.9.4.2.1 requires the annotation's Contents and the enclosing
-                // struct element's Alt to be identical when both are present. Prefer any existing
-                // Contents authored on the annotation (accessibility text the author already
-                // wrote), otherwise fall back to URI, then to "Link".
+                // PDF/UA-2 clause 8.9.4.2.1 requires the annotation's Contents and the
+                // enclosing struct element's Alt to be identical when both are present.
+                // Prefer existing author-supplied Contents, otherwise fall back to URI,
+                // then to "Link". See buildLinkTextCOSString for the encoding rationale.
                 String existingContents = annotation.getContents();
-                // Build a single COSString object and use it for both /Contents and
-                // /Alt so PDF/UA-2 clause 8.9.4.2.1 (byte-identity) holds. Hex form
-                // (isHex=true) is required because UTF-16BE code units whose low
-                // byte is 0x5C would be misparsed as a backslash escape inside a
-                // PDF literal string, corrupting non-ASCII text. UTF-16 with BOM
-                // keeps readers from interpreting the string as PDFDocEncoding.
                 COSObject linkTextObject;
+                boolean existingIsStringObj = false;
                 if (existingContents != null && !existingContents.isEmpty()) {
-                    // Preserve the annotation's existing COSString reference when
-                    // present — re-encoding would change literal/hex form and
-                    // break the equality check.
                     COSObject contentsObj = annotObj.getKey(ASAtom.CONTENTS);
                     if (contentsObj != null && contentsObj.getType() == COSObjType.COS_STRING) {
                         linkTextObject = contentsObj;
+                        existingIsStringObj = true;
                     } else {
-                        // Non-string /Contents (rare, e.g. indirect/array shape). Build a hex
-                        // UTF-16 COSString from the parsed text and write it back to /Contents
-                        // too so the annotation and /Alt remain byte-identical per §8.9.4.2.1.
-                        linkTextObject = COSString.construct(
-                                existingContents.getBytes(StandardCharsets.UTF_16), true);
-                        annotObj.setKey(ASAtom.CONTENTS, linkTextObject);
+                        linkTextObject = buildLinkTextCOSString(existingContents);
                     }
                 } else {
                     String altText = uriString != null ? uriString : "Link";
-                    linkTextObject = COSString.construct(
-                            altText.getBytes(StandardCharsets.UTF_16), true);
+                    linkTextObject = buildLinkTextCOSString(altText);
+                }
+                // Promote to an indirect object so /Contents and /Alt share a single
+                // referenced object rather than being serialized as two independent
+                // inline copies (veraPDF clause 8.9.4.2.1 treats identical inline
+                // bytes as distinct, causing spurious failures). Skip the wrap if the
+                // existing /Contents is already an indirect — avoids double-wrapping
+                // and gratuitous xref churn; in that case /Contents already references
+                // this object, so no setKey is needed.
+                if (!existingIsStringObj || !linkTextObject.isIndirect()) {
+                    linkTextObject = COSIndirect.construct(linkTextObject, cosDocument);
+                    cosDocument.addObject(linkTextObject);
                     annotObj.setKey(ASAtom.CONTENTS, linkTextObject);
                 }
                 linkElem.setKey(ASAtom.ALT, linkTextObject);
@@ -425,6 +425,41 @@ public class AutoTaggingProcessor {
                 cosDocument.addChangedObject(page.getObject());
             }
         }
+    }
+
+    /**
+     * Build a COSString for Link /Contents and /Alt.
+     *
+     * <p>veraPDF's PDAnnot.Contents adapter decodes the COSString to text, while its
+     * PDStructElem.Alt adapter surfaces a representation that depends on the string's
+     * encoding. A UTF-16BE+BOM hex COSString surfaces as "&lt;FEFF...&gt;" on the Alt side
+     * and as the decoded text on the Contents side; a raw-ASCII hex COSString is similarly
+     * asymmetric — §8.9.4.2.1 equality fails even when both keys point at the same indirect
+     * object.
+     *
+     * <p>For ASCII-safe text we emit a literal COSString ({@code isHex=false}): both
+     * veraPDF adapters decode the literal form to the same text. The writer escapes
+     * {@code (}, {@code )}, {@code \} automatically when serializing, so URLs with those
+     * characters round-trip safely.
+     *
+     * <p>For non-ASCII we keep UTF-16BE+BOM hex as the least-broken option; the Alt/
+     * Contents asymmetry may still trip 8.9.4.2.1 for non-ASCII payloads. TODO: solve
+     * non-ASCII symmetry (not observed in the 200-PDF benchmark corpus).
+     */
+    private static COSObject buildLinkTextCOSString(String text) {
+        boolean asciiSafe = true;
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (c < 0x20 || c > 0x7E) {
+                asciiSafe = false;
+                break;
+            }
+        }
+        if (asciiSafe) {
+            return COSString.construct(text.getBytes(StandardCharsets.US_ASCII), false);
+        }
+        LOGGER.warning("Link /Contents contains non-ASCII; PDF/UA-2 §8.9.4.2.1 equality may fail for this annotation (text=" + text + ")");
+        return COSString.construct(text.getBytes(StandardCharsets.UTF_16), true);
     }
 
     /**
