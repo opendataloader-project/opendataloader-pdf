@@ -2,7 +2,7 @@
 
 Ready-to-run code for each supported interface. Load this file when the user asks for copy-pasteable examples in a specific language or framework.
 
-Every path requires **Java 11+** at runtime — see `installation-matrix.md`.
+Every path requires **Java 11+** at runtime (current floor per `java/pom.xml`). Language wrappers additionally require **Python 3.10+** (pip, per `pyproject.toml`) or **Node.js 20.19+** (npm, per `package.json`). See `installation-matrix.md` § Prerequisites for details.
 
 ---
 

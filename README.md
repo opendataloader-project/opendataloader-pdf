@@ -456,7 +456,7 @@ Existing PDFs (untagged)
 Your AI coding agent knows how to use opendataloader-pdf — optimal options,
 hybrid mode setup, and quality diagnostics, all handled automatically.
 
-Works with **Claude Code**, **Codex**, **Gemini CLI**, **Cursor**, **VS Code**, and 26+ platforms via [agentskills.io](https://agentskills.io) spec.
+Follows the [Agent Skills](https://agentskills.io) open format. Native support in **Claude Code** via the included [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json).
 
 ### What the Skill Does
 
@@ -470,11 +470,15 @@ Works with **Claude Code**, **Codex**, **Gemini CLI**, **Cursor**, **VS Code**, 
 
 ### Install
 
+Requires Java 11+ and Python 3.10+ with `opendataloader-pdf >= 2.2.0` (Node.js 20.19+ or Java SDK also supported).
+
 ```bash
 npx skills add opendataloader-project/opendataloader-pdf --skill odl-pdf
 ```
 
-Or use the `/odl-pdf` slash command in Claude Code after installing the plugin.
+After installation, invoke with `/odl-pdf` in Claude Code.
+
+For clients without a skills installer, copy [`skills/odl-pdf/`](skills/odl-pdf/) into the client's skills directory (location varies by client — see its docs).
 
 ## Roadmap
 

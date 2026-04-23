@@ -59,16 +59,18 @@ Control how pages are routed with `--hybrid-mode`.
 
 `auto` is the default and works well for mixed documents. The triage strategy is conservative: it prefers to send borderline pages to the backend (minimizing missed complex content) at the cost of some extra backend calls.
 
-Expected throughput:
-- Simple pages (Java path): ~0.015 s/page
+Expected throughput shape:
+- Simple pages (Java path): fastest
 - Complex pages (backend path): varies by content and hardware
 - Overall for a mixed document: between the two extremes
+
+For current numbers, run `./scripts/bench.sh`.
 
 ### When to use `full`
 
 Use `full` when you need enrichment features (`--enrich-formula`, `--enrich-picture-description`) or when the entire document is scanned and you want consistent OCR output across all pages.
 
-Expected throughput with `full`: approximately 0.5 s/page (depends on backend and GPU availability).
+Expected throughput with `full`: noticeably slower than Java-only or `auto`, depending on backend and GPU availability. Run `./scripts/bench.sh` for current per-page timings.
 
 > **Important:** `--enrich-formula` and `--enrich-picture-description` are server-side options, but they only take effect when the client is running with `--hybrid-mode full`. In `auto` mode, enrichments are silently skipped — no warning or error is shown. If your output is missing formulas or image descriptions, check that you have `--hybrid-mode full` set on the client side.
 
@@ -93,6 +95,7 @@ All options are passed when starting `opendataloader-pdf-hybrid`.
 | Option | Default | Description |
 |--------|---------|-------------|
 | `--port <n>` | `5002` | Port the server listens on. |
+| `--device <name>` | `auto` | Accelerator for model inference. Values: `auto`, `cpu`, `cuda`, `mps`, `xpu`. `auto` selects the best available device (checks CUDA, then MPS, then XPU, then CPU). Use `mps` explicitly on Apple Silicon if the auto-selected device is suboptimal, or `cpu` to force CPU-only processing. |
 | `--force-ocr` | Off | Run OCR on every page, even if the page has selectable text. Use this for scanned PDFs where embedded text is unreliable. |
 | `--ocr-lang "<langs>"` | `"en"` | Comma-separated language codes for OCR (e.g., `"ko,en"`). Improves accuracy for non-English documents. |
 | `--enrich-formula` | Off | Extract mathematical formulas as LaTeX. **Requires `--hybrid-mode full` on the client.** |
@@ -163,12 +166,14 @@ Backends are selected with `--hybrid <name>`. Only one backend can be active per
 
 ## Performance Notes
 
-| Processing path | Approximate throughput |
-|-----------------|----------------------|
-| Java only (no hybrid) | ~0.015 s/page |
-| Hybrid `auto` (mixed document) | Varies; most pages stay at Java speed |
-| Hybrid `full` | ~0.5 s/page (GPU-accelerated backend recommended) |
+Relative throughput:
 
-Latency figures are approximate and depend on document complexity, available hardware, and backend configuration. Running the hybrid server on a machine with a GPU significantly reduces the per-page time in `full` mode.
+- **Java only (no hybrid)**: fastest path
+- **Hybrid `auto`** (mixed document): close to Java speed for most pages; only triaged pages pay the backend round-trip
+- **Hybrid `full`**: slowest path; GPU-accelerated backend recommended
+
+Latency figures depend on document complexity, available hardware, and backend configuration. Running the hybrid server on a machine with a GPU significantly reduces the per-page time in `full` mode. Run `./scripts/bench.sh` against your own corpus for representative numbers.
 
 For throughput-sensitive workloads, use `auto` mode and reserve `full` mode for documents where enrichment or uniform OCR quality is required.
+
+**Large-document auto-chunking (2.2.1+)** — The Java client automatically splits backend-routed pages into 50-page chunks before sending them to the server. Processing a 200-page scanned PDF in `--hybrid-mode full` no longer hangs the backend. The AI model is loaded once at server startup (singleton), so chunking adds no per-chunk startup cost. No client-side flag; the server's existing `page_ranges` support handles it. Pre-2.2.1 users who manually split large PDFs before processing no longer need to.

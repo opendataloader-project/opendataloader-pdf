@@ -2,6 +2,8 @@
 
 opendataloader-pdf supports 7 output formats via the `format` option. This guide helps you choose the right format for your use case.
 
+> This file documents the 2.2.1 snapshot (matching SKILL.md `# Documented against`). If the project's `options.json` lists a format not covered here, that file is the authoritative source — newer releases may add values this guide has not caught up to yet.
+
 ## Format Overview
 
 | Format | Best For | Bounding Boxes | Tables | Images |

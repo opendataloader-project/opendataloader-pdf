@@ -58,28 +58,29 @@ This document explains the metrics used in opendataloader-pdf benchmarks, how to
 
 **What it measures:** Processing throughput in seconds per page.
 
-**Interpretation:** Lower is better. Scores vary significantly by mode:
+**Interpretation:** Lower is better. Relative shape:
 
-| Mode | Approximate throughput |
-|------|----------------------|
-| Local (no hybrid) | ~0.015 s/page |
-| Hybrid `auto` (mixed document) | Varies; most pages stay at Java speed |
-| Hybrid `full` | ~0.463 s/page |
+- **Local (no hybrid)**: fastest — pure Java layout analysis
+- **Hybrid `auto`**: varies with document complexity; most pages stay at Java speed, only triaged pages pay the backend round-trip
+- **Hybrid `full`**: slowest — every page goes to the backend
 
-Speed is not normalized to 0–1. It is an absolute wall-clock measurement averaged over the benchmark document set.
+Speed is not normalized to 0–1. It is an absolute wall-clock measurement averaged over the benchmark document set. For current numbers, run `./scripts/bench.sh` — published scores can lag the latest code.
 
 ---
 
 ## Benchmark Reference Scores
 
-**200 real-world PDFs including multi-column layouts and scientific papers.**
+Run `./scripts/bench.sh` to produce the current scores against the benchmark document set maintained in [opendataloader-bench](https://github.com/opendataloader-project/opendataloader-bench) (200 real-world PDFs including multi-column layouts and scientific papers).
 
-| Engine | Overall | NID (Reading Order) | TEDS (Table) | MHS (Heading) | Table Detection F1 | Speed (s/page) |
-|--------|---------|---------------------|--------------|---------------|--------------------|----------------|
-| **opendataloader [hybrid]** | **0.907** | **0.934** | **0.928** | 0.821 | see bench | 0.463 |
-| opendataloader [local] | 0.831 | 0.902 | 0.489 | 0.739 | see bench | **0.015** |
+Per-metric output shape:
 
-> The `Overall` column is an average of NID / TEDS / MHS. Table Detection F1 is reported per-document by `scripts/bench.sh` but is not currently folded into the Overall average; run the bench for the F1 numbers on the current snapshot. See [opendataloader-bench](https://github.com/opendataloader-project/opendataloader-bench) for methodology.
+- **Overall** — the average of NID / TEDS / MHS
+- **NID** / **TEDS** / **MHS** / **Table Detection F1** — 0–1 scale, higher is better
+- **Speed** — absolute seconds per page
+
+Table Detection F1 is reported per-document and is not folded into the Overall average.
+
+Hardcoded snapshot scores are intentionally not reproduced here — they drift whenever the bench is rerun against updated extraction code or benchmark documents. The authoritative current values live in the bench output; the opendataloader-bench README also publishes periodic snapshots. See its methodology section for reference-score context.
 
 ---
 

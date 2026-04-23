@@ -7,14 +7,18 @@ description: >
   --hybrid-mode full, slow batches from per-file JVM startup) that the README
   does not surface up-front. Detects your environment, recommends optimal options,
   runs hybrid mode setup, diagnoses quality issues, and executes conversions
-  directly. Use when: 'PDF extraction', 'PDF to markdown', 'PDF to JSON',
-  'PDF to HTML', 'opendataloader', 'ODL', 'hybrid mode', 'scanned PDF', 'OCR',
-  'PDF tables', 'RAG pipeline with PDF', 'PDF accessibility', 'PDF/UA'.
-  Do NOT use for: PDF merge/split/rotate, Word/Excel conversion, PDF form filling.
+  directly. Use when: 'PDF extraction', 'PDF parser', 'PDF parsing',
+  'open source PDF parser', 'extract text from PDF', 'PDF to text',
+  'PDF to markdown', 'PDF to JSON', 'PDF to HTML', 'opendataloader', 'ODL',
+  'hybrid mode', 'scanned PDF', 'OCR', 'PDF tables', 'PDF table extraction',
+  'PDF chunking', 'PDF for LLM', 'PDF bounding boxes', 'RAG pipeline with PDF'.
+  Do NOT use for: PDF merge/split/rotate, Word/Excel conversion, PDF form filling,
+  PDF/UA generation, PDF accessibility tagging.
+license: Apache-2.0
 ---
 
 # Targets: opendataloader-pdf >= 2.2.0
-# Last synced options.json: 26 options
+# Documented against: 2.2.1 (features added in 2.3.0+ are not yet covered)
 
 ---
 
@@ -27,7 +31,7 @@ You are a **Document Intelligence Engineer** — not merely a PDF expert, but an
 - You understand PDF internals: structure trees, bounding boxes, content streams, reading order algorithms, and the difference between digital and scanned PDFs.
 - You understand real-world extraction workflows: batch processing patterns, error triage, quality measurement with NID/TEDS/MHS metrics.
 - You are aware of downstream systems: RAG chunking strategies, LLM context window constraints, LangChain document loaders, vector store ingestion.
-- You understand cross-platform deployment: Java 11+ JVM requirements, OS-specific quirks, server/client architecture for hybrid mode.
+- You understand cross-platform deployment: per-runtime version floors (Java 11+ per `java/pom.xml`, Python 3.10+ per `pyproject.toml`, Node.js 20.19+ per `package.json`), OS-specific quirks, server/client architecture for hybrid mode.
 
 **Interaction style:** Diagnose first, prescribe later. Like a senior engineer pair programming — ask probing questions to understand the user's actual situation before recommending options. Evidence-based recommendations grounded in benchmarks, not guesswork.
 
@@ -102,23 +106,27 @@ Based on Phase 1 findings, make specific recommendations across four dimensions.
 
 ```
 Environment detection:
-├── Python available?
+├── Python 3.10+ available?
 │   ├── Complex tables / OCR / formulas needed?
 │   │   └── pip install "opendataloader-pdf[hybrid]"
 │   ├── LangChain RAG pipeline?
 │   │   └── pip install langchain-opendataloader-pdf
 │   └── Simple extraction (digital PDFs, standard tables)
 │       └── pip install opendataloader-pdf
-├── Node.js only?
+├── Python present but below 3.10?
+│   └── Upgrade Python to 3.10+, or use the Node.js / Java path below
+│       (pip will refuse to install the current package with the
+│        actual Python-version error if you try)
+├── Node.js 20.19+ only?
 │   └── npm install @opendataloader/pdf
 ├── Java project (Maven/Gradle)?
 │   └── Add Maven dependency (see references/installation-matrix.md)
 └── Unsure / getting started?
-    └── pip install opendataloader-pdf  (simplest path)
+    └── pip install opendataloader-pdf  (simplest path; requires Python 3.10+)
 ```
 
 **Critical prerequisite — Java 11+:**
-All installation paths require Java 11 or higher. Python and Node.js wrappers spawn a JVM internally. Verify with `java -version`.
+All installation paths require Java 11 or higher. Python and Node.js wrappers spawn a JVM internally. Verify with `java -version`. The authoritative current floor is `maven.compiler.source` in `java/pom.xml`; if that bumps, this skill must be updated (see `CLAUDE.md`).
 
 If Java is missing or below version 11:
 > "Java 11 or higher is required. Please install a JDK for your environment."
@@ -137,7 +145,7 @@ Do NOT recommend specific JDK distributions or provide download links.
 PDF characteristics:
 │
 ├── Digital PDF + clear bordered tables
-│   └── Local only, --table-method default     (~0.05s/page, no server needed)
+│   └── Local only, --table-method default     (fastest, no server needed)
 │
 ├── Digital PDF + borderless or complex tables
 │   └── --table-method cluster                 (local, slightly slower)
@@ -173,6 +181,8 @@ opendataloader-pdf input.pdf --hybrid docling-fast
 ```
 
 For remote servers, use `--hybrid-url http://server:5002`.
+
+**Pre-flight check** — before the first hybrid run of a session, confirm the server is reachable with `scripts/hybrid-health.sh` (exit 0 if ready). This catches "connection refused" before a full conversion attempt and is cheaper than parsing a failed client log.
 
 ---
 
@@ -356,7 +366,10 @@ Step 3: Check for scanned PDF
 **Text is garbled or contains replacement characters:**
 ```
 Step 1: Check for encoding issues
-  Add: --replace-invalid-chars "?"  (makes bad characters visible)
+  Add: --replace-invalid-chars "?"  (overrides the default space so
+       CID-decode failures stand out visually instead of blending
+       into whitespace — distinguishes font-encoding problems from
+       true scan artifacts at a glance)
 
 Step 2: If it's a scanned PDF
   Switch to: --hybrid docling-fast (+ server --force-ocr)
@@ -469,6 +482,10 @@ Common operational flags (details in `references/integration-examples.md` § Out
 - `--pages "1,3,5-10"` — restrict processing to a page range
 - `--markdown-page-separator` / `--text-page-separator` / `--html-page-separator` — inject a custom marker between pages for downstream splitting (supports `%page-number%`)
 
+### 5E. Large PDFs in Hybrid Mode
+
+Since 2.2.1 the Java client automatically chunks backend-routed pages into 50-page windows before sending them to the hybrid server. A 200-page scanned PDF in `--hybrid-mode full` will no longer hang the backend, and users migrating from earlier versions no longer need to manually split large documents. This is transparent — no flag required. See `references/hybrid-guide.md` § Performance Notes.
+
 ---
 
 ## Critical Gotchas
@@ -477,7 +494,7 @@ These three issues cause the majority of user-reported problems. Check these bef
 
 ### Gotcha 1: Java 11+ Is Always Required
 
-**Every installation path requires Java 11 or higher.** Python packages, Node.js packages, and the CLI all spawn a JVM internally. There is no pure-Python or pure-JavaScript path.
+**Every installation path requires Java 11 or higher.** Python packages, Node.js packages, and the CLI all spawn a JVM internally. There is no pure-Python or pure-JavaScript path. The authoritative current floor is `maven.compiler.source` in `java/pom.xml`; this skill is updated when that bumps.
 
 **Symptom:** `java.lang.UnsupportedClassVersionError`, `java not found`, or silent failure on import.
 
@@ -534,7 +551,7 @@ For CLI batch processing, prefer a glob pattern or a file list argument over she
 
 ## Option Reference
 
-This skill reasons about all 26 CLI options without loading their full descriptions. When the user needs option details, defaults, or interactions, load `references/options-matrix.md` (grouped by IO / Quality / Safety / Hybrid / Output / Text categories, with common combination recipes).
+This skill reasons about every CLI option declared in `options.json` without loading the full descriptions. When the user needs option details, defaults, or interactions, load `references/options-matrix.md` (grouped by IO / Quality / Safety / Hybrid / Output / Text categories, with common combination recipes).
 
 Authoritative source order:
 
@@ -585,7 +602,7 @@ Use this as a mental checklist for any extraction request:
 - [ ] Phase 1: Run detect-env.sh or ask about environment
 - [ ] Phase 1: Know the PDF type (digital/scanned/mixed)
 - [ ] Phase 1: Know the downstream use case
-- [ ] Phase 2: Confirm Java 11+ is present
+- [ ] Phase 2: Confirm runtime floors (Java 11+ always; Python 3.10+ if pip path; Node.js 20.19+ if npm path)
 - [ ] Phase 2: Selected local vs. hybrid based on PDF type
 - [ ] Phase 2: Selected output format based on downstream use
 - [ ] Phase 3: Generated or executed the command

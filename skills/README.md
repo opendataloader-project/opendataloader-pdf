@@ -1,6 +1,6 @@
 # Agent Skills
 
-opendataloader-pdf ships built-in agent skills that help AI coding assistants use this project effectively. Skills follow the [agentskills.io](https://agentskills.io) specification and work with Claude Code, Codex, Gemini CLI, Cursor, VS Code, and 26+ platforms.
+opendataloader-pdf ships built-in agent skills that help AI coding assistants use this project effectively. Skills follow the [Agent Skills](https://agentskills.io) open format. This repository is packaged for Claude Code via [`.claude-plugin/marketplace.json`](../.claude-plugin/marketplace.json).
 
 ## Directory Structure
 
@@ -14,6 +14,7 @@ skills/
     │   ├── hybrid-guide.md
     │   ├── format-guide.md
     │   ├── installation-matrix.md
+    │   ├── integration-examples.md
     │   └── eval-metrics.md
     ├── scripts/                       ← Executable helpers
     │   ├── detect-env.sh
@@ -30,8 +31,8 @@ skills/
 
 | Level | Content | When Loaded |
 |-------|---------|-------------|
-| **L1** | `description` field in SKILL.md frontmatter (~100 words) | Always visible to skill router |
-| **L2** | SKILL.md body (~400 lines) — persona, workflows, decision trees, gotchas | When skill is activated |
+| **L1** | `description` field in SKILL.md frontmatter | Always visible to skill router |
+| **L2** | SKILL.md body — persona, workflows, decision trees, gotchas | When skill is activated |
 | **L3** | `references/*` files — detailed option matrices, guides, metrics | When the user enters that topic |
 
 This design minimizes token usage. The AI agent only loads what it needs for the current task.
@@ -159,7 +160,8 @@ python skills/odl-pdf/scripts/sync-skill-refs.py
 
 ## References
 
-- [agentskills.io specification](https://agentskills.io) — Multi-agent skill format standard
+- [Agent Skills](https://agentskills.io) — Open format spec for agent skills
+- [`skills` CLI](https://skills.sh) — CLI that installs Agent Skills (`vercel-labs/skills`); used by the `npx skills add ...` command in the root README's install section
 - [Claude Code Skills](https://docs.anthropic.com/en/docs/claude-code) — Claude Code skill documentation
 - `.claude-plugin/marketplace.json` — Plugin registration for this project
 - `CLAUDE.md` — Internal development notes (not for the skill)

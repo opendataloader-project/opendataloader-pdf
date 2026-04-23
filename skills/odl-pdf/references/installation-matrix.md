@@ -5,26 +5,26 @@ This guide helps you choose the right installation method for your environment.
 ## Decision Tree
 
 ```
-Do you have Python available?
+Do you have Python 3.10+ available?
 ├── Yes
 │   ├── Do you need LangChain integration?
 │   │   └── Yes → pip install langchain-opendataloader-pdf
 │   ├── Do you need hybrid server capability?
 │   │   └── Yes → pip install "opendataloader-pdf[hybrid]"
 │   └── Otherwise → pip install opendataloader-pdf  (simplest)
-├── Node.js only (no Python)?
+├── Node.js 20.19+ only (no Python)?
 │   └── npm install @opendataloader/pdf
 ├── Java project (Maven/Gradle)?
 │   └── Add Maven dependency (see below)
 └── Unsure?
-    └── pip install opendataloader-pdf  (simplest, works on all platforms)
+    └── pip install opendataloader-pdf  (simplest, works on all platforms; requires Python 3.10+)
 ```
 
 ## Prerequisites
 
-**Java 11 or higher is required for all installation methods.** All methods spawn a JVM internally to perform PDF processing.
+**Java 11 or higher is required for all installation methods.** All methods spawn a JVM internally to perform PDF processing. The authoritative current floor is `maven.compiler.source` in `java/pom.xml`; this document is updated when that bumps.
 
-If Java is missing when you run the tool, you will see:
+If Java is missing or below version 11 when you run the tool, you will see:
 
 > Java 11 or higher is required. Please install a JDK for your environment.
 
@@ -33,6 +33,14 @@ Install a JDK appropriate for your OS before proceeding. Verify with:
 ```
 java -version
 ```
+
+**Language-binding runtime floors** are declared in each package's manifest and enforced by the respective package manager at install time:
+
+- pip: Python >= 3.10 (per `python/opendataloader-pdf/pyproject.toml` `requires-python`)
+- npm: Node.js >= 20.19 (per `node/opendataloader-pdf/package.json` `engines.node`)
+- Maven: Java >= 11 (same as the JVM floor above)
+
+If the user's runtime is below the floor, `pip` / `npm` / `mvn` refuse to install with a clear error. Java alone is the exception — it is a runtime requirement of the built JAR, so the CLI fails at use time rather than install time, which is why the upfront `java -version` verification above is explicitly called out.
 
 ## Quick Start Commands
 
@@ -109,8 +117,9 @@ enforce it at install time:
 `pip` / `npm` / `mvn` each validate against the manifest's declared floor and
 fail with a clear error if the environment is below it.
 
-All methods additionally require **Java 11 or higher** at runtime; the pip and
-npm wrappers spawn a JVM internally. See Critical Gotcha 1 in `SKILL.md`.
+All methods additionally require **Java 11 or higher** at runtime (current
+floor declared in `java/pom.xml` `maven.compiler.source`); the pip and npm
+wrappers spawn a JVM internally. See Critical Gotcha 1 in `SKILL.md`.
 
 ## Post-Install Verification
 

@@ -55,5 +55,46 @@ The `skill-smoke-test.yml` workflow runs automatically on push and
 verifies cross-platform shell and Python script behavior on
 ubuntu/windows/macos; it does not exercise model behavior.
 
+When bumping the minimum Java version (raising
+`<maven.compiler.source>` / `<maven.compiler.target>` in `java/pom.xml`),
+also update every explicit "Java 11" / "Java 11+" mention in these
+skill files — pip-installed users do not have `java/pom.xml` on disk
+and rely on the skill to state the concrete minimum:
+
+- `skills/odl-pdf/SKILL.md` — Persona, Phase 2A prerequisite and the
+  user-facing message, Action Mode A1 environment check, Gotcha 1
+  (title, body, Resolution, user-facing message), Session Checklist
+- `skills/odl-pdf/references/installation-matrix.md` — Prerequisites
+  paragraph and the Version Compatibility table's footer note
+- `skills/odl-pdf/references/integration-examples.md` — opening
+  requirement line
+- `skills/odl-pdf/evals/evals.json` — eval-006 `must_mention` array
+  (currently `"Java 11"`)
+
+The same pattern applies when the Python or Node.js runtime floor
+bumps, though the urgency is asymmetric:
+
+- **Node.js — peer to Java in silent-failure terms.** `npm` treats
+  `engines.node` in `node/opendataloader-pdf/package.json` as advisory
+  by default (`npm warn EBADENGINE` then installs anyway), so a user
+  below the floor gets a cryptic runtime error rather than a blocked
+  install. When bumping `engines.node`, grep for the current value
+  (e.g. `Node.js 20.19+`) across `skills/odl-pdf/` and update every
+  match. `pnpm` is strict by default, but the skill cannot assume the
+  user's package manager.
+- **Python — loud install failure.** Modern `pip` strictly enforces
+  `requires-python` in `python/opendataloader-pdf/pyproject.toml` and
+  refuses to install with a clear error. Surfacing the floor still
+  saves an agent-user round-trip, so when bumping `requires-python`,
+  grep for the current value (e.g. `Python 3.10+`) across
+  `skills/odl-pdf/` and update every match.
+
+Current Python/Node.js floor mentions live in the same skill locations
+as the Java ones: `SKILL.md` Persona, Phase 2A decision tree and
+default note, Session Checklist; `installation-matrix.md` Decision
+Tree and Prerequisites; `integration-examples.md` opening line. Grep
+is the authoritative discovery method for either bump — the file list
+above is a navigation aid, not a substitute for a fresh grep.
+
 The skill is written in English for external users. Do not include internal
 team terminology or company-specific policies.
