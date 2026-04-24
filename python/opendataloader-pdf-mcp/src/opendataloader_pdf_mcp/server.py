@@ -7,6 +7,9 @@ from typing import Any
 from mcp.server.fastmcp import FastMCP
 
 import opendataloader_pdf
+from opendataloader_pdf_mcp.jobs import JobManager, JobStatus
+
+_job_manager = JobManager()
 
 mcp = FastMCP("opendataloader-pdf")
 
@@ -169,6 +172,158 @@ def convert_pdf(
             output_file = matching_ext[0]
 
         return output_file.read_text(encoding="utf-8")
+
+
+def _collect_kwargs(
+    password: str | None,
+    pages: str | None,
+    keep_line_breaks: bool,
+    sanitize: bool,
+    content_safety_off: str | None,
+    replace_invalid_chars: str | None,
+    use_struct_tree: bool,
+    table_method: str | None,
+    reading_order: str | None,
+    markdown_page_separator: str | None,
+    text_page_separator: str | None,
+    html_page_separator: str | None,
+    image_output: str | None,
+    image_format: str | None,
+    include_header_footer: bool,
+    detect_strikethrough: bool,
+    hybrid: str | None,
+    hybrid_mode: str | None,
+    hybrid_url: str | None,
+    hybrid_timeout: str | None,
+    hybrid_fallback: bool,
+    image_dir: str | None,
+    fmt: str,
+) -> dict:
+    kwargs: dict = {}
+    if password is not None:
+        kwargs["password"] = password
+    if pages is not None:
+        kwargs["pages"] = pages
+    if keep_line_breaks:
+        kwargs["keep_line_breaks"] = True
+    if sanitize:
+        kwargs["sanitize"] = True
+    if content_safety_off is not None:
+        kwargs["content_safety_off"] = content_safety_off
+    if replace_invalid_chars is not None:
+        kwargs["replace_invalid_chars"] = replace_invalid_chars
+    if use_struct_tree:
+        kwargs["use_struct_tree"] = True
+    if table_method is not None:
+        kwargs["table_method"] = table_method
+    if reading_order is not None:
+        kwargs["reading_order"] = reading_order
+    if markdown_page_separator is not None:
+        kwargs["markdown_page_separator"] = markdown_page_separator
+    if text_page_separator is not None:
+        kwargs["text_page_separator"] = text_page_separator
+    if html_page_separator is not None:
+        kwargs["html_page_separator"] = html_page_separator
+    if fmt == "markdown-with-images" and image_output is None:
+        kwargs["image_output"] = "embedded"
+    elif image_output is not None:
+        kwargs["image_output"] = image_output
+    if image_format is not None:
+        kwargs["image_format"] = image_format
+    if include_header_footer:
+        kwargs["include_header_footer"] = True
+    if detect_strikethrough:
+        kwargs["detect_strikethrough"] = True
+    if hybrid is not None:
+        kwargs["hybrid"] = hybrid
+    if hybrid_mode is not None:
+        kwargs["hybrid_mode"] = hybrid_mode
+    if hybrid_url is not None:
+        kwargs["hybrid_url"] = hybrid_url
+    if hybrid_timeout is not None:
+        kwargs["hybrid_timeout"] = hybrid_timeout
+    if hybrid_fallback:
+        kwargs["hybrid_fallback"] = True
+    if image_dir is not None:
+        kwargs["image_dir"] = image_dir
+    return kwargs
+
+
+@mcp.tool()
+def submit_pdf(
+    input_path: str,
+    format: str = "markdown",
+    password: str | None = None,
+    pages: str | None = None,
+    keep_line_breaks: bool = False,
+    sanitize: bool = False,
+    content_safety_off: str | None = None,
+    replace_invalid_chars: str | None = None,
+    use_struct_tree: bool = False,
+    table_method: str | None = None,
+    reading_order: str | None = None,
+    markdown_page_separator: str | None = None,
+    text_page_separator: str | None = None,
+    html_page_separator: str | None = None,
+    image_output: str | None = None,
+    image_format: str | None = None,
+    include_header_footer: bool = False,
+    detect_strikethrough: bool = False,
+    hybrid: str | None = None,
+    hybrid_mode: str | None = None,
+    hybrid_url: str | None = None,
+    hybrid_timeout: str | None = None,
+    hybrid_fallback: bool = False,
+    image_dir: str | None = None,
+) -> dict:
+    """Submit a PDF for async conversion. Returns a job_id to poll with get_job_status."""
+    kwargs = _collect_kwargs(
+        password, pages, keep_line_breaks, sanitize, content_safety_off,
+        replace_invalid_chars, use_struct_tree, table_method, reading_order,
+        markdown_page_separator, text_page_separator, html_page_separator,
+        image_output, image_format, include_header_footer, detect_strikethrough,
+        hybrid, hybrid_mode, hybrid_url, hybrid_timeout, hybrid_fallback,
+        image_dir, format,
+    )
+    job_id = _job_manager.submit(input_path, format, **kwargs)
+    job = _job_manager.get(job_id)
+    with job._status_lock:
+        status = job.status if job.status != JobStatus.RUNNING else JobStatus.PENDING
+    return {"job_id": job_id, "status": status.value, "content_hash": job.content_hash}
+
+
+@mcp.tool()
+def get_job_status(job_id: str) -> dict:
+    """Get the current status and metadata of a submitted conversion job."""
+    job = _job_manager.get(job_id)
+    return {
+        "job_id": job.job_id,
+        "status": job.status.value,
+        "triage_decision": job.triage_decision,
+        "score": job.score,
+        "submitted_at": job.submitted_at,
+        "completed_at": job.completed_at,
+    }
+
+
+@mcp.tool()
+def cancel_job(job_id: str) -> dict:
+    """Cancel a pending or running conversion job. Idempotent on terminal jobs."""
+    status = _job_manager.cancel(job_id)
+    return {"job_id": job_id, "status": status.value}
+
+
+@mcp.tool()
+def get_artifact(job_id: str) -> str:
+    """Retrieve the converted content for a completed job. Raises if not done."""
+    job = _job_manager.get(job_id)
+    if job.status == JobStatus.FAILED:
+        raise RuntimeError(f"job {job_id} failed: {job.error}")
+    if job.status == JobStatus.CANCELLED:
+        raise RuntimeError(f"job {job_id} was cancelled")
+    if job.status != JobStatus.DONE:
+        raise RuntimeError(f"job {job_id} is {job.status.value}, not done")
+    return job.artifact
 
 
 def main():
