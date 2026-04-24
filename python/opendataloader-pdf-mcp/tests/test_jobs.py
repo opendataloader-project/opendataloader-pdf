@@ -124,7 +124,7 @@ class TestCancel:
             slow_start.wait(timeout=5)
             original_run(job, input_file)
 
-        manager._run = delayed_run
+        manager._run = delayed_run  # must be BEFORE submit
 
         with patch("opendataloader_pdf_mcp.jobs.opendataloader_pdf") as mock_odl:
             mock_odl.convert = MagicMock()

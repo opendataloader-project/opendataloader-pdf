@@ -46,7 +46,8 @@ class Job:
     error:           str | None       = None
     submitted_at:    str              = field(default_factory=lambda: _now())
     completed_at:    str | None       = None
-    _cancel_event:   threading.Event  = field(default_factory=threading.Event, repr=False)
+    _cancel_event:   threading.Event  = field(default_factory=threading.Event, repr=False, compare=False)
+    _status_lock:    threading.Lock   = field(default_factory=threading.Lock, repr=False, compare=False)
 
 
 def _now() -> str:
@@ -72,7 +73,7 @@ class JobManager:
 
         with self._lock:
             existing_id = self._hash_index.get(content_hash)
-            if existing_id and self._jobs.get(existing_id, Job("", "", JobStatus.FAILED, "", {})).status == JobStatus.DONE:
+            if existing_id and self._jobs[existing_id].status == JobStatus.DONE:
                 return existing_id
 
             job_id = str(uuid.uuid4())
@@ -97,21 +98,21 @@ class JobManager:
 
     def cancel(self, job_id: str) -> JobStatus:
         job = self.get(job_id)
-        if job.status in (JobStatus.DONE, JobStatus.FAILED, JobStatus.CANCELLED):
-            return job.status
-        job._cancel_event.set()
-        if job.status in (JobStatus.PENDING, JobStatus.RUNNING):
+        with job._status_lock:
+            if job.status in (JobStatus.DONE, JobStatus.FAILED, JobStatus.CANCELLED):
+                return job.status
+            job._cancel_event.set()
             job.status = JobStatus.CANCELLED
             job.completed_at = _now()
-        return JobStatus.CANCELLED
+            return JobStatus.CANCELLED
 
     def _run(self, job: Job, input_file: Path) -> None:
-        if job._cancel_event.is_set():
-            job.status = JobStatus.CANCELLED
-            job.completed_at = _now()
-            return
-
-        job.status = JobStatus.RUNNING
+        with job._status_lock:
+            if job._cancel_event.is_set():
+                job.status = JobStatus.CANCELLED
+                job.completed_at = _now()
+                return
+            job.status = JobStatus.RUNNING
         ext = _EXT_MAP[job.format]
 
         try:
@@ -139,15 +140,16 @@ class JobManager:
 
                 job.artifact = output_file.read_text(encoding="utf-8")
 
-            with self._lock:
-                self._hash_index[job.content_hash] = job.job_id
-
-            if not job._cancel_event.is_set():
-                job.status = JobStatus.DONE
-                job.completed_at = _now()
+            with job._status_lock:
+                if not job._cancel_event.is_set():
+                    job.status = JobStatus.DONE
+                    job.completed_at = _now()
+                    with self._lock:
+                        self._hash_index[job.content_hash] = job.job_id
 
         except Exception as exc:
-            if job.status != JobStatus.CANCELLED:
-                job.error = str(exc)
-                job.status = JobStatus.FAILED
-                job.completed_at = _now()
+            with job._status_lock:
+                if job.status != JobStatus.CANCELLED:
+                    job.error = str(exc)
+                    job.status = JobStatus.FAILED
+                    job.completed_at = _now()
