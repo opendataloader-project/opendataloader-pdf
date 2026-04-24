@@ -37,6 +37,7 @@ def convert(
     hybrid_timeout: Optional[str] = None,
     hybrid_fallback: bool = False,
     to_stdout: bool = False,
+    threads: Optional[str] = None,
 ) -> None:
     """
     Convert PDF(s) into the requested output format(s).
@@ -69,6 +70,7 @@ def convert(
         hybrid_timeout: Hybrid backend request timeout in milliseconds (0 = no timeout). Default: 0
         hybrid_fallback: Opt in to Java fallback on hybrid backend error (default: disabled)
         to_stdout: Write output to stdout instead of file (single format only)
+        threads: Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode
     """
     args: List[str] = []
 
@@ -138,5 +140,7 @@ def convert(
         args.append("--hybrid-fallback")
     if to_stdout:
         args.append("--to-stdout")
+    if threads:
+        args.extend(["--threads", threads])
 
     run_jar(args, quiet)

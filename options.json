@@ -207,6 +207,14 @@
       "required": false,
       "default": false,
       "description": "Write output to stdout instead of file (single format only)"
+    },
+    {
+      "name": "threads",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": "1",
+      "description": "Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode"
     }
   ]
 }

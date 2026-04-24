@@ -33,4 +33,5 @@ export function registerCliOptions(program: Command): void {
   program.option('--hybrid-timeout <value>', 'Hybrid backend request timeout in milliseconds (0 = no timeout). Default: 0');
   program.option('--hybrid-fallback', 'Opt in to Java fallback on hybrid backend error (default: disabled)');
   program.option('--to-stdout', 'Write output to stdout instead of file (single format only)');
+  program.option('--threads <value>', 'Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode');
 }
