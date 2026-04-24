@@ -337,9 +337,14 @@ def get_job_resource(job_id: str) -> str:
         job = _job_manager.get(job_id)
     except KeyError:
         return f"Error: job not found: {job_id}"
-    if job.status != JobStatus.DONE:
-        return f"Error: job {job_id} is {job.status.value}, not done"
-    return job.artifact
+    with job._status_lock:
+        status = job.status
+        artifact = job.artifact
+    if status != JobStatus.DONE:
+        return f"Error: job {job_id} is {status.value}, not done"
+    if artifact is None:
+        return f"Error: job {job_id} completed but artifact is missing"
+    return artifact
 
 
 def main():
