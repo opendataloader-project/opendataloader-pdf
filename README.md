@@ -66,56 +66,56 @@ opendataloader_pdf.convert(
 
 ## What Problems Does This Solve?
 
-| Problem | Solution | Status |
-|---------|----------|--------|
-| **PDF structure lost during parsing** — wrong reading order, broken tables, no element coordinates | Deterministic local PDF to Markdown/JSON with bounding boxes, XY-Cut++ reading order | Shipped |
-| **Complex tables, scanned PDFs, formulas, charts** need AI-level understanding | Hybrid mode routes complex pages to AI backend (#1 in benchmarks) | Shipped |
+| Problem                                                                                                   | Solution                                                                                                                                        | Status            |
+| --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| **PDF structure lost during parsing** — wrong reading order, broken tables, no element coordinates | Deterministic local PDF to Markdown/JSON with bounding boxes, XY-Cut++ reading order                                                            | Shipped           |
+| **Complex tables, scanned PDFs, formulas, charts** need AI-level understanding                      | Hybrid mode routes complex pages to AI backend (#1 in benchmarks)                                                                               | Shipped           |
 | **PDF accessibility compliance** — EAA, ADA, Section 508 enforced. Manual remediation $50–200/doc | Auto-tagging: layout analysis → Tagged PDF (free, Q2 2026). Built with PDF Association & veraPDF validation. PDF/UA export (enterprise add-on) | Auto-tag: Q2 2026 |
 
 ## Capability Matrix
 
-| Capability | Supported | Tier |
-|------------|-----------|------|
-| **Data extraction** | | |
-| Extract text with correct reading order | Yes | Free |
-| Bounding boxes for every element | Yes | Free |
-| Table extraction (simple borders) | Yes | Free |
-| Table extraction (complex/borderless) | Yes | Free (Hybrid) |
-| Heading hierarchy detection | Yes | Free |
-| List detection (numbered, bulleted, nested) | Yes | Free |
-| Image extraction with coordinates | Yes | Free |
-| AI chart/image description | Yes | Free (Hybrid) |
-| OCR for scanned PDFs | Yes | Free (Hybrid) |
-| Formula extraction (LaTeX) | Yes | Free (Hybrid) |
-| Tagged PDF structure extraction | Yes | Free |
-| AI safety (prompt injection filtering) | Yes | Free |
-| Header/footer/watermark filtering | Yes | Free |
-| **Accessibility** | | |
+| Capability                                   | Supported      | Tier              |
+| -------------------------------------------- | -------------- | ----------------- |
+| **Data extraction**                    |                |                   |
+| Extract text with correct reading order      | Yes            | Free              |
+| Bounding boxes for every element             | Yes            | Free              |
+| Table extraction (simple borders)            | Yes            | Free              |
+| Table extraction (complex/borderless)        | Yes            | Free (Hybrid)     |
+| Heading hierarchy detection                  | Yes            | Free              |
+| List detection (numbered, bulleted, nested)  | Yes            | Free              |
+| Image extraction with coordinates            | Yes            | Free              |
+| AI chart/image description                   | Yes            | Free (Hybrid)     |
+| OCR for scanned PDFs                         | Yes            | Free (Hybrid)     |
+| Formula extraction (LaTeX)                   | Yes            | Free (Hybrid)     |
+| Tagged PDF structure extraction              | Yes            | Free              |
+| AI safety (prompt injection filtering)       | Yes            | Free              |
+| Header/footer/watermark filtering            | Yes            | Free              |
+| **Accessibility**                      |                |                   |
 | Auto-tagging → Tagged PDF for untagged PDFs | Coming Q2 2026 | Free (Apache 2.0) |
-| PDF/UA-1, PDF/UA-2 export | 💼 Available | Enterprise |
-| Accessibility studio (visual editor) | 💼 Available | Enterprise |
-| **Limitations** | | |
-| Process Word/Excel/PPT | No | — |
-| GPU required | No | — |
+| PDF/UA-1, PDF/UA-2 export                    | 💼 Available   | Enterprise        |
+| Accessibility studio (visual editor)         | 💼 Available   | Enterprise        |
+| **Limitations**                        |                |                   |
+| Process Word/Excel/PPT                       | No             | —                |
+| GPU required                                 | No             | —                |
 
 ## Extraction Benchmarks
 
 **opendataloader-pdf [hybrid] ranks #1 overall (0.907)** across reading order, table, and heading extraction accuracy.
 
-| Engine | Overall | Reading Order | Table | Heading | Speed (s/page) |
-|--------|---------|---------------|-------|---------|----------------|
-| **opendataloader [hybrid]** | **0.907** | **0.934** | **0.928** | 0.821 | 0.463 |
-| docling | 0.882 | 0.898 | 0.887 | **0.824** | 0.762 |
-| nutrient | 0.880 | 0.924 | 0.662 | 0.811 | 0.230 |
-| marker | 0.861 | 0.890 | 0.808 | 0.796 | 53.932 |
-| unstructured [hi_res] | 0.841 | 0.904 | 0.588 | 0.749 | 3.008 |
-| edgeparse | 0.837 | 0.894 | 0.717 | 0.706 | 0.036 |
-| opendataloader | 0.831 | 0.902 | 0.489 | 0.739 | **0.015** |
-| mineru | 0.831 | 0.857 | 0.873 | 0.743 | 5.962 |
-| pymupdf4llm | 0.732 | 0.885 | 0.401 | 0.412 | 0.091 |
-| unstructured | 0.686 | 0.882 | 0.000 | 0.388 | 0.077 |
-| markitdown | 0.589 | 0.844 | 0.273 | 0.000 | 0.114 |
-| liteparse | 0.576 | 0.866 | 0.000 | 0.000 | 1.061 |
+| Engine                            | Overall         | Reading Order   | Table           | Heading         | Speed (s/page)  |
+| --------------------------------- | --------------- | --------------- | --------------- | --------------- | --------------- |
+| **opendataloader [hybrid]** | **0.907** | **0.934** | **0.928** | 0.821           | 0.463           |
+| docling                           | 0.882           | 0.898           | 0.887           | **0.824** | 0.762           |
+| nutrient                          | 0.880           | 0.924           | 0.662           | 0.811           | 0.230           |
+| marker                            | 0.861           | 0.890           | 0.808           | 0.796           | 53.932          |
+| unstructured [hi_res]             | 0.841           | 0.904           | 0.588           | 0.749           | 3.008           |
+| edgeparse                         | 0.837           | 0.894           | 0.717           | 0.706           | 0.036           |
+| opendataloader                    | 0.831           | 0.902           | 0.489           | 0.739           | **0.015** |
+| mineru                            | 0.831           | 0.857           | 0.873           | 0.743           | 5.962           |
+| pymupdf4llm                       | 0.732           | 0.885           | 0.401           | 0.412           | 0.091           |
+| unstructured                      | 0.686           | 0.882           | 0.000           | 0.388           | 0.077           |
+| markitdown                        | 0.589           | 0.844           | 0.273           | 0.000           | 0.114           |
+| liteparse                         | 0.576           | 0.866           | 0.000           | 0.000           | 1.061           |
 
 > Scores normalized to [0, 1]. Higher is better for accuracy; lower is better for speed. **Bold** = best. [Full benchmark details](https://github.com/opendataloader-project/opendataloader-bench)
 
@@ -125,15 +125,15 @@ opendataloader_pdf.convert(
 
 ## Which Mode Should I Use?
 
-| Your Document | Mode | Install | Server Command | Client Command |
-|---------------|------|---------|----------------|----------------|
-| Standard digital PDF | Fast (default) | `pip install opendataloader-pdf` | None needed | `opendataloader-pdf file1.pdf file2.pdf folder/` |
-| Complex or nested tables | **Hybrid** | `pip install "opendataloader-pdf[hybrid]"` | `opendataloader-pdf-hybrid --port 5002` | `opendataloader-pdf --hybrid docling-fast file1.pdf file2.pdf folder/` |
-| Scanned / image-based PDF | Hybrid + OCR | `pip install "opendataloader-pdf[hybrid]"` | `opendataloader-pdf-hybrid --port 5002 --force-ocr` | `opendataloader-pdf --hybrid docling-fast file1.pdf file2.pdf folder/` |
-| Non-English scanned PDF | Hybrid + OCR | `pip install "opendataloader-pdf[hybrid]"` | `opendataloader-pdf-hybrid --port 5002 --force-ocr --ocr-lang "ko,en"` | `opendataloader-pdf --hybrid docling-fast file1.pdf file2.pdf folder/` |
-| Mathematical formulas | Hybrid + formula | `pip install "opendataloader-pdf[hybrid]"` | `opendataloader-pdf-hybrid --enrich-formula` | `opendataloader-pdf --hybrid docling-fast --hybrid-mode full file1.pdf file2.pdf folder/` |
-| Charts needing description | Hybrid + picture | `pip install "opendataloader-pdf[hybrid]"` | `opendataloader-pdf-hybrid --enrich-picture-description` | `opendataloader-pdf --hybrid docling-fast --hybrid-mode full file1.pdf file2.pdf folder/` |
-| Untagged PDFs needing accessibility | Auto-tagging → Tagged PDF | Coming Q2 2026 | — | — |
+| Your Document                       | Mode                       | Install                                      | Server Command                                                           | Client Command                                                                              |
+| ----------------------------------- | -------------------------- | -------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| Standard digital PDF                | Fast (default)             | `pip install opendataloader-pdf`           | None needed                                                              | `opendataloader-pdf file1.pdf file2.pdf folder/`                                          |
+| Complex or nested tables            | **Hybrid**           | `pip install "opendataloader-pdf[hybrid]"` | `opendataloader-pdf-hybrid --port 5002`                                | `opendataloader-pdf --hybrid docling-fast file1.pdf file2.pdf folder/`                    |
+| Scanned / image-based PDF           | Hybrid + OCR               | `pip install "opendataloader-pdf[hybrid]"` | `opendataloader-pdf-hybrid --port 5002 --force-ocr`                    | `opendataloader-pdf --hybrid docling-fast file1.pdf file2.pdf folder/`                    |
+| Non-English scanned PDF             | Hybrid + OCR               | `pip install "opendataloader-pdf[hybrid]"` | `opendataloader-pdf-hybrid --port 5002 --force-ocr --ocr-lang "ko,en"` | `opendataloader-pdf --hybrid docling-fast file1.pdf file2.pdf folder/`                    |
+| Mathematical formulas               | Hybrid + formula           | `pip install "opendataloader-pdf[hybrid]"` | `opendataloader-pdf-hybrid --enrich-formula`                           | `opendataloader-pdf --hybrid docling-fast --hybrid-mode full file1.pdf file2.pdf folder/` |
+| Charts needing description          | Hybrid + picture           | `pip install "opendataloader-pdf[hybrid]"` | `opendataloader-pdf-hybrid --enrich-picture-description`               | `opendataloader-pdf --hybrid docling-fast --hybrid-mode full file1.pdf file2.pdf folder/` |
+| Untagged PDFs needing accessibility | Auto-tagging → Tagged PDF | Coming Q2 2026                               | —                                                                       | —                                                                                          |
 
 ## Quick Start
 
@@ -241,6 +241,7 @@ opendataloader-pdf --hybrid docling-fast --hybrid-mode full file1.pdf file2.pdf 
 ```
 
 Output in JSON:
+
 ```json
 {
   "type": "formula",
@@ -265,6 +266,7 @@ opendataloader-pdf --hybrid docling-fast --hybrid-mode full file1.pdf file2.pdf 
 ```
 
 Output in JSON:
+
 ```json
 {
   "type": "picture",
@@ -284,13 +286,13 @@ Enterprise-grade AI document analysis via [Hancom Data Loader](https://sdk.hanco
 
 ## Output Formats
 
-| Format | Use Case |
-|--------|----------|
-| **JSON** | Structured data with bounding boxes, semantic types |
-| **Markdown** | Clean text for LLM context, RAG chunks |
-| **HTML** | Web display with styling |
+| Format                  | Use Case                                                                                                    |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------- |
+| **JSON**          | Structured data with bounding boxes, semantic types                                                         |
+| **Markdown**      | Clean text for LLM context, RAG chunks                                                                      |
+| **HTML**          | Web display with styling                                                                                    |
 | **Annotated PDF** | Visual debugging — see detected structures ([sample](https://opendataloader.org/demo/samples/01030000000000)) |
-| **Text** | Plain text extraction |
+| **Text**          | Plain text extraction                                                                                       |
 
 Combine formats: `format="json,markdown"`
 
@@ -311,14 +313,14 @@ Combine formats: `format="json,markdown"`
 }
 ```
 
-| Field | Description |
-|-------|-------------|
-| `type` | Element type: heading, paragraph, table, list, image, caption, formula |
-| `id` | Unique identifier for cross-referencing |
-| `page number` | 1-indexed page reference |
-| `bounding box` | `[left, bottom, right, top]` in PDF points (72pt = 1 inch) |
-| `heading level` | Heading depth (1+) |
-| `content` | Extracted text |
+| Field             | Description                                                            |
+| ----------------- | ---------------------------------------------------------------------- |
+| `type`          | Element type: heading, paragraph, table, list, image, caption, formula |
+| `id`            | Unique identifier for cross-referencing                                |
+| `page number`   | 1-indexed page reference                                               |
+| `bounding box`  | `[left, bottom, right, top]` in PDF points (72pt = 1 inch)           |
+| `heading level` | Heading depth (1+)                                                     |
+| `content`       | Extracted text                                                         |
 
 [Full JSON Schema](https://opendataloader.org/docs/reference/json-schema)
 
@@ -396,29 +398,29 @@ opendataloader_pdf.convert(
 
 **OpenDataLoader's approach**: Built in collaboration with [PDF Association](https://pdfa.org) and [Dual Lab](https://duallab.com) (developers of [veraPDF](https://verapdf.org), the industry-reference open-source PDF/A and PDF/UA validator). Auto-tagging follows the [Well-Tagged PDF specification](https://pdfa.org/resource/well-tagged-pdf/) and is validated programmatically using veraPDF — automated conformance checks against PDF accessibility standards, not manual review. No existing open-source tool generates Tagged PDFs end-to-end — most rely on proprietary SDKs for the tag-writing step. OpenDataLoader does it all under Apache 2.0. ([collaboration details](https://opendataloader.org/docs/tagged-pdf-collaboration))
 
-| Regulation | Deadline | Requirement |
-|------------|----------|-------------|
-| **European Accessibility Act (EAA)** | June 28, 2025 | Accessible digital products across the EU |
-| **ADA & Section 508** | In effect | U.S. federal agencies and public accommodations |
-| **Digital Inclusion Act** | In effect | South Korea digital service accessibility |
+| Regulation                                 | Deadline      | Requirement                                     |
+| ------------------------------------------ | ------------- | ----------------------------------------------- |
+| **European Accessibility Act (EAA)** | June 28, 2025 | Accessible digital products across the EU       |
+| **ADA & Section 508**                | In effect     | U.S. federal agencies and public accommodations |
+| **Digital Inclusion Act**            | In effect     | South Korea digital service accessibility       |
 
 ### Standards & Validation
 
-| Aspect | Detail |
-|--------|--------|
-| **Specification** | [Well-Tagged PDF](https://pdfa.org/resource/well-tagged-pdf/) by PDF Association |
-| **Validation** | [veraPDF](https://verapdf.org) — industry-reference open-source PDF/A & PDF/UA validator |
-| **Collaboration** | PDF Association + [Dual Lab](https://duallab.com) (veraPDF developers) co-develop tagging and validation |
-| **License** | Auto-tagging → Tagged PDF: Apache 2.0 (free). PDF/UA export: Enterprise |
+| Aspect                  | Detail                                                                                               |
+| ----------------------- | ---------------------------------------------------------------------------------------------------- |
+| **Specification** | [Well-Tagged PDF](https://pdfa.org/resource/well-tagged-pdf/) by PDF Association                        |
+| **Validation**    | [veraPDF](https://verapdf.org) — industry-reference open-source PDF/A & PDF/UA validator               |
+| **Collaboration** | PDF Association +[Dual Lab](https://duallab.com) (veraPDF developers) co-develop tagging and validation |
+| **License**       | Auto-tagging → Tagged PDF: Apache 2.0 (free). PDF/UA export: Enterprise                             |
 
 ### Accessibility Pipeline
 
-| Step | Feature | Status | Tier |
-|------|---------|--------|------|
-| 1. **Audit** | Read existing PDF tags, detect untagged PDFs | Shipped | Free |
-| 2. **Auto-tag → Tagged PDF** | Generate structure tags for untagged PDFs | Coming Q2 2026 | Free (Apache 2.0) |
-| 3. **Export PDF/UA** | Convert to PDF/UA-1 or PDF/UA-2 compliant files | 💼 Available | Enterprise |
-| 4. **Visual editing** | Accessibility studio — review and fix tags | 💼 Available | Enterprise |
+| Step                               | Feature                                         | Status         | Tier              |
+| ---------------------------------- | ----------------------------------------------- | -------------- | ----------------- |
+| 1.**Audit**                  | Read existing PDF tags, detect untagged PDFs    | Shipped        | Free              |
+| 2.**Auto-tag → Tagged PDF** | Generate structure tags for untagged PDFs       | Coming Q2 2026 | Free (Apache 2.0) |
+| 3.**Export PDF/UA**          | Convert to PDF/UA-1 or PDF/UA-2 compliant files | 💼 Available   | Enterprise        |
+| 4.**Visual editing**         | Accessibility studio — review and fix tags     | 💼 Available   | Enterprise        |
 
 > **💼 Enterprise features** are available on request. [Contact us](https://opendataloader.org/contact) to get started.
 
@@ -453,11 +455,11 @@ Existing PDFs (untagged)
 
 ## Roadmap
 
-| Feature | Timeline | Tier |
-|---------|----------|------|
-| **Auto-tagging → Tagged PDF** — Generate Tagged PDFs from untagged PDFs | Q2 2026 | Free |
+| Feature                                                                                                                                                                                                                                                         | Timeline   | Tier    |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- |
+| **Auto-tagging → Tagged PDF** — Generate Tagged PDFs from untagged PDFs                                                                                                                                                                                 | Q2 2026    | Free    |
 | **[Hancom Data Loader](https://sdk.hancom.com/en/services/1?utm_source=github&utm_medium=readme&utm_campaign=opendataloader-pdf)** — Enterprise AI document analysis, customer-customized models, VLM-based chart/image understanding, production-grade OCR | Q2-Q3 2026 | Planned |
-| **Structure validation** — Verify PDF tag trees | Q2 2026 | Planned |
+| **Structure validation** — Verify PDF tag trees                                                                                                                                                                                                          | Q2 2026    | Planned |
 
 [Full Roadmap](https://opendataloader.org/docs/upcoming-roadmap)
 
@@ -588,4 +590,4 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ---
 
-**Found this useful?** Give us a star to help others discover OpenDataLoader.
+**Found this useful?** Give us a star to help others discover OpenDataLoader. hello this document is about opendataloader
