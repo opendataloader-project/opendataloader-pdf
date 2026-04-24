@@ -106,8 +106,9 @@ class TestGetArtifact:
         with patch("opendataloader_pdf_mcp.jobs.opendataloader_pdf") as mock_odl:
             mock_odl.convert = MagicMock()
             job_id = submit_pdf(input_path=str(pdf_file))["job_id"]
-            with _job_manager.get(job_id)._status_lock:
-                _job_manager.get(job_id).status = JobStatus.RUNNING
+            job = _job_manager.get(job_id)
+            with job._status_lock:
+                job.status = JobStatus.RUNNING
         with pytest.raises(RuntimeError, match="not done"):
             get_artifact(job_id=job_id)
 
@@ -126,8 +127,9 @@ class TestGetArtifact:
         with patch("opendataloader_pdf_mcp.jobs.opendataloader_pdf") as mock_odl:
             mock_odl.convert = MagicMock()
             job_id = submit_pdf(input_path=str(pdf_file))["job_id"]
-            with _job_manager.get(job_id)._status_lock:
-                _job_manager.get(job_id).status = JobStatus.CANCELLED
+            job = _job_manager.get(job_id)
+            with job._status_lock:
+                job.status = JobStatus.CANCELLED
         with pytest.raises(RuntimeError, match="cancelled"):
             get_artifact(job_id=job_id)
 

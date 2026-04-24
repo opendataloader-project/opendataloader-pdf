@@ -288,7 +288,11 @@ def submit_pdf(
     job_id = _job_manager.submit(input_path, format, **kwargs)
     job = _job_manager.get(job_id)
     with job._status_lock:
-        status = job.status if job.status != JobStatus.RUNNING else JobStatus.PENDING
+        status = job.status
+    # A newly submitted job may already be RUNNING; report PENDING to the caller.
+    # A dedup-cache hit (already DONE) reports its real status.
+    if status == JobStatus.RUNNING:
+        status = JobStatus.PENDING
     return {"job_id": job_id, "status": status.value, "content_hash": job.content_hash}
 
 
