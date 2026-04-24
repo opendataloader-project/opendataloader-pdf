@@ -57,6 +57,8 @@ export interface ConvertOptions {
   hybridFallback?: boolean;
   /** Write output to stdout instead of file (single format only) */
   toStdout?: boolean;
+  /** Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode */
+  threads?: string;
 }
 
 /**
@@ -89,6 +91,7 @@ export interface CliOptions {
   hybridTimeout?: string;
   hybridFallback?: boolean;
   toStdout?: boolean;
+  threads?: string;
 }
 
 /**
@@ -174,6 +177,9 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   }
   if (cliOptions.toStdout) {
     convertOptions.toStdout = true;
+  }
+  if (cliOptions.threads) {
+    convertOptions.threads = cliOptions.threads;
   }
 
   return convertOptions;
@@ -274,6 +280,9 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.toStdout) {
     args.push('--to-stdout');
+  }
+  if (options.threads) {
+    args.push('--threads', options.threads);
   }
 
   return args;

@@ -140,6 +140,13 @@ public class CLIOptions {
     private static final String TO_STDOUT_LONG_OPTION = "to-stdout";
     private static final String TO_STDOUT_DESC = "Write output to stdout instead of file (single format only)";
 
+    // ===== Threads =====
+    private static final String THREADS_LONG_OPTION = "threads";
+    private static final String THREADS_DESC = "Number of worker threads for per-page processing. "
+            + "Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; "
+            + "output may vary slightly on some PDFs. Capped at the number of available CPU cores. "
+            + "Applies to the native Java pipeline only; ignored in --hybrid mode";
+
     // ===== Export Options (internal) =====
     public static final String EXPORT_OPTIONS_LONG_OPTION = "export-options";
 
@@ -188,6 +195,7 @@ public class CLIOptions {
             new OptionDefinition(HYBRID_TIMEOUT_LONG_OPTION, null, "string", "0", HYBRID_TIMEOUT_DESC, true),
             new OptionDefinition(HYBRID_FALLBACK_LONG_OPTION, null, "boolean", false, HYBRID_FALLBACK_DESC, true),
             new OptionDefinition(TO_STDOUT_LONG_OPTION, null, "boolean", false, TO_STDOUT_DESC, true),
+            new OptionDefinition(THREADS_LONG_OPTION, null, "string", "1", THREADS_DESC, true),
             new OptionDefinition(EXPORT_OPTIONS_LONG_OPTION, null, "boolean", null, null, false),
 
             // Legacy options (not exported, for backward compatibility)
@@ -273,7 +281,34 @@ public class CLIOptions {
         applyImageOptions(config, commandLine);
         applyPagesOption(config, commandLine);
         applyHybridOptions(config, commandLine);
+        applyThreadsOption(config, commandLine);
+        config.normalize();
         return config;
+    }
+
+    private static void applyThreadsOption(Config config, CommandLine commandLine) {
+        if (!commandLine.hasOption(THREADS_LONG_OPTION)) {
+            return;
+        }
+        String value = commandLine.getOptionValue(THREADS_LONG_OPTION);
+        int requested;
+        try {
+            requested = Integer.parseInt(value.trim());
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(
+                    String.format("Option --threads requires an integer >= 1, got '%s'", value));
+        }
+        if (requested < 1) {
+            throw new IllegalArgumentException(
+                    String.format("Option --threads requires an integer >= 1, got %d", requested));
+        }
+        config.setThreads(requested);
+        int applied = config.getThreads();
+        if (applied < requested) {
+            System.err.println(String.format(
+                    "Warning: --threads=%d exceeds available CPU cores; capped to %d.",
+                    requested, applied));
+        }
     }
 
     private static void applyImageOptions(Config config, CommandLine commandLine) {

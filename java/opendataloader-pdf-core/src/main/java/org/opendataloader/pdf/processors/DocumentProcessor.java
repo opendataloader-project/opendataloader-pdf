@@ -226,7 +226,7 @@ public class DocumentProcessor {
             pageArtifacts[i] = document.getArtifacts(i);
         }
 
-        int parallelism = Runtime.getRuntime().availableProcessors();
+        int parallelism = config.getThreads();
         ForkJoinPool pool = new ForkJoinPool(parallelism);
         LOGGER.log(Level.INFO, "Processing {0} pages with {1} threads", new Object[]{totalPages, parallelism});
 
@@ -651,9 +651,15 @@ public class DocumentProcessor {
 
         // xycut: XY-Cut++ sorting (per-page, stateless — safe to parallelize)
         if (Config.READING_ORDER_XYCUT.equals(readingOrder)) {
-            IntStream.range(0, StaticContainers.getDocument().getNumberOfPages()).parallel().forEach(pageNumber ->
-                contents.set(pageNumber, XYCutPlusPlusSorter.sort(contents.get(pageNumber)))
-            );
+            int totalPages = StaticContainers.getDocument().getNumberOfPages();
+            IntStream pages = IntStream.range(0, totalPages);
+            if (config.getThreads() > 1) {
+                pages.parallel().forEach(pageNumber ->
+                    contents.set(pageNumber, XYCutPlusPlusSorter.sort(contents.get(pageNumber))));
+            } else {
+                pages.forEach(pageNumber ->
+                    contents.set(pageNumber, XYCutPlusPlusSorter.sort(contents.get(pageNumber))));
+            }
             return;
         }
 

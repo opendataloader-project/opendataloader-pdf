@@ -243,6 +243,15 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "default": False,
         "description": "Write output to stdout instead of file (single format only)",
     },
+    {
+        "name": "threads",
+        "python_name": "threads",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": "1",
+        "description": "Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode",
+    },
 ]
 
 
