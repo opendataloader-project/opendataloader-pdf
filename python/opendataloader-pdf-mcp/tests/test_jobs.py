@@ -113,6 +113,29 @@ class TestCancel:
                 break
             time.sleep(0.02)
         assert manager.get(job_id).status == JobStatus.CANCELLED
+        assert manager.get(job_id).completed_at is not None
+
+    def test_cancel_pending_job(self, manager, pdf_file):
+        slow_start = threading.Event()
+
+        original_run = manager._run
+
+        def delayed_run(job, input_file):
+            slow_start.wait(timeout=5)
+            original_run(job, input_file)
+
+        manager._run = delayed_run
+
+        with patch("opendataloader_pdf_mcp.jobs.opendataloader_pdf") as mock_odl:
+            mock_odl.convert = MagicMock()
+            job_id = manager.submit(str(pdf_file), "markdown")
+            # Cancel while still PENDING (thread blocked before _run executes)
+            status = manager.cancel(job_id)
+
+        assert status == JobStatus.CANCELLED
+        assert manager.get(job_id).status == JobStatus.CANCELLED
+        assert manager.get(job_id).completed_at is not None
+        slow_start.set()  # release the blocked thread
 
     def test_cancel_done_job_is_noop(self, manager, pdf_file):
         with patch("opendataloader_pdf_mcp.jobs.opendataloader_pdf") as mock_odl:

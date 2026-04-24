@@ -100,7 +100,10 @@ class JobManager:
         if job.status in (JobStatus.DONE, JobStatus.FAILED, JobStatus.CANCELLED):
             return job.status
         job._cancel_event.set()
-        return job.status
+        if job.status in (JobStatus.PENDING, JobStatus.RUNNING):
+            job.status = JobStatus.CANCELLED
+            job.completed_at = _now()
+        return JobStatus.CANCELLED
 
     def _run(self, job: Job, input_file: Path) -> None:
         if job._cancel_event.is_set():
@@ -139,8 +142,9 @@ class JobManager:
             with self._lock:
                 self._hash_index[job.content_hash] = job.job_id
 
-            job.status = JobStatus.DONE
-            job.completed_at = _now()
+            if not job._cancel_event.is_set():
+                job.status = JobStatus.DONE
+                job.completed_at = _now()
 
         except Exception as exc:
             if job.status != JobStatus.CANCELLED:
