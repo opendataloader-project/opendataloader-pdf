@@ -16,9 +16,9 @@ dependencies = []
 
 [project.optional-dependencies]
 hybrid = [
-    "docling[easyocr]>=2.88.0",
-    "fastapi>=0.135.3",
-    "uvicorn>=0.44.0",
+    "docling[easyocr]>=2.91.0",
+    "fastapi>=0.136.1",
+    "uvicorn>=0.46.0",
     "python-multipart>=0.0.26",
 ]
 
