@@ -143,3 +143,33 @@ class TestGetArtifact:
                 job.artifact = "# Converted"
         result = get_artifact(job_id=job_id)
         assert result == "# Converted"
+
+
+class TestJobResource:
+    def test_resource_returns_artifact_when_done(self, pdf_file):
+        from opendataloader_pdf_mcp.server import get_job_resource
+        with patch("opendataloader_pdf_mcp.jobs.opendataloader_pdf") as mock_odl:
+            mock_odl.convert = MagicMock()
+            job_id = submit_pdf(input_path=str(pdf_file))["job_id"]
+            job = _job_manager.get(job_id)
+            with job._status_lock:
+                job.status = JobStatus.DONE
+                job.artifact = "# Resource content"
+        result = get_job_resource(job_id=job_id)
+        assert result == "# Resource content"
+
+    def test_resource_returns_error_string_when_not_done(self, pdf_file):
+        from opendataloader_pdf_mcp.server import get_job_resource
+        with patch("opendataloader_pdf_mcp.jobs.opendataloader_pdf") as mock_odl:
+            mock_odl.convert = MagicMock()
+            job_id = submit_pdf(input_path=str(pdf_file))["job_id"]
+            job = _job_manager.get(job_id)
+            with job._status_lock:
+                job.status = JobStatus.RUNNING
+        result = get_job_resource(job_id=job_id)
+        assert "not done" in result or "running" in result
+
+    def test_resource_returns_error_string_for_unknown_id(self):
+        from opendataloader_pdf_mcp.server import get_job_resource
+        result = get_job_resource(job_id="no-such-id")
+        assert "unknown" in result.lower() or "not found" in result.lower()

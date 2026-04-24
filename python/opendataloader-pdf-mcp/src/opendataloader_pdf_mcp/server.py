@@ -330,6 +330,18 @@ def get_artifact(job_id: str) -> str:
     return job.artifact
 
 
+@mcp.resource("jobs://{job_id}")
+def get_job_resource(job_id: str) -> str:
+    """MCP resource: returns artifact content for a completed job."""
+    try:
+        job = _job_manager.get(job_id)
+    except KeyError:
+        return f"Error: job not found: {job_id}"
+    if job.status != JobStatus.DONE:
+        return f"Error: job {job_id} is {job.status.value}, not done"
+    return job.artifact
+
+
 def main():
     """Run the MCP server."""
     mcp.run()
