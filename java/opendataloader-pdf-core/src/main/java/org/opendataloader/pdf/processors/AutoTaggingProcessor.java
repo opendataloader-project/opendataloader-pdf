@@ -13,6 +13,8 @@ import org.verapdf.gf.model.factory.chunks.GraphicsState;
 import org.verapdf.gf.model.impl.sa.util.ResourceHandler;
 import org.verapdf.pd.*;
 import org.verapdf.pd.actions.PDAction;
+import org.verapdf.pd.form.PDAcroForm;
+import org.verapdf.pd.form.PDFormField;
 import org.verapdf.pd.images.PDXObject;
 import org.verapdf.tools.StaticResources;
 import org.verapdf.tools.TaggedPDFConstants;
@@ -78,6 +80,10 @@ public class AutoTaggingProcessor {
         COSObject structTreeRoot = createStructTreeRoot(catalog, cosDocument, document);
         createStructureTreeElements(document, contents, structTreeRoot, cosDocument);
         updateDestinationsToStructureDestinations(document);
+        updateOutlines(cosDocument, document);
+        updateOpenAction(cosDocument, catalog, document);
+        updateAdditionalAction(catalog.getObject(), cosDocument, document);
+        updateAcroForm(document, cosDocument);
         updatePages(document, cosDocument);
         createParentTree(cosDocument, structTreeRoot);
         cosDocument.getTrailer().removeKey(ASAtom.ENCRYPT);
@@ -100,6 +106,7 @@ public class AutoTaggingProcessor {
         List<org.verapdf.pd.PDPage> rawPages = document.getPages();
         for (int pageNumber = 0; pageNumber < rawPages.size(); pageNumber++) {
             PDPage page = rawPages.get(pageNumber);
+            updateAdditionalAction(page.getObject(), cosDocument, document);
             OperatorStreamKey operatorStreamKey = new OperatorStreamKey(pageNumber, null);
             Integer structParent = structParentsIntegers.get(operatorStreamKey);
             if (structParent != null) {
@@ -445,8 +452,11 @@ public class AutoTaggingProcessor {
             for (PDAnnotation annotation : annotations) {
                 COSObject annotObj = annotation.getObject();
                 if (annotObj == null || annotObj.empty()) continue;
+                COSDocument cosDocument = document.getDocument();
+                rewriteDestinationToStructDestinationInAction(annotObj, document, cosDocument);
+                updateAdditionalAction(annotObj, cosDocument, document);
                 if (!ASAtom.LINK.equals(annotation.getSubtype())) continue;
-                rewriteDestinationToStructDestination(annotObj, document, pageNumber);
+                rewriteDestinationToStructDestinationInLinkAnnotation(annotObj, document);
             }
         }
     }
@@ -463,16 +473,25 @@ public class AutoTaggingProcessor {
      *       an {@code /SD [structElem /Fit]} entry alongside (or instead of) the existing {@code /D}.
      * </ul>
      */
-    private static void rewriteDestinationToStructDestination(COSObject annotObj, PDDocument document, int annotPageNumber) {
-        COSDocument cosDocument = document.getDocument();
+    private static void rewriteDestinationToStructDestinationInLinkAnnotation(COSObject annotObj, PDDocument document) {
         COSObject dest = annotObj.getKey(ASAtom.DEST);
         if (dest != null && !dest.empty()) {
-            COSObject structDestArray = buildStructDestArray(dest, document, annotPageNumber);
+            COSObject structDestArray = buildStructDestArray(dest, document);
             if (structDestArray != null) {
                 annotObj.setKey(ASAtom.DEST, structDestArray);
+            } else {
+                annotObj.removeKey(ASAtom.DEST);
             }
+            document.getDocument().addChangedObject(annotObj);
         }
-        COSObject action = annotObj.getKey(ASAtom.A);
+    }
+
+    private static void rewriteDestinationToStructDestinationInAction(COSObject object, PDDocument document, COSDocument cosDocument) {
+        rewriteDestinationToStructDestinationInAction(object, document, cosDocument, ASAtom.A);
+    }
+
+    private static void rewriteDestinationToStructDestinationInAction(COSObject object, PDDocument document, COSDocument cosDocument, ASAtom key) {
+        COSObject action = object.getKey(key);
         if (action == null || action.empty() || action.getType() != COSObjType.COS_DICT) {
             return;
         }
@@ -480,10 +499,42 @@ public class AutoTaggingProcessor {
             return;
         }
         COSObject d = action.getKey(ASAtom.D);
-        COSObject structDestArray = buildStructDestArray(d, document, annotPageNumber);
+        COSObject structDestArray = buildStructDestArray(d, document);
         if (structDestArray != null) {
             action.setKey(ASAtom.SD, structDestArray);
             cosDocument.addChangedObject(action);
+        } else {
+            object.removeKey(key);
+            cosDocument.addChangedObject(object);
+        }
+    }
+
+    private static void updateAdditionalAction(COSObject object, COSDocument cosDocument, PDDocument document) {
+        if (object.knownKey(ASAtom.AA)) {
+            COSObject aaEntry = object.getKey(ASAtom.AA);
+            if (aaEntry.getType() == COSObjType.COS_DICT) {
+                COSDictionary dictionary = (COSDictionary) aaEntry.getDirectBase();
+                for (ASAtom key : dictionary.getKeySet()) {
+                    rewriteDestinationToStructDestinationInAction(aaEntry, document, cosDocument, key);
+                }
+            }
+        }
+    }
+
+    private static void updateOpenAction(COSDocument cosDocument, PDCatalog catalog, PDDocument document) {
+        PDAction action = catalog.getOpenAction();
+        if (action != null) {
+            rewriteDestinationToStructDestinationInAction(catalog.getObject(), document,  cosDocument,  ASAtom.OPEN_ACTION);
+        }
+    }
+
+    private static void updateAcroForm(PDDocument document, COSDocument cosDocument) {
+        PDAcroForm acroForm = document.getAcroForm();
+        if (acroForm != null) {
+            List<PDFormField> fields = acroForm.getFields();
+            for (PDFormField field : fields) {
+                updateAdditionalAction(field.getObject(), cosDocument, document);
+            }
         }
     }
 
@@ -495,32 +546,24 @@ public class AutoTaggingProcessor {
      * so the caller leaves the original destination untouched rather than silently
      * redirecting a cross-page link to the annotation's own page.
      */
-    private static COSObject buildStructDestArray(COSObject originalDest, PDDocument document, int annotPageNumber) {
+    private static COSObject buildStructDestArray(COSObject originalDest, PDDocument document) {
         COSObject target = null;
         boolean destIsPresent = originalDest != null && !originalDest.empty();
-        boolean destIsResolvableArray = destIsPresent
-            && originalDest.getType() == COSObjType.COS_ARRAY && originalDest.size() >= 1;
-        if (destIsResolvableArray) {
-            COSObject first = originalDest.at(0);
-            if (first != null && !first.empty() && first.getType() == COSObjType.COS_DICT
-                    && ASAtom.PAGE.equals(first.getNameKey(ASAtom.TYPE))) {
+        COSObject page;
+        if (destIsPresent) {
+            page = getPageFromDestination(originalDest);
+            if (page != null && !page.empty() && page.getType() == COSObjType.COS_DICT
+                    && ASAtom.PAGE.equals(page.getNameKey(ASAtom.TYPE))) {
                 List<PDPage> pages = document.getPages();
                 for (int i = 0; i < pages.size(); i++) {
-                    if (pages.get(i).getObject().getObjectKey().equals(first.getObjectKey())) {
+                    if (pages.get(i).getObject().getObjectKey().equals(page.getObjectKey())) {
                         target = pageNumberToFirstStructElement.get(i);
                         break;
                     }
                 }
             }
         }
-        // Fallback to the annotation's own page only when the destination is entirely
-        // absent. If a destination is present but unresolvable (named destination,
-        // non-array form, or page not found) we must NOT rewrite it to the link's own
-        // page — that silently redirects cross-page GoTo links. Return null so the
-        // caller can leave the destination untouched.
-        if (target == null && !destIsPresent) {
-            target = pageNumberToFirstStructElement.get(annotPageNumber);
-        }
+
         if (target == null) {
             return null;
         }
@@ -528,6 +571,54 @@ public class AutoTaggingProcessor {
         arr.add(target);
         arr.add(COSName.construct(ASAtom.getASAtom("Fit")));
         return arr;
+    }
+
+    private static COSObject getPageFromDestination(COSObject destination) {
+        if (destination.getType() == COSObjType.COS_STRING) {
+            PDNamesDictionary namesDictionary = StaticResources.getDocument().getCatalog().getNamesDictionary();
+            if (namesDictionary == null) {
+                return null;
+            }
+            PDNameTreeNode dests = namesDictionary.getDests();
+            if (dests != null) {
+                destination = dests.getObject(destination.getString());
+                if (destination == null) {
+                    return null;
+                }
+            }
+        } else if (destination.getType() == COSObjType.COS_NAME) {
+            COSObject dests = StaticResources.getDocument().getCatalog().getDests();
+            if (dests != null) {
+                destination = dests.getKey(destination.getDirectBase().getName());
+                if (destination == null) {
+                    return null;
+                }
+            }
+        }
+        if (destination.getType() == COSObjType.COS_DICT) {
+            destination = destination.getKey(ASAtom.D);
+        }
+        COSObject obj = null;
+        if (destination.getType() == COSObjType.COS_ARRAY && destination.size() > 0) {
+            obj = destination.at(0);
+        }
+        return obj;
+    }
+
+    private static void updateOutlines(COSDocument cosDocument, PDDocument document) {
+        PDOutlineDictionary dictionary = document.getOutlines();
+        if (dictionary == null) {
+            return;
+        }
+        PDOutlineItem current = dictionary.getFirst();
+        while (current != null) {
+            PDAction action = current.getAction();
+            if (action != null) {
+                rewriteDestinationToStructDestinationInAction(current.getObject(), document, cosDocument);
+                cosDocument.addChangedObject(current.getObject());
+            }
+            current = current.getNext();
+        }
     }
 
     private static void createStructElem(IObject object, COSObject parentStructElem, COSDocument cosDocument) {
