@@ -563,7 +563,7 @@ public class AutoTaggingProcessor {
         boolean destIsPresent = originalDest != null && !originalDest.empty();
         COSObject page;
         if (destIsPresent) {
-            page = getPageFromDestination(originalDest);
+            page = PDAnnotation.getPageFromDestination(originalDest, ASAtom.D);
             if (page != null && !page.empty() && page.getType() == COSObjType.COS_DICT
                     && ASAtom.PAGE.equals(page.getNameKey(ASAtom.TYPE))) {
                 List<PDPage> pages = document.getPages();
@@ -583,38 +583,6 @@ public class AutoTaggingProcessor {
         arr.add(target);
         arr.add(COSName.construct(ASAtom.getASAtom("Fit")));
         return arr;
-    }
-
-    private static COSObject getPageFromDestination(COSObject destination) {
-        if (destination.getType() == COSObjType.COS_STRING) {
-            PDNamesDictionary namesDictionary = StaticResources.getDocument().getCatalog().getNamesDictionary();
-            if (namesDictionary == null) {
-                return null;
-            }
-            PDNameTreeNode dests = namesDictionary.getDests();
-            if (dests != null) {
-                destination = dests.getObject(destination.getString());
-                if (destination == null) {
-                    return null;
-                }
-            }
-        } else if (destination.getType() == COSObjType.COS_NAME) {
-            COSObject dests = StaticResources.getDocument().getCatalog().getDests();
-            if (dests != null) {
-                destination = dests.getKey(destination.getDirectBase().getName());
-                if (destination == null) {
-                    return null;
-                }
-            }
-        }
-        if (destination.getType() == COSObjType.COS_DICT) {
-            destination = destination.getKey(ASAtom.D);
-        }
-        COSObject obj = null;
-        if (destination.getType() == COSObjType.COS_ARRAY && destination.size() > 0) {
-            obj = destination.at(0);
-        }
-        return obj;
     }
 
     private static void updateOutlines(COSDocument cosDocument, PDDocument document) {
