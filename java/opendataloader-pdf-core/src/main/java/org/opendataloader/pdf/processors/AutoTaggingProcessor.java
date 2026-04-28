@@ -79,11 +79,9 @@ public class AutoTaggingProcessor {
         PDCatalog catalog = document.getCatalog();
         COSObject structTreeRoot = createStructTreeRoot(catalog, cosDocument, document);
         createStructureTreeElements(document, contents, structTreeRoot, cosDocument);
-        updateDestinationsToStructureDestinations(document);
-        updateOutlines(cosDocument, document);
-        updateOpenAction(cosDocument, catalog, document);
-        updateAdditionalAction(catalog.getObject(), cosDocument, document);
-        updateAcroForm(document, cosDocument);
+        if (isPDF2_0) {
+            updateDestinationsToStructureDestinations(document, catalog, cosDocument);
+        }
         updatePages(document, cosDocument);
         createParentTree(cosDocument, structTreeRoot);
         cosDocument.getTrailer().removeKey(ASAtom.ENCRYPT);
@@ -106,7 +104,9 @@ public class AutoTaggingProcessor {
         List<org.verapdf.pd.PDPage> rawPages = document.getPages();
         for (int pageNumber = 0; pageNumber < rawPages.size(); pageNumber++) {
             PDPage page = rawPages.get(pageNumber);
-            updateAdditionalAction(page.getObject(), cosDocument, document);
+            if (isPDF2_0) {
+                updateAdditionalAction(page.getObject(), cosDocument, document);
+            }
             OperatorStreamKey operatorStreamKey = new OperatorStreamKey(pageNumber, null);
             Integer structParent = structParentsIntegers.get(operatorStreamKey);
             if (structParent != null) {
@@ -444,21 +444,23 @@ public class AutoTaggingProcessor {
         }
     }
 
-    private static void updateDestinationsToStructureDestinations(PDDocument document) {
-        for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
-            PDPage page = document.getPages().get(pageNumber);
+    private static void updateDestinationsToStructureDestinations(PDDocument document, PDCatalog catalog, COSDocument cosDocument) {
+        for (PDPage page: document.getPages()) {
             List<PDAnnotation> annotations = page.getAnnotations();
-            if (annotations == null) return;
+            if (annotations == null) continue;
             for (PDAnnotation annotation : annotations) {
                 COSObject annotObj = annotation.getObject();
                 if (annotObj == null || annotObj.empty()) continue;
-                COSDocument cosDocument = document.getDocument();
                 rewriteDestinationToStructDestinationInAction(annotObj, document, cosDocument);
                 updateAdditionalAction(annotObj, cosDocument, document);
                 if (!ASAtom.LINK.equals(annotation.getSubtype())) continue;
                 rewriteDestinationToStructDestinationInLinkAnnotation(annotObj, document);
             }
         }
+        updateOutlines(cosDocument, document);
+        updateOpenAction(cosDocument, catalog, document);
+        updateAdditionalAction(catalog.getObject(), cosDocument, document);
+        updateAcroForm(document, cosDocument);
     }
 
     /**
@@ -522,8 +524,16 @@ public class AutoTaggingProcessor {
     }
 
     private static void updateOpenAction(COSDocument cosDocument, PDCatalog catalog, PDDocument document) {
-        PDAction action = catalog.getOpenAction();
-        if (action != null) {
+        if (catalog.knownKey(ASAtom.OPEN_ACTION)) {
+            COSObject openAction = catalog.getKey(ASAtom.OPEN_ACTION);
+            if (openAction.getType() == COSObjType.COS_ARRAY) {
+                COSObject sd = buildStructDestArray(openAction, document);
+                if (sd != null) {
+                    catalog.setKey(ASAtom.OPEN_ACTION, sd);
+                    cosDocument.addChangedObject(catalog.getObject());
+                }
+                return;
+            }
             rewriteDestinationToStructDestinationInAction(catalog.getObject(), document,  cosDocument,  ASAtom.OPEN_ACTION);
         }
     }
@@ -531,9 +541,11 @@ public class AutoTaggingProcessor {
     private static void updateAcroForm(PDDocument document, COSDocument cosDocument) {
         PDAcroForm acroForm = document.getAcroForm();
         if (acroForm != null) {
-            List<PDFormField> fields = acroForm.getFields();
-            for (PDFormField field : fields) {
+            Deque<PDFormField> deque = new ArrayDeque<>(acroForm.getFields());
+            while (!deque.isEmpty()) {
+                PDFormField field = deque.poll();
                 updateAdditionalAction(field.getObject(), cosDocument, document);
+                deque.addAll(field.getChildFormFields());
             }
         }
     }
@@ -610,13 +622,15 @@ public class AutoTaggingProcessor {
         if (dictionary == null) {
             return;
         }
-        PDOutlineItem current = dictionary.getFirst();
+        updateOutlineItem(dictionary.getFirst(), document, cosDocument);
+    }
+
+    private static void updateOutlineItem(PDOutlineItem current, PDDocument document, COSDocument cosDocument) {
         while (current != null) {
-            PDAction action = current.getAction();
-            if (action != null) {
-                rewriteDestinationToStructDestinationInAction(current.getObject(), document, cosDocument);
-                cosDocument.addChangedObject(current.getObject());
-            }
+            COSObject currentObject = current.getObject();
+            rewriteDestinationToStructDestinationInLinkAnnotation(currentObject, document);
+            rewriteDestinationToStructDestinationInAction(currentObject, document, cosDocument);
+            updateOutlineItem(current.getFirst(), document, cosDocument);
             current = current.getNext();
         }
     }
