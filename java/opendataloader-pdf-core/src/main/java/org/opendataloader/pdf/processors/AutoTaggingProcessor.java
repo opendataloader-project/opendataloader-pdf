@@ -516,7 +516,7 @@ public class AutoTaggingProcessor {
             COSObject aaEntry = object.getKey(ASAtom.AA);
             if (aaEntry.getType() == COSObjType.COS_DICT) {
                 COSDictionary dictionary = (COSDictionary) aaEntry.getDirectBase();
-                for (ASAtom key : dictionary.getKeySet()) {
+                for (ASAtom key : new ArrayList<>(dictionary.getKeySet())) {
                     rewriteDestinationToStructDestinationInAction(aaEntry, document, cosDocument, key);
                 }
             }
