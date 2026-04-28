@@ -17,10 +17,11 @@ def pdf_path(tmp_path):
 
 class TestMinerURunner:
     def test_run_success(self, pdf_path, tmp_path):
-        md_file = tmp_path / "doc.md"
-        json_file = tmp_path / "doc.json"
-        md_file.write_text("# Extracted", encoding="utf-8")
-        json_file.write_text('{"pages": []}', encoding="utf-8")
+        # MinerU writes into {output_dir}/{stem}/ subdirectory
+        sub = tmp_path / "doc"
+        sub.mkdir()
+        (sub / "doc.md").write_text("# Extracted", encoding="utf-8")
+        (sub / "content_list.json").write_text('{"pages": []}', encoding="utf-8")
 
         mock_result = MagicMock()
         mock_result.returncode = 0
@@ -51,6 +52,30 @@ class TestMinerURunner:
                     MinerURunner().run(pdf_path, tmp_path)
 
     def test_run_missing_output(self, pdf_path, tmp_path):
+        mock_result = MagicMock()
+        mock_result.returncode = 0
+        mock_result.stderr = ""
+
+        with patch("opendataloader_pdf_mcp.mineru.shutil.which", return_value="/usr/bin/mineru"):
+            with patch("opendataloader_pdf_mcp.mineru.subprocess.run", return_value=mock_result):
+                with pytest.raises(MinerUError, match="no output"):
+                    MinerURunner().run(pdf_path, tmp_path)
+
+    def test_run_timeout(self, pdf_path, tmp_path):
+        with patch("opendataloader_pdf_mcp.mineru.shutil.which", return_value="/usr/bin/mineru"):
+            with patch(
+                "opendataloader_pdf_mcp.mineru.subprocess.run",
+                side_effect=subprocess.TimeoutExpired(cmd="mineru", timeout=300),
+            ):
+                with pytest.raises(MinerUError, match="timed out"):
+                    MinerURunner().run(pdf_path, tmp_path)
+
+    def test_run_missing_json(self, pdf_path, tmp_path):
+        # Only .md present, no content_list.json
+        sub = tmp_path / "doc"
+        sub.mkdir()
+        (sub / "doc.md").write_text("# Extracted", encoding="utf-8")
+
         mock_result = MagicMock()
         mock_result.returncode = 0
         mock_result.stderr = ""
