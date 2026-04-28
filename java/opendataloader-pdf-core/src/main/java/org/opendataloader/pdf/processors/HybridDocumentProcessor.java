@@ -437,8 +437,11 @@ public class HybridDocumentProcessor {
         for (int pageNumber : pageNumbers) {
             try {
                 List<IObject> pageContents = workingContents.get(pageNumber);
-                pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber);
+                pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber,
+                    config.isDetectStrikethrough());
                 if (config.isDetectStrikethrough()) {
+                    // Run after table normalization for text that was split,
+                    // moved out of tables, or left outside table contents.
                     StrikethroughProcessor.processStrikethroughs(pageContents);
                 }
                 pageContents = pageContents.stream()

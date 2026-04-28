@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
+import org.verapdf.wcag.algorithms.entities.content.LineChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.tables.TableBordersCollection;
@@ -174,6 +175,58 @@ public class TableBorderProcessorTest {
         Assertions.assertEquals(2, resultBorder.getNumberOfRows());
         Assertions.assertEquals("r1c1", ((SemanticParagraph) resultBorder.getCell(0, 0).getContents().get(0)).getValue());
         Assertions.assertEquals("r2c2", ((SemanticParagraph) resultBorder.getCell(1, 1).getContents().get(0)).getValue());
+    }
+
+    @Test
+    public void testTableCellContentDetectsStrikethroughWhenEnabled() {
+        StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
+        StaticContainers.setIsDataLoader(true);
+        StaticLayoutContainers.setCurrentContentId(350L);
+        StaticContainers.setTableBordersCollection(null);
+
+        TableBorder tableBorder = createTable(0, 10.0, 10.0, 110.0, 60.0, 1, 1, 35L);
+        TextChunk textChunk = createTextChunk(0, 20.0, 30.0, 80.0, 40.0, "deleted");
+        LineChunk strikethrough = LineChunk.createLineChunk(0, 20.0, 35.0, 80.0, 35.0, 0.6,
+            LineChunk.BUTT_CAP_STYLE);
+        tableBorder.getCell(0, 0).setContents(new ArrayList<>(List.of(textChunk, strikethrough)));
+
+        TableBorderProcessor.normalizeAndProcessTableBorder(new ArrayList<>(), tableBorder, 0, true);
+
+        TextChunk processedChunk = ((SemanticParagraph) tableBorder.getCell(0, 0).getContents().get(0))
+            .getFirstLine()
+            .getFirstTextChunk();
+        Assertions.assertTrue(processedChunk.getIsStrikethroughText(),
+            "Strikethrough should be detected inside table cell contents");
+    }
+
+    @Test
+    public void testTableBorderProcessingDetectsLineChunkBeforeTableConsumption() {
+        StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
+        StaticContainers.setIsDataLoader(true);
+        StaticLayoutContainers.setCurrentContentId(360L);
+        TableBordersCollection tableBordersCollection = new TableBordersCollection();
+        StaticContainers.setTableBordersCollection(tableBordersCollection);
+
+        TableBorder tableBorder = createTable(0, 10.0, 10.0, 110.0, 60.0, 1, 1, 36L);
+        SortedSet<TableBorder> tables = new TreeSet<>(new TableBorder.TableBordersComparator());
+        tables.add(tableBorder);
+        tableBordersCollection.getTableBorders().add(tables);
+
+        TextChunk textChunk = createTextChunk(0, 20.0, 30.0, 80.0, 40.0, "deleted");
+        LineChunk consumedAsTableStructure = LineChunk.createLineChunk(0, 20.0, 35.0, 80.0, 35.0, 0.6,
+            LineChunk.BUTT_CAP_STYLE);
+        List<IObject> contents = new ArrayList<>(List.of(textChunk, consumedAsTableStructure));
+
+        List<IObject> processedContents = TableBorderProcessor.processTableBorders(contents, 0, true);
+
+        Assertions.assertEquals(1, processedContents.size());
+        Assertions.assertTrue(processedContents.get(0) instanceof TableBorder);
+        TableBorder resultBorder = (TableBorder) processedContents.get(0);
+        TextChunk processedChunk = ((SemanticParagraph) resultBorder.getCell(0, 0).getContents().get(0))
+            .getFirstLine()
+            .getFirstTextChunk();
+        Assertions.assertTrue(processedChunk.getIsStrikethroughText(),
+            "Raw LineChunk strikethrough should be detected before table processing consumes it");
     }
 
     @Test

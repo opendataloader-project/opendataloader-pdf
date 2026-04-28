@@ -335,8 +335,11 @@ public class DocumentProcessor {
                     propagateState.run();
                     List<IObject> pageContents = contents.get(pageNumber);
                     if (structured) {
-                        pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber);
+                        pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber,
+                            config.isDetectStrikethrough());
                         if (config.isDetectStrikethrough()) {
+                            // Run after table normalization for text that was split,
+                            // moved out of tables, or left outside table contents.
                             StrikethroughProcessor.processStrikethroughs(pageContents);
                         }
                         pageContents = pageContents.stream().filter(x -> !(x instanceof LineChunk)).collect(Collectors.toList());

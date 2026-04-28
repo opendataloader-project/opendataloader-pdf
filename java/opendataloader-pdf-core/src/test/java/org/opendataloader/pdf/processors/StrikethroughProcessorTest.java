@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
 import org.verapdf.wcag.algorithms.entities.content.LineChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
@@ -141,7 +142,7 @@ public class StrikethroughProcessorTest {
     }
 
     @Test
-    public void testWideLineSpanningMultipleChunksRejected() {
+    public void testWideLineSpanningMultipleChunksDetected() {
         List<IObject> contents = new ArrayList<>();
 
         // Two text chunks at different horizontal positions
@@ -152,15 +153,39 @@ public class StrikethroughProcessorTest {
         contents.add(chunk1);
         contents.add(chunk2);
 
-        // A wide line spanning both chunks — likely a table border or separator
+        // A thin line spanning multiple chunks on one visual text line.
         LineChunk line = LineChunk.createLineChunk(0, 10.0, 110.0, 130.0, 110.0, 1.0,
             LineChunk.BUTT_CAP_STYLE);
         contents.add(line);
 
         StrikethroughProcessor.processStrikethroughs(contents);
 
-        Assertions.assertFalse(chunk1.getIsStrikethroughText(), "Wide line matching multiple chunks should be rejected as structural separator");
-        Assertions.assertFalse(chunk2.getIsStrikethroughText(), "Wide line matching multiple chunks should be rejected as structural separator");
+        Assertions.assertTrue(chunk1.getIsStrikethroughText(),
+            "Thin line matching multiple chunks should be detected");
+        Assertions.assertTrue(chunk2.getIsStrikethroughText(),
+            "Thin line matching multiple chunks should be detected");
+    }
+
+    @Test
+    public void testWideLineArtSpanningMultipleChunksDetected() {
+        List<IObject> contents = new ArrayList<>();
+
+        TextChunk chunk1 = new TextChunk(new BoundingBox(0, 10.0, 100.0, 40.0, 120.0),
+            "hello", 12, 100.0);
+        TextChunk chunk2 = new TextChunk(new BoundingBox(0, 45.0, 100.0, 90.0, 120.0),
+            "world", 12, 100.0);
+        contents.add(chunk1);
+        contents.add(chunk2);
+
+        LineArtChunk lineArt = new LineArtChunk(new BoundingBox(0, 10.0, 109.5, 90.0, 110.5));
+        contents.add(lineArt);
+
+        StrikethroughProcessor.processStrikethroughs(contents);
+
+        Assertions.assertTrue(chunk1.getIsStrikethroughText(),
+            "Line-art strikethrough should support multiple chunks on one visual line");
+        Assertions.assertTrue(chunk2.getIsStrikethroughText(),
+            "Line-art strikethrough should support multiple chunks on one visual line");
     }
 
     @Test
@@ -191,15 +216,34 @@ public class StrikethroughProcessorTest {
             "hello", 12, 100.0);
         contents.add(textChunk);
 
-        // Line with stroke=30.0 — thicker than text height (30/20 = 1.5 > 1.3)
-        // This is a background fill or table cell shading, not a strikethrough
+        // Line with stroke=30.0. This is a background fill or table cell shading,
+        // not a strikethrough.
         LineChunk line = LineChunk.createLineChunk(0, 10.0, 110.0, 60.0, 110.0, 30.0,
             LineChunk.BUTT_CAP_STYLE);
         contents.add(line);
 
         StrikethroughProcessor.processStrikethroughs(contents);
 
-        Assertions.assertFalse(textChunk.getIsStrikethroughText(), "Thick line (stroke > 1.3x text height) should be rejected");
+        Assertions.assertFalse(textChunk.getIsStrikethroughText(), "Thick line should be rejected");
+    }
+
+    @Test
+    public void testTextHeightLineRejectedAsGlyphArtifact() {
+        List<IObject> contents = new ArrayList<>();
+
+        TextChunk textChunk = new TextChunk(new BoundingBox(0, 10.0, 100.0, 60.0, 120.0),
+            "hello", 12, 100.0);
+        contents.add(textChunk);
+
+        // Centered but text-height-ish rules are often extracted glyph/vector
+        // artifacts, not strikethrough marks.
+        LineChunk line = LineChunk.createLineChunk(0, 10.0, 110.0, 60.0, 110.0, 10.0,
+            LineChunk.BUTT_CAP_STYLE);
+        contents.add(line);
+
+        StrikethroughProcessor.processStrikethroughs(contents);
+
+        Assertions.assertFalse(textChunk.getIsStrikethroughText(), "Text-height line should be rejected");
     }
 
     @Test
@@ -212,6 +256,74 @@ public class StrikethroughProcessorTest {
 
         Assertions.assertTrue(StrikethroughProcessor.isStrikethroughLine(line, textChunk),
             "Thin line at center should be detected as strikethrough");
+    }
+
+    @Test
+    public void testThinLineArtDetectedAsStrikethrough() {
+        List<IObject> contents = new ArrayList<>();
+
+        TextChunk textChunk = new TextChunk(new BoundingBox(0, 10.0, 100.0, 60.0, 120.0),
+            "test", 12, 100.0);
+        contents.add(textChunk);
+
+        // Thin horizontal rectangle through the text center.
+        LineArtChunk lineArt = new LineArtChunk(new BoundingBox(0, 10.0, 109.5, 60.0, 110.5));
+        contents.add(lineArt);
+
+        StrikethroughProcessor.processStrikethroughs(contents);
+
+        Assertions.assertTrue(textChunk.getIsStrikethroughText(), "Thin centered line art should trigger strikethrough");
+    }
+
+    @Test
+    public void testUnderlineLineArtNotDetectedAsStrikethrough() {
+        List<IObject> contents = new ArrayList<>();
+
+        TextChunk textChunk = new TextChunk(new BoundingBox(0, 10.0, 100.0, 60.0, 120.0),
+            "test", 12, 100.0);
+        contents.add(textChunk);
+
+        // Thin horizontal rectangle near the text bottom.
+        LineArtChunk lineArt = new LineArtChunk(new BoundingBox(0, 10.0, 100.5, 60.0, 101.5));
+        contents.add(lineArt);
+
+        StrikethroughProcessor.processStrikethroughs(contents);
+
+        Assertions.assertFalse(textChunk.getIsStrikethroughText(), "Underline-position line art should be ignored");
+    }
+
+    @Test
+    public void testTallLineArtRejectedAsBackgroundFill() {
+        List<IObject> contents = new ArrayList<>();
+
+        TextChunk textChunk = new TextChunk(new BoundingBox(0, 10.0, 100.0, 60.0, 120.0),
+            "test", 12, 100.0);
+        contents.add(textChunk);
+
+        // Height=30, far thicker than a strikethrough rule.
+        LineArtChunk lineArt = new LineArtChunk(new BoundingBox(0, 10.0, 95.0, 60.0, 125.0));
+        contents.add(lineArt);
+
+        StrikethroughProcessor.processStrikethroughs(contents);
+
+        Assertions.assertFalse(textChunk.getIsStrikethroughText(), "Tall line art should be rejected");
+    }
+
+    @Test
+    public void testLargeBackgroundLineArtRejected() {
+        List<IObject> contents = new ArrayList<>();
+
+        TextChunk textChunk = new TextChunk(new BoundingBox(0, 50.0, 100.0, 80.0, 120.0),
+            "hi", 12, 100.0);
+        contents.add(textChunk);
+
+        // Thin but much wider than the text, so it is likely a separator or background shape.
+        LineArtChunk lineArt = new LineArtChunk(new BoundingBox(0, 10.0, 109.5, 200.0, 110.5));
+        contents.add(lineArt);
+
+        StrikethroughProcessor.processStrikethroughs(contents);
+
+        Assertions.assertFalse(textChunk.getIsStrikethroughText(), "Large background-like line art should be rejected");
     }
 
     @Test
