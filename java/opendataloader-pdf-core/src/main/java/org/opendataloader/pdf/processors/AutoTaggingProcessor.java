@@ -530,8 +530,10 @@ public class AutoTaggingProcessor {
                 COSObject sd = buildStructDestArray(openAction, document);
                 if (sd != null) {
                     catalog.setKey(ASAtom.OPEN_ACTION, sd);
-                    cosDocument.addChangedObject(catalog.getObject());
+                } else {
+                    catalog.removeKey(ASAtom.OPEN_ACTION);
                 }
+                cosDocument.addChangedObject(catalog.getObject());
                 return;
             }
             rewriteDestinationToStructDestinationInAction(catalog.getObject(), document,  cosDocument,  ASAtom.OPEN_ACTION);
