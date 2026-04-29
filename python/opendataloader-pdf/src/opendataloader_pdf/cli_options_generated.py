@@ -196,7 +196,7 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "type": "string",
         "required": False,
         "default": "off",
-        "description": "Hybrid backend (requires a running server). Quick start: pip install \"opendataloader-pdf[hybrid]\" && opendataloader-pdf-hybrid --port 5002. For remote servers use --hybrid-url. Values: off (default), docling-fast",
+        "description": "Hybrid backend (requires a running server). Quick start: pip install \"opendataloader-pdf[hybrid]\" && opendataloader-pdf-hybrid --port 5002. For remote servers use --hybrid-url. Values: off (default), docling-fast, hancom-ai",
     },
     {
         "name": "hybrid-mode",

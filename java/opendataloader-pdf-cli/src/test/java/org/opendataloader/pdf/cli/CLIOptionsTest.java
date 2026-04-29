@@ -541,6 +541,47 @@ class CLIOptionsTest {
     }
 
     @Test
+    void testCreateConfig_hybridHancomAiRegionlistStrategy_invalidValue_throws() {
+        String[] args = {"--hybrid", "hancom-ai",
+                         "--hybrid-hancom-ai-regionlist-strategy", "bogus",
+                         testPdf.getAbsolutePath()};
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+            CommandLine cmd = parser.parse(options, args);
+            CLIOptions.createConfigFromCommandLine(cmd);
+        });
+        assertTrue(ex.getMessage().contains("--hybrid-hancom-ai-regionlist-strategy"),
+                "Error should name the offending CLI flag, got: " + ex.getMessage());
+        assertTrue(ex.getMessage().contains("table-first") && ex.getMessage().contains("list-only"),
+                "Error should list valid values, got: " + ex.getMessage());
+    }
+
+    @Test
+    void testCreateConfig_hybridHancomAiOcrStrategy_invalidValue_throws() {
+        String[] args = {"--hybrid", "hancom-ai",
+                         "--hybrid-hancom-ai-ocr-strategy", "bogus",
+                         testPdf.getAbsolutePath()};
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+            CommandLine cmd = parser.parse(options, args);
+            CLIOptions.createConfigFromCommandLine(cmd);
+        });
+        assertTrue(ex.getMessage().contains("--hybrid-hancom-ai-ocr-strategy"),
+                "Error should name the offending CLI flag, got: " + ex.getMessage());
+    }
+
+    @Test
+    void testCreateConfig_hybridHancomAiImageCache_invalidValue_throws() {
+        String[] args = {"--hybrid", "hancom-ai",
+                         "--hybrid-hancom-ai-image-cache", "bogus",
+                         testPdf.getAbsolutePath()};
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+            CommandLine cmd = parser.parse(options, args);
+            CLIOptions.createConfigFromCommandLine(cmd);
+        });
+        assertTrue(ex.getMessage().contains("--hybrid-hancom-ai-image-cache"),
+                "Error should name the offending CLI flag, got: " + ex.getMessage());
+    }
+
+    @Test
     void testCreateConfig_hybridHancomAiOption_withoutHancomAi_throws() {
         String[] args = {"--hybrid-hancom-ai-regionlist-strategy", "list-only",
                          testPdf.getAbsolutePath()};
