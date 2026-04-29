@@ -565,4 +565,15 @@ class CLIOptionsTest {
             CLIOptions.createConfigFromCommandLine(cmd);
         });
     }
+
+    @Test
+    void testAddAllTo_registersAllOptions() {
+        Options ext = new Options();
+        CLIOptions.addAllTo(ext);
+        assertTrue(ext.hasOption("hybrid"));
+        assertTrue(ext.hasOption("hybrid-mode"));
+        assertTrue(ext.hasOption("hybrid-hancom-ai-regionlist-strategy"));
+        assertTrue(ext.hasOption("format"));
+        assertTrue(ext.hasOption("threads"));
+    }
 }
