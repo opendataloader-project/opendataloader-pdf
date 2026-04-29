@@ -267,6 +267,31 @@ public class CLIOptions {
 
     public static Config createConfigFromCommandLine(CommandLine commandLine) {
         Config config = new Config();
+        if (commandLine.hasOption(CLIOptions.FOLDER_OPTION)) {
+            config.setOutputFolder(commandLine.getOptionValue(CLIOptions.FOLDER_OPTION));
+        } else {
+            String argument = commandLine.getArgs()[0];
+            File file = new File(argument);
+            file = new File(file.getAbsolutePath());
+            config.setOutputFolder(file.isDirectory() ? file.getAbsolutePath() : file.getParent());
+        }
+        applyAllTo(config, commandLine);
+        return config;
+    }
+
+    /**
+     * Applies every core CLI option from the parsed command line onto the given Config.
+     * Caller is responsible for setting required Config state that is not represented
+     * by a CLI option (e.g. output folder when no positional input file is provided).
+     *
+     * Used by downstream CLIs that build their own Options + Config and want core
+     * options applied without paying for the positional-arg-based output-folder
+     * fallback that {@link #createConfigFromCommandLine} performs.
+     *
+     * @param config       Config to populate
+     * @param commandLine  parsed CommandLine
+     */
+    public static void applyAllTo(Config config, CommandLine commandLine) {
         if (commandLine.hasOption(CLIOptions.PASSWORD_OPTION)) {
             config.setPassword(commandLine.getOptionValue(CLIOptions.PASSWORD_OPTION));
         }
@@ -315,14 +340,6 @@ public class CLIOptions {
         if (commandLine.hasOption(CLIOptions.HTML_PAGE_SEPARATOR_LONG_OPTION)) {
             config.setHtmlPageSeparator(commandLine.getOptionValue(CLIOptions.HTML_PAGE_SEPARATOR_LONG_OPTION));
         }
-        if (commandLine.hasOption(CLIOptions.FOLDER_OPTION)) {
-            config.setOutputFolder(commandLine.getOptionValue(CLIOptions.FOLDER_OPTION));
-        } else {
-            String argument = commandLine.getArgs()[0];
-            File file = new File(argument);
-            file = new File(file.getAbsolutePath());
-            config.setOutputFolder(file.isDirectory() ? file.getAbsolutePath() : file.getParent());
-        }
         applyContentSafetyOption(config, commandLine);
         applySanitizeOption(config, commandLine);
         applyFormatOption(config, commandLine);
@@ -332,7 +349,6 @@ public class CLIOptions {
         applyHybridOptions(config, commandLine);
         applyThreadsOption(config, commandLine);
         config.normalize();
-        return config;
     }
 
     private static void applyThreadsOption(Config config, CommandLine commandLine) {
