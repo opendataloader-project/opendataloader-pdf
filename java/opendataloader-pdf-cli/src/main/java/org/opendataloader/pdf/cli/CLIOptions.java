@@ -136,6 +136,35 @@ public class CLIOptions {
     private static final String HYBRID_FALLBACK_LONG_OPTION = "hybrid-fallback";
     private static final String HYBRID_FALLBACK_DESC = "Opt in to Java fallback on hybrid backend error (default: disabled)";
 
+    // ===== Hybrid hancom-ai backend-specific =====
+    private static final String HYBRID_HANCOM_AI_REGIONLIST_STRATEGY_LONG_OPTION =
+            "hybrid-hancom-ai-regionlist-strategy";
+    private static final String HYBRID_HANCOM_AI_REGIONLIST_STRATEGY_DESC =
+            "DLA label 7 (regionlist) handling. Requires --hybrid=hancom-ai. "
+            + "Values: table-first (default; check TSR overlap), list-only (skip TSR, always treat as list)";
+
+    private static final String HYBRID_HANCOM_AI_OCR_STRATEGY_LONG_OPTION =
+            "hybrid-hancom-ai-ocr-strategy";
+    private static final String HYBRID_HANCOM_AI_OCR_STRATEGY_DESC =
+            "OCR strategy. Requires --hybrid=hancom-ai. "
+            + "Values: off (stream-only), auto (default; stream first, OCR fallback), force (OCR-only)";
+
+    private static final String HYBRID_HANCOM_AI_IMAGE_CACHE_LONG_OPTION =
+            "hybrid-hancom-ai-image-cache";
+    private static final String HYBRID_HANCOM_AI_IMAGE_CACHE_DESC =
+            "Page image cache backing. Requires --hybrid=hancom-ai. "
+            + "Values: memory (default), disk";
+
+    private static final String HYBRID_HANCOM_AI_SAVE_CROPS_LONG_OPTION =
+            "hybrid-hancom-ai-save-crops";
+    private static final String HYBRID_HANCOM_AI_SAVE_CROPS_DESC =
+            "Persist cropped figure images to disk for debugging. Requires --hybrid=hancom-ai";
+
+    private static final String HYBRID_HANCOM_AI_CROP_OUTPUT_DIR_LONG_OPTION =
+            "hybrid-hancom-ai-crop-output-dir";
+    private static final String HYBRID_HANCOM_AI_CROP_OUTPUT_DIR_DESC =
+            "Output directory for --hybrid-hancom-ai-save-crops. Requires --hybrid=hancom-ai";
+
     // ===== Stdout Output =====
     private static final String TO_STDOUT_LONG_OPTION = "to-stdout";
     private static final String TO_STDOUT_DESC = "Write output to stdout instead of file (single format only)";
