@@ -248,11 +248,21 @@ public class CLIOptions {
 
     public static Options defineOptions() {
         Options options = new Options();
+        addAllTo(options);
+        return options;
+    }
+
+    /**
+     * Registers every core CLI option onto an external {@link Options} instance.
+     * Used by downstream CLIs (e.g. opendataloader-pdfua) that want to inherit
+     * the entire core option set and add their own options on top.
+     *
+     * @param options the Options instance to populate
+     */
+    public static void addAllTo(Options options) {
         for (OptionDefinition def : OPTION_DEFINITIONS) {
             options.addOption(def.toOption());
         }
-
-        return options;
     }
 
     public static Config createConfigFromCommandLine(CommandLine commandLine) {
