@@ -383,7 +383,20 @@ public class DocumentProcessor {
         return pagesToProcess == null || pagesToProcess.contains(pageNumber);
     }
 
-    private static void generateOutputs(String inputPdfName, List<List<IObject>> contents, Config config,
+    /**
+     * Writes the configured output files (JSON/MD/HTML/PDF/Text/images/tagged PDF)
+     * from already-extracted contents.
+     *
+     * <p><strong>Internal API. Do not call directly.</strong> This method is
+     * {@code public} only so the {@link org.opendataloader.pdf.api.OutputWriter}
+     * facade in the {@code api} package can delegate to it. The signature
+     * (notably the {@code List<List<IObject>>} and
+     * {@code Map<Long, ElementMetadata>} parameters) is an implementation
+     * detail and may change in any release. External callers must use
+     * {@link org.opendataloader.pdf.api.OutputWriter#writeOutputs}, which is
+     * the stable public API.
+     */
+    public static void generateOutputs(String inputPdfName, List<List<IObject>> contents, Config config,
                                            Map<Long, ElementMetadata> elementMetadata) throws IOException {
         // Stdout mode: write primary format to stdout, skip file I/O
         if (config.isOutputStdout()) {
