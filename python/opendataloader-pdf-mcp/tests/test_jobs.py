@@ -183,3 +183,141 @@ class TestWorker:
         assert job.status == JobStatus.FAILED
         assert "parse error" in job.error
         assert job.completed_at is not None
+
+
+class TestMinerUFallback:
+    """Tests for the MinerU fallback branch in JobManager._run()."""
+
+    def test_submit_mineru_fallback_hard_fail(self, manager, pdf_file):
+        java_content = "# Java output"
+        mineru_content = "# MinerU output"
+        mineru_json = '{"pages": []}'
+
+        from opendataloader_pdf_mcp.mineru import MinerUResult
+
+        def fake_convert(input_path, output_dir, **kwargs):
+            stem = Path(input_path).stem
+            (Path(output_dir) / f"{stem}.md").write_text(java_content, encoding="utf-8")
+            for job in manager._jobs.values():
+                if str(job.kwargs.get("enable_mineru_fallback")) or True:
+                    job.triage_decision = "HARD_FAIL"
+
+        mock_result = MinerUResult(
+            markdown=mineru_content, json_str=mineru_json, exit_code=0, stderr=""
+        )
+
+        with patch("opendataloader_pdf_mcp.jobs.opendataloader_pdf") as mock_odl:
+            mock_odl.convert = fake_convert
+            with patch("opendataloader_pdf_mcp.jobs.MinerURunner") as mock_runner_cls:
+                mock_runner_cls.return_value.run.return_value = mock_result
+                job_id = manager.submit(str(pdf_file), "markdown", enable_mineru_fallback=True)
+                for _ in range(100):
+                    if manager.get(job_id).status in (JobStatus.DONE, JobStatus.FAILED):
+                        break
+                    time.sleep(0.05)
+
+        job = manager.get(job_id)
+        assert job.status == JobStatus.DONE
+        assert job.artifact == mineru_content
+        assert job.java_artifact == java_content
+        assert job.mineru_artifact == mineru_content
+        assert job.mineru_json == mineru_json
+        assert job.fallback_source == "mineru"
+
+    def test_submit_mineru_fallback_pass(self, manager, pdf_file):
+        java_content = "# Java output"
+
+        def fake_convert(input_path, output_dir, **kwargs):
+            stem = Path(input_path).stem
+            (Path(output_dir) / f"{stem}.md").write_text(java_content, encoding="utf-8")
+            for job in manager._jobs.values():
+                job.triage_decision = "PASS"
+
+        with patch("opendataloader_pdf_mcp.jobs.opendataloader_pdf") as mock_odl:
+            mock_odl.convert = fake_convert
+            with patch("opendataloader_pdf_mcp.jobs.MinerURunner") as mock_runner_cls:
+                job_id = manager.submit(str(pdf_file), "markdown", enable_mineru_fallback=True)
+                for _ in range(100):
+                    if manager.get(job_id).status in (JobStatus.DONE, JobStatus.FAILED):
+                        break
+                    time.sleep(0.05)
+
+        job = manager.get(job_id)
+        assert job.status == JobStatus.DONE
+        assert job.artifact == java_content
+        assert job.java_artifact is None
+        assert job.fallback_source is None
+        mock_runner_cls.return_value.run.assert_not_called()
+
+    def test_submit_mineru_fallback_disabled(self, manager, pdf_file):
+        java_content = "# Java output"
+
+        def fake_convert(input_path, output_dir, **kwargs):
+            stem = Path(input_path).stem
+            (Path(output_dir) / f"{stem}.md").write_text(java_content, encoding="utf-8")
+            for job in manager._jobs.values():
+                job.triage_decision = "HARD_FAIL"
+
+        with patch("opendataloader_pdf_mcp.jobs.opendataloader_pdf") as mock_odl:
+            mock_odl.convert = fake_convert
+            with patch("opendataloader_pdf_mcp.jobs.MinerURunner") as mock_runner_cls:
+                job_id = manager.submit(str(pdf_file), "markdown", enable_mineru_fallback=False)
+                for _ in range(100):
+                    if manager.get(job_id).status in (JobStatus.DONE, JobStatus.FAILED):
+                        break
+                    time.sleep(0.05)
+
+        job = manager.get(job_id)
+        assert job.status == JobStatus.DONE
+        assert job.artifact == java_content
+        assert job.java_artifact is None
+        mock_runner_cls.return_value.run.assert_not_called()
+
+    def test_submit_mineru_fallback_error(self, manager, pdf_file):
+        java_content = "# Java output"
+
+        from opendataloader_pdf_mcp.mineru import MinerUError
+
+        def fake_convert(input_path, output_dir, **kwargs):
+            stem = Path(input_path).stem
+            (Path(output_dir) / f"{stem}.md").write_text(java_content, encoding="utf-8")
+            for job in manager._jobs.values():
+                job.triage_decision = "HARD_FAIL"
+
+        with patch("opendataloader_pdf_mcp.jobs.opendataloader_pdf") as mock_odl:
+            mock_odl.convert = fake_convert
+            with patch("opendataloader_pdf_mcp.jobs.MinerURunner") as mock_runner_cls:
+                mock_runner_cls.return_value.run.side_effect = MinerUError("mineru not found in PATH")
+                job_id = manager.submit(str(pdf_file), "markdown", enable_mineru_fallback=True)
+                for _ in range(100):
+                    if manager.get(job_id).status in (JobStatus.DONE, JobStatus.FAILED):
+                        break
+                    time.sleep(0.05)
+
+        job = manager.get(job_id)
+        assert job.status == JobStatus.FAILED
+        assert job.java_artifact == java_content
+        assert "mineru not found" in job.error
+
+    def test_submit_mineru_cancelled_before_fallback(self, manager, pdf_file):
+        java_content = "# Java output"
+
+        def fake_convert(input_path, output_dir, **kwargs):
+            stem = Path(input_path).stem
+            (Path(output_dir) / f"{stem}.md").write_text(java_content, encoding="utf-8")
+            for job in manager._jobs.values():
+                job.triage_decision = "HARD_FAIL"
+                job._cancel_event.set()
+
+        with patch("opendataloader_pdf_mcp.jobs.opendataloader_pdf") as mock_odl:
+            mock_odl.convert = fake_convert
+            with patch("opendataloader_pdf_mcp.jobs.MinerURunner") as mock_runner_cls:
+                job_id = manager.submit(str(pdf_file), "markdown", enable_mineru_fallback=True)
+                for _ in range(100):
+                    if manager.get(job_id).status in (JobStatus.DONE, JobStatus.FAILED, JobStatus.CANCELLED):
+                        break
+                    time.sleep(0.05)
+
+        job = manager.get(job_id)
+        assert job.status == JobStatus.CANCELLED
+        mock_runner_cls.return_value.run.assert_not_called()

@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 import opendataloader_pdf
+from opendataloader_pdf_mcp.mineru import MinerUError, MinerURunner
 
 _SUPPORTED_FORMATS = {"json", "text", "html", "markdown", "markdown-with-html", "markdown-with-images"}
 _EXT_MAP = {
@@ -46,6 +47,10 @@ class Job:
     error:           str | None       = None
     submitted_at:    str              = field(default_factory=lambda: _now())
     completed_at:    str | None       = None
+    mineru_artifact: str | None       = None
+    mineru_json:     str | None       = None
+    java_artifact:   str | None       = None
+    fallback_source: str | None       = None
     _cancel_event:   threading.Event  = field(default_factory=threading.Event, repr=False, compare=False)
     _status_lock:    threading.Lock   = field(default_factory=threading.Lock, repr=False, compare=False)
 
@@ -122,7 +127,7 @@ class JobManager:
                     "output_dir": tmp_dir,
                     "format": job.format,
                     "quiet": True,
-                    **job.kwargs,
+                    **{k: v for k, v in job.kwargs.items() if k != "enable_mineru_fallback"},
                 }
                 opendataloader_pdf.convert(**kwargs)
 
@@ -150,6 +155,38 @@ class JobManager:
         except Exception as exc:
             with job._status_lock:
                 if job.status != JobStatus.CANCELLED:
+                    job.error = str(exc)
+                    job.status = JobStatus.FAILED
+                    job.completed_at = _now()
+            return
+
+        # MinerU fallback: only when Java completed successfully with HARD_FAIL triage
+        if (
+            job.triage_decision == "HARD_FAIL"
+            and job.kwargs.get("enable_mineru_fallback")
+        ):
+            if job._cancel_event.is_set():
+                with job._status_lock:
+                    job.status = JobStatus.CANCELLED
+                    job.completed_at = _now()
+                return
+
+            job.java_artifact = job.artifact
+            job.fallback_source = "mineru"
+            with job._status_lock:
+                job.status = JobStatus.RUNNING
+
+            try:
+                with tempfile.TemporaryDirectory() as mineru_tmp:
+                    result = MinerURunner().run(input_file, Path(mineru_tmp))
+                    job.mineru_artifact = result.markdown
+                    job.mineru_json = result.json_str
+                    job.artifact = result.markdown
+                with job._status_lock:
+                    job.status = JobStatus.DONE
+                    job.completed_at = _now()
+            except MinerUError as exc:
+                with job._status_lock:
                     job.error = str(exc)
                     job.status = JobStatus.FAILED
                     job.completed_at = _now()
