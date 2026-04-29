@@ -621,6 +621,18 @@ public class CLIOptions {
         if (commandLine.hasOption(TO_STDOUT_LONG_OPTION)) {
             config.setOutputStdout(true);
         }
+        // Keep in sync with all HYBRID_HANCOM_AI_*_LONG_OPTION constants above.
+        boolean usesHancomAiOnly =
+                commandLine.hasOption(HYBRID_HANCOM_AI_REGIONLIST_STRATEGY_LONG_OPTION) ||
+                commandLine.hasOption(HYBRID_HANCOM_AI_OCR_STRATEGY_LONG_OPTION) ||
+                commandLine.hasOption(HYBRID_HANCOM_AI_IMAGE_CACHE_LONG_OPTION) ||
+                commandLine.hasOption(HYBRID_HANCOM_AI_SAVE_CROPS_LONG_OPTION) ||
+                commandLine.hasOption(HYBRID_HANCOM_AI_CROP_OUTPUT_DIR_LONG_OPTION);
+        if (usesHancomAiOnly && !Config.HYBRID_HANCOM_AI.equals(config.getHybrid())) {
+            throw new IllegalArgumentException(
+                    "Options --hybrid-hancom-ai-* require --hybrid=hancom-ai (got --hybrid="
+                    + config.getHybrid() + ")");
+        }
     }
 
     /**
