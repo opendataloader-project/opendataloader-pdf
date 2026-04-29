@@ -55,6 +55,12 @@ export interface ConvertOptions {
   hybridTimeout?: string;
   /** Opt in to Java fallback on hybrid backend error (default: disabled) */
   hybridFallback?: boolean;
+  /** DLA label 7 (regionlist) handling. Requires --hybrid=hancom-ai. Values: table-first (default; check TSR overlap), list-only (skip TSR, always treat as list) */
+  hybridHancomAiRegionlistStrategy?: string;
+  /** OCR strategy. Requires --hybrid=hancom-ai. Values: off (stream-only), auto (default; stream first, OCR fallback), force (OCR-only) */
+  hybridHancomAiOcrStrategy?: string;
+  /** Page image cache backing. Requires --hybrid=hancom-ai. Values: memory (default), disk */
+  hybridHancomAiImageCache?: string;
   /** Write output to stdout instead of file (single format only) */
   toStdout?: boolean;
   /** Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode */
@@ -90,6 +96,9 @@ export interface CliOptions {
   hybridUrl?: string;
   hybridTimeout?: string;
   hybridFallback?: boolean;
+  hybridHancomAiRegionlistStrategy?: string;
+  hybridHancomAiOcrStrategy?: string;
+  hybridHancomAiImageCache?: string;
   toStdout?: boolean;
   threads?: string;
 }
@@ -174,6 +183,15 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   }
   if (cliOptions.hybridFallback) {
     convertOptions.hybridFallback = true;
+  }
+  if (cliOptions.hybridHancomAiRegionlistStrategy) {
+    convertOptions.hybridHancomAiRegionlistStrategy = cliOptions.hybridHancomAiRegionlistStrategy;
+  }
+  if (cliOptions.hybridHancomAiOcrStrategy) {
+    convertOptions.hybridHancomAiOcrStrategy = cliOptions.hybridHancomAiOcrStrategy;
+  }
+  if (cliOptions.hybridHancomAiImageCache) {
+    convertOptions.hybridHancomAiImageCache = cliOptions.hybridHancomAiImageCache;
   }
   if (cliOptions.toStdout) {
     convertOptions.toStdout = true;
@@ -277,6 +295,15 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.hybridFallback) {
     args.push('--hybrid-fallback');
+  }
+  if (options.hybridHancomAiRegionlistStrategy) {
+    args.push('--hybrid-hancom-ai-regionlist-strategy', options.hybridHancomAiRegionlistStrategy);
+  }
+  if (options.hybridHancomAiOcrStrategy) {
+    args.push('--hybrid-hancom-ai-ocr-strategy', options.hybridHancomAiOcrStrategy);
+  }
+  if (options.hybridHancomAiImageCache) {
+    args.push('--hybrid-hancom-ai-image-cache', options.hybridHancomAiImageCache);
   }
   if (options.toStdout) {
     args.push('--to-stdout');

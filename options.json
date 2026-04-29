@@ -201,6 +201,30 @@
       "description": "Opt in to Java fallback on hybrid backend error (default: disabled)"
     },
     {
+      "name": "hybrid-hancom-ai-regionlist-strategy",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": "table-first",
+      "description": "DLA label 7 (regionlist) handling. Requires --hybrid=hancom-ai. Values: table-first (default; check TSR overlap), list-only (skip TSR, always treat as list)"
+    },
+    {
+      "name": "hybrid-hancom-ai-ocr-strategy",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": "auto",
+      "description": "OCR strategy. Requires --hybrid=hancom-ai. Values: off (stream-only), auto (default; stream first, OCR fallback), force (OCR-only)"
+    },
+    {
+      "name": "hybrid-hancom-ai-image-cache",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": "memory",
+      "description": "Page image cache backing. Requires --hybrid=hancom-ai. Values: memory (default), disk"
+    },
+    {
       "name": "to-stdout",
       "shortName": null,
       "type": "boolean",
