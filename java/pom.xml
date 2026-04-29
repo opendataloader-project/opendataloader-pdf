@@ -58,7 +58,9 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <verapdf.version>[1.31.0,1.32.0-RC)</verapdf.version>
+        <verapdf.version>1.31.54</verapdf.version>
+        <verapdf.wcag.algs.version>1.31.18</verapdf.wcag.algs.version>
+        <jackson.databind.version>2.21.1</jackson.databind.version>
         <junit.jupiter.version>5.14.3</junit.jupiter.version>
         <assertj.version>3.27.7</assertj.version>
         <commons.cli.version>1.11.0</commons.cli.version>
@@ -82,6 +84,22 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>org.verapdf</groupId>
+                <artifactId>wcag-algorithms</artifactId>
+                <version>${verapdf.wcag.algs.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.databind.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter</artifactId>
