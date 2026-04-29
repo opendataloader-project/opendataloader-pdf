@@ -19,6 +19,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.hybrid.HybridConfig;
 
 import java.io.File;
 import java.io.PrintStream;
@@ -118,7 +119,7 @@ public class CLIOptions {
     private static final String HYBRID_LONG_OPTION = "hybrid";
     private static final String HYBRID_DESC = "Hybrid backend (requires a running server). "
             + "Quick start: pip install \"opendataloader-pdf[hybrid]\" && opendataloader-pdf-hybrid --port 5002. "
-            + "For remote servers use --hybrid-url. Values: off (default), docling-fast";
+            + "For remote servers use --hybrid-url. Values: off (default), docling-fast, hancom-ai";
 
     private static final String HYBRID_MODE_LONG_OPTION = "hybrid-mode";
     private static final String HYBRID_MODE_DESC = "Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)";
@@ -620,19 +621,42 @@ public class CLIOptions {
         if (commandLine.hasOption(HYBRID_HANCOM_AI_REGIONLIST_STRATEGY_LONG_OPTION)) {
             String value = commandLine.getOptionValue(HYBRID_HANCOM_AI_REGIONLIST_STRATEGY_LONG_OPTION);
             if (value != null && !value.trim().isEmpty()) {
-                config.getHybridConfig().setRegionlistStrategy(value.trim().toLowerCase(Locale.ROOT));
+                String normalized = value.trim().toLowerCase(Locale.ROOT);
+                if (!HybridConfig.REGIONLIST_TABLE_FIRST.equals(normalized)
+                        && !HybridConfig.REGIONLIST_LIST_ONLY.equals(normalized)) {
+                    throw new IllegalArgumentException(String.format(
+                            "Option --%s: unsupported value '%s'. Supported values: %s, %s",
+                            HYBRID_HANCOM_AI_REGIONLIST_STRATEGY_LONG_OPTION, normalized,
+                            HybridConfig.REGIONLIST_TABLE_FIRST, HybridConfig.REGIONLIST_LIST_ONLY));
+                }
+                config.getHybridConfig().setRegionlistStrategy(normalized);
             }
         }
         if (commandLine.hasOption(HYBRID_HANCOM_AI_OCR_STRATEGY_LONG_OPTION)) {
             String value = commandLine.getOptionValue(HYBRID_HANCOM_AI_OCR_STRATEGY_LONG_OPTION);
             if (value != null && !value.trim().isEmpty()) {
-                config.getHybridConfig().setOcrStrategy(value.trim().toLowerCase(Locale.ROOT));
+                String normalized = value.trim().toLowerCase(Locale.ROOT);
+                if (!HybridConfig.OCR_OFF.equals(normalized)
+                        && !HybridConfig.OCR_AUTO.equals(normalized)
+                        && !HybridConfig.OCR_FORCE.equals(normalized)) {
+                    throw new IllegalArgumentException(String.format(
+                            "Option --%s: unsupported value '%s'. Supported values: %s, %s, %s",
+                            HYBRID_HANCOM_AI_OCR_STRATEGY_LONG_OPTION, normalized,
+                            HybridConfig.OCR_OFF, HybridConfig.OCR_AUTO, HybridConfig.OCR_FORCE));
+                }
+                config.getHybridConfig().setOcrStrategy(normalized);
             }
         }
         if (commandLine.hasOption(HYBRID_HANCOM_AI_IMAGE_CACHE_LONG_OPTION)) {
             String value = commandLine.getOptionValue(HYBRID_HANCOM_AI_IMAGE_CACHE_LONG_OPTION);
             if (value != null && !value.trim().isEmpty()) {
-                config.getHybridConfig().setImageCache(value.trim().toLowerCase(Locale.ROOT));
+                String normalized = value.trim().toLowerCase(Locale.ROOT);
+                if (!"memory".equals(normalized) && !"disk".equals(normalized)) {
+                    throw new IllegalArgumentException(String.format(
+                            "Option --%s: unsupported value '%s'. Supported values: memory, disk",
+                            HYBRID_HANCOM_AI_IMAGE_CACHE_LONG_OPTION, normalized));
+                }
+                config.getHybridConfig().setImageCache(normalized);
             }
         }
         if (commandLine.hasOption(HYBRID_HANCOM_AI_SAVE_CROPS_LONG_OPTION)) {
