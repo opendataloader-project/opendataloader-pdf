@@ -489,4 +489,54 @@ class CLIOptionsTest {
     void testDefineOptions_containsHybridHancomAiCropOutputDir() {
         assertTrue(options.hasOption("hybrid-hancom-ai-crop-output-dir"));
     }
+
+    @Test
+    void testCreateConfig_withHybridHancomAiRegionlistStrategy() throws ParseException {
+        String[] args = {"--hybrid", "hancom-ai",
+                         "--hybrid-hancom-ai-regionlist-strategy", "list-only",
+                         testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+        assertEquals("list-only", config.getHybridConfig().getRegionlistStrategy());
+    }
+
+    @Test
+    void testCreateConfig_withHybridHancomAiOcrStrategy() throws ParseException {
+        String[] args = {"--hybrid", "hancom-ai",
+                         "--hybrid-hancom-ai-ocr-strategy", "force",
+                         testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+        assertEquals("force", config.getHybridConfig().getOcrStrategy());
+    }
+
+    @Test
+    void testCreateConfig_withHybridHancomAiImageCache() throws ParseException {
+        String[] args = {"--hybrid", "hancom-ai",
+                         "--hybrid-hancom-ai-image-cache", "disk",
+                         testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+        assertEquals("disk", config.getHybridConfig().getImageCache());
+    }
+
+    @Test
+    void testCreateConfig_withHybridHancomAiSaveCrops() throws ParseException {
+        String[] args = {"--hybrid", "hancom-ai",
+                         "--hybrid-hancom-ai-save-crops",
+                         testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+        assertTrue(config.getHybridConfig().isSaveCrops());
+    }
+
+    @Test
+    void testCreateConfig_withHybridHancomAiCropOutputDir() throws ParseException {
+        String[] args = {"--hybrid", "hancom-ai",
+                         "--hybrid-hancom-ai-crop-output-dir", "/tmp/crops",
+                         testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+        assertEquals("/tmp/crops", config.getHybridConfig().getCropOutputDir());
+    }
 }
