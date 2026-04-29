@@ -223,6 +223,12 @@ public class CLIOptions {
             new OptionDefinition(HYBRID_URL_LONG_OPTION, null, "string", null, HYBRID_URL_DESC, true),
             new OptionDefinition(HYBRID_TIMEOUT_LONG_OPTION, null, "string", "0", HYBRID_TIMEOUT_DESC, true),
             new OptionDefinition(HYBRID_FALLBACK_LONG_OPTION, null, "boolean", false, HYBRID_FALLBACK_DESC, true),
+            new OptionDefinition(HYBRID_HANCOM_AI_REGIONLIST_STRATEGY_LONG_OPTION, null, "string",
+                    "table-first", HYBRID_HANCOM_AI_REGIONLIST_STRATEGY_DESC, true),
+            new OptionDefinition(HYBRID_HANCOM_AI_OCR_STRATEGY_LONG_OPTION, null, "string",
+                    "auto", HYBRID_HANCOM_AI_OCR_STRATEGY_DESC, true),
+            new OptionDefinition(HYBRID_HANCOM_AI_IMAGE_CACHE_LONG_OPTION, null, "string",
+                    "memory", HYBRID_HANCOM_AI_IMAGE_CACHE_DESC, true),
             new OptionDefinition(TO_STDOUT_LONG_OPTION, null, "boolean", false, TO_STDOUT_DESC, true),
             new OptionDefinition(THREADS_LONG_OPTION, null, "string", "1", THREADS_DESC, true),
             new OptionDefinition(EXPORT_OPTIONS_LONG_OPTION, null, "boolean", null, null, false),
@@ -234,7 +240,11 @@ public class CLIOptions {
             new OptionDefinition(HTML_REPORT_LONG_OPTION, null, "boolean", null, null, false),
             new OptionDefinition(HTML_IN_MARKDOWN_LONG_OPTION, null, "boolean", null, null, false),
             new OptionDefinition(MARKDOWN_IMAGE_LONG_OPTION, null, "boolean", null, null, false),
-            new OptionDefinition(NO_JSON_REPORT_LONG_OPTION, null, "boolean", null, null, false));
+            new OptionDefinition(NO_JSON_REPORT_LONG_OPTION, null, "boolean", null, null, false),
+            new OptionDefinition(HYBRID_HANCOM_AI_SAVE_CROPS_LONG_OPTION, null, "boolean",
+                    false, HYBRID_HANCOM_AI_SAVE_CROPS_DESC, false),
+            new OptionDefinition(HYBRID_HANCOM_AI_CROP_OUTPUT_DIR_LONG_OPTION, null, "string",
+                    null, HYBRID_HANCOM_AI_CROP_OUTPUT_DIR_DESC, false));
 
     public static Options defineOptions() {
         Options options = new Options();
