@@ -591,6 +591,33 @@ public class CLIOptions {
         if (commandLine.hasOption(HYBRID_FALLBACK_LONG_OPTION)) {
             config.getHybridConfig().setFallbackToJava(true);
         }
+        if (commandLine.hasOption(HYBRID_HANCOM_AI_REGIONLIST_STRATEGY_LONG_OPTION)) {
+            String value = commandLine.getOptionValue(HYBRID_HANCOM_AI_REGIONLIST_STRATEGY_LONG_OPTION);
+            if (value != null && !value.trim().isEmpty()) {
+                config.getHybridConfig().setRegionlistStrategy(value.trim().toLowerCase(Locale.ROOT));
+            }
+        }
+        if (commandLine.hasOption(HYBRID_HANCOM_AI_OCR_STRATEGY_LONG_OPTION)) {
+            String value = commandLine.getOptionValue(HYBRID_HANCOM_AI_OCR_STRATEGY_LONG_OPTION);
+            if (value != null && !value.trim().isEmpty()) {
+                config.getHybridConfig().setOcrStrategy(value.trim().toLowerCase(Locale.ROOT));
+            }
+        }
+        if (commandLine.hasOption(HYBRID_HANCOM_AI_IMAGE_CACHE_LONG_OPTION)) {
+            String value = commandLine.getOptionValue(HYBRID_HANCOM_AI_IMAGE_CACHE_LONG_OPTION);
+            if (value != null && !value.trim().isEmpty()) {
+                config.getHybridConfig().setImageCache(value.trim().toLowerCase(Locale.ROOT));
+            }
+        }
+        if (commandLine.hasOption(HYBRID_HANCOM_AI_SAVE_CROPS_LONG_OPTION)) {
+            config.getHybridConfig().setSaveCrops(true);
+        }
+        if (commandLine.hasOption(HYBRID_HANCOM_AI_CROP_OUTPUT_DIR_LONG_OPTION)) {
+            String value = commandLine.getOptionValue(HYBRID_HANCOM_AI_CROP_OUTPUT_DIR_LONG_OPTION);
+            if (value != null && !value.trim().isEmpty()) {
+                config.getHybridConfig().setCropOutputDir(value.trim());
+            }
+        }
         if (commandLine.hasOption(TO_STDOUT_LONG_OPTION)) {
             config.setOutputStdout(true);
         }
