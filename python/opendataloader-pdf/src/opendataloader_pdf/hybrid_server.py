@@ -360,8 +360,9 @@ def create_converter(
                     factory (`get_ocr_factory`). Each engine has its own license, language
                     coverage, and accuracy characteristics; this project does not validate
                     engine accuracy. Default: "easyocr" (preserves prior behavior).
-        psm: Tesseract Page Segmentation Mode (0-13). Only applied when ocr_engine is
-             "tesseract" or "tesserocr". Ignored otherwise.
+        psm: Tesseract Page Segmentation Mode. Only applied when ocr_engine is
+             "tesseract" or "tesserocr". Ignored otherwise. Range and semantics
+             are owned by Tesseract / docling; see `tesseract --help-extra`.
         ocr_lang: List of OCR language codes. The code system depends on the chosen engine
                   (EasyOCR uses 'ko,en', Tesseract uses 'kor,eng', RapidOCR uses
                   'english,chinese', ocrmac uses 'en-US'). If None, the engine's default
@@ -390,6 +391,16 @@ def create_converter(
     # security/reproducibility; the module-level _OCR_ENGINE_DENYLIST filters
     # engines unsuitable for hybrid local mode (e.g., remote inference servers).
     ocr_factory = get_ocr_factory(allow_external_plugins=False)
+    if ocr_engine in _OCR_ENGINE_DENYLIST:
+        # Programmatic callers (importing this module) bypass argparse `choices`,
+        # so enforce the denylist here too. Without this, the module-level claim
+        # that `_OCR_ENGINE_DENYLIST` is shared across CLI and create_converter
+        # would only be true at the CLI layer.
+        available = sorted(set(ocr_factory.registered_kind) - _OCR_ENGINE_DENYLIST)
+        raise ValueError(
+            f"OCR engine '{ocr_engine}' is not supported in hybrid local mode "
+            f"(filtered by _OCR_ENGINE_DENYLIST). Available engines: {available}"
+        )
     try:
         ocr_options = ocr_factory.create_options(
             kind=ocr_engine,
@@ -463,7 +474,7 @@ def create_app(
         force_ocr: If True, force full-page OCR on all pages.
         disable_ocr: If True, disable OCR entirely. Mutually exclusive with force_ocr at CLI.
         ocr_engine: OCR engine kind (delegated to docling's get_ocr_factory). Default: "easyocr".
-        psm: Tesseract Page Segmentation Mode (0-13). Only applied for Tesseract engines.
+        psm: Tesseract Page Segmentation Mode. Only applied for Tesseract engines.
         ocr_lang: List of OCR language codes (engine-specific format).
         enrich_formula: If True, enable formula enrichment (LaTeX extraction).
         enrich_picture_description: If True, enable picture description (alt text generation).
@@ -804,9 +815,9 @@ def main():
         "--psm",
         type=int,
         default=None,
-        help="Tesseract Page Segmentation Mode (0-13). Only applies when --ocr-engine is "
-             "'tesseract' or 'tesserocr'. Common values: 3 (auto, default), 6 (uniform block), "
-             "11 (sparse text). Ignored for other engines.",
+        help="Tesseract Page Segmentation Mode. Applied only when --ocr-engine is "
+             "'tesseract' or 'tesserocr'; ignored for other engines. See "
+             "`tesseract --help-extra` for valid values.",
     )
     parser.add_argument(
         "--ocr-lang",

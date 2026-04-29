@@ -126,6 +126,26 @@ def test_unknown_engine_raises_value_error_with_clear_message():
     assert "Available engines" in msg
 
 
+def test_create_converter_rejects_denylisted_engine():
+    """Programmatic callers cannot bypass `_OCR_ENGINE_DENYLIST` via create_converter().
+
+    The CLI layer rejects denylisted engines via argparse `choices`. This test
+    locks in the same enforcement at the function-call layer, so importing the
+    module and passing `ocr_engine="kserve_v2_ocr"` directly fails with a clear
+    ValueError instead of building a converter that fails opaquely on the first
+    request.
+    """
+    with pytest.raises(ValueError) as excinfo:
+        _capture_pipeline_options(ocr_engine="kserve_v2_ocr")
+    msg = str(excinfo.value)
+    assert "kserve_v2_ocr" in msg
+    assert "hybrid local mode" in msg
+    assert "Available engines" in msg
+    # Must also mention the denylist explicitly so a future maintainer searching
+    # for the constant lands here.
+    assert "_OCR_ENGINE_DENYLIST" in msg
+
+
 # ---------- argparse: --no-ocr / --force-ocr / --ocr-engine / --psm ----------
 
 def _build_parser_subset():
@@ -191,7 +211,12 @@ def test_argparse_tesseract_path_for_issue_439():
 
 
 def test_argparse_psm_accepted_as_integer():
-    """`--psm 6` is parsed as an integer."""
+    """`--psm 6` is parsed as an integer.
+
+    Range and semantics belong to Tesseract / docling; this server passes the
+    integer through unchanged. Out-of-range values surface from docling /
+    Tesseract at conversion time, not here.
+    """
     args = _build_parser_subset().parse_args(
         ["--ocr-engine", "tesseract", "--psm", "6"]
     )
