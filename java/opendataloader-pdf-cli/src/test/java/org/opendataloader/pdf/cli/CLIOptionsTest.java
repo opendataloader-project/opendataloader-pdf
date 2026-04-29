@@ -576,4 +576,26 @@ class CLIOptionsTest {
         assertTrue(ext.hasOption("format"));
         assertTrue(ext.hasOption("threads"));
     }
+
+    @Test
+    void testApplyAllTo_appliesCoreOptions() throws ParseException {
+        Options ext = new Options();
+        CLIOptions.addAllTo(ext);
+        ext.addOption(null, "downstream-only", true, "Downstream-specific");
+
+        // Use --hybrid off so normalize() does not reset threads to 1.
+        String[] args = {"--hybrid", "off",
+                         "--threads", "2",
+                         "--downstream-only", "value"};
+        CommandLine cmd = parser.parse(ext, args);
+
+        Config config = new Config();
+        config.setOutputFolder(tempDir.toString());
+        CLIOptions.applyAllTo(config, cmd);
+
+        assertEquals("off", config.getHybrid());
+        assertEquals(2, config.getThreads());
+        // downstream-only is not consumed by applyAllTo — that is the caller's job.
+        assertEquals("value", cmd.getOptionValue("downstream-only"));
+    }
 }
