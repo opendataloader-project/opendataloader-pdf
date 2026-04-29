@@ -239,6 +239,21 @@ def test_engine_check_auto_always_ok():
     assert msg == ""
 
 
+def test_engine_check_unknown_kind_returns_false():
+    """Unknown engine kinds fail closed instead of silently passing.
+
+    Before this contract was tightened, the helper returned `(True, "")` for any
+    engine name it did not recognize, so a docling release that registered a
+    new engine kind would slip past the probe and fail at first conversion.
+    Locks in the fail-closed behavior.
+    """
+    ok, msg = hybrid_server._check_ocr_engine_available("hypothetical_new_engine")
+    assert ok is False
+    assert "hypothetical_new_engine" in msg
+    # Maintainer-targeted hint: where to add the probe branch.
+    assert "_check_ocr_engine_available" in msg
+
+
 def test_engine_check_tesseract_missing_binary():
     """`tesseract` engine without the binary on PATH fails with an actionable message."""
     with patch("shutil.which", return_value=None):
