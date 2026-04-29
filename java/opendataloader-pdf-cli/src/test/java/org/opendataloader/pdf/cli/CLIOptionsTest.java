@@ -539,4 +539,30 @@ class CLIOptionsTest {
         Config config = CLIOptions.createConfigFromCommandLine(cmd);
         assertEquals("/tmp/crops", config.getHybridConfig().getCropOutputDir());
     }
+
+    @Test
+    void testCreateConfig_hybridHancomAiOption_withoutHancomAi_throws() {
+        String[] args = {"--hybrid-hancom-ai-regionlist-strategy", "list-only",
+                         testPdf.getAbsolutePath()};
+        // No --hybrid set, defaults to off.
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+            CommandLine cmd = parser.parse(options, args);
+            CLIOptions.createConfigFromCommandLine(cmd);
+        });
+        assertTrue(ex.getMessage().contains("--hybrid-hancom-ai-"),
+                "Error should mention the offending prefix, got: " + ex.getMessage());
+        assertTrue(ex.getMessage().contains("hancom-ai"),
+                "Error should mention required backend, got: " + ex.getMessage());
+    }
+
+    @Test
+    void testCreateConfig_hybridHancomAiOption_withDoclingFast_throws() {
+        String[] args = {"--hybrid", "docling-fast",
+                         "--hybrid-hancom-ai-ocr-strategy", "force",
+                         testPdf.getAbsolutePath()};
+        assertThrows(IllegalArgumentException.class, () -> {
+            CommandLine cmd = parser.parse(options, args);
+            CLIOptions.createConfigFromCommandLine(cmd);
+        });
+    }
 }
