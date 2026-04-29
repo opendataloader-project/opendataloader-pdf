@@ -36,6 +36,9 @@ def convert(
     hybrid_url: Optional[str] = None,
     hybrid_timeout: Optional[str] = None,
     hybrid_fallback: bool = False,
+    hybrid_hancom_ai_regionlist_strategy: Optional[str] = None,
+    hybrid_hancom_ai_ocr_strategy: Optional[str] = None,
+    hybrid_hancom_ai_image_cache: Optional[str] = None,
     to_stdout: bool = False,
     threads: Optional[str] = None,
 ) -> None:
@@ -69,6 +72,9 @@ def convert(
         hybrid_url: Hybrid backend server URL (overrides default)
         hybrid_timeout: Hybrid backend request timeout in milliseconds (0 = no timeout). Default: 0
         hybrid_fallback: Opt in to Java fallback on hybrid backend error (default: disabled)
+        hybrid_hancom_ai_regionlist_strategy: DLA label 7 (regionlist) handling. Requires --hybrid=hancom-ai. Values: table-first (default; check TSR overlap), list-only (skip TSR, always treat as list)
+        hybrid_hancom_ai_ocr_strategy: OCR strategy. Requires --hybrid=hancom-ai. Values: off (stream-only), auto (default; stream first, OCR fallback), force (OCR-only)
+        hybrid_hancom_ai_image_cache: Page image cache backing. Requires --hybrid=hancom-ai. Values: memory (default), disk
         to_stdout: Write output to stdout instead of file (single format only)
         threads: Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode
     """
@@ -138,6 +144,12 @@ def convert(
         args.extend(["--hybrid-timeout", hybrid_timeout])
     if hybrid_fallback:
         args.append("--hybrid-fallback")
+    if hybrid_hancom_ai_regionlist_strategy:
+        args.extend(["--hybrid-hancom-ai-regionlist-strategy", hybrid_hancom_ai_regionlist_strategy])
+    if hybrid_hancom_ai_ocr_strategy:
+        args.extend(["--hybrid-hancom-ai-ocr-strategy", hybrid_hancom_ai_ocr_strategy])
+    if hybrid_hancom_ai_image_cache:
+        args.extend(["--hybrid-hancom-ai-image-cache", hybrid_hancom_ai_image_cache])
     if to_stdout:
         args.append("--to-stdout")
     if threads:
