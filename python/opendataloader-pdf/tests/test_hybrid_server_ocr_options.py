@@ -343,6 +343,27 @@ def test_no_ocr_warns_when_engine_explicitly_set(monkeypatch, caplog):
     assert any("--ocr-engine tesseract" in w for w in warnings), warnings
 
 
+def test_no_ocr_warns_when_engine_explicitly_set_to_easyocr(monkeypatch, caplog):
+    """Explicit `--ocr-engine easyocr` under --no-ocr is still inert and must warn.
+
+    argparse cannot distinguish "user typed easyocr" from "default was used", so
+    main() inspects argv directly. This regression test locks the path in.
+    """
+    _run_main_to_warning(
+        ["--no-ocr", "--ocr-engine", "easyocr"], monkeypatch, caplog
+    )
+    warnings = [r.message for r in caplog.records if r.levelname == "WARNING"]
+    assert any("--ocr-engine easyocr" in w for w in warnings), warnings
+
+
+def test_no_ocr_no_warning_when_engine_left_default(monkeypatch, caplog):
+    """`--no-ocr` without --ocr-engine does not falsely report easyocr as inert."""
+    _run_main_to_warning(["--no-ocr"], monkeypatch, caplog)
+    warnings = [r.message for r in caplog.records if r.levelname == "WARNING"]
+    # No "--ocr-engine" mention because the user did not type it.
+    assert not any("--ocr-engine" in w for w in warnings), warnings
+
+
 def test_no_ocr_warns_when_ocr_lang_set(monkeypatch, caplog):
     """`--no-ocr --ocr-lang ko` warns that --ocr-lang has no effect."""
     _run_main_to_warning(["--no-ocr", "--ocr-lang", "ko"], monkeypatch, caplog)
