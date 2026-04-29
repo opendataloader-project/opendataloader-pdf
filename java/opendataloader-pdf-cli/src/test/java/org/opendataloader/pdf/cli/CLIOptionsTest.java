@@ -464,4 +464,29 @@ class CLIOptionsTest {
         assertTrue(config.getHybridConfig().isFallbackToJava(),
             "hybrid fallback should be enabled when explicitly passed");
     }
+
+    @Test
+    void testDefineOptions_containsHybridHancomAiRegionlistStrategy() {
+        assertTrue(options.hasOption("hybrid-hancom-ai-regionlist-strategy"));
+    }
+
+    @Test
+    void testDefineOptions_containsHybridHancomAiOcrStrategy() {
+        assertTrue(options.hasOption("hybrid-hancom-ai-ocr-strategy"));
+    }
+
+    @Test
+    void testDefineOptions_containsHybridHancomAiImageCache() {
+        assertTrue(options.hasOption("hybrid-hancom-ai-image-cache"));
+    }
+
+    @Test
+    void testDefineOptions_containsHybridHancomAiSaveCrops() {
+        assertTrue(options.hasOption("hybrid-hancom-ai-save-crops"));
+    }
+
+    @Test
+    void testDefineOptions_containsHybridHancomAiCropOutputDir() {
+        assertTrue(options.hasOption("hybrid-hancom-ai-crop-output-dir"));
+    }
 }
