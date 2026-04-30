@@ -66,6 +66,7 @@ public class PictureSerializer extends StdSerializer<SemanticPicture> {
                 jsonGenerator.writeStringField(JsonName.SOURCE, relativePath);
             }
         }
+        SerializerUtil.writeMetadataIfPresent(jsonGenerator, picture);
         jsonGenerator.writeEndObject();
     }
 }

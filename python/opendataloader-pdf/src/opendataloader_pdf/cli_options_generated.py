@@ -196,7 +196,7 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "type": "string",
         "required": False,
         "default": "off",
-        "description": "Hybrid backend (requires a running server). Quick start: pip install \"opendataloader-pdf[hybrid]\" && opendataloader-pdf-hybrid --port 5002. For remote servers use --hybrid-url. Values: off (default), docling-fast",
+        "description": "Hybrid backend (requires a running server). Quick start: pip install \"opendataloader-pdf[hybrid]\" && opendataloader-pdf-hybrid --port 5002. For remote servers use --hybrid-url. Values: off (default), docling-fast, hancom-ai",
     },
     {
         "name": "hybrid-mode",
@@ -235,6 +235,33 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "description": "Opt in to Java fallback on hybrid backend error (default: disabled)",
     },
     {
+        "name": "hybrid-hancom-ai-regionlist-strategy",
+        "python_name": "hybrid_hancom_ai_regionlist_strategy",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": "table-first",
+        "description": "DLA label 7 (regionlist) handling. Requires --hybrid=hancom-ai. Values: table-first (default; check TSR overlap), list-only (skip TSR, always treat as list)",
+    },
+    {
+        "name": "hybrid-hancom-ai-ocr-strategy",
+        "python_name": "hybrid_hancom_ai_ocr_strategy",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": "auto",
+        "description": "OCR strategy. Requires --hybrid=hancom-ai. Values: off (stream-only), auto (default; stream first, OCR fallback), force (OCR-only)",
+    },
+    {
+        "name": "hybrid-hancom-ai-image-cache",
+        "python_name": "hybrid_hancom_ai_image_cache",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": "memory",
+        "description": "Page image cache backing. Requires --hybrid=hancom-ai. Values: memory (default), disk",
+    },
+    {
         "name": "to-stdout",
         "python_name": "to_stdout",
         "short_name": None,
@@ -242,6 +269,15 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "required": False,
         "default": False,
         "description": "Write output to stdout instead of file (single format only)",
+    },
+    {
+        "name": "threads",
+        "python_name": "threads",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": "1",
+        "description": "Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode",
     },
 ]
 

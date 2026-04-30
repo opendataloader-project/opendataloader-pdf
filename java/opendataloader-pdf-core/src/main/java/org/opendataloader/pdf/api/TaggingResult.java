@@ -1,9 +1,12 @@
 package org.opendataloader.pdf.api;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.opendataloader.pdf.hybrid.ElementMetadata;
 import org.verapdf.pd.PDDocument;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * Result of {@link AutoTagger#tag}. Contains the tagged PDF document in-memory
@@ -19,8 +22,10 @@ public class TaggingResult implements AutoCloseable {
     private final long extractionNs;
     private final long taggingNs;
     private final JsonNode hybridTimings;
+    private final Map<Long, ElementMetadata> elementMetadata;
 
-    public TaggingResult(PDDocument document, long extractionNs, long taggingNs, JsonNode hybridTimings) {
+    public TaggingResult(PDDocument document, long extractionNs, long taggingNs,
+                          JsonNode hybridTimings, Map<Long, ElementMetadata> elementMetadata) {
         if (document == null) {
             throw new IllegalArgumentException("document must not be null");
         }
@@ -28,6 +33,11 @@ public class TaggingResult implements AutoCloseable {
         this.extractionNs = extractionNs;
         this.taggingNs = taggingNs;
         this.hybridTimings = hybridTimings;
+        this.elementMetadata = elementMetadata != null ? elementMetadata : Collections.emptyMap();
+    }
+
+    public TaggingResult(PDDocument document, long extractionNs, long taggingNs, JsonNode hybridTimings) {
+        this(document, extractionNs, taggingNs, hybridTimings, Collections.emptyMap());
     }
 
     /** The tagged PDF document. Do not close this directly — close the TaggingResult instead. */
@@ -48,6 +58,11 @@ public class TaggingResult implements AutoCloseable {
     /** Per-step hybrid server timings, or null if hybrid mode was not used. */
     public JsonNode getHybridTimings() {
         return hybridTimings;
+    }
+
+    /** Element metadata from hybrid backend, or empty map if not available. */
+    public Map<Long, ElementMetadata> getElementMetadata() {
+        return elementMetadata;
     }
 
     /**

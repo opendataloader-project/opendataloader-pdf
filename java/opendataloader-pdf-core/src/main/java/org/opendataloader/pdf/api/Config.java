@@ -20,6 +20,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.opendataloader.pdf.hybrid.HybridConfig;
 
@@ -28,6 +30,8 @@ import org.opendataloader.pdf.hybrid.HybridConfig;
  * Use this class to specify output formats, text processing options, and other settings.
  */
 public class Config {
+    private static final Logger LOGGER = Logger.getLogger(Config.class.getCanonicalName());
+
     /** Reading order option: no sorting, keeps PDF COS object order. */
     public static final String READING_ORDER_OFF = "off";
     /** Reading order option: XY-Cut++ algorithm for layout-aware sorting. */
@@ -42,6 +46,8 @@ public class Config {
     public static final String HYBRID_DOCLING_FAST = "docling-fast";
     /** Hybrid mode: hancom backend (Hancom Document AI). */
     public static final String HYBRID_HANCOM = "hancom";
+    /** Hybrid mode: hancom-ai backend (Hancom AI HOCR SDK — individual modules). */
+    public static final String HYBRID_HANCOM_AI = "hancom-ai";
     /** Hybrid mode: azure backend (Azure Document Intelligence). */
     public static final String HYBRID_AZURE = "azure";
     /** Hybrid mode: google backend (Google Document AI). */
@@ -119,6 +125,7 @@ public class Config {
         hybridOptions.add(HYBRID_DOCLING);
         hybridOptions.add(HYBRID_DOCLING_FAST);  // deprecated alias
         hybridOptions.add(HYBRID_HANCOM);
+        hybridOptions.add(HYBRID_HANCOM_AI);
         // azure, google added when implemented
         hybridModeOptions.add(HYBRID_MODE_AUTO);
         hybridModeOptions.add(HYBRID_MODE_FULL);
@@ -874,6 +881,19 @@ public class Config {
         this.outputStdout = outputStdout;
     }
 
+    private int threads = 1;
+
+    public int getThreads() {
+        return threads;
+    }
+
+    public void setThreads(int threads) {
+        if (threads < 1) {
+            throw new IllegalArgumentException("threads must be >= 1, got " + threads);
+        }
+        this.threads = Math.min(threads, Runtime.getRuntime().availableProcessors());
+    }
+
     /**
      * Returns true if any output format requires structured content
      * (reading order, heading levels, list detection, etc.).
@@ -881,6 +901,22 @@ public class Config {
      */
     public boolean needsStructuredProcessing() {
         return isGenerateMarkdown() || isGenerateHtml() || isGenerateJSON() || isGeneratePDF();
+    }
+
+    /**
+     * Resolves conflicts between individually valid option values.
+     * Call once after all setters, before passing the Config to a processor.
+     * Currently: in hybrid mode, forces {@code threads} to 1 because the hybrid
+     * pipeline runs sequentially regardless of this value.
+     */
+    public void normalize() {
+        if (isHybridEnabled() && threads > 1) {
+            LOGGER.log(Level.WARNING,
+                    "--threads={0} ignored in hybrid mode (forcing threads=1); "
+                            + "the hybrid pipeline processes pages sequentially",
+                    threads);
+            threads = 1;
+        }
     }
 
 }

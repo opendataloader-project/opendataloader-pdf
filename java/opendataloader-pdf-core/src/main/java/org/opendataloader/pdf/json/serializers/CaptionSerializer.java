@@ -46,6 +46,7 @@ public class CaptionSerializer extends StdSerializer<SemanticCaption> {
             jsonGenerator.writeNumberField("linked content id", caption.getLinkedContentId());
         }
         SerializerUtil.writeTextInfo(jsonGenerator, caption);
+        SerializerUtil.writeMetadataIfPresent(jsonGenerator, caption);
         jsonGenerator.writeEndObject();
     }
 }

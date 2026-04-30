@@ -166,7 +166,7 @@
       "type": "string",
       "required": false,
       "default": "off",
-      "description": "Hybrid backend (requires a running server). Quick start: pip install \"opendataloader-pdf[hybrid]\" && opendataloader-pdf-hybrid --port 5002. For remote servers use --hybrid-url. Values: off (default), docling-fast"
+      "description": "Hybrid backend (requires a running server). Quick start: pip install \"opendataloader-pdf[hybrid]\" && opendataloader-pdf-hybrid --port 5002. For remote servers use --hybrid-url. Values: off (default), docling-fast, hancom-ai"
     },
     {
       "name": "hybrid-mode",
@@ -201,12 +201,44 @@
       "description": "Opt in to Java fallback on hybrid backend error (default: disabled)"
     },
     {
+      "name": "hybrid-hancom-ai-regionlist-strategy",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": "table-first",
+      "description": "DLA label 7 (regionlist) handling. Requires --hybrid=hancom-ai. Values: table-first (default; check TSR overlap), list-only (skip TSR, always treat as list)"
+    },
+    {
+      "name": "hybrid-hancom-ai-ocr-strategy",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": "auto",
+      "description": "OCR strategy. Requires --hybrid=hancom-ai. Values: off (stream-only), auto (default; stream first, OCR fallback), force (OCR-only)"
+    },
+    {
+      "name": "hybrid-hancom-ai-image-cache",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": "memory",
+      "description": "Page image cache backing. Requires --hybrid=hancom-ai. Values: memory (default), disk"
+    },
+    {
       "name": "to-stdout",
       "shortName": null,
       "type": "boolean",
       "required": false,
       "default": false,
       "description": "Write output to stdout instead of file (single format only)"
+    },
+    {
+      "name": "threads",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": "1",
+      "description": "Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode"
     }
   ]
 }

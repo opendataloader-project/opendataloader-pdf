@@ -16,9 +16,12 @@
 package org.opendataloader.pdf.processors;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.opendataloader.pdf.hybrid.ElementMetadata;
 import org.verapdf.wcag.algorithms.entities.IObject;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Internal result of the extraction pipeline (preprocessing + content extraction + sanitization).
@@ -29,11 +32,18 @@ public class ExtractionResult {
     private final List<List<IObject>> contents;
     private final long extractionNs;
     private final JsonNode hybridTimings;
+    private final Map<Long, ElementMetadata> elementMetadata;
 
-    public ExtractionResult(List<List<IObject>> contents, long extractionNs, JsonNode hybridTimings) {
+    public ExtractionResult(List<List<IObject>> contents, long extractionNs, JsonNode hybridTimings,
+                             Map<Long, ElementMetadata> elementMetadata) {
         this.contents = contents;
         this.extractionNs = extractionNs;
         this.hybridTimings = hybridTimings;
+        this.elementMetadata = elementMetadata != null ? elementMetadata : Collections.emptyMap();
+    }
+
+    public ExtractionResult(List<List<IObject>> contents, long extractionNs, JsonNode hybridTimings) {
+        this(contents, extractionNs, hybridTimings, Collections.emptyMap());
     }
 
     public List<List<IObject>> getContents() {
@@ -46,5 +56,9 @@ public class ExtractionResult {
 
     public JsonNode getHybridTimings() {
         return hybridTimings;
+    }
+
+    public Map<Long, ElementMetadata> getElementMetadata() {
+        return elementMetadata;
     }
 }

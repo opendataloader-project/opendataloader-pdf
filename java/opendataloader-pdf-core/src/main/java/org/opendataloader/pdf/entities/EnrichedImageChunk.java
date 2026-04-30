@@ -67,6 +67,10 @@ public class EnrichedImageChunk extends ImageChunk {
                 .replace(">", "")
                 .replace("&", "")
                 .replace("\u0000", "")
+                // PDF/UA-2 clause 8.4.3.3 forbids Private Use Area code points in /Alt.
+                // Strip BMP PUA (U+E000–U+F8FF) and supplementary PUA (encoded as surrogate pairs
+                // U+DB80–U+DBFF paired with U+DC00–U+DFFF).
+                .replaceAll("[\\uE000-\\uF8FF]|[\\uDB80-\\uDBFF][\\uDC00-\\uDFFF]", "")
                 .replaceAll("\\s{2,}", " ")
                 .trim();
     }

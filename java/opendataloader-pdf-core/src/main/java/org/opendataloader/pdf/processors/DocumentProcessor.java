@@ -16,6 +16,7 @@
 package org.opendataloader.pdf.processors;
 
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
+import org.opendataloader.pdf.hybrid.ElementMetadata;
 import org.opendataloader.pdf.processors.readingorder.XYCutPlusPlusSorter;
 import org.opendataloader.pdf.json.JsonWriter;
 import org.opendataloader.pdf.markdown.MarkdownGenerator;
@@ -94,7 +95,7 @@ public class DocumentProcessor {
 
         // Phase 2: Output (JSON/MD/HTML/PDF/Text)
         long t0 = System.nanoTime();
-        generateOutputs(inputPdfName, extraction.getContents(), config);
+        generateOutputs(inputPdfName, extraction.getContents(), config, extraction.getElementMetadata());
         long outputNs = System.nanoTime() - t0;
 
         return new ProcessingResult(extraction.getHybridTimings(), extraction.getExtractionNs(), outputNs);
@@ -132,7 +133,14 @@ public class DocumentProcessor {
         contentSanitizer.sanitizeContents(contents);
         long extractionNs = System.nanoTime() - t0;
 
-        return new ExtractionResult(contents, extractionNs, HybridDocumentProcessor.getLastHybridTimings());
+        // Re-key metadata by actual IObject IDs in contents.
+        // After enrichment, IObject recognizedStructureIds may differ from transformer-assigned IDs.
+        // Match metadata to IObjects by bbox proximity.
+        Map<Long, ElementMetadata> rawMetadata = HybridDocumentProcessor.getLastElementMetadata();
+        Map<Long, ElementMetadata> remappedMetadata = remapMetadataToContents(rawMetadata, contents);
+
+        return new ExtractionResult(contents, extractionNs, HybridDocumentProcessor.getLastHybridTimings(),
+            remappedMetadata);
     }
 
     /**
@@ -218,7 +226,7 @@ public class DocumentProcessor {
             pageArtifacts[i] = document.getArtifacts(i);
         }
 
-        int parallelism = Runtime.getRuntime().availableProcessors();
+        int parallelism = config.getThreads();
         ForkJoinPool pool = new ForkJoinPool(parallelism);
         LOGGER.log(Level.INFO, "Processing {0} pages with {1} threads", new Object[]{totalPages, parallelism});
 
@@ -345,11 +353,51 @@ public class DocumentProcessor {
      * @param pagesToProcess set of valid page numbers to process, or null for all pages
      * @return true if the page should be processed
      */
+    /**
+     * Filters ElementMetadata down to entries whose transformer-assigned ID still
+     * matches an IObject in the post-enrichment contents. This is deliberately
+     * ID-based (not positional): sorting, filtering, and enrichment can reorder
+     * or drop IObjects, so positional matching would attach the wrong
+     * confidence/source label to an element. IObjects whose ID was rewritten
+     * during enrichment simply lose their metadata — preferable to a wrong one.
+     */
+    private static Map<Long, ElementMetadata> remapMetadataToContents(
+            Map<Long, ElementMetadata> rawMetadata, List<List<IObject>> contents) {
+        if (rawMetadata == null || rawMetadata.isEmpty()) return Collections.emptyMap();
+
+        Map<Long, ElementMetadata> remapped = new LinkedHashMap<>();
+        for (List<IObject> pageContents : contents) {
+            for (IObject obj : pageContents) {
+                Long id = obj.getRecognizedStructureId();
+                if (id == null || id == 0L) continue;
+                ElementMetadata meta = rawMetadata.get(id);
+                if (meta != null) {
+                    remapped.put(id, meta);
+                }
+            }
+        }
+        return remapped;
+    }
+
     private static boolean shouldProcessPage(int pageNumber, Set<Integer> pagesToProcess) {
         return pagesToProcess == null || pagesToProcess.contains(pageNumber);
     }
 
-    private static void generateOutputs(String inputPdfName, List<List<IObject>> contents, Config config) throws IOException {
+    /**
+     * Writes the configured output files (JSON/MD/HTML/PDF/Text/images/tagged PDF)
+     * from already-extracted contents.
+     *
+     * <p><strong>Internal API. Do not call directly.</strong> This method is
+     * {@code public} only so the {@link org.opendataloader.pdf.api.OutputWriter}
+     * facade in the {@code api} package can delegate to it. The signature
+     * (notably the {@code List<List<IObject>>} and
+     * {@code Map<Long, ElementMetadata>} parameters) is an implementation
+     * detail and may change in any release. External callers must use
+     * {@link org.opendataloader.pdf.api.OutputWriter#writeOutputs}, which is
+     * the stable public API.
+     */
+    public static void generateOutputs(String inputPdfName, List<List<IObject>> contents, Config config,
+                                           Map<Long, ElementMetadata> elementMetadata) throws IOException {
         // Stdout mode: write primary format to stdout, skip file I/O
         if (config.isOutputStdout()) {
             java.io.Writer stdoutWriter = new java.io.BufferedWriter(
@@ -391,7 +439,7 @@ public class DocumentProcessor {
             pdfWriter.updatePDF(inputPDF, config.getPassword(), config.getOutputFolder(), contents);
         }
         if (config.isGenerateJSON()) {
-            JsonWriter.writeToJson(inputPDF, config.getOutputFolder(), contents);
+            JsonWriter.writeToJson(inputPDF, config.getOutputFolder(), contents, elementMetadata);
         }
         if (config.isGenerateMarkdown()) {
             try (MarkdownGenerator markdownGenerator = MarkdownGeneratorFactory.getMarkdownGenerator(inputPDF,
@@ -616,9 +664,15 @@ public class DocumentProcessor {
 
         // xycut: XY-Cut++ sorting (per-page, stateless — safe to parallelize)
         if (Config.READING_ORDER_XYCUT.equals(readingOrder)) {
-            IntStream.range(0, StaticContainers.getDocument().getNumberOfPages()).parallel().forEach(pageNumber ->
-                contents.set(pageNumber, XYCutPlusPlusSorter.sort(contents.get(pageNumber)))
-            );
+            int totalPages = StaticContainers.getDocument().getNumberOfPages();
+            IntStream pages = IntStream.range(0, totalPages);
+            if (config.getThreads() > 1) {
+                pages.parallel().forEach(pageNumber ->
+                    contents.set(pageNumber, XYCutPlusPlusSorter.sort(contents.get(pageNumber))));
+            } else {
+                pages.forEach(pageNumber ->
+                    contents.set(pageNumber, XYCutPlusPlusSorter.sort(contents.get(pageNumber))));
+            }
             return;
         }
 
