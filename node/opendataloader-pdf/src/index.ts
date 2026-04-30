@@ -99,6 +99,11 @@ function executeJar(args: string[], executionOptions: JarExecutionOptions = {}):
         const error = new Error(
           `The opendataloader-pdf CLI exited with code ${code}.\n\n${errorOutput}`,
         );
+        // Tag so the CLI can suppress re-printing this message — Java's
+        // stderr was already streamed live to the parent in CLI mode, and
+        // re-printing risks leaking anything sensitive Java logged
+        // (e.g. a --password value echoed by an underlying library).
+        (error as Error & { isJavaExit?: boolean }).isJavaExit = true;
         reject(error);
       }
     });
