@@ -102,20 +102,20 @@ opendataloader_pdf.convert(
 
 **opendataloader-pdf [hybrid] ranks #1 overall (0.907)** across reading order, table, and heading extraction accuracy.
 
-| Engine | Overall | Reading Order | Table | Heading | Speed (s/page) |
-|--------|---------|---------------|-------|---------|----------------|
-| **opendataloader [hybrid]** | **0.907** | **0.934** | **0.928** | 0.821 | 0.463 |
-| docling | 0.882 | 0.898 | 0.887 | **0.824** | 0.762 |
-| nutrient | 0.880 | 0.924 | 0.662 | 0.811 | 0.230 |
-| marker | 0.861 | 0.890 | 0.808 | 0.796 | 53.932 |
-| unstructured [hi_res] | 0.841 | 0.904 | 0.588 | 0.749 | 3.008 |
-| edgeparse | 0.837 | 0.894 | 0.717 | 0.706 | 0.036 |
-| opendataloader | 0.831 | 0.902 | 0.489 | 0.739 | **0.015** |
-| mineru | 0.831 | 0.857 | 0.873 | 0.743 | 5.962 |
-| pymupdf4llm | 0.732 | 0.885 | 0.401 | 0.412 | 0.091 |
-| unstructured | 0.686 | 0.882 | 0.000 | 0.388 | 0.077 |
-| markitdown | 0.589 | 0.844 | 0.273 | 0.000 | 0.114 |
-| liteparse | 0.576 | 0.866 | 0.000 | 0.000 | 1.061 |
+| Engine | Overall | Reading Order | Table | Heading | Speed (s/page) | License |
+|--------|---------|---------------|-------|---------|----------------|---------|
+| **opendataloader [hybrid]** | **0.907** | **0.934** | **0.928** | 0.821 | 0.463 | Apache-2.0 |
+| docling | 0.882 | 0.898 | 0.887 | **0.824** | 0.762 | MIT |
+| nutrient | 0.885 | 0.925 | 0.708 | 0.819 | 0.008 | Commercial |
+| marker | 0.861 | 0.890 | 0.808 | 0.796 | 53.932 | GPL-3.0 |
+| unstructured [hi_res] | 0.841 | 0.904 | 0.588 | 0.749 | 3.008 | Apache-2.0 |
+| edgeparse | 0.837 | 0.894 | 0.717 | 0.706 | 0.036 | Apache-2.0 |
+| opendataloader | 0.831 | 0.902 | 0.489 | 0.739 | **0.015** | Apache-2.0 |
+| mineru | 0.831 | 0.857 | 0.873 | 0.743 | 5.962 | AGPL-3.0 |
+| pymupdf4llm | 0.732 | 0.885 | 0.401 | 0.412 | 0.091 | AGPL-3.0 |
+| unstructured | 0.686 | 0.882 | 0.000 | 0.388 | 0.077 | Apache-2.0 |
+| markitdown | 0.589 | 0.844 | 0.273 | 0.000 | 0.114 | MIT |
+| liteparse | 0.576 | 0.866 | 0.000 | 0.000 | 1.061 | Apache-2.0 |
 
 > Scores normalized to [0, 1]. Higher is better for accuracy; lower is better for speed. **Bold** = best. [Full benchmark details](https://github.com/opendataloader-project/opendataloader-bench)
 
