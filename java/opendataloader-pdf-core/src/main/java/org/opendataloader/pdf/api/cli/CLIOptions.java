@@ -33,15 +33,33 @@ import java.util.stream.Collectors;
 /**
  * Adapter that maps Apache Commons CLI options to {@link Config} / {@link HybridConfig}.
  *
- * <p><b>Stable API for downstream tools (e.g. opendataloader-pdfua):</b>
+ * <p><b>Stable API for downstream tools</b> (e.g. opendataloader-pdfua) — these four
+ * members are the supported integration surface and will not break compatibly:
  * <ul>
- *   <li>{@link #defineOptions()}</li>
- *   <li>{@link #addAllTo(Options)}</li>
- *   <li>{@link #applyAllTo(Config, CommandLine)}</li>
- *   <li>{@link #FOLDER_OPTION}</li>
+ *   <li>{@link #defineOptions()} — get a fully populated {@code Options} instance</li>
+ *   <li>{@link #addAllTo(Options)} — add core options into an externally-built {@code Options}</li>
+ *   <li>{@link #applyAllTo(Config, CommandLine)} — populate a {@code Config} from a parsed line</li>
+ *   <li>{@link #FOLDER_OPTION} — short option name for {@code --output-dir}</li>
  * </ul>
- * Other public members exist for internal use by the CLI module and the option-export
- * tooling. They may change between minor releases.
+ *
+ * <p><b>Everything else is internal.</b> The numerous other public {@code static} members
+ * (option-name constants, helpers like {@code createConfigFromCommandLine},
+ * {@code exportOptionsAsJson}) exist for the CLI module ({@code CLIMain}) and the
+ * options-export tooling that drives Node/Python binding generation. Their visibility
+ * is {@code public} only for cross-package access within this codebase; they are
+ * <i>not</i> part of the supported API and may be renamed, moved, or removed in any
+ * release. Downstream consumers depending on them do so at their own risk.
+ *
+ * <p>Pdfua's usage pattern (build your own {@code Options}, add core's, parse, then
+ * populate {@code Config}):
+ * <pre>{@code
+ *   Options options = new Options();
+ *   options.addOption(...);              // your tool-specific options
+ *   CLIOptions.addAllTo(options);        // add core's options
+ *   CommandLine cmd = parser.parse(options, args);
+ *   Config core = new Config();
+ *   CLIOptions.applyAllTo(core, cmd);
+ * }</pre>
  */
 public class CLIOptions {
 
