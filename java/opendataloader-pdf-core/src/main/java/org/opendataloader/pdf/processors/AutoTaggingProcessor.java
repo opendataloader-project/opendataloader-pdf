@@ -463,6 +463,10 @@ public class AutoTaggingProcessor {
             tag = TaggedPDFConstants.ANNOT;
         }
         COSObject linkElem = addStructElement(parent, cosDocument, tag, pageNumber);
+        COSObject contents = annotation.getKey(ASAtom.CONTENTS);
+        if (contents != null && !contents.empty() && contents.getType() == COSObjType.COS_STRING) {
+            linkElem.setKey(ASAtom.ALT, contents);
+        }
         linkElem.setKey(ASAtom.ALT, annotation.getKey(ASAtom.CONTENTS));
         annotationStructParents.put(annotation.getIntegerKey(ASAtom.STRUCT_PARENT).intValue(), linkElem);
         // Create OBJR pointing to the annotation
