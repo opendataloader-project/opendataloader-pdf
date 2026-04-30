@@ -59,8 +59,7 @@ public class PDFWriter {
     private final List<List<PDAnnotation>> annotations = new ArrayList<>();
     private final List<BoundingBox> pageBoundingBoxes = new ArrayList<>();
 
-    public void updatePDF(File inputPDF, String password, String outputFolder, List<List<IObject>> contents)
-            throws IOException {
+    public void updatePDF(File inputPDF, String password, String outputFolder, List<List<IObject>> contents) throws IOException {
         try (PDDocument document = Loader.loadPDF(inputPDF, password)) {
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 annotations.add(new ArrayList<>());
@@ -92,8 +91,7 @@ public class PDFWriter {
         drawContent(content, layer, null);
     }
 
-    private void drawContent(IObject content, PDFLayer layer, Map<Integer, PDAnnotation> linkedAnnots)
-            throws IOException {
+    private void drawContent(IObject content, PDFLayer layer, Map<Integer, PDAnnotation> linkedAnnots) throws IOException {
         if ((content instanceof LineChunk)) {
             return;
         }
@@ -128,12 +126,9 @@ public class PDFWriter {
                             contentValue.append(((SemanticTextNode) object).getValue());
                         }
                     }
-                    String cellValue = String.format(
-                            "Table cell: row number %s, column number %s, row span %s, column span %s, text content \"%s\"",
-                            cell.getRowNumber() + 1, cell.getColNumber() + 1, cell.getRowSpan(), cell.getColSpan(),
-                            contentValue);
-                    draw(cell.getBoundingBox(), getColor(SemanticType.TABLE), cellValue, null, annots, cell.getLevel(),
-                            PDFLayer.TABLE_CELLS);
+                    String cellValue = String.format("Table cell: row number %s, column number %s, row span %s, column span %s, text content \"%s\"",
+                            cell.getRowNumber() + 1, cell.getColNumber() + 1, cell.getRowSpan(), cell.getColSpan(), contentValue);
+                    draw(cell.getBoundingBox(), getColor(SemanticType.TABLE), cellValue, null, annots, cell.getLevel(), PDFLayer.TABLE_CELLS);
                     for (IObject content : cell.getContents()) {
                         drawContent(content, PDFLayer.TABLE_CONTENT);
                     }
@@ -145,8 +140,7 @@ public class PDFWriter {
     private void drawListItems(PDFList list, Map<Integer, PDAnnotation> annots) throws IOException {
         for (ListItem listItem : list.getListItems()) {
             String contentValue = String.format("List item: text content \"%s\"", listItem.toString());
-            draw(listItem.getBoundingBox(), getColor(SemanticType.LIST), contentValue, null, annots,
-                    listItem.getLevel(), PDFLayer.LIST_ITEMS);
+            draw(listItem.getBoundingBox(), getColor(SemanticType.LIST), contentValue, null, annots, listItem.getLevel(), PDFLayer.LIST_ITEMS);
             for (IObject content : listItem.getContents()) {
                 drawContent(content, PDFLayer.LIST_CONTENT);
             }
@@ -154,16 +148,14 @@ public class PDFWriter {
     }
 
     public Map<Integer, PDAnnotation> draw(BoundingBox boundingBox, float[] colorArray, String contents, Long id,
-            Map<Integer, PDAnnotation> linkedAnnots, String level, PDFLayer layerName) {
+                                           Map<Integer, PDAnnotation> linkedAnnots, String level, PDFLayer layerName) {
         Map<Integer, PDAnnotation> result = new HashMap<>();
         if (!Objects.equals(boundingBox.getPageNumber(), boundingBox.getLastPageNumber())) {
             if (boundingBox instanceof MultiBoundingBox) {
-                for (int pageNumber = boundingBox.getPageNumber(); pageNumber <= boundingBox
-                        .getLastPageNumber(); pageNumber++) {
+                for (int pageNumber = boundingBox.getPageNumber(); pageNumber <= boundingBox.getLastPageNumber(); pageNumber++) {
                     BoundingBox boundingBoxForPage = boundingBox.getBoundingBox(pageNumber);
                     if (boundingBoxForPage != null) {
-                        result.putAll(
-                                draw(boundingBoxForPage, colorArray, contents, id, linkedAnnots, level, layerName));
+                        result.putAll(draw(boundingBoxForPage, colorArray, contents, id, linkedAnnots, level, layerName));
                     }
                 }
                 return result;
@@ -178,15 +170,13 @@ public class PDFWriter {
             movedBoundingBox.move(pageBoundingBox.getLeftX(), pageBoundingBox.getBottomY());
         }
         PDAnnotationSquareCircle square = new PDAnnotationSquare();
-        square.setRectangle(
-                new PDRectangle(getFloat(movedBoundingBox.getLeftX()), getFloat(movedBoundingBox.getBottomY()),
-                        getFloat(movedBoundingBox.getWidth()), getFloat(movedBoundingBox.getHeight())));
+        square.setRectangle(new PDRectangle(getFloat(movedBoundingBox.getLeftX()), getFloat(movedBoundingBox.getBottomY()),
+                getFloat(movedBoundingBox.getWidth()), getFloat(movedBoundingBox.getHeight())));
         square.setConstantOpacity(0.4f);
         PDColor color = new PDColor(colorArray, PDDeviceRGB.INSTANCE);
         square.setColor(color);
         square.setInteriorColor(color);
-        square.setContents(
-                (id != null ? "id = " + id + ", " : "") + (level != null ? "level = " + level + ", " : "") + contents);
+        square.setContents((id != null ? "id = " + id + ", " : "") + (level != null ? "level = " + level + ", " : "") + contents);
         if (linkedAnnots != null) {
             square.setInReplyTo(linkedAnnots.get(boundingBox.getPageNumber()));
         }
@@ -214,8 +204,7 @@ public class PDFWriter {
                 return "Text block";
             }
             return String.format("Table: %s rows, %s columns, previous table id %s, next table id %s",
-                    border.getNumberOfRows(), border.getNumberOfColumns(), border.getPreviousTableId(),
-                    border.getNextTableId());
+                    border.getNumberOfRows(), border.getNumberOfColumns(), border.getPreviousTableId(), border.getNextTableId());
         }
         if (content instanceof PDFList) {
             PDFList list = (PDFList) content;
@@ -270,31 +259,30 @@ public class PDFWriter {
         if (content instanceof LineArtChunk || content instanceof LineChunk) {
             return getColor(SemanticType.PART);
         }
-        return new float[] {};
+        return new float[]{};
     }
 
     public static float[] getColor(SemanticType semanticType) {
-        if (semanticType == SemanticType.HEADING || semanticType == SemanticType.HEADER
-                || semanticType == SemanticType.FOOTER) {
-            return new float[] { 0, 0, 1 };
+        if (semanticType == SemanticType.HEADING || semanticType == SemanticType.HEADER || semanticType == SemanticType.FOOTER) {
+            return new float[]{0, 0, 1};
         }
         if (semanticType == SemanticType.LIST) {
-            return new float[] { 0, 1, 0 };
+            return new float[]{0, 1, 0};
         }
         if (semanticType == SemanticType.PARAGRAPH) {
-            return new float[] { 0, 1, 1 };
+            return new float[]{0, 1, 1};
         }
         if (semanticType == SemanticType.FIGURE) {
-            return new float[] { 1, 0, 0 };
+            return new float[]{1, 0, 0};
         }
         if (semanticType == SemanticType.TABLE) {
-            return new float[] { 1, 0, 1 };
+            return new float[]{1, 0, 1};
         }
         if (semanticType == SemanticType.CAPTION) {
-            return new float[] { 1, 1, 0 };
+            return new float[]{1, 1, 0};
         }
         if (semanticType == SemanticType.PART) {
-            return new float[] { 0.9f, 0.9f, 0.9f };
+            return new float[]{0.9f, 0.9f, 0.9f};
         }
         return null;
     }

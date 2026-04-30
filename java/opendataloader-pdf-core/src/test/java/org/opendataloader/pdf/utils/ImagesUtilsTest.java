@@ -41,9 +41,7 @@ class ImagesUtilsTest {
         // When
         try {
             Path path = Paths.get(testPdf.getPath());
-            StaticLayoutContainers.setImagesDirectory(outputFolder + File.separator
-                    + path.getFileName().toString().substring(0, path.getFileName().toString().length() - 4)
-                    + "_images");
+            StaticLayoutContainers.setImagesDirectory(outputFolder + File.separator + path.getFileName().toString().substring(0, path.getFileName().toString().length() - 4) + "_images");
             ImagesUtils imagesUtils = new ImagesUtils();
             imagesUtils.createImagesDirectory(StaticLayoutContainers.getImagesDirectory());
             // Then - verify images directory was created in createImagesDirectory()
@@ -55,14 +53,14 @@ class ImagesUtilsTest {
         } finally {
             // Cleanup
             Files.walk(tempDir)
-                    .sorted((a, b) -> b.compareTo(a))
-                    .forEach(p -> {
-                        try {
-                            Files.deleteIfExists(p);
-                        } catch (IOException e) {
-                            // ignore
-                        }
-                    });
+                .sorted((a, b) -> b.compareTo(a))
+                .forEach(p -> {
+                    try {
+                        Files.deleteIfExists(p);
+                    } catch (IOException e) {
+                        // ignore
+                    }
+                });
         }
     }
 
@@ -80,12 +78,10 @@ class ImagesUtilsTest {
             Path path = Paths.get(testPdf.getAbsolutePath());
             ImagesUtils imagesUtils = new ImagesUtils();
             assertNull(imagesUtils.getContrastRatioConsumer());
-            StaticLayoutContainers.setImagesDirectory(outputFolder + File.separator
-                    + path.getFileName().toString().substring(0, path.getFileName().toString().length() - 4)
-                    + "_images");
+            StaticLayoutContainers.setImagesDirectory(outputFolder + File.separator + path.getFileName().toString().substring(0, path.getFileName().toString().length() - 4) + "_images");
             ImageChunk imageChunk = new ImageChunk(new BoundingBox(0));
             // Initializing contrastRatioConsumer in writeImage()
-            imagesUtils.writeImage(imageChunk, testPdf.getAbsolutePath(), "");
+            imagesUtils.writeImage(imageChunk, testPdf.getAbsolutePath(),"");
             assertNotNull(imagesUtils.getContrastRatioConsumer());
             // Verify file was created
             Path pngPath = Path.of(StaticLayoutContainers.getImagesDirectory(), "imageFile1.png");
@@ -95,14 +91,14 @@ class ImagesUtilsTest {
             // Cleanup
             StaticLayoutContainers.closeContrastRatioConsumer();
             Files.walk(tempDir)
-                    .sorted((a, b) -> b.compareTo(a))
-                    .forEach(p -> {
-                        try {
-                            Files.deleteIfExists(p);
-                        } catch (IOException e) {
-                            // ignore
-                        }
-                    });
+                .sorted((a, b) -> b.compareTo(a))
+                .forEach(p -> {
+                    try {
+                        Files.deleteIfExists(p);
+                    } catch (IOException e) {
+                        // ignore
+                    }
+                });
         }
     }
 }
