@@ -61,8 +61,17 @@ async function main(): Promise<number> {
     await _runForCli(inputPaths, convertOptions);
     return 0;
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error(message);
+    // Subprocess-exit errors are already on the user's terminal via the live
+    // stderr stream — re-printing would duplicate output and risk leaking
+    // anything sensitive Java logged (e.g. a --password value echoed by an
+    // underlying library). Wrapper-side failures (JAR not found, java not in
+    // PATH, bad input path) still need to be surfaced.
+    const isJavaExit =
+      err instanceof Error && (err as Error & { isJavaExit?: boolean }).isJavaExit === true;
+    if (!isJavaExit) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(message);
+    }
     return 1;
   }
 }

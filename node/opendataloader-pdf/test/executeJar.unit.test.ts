@@ -110,6 +110,19 @@ describe('executeJar — library API (convert)', () => {
     await expect(promise).rejects.toThrow(/Java stack trace/);
   });
 
+  it('tags the rejection with isJavaExit so the CLI can suppress re-printing', async () => {
+    // The CLI relies on this tag to avoid duplicating stderr that was already
+    // streamed live (and to avoid re-surfacing anything sensitive Java logged).
+    // Library callers can ignore the tag — message and behavior are unchanged.
+    const { proc } = makeFakeSpawn();
+    const promise = convert('input.pdf', { quiet: true });
+
+    proc.stderr.emit('data', Buffer.from('Bad password: hunter2'));
+    proc.emit('close', 1);
+
+    await expect(promise).rejects.toMatchObject({ isJavaExit: true });
+  });
+
   it('reassembles multi-byte UTF-8 codepoints split across chunks', async () => {
     // Java's progress logs are localized; '정' = 0xEC 0xA0 0x95 (3 bytes).
     // If the OS hands us this codepoint split across two 'data' events, a
