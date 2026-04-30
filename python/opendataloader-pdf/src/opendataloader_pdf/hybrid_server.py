@@ -118,7 +118,8 @@ def _extract_failed_pages_from_errors(errors: list[str]) -> list[int]:
     """Extract failed page numbers from error messages.
 
     Docling error messages follow the pattern "Page N: <error>" (e.g.,
-    "Page 26: std::bad_alloc"). Even when docling includes failed pages
+    "Page 26: std::bad_alloc") or, when no error description is available,
+    a bare "Page N" with no colon. Even when docling includes failed pages
     in the pages dict as empty entries, the error messages reliably
     indicate which pages actually failed.
 
@@ -129,7 +130,7 @@ def _extract_failed_pages_from_errors(errors: list[str]) -> list[int]:
         Sorted list of 1-indexed page numbers that failed.
     """
     failed = set()
-    page_pattern = re.compile(r"^Page\s+(\d+):")
+    page_pattern = re.compile(r"^Page\s+(\d+)(?::|$)")
     for msg in errors:
         m = page_pattern.match(msg)
         if m:

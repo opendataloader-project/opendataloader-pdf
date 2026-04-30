@@ -207,6 +207,10 @@ class TestExtractFailedPagesFromErrors:
         ]
         assert _extract_failed_pages_from_errors(errors) == []
 
+    def test_bare_page_no_colon(self):
+        """Bare 'Page N' (no colon) should be matched when error_msg is empty."""
+        assert _extract_failed_pages_from_errors(["Page 26"]) == [26]
+
 
 class TestBuildConversionResponseErrorParsing:
     """Tests for failed page detection via error message parsing.
