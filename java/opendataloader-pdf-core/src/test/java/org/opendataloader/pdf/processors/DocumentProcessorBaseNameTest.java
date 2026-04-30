@@ -18,6 +18,7 @@ package org.opendataloader.pdf.processors;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.opendataloader.pdf.utils.FileUtils;
 
 /**
  * Unit tests for the base-name extraction logic introduced to replace the
@@ -41,73 +42,65 @@ import org.junit.jupiter.api.Test;
  */
 public class DocumentProcessorBaseNameTest {
 
-    /**
-     * Mirrors the base-name extraction used in DocumentProcessor, AutoTaggingProcessor,
-     * and PDFWriter so that any future change to those sites will break these tests.
-     */
-    private static String extractBaseName(String fileName) {
-        int dotIndex = fileName.lastIndexOf('.');
-        return dotIndex > 0 ? fileName.substring(0, dotIndex) : fileName;
-    }
 
     @Test
     public void testStandardLowercasePdfExtension() {
-        Assertions.assertEquals("my_paper", extractBaseName("my_paper.pdf"));
+        Assertions.assertEquals("my_paper", FileUtils.getBaseName("my_paper.pdf"));
     }
 
     @Test
     public void testUppercasePdfExtension() {
         // length() - 4 would give "my_p" for "my_paper.PDF" — lastIndexOf fixes this
-        Assertions.assertEquals("my_paper", extractBaseName("my_paper.PDF"));
+        Assertions.assertEquals("my_paper", FileUtils.getBaseName("my_paper.PDF"));
     }
 
     @Test
     public void testMixedCaseExtension() {
-        Assertions.assertEquals("my_paper", extractBaseName("my_paper.Pdf"));
+        Assertions.assertEquals("my_paper", FileUtils.getBaseName("my_paper.Pdf"));
     }
 
     @Test
     public void testMultiDotFilename() {
         // e.g. report.v1.2.pdf — only the final extension should be stripped
-        Assertions.assertEquals("report.v1.2", extractBaseName("report.v1.2.pdf"));
+        Assertions.assertEquals("report.v1.2", FileUtils.getBaseName("report.v1.2.pdf"));
     }
 
     @Test
     public void testMultiDotFilenameUppercase() {
-        Assertions.assertEquals("report.v1.2", extractBaseName("report.v1.2.PDF"));
+        Assertions.assertEquals("report.v1.2", FileUtils.getBaseName("report.v1.2.PDF"));
     }
 
     @Test
     public void testFilenameWithSpaces() {
         // Spaces in the stem are kept verbatim; only the extension is removed
-        Assertions.assertEquals("my paper", extractBaseName("my paper.pdf"));
+        Assertions.assertEquals("my paper", FileUtils.getBaseName("my paper.pdf"));
     }
 
     @Test
     public void testFilenameWithSpacesUppercase() {
-        Assertions.assertEquals("my paper", extractBaseName("my paper.PDF"));
+        Assertions.assertEquals("my paper", FileUtils.getBaseName("my paper.PDF"));
     }
 
     @Test
     public void testNoExtension() {
         // No dot → keep the full filename unchanged
-        Assertions.assertEquals("myfile", extractBaseName("myfile"));
+        Assertions.assertEquals("myfile", FileUtils.getBaseName("myfile"));
     }
 
     @Test
     public void testDotOnlyAtStart() {
         // Dot at index 0 means dotIndex == 0 (not > 0) → keep the full name
-        Assertions.assertEquals(".hidden", extractBaseName(".hidden"));
+        Assertions.assertEquals(".hidden", FileUtils.getBaseName(".hidden"));
     }
 
     @Test
     public void testSingleCharBaseName() {
-        Assertions.assertEquals("a", extractBaseName("a.pdf"));
+        Assertions.assertEquals("a", FileUtils.getBaseName("a.pdf"));
     }
 
     @Test
     public void testNonPdfExtension() {
         // The logic is extension-agnostic — strips whatever is after the last dot
-        Assertions.assertEquals("archive", extractBaseName("archive.tar"));
+        Assertions.assertEquals("archive", FileUtils.getBaseName("archive.tar"));
     }
 }

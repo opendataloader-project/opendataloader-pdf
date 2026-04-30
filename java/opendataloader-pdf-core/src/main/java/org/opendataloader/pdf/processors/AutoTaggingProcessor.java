@@ -31,6 +31,7 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.StreamInfo;
+import org.opendataloader.pdf.utils.FileUtils;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -93,7 +94,7 @@ public class AutoTaggingProcessor {
     public static synchronized void createTaggedPDF(File inputPDF, String outputFolder, PDDocument document, List<List<IObject>> contents) throws IOException {
         tagDocument(inputPDF, document, contents);
         String outputFileName = outputFolder + File.separator +
-            inputPDF.getName().substring(0, inputPDF.getName().length() - 4) + "_tagged.pdf";
+                FileUtils.getBaseName(inputPDF.getName()) + "_tagged.pdf";
         document.saveAs(outputFileName);
     }
 
