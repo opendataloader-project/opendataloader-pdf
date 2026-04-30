@@ -100,7 +100,7 @@ public class AutoTaggingProcessor {
         for (OperatorStreamKey operatorStreamKey : structParents.keySet()) {
             structParentsIntegers.put(operatorStreamKey, currentStructParent++);
         }
-        List<org.verapdf.pd.PDPage> rawPages = document.getPages();
+        List<PDPage> rawPages = document.getPages();
         for (int pageNumber = 0; pageNumber < rawPages.size(); pageNumber++) {
             PDPage page = rawPages.get(pageNumber);
             if (isPDF2_0) {
@@ -351,6 +351,70 @@ public class AutoTaggingProcessor {
         return result;
     }
 
+    private static boolean needToAddToStructTree(PDAnnotation annotation, PDPage page, BoundingBox boundingBox) {
+        if (isPDF2_0) {
+            Long f = annotation.getIntegerKey(ASAtom.F);
+            //PDF/UA-2 rules 8.9.2.2-1, 8.9.2.2-2
+            if (f != null && (((f & 1) == 0) || (f & 32) == 0 || (f & 256) == 256)) {
+                return false;
+            }
+            //PDF/UA-2 rules 8.10.1-1, 8.9.2.4.13-1, 8.9.2.4.16-1, 8.9.2.3-1, 8.2.5.20-1
+            return (ASAtom.WIDGET.equals(annotation.getSubtype()) && boundingBox.getHeight() != 0 && boundingBox.getWidth() != 0)
+                || ASAtom.WATERMARK.equals(annotation.getSubtype()) || annotation.isMarkup() || ASAtom.LINK.equals(annotation.getSubtype());
+        } else {
+            //PDF/UA-1 rules 7.18.1-1, 7.18.4-1, 7.18.5-1
+            return !ASAtom.PRINTER_MARK.equals(annotation.getSubtype()) &&
+                !PDAnnotation.isOutsideCropBox(page, annotation) && PDAnnotation.isVisibleAnnotation(annotation);
+        }
+    }
+
+    private static void setAnnotationContents(PDAnnotation annotation, COSObject annotObj) {
+        // Create Annotation struct element
+        // PDF/UA-2 clause 8.9.4.2.1 requires the annotation's Contents and the enclosing
+        // struct element's Alt to be identical when both are present. Prefer any existing
+        // Contents authored on the annotation (accessibility text the author already
+        // wrote), otherwise fall back to URI, then to "Annotation".
+        String existingContents = annotation.getContents();
+        // Build a single COSString object and use it for /Contents. Hex form
+        // (isHex=true) is required because UTF-16BE code units whose low
+        // byte is 0x5C would be misparsed as a backslash escape inside a
+        // PDF literal string, corrupting non-ASCII text. UTF-16 with BOM
+        // keeps readers from interpreting the string as PDFDocEncoding.
+        if (existingContents != null && !existingContents.isEmpty()) {
+            // Preserve the annotation's existing COSString reference when
+            // present — re-encoding would change literal/hex form and
+            // break the equality check.
+            COSObject contentsObj = annotObj.getKey(ASAtom.CONTENTS);
+            if (contentsObj == null || contentsObj.getType() != COSObjType.COS_STRING) {
+                // Non-string /Contents (rare, e.g. indirect/array shape). Build a hex
+                // UTF-16 COSString from the parsed text and write it back to /Contents
+                // too so the annotation and /Alt remain byte-identical per §8.9.4.2.1.
+                COSObject linkTextObject = COSString.construct(
+                    existingContents.getBytes(StandardCharsets.UTF_16), true);
+                annotObj.setKey(ASAtom.CONTENTS, linkTextObject);
+            }
+        } else {
+            String altText = null;
+            // Get URI from action if available
+            if (ASAtom.LINK.equals(annotation.getSubtype())){
+                try {
+                    PDAction action = annotation.getA();
+                    if (action != null && action.getObject() != null && ASAtom.URI.equals(action.getSubtype())) {
+                        altText = action.getStringKey(ASAtom.URI);
+                    }
+                } catch (Exception e) {
+                    // ignore — URI not critical
+                }
+            }
+            if (altText == null) {
+                altText = "Annotation";
+            }
+            COSObject linkTextObject = COSString.construct(
+                altText.getBytes(StandardCharsets.UTF_16), true);
+            annotObj.setKey(ASAtom.CONTENTS, linkTextObject);
+        }
+    }
+
     private static void processAnnotations(PDDocument document, COSDocument cosDocument, int pageNumber) {
         PDPage page = document.getPages().get(pageNumber);
         List<PDAnnotation> annotations = page.getAnnotations();
@@ -360,68 +424,10 @@ public class AutoTaggingProcessor {
             COSObject annotObj = annotation.getObject();
             if (annotObj == null || annotObj.empty()) continue;
 
-            if (isPDF2_0) {
-                //PDF/UA-2 rules 8.10.1-1, 8.9.2.4.16-1, 8.9.2.3-1
-                if (ASAtom.WIDGET.equals(annotation.getSubtype()) || ASAtom.WATERMARK.equals(annotation.getSubtype()) ||
-                    annotation.isMarkup()) {
-                    annotationBBoxesMap.put(new BoundingBox(page.getPageNumber(), annotation.getRect()), annotation);
-                    pageChanged = assignStructParentToAnnotation(annotObj, cosDocument);
-                }
-            } else {
-                //PDF/UA-1 rules 7.18.1-1 + 7.18.4-1
-                if (!ASAtom.LINK.equals(annotation.getSubtype()) &&
-                    !ASAtom.PRINTER_MARK.equals(annotation.getSubtype()) &&
-                    !PDAnnotation.isOutsideCropBox(page, annotation) && PDAnnotation.isVisibleAnnotation(annotation)) {
-                    annotationBBoxesMap.put(new BoundingBox(page.getPageNumber(), annotation.getRect()), annotation);
-                    pageChanged = assignStructParentToAnnotation(annotObj, cosDocument);
-                }
-            }
-            //PDF/UA-1 rule 7.18.5-1 / PDF/UA-2 rule 8.2.5.20-1
-            //TODO: check if artifact in PDF/UA-2
-            if ((ASAtom.LINK.equals(annotation.getSubtype()) && isPDF2_0) ||
-                (ASAtom.LINK.equals(annotation.getSubtype()) && !isPDF2_0 &&
-                    !PDAnnotation.isOutsideCropBox(page, annotation) && PDAnnotation.isVisibleAnnotation(annotation))) {
-                annotationBBoxesMap.put(new BoundingBox(page.getPageNumber(), annotation.getRect()), annotation);
-                // Get URI from action if available
-                String uriString = null;
-                try {
-                    PDAction action = annotation.getA();
-                    if (action != null && action.getObject() != null && ASAtom.URI.equals(action.getSubtype())) {
-                        uriString = action.getStringKey(ASAtom.URI);
-                    }
-                } catch (Exception e) {
-                    // ignore — URI not critical
-                }
-                // Create Link struct element
-                // PDF/UA-2 clause 8.9.4.2.1 requires the annotation's Contents and the enclosing
-                // struct element's Alt to be identical when both are present. Prefer any existing
-                // Contents authored on the annotation (accessibility text the author already
-                // wrote), otherwise fall back to URI, then to "Link".
-                String existingContents = annotation.getContents();
-                // Build a single COSString object and use it for /Contents. Hex form
-                // (isHex=true) is required because UTF-16BE code units whose low
-                // byte is 0x5C would be misparsed as a backslash escape inside a
-                // PDF literal string, corrupting non-ASCII text. UTF-16 with BOM
-                // keeps readers from interpreting the string as PDFDocEncoding.
-                if (existingContents != null && !existingContents.isEmpty()) {
-                    // Preserve the annotation's existing COSString reference when
-                    // present — re-encoding would change literal/hex form and
-                    // break the equality check.
-                    COSObject contentsObj = annotObj.getKey(ASAtom.CONTENTS);
-                    if (contentsObj == null || contentsObj.getType() != COSObjType.COS_STRING) {
-                        // Non-string /Contents (rare, e.g. indirect/array shape). Build a hex
-                        // UTF-16 COSString from the parsed text and write it back to /Contents
-                        // too so the annotation and /Alt remain byte-identical per §8.9.4.2.1.
-                        COSObject linkTextObject = COSString.construct(
-                            existingContents.getBytes(StandardCharsets.UTF_16), true);
-                        annotObj.setKey(ASAtom.CONTENTS, linkTextObject);
-                    }
-                } else {
-                    String altText = uriString != null ? uriString : "Link";
-                    COSObject linkTextObject = COSString.construct(
-                        altText.getBytes(StandardCharsets.UTF_16), true);
-                    annotObj.setKey(ASAtom.CONTENTS, linkTextObject);
-                }
+            BoundingBox boundingBox = new BoundingBox(page.getPageNumber(), annotation.getRect());
+            if (needToAddToStructTree(annotation, page, boundingBox)) {
+                annotationBBoxesMap.put(boundingBox, annotation);
+                setAnnotationContents(annotation, annotObj);
                 pageChanged = assignStructParentToAnnotation(annotObj, cosDocument);
             }
         }
@@ -462,13 +468,12 @@ public class AutoTaggingProcessor {
         } else {
             tag = TaggedPDFConstants.ANNOT;
         }
-        COSObject linkElem = addStructElement(parent, cosDocument, tag, pageNumber);
+        COSObject structElement = addStructElement(parent, cosDocument, tag, pageNumber);
         COSObject contents = annotation.getKey(ASAtom.CONTENTS);
         if (contents != null && !contents.empty() && contents.getType() == COSObjType.COS_STRING) {
-            linkElem.setKey(ASAtom.ALT, contents);
+            structElement.setKey(ASAtom.ALT, contents);
         }
-        linkElem.setKey(ASAtom.ALT, annotation.getKey(ASAtom.CONTENTS));
-        annotationStructParents.put(annotation.getIntegerKey(ASAtom.STRUCT_PARENT).intValue(), linkElem);
+        annotationStructParents.put(annotation.getIntegerKey(ASAtom.STRUCT_PARENT).intValue(), structElement);
         // Create OBJR pointing to the annotation
         COSObject objr = COSDictionary.construct();
         objr.setKey(ASAtom.TYPE, COSName.construct(ASAtom.OBJR));
@@ -476,9 +481,9 @@ public class AutoTaggingProcessor {
         objr.setKey(ASAtom.PG, cosDocument.getPDDocument().getPages().get(pageNumber).getObject());
         COSObject kArray = COSArray.construct();
         kArray.add(objr);
-        linkElem.setKey(ASAtom.K, kArray);
+        structElement.setKey(ASAtom.K, kArray);
         if (streamInfos != null) {
-            addMcidChildren(streamInfos, pageNumber, linkElem);
+            addMcidChildren(streamInfos, pageNumber, structElement);
         }
     }
 
