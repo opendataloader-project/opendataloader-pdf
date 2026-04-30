@@ -145,6 +145,55 @@ class TestGetArtifact:
         assert result == "# Converted"
 
 
+class TestGetArtifactSource:
+    def test_get_artifact_source_primary(self, pdf_file):
+        with patch("opendataloader_pdf_mcp.jobs.opendataloader_pdf") as mock_odl:
+            mock_odl.convert = MagicMock()
+            job_id = submit_pdf(input_path=str(pdf_file))["job_id"]
+            job = _job_manager.get(job_id)
+            with job._status_lock:
+                job.status = JobStatus.DONE
+                job.artifact = "# Primary"
+                job.java_artifact = "# Java"
+        result = get_artifact(job_id=job_id, source="primary")
+        assert result == "# Primary"
+
+    def test_get_artifact_source_java(self, pdf_file):
+        with patch("opendataloader_pdf_mcp.jobs.opendataloader_pdf") as mock_odl:
+            mock_odl.convert = MagicMock()
+            job_id = submit_pdf(input_path=str(pdf_file))["job_id"]
+            job = _job_manager.get(job_id)
+            with job._status_lock:
+                job.status = JobStatus.DONE
+                job.artifact = "# Primary"
+                job.java_artifact = "# Java"
+        result = get_artifact(job_id=job_id, source="java")
+        assert result == "# Java"
+
+    def test_get_artifact_source_mineru_json(self, pdf_file):
+        with patch("opendataloader_pdf_mcp.jobs.opendataloader_pdf") as mock_odl:
+            mock_odl.convert = MagicMock()
+            job_id = submit_pdf(input_path=str(pdf_file))["job_id"]
+            job = _job_manager.get(job_id)
+            with job._status_lock:
+                job.status = JobStatus.DONE
+                job.artifact = "# Primary"
+                job.mineru_json = '{"pages": []}'
+        result = get_artifact(job_id=job_id, source="mineru-json")
+        assert result == '{"pages": []}'
+
+    def test_get_artifact_invalid_source(self, pdf_file):
+        with patch("opendataloader_pdf_mcp.jobs.opendataloader_pdf") as mock_odl:
+            mock_odl.convert = MagicMock()
+            job_id = submit_pdf(input_path=str(pdf_file))["job_id"]
+            job = _job_manager.get(job_id)
+            with job._status_lock:
+                job.status = JobStatus.DONE
+                job.artifact = "# Primary"
+        result = get_artifact(job_id=job_id, source="bogus")
+        assert "unknown source" in result.lower()
+
+
 class TestJobResource:
     def test_resource_returns_artifact_when_done(self, pdf_file):
         from opendataloader_pdf_mcp.server import get_job_resource

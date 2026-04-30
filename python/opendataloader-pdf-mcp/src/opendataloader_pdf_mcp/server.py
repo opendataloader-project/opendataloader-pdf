@@ -198,6 +198,7 @@ def _collect_kwargs(
     hybrid_fallback: bool,
     image_dir: str | None,
     fmt: str,
+    enable_mineru_fallback: bool = False,
 ) -> dict:
     kwargs: dict = {}
     if password is not None:
@@ -246,6 +247,8 @@ def _collect_kwargs(
         kwargs["hybrid_fallback"] = True
     if image_dir is not None:
         kwargs["image_dir"] = image_dir
+    if enable_mineru_fallback:
+        kwargs["enable_mineru_fallback"] = True
     return kwargs
 
 
@@ -275,6 +278,7 @@ def submit_pdf(
     hybrid_timeout: str | None = None,
     hybrid_fallback: bool = False,
     image_dir: str | None = None,
+    enable_mineru_fallback: bool = False,
 ) -> dict:
     """Submit a PDF for async conversion. Returns a job_id to poll with get_job_status."""
     kwargs = _collect_kwargs(
@@ -283,7 +287,7 @@ def submit_pdf(
         markdown_page_separator, text_page_separator, html_page_separator,
         image_output, image_format, include_header_footer, detect_strikethrough,
         hybrid, hybrid_mode, hybrid_url, hybrid_timeout, hybrid_fallback,
-        image_dir, format,
+        image_dir, format, enable_mineru_fallback,
     )
     job_id = _job_manager.submit(input_path, format, **kwargs)
     job = _job_manager.get(job_id)
@@ -318,8 +322,13 @@ def cancel_job(job_id: str) -> dict:
 
 
 @mcp.tool()
-def get_artifact(job_id: str) -> str:
-    """Retrieve the converted content for a completed job. Raises if not done."""
+def get_artifact(job_id: str, source: str = "primary") -> str:
+    """Retrieve converted content for a completed job.
+
+    Args:
+        job_id: The job ID returned by submit_pdf.
+        source: Which artifact to return. Values: primary (default), java, mineru-json.
+    """
     job = _job_manager.get(job_id)
     if job.status == JobStatus.FAILED:
         raise RuntimeError(f"job {job_id} failed: {job.error}")
@@ -327,7 +336,14 @@ def get_artifact(job_id: str) -> str:
         raise RuntimeError(f"job {job_id} was cancelled")
     if job.status != JobStatus.DONE:
         raise RuntimeError(f"job {job_id} is {job.status.value}, not done")
-    return job.artifact
+
+    if source == "primary":
+        return job.artifact
+    if source == "java":
+        return job.java_artifact
+    if source == "mineru-json":
+        return job.mineru_json
+    return f"unknown source: {source!r}. Valid: primary, java, mineru-json"
 
 
 @mcp.resource("jobs://{job_id}")
