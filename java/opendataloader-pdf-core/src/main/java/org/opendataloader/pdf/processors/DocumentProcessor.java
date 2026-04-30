@@ -75,28 +75,15 @@ public class DocumentProcessor {
      * - Clears static containers to remove lingering references
      * Should always be called in a finally block.
      */
-    private static void closePdfResources() throws Exception {
-        Exception closeFailure = null;
-        PDDocument document = StaticResources.getDocument();
-        if (document != null) {
-            try {
+    private static void closePdfResources() {
+        clearCleanupStep("PDDocument", () -> {
+            PDDocument document = StaticResources.getDocument();
+            if (document != null) {
                 document.close();
-            } catch (Exception e) {
-                closeFailure = e;
             }
-        }
+        });
+        clearCleanupStep("ContrastRatioConsumer", StaticLayoutContainers::closeContrastRatioConsumer);
 
-        try {
-            StaticLayoutContainers.closeContrastRatioConsumer();
-        } catch (Exception e) {
-            if (closeFailure != null) {
-                closeFailure.addSuppressed(e);
-            } else {
-                closeFailure = e;
-            }
-        }
-
-        // cleanup static containers
         clearCleanupStep("StaticResources", StaticResources::clear);
         clearCleanupStep("StaticContainers", () -> StaticContainers.updateContainers(null));
         clearCleanupStep(
@@ -107,10 +94,6 @@ public class DocumentProcessor {
         clearCleanupStep("StaticStorages", StaticStorages::clearAllContainers);
         clearCleanupStep("StaticCoreContainers", StaticCoreContainers::clearAllContainers);
         clearCleanupStep("StaticXmpCoreContainers", StaticXmpCoreContainers::clearAllContainers);
-
-        if (closeFailure != null) {
-            throw closeFailure;
-        }
     }
 
     /**
@@ -149,7 +132,6 @@ public class DocumentProcessor {
      * @throws IOException if unable to process the file
      */
     public static ProcessingResult processFileWithResult(String inputPdfName, Config config) throws IOException {
-        Throwable processingFailure = null;
         try {
             // Phase 1: Extract
             ExtractionResult extraction = extractContents(inputPdfName, config);
@@ -160,25 +142,11 @@ public class DocumentProcessor {
             long outputNs = System.nanoTime() - t0;
 
             return new ProcessingResult(extraction.getHybridTimings(), extraction.getExtractionNs(), outputNs);
-        } catch (IOException | RuntimeException | Error e) {
-            processingFailure = e;
-            throw e;
         } finally {
-            // Ensures resources are always released, even if processing throws an exception
-            try {
-                closePdfResources();
-            } catch (Exception closeException) {
-                LOGGER.log(Level.WARNING, "Error during PDF resource cleanup", closeException);
-                if (processingFailure != null) {
-                    processingFailure.addSuppressed(closeException);
-                } else {
-                    if (closeException instanceof IOException) {
-                        throw (IOException) closeException;
-                    } else {
-                        throw new IOException("Failed to close PDF resources", closeException);
-                    }
-                }
-            }
+            // Always release resources, even if processing threw. closePdfResources
+            // logs and swallows per-step failures so cleanup cannot mask the original
+            // processing exception.
+            closePdfResources();
         }
     }
 
