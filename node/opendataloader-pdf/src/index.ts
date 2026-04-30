@@ -1,6 +1,7 @@
 import { spawn } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
+import { StringDecoder } from 'string_decoder';
 import { fileURLToPath } from 'url';
 
 // Re-export types and utilities from auto-generated file
@@ -15,6 +16,11 @@ const __dirname = path.dirname(__filename);
 const JAR_NAME = 'opendataloader-pdf-cli.jar';
 
 interface JarExecutionOptions {
+  /**
+   * When true, forwards Java's stdout and stderr chunks to the parent
+   * process in real time as well as accumulating them. Used by the bundled
+   * CLI so long-running conversions show progress as it happens.
+   */
   streamOutput?: boolean;
 }
 
@@ -37,24 +43,55 @@ function executeJar(args: string[], executionOptions: JarExecutionOptions = {}):
 
     let stdout = '';
     let stderr = '';
+    // StringDecoder buffers incomplete multi-byte UTF-8 sequences across
+    // chunk boundaries — Buffer.toString() alone would emit replacement
+    // characters when, e.g., a 3-byte Korean codepoint splits across two
+    // 'data' events. One decoder per stream so they don't share state.
+    const stdoutDecoder = new StringDecoder('utf8');
+    const stderrDecoder = new StringDecoder('utf8');
 
-    javaProcess.stdout.on('data', (data) => {
-      const chunk = data.toString();
+    javaProcess.stdout.on('data', (data: Buffer) => {
+      const chunk = stdoutDecoder.write(data);
+      if (chunk.length === 0) return;
       if (streamOutput) {
+        // Stream-only: don't also accumulate, or a multi-hour conversion
+        // would buffer its entire (potentially gigabyte) stdout in memory
+        // for no consumer.
         process.stdout.write(chunk);
+      } else {
+        stdout += chunk;
       }
-      stdout += chunk;
     });
 
-    javaProcess.stderr.on('data', (data) => {
-      const chunk = data.toString();
+    javaProcess.stderr.on('data', (data: Buffer) => {
+      const chunk = stderrDecoder.write(data);
+      if (chunk.length === 0) return;
       if (streamOutput) {
         process.stderr.write(chunk);
       }
+      // stderr is always accumulated (progress logs are small and we need
+      // them for error messages on non-zero exit).
       stderr += chunk;
     });
 
     javaProcess.on('close', (code) => {
+      // Flush any trailing bytes the decoder is still holding (always emit
+      // them — if we drop them on error paths, error messages with non-ASCII
+      // characters lose their tail).
+      const stdoutTail = stdoutDecoder.end();
+      const stderrTail = stderrDecoder.end();
+      if (stdoutTail.length > 0) {
+        if (streamOutput) {
+          process.stdout.write(stdoutTail);
+        } else {
+          stdout += stdoutTail;
+        }
+      }
+      if (stderrTail.length > 0) {
+        if (streamOutput) process.stderr.write(stderrTail);
+        stderr += stderrTail;
+      }
+
       if (code === 0) {
         resolve(stdout);
       } else {
@@ -80,26 +117,58 @@ function executeJar(args: string[], executionOptions: JarExecutionOptions = {}):
   });
 }
 
-export function convert(
+function buildJarArgs(
   inputPaths: string | string[],
-  options: ConvertOptions = {},
-): Promise<string> {
+  options: ConvertOptions,
+): string[] | Error {
   const inputList = Array.isArray(inputPaths) ? inputPaths : [inputPaths];
   if (inputList.length === 0) {
-    return Promise.reject(new Error('At least one input path must be provided.'));
+    return new Error('At least one input path must be provided.');
   }
 
   for (const input of inputList) {
     if (!fs.existsSync(input)) {
-      return Promise.reject(new Error(`Input file or folder not found: ${input}`));
+      return new Error(`Input file or folder not found: ${input}`);
     }
   }
 
-  const args: string[] = [...inputList, ...buildArgs(options)];
+  return [...inputList, ...buildArgs(options)];
+}
 
-  return executeJar(args, {
-    streamOutput: !options.quiet,
-  });
+export function convert(
+  inputPaths: string | string[],
+  options: ConvertOptions = {},
+): Promise<string> {
+  const argsOrError = buildJarArgs(inputPaths, options);
+  if (argsOrError instanceof Error) {
+    return Promise.reject(argsOrError);
+  }
+  // Library API: never streams to the parent process. Returns the full stdout
+  // string so callers can do `const out = await convert(...)` without surprise
+  // side-effects on process.stdout / process.stderr.
+  return executeJar(argsOrError, { streamOutput: false });
+}
+
+/**
+ * Internal entry point used by the bundled CLI. Streams Java's stdout and
+ * stderr to the parent process in real time (so long-running conversions like
+ * hybrid mode show progress as it happens) and resolves without a stdout
+ * payload — preventing the caller from re-printing what was already streamed.
+ *
+ * Not part of the public API: do not import this from application code. Use
+ * {@link convert} instead.
+ *
+ * @internal
+ */
+export async function _runForCli(
+  inputPaths: string | string[],
+  options: ConvertOptions = {},
+): Promise<void> {
+  const argsOrError = buildJarArgs(inputPaths, options);
+  if (argsOrError instanceof Error) {
+    throw argsOrError;
+  }
+  await executeJar(argsOrError, { streamOutput: true });
 }
 
 /**
