@@ -450,14 +450,14 @@ Combine with other formats: `format="json,tagged-pdf"`.
 Existing PDFs (untagged)
     │
     ▼
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│  1. Audit       │───>│  2. Auto-Tag    │───>│  3. Export       │───>│  4. Studio       │
-│  (check tags)   │    │  (→ Tagged PDF) │    │  (PDF/UA)        │    │  (visual editor) │
-└─────────────────┘    └─────────────────┘    └─────────────────┘    └─────────────────┘
-        │                      │                      │                      │
-        ▼                      ▼                      ▼                      ▼
-  use_struct_tree     format="tagged-pdf"       PDF/UA export       Accessibility Studio
-  (Available now)      (Available, Apache 2.0)   (Enterprise)        (Enterprise)
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐    ┌──────────────────┐
+│  1. Audit       │───>│  2. Auto-Tag     │───>│  3. Export      │───>│  4. Studio       │
+│  (check tags)   │    │  (→ Tagged PDF)  │    │  (PDF/UA)       │    │  (visual editor) │
+└─────────────────┘    └──────────────────┘    └─────────────────┘    └──────────────────┘
+        │                       │                       │                      │
+        ▼                       ▼                       ▼                      ▼
+  use_struct_tree      format="tagged-pdf"        PDF/UA export       Accessibility Studio
+  (Available now)      (Available, Apache 2.0)    (Enterprise)        (Enterprise)
 ```
 
 [PDF Accessibility Guide](https://opendataloader.org/docs/accessibility-compliance)
