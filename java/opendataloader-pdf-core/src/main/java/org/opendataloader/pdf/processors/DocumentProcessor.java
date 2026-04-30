@@ -70,6 +70,65 @@ public class DocumentProcessor {
     private static final Logger LOGGER = Logger.getLogger(DocumentProcessor.class.getCanonicalName());
 
     /**
+     * Releases PDF resources to prevent file locks and memory leaks.
+     * - Closes PDDocument to free OS file handles (required for file deletion)
+     * - Clears static containers to remove lingering references
+     * Should always be called in a finally block.
+     */
+    private static void closePdfResources() throws Exception {
+        Exception closeFailure = null;
+        PDDocument document = StaticResources.getDocument();
+        if (document != null) {
+            try {
+                document.close();
+            } catch (Exception e) {
+                closeFailure = e;
+            }
+        }
+
+        try {
+            StaticLayoutContainers.closeContrastRatioConsumer();
+        } catch (Exception e) {
+            if (closeFailure != null) {
+                closeFailure.addSuppressed(e);
+            } else {
+                closeFailure = e;
+            }
+        }
+
+        // cleanup static containers
+        clearCleanupStep("StaticResources", StaticResources::clear);
+        clearCleanupStep("StaticContainers", () -> StaticContainers.updateContainers(null));
+        clearCleanupStep(
+            "GFStaticContainers",
+            org.verapdf.gf.model.impl.containers.StaticContainers::clearAllContainers
+        );
+        clearCleanupStep("StaticLayoutContainers", StaticLayoutContainers::clearContainers);
+        clearCleanupStep("StaticStorages", StaticStorages::clearAllContainers);
+        clearCleanupStep("StaticCoreContainers", StaticCoreContainers::clearAllContainers);
+        clearCleanupStep("StaticXmpCoreContainers", StaticXmpCoreContainers::clearAllContainers);
+
+        if (closeFailure != null) {
+            throw closeFailure;
+        }
+    }
+
+    /**
+     * Executes a cleanup step safely without interrupting subsequent steps.
+     *
+     * Each cleanup action is isolated so that a failure in one step
+     * does not prevent the remaining cleanup operations from running.
+     * Errors are logged for debugging purposes.
+     */
+    private static void clearCleanupStep(String name, Runnable cleanup) {
+        try {
+            cleanup.run();
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Error clearing " + name, e);
+        }
+    }
+
+    /**
      * Processes a PDF file and generates the configured outputs.
      *
      * @param inputPdfName the path to the input PDF file
@@ -90,15 +149,37 @@ public class DocumentProcessor {
      * @throws IOException if unable to process the file
      */
     public static ProcessingResult processFileWithResult(String inputPdfName, Config config) throws IOException {
-        // Phase 1: Extract
-        ExtractionResult extraction = extractContents(inputPdfName, config);
+        Throwable processingFailure = null;
+        try {
+            // Phase 1: Extract
+            ExtractionResult extraction = extractContents(inputPdfName, config);
 
-        // Phase 2: Output (JSON/MD/HTML/PDF/Text)
-        long t0 = System.nanoTime();
-        generateOutputs(inputPdfName, extraction.getContents(), config, extraction.getElementMetadata());
-        long outputNs = System.nanoTime() - t0;
+            // Phase 2: Output (JSON/MD/HTML/PDF/Text)
+            long t0 = System.nanoTime();
+            generateOutputs(inputPdfName, extraction.getContents(), config, extraction.getElementMetadata());
+            long outputNs = System.nanoTime() - t0;
 
-        return new ProcessingResult(extraction.getHybridTimings(), extraction.getExtractionNs(), outputNs);
+            return new ProcessingResult(extraction.getHybridTimings(), extraction.getExtractionNs(), outputNs);
+        } catch (IOException | RuntimeException | Error e) {
+            processingFailure = e;
+            throw e;
+        } finally {
+            // Ensures resources are always released, even if processing throws an exception
+            try {
+                closePdfResources();
+            } catch (Exception closeException) {
+                LOGGER.log(Level.WARNING, "Error during PDF resource cleanup", closeException);
+                if (processingFailure != null) {
+                    processingFailure.addSuppressed(closeException);
+                } else {
+                    if (closeException instanceof IOException) {
+                        throw (IOException) closeException;
+                    } else {
+                        throw new IOException("Failed to close PDF resources", closeException);
+                    }
+                }
+            }
+        }
     }
 
     /**
