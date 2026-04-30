@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.opendataloader.pdf.cli;
+package org.opendataloader.pdf.api.cli;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -638,5 +638,30 @@ class CLIOptionsTest {
         assertEquals(2, config.getThreads());
         // downstream-only is not consumed by applyAllTo — that is the caller's job.
         assertEquals("value", cmd.getOptionValue("downstream-only"));
+    }
+
+    @Test
+    void testAddAllTo_preservesPreexistingDownstreamOptions() {
+        Options ext = new Options();
+        ext.addOption(null, "ua-foo", true, "Pdfua-specific option");
+        ext.addOption(null, "ua-bar", false, "Pdfua-specific flag");
+        CLIOptions.addAllTo(ext);
+
+        assertTrue(ext.hasOption("ua-foo"));
+        assertTrue(ext.hasOption("ua-bar"));
+        assertTrue(ext.hasOption("hybrid"));
+        assertTrue(ext.hasOption("threads"));
+    }
+
+    @Test
+    void testAddAllTo_calledTwice_isIdempotent() {
+        Options ext = new Options();
+        CLIOptions.addAllTo(ext);
+        int afterFirst = ext.getOptions().size();
+        // commons-cli's Options.addOption silently replaces by long-name, so calling
+        // addAllTo twice does not throw and does not duplicate. Pin this so a future
+        // commons-cli upgrade that changes the behavior surfaces here.
+        CLIOptions.addAllTo(ext);
+        assertEquals(afterFirst, ext.getOptions().size());
     }
 }
