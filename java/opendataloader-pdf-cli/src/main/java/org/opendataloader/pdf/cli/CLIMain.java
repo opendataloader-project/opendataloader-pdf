@@ -18,6 +18,7 @@ package org.opendataloader.pdf.cli;
 import org.apache.commons.cli.*;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.api.OpenDataLoaderPDF;
+import org.opendataloader.pdf.api.cli.CLIOptions;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 
 import java.io.File;

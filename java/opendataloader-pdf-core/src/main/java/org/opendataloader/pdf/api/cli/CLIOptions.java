@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.opendataloader.pdf.cli;
+package org.opendataloader.pdf.api.cli;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
@@ -30,6 +30,19 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Adapter that maps Apache Commons CLI options to {@link Config} / {@link HybridConfig}.
+ *
+ * <p><b>Stable API for downstream tools (e.g. opendataloader-pdfua):</b>
+ * <ul>
+ *   <li>{@link #defineOptions()}</li>
+ *   <li>{@link #addAllTo(Options)}</li>
+ *   <li>{@link #applyAllTo(Config, CommandLine)}</li>
+ *   <li>{@link #FOLDER_OPTION}</li>
+ * </ul>
+ * Other public members exist for internal use by the CLI module and the option-export
+ * tooling. They may change between minor releases.
+ */
 public class CLIOptions {
 
     // ===== Output Directory =====
