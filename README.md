@@ -105,12 +105,12 @@ opendataloader_pdf.convert(
 | Engine | Overall | Reading Order | Table | Heading | Speed (s/page) | License |
 |--------|---------|---------------|-------|---------|----------------|---------|
 | **opendataloader [hybrid]** | **0.907** | **0.934** | **0.928** | 0.821 | 0.463 | Apache-2.0 |
+| nutrient | 0.885 | 0.925 | 0.708 | 0.819 | **0.008** | Commercial |
 | docling | 0.882 | 0.898 | 0.887 | **0.824** | 0.762 | MIT |
-| nutrient | 0.885 | 0.925 | 0.708 | 0.819 | 0.008 | Commercial |
 | marker | 0.861 | 0.890 | 0.808 | 0.796 | 53.932 | GPL-3.0 |
 | unstructured [hi_res] | 0.841 | 0.904 | 0.588 | 0.749 | 3.008 | Apache-2.0 |
 | edgeparse | 0.837 | 0.894 | 0.717 | 0.706 | 0.036 | Apache-2.0 |
-| opendataloader | 0.831 | 0.902 | 0.489 | 0.739 | **0.015** | Apache-2.0 |
+| opendataloader | 0.831 | 0.902 | 0.489 | 0.739 | 0.015 | Apache-2.0 |
 | mineru | 0.831 | 0.857 | 0.873 | 0.743 | 5.962 | AGPL-3.0 |
 | pymupdf4llm | 0.732 | 0.885 | 0.401 | 0.412 | 0.091 | AGPL-3.0 |
 | unstructured | 0.686 | 0.882 | 0.000 | 0.388 | 0.077 | Apache-2.0 |
