@@ -199,8 +199,7 @@ class TestMinerUFallback:
             stem = Path(input_path).stem
             (Path(output_dir) / f"{stem}.md").write_text(java_content, encoding="utf-8")
             for job in manager._jobs.values():
-                if str(job.kwargs.get("enable_mineru_fallback")) or True:
-                    job.triage_decision = "HARD_FAIL"
+                job.triage_decision = "HARD_FAIL"
 
         mock_result = MinerUResult(
             markdown=mineru_content, json_str=mineru_json, exit_code=0, stderr=""
@@ -223,6 +222,7 @@ class TestMinerUFallback:
         assert job.mineru_artifact == mineru_content
         assert job.mineru_json == mineru_json
         assert job.fallback_source == "mineru"
+        assert job.completed_at is not None
 
     def test_submit_mineru_fallback_pass(self, manager, pdf_file):
         java_content = "# Java output"

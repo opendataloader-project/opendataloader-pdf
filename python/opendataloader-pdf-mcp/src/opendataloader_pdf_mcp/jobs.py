@@ -165,15 +165,13 @@ class JobManager:
             job.triage_decision == "HARD_FAIL"
             and job.kwargs.get("enable_mineru_fallback")
         ):
-            if job._cancel_event.is_set():
-                with job._status_lock:
+            with job._status_lock:
+                if job._cancel_event.is_set():
                     job.status = JobStatus.CANCELLED
                     job.completed_at = _now()
-                return
-
-            job.java_artifact = job.artifact
-            job.fallback_source = "mineru"
-            with job._status_lock:
+                    return
+                job.java_artifact = job.artifact
+                job.fallback_source = "mineru"
                 job.status = JobStatus.RUNNING
 
             try:
@@ -185,7 +183,9 @@ class JobManager:
                 with job._status_lock:
                     job.status = JobStatus.DONE
                     job.completed_at = _now()
-            except MinerUError as exc:
+                    with self._lock:
+                        self._hash_index[job.content_hash] = job.job_id
+            except Exception as exc:
                 with job._status_lock:
                     job.error = str(exc)
                     job.status = JobStatus.FAILED
