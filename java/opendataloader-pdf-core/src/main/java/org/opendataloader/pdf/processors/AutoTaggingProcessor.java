@@ -359,13 +359,28 @@ public class AutoTaggingProcessor {
         for (PDAnnotation annotation : annotations) {
             COSObject annotObj = annotation.getObject();
             if (annotObj == null || annotObj.empty()) continue;
-            //PDF/UA-1 rule 7.18.1-1
-            if (!isPDF2_0 && !ASAtom.LINK.equals(annotation.getSubtype()) &&
-                !ASAtom.PRINTER_MARK.equals(annotation.getSubtype()) && !ASAtom.PRINTER_MARK.equals(annotation.getSubtype()) &&
-                !PDAnnotation.isOutsideCropBox(page, annotation) && PDAnnotation.isVisibleAnnotation(annotation)) {
-                annotationBBoxesMap.put(new BoundingBox(page.getPageNumber(), annotation.getRect()), annotation);
+
+            if (isPDF2_0) {
+                //PDF/UA-2 rules 8.10.1-1, 8.9.2.4.16-1, 8.9.2.3-1
+                if (ASAtom.WIDGET.equals(annotation.getSubtype()) || ASAtom.WATERMARK.equals(annotation.getSubtype()) ||
+                    annotation.isMarkup()) {
+                    annotationBBoxesMap.put(new BoundingBox(page.getPageNumber(), annotation.getRect()), annotation);
+                    pageChanged = assignStructParentToAnnotation(annotObj, cosDocument);
+                }
+            } else {
+                //PDF/UA-1 rules 7.18.1-1 + 7.18.4-1
+                if (!ASAtom.LINK.equals(annotation.getSubtype()) &&
+                    !ASAtom.PRINTER_MARK.equals(annotation.getSubtype()) &&
+                    !PDAnnotation.isOutsideCropBox(page, annotation) && PDAnnotation.isVisibleAnnotation(annotation)) {
+                    annotationBBoxesMap.put(new BoundingBox(page.getPageNumber(), annotation.getRect()), annotation);
+                    pageChanged = assignStructParentToAnnotation(annotObj, cosDocument);
+                }
             }
-            if (ASAtom.LINK.equals(annotation.getSubtype())) {
+            //PDF/UA-1 rule 7.18.5-1 / PDF/UA-2 rule 8.2.5.20-1
+            //TODO: check if artifact in PDF/UA-2
+            if ((ASAtom.LINK.equals(annotation.getSubtype()) && isPDF2_0) ||
+                (ASAtom.LINK.equals(annotation.getSubtype()) && !isPDF2_0 &&
+                    !PDAnnotation.isOutsideCropBox(page, annotation) && PDAnnotation.isVisibleAnnotation(annotation))) {
                 annotationBBoxesMap.put(new BoundingBox(page.getPageNumber(), annotation.getRect()), annotation);
                 // Get URI from action if available
                 String uriString = null;
@@ -407,12 +422,8 @@ public class AutoTaggingProcessor {
                         altText.getBytes(StandardCharsets.UTF_16), true);
                     annotObj.setKey(ASAtom.CONTENTS, linkTextObject);
                 }
+                pageChanged = assignStructParentToAnnotation(annotObj, cosDocument);
             }
-            // Assign StructParent integer to annotation and register in parent tree
-            int structParentInt = currentStructParent++;
-            annotObj.setKey(ASAtom.STRUCT_PARENT, COSInteger.construct(structParentInt));
-            cosDocument.addChangedObject(annotObj);
-            pageChanged = true;
         }
         // Flush the Annots array (may be an indirect object separate from the page)
         // so that direct-object annotation dicts inside it (StructParent + Contents) are saved.
@@ -425,19 +436,32 @@ public class AutoTaggingProcessor {
         }
     }
 
+    private static boolean assignStructParentToAnnotation(COSObject annotObj, COSDocument cosDocument) {
+        // Assign StructParent integer to annotation and register in parent tree
+        int structParentInt = currentStructParent++;
+        annotObj.setKey(ASAtom.STRUCT_PARENT, COSInteger.construct(structParentInt));
+        cosDocument.addChangedObject(annotObj);
+        return true;
+    }
+
     private static void processAnnotations(COSDocument cosDocument, COSObject seDocument, int pageNumber) {
         for (PDAnnotation annotation : annotationBBoxesMap.values()) {
-            if (ASAtom.LINK.equals(annotation.getSubtype())) {
-                createAnnotationStructElem(cosDocument, seDocument, annotation, null, pageNumber, TaggedPDFConstants.LINK);
-            } else {
-                createAnnotationStructElem(cosDocument, seDocument, annotation, null, pageNumber, TaggedPDFConstants.ANNOT);
-            }
+            createAnnotationStructElem(cosDocument, seDocument, annotation, null, pageNumber);
         }
         annotationBBoxesMap.clear();
     }
 
     private static void createAnnotationStructElem(COSDocument cosDocument, COSObject parent, PDAnnotation annotation,
-                                                   List<StreamInfo> streamInfos, int pageNumber, String tag) {
+                                                   List<StreamInfo> streamInfos, int pageNumber) {
+
+        String tag;
+        if (ASAtom.LINK.equals(annotation.getSubtype())) {
+            tag = TaggedPDFConstants.LINK;
+        } else if (ASAtom.WIDGET.equals(annotation.getSubtype())) {
+            tag = TaggedPDFConstants.FORM;
+        } else {
+            tag = TaggedPDFConstants.ANNOT;
+        }
         COSObject linkElem = addStructElement(parent, cosDocument, tag, pageNumber);
         linkElem.setKey(ASAtom.ALT, annotation.getKey(ASAtom.CONTENTS));
         annotationStructParents.put(annotation.getIntegerKey(ASAtom.STRUCT_PARENT).intValue(), linkElem);
@@ -888,14 +912,8 @@ public class AutoTaggingProcessor {
                             addMcidChildren(streamInfos, textNode.getPageNumber(), cosObject);
                             streamInfos.clear();
                         }
-                        if (ASAtom.LINK.equals(entry.getValue().getSubtype())) {
-                            createAnnotationStructElem(StaticResources.getDocument().getDocument(), cosObject, entry.getValue(),
-                                textChunk.getStreamInfos(), textNode.getPageNumber(), TaggedPDFConstants.LINK);
-                        } else {
-                            createAnnotationStructElem(StaticResources.getDocument().getDocument(), cosObject, entry.getValue(),
-                                textChunk.getStreamInfos(), textNode.getPageNumber(), TaggedPDFConstants.ANNOT);
-                        }
-
+                        createAnnotationStructElem(StaticResources.getDocument().getDocument(), cosObject, entry.getValue(),
+                            textChunk.getStreamInfos(), textNode.getPageNumber());
                     } else {
                         streamInfos.addAll(textChunk.getStreamInfos());
                     }
