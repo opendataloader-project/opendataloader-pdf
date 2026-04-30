@@ -7,7 +7,10 @@ Validates that when Docling encounters errors during PDF preprocessing
 - error messages from Docling
 """
 
-from opendataloader_pdf.hybrid_server import build_conversion_response
+from opendataloader_pdf.hybrid_server import (
+    _extract_failed_pages_from_errors,
+    build_conversion_response,
+)
 
 
 class TestBuildConversionResponse:
@@ -163,7 +166,7 @@ class TestBuildConversionResponse:
         assert response["failed_pages"] == []
 
     def test_partial_success_missing_pages_key(self):
-        """json_content without 'pages' key should produce empty failed_pages."""
+        """json_content without 'pages' key should mark all requested pages as failed."""
         response = build_conversion_response(
             status_value="partial_success",
             json_content={"body": {"text": "hello"}},
@@ -173,3 +176,120 @@ class TestBuildConversionResponse:
         )
         assert response["status"] == "partial_success"
         assert response["failed_pages"] == [1, 2, 3]
+
+
+class TestExtractFailedPagesFromErrors:
+    """Tests for error message-based failed page detection."""
+
+    def test_std_bad_alloc_errors(self):
+        """Page numbers should be extracted from 'Page N: std::bad_alloc' messages."""
+        errors = [
+            "Page 26: std::bad_alloc",
+            "Page 27: std::bad_alloc",
+            "Page 28: std::bad_alloc",
+        ]
+        assert _extract_failed_pages_from_errors(errors) == [26, 27, 28]
+
+    def test_mixed_error_formats(self):
+        """Only 'Page N:' prefixed messages should be matched."""
+        errors = [
+            "Page 5: Invalid code point",
+            "Unknown page: pipeline terminated early",
+            "Page 10: std::bad_alloc",
+        ]
+        assert _extract_failed_pages_from_errors(errors) == [5, 10]
+
+    def test_no_page_errors(self):
+        """Non-page errors should return empty list."""
+        errors = [
+            "Unknown page: pipeline terminated early",
+            "General error occurred",
+        ]
+        assert _extract_failed_pages_from_errors(errors) == []
+
+
+class TestBuildConversionResponseErrorParsing:
+    """Tests for failed page detection via error message parsing.
+
+    When docling includes failed pages as empty entries in the pages dict,
+    gap detection fails. Error message parsing handles this case.
+    """
+
+    def test_failed_pages_with_empty_entries_in_pages_dict(self):
+        """Failed pages present as empty entries should still be detected via errors."""
+        response = build_conversion_response(
+            status_value="partial_success",
+            json_content={"pages": {"1": {}, "2": {}, "3": {}, "4": {}, "5": {}}},
+            processing_time=2.0,
+            errors=["Page 4: std::bad_alloc", "Page 5: std::bad_alloc"],
+            requested_pages=(1, 5),
+        )
+        assert response["failed_pages"] == [4, 5]
+
+    def test_boundary_pages_detected_via_errors(self):
+        """Boundary page failures should be detected even without page range."""
+        response = build_conversion_response(
+            status_value="partial_success",
+            json_content={"pages": {"1": {}, "2": {}, "3": {}, "4": {}, "5": {}}},
+            processing_time=2.0,
+            errors=["Page 4: std::bad_alloc", "Page 5: std::bad_alloc"],
+            requested_pages=None,
+            total_pages=None,
+        )
+        assert response["failed_pages"] == [4, 5]
+
+    def test_both_strategies_combined(self):
+        """Union of error-parsed and gap-detected pages should be reported.
+
+        Page 2 is missing from dict (gap), pages 4-5 have error messages
+        but are present as empty entries. All three must appear.
+        """
+        response = build_conversion_response(
+            status_value="partial_success",
+            json_content={"pages": {"1": {}, "3": {}, "4": {}, "5": {}}},
+            processing_time=2.0,
+            errors=["Page 4: std::bad_alloc", "Page 5: std::bad_alloc"],
+            requested_pages=(1, 5),
+        )
+        assert response["failed_pages"] == [2, 4, 5]
+
+    def test_overlap_between_gap_and_error_is_deduplicated(self):
+        """Same page from gap and error parsing should appear once."""
+        response = build_conversion_response(
+            status_value="partial_success",
+            json_content={"pages": {"1": {}, "3": {}}},
+            processing_time=1.0,
+            errors=["Page 2: std::bad_alloc"],
+            requested_pages=(1, 3),
+        )
+        assert response["failed_pages"] == [2]
+
+    def test_duplicate_page_in_errors(self):
+        """Duplicate page numbers in error messages should be deduplicated."""
+        errors = [
+            "Page 3: std::bad_alloc",
+            "Page 3: Invalid code point",
+        ]
+        assert _extract_failed_pages_from_errors(errors) == [3]
+
+    def test_no_page_pattern_errors_falls_back_to_gap(self):
+        """When errors lack 'Page N:' pattern, gap detection should still work."""
+        response = build_conversion_response(
+            status_value="partial_success",
+            json_content={"pages": {"1": {}, "3": {}}},
+            processing_time=1.0,
+            errors=["Unknown page: pipeline terminated early"],
+            requested_pages=(1, 3),
+        )
+        assert response["failed_pages"] == [2]
+
+    def test_empty_errors_with_partial_success(self):
+        """Partial success with no error messages should still detect gaps."""
+        response = build_conversion_response(
+            status_value="partial_success",
+            json_content={"pages": {"1": {}, "3": {}}},
+            processing_time=1.0,
+            errors=[],
+            requested_pages=(1, 3),
+        )
+        assert response["failed_pages"] == [2]

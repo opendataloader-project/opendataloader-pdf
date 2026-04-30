@@ -114,6 +114,29 @@ _convert_lock = threading.Lock()
 _INVALID_UNICODE_RE = re.compile(r"[\ud800-\udfff\x00]")
 
 
+def _extract_failed_pages_from_errors(errors: list[str]) -> list[int]:
+    """Extract failed page numbers from error messages.
+
+    Docling error messages follow the pattern "Page N: <error>" (e.g.,
+    "Page 26: std::bad_alloc"). Even when docling includes failed pages
+    in the pages dict as empty entries, the error messages reliably
+    indicate which pages actually failed.
+
+    Args:
+        errors: List of error message strings.
+
+    Returns:
+        Sorted list of 1-indexed page numbers that failed.
+    """
+    failed = set()
+    page_pattern = re.compile(r"^Page\s+(\d+):")
+    for msg in errors:
+        m = page_pattern.match(msg)
+        if m:
+            failed.add(int(m.group(1)))
+    return sorted(failed)
+
+
 def extract_timings(result: Any) -> dict[str, Any]:
     """Extract per-step pipeline timings from a Docling ConversionResult.
 
@@ -149,10 +172,12 @@ def build_conversion_response(
 ) -> dict:
     """Build a structured conversion response with status and failed page info.
 
-    When Docling encounters errors (e.g., Invalid code point in PDF font encoding),
-    it skips the affected pages and returns PARTIAL_SUCCESS. This function detects
-    which pages failed by comparing the requested page range against pages present
-    in the output.
+    When Docling encounters errors (e.g., std::bad_alloc in PDF preprocessing),
+    it may still include failed pages as empty entries in the pages dict.
+    This function combines two strategies to detect failed pages:
+    1. Parse page numbers from error messages ("Page N: <error>")
+    2. Detect pages missing from the output pages dict (gap detection)
+    Both results are merged (union) since each catches a different failure mode.
 
     Args:
         status_value: Docling ConversionStatus value as string (e.g., "success", "partial_success").
@@ -169,7 +194,14 @@ def build_conversion_response(
     failed_pages: list[int] = []
 
     if status_value == "partial_success":
-        # Detect failed pages by finding gaps in the pages dict
+        # Strategy 1: Extract failed pages from error messages (reliable —
+        # docling may include failed pages as empty entries in the pages dict,
+        # making gap detection ineffective)
+        error_failed = set(_extract_failed_pages_from_errors(errors))
+
+        # Strategy 2: Detect pages missing from the pages dict (catches
+        # failures that don't produce "Page N:" error messages)
+        gap_failed: set[int] = set()
         pages_dict = json_content.get("pages", {})
         present_pages = set()
         for k in pages_dict.keys():
@@ -183,7 +215,6 @@ def build_conversion_response(
         elif total_pages is not None:
             expected_pages = set(range(1, total_pages + 1))
         elif present_pages:
-            # Fallback: infer range from min to max of present pages
             logger.warning(
                 "No page range or total_pages available; boundary page failures cannot be detected"
             )
@@ -191,7 +222,10 @@ def build_conversion_response(
         else:
             expected_pages = set()
 
-        failed_pages = sorted(expected_pages - present_pages)
+        gap_failed = expected_pages - present_pages
+
+        # Union: each strategy catches a different failure mode
+        failed_pages = sorted(error_failed | gap_failed)
 
     response: dict[str, Any] = {
         "status": status_value,
