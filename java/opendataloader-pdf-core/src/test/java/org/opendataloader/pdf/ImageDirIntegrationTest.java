@@ -157,4 +157,99 @@ class ImageDirIntegrationTest {
                     "Markdown should reference custom image directory");
         }
     }
+
+    /**
+     * Regression test for #405: when the input filename contains characters that
+     * have special meaning in CommonMark link destinations (spaces, parens, etc.),
+     * the on-disk directory keeps the original filename and the rendered Markdown
+     * link wraps the destination in angle brackets per CommonMark §6.4 so it stays
+     * a single, parseable token.
+     */
+    @Test
+    void testDefaultImageDir_markdownLinkUsesAngleBracketDestination() throws Exception {
+        File samplePdf = new File(SAMPLE_PDF_WITH_IMAGES);
+        if (!samplePdf.exists()) {
+            System.out.println("Skipping test: Sample PDF not found");
+            return;
+        }
+
+        // Copy the sample PDF under a filename containing CommonMark-reserved chars.
+        String unsafeStem = "my paper (draft) [v2]";
+        Path renamed = tempDir.resolve(unsafeStem + ".pdf");
+        Files.copy(samplePdf.toPath(), renamed);
+
+        Path outputDir = tempDir.resolve("output");
+
+        Config config = new Config();
+        config.setOutputFolder(outputDir.toString());
+        config.setImageOutput(Config.IMAGE_OUTPUT_EXTERNAL);
+        config.setGenerateJSON(false);
+        config.setAddImageToMarkdown(true);
+
+        DocumentProcessor.processFile(renamed.toAbsolutePath().toString(), config);
+
+        // The on-disk image directory keeps the original filename — we don't rewrite
+        // user input. The rendered destination uses the angle-bracket form.
+        Path imageDir = outputDir.resolve(unsafeStem + "_images");
+        assertTrue(Files.exists(imageDir),
+                "On-disk image directory should keep the original filename");
+
+        Path mdOutput = outputDir.resolve(unsafeStem + ".md");
+        assertTrue(Files.exists(mdOutput), "Markdown output should exist");
+
+        String mdContent = Files.readString(mdOutput);
+        assertTrue(mdContent.contains("!["),
+                "Test precondition: sample must produce markdown image syntax");
+
+        // Inside `<...>` the path stays byte-identical to the on-disk directory.
+        String expectedDestination = "<" + unsafeStem + "_images/imageFile";
+        assertTrue(mdContent.contains(expectedDestination),
+                "Markdown link should wrap the path in angle brackets; expected '" + expectedDestination + "'");
+        // The raw unwrapped form must NOT appear inside a link destination — that
+        // is the exact bug #405 reports.
+        assertFalse(mdContent.contains("(" + unsafeStem + "_images/"),
+                "Raw unwrapped directory name must not appear as a Markdown link destination");
+    }
+
+    /**
+     * #405 reproduces equally through the `--image-dir` path. A user-provided
+     * directory name with spaces or parens lands verbatim on disk (we respect the
+     * user's input) and the Markdown link wraps it in angle brackets.
+     */
+    @Test
+    void testCustomImageDir_markdownLinkUsesAngleBracketDestination() throws Exception {
+        File samplePdf = new File(SAMPLE_PDF_WITH_IMAGES);
+        if (!samplePdf.exists()) {
+            System.out.println("Skipping test: Sample PDF not found");
+            return;
+        }
+
+        Path customImageDir = tempDir.resolve("my pictures (v2)");
+
+        Config config = new Config();
+        config.setOutputFolder(tempDir.toString());
+        config.setImageDir(customImageDir.toString());
+        config.setImageOutput(Config.IMAGE_OUTPUT_EXTERNAL);
+        config.setGenerateJSON(false);
+        config.setAddImageToMarkdown(true);
+
+        DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
+
+        // On-disk directory keeps the user-provided name verbatim.
+        assertTrue(Files.exists(customImageDir),
+                "Custom image directory should keep the user-provided name");
+
+        Path mdOutput = tempDir.resolve(SAMPLE_PDF_BASENAME + ".md");
+        assertTrue(Files.exists(mdOutput), "Markdown output should exist");
+
+        String mdContent = Files.readString(mdOutput);
+        assertTrue(mdContent.contains("!["),
+                "Test precondition: sample must produce markdown image syntax");
+
+        String expectedDestination = "<my pictures (v2)/imageFile";
+        assertTrue(mdContent.contains(expectedDestination),
+                "Markdown link should wrap the custom dir in angle brackets; expected '" + expectedDestination + "'");
+        assertFalse(mdContent.contains("(my pictures (v2)/"),
+                "Raw unwrapped custom-dir name must not appear as a Markdown link destination");
+    }
 }

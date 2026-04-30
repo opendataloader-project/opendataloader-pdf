@@ -150,6 +150,39 @@ public class MarkdownGenerator implements Closeable {
         }
     }
 
+    /**
+     * Wraps an image relative path as a CommonMark angle-bracket link destination
+     * (`<...>`). The bare form `(my paper.png)` is terminated by the first space or
+     * unbalanced parenthesis, so paths inheriting filenames with spaces, parens, or
+     * brackets break in renderers (#405). The angle-bracket form is the
+     * spec-recommended way to embed such paths and lets the on-disk path stay
+     * byte-identical to the rendered link, which preserves user intent for both the
+     * default `<stem>_images/` directory and any `--image-dir` value.
+     *
+     * Only `<`, `>`, and `\` are reserved inside the angle-bracket form; escape
+     * those with a backslash. Newlines have no representable form in a link
+     * destination — replace them with spaces so the destination stays well-formed.
+     */
+    static String formatMarkdownLinkDestination(String path) {
+        if (path == null) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder(path.length() + 2);
+        sb.append('<');
+        for (int i = 0; i < path.length(); i++) {
+            char c = path.charAt(i);
+            if (c == '<' || c == '>' || c == '\\') {
+                sb.append('\\').append(c);
+            } else if (c == '\n' || c == '\r') {
+                sb.append(' ');
+            } else {
+                sb.append(c);
+            }
+        }
+        sb.append('>');
+        return sb.toString();
+    }
+
     protected void writeImage(ImageChunk image) {
         try {
             String absolutePath = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, image.getIndex(), imageFormat);
@@ -164,7 +197,7 @@ public class MarkdownGenerator implements Closeable {
                         LOGGER.log(Level.WARNING, "Failed to convert image to Base64: {0}", absolutePath);
                     }
                 } else {
-                    imageSource = relativePath;
+                    imageSource = formatMarkdownLinkDestination(relativePath);
                 }
                 if (imageSource != null) {
                     String altText = (image instanceof EnrichedImageChunk && ((EnrichedImageChunk) image).hasDescription())
@@ -198,7 +231,7 @@ public class MarkdownGenerator implements Closeable {
                         LOGGER.log(Level.WARNING, "Failed to convert image to Base64: {0}", absolutePath);
                     }
                 } else {
-                    imageSource = relativePath;
+                    imageSource = formatMarkdownLinkDestination(relativePath);
                 }
                 if (imageSource != null) {
                     String altText = picture.hasDescription()
