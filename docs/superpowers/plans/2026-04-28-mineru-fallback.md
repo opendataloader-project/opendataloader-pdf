@@ -31,7 +31,7 @@
 
 All commands run from `python/opendataloader-pdf-mcp/`.
 
-- [ ] **Step 1: Write the four failing tests**
+- [x] **Step 1: Write the four failing tests**
 
 Create `tests/test_mineru.py`:
 
@@ -99,7 +99,7 @@ class TestMinerURunner:
                     MinerURunner().run(pdf_path, tmp_path)
 ```
 
-- [ ] **Step 2: Run tests to confirm they all fail**
+- [x] **Step 2: Run tests to confirm they all fail**
 
 ```bash
 .venv/bin/python -m pytest tests/test_mineru.py -v
@@ -107,7 +107,7 @@ class TestMinerURunner:
 
 Expected: 4 errors — `ModuleNotFoundError: No module named 'opendataloader_pdf_mcp.mineru'`
 
-- [ ] **Step 3: Implement `mineru.py`**
+- [x] **Step 3: Implement `mineru.py`**
 
 Create `src/opendataloader_pdf_mcp/mineru.py`:
 
@@ -168,7 +168,7 @@ class MinerURunner:
         )
 ```
 
-- [ ] **Step 4: Run tests to confirm they pass**
+- [x] **Step 4: Run tests to confirm they pass**
 
 ```bash
 .venv/bin/python -m pytest tests/test_mineru.py -v
@@ -176,13 +176,15 @@ class MinerURunner:
 
 Expected: 4 passed
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add python/opendataloader-pdf-mcp/src/opendataloader_pdf_mcp/mineru.py \
         python/opendataloader-pdf-mcp/tests/test_mineru.py
 git commit -m "feat(mcp): add MinerURunner subprocess wrapper with tests"
 ```
+
+> **Note (actual impl):** `mineru.py` also adds `timeout=300` to `subprocess.run` and uses `content_list.json` (not `{stem}.json`) as the JSON filename, matching MinerU 2.x output layout. Commit: `fix(mcp): fix MinerU output path, add timeout, improve tests`.
 
 ---
 
@@ -194,7 +196,7 @@ git commit -m "feat(mcp): add MinerURunner subprocess wrapper with tests"
 
 All commands run from `python/opendataloader-pdf-mcp/`.
 
-- [ ] **Step 1: Write the five failing tests**
+- [x] **Step 1: Write the five failing tests**
 
 Append a new `TestMinerUFallback` class to `tests/test_jobs.py`:
 
@@ -340,7 +342,7 @@ class TestMinerUFallback:
         mock_runner_cls.return_value.run.assert_not_called()
 ```
 
-- [ ] **Step 2: Run tests to confirm they fail**
+- [x] **Step 2: Run tests to confirm they fail**
 
 ```bash
 .venv/bin/python -m pytest tests/test_jobs.py::TestMinerUFallback -v
@@ -348,7 +350,7 @@ class TestMinerUFallback:
 
 Expected: 5 failures — `AttributeError: 'Job' object has no attribute 'java_artifact'`
 
-- [ ] **Step 3: Add 4 new fields to the `Job` dataclass**
+- [x] **Step 3: Add 4 new fields to the `Job` dataclass**
 
 In `src/opendataloader_pdf_mcp/jobs.py`, find the `Job` dataclass and add four fields after `completed_at`:
 
@@ -387,7 +389,7 @@ class Job:
     _status_lock:    threading.Lock   = field(default_factory=threading.Lock, repr=False, compare=False)
 ```
 
-- [ ] **Step 4: Add `MinerURunner` import and `enable_mineru_fallback` to `submit()`**
+- [x] **Step 4: Add `MinerURunner` import and `enable_mineru_fallback` to `submit()`**
 
 At the top of `jobs.py`, add the import after the existing imports:
 
@@ -397,7 +399,7 @@ from opendataloader_pdf_mcp.mineru import MinerUError, MinerURunner
 
 The `submit()` signature already accepts `**kwargs` so `enable_mineru_fallback` flows through automatically — no signature change needed. It arrives in `job.kwargs` and is read in `_run()`.
 
-- [ ] **Step 5: Add the fallback branch to `_run()`**
+- [x] **Step 5: Add the fallback branch to `_run()`**
 
 Replace the entire `_run()` method in `jobs.py`:
 
@@ -483,7 +485,7 @@ Replace the entire `_run()` method in `jobs.py`:
                     job.completed_at = _now()
 ```
 
-- [ ] **Step 6: Run all job tests to confirm they pass**
+- [x] **Step 6: Run all job tests to confirm they pass**
 
 ```bash
 .venv/bin/python -m pytest tests/test_jobs.py -v
@@ -491,13 +493,20 @@ Replace the entire `_run()` method in `jobs.py`:
 
 Expected: all tests pass (existing 16 + new 5 = 21 total)
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add python/opendataloader-pdf-mcp/src/opendataloader_pdf_mcp/jobs.py \
         python/opendataloader-pdf-mcp/tests/test_jobs.py
 git commit -m "feat(mcp): add MinerU fallback branch to JobManager with tests"
 ```
+
+> **Note (code-review hardening):** A follow-up commit `fix(mcp): harden MinerU fallback branch thread safety and dedup` was applied after code review:
+> - Cancel-event check inside `_status_lock` (TOCTOU fix)
+> - `_hash_index` updated after MinerU DONE (dedup gap fix)
+> - `except Exception` instead of `except MinerUError` (catches all failure modes)
+> - Test: removed dead `or True` guard; added `assert job.completed_at is not None`
+> - **Actual test count: 18 passed** (not 21 — 13 pre-existing + 5 new)
 
 ---
 
@@ -509,7 +518,7 @@ git commit -m "feat(mcp): add MinerU fallback branch to JobManager with tests"
 
 All commands run from `python/opendataloader-pdf-mcp/`.
 
-- [ ] **Step 1: Write the four failing tests**
+- [x] **Step 1: Write the four failing tests**
 
 Append a new `TestGetArtifactSource` class to `tests/test_server_async_tools.py`:
 
@@ -563,7 +572,7 @@ class TestGetArtifactSource:
         assert "unknown source" in result.lower()
 ```
 
-- [ ] **Step 2: Run tests to confirm they fail**
+- [x] **Step 2: Run tests to confirm they fail**
 
 ```bash
 .venv/bin/python -m pytest tests/test_server_async_tools.py::TestGetArtifactSource -v
@@ -571,7 +580,7 @@ class TestGetArtifactSource:
 
 Expected: 4 failures — `TypeError: get_artifact() got an unexpected keyword argument 'source'`
 
-- [ ] **Step 3: Add `enable_mineru_fallback` to `submit_pdf` and update `_collect_kwargs`**
+- [x] **Step 3: Add `enable_mineru_fallback` to `submit_pdf` and update `_collect_kwargs`**
 
 In `server.py`, update the `_collect_kwargs` function signature to accept the new param (add at the end before `fmt`):
 
@@ -658,7 +667,7 @@ def submit_pdf(
     return {"job_id": job_id, "status": status.value, "content_hash": job.content_hash}
 ```
 
-- [ ] **Step 4: Update `get_artifact` to accept a `source` parameter**
+- [x] **Step 4: Update `get_artifact` to accept a `source` parameter**
 
 Replace the existing `get_artifact` function in `server.py`:
 
@@ -688,26 +697,39 @@ def get_artifact(job_id: str, source: str = "primary") -> str:
     return f"unknown source: {source!r}. Valid: primary, java, mineru-json"
 ```
 
-- [ ] **Step 5: Run all server tests**
+- [x] **Step 5: Run all server tests**
 
 ```bash
 .venv/bin/python -m pytest tests/test_server_async_tools.py -v
 ```
 
-Expected: all tests pass (existing 12 + new 4 = 16 total)
+Expected: all tests pass (existing 12 + new 4 = 16 total) — **Actual: 20 passed** (16 pre-existing + 4 new)
 
-- [ ] **Step 6: Run the full test suite**
+- [x] **Step 6: Run the full test suite**
 
 ```bash
 .venv/bin/python -m pytest tests/ -v
 ```
 
-Expected: 40 existing + 4 (test_mineru) + 5 (test_jobs) + 4 (test_server) = 53 passed, 0 failed
+Expected: 40 existing + 4 (test_mineru) + 5 (test_jobs) + 4 (test_server) = 53 passed, 0 failed — **Actual: 55 passed, 0 failed**
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add python/opendataloader-pdf-mcp/src/opendataloader_pdf_mcp/server.py \
         python/opendataloader-pdf-mcp/tests/test_server_async_tools.py
 git commit -m "feat(mcp): add enable_mineru_fallback to submit_pdf and source param to get_artifact"
 ```
+
+---
+
+## Completion Status
+
+**All tasks complete as of 2026-04-30.** Final state:
+
+| Task | Commits | Tests |
+|------|---------|-------|
+| Task 1: MinerURunner | `feat(mcp): add MinerURunner subprocess wrapper with tests` + `fix(mcp): fix MinerU output path, add timeout, improve tests` | 4 passed |
+| Task 2: Job fields + fallback branch | `feat(mcp): add MinerU fallback branch to JobManager with tests` + `fix(mcp): harden MinerU fallback branch thread safety and dedup` | 18 passed |
+| Task 3: server.py extensions | `feat(mcp): add enable_mineru_fallback to submit_pdf and source param to get_artifact` | 20 passed |
+| **Total** | **5 commits on `plan-c-mineru-fallback`** | **55 passed, 0 failed** |
