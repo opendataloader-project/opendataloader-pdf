@@ -29,6 +29,7 @@ import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 public class SemanticFormula extends BaseObject {
 
     private final String latex;
+    private String number;
 
     /**
      * Creates a SemanticFormula with the given bounding box and LaTeX content.
@@ -48,5 +49,21 @@ public class SemanticFormula extends BaseObject {
      */
     public String getLatex() {
         return latex != null ? latex : "";
+    }
+
+    /**
+     * Gets the resolved equation number (e.g. "3.1"), or null if unresolved.
+     */
+    public String getNumber() {
+        return number;
+    }
+
+    /**
+     * Sets the resolved equation number.
+     *
+     * @param number the equation number string, or null if unresolved
+     */
+    public void setNumber(String number) {
+        this.number = number;
     }
 }
