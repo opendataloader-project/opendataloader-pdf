@@ -75,7 +75,7 @@ public class ExtractionResult {
     }
 
     public int getPageCount() {
-        return enrichedGraphNodes != null ? enrichedGraphNodes.size() : 0;
+        return contents != null ? contents.size() : 0;
     }
 
     public JsonNode getHybridTimings() {

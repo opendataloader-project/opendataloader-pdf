@@ -91,11 +91,13 @@ public class GraphJsonWriter {
 
             } else if (node instanceof CaptionNode) {
                 CaptionNode cap = (CaptionNode) node;
-                ObjectNode f = mapper.createObjectNode();
-                f.put("id",      String.valueOf(cap.getRawId()));
-                f.put("caption", cap.getText());
-                f.put("page",    cap.getPage());
-                figures.add(f);
+                if ("figure".equalsIgnoreCase(cap.getKind())) {
+                    ObjectNode f = mapper.createObjectNode();
+                    f.put("id",      String.valueOf(cap.getRawId()));
+                    f.put("caption", cap.getText());
+                    f.put("page",    cap.getPage());
+                    figures.add(f);
+                }
 
             } else if (node instanceof ReferenceEntryNode) {
                 ObjectNode r = mapper.valueToTree(node);

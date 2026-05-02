@@ -98,6 +98,23 @@ class GraphJsonWriterTest {
     }
 
     @Test
+    void testCaptionKindFilter(@TempDir Path tmpDir) throws Exception {
+        List<GraphNode> nodes = List.of(
+                new CaptionNode("figure", "Figure 1", null, "A figure caption", null, 1, null, 100L, 1.0),
+                new CaptionNode("table",  "Table 1",  null, "A table caption",  null, 2, null, 101L, 1.0)
+        );
+        ExtractionResult result = ExtractionResult.ofEnrichedNodes(nodes);
+
+        new GraphJsonWriter().write("cap", tmpDir, result, passTriage(0.9));
+
+        JsonNode root = PLAIN_MAPPER.readTree(tmpDir.resolve("cap-graph.json").toFile());
+        JsonNode figures = root.get("figures");
+        assertNotNull(figures);
+        assertEquals(1, figures.size(), "Only figure captions should appear");
+        assertEquals("A figure caption", figures.get(0).get("caption").asText());
+    }
+
+    @Test
     void testTriageBlockPresent(@TempDir Path tmpDir) throws Exception {
         ExtractionResult result = ExtractionResult.ofEnrichedNodes(Collections.emptyList());
         TriageDecision triage = passTriage(91.5);
