@@ -66,4 +66,11 @@ public class SemanticFormula extends BaseObject {
     public void setNumber(String number) {
         this.number = number;
     }
+
+    /**
+     * Returns true if the equation number has been resolved (non-null, non-empty).
+     */
+    public boolean hasNumber() {
+        return number != null && !number.isEmpty();
+    }
 }

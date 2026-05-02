@@ -33,9 +33,11 @@ import java.io.IOException;
  *   "id": 123,
  *   "page number": 1,
  *   "bounding box": [x1, y1, x2, y2],
- *   "content": "\\frac{a}{b}"
+ *   "content": "\\frac{a}{b}",
+ *   "equation number": "3.1"
  * }
  * </pre>
+ * The {@code "equation number"} field is optional — present only when resolved.
  */
 public class FormulaSerializer extends StdSerializer<SemanticFormula> {
 
@@ -49,7 +51,7 @@ public class FormulaSerializer extends StdSerializer<SemanticFormula> {
         jsonGenerator.writeStartObject();
         SerializerUtil.writeEssentialInfo(jsonGenerator, formula, JsonName.FORMULA_TYPE);
         jsonGenerator.writeStringField(JsonName.CONTENT, formula.getLatex());
-        if (formula.getNumber() != null) {
+        if (formula.hasNumber()) {
             jsonGenerator.writeStringField(JsonName.EQUATION_NUMBER, formula.getNumber());
         }
         jsonGenerator.writeEndObject();
