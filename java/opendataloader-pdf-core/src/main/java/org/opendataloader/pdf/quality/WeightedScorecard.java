@@ -92,6 +92,14 @@ public final class WeightedScorecard {
         }
     }
 
+    /**
+     * Returns a scorecard with default weights (equation=0.4, caption=0.3, citation=0.3).
+     * Used when no external weights file is available (e.g., pip-installed MCP server).
+     */
+    public static WeightedScorecard withDefaultWeights() {
+        return new WeightedScorecard();
+    }
+
     /** Reads a JSON weight file and returns a WeightedScorecard. */
     public static WeightedScorecard fromFile(Path filePath) {
         Objects.requireNonNull(filePath, "filePath must not be null");

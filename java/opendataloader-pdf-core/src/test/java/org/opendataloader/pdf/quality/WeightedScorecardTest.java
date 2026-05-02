@@ -74,4 +74,19 @@ public class WeightedScorecardTest {
         assertTrue(result > 0.0 && result < 1.0,
                 "Expected score in (0,1) but got: " + result);
     }
+
+    @Test
+    void testWithDefaultWeightsDoesNotThrow() {
+        WeightedScorecard scorecard = WeightedScorecard.withDefaultWeights();
+        assertNotNull(scorecard);
+    }
+
+    @Test
+    void testWithDefaultWeightsSumsToOne() {
+        WeightedScorecard scorecard = WeightedScorecard.withDefaultWeights();
+        // totals=0 → all rates return 1.0 (perfect report)
+        ParityReport perfect = new ParityReport(0, 0, 0, 0, 0, 0, 0);
+        double score = scorecard.score(perfect);
+        assertEquals(1.0, score, 0.001);
+    }
 }
