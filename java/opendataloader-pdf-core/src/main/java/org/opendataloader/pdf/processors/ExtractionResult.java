@@ -21,6 +21,7 @@ import org.opendataloader.pdf.graph.GraphBuilder;
 import org.opendataloader.pdf.graph.GraphNode;
 import org.verapdf.wcag.algorithms.entities.IObject;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -43,6 +44,19 @@ public class ExtractionResult {
         this.hybridTimings = hybridTimings;
     }
 
+    private ExtractionResult(List<GraphNode> enrichedNodes) {
+        this.contents = Collections.emptyList();
+        this.graphNodes = Collections.emptyList();
+        this.enrichedGraphNodes = enrichedNodes != null ? Collections.unmodifiableList(enrichedNodes) : Collections.emptyList();
+        this.extractionNs = 0L;
+        this.hybridTimings = null;
+    }
+
+    /** Testing factory — bypasses pipeline, injects pre-built enriched nodes directly. */
+    public static ExtractionResult ofEnrichedNodes(List<GraphNode> nodes) {
+        return new ExtractionResult(nodes);
+    }
+
     public List<List<IObject>> getContents() {
         return contents;
     }
@@ -58,6 +72,10 @@ public class ExtractionResult {
 
     public long getExtractionNs() {
         return extractionNs;
+    }
+
+    public int getPageCount() {
+        return enrichedGraphNodes != null ? enrichedGraphNodes.size() : 0;
     }
 
     public JsonNode getHybridTimings() {
