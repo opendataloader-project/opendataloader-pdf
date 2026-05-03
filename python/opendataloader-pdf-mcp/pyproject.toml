@@ -1,10 +1,23 @@
 [project]
 name = "opendataloader-pdf-mcp"
-version = "0.0.0"
+version = "0.2.0"
 description = "MCP server for OpenDataLoader PDF — convert PDFs to Markdown, JSON, HTML, and more"
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.10"
+keywords = ["pdf", "mcp", "scientific-papers", "ai-agents", "llm", "model-context-protocol"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Text Processing :: Markup",
+]
 dependencies = [
     "mcp[cli]>=1.27.0,<2",
     "opendataloader-pdf",
