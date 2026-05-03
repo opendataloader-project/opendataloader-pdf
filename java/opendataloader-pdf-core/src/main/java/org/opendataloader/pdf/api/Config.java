@@ -64,6 +64,7 @@ public class Config {
     private boolean isGenerateJSON = true;
     private boolean isGenerateText = false;
     private boolean isGenerateTaggedPDF = false;
+    private boolean isGenerateGraphJson = false;
     private boolean useStructTree = false;
     private boolean useHTMLInMarkdown = false;
     private boolean addImageToMarkdown = false;
@@ -274,6 +275,24 @@ public class Config {
 
     public void setGenerateTaggedPDF(boolean generateTaggedPDF) {
         isGenerateTaggedPDF = generateTaggedPDF;
+    }
+
+    /**
+     * Checks if graph-JSON sidecar output generation is enabled.
+     *
+     * @return true if graph-json sidecar should be generated, false otherwise.
+     */
+    public boolean isGenerateGraphJson() {
+        return isGenerateGraphJson;
+    }
+
+    /**
+     * Enables or disables graph-JSON sidecar output generation.
+     *
+     * @param generateGraphJson true to enable, false to disable.
+     */
+    public void setGenerateGraphJson(boolean generateGraphJson) {
+        isGenerateGraphJson = generateGraphJson;
     }
 
     /**

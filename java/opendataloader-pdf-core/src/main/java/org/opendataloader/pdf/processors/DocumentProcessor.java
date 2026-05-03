@@ -17,6 +17,7 @@ package org.opendataloader.pdf.processors;
 
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.processors.readingorder.XYCutPlusPlusSorter;
+import org.opendataloader.pdf.json.GraphJsonWriter;
 import org.opendataloader.pdf.json.JsonWriter;
 import org.opendataloader.pdf.markdown.MarkdownGenerator;
 import org.opendataloader.pdf.markdown.MarkdownGeneratorFactory;
@@ -25,6 +26,13 @@ import org.opendataloader.pdf.html.HtmlGenerator;
 import org.opendataloader.pdf.html.HtmlGeneratorFactory;
 import org.opendataloader.pdf.pdf.PDFWriter;
 import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.quality.HardFailDetector;
+import org.opendataloader.pdf.quality.ParityChecker;
+import org.opendataloader.pdf.quality.ParityReport;
+import org.opendataloader.pdf.quality.QualityGate;
+import org.opendataloader.pdf.quality.TriageDecision;
+import org.opendataloader.pdf.quality.TriagePolicy;
+import org.opendataloader.pdf.quality.WeightedScorecard;
 import org.opendataloader.pdf.text.TextGenerator;
 import org.opendataloader.pdf.utils.ContentSanitizer;
 import org.opendataloader.pdf.utils.ImagesUtils;
@@ -94,7 +102,7 @@ public class DocumentProcessor {
 
         // Phase 2: Output (JSON/MD/HTML/PDF/Text)
         long t0 = System.nanoTime();
-        generateOutputs(inputPdfName, extraction.getContents(), config);
+        generateOutputs(inputPdfName, extraction, config);
         long outputNs = System.nanoTime() - t0;
 
         return new ProcessingResult(extraction.getHybridTimings(), extraction.getExtractionNs(), outputNs);
@@ -349,7 +357,8 @@ public class DocumentProcessor {
         return pagesToProcess == null || pagesToProcess.contains(pageNumber);
     }
 
-    private static void generateOutputs(String inputPdfName, List<List<IObject>> contents, Config config) throws IOException {
+    private static void generateOutputs(String inputPdfName, ExtractionResult extraction, Config config) throws IOException {
+        List<List<IObject>> contents = extraction.getContents();
         // Stdout mode: write primary format to stdout, skip file I/O
         if (config.isOutputStdout()) {
             java.io.Writer stdoutWriter = new java.io.BufferedWriter(
@@ -408,6 +417,28 @@ public class DocumentProcessor {
             try (TextGenerator textGenerator = new TextGenerator(inputPDF, config)) {
                 textGenerator.writeToText(contents);
             }
+        }
+        if (config.isGenerateGraphJson()) {
+            String fileName = inputPDF.getName();
+            String stem = fileName.substring(0, fileName.lastIndexOf('.'));
+            java.nio.file.Path outputDir = java.nio.file.Paths.get(config.getOutputFolder());
+            WeightedScorecard scorecard;
+            try {
+                java.nio.file.Path weightsPath = java.nio.file.Path.of("benchmarks/config/scorecard-weights-v0.json");
+                scorecard = java.nio.file.Files.exists(weightsPath)
+                    ? WeightedScorecard.fromFile(weightsPath)
+                    : WeightedScorecard.withDefaultWeights();
+            } catch (Exception e) {
+                scorecard = WeightedScorecard.withDefaultWeights();
+            }
+            ParityReport parityReport =
+                new ParityChecker().check(extraction);
+            TriageDecision triage = new TriagePolicy(
+                new QualityGate(),
+                scorecard,
+                new HardFailDetector()
+            ).evaluate(parityReport);
+            new GraphJsonWriter().write(stem, outputDir, extraction, triage);
         }
     }
 
