@@ -81,12 +81,12 @@ public class GraphJsonWriter {
             } else if (node instanceof EquationNode) {
                 EquationNode eq = (EquationNode) node;
                 ObjectNode e = mapper.createObjectNode();
-                Long rawId = eq.getRawId();
-                if (rawId != null) { e.put("id", rawId); } else { e.putNull("id"); }
+                Long eqRawId = eq.getRawId();
+                if (eqRawId != null) { e.put("id", eqRawId); } else { e.putNull("id"); }
                 e.put("latex",        eq.getLatex());
                 e.put("display_mode", eq.isDisplayMode());
-                Integer page = eq.getPage();
-                if (page != null) { e.put("page", page); } else { e.putNull("page"); }
+                Integer eqPage = eq.getPage();
+                if (eqPage != null) { e.put("page", eqPage); } else { e.putNull("page"); }
                 if (eq.getNumber() != null) {
                     e.put("equation number", eq.getNumber());
                 }
@@ -96,8 +96,8 @@ public class GraphJsonWriter {
                 CaptionNode cap = (CaptionNode) node;
                 if ("figure".equalsIgnoreCase(cap.getKind())) {
                     ObjectNode f = mapper.createObjectNode();
-                    Long rawId = cap.getRawId();
-                    if (rawId != null) { f.put("id", rawId); } else { f.putNull("id"); }
+                    Long capRawId = cap.getRawId();
+                    if (capRawId != null) { f.put("id", capRawId); } else { f.putNull("id"); }
                     f.put("caption", cap.getText());
                     Integer capPage = cap.getPage();
                     if (capPage != null) { f.put("page", capPage); } else { f.putNull("page"); }
