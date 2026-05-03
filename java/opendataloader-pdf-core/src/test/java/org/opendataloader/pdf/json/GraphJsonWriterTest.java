@@ -47,6 +47,9 @@ class GraphJsonWriterTest {
 
         Path expected = tmpDir.resolve("paper-graph.json");
         assertTrue(expected.toFile().exists(), "paper-graph.json should exist");
+        JsonNode root = new ObjectMapper().readTree(tmpDir.resolve("paper-graph.json").toFile());
+        assertNotNull(root, "output should be valid JSON");
+        assertTrue(root.has("sections"), "root should have sections key");
     }
 
     @Test
@@ -126,5 +129,43 @@ class GraphJsonWriterTest {
         assertNotNull(triageNode);
         assertEquals("PASS", triageNode.get("outcome").asText());
         assertEquals(91.5, triageNode.get("composite_score").asDouble(), 0.001);
+    }
+
+    @Test
+    void testEquationNumberAbsentWhenNoNumber(@TempDir Path tmpDir) throws Exception {
+        List<GraphNode> nodes = List.of(
+                new EquationNode("x^2", true, null, null, 1, null, 5L, 0.9)
+        );
+        ExtractionResult result = ExtractionResult.ofEnrichedNodes(nodes);
+
+        new GraphJsonWriter().write("eqno", tmpDir, result, passTriage(0.9));
+
+        JsonNode root = PLAIN_MAPPER.readTree(tmpDir.resolve("eqno-graph.json").toFile());
+        JsonNode eq = root.get("equations").get(0);
+        assertFalse(eq.has("equation number"), "equation number key should be absent when null");
+    }
+
+    @Test
+    void testCitationsPopulated(@TempDir Path tmpDir) throws Exception {
+        List<GraphNode> nodes = List.of(
+                new CitationNode(List.of("[1]"), List.of("ref1"), null, 2, null, 50L, 1.0)
+        );
+        ExtractionResult result = ExtractionResult.ofEnrichedNodes(nodes);
+
+        new GraphJsonWriter().write("cite", tmpDir, result, passTriage(0.9));
+
+        JsonNode root = PLAIN_MAPPER.readTree(tmpDir.resolve("cite-graph.json").toFile());
+        JsonNode citations = root.get("citations");
+        assertNotNull(citations);
+        assertEquals(1, citations.size(), "citations array should have size 1");
+    }
+
+    @Test
+    void testTriageNullProducesNullField(@TempDir Path tmpDir) throws Exception {
+        new GraphJsonWriter().write("paper", tmpDir,
+                ExtractionResult.ofEnrichedNodes(List.of()), null);
+        JsonNode root = new ObjectMapper().readTree(tmpDir.resolve("paper-graph.json").toFile());
+        assertTrue(root.has("triage"), "triage key should be present");
+        assertTrue(root.get("triage").isNull(), "triage should be JSON null");
     }
 }

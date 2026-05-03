@@ -74,16 +74,19 @@ public class GraphJsonWriter {
                 ObjectNode s = mapper.createObjectNode();
                 s.put("level", h.getLevel());
                 s.put("text",  h.getText());
-                s.put("page",  h.getPage());
+                Integer hPage = h.getPage();
+                if (hPage != null) { s.put("page", hPage); } else { s.putNull("page"); }
                 sections.add(s);
 
             } else if (node instanceof EquationNode) {
                 EquationNode eq = (EquationNode) node;
                 ObjectNode e = mapper.createObjectNode();
-                e.put("id",           String.valueOf(eq.getRawId()));
+                Long rawId = eq.getRawId();
+                if (rawId != null) { e.put("id", rawId); } else { e.putNull("id"); }
                 e.put("latex",        eq.getLatex());
                 e.put("display_mode", eq.isDisplayMode());
-                e.put("page",         eq.getPage());
+                Integer page = eq.getPage();
+                if (page != null) { e.put("page", page); } else { e.putNull("page"); }
                 if (eq.getNumber() != null) {
                     e.put("equation number", eq.getNumber());
                 }
@@ -93,9 +96,11 @@ public class GraphJsonWriter {
                 CaptionNode cap = (CaptionNode) node;
                 if ("figure".equalsIgnoreCase(cap.getKind())) {
                     ObjectNode f = mapper.createObjectNode();
-                    f.put("id",      String.valueOf(cap.getRawId()));
+                    Long rawId = cap.getRawId();
+                    if (rawId != null) { f.put("id", rawId); } else { f.putNull("id"); }
                     f.put("caption", cap.getText());
-                    f.put("page",    cap.getPage());
+                    Integer capPage = cap.getPage();
+                    if (capPage != null) { f.put("page", capPage); } else { f.putNull("page"); }
                     figures.add(f);
                 }
 
@@ -125,6 +130,8 @@ public class GraphJsonWriter {
             }
             t.set("gate_failures", failures);
             root.set("triage", t);
+        } else {
+            root.putNull("triage");
         }
 
         Path out = outputDir.resolve(stem + "-graph.json");
