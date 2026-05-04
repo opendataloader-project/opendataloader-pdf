@@ -370,19 +370,17 @@ public class AutoTaggingProcessor {
 
     private static void setAnnotationContents(PDAnnotation annotation, COSObject annotObj) {
         // Create Annotation struct element
-        // PDF/UA-2 clause 8.9.4.2.1 requires the annotation's Contents and the enclosing
+        // Various PDF/UA riles require the annotation's Contents and the enclosing
         // struct element's Alt to be identical when both are present. Prefer any existing
         // Contents authored on the annotation (accessibility text the author already
-        // wrote), otherwise fall back to URI, then to "Annotation".
+        // wrote), otherwise fall back to URI (for Link only), then to "Annotation".
         String existingContents = annotation.getContents();
 
-        // Preserve the annotation's existing COSString reference when
-        // present — re-encoding would change literal/hex form and
-        // break the equality check.
+        // Preserve the annotation's existing Contents when present
         if (existingContents == null || existingContents.isEmpty()) {
             String altText = null;
             // Get URI from action if available
-            if (ASAtom.LINK.equals(annotation.getSubtype())){
+            if (ASAtom.LINK.equals(annotation.getSubtype())) {
                 PDAction action = annotation.getA();
                 if (action != null && action.getObject() != null && ASAtom.URI.equals(action.getSubtype())) {
                     altText = action.getStringKey(ASAtom.URI);
