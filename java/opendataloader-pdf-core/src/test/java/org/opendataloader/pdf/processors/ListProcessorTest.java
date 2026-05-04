@@ -164,6 +164,27 @@ public class ListProcessorTest {
     }
 
     @Test
+    public void testProcessListsFromDoublesNodeIsNotExpanded() {
+        StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
+        StaticContainers.setIsDataLoader(true);
+        StaticContainers.setAccumulatedNodeMapper(new AccumulatedNodeMapper());
+        List<IObject> contents = new ArrayList<>();
+        SemanticParagraph paragraph = new SemanticParagraph();
+        contents.add(paragraph);
+        paragraph.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 50.0, 120.0, 60.0),
+            "1.5", 10, 50.0)));
+        paragraph.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 40.0, 120.0, 50.0),
+            "2.3", 10, 40.0)));
+        contents = ListProcessor.processListsFromTextNodes(contents);
+        Assertions.assertFalse(contents.stream().anyMatch(o -> o instanceof PDFList),
+            "Doubles-format node should not be expanded into a PDFList");
+        Assertions.assertEquals(1, contents.size(),
+            "Original node count should be unchanged");
+        Assertions.assertInstanceOf(SemanticParagraph.class, contents.get(0),
+            "Original SemanticParagraph should remain in contents");
+    }
+
+    @Test
     public void testCheckNeighborLists() {
         StaticContainers.setIsDataLoader(true);
         List<IObject> pageContents = new ArrayList<>();

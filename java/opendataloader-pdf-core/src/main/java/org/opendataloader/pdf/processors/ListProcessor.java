@@ -490,7 +490,16 @@ public class ListProcessor {
     }
 
     private static boolean isDoubles(List<TextLine> lines) {
+        List<TextLine> labeledLines = new ArrayList<>();
         for (TextLine line : lines) {
+            if (BulletedParagraphUtils.isLabeledLine(line)) {
+                labeledLines.add(line);
+            }
+        }
+        if (labeledLines.isEmpty()) {
+            return false;
+        }
+        for (TextLine line : labeledLines) {
             if (!line.getValue().matches("^\\d+\\.\\d+$")) {
                 return false;
             }
