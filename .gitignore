@@ -71,6 +71,7 @@ logs/
 
 # Git worktrees
 .worktrees/
+.claire/
 
 # Auto-generated reference docs (CI-only, not tracked)
 content/docs/
