@@ -372,6 +372,9 @@ public class AutoTaggingProcessor {
         String existingContents = annotation.getContents();
         // Preserve the annotation's existing Contents when present
         if (existingContents == null || existingContents.isEmpty()) {
+            // Prefer any existing Contents authored on the annotation (accessibility
+            // text the author already wrote), otherwise fall back to URI (for Link only),
+            // then to "Annotation".
             String contentsText = null;
             // Get URI from action if available
             if (ASAtom.LINK.equals(annotation.getSubtype())) {
@@ -380,6 +383,7 @@ public class AutoTaggingProcessor {
                     contentsText = action.getStringKey(ASAtom.URI);
                 }
             }
+            //TODO Use AI to generate descriptions
             if (contentsText == null) {
                 contentsText = "Annotation";
             }
@@ -441,9 +445,7 @@ public class AutoTaggingProcessor {
         COSObject structElement = addStructElement(parent, cosDocument, tag, pageNumber);
 
         // Various PDF/UA riles require the annotation's Contents and the enclosing
-        // struct element's Alt to be identical when both are present. Prefer any existing
-        // Contents authored on the annotation (accessibility text the author already
-        // wrote), otherwise fall back to URI (for Link only), then to "Annotation".
+        // struct element's Alt to be identical when both are present.
         COSObject contents = annotation.getKey(ASAtom.CONTENTS);
         if (contents != null && !contents.empty() && contents.getType() == COSObjType.COS_STRING) {
             structElement.setKey(ASAtom.ALT, contents);
@@ -708,6 +710,7 @@ public class AutoTaggingProcessor {
     }
 
 
+    //PDF/UA-1 rule 7.3-1 / PDF/UA-2 rule 8.2.5.28.2-1
     private static COSObject createFigureStructElemReturning(ImageChunk image, COSObject parent, COSDocument cosDocument) {
         COSObject figureObject = addStructElement(parent, cosDocument, TaggedPDFConstants.FIGURE, image.getPageNumber());
         double[] bbox = {image.getLeftX(), image.getBottomY(), image.getRightX(), image.getTopY()};
@@ -731,6 +734,7 @@ public class AutoTaggingProcessor {
         return figureObject;
     }
 
+    //PDF/UA-1 rule 7.7-1
     private static void createFormulaStructElem(SemanticFormula formula, COSObject parent, COSDocument cosDocument) {
         COSObject formulaObject = addStructElement(parent, cosDocument, TaggedPDFConstants.FORMULA, formula.getPageNumber());
         double[] bbox = {formula.getLeftX(), formula.getBottomY(), formula.getRightX(), formula.getTopY()};
