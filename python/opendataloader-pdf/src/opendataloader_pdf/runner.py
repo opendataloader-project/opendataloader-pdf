@@ -26,7 +26,7 @@ def run_jar(args: List[str], quiet: bool = False) -> str:
                     capture_output=True,
                     text=True,
                     check=True,
-                    encoding=locale.getpreferredencoding(False),
+                    encoding="utf-8",
                 )
                 return result.stdout
 
@@ -36,11 +36,11 @@ def run_jar(args: List[str], quiet: bool = False) -> str:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
-                encoding=locale.getpreferredencoding(False),
+                encoding="utf-8",
             ) as process:
                 output_lines: List[str] = []
                 for line in process.stdout:
-                    sys.stdout.write(line)
+                    sys.stdout.buffer.write(line.encode("utf-8", errors="replace"))
                     output_lines.append(line)
 
                 return_code = process.wait()
