@@ -19,6 +19,7 @@ import org.opendataloader.pdf.utils.BulletedParagraphUtils;
 import org.verapdf.as.ASAtom;
 import org.verapdf.wcag.algorithms.entities.INode;
 import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.*;
 import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
@@ -412,19 +413,26 @@ public class ListProcessor {
             }
 
             SemanticTextNode textNode = (SemanticTextNode) content;
-            PDFList list = buildListFromMultiLineTextNode(textNode);
-            expanded.add(list != null ? list : textNode);
+            List<SemanticTextNode> splitNodes = splitMultiLineListTextNode(textNode);
+            if (splitNodes == null) {
+                expanded.add(textNode);
+            } else {
+                expanded.addAll(splitNodes);
+            }
         }
         return expanded;
     }
 
-    private static PDFList buildListFromMultiLineTextNode(SemanticTextNode textNode) {
+    private static List<SemanticTextNode> splitMultiLineListTextNode(SemanticTextNode textNode) {
+        TextColumn firstColumn = textNode.getFirstColumn();
+        if (firstColumn == null || firstColumn.getLines() == null) {
+            return null;
+        }
+
         List<TextLine> nonSpaceLines = new ArrayList<>();
-        for (TextColumn column : textNode.getColumns()) {
-            for (TextLine line : column.getLines()) {
-                if (!line.getValue().isBlank()) {
-                    nonSpaceLines.add(line);
-                }
+        for (TextLine line : firstColumn.getLines()) {
+            if (!line.getValue().isBlank()) {
+                nonSpaceLines.add(line);
             }
         }
 
@@ -439,21 +447,21 @@ public class ListProcessor {
             return null;
         }
 
-        PDFList list = new PDFList();
-        ListItem currentItem = null;
+        List<SemanticTextNode> splitNodes = new ArrayList<>();
+        SemanticParagraph currentNode = null;
         for (TextLine line : nonSpaceLines) {
             if (BulletedParagraphUtils.isLabeledLine(line)) {
-                currentItem = new ListItem(new BoundingBox(), null);
-                currentItem.add(line);
-                list.add(currentItem);
-            } else if (currentItem != null) {
-                currentItem.add(line);
+                currentNode = new SemanticParagraph();
+                currentNode.add(line);
+                splitNodes.add(currentNode);
+            } else if (currentNode != null) {
+                currentNode.add(line);
             } else {
                 return null;
             }
         }
 
-        return list.getListItems().size() > 1 ? list : null;
+        return splitNodes.size() > 1 ? splitNodes : null;
     }
 
     private static List<ListItemTextInfo> calculateTextChildrenInfo(List<SemanticTextNode> textNodes) {

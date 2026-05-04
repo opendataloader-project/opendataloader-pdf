@@ -110,6 +110,23 @@ public class ListProcessorTest {
     }
 
     @Test
+    public void testProcessListsFromSingleLabeledLineIsNotExpanded() {
+        StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
+        StaticContainers.setIsDataLoader(true);
+        StaticContainers.setAccumulatedNodeMapper(new AccumulatedNodeMapper());
+        List<IObject> contents = new ArrayList<>();
+        SemanticParagraph paragraph = new SemanticParagraph();
+        contents.add(paragraph);
+        paragraph.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 50.0, 120.0, 60.0),
+            "1. Only Item", 10, 50.0)));
+        paragraph.add(new TextLine(new TextChunk(new BoundingBox(0, 24.0, 40.0, 120.0, 50.0),
+            "Continuation text", 10, 40.0)));
+        contents = ListProcessor.processListsFromTextNodes(contents);
+        Assertions.assertFalse(contents.stream().anyMatch(o -> o instanceof PDFList),
+            "Single-label node should not be expanded into a PDFList");
+    }
+
+    @Test
     public void testCheckNeighborLists() {
         StaticContainers.setIsDataLoader(true);
         List<IObject> pageContents = new ArrayList<>();
