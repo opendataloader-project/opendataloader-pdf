@@ -68,6 +68,48 @@ public class ListProcessorTest {
     }
 
     @Test
+    public void testProcessListsFromSingleMultilineTextNode() {
+        StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
+        StaticContainers.setIsDataLoader(true);
+        StaticContainers.setAccumulatedNodeMapper(new AccumulatedNodeMapper());
+        List<IObject> contents = new ArrayList<>();
+        SemanticParagraph paragraph = new SemanticParagraph();
+        contents.add(paragraph);
+        paragraph.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 50.0, 120.0, 60.0),
+            "1. Revenue from Operations", 10, 50.0)));
+        paragraph.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 40.0, 120.0, 50.0),
+            "2. Other Income", 10, 40.0)));
+        paragraph.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 30.0, 120.0, 40.0),
+            "3. Total Income", 10, 30.0)));
+        contents = ListProcessor.processListsFromTextNodes(contents);
+        Assertions.assertEquals(1, contents.size());
+        Assertions.assertTrue(contents.get(0) instanceof PDFList);
+        Assertions.assertEquals(3, ((PDFList) contents.get(0)).getNumberOfListItems());
+    }
+
+    @Test
+    public void testProcessListsFromSingleMultilineTextNodeKeepsContinuationLines() {
+        StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
+        StaticContainers.setIsDataLoader(true);
+        StaticContainers.setAccumulatedNodeMapper(new AccumulatedNodeMapper());
+        List<IObject> contents = new ArrayList<>();
+        SemanticParagraph paragraph = new SemanticParagraph();
+        contents.add(paragraph);
+        paragraph.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 60.0, 160.0, 70.0),
+            "1. Changes in Inventories", 10, 60.0)));
+        paragraph.add(new TextLine(new TextChunk(new BoundingBox(0, 24.0, 50.0, 160.0, 60.0),
+            "Work In Progress", 10, 50.0)));
+        paragraph.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 40.0, 160.0, 50.0),
+            "2. Employee Benefits Expense", 10, 40.0)));
+        contents = ListProcessor.processListsFromTextNodes(contents);
+        Assertions.assertEquals(1, contents.size());
+        Assertions.assertTrue(contents.get(0) instanceof PDFList);
+        PDFList list = (PDFList) contents.get(0);
+        Assertions.assertEquals(2, list.getNumberOfListItems());
+        Assertions.assertEquals(2, list.getListItems().get(0).getLinesNumber());
+    }
+
+    @Test
     public void testCheckNeighborLists() {
         StaticContainers.setIsDataLoader(true);
         List<IObject> pageContents = new ArrayList<>();

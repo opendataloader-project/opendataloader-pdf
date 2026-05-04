@@ -374,6 +374,8 @@ public class ListProcessor {
     }
 
     public static List<IObject> processListsFromTextNodes(List<IObject> contents) {
+        contents = expandMultiLineListTextNodes(contents);
+
         List<SemanticTextNode> textNodes = new ArrayList<>();
         List<Integer> textNodesIndexes = new ArrayList<>();
         for (int index = 0; index < contents.size(); index++) {
@@ -399,6 +401,59 @@ public class ListProcessor {
             }
         }
         return DocumentProcessor.removeNullObjectsFromList(contents);
+    }
+
+    private static List<IObject> expandMultiLineListTextNodes(List<IObject> contents) {
+        List<IObject> expanded = new ArrayList<>(contents.size());
+        for (IObject content : contents) {
+            if (!(content instanceof SemanticTextNode)) {
+                expanded.add(content);
+                continue;
+            }
+
+            SemanticTextNode textNode = (SemanticTextNode) content;
+            PDFList list = buildListFromMultiLineTextNode(textNode);
+            expanded.add(list != null ? list : textNode);
+        }
+        return expanded;
+    }
+
+    private static PDFList buildListFromMultiLineTextNode(SemanticTextNode textNode) {
+        List<TextLine> nonSpaceLines = new ArrayList<>();
+        for (TextColumn column : textNode.getColumns()) {
+            for (TextLine line : column.getLines()) {
+                if (!line.getValue().isBlank()) {
+                    nonSpaceLines.add(line);
+                }
+            }
+        }
+
+        if (nonSpaceLines.size() < 2) {
+            return null;
+        }
+
+        long labeledLineCount = nonSpaceLines.stream()
+            .filter(BulletedParagraphUtils::isLabeledLine)
+            .count();
+        if (labeledLineCount < 2) {
+            return null;
+        }
+
+        PDFList list = new PDFList();
+        ListItem currentItem = null;
+        for (TextLine line : nonSpaceLines) {
+            if (BulletedParagraphUtils.isLabeledLine(line)) {
+                currentItem = new ListItem(new BoundingBox(), null);
+                currentItem.add(line);
+                list.add(currentItem);
+            } else if (currentItem != null) {
+                currentItem.add(line);
+            } else {
+                return null;
+            }
+        }
+
+        return list.getListItems().size() > 1 ? list : null;
     }
 
     private static List<ListItemTextInfo> calculateTextChildrenInfo(List<SemanticTextNode> textNodes) {
