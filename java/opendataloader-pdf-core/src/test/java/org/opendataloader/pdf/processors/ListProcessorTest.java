@@ -185,6 +185,31 @@ public class ListProcessorTest {
     }
 
     @Test
+    public void testProcessListsFromExpandedNodeRestoresOriginalWhenNoListIsBuilt() {
+        StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
+        StaticContainers.setIsDataLoader(true);
+        StaticContainers.setAccumulatedNodeMapper(new AccumulatedNodeMapper());
+        List<IObject> contents = new ArrayList<>();
+        SemanticParagraph paragraph = new SemanticParagraph();
+        contents.add(paragraph);
+        paragraph.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 50.0, 160.0, 60.0),
+            "1. Revenue", 10, 50.0)));
+        paragraph.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 40.0, 160.0, 50.0),
+            "A. Other Income", 10, 40.0)));
+
+        contents = ListProcessor.processListsFromTextNodes(contents);
+
+        Assertions.assertEquals(1, contents.size(),
+            "Original node count should be unchanged after restore");
+        Assertions.assertInstanceOf(SemanticParagraph.class, contents.get(0),
+            "Original SemanticParagraph should be restored when no list is built");
+        Assertions.assertFalse(contents.get(0) instanceof PDFList,
+            "Mixed-label expanded node should not become a PDFList");
+        Assertions.assertEquals(2, ((SemanticParagraph) contents.get(0)).getLinesNumber(),
+            "Restored SemanticParagraph should keep both original lines");
+    }
+
+    @Test
     public void testCheckNeighborLists() {
         StaticContainers.setIsDataLoader(true);
         List<IObject> pageContents = new ArrayList<>();
