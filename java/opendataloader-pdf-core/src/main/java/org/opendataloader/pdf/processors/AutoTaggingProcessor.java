@@ -369,28 +369,22 @@ public class AutoTaggingProcessor {
     }
 
     private static void setAnnotationContents(PDAnnotation annotation, COSObject annotObj) {
-        // Create Annotation struct element
-        // Various PDF/UA riles require the annotation's Contents and the enclosing
-        // struct element's Alt to be identical when both are present. Prefer any existing
-        // Contents authored on the annotation (accessibility text the author already
-        // wrote), otherwise fall back to URI (for Link only), then to "Annotation".
         String existingContents = annotation.getContents();
-
         // Preserve the annotation's existing Contents when present
         if (existingContents == null || existingContents.isEmpty()) {
-            String altText = null;
+            String contentsText = null;
             // Get URI from action if available
             if (ASAtom.LINK.equals(annotation.getSubtype())) {
                 PDAction action = annotation.getA();
                 if (action != null && action.getObject() != null && ASAtom.URI.equals(action.getSubtype())) {
-                    altText = action.getStringKey(ASAtom.URI);
+                    contentsText = action.getStringKey(ASAtom.URI);
                 }
             }
-            if (altText == null) {
-                altText = "Annotation";
+            if (contentsText == null) {
+                contentsText = "Annotation";
             }
             COSObject textObject = COSString.construct(
-                altText.getBytes(StandardCharsets.UTF_16), true);
+                contentsText.getBytes(StandardCharsets.UTF_16), true);
             annotObj.setKey(ASAtom.CONTENTS, textObject);
         }
     }
@@ -445,6 +439,11 @@ public class AutoTaggingProcessor {
             tag = TaggedPDFConstants.ANNOT;
         }
         COSObject structElement = addStructElement(parent, cosDocument, tag, pageNumber);
+
+        // Various PDF/UA riles require the annotation's Contents and the enclosing
+        // struct element's Alt to be identical when both are present. Prefer any existing
+        // Contents authored on the annotation (accessibility text the author already
+        // wrote), otherwise fall back to URI (for Link only), then to "Annotation".
         COSObject contents = annotation.getKey(ASAtom.CONTENTS);
         if (contents != null && !contents.empty() && contents.getType() == COSObjType.COS_STRING) {
             structElement.setKey(ASAtom.ALT, contents);
