@@ -124,6 +124,13 @@ public class ListProcessorTest {
         contents = ListProcessor.processListsFromTextNodes(contents);
         Assertions.assertFalse(contents.stream().anyMatch(o -> o instanceof PDFList),
             "Single-label node should not be expanded into a PDFList");
+        Assertions.assertEquals(1, contents.size(),
+            "Original node count should be unchanged");
+        Assertions.assertInstanceOf(SemanticParagraph.class, contents.get(0),
+            "Original SemanticParagraph should remain in contents");
+        SemanticParagraph result = (SemanticParagraph) contents.get(0);
+        Assertions.assertEquals(2, result.getLinesNumber(),
+            "Original SemanticParagraph lines should remain intact");
     }
 
     @Test
