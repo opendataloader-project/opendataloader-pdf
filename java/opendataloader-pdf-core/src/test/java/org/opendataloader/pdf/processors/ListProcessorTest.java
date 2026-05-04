@@ -134,6 +134,36 @@ public class ListProcessorTest {
     }
 
     @Test
+    public void testProcessListsFromAdjacentExpandedNodesDoesNotRestoreConsumedNode() {
+        StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
+        StaticContainers.setIsDataLoader(true);
+        StaticContainers.setAccumulatedNodeMapper(new AccumulatedNodeMapper());
+        List<IObject> contents = new ArrayList<>();
+
+        SemanticParagraph paragraph1 = new SemanticParagraph();
+        contents.add(paragraph1);
+        paragraph1.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 60.0, 160.0, 70.0),
+            "1. Revenue from Operations", 10, 60.0)));
+        paragraph1.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 50.0, 160.0, 60.0),
+            "2. Other Income", 10, 50.0)));
+
+        SemanticParagraph paragraph2 = new SemanticParagraph();
+        contents.add(paragraph2);
+        paragraph2.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 40.0, 160.0, 50.0),
+            "3. Total Income", 10, 40.0)));
+        paragraph2.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 30.0, 160.0, 40.0),
+            "4. Total Expenses", 10, 30.0)));
+
+        contents = ListProcessor.processListsFromTextNodes(contents);
+
+        Assertions.assertEquals(1, contents.size(),
+            "Consumed expanded nodes should not be restored alongside the merged list");
+        Assertions.assertInstanceOf(PDFList.class, contents.get(0),
+            "Adjacent expanded nodes should collapse into a single PDFList");
+        Assertions.assertEquals(4, ((PDFList) contents.get(0)).getNumberOfListItems());
+    }
+
+    @Test
     public void testCheckNeighborLists() {
         StaticContainers.setIsDataLoader(true);
         List<IObject> pageContents = new ArrayList<>();

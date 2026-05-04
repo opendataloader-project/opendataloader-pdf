@@ -471,15 +471,15 @@ public class ListProcessor {
 
     private static void restoreExpandedTextNodes(List<IObject> contents, List<ExpandedTextNodeCandidate> candidates) {
         for (ExpandedTextNodeCandidate candidate : candidates) {
-            boolean hasList = false;
+            boolean consumedByList = false;
             for (int index = candidate.getStartIndex(); index <= candidate.getEndIndex(); index++) {
                 IObject content = contents.get(index);
-                if (content instanceof PDFList) {
-                    hasList = true;
+                if (content == null || content instanceof PDFList) {
+                    consumedByList = true;
                     break;
                 }
             }
-            if (hasList) {
+            if (consumedByList) {
                 continue;
             }
             contents.set(candidate.getStartIndex(), candidate.getOriginalNode());
