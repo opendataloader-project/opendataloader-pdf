@@ -576,6 +576,39 @@ MPL 2.0 requires file-level copyleft, which often triggers legal review before e
 - [AI Safety Features](https://opendataloader.org/docs/ai-safety)
 - [PDF Accessibility](https://opendataloader.org/docs/accessibility-compliance)
 
+## MCP Server
+
+Use OpenDataLoader PDF directly from AI agents (Claude, Cursor, Codex, Windsurf) via the [Model Context Protocol](https://modelcontextprotocol.io).
+
+```bash
+pip install opendataloader-pdf-mcp
+```
+
+Connect to Claude Code:
+
+```bash
+claude mcp add opendataloader-pdf -- opendataloader-pdf-mcp
+```
+
+Connect to Cursor (`~/.cursor/mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "opendataloader-pdf": {
+      "command": "opendataloader-pdf-mcp"
+    }
+  }
+}
+```
+
+Available tools: `describe_pdf`, `convert_pdf`, `submit_pdf`, `get_job_status`, `cancel_job`, `get_artifact`.
+
+[![PyPI version](https://img.shields.io/pypi/v/opendataloader-pdf-mcp.svg)](https://pypi.org/project/opendataloader-pdf-mcp/)
+[MCP Server README](python/opendataloader-pdf-mcp/README.md) | [PyPI](https://pypi.org/project/opendataloader-pdf-mcp/) | [GitHub](https://github.com/hahahuy/opendataloader-pdf-mcp)
+
+> MCP server contributed by [@hahahuy](https://github.com/hahahuy).
+
 ## Contributing
 
 We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
