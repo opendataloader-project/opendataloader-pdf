@@ -444,7 +444,7 @@ public class AutoTaggingProcessor {
         }
         COSObject structElement = addStructElement(parent, cosDocument, tag, pageNumber);
 
-        // Various PDF/UA riles require the annotation's Contents and the enclosing
+        // PDF/UA-2 rule 8.9.4.2-1 requires the annotation's Contents and the enclosing
         // struct element's Alt to be identical when both are present.
         COSObject contents = annotation.getKey(ASAtom.CONTENTS);
         if (contents != null && !contents.empty() && contents.getType() == COSObjType.COS_STRING) {
@@ -710,11 +710,12 @@ public class AutoTaggingProcessor {
     }
 
 
-    //PDF/UA-1 rule 7.3-1 / PDF/UA-2 rule 8.2.5.28.2-1
+
     private static COSObject createFigureStructElemReturning(ImageChunk image, COSObject parent, COSDocument cosDocument) {
         COSObject figureObject = addStructElement(parent, cosDocument, TaggedPDFConstants.FIGURE, image.getPageNumber());
         double[] bbox = {image.getLeftX(), image.getBottomY(), image.getRightX(), image.getTopY()};
         addAttributeToStructElem(figureObject, ASAtom.LAYOUT, ASAtom.BBOX, COSArray.construct(4, bbox));
+        //PDF/UA-1 rule 7.3-1 / PDF/UA-2 rule 8.2.5.28.2-1
         // Use enriched description if available, otherwise fallback "image N"
         String altText = (image instanceof EnrichedImageChunk && ((EnrichedImageChunk) image).hasDescription())
                 ? ((EnrichedImageChunk) image).sanitizeDescription()
@@ -734,11 +735,12 @@ public class AutoTaggingProcessor {
         return figureObject;
     }
 
-    //PDF/UA-1 rule 7.7-1
+
     private static void createFormulaStructElem(SemanticFormula formula, COSObject parent, COSDocument cosDocument) {
         COSObject formulaObject = addStructElement(parent, cosDocument, TaggedPDFConstants.FORMULA, formula.getPageNumber());
         double[] bbox = {formula.getLeftX(), formula.getBottomY(), formula.getRightX(), formula.getTopY()};
         addAttributeToStructElem(formulaObject, ASAtom.LAYOUT, ASAtom.BBOX, COSArray.construct(4, bbox));
+        //PDF/UA-1 rule 7.7-1
         String altText = formula.getLatex().isEmpty() ? "formula" : formula.getLatex();
         formulaObject.setKey(ASAtom.ALT,
                 COSString.construct(altText.getBytes(StandardCharsets.UTF_16), true));
