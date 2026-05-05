@@ -362,11 +362,14 @@ public class AutoTaggingProcessor {
             if (f != null && (((f & 1) != 0) || (((f & 32) != 0) && (f & 256) != 256))) {
                 return false;
             }
+            ASAtom subtype = annotation.getSubtype();
+            //PDF/UA-2 8.9.2.4.11-1, 8.9.2.4.11-2, 8.9.2.4.9-1
+            if (ASAtom.SOUND.equals(subtype) || ASAtom.MOVIE.equals(subtype) || ASAtom.POPUP.equals(subtype)) {
+                return false;
+            }
             //PDF/UA-2 rules 8.10.1-1, 8.9.2.4.13-1, 8.9.2.4.16-1, 8.9.2.3-1, 8.2.5.20-1,
-            //8.9.2.4.11-1, 8.9.2.4.11-2, 8.9.2.4.9-1
-            return (ASAtom.WIDGET.equals(annotation.getSubtype()) && boundingBox.getHeight() != 0 && boundingBox.getWidth() != 0)
-                || ASAtom.WATERMARK.equals(annotation.getSubtype()) || annotation.isMarkup() || ASAtom.LINK.equals(annotation.getSubtype())
-                || (!ASAtom.SOUND.equals(annotation.getSubtype()) && !ASAtom.MOVIE.equals(annotation.getSubtype()) && !ASAtom.POPUP.equals(annotation.getSubtype()));
+            return (ASAtom.WIDGET.equals(subtype) && boundingBox.getHeight() != 0 && boundingBox.getWidth() != 0)
+                || ASAtom.WATERMARK.equals(subtype) || annotation.isMarkup() || ASAtom.LINK.equals(subtype);
         } else {
             //PDF/UA-1 rules 7.18.1-1, 7.18.4-1, 7.18.5-1
             return !ASAtom.PRINTER_MARK.equals(annotation.getSubtype()) &&
