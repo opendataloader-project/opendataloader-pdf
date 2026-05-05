@@ -352,15 +352,21 @@ public class AutoTaggingProcessor {
     }
 
     private static boolean needToAddAnnotationToStructTree(PDAnnotation annotation, PDPage page, BoundingBox boundingBox) {
+        //PDF/UA-1 rule 7.18.2-1 / PDF/UA-2 rule 8.9.2.4.15-1
+        if (ASAtom.TRAP_NET.equals(annotation.getSubtype())) {
+            return false;
+        }
         if (isPDF2_0) {
             Long f = annotation.getIntegerKey(ASAtom.F);
             //PDF/UA-2 rules 8.9.2.2-1, 8.9.2.2-2
-            if (f != null && (((f & 1) == 0) || (f & 32) == 0 || (f & 256) == 256)) {
+            if (f != null && (((f & 1) != 0) || (((f & 32) != 0) && (f & 256) != 256))) {
                 return false;
             }
-            //PDF/UA-2 rules 8.10.1-1, 8.9.2.4.13-1, 8.9.2.4.16-1, 8.9.2.3-1, 8.2.5.20-1
+            //PDF/UA-2 rules 8.10.1-1, 8.9.2.4.13-1, 8.9.2.4.16-1, 8.9.2.3-1, 8.2.5.20-1,
+            //8.9.2.4.11-1, 8.9.2.4.11-2, 8.9.2.4.9-1
             return (ASAtom.WIDGET.equals(annotation.getSubtype()) && boundingBox.getHeight() != 0 && boundingBox.getWidth() != 0)
-                || ASAtom.WATERMARK.equals(annotation.getSubtype()) || annotation.isMarkup() || ASAtom.LINK.equals(annotation.getSubtype());
+                || ASAtom.WATERMARK.equals(annotation.getSubtype()) || annotation.isMarkup() || ASAtom.LINK.equals(annotation.getSubtype())
+                || (!ASAtom.SOUND.equals(annotation.getSubtype()) && !ASAtom.MOVIE.equals(annotation.getSubtype()) && !ASAtom.POPUP.equals(annotation.getSubtype()));
         } else {
             //PDF/UA-1 rules 7.18.1-1, 7.18.4-1, 7.18.5-1
             return !ASAtom.PRINTER_MARK.equals(annotation.getSubtype()) &&
