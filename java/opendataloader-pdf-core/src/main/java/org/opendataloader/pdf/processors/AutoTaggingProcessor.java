@@ -359,7 +359,7 @@ public class AutoTaggingProcessor {
         if (isPDF2_0) {
             Long f = annotation.getIntegerKey(ASAtom.F);
             //PDF/UA-2 rules 8.9.2.2-1, 8.9.2.2-2
-            if (f != null && (((f & 1) != 0) || (((f & 32) != 0) && (f & 256) != 256))) {
+            if (f != null && ((f & 1) != 0 || ((f & 32) != 0 && (f & 256) == 0))) {
                 return false;
             }
             ASAtom subtype = annotation.getSubtype();
@@ -367,7 +367,7 @@ public class AutoTaggingProcessor {
             if (ASAtom.SOUND.equals(subtype) || ASAtom.MOVIE.equals(subtype) || ASAtom.POPUP.equals(subtype)) {
                 return false;
             }
-            //PDF/UA-2 rules 8.10.1-1, 8.9.2.4.13-1, 8.9.2.4.16-1, 8.9.2.3-1, 8.2.5.20-1,
+            //PDF/UA-2 rules 8.10.1-1, 8.9.2.4.13-1, 8.9.2.4.16-1, 8.9.2.3-1, 8.2.5.20-1
             return (ASAtom.WIDGET.equals(subtype) && boundingBox.getHeight() != 0 && boundingBox.getWidth() != 0)
                 || ASAtom.WATERMARK.equals(subtype) || annotation.isMarkup() || ASAtom.LINK.equals(subtype);
         } else {
