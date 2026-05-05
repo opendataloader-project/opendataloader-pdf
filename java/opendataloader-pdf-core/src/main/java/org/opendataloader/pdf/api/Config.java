@@ -90,6 +90,7 @@ public class Config {
     private final HybridConfig hybridConfig = new HybridConfig();
     private boolean includeHeaderFooter = false;
     private boolean detectStrikethrough = false;
+    private float imageResolution = 2000.0f;
 
     /** Table detection method: default (border-based detection). */
     public static final String TABLE_METHOD_DEFAULT = "default";
@@ -869,6 +870,30 @@ public class Config {
 
     public void setDetectStrikethrough(boolean detectStrikethrough) {
         this.detectStrikethrough = detectStrikethrough;
+    }
+
+    /**
+     * Gets the maximum pixel size for the longest axis when rendering pages for image extraction.
+     * Lower values reduce memory usage at the cost of image resolution.
+     *
+     * @return The maximum pixel size on the longest axis (default: 2000).
+     */
+    public float getImageResolution() {
+        return imageResolution;
+    }
+
+    /**
+     * Sets the maximum pixel size for the longest axis when rendering pages for image extraction.
+     *
+     * @param imageResolution The maximum pixel size (must be > 0).
+     * @throws IllegalArgumentException if the value is not positive.
+     */
+    public void setImageResolution(float imageResolution) {
+        if (imageResolution <= 0) {
+            throw new IllegalArgumentException(
+                String.format("imageResolution must be > 0, got %s", imageResolution));
+        }
+        this.imageResolution = imageResolution;
     }
 
     private boolean outputStdout = false;

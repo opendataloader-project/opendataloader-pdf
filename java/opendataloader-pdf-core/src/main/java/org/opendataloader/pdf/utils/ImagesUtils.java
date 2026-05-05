@@ -95,7 +95,7 @@ public class ImagesUtils {
         int currentImageIndex = StaticLayoutContainers.incrementImageIndex();
         if (currentImageIndex == 1) {
             createImagesDirectory(StaticLayoutContainers.getImagesDirectory());
-            contrastRatioConsumer = StaticLayoutContainers.getContrastRatioConsumer(pdfFilePath, password, false, null);
+            contrastRatioConsumer = StaticLayoutContainers.getContrastRatioConsumer(pdfFilePath, password, false, StaticLayoutContainers.getImageResolution());
         }
         String imageFormat = StaticLayoutContainers.getImageFormat();
         String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, currentImageIndex, imageFormat);
@@ -107,7 +107,7 @@ public class ImagesUtils {
         int pictureIndex = picture.getPictureIndex();
         if (contrastRatioConsumer == null) {
             createImagesDirectory(StaticLayoutContainers.getImagesDirectory());
-            contrastRatioConsumer = StaticLayoutContainers.getContrastRatioConsumer(pdfFilePath, password, false, null);
+            contrastRatioConsumer = StaticLayoutContainers.getContrastRatioConsumer(pdfFilePath, password, false, StaticLayoutContainers.getImageResolution());
         }
         String imageFormat = StaticLayoutContainers.getImageFormat();
         String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, pictureIndex, imageFormat);

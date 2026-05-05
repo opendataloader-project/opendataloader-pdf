@@ -119,4 +119,22 @@ class StaticLayoutContainersTest {
         assertEquals(100, id);
         assertEquals(101, StaticLayoutContainers.getCurrentContentId());
     }
+
+    @Test
+    void testClearContainers_resetsImageResolution() {
+        StaticLayoutContainers.setImageResolution(500.0f);
+        assertEquals(500.0f, StaticLayoutContainers.getImageResolution());
+
+        StaticLayoutContainers.clearContainers();
+
+        assertEquals(2000.0f, StaticLayoutContainers.getImageResolution());
+    }
+
+    @Test
+    void testSetAndGetImageResolution() {
+        assertEquals(2000.0f, StaticLayoutContainers.getImageResolution());
+
+        StaticLayoutContainers.setImageResolution(1000.0f);
+        assertEquals(1000.0f, StaticLayoutContainers.getImageResolution());
+    }
 }
