@@ -59,11 +59,10 @@ public class AutoTaggingProcessor {
      * Tag a PDF document in-memory without saving to disk.
      * Adds structure tree, marked content references, and parent tree to the document.
      *
-     * @param inputPDF  the original PDF file (used for metadata only)
      * @param document  the PDDocument to tag (modified in place)
      * @param contents  extracted content by page
      */
-    public static synchronized void tagDocument(File inputPDF, PDDocument document, List<List<IObject>> contents) throws IOException {
+    public static synchronized void tagDocument(PDDocument document, List<List<IObject>> contents, Float pdfVersion) throws IOException {
         operatorIndexesToStreamInfosMap.clear();
         structParents.clear();
         structParentsIntegers.clear();
@@ -73,7 +72,7 @@ public class AutoTaggingProcessor {
         annotationBBoxesMap.clear();
         currentStructParent = 0;
         imageChunkFigureCounter = 0;
-        isPDF2_0 = document.getVersion() == 2.0F;
+        isPDF2_0 = pdfVersion != null ? pdfVersion == 2.0F : document.getVersion() == 2.0F;
         COSDocument cosDocument = document.getDocument();
         PDCatalog catalog = document.getCatalog();
         COSObject structTreeRoot = createStructTreeRoot(catalog, cosDocument, document);
@@ -90,7 +89,7 @@ public class AutoTaggingProcessor {
      * Tag a PDF document and save to disk. Existing behavior preserved.
      */
     public static synchronized void createTaggedPDF(File inputPDF, String outputFolder, PDDocument document, List<List<IObject>> contents) throws IOException {
-        tagDocument(inputPDF, document, contents);
+        tagDocument(document, contents, null);
         String outputFileName = outputFolder + File.separator +
             inputPDF.getName().substring(0, inputPDF.getName().length() - 4) + "_tagged.pdf";
         document.saveAs(outputFileName);
