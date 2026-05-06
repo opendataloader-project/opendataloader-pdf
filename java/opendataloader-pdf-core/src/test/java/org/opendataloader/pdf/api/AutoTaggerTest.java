@@ -17,7 +17,7 @@ class AutoTaggerTest {
     void tagReturnsDocumentWithStructTree() throws Exception {
         Config config = new Config();
 
-        try (TaggingResult result = AutoTagger.tag(TEST_PDF, config)) {
+        try (TaggingResult result = AutoTagger.tag(TEST_PDF, config, null)) {
             PDDocument doc = result.getDocument();
             assertThat(doc).isNotNull();
             assertThat(doc.getCatalog().getKey(org.verapdf.as.ASAtom.STRUCT_TREE_ROOT).empty())
@@ -30,7 +30,7 @@ class AutoTaggerTest {
     void tagTimingsArePositive() throws Exception {
         Config config = new Config();
 
-        try (TaggingResult result = AutoTagger.tag(TEST_PDF, config)) {
+        try (TaggingResult result = AutoTagger.tag(TEST_PDF, config, null)) {
             assertThat(result.getExtractionNs()).isGreaterThan(0);
             assertThat(result.getTaggingNs()).isGreaterThan(0);
         }
@@ -41,7 +41,7 @@ class AutoTaggerTest {
         Config config = new Config();
         String outputPath = tempDir.resolve("output_tagged.pdf").toString();
 
-        try (TaggingResult result = AutoTagger.tag(TEST_PDF, config)) {
+        try (TaggingResult result = AutoTagger.tag(TEST_PDF, config, null)) {
             result.saveTo(outputPath);
         }
 
@@ -55,7 +55,7 @@ class AutoTaggerTest {
         config.setGenerateJSON(true);
         config.setGenerateMarkdown(true);
 
-        try (TaggingResult result = AutoTagger.tag(TEST_PDF, config)) {
+        try (TaggingResult result = AutoTagger.tag(TEST_PDF, config, null)) {
             assertThat(result.getDocument()).isNotNull();
         }
     }

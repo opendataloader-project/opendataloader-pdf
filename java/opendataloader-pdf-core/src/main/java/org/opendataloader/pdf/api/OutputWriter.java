@@ -25,7 +25,7 @@ import java.io.IOException;
  * tagged PDF) from a pre-computed {@link ExtractionResult}.
  *
  * <p>Use this when you have already run extraction once (e.g. via
- * {@link AutoTagger#tag(String, ExtractionResult)}) and want to emit file
+ * {@link AutoTagger#tag(ExtractionResult, Float)}) and want to emit file
  * outputs from that same result without re-extracting.
  *
  * <p>Typical two-phase usage:
