@@ -419,6 +419,12 @@ public class AutoTaggingProcessor {
                 annotObj.setKey(ASAtom.STRUCT_PARENT, COSInteger.construct(structParentInt));
                 cosDocument.addChangedObject(annotObj);
                 pageChanged = true;
+            } else {
+                if (annotation.knownKey(ASAtom.STRUCT_PARENT)) {
+                    annotation.removeKey(ASAtom.STRUCT_PARENT);
+                    cosDocument.addChangedObject(annotObj);
+                    pageChanged = true;
+                }
             }
         }
         // Flush the Annots array (may be an indirect object separate from the page)
