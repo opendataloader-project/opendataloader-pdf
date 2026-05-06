@@ -420,8 +420,8 @@ public class AutoTaggingProcessor {
                 cosDocument.addChangedObject(annotObj);
                 pageChanged = true;
             } else {
-                if (annotation.knownKey(ASAtom.STRUCT_PARENT)) {
-                    annotation.removeKey(ASAtom.STRUCT_PARENT);
+                if (annotObj.knownKey(ASAtom.STRUCT_PARENT)) {
+                    annotObj.removeKey(ASAtom.STRUCT_PARENT);
                     cosDocument.addChangedObject(annotObj);
                     pageChanged = true;
                 }
