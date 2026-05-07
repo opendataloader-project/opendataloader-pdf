@@ -408,7 +408,7 @@ public class AutoTaggingProcessor {
     //PDF/UA-2 rule 8.4.3-3
     private static void setStringEntry(String contents, COSObject object, String replacementText, ASAtom key,  boolean useFigureCounter) {
         contents = stripPuaCodePoints(contents);
-        if (contents.isEmpty()) {
+        if (contents == null || contents.isEmpty()) {
             if (useFigureCounter) {
                 contents = replacementText + (++imageChunkFigureCounter);
             } else {
