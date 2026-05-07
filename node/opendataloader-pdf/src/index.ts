@@ -37,7 +37,16 @@ function executeJar(args: string[], executionOptions: JarExecutionOptions = {}):
     }
 
     const command = 'java';
-    const commandArgs = ['-jar', jarPath, ...args];
+    // Force headless AWT so macOS doesn't surface a Dock icon (and steal focus)
+    // every time the JVM touches ImageIO/PDFBox rendering. Safe on all OSes —
+    // the CLI never opens a UI window, only manipulates BufferedImages.
+    const commandArgs = [
+      '-Djava.awt.headless=true',
+      '-Dapple.awt.UIElement=true',
+      '-jar',
+      jarPath,
+      ...args,
+    ];
 
     const javaProcess = spawn(command, commandArgs);
 

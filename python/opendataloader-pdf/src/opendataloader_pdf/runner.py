@@ -16,7 +16,18 @@ def run_jar(args: List[str], quiet: bool = False) -> str:
         # Access the embedded JAR inside the package
         jar_ref = resources.files("opendataloader_pdf").joinpath("jar", _JAR_NAME)
         with resources.as_file(jar_ref) as jar_path:
-            command = ["java", "-jar", str(jar_path), *args]
+            # Force headless AWT so macOS doesn't surface a Dock icon (and
+            # steal focus) every time the JVM touches ImageIO/PDFBox
+            # rendering. Safe on all OSes — the CLI never opens a UI window,
+            # only manipulates BufferedImages.
+            command = [
+                "java",
+                "-Djava.awt.headless=true",
+                "-Dapple.awt.UIElement=true",
+                "-jar",
+                str(jar_path),
+                *args,
+            ]
 
             if quiet:
                 # Quiet mode → capture all output

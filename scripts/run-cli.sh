@@ -54,5 +54,6 @@ else
     ARGS=("$@")
 fi
 
-# Run the CLI
-java -jar "$JAR_PATH" "${ARGS[@]}"
+# Run the CLI. Headless flags suppress the macOS Dock icon / focus theft when
+# AWT/ImageIO/PDFBox initialize. Safe on all OSes — the CLI never opens a UI.
+java -Djava.awt.headless=true -Dapple.awt.UIElement=true -jar "$JAR_PATH" "${ARGS[@]}"
