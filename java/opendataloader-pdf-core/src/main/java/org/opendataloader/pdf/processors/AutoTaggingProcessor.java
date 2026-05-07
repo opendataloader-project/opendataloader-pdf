@@ -397,20 +397,19 @@ public class AutoTaggingProcessor {
             if (contentsText == null) {
                 contentsText = replacementText;
             }
-            setStringEntry(contentsText, annotObj, replacementText, ASAtom.CONTENTS);
+            setStringEntry(contentsText, annotObj, replacementText, ASAtom.CONTENTS, false);
         } else {
             if (PUAHelper.containPUA(existingContents)) {
-                setStringEntry(existingContents, annotObj, replacementText, ASAtom.CONTENTS);
+                setStringEntry(existingContents, annotObj, replacementText, ASAtom.CONTENTS, false);
             }
         }
     }
 
-    private static void setStringEntry(String contents, COSObject object, String replacementText, ASAtom key) {
-        if (PUAHelper.containPUA(contents)) {
-            contents = stripPuaCodePoints(contents);
-        }
+    //PDF/UA-2 rule 8.4.3-3
+    private static void setStringEntry(String contents, COSObject object, String replacementText, ASAtom key,  boolean useFigureCounter) {
+        contents = stripPuaCodePoints(contents);
         if (contents.isEmpty()) {
-            if (Objects.equals(replacementText, "image ")) {
+            if (useFigureCounter) {
                 contents = replacementText + (++imageChunkFigureCounter);
             } else {
                 contents = replacementText;
@@ -758,9 +757,7 @@ public class AutoTaggingProcessor {
         // Write as hex string (isHex=true). UTF-16BE code units whose low byte is 0x5C (e.g. U+D55C "한")
         // would be misparsed as a backslash escape inside a PDF literal string, shifting all subsequent
         // bytes by one and producing PUA code points that fail PDF/UA-2 clause 8.4.3.3.
-        setStringEntry(altText, figureObject, replacementText, ASAtom.ALT);
-        figureObject.setKey(ASAtom.ALT,
-                COSString.construct(altText.getBytes(StandardCharsets.UTF_16), true));
+        setStringEntry(altText, figureObject, replacementText, ASAtom.ALT, true);
         cosDocument.addChangedObject(figureObject);
         processImageNode(image, figureObject);
         addCaptionIfPresent(image, figureObject, cosDocument);
@@ -773,9 +770,9 @@ public class AutoTaggingProcessor {
         double[] bbox = {formula.getLeftX(), formula.getBottomY(), formula.getRightX(), formula.getTopY()};
         addAttributeToStructElem(formulaObject, ASAtom.LAYOUT, ASAtom.BBOX, COSArray.construct(4, bbox));
         //PDF/UA-1 rule 7.7-1
-        String replacementText = "formula ";
+        String replacementText = "formula";
         String altText = formula.getLatex().isEmpty() ? replacementText : formula.getLatex();
-        setStringEntry(altText, formulaObject, replacementText, ASAtom.ALT);
+        setStringEntry(altText, formulaObject, replacementText, ASAtom.ALT, false);
         cosDocument.addChangedObject(formulaObject);
         addMcidChildren(formula.getStreamInfos(), formula.getPageNumber(), formulaObject);
     }
