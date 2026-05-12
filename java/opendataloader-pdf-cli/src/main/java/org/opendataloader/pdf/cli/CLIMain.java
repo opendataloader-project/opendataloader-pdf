@@ -85,7 +85,7 @@ public class CLIMain {
         boolean hasFailure = false;
         try {
             for (String argument : arguments) {
-                if (!processPath(new File(argument), config)) {
+                if (!processPath(new File(argument), config, true)) {
                     hasFailure = true;
                 }
             }
@@ -110,15 +110,26 @@ public class CLIMain {
 
     /**
      * Processes a file or directory, returning true if all files succeeded.
+     *
+     * <p>{@code isTopLevel} distinguishes user-provided arguments from files
+     * discovered during directory traversal: a non-PDF given directly on the
+     * command line is reported as an error, while non-PDF files inside a
+     * directory are silently skipped (preserves batch-folder processing).
      */
-    private static boolean processPath(File file, Config config) {
+    private static boolean processPath(File file, Config config, boolean isTopLevel) {
         if (!file.exists()) {
             LOGGER.log(Level.WARNING, "File or folder " + file.getAbsolutePath() + " not found.");
             return false;
         }
         if (file.isDirectory()) {
             return processDirectory(file, config);
-        } else if (file.isFile()) {
+        }
+        if (file.isFile()) {
+            if (isTopLevel && !isPdfFile(file)) {
+                System.out.println("Error: '" + file.getName()
+                    + "' is not a PDF file. Input must be a PDF file or a folder containing PDF files.");
+                return false;
+            }
             return processFile(file, config);
         }
         return true;
@@ -132,7 +143,7 @@ public class CLIMain {
         }
         boolean allSucceeded = true;
         for (File child : children) {
-            if (!processPath(child, config)) {
+            if (!processPath(child, config, false)) {
                 allSucceeded = false;
             }
         }
