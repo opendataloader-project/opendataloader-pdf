@@ -47,6 +47,7 @@ public class AutoTaggingProcessor {
     private static final Map<Integer, COSObject> pageNumberToFirstStructElement = new HashMap<>();
     private static final String FORMULA_REPLACEMENT_TEXT = "formula";
     private static final String IMAGE_REPLACEMENT_TEXT = "image ";
+    private static final String ANNOTATION_REPLACEMENT_TEXT = "Annotation";
     // Namespace for PDF 2.0-only structure types (FENote, etc.), created in createStructTreeRoot.
     private static COSObject pdf2_0Namespace;
     // Caption elements keyed by their linked content ID (Raman's approach from #377)
@@ -381,7 +382,6 @@ public class AutoTaggingProcessor {
 
     private static void setAnnotationContents(PDAnnotation annotation, COSObject annotObj) {
         String existingContents = annotation.getContents();
-        String replacementText = "Annotation";
         // Preserve the annotation's existing Contents when present
         if (existingContents == null || existingContents.isEmpty()) {
             // Prefer any existing Contents authored on the annotation (accessibility
@@ -396,13 +396,10 @@ public class AutoTaggingProcessor {
                 }
             }
             //TODO Use AI to generate descriptions
-            if (contentsText == null) {
-                contentsText = replacementText;
-            }
-            setStringEntry(contentsText, annotObj, replacementText, ASAtom.CONTENTS, false);
+            setStringEntry(contentsText, annotObj, ANNOTATION_REPLACEMENT_TEXT, ASAtom.CONTENTS, false);
         } else {
             if (PUAHelper.containPUA(existingContents)) {
-                setStringEntry(existingContents, annotObj, replacementText, ASAtom.CONTENTS, false);
+                setStringEntry(existingContents, annotObj, ANNOTATION_REPLACEMENT_TEXT, ASAtom.CONTENTS, false);
             }
         }
     }
