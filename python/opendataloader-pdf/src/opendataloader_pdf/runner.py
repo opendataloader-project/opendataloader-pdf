@@ -78,10 +78,14 @@ def run_jar(args: List[str], quiet: bool = False) -> str:
     except subprocess.CalledProcessError as error:
         print("Error running opendataloader-pdf CLI.", file=sys.stderr)
         print(f"Return code: {error.returncode}", file=sys.stderr)
-        if error.output:
-            print(f"Output: {error.output}", file=sys.stderr)
-        if error.stderr:
-            print(f"Stderr: {error.stderr}", file=sys.stderr)
-        if error.stdout:
-            print(f"Stdout: {error.stdout}", file=sys.stderr)
+        # Streaming mode already wrote the JAR's output live to stdout, so
+        # re-printing the captured copy would duplicate it. Only surface the
+        # captured streams in quiet mode, where the caller has not seen them.
+        # Note: CalledProcessError.output and .stdout are aliases for the same
+        # attribute — printing both produces the same content twice.
+        if quiet:
+            if error.stdout:
+                print(f"Stdout: {error.stdout}", file=sys.stderr)
+            if error.stderr:
+                print(f"Stderr: {error.stderr}", file=sys.stderr)
         raise
