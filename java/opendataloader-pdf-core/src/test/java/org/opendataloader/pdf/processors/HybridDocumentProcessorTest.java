@@ -484,10 +484,12 @@ public class HybridDocumentProcessorTest {
         Assertions.assertEquals(pages, allChunked);
     }
 
-    // failFastIfBackendFailedWithoutFallback — PDFDLOSP-11 regression tests.
+    // failFastIfBackendFailedWithoutFallback — fail-fast contract for backend failures.
 
     @Test
     public void testFailFast_EmptyFailedPages_NoFallback_DoesNotThrow() throws Exception {
+        // Contract: no failed pages means processing succeeded — never throw,
+        // regardless of fallback flag.
         HybridConfig config = new HybridConfig();
         config.setFallbackToJava(false);
 
@@ -504,6 +506,8 @@ public class HybridDocumentProcessorTest {
 
     @Test
     public void testFailFast_NonEmptyFailedPages_WithFallback_DoesNotThrow() throws Exception {
+        // Contract: when fallback is enabled, failed pages are reprocessed via Java
+        // path elsewhere — this helper must stay silent and never throw.
         HybridConfig config = new HybridConfig();
         config.setFallbackToJava(true);
 
@@ -516,8 +520,9 @@ public class HybridDocumentProcessorTest {
 
     @Test
     public void testFailFast_AllPagesFailed_NoFallback_ThrowsWithPageNumbers() {
-        // PDFDLOSP-11 scenario: every backend page failed (e.g., 500 response per chunk)
-        // and fallback is disabled. Must throw — without this the CLI exits 0 with empty JSON.
+        // Contract: backend left every page unprocessed and fallback is disabled —
+        // throw so the caller (CLI / library wrapper) can surface a non-zero exit
+        // instead of producing an empty result silently.
         HybridConfig config = new HybridConfig();
         config.setFallbackToJava(false);
 
@@ -529,8 +534,8 @@ public class HybridDocumentProcessorTest {
         java.io.IOException ex = Assertions.assertThrows(java.io.IOException.class, () ->
             HybridDocumentProcessor.failFastIfBackendFailedWithoutFallback(failed, config));
 
-        // Message must list failed pages in 1-indexed form so users can identify them
-        // from stderr without re-running with verbose logs.
+        // Message must carry enough information that automation reading stderr can
+        // identify which pages failed without re-running with verbose logs.
         Assertions.assertTrue(ex.getMessage().contains("21 page(s)"),
             "message should include failed page count: " + ex.getMessage());
         Assertions.assertTrue(ex.getMessage().contains("1") && ex.getMessage().contains("21"),
@@ -541,9 +546,10 @@ public class HybridDocumentProcessorTest {
 
     @Test
     public void testFailFast_PartialPagesFailed_NoFallback_ThrowsWithPageNumbers() {
-        // PDFDLOSP-11 also affects partial_success — some pages succeed, others fail,
-        // and fallback is disabled. Earlier behavior would log WARN and continue,
-        // returning exit 0 with sparse JSON. Must also throw.
+        // Contract: partial failure is treated the same as total failure when
+        // fallback is disabled — any unprocessed page must surface as a non-zero
+        // exit, otherwise downstream consumers cannot tell a sparse result from
+        // a successful one.
         HybridConfig config = new HybridConfig();
         config.setFallbackToJava(false);
 
