@@ -289,7 +289,7 @@ public class HybridDocumentProcessor {
     /**
      * Fails fast when the backend left pages unprocessed and fallback to Java is disabled.
      * Without this, the CLI would exit 0 with a sparse JSON that drops failed pages,
-     * making backend failures invisible to automation. See PDFDLOSP-11.
+     * making backend failures invisible to automation.
      *
      * @param backendFailedPages 0-indexed pages that the backend failed to process.
      * @param hybridConfig       Hybrid configuration; consulted for the fallback flag.
