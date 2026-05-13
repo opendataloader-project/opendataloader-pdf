@@ -18,7 +18,10 @@ package org.opendataloader.pdf.cli;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -107,5 +110,116 @@ class CLIMainTest {
         int exitCode = CLIMain.run(new String[]{"/nonexistent/path/file.pdf"});
         assertNotEquals(0, exitCode,
             "Exit code must be non-zero when input file does not exist");
+    }
+
+    /**
+     * A non-PDF file given directly on the command line must produce a clear
+     * error message on stdout and a non-zero exit code, instead of silently
+     * exiting with success.
+     *
+     * <p>Regression test for PDFDLOSP-5.
+     */
+    @Test
+    void testNonPdfTopLevelArgumentEmitsErrorAndFails() throws IOException {
+        Path png = tempDir.resolve("abcd.png");
+        Files.write(png, new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47});
+
+        String stdout = captureStdoutOf(() -> CLIMain.run(new String[]{png.toString()}));
+
+        assertTrue(stdout.contains("'abcd.png' is not a PDF file"),
+            "stdout must mention the offending file name and that it is not a PDF; got: " + stdout);
+        assertTrue(stdout.contains("Input must be a PDF file or a folder containing PDF files"),
+            "stdout must guide the user to valid input; got: " + stdout);
+    }
+
+    @Test
+    void testNonPdfTopLevelArgumentReturnsNonZeroExitCode() throws IOException {
+        Path png = tempDir.resolve("abcd.png");
+        Files.write(png, new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47});
+
+        int exitCode = CLIMain.run(new String[]{png.toString()});
+
+        assertNotEquals(0, exitCode,
+            "Exit code must be non-zero when the top-level argument is not a PDF");
+    }
+
+    /**
+     * Non-PDF files inside a directory must continue to be silently skipped —
+     * batch-folder processing with mixed file types is a legitimate use case
+     * and must not regress.
+     */
+    @Test
+    void testNonPdfFileInsideDirectoryIsSilentlySkipped() throws IOException {
+        Path dir = tempDir.resolve("mixed");
+        Files.createDirectory(dir);
+        Files.write(dir.resolve("note.png"), new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47});
+        Files.write(dir.resolve("readme.txt"), "hello".getBytes(StandardCharsets.UTF_8));
+
+        String stdout = captureStdoutOf(() -> CLIMain.run(new String[]{dir.toString()}));
+
+        assertFalse(stdout.contains("is not a PDF file"),
+            "Files discovered during directory traversal must not trigger the top-level error; got: " + stdout);
+    }
+
+    @Test
+    void testDirectoryWithOnlyNonPdfFilesReturnsZero() throws IOException {
+        Path dir = tempDir.resolve("non-pdf-only");
+        Files.createDirectory(dir);
+        Files.write(dir.resolve("note.png"), new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47});
+
+        int exitCode = CLIMain.run(new String[]{dir.toString()});
+
+        assertEquals(0, exitCode,
+            "Directories containing only non-PDF files must succeed (silent skip)");
+    }
+
+    /**
+     * When the command line mixes a valid PDF argument with a top-level non-PDF
+     * argument, the run must fail overall but only the non-PDF entry should
+     * produce the user-facing error message.
+     */
+    @Test
+    void testMixedTopLevelArgumentsReportOnlyNonPdfAndFailOverall() throws IOException {
+        Path png = tempDir.resolve("note.png");
+        Files.write(png, new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47});
+        Path pdf = tempDir.resolve("doc.pdf");
+        Files.write(pdf, "%PDF-1.4 minimal".getBytes(StandardCharsets.UTF_8));
+
+        String[] stdoutHolder = new String[1];
+        int exitCode = (int) runCapturingStdout(
+            () -> CLIMain.run(new String[]{pdf.toString(), png.toString()}),
+            stdoutHolder);
+
+        assertNotEquals(0, exitCode,
+            "Exit code must be non-zero when any top-level argument is not a PDF");
+        assertTrue(stdoutHolder[0].contains("'note.png' is not a PDF file"),
+            "stdout must call out the non-PDF argument by name; got: " + stdoutHolder[0]);
+    }
+
+    private static String captureStdoutOf(Runnable action) {
+        String[] holder = new String[1];
+        runCapturingStdout(() -> {
+            action.run();
+            return 0;
+        }, holder);
+        return holder[0];
+    }
+
+    // System.setOut is JVM-global; this helper assumes sequential test
+    // execution (JUnit 5 + maven-surefire default). Revisit if parallel
+    // test execution is enabled — concurrent captures would interleave.
+    private static long runCapturingStdout(java.util.concurrent.Callable<Integer> action, String[] stdoutHolder) {
+        PrintStream originalOut = System.out;
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(buffer, true, StandardCharsets.UTF_8));
+        try {
+            int exitCode = action.call();
+            stdoutHolder[0] = buffer.toString(StandardCharsets.UTF_8);
+            return exitCode;
+        } catch (Exception exception) {
+            throw new RuntimeException(exception);
+        } finally {
+            System.setOut(originalOut);
+        }
     }
 }

@@ -33,6 +33,8 @@ public class CLIMain {
 
     private static final String HELP = "[options] <INPUT FILE OR FOLDER>...\n Options:";
 
+    private enum InputSource { CLI_ARGUMENT, DIRECTORY_CHILD }
+
     public static void main(String[] args) {
         int exitCode = run(args);
         if (exitCode != 0) {
@@ -85,7 +87,7 @@ public class CLIMain {
         boolean hasFailure = false;
         try {
             for (String argument : arguments) {
-                if (!processPath(new File(argument), config)) {
+                if (!processPath(new File(argument), config, InputSource.CLI_ARGUMENT)) {
                     hasFailure = true;
                 }
             }
@@ -110,15 +112,27 @@ public class CLIMain {
 
     /**
      * Processes a file or directory, returning true if all files succeeded.
+     *
+     * <p>{@code source} distinguishes user-provided arguments
+     * ({@link InputSource#CLI_ARGUMENT}) from files discovered during directory
+     * traversal ({@link InputSource#DIRECTORY_CHILD}): a non-PDF given directly
+     * on the command line is reported as an error, while non-PDF files inside a
+     * directory are silently skipped (preserves batch-folder processing).
      */
-    private static boolean processPath(File file, Config config) {
+    private static boolean processPath(File file, Config config, InputSource source) {
         if (!file.exists()) {
             LOGGER.log(Level.WARNING, "File or folder " + file.getAbsolutePath() + " not found.");
             return false;
         }
         if (file.isDirectory()) {
             return processDirectory(file, config);
-        } else if (file.isFile()) {
+        }
+        if (file.isFile()) {
+            if (source == InputSource.CLI_ARGUMENT && !isPdfFile(file)) {
+                System.out.println("Error: '" + file.getName()
+                    + "' is not a PDF file. Input must be a PDF file or a folder containing PDF files.");
+                return false;
+            }
             return processFile(file, config);
         }
         return true;
@@ -132,7 +146,7 @@ public class CLIMain {
         }
         boolean allSucceeded = true;
         for (File child : children) {
-            if (!processPath(child, config)) {
+            if (!processPath(child, config, InputSource.DIRECTORY_CHILD)) {
                 allSucceeded = false;
             }
         }
