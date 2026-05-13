@@ -1,6 +1,7 @@
 package org.opendataloader.pdf.processors;
 
 import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.entities.EnrichedImageChunk;
 import org.verapdf.gf.model.impl.sa.GFSANode;
 import org.verapdf.wcag.algorithms.entities.*;
@@ -148,6 +149,7 @@ public class TaggedDocumentProcessor {
                 contentsStack.peek().add(object);
             }
         }
+        object.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
     }
 
     private static void processParagraph(INode paragraph) {
@@ -213,6 +215,7 @@ public class TaggedDocumentProcessor {
                 listItem.getContents().add(content);
             }
         }
+        listItem.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
         return listItem;
     }
 
@@ -334,6 +337,7 @@ public class TaggedDocumentProcessor {
             cellBoundingBox.union(content.getBoundingBox());
         }
         cell.setBoundingBox(cellBoundingBox);
+        cell.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
     }
 
     private static void processChildContents(INode elem, List<IObject> contents) {
@@ -354,6 +358,7 @@ public class TaggedDocumentProcessor {
                 rows[rowNumber].getCells()[colNumber] = table.get(rowNumber).get(colNumber);
                 if (rows[rowNumber].getCell(colNumber) == null) {
                     rows[rowNumber].getCells()[colNumber] = new TableBorderCell(rowNumber, colNumber, 1, 1, 0L);
+                    rows[rowNumber].getCells()[colNumber].setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
                 }
             }
         }
