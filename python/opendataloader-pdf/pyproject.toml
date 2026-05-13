@@ -19,7 +19,7 @@ hybrid = [
     "docling[easyocr]>=2.91.0",
     "fastapi>=0.136.1",
     "uvicorn>=0.46.0",
-    "python-multipart>=0.0.26",
+    "python-multipart>=0.0.28",
 ]
 
 [project.scripts]
