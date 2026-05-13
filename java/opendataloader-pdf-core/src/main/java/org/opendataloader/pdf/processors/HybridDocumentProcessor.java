@@ -263,8 +263,9 @@ public class HybridDocumentProcessor {
                 );
                 backendResults.putAll(fallbackResults);
             } else {
-                LOGGER.log(Level.WARNING, "Backend returned partial_success: {0} page(s) failed (pages {1}), fallback disabled — skipping failed pages",
+                LOGGER.log(Level.WARNING, "Backend returned partial_success: {0} page(s) failed (pages {1}), fallback disabled — failing fast",
                     new Object[]{backendFailedPages.size(), failedPages1Indexed});
+                failFastIfBackendFailedWithoutFallback(backendFailedPages, config.getHybridConfig());
             }
         }
 
@@ -283,6 +284,30 @@ public class HybridDocumentProcessor {
             contents.add(new ArrayList<>());
         }
         return contents;
+    }
+
+    /**
+     * Fails fast when the backend left pages unprocessed and fallback to Java is disabled.
+     * Without this, the CLI would exit 0 with a sparse JSON that drops failed pages,
+     * making backend failures invisible to automation. See PDFDLOSP-11.
+     *
+     * @param backendFailedPages 0-indexed pages that the backend failed to process.
+     * @param hybridConfig       Hybrid configuration; consulted for the fallback flag.
+     * @throws IOException if {@code backendFailedPages} is non-empty and
+     *                     {@code hybridConfig.isFallbackToJava()} returns false. The
+     *                     exception message lists the 1-indexed failed page numbers.
+     */
+    static void failFastIfBackendFailedWithoutFallback(
+            Set<Integer> backendFailedPages,
+            HybridConfig hybridConfig) throws IOException {
+        if (backendFailedPages.isEmpty() || hybridConfig.isFallbackToJava()) {
+            return;
+        }
+        List<Integer> failedPages1Indexed = backendFailedPages.stream()
+            .map(p -> p + 1).sorted().collect(Collectors.toList());
+        throw new IOException(String.format(
+            "Backend processing failed for %d page(s) with fallback disabled: pages %s",
+            backendFailedPages.size(), failedPages1Indexed));
     }
 
     /**

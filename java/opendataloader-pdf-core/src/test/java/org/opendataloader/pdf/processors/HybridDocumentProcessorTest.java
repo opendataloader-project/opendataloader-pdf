@@ -483,4 +483,81 @@ public class HybridDocumentProcessorTest {
         }
         Assertions.assertEquals(pages, allChunked);
     }
+
+    // failFastIfBackendFailedWithoutFallback — PDFDLOSP-11 regression tests.
+
+    @Test
+    public void testFailFast_EmptyFailedPages_NoFallback_DoesNotThrow() throws Exception {
+        HybridConfig config = new HybridConfig();
+        config.setFallbackToJava(false);
+
+        HybridDocumentProcessor.failFastIfBackendFailedWithoutFallback(new HashSet<>(), config);
+    }
+
+    @Test
+    public void testFailFast_EmptyFailedPages_WithFallback_DoesNotThrow() throws Exception {
+        HybridConfig config = new HybridConfig();
+        config.setFallbackToJava(true);
+
+        HybridDocumentProcessor.failFastIfBackendFailedWithoutFallback(new HashSet<>(), config);
+    }
+
+    @Test
+    public void testFailFast_NonEmptyFailedPages_WithFallback_DoesNotThrow() throws Exception {
+        HybridConfig config = new HybridConfig();
+        config.setFallbackToJava(true);
+
+        Set<Integer> failed = new HashSet<>();
+        failed.add(0);
+        failed.add(3);
+
+        HybridDocumentProcessor.failFastIfBackendFailedWithoutFallback(failed, config);
+    }
+
+    @Test
+    public void testFailFast_AllPagesFailed_NoFallback_ThrowsWithPageNumbers() {
+        // PDFDLOSP-11 scenario: every backend page failed (e.g., 500 response per chunk)
+        // and fallback is disabled. Must throw — without this the CLI exits 0 with empty JSON.
+        HybridConfig config = new HybridConfig();
+        config.setFallbackToJava(false);
+
+        Set<Integer> failed = new HashSet<>();
+        for (int i = 0; i < 21; i++) {
+            failed.add(i);
+        }
+
+        java.io.IOException ex = Assertions.assertThrows(java.io.IOException.class, () ->
+            HybridDocumentProcessor.failFastIfBackendFailedWithoutFallback(failed, config));
+
+        // Message must list failed pages in 1-indexed form so users can identify them
+        // from stderr without re-running with verbose logs.
+        Assertions.assertTrue(ex.getMessage().contains("21 page(s)"),
+            "message should include failed page count: " + ex.getMessage());
+        Assertions.assertTrue(ex.getMessage().contains("1") && ex.getMessage().contains("21"),
+            "message should include 1-indexed page numbers: " + ex.getMessage());
+        Assertions.assertTrue(ex.getMessage().contains("fallback disabled"),
+            "message should explain why processing failed: " + ex.getMessage());
+    }
+
+    @Test
+    public void testFailFast_PartialPagesFailed_NoFallback_ThrowsWithPageNumbers() {
+        // PDFDLOSP-11 also affects partial_success — some pages succeed, others fail,
+        // and fallback is disabled. Earlier behavior would log WARN and continue,
+        // returning exit 0 with sparse JSON. Must also throw.
+        HybridConfig config = new HybridConfig();
+        config.setFallbackToJava(false);
+
+        Set<Integer> failed = new HashSet<>();
+        failed.add(1); // page 2 (1-indexed)
+        failed.add(5); // page 6
+        failed.add(20); // page 21
+
+        java.io.IOException ex = Assertions.assertThrows(java.io.IOException.class, () ->
+            HybridDocumentProcessor.failFastIfBackendFailedWithoutFallback(failed, config));
+
+        Assertions.assertTrue(ex.getMessage().contains("3 page(s)"),
+            "message should include failed page count: " + ex.getMessage());
+        Assertions.assertTrue(ex.getMessage().contains("2") && ex.getMessage().contains("6") && ex.getMessage().contains("21"),
+            "message should include 1-indexed page numbers: " + ex.getMessage());
+    }
 }
