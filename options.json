@@ -137,6 +137,14 @@
       "description": "Directory for extracted images"
     },
     {
+      "name": "image-resolution",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": "2000",
+      "description": "Max pixel size for the longest axis when rendering pages for image extraction. Lower values reduce memory usage. Default: 2000"
+    },
+    {
       "name": "pages",
       "shortName": null,
       "type": "string",

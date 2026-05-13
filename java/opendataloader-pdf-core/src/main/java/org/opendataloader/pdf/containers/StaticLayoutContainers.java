@@ -41,6 +41,7 @@ public class StaticLayoutContainers {
     private static final ThreadLocal<String> imagesDirectory = new ThreadLocal<>();
     private static final ThreadLocal<Boolean> embedImages = new ThreadLocal<>();
     private static final ThreadLocal<String> imageFormat = new ThreadLocal<>();
+    private static final ThreadLocal<Float> imageResolution = ThreadLocal.withInitial(() -> 2000.0f);
     private static final ThreadLocal<Map<Integer, Double>> replacementCharRatios = ThreadLocal.withInitial(ConcurrentHashMap::new);
 
     public static void clearContainers() {
@@ -53,6 +54,7 @@ public class StaticLayoutContainers {
         imagesDirectory.set("");
         embedImages.set(false);
         imageFormat.set(Config.IMAGE_FORMAT_PNG);
+        imageResolution.remove();
         replacementCharRatios.get().clear();
     }
 
@@ -147,6 +149,14 @@ public class StaticLayoutContainers {
 
     public static void setImageFormat(String format) {
         StaticLayoutContainers.imageFormat.set(format);
+    }
+
+    public static Float getImageResolution() {
+        return imageResolution.get();
+    }
+
+    public static void setImageResolution(Float resolution) {
+        StaticLayoutContainers.imageResolution.set(resolution);
     }
 
     public static void setReplacementCharRatio(int pageNumber, double ratio) {

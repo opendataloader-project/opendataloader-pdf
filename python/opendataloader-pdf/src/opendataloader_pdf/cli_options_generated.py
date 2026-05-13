@@ -163,6 +163,15 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "description": "Directory for extracted images",
     },
     {
+        "name": "image-resolution",
+        "python_name": "image_resolution",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": "2000",
+        "description": "Max pixel size for the longest axis when rendering pages for image extraction. Lower values reduce memory usage. Default: 2000",
+    },
+    {
         "name": "pages",
         "python_name": "pages",
         "short_name": None,

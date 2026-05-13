@@ -466,6 +466,7 @@ public class DocumentProcessor {
 
         File inputPDF = new File(inputPdfName);
         new File(config.getOutputFolder()).mkdirs();
+        StaticLayoutContainers.setImageResolution(config.getImageResolution());
         if (!config.isImageOutputOff() && (config.isGenerateHtml() || config.isGenerateMarkdown() || config.isGenerateJSON())) {
             String imagesDirectory;
             if (config.getImageDir() != null && !config.getImageDir().isEmpty()) {

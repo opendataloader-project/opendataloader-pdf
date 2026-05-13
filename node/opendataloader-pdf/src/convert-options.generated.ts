@@ -39,6 +39,8 @@ export interface ConvertOptions {
   imageFormat?: string;
   /** Directory for extracted images */
   imageDir?: string;
+  /** Max pixel size for the longest axis when rendering pages for image extraction. Lower values reduce memory usage. Default: 2000 */
+  imageResolution?: string;
   /** Pages to extract (e.g., "1,3,5-7"). Default: all pages */
   pages?: string;
   /** Include page headers and footers in output */
@@ -88,6 +90,7 @@ export interface CliOptions {
   imageOutput?: string;
   imageFormat?: string;
   imageDir?: string;
+  imageResolution?: string;
   pages?: string;
   includeHeaderFooter?: boolean;
   detectStrikethrough?: boolean;
@@ -159,6 +162,9 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   }
   if (cliOptions.imageDir) {
     convertOptions.imageDir = cliOptions.imageDir;
+  }
+  if (cliOptions.imageResolution) {
+    convertOptions.imageResolution = cliOptions.imageResolution;
   }
   if (cliOptions.pages) {
     convertOptions.pages = cliOptions.pages;
@@ -271,6 +277,9 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.imageDir) {
     args.push('--image-dir', options.imageDir);
+  }
+  if (options.imageResolution) {
+    args.push('--image-resolution', options.imageResolution);
   }
   if (options.pages) {
     args.push('--pages', options.pages);

@@ -335,4 +335,39 @@ class ConfigTest {
         // This will throw "Invalid page range format" because "-1" looks like a range
         assertTrue(exception.getMessage().contains("Invalid page range format"));
     }
+
+    // ===== Image Resolution Tests =====
+
+    @Test
+    void testDefaultImageResolution() {
+        Config config = new Config();
+        assertEquals(2000.0f, config.getImageResolution());
+    }
+
+    @Test
+    void testSetImageResolution() {
+        Config config = new Config();
+        config.setImageResolution(1000.0f);
+        assertEquals(1000.0f, config.getImageResolution());
+    }
+
+    @Test
+    void testSetImageResolutionZeroThrows() {
+        Config config = new Config();
+        IllegalArgumentException exception = assertThrows(
+            IllegalArgumentException.class,
+            () -> config.setImageResolution(0)
+        );
+        assertTrue(exception.getMessage().contains("must be > 0"));
+    }
+
+    @Test
+    void testSetImageResolutionNegativeThrows() {
+        Config config = new Config();
+        IllegalArgumentException exception = assertThrows(
+            IllegalArgumentException.class,
+            () -> config.setImageResolution(-100)
+        );
+        assertTrue(exception.getMessage().contains("must be > 0"));
+    }
 }

@@ -134,6 +134,9 @@ public class CLIOptions {
     private static final String IMAGE_DIR_LONG_OPTION = "image-dir";
     private static final String IMAGE_DIR_DESC = "Directory for extracted images";
 
+    private static final String IMAGE_RESOLUTION_LONG_OPTION = "image-resolution";
+    private static final String IMAGE_RESOLUTION_DESC = "Max pixel size for the longest axis when rendering pages for image extraction. Lower values reduce memory usage. Default: 2000";
+
     // ===== Pages =====
     private static final String PAGES_LONG_OPTION = "pages";
     private static final String PAGES_DESC = "Pages to extract (e.g., \"1,3,5-7\"). Default: all pages";
@@ -245,6 +248,7 @@ public class CLIOptions {
             new OptionDefinition(IMAGE_OUTPUT_LONG_OPTION, null, "string", "external", IMAGE_OUTPUT_DESC, true),
             new OptionDefinition(IMAGE_FORMAT_LONG_OPTION, null, "string", "png", IMAGE_FORMAT_DESC, true),
             new OptionDefinition(IMAGE_DIR_LONG_OPTION, null, "string", null, IMAGE_DIR_DESC, true),
+            new OptionDefinition(IMAGE_RESOLUTION_LONG_OPTION, null, "string", "2000", IMAGE_RESOLUTION_DESC, true),
             new OptionDefinition(PAGES_LONG_OPTION, null, "string", null, PAGES_DESC, true),
             new OptionDefinition(INCLUDE_HEADER_FOOTER_LONG_OPTION, null, "boolean", false,
                     INCLUDE_HEADER_FOOTER_DESC, true),
@@ -377,6 +381,7 @@ public class CLIOptions {
         applyFormatOption(config, commandLine);
         applyTableMethodOption(config, commandLine);
         applyImageOptions(config, commandLine);
+        applyImageResolutionOption(config, commandLine);
         applyPagesOption(config, commandLine);
         applyHybridOptions(config, commandLine);
         applyThreadsOption(config, commandLine);
@@ -440,6 +445,29 @@ public class CLIOptions {
         if (commandLine.hasOption(IMAGE_DIR_LONG_OPTION)) {
             config.setImageDir(commandLine.getOptionValue(IMAGE_DIR_LONG_OPTION));
         }
+    }
+
+    private static void applyImageResolutionOption(Config config, CommandLine commandLine) {
+        if (!commandLine.hasOption(IMAGE_RESOLUTION_LONG_OPTION)) {
+            return;
+        }
+        String value = commandLine.getOptionValue(IMAGE_RESOLUTION_LONG_OPTION);
+        if (value == null || value.trim().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Option --image-resolution requires a positive number");
+        }
+        float resolution;
+        try {
+            resolution = Float.parseFloat(value.trim());
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(
+                    String.format("Option --image-resolution requires a positive number, got '%s'", value));
+        }
+        if (resolution <= 0) {
+            throw new IllegalArgumentException(
+                    String.format("Option --image-resolution requires a positive number, got %s", resolution));
+        }
+        config.setImageResolution(resolution);
     }
 
     private static void applyPagesOption(Config config, CommandLine commandLine) {

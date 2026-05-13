@@ -664,4 +664,81 @@ class CLIOptionsTest {
         CLIOptions.addAllTo(ext);
         assertEquals(afterFirst, ext.getOptions().size());
     }
+
+    // ===== Image Resolution Option Tests =====
+
+    @Test
+    void testDefineOptions_containsImageResolutionOption() {
+        assertTrue(options.hasOption("image-resolution"));
+    }
+
+    @Test
+    void testCreateConfig_defaultImageResolution() throws ParseException {
+        String[] args = {testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertEquals(2000.0f, config.getImageResolution());
+    }
+
+    @Test
+    void testCreateConfig_withImageResolution() throws ParseException {
+        String[] args = {"--image-resolution", "1000", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertEquals(1000.0f, config.getImageResolution());
+    }
+
+    @Test
+    void testCreateConfig_withImageResolutionDecimal() throws ParseException {
+        String[] args = {"--image-resolution", "1500.5", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertEquals(1500.5f, config.getImageResolution());
+    }
+
+    @Test
+    void testCreateConfig_withImageResolutionZero_throws() throws ParseException {
+        String[] args = {"--image-resolution", "0", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            CLIOptions.createConfigFromCommandLine(cmd);
+        });
+    }
+
+    @Test
+    void testCreateConfig_withImageResolutionNegative_throws() throws ParseException {
+        String[] args = {"--image-resolution", "-100", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            CLIOptions.createConfigFromCommandLine(cmd);
+        });
+    }
+
+    @Test
+    void testCreateConfig_withImageResolutionInvalid_throws() throws ParseException {
+        String[] args = {"--image-resolution", "abc", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            CLIOptions.createConfigFromCommandLine(cmd);
+        });
+    }
+
+    @Test
+    void testCreateConfig_withEmptyImageResolution_throws() throws ParseException {
+        String[] args = {"--image-resolution", "", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            CLIOptions.createConfigFromCommandLine(cmd);
+        });
+    }
 }
