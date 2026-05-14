@@ -96,24 +96,21 @@ public class FilterConfig {
 //            Pattern.compile("\\b\\d{2,4}-\\d{2,3}-\\d{4,6}\\b"),
 //            "000-000-000000"
 //        ));
+        //TODO Confirm info about regex for AWS (maybe create 2 separate rules for AKIA|ASIA)
         // AWS Access Key
         filterRules.add(new SanitizationRule(
-            Pattern.compile("\\bAKIA[0-9A-Z]{12,124}\\b"),
+            Pattern.compile("\\b(AKIA|ASIA)[0-9A-Z]{12,124}\\b"),
             "AKIA0000000000000000"
         ));
         // AWS Secret Key
         filterRules.add(new SanitizationRule(
-            Pattern.compile("(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{40}(?![A-Za-z0-9/+=])"),
+            Pattern.compile("(?<![A-Za-z0-9/+])[A-Za-z0-9/+]{40}(?![A-Za-z0-9/+])"),
             "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         ));
-        // GitHub Actions Access Token
-        filterRules.add(new SanitizationRule(
-            Pattern.compile("\\bghs_[A-Za-z0-9_]{10,251}\\b"),
-            "ghs_000000000000000000000000000000000000"
-        ));
+        //TODO Confirm info about regex for GitHub (maybe create separate rules for ghp|ghu|gho|ghs|ghr)
         // GitHub Personal Access Token
         filterRules.add(new SanitizationRule(
-            Pattern.compile("\\bgh[puor]_[A-Za-z0-9]{10,251}\\b"),
+            Pattern.compile("\\bgh[puors]_[A-Za-z0-9]{10,251}\\b"),
             "ghp_000000000000000000000000000000000000"
         ));
         // GitHub Fine-grained Personal Access Token
