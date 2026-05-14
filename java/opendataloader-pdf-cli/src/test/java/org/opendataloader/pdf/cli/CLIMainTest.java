@@ -174,6 +174,89 @@ class CLIMainTest {
     }
 
     /**
+     * A folder containing zero processable PDFs must emit a clear "No PDF files
+     * found" message instead of exiting silently with status 0 — without this
+     * the user cannot distinguish "wrong folder", "empty folder", and
+     * "successful run". The path shown is the literal argument the user typed
+     * (File#getPath), so {@code .} and trailing-slash inputs render correctly.
+     *
+     * <p>Regression test for PDFDLOSP-15.
+     */
+    @Test
+    void testEmptyDirectoryEmitsNoPdfFoundMessage() throws IOException {
+        Path dir = tempDir.resolve("empty");
+        Files.createDirectory(dir);
+
+        String[] stdoutHolder = new String[1];
+        int exitCode = (int) runCapturingStdout(
+            () -> CLIMain.run(new String[]{dir.toString()}),
+            stdoutHolder);
+
+        assertEquals(0, exitCode, "Empty folder is not an error");
+        assertTrue(stdoutHolder[0].contains("No PDF files found in '" + dir + "'"),
+            "stdout must report that no PDFs were found; got: " + stdoutHolder[0]);
+    }
+
+    @Test
+    void testDirectoryWithOnlyNonPdfFilesEmitsNoPdfFoundMessage() throws IOException {
+        Path dir = tempDir.resolve("basic_images");
+        Files.createDirectory(dir);
+        Files.write(dir.resolve("a.png"), new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47});
+        Files.write(dir.resolve("b.jpg"), new byte[]{(byte) 0xFF, (byte) 0xD8});
+
+        String[] stdoutHolder = new String[1];
+        int exitCode = (int) runCapturingStdout(
+            () -> CLIMain.run(new String[]{dir.toString()}),
+            stdoutHolder);
+
+        assertEquals(0, exitCode);
+        assertTrue(stdoutHolder[0].contains("No PDF files found in '" + dir + "'"),
+            "stdout must report that no PDFs were found; got: " + stdoutHolder[0]);
+    }
+
+    /**
+     * Subdirectories must aggregate into the top-level summary rather than
+     * emit their own "No PDF files found" / "Processed N..." lines — only the
+     * user-supplied folder path appears in the output.
+     */
+    @Test
+    void testNestedSubdirectoriesAggregateIntoTopLevelSummary() throws IOException {
+        Path top = tempDir.resolve("top");
+        Path sub = top.resolve("sub");
+        Files.createDirectories(sub);
+        Files.write(sub.resolve("nested.pdf"), "%PDF-1.4 minimal".getBytes(StandardCharsets.UTF_8));
+
+        String[] stdoutHolder = new String[1];
+        runCapturingStdout(
+            () -> CLIMain.run(new String[]{top.toString()}),
+            stdoutHolder);
+
+        assertTrue(stdoutHolder[0].contains("Processed 1 PDF file in '" + top + "'"),
+            "stdout must summarize at the top-level folder including nested PDFs; got: "
+                + stdoutHolder[0]);
+        assertFalse(stdoutHolder[0].contains("in '" + sub + "'"),
+            "stdout must not emit a separate summary for nested subdirectories; got: "
+                + stdoutHolder[0]);
+    }
+
+    @Test
+    void testDirectoryWithMultiplePdfsEmitsProcessedSummary() throws IOException {
+        Path dir = tempDir.resolve("docs");
+        Files.createDirectory(dir);
+        Files.write(dir.resolve("a.pdf"), "%PDF-1.4 minimal".getBytes(StandardCharsets.UTF_8));
+        Files.write(dir.resolve("b.pdf"), "%PDF-1.4 minimal".getBytes(StandardCharsets.UTF_8));
+
+        String[] stdoutHolder = new String[1];
+        runCapturingStdout(
+            () -> CLIMain.run(new String[]{dir.toString()}),
+            stdoutHolder);
+
+        assertTrue(stdoutHolder[0].contains("Processed 2 PDF files in '" + dir + "'"),
+            "stdout must summarize with plural 'files' when count > 1; got: "
+                + stdoutHolder[0]);
+    }
+
+    /**
      * When the command line mixes a valid PDF argument with a top-level non-PDF
      * argument, the run must fail overall but only the non-PDF entry should
      * produce the user-facing error message.
