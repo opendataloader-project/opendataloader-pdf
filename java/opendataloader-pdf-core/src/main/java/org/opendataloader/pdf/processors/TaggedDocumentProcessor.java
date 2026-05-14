@@ -60,7 +60,70 @@ public class TaggedDocumentProcessor {
             List<IObject> pageContents = TextLineProcessor.processTextLines(contents.get(pageNumber));
             contents.set(pageNumber, ParagraphProcessor.processParagraphs(pageContents));
         }
+        // PDFDLOSP-7: ParagraphProcessor (and earlier helpers) materialise new
+        // top-level objects (paragraphs, images, list/table containers) that
+        // did not exist when addObjectToContent assigned ids during struct-tree
+        // traversal. Walk the final per-page contents and fill in any missing
+        // ids. Items that already have one are left untouched so the order
+        // produced by the struct-tree pass is preserved.
+        for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
+            if (shouldProcessPage(pageNumber)) {
+                fillMissingIds(contents.get(pageNumber));
+            }
+        }
         return contents;
+    }
+
+    private static void fillMissingIds(List<IObject> contents) {
+        for (IObject object : contents) {
+            assignIdIfMissing(object);
+        }
+    }
+
+    private static void assignIdIfMissing(IObject object) {
+        if (object == null) {
+            return;
+        }
+        if (object.getRecognizedStructureId() == null) {
+            object.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+        }
+        if (object instanceof SemanticHeaderOrFooter) {
+            for (IObject child : ((SemanticHeaderOrFooter) object).getContents()) {
+                assignIdIfMissing(child);
+            }
+        } else if (object instanceof PDFList) {
+            for (IObject child : ((PDFList) object).getListItems()) {
+                assignIdIfMissing(child);
+            }
+        } else if (object instanceof ListItem) {
+            for (IObject child : ((ListItem) object).getContents()) {
+                assignIdIfMissing(child);
+            }
+        } else if (object instanceof TableBorder) {
+            TableBorder table = (TableBorder) object;
+            TableBorderRow[] rows = table.getRows();
+            if (rows == null) {
+                return;
+            }
+            for (TableBorderRow row : rows) {
+                if (row == null) {
+                    continue;
+                }
+                TableBorderCell[] cells = row.getCells();
+                if (cells == null) {
+                    continue;
+                }
+                for (TableBorderCell cell : cells) {
+                    if (cell == null) {
+                        continue;
+                    }
+                    assignIdIfMissing(cell);
+                    for (IObject content : cell.getContents()) {
+                        assignIdIfMissing(content);
+                    }
+                }
+            }
+        }
     }
 
     private static List<List<IObject>> collectArtifacts(int totalPages) {
