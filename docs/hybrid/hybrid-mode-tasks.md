@@ -519,7 +519,7 @@ Add configuration classes for hybrid processing.
 public class HybridConfig {
     private String url;                  // null = use backend default
     private int timeoutMs = 0;  // 0 = no timeout
-    private boolean fallbackToJava = true;
+    private boolean fallbackToJava = false;
     private int maxConcurrentRequests = 4;
     // getters, setters, builder pattern
 
@@ -593,7 +593,7 @@ New options:
   --hybrid <off|docling|hancom|...> Hybrid backend to use (default: off)
   --hybrid-url <url>                Backend server URL (default: backend-specific)
   --hybrid-timeout <ms>             Request timeout in ms (default: 0, no timeout)
-  --hybrid-fallback                 Fallback to Java on error (default: true)
+  --hybrid-fallback                 Opt in to Java fallback on backend error (default: disabled)
 ```
 
 ```java
@@ -604,8 +604,8 @@ new OptionDefinition("hybrid-url", null, "string", null,
     "Hybrid backend server URL (overrides default)", true),
 new OptionDefinition("hybrid-timeout", null, "string", "0",
     "Hybrid backend request timeout in milliseconds (0 = no timeout)", true),
-new OptionDefinition("hybrid-fallback", null, "boolean", true,
-    "Fallback to Java on hybrid backend error", true),
+new OptionDefinition("hybrid-fallback", null, "boolean", false,
+    "Opt in to Java fallback on hybrid backend error (default: disabled)", true),
 ```
 
 ### Success Criteria
