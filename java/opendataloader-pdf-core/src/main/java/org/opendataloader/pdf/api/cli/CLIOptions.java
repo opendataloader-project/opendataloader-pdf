@@ -77,7 +77,9 @@ public class CLIOptions {
     public static final String FORMAT_OPTION = "f";
     public static final String FORMAT_LONG_OPTION = "format";
     private static final String FORMAT_DESC = "Output formats (comma-separated). "
-            + "Values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images, tagged-pdf. Default: json";
+            + "Values: json, text, html, pdf, markdown, tagged-pdf. Default: json. "
+            + "For HTML inside Markdown use --markdown-with-html. "
+            + "For image extraction control use --image-output.";
 
     // ===== Quiet =====
     public static final String QUIET_OPTION = "q";
@@ -208,6 +210,12 @@ public class CLIOptions {
             + "output may vary slightly on some PDFs. Capped at the number of available CPU cores. "
             + "Applies to the native Java pipeline only; ignored in --hybrid mode";
 
+    // ===== Markdown modifiers =====
+    public static final String HTML_IN_MARKDOWN_LONG_OPTION = "markdown-with-html";
+    private static final String HTML_IN_MARKDOWN_DESC =
+            "Allow HTML tags inside Markdown output for complex structures such as multi-row-span tables. "
+                    + "Implies --format markdown.";
+
     // ===== Export Options (internal) =====
     public static final String EXPORT_OPTIONS_LONG_OPTION = "export-options";
 
@@ -215,7 +223,6 @@ public class CLIOptions {
     public static final String PDF_REPORT_LONG_OPTION = "pdf";
     public static final String MARKDOWN_REPORT_LONG_OPTION = "markdown";
     public static final String HTML_REPORT_LONG_OPTION = "html";
-    private static final String HTML_IN_MARKDOWN_LONG_OPTION = "markdown-with-html";
     private static final String MARKDOWN_IMAGE_LONG_OPTION = "markdown-with-images";
     public static final String NO_JSON_REPORT_LONG_OPTION = "no-json";
 
@@ -240,6 +247,8 @@ public class CLIOptions {
             new OptionDefinition(READING_ORDER_LONG_OPTION, null, "string", "xycut", READING_ORDER_DESC, true),
             new OptionDefinition(MARKDOWN_PAGE_SEPARATOR_LONG_OPTION, null, "string", null,
                     MARKDOWN_PAGE_SEPARATOR_DESC, true),
+            new OptionDefinition(HTML_IN_MARKDOWN_LONG_OPTION, null, "boolean", false,
+                    HTML_IN_MARKDOWN_DESC, true),
             new OptionDefinition(TEXT_PAGE_SEPARATOR_LONG_OPTION, null, "string", null, TEXT_PAGE_SEPARATOR_DESC, true),
             new OptionDefinition(HTML_PAGE_SEPARATOR_LONG_OPTION, null, "string", null, HTML_PAGE_SEPARATOR_DESC, true),
             new OptionDefinition(IMAGE_OUTPUT_LONG_OPTION, null, "string", "external", IMAGE_OUTPUT_DESC, true),
@@ -270,7 +279,6 @@ public class CLIOptions {
             new OptionDefinition(PDF_REPORT_LONG_OPTION, null, "boolean", null, null, false),
             new OptionDefinition(MARKDOWN_REPORT_LONG_OPTION, null, "boolean", null, null, false),
             new OptionDefinition(HTML_REPORT_LONG_OPTION, null, "boolean", null, null, false),
-            new OptionDefinition(HTML_IN_MARKDOWN_LONG_OPTION, null, "boolean", null, null, false),
             new OptionDefinition(MARKDOWN_IMAGE_LONG_OPTION, null, "boolean", null, null, false),
             new OptionDefinition(NO_JSON_REPORT_LONG_OPTION, null, "boolean", null, null, false),
             new OptionDefinition(HYBRID_HANCOM_AI_SAVE_CROPS_LONG_OPTION, null, "boolean",
@@ -343,7 +351,7 @@ public class CLIOptions {
             config.setUseHTMLInMarkdown(true);
         }
         if (commandLine.hasOption(CLIOptions.MARKDOWN_IMAGE_LONG_OPTION)) {
-            config.setAddImageToMarkdown(true);
+            config.setGenerateMarkdown(true);
         }
         if (commandLine.hasOption(CLIOptions.NO_JSON_REPORT_LONG_OPTION)) {
             config.setGenerateJSON(false);
@@ -530,13 +538,13 @@ public class CLIOptions {
         String[] optionValues = commandLine.getOptionValues(FORMAT_OPTION);
         if (optionValues == null || optionValues.length == 0) {
             throw new IllegalArgumentException(
-                    "Option --format requires at least one value. Supported values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images, tagged-pdf");
+                    "Option --format requires at least one value. Supported values: json, text, html, pdf, markdown, tagged-pdf");
         }
 
         Set<String> values = parseOptionValues(optionValues);
         if (values.isEmpty()) {
             throw new IllegalArgumentException(
-                    "Option --format requires at least one value. Supported values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images, tagged-pdf");
+                    "Option --format requires at least one value. Supported values: json, text, html, pdf, markdown, tagged-pdf");
         }
 
         config.setGenerateJSON(false);
@@ -559,17 +567,22 @@ public class CLIOptions {
                     config.setGenerateMarkdown(true);
                     break;
                 case "markdown-with-html":
+                    System.err.println("[WARN] --format markdown-with-html is deprecated and will be removed "
+                            + "in the next major release. Use --format markdown --markdown-with-html instead.");
                     config.setUseHTMLInMarkdown(true);
                     break;
                 case "markdown-with-images":
-                    config.setAddImageToMarkdown(true);
+                    System.err.println("[WARN] --format markdown-with-images is deprecated and will be removed "
+                            + "in the next major release. Use --format markdown with --image-output "
+                            + "(off|embedded|external) instead.");
+                    config.setGenerateMarkdown(true);
                     break;
                 case "tagged-pdf":
                     config.setGenerateTaggedPDF(true);
                     break;
                 default:
                     throw new IllegalArgumentException(String.format(
-                            "Unsupported format '%s'. Supported values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images, tagged-pdf",
+                            "Unsupported format '%s'. Supported values: json, text, html, pdf, markdown, tagged-pdf",
                             value));
             }
         }

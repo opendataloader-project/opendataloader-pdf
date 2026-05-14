@@ -34,7 +34,7 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "type": "string",
         "required": False,
         "default": None,
-        "description": "Output formats (comma-separated). Values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images, tagged-pdf. Default: json",
+        "description": "Output formats (comma-separated). Values: json, text, html, pdf, markdown, tagged-pdf. Default: json. For HTML inside Markdown use --markdown-with-html. For image extraction control use --image-output.",
     },
     {
         "name": "quiet",
@@ -116,6 +116,15 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "required": False,
         "default": None,
         "description": "Separator between pages in Markdown output. Use %%page-number%% for page numbers. Default: none",
+    },
+    {
+        "name": "markdown-with-html",
+        "python_name": "markdown_with_html",
+        "short_name": None,
+        "type": "boolean",
+        "required": False,
+        "default": False,
+        "description": "Allow HTML tags inside Markdown output for complex structures such as multi-row-span tables. Implies --format markdown.",
     },
     {
         "name": "text-page-separator",

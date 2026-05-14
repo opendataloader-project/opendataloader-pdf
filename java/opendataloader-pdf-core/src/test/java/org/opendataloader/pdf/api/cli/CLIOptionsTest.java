@@ -27,8 +27,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.opendataloader.pdf.api.Config;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -663,5 +666,97 @@ class CLIOptionsTest {
         // commons-cli upgrade that changes the behavior surfaces here.
         CLIOptions.addAllTo(ext);
         assertEquals(afterFirst, ext.getOptions().size());
+    }
+
+    // ===== PDFDLOSP-6: --format spec separation =====
+
+    @Test
+    void testDefineOptions_markdownWithHtmlIsExportedAsBooleanFlag() {
+        // --markdown-with-html is the official way to enable HTML-in-Markdown.
+        assertTrue(options.hasOption("markdown-with-html"));
+    }
+
+    @Test
+    void testCreateConfig_formatMarkdownPlusMarkdownWithHtml() throws ParseException {
+        String[] args = {"--format", "markdown", "--markdown-with-html", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertTrue(config.isGenerateMarkdown());
+        assertTrue(config.isUseHTMLInMarkdown());
+    }
+
+    @Test
+    void testCreateConfig_formatMarkdownWithHtmlEmitsDeprecationWarning() throws ParseException {
+        String stderr = captureStderr(() -> {
+            String[] args = {"--format", "markdown-with-html", testPdf.getAbsolutePath()};
+            CommandLine cmd = parser.parse(options, args);
+            Config config = CLIOptions.createConfigFromCommandLine(cmd);
+            assertTrue(config.isGenerateMarkdown());
+            assertTrue(config.isUseHTMLInMarkdown());
+        });
+        assertTrue(stderr.contains("--format markdown-with-html is deprecated"),
+                "expected deprecation warning, got: " + stderr);
+    }
+
+    @Test
+    void testCreateConfig_formatMarkdownWithImagesEmitsDeprecationWarning() throws ParseException {
+        // PDFDLOSP-6: --format markdown-with-images used to look distinct but produced the same output
+        // as --format markdown. Now it warns and behaves the same; image extraction is controlled by
+        // --image-output instead.
+        String stderr = captureStderr(() -> {
+            String[] args = {"--format", "markdown-with-images", testPdf.getAbsolutePath()};
+            CommandLine cmd = parser.parse(options, args);
+            Config config = CLIOptions.createConfigFromCommandLine(cmd);
+            assertTrue(config.isGenerateMarkdown());
+        });
+        assertTrue(stderr.contains("--format markdown-with-images is deprecated"),
+                "expected deprecation warning, got: " + stderr);
+    }
+
+    @Test
+    void testCreateConfig_formatMarkdownAloneDoesNotWarn() throws ParseException {
+        String stderr = captureStderr(() -> {
+            String[] args = {"--format", "markdown", testPdf.getAbsolutePath()};
+            CommandLine cmd = parser.parse(options, args);
+            Config config = CLIOptions.createConfigFromCommandLine(cmd);
+            assertTrue(config.isGenerateMarkdown());
+            assertFalse(config.isUseHTMLInMarkdown());
+        });
+        assertFalse(stderr.contains("deprecated"), "expected no deprecation warning, got: " + stderr);
+    }
+
+    @Test
+    void testCreateConfig_formatUnsupportedValueErrorDropsDeprecatedNames() {
+        String[] args = {"--format", "bogus", testPdf.getAbsolutePath()};
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+            CommandLine cmd = parser.parse(options, args);
+            CLIOptions.createConfigFromCommandLine(cmd);
+        });
+        String msg = ex.getMessage();
+        assertFalse(msg.contains("markdown-with-html"),
+                "deprecated value must not appear in supported-values list: " + msg);
+        assertFalse(msg.contains("markdown-with-images"),
+                "deprecated value must not appear in supported-values list: " + msg);
+    }
+
+    private static String captureStderr(ThrowingRunnable r) {
+        PrintStream originalErr = System.err;
+        ByteArrayOutputStream buf = new ByteArrayOutputStream();
+        try (PrintStream captured = new PrintStream(buf, true, StandardCharsets.UTF_8)) {
+            System.setErr(captured);
+            r.run();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            System.setErr(originalErr);
+        }
+        return buf.toString(StandardCharsets.UTF_8);
+    }
+
+    @FunctionalInterface
+    private interface ThrowingRunnable {
+        void run() throws Exception;
     }
 }

@@ -22,7 +22,7 @@
       "type": "string",
       "required": false,
       "default": null,
-      "description": "Output formats (comma-separated). Values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images, tagged-pdf. Default: json"
+      "description": "Output formats (comma-separated). Values: json, text, html, pdf, markdown, tagged-pdf. Default: json. For HTML inside Markdown use --markdown-with-html. For image extraction control use --image-output."
     },
     {
       "name": "quiet",
@@ -95,6 +95,14 @@
       "required": false,
       "default": null,
       "description": "Separator between pages in Markdown output. Use %page-number% for page numbers. Default: none"
+    },
+    {
+      "name": "markdown-with-html",
+      "shortName": null,
+      "type": "boolean",
+      "required": false,
+      "default": false,
+      "description": "Allow HTML tags inside Markdown output for complex structures such as multi-row-span tables. Implies --format markdown."
     },
     {
       "name": "text-page-separator",

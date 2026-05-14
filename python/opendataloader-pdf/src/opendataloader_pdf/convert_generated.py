@@ -23,6 +23,7 @@ def convert(
     table_method: Optional[str] = None,
     reading_order: Optional[str] = None,
     markdown_page_separator: Optional[str] = None,
+    markdown_with_html: bool = False,
     text_page_separator: Optional[str] = None,
     html_page_separator: Optional[str] = None,
     image_output: Optional[str] = None,
@@ -49,7 +50,7 @@ def convert(
         input_path: One or more input PDF file paths or directories
         output_dir: Directory where output files are written. Default: input file directory
         password: Password for encrypted PDF files
-        format: Output formats (comma-separated). Values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images, tagged-pdf. Default: json
+        format: Output formats (comma-separated). Values: json, text, html, pdf, markdown, tagged-pdf. Default: json. For HTML inside Markdown use --markdown-with-html. For image extraction control use --image-output.
         quiet: Suppress console logging output
         content_safety_off: Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg
         sanitize: Enable sensitive data sanitization. Replaces emails, phone numbers, IPs, credit cards, and URLs with placeholders
@@ -59,6 +60,7 @@ def convert(
         table_method: Table detection method. Values: default (border-based), cluster (border + cluster). Default: default
         reading_order: Reading order algorithm. Values: off, xycut. Default: xycut
         markdown_page_separator: Separator between pages in Markdown output. Use %page-number% for page numbers. Default: none
+        markdown_with_html: Allow HTML tags inside Markdown output for complex structures such as multi-row-span tables. Implies --format markdown.
         text_page_separator: Separator between pages in text output. Use %page-number% for page numbers. Default: none
         html_page_separator: Separator between pages in HTML output. Use %page-number% for page numbers. Default: none
         image_output: Image output mode. Values: off (no images), embedded (Base64 data URIs), external (file references). Default: external
@@ -118,6 +120,8 @@ def convert(
         args.extend(["--reading-order", reading_order])
     if markdown_page_separator:
         args.extend(["--markdown-page-separator", markdown_page_separator])
+    if markdown_with_html:
+        args.append("--markdown-with-html")
     if text_page_separator:
         args.extend(["--text-page-separator", text_page_separator])
     if html_page_separator:
