@@ -31,49 +31,94 @@ public class FilterConfig {
     private boolean filterTinyText = true;
     private boolean filterHiddenOCG = true;
     private boolean filterSensitiveData = false;
-    private final List<SanitizationRule> filterRules;
+    private final List<SanitizationRule> filterRules = new ArrayList<>();
 
     /** Default rules */
-    private void initializeDefaultRules() {
-        filterRules.add(new SanitizationRule(
+    private static final List<SanitizationRule> DEFAULT_RULES = new ArrayList<>();
+    static {
+        DEFAULT_RULES.add(new SanitizationRule(
             Pattern.compile("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"),
             "email@example.com"
         ));
-        filterRules.add(new SanitizationRule(
+        DEFAULT_RULES.add(new SanitizationRule(
             Pattern.compile("[+]\\d+(?:-\\d+)+"),
             "+00-0000-0000"
         ));
-        filterRules.add(new SanitizationRule(
+        DEFAULT_RULES.add(new SanitizationRule(
             Pattern.compile("[A-Z]{1,2}\\d{6,9}"),
             "AA0000000"
         ));
-        filterRules.add(new SanitizationRule(
+        DEFAULT_RULES.add(new SanitizationRule(
             Pattern.compile("\\b\\d{4}-?\\d{4}-?\\d{4}-?\\d{4}\\b"),
             "0000-0000-0000-0000"
         ));
-        filterRules.add(new SanitizationRule(
+        DEFAULT_RULES.add(new SanitizationRule(
             Pattern.compile("\\b\\d{10,18}\\b"),
             "0000000000000000"
         ));
-        filterRules.add(new SanitizationRule(
+        DEFAULT_RULES.add(new SanitizationRule(
             Pattern.compile("\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b"),
             "0.0.0.0"
         ));
-        filterRules.add(new SanitizationRule(
+        DEFAULT_RULES.add(new SanitizationRule(
             Pattern.compile("\\b([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}\\b"),
             "0.0.0.0::1"
         ));
-        filterRules.add(new SanitizationRule(
+        DEFAULT_RULES.add(new SanitizationRule(
             Pattern.compile("\\b(?:[0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}\\b"),
             "00:00:00:00:00:00"
         ));
-        filterRules.add(new SanitizationRule(
+        DEFAULT_RULES.add(new SanitizationRule(
             Pattern.compile("\\b\\d{15}\\b"),
             "000000000000000"
         ));
-        filterRules.add(new SanitizationRule(
+        DEFAULT_RULES.add(new SanitizationRule(
             Pattern.compile("https?://[A-Za-z0-9.-]+(:\\d+)?(/\\S*)?"),
             "https://example.com"
+        ));
+        //TODO Confirm info about regex for Korean phone, card, resident numbers and etc.
+        // Korean Resident Registration Number
+        DEFAULT_RULES.add(new SanitizationRule(
+            Pattern.compile("\\b\\d{6}-\\d{7}\\b"),
+            "000000-0000000"
+        ));
+        // Korean phone numbers
+        DEFAULT_RULES.add(new SanitizationRule(
+            Pattern.compile("\\b0\\d{1,2}-\\d{3,4}-\\d{4}\\b"),
+            "010-0000-0000"
+        ));
+        // Korean business registration number
+        DEFAULT_RULES.add(new SanitizationRule(
+            Pattern.compile("\\b\\d{3}-\\d{2}-\\d{5}\\b"),
+            "000-00-00000"
+        ));
+        // Korean bank account numbers
+//        DEFAULT_RULES.add(new SanitizationRule(
+//            Pattern.compile("\\b\\d{2,4}-\\d{2,3}-\\d{4,6}\\b"),
+//            "000-000-000000"
+//        ));
+        //TODO Confirm info about regex for AWS (maybe create 2 separate rules for AKIA|ASIA)
+        // AWS Access Key
+        DEFAULT_RULES.add(new SanitizationRule(
+            Pattern.compile("\\b(AKIA|ASIA)[0-9A-Z]{12,124}\\b"),
+            "AKIA0000000000000000"
+        ));
+        //TODO Confirm info about regex for GitHub (maybe create separate rules for ghp|ghu|gho|ghs|ghr)
+        // GitHub Personal Access Token
+        DEFAULT_RULES.add(new SanitizationRule(
+            Pattern.compile("\\bgh[puors]_[A-Za-z0-9]{10,251}\\b"),
+            "ghp_000000000000000000000000000000000000"
+        ));
+        // GitHub Fine-grained Personal Access Token
+        DEFAULT_RULES.add(new SanitizationRule(
+            Pattern.compile("\\bgithub_pat_[A-Za-z0-9_]{10,243}\\b"),
+            "github_pat_0000000000000000000000_00000000000000000000000000000000000000000000000000000000000"
+        ));
+        // AWS Secret Key (Finds 40-character, base-64 strings that don't have any base 64 characters immediately before or after).
+        // Has to be last rule
+        DEFAULT_RULES.add(new SanitizationRule(
+            Pattern.compile("(?<![A-Za-z0-9/+])[A-Za-z0-9/+]{40}(?![A-Za-z0-9/+])"),
+            "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         ));
     }
 
@@ -81,8 +126,7 @@ public class FilterConfig {
      * Constructor initializing the configuration of filter.
      */
     public FilterConfig() {
-        this.filterRules = new ArrayList<>();
-        initializeDefaultRules();
+        filterRules.addAll(DEFAULT_RULES);
     }
 
     /**
