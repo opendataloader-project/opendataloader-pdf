@@ -35,6 +35,22 @@ public class CLIMain {
 
     private enum InputSource { CLI_ARGUMENT, DIRECTORY_CHILD }
 
+    /**
+     * Result of processing a path: whether all files succeeded, and how many
+     * PDF files were processed under it (counted recursively for directories,
+     * 1 or 0 for a single file). Used by {@link #processDirectory} to print a
+     * clear summary when a user-supplied folder contains no PDFs (PDFDLOSP-15).
+     */
+    private static final class PathResult {
+        final boolean allSucceeded;
+        final int pdfCount;
+
+        PathResult(boolean allSucceeded, int pdfCount) {
+            this.allSucceeded = allSucceeded;
+            this.pdfCount = pdfCount;
+        }
+    }
+
     public static void main(String[] args) {
         int exitCode = run(args);
         if (exitCode != 0) {
@@ -87,7 +103,7 @@ public class CLIMain {
         boolean hasFailure = false;
         try {
             for (String argument : arguments) {
-                if (!processPath(new File(argument), config, InputSource.CLI_ARGUMENT)) {
+                if (!processPath(new File(argument), config, InputSource.CLI_ARGUMENT).allSucceeded) {
                     hasFailure = true;
                 }
             }
@@ -119,38 +135,69 @@ public class CLIMain {
      * on the command line is reported as an error, while non-PDF files inside a
      * directory are silently skipped (preserves batch-folder processing).
      */
-    private static boolean processPath(File file, Config config, InputSource source) {
+    private static PathResult processPath(File file, Config config, InputSource source) {
         if (!file.exists()) {
             LOGGER.log(Level.WARNING, "File or folder " + file.getAbsolutePath() + " not found.");
-            return false;
+            return new PathResult(false, 0);
         }
         if (file.isDirectory()) {
-            return processDirectory(file, config);
+            return processDirectory(file, config, source);
         }
         if (file.isFile()) {
-            if (source == InputSource.CLI_ARGUMENT && !isPdfFile(file)) {
+            boolean isPdf = isPdfFile(file);
+            if (source == InputSource.CLI_ARGUMENT && !isPdf) {
                 System.out.println("Error: '" + file.getName()
                     + "' is not a PDF file. Input must be a PDF file or a folder containing PDF files.");
-                return false;
+                return new PathResult(false, 0);
             }
-            return processFile(file, config);
+            return new PathResult(processFile(file, config), isPdf ? 1 : 0);
         }
-        return true;
+        return new PathResult(true, 0);
     }
 
-    private static boolean processDirectory(File file, Config config) {
+    /**
+     * Counts PDF files processed under the directory rooted at {@code file}
+     * (recursively), so the CLI can surface a clear summary when a
+     * user-supplied folder contains no PDFs. Without this feedback the program
+     * would exit silently with status 0 and the user could not distinguish
+     * "wrong folder", "empty folder", and "successful run" (PDFDLOSP-15).
+     *
+     * <p>The summary is only printed for folders given directly on the command
+     * line ({@link InputSource#CLI_ARGUMENT}) — nested subdirectories aggregate
+     * upward into the top-level count rather than each printing their own line.
+     *
+     * <p>The summary line is the final <em>result</em> of the run, not a log
+     * entry, and is therefore intentionally emitted on stdout even under
+     * {@code --quiet}. {@code --quiet} suppresses processing logs; users
+     * still need to see whether anything was actually processed. The path
+     * shown is {@link File#getPath()} (the literal argument the user typed,
+     * e.g. {@code .} or {@code basic_images}) rather than {@link File#getName()},
+     * which would be empty for {@code .} or trailing-slash inputs.
+     */
+    private static PathResult processDirectory(File file, Config config, InputSource source) {
         File[] children = file.listFiles();
         if (children == null) {
             LOGGER.log(Level.WARNING, "Unable to read folder " + file.getAbsolutePath());
-            return false;
+            return new PathResult(false, 0);
         }
         boolean allSucceeded = true;
+        int pdfCount = 0;
         for (File child : children) {
-            if (!processPath(child, config, InputSource.DIRECTORY_CHILD)) {
+            PathResult childResult = processPath(child, config, InputSource.DIRECTORY_CHILD);
+            if (!childResult.allSucceeded) {
                 allSucceeded = false;
             }
+            pdfCount += childResult.pdfCount;
         }
-        return allSucceeded;
+        if (source == InputSource.CLI_ARGUMENT) {
+            if (pdfCount == 0) {
+                System.out.println("No PDF files found in '" + file.getPath() + "'.");
+            } else {
+                System.out.println("Processed " + pdfCount + " PDF file"
+                    + (pdfCount == 1 ? "" : "s") + " in '" + file.getPath() + "'.");
+            }
+        }
+        return new PathResult(allSucceeded, pdfCount);
     }
 
     /**
