@@ -51,9 +51,15 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.LinesPreprocessi
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 import org.verapdf.xmp.containers.StaticXmpCoreContainers;
 
+import org.opendataloader.pdf.exceptions.InvalidPdfFileException;
+
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ForkJoinPool;
@@ -518,6 +524,7 @@ public class DocumentProcessor {
      */
     public static void preprocessing(String pdfName, Config config) throws IOException {
         LOGGER.log(Level.INFO, () -> "File name: " + pdfName);
+        validatePdfMagicNumber(pdfName);
         updateStaticContainers(config);
         PDDocument pdDocument = new PDDocument(pdfName);
         StaticResources.setDocument(pdDocument);
@@ -544,6 +551,51 @@ public class DocumentProcessor {
         LinesPreprocessingConsumer linesPreprocessingConsumer = new LinesPreprocessingConsumer();
         linesPreprocessingConsumer.findTableBorders();
         StaticContainers.setTableBordersCollection(new TableBordersCollection(linesPreprocessingConsumer.getTableBorders()));
+    }
+
+    /**
+     * Verifies the input file contains the PDF magic number ({@code %PDF-})
+     * within its first 1024 bytes.
+     *
+     * <p>ISO 32000-1 §7.5.2 allows the {@code %PDF-} header to appear "near
+     * the beginning" of the file rather than strictly at byte 0; real-world
+     * PDFs sometimes have a leading UTF-8 BOM or whitespace. A 1024-byte
+     * search window matches that tolerance while still rejecting any
+     * JPG/PNG/HTML/empty file.
+     *
+     * @throws InvalidPdfFileException if the magic number is not present
+     * @throws IOException if the file cannot be opened or read
+     */
+    private static void validatePdfMagicNumber(String pdfName) throws IOException {
+        Path path = Path.of(pdfName);
+        byte[] head;
+        try (InputStream in = Files.newInputStream(path)) {
+            head = in.readNBytes(1024);
+        }
+        byte[] marker = "%PDF-".getBytes(StandardCharsets.US_ASCII);
+        if (indexOfBytes(head, marker) < 0) {
+            Path fileName = path.getFileName();
+            String displayName = fileName != null ? fileName.toString() : pdfName;
+            throw new InvalidPdfFileException(
+                "'" + displayName + "' is not a valid PDF file (missing %PDF- header).");
+        }
+    }
+
+    private static int indexOfBytes(byte[] haystack, byte[] needle) {
+        if (needle.length == 0 || haystack.length < needle.length) {
+            return -1;
+        }
+        int last = haystack.length - needle.length;
+        outer:
+        for (int i = 0; i <= last; i++) {
+            for (int j = 0; j < needle.length; j++) {
+                if (haystack[i + j] != needle[j]) {
+                    continue outer;
+                }
+            }
+            return i;
+        }
+        return -1;
     }
 
     private static void updateStaticContainers(Config config) {

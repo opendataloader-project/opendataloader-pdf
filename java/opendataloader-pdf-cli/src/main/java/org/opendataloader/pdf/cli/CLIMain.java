@@ -20,6 +20,7 @@ import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.api.OpenDataLoaderPDF;
 import org.opendataloader.pdf.api.cli.CLIOptions;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
+import org.opendataloader.pdf.exceptions.InvalidPdfFileException;
 import org.verapdf.exceptions.InvalidPasswordException;
 
 import java.io.File;
@@ -151,7 +152,7 @@ public class CLIMain {
                     + "' is not a PDF file. Input must be a PDF file or a folder containing PDF files.");
                 return new PathResult(false, 0);
             }
-            return new PathResult(processFile(file, config), isPdf ? 1 : 0);
+            return new PathResult(processFile(file, config, source), isPdf ? 1 : 0);
         }
         return new PathResult(true, 0);
     }
@@ -204,15 +205,32 @@ public class CLIMain {
     /**
      * Processes a single PDF file.
      *
-     * @return true if processing succeeded, false if an error occurred.
+     * <p>{@code source} controls how an {@link InvalidPdfFileException} from
+     * the magic-number guard is surfaced: {@link InputSource#CLI_ARGUMENT}
+     * routes it to stdout as a user-facing error and fails the run;
+     * {@link InputSource#DIRECTORY_CHILD} logs a WARNING and treats the file
+     * as silently skipped so batch-folder runs can still exit 0.
+     *
+     * @param file the file to process
+     * @param config the processing configuration
+     * @param source whether the file came from a CLI argument or directory traversal
+     * @return true if processing succeeded (or the file was a silently
+     *         skipped non-PDF inside a directory), false on error.
      */
-    private static boolean processFile(File file, Config config) {
+    private static boolean processFile(File file, Config config, InputSource source) {
         if (!isPdfFile(file)) {
             LOGGER.log(Level.FINE, "Skipping non-PDF file " + file.getAbsolutePath());
             return true;
         }
         try {
             OpenDataLoaderPDF.processFile(file.getAbsolutePath(), config);
+            return true;
+        } catch (InvalidPdfFileException invalid) {
+            if (source == InputSource.CLI_ARGUMENT) {
+                System.out.println("Error: " + invalid.getMessage());
+                return false;
+            }
+            LOGGER.log(Level.WARNING, invalid.getMessage() + " Skipping.");
             return true;
         } catch (InvalidPasswordException exception) {
             String password = config.getPassword();
