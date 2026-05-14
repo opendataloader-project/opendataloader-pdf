@@ -20,6 +20,7 @@ import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.api.OpenDataLoaderPDF;
 import org.opendataloader.pdf.api.cli.CLIOptions;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
+import org.verapdf.exceptions.InvalidPasswordException;
 
 import java.io.File;
 import java.util.Locale;
@@ -213,6 +214,13 @@ public class CLIMain {
         try {
             OpenDataLoaderPDF.processFile(file.getAbsolutePath(), config);
             return true;
+        } catch (InvalidPasswordException exception) {
+            String password = config.getPassword();
+            String message = (password == null || password.isEmpty())
+                ? "Error: '" + file.getName() + "' is password-protected. Use --password option."
+                : "Error: Incorrect password for '" + file.getName() + "'.";
+            System.out.println(message);
+            return false;
         } catch (Exception exception) {
             LOGGER.log(Level.SEVERE, "Exception during processing file " + file.getAbsolutePath() + ": " +
                 exception.getMessage(), exception);
