@@ -28,6 +28,12 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -359,6 +365,164 @@ class CLIMainTest {
             document.save(target.toFile());
         }
         return target;
+    }
+
+    // --- PDFDLOSP-14: magic-number guard regressions ----------------------
+
+    private static final byte[] JPEG_PREFIX = new byte[]{
+        (byte) 0xFF, (byte) 0xD8, (byte) 0xFF, (byte) 0xE0,
+        0x00, 0x10, 'J', 'F', 'I', 'F', 0x00
+    };
+
+    /**
+     * A .pdf-named file whose content is not actually PDF must produce the
+     * user-facing magic-number error on stdout, fail with non-zero exit, AND
+     * must not leak any veraPDF internal stack trace. Regression for
+     * PDFDLOSP-14.
+     */
+    @Test
+    void testPdfExtensionWithNonPdfContentEmitsMagicNumberError() throws IOException {
+        Path fakePdf = tempDir.resolve("fake.pdf");
+        Files.write(fakePdf, JPEG_PREFIX);
+
+        String[] stdoutHolder = new String[1];
+        int exitCode = (int) runCapturingStdout(
+            () -> CLIMain.run(new String[]{fakePdf.toString()}),
+            stdoutHolder);
+
+        assertNotEquals(0, exitCode,
+            "Exit code must be non-zero when input content is not PDF");
+        assertTrue(stdoutHolder[0].contains("'fake.pdf' is not a valid PDF file (missing %PDF- header)"),
+            "stdout must contain the magic-number error; got: " + stdoutHolder[0]);
+    }
+
+    /**
+     * Stack-trace leakage guard: the veraPDF internals must NEVER appear on
+     * stdout for the non-PDF-content case. This is the core regression we
+     * are preventing — if the catch branch is reverted or the guard moves
+     * back behind PDDocument construction, this test fails.
+     */
+    @Test
+    void testPdfExtensionWithNonPdfContentDoesNotLeakStackTrace() throws IOException {
+        Path fakePdf = tempDir.resolve("fake.pdf");
+        Files.write(fakePdf, JPEG_PREFIX);
+
+        String[] stdoutHolder = new String[1];
+        runCapturingStdout(
+            () -> CLIMain.run(new String[]{fakePdf.toString()}),
+            stdoutHolder);
+
+        String out = stdoutHolder[0];
+        assertFalse(out.toLowerCase(java.util.Locale.ROOT).contains("verapdf"),
+            "Output must not contain 'verapdf'; got: " + out);
+        assertFalse(out.contains("java.io.IOException:"),
+            "Output must not contain 'java.io.IOException:'; got: " + out);
+        assertFalse(out.contains("\tat "),
+            "Output must not contain a Java stack trace ('\\tat '); got: " + out);
+    }
+
+    /**
+     * A directory containing a .pdf-named non-PDF file alongside another
+     * non-PDF file must (a) NOT print the top-level magic-number error to
+     * stdout, (b) still exit 0 (silent skip preserves PR #496's batch-folder
+     * semantics), and (c) emit a single WARNING log line so operators can
+     * investigate why a file was skipped. Captures CLIMain's JUL logger
+     * directly because java.util.logging routes WARNING to a ConsoleHandler
+     * on stderr by default and may be suppressed entirely under --quiet.
+     */
+    @Test
+    void testPdfExtensionNonPdfInsideDirectoryIsSilentlySkipped() throws IOException {
+        Path dir = tempDir.resolve("mixed");
+        Files.createDirectory(dir);
+        Files.write(dir.resolve("fake.pdf"), JPEG_PREFIX);
+        Files.write(dir.resolve("note.png"), new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47});
+
+        List<LogRecord> records = new ArrayList<>();
+        String[] stdoutHolder = new String[1];
+        int exitCode = (int) captureLogsOf(records, () -> runCapturingStdout(
+            () -> CLIMain.run(new String[]{dir.toString()}),
+            stdoutHolder)).intValue();
+
+        assertEquals(0, exitCode,
+            "Directory containing only invalid files must still exit 0 (silent skip)");
+        assertFalse(stdoutHolder[0].contains("Error:"),
+            "Directory traversal must not surface 'Error:' on stdout; got: " + stdoutHolder[0]);
+        assertFalse(stdoutHolder[0].contains("missing %PDF- header"),
+            "Directory traversal must not surface the magic-number error on stdout; got: "
+            + stdoutHolder[0]);
+        long warningMatches = records.stream().filter(r ->
+                r.getLevel() == Level.WARNING
+                && r.getMessage() != null
+                && r.getMessage().contains("'fake.pdf'")
+                && r.getMessage().contains("missing %PDF- header")).count();
+        assertEquals(1L, warningMatches,
+            "Exactly one WARNING log must name the offending file and the missing header; "
+            + "got: " + records);
+    }
+
+    /**
+     * A genuinely corrupted PDF (has %PDF- header, body broken) is OUT of
+     * scope for this fix and must continue to fail via the existing SEVERE
+     * path — NOT through the new magic-number branch. This test pins that
+     * behavior by asserting (a) the user-facing magic-number error never
+     * appears, and (b) the SEVERE log line from CLIMain.processFile is
+     * actually emitted (proving the existing SEVERE path was the one taken).
+     */
+    @Test
+    void testCorruptPdfStillFailsViaExistingPath() throws IOException {
+        Path corrupt = tempDir.resolve("corrupt.pdf");
+        // Valid header, but nothing else — veraPDF will fail at parse time.
+        Files.write(corrupt, "%PDF-1.4\n<garbage>".getBytes(StandardCharsets.UTF_8));
+
+        List<LogRecord> records = new ArrayList<>();
+        String[] stdoutHolder = new String[1];
+        int exitCode = (int) captureLogsOf(records, () -> runCapturingStdout(
+            () -> CLIMain.run(new String[]{corrupt.toString()}),
+            stdoutHolder)).intValue();
+
+        assertNotEquals(0, exitCode,
+            "Corrupt PDF must still fail (non-zero exit)");
+        assertFalse(stdoutHolder[0].contains("missing %PDF- header"),
+            "Corrupt-but-headered PDFs must NOT be misreported as missing the header; got: "
+            + stdoutHolder[0]);
+        assertTrue(records.stream().anyMatch(r ->
+                r.getLevel() == Level.SEVERE
+                && r.getMessage() != null
+                && r.getMessage().contains("Exception during processing file")),
+            "Corrupt PDF must take the SEVERE path (not the magic-number branch); got: "
+            + records);
+    }
+
+    /**
+     * Runs {@code action} with a temporary {@link Handler} attached to
+     * {@link CLIMain}'s JUL logger, collecting every {@link LogRecord} into
+     * {@code sink}. Restores the prior handler list and level on exit.
+     *
+     * <p>JUL is global; this helper assumes sequential test execution
+     * (JUnit 5 + Surefire default). Returns whatever {@code action} returned.
+     */
+    private static <T> T captureLogsOf(List<LogRecord> sink, java.util.concurrent.Callable<T> action) {
+        Logger logger = Logger.getLogger(CLIMain.class.getCanonicalName());
+        Level priorLevel = logger.getLevel();
+        boolean priorUseParent = logger.getUseParentHandlers();
+        Handler capture = new Handler() {
+            @Override public void publish(LogRecord record) { sink.add(record); }
+            @Override public void flush() { }
+            @Override public void close() { }
+        };
+        capture.setLevel(Level.ALL);
+        logger.addHandler(capture);
+        logger.setLevel(Level.ALL);
+        logger.setUseParentHandlers(false);
+        try {
+            return action.call();
+        } catch (Exception exception) {
+            throw new RuntimeException(exception);
+        } finally {
+            logger.removeHandler(capture);
+            logger.setLevel(priorLevel);
+            logger.setUseParentHandlers(priorUseParent);
+        }
     }
 
     private static String captureStdoutOf(Runnable action) {
