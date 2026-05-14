@@ -75,6 +75,48 @@ public class FilterConfig {
             Pattern.compile("https?://[A-Za-z0-9.-]+(:\\d+)?(/\\S*)?"),
             "https://example.com"
         ));
+        //TODO Confirm info about regex for Korean phone, card, resident numbers and etc.
+//        filterRules.add(new SanitizationRule(
+//            Pattern.compile("\\b\\d{6}-\\d{7}\\b"),
+//            "000000-0000000"
+//        ));
+//        filterRules.add(new SanitizationRule(
+//            Pattern.compile("\\b0\\d{1,2}-\\d{3,4}-\\d{4}\\b"),
+//            "010-0000-0000"
+//        ));
+//        filterRules.add(new SanitizationRule(
+//            Pattern.compile("\\b\\d{3}-\\d{2}-\\d{5}\\b"),
+//            "000-00-00000"
+//        ));
+//        filterRules.add(new SanitizationRule(
+//            Pattern.compile("\\b\\d{2,4}-\\d{2,3}-\\d{4,6}\\b"),
+//            "000-00-000000"
+//        ));
+        // AWS Access Key
+        filterRules.add(new SanitizationRule(
+            Pattern.compile("\\bAKIA[0-9A-Z]{16}\\b"),
+            "AKIA0000000000000000"
+        ));
+        // AWS Secret Key
+        filterRules.add(new SanitizationRule(
+            Pattern.compile("\\b[A-Za-z0-9/+]{40}\\b"),
+            "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        ));
+        // GitHub Actions Access Token
+        filterRules.add(new SanitizationRule(
+            Pattern.compile("\\bghs_[A-Za-z0-9_]{36,251}\\b"),
+            "ghs_000000000000000000000000000000000000"
+        ));
+        // GitHub Personal Access Token
+        filterRules.add(new SanitizationRule(
+            Pattern.compile("\\bgh[puor]_[A-Za-z0-9]{36}\\b"),
+            "ghp_000000000000000000000000000000000000"
+        ));
+        // GitHub Fine-grained Personal Access Token
+        filterRules.add(new SanitizationRule(
+            Pattern.compile("\\bgithub_pat_[A-Za-z0-9]{22}_[A-Za-z0-9]{59}\\b"),
+            "github_pat_0000000000000000000000_00000000000000000000000000000000000000000000000000000000000"
+        ));
     }
 
     /**
