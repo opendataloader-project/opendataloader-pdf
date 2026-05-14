@@ -98,27 +98,27 @@ public class FilterConfig {
 //        ));
         // AWS Access Key
         filterRules.add(new SanitizationRule(
-            Pattern.compile("\\bAKIA[0-9A-Z]{16}\\b"),
+            Pattern.compile("\\bAKIA[0-9A-Z]{12,124}\\b"),
             "AKIA0000000000000000"
         ));
         // AWS Secret Key
         filterRules.add(new SanitizationRule(
-            Pattern.compile("\\b[A-Za-z0-9/+]{40}\\b"),
+            Pattern.compile("(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{40}(?![A-Za-z0-9/+=])"),
             "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         ));
         // GitHub Actions Access Token
         filterRules.add(new SanitizationRule(
-            Pattern.compile("\\bghs_[A-Za-z0-9_]{36,251}\\b"),
+            Pattern.compile("\\bghs_[A-Za-z0-9_]{10,251}\\b"),
             "ghs_000000000000000000000000000000000000"
         ));
         // GitHub Personal Access Token
         filterRules.add(new SanitizationRule(
-            Pattern.compile("\\bgh[puor]_[A-Za-z0-9]{36}\\b"),
+            Pattern.compile("\\bgh[puor]_[A-Za-z0-9]{10,251}\\b"),
             "ghp_000000000000000000000000000000000000"
         ));
         // GitHub Fine-grained Personal Access Token
         filterRules.add(new SanitizationRule(
-            Pattern.compile("\\bgithub_pat_[A-Za-z0-9]{22}_[A-Za-z0-9]{59}\\b"),
+            Pattern.compile("\\bgithub_pat_[A-Za-z0-9_]{10,243}\\b"),
             "github_pat_0000000000000000000000_00000000000000000000000000000000000000000000000000000000000"
         ));
     }
