@@ -51,6 +51,7 @@ public class TaggedDocumentProcessor {
             if (!shouldProcessPage(pageNumber)) {
                 continue;
             }
+            DocumentProcessor.setIDs(artifacts.get(pageNumber));
             contents.get(pageNumber).addAll(artifacts.get(pageNumber));
         }
         for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
