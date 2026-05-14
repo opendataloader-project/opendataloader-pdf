@@ -62,6 +62,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -300,6 +301,8 @@ public class HybridDocumentProcessor {
     static void failFastIfBackendFailedWithoutFallback(
             Set<Integer> backendFailedPages,
             HybridConfig hybridConfig) throws IOException {
+        Objects.requireNonNull(backendFailedPages, "backendFailedPages");
+        Objects.requireNonNull(hybridConfig, "hybridConfig");
         if (backendFailedPages.isEmpty() || hybridConfig.isFallbackToJava()) {
             return;
         }

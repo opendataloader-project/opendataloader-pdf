@@ -536,10 +536,14 @@ public class HybridDocumentProcessorTest {
 
         // Message must carry enough information that automation reading stderr can
         // identify which pages failed without re-running with verbose logs.
+        // Anchor on the rendered list prefix/suffix so the assertion fails if the
+        // list itself disappears — a bare contains("1") would pass on "1 page(s)".
         Assertions.assertTrue(ex.getMessage().contains("21 page(s)"),
             "message should include failed page count: " + ex.getMessage());
-        Assertions.assertTrue(ex.getMessage().contains("1") && ex.getMessage().contains("21"),
-            "message should include 1-indexed page numbers: " + ex.getMessage());
+        Assertions.assertTrue(ex.getMessage().contains("[1, 2,"),
+            "message should render 1-indexed page list starting at 1: " + ex.getMessage());
+        Assertions.assertTrue(ex.getMessage().contains(", 21]"),
+            "message should render 1-indexed page list ending at 21: " + ex.getMessage());
         Assertions.assertTrue(ex.getMessage().contains("fallback disabled"),
             "message should explain why processing failed: " + ex.getMessage());
     }
@@ -563,7 +567,29 @@ public class HybridDocumentProcessorTest {
 
         Assertions.assertTrue(ex.getMessage().contains("3 page(s)"),
             "message should include failed page count: " + ex.getMessage());
-        Assertions.assertTrue(ex.getMessage().contains("2") && ex.getMessage().contains("6") && ex.getMessage().contains("21"),
-            "message should include 1-indexed page numbers: " + ex.getMessage());
+        // The exact rendered list — both that the right pages are present and
+        // that they are sorted 1-indexed ascending.
+        Assertions.assertTrue(ex.getMessage().contains("[2, 6, 21]"),
+            "message should render sorted 1-indexed list [2, 6, 21]: " + ex.getMessage());
+    }
+
+    @Test
+    public void testFailFast_SinglePageFailed_RendersSingleElementList() {
+        // Contract guard for single-element list rendering. Keeps the
+        // [<page>] form honest when only one page failed (the most common
+        // partial-failure case in practice).
+        HybridConfig config = new HybridConfig();
+        config.setFallbackToJava(false);
+
+        Set<Integer> failed = new HashSet<>();
+        failed.add(6); // page 7 (1-indexed)
+
+        java.io.IOException ex = Assertions.assertThrows(java.io.IOException.class, () ->
+            HybridDocumentProcessor.failFastIfBackendFailedWithoutFallback(failed, config));
+
+        Assertions.assertTrue(ex.getMessage().contains("1 page(s)"),
+            "message should include failed page count: " + ex.getMessage());
+        Assertions.assertTrue(ex.getMessage().contains("[7]"),
+            "message should render single-element list as [7]: " + ex.getMessage());
     }
 }
