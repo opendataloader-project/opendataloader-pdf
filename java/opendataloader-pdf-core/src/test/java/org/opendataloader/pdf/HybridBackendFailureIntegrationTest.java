@@ -71,7 +71,13 @@ class HybridBackendFailureIntegrationTest {
     @AfterEach
     void tearDown() throws IOException {
         try {
-            server.shutdown();
+            // Guard against partial @BeforeEach failure leaving server unassigned
+            // (HybridClientFactory.shutdown() or `new MockWebServer()` could throw
+            // before the assignment). JUnit 5 still calls tearDown, so the guard
+            // prevents an NPE from masking the real setup failure.
+            if (server != null) {
+                server.shutdown();
+            }
         } finally {
             // Drop the cached HybridClient holding the mock server's URL so other
             // tests don't accidentally reuse it. Runs even if server.shutdown()
