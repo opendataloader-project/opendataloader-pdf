@@ -76,21 +76,25 @@ public class FilterConfig {
             "https://example.com"
         ));
         //TODO Confirm info about regex for Korean phone, card, resident numbers and etc.
-//        filterRules.add(new SanitizationRule(
-//            Pattern.compile("\\b\\d{6}-\\d{7}\\b"),
-//            "000000-0000000"
-//        ));
-//        filterRules.add(new SanitizationRule(
-//            Pattern.compile("\\b0\\d{1,2}-\\d{3,4}-\\d{4}\\b"),
-//            "010-0000-0000"
-//        ));
-//        filterRules.add(new SanitizationRule(
-//            Pattern.compile("\\b\\d{3}-\\d{2}-\\d{5}\\b"),
-//            "000-00-00000"
-//        ));
+        // Korean Resident Registration Number
+        filterRules.add(new SanitizationRule(
+            Pattern.compile("\\b\\d{6}-\\d{7}\\b"),
+            "000000-0000000"
+        ));
+        // Korean phone numbers
+        filterRules.add(new SanitizationRule(
+            Pattern.compile("\\b0\\d{1,2}-\\d{3,4}-\\d{4}\\b"),
+            "010-0000-0000"
+        ));
+        // Korean business registration number
+        filterRules.add(new SanitizationRule(
+            Pattern.compile("\\b\\d{3}-\\d{2}-\\d{5}\\b"),
+            "000-00-00000"
+        ));
+        // Korean bank account numbers
 //        filterRules.add(new SanitizationRule(
 //            Pattern.compile("\\b\\d{2,4}-\\d{2,3}-\\d{4,6}\\b"),
-//            "000-00-000000"
+//            "000-000-000000"
 //        ));
         // AWS Access Key
         filterRules.add(new SanitizationRule(
