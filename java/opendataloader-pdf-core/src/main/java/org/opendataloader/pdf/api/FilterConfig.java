@@ -102,11 +102,6 @@ public class FilterConfig {
             Pattern.compile("\\b(AKIA|ASIA)[0-9A-Z]{12,124}\\b"),
             "AKIA0000000000000000"
         ));
-        // AWS Secret Key
-        filterRules.add(new SanitizationRule(
-            Pattern.compile("(?<![A-Za-z0-9/+])[A-Za-z0-9/+]{40}(?![A-Za-z0-9/+])"),
-            "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-        ));
         //TODO Confirm info about regex for GitHub (maybe create separate rules for ghp|ghu|gho|ghs|ghr)
         // GitHub Personal Access Token
         filterRules.add(new SanitizationRule(
@@ -117,6 +112,12 @@ public class FilterConfig {
         filterRules.add(new SanitizationRule(
             Pattern.compile("\\bgithub_pat_[A-Za-z0-9_]{10,243}\\b"),
             "github_pat_0000000000000000000000_00000000000000000000000000000000000000000000000000000000000"
+        ));
+        // AWS Secret Key (Finds 40-character, base-64 strings that don't have any base 64 characters immediately before or after).
+        // Has to be last rule
+        filterRules.add(new SanitizationRule(
+            Pattern.compile("(?<![A-Za-z0-9/+])[A-Za-z0-9/+]{40}(?![A-Za-z0-9/+])"),
+            "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         ));
     }
 
