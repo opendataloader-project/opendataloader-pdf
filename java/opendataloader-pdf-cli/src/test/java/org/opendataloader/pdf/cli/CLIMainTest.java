@@ -15,6 +15,10 @@
  */
 package org.opendataloader.pdf.cli;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
+import org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -277,6 +281,84 @@ class CLIMainTest {
             "Exit code must be non-zero when any top-level argument is not a PDF");
         assertTrue(stdoutHolder[0].contains("'note.png' is not a PDF file"),
             "stdout must call out the non-PDF argument by name; got: " + stdoutHolder[0]);
+    }
+
+    /**
+     * Password-protected PDF with no password supplied must produce a single
+     * user-friendly error message (no verapdf stack trace) and exit non-zero.
+     *
+     * <p>Regression test for PDFDLOSP-9.
+     */
+    @Test
+    void testPasswordProtectedWithoutPasswordEmitsFriendlyError() throws IOException {
+        Path pdf = createPasswordProtectedPdf(tempDir.resolve("locked.pdf"), "1234");
+
+        String[] holder = new String[1];
+        int exitCode = (int) runCapturingStdout(
+            () -> CLIMain.run(new String[]{pdf.toString()}),
+            holder);
+
+        assertNotEquals(0, exitCode, "exit code must be non-zero");
+        assertTrue(holder[0].contains("'locked.pdf' is password-protected"),
+            "stdout must call out the file by name and explain it is password-protected; got: " + holder[0]);
+        assertTrue(holder[0].contains("--password"),
+            "stdout must guide the user to the --password option; got: " + holder[0]);
+        assertFalse(holder[0].contains("InvalidPasswordException"),
+            "stdout must not expose internal exception type; got: " + holder[0]);
+        assertFalse(holder[0].contains("at org.verapdf"),
+            "stdout must not expose a stack trace; got: " + holder[0]);
+    }
+
+    /**
+     * Password-protected PDF with an incorrect password must produce a single
+     * user-friendly error message (no verapdf stack trace) and exit non-zero.
+     *
+     * <p>Regression test for PDFDLOSP-9.
+     */
+    @Test
+    void testPasswordProtectedWithWrongPasswordEmitsFriendlyError() throws IOException {
+        Path pdf = createPasswordProtectedPdf(tempDir.resolve("locked.pdf"), "1234");
+
+        String[] holder = new String[1];
+        int exitCode = (int) runCapturingStdout(
+            () -> CLIMain.run(new String[]{pdf.toString(), "--password", "wrongpw"}),
+            holder);
+
+        assertNotEquals(0, exitCode, "exit code must be non-zero");
+        assertTrue(holder[0].contains("Incorrect password for 'locked.pdf'"),
+            "stdout must report incorrect password and the file name; got: " + holder[0]);
+        assertFalse(holder[0].contains("InvalidPasswordException"),
+            "stdout must not expose internal exception type; got: " + holder[0]);
+        assertFalse(holder[0].contains("at org.verapdf"),
+            "stdout must not expose a stack trace; got: " + holder[0]);
+    }
+
+    /**
+     * Correct password must keep the existing success path: exit code 0 and
+     * the JSON output produced next to the input. Regression guard for the
+     * happy case while fixing PDFDLOSP-9.
+     */
+    @Test
+    void testPasswordProtectedWithCorrectPasswordSucceeds() throws IOException {
+        Path pdf = createPasswordProtectedPdf(tempDir.resolve("locked.pdf"), "1234");
+
+        int exitCode = CLIMain.run(new String[]{pdf.toString(), "--password", "1234"});
+
+        assertEquals(0, exitCode, "correct password must keep exit code 0");
+        assertTrue(Files.exists(tempDir.resolve("locked.json")),
+            "JSON output must be produced next to the input PDF");
+    }
+
+    private static Path createPasswordProtectedPdf(Path target, String password) throws IOException {
+        try (PDDocument document = new PDDocument()) {
+            document.addPage(new PDPage());
+            AccessPermission permissions = new AccessPermission();
+            StandardProtectionPolicy policy = new StandardProtectionPolicy(password, password, permissions);
+            policy.setEncryptionKeyLength(128);
+            document.protect(policy);
+            document.save(target.toFile());
+        }
+        return target;
     }
 
     private static String captureStdoutOf(Runnable action) {
