@@ -9,7 +9,7 @@ import { Command } from 'commander';
 export function registerCliOptions(program: Command): void {
   program.option('-o, --output-dir <value>', 'Directory where output files are written. Default: input file directory');
   program.option('-p, --password <value>', 'Password for encrypted PDF files');
-  program.option('-f, --format <value>', 'Output formats (comma-separated). Values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images, tagged-pdf. Default: json');
+  program.option('-f, --format <value>', 'Output formats (comma-separated). Values: json, text, html, pdf, markdown, tagged-pdf. Default: json. For HTML inside Markdown use --markdown-with-html. For image extraction control use --image-output.');
   program.option('-q, --quiet', 'Suppress console logging output');
   program.option('--content-safety-off <value>', 'Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg');
   program.option('--sanitize', 'Enable sensitive data sanitization. Replaces emails, phone numbers, IPs, credit cards, and URLs with placeholders');
@@ -19,6 +19,7 @@ export function registerCliOptions(program: Command): void {
   program.option('--table-method <value>', 'Table detection method. Values: default (border-based), cluster (border + cluster). Default: default');
   program.option('--reading-order <value>', 'Reading order algorithm. Values: off, xycut. Default: xycut');
   program.option('--markdown-page-separator <value>', 'Separator between pages in Markdown output. Use %page-number% for page numbers. Default: none');
+  program.option('--markdown-with-html', 'Allow HTML tags inside Markdown output for complex structures such as multi-row-span tables. Implies --format markdown.');
   program.option('--text-page-separator <value>', 'Separator between pages in text output. Use %page-number% for page numbers. Default: none');
   program.option('--html-page-separator <value>', 'Separator between pages in HTML output. Use %page-number% for page numbers. Default: none');
   program.option('--image-output <value>', 'Image output mode. Values: off (no images), embedded (Base64 data URIs), external (file references). Default: external');

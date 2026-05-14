@@ -9,7 +9,7 @@ export interface ConvertOptions {
   outputDir?: string;
   /** Password for encrypted PDF files */
   password?: string;
-  /** Output formats (comma-separated). Values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images, tagged-pdf. Default: json */
+  /** Output formats (comma-separated). Values: json, text, html, pdf, markdown, tagged-pdf. Default: json. For HTML inside Markdown use --markdown-with-html. For image extraction control use --image-output. */
   format?: string | string[];
   /** Suppress console logging output */
   quiet?: boolean;
@@ -29,6 +29,8 @@ export interface ConvertOptions {
   readingOrder?: string;
   /** Separator between pages in Markdown output. Use %page-number% for page numbers. Default: none */
   markdownPageSeparator?: string;
+  /** Allow HTML tags inside Markdown output for complex structures such as multi-row-span tables. Implies --format markdown. */
+  markdownWithHtml?: boolean;
   /** Separator between pages in text output. Use %page-number% for page numbers. Default: none */
   textPageSeparator?: string;
   /** Separator between pages in HTML output. Use %page-number% for page numbers. Default: none */
@@ -83,6 +85,7 @@ export interface CliOptions {
   tableMethod?: string;
   readingOrder?: string;
   markdownPageSeparator?: string;
+  markdownWithHtml?: boolean;
   textPageSeparator?: string;
   htmlPageSeparator?: string;
   imageOutput?: string;
@@ -144,6 +147,9 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   }
   if (cliOptions.markdownPageSeparator) {
     convertOptions.markdownPageSeparator = cliOptions.markdownPageSeparator;
+  }
+  if (cliOptions.markdownWithHtml) {
+    convertOptions.markdownWithHtml = true;
   }
   if (cliOptions.textPageSeparator) {
     convertOptions.textPageSeparator = cliOptions.textPageSeparator;
@@ -256,6 +262,9 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.markdownPageSeparator) {
     args.push('--markdown-page-separator', options.markdownPageSeparator);
+  }
+  if (options.markdownWithHtml) {
+    args.push('--markdown-with-html');
   }
   if (options.textPageSeparator) {
     args.push('--text-page-separator', options.textPageSeparator);
