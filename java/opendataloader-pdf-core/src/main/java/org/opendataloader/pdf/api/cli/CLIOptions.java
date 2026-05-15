@@ -106,7 +106,7 @@ public class CLIOptions {
 
     // ===== Use Struct Tree =====
     private static final String USE_STRUCT_TREE_LONG_OPTION = "use-struct-tree";
-    private static final String USE_STRUCT_TREE_DESC = "Use PDF structure tree (tagged PDF) for reading order and semantic structure";
+    private static final String USE_STRUCT_TREE_DESC = "Use PDF structure tree (tagged PDF) for reading order and semantic structure. Output quality depends on tag quality";
 
     // ===== Table Method =====
     private static final String TABLE_METHOD_LONG_OPTION = "table-method";
