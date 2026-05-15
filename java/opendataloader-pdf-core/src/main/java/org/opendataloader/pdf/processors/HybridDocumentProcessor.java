@@ -184,7 +184,20 @@ public class HybridDocumentProcessor {
         // Phase 0: Check backend availability before any processing.
         // Runs before triage intentionally — if the user explicitly requested hybrid mode,
         // they expect the server to be available regardless of how pages would be routed.
-        getClient(config).checkAvailability();
+        // When the health check fails and --hybrid-fallback is enabled, route every page
+        // through the Java path instead of aborting the whole run (PDFDLOSP-21).
+        try {
+            getClient(config).checkAvailability();
+        } catch (IOException e) {
+            if (config.getHybridConfig().isFallbackToJava()) {
+                LOGGER.log(Level.WARNING,
+                    "Hybrid backend unavailable; falling back to Java-only processing: {0}",
+                    e.getMessage());
+                return processAllPagesAsJavaFallback(
+                    inputPdfName, config, pagesToProcess, totalPages);
+            }
+            throw e;
+        }
 
         // Phase 1: Filter all pages and collect filtered contents
         Map<Integer, List<IObject>> filteredContents = filterAllPages(inputPdfName, config, pagesToProcess, totalPages);
@@ -276,6 +289,40 @@ public class HybridDocumentProcessor {
         // Phase 6: Post-processing (cross-page operations)
         postProcess(contents, config, pagesToProcess, totalPages);
 
+        return contents;
+    }
+
+    /**
+     * Runs the full document through the Java path when the hybrid backend health check
+     * fails and {@code --hybrid-fallback} is enabled. Mirrors the structure of
+     * {@link #processDocument} so the caller still gets a per-page result list, but
+     * skips triage and the backend chunk loop entirely.
+     */
+    private static List<List<IObject>> processAllPagesAsJavaFallback(
+            String inputPdfName,
+            Config config,
+            Set<Integer> pagesToProcess,
+            int totalPages) throws IOException {
+
+        Map<Integer, List<IObject>> filteredContents =
+            filterAllPages(inputPdfName, config, pagesToProcess, totalPages);
+
+        Set<Integer> allPages = new HashSet<>();
+        for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
+            if (shouldProcessPage(pageNumber, pagesToProcess)) {
+                allPages.add(pageNumber);
+            }
+        }
+
+        Map<Integer, List<IObject>> javaResults =
+            processJavaPath(filteredContents, allPages, config, totalPages);
+
+        List<List<IObject>> contents = new ArrayList<>();
+        for (int i = 0; i < totalPages; i++) {
+            contents.add(new ArrayList<>());
+        }
+        mergeResults(contents, javaResults, new HashMap<>(), pagesToProcess, totalPages);
+        postProcess(contents, config, pagesToProcess, totalPages);
         return contents;
     }
 
