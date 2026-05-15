@@ -21,7 +21,7 @@ export interface ConvertOptions {
   keepLineBreaks?: boolean;
   /** Replacement character for invalid/unrecognized characters. Default: space */
   replaceInvalidChars?: string;
-  /** Use PDF structure tree (tagged PDF) for reading order and semantic structure */
+  /** Use PDF structure tree (tagged PDF) for reading order and semantic structure. Output quality depends on tag quality */
   useStructTree?: boolean;
   /** Table detection method. Values: default (border-based), cluster (border + cluster). Default: default */
   tableMethod?: string;
