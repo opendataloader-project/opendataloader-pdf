@@ -371,9 +371,10 @@ class CLIMainTest {
 
     /**
      * When the hybrid backend is unreachable and {@code --hybrid-fallback} is
-     * NOT supplied, CLIMain must surface the friendly fail-fast message on
-     * stdout (including the new {@code --hybrid-fallback} hint) and must never
-     * leak a Java stack trace. Regression for PDFDLOSP-21.
+     * NOT supplied, CLIMain must surface the friendly fail-fast message
+     * (including the new {@code --hybrid-fallback} hint) via the SEVERE log
+     * record and must never leak a Java stack trace to stdout. Regression for
+     * PDFDLOSP-21.
      */
     @Test
     void testHybridUnavailableWithoutFallbackEmitsFriendlyMessageNoStackTrace() throws IOException {
@@ -392,20 +393,50 @@ class CLIMainTest {
         }
 
         String[] stdoutHolder = new String[1];
-        int exitCode = (int) runCapturingStdout(() -> CLIMain.run(new String[]{
-            "--hybrid", "docling-fast",
-            "--hybrid-mode", "full",
-            "--hybrid-url", "http://127.0.0.1:" + closedPort,
-            "--output", tempDir.toString(),
-            testPdf.toString()
-        }), stdoutHolder);
+        StringBuilder logCapture = new StringBuilder();
+        java.util.logging.Logger cliLogger = java.util.logging.Logger.getLogger(
+            "org.opendataloader.pdf.cli.CLIMain");
+        java.util.logging.Handler captureHandler = new java.util.logging.Handler() {
+            @Override public void publish(java.util.logging.LogRecord record) {
+                logCapture.append(record.getMessage()).append('\n');
+                Throwable thrown = record.getThrown();
+                while (thrown != null) {
+                    logCapture.append(thrown).append('\n');
+                    for (StackTraceElement frame : thrown.getStackTrace()) {
+                        logCapture.append("\tat ").append(frame).append('\n');
+                    }
+                    thrown = thrown.getCause();
+                }
+            }
+            @Override public void flush() {}
+            @Override public void close() {}
+        };
+        cliLogger.addHandler(captureHandler);
+        int exitCode;
+        try {
+            exitCode = (int) runCapturingStdout(() -> CLIMain.run(new String[]{
+                "--hybrid", "docling-fast",
+                "--hybrid-mode", "full",
+                "--hybrid-url", "http://127.0.0.1:" + closedPort,
+                "--output", tempDir.toString(),
+                testPdf.toString()
+            }), stdoutHolder);
+        } finally {
+            cliLogger.removeHandler(captureHandler);
+        }
 
         assertNotEquals(0, exitCode,
             "Exit code must be non-zero when hybrid backend is unreachable and fallback is off");
 
         String out = stdoutHolder[0];
         assertFalse(out.contains("\tat "),
-            "Output must not contain a Java stack trace ('\\tat '); got: " + out);
+            "stdout must not contain a Java stack trace ('\\tat '); got: " + out);
+
+        String logged = logCapture.toString();
+        assertTrue(logged.contains("Hybrid server is not available"),
+            "Log output should explain that the hybrid backend is unreachable; got: " + logged);
+        assertTrue(logged.contains("--hybrid-fallback"),
+            "Log output should include the --hybrid-fallback recovery hint; got: " + logged);
     }
 
     // --- PDFDLOSP-14: magic-number guard regressions ----------------------
