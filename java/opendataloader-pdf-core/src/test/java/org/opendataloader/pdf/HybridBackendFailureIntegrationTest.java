@@ -29,8 +29,11 @@ import org.opendataloader.pdf.processors.DocumentProcessor;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.ServerSocket;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -121,5 +124,114 @@ class HybridBackendFailureIntegrationTest {
 
         assertTrue(ex.getMessage().contains("page(s) with fallback disabled"),
             "exception should mention fallback context: " + ex.getMessage());
+    }
+
+    /**
+     * PDFDLOSP-21 case 1 (P0): backend is entirely unreachable and
+     * {@code --hybrid-fallback} is ON. {@code processDocument} must catch the
+     * health-check IOException and route every page through the Java path so the
+     * run completes normally and writes a valid JSON output.
+     */
+    @Test
+    void serverAbsent_withFallback_processesWithJava() throws IOException {
+        // Reserve a port and immediately close the socket so connection attempts
+        // hit a closed port (most reliable connection-refused simulation that
+        // does not depend on platform DNS quirks).
+        int closedPort = reserveClosedPort();
+        String unreachableUrl = "http://127.0.0.1:" + closedPort;
+
+        Config config = new Config();
+        config.setOutputFolder(tempDir.toString());
+        config.setGenerateJSON(true);
+        config.setHybrid("docling-fast");
+        config.getHybridConfig().setMode(HybridConfig.MODE_FULL);
+        config.getHybridConfig().setUrl(unreachableUrl);
+        config.getHybridConfig().setFallbackToJava(true);
+
+        assertDoesNotThrow(
+            () -> DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config),
+            "with --hybrid-fallback the run must succeed when the backend is absent");
+
+        Path jsonOutput = tempDir.resolve("lorem.json");
+        assertTrue(Files.exists(jsonOutput),
+            "Java-fallback path should still produce JSON output at " + jsonOutput);
+        assertTrue(Files.size(jsonOutput) > 0L,
+            "JSON output must not be empty when fallback ran successfully");
+    }
+
+    /**
+     * PDFDLOSP-21 case 2 (P0): backend is entirely unreachable and
+     * {@code --hybrid-fallback} is OFF. The run must fail fast with an
+     * {@link IOException} whose message points the user at the new
+     * {@code --hybrid-fallback} escape hatch (DoclingFastServerClient patch).
+     */
+    @Test
+    void serverAbsent_withoutFallback_failsFastWithHelpfulMessage() throws IOException {
+        int closedPort = reserveClosedPort();
+        String unreachableUrl = "http://127.0.0.1:" + closedPort;
+
+        Config config = new Config();
+        config.setOutputFolder(tempDir.toString());
+        config.setGenerateJSON(true);
+        config.setHybrid("docling-fast");
+        config.getHybridConfig().setMode(HybridConfig.MODE_FULL);
+        config.getHybridConfig().setUrl(unreachableUrl);
+        // Document the precondition: fallback stays off, so health-check failure
+        // must propagate.
+        assertFalse(config.getHybridConfig().isFallbackToJava(),
+            "fallback must be disabled for the fail-fast scenario");
+
+        IOException ex = assertThrows(IOException.class,
+            () -> DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config));
+
+        String msg = ex.getMessage() == null ? "" : ex.getMessage();
+        assertTrue(msg.contains("Hybrid server is not available"),
+            "exception should identify the health-check failure: " + msg);
+        assertTrue(msg.contains("--hybrid-fallback"),
+            "exception should point user to --hybrid-fallback escape hatch: " + msg);
+    }
+
+    /**
+     * PDFDLOSP-21 case 3 (P0): same as case 1 but with an aggressive 1 ms
+     * timeout. The fallback path must be triggered by any IOException raised
+     * from {@code checkAvailability()} — connection refused, connect timeout,
+     * read timeout — so this guards H-6/H-7 equivalence: timeout-driven failures
+     * are recovered just like connection-refused failures.
+     */
+    @Test
+    void serverAbsent_withFallbackAndTinyTimeout_processesWithJava() throws IOException {
+        int closedPort = reserveClosedPort();
+        String unreachableUrl = "http://127.0.0.1:" + closedPort;
+
+        Config config = new Config();
+        config.setOutputFolder(tempDir.toString());
+        config.setGenerateJSON(true);
+        config.setHybrid("docling-fast");
+        config.getHybridConfig().setMode(HybridConfig.MODE_FULL);
+        config.getHybridConfig().setUrl(unreachableUrl);
+        config.getHybridConfig().setFallbackToJava(true);
+        config.getHybridConfig().setTimeoutMs(1);
+
+        assertDoesNotThrow(
+            () -> DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config),
+            "fallback must handle timeout-driven health-check failures too");
+
+        Path jsonOutput = tempDir.resolve("lorem.json");
+        assertTrue(Files.exists(jsonOutput),
+            "Java-fallback path should still produce JSON output at " + jsonOutput);
+        assertTrue(Files.size(jsonOutput) > 0L,
+            "JSON output must not be empty when fallback ran with tiny timeout");
+    }
+
+    /**
+     * Binds an ephemeral port and releases it. Subsequent connect() attempts to
+     * the returned port number are extremely likely to be refused, giving a
+     * deterministic "backend unreachable" condition without relying on
+     * unrouteable IPs (which can hang on some hosts).
+     */
+    private static int reserveClosedPort() throws IOException {
+        try (ServerSocket socket = new ServerSocket(0)) {
+            return socket.getLocalPort();
+        }
     }
 }

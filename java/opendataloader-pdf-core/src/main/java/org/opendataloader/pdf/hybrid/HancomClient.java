@@ -121,6 +121,7 @@ public class HancomClient implements HybridClient {
             throw new IOException(
                 "Hybrid server is not available at " + baseUrl + "\n"
                 + "Please check the server URL and ensure the Hancom API is accessible.\n"
+                + "Or pass --hybrid-fallback to fall back to Java-only output for this run.\n"
                 + "Or run without --hybrid flag for Java-only processing.", e);
         }
     }
