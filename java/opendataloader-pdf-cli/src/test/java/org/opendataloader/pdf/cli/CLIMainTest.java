@@ -367,6 +367,47 @@ class CLIMainTest {
         return target;
     }
 
+    // --- PDFDLOSP-21: hybrid backend unavailable, stack-trace guard -------
+
+    /**
+     * When the hybrid backend is unreachable and {@code --hybrid-fallback} is
+     * NOT supplied, CLIMain must surface the friendly fail-fast message on
+     * stdout (including the new {@code --hybrid-fallback} hint) and must never
+     * leak a Java stack trace. Regression for PDFDLOSP-21.
+     */
+    @Test
+    void testHybridUnavailableWithoutFallbackEmitsFriendlyMessageNoStackTrace() throws IOException {
+        Path testPdf = tempDir.resolve("ok.pdf");
+        // Minimal but valid-enough header so the file reaches HybridDocumentProcessor.
+        // PDF parsing happens after health-check on this branch.
+        try (PDDocument doc = new PDDocument()) {
+            doc.addPage(new PDPage());
+            doc.save(testPdf.toFile());
+        }
+
+        // Reserve an ephemeral port and release it so connect() is refused.
+        int closedPort;
+        try (java.net.ServerSocket socket = new java.net.ServerSocket(0)) {
+            closedPort = socket.getLocalPort();
+        }
+
+        String[] stdoutHolder = new String[1];
+        int exitCode = (int) runCapturingStdout(() -> CLIMain.run(new String[]{
+            "--hybrid", "docling-fast",
+            "--hybrid-mode", "full",
+            "--hybrid-url", "http://127.0.0.1:" + closedPort,
+            "--output", tempDir.toString(),
+            testPdf.toString()
+        }), stdoutHolder);
+
+        assertNotEquals(0, exitCode,
+            "Exit code must be non-zero when hybrid backend is unreachable and fallback is off");
+
+        String out = stdoutHolder[0];
+        assertFalse(out.contains("\tat "),
+            "Output must not contain a Java stack trace ('\\tat '); got: " + out);
+    }
+
     // --- PDFDLOSP-14: magic-number guard regressions ----------------------
 
     private static final byte[] JPEG_PREFIX = new byte[]{
