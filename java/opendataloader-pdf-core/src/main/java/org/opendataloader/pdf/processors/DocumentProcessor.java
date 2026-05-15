@@ -283,7 +283,8 @@ public class DocumentProcessor {
 
         int parallelism = config.getThreads();
         ForkJoinPool pool = new ForkJoinPool(parallelism);
-        LOGGER.log(Level.INFO, "Processing {0} pages with {1} threads", new Object[]{totalPages, parallelism});
+        int pagesToProcessCount = (pagesToProcess != null) ? pagesToProcess.size() : totalPages;
+        LOGGER.log(Level.INFO, "Processing {0} pages with {1} threads", new Object[]{pagesToProcessCount, parallelism});
 
         try {
             // Loop 1: ContentFilter per-page (largest bottleneck)
