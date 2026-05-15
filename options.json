@@ -70,7 +70,7 @@
       "type": "boolean",
       "required": false,
       "default": false,
-      "description": "Use PDF structure tree (tagged PDF) for reading order and semantic structure"
+      "description": "Use PDF structure tree (tagged PDF) for reading order and semantic structure. Output quality depends on tag quality"
     },
     {
       "name": "table-method",

@@ -88,7 +88,7 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "type": "boolean",
         "required": False,
         "default": False,
-        "description": "Use PDF structure tree (tagged PDF) for reading order and semantic structure",
+        "description": "Use PDF structure tree (tagged PDF) for reading order and semantic structure. Output quality depends on tag quality",
     },
     {
         "name": "table-method",
