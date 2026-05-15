@@ -20,6 +20,7 @@ import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.api.OpenDataLoaderPDF;
 import org.opendataloader.pdf.api.cli.CLIOptions;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
+import org.opendataloader.pdf.exceptions.EncryptedTaggedPdfNotSupportedException;
 import org.opendataloader.pdf.exceptions.InvalidPdfFileException;
 import org.verapdf.exceptions.InvalidPasswordException;
 
@@ -238,6 +239,9 @@ public class CLIMain {
                 ? "Error: '" + file.getName() + "' is password-protected. Use --password option."
                 : "Error: Incorrect password for '" + file.getName() + "'.";
             System.out.println(message);
+            return false;
+        } catch (EncryptedTaggedPdfNotSupportedException exception) {
+            System.out.println("Error: " + exception.getMessage());
             return false;
         } catch (Exception exception) {
             LOGGER.log(Level.SEVERE, "Exception during processing file " + file.getAbsolutePath() + ": " +

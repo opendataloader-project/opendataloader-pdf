@@ -5,6 +5,7 @@ import org.opendataloader.pdf.autotagging.OperatorStreamKey;
 import org.opendataloader.pdf.entities.EnrichedImageChunk;
 import org.opendataloader.pdf.entities.SemanticFootnote;
 import org.opendataloader.pdf.entities.SemanticFormula;
+import org.opendataloader.pdf.exceptions.EncryptedTaggedPdfNotSupportedException;
 import org.verapdf.as.ASAtom;
 import org.verapdf.as.io.ASMemoryInStream;
 import org.verapdf.cos.*;
@@ -93,6 +94,11 @@ public class AutoTaggingProcessor {
      * Tag a PDF document and save to disk. Existing behavior preserved.
      */
     public static synchronized void createTaggedPDF(File inputPDF, String outputFolder, PDDocument document, List<List<IObject>> contents) throws IOException {
+        COSObject encrypt = document.getDocument().getTrailer().getEncrypt();
+        if (encrypt != null && !encrypt.empty()) {
+            throw new EncryptedTaggedPdfNotSupportedException(
+                "'" + inputPDF.getName() + "' is encrypted; tagged-pdf conversion is not supported for encrypted documents.");
+        }
         tagDocument(document, contents, null);
         String outputFileName = outputFolder + File.separator +
             inputPDF.getName().substring(0, inputPDF.getName().length() - 4) + "_tagged.pdf";
