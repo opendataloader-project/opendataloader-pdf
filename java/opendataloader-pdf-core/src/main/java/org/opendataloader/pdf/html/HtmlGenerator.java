@@ -44,7 +44,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -71,6 +73,15 @@ public class HtmlGenerator implements Closeable {
     protected int tableNesting = 0;
     /** String to insert between pages in HTML output. */
     protected String htmlPageSeparator = "";
+    /**
+     * Page numbers (1-based) selected by --pages; an empty set means all pages.
+     * Sourced from the raw {@link Config#getPageNumbers()} list (not the
+     * validated set built by {@code DocumentProcessor.getValidPageNumbers}).
+     * Safe to compare against {@code pageNumber + 1} because the surrounding
+     * loop is bounded by the document's actual page count, so out-of-range
+     * values from the raw list are never tested for membership.
+     */
+    protected final Set<Integer> selectedPageNumbers;
     /** Whether to embed images as Base64 data URIs. */
     protected boolean embedImages = false;
     /** Format for extracted images (png or jpeg). */
@@ -96,6 +107,7 @@ public class HtmlGenerator implements Closeable {
         this.htmlFilePath = Path.of(config.getOutputFolder(), htmlFileName);
         this.htmlWriter = new FileWriter(htmlFilePath.toFile(), StandardCharsets.UTF_8);
         this.htmlPageSeparator = config.getHtmlPageSeparator();
+        this.selectedPageNumbers = new HashSet<>(config.getPageNumbers());
         this.embedImages = config.isEmbedImages();
         this.imageFormat = config.getImageFormat();
         this.includeHeaderFooter = config.isIncludeHeaderFooter();
@@ -114,7 +126,9 @@ public class HtmlGenerator implements Closeable {
             htmlWriter.write("</head>\n<body>\n");
 
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
-                writePageSeparator(pageNumber);
+                if (selectedPageNumbers.isEmpty() || selectedPageNumbers.contains(pageNumber + 1)) {
+                    writePageSeparator(pageNumber);
+                }
                 for (IObject content : contents.get(pageNumber)) {
                     this.write(content);
                 }
