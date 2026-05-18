@@ -34,7 +34,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -51,6 +53,15 @@ public class TextGenerator implements Closeable {
     private final String textFileName;
     private final String lineSeparator = System.lineSeparator();
     private final String textPageSeparator;
+    /**
+     * Page numbers (1-based) selected by --pages; an empty set means all pages.
+     * Sourced from the raw {@link Config#getPageNumbers()} list (not the
+     * validated set built by {@code DocumentProcessor.getValidPageNumbers}).
+     * Safe to compare against {@code pageIndex + 1} because the surrounding
+     * loop is bounded by the document's actual page count, so out-of-range
+     * values from the raw list are never tested for membership.
+     */
+    private final Set<Integer> selectedPageNumbers;
     private final boolean includeHeaderFooter;
 
     public TextGenerator(File inputPdf, Config config) throws IOException {
@@ -58,6 +69,7 @@ public class TextGenerator implements Closeable {
         this.textFileName = config.getOutputFolder() + File.separator + cutPdfFileName.substring(0, cutPdfFileName.length() - 3) + "txt";
         this.textWriter = new FileWriter(textFileName, StandardCharsets.UTF_8);
         this.textPageSeparator = config.getTextPageSeparator();
+        this.selectedPageNumbers = new HashSet<>(config.getPageNumbers());
         this.includeHeaderFooter = config.isIncludeHeaderFooter();
     }
 
@@ -68,13 +80,16 @@ public class TextGenerator implements Closeable {
         this.textFileName = null;
         this.textWriter = writer;
         this.textPageSeparator = config.getTextPageSeparator();
+        this.selectedPageNumbers = new HashSet<>(config.getPageNumbers());
         this.includeHeaderFooter = config.isIncludeHeaderFooter();
     }
 
     public void writeToText(List<List<IObject>> contents) {
         try {
             for (int pageIndex = 0; pageIndex < contents.size(); pageIndex++) {
-                writePageSeparator(pageIndex);
+                if (selectedPageNumbers.isEmpty() || selectedPageNumbers.contains(pageIndex + 1)) {
+                    writePageSeparator(pageIndex);
+                }
                 List<IObject> pageContents = contents.get(pageIndex);
                 writeContents(pageContents, 0);
                 if (pageIndex < contents.size() - 1) {
