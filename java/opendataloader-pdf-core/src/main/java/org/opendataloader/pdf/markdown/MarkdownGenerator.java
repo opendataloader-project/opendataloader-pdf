@@ -42,7 +42,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -54,6 +56,15 @@ public class MarkdownGenerator implements Closeable {
     protected int tableNesting = 0;
     protected boolean isImageSupported;
     protected String markdownPageSeparator;
+    /**
+     * Page numbers (1-based) selected by --pages; an empty set means all pages.
+     * Sourced from the raw {@link Config#getPageNumbers()} list (not the
+     * validated set built by {@code DocumentProcessor.getValidPageNumbers}).
+     * Safe to compare against {@code pageNumber + 1} because the surrounding
+     * loop is bounded by the document's actual page count, so out-of-range
+     * values from the raw list are never tested for membership.
+     */
+    protected final Set<Integer> selectedPageNumbers;
     protected boolean embedImages = false;
     protected String imageFormat = Config.IMAGE_FORMAT_PNG;
     protected boolean includeHeaderFooter = false;
@@ -65,6 +76,7 @@ public class MarkdownGenerator implements Closeable {
         this.markdownWriter = new FileWriter(markdownFileName, StandardCharsets.UTF_8);
         this.isImageSupported = !config.isImageOutputOff() && config.isGenerateMarkdown();
         this.markdownPageSeparator = config.getMarkdownPageSeparator();
+        this.selectedPageNumbers = new HashSet<>(config.getPageNumbers());
         this.embedImages = config.isEmbedImages();
         this.imageFormat = config.getImageFormat();
         this.includeHeaderFooter = config.isIncludeHeaderFooter();
@@ -78,6 +90,7 @@ public class MarkdownGenerator implements Closeable {
         this.markdownWriter = writer;
         this.isImageSupported = false;
         this.markdownPageSeparator = config.getMarkdownPageSeparator();
+        this.selectedPageNumbers = new HashSet<>(config.getPageNumbers());
         this.embedImages = false;
         this.imageFormat = config.getImageFormat();
         this.includeHeaderFooter = config.isIncludeHeaderFooter();
@@ -86,7 +99,9 @@ public class MarkdownGenerator implements Closeable {
     public void writeToMarkdown(List<List<IObject>> contents) {
         try {
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
-                writePageSeparator(pageNumber);
+                if (selectedPageNumbers.isEmpty() || selectedPageNumbers.contains(pageNumber + 1)) {
+                    writePageSeparator(pageNumber);
+                }
                 for (IObject content : contents.get(pageNumber)) {
                     if (!isSupportedContent(content)) {
                         continue;
