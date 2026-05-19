@@ -508,6 +508,14 @@ public class ParagraphProcessor {
         if (previousBlock.isHiddenText() != nextBlock.isHiddenText()) {
             return 0;
         }
+        if (previousBlock.getLastLine() != null && previousBlock.getLastLine().getFirstTextChunk() != null &&
+            nextBlock.getFirstLine() != null && nextBlock.getFirstLine().getFirstTextChunk() != null) {
+            double prevWeight = previousBlock.getLastLine().getFirstTextChunk().getFontWeight();
+            double nextWeight = nextBlock.getFirstLine().getFirstTextChunk().getFontWeight();
+            if (Math.abs(prevWeight - nextWeight) > 50.0) {
+                return 0;
+            }
+        }
         if (previousBlock.getLinesNumber() == 1 && nextBlock.getLinesNumber() == 1) {
             return ChunksMergeUtils.mergeLeadingProbability(previousBlock.getLastLine(), nextBlock.getFirstLine());
         }

@@ -328,6 +328,53 @@ public class XYCutPlusPlusSorter {
      * @param preferHorizontalFirst Initial preference (used as tiebreaker)
      * @return Sorted list of objects
      */
+    private static boolean isVerticallyAligned(IObject o1, IObject o2) {
+        BoundingBox b1 = o1.getBoundingBox();
+        BoundingBox b2 = o2.getBoundingBox();
+        if (b1 == null || b2 == null) {
+            return false;
+        }
+        double overlapTop = Math.min(b1.getTopY(), b2.getTopY());
+        double overlapBottom = Math.max(b1.getBottomY(), b2.getBottomY());
+        double overlapHeight = overlapTop - overlapBottom;
+        if (overlapHeight <= 0) {
+            return false;
+        }
+        double minHeight = Math.min(b1.getHeight(), b2.getHeight());
+        return minHeight > 0 && (overlapHeight / minHeight) >= 0.5;
+    }
+
+    private static boolean isRowBasedLayout(List<IObject> left, List<IObject> right, double verticalGap, double horizontalGap) {
+        if (left.isEmpty() || right.isEmpty()) {
+            return false;
+        }
+        int alignedCount = 0;
+        double totalHeight = 0;
+        for (IObject L : left) {
+            boolean aligned = false;
+            for (IObject R : right) {
+                if (isVerticallyAligned(L, R)) {
+                    aligned = true;
+                    totalHeight += L.getBoundingBox().getHeight();
+                    break;
+                }
+            }
+            if (aligned) {
+                alignedCount++;
+            }
+        }
+        if (alignedCount < 2) {
+            return false;
+        }
+        boolean hasLargeVerticalGap = verticalGap >= 80.0 && verticalGap >= 8.0 * Math.max(1.0, horizontalGap);
+        if (alignedCount < 3 && !hasLargeVerticalGap) {
+            return false;
+        }
+        double avgHeight = totalHeight / alignedCount;
+        double ratio = (double) alignedCount / left.size();
+        return ratio >= 0.5 && avgHeight < 45.0;
+    }
+
     static List<IObject> recursiveSegment(List<IObject> objects, boolean preferHorizontalFirst) {
         if (objects == null || objects.size() <= 1) {
             return objects != null ? new ArrayList<>(objects) : new ArrayList<>();
@@ -353,6 +400,26 @@ public class XYCutPlusPlusSorter {
         } else {
             // No valid cuts found - sort by Y then X (reading order)
             return sortByYThenX(objects);
+        }
+
+        // Row-based layout (TOC / table) protection:
+        if (!useHorizontalCut && hasValidVerticalCut) {
+            List<IObject> left = new ArrayList<>();
+            List<IObject> right = new ArrayList<>();
+            for (IObject obj : objects) {
+                if (obj.getCenterX() < verticalCut.position) {
+                    left.add(obj);
+                } else {
+                    right.add(obj);
+                }
+            }
+            if (isRowBasedLayout(left, right, verticalCut.gap, horizontalCut.gap)) {
+                if (horizontalCut.gap >= 1.5) {
+                    useHorizontalCut = true;
+                } else {
+                    return sortByYThenX(objects);
+                }
+            }
         }
 
         if (useHorizontalCut) {
