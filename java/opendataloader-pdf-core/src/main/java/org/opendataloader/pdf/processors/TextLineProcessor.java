@@ -114,6 +114,7 @@ public class TextLineProcessor {
                 spaceBBox.setLeftX(spaceLeft);
                 spaceBBox.setRightX(spaceRight);
                 TextChunk spaceChunk = new TextChunk(spaceBBox, " ", textLine.getFontSize(), textLine.getBaseLine());
+                spaceChunk.adjustSymbolEndsToBoundingBox(null);
                 newLine.add(spaceChunk);
             }
             previousEnd = currentTextChunk.getBoundingBox().getRightX();
