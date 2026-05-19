@@ -239,7 +239,7 @@ public class TableBorderProcessor {
         currentTable.setPreviousTable(previousTable);
     }
 
-    static TextChunk getTextChunkPartForRange(TextChunk textChunk, double leftX, double rightX) {
+    public static TextChunk getTextChunkPartForRange(TextChunk textChunk, double leftX, double rightX) {
         Integer start = textChunk.getSymbolStartIndexByCoordinate(leftX);
         if (start == null) {
             return null;
@@ -255,12 +255,8 @@ public class TableBorderProcessor {
         return ChunksMergeUtils.getTrimTextChunk(result);
     }
 
-    private static TextChunk getTextChunkPartForTableCell(TextChunk textChunk, TableBorderCell cell) {
-        return getTextChunkPartForRange(textChunk, cell.getLeftX(), cell.getRightX());
-    }
-
-    public static TextChunk getTextChunkPartBeforeTable(TextChunk textChunk, TableBorder table) {
-        Integer end = textChunk.getSymbolEndIndexByCoordinate(table.getLeftX());
+    public static TextChunk getTextChunkPartBeforeBoundingBox(TextChunk textChunk, BoundingBox bbox) {
+        Integer end = textChunk.getSymbolEndIndexByCoordinate(bbox.getLeftX());
         if (end == null) {
             return null;
         }
@@ -271,12 +267,24 @@ public class TableBorderProcessor {
         return ChunksMergeUtils.getTrimTextChunk(result);
     }
 
-    public static TextChunk getTextChunkPartAfterTable(TextChunk textChunk, TableBorder table) {
-        Integer start = textChunk.getSymbolStartIndexByCoordinate(table.getRightX());
+    private static TextChunk getTextChunkPartAfterBoundingBox(TextChunk textChunk, BoundingBox bbox) {
+        Integer start = textChunk.getSymbolStartIndexByCoordinate(bbox.getRightX());
         if (start == null) {
             return null;
         }
         TextChunk result = TextChunk.getTextChunk(textChunk, start, textChunk.getValue().length());
         return ChunksMergeUtils.getTrimTextChunk(result);
+    }
+
+    private static TextChunk getTextChunkPartForTableCell(TextChunk textChunk, TableBorderCell cell) {
+        return getTextChunkPartForRange(textChunk, cell.getLeftX(), cell.getRightX());
+    }
+
+    public static TextChunk getTextChunkPartBeforeTable(TextChunk textChunk, TableBorder table) {
+        return getTextChunkPartBeforeBoundingBox(textChunk, table.getBoundingBox());
+    }
+
+    public static TextChunk getTextChunkPartAfterTable(TextChunk textChunk, TableBorder table) {
+        return getTextChunkPartAfterBoundingBox(textChunk, table.getBoundingBox());
     }
 }
