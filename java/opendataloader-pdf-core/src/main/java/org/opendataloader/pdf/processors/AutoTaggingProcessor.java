@@ -36,8 +36,12 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.utils.StreamInfo;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class AutoTaggingProcessor {
+
+    private static final Logger LOGGER = Logger.getLogger(AutoTaggingProcessor.class.getCanonicalName());
 
     private static final Map<OperatorStreamKey, Map<Integer, Set<StreamInfo>>> operatorIndexesToStreamInfosMap = new LinkedHashMap<>();
     private static final Map<OperatorStreamKey, List<COSObject>> structParents = new LinkedHashMap<>();
@@ -103,6 +107,7 @@ public class AutoTaggingProcessor {
         String outputFileName = outputFolder + File.separator +
             inputPDF.getName().substring(0, inputPDF.getName().length() - 4) + "_tagged.pdf";
         document.saveAs(outputFileName);
+        LOGGER.log(Level.INFO, "Created {0}", outputFileName);
     }
 
     private static void updatePages(PDDocument document, COSDocument cosDocument) throws IOException {
