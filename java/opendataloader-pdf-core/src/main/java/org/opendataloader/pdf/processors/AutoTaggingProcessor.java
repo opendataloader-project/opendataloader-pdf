@@ -927,50 +927,138 @@ public class AutoTaggingProcessor {
     }
 
     private static void processTextNode(SemanticTextNode textNode, COSObject cosObject) {
+        Map.Entry<BoundingBox, PDAnnotation> bBoxToAnnotation = null;
         List<StreamInfo> streamInfos = new ArrayList<>();
         for (TextColumn textColumn : textNode.getColumns()) {
             for (TextLine textLine : textColumn.getLines()) {
                 for (TextChunk textChunk : textLine.getTextChunks()) {
-                    Map.Entry<BoundingBox, PDAnnotation> entry = getAnnotationByBBox(textChunk.getBoundingBox());
-                    if (entry != null) {
-                        annotationBBoxesMap.remove(entry.getKey());
-                        if (!streamInfos.isEmpty()) {
-                            addMcidChildren(streamInfos, textNode.getPageNumber(), cosObject);
-                            streamInfos.clear();
-                        }
-                        createAnnotationStructElem(StaticResources.getDocument().getDocument(), cosObject, entry.getValue(),
-                            textChunk.getStreamInfos(), textNode.getPageNumber());
+                    if (bBoxToAnnotation != null &&
+                        (!isAnnotIntersectWithBoundingBox(bBoxToAnnotation.getKey(), textChunk.getBoundingBox()) ||
+                            TableBorderProcessor.getTextChunkPartBeforeBoundingBox(textChunk, bBoxToAnnotation.getKey()) != null)) {
+                        createAnnotationStructElem(StaticResources.getDocument().getDocument(), cosObject,
+                            bBoxToAnnotation.getValue(), streamInfos, textNode.getPageNumber());
+                        annotationBBoxesMap.remove(bBoxToAnnotation.getKey());
+                        streamInfos.clear();
+                        bBoxToAnnotation = null;
+                    }
+                    SortedMap<BoundingBox, PDAnnotation> annots = getAnnotationsByBBox(textChunk.getBoundingBox());
+                    if (!annots.isEmpty()) {
+                        bBoxToAnnotation = processAnnotsForTextChunk(cosObject, bBoxToAnnotation, streamInfos,
+                            textChunk, annots);
                     } else {
                         streamInfos.addAll(textChunk.getStreamInfos());
                     }
                 }
             }
         }
-        addMcidChildren(streamInfos, textNode.getPageNumber(), cosObject);
+        if (bBoxToAnnotation != null) {
+            createAnnotationStructElem(StaticResources.getDocument().getDocument(), cosObject, bBoxToAnnotation.getValue(),
+                streamInfos, textNode.getPageNumber());
+            annotationBBoxesMap.remove(bBoxToAnnotation.getKey());
+        } else {
+            addMcidChildren(streamInfos, textNode.getPageNumber(), cosObject);
+        }
+    }
+
+    private static Map.Entry<BoundingBox, PDAnnotation> processAnnotsForTextChunk(COSObject cosObject,
+                                                                                  Map.Entry<BoundingBox, PDAnnotation> bBoxToAnnotation,
+                                                                                  List<StreamInfo> streamInfos,
+                                                                                  TextChunk textChunk,
+                                                                                  SortedMap<BoundingBox, PDAnnotation> annots) {
+        Map.Entry<BoundingBox, PDAnnotation> currentBBoxToAnnotation = bBoxToAnnotation;
+        double currentRightX = textChunk.getLeftX();
+        for (Map.Entry<BoundingBox, PDAnnotation> entry : annots.entrySet()) {
+            // Reference equality is intentional: currentBBoxToAnnotation may have been
+            // carried over from a previous TextChunk when the annotation spans multiple
+            // chunks. 'entry' comes from the freshly built 'annots' map (ordered by left X)
+            // for the current chunk. If both references point to the same Map.Entry object,
+            // we are still accumulating stream infos inside the annotation region that was
+            // started in a prior iteration and should not flush it yet.
+            // Processed annotations are removed from annotationBBoxesMap immediately after
+            // createAnnotationStructElem, so they will never reappear in a subsequent
+            // getAnnotationsByBBox call, making the identity check safe and unambiguous.
+            if (currentBBoxToAnnotation == null || !Objects.equals(currentBBoxToAnnotation.getKey(), entry.getKey())) {
+                if (currentBBoxToAnnotation != null) {
+                    createAnnotationStructElem(StaticResources.getDocument().getDocument(), cosObject,
+                        currentBBoxToAnnotation.getValue(), streamInfos, textChunk.getPageNumber());
+                    annotationBBoxesMap.remove(currentBBoxToAnnotation.getKey());
+                    streamInfos.clear();
+                    currentRightX = currentBBoxToAnnotation.getKey().getRightX();
+                }
+                BoundingBox boundingBox = entry.getKey();
+                TextChunk textChunkPart = TableBorderProcessor.getTextChunkPartForRange(textChunk,
+                    currentRightX, boundingBox.getLeftX());
+                if (textChunkPart != null) {
+                    streamInfos.addAll(textChunkPart.getStreamInfos());
+                }
+                addMcidChildren(streamInfos, textChunk.getPageNumber(), cosObject);
+                streamInfos.clear();
+                textChunkPart = TableBorderProcessor.getTextChunkPartForRange(textChunk,
+                    boundingBox.getLeftX(), boundingBox.getRightX());
+                if (textChunkPart != null) {
+                    streamInfos.addAll(textChunkPart.getStreamInfos());
+                }
+                currentRightX = boundingBox.getRightX();
+            }
+            currentBBoxToAnnotation = entry;
+        }
+        TextChunk textChunkPart = TableBorderProcessor.getTextChunkPartForRange(textChunk,
+            currentRightX, textChunk.getRightX());
+        if (textChunkPart != null) {
+            createAnnotationStructElem(StaticResources.getDocument().getDocument(), cosObject,
+                currentBBoxToAnnotation.getValue(), streamInfos, textChunk.getPageNumber());
+            annotationBBoxesMap.remove(currentBBoxToAnnotation.getKey());
+            streamInfos.clear();
+            streamInfos.addAll(textChunkPart.getStreamInfos());
+            currentBBoxToAnnotation = null;
+        }
+        return currentBBoxToAnnotation;
     }
 
     private static Map.Entry<BoundingBox, PDAnnotation> getAnnotationByBBox(BoundingBox boundingBox) {
         for (Map.Entry<BoundingBox, PDAnnotation> entry : annotationBBoxesMap.entrySet()) {
-            if (entry.getKey().getIntersectionPercent(boundingBox) > 0.5d) {
+            if (isAnnotIntersectWithBoundingBox(entry.getKey(), boundingBox)) {
                 return entry;
             }
         }
         return null;
     }
 
+    private static SortedMap<BoundingBox, PDAnnotation> getAnnotationsByBBox(BoundingBox boundingBox) {
+        SortedMap<BoundingBox, PDAnnotation> result = new TreeMap<>(
+            Comparator.comparingDouble((BoundingBox b) -> b.getLeftX()).thenComparingInt(BoundingBox::hashCode));
+        for (Map.Entry<BoundingBox, PDAnnotation> entry : annotationBBoxesMap.entrySet()) {
+            if (isAnnotIntersectWithBoundingBox(entry.getKey(), boundingBox)) {
+                result.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return result;
+    }
+
+    private static boolean isAnnotIntersectWithBoundingBox(BoundingBox annotBoundingBox, BoundingBox boundingBox) {
+        return annotBoundingBox.getIntersectionPercent(boundingBox) > 0.5d;
+    }
+
     private static void processImageNode(ImageChunk imageChunk, COSObject cosObject) {
-        addMcidChildren(imageChunk.getStreamInfos(), imageChunk.getPageNumber(), cosObject);
+        Map.Entry<BoundingBox, PDAnnotation> entry = getAnnotationByBBox(imageChunk.getBoundingBox());
+        if (entry != null) {
+            annotationBBoxesMap.remove(entry.getKey());
+            createAnnotationStructElem(StaticResources.getDocument().getDocument(), cosObject, entry.getValue(),
+                imageChunk.getStreamInfos(), imageChunk.getPageNumber());
+        } else {
+            addMcidChildren(imageChunk.getStreamInfos(), imageChunk.getPageNumber(), cosObject);
+        }
     }
 
     private static void addMcidChildren(List<StreamInfo> streamInfos, Integer pageNumber, COSObject parentStructElement) {
+        if (streamInfos.isEmpty()) {
+            return;
+        }
         COSObject kids = parentStructElement.getKey(ASAtom.K);
         if (kids.getType() != COSObjType.COS_ARRAY) {
             COSObject array = COSArray.construct();
             parentStructElement.setKey(ASAtom.K, array);
             kids = array;
-        }
-        if (streamInfos.isEmpty()) {
-            return;
         }
         List<StreamInfo> streamInfoList = getMergedStreamInfos(streamInfos);
         for (StreamInfo streamInfo : streamInfoList) {
