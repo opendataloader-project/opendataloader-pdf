@@ -54,21 +54,4 @@ public class GeneratorUtils {
         }
         return stringBuilder.toString();
     }
-
-    public static boolean isItalic(TextChunk chunk) {
-        return !NodeUtils.areCloseNumbers(chunk.getItalicAngle(), 0);
-    }
-
-    public static boolean isNotDefaultFontColor(TextChunk chunk) {
-        return !Color.BLACK.equals(ContrastRatioConsumer.getTextColorFromComponentArray(chunk.getFontColor()));
-    }
-
-    public static int getRoundedFontWeight(double value) {
-        int rounded = (int) Math.round(value / 100.0) * 100;
-
-        if (rounded < 100) {
-            return 100;
-        }
-        return Math.min(rounded, 900);
-    }
 }

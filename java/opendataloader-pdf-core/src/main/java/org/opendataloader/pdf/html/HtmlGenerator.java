@@ -15,6 +15,7 @@
  */
 package org.opendataloader.pdf.html;
 
+import org.jetbrains.annotations.NotNull;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.entities.SemanticFormula;
@@ -497,29 +498,10 @@ public class HtmlGenerator implements Closeable {
 
     public static void getTextFromLineForHTML(TextLine line, StringBuilder stringBuilder) {
         for (TextChunk chunk : line.getTextChunks()) {
-            if (isSpanWithStylesNeeded(chunk)) {
+            String style = getTextStyle(chunk);
+            if (!style.isEmpty()) {
                 stringBuilder.append(HtmlSyntax.HTML_SPAN_WITH_STYLE_START_TAG);
-                if (chunk.getIsStrikethroughText()) {
-                    stringBuilder.append(HtmlSyntax.HTML_STRIKETHROUGH_STYLE_PROPERTY);
-                }
-                if (GeneratorUtils.isItalic(chunk)) {
-                    writeSpaceInString(stringBuilder);
-                    stringBuilder.append(HtmlSyntax.HTML_ITALIC_STYLE_PROPERTY);
-                }
-                if (GeneratorUtils.isNotDefaultFontColor(chunk)) {
-                    Color color = ContrastRatioConsumer.getTextColorFromComponentArray(chunk.getFontColor());
-                    writeSpaceInString(stringBuilder);
-                    stringBuilder.append(HtmlSyntax.HTML_FONT_COLOR_PROPERTY)
-                        .append(color.getRed()).append(", ")
-                        .append(color.getGreen()).append(", ")
-                        .append(color.getBlue()).append(");");
-                }
-                int fontWeight = GeneratorUtils.getRoundedFontWeight(chunk.getFontWeight());
-                if (fontWeight != 400) {
-                    writeSpaceInString(stringBuilder);
-                    stringBuilder.append(HtmlSyntax.HTML_FONT_WEIGHT_PROPERTY)
-                        .append(fontWeight).append(";");
-                }
+                stringBuilder.append(style.trim());
                 stringBuilder.append(HtmlSyntax.HTML_SPAN_WITH_STYLE_END_TAG);
                 stringBuilder.append(chunk.getValue());
                 stringBuilder.append(HtmlSyntax.HTML_SPAN_CLOSE_TAG);
@@ -529,15 +511,25 @@ public class HtmlGenerator implements Closeable {
         }
     }
 
-    private static boolean isSpanWithStylesNeeded(TextChunk chunk) {
-        return chunk.getIsStrikethroughText() || GeneratorUtils.isItalic(chunk)
-            || GeneratorUtils.isNotDefaultFontColor(chunk) || GeneratorUtils.getRoundedFontWeight(chunk.getFontWeight()) != 400;
-    }
-
-    private static void writeSpaceInString(StringBuilder stringBuilder) {
-        if (stringBuilder.charAt(stringBuilder.length() - 1) != '\"') {
-            stringBuilder.append(" ");
+    @NotNull
+    private static String getTextStyle(TextChunk chunk) {
+        StringBuilder style = new StringBuilder();
+        if (chunk.getIsStrikethroughText()) {
+            style.append(HtmlSyntax.HTML_STRIKETHROUGH_STYLE_PROPERTY);
         }
+        if (chunk.isItalic()) {
+            style.append(HtmlSyntax.HTML_ITALIC_STYLE_PROPERTY);
+        }
+        if (!Color.BLACK.equals(chunk.getTextColor())) {
+            Color color = ContrastRatioConsumer.getTextColorFromComponentArray(chunk.getFontColor());
+            style.append(String.format(HtmlSyntax.HTML_FONT_COLOR_PROPERTY,
+                color.getRed(), color.getGreen(), color.getBlue()));
+        }
+        int fontWeight = chunk.getRoundedFontWeight();
+        if (fontWeight != 400) {
+            style.append(String.format(HtmlSyntax.HTML_FONT_WEIGHT_PROPERTY, fontWeight));
+        }
+        return style.toString();
     }
 
     @Override
