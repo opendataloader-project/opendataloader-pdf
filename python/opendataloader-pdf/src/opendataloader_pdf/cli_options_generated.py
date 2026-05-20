@@ -169,7 +169,7 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "type": "string",
         "required": False,
         "default": None,
-        "description": "Directory for extracted images",
+        "description": "Directory for extracted images (applies only with --image-output external)",
     },
     {
         "name": "pages",

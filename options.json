@@ -142,7 +142,7 @@
       "type": "string",
       "required": false,
       "default": null,
-      "description": "Directory for extracted images"
+      "description": "Directory for extracted images (applies only with --image-output external)"
     },
     {
       "name": "pages",

@@ -42,6 +42,7 @@ public class StaticLayoutContainers {
     private static final ThreadLocal<Boolean> embedImages = new ThreadLocal<>();
     private static final ThreadLocal<String> imageFormat = new ThreadLocal<>();
     private static final ThreadLocal<Map<Integer, Double>> replacementCharRatios = ThreadLocal.withInitial(ConcurrentHashMap::new);
+    private static final ThreadLocal<Map<String, byte[]>> embeddedImageBytes = ThreadLocal.withInitial(ConcurrentHashMap::new);
 
     public static void clearContainers() {
         currentContentId.set(1L);
@@ -54,6 +55,7 @@ public class StaticLayoutContainers {
         embedImages.set(false);
         imageFormat.set(Config.IMAGE_FORMAT_PNG);
         replacementCharRatios.get().clear();
+        embeddedImageBytes.get().clear();
     }
 
     public static long getCurrentContentId() {
@@ -155,5 +157,38 @@ public class StaticLayoutContainers {
 
     public static double getReplacementCharRatio(int pageNumber) {
         return replacementCharRatios.get().getOrDefault(pageNumber, 0.0);
+    }
+
+    public static void cacheEmbeddedImageBytes(String absolutePath, byte[] bytes) {
+        embeddedImageBytes.get().put(normalizeImageKey(absolutePath), bytes);
+    }
+
+    public static byte[] getEmbeddedImageBytes(String absolutePath) {
+        return embeddedImageBytes.get().get(normalizeImageKey(absolutePath));
+    }
+
+    public static boolean hasEmbeddedImageBytes(String absolutePath) {
+        return embeddedImageBytes.get().containsKey(normalizeImageKey(absolutePath));
+    }
+
+    // Map-level accessors are used by DocumentProcessor.propagateState so worker threads
+    // share the main thread's cache instance. Today the cache is only touched on the main
+    // thread, but propagating it eliminates a silent-data-loss trap if generators ever
+    // run on workers — matches the CLAUDE.md ThreadLocal-propagation gotcha.
+    public static Map<String, byte[]> getEmbeddedImageBytesMap() {
+        return embeddedImageBytes.get();
+    }
+
+    public static void setEmbeddedImageBytesMap(Map<String, byte[]> map) {
+        embeddedImageBytes.set(map);
+    }
+
+    // Image paths flow through String.format with File.separator (cache write side) and
+    // through File.getPath() (cache read side via Base64ImageUtils.toDataUri). The two
+    // forms can differ on Windows when the user passes forward-slash output paths
+    // (e.g. /tmp/x). Collapse both forms to a single canonical key so writers and readers
+    // agree on cache identity.
+    private static String normalizeImageKey(String path) {
+        return path == null ? null : new File(path).getPath();
     }
 }

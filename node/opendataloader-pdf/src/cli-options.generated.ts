@@ -24,7 +24,7 @@ export function registerCliOptions(program: Command): void {
   program.option('--html-page-separator <value>', 'Separator between pages in HTML output. Use %page-number% for page numbers. Default: none');
   program.option('--image-output <value>', 'Image output mode. Values: off (no images), embedded (Base64 data URIs), external (file references). Default: external');
   program.option('--image-format <value>', 'Output format for extracted images. Values: png, jpeg. Default: png');
-  program.option('--image-dir <value>', 'Directory for extracted images');
+  program.option('--image-dir <value>', 'Directory for extracted images (applies only with --image-output external)');
   program.option('--pages <value>', 'Pages to extract (e.g., "1,3,5-7"). Default: all pages');
   program.option('--include-header-footer', 'Include page headers and footers in output');
   program.option('--detect-strikethrough', 'Detect strikethrough text and wrap with ~~ in Markdown output or <del></del> tag in HTML output (experimental)');

@@ -134,7 +134,7 @@ public class CLIOptions {
     private static final String IMAGE_FORMAT_DESC = "Output format for extracted images. Values: png, jpeg. Default: png";
 
     private static final String IMAGE_DIR_LONG_OPTION = "image-dir";
-    private static final String IMAGE_DIR_DESC = "Directory for extracted images";
+    private static final String IMAGE_DIR_DESC = "Directory for extracted images (applies only with --image-output external)";
 
     // ===== Pages =====
     private static final String PAGES_LONG_OPTION = "pages";
