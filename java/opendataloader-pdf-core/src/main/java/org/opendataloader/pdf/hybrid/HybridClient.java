@@ -39,6 +39,18 @@ import java.util.concurrent.CompletableFuture;
 public interface HybridClient {
 
     /**
+     * Optional: fetch the backend's {@code /health} (or equivalent) payload
+     * for reference-environment metadata (hardware, model identifiers,
+     * backend version). Best-effort — returns {@code null} when the backend
+     * has no such endpoint or the call fails. The default returns
+     * {@code null}; implementations that have a health endpoint should
+     * override.
+     */
+    default com.fasterxml.jackson.databind.JsonNode fetchHealth() {
+        return null;
+    }
+
+    /**
      * Output formats that can be requested from the hybrid backend.
      */
     enum OutputFormat {
