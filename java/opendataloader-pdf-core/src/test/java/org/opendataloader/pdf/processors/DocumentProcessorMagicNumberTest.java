@@ -26,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -102,7 +103,7 @@ class DocumentProcessorMagicNumberTest {
         assertFalse(message.contains("missing %PDF- header"),
             "Header IS present (just preceded by BOM/whitespace) — must not "
             + "be misreported as missing; got: " + message);
-        assertNotNull(thrown.getCause(),
+        assertInstanceOf(IOException.class, thrown.getCause(),
             "Original veraPDF IOException must be preserved as cause for diagnostics");
     }
 
@@ -142,7 +143,7 @@ class DocumentProcessorMagicNumberTest {
         assertTrue(message.contains("corrupted or truncated"),
             "Truncated PDF must surface the 'corrupted or truncated' message; got: "
             + message);
-        assertNotNull(thrown.getCause(),
+        assertInstanceOf(IOException.class, thrown.getCause(),
             "Original veraPDF IOException must be preserved as cause for diagnostics");
     }
 }
