@@ -36,8 +36,11 @@ import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
+import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioConsumer;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
+import java.awt.*;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileWriter;
@@ -494,13 +497,46 @@ public class HtmlGenerator implements Closeable {
 
     public static void getTextFromLineForHTML(TextLine line, StringBuilder stringBuilder) {
         for (TextChunk chunk : line.getTextChunks()) {
-            if (chunk.getIsStrikethroughText()) {
-                stringBuilder.append(strikethroughTextHtmlOpeningTag);
+            if (isSpanWithStylesNeeded(chunk)) {
+                stringBuilder.append(HtmlSyntax.HTML_SPAN_WITH_STYLE_START_TAG);
+                if (chunk.getIsStrikethroughText()) {
+                    stringBuilder.append(HtmlSyntax.HTML_STRIKETHROUGH_STYLE_PROPERTY);
+                }
+                if (GeneratorUtils.isItalic(chunk)) {
+                    writeSpaceInString(stringBuilder);
+                    stringBuilder.append(HtmlSyntax.HTML_ITALIC_STYLE_PROPERTY);
+                }
+                if (GeneratorUtils.isNotDefaultFontColor(chunk)) {
+                    Color color = ContrastRatioConsumer.getTextColorFromComponentArray(chunk.getFontColor());
+                    writeSpaceInString(stringBuilder);
+                    stringBuilder.append(HtmlSyntax.HTML_FONT_COLOR_PROPERTY)
+                        .append(color.getRed()).append(", ")
+                        .append(color.getGreen()).append(", ")
+                        .append(color.getBlue()).append(");");
+                }
+                int fontWeight = GeneratorUtils.getRoundedFontWeight(chunk.getFontWeight());
+                if (fontWeight != 400) {
+                    writeSpaceInString(stringBuilder);
+                    stringBuilder.append(HtmlSyntax.HTML_FONT_WEIGHT_PROPERTY)
+                        .append(fontWeight).append(";");
+                }
+                stringBuilder.append(HtmlSyntax.HTML_SPAN_WITH_STYLE_END_TAG);
+                stringBuilder.append(chunk.getValue());
+                stringBuilder.append(HtmlSyntax.HTML_SPAN_CLOSE_TAG);
+            } else {
+                stringBuilder.append(chunk.getValue());
             }
-            stringBuilder.append(chunk.getValue());
-            if (chunk.getIsStrikethroughText()) {
-                stringBuilder.append(strikethroughTextHtmlClosingTag);
-            }
+        }
+    }
+
+    private static boolean isSpanWithStylesNeeded(TextChunk chunk) {
+        return chunk.getIsStrikethroughText() || GeneratorUtils.isItalic(chunk)
+            || GeneratorUtils.isNotDefaultFontColor(chunk) || GeneratorUtils.getRoundedFontWeight(chunk.getFontWeight()) != 400;
+    }
+
+    private static void writeSpaceInString(StringBuilder stringBuilder) {
+        if (stringBuilder.charAt(stringBuilder.length() - 1) != '\"') {
+            stringBuilder.append(" ");
         }
     }
 

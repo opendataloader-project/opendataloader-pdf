@@ -4,10 +4,14 @@ import org.opendataloader.pdf.html.HtmlGenerator;
 import org.opendataloader.pdf.markdown.MarkdownGenerator;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.TextBlock;
+import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextColumn;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
+import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioConsumer;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
 
+import java.awt.*;
 import java.util.List;
 
 public class GeneratorUtils {
@@ -49,5 +53,22 @@ public class GeneratorUtils {
                 break;
         }
         return stringBuilder.toString();
+    }
+
+    public static boolean isItalic(TextChunk chunk) {
+        return !NodeUtils.areCloseNumbers(chunk.getItalicAngle(), 0);
+    }
+
+    public static boolean isNotDefaultFontColor(TextChunk chunk) {
+        return !Color.BLACK.equals(ContrastRatioConsumer.getTextColorFromComponentArray(chunk.getFontColor()));
+    }
+
+    public static int getRoundedFontWeight(double value) {
+        int rounded = (int) Math.round(value / 100.0) * 100;
+
+        if (rounded < 100) {
+            return 100;
+        }
+        return Math.min(rounded, 900);
     }
 }
