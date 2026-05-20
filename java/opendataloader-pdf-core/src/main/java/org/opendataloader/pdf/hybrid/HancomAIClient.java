@@ -67,6 +67,7 @@ public class HancomAIClient implements HybridClient {
     private static final String SDK_ENDPOINT = "/hocr/sdk";
     private static final String PDF2IMG_ENDPOINT = "/support/pdf2img";
     private static final String PING_ENDPOINT = "/ping";
+    private static final String HEALTH_ENDPOINT = "/health";
     private static final int HEALTH_CHECK_TIMEOUT_MS = 3000;
     private static final String DEFAULT_FILENAME = "document.pdf";
     private static final MediaType MEDIA_TYPE_PDF = MediaType.parse("application/pdf");
@@ -135,6 +136,28 @@ public class HancomAIClient implements HybridClient {
         this.baseUrl = baseUrl;
         this.httpClient = httpClient;
         this.objectMapper = objectMapper;
+    }
+
+    @Override
+    public JsonNode fetchHealth() {
+        OkHttpClient healthClient = httpClient.newBuilder()
+            .connectTimeout(HEALTH_CHECK_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+            .readTimeout(HEALTH_CHECK_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+            .build();
+        Request request = new Request.Builder()
+            .url(baseUrl + HEALTH_ENDPOINT)
+            .get()
+            .build();
+        try (Response response = healthClient.newCall(request).execute()) {
+            if (!response.isSuccessful()) return null;
+            ResponseBody body = response.body();
+            if (body == null) return null;
+            return objectMapper.readTree(body.string());
+        } catch (IOException e) {
+            LOGGER.log(Level.FINE,
+                "Hancom AI /health unavailable: {0}", e.getMessage());
+            return null;
+        }
     }
 
     @Override
@@ -330,7 +353,8 @@ public class HancomAIClient implements HybridClient {
                     }
 
                     int objIdForCaption = fig.has("object_id") ? fig.get("object_id").asInt() : -1;
-                    String caption = callImageCaptioning(croppedPng, pageNum, objIdForCaption);
+                    CaptionResult captionResult = callImageCaptioning(croppedPng, pageNum, objIdForCaption);
+                    String caption = captionResult != null ? captionResult.caption : null;
 
                     ObjectNode capNode = objectMapper.createObjectNode();
                     capNode.put("page_number", pageNum);
@@ -339,6 +363,9 @@ public class HancomAIClient implements HybridClient {
                     bboxArr.add(left).add(top).add(right).add(bottom);
                     capNode.set("bbox", bboxArr);
                     capNode.put("caption", caption != null ? caption : "");
+                    if (captionResult != null && captionResult.confidence != null) {
+                        capNode.put("confidence", captionResult.confidence);
+                    }
                     captions.add(capNode);
 
                     LOGGER.log(Level.FINE, "Captioned figure page={0} bbox=[{1},{2},{3},{4}]: {5}",
@@ -467,10 +494,20 @@ public class HancomAIClient implements HybridClient {
                     dlaBbox.add(left).add(top).add(right).add(bottom);
                     entry.set("dla_bbox", dlaBbox);
 
-                    // Extract TSR page result
+                    // Extract TSR page result. The HOCR envelope wraps results
+                    // as RESULT=[[page]], so the page node is where any
+                    // top-level self-score lands.
                     List<JsonNode> tsrPages = extractPages(tsrResult);
                     if (!tsrPages.isEmpty()) {
-                        entry.set("tsr", tsrPages.get(0));
+                        JsonNode tsrPage = tsrPages.get(0);
+                        JsonNode conf = tsrPage.get("confidence");
+                        if (conf != null && conf.isNumber()) {
+                            // doubleValue() returns the numeric value directly;
+                            // asDouble() has a silent 0.0 fallback we don't want
+                            // even though the isNumber() guard makes it unreachable.
+                            entry.put("confidence", conf.doubleValue());
+                        }
+                        entry.set("tsr", tsrPage);
                     } else {
                         entry.set("tsr", objectMapper.createObjectNode());
                     }
@@ -637,7 +674,17 @@ public class HancomAIClient implements HybridClient {
     /**
      * Sends a cropped image to IMAGE_CAPTIONING and returns the caption text.
      */
-    private String callImageCaptioning(byte[] pngBytes, int pageNum, int objectId) throws IOException {
+    /** Image-captioning result: caption text + the model's self-reported confidence. */
+    static final class CaptionResult {
+        final String caption;
+        final Double confidence;
+        CaptionResult(String caption, Double confidence) {
+            this.caption = caption;
+            this.confidence = confidence;
+        }
+    }
+
+    private CaptionResult callImageCaptioning(byte[] pngBytes, int pageNum, int objectId) throws IOException {
         String requestId = "odl-" + sourcePdfShaShort + "-p" + pageNum + "-o" + objectId + "-caption";
         MultipartBody body = new MultipartBody.Builder()
             .setType(MultipartBody.FORM)
@@ -668,7 +715,11 @@ public class HancomAIClient implements HybridClient {
             JsonNode page = result.get(0);
             if (page.isArray() && page.size() > 0) page = page.get(0);
 
-            return page.has("caption") ? page.get("caption").asText("") : null;
+            String caption = page.has("caption") ? page.get("caption").asText("") : null;
+            JsonNode confNode = page.get("confidence");
+            Double confidence = confNode != null && confNode.isNumber()
+                ? confNode.doubleValue() : null;
+            return new CaptionResult(caption, confidence);
         }
     }
 
