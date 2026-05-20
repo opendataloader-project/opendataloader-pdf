@@ -30,8 +30,8 @@ import java.util.List;
  * setting their isStrikethroughText field to true.
  *
  * Filters to avoid false positives:
- * 1. Stroke-to-text-height ratio (rejects thick background fills/borders)
- * 2. Line-to-text width ratio (rejects lines wider than text)
+ * 1. Rule-to-text-height ratio (rejects thick background fills/borders)
+ * 2. Rule-to-text width ratio (rejects rules wider than text)
  * 3. Vertical center alignment
  * 4. Horizontal overlap requirement
  * 5. Multi-chunk matching using the combined text width
@@ -43,7 +43,7 @@ public class StrikethroughProcessor {
     private static final double MAX_LINE_TO_TEXT_WIDTH_RATIO = 1.5;
 
     // Real strikethrough marks are thin rules. Text-height rectangles commonly
-    // come from glyph bounds or filled artifacts and must not be treated as strikes.
+    // come from glyph bounds, filled artifacts, backgrounds, or table artwork.
     private static final double MAX_RULE_THICKNESS = 2.0;
     private static final double MAX_RULE_TO_TEXT_HEIGHT_RATIO = 0.25;
 
@@ -55,19 +55,42 @@ public class StrikethroughProcessor {
      * @return the page contents (modified in place)
      */
     public static List<IObject> processStrikethroughs(List<IObject> pageContents) {
+        return processStrikethroughs(pageContents, true, true);
+    }
+
+    /**
+     * Detects only line-art strikethroughs. This is used before table
+     * normalization because table processing can consume LineArtChunks.
+     *
+     * @param pageContents the list of content objects for a page
+     * @return the page contents (modified in place)
+     */
+    public static List<IObject> processLineArtStrikethroughs(List<IObject> pageContents) {
+        return processStrikethroughs(pageContents, false, true);
+    }
+
+    // Shared implementation lets the normal post-table pass inspect both sources,
+    // while the pre-table pass can inspect only raw LineArtChunks before table
+    // normalization has a chance to consume them.
+    private static List<IObject> processStrikethroughs(List<IObject> pageContents, boolean includeLineChunks,
+                                                       boolean includeLineArtChunks) {
+        if (pageContents == null) {
+            return null;
+        }
+
         List<HorizontalRuleCandidate> horizontalRules = new ArrayList<>();
         List<TextChunk> textChunks = new ArrayList<>();
 
         for (IObject content : pageContents) {
-            if (content instanceof LineChunk) {
-                LineChunk line = (LineChunk) content;
-                if (line.isHorizontalLine()) {
-                    horizontalRules.add(HorizontalRuleCandidate.fromLineChunk(line));
+            if (includeLineChunks && content instanceof LineChunk) {
+                HorizontalRuleCandidate rule = HorizontalRuleCandidate.fromLineChunk((LineChunk) content);
+                if (rule != null) {
+                    horizontalRules.add(rule);
                 }
-            } else if (content instanceof LineArtChunk) {
-                LineArtChunk lineArt = (LineArtChunk) content;
-                if (isHorizontalLineArt(lineArt)) {
-                    horizontalRules.add(HorizontalRuleCandidate.fromLineArtChunk(lineArt));
+            } else if (includeLineArtChunks && content instanceof LineArtChunk) {
+                HorizontalRuleCandidate rule = HorizontalRuleCandidate.fromLineArtChunk((LineArtChunk) content);
+                if (rule != null) {
+                    horizontalRules.add(rule);
                 }
             } else if (content instanceof TextChunk) {
                 textChunks.add((TextChunk) content);
@@ -105,15 +128,18 @@ public class StrikethroughProcessor {
      * Determines whether a horizontal line is a strikethrough for the given text chunk.
      */
     static boolean isStrikethroughLine(LineChunk line, TextChunk textChunk) {
-        return isStrikethroughRule(HorizontalRuleCandidate.fromLineChunk(line), textChunk);
+        HorizontalRuleCandidate rule = HorizontalRuleCandidate.fromLineChunk(line);
+        return rule != null && isStrikethroughRule(rule, textChunk);
     }
 
     /**
      * Determines whether a line-art rectangle is a strikethrough for the given text chunk.
      */
     static boolean isStrikethroughLineArt(LineArtChunk lineArt, TextChunk textChunk) {
-        return isHorizontalLineArt(lineArt) && isStrikethroughRule(HorizontalRuleCandidate.fromLineArtChunk(lineArt),
-            textChunk);
+        HorizontalRuleCandidate rule = HorizontalRuleCandidate.fromLineArtChunk(lineArt);
+        // Line-art rectangles are also used for table/background artwork, so
+        // apply the width-ratio guard even for direct single-chunk checks.
+        return rule != null && isStrikethroughRule(rule, textChunk) && isValidMatch(rule, List.of(textChunk));
     }
 
     private static boolean isHorizontalLineArt(LineArtChunk lineArt) {
@@ -122,13 +148,18 @@ public class StrikethroughProcessor {
     }
 
     private static boolean isStrikethroughRule(HorizontalRuleCandidate rule, TextChunk textChunk) {
+        if (rule == null || textChunk == null) {
+            return false;
+        }
+
         double textHeight = textChunk.getHeight();
 
         if (textHeight <= 0) {
             return false;
         }
 
-        // Reject rules that are too thick to be a strikethrough mark.
+        // LineChunk thickness is stroke width; LineArtChunk thickness is rectangle
+        // height. In both cases, strikethrough marks should stay thin relative to text.
         double maxRuleThickness = Math.min(MAX_RULE_THICKNESS, textHeight * MAX_RULE_TO_TEXT_HEIGHT_RATIO);
         if (rule.thickness > maxRuleThickness) {
             return false;
@@ -169,6 +200,10 @@ public class StrikethroughProcessor {
         if (matchingChunks.isEmpty()) {
             return false;
         }
+
+        // Validate against the combined span of all matched chunks. This accepts
+        // split text on one visual line while still rejecting table separators
+        // and background rules that extend far past the text group.
         double leftX = Double.POSITIVE_INFINITY;
         double rightX = Double.NEGATIVE_INFINITY;
         for (TextChunk chunk : matchingChunks) {
@@ -180,6 +215,9 @@ public class StrikethroughProcessor {
         return textGroupWidth > 0 && rule.width / textGroupWidth <= MAX_LINE_TO_TEXT_WIDTH_RATIO;
     }
 
+    /**
+     * Normalized geometry for either LineChunk or LineArtChunk.
+     */
     private static class HorizontalRuleCandidate {
         private final double leftX;
         private final double rightX;
@@ -196,12 +234,18 @@ public class StrikethroughProcessor {
         }
 
         private static HorizontalRuleCandidate fromLineChunk(LineChunk line) {
+            if (line == null || line.getBoundingBox() == null || !line.isHorizontalLine()) {
+                return null;
+            }
             BoundingBox bbox = line.getBoundingBox();
             return new HorizontalRuleCandidate(line.getLeftX(), line.getRightX(), line.getCenterY(),
                 bbox.getWidth(), line.getWidth());
         }
 
         private static HorizontalRuleCandidate fromLineArtChunk(LineArtChunk lineArt) {
+            if (lineArt == null || !isHorizontalLineArt(lineArt)) {
+                return null;
+            }
             BoundingBox bbox = lineArt.getBoundingBox();
             return new HorizontalRuleCandidate(lineArt.getLeftX(), lineArt.getRightX(), lineArt.getCenterY(),
                 bbox.getWidth(), bbox.getHeight());

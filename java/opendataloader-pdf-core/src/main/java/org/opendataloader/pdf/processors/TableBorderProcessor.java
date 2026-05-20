@@ -52,17 +52,6 @@ public class TableBorderProcessor {
     private static final ThreadLocal<Integer> currentDepth = ThreadLocal.withInitial(() -> 0);
 
     public static List<IObject> processTableBorders(List<IObject> contents, int pageNumber) {
-        return processTableBorders(contents, pageNumber, false);
-    }
-
-    public static List<IObject> processTableBorders(List<IObject> contents, int pageNumber,
-                                                    boolean processStrikethroughs) {
-        // Run before table normalization because some PDFs draw strikethroughs
-        // as LineChunks that are otherwise consumed as table structure.
-        if (processStrikethroughs) {
-            StrikethroughProcessor.processStrikethroughs(contents);
-        }
-
         // Check if TableBordersCollection exists (may be null if no borders detected during preprocessing)
         if (StaticContainers.getTableBordersCollection() == null) {
             return new ArrayList<>(contents);
@@ -108,8 +97,7 @@ public class TableBorderProcessor {
             Map<TableBorder, TableBorder> normalizedTables = new HashMap<>();
             for (TableBorder border : processedTableBorders) {
                 StaticContainers.getTableBordersCollection().removeTableBorder(border, pageNumber);
-                TableBorder normalizedTable = normalizeAndProcessTableBorder(contents, border, pageNumber,
-                    processStrikethroughs);
+                TableBorder normalizedTable = normalizeAndProcessTableBorder(contents, border, pageNumber);
                 normalizedTables.put(border, normalizedTable);
                 // Remove the outer table while processing its contents, then restore the page index
                 // with the final instance so later lookups still see the normalized table.
@@ -174,43 +162,29 @@ public class TableBorderProcessor {
     }
 
     public static void processTableBorder(TableBorder tableBorder, int pageNumber) {
-        processTableBorderContents(tableBorder, pageNumber, false);
+        processTableBorderContents(tableBorder, pageNumber);
     }
 
     static TableBorder normalizeAndProcessTableBorder(List<IObject> rawPageContents, TableBorder tableBorder, int pageNumber) {
-        return normalizeAndProcessTableBorder(rawPageContents, tableBorder, pageNumber, false);
-    }
-
-    static TableBorder normalizeAndProcessTableBorder(List<IObject> rawPageContents, TableBorder tableBorder,
-                                                      int pageNumber, boolean processStrikethroughs) {
         TableBorder normalizedTable = TableStructureNormalizer.normalize(rawPageContents, tableBorder);
-        processTableBorderContents(normalizedTable, pageNumber, processStrikethroughs);
+        processTableBorderContents(normalizedTable, pageNumber);
         return normalizedTable;
     }
 
-    private static void processTableBorderContents(TableBorder tableBorder, int pageNumber,
-                                                   boolean processStrikethroughs) {
+    private static void processTableBorderContents(TableBorder tableBorder, int pageNumber) {
         for (int rowNumber = 0; rowNumber < tableBorder.getNumberOfRows(); rowNumber++) {
             TableBorderRow row = tableBorder.getRow(rowNumber);
             for (int colNumber = 0; colNumber < tableBorder.getNumberOfColumns(); colNumber++) {
                 TableBorderCell tableBorderCell = row.getCell(colNumber);
                 if (tableBorderCell.getRowNumber() == rowNumber && tableBorderCell.getColNumber() == colNumber) {
-                    tableBorderCell.setContents(processTableCellContent(tableBorderCell.getContents(), pageNumber,
-                        processStrikethroughs));
+                    tableBorderCell.setContents(processTableCellContent(tableBorderCell.getContents(), pageNumber));
                 }
             }
         }
     }
 
-    private static List<IObject> processTableCellContent(List<IObject> contents, int pageNumber,
-                                                         boolean processStrikethroughs) {
-        List<IObject> newContents = TableBorderProcessor.processTableBorders(contents, pageNumber,
-            processStrikethroughs);
-        if (processStrikethroughs) {
-            // Run again after nested table processing because normalization can
-            // split or move text into new cell content lists.
-            StrikethroughProcessor.processStrikethroughs(newContents);
-        }
+    private static List<IObject> processTableCellContent(List<IObject> contents, int pageNumber) {
+        List<IObject> newContents = TableBorderProcessor.processTableBorders(contents, pageNumber);
         newContents = TextLineProcessor.processTextLines(newContents);
         List<List<IObject>> contentsList = new ArrayList<>(1);
         contentsList.add(newContents);

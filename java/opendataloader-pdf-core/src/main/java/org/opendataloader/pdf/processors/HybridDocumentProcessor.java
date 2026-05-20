@@ -437,8 +437,12 @@ public class HybridDocumentProcessor {
         for (int pageNumber : pageNumbers) {
             try {
                 List<IObject> pageContents = workingContents.get(pageNumber);
-                pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber,
-                    config.isDetectStrikethrough());
+                if (config.isDetectStrikethrough()) {
+                    // Line-art strikethroughs can be absorbed into table/cell structure during
+                    // normalization, so mark them while the raw LineArtChunks are still present.
+                    StrikethroughProcessor.processLineArtStrikethroughs(pageContents);
+                }
+                pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber);
                 if (config.isDetectStrikethrough()) {
                     // Run after table normalization for text that was split,
                     // moved out of tables, or left outside table contents.

@@ -259,6 +259,17 @@ public class StrikethroughProcessorTest {
     }
 
     @Test
+    public void testNullLineInputsAreIgnored() {
+        TextChunk textChunk = new TextChunk(new BoundingBox(0, 10.0, 100.0, 60.0, 120.0),
+            "test", 12, 100.0);
+
+        Assertions.assertFalse(StrikethroughProcessor.isStrikethroughLine(null, textChunk),
+            "Null LineChunk should not throw or match");
+        Assertions.assertFalse(StrikethroughProcessor.isStrikethroughLineArt(null, textChunk),
+            "Null LineArtChunk should not throw or match");
+    }
+
+    @Test
     public void testThinLineArtDetectedAsStrikethrough() {
         List<IObject> contents = new ArrayList<>();
 
@@ -273,6 +284,16 @@ public class StrikethroughProcessorTest {
         StrikethroughProcessor.processStrikethroughs(contents);
 
         Assertions.assertTrue(textChunk.getIsStrikethroughText(), "Thin centered line art should trigger strikethrough");
+    }
+
+    @Test
+    public void testWideLineArtHelperRejected() {
+        TextChunk textChunk = new TextChunk(new BoundingBox(0, 50.0, 100.0, 80.0, 120.0),
+            "hi", 12, 100.0);
+        LineArtChunk lineArt = new LineArtChunk(new BoundingBox(0, 10.0, 109.5, 200.0, 110.5));
+
+        Assertions.assertFalse(StrikethroughProcessor.isStrikethroughLineArt(lineArt, textChunk),
+            "Direct line-art helper should reject rules much wider than the text");
     }
 
     @Test
