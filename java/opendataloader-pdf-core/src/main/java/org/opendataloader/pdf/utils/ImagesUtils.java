@@ -32,6 +32,7 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainer
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -47,6 +48,10 @@ public class ImagesUtils {
     }
 
     public void createImagesDirectory(String path) {
+        // Embedded mode is self-contained: no external image directory is created.
+        if (StaticLayoutContainers.isEmbedImages()) {
+            return;
+        }
         File directory = new File(path);
         if (!directory.exists()) {
             directory.mkdirs();
@@ -116,18 +121,31 @@ public class ImagesUtils {
 
     private void createImageFile(BoundingBox imageBox, String fileName, String imageFormat) {
         try {
-            File outputFile = new File(fileName);
             BufferedImage targetImage = contrastRatioConsumer != null ? contrastRatioConsumer.getPageSubImage(imageBox) : null;
             if (targetImage == null) {
                 return;
             }
-            ImageIO.write(targetImage, imageFormat, outputFile);
+            if (StaticLayoutContainers.isEmbedImages()) {
+                // Embedded mode: encode in memory and cache for downstream base64 inlining;
+                // no disk write — output is a single self-contained file.
+                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                ImageIO.write(targetImage, imageFormat, buffer);
+                StaticLayoutContainers.cacheEmbeddedImageBytes(fileName, buffer.toByteArray());
+            } else {
+                File outputFile = new File(fileName);
+                ImageIO.write(targetImage, imageFormat, outputFile);
+            }
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Unable to create image files: " + e.getMessage());
+            // Same catch covers both branches — encoding-to-buffer (embedded)
+            // and writing-to-disk (external). Keep the message neutral.
+            LOGGER.log(Level.WARNING, "Unable to encode image: " + e.getMessage());
         }
     }
 
     public static boolean isImageFileExists(String fileName) {
+        if (StaticLayoutContainers.isEmbedImages() && StaticLayoutContainers.hasEmbeddedImageBytes(fileName)) {
+            return true;
+        }
         File outputFile = new File(fileName);
         return outputFile.exists();
     }

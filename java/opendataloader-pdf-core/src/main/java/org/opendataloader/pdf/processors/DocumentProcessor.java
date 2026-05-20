@@ -258,6 +258,7 @@ public class DocumentProcessor {
         final var headings = StaticLayoutContainers.getHeadings();
         final long contentId = StaticLayoutContainers.getCurrentContentId();
         final boolean useStructTree = StaticLayoutContainers.isUseStructTree();
+        final var embeddedImageBytesMap = StaticLayoutContainers.getEmbeddedImageBytesMap();
 
         // Runnable that propagates ThreadLocal state to the current (worker) thread
         final Runnable propagateState = () -> {
@@ -273,6 +274,7 @@ public class DocumentProcessor {
             StaticLayoutContainers.setHeadings(headings);
             StaticLayoutContainers.setCurrentContentId(contentId);
             StaticLayoutContainers.setIsUseStructTree(useStructTree);
+            StaticLayoutContainers.setEmbeddedImageBytesMap(embeddedImageBytesMap);
         };
 
         // Pre-fetch all page artifacts on main thread (document access is ThreadLocal)
@@ -502,7 +504,8 @@ public class DocumentProcessor {
             pdfWriter.updatePDF(inputPDF, config.getPassword(), config.getOutputFolder(), contents);
         }
         if (config.isGenerateJSON()) {
-            JsonWriter.writeToJson(inputPDF, config.getOutputFolder(), contents, elementMetadata);
+            JsonWriter.writeToJson(inputPDF, config.getOutputFolder(), contents, elementMetadata,
+                    null, config.isIncludeHeaderFooter());
         }
         if (config.isGenerateMarkdown()) {
             try (MarkdownGenerator markdownGenerator = MarkdownGeneratorFactory.getMarkdownGenerator(inputPDF,
