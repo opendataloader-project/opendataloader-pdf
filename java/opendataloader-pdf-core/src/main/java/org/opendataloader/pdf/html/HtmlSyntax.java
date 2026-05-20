@@ -72,9 +72,9 @@ public class HtmlSyntax {
     /** Closing math display block tag. */
     public static final String HTML_MATH_DISPLAY_CLOSE_TAG = "</div>";
     /** First part of styled span opening tag. */
-    public static final String HTML_SPAN_WITH_STYLE_START_TAG = "<span style=\"";
-    /** Second part of styled span opening tag. */
-    public static final String HTML_SPAN_WITH_STYLE_END_TAG = "\">";
+    public static final String HTML_SPAN_START_TAG = "<span%s>";
+    /** Style attribute */
+    public static final String HTML_STYLE_ATTRIBUTE = " style=\"";
     /** Styled span closing tag. */
     public static final String HTML_SPAN_CLOSE_TAG = "</span>";
     /** Strikethrough text property. */

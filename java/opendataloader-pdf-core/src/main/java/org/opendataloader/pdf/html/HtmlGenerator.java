@@ -15,7 +15,6 @@
  */
 package org.opendataloader.pdf.html;
 
-import org.jetbrains.annotations.NotNull;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.entities.SemanticFormula;
@@ -39,7 +38,6 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioConsumer;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
-import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
 import java.awt.*;
 import java.io.Closeable;
@@ -500,9 +498,8 @@ public class HtmlGenerator implements Closeable {
         for (TextChunk chunk : line.getTextChunks()) {
             String style = getTextStyle(chunk);
             if (!style.isEmpty()) {
-                stringBuilder.append(HtmlSyntax.HTML_SPAN_WITH_STYLE_START_TAG);
-                stringBuilder.append(style.trim());
-                stringBuilder.append(HtmlSyntax.HTML_SPAN_WITH_STYLE_END_TAG);
+                String styleAttribute = HtmlSyntax.HTML_STYLE_ATTRIBUTE + style.trim() + '\"';
+                stringBuilder.append(String.format(HtmlSyntax.HTML_SPAN_START_TAG, styleAttribute));
                 stringBuilder.append(chunk.getValue());
                 stringBuilder.append(HtmlSyntax.HTML_SPAN_CLOSE_TAG);
             } else {
@@ -511,7 +508,6 @@ public class HtmlGenerator implements Closeable {
         }
     }
 
-    @NotNull
     private static String getTextStyle(TextChunk chunk) {
         StringBuilder style = new StringBuilder();
         if (chunk.getIsStrikethroughText()) {
