@@ -42,6 +42,7 @@ def convert(
     hybrid_hancom_ai_image_cache: Optional[str] = None,
     to_stdout: bool = False,
     threads: Optional[str] = None,
+    timeout: Optional[float] = None,
 ) -> None:
     """
     Convert PDF(s) into the requested output format(s).
@@ -79,6 +80,7 @@ def convert(
         hybrid_hancom_ai_image_cache: Page image cache backing. Requires --hybrid=hancom-ai. Values: memory (default), disk
         to_stdout: Write output to stdout instead of file (single format only)
         threads: Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode
+        timeout: Optional wall-clock timeout in seconds. If the JVM hasn't finished by then it is SIGKILLed and subprocess.TimeoutExpired is raised. None (default) preserves the original no-timeout behaviour. Useful when invoking convert() from a long-running service where a single pathological PDF must not stall the caller indefinitely.
     """
     args: List[str] = []
 
@@ -159,4 +161,4 @@ def convert(
     if threads:
         args.extend(["--threads", threads])
 
-    run_jar(args, quiet)
+    run_jar(args, quiet, timeout=timeout)
