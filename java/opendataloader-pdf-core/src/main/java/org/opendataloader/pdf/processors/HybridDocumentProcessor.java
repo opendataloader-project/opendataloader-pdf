@@ -66,6 +66,7 @@ import java.util.Objects;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -95,6 +96,16 @@ public class HybridDocumentProcessor {
     private static volatile JsonNode lastHybridTimings;
 
     /**
+     * Cumulative client-side wall-clock for {@code client.convert(...)} calls during
+     * the most recent {@link #processDocument} run. Includes network RTT, JSON
+     * (de)serialization, and any queueing — i.e. the time the user actually waited
+     * on the backend. May exceed the server-reported {@code total_ms} (which
+     * counts only on-GPU work) and is the truer figure for SLA / throughput
+     * reasoning. {@code null} when no backend chunks were attempted.
+     */
+    private static volatile Long lastHybridClientMs;
+
+    /**
      * Stores element metadata from the most recent hybrid backend processing.
      * Reset at the start of each {@code processDocument} call.
      */
@@ -107,9 +118,61 @@ public class HybridDocumentProcessor {
      */
     private static volatile Map<Integer, List<OcrWordInfo>> lastOcrWordsByPage;
 
+    /**
+     * Stores the raw merged JSON returned by the hybrid backend's most recent
+     * {@code HybridResponse.getJson()}. Downstream tools (e.g. opendataloader-pdfua
+     * evidence reports) need per-module raw outputs to file as L2 evidence.
+     *
+     * <p>Single-threaded by contract: this static is overwritten on each
+     * {@code processDocument} call, so concurrent invocations would race. Callers
+     * that need per-document raw JSON must serialize {@code processDocument}
+     * invocations (or wrap with their own ThreadLocal).
+     *
+     * <p>Multi-chunk documents (&gt;{@link #BACKEND_CHUNK_SIZE} backend pages) currently
+     * keep only the last chunk's JSON. Single-chunk documents capture the full
+     * response.
+     */
+    private static volatile JsonNode lastHybridRawJson;
+
+    /**
+     * Snapshot of the hybrid backend's {@code /health} response taken at the
+     * start of the most recent {@link #processDocument} call. Downstream
+     * tools surface this so server-side timings can be interpreted against
+     * the hardware that produced them. {@code null} if hybrid was off or
+     * the backend did not provide a health endpoint.
+     */
+    private static volatile JsonNode lastHybridHealth;
+
     /** Returns the hybrid server timings from the most recent {@link #processDocument} call. */
     public static JsonNode getLastHybridTimings() {
         return lastHybridTimings;
+    }
+
+    /**
+     * Returns cumulative client-side wall-clock for hybrid backend calls during
+     * the most recent {@link #processDocument} call, or {@code null} if hybrid
+     * was off or the backend was never invoked. Always measured client-side, so
+     * mock and real backends are directly comparable on the same scale.
+     */
+    public static Long getLastHybridClientMs() {
+        return lastHybridClientMs;
+    }
+
+    /**
+     * Returns the raw merged hybrid backend JSON from the most recent
+     * {@link #processDocument} call, or {@code null} if hybrid was not used.
+     */
+    public static JsonNode getLastHybridRawJson() {
+        return lastHybridRawJson;
+    }
+
+    /**
+     * Returns the hybrid backend's reported {@code /health} payload
+     * (hardware + models + version) from the most recent processing run,
+     * or {@code null} if hybrid was off or the backend didn't report one.
+     */
+    public static JsonNode getLastHybridHealth() {
+        return lastHybridHealth;
     }
 
     /** Returns the element metadata from the most recent {@link #processDocument} call. */
@@ -172,6 +235,9 @@ public class HybridDocumentProcessor {
         lastHybridTimings = null; // Reset for this processing run
         lastElementMetadata = null;
         lastOcrWordsByPage = null;
+        lastHybridRawJson = null;
+        lastHybridHealth = null;
+        lastHybridClientMs = null;
 
         int totalPages = StaticContainers.getDocument().getNumberOfPages();
         LOGGER.log(Level.INFO, "Starting hybrid processing for {0} pages", totalPages);
@@ -509,6 +575,17 @@ public class HybridDocumentProcessor {
         // Get or create cached client
         HybridClient client = getClient(config);
 
+        // Best-effort: snapshot backend health (hardware, models, version)
+        // so downstream tooling can interpret server timings against the
+        // environment that produced them. Narrow catch to Exception so
+        // JVM-fatal errors (OutOfMemoryError etc.) still propagate.
+        try {
+            lastHybridHealth = client.fetchHealth();
+        } catch (Exception e) {
+            lastHybridHealth = null;
+            LOGGER.log(Level.FINE, "fetchHealth failed", e);
+        }
+
         // Read PDF bytes
         byte[] pdfBytes = Files.readAllBytes(Path.of(inputPdfName));
 
@@ -543,12 +620,30 @@ public class HybridDocumentProcessor {
 
             try {
                 HybridRequest request = HybridRequest.forPages(pdfBytes, chunkPages1Indexed, outputFormats);
-                HybridResponse response = client.convert(request);
+                long convertStartNs = System.nanoTime();
+                HybridResponse response;
+                try {
+                    response = client.convert(request);
+                } finally {
+                    // Accumulate client wall-clock for this convert call whether
+                    // it succeeded, failed with IOException, or otherwise unwound
+                    // — the user waited that long regardless of outcome, and
+                    // that's what this metric exists to measure (SLA / throughput).
+                    // nanoTime() is monotonic; safe against wall-clock jumps
+                    // (NTP / DST / manual changes).
+                    long convertElapsedMs = TimeUnit.NANOSECONDS.toMillis(
+                        System.nanoTime() - convertStartNs);
+                    lastHybridClientMs = (lastHybridClientMs == null ? 0L : lastHybridClientMs)
+                        + convertElapsedMs;
+                }
 
                 // Capture hybrid server pipeline timings (last chunk wins for now;
                 // in single-chunk documents this is exact)
                 if (response.getTimings() != null) {
                     lastHybridTimings = response.getTimings();
+                }
+                if (response.getJson() != null) {
+                    lastHybridRawJson = response.getJson();
                 }
 
                 // Collect failed pages (convert from 1-indexed to 0-indexed)
