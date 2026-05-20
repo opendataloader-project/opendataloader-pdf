@@ -495,7 +495,8 @@ public class DocumentProcessor {
             pdfWriter.updatePDF(inputPDF, config.getPassword(), config.getOutputFolder(), contents);
         }
         if (config.isGenerateJSON()) {
-            JsonWriter.writeToJson(inputPDF, config.getOutputFolder(), contents, elementMetadata);
+            JsonWriter.writeToJson(inputPDF, config.getOutputFolder(), contents, elementMetadata,
+                    null, config.isIncludeHeaderFooter());
         }
         if (config.isGenerateMarkdown()) {
             try (MarkdownGenerator markdownGenerator = MarkdownGeneratorFactory.getMarkdownGenerator(inputPDF,

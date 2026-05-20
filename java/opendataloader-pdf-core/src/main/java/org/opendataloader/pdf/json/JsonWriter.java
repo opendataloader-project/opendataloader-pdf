@@ -31,6 +31,7 @@ import org.verapdf.tools.StaticResources;
 import org.opendataloader.pdf.hybrid.ElementMetadata;
 import org.opendataloader.pdf.json.serializers.SerializerUtil;
 import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter;
 import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
@@ -63,6 +64,13 @@ public class JsonWriter {
     public static void writeToJson(File inputPDF, String outputFolder, List<List<IObject>> contents,
                                    Map<Long, ElementMetadata> elementMetadata,
                                    Map<String, Object> hybridInfo) throws IOException {
+        writeToJson(inputPDF, outputFolder, contents, elementMetadata, hybridInfo, false);
+    }
+
+    public static void writeToJson(File inputPDF, String outputFolder, List<List<IObject>> contents,
+                                   Map<Long, ElementMetadata> elementMetadata,
+                                   Map<String, Object> hybridInfo,
+                                   boolean includeHeaderFooter) throws IOException {
         StaticLayoutContainers.resetImageIndex();
         String jsonFileName = outputFolder + File.separator + inputPDF.getName().substring(0, inputPDF.getName().length() - 3) + "json";
         try (JsonGenerator jsonGenerator = getJsonGenerator(jsonFileName)) {
@@ -78,9 +86,13 @@ public class JsonWriter {
                 jsonGenerator.writeArrayFieldStart(JsonName.KIDS);
                 for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                     for (IObject content : contents.get(pageNumber)) {
-                        if (!(content instanceof LineArtChunk)) {
-                            jsonGenerator.writePOJO(content);
+                        if (content instanceof LineArtChunk) {
+                            continue;
                         }
+                        if (!includeHeaderFooter && content instanceof SemanticHeaderOrFooter) {
+                            continue;
+                        }
+                        jsonGenerator.writePOJO(content);
                     }
                 }
                 jsonGenerator.writeEndArray();
