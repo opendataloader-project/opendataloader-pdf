@@ -35,6 +35,7 @@ public class SemanticTextNodeSerializer extends StdSerializer<SemanticTextNode> 
         jsonGenerator.writeStartObject();
         SerializerUtil.writeEssentialInfo(jsonGenerator, textNode, textNode.getSemanticType().toString().toLowerCase());
         SerializerUtil.writeTextInfo(jsonGenerator, textNode);
+        SerializerUtil.writeMetadataIfPresent(jsonGenerator, textNode);
         jsonGenerator.writeEndObject();
     }
 }

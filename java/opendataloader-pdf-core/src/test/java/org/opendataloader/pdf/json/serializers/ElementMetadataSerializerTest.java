@@ -61,14 +61,14 @@ class ElementMetadataSerializerTest {
         long id = 42L;
         Map<Long, ElementMetadata> metadata = new HashMap<>();
         metadata.put(id, new ElementMetadata()
-                .setConfidence(0.85)
+                .setAiScore(0.85)
                 .setSourceLabel(3));
         SerializerUtil.setElementMetadata(metadata);
 
         SemanticHeading heading = createHeading(id);
         String json = objectMapper.writeValueAsString(heading);
 
-        assertTrue(json.contains("\"confidence\":0.85"), "Should contain confidence field");
+        assertTrue(json.contains("\"ai_score\":0.85"), "Should contain ai_score field");
         assertTrue(json.contains("\"source label\":3"), "Should contain source label field");
     }
 
@@ -78,23 +78,23 @@ class ElementMetadataSerializerTest {
         SemanticHeading heading = createHeading(42L);
         String json = objectMapper.writeValueAsString(heading);
 
-        assertFalse(json.contains("\"confidence\""), "Should not contain confidence without metadata");
+        assertFalse(json.contains("\"ai_score\""), "Should not contain ai_score without metadata");
         assertFalse(json.contains("\"source label\""), "Should not contain source label without metadata");
     }
 
     @Test
-    void testConfidenceOmittedWhenDefault() throws JsonProcessingException {
+    void testAiScoreOmittedWhenUnset() throws JsonProcessingException {
         long id = 10L;
         Map<Long, ElementMetadata> metadata = new HashMap<>();
+        // No setAiScore() — leaves the sentinel default (-1.0)
         metadata.put(id, new ElementMetadata()
-                .setConfidence(1.0)
                 .setSourceLabel(5));
         SerializerUtil.setElementMetadata(metadata);
 
         SemanticHeading heading = createHeading(id);
         String json = objectMapper.writeValueAsString(heading);
 
-        assertFalse(json.contains("\"confidence\""), "confidence=1.0 should be omitted");
+        assertFalse(json.contains("\"ai_score\""), "ai_score should be omitted when not provided");
         assertTrue(json.contains("\"source label\":5"), "source label should still appear");
     }
 
@@ -103,14 +103,14 @@ class ElementMetadataSerializerTest {
         long id = 11L;
         Map<Long, ElementMetadata> metadata = new HashMap<>();
         metadata.put(id, new ElementMetadata()
-                .setConfidence(0.5)
+                .setAiScore(0.5)
                 .setSourceLabel(-1));
         SerializerUtil.setElementMetadata(metadata);
 
         SemanticHeading heading = createHeading(id);
         String json = objectMapper.writeValueAsString(heading);
 
-        assertTrue(json.contains("\"confidence\":0.5"));
+        assertTrue(json.contains("\"ai_score\":0.5"));
         assertFalse(json.contains("\"source label\""), "sourceLabel=-1 should be omitted");
     }
 
@@ -211,26 +211,26 @@ class ElementMetadataSerializerTest {
     @Test
     void testNoMetadataForUnknownId() throws JsonProcessingException {
         Map<Long, ElementMetadata> metadata = new HashMap<>();
-        metadata.put(99L, new ElementMetadata().setConfidence(0.5));
+        metadata.put(99L, new ElementMetadata().setAiScore(0.5));
         SerializerUtil.setElementMetadata(metadata);
 
         SemanticHeading heading = createHeading(1L); // different ID
         String json = objectMapper.writeValueAsString(heading);
 
-        assertFalse(json.contains("\"confidence\""), "Should not write metadata for unmatched ID");
+        assertFalse(json.contains("\"ai_score\""), "Should not write metadata for unmatched ID");
     }
 
     @Test
     void testClearElementMetadataRemovesState() throws JsonProcessingException {
         long id = 42L;
         Map<Long, ElementMetadata> metadata = new HashMap<>();
-        metadata.put(id, new ElementMetadata().setConfidence(0.5));
+        metadata.put(id, new ElementMetadata().setAiScore(0.5));
         SerializerUtil.setElementMetadata(metadata);
         SerializerUtil.clearElementMetadata();
 
         SemanticHeading heading = createHeading(id);
         String json = objectMapper.writeValueAsString(heading);
 
-        assertFalse(json.contains("\"confidence\""), "After clear, metadata should not be written");
+        assertFalse(json.contains("\"ai_score\""), "After clear, metadata should not be written");
     }
 }

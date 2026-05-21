@@ -40,7 +40,7 @@ public class ElementMetadataTest {
     @Test
     void onlyNonDefaultFieldsAppearInJson() throws Exception {
         ElementMetadata meta = new ElementMetadata()
-                .setConfidence(0.85)
+                .setAiScore(0.85)
                 .setSourceLabel(3)
                 .setHeadingInferenceMethod("bbox-height")
                 .setBboxHeightPx(24.5);
@@ -48,7 +48,7 @@ public class ElementMetadataTest {
         String json = mapper.writeValueAsString(meta);
         JsonNode node = mapper.readTree(json);
 
-        assertEquals(0.85, node.get("confidence").asDouble(), 0.001);
+        assertEquals(0.85, node.get("aiScore").asDouble(), 0.001);
         assertEquals(3, node.get("sourceLabel").asInt());
         assertEquals("bbox-height", node.get("headingInferenceMethod").asText());
         assertEquals(24.5, node.get("bboxHeightPx").asDouble(), 0.001);
@@ -121,14 +121,14 @@ public class ElementMetadataTest {
     @Test
     void fluentSettersReturnSameInstance() {
         ElementMetadata meta = new ElementMetadata();
-        ElementMetadata returned = meta.setConfidence(0.5).setSourceLabel(2);
+        ElementMetadata returned = meta.setAiScore(0.5).setSourceLabel(2);
         assertTrue(meta == returned);
     }
 
     @Test
     void roundTripDeserialization() throws Exception {
         ElementMetadata original = new ElementMetadata()
-                .setConfidence(0.92)
+                .setAiScore(0.92)
                 .setSourceLabel(7)
                 .setWordMatchMethod("bbox-intersection")
                 .setMatchedWordCount(5);
@@ -136,7 +136,7 @@ public class ElementMetadataTest {
         String json = mapper.writeValueAsString(original);
         ElementMetadata deserialized = mapper.readValue(json, ElementMetadata.class);
 
-        assertEquals(original.getConfidence(), deserialized.getConfidence(), 0.001);
+        assertEquals(original.getAiScore(), deserialized.getAiScore(), 0.001);
         assertEquals(original.getSourceLabel(), deserialized.getSourceLabel());
         assertEquals(original.getWordMatchMethod(), deserialized.getWordMatchMethod());
         assertEquals(original.getMatchedWordCount(), deserialized.getMatchedWordCount());
