@@ -36,10 +36,9 @@ import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
-import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioConsumer;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
-import java.awt.*;
+import java.awt.Color;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileWriter;
@@ -516,8 +515,8 @@ public class HtmlGenerator implements Closeable {
         if (chunk.isItalic()) {
             style.append(HtmlSyntax.HTML_ITALIC_STYLE_PROPERTY);
         }
-        if (!Color.BLACK.equals(chunk.getTextColor())) {
-            Color color = ContrastRatioConsumer.getTextColorFromComponentArray(chunk.getFontColor());
+        Color color = chunk.getTextColor();
+        if (color != null && (color.getRGB() & 0x00FFFFFF) != (Color.BLACK.getRGB() & 0x00FFFFFF)) {
             style.append(String.format(HtmlSyntax.HTML_FONT_COLOR_PROPERTY,
                 color.getRed(), color.getGreen(), color.getBlue()));
         }
