@@ -18,12 +18,22 @@ package org.opendataloader.pdf.exceptions;
 import java.io.IOException;
 
 /**
- * Thrown when an input file does not look like a PDF (the {@code %PDF-} magic
- * number is missing from the first 1024 bytes).
+ * Thrown when an input file cannot be processed as a PDF. Two failure modes
+ * share this exception type, distinguished by message wording:
+ * <ul>
+ *   <li><em>Missing header</em> — the {@code %PDF-} magic number is absent
+ *       from the first 1024 bytes (JPEG renamed to {@code .pdf}, empty file,
+ *       arbitrary text). Detected before veraPDF is invoked.</li>
+ *   <li><em>Corrupted or truncated content</em> — the magic number is
+ *       present but the body fails to parse (interrupted download, missing
+ *       trailing xref, garbage payload). Detected when {@code new PDDocument}
+ *       throws {@link IOException}; the original veraPDF exception is
+ *       preserved via {@link #getCause()} for diagnostics.</li>
+ * </ul>
  *
  * <p>This is a checked subtype of {@link IOException} so callers that already
  * handle {@code IOException} keep compiling, while callers that want to
- * distinguish "not a PDF" from other I/O failures can catch this type
+ * distinguish "not a usable PDF" from other I/O failures can catch this type
  * specifically.
  *
  * <p>Public entry points that may surface this exception:
