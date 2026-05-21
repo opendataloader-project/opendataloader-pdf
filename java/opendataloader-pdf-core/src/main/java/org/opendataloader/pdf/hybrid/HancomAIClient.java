@@ -227,6 +227,12 @@ public class HancomAIClient implements HybridClient {
             long captionMs = System.currentTimeMillis() - captionStartMs;
             merged.set("FIGURE_CAPTIONS", figureCaptions);
 
+            // Evidence-report consumers need the same rendered page image that
+            // DLA bboxes are expressed against. TSR/FIGURE fetches already save
+            // their pages; this pass fills only pages that were not otherwise
+            // rendered.
+            saveDlaPageImages(pdfBytes, dlaOcrResult, pageImageCache);
+
             ObjectNode captionTiming = objectMapper.createObjectNode();
             captionTiming.put("total_ms", captionMs);
             captionTiming.put("count", figureCaptions.size());
@@ -593,6 +599,36 @@ public class HancomAIClient implements HybridClient {
     }
 
     /**
+     * Saves full-page render images for every DLA page when evidence image
+     * capture is enabled.
+     */
+    private void saveDlaPageImages(byte[] pdfBytes, JsonNode dlaResult,
+                                   PageImageCache pageImageCache) {
+        if (!config.isSaveCrops() || config.getCropOutputDir() == null) return;
+
+        for (JsonNode page : extractPages(dlaResult)) {
+            int pageNum = page.has("page_number") ? page.get("page_number").asInt() : -1;
+            if (pageNum < 0) continue;
+            if (isPageImageFileSaved(config.getCropOutputDir(), pageNum)) continue;
+            try {
+                pageImageCache.getOrFetch(pageNum, idx -> fetchPageImage(pdfBytes, idx));
+            } catch (IOException e) {
+                LOGGER.log(Level.FINE, "Failed to save DLA page image for page "
+                    + pageNum, e);
+            } finally {
+                pageImageCache.evict(pageNum);
+            }
+        }
+    }
+
+    private boolean isPageImageFileSaved(String outputDir, int pageNum) {
+        if (outputDir == null) return false;
+        File file = new File(new File(outputDir, "page-images"),
+            String.format("page-%d.png", pageNum));
+        return file.isFile();
+    }
+
+    /**
      * Saves a cropped image to disk for debugging.
      */
     private void saveCropFile(String outputDir, int pageNum, int objectId,
@@ -604,6 +640,20 @@ public class HancomAIClient implements HybridClient {
             Files.write(new File(dir, filename).toPath(), pngBytes);
         } catch (IOException e) {
             LOGGER.log(Level.FINE, "Failed to save crop file", e);
+        }
+    }
+
+    /**
+     * Saves a full rendered PDF page image to disk for evidence overlays.
+     */
+    private void savePageImageFile(String outputDir, int pageNum, byte[] pngBytes) {
+        try {
+            File dir = new File(outputDir, "page-images");
+            dir.mkdirs();
+            String filename = String.format("page-%d.png", pageNum);
+            Files.write(new File(dir, filename).toPath(), pngBytes);
+        } catch (IOException e) {
+            LOGGER.log(Level.FINE, "Failed to save page image file", e);
         }
     }
 
@@ -666,6 +716,9 @@ public class HancomAIClient implements HybridClient {
             BufferedImage image = ImageIO.read(new ByteArrayInputStream(pngBytes));
             if (image == null) {
                 throw new IOException("pdf2img PAGE_PNG_DATA is not a readable image");
+            }
+            if (config.isSaveCrops() && config.getCropOutputDir() != null) {
+                savePageImageFile(config.getCropOutputDir(), pageIndex, pngBytes);
             }
             return image;
         }
