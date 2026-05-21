@@ -25,8 +25,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class ElementMetadata {
 
-    /** DLA confidence (0.0~1.0). */
-    private double confidence = 1.0;
+    /** DLA AI score (0.0~1.0). Negative sentinel means "not provided". */
+    private double aiScore = -1.0;
 
     /** Original Hancom AI label (0~17), -1 if not applicable. */
     private int sourceLabel = -1;
@@ -58,12 +58,12 @@ public class ElementMetadata {
     /** Stream vs OCR text similarity score (auto mode only). */
     private Double streamOcrSimilarity;
 
-    public double getConfidence() {
-        return confidence;
+    public double getAiScore() {
+        return aiScore;
     }
 
-    public ElementMetadata setConfidence(double confidence) {
-        this.confidence = confidence;
+    public ElementMetadata setAiScore(double aiScore) {
+        this.aiScore = aiScore;
         return this;
     }
 
