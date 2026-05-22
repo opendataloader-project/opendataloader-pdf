@@ -31,6 +31,17 @@ public class ElementMetadata {
     /** Original Hancom AI label (0~17), -1 if not applicable. */
     private int sourceLabel = -1;
 
+    /**
+     * The hybrid backend's per-page detection id for this element — the
+     * same value that surfaces as {@code object_id} in the raw DLA JSON
+     * and as {@code scored_items[].id} in the evidence report. Carrying
+     * it through to the corrected extraction tree lets downstream
+     * tooling line up a reading-ordered node with the original detection
+     * row without re-matching by bbox. Negative sentinel ({@code -1})
+     * means "not provided" — e.g. native pipeline output.
+     */
+    private int dlaObjectId = -1;
+
     /** Heading inference method: "bbox-height" or "fixed". */
     private String headingInferenceMethod;
 
@@ -73,6 +84,15 @@ public class ElementMetadata {
 
     public ElementMetadata setSourceLabel(int sourceLabel) {
         this.sourceLabel = sourceLabel;
+        return this;
+    }
+
+    public int getDlaObjectId() {
+        return dlaObjectId;
+    }
+
+    public ElementMetadata setDlaObjectId(int dlaObjectId) {
+        this.dlaObjectId = dlaObjectId;
         return this;
     }
 

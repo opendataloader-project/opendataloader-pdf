@@ -482,9 +482,15 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
 
         // Produce ElementMetadata for this IObject
         if (iobj != null && iobj.getRecognizedStructureId() != null) {
+            // Carry the raw DLA detection id so downstream tooling (evidence
+            // report) can line a reading-ordered node back to its DLA row
+            // without re-matching by bbox. Same field the FIGURE branch
+            // already reads — pulled out here so every label gets it.
+            int rawObjectId = obj.has("object_id") ? obj.get("object_id").asInt() : -1;
             ElementMetadata meta = new ElementMetadata()
                 .setAiScore(aiScore)
-                .setSourceLabel(label);
+                .setSourceLabel(label)
+                .setDlaObjectId(rawObjectId);
 
             if (label == LABEL_PARA_TITLE || label == LABEL_REGION_TITLE) {
                 double pixelHeight = bboxNode.get(3).asDouble() - bboxNode.get(1).asDouble();
@@ -730,9 +736,12 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
         // Produce ElementMetadata for the table
         double tableAiScore = tableEntry.has("confidence")
             ? tableEntry.get("confidence").asDouble(-1.0) : -1.0;
+        int tableRawObjectId = tableEntry.has("object_id")
+            ? tableEntry.get("object_id").asInt() : -1;
         ElementMetadata tableMeta = new ElementMetadata()
             .setAiScore(tableAiScore)
-            .setSourceLabel(tableEntry.has("label") ? tableEntry.get("label").asInt() : LABEL_TABLE);
+            .setSourceLabel(tableEntry.has("label") ? tableEntry.get("label").asInt() : LABEL_TABLE)
+            .setDlaObjectId(tableRawObjectId);
         if (tsr != null) {
             ElementMetadata.TsrMetadata tsrMeta = new ElementMetadata.TsrMetadata();
             tsrMeta.setNumCells(tsr.has("num_cells") ? tsr.get("num_cells").asInt() : 0);
