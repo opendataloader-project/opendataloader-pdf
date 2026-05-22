@@ -58,8 +58,8 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <verapdf.version>1.31.61</verapdf.version>
-        <verapdf.wcag.algs.version>1.31.19</verapdf.wcag.algs.version>
+        <verapdf.version>1.31.63</verapdf.version>
+        <verapdf.wcag.algs.version>1.31.21</verapdf.wcag.algs.version>
         <jackson.databind.version>2.21.1</jackson.databind.version>
         <junit.jupiter.version>5.14.3</junit.jupiter.version>
         <assertj.version>3.27.7</assertj.version>
