@@ -497,7 +497,7 @@ public class HtmlGenerator implements Closeable {
         for (TextChunk chunk : line.getTextChunks()) {
             String style = getTextStyle(chunk);
             if (!style.isEmpty()) {
-                String styleAttribute = HtmlSyntax.HTML_STYLE_ATTRIBUTE + style.trim() + '\"';
+                String styleAttribute = String.format(HtmlSyntax.HTML_STYLE_ATTRIBUTE, style.trim());
                 stringBuilder.append(String.format(HtmlSyntax.HTML_SPAN_START_TAG, styleAttribute));
                 stringBuilder.append(chunk.getValue());
                 stringBuilder.append(HtmlSyntax.HTML_SPAN_CLOSE_TAG);

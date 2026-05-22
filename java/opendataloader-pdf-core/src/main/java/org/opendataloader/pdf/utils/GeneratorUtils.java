@@ -8,7 +8,6 @@ import org.verapdf.wcag.algorithms.entities.content.TextColumn;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
 
-import java.awt.*;
 import java.util.List;
 
 public class GeneratorUtils {
