@@ -313,6 +313,11 @@ function generatePythonConvert() {
     lines.push(`    ${snakeName}: ${typeHint} = ${defaultVal},`);
   }
 
+  // Python-only kwarg: not a CLI option but a wall-clock bound on the
+  // JVM subprocess. Lives outside options.json because it doesn't map
+  // to a Java flag — it's purely about how the Python launcher waits.
+  lines.push('    timeout: Optional[float] = None,');
+
   lines.push(') -> None:');
   lines.push('    """');
   lines.push('    Convert PDF(s) into the requested output format(s).');
@@ -324,6 +329,8 @@ function generatePythonConvert() {
     const snakeName = toSnakeCase(opt.name);
     lines.push(`        ${snakeName}: ${opt.description}`);
   }
+
+  lines.push('        timeout: Optional wall-clock timeout in seconds. If the JVM hasn\'t finished by then it is SIGKILLed and subprocess.TimeoutExpired is raised. None (default) preserves the original no-timeout behaviour. Useful when invoking convert() from a long-running service where a single pathological PDF must not stall the caller indefinitely.');
 
   lines.push('    """');
 
@@ -359,7 +366,7 @@ function generatePythonConvert() {
   }
 
   lines.push('');
-  lines.push('    run_jar(args, quiet)');
+  lines.push('    run_jar(args, quiet, timeout=timeout)');
   lines.push('');
 
   const outputPath = join(ROOT_DIR, 'python/opendataloader-pdf/src/opendataloader_pdf/convert_generated.py');

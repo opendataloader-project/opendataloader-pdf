@@ -65,6 +65,77 @@ def test_streaming_failure_does_not_duplicate_output(monkeypatch, capsys, patche
     assert "Return code: 2" in captured.err
 
 
+def test_quiet_timeout_forwards_to_subprocess_run(monkeypatch, patched_jar):
+    """Quiet mode delegates to subprocess.run; the timeout kwarg must be
+    forwarded so a hung JVM is SIGKILLed and TimeoutExpired surfaces to
+    the caller. Without this, a long-running service that imports
+    opendataloader-pdf has no bound on the JVM and a pathological PDF can
+    stall the whole process indefinitely."""
+    seen_kwargs: dict = {}
+
+    def fake_run(*args, **kwargs):
+        seen_kwargs.update(kwargs)
+        # Simulate the expiry that subprocess.run produces.
+        raise subprocess.TimeoutExpired(args[0], timeout=kwargs.get("timeout"))
+
+    monkeypatch.setattr(runner.subprocess, "run", fake_run)
+
+    with pytest.raises(subprocess.TimeoutExpired) as excinfo:
+        runner.run_jar(["--quiet-some-input"], quiet=True, timeout=0.5)
+
+    assert seen_kwargs.get("timeout") == 0.5
+    assert excinfo.value.timeout == 0.5
+
+
+def test_streaming_timeout_kills_process(monkeypatch, patched_jar):
+    """Streaming mode tracks the deadline itself (subprocess.run's
+    ``timeout`` doesn't work while we're tee-ing stdout). On expiry we
+    must call ``process.kill()`` and raise TimeoutExpired, matching the
+    shape of the quiet-mode path."""
+    long_output = ["chunk\n" for _ in range(100)]
+    fake_process = MagicMock()
+    fake_process.stdout = iter(long_output)
+    fake_process.__enter__ = lambda self: self
+    fake_process.__exit__ = lambda self, *_a: False
+
+    monkeypatch.setattr(runner.subprocess, "Popen", lambda *_a, **_kw: fake_process)
+
+    # Inject a fake time source that advances faster than the loop reads
+    # lines, so the deadline expires on the first iteration.
+    import itertools
+    t = itertools.count(start=0, step=10)
+    monkeypatch.setattr(runner, "_time" if False else "subprocess",
+                        runner.subprocess)  # keep import shape
+    import time as _real_time
+    monkeypatch.setattr(_real_time, "monotonic", lambda: next(t))
+
+    with pytest.raises(subprocess.TimeoutExpired):
+        runner.run_jar(["--something"], quiet=False, timeout=1.0)
+
+    fake_process.kill.assert_called()
+
+
+def test_quiet_no_timeout_preserves_legacy_behavior(monkeypatch, patched_jar):
+    """When ``timeout`` is not supplied (default), subprocess.run still
+    receives ``timeout=None`` — matching its own no-bound default.
+    Verifies the kwarg always flows through and we never accidentally
+    drop it."""
+    seen_kwargs: dict = {}
+
+    def fake_run(*args, **kwargs):
+        seen_kwargs.update(kwargs)
+        result = MagicMock()
+        result.stdout = "ok"
+        return result
+
+    monkeypatch.setattr(runner.subprocess, "run", fake_run)
+
+    out = runner.run_jar(["--ok"], quiet=True)
+    assert out == "ok"
+    assert "timeout" in seen_kwargs
+    assert seen_kwargs["timeout"] is None
+
+
 def test_quiet_failure_prints_captured_streams_once(monkeypatch, capsys, patched_jar):
     """Quiet mode captures output, so the except handler surfaces it — but
     must avoid the old bug where Output and Stdout (aliases) both printed."""

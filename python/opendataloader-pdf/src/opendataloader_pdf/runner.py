@@ -4,14 +4,40 @@ Low-level JAR runner for opendataloader-pdf.
 import subprocess
 import sys
 import importlib.resources as resources
-from typing import List
+from typing import List, Optional
 
 # The consistent name of the JAR file bundled with the package
 _JAR_NAME = "opendataloader-pdf-cli.jar"
 
 
-def run_jar(args: List[str], quiet: bool = False) -> str:
-    """Run the opendataloader-pdf JAR with the given arguments."""
+def run_jar(
+    args: List[str],
+    quiet: bool = False,
+    timeout: Optional[float] = None,
+) -> str:
+    """Run the opendataloader-pdf JAR with the given arguments.
+
+    Args:
+        args: Arguments forwarded to the bundled JAR.
+        quiet: Suppress live console streaming and capture stdout instead.
+        timeout: Optional wall-clock timeout in seconds. If the JVM hasn't
+            finished by then it is sent SIGKILL and ``subprocess.TimeoutExpired``
+            is raised. ``None`` (default) preserves the original
+            no-timeout behaviour. Useful when invoking the JAR from a
+            long-running service where a single malformed/pathological PDF
+            must not be able to stall the caller indefinitely.
+
+    Returns:
+        Captured stdout from the JAR. In streaming mode this is the same
+        text that was tee-d to ``sys.stdout`` during the run.
+
+    Raises:
+        FileNotFoundError: ``java`` is not on PATH.
+        subprocess.CalledProcessError: JAR exited non-zero.
+        subprocess.TimeoutExpired: ``timeout`` was set and elapsed. The
+            JVM has been killed by the time this is raised; partial
+            output is in ``exc.stdout``.
+    """
     try:
         # Access the embedded JAR inside the package
         jar_ref = resources.files("opendataloader_pdf").joinpath("jar", _JAR_NAME)
@@ -30,7 +56,9 @@ def run_jar(args: List[str], quiet: bool = False) -> str:
             ]
 
             if quiet:
-                # Quiet mode → capture all output
+                # Quiet mode → capture all output. ``subprocess.run`` natively
+                # supports ``timeout``; on expiry it sends SIGKILL to the
+                # child and raises ``TimeoutExpired`` — no orphan JVM.
                 result = subprocess.run(
                     command,
                     capture_output=True,
@@ -38,10 +66,18 @@ def run_jar(args: List[str], quiet: bool = False) -> str:
                     check=True,
                     encoding="utf-8",
                     errors="replace",
+                    timeout=timeout,
                 )
                 return result.stdout
 
-            # Streaming mode → live output
+            # Streaming mode → live output. We can't rely on subprocess.run's
+            # timeout here because we're tee-ing lines as they arrive. Track
+            # the deadline manually and SIGKILL on expiry, then raise the
+            # same ``TimeoutExpired`` shape so callers can ``except`` uniformly
+            # across quiet/streaming modes.
+            import time as _time
+            deadline = (_time.monotonic() + timeout) if timeout is not None else None
+
             with subprocess.Popen(
                 command,
                 stdout=subprocess.PIPE,
@@ -51,15 +87,36 @@ def run_jar(args: List[str], quiet: bool = False) -> str:
                 errors="replace",
             ) as process:
                 output_lines: List[str] = []
-                for line in process.stdout:
-                    if hasattr(sys.stdout, "buffer"):
-                        sys.stdout.buffer.write(line.encode("utf-8", errors="replace"))
-                        sys.stdout.buffer.flush()
-                    else:
-                        sys.stdout.write(line)
-                    output_lines.append(line)
+                try:
+                    for line in process.stdout:
+                        if hasattr(sys.stdout, "buffer"):
+                            sys.stdout.buffer.write(
+                                line.encode("utf-8", errors="replace")
+                            )
+                            sys.stdout.buffer.flush()
+                        else:
+                            sys.stdout.write(line)
+                        output_lines.append(line)
+                        if deadline is not None and _time.monotonic() > deadline:
+                            process.kill()
+                            captured = "".join(output_lines)
+                            raise subprocess.TimeoutExpired(
+                                command, timeout, output=captured
+                            )
 
-                return_code = process.wait()
+                    # ``timeout`` here covers the case where the process
+                    # has finished streaming but is still in the wait()
+                    # finalization (rare but possible).
+                    if deadline is not None:
+                        remaining = max(0.0, deadline - _time.monotonic())
+                    else:
+                        remaining = None
+                    return_code = process.wait(timeout=remaining)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait()
+                    raise
+
                 captured_output = "".join(output_lines)
 
                 if return_code:
@@ -71,6 +128,13 @@ def run_jar(args: List[str], quiet: bool = False) -> str:
     except FileNotFoundError:
         print(
             "Error: 'java' command not found. Please ensure Java is installed and in your system's PATH.",
+            file=sys.stderr,
+        )
+        raise
+
+    except subprocess.TimeoutExpired as error:
+        print(
+            f"Error: opendataloader-pdf CLI exceeded timeout of {error.timeout}s.",
             file=sys.stderr,
         )
         raise
