@@ -503,10 +503,10 @@ public class HybridDocumentProcessor {
         for (int pageNumber : pageNumbers) {
             try {
                 List<IObject> pageContents = workingContents.get(pageNumber);
-                pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber);
                 if (config.isDetectStrikethrough()) {
-                    StrikethroughProcessor.processStrikethroughs(pageContents);
+                    StrikethroughProcessor.processStrikethroughs(pageContents, pageNumber);
                 }
+                pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber);
                 pageContents = pageContents.stream()
                     .filter(x -> !(x instanceof LineChunk))
                     .collect(Collectors.toList());
