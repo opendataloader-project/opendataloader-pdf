@@ -18,12 +18,9 @@ package org.opendataloader.pdf.processors;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.content.LineChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
-import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
-import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Detects strikethrough text by finding horizontal lines that pass through
@@ -31,12 +28,11 @@ import java.util.List;
  * their isStrikethroughText field to true.
  *
  * Filters to avoid false positives:
- * 1. Table border membership (via TableBordersCollection)
- * 2. Stroke-to-text-height ratio (rejects thick background fills/borders)
- * 3. Line-to-text width ratio (rejects lines wider than text)
- * 4. Vertical center alignment
- * 5. Horizontal overlap requirement
- * 6. Multi-chunk matching (structural separator detection)
+ * 1. Stroke-to-text-height ratio (rejects thick background fills/borders)
+ * 2. Line-to-text width ratio (rejects lines wider than text)
+ * 3. Vertical center alignment
+ * 4. Horizontal overlap requirement
+ * 5. Multi-chunk matching (structural separator detection)
  */
 public class StrikethroughProcessor {
 
@@ -56,19 +52,16 @@ public class StrikethroughProcessor {
      * TextChunk isStrikethroughText field to true.
      *
      * @param pageContents the list of content objects for a page
+     * @param pageNumber the number of a page
      * @return the page contents (modified in place)
      */
-    public static List<IObject> processStrikethroughs(List<IObject> pageContents) {
-        List<LineChunk> horizontalLines = new ArrayList<>();
+    public static List<IObject> processStrikethroughs(List<IObject> pageContents, int pageNumber) {
+        SortedSet<LineChunk> horizontalLines = StaticContainers.getLinesCollection() != null ?
+            StaticContainers.getLinesCollection().getHorizontalLines(pageNumber) : Collections.emptySortedSet();
         List<TextChunk> textChunks = new ArrayList<>();
 
         for (IObject content : pageContents) {
-            if (content instanceof LineChunk) {
-                LineChunk line = (LineChunk) content;
-                if (line.isHorizontalLine()) {
-                    horizontalLines.add(line);
-                }
-            } else if (content instanceof TextChunk) {
+            if (content instanceof TextChunk) {
                 textChunks.add((TextChunk) content);
             }
         }
@@ -78,9 +71,6 @@ public class StrikethroughProcessor {
         }
 
         for (LineChunk line : horizontalLines) {
-//            if (isTableBorderLine(line)) {
-//                continue;
-//            }
 
             List<TextChunk> matchingChunks = new ArrayList<>();
             for (TextChunk textChunk : textChunks) {
@@ -102,18 +92,6 @@ public class StrikethroughProcessor {
         }
 
         return pageContents;
-    }
-
-    /**
-     * Checks if a line belongs to a known table border region.
-     */
-    static boolean isTableBorderLine(LineChunk line) {
-        if (StaticContainers.getTableBordersCollection() == null) {
-            return false;
-        }
-        TableBorder tableBorder = StaticContainers.getTableBordersCollection()
-            .getTableBorder(line.getBoundingBox());
-        return tableBorder != null;
     }
 
     /**

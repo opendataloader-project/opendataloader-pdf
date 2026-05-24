@@ -251,6 +251,7 @@ public class DocumentProcessor {
         final var tableBordersCollection = StaticContainers.getTableBordersCollection();
         final var accumulatedNodeMapper = StaticContainers.getAccumulatedNodeMapper();
         final var objectKeyMapper = StaticContainers.getObjectKeyMapper();
+        final var linesCollection = StaticContainers.getLinesCollection();
         final boolean keepLineBreaks = StaticContainers.isKeepLineBreaks();
         final boolean isDataLoader = StaticContainers.isDataLoader();
         final var isIgnoreCharsWithoutUnicode = StaticContainers.getIsIgnoreCharactersWithoutUnicode();
@@ -268,6 +269,7 @@ public class DocumentProcessor {
             StaticContainers.setTableBordersCollection(tableBordersCollection);
             StaticContainers.setAccumulatedNodeMapper(accumulatedNodeMapper);
             StaticContainers.setObjectKeyMapper(objectKeyMapper);
+            StaticContainers.setLinesCollection(linesCollection);
             StaticContainers.setKeepLineBreaks(keepLineBreaks);
             StaticContainers.setIsDataLoader(isDataLoader);
             StaticContainers.setIsIgnoreCharactersWithoutUnicode(isIgnoreCharsWithoutUnicode);
@@ -338,10 +340,10 @@ public class DocumentProcessor {
                     propagateState.run();
                     List<IObject> pageContents = contents.get(pageNumber);
                     if (structured) {
-                        pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber);
                         if (config.isDetectStrikethrough()) {
-                            StrikethroughProcessor.processStrikethroughs(pageContents);
+                            StrikethroughProcessor.processStrikethroughs(pageContents, pageNumber);
                         }
+                        pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber);
                         pageContents = pageContents.stream().filter(x -> !(x instanceof LineChunk)).collect(Collectors.toList());
                         pageContents = SpecialTableProcessor.detectSpecialTables(pageContents);
                     }
