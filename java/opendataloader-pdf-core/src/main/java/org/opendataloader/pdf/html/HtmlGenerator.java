@@ -37,6 +37,7 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
 import java.awt.Color;
 import java.io.Closeable;
@@ -515,6 +516,10 @@ public class HtmlGenerator implements Closeable {
         if (chunk.isItalic()) {
             style.append(HtmlSyntax.HTML_ITALIC_STYLE_PROPERTY);
         }
+        double fontSizeInPx = getFontSizeInPx(chunk.getFontSize());
+        if (!NodeUtils.areCloseNumbers(fontSizeInPx, 16.0)) {
+            style.append(String.format(HtmlSyntax.HTML_FONT_SIZE_PROPERTY, fontSizeInPx));
+        }
         Color color = chunk.getTextColor();
         if (color != null && (color.getRGB() & 0x00FFFFFF) != (Color.BLACK.getRGB() & 0x00FFFFFF)) {
             style.append(String.format(HtmlSyntax.HTML_FONT_COLOR_PROPERTY,
@@ -525,6 +530,10 @@ public class HtmlGenerator implements Closeable {
             style.append(String.format(HtmlSyntax.HTML_FONT_WEIGHT_PROPERTY, fontWeight));
         }
         return style.toString();
+    }
+
+    public static double getFontSizeInPx(double sizeInPt) {
+        return sizeInPt * 4.0 / 3.0;
     }
 
     @Override

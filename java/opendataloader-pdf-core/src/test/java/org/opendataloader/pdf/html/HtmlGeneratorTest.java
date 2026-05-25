@@ -14,6 +14,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
 class HtmlGeneratorTest {
     /**
@@ -24,9 +25,9 @@ class HtmlGeneratorTest {
      * - setFontWeight(double) is stored and getRoundedFontWeight() rounds it.
      */
     private TextChunk createChunk(String text, boolean strikethrough, boolean italic,
-                                  boolean colorNonBlack, double fontWeight) {
+                                  boolean colorNonBlack, double fontWeight, double fontSize) {
         BoundingBox dummyBox = new BoundingBox(0, 0, 10, 20, 30);
-        TextChunk chunk = new TextChunk(dummyBox, text, 12, 100.0);
+        TextChunk chunk = new TextChunk(dummyBox, text, fontSize, 100.0);
 
         if (strikethrough) {
             chunk.setIsStrikethroughText();      // sets the flag to true
@@ -50,7 +51,7 @@ class HtmlGeneratorTest {
      * The order matches getTextStyle(): strikethrough → italic → color → weight.
      */
     private String expectedStyle(boolean strikethrough, boolean italic,
-                                 boolean colorNonBlack, double fontWeight) {
+                                 boolean colorNonBlack, double fontWeight, double fontSize) {
         StringBuilder style = new StringBuilder();
         if (strikethrough) {
             style.append("text-decoration: line-through; ");
@@ -58,12 +59,17 @@ class HtmlGeneratorTest {
         if (italic) {
             style.append("font-style: italic; ");
         }
+        if (fontSize != 12.0) {
+            //Converting pt font-size into px
+            double fontSizeInPx = fontSize * 4.0 / 3.0;
+            style.append("font-size: ").append(String.format("%.3f", fontSizeInPx)).append("px; ");
+        }
         if (colorNonBlack) {
             style.append("color: rgb(255, 0, 0); ");
         }
         int roundedWeight = (int) Math.round(fontWeight);
         if (roundedWeight != 400) {
-            style.append("font-weight: " + roundedWeight + "; ");
+            style.append("font-weight: ").append(roundedWeight).append("; ");
         }
         return style.toString().trim();
     }
@@ -72,11 +78,14 @@ class HtmlGeneratorTest {
         List<Arguments> args = new ArrayList<>();
         boolean[] bools = { false, true };
         double[] weights = { 400.0, 700.0 };   // 400 = default, 700 = bold
+        double[] sizes = { 12.0, 32.0 }; // 12 = default in pt
         for (boolean s : bools) {
             for (boolean i : bools) {
                 for (boolean c : bools) {
                     for (double w : weights) {
-                        args.add(Arguments.of(s, i, c, w));
+                        for (double fs : sizes) {
+                            args.add(Arguments.of(s, i, c, w, fs));
+                        }
                     }
                 }
             }
@@ -87,16 +96,16 @@ class HtmlGeneratorTest {
     @ParameterizedTest(name = "strikethrough={0}, italic={1}, color={2}, weight={3}")
     @MethodSource("styleCombinations")
     void testAllStyleCombinations(boolean strikethrough, boolean italic,
-                                  boolean colorNonBlack, double fontWeight) {
-        TextChunk chunk = createChunk("A", strikethrough, italic, colorNonBlack, fontWeight);
+                                  boolean colorNonBlack, double fontWeight, double fontSize) {
+        TextChunk chunk = createChunk("A", strikethrough, italic, colorNonBlack, fontWeight, fontSize);
         TextLine line = new TextLine(chunk);
         StringBuilder sb = new StringBuilder();
 
         HtmlGenerator.getTextFromLineForHTML(line, sb);
 
         String expected;
-        if (strikethrough || italic || colorNonBlack || (int) Math.round(fontWeight) != 400) {
-            String styleAttr = expectedStyle(strikethrough, italic, colorNonBlack, fontWeight);
+        if (strikethrough || italic || colorNonBlack || (int) Math.round(fontWeight) != 400 || !NodeUtils.areCloseNumbers(fontSize, 12.0)) {
+            String styleAttr = expectedStyle(strikethrough, italic, colorNonBlack, fontWeight, fontSize);
             expected = "<span style=\"" + styleAttr + "\">A</span>";
         } else {
             expected = "A";
@@ -151,7 +160,7 @@ class HtmlGeneratorTest {
 
     @Test
     void testFontWeightZero() {
-        TextChunk chunk = createChunk("z", false, false, false, 0.0);
+        TextChunk chunk = createChunk("z", false, false, false, 0.0, 12.0);
         TextLine line = new TextLine(chunk);
         StringBuilder sb = new StringBuilder();
         HtmlGenerator.getTextFromLineForHTML(line, sb);
@@ -165,8 +174,8 @@ class HtmlGeneratorTest {
         helloChunk.setFontColor(new double[] {0.0, 0.0, 1.0});   // blue
         helloChunk.setFontWeight(400.0);
 
-        TextChunk spaceChunk = createChunk(" ", false, false, false, 400.0);
-        TextChunk worldChunk = createChunk("World", true, true, true, 700.0);
+        TextChunk spaceChunk = createChunk(" ", false, false, false, 400.0, 12.0);
+        TextChunk worldChunk = createChunk("World", true, true, true, 700.0, 12.0);
 
         TextLine line = new TextLine(helloChunk);
         line.add(spaceChunk);
