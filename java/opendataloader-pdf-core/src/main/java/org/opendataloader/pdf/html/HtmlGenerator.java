@@ -516,7 +516,7 @@ public class HtmlGenerator implements Closeable {
         if (chunk.isItalic()) {
             style.append(HtmlSyntax.HTML_ITALIC_STYLE_PROPERTY);
         }
-        double fontSizeInPx = getFontSizeInPx(chunk);
+        double fontSizeInPx = getFontSizeInPx(chunk.getFontSize());
         if (!NodeUtils.areCloseNumbers(fontSizeInPx, 16.0)) {
             style.append(String.format(HtmlSyntax.HTML_FONT_SIZE_PROPERTY, fontSizeInPx));
         }
@@ -532,8 +532,8 @@ public class HtmlGenerator implements Closeable {
         return style.toString();
     }
 
-    public static double getFontSizeInPx(TextChunk chunk) {
-        return chunk.getFontSize() * 4 / 3;
+    public static double getFontSizeInPx(double sizeInPt) {
+        return sizeInPt * 4.0 / 3.0;
     }
 
     @Override

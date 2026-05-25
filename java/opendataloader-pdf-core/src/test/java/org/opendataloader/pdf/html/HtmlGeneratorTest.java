@@ -14,6 +14,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
 class HtmlGeneratorTest {
     /**
@@ -60,7 +61,7 @@ class HtmlGeneratorTest {
         }
         if (fontSize != 12.0) {
             //Converting pt font-size into px
-            double fontSizeInPx = fontSize * 4 / 3;
+            double fontSizeInPx = fontSize * 4.0 / 3.0;
             style.append("font-size: ").append(String.format("%.3f", fontSizeInPx)).append("px; ");
         }
         if (colorNonBlack) {
@@ -103,7 +104,7 @@ class HtmlGeneratorTest {
         HtmlGenerator.getTextFromLineForHTML(line, sb);
 
         String expected;
-        if (strikethrough || italic || colorNonBlack || (int) Math.round(fontWeight) != 400 || (int) Math.round(fontSize) != 12) {
+        if (strikethrough || italic || colorNonBlack || (int) Math.round(fontWeight) != 400 || !NodeUtils.areCloseNumbers(fontSize, 12.0)) {
             String styleAttr = expectedStyle(strikethrough, italic, colorNonBlack, fontWeight, fontSize);
             expected = "<span style=\"" + styleAttr + "\">A</span>";
         } else {

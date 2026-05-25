@@ -86,5 +86,5 @@ public class HtmlSyntax {
     /** Font weight property. */
     public static final String HTML_FONT_WEIGHT_PROPERTY = "font-weight: %d; ";
     /** Font size property. */
-    public static final String HTML_FONT_SIZE_PROPERTY  = "font-size: %.3fpx; ";
+    public static final String HTML_FONT_SIZE_PROPERTY = "font-size: %.3fpx; ";
 }
