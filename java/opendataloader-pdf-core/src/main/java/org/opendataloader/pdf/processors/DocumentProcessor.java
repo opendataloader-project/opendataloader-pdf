@@ -36,6 +36,7 @@ import org.verapdf.cos.COSDictionary;
 import org.verapdf.cos.COSObjType;
 import org.verapdf.cos.COSObject;
 import org.verapdf.cos.COSTrailer;
+import org.verapdf.exceptions.InvalidPasswordException;
 import org.verapdf.gf.model.impl.containers.StaticStorages;
 import org.verapdf.gf.model.impl.cos.GFCosInfo;
 import org.verapdf.gf.model.impl.sa.GFSAPDFDocument;
@@ -537,7 +538,22 @@ public class DocumentProcessor {
         LOGGER.log(Level.INFO, () -> "File name: " + pdfName);
         validatePdfMagicNumber(pdfName);
         updateStaticContainers(config);
-        PDDocument pdDocument = new PDDocument(pdfName);
+        PDDocument pdDocument;
+        try {
+            pdDocument = new PDDocument(pdfName);
+        } catch (InvalidPasswordException pw) {
+            // Encrypted PDFs are not a content-validity failure — let the
+            // password-handling branch in callers (e.g. CLIMain) take over.
+            throw pw;
+        } catch (IOException cause) {
+            // Magic number was present, so the user expected a real PDF, but
+            // veraPDF could not parse the document (truncated download, body
+            // corruption, missing xref). Surface a friendly message instead
+            // of letting the raw veraPDF IOException leak as a stack trace.
+            throw new InvalidPdfFileException(
+                "'" + displayName(pdfName) + "' is not a valid PDF file (corrupted or truncated content).",
+                cause);
+        }
         StaticResources.setDocument(pdDocument);
         GFSAPDFDocument document = new GFSAPDFDocument(pdDocument);
 //        org.verapdf.gf.model.impl.containers.StaticContainers.setFlavour(Collections.singletonList(PDFAFlavour.WCAG_2_2));
@@ -585,11 +601,19 @@ public class DocumentProcessor {
         }
         byte[] marker = "%PDF-".getBytes(StandardCharsets.US_ASCII);
         if (indexOfBytes(head, marker) < 0) {
-            Path fileName = path.getFileName();
-            String displayName = fileName != null ? fileName.toString() : pdfName;
             throw new InvalidPdfFileException(
-                "'" + displayName + "' is not a valid PDF file (missing %PDF- header).");
+                "'" + displayName(pdfName) + "' is not a valid PDF file (missing %PDF- header).");
         }
+    }
+
+    /**
+     * Path.getFileName() returns null for filesystem roots (e.g. {@code C:\}).
+     * Fall back to the original input string in that case so the user-facing
+     * error message is never empty.
+     */
+    private static String displayName(String pdfName) {
+        Path fileName = Path.of(pdfName).getFileName();
+        return fileName != null ? fileName.toString() : pdfName;
     }
 
     private static int indexOfBytes(byte[] haystack, byte[] needle) {

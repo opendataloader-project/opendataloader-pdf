@@ -686,7 +686,15 @@ public class HybridDocumentProcessor {
                     if (page0 < transformedContents.size()) {
                         List<IObject> pageContents = transformedContents.get(page0);
                         TextProcessor.replaceUndefinedCharacters(pageContents, config.getReplaceInvalidChars());
+                        // Capture transformer-assigned IDs before setIDs rewrites them
+                        // so ElementMetadata keyed by the original ID can be migrated
+                        // to the renumbered structure ID.
+                        List<Long> oldIds = new ArrayList<>(pageContents.size());
+                        for (IObject obj : pageContents) {
+                            oldIds.add(obj.getRecognizedStructureId());
+                        }
                         DocumentProcessor.setIDs(pageContents);
+                        rekeyMetadata(transformer, oldIds, pageContents);
                         results.put(page0, pageContents);
                     } else {
                         results.put(page0, new ArrayList<>());
@@ -721,6 +729,26 @@ public class HybridDocumentProcessor {
      */
     private static HybridClient getClient(Config config) {
         return HybridClientFactory.getOrCreate(config.getHybrid(), config.getHybridConfig());
+    }
+
+    /**
+     * Migrate ElementMetadata entries from transformer-assigned IDs onto the
+     * structure IDs that {@code setIDs} just renumbered each IObject with.
+     * Without this, the metadata map keeps pointing at the throwaway IDs the
+     * transformer minted and downstream metadata lookups all miss.
+     */
+    private static void rekeyMetadata(HybridSchemaTransformer transformer,
+                                       List<Long> oldIds, List<IObject> pageContents) {
+        Map<Long, Long> oldToNew = new java.util.HashMap<>(pageContents.size());
+        for (int i = 0; i < pageContents.size(); i++) {
+            Long oldId = oldIds.get(i);
+            Long newId = pageContents.get(i).getRecognizedStructureId();
+            if (oldId == null || newId == null || oldId.equals(newId)) continue;
+            oldToNew.put(oldId, newId);
+        }
+        if (!oldToNew.isEmpty()) {
+            transformer.rekeyMetadata(oldToNew);
+        }
     }
 
     /**

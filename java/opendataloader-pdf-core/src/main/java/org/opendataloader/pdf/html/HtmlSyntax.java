@@ -71,4 +71,20 @@ public class HtmlSyntax {
     public static final String HTML_MATH_DISPLAY_TAG = "<div class=\"math-display\">";
     /** Closing math display block tag. */
     public static final String HTML_MATH_DISPLAY_CLOSE_TAG = "</div>";
+    /** Span opening tag. */
+    public static final String HTML_SPAN_START_TAG = "<span%s>";
+    /** Style attribute */
+    public static final String HTML_STYLE_ATTRIBUTE = " style=\"%s\"";
+    /** Span closing tag. */
+    public static final String HTML_SPAN_CLOSE_TAG = "</span>";
+    /** Strikethrough text property. */
+    public static final String HTML_STRIKETHROUGH_STYLE_PROPERTY = "text-decoration: line-through; ";
+    /** Italic font property. */
+    public static final String HTML_ITALIC_STYLE_PROPERTY = "font-style: italic; ";
+    /** Font color property. */
+    public static final String HTML_FONT_COLOR_PROPERTY = "color: rgb(%d, %d, %d); ";
+    /** Font weight property. */
+    public static final String HTML_FONT_WEIGHT_PROPERTY = "font-weight: %d; ";
+    /** Font size property. */
+    public static final String HTML_FONT_SIZE_PROPERTY = "font-size: %.3fpx; ";
 }

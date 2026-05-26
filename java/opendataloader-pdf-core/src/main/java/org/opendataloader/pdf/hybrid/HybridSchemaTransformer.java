@@ -81,6 +81,20 @@ public interface HybridSchemaTransformer {
     }
 
     /**
+     * Re-key the in-memory {@link ElementMetadata} map after the host
+     * pipeline renumbered structure IDs. {@code oldToNew} maps the
+     * transformer-assigned ID to the post-{@code setIDs} ID for IObjects
+     * the caller just renumbered; entries for unmapped IDs are left alone.
+     *
+     * <p>Backends that don't expose mutable metadata should leave the
+     * default no-op; their downstream metadata lookups will continue to
+     * miss.
+     */
+    default void rekeyMetadata(Map<Long, Long> oldToNew) {
+        // no-op
+    }
+
+    /**
      * Returns per-page OCR word data collected during the last {@link #transform} call.
      * Keys are 0-indexed page numbers. Each list contains word-level OCR data with
      * text and bounding box in PDF coordinate space.

@@ -151,6 +151,17 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
     }
 
     @Override
+    public void rekeyMetadata(Map<Long, Long> oldToNew) {
+        if (oldToNew == null || oldToNew.isEmpty() || elementMetadataMap.isEmpty()) return;
+        Map<Long, ElementMetadata> rebuilt = new LinkedHashMap<>(elementMetadataMap.size());
+        for (Map.Entry<Long, ElementMetadata> entry : elementMetadataMap.entrySet()) {
+            Long mapped = oldToNew.get(entry.getKey());
+            rebuilt.put(mapped != null ? mapped : entry.getKey(), entry.getValue());
+        }
+        elementMetadataMap = rebuilt;
+    }
+
+    @Override
     public Map<Integer, List<OcrWordInfo>> getOcrWordsByPage() {
         return Collections.unmodifiableMap(ocrWordsByPage);
     }
@@ -456,18 +467,30 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
                 break;
         }
 
-        // Map confidence to correctSemanticScore (only for SemanticNode subtypes)
-        if (iobj instanceof SemanticNode) {
-            double confidence = obj.has("confidence") ? obj.get("confidence").asDouble(1.0) : 1.0;
-            ((SemanticNode) iobj).setCorrectSemanticScore(confidence);
+        // Hancom AI DLA reports each object's overall detection score in the
+        // "confidence" field (numeric, 0..1). The per-word "score" entries
+        // inside "words" are OCR confidences, not object scores.
+        double aiScore = -1.0;
+        if (obj.has("confidence")) {
+            aiScore = obj.get("confidence").asDouble(-1.0);
+        }
+
+        // Map AI score to correctSemanticScore (only for SemanticNode subtypes)
+        if (iobj instanceof SemanticNode && aiScore >= 0.0) {
+            ((SemanticNode) iobj).setCorrectSemanticScore(aiScore);
         }
 
         // Produce ElementMetadata for this IObject
         if (iobj != null && iobj.getRecognizedStructureId() != null) {
-            double confidence = obj.has("confidence") ? obj.get("confidence").asDouble(1.0) : 1.0;
+            // Carry the raw DLA detection id so downstream tooling (evidence
+            // report) can line a reading-ordered node back to its DLA row
+            // without re-matching by bbox. Same field the FIGURE branch
+            // already reads — pulled out here so every label gets it.
+            int rawObjectId = obj.has("object_id") ? obj.get("object_id").asInt() : -1;
             ElementMetadata meta = new ElementMetadata()
-                .setConfidence(confidence)
-                .setSourceLabel(label);
+                .setAiScore(aiScore)
+                .setSourceLabel(label)
+                .setDlaObjectId(rawObjectId);
 
             if (label == LABEL_PARA_TITLE || label == LABEL_REGION_TITLE) {
                 double pixelHeight = bboxNode.get(3).asDouble() - bboxNode.get(1).asDouble();
@@ -711,8 +734,14 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
         }
 
         // Produce ElementMetadata for the table
+        double tableAiScore = tableEntry.has("confidence")
+            ? tableEntry.get("confidence").asDouble(-1.0) : -1.0;
+        int tableRawObjectId = tableEntry.has("object_id")
+            ? tableEntry.get("object_id").asInt() : -1;
         ElementMetadata tableMeta = new ElementMetadata()
-            .setSourceLabel(tableEntry.has("label") ? tableEntry.get("label").asInt() : LABEL_TABLE);
+            .setAiScore(tableAiScore)
+            .setSourceLabel(tableEntry.has("label") ? tableEntry.get("label").asInt() : LABEL_TABLE)
+            .setDlaObjectId(tableRawObjectId);
         if (tsr != null) {
             ElementMetadata.TsrMetadata tsrMeta = new ElementMetadata.TsrMetadata();
             tsrMeta.setNumCells(tsr.has("num_cells") ? tsr.get("num_cells").asInt() : 0);

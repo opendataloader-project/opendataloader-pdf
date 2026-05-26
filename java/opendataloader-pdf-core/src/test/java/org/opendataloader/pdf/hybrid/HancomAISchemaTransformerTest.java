@@ -489,6 +489,8 @@ public class HancomAISchemaTransformerTest {
         ObjectNode obj = objectMapper.createObjectNode();
         obj.put("label", label);
         obj.put("ocrtext", text);
+        // Hancom AI DLA reports each object's overall detection confidence
+        // in the "confidence" field (numeric, 0..1).
         obj.put("confidence", 0.95);
 
         ArrayNode bbox = obj.putArray("bbox");
@@ -501,7 +503,7 @@ public class HancomAISchemaTransformerTest {
     }
 
     /**
-     * Creates an object node with a specific confidence value.
+     * Creates an object node with a specific AI score value.
      */
     private ObjectNode createObjectWithConfidence(int label, String text, double left, double top,
                                                    double right, double bottom, double confidence) {
@@ -1074,11 +1076,11 @@ public class HancomAISchemaTransformerTest {
         assertThat(result.get(0).get(0)).isInstanceOf(SemanticPicture.class);
     }
 
-    // --- Task 8: confidence → correctSemanticScore ---
+    // --- Task 8: AI score → correctSemanticScore ---
 
     @Test
-    void confidence_mappedToCorrectSemanticScore() {
-        // object with confidence 0.85 → correctSemanticScore = 0.85
+    void aiScore_mappedToCorrectSemanticScore() {
+        // object with score 0.85 → correctSemanticScore = 0.85
         ObjectNode obj = createObjectWithConfidence(2, "Test paragraph", 100, 100, 500, 130, 0.85);
         ObjectNode json = createHancomAIJson(obj);
 
@@ -1090,11 +1092,12 @@ public class HancomAISchemaTransformerTest {
     }
 
     @Test
-    void confidence_defaultsTo1WhenMissing() {
-        // object without confidence field → correctSemanticScore = 1.0
+    void aiScore_defaultsTo1WhenMissing() {
+        // object without score field → correctSemanticScore stays at the
+        // factory default (1.0); ElementMetadata.aiScore stays at sentinel.
         ObjectNode obj = objectMapper.createObjectNode();
         obj.put("label", 2);
-        obj.put("ocrtext", "No confidence field");
+        obj.put("ocrtext", "No score field");
         ArrayNode bbox = obj.putArray("bbox");
         bbox.add(100); bbox.add(100); bbox.add(500); bbox.add(130);
 
@@ -1108,8 +1111,8 @@ public class HancomAISchemaTransformerTest {
     }
 
     @Test
-    void confidence_appliedToHeading() {
-        // heading with confidence 0.72 → correctSemanticScore = 0.72
+    void aiScore_appliedToHeading() {
+        // heading with score 0.72 → correctSemanticScore = 0.72
         ObjectNode obj = createObjectWithConfidence(0, "Title", 100, 50, 500, 100, 0.72);
         ObjectNode json = createHancomAIJson(obj);
 
@@ -1384,7 +1387,7 @@ public class HancomAISchemaTransformerTest {
         assertThat(metadata).containsKey(iobj.getRecognizedStructureId());
 
         ElementMetadata meta = metadata.get(iobj.getRecognizedStructureId());
-        assertThat(meta.getConfidence()).isEqualTo(0.88);
+        assertThat(meta.getAiScore()).isEqualTo(0.88);
         assertThat(meta.getSourceLabel()).isEqualTo(2);
         assertThat(meta.getHeadingInferenceMethod()).isNull();
     }

@@ -65,7 +65,8 @@ public class JsonName {
     public static final String IMAGE_FORMAT = "format";
     public static final String FORMULA_TYPE = "formula";
     public static final String DESCRIPTION = "description";
-    public static final String CONFIDENCE = "confidence";
+    public static final String AI_SCORE = "ai_score";
+    public static final String PDFUA_TAG = "pdfua_tag";
     public static final String SOURCE_LABEL = "source label";
     public static final String HYBRID = "hybrid";
 }

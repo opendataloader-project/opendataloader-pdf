@@ -20,6 +20,7 @@ import org.opendataloader.pdf.hybrid.ElementMetadata;
 import org.opendataloader.pdf.json.JsonName;
 import org.opendataloader.pdf.utils.TextNodeUtils;
 import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 
 import java.io.IOException;
@@ -52,8 +53,8 @@ public class SerializerUtil {
         ElementMetadata meta = metadata.get(object.getRecognizedStructureId());
         if (meta == null) return;
 
-        if (meta.getConfidence() != 1.0) {
-            gen.writeNumberField(JsonName.CONFIDENCE, meta.getConfidence());
+        if (meta.getAiScore() >= 0.0) {
+            gen.writeNumberField(JsonName.AI_SCORE, meta.getAiScore());
         }
         if (meta.getSourceLabel() >= 0) {
             gen.writeNumberField(JsonName.SOURCE_LABEL, meta.getSourceLabel());
@@ -121,6 +122,10 @@ public class SerializerUtil {
 
     public static void writeEssentialInfo(JsonGenerator jsonGenerator, IObject object, String type) throws IOException {
         jsonGenerator.writeStringField(JsonName.TYPE, type);
+        String pdfuaTag = pdfuaTagFor(type, object);
+        if (pdfuaTag != null) {
+            jsonGenerator.writeStringField(JsonName.PDFUA_TAG, pdfuaTag);
+        }
         Long id = object.getRecognizedStructureId();
         if (id != null && id != 0L) {
             jsonGenerator.writeNumberField(JsonName.ID, id);
@@ -135,6 +140,51 @@ public class SerializerUtil {
         jsonGenerator.writePOJO(object.getRightX());
         jsonGenerator.writePOJO(object.getTopY());
         jsonGenerator.writeEndArray();
+    }
+
+    /**
+     * Maps an extraction JSON `type` (plus heading level when relevant) to the
+     * PDF/UA structure tag that AutoTaggingProcessor will emit for the node.
+     * Returns null when the node has no canonical PDF/UA tag (e.g. text chunks
+     * that live below the structure-element granularity).
+     */
+    static String pdfuaTagFor(String type, IObject object) {
+        if (type == null) {
+            return null;
+        }
+        switch (type) {
+            case JsonName.HEADING_TYPE:
+                if (object instanceof SemanticHeading) {
+                    int level = ((SemanticHeading) object).getHeadingLevel();
+                    if (level >= 1 && level <= 6) {
+                        return "H" + level;
+                    }
+                }
+                // Fallback for unleveled headings. PDF/UA-2 deprecates the
+                // plain "H" tag in favor of H1..H6; emit it only because we
+                // cannot infer a level. Downstream remediation may upgrade
+                // this when more context is available.
+                return "H";
+            case JsonName.PARAGRAPH_TYPE:
+                return "P";
+            case JsonName.IMAGE_CHUNK_TYPE:
+                return "Figure";
+            case JsonName.FORMULA_TYPE:
+                return "Formula";
+            case JsonName.LIST_TYPE:
+                return "L";
+            case JsonName.LIST_ITEM_TYPE:
+                return "LI";
+            case JsonName.TABLE_TYPE:
+                return "Table";
+            case JsonName.TABLE_CELL_TYPE:
+                return "TD";
+            default:
+                // header/footer/footnote/caption/line/text-chunk/text-block
+                // either become Artifact or are not promoted to their own
+                // PDF/UA structure element. Leave the tag unset for now.
+                return null;
+        }
     }
 
     public static void writeTextInfo(JsonGenerator jsonGenerator, SemanticTextNode textNode) throws IOException {

@@ -74,14 +74,22 @@ class CLIMainTest {
 
     /**
      * When a directory contains a file that fails processing, run() must return
-     * non-zero, even though other files in the directory may succeed.
+     * non-zero, even though other files in the directory may succeed. The
+     * "failure" here must be a genuine processing error (unreachable hybrid
+     * backend), not a corrupt-content classification — corrupt PDFs inside a
+     * directory are silently skipped by design (see
+     * {@link #testCorruptPdfInsideDirectoryIsSilentlySkipped()}), so the test
+     * uses a parseable PDF and lets the hybrid availability check fail.
      */
     @Test
     void testDirectoryWithFailingFileReturnsNonZeroExitCode() throws IOException {
         Path dir = tempDir.resolve("docs");
         Files.createDirectory(dir);
         Path testPdf = dir.resolve("bad.pdf");
-        Files.write(testPdf, "%PDF-1.4 minimal".getBytes());
+        try (PDDocument doc = new PDDocument()) {
+            doc.addPage(new PDPage());
+            doc.save(testPdf.toFile());
+        }
 
         int exitCode = CLIMain.run(new String[]{
             "--hybrid", "docling-fast",
@@ -533,36 +541,74 @@ class CLIMainTest {
     }
 
     /**
-     * A genuinely corrupted PDF (has %PDF- header, body broken) is OUT of
-     * scope for this fix and must continue to fail via the existing SEVERE
-     * path — NOT through the new magic-number branch. This test pins that
-     * behavior by asserting (a) the user-facing magic-number error never
-     * appears, and (b) the SEVERE log line from CLIMain.processFile is
-     * actually emitted (proving the existing SEVERE path was the one taken).
+     * A PDF with a valid {@code %PDF-} header but a corrupt or truncated body
+     * must surface the friendly "corrupted or truncated content" error on
+     * stdout, exit non-zero, AND must not leak a veraPDF stack trace. The
+     * wording must also be distinct from the missing-header case so users
+     * can tell the two failure modes apart.
      */
     @Test
-    void testCorruptPdfStillFailsViaExistingPath() throws IOException {
+    void testCorruptPdfShowsCorruptedFileErrorWithoutStackTrace() throws IOException {
         Path corrupt = tempDir.resolve("corrupt.pdf");
         // Valid header, but nothing else — veraPDF will fail at parse time.
         Files.write(corrupt, "%PDF-1.4\n<garbage>".getBytes(StandardCharsets.UTF_8));
 
+        String[] stdoutHolder = new String[1];
+        int exitCode = (int) runCapturingStdout(
+            () -> CLIMain.run(new String[]{corrupt.toString()}),
+            stdoutHolder);
+
+        String out = stdoutHolder[0];
+        assertNotEquals(0, exitCode,
+            "Corrupt PDF must still fail (non-zero exit); got stdout: " + out);
+        assertTrue(out.contains("'corrupt.pdf' is not a valid PDF file (corrupted or truncated content)"),
+            "stdout must surface the friendly corrupted-content error; got: " + out);
+        assertFalse(out.contains("missing %PDF- header"),
+            "Corrupt-but-headered PDFs must NOT be misreported as missing the header; got: "
+            + out);
+        assertFalse(out.toLowerCase(java.util.Locale.ROOT).contains("verapdf"),
+            "Output must not contain 'verapdf'; got: " + out);
+        assertFalse(out.contains("java.io.IOException:"),
+            "Output must not contain 'java.io.IOException:'; got: " + out);
+        assertFalse(out.contains("\tat "),
+            "Output must not contain a Java stack trace ('\\tat '); got: " + out);
+    }
+
+    /**
+     * A corrupt-but-headered PDF inside a directory must follow the same
+     * batch-folder semantics as a non-PDF-content file: WARNING log, no
+     * {@code Error:} on stdout, exit 0. This mirrors
+     * {@link #testPdfExtensionNonPdfInsideDirectoryIsSilentlySkipped()} for
+     * the corrupted-body branch so both failure modes route through the
+     * same {@link InvalidPdfFileException} handler in CLIMain.
+     */
+    @Test
+    void testCorruptPdfInsideDirectoryIsSilentlySkipped() throws IOException {
+        Path dir = tempDir.resolve("mixed-corrupt");
+        Files.createDirectory(dir);
+        Files.write(dir.resolve("corrupt.pdf"),
+            "%PDF-1.4\n<garbage>".getBytes(StandardCharsets.UTF_8));
+        Files.write(dir.resolve("note.png"), new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47});
+
         List<LogRecord> records = new ArrayList<>();
         String[] stdoutHolder = new String[1];
         int exitCode = (int) captureLogsOf(records, () -> runCapturingStdout(
-            () -> CLIMain.run(new String[]{corrupt.toString()}),
+            () -> CLIMain.run(new String[]{dir.toString()}),
             stdoutHolder)).intValue();
 
-        assertNotEquals(0, exitCode,
-            "Corrupt PDF must still fail (non-zero exit)");
-        assertFalse(stdoutHolder[0].contains("missing %PDF- header"),
-            "Corrupt-but-headered PDFs must NOT be misreported as missing the header; got: "
-            + stdoutHolder[0]);
-        assertTrue(records.stream().anyMatch(r ->
-                r.getLevel() == Level.SEVERE
+        assertEquals(0, exitCode,
+            "Directory traversal must exit 0 even when a child is a corrupt PDF "
+            + "(silent-skip semantics); got stdout: " + stdoutHolder[0]);
+        assertFalse(stdoutHolder[0].contains("Error:"),
+            "Directory traversal must not surface 'Error:' on stdout; got: " + stdoutHolder[0]);
+        long warningMatches = records.stream().filter(r ->
+                r.getLevel() == Level.WARNING
                 && r.getMessage() != null
-                && r.getMessage().contains("Exception during processing file")),
-            "Corrupt PDF must take the SEVERE path (not the magic-number branch); got: "
-            + records);
+                && r.getMessage().contains("'corrupt.pdf'")
+                && r.getMessage().contains("corrupted or truncated")).count();
+        assertEquals(1L, warningMatches,
+            "Exactly one WARNING log must name the offending file and describe "
+            + "the corrupted-content failure; got: " + records);
     }
 
     /**

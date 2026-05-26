@@ -25,14 +25,27 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Regression tests for PDFDLOSP-14: DocumentProcessor.preprocessing must reject
- * files whose content is not PDF with a typed InvalidPdfFileException, before
- * the veraPDF parser is invoked.
+ * Regression tests for DocumentProcessor.preprocessing: every "input is not
+ * a usable PDF" failure mode must surface as a typed InvalidPdfFileException
+ * with a user-facing message, never a raw veraPDF IOException.
+ *
+ * <p>Two failure modes are covered:
+ * <ul>
+ *   <li>Missing {@code %PDF-} header (JPEG, empty file): caught by the
+ *       magic-number guard before veraPDF is invoked. Message ends with
+ *       {@code (missing %PDF- header)}.</li>
+ *   <li>Header present but body corrupt or truncated: caught when
+ *       {@code new PDDocument(pdfName)} fails inside veraPDF. Message ends
+ *       with {@code (corrupted or truncated content)}, and the original
+ *       IOException is preserved as the cause for diagnostics.</li>
+ * </ul>
  */
 class DocumentProcessorMagicNumberTest {
 
@@ -61,12 +74,14 @@ class DocumentProcessorMagicNumberTest {
     }
 
     @Test
-    void preprocessingAcceptsHeaderAfterBomAndWhitespace() throws IOException {
+    void preprocessingClassifiesBomPrefixedTruncatedPdfAsCorrupted() throws IOException {
         Path bomPdf = tempDir.resolve("bom.pdf");
         // UTF-8 BOM + spaces + valid PDF header. The magic-number guard must
-        // accept this (1024-byte search window). It will still fail later in
-        // veraPDF because the body is incomplete — that failure must NOT be
-        // an InvalidPdfFileException, since the header IS present.
+        // accept this (1024-byte search window). veraPDF will still reject
+        // the file because the body is incomplete — but that failure must
+        // surface as InvalidPdfFileException with the "corrupted or
+        // truncated" message, not as a raw IOException and not with the
+        // missing-header wording.
         byte[] prefix = new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF, ' ', ' '};
         byte[] header = "%PDF-1.4\n".getBytes(StandardCharsets.US_ASCII);
         byte[] content = new byte[prefix.length + header.length];
@@ -74,14 +89,22 @@ class DocumentProcessorMagicNumberTest {
         System.arraycopy(header, 0, content, prefix.length, header.length);
         Files.write(bomPdf, content);
 
-        // Any exception thrown must NOT be InvalidPdfFileException — the
-        // magic-number guard accepted the file. veraPDF may still reject it
-        // later, but that goes through the normal IOException path.
-        Throwable thrown = assertThrows(Throwable.class,
+        InvalidPdfFileException thrown = assertThrows(
+            InvalidPdfFileException.class,
             () -> DocumentProcessor.preprocessing(bomPdf.toString(), new Config()));
-        assertTrue(!(thrown instanceof InvalidPdfFileException),
-            "Magic-number guard must accept %PDF- preceded by BOM/whitespace; "
-            + "got InvalidPdfFileException: " + thrown.getMessage());
+
+        String message = thrown.getMessage();
+        assertNotNull(message);
+        assertTrue(message.contains("bom.pdf"),
+            "Message must include the file name; got: " + message);
+        assertTrue(message.contains("corrupted or truncated"),
+            "Body-corruption case must use the 'corrupted or truncated' wording, "
+            + "not the missing-header wording; got: " + message);
+        assertFalse(message.contains("missing %PDF- header"),
+            "Header IS present (just preceded by BOM/whitespace) — must not "
+            + "be misreported as missing; got: " + message);
+        assertInstanceOf(IOException.class, thrown.getCause(),
+            "Original veraPDF IOException must be preserved as cause for diagnostics");
     }
 
     @Test
@@ -91,5 +114,36 @@ class DocumentProcessorMagicNumberTest {
 
         assertThrows(InvalidPdfFileException.class,
             () -> DocumentProcessor.preprocessing(empty.toString(), new Config()));
+    }
+
+    @Test
+    void preprocessingRejectsTruncatedPdfWithInvalidPdfFileException() throws IOException {
+        // Simulates a real download that was interrupted near the end of
+        // the file: valid %PDF- header at the start, plausible body bytes,
+        // but the trailing xref table that veraPDF requires is gone.
+        Path truncated = tempDir.resolve("truncated.pdf");
+        byte[] head = "%PDF-1.6\n".getBytes(StandardCharsets.US_ASCII);
+        byte[] body = new byte[1024];
+        for (int i = 0; i < body.length; i++) {
+            body[i] = (byte) ('a' + (i % 26));
+        }
+        byte[] content = new byte[head.length + body.length];
+        System.arraycopy(head, 0, content, 0, head.length);
+        System.arraycopy(body, 0, content, head.length, body.length);
+        Files.write(truncated, content);
+
+        InvalidPdfFileException thrown = assertThrows(
+            InvalidPdfFileException.class,
+            () -> DocumentProcessor.preprocessing(truncated.toString(), new Config()));
+
+        String message = thrown.getMessage();
+        assertNotNull(message);
+        assertTrue(message.contains("truncated.pdf"),
+            "Message must include the file name; got: " + message);
+        assertTrue(message.contains("corrupted or truncated"),
+            "Truncated PDF must surface the 'corrupted or truncated' message; got: "
+            + message);
+        assertInstanceOf(IOException.class, thrown.getCause(),
+            "Original veraPDF IOException must be preserved as cause for diagnostics");
     }
 }
