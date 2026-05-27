@@ -480,8 +480,15 @@ public class DoclingSchemaTransformer implements HybridSchemaTransformer {
             double rowTop = tableBbox.getTopY() - (row * rowHeight);
             double rowBottom = rowTop - rowHeight;
             borderRow.setBoundingBox(new BoundingBox(pageIndex, tableBbox.getLeftX(), rowBottom, tableBbox.getRightX(), rowTop));
+            table.getRows()[row] = borderRow;
+        }
 
+        for (int row = 0; row < numRows; row++) {
             for (int col = 0; col < numCols; col++) {
+                // Slot already covered by a spanning cell from an earlier
+                // iteration — do not overwrite with a fresh placeholder.
+                if (table.getRows()[row].getCells()[col] != null) continue;
+
                 String key = row + "," + col;
                 JsonNode cellNode = cellMap.get(key);
 
@@ -498,23 +505,40 @@ public class DoclingSchemaTransformer implements HybridSchemaTransformer {
                     }
                 }
 
-                TableBorderCell cell = new TableBorderCell(row, col, rowSpan, colSpan, 0L);
+                // Clamp spans to the declared table bounds. Docling occasionally
+                // emits col_span/row_span values that, combined with the start
+                // index, run past the table; let the spanning area be exactly
+                // what stays inside the grid. Math.max(1, ...) defends against
+                // malformed zero or negative span values that would otherwise
+                // leave the slot unfilled.
+                int effectiveColSpan = Math.max(1, Math.min(colSpan, numCols - col));
+                int effectiveRowSpan = Math.max(1, Math.min(rowSpan, numRows - row));
+
+                TableBorderCell cell = new TableBorderCell(row, col, effectiveRowSpan, effectiveColSpan, 0L);
                 double cellLeft = tableBbox.getLeftX() + (col * colWidth);
-                double cellRight = cellLeft + (colSpan * colWidth);
+                double cellRight = cellLeft + (effectiveColSpan * colWidth);
                 double cellTop = tableBbox.getTopY() - (row * rowHeight);
-                double cellBottom = cellTop - (rowSpan * rowHeight);
+                double cellBottom = cellTop - (effectiveRowSpan * rowHeight);
                 cell.setBoundingBox(new BoundingBox(pageIndex, cellLeft, cellBottom, cellRight, cellTop));
 
-                // Add cell content if present
                 if (!cellText.isEmpty()) {
                     SemanticParagraph content = createParagraph(cellText, cell.getBoundingBox());
                     cell.addContentObject(content);
                 }
 
-                borderRow.getCells()[col] = cell;
+                // Mark every slot covered by this cell's span with the same
+                // instance so AutoTaggingProcessor.addTableRow skips the
+                // duplicates. Without this Docling produces redundant
+                // 1x1 placeholders next to spanning cells, breaking
+                // PDF/UA-1 §7.2 (test 43) / PDF/UA-2 §8.2.5.26 "Table rows
+                // shall have the same number of columns (taking into account
+                // column spans)".
+                for (int r = row; r < row + effectiveRowSpan; r++) {
+                    for (int c = col; c < col + effectiveColSpan; c++) {
+                        table.getRows()[r].getCells()[c] = cell;
+                    }
+                }
             }
-
-            table.getRows()[row] = borderRow;
         }
 
         result.get(pageIndex).add(table);
