@@ -63,6 +63,11 @@ public class AutoTaggingProcessor {
     private static final int MAX_TOKENS_PER_STREAM = 100_000;
     // imageChunkCounter is per-call; tracked via the figureObject index across a document
     private static int imageChunkFigureCounter = 0;
+    // Counter for unique /ID strings on Note / FENote struct elements.
+    // PDF/UA-1 §7.9.1 and PDF 2.0 14.8.4.6 require every Note to carry
+    // an /ID entry that is unique within the document — veraPDF reports
+    // a hard failure when missing. Reset per document in tagDocument().
+    private static int footnoteCounter = 0;
 
     /**
      * Tag a PDF document in-memory without saving to disk.
@@ -81,6 +86,7 @@ public class AutoTaggingProcessor {
         annotationBBoxesMap.clear();
         currentStructParent = 0;
         imageChunkFigureCounter = 0;
+        footnoteCounter = 0;
         isPDF2_0 = pdfVersion != null ? pdfVersion == 2.0F : document.getVersion() == 2.0F;
         COSDocument cosDocument = document.getDocument();
         PDCatalog catalog = document.getCatalog();
@@ -736,6 +742,20 @@ public class AutoTaggingProcessor {
         COSObject noteObject = addStructElement(parent, cosDocument,
                 usePdf2Footnote ? TaggedPDFConstants.FENOTE : TaggedPDFConstants.NOTE,
                 footnote.getPageNumber());
+        // PDF/UA-1 §7.9.1 and PDF 2.0 14.8.4.6 require Note / FENote struct
+        // elements to carry an /ID entry that is unique within the document.
+        // The value is opaque to veraPDF — any non-empty unique string works.
+        // We use a per-document counter prefixed with "note" so the IDs are
+        // human-readable in PDF dumps. footnoteCounter is reset at the top
+        // of tagDocument(), and tagDocument is synchronized, so the counter
+        // is safe under repeated calls. US_ASCII is explicit so the byte
+        // representation does not depend on the JVM default charset — the
+        // string is pure ASCII so the choice is functionally a no-op, but
+        // it documents intent and silences SpotBugs DM_DEFAULT_ENCODING.
+        footnoteCounter++;
+        String noteId = "note-" + footnoteCounter;
+        noteObject.setKey(ASAtom.ID,
+                COSString.construct(noteId.getBytes(java.nio.charset.StandardCharsets.US_ASCII)));
         if (usePdf2Footnote) {
             noteObject.setKey(ASAtom.NS, pdf2_0Namespace);
             noteObject.setKey(ASAtom.NOTE_TYPE, COSName.construct(ASAtom.getASAtom("Footnote")));
