@@ -776,8 +776,16 @@ public class AutoTaggingProcessor {
         COSObject figureObject = addStructElement(parent, cosDocument, TaggedPDFConstants.FIGURE, image.getPageNumber());
         double[] bbox = {image.getLeftX(), image.getBottomY(), image.getRightX(), image.getTopY()};
         addAttributeToStructElem(figureObject, ASAtom.LAYOUT, ASAtom.BBOX, COSArray.construct(4, bbox));
-        //PDF/UA-1 rule 7.3-1 / PDF/UA-2 rule 8.2.5.28.2-1
-        // Use enriched description if available, otherwise fallback "image N"
+        // PDF/UA-1 rule 7.3-1 / PDF/UA-2 rule 8.2.5.28.2-1: every Figure must
+        // carry a non-empty /Alt. JSON/HTML/Markdown outputs follow the
+        // alt/alt_source schema (alt absent ↔ alt_source=missing), but the
+        // PDF struct tree cannot leave /Alt empty without failing verification.
+        // The "image N" synthetic fallback below is the lesser evil: it
+        // satisfies veraPDF but is a known false alternative for AT users.
+        // TODO(a11y): when alt is missing, re-tag as /Artifact (decorative)
+        // rather than emitting synthetic text. Tracked as a follow-up to the
+        // alt/alt_source schema unification; file an issue before removing
+        // this comment.
         String altText = null;
         if (image instanceof EnrichedImageChunk) {
             altText = ((EnrichedImageChunk) image).sanitizeDescription();
