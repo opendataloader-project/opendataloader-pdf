@@ -429,15 +429,75 @@ public class DocumentProcessor {
         Map<Long, ElementMetadata> remapped = new LinkedHashMap<>();
         for (List<IObject> pageContents : contents) {
             for (IObject obj : pageContents) {
-                Long id = obj.getRecognizedStructureId();
-                if (id == null || id == 0L) continue;
-                ElementMetadata meta = rawMetadata.get(id);
-                if (meta != null) {
-                    remapped.put(id, meta);
-                }
+                collectMetadata(obj, rawMetadata, remapped);
             }
         }
         return remapped;
+    }
+
+    /**
+     * Walks an IObject tree and copies any metadata entry keyed by its
+     * recognized structure id into {@code remapped}. Containers like
+     * {@code ListItem} hold their own children via {@code getContents()}, so
+     * a shallow iteration over the top-level page list would miss nested
+     * images / pictures — their metadata (ai_score, source label, caption)
+     * would silently disappear from the JSON output. We recurse through the
+     * containers we actually emit at this level (lists, tables, headers,
+     * footers); leaf nodes terminate naturally.
+     */
+    private static void collectMetadata(IObject obj,
+            Map<Long, ElementMetadata> rawMetadata,
+            Map<Long, ElementMetadata> remapped) {
+        if (obj == null) return;
+        Long id = obj.getRecognizedStructureId();
+        if (id != null && id != 0L) {
+            ElementMetadata meta = rawMetadata.get(id);
+            if (meta != null) {
+                remapped.put(id, meta);
+            }
+        }
+        // Recurse into every container the JSON serializers walk. This keeps
+        // the metadata visibility surface aligned with the serialized tree —
+        // any image / picture / heading that ends up in the JSON output also
+        // gets its ElementMetadata copied through. Add new container types
+        // here when their serializer descends into child IObjects.
+        if (obj instanceof org.verapdf.wcag.algorithms.entities.lists.ListItem) {
+            for (IObject child : ((org.verapdf.wcag.algorithms.entities.lists.ListItem) obj).getContents()) {
+                collectMetadata(child, rawMetadata, remapped);
+            }
+        } else if (obj instanceof org.verapdf.wcag.algorithms.entities.lists.PDFList) {
+            for (org.verapdf.wcag.algorithms.entities.lists.ListItem item :
+                    ((org.verapdf.wcag.algorithms.entities.lists.PDFList) obj).getListItems()) {
+                collectMetadata(item, rawMetadata, remapped);
+            }
+        } else if (obj instanceof org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder) {
+            org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder table =
+                (org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder) obj;
+            if (table.isTextBlock()) {
+                // Text-block tables serialize as a single anonymous cell. Recurse
+                // through the cell IObject itself so its own structureId metadata
+                // is captured alongside the children — going straight to
+                // getContents() would skip the cell-level entry.
+                org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell cell = table.getCell(0, 0);
+                if (cell != null) {
+                    collectMetadata(cell, rawMetadata, remapped);
+                }
+            } else {
+                for (org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow row : table.getRows()) {
+                    for (org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell cell : row.getCells()) {
+                        collectMetadata(cell, rawMetadata, remapped);
+                    }
+                }
+            }
+        } else if (obj instanceof org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell) {
+            for (IObject child : ((org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell) obj).getContents()) {
+                collectMetadata(child, rawMetadata, remapped);
+            }
+        } else if (obj instanceof org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter) {
+            for (IObject child : ((org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter) obj).getContents()) {
+                collectMetadata(child, rawMetadata, remapped);
+            }
+        }
     }
 
     private static boolean shouldProcessPage(int pageNumber, Set<Integer> pagesToProcess) {

@@ -245,9 +245,12 @@ public class HtmlGenerator implements Closeable {
                 }
                 if (imageSource != null) {
                     String escapedSource = escapeHtmlAttribute(imageSource);
+                    // Empty alt is correct HTML for "missing description": screen
+                    // readers skip it, and our evidence-report flags it as
+                    // alt_source="missing". Never synthesize "figureN".
                     String altText = (image instanceof EnrichedImageChunk && ((EnrichedImageChunk) image).hasDescription())
                             ? ((EnrichedImageChunk) image).sanitizeDescription()
-                            : "figure" + image.getIndex();
+                            : "";
                     String imageString = String.format("<img src=\"%s\" alt=\"%s\">", escapedSource, altText);
                     htmlWriter.write(imageString);
                     htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
@@ -282,7 +285,7 @@ public class HtmlGenerator implements Closeable {
                 if (imageSource != null) {
                     String altText = picture.hasDescription()
                             ? picture.sanitizeDescription()
-                            : "figure" + picture.getPictureIndex();
+                            : "";
                     String escapedSource = escapeHtmlAttribute(imageSource);
 
                     htmlWriter.write(HtmlSyntax.HTML_FIGURE_TAG);
