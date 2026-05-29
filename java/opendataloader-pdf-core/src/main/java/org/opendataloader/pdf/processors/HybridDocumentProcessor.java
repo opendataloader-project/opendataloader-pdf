@@ -58,9 +58,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Map;
@@ -316,10 +318,15 @@ public class HybridDocumentProcessor {
         // Process backend path (synchronous)
         Map<Integer, List<IObject>> backendResults;
         Set<Integer> backendFailedPages = new HashSet<>();
+        // Track SemanticPicture→EnrichedImageChunk swaps so we can rekey
+        // ElementMetadata after Phase 6 cross-page processors (HeaderFooter,
+        // List, etc.) re-run setIDs and mutate the picture's structure id.
+        Map<EnrichedImageChunk, Long> pictureSwapOriginalIds = new IdentityHashMap<>();
         try {
             backendResults = processBackendPath(inputPdfName, backendPages, config, backendFailedPages);
             // Enrich backend results: copy StreamInfos from Java-extracted content for MCID linkage
-            enrichBackendResults(backendResults, filteredContents, config.getHybridConfig());
+            enrichBackendResults(backendResults, filteredContents, config.getHybridConfig(),
+                pictureSwapOriginalIds);
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Backend processing failed: {0}", e.getMessage());
             if (config.getHybridConfig().isFallbackToJava()) {
@@ -354,6 +361,70 @@ public class HybridDocumentProcessor {
 
         // Phase 6: Post-processing (cross-page operations)
         postProcess(contents, config, pagesToProcess, totalPages);
+
+        // Phase 7: Final metadata rekey. setIDs runs inside HeaderFooterProcessor /
+        // ListProcessor / TableBorderProcessor during Phase 6 and may rewrite the
+        // structure id of any IObject on the page — including EnrichedImageChunks
+        // we just created from SemanticPicture. Without this final pass, an image
+        // node downstream of a list (or header/footer container that triggers
+        // setIDs) drops ai_score / source label / caption metadata.
+        if (!pictureSwapOriginalIds.isEmpty() && lastElementMetadata != null
+                && !lastElementMetadata.isEmpty()) {
+            Map<Long, Long> oldToFinal = new HashMap<>(pictureSwapOriginalIds.size());
+            for (Map.Entry<EnrichedImageChunk, Long> e : pictureSwapOriginalIds.entrySet()) {
+                Long oldId = e.getValue();
+                Long finalId = e.getKey().getRecognizedStructureId();
+                if (oldId != null && finalId != null && !oldId.equals(finalId)) {
+                    oldToFinal.put(oldId, finalId);
+                }
+            }
+            if (!oldToFinal.isEmpty()) {
+                Map<Long, ElementMetadata> rebuilt = new HashMap<>(lastElementMetadata);
+                // Two-phase apply: first detach every (oldId → meta) we plan
+                // to move, then re-attach under finalId. This prevents a
+                // finalId that coincides with another picture's oldId from
+                // clobbering unrelated metadata.
+                Map<Long, ElementMetadata> detached = new HashMap<>(oldToFinal.size());
+                for (Long oldId : oldToFinal.keySet()) {
+                    ElementMetadata meta = rebuilt.remove(oldId);
+                    if (meta != null) {
+                        detached.put(oldId, meta);
+                    }
+                }
+                for (Map.Entry<Long, Long> e : oldToFinal.entrySet()) {
+                    Long oldId = e.getKey();
+                    ElementMetadata meta = detached.get(oldId);
+                    if (meta == null) continue;
+                    Long finalId = e.getValue();
+                    if (rebuilt.containsKey(finalId)) {
+                        // Another node already owns finalId after setIDs ran.
+                        // Re-attaching here would silently overwrite that
+                        // node's metadata. Try to restore the detached entry
+                        // under its original key — but only if oldId is also
+                        // unowned. With HashMap iteration order, an earlier
+                        // iteration in this same loop may have migrated some
+                        // other picture *into* oldId (its finalId == this
+                        // oldId), and rolling back would clobber that
+                        // legitimately-migrated entry. Permanent metadata
+                        // loss is the lesser evil there: the WARNING flags
+                        // it for investigation.
+                        if (!rebuilt.containsKey(oldId)) {
+                            LOGGER.log(Level.WARNING,
+                                "PhaseRekey: finalId {0} already owned in metadata map, keeping picture entry at oldId {1} (alt may not surface in JSON output)",
+                                new Object[]{finalId, oldId});
+                            rebuilt.put(oldId, meta);
+                        } else {
+                            LOGGER.log(Level.WARNING,
+                                "PhaseRekey: both finalId {0} and oldId {1} already owned in metadata map; dropping picture metadata to preserve migrated entries",
+                                new Object[]{finalId, oldId});
+                        }
+                        continue;
+                    }
+                    rebuilt.put(finalId, meta);
+                }
+                lastElementMetadata = Collections.unmodifiableMap(rebuilt);
+            }
+        }
 
         return contents;
     }
@@ -808,7 +879,8 @@ public class HybridDocumentProcessor {
     private static void enrichBackendResults(
             Map<Integer, List<IObject>> backendResults,
             Map<Integer, List<IObject>> filteredContents,
-            HybridConfig hybridConfig) {
+            HybridConfig hybridConfig,
+            Map<EnrichedImageChunk, Long> pictureSwapOriginalIds) {
 
         for (Map.Entry<Integer, List<IObject>> entry : backendResults.entrySet()) {
             int pageNumber = entry.getKey();
@@ -829,10 +901,62 @@ public class HybridDocumentProcessor {
                         SemanticPicture picture = (SemanticPicture) obj;
                         ImageChunk matched = findMatchingImageChunk(picture, javaImageChunks);
                         if (matched != null) {
-                            enriched.add(new EnrichedImageChunk(matched, picture.getDescription()));
+                            // Author-authored /Alt wins over AI caption. If the
+                            // matched chunk is already an EnrichedImageChunk with
+                            // AltSource.ORIGINAL (TaggedDocumentProcessor extracts
+                            // the source PDF's /Alt that way), preserve it; the
+                            // backend caption is discarded because a human-authored
+                            // /Alt is more trustworthy than any AI description.
+                            String alt;
+                            EnrichedImageChunk.AltSource altSource;
+                            if (matched instanceof EnrichedImageChunk
+                                    && ((EnrichedImageChunk) matched).getAltSource()
+                                        == EnrichedImageChunk.AltSource.ORIGINAL
+                                    && ((EnrichedImageChunk) matched).hasDescription()) {
+                                alt = ((EnrichedImageChunk) matched).getDescription();
+                                altSource = EnrichedImageChunk.AltSource.ORIGINAL;
+                                // Author /Alt wins; AI caption is intentionally
+                                // discarded here. Logged so a future regression
+                                // (e.g. whitespace-only original /Alt that
+                                // passes hasDescription) is visible during
+                                // hybrid-pipeline debugging.
+                                if (picture.getDescription() != null
+                                        && !picture.getDescription().isEmpty()) {
+                                    LOGGER.log(Level.FINE,
+                                        "Page {0}: kept original /Alt over AI caption (orig len={1}, ai len={2})",
+                                        new Object[]{pageNumber, alt.length(), picture.getDescription().length()});
+                                }
+                            } else {
+                                alt = picture.getDescription();
+                                altSource = EnrichedImageChunk.AltSource.AI_GENERATED;
+                            }
+                            EnrichedImageChunk replacement = new EnrichedImageChunk(
+                                matched, alt, altSource);
+                            // Preserve the SemanticPicture's structure id so that
+                            // ElementMetadata keyed by it (ai_score, source label,
+                            // caption) survives the SemanticPicture → EnrichedImageChunk
+                            // swap. Without this, downstream metadata lookups miss
+                            // and the JSON output drops every picture-level metadata
+                            // field except `alt`.
+                            Long originalId = picture.getRecognizedStructureId();
+                            replacement.setRecognizedStructureId(originalId);
+                            if (originalId != null) {
+                                pictureSwapOriginalIds.put(replacement, originalId);
+                            }
+                            enriched.add(replacement);
                         } else {
-                            LOGGER.fine(() -> "Page " + pageNumber + ": dropped SemanticPicture (no matching ImageChunk) at bbox ["
+                            // No Java ImageChunk overlapped this backend Figure.
+                            // We preserve the SemanticPicture rather than dropping
+                            // it: dropping silently discards the backend's caption
+                            // and the corresponding ai-raw FIGURE evidence, and
+                            // the page would no longer mention a region the
+                            // backend definitively classified as a figure.
+                            // Downstream PDF struct-tree tagging tolerates a
+                            // missing StreamInfo (the figure is tagged from its
+                            // bounding box) but the alt text and evidence remain.
+                            LOGGER.fine(() -> "Page " + pageNumber + ": kept SemanticPicture without StreamInfo (no matching Java ImageChunk) at bbox ["
                                 + String.format("%.1f,%.1f,%.1f,%.1f", picture.getLeftX(), picture.getBottomY(), picture.getRightX(), picture.getTopY()) + "]");
+                            enriched.add(picture);
                         }
                     } else {
                         enriched.add(obj);

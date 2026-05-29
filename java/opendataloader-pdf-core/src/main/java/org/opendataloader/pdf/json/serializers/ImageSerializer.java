@@ -43,12 +43,27 @@ public class ImageSerializer extends StdSerializer<ImageChunk> {
         String relativePath = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectoryName(), "/", imageChunk.getIndex(), imageFormat);
         jsonGenerator.writeStartObject();
         SerializerUtil.writeEssentialInfo(jsonGenerator, imageChunk, JsonName.IMAGE_CHUNK_TYPE);
+        // alt / alt_source policy (PDF/UA semantics):
+        //   - original /Alt present → alt = original,    alt_source = "original"
+        //   - no /Alt, AI caption   → alt = AI caption,  alt_source = "ai-generated"
+        //   - neither present       → no alt field,      alt_source = "missing"
+        // We never synthesize a placeholder like "Image N": PDF/UA forbids false
+        // alternatives and a synthetic string defeats the evidence-report
+        // signal a reviewer needs to find genuinely missing alt text.
+        String alt = "";
+        String altSource = "missing";
         if (imageChunk instanceof EnrichedImageChunk) {
-            String alt = ((EnrichedImageChunk) imageChunk).sanitizeDescription();
+            EnrichedImageChunk eic = (EnrichedImageChunk) imageChunk;
+            alt = eic.sanitizeDescription();
             if (!alt.isEmpty()) {
-                jsonGenerator.writeStringField("alt", alt);
+                altSource = eic.getAltSource() == EnrichedImageChunk.AltSource.AI_GENERATED
+                    ? "ai-generated" : "original";
             }
         }
+        if (!alt.isEmpty()) {
+            jsonGenerator.writeStringField(JsonName.ALT, alt);
+        }
+        jsonGenerator.writeStringField(JsonName.ALT_SOURCE, altSource);
         if (ImagesUtils.isImageFileExists(absolutePath)) {
             if (StaticLayoutContainers.isEmbedImages()) {
                 File imageFile = new File(absolutePath);
@@ -61,6 +76,7 @@ public class ImageSerializer extends StdSerializer<ImageChunk> {
                 jsonGenerator.writeStringField(JsonName.SOURCE, relativePath);
             }
         }
+        SerializerUtil.writeMetadataIfPresent(jsonGenerator, imageChunk);
         jsonGenerator.writeEndObject();
     }
 }

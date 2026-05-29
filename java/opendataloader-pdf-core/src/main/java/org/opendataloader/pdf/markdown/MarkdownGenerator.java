@@ -215,9 +215,13 @@ public class MarkdownGenerator implements Closeable {
                     imageSource = formatMarkdownLinkDestination(relativePath);
                 }
                 if (imageSource != null) {
+                    // No "image N" fallback: PDF/UA forbids false alternatives,
+                    // and an empty Markdown alt lets screen readers skip the
+                    // image as a decorative element rather than reading a
+                    // meaningless synthetic label.
                     String altText = (image instanceof EnrichedImageChunk && ((EnrichedImageChunk) image).hasDescription())
                             ? ((EnrichedImageChunk) image).sanitizeDescription()
-                            : "image " + image.getIndex();
+                            : "";
                     String imageString = String.format(MarkdownSyntax.IMAGE_FORMAT, altText, imageSource);
                     markdownWriter.write(getCorrectMarkdownString(imageString));
                 }
@@ -251,7 +255,7 @@ public class MarkdownGenerator implements Closeable {
                 if (imageSource != null) {
                     String altText = picture.hasDescription()
                             ? picture.sanitizeDescription()
-                            : "image " + picture.getPictureIndex();
+                            : "";
                     String imageString = String.format(MarkdownSyntax.IMAGE_FORMAT, altText, imageSource);
                     markdownWriter.write(getCorrectMarkdownString(imageString));
                 }
