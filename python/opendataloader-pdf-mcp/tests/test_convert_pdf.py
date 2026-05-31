@@ -24,6 +24,14 @@ class TestConvertPdfValidation:
         with pytest.raises(ValueError, match="Unsupported format"):
             convert_pdf(input_path=str(input_pdf), format="docx")
 
+    @pytest.mark.parametrize(
+        "deprecated_format", ["markdown-with-html", "markdown-with-images"]
+    )
+    def test_deprecated_format_values_are_rejected(self, input_pdf, deprecated_format):
+        """PDFDLOSP-6: legacy --format values were retired from the MCP surface."""
+        with pytest.raises(ValueError, match="Unsupported format"):
+            convert_pdf(input_path=str(input_pdf), format=deprecated_format)
+
 
 class TestConvertPdfFormats:
     """Tests for output format support."""
@@ -82,6 +90,58 @@ class TestConvertPdfOptions:
             mock_convert.assert_called_once()
             kwargs = mock_convert.call_args[1]
             assert kwargs["quiet"] is True
+
+    def test_markdown_with_html_flag_is_forwarded(self, input_pdf, tmp_path):
+        """markdown_with_html=True should map to the convert() kwarg of the same name."""
+        fake_output = tmp_path / "lorem.md"
+        fake_output.write_text("mocked")
+
+        with patch("opendataloader_pdf_mcp.server.opendataloader_pdf.convert") as mock_convert, \
+             patch("opendataloader_pdf_mcp.server.tempfile.TemporaryDirectory") as mock_tmpdir:
+            mock_tmpdir.return_value.__enter__ = lambda self: str(tmp_path)
+            mock_tmpdir.return_value.__exit__ = lambda *args: None
+            convert_pdf(input_path=str(input_pdf), markdown_with_html=True)
+            kwargs = mock_convert.call_args[1]
+            assert kwargs.get("markdown_with_html") is True
+
+    def test_markdown_defaults_to_embedded_images(self, input_pdf, tmp_path):
+        """Markdown output should embed images by default so they survive the temp dir."""
+        fake_output = tmp_path / "lorem.md"
+        fake_output.write_text("mocked")
+
+        with patch("opendataloader_pdf_mcp.server.opendataloader_pdf.convert") as mock_convert, \
+             patch("opendataloader_pdf_mcp.server.tempfile.TemporaryDirectory") as mock_tmpdir:
+            mock_tmpdir.return_value.__enter__ = lambda self: str(tmp_path)
+            mock_tmpdir.return_value.__exit__ = lambda *args: None
+            convert_pdf(input_path=str(input_pdf), format="markdown")
+            kwargs = mock_convert.call_args[1]
+            assert kwargs.get("image_output") == "embedded"
+
+    def test_explicit_image_output_overrides_default(self, input_pdf, tmp_path):
+        """An explicit image_output value must not be overridden by the markdown default."""
+        fake_output = tmp_path / "lorem.md"
+        fake_output.write_text("mocked")
+
+        with patch("opendataloader_pdf_mcp.server.opendataloader_pdf.convert") as mock_convert, \
+             patch("opendataloader_pdf_mcp.server.tempfile.TemporaryDirectory") as mock_tmpdir:
+            mock_tmpdir.return_value.__enter__ = lambda self: str(tmp_path)
+            mock_tmpdir.return_value.__exit__ = lambda *args: None
+            convert_pdf(input_path=str(input_pdf), format="markdown", image_output="off")
+            kwargs = mock_convert.call_args[1]
+            assert kwargs.get("image_output") == "off"
+
+    def test_json_format_does_not_set_default_image_output(self, input_pdf, tmp_path):
+        """JSON/text output should not get the markdown-only embedded-image default."""
+        fake_output = tmp_path / "lorem.json"
+        fake_output.write_text("{}")
+
+        with patch("opendataloader_pdf_mcp.server.opendataloader_pdf.convert") as mock_convert, \
+             patch("opendataloader_pdf_mcp.server.tempfile.TemporaryDirectory") as mock_tmpdir:
+            mock_tmpdir.return_value.__enter__ = lambda self: str(tmp_path)
+            mock_tmpdir.return_value.__exit__ = lambda *args: None
+            convert_pdf(input_path=str(input_pdf), format="json")
+            kwargs = mock_convert.call_args[1]
+            assert "image_output" not in kwargs
 
 
 class TestMcpToolRegistration:
