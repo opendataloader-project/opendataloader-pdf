@@ -33,18 +33,14 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
-import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
-import java.awt.Color;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -86,10 +82,11 @@ public class HtmlGenerator implements Closeable {
     protected String imageFormat = Config.IMAGE_FORMAT_PNG;
     /** Whether to include page headers and footers in output. */
     protected boolean includeHeaderFooter = false;
-    /** Opening tag for strikethrough text*/
-    protected static final String strikethroughTextHtmlOpeningTag = "<del>";
-    /** Closing tag for strikethrough text*/
-    protected static final String strikethroughTextHtmlClosingTag = "</del>";;
+
+    protected static boolean isHeading = false;
+
+    protected final int TABLE_BORDER = 1;
+    protected static final String EMPTY_STRING = "";
 
     /**
      * Creates a new HtmlGenerator for the specified PDF file.
@@ -111,6 +108,10 @@ public class HtmlGenerator implements Closeable {
         this.includeHeaderFooter = config.isIncludeHeaderFooter();
     }
 
+    protected OutputType getOutputType() {
+        return OutputType.HTML;
+    }
+
     /**
      * Writes the document contents to HTML format.
      *
@@ -121,10 +122,12 @@ public class HtmlGenerator implements Closeable {
             htmlWriter.write("<!DOCTYPE html>\n");
             htmlWriter.write("<html lang=\"und\">\n<head>\n<meta charset=\"utf-8\">\n");
             htmlWriter.write("<title>" + escapeHtmlText(pdfFileName) + "</title>\n");
+            writeStyleTag();
             htmlWriter.write("</head>\n<body>\n");
 
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
                 if (selectedPageNumbers.isEmpty() || selectedPageNumbers.contains(pageNumber + 1)) {
+                    updatePagesHeight(pageNumber);
                     writePageSeparator(pageNumber);
                 }
                 for (IObject content : contents.get(pageNumber)) {
@@ -137,6 +140,11 @@ public class HtmlGenerator implements Closeable {
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Unable to create html output: " + e.getMessage());
         }
+    }
+
+    protected void updatePagesHeight(int pageNumber) {}
+
+    protected void writeStyleTag() throws IOException {
     }
 
     /**
@@ -212,7 +220,7 @@ public class HtmlGenerator implements Closeable {
      * @throws IOException if unable to write to the output
      */
     protected void writeFormula(SemanticFormula formula) throws IOException {
-        htmlWriter.write(HtmlSyntax.HTML_MATH_DISPLAY_TAG);
+        htmlWriter.write(String.format(HtmlSyntax.HTML_MATH_DISPLAY_TAG, getFormulaStyleAttribute(formula)));
         htmlWriter.write("\\[");
         htmlWriter.write(escapeHtmlText(formula.getLatex()));
         htmlWriter.write("\\]");
@@ -227,8 +235,10 @@ public class HtmlGenerator implements Closeable {
      */
     protected void writeImage(ImageChunk image) {
         try {
-            String absolutePath = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, image.getIndex(), imageFormat);
-            String relativePath = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectoryName(), "/", image.getIndex(), imageFormat);
+            String absolutePath = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT,
+                StaticLayoutContainers.getImagesDirectory(), File.separator, image.getIndex(), imageFormat);
+            String relativePath = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT,
+                StaticLayoutContainers.getImagesDirectoryName(), "/", image.getIndex(), imageFormat);
 
             if (ImagesUtils.isImageFileExists(absolutePath)) {
                 String imageSource;
@@ -248,8 +258,13 @@ public class HtmlGenerator implements Closeable {
                     // alt_source="missing". Never synthesize "figureN".
                     String altText = (image instanceof EnrichedImageChunk && ((EnrichedImageChunk) image).hasDescription())
                             ? ((EnrichedImageChunk) image).sanitizeDescription()
-                            : "";
-                    String imageString = String.format("<img src=\"%s\" alt=\"%s\">", escapedSource, escapeHtmlAttribute(altText));
+                            : EMPTY_STRING;
+                    String altAttribute = EMPTY_STRING;
+                    if (!altText.isEmpty()) {
+                        altAttribute = String.format("alt=\"%s\"", escapeHtmlAttribute(altText));
+                    }
+                    String imageString = String.format("<img src=\"%s\" %s%s>",
+                        escapedSource, altAttribute, getImageStyleAttribute(image));
                     htmlWriter.write(imageString);
                     htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
                 }
@@ -266,8 +281,10 @@ public class HtmlGenerator implements Closeable {
      */
     protected void writePicture(SemanticPicture picture) {
         try {
-            String absolutePath = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, picture.getPictureIndex(), imageFormat);
-            String relativePath = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectoryName(), "/", picture.getPictureIndex(), imageFormat);
+            String absolutePath = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT,
+                StaticLayoutContainers.getImagesDirectory(), File.separator, picture.getPictureIndex(), imageFormat);
+            String relativePath = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT,
+                StaticLayoutContainers.getImagesDirectoryName(), "/", picture.getPictureIndex(), imageFormat);
 
             if (ImagesUtils.isImageFileExists(absolutePath)) {
                 String imageSource;
@@ -283,12 +300,15 @@ public class HtmlGenerator implements Closeable {
                 if (imageSource != null) {
                     String altText = picture.hasDescription()
                             ? picture.sanitizeDescription()
-                            : "";
+                            : EMPTY_STRING;
                     String escapedSource = escapeHtmlAttribute(imageSource);
-
-                    htmlWriter.write(HtmlSyntax.HTML_FIGURE_TAG);
+                    htmlWriter.write(String.format(HtmlSyntax.HTML_FIGURE_TAG, getImageStyleAttribute(picture)));
                     htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
-                    String imageString = String.format("<img src=\"%s\" alt=\"%s\">", escapedSource, escapeHtmlAttribute(altText));
+                    String altAttribute = EMPTY_STRING;
+                    if (!altText.isEmpty()) {
+                        altAttribute = String.format("alt=\"%s\"", escapeHtmlAttribute(altText));
+                    }
+                    String imageString = String.format("<img src=\"%s\" %s>", escapedSource, altAttribute);
                     htmlWriter.write(imageString);
                     htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
                     htmlWriter.write(HtmlSyntax.HTML_FIGURE_CLOSE_TAG);
@@ -307,51 +327,75 @@ public class HtmlGenerator implements Closeable {
      * @throws IOException if unable to write to the output
      */
     protected void writeList(PDFList list) throws IOException {
-        htmlWriter.write(HtmlSyntax.HTML_UNORDERED_LIST_TAG);
+        htmlWriter.write(String.format(HtmlSyntax.HTML_UNORDERED_LIST_TAG, getListStyleAttribute(list)));
         htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
-        for (ListItem item : list.getListItems()) {
-            htmlWriter.write(HtmlSyntax.HTML_LIST_ITEM_TAG);
-
-            htmlWriter.write(HtmlSyntax.HTML_PARAGRAPH_TAG);
-            String value = GeneratorUtils.getTextFromLines(item.getLines(), OutputType.HTML);
+        addToNestedObjects(list);
+        double nestedItemsHeight = 0.0;
+        for (int i = 0; i < list.getListItems().size(); i++) {
+            ListItem item = list.getListItems().get(i);
+            addToNestedObjects(item);
+            htmlWriter.write(String.format(HtmlSyntax.HTML_LIST_ITEM_TAG, getListItemStyleAttribute(nestedItemsHeight,
+                item, i == 0)));
+            htmlWriter.write(String.format(HtmlSyntax.HTML_PARAGRAPH_TAG, getTextBlockStyleAttribute(item)));
+            String value = GeneratorUtils.getTextFromLines(item.getLines(), getOutputType());
             htmlWriter.write(value);
             htmlWriter.write(HtmlSyntax.HTML_PARAGRAPH_CLOSE_TAG);
-
-            for (IObject object : item.getContents()) {
+            List<IObject> contents = item.getContents();
+            for (IObject object : contents) {
                 write(object);
             }
+            if (i < list.getListItems().size() - 1) {
+                nestedItemsHeight = calculateNestedItemsHeight(item, list.getListItems().get(i + 1), nestedItemsHeight, i == 0);
+            }
+
             htmlWriter.write(HtmlSyntax.HTML_LIST_ITEM_CLOSE_TAG);
             htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
+            removeFromNestedObjects();
         }
         htmlWriter.write(HtmlSyntax.HTML_UNORDERED_LIST_CLOSE_TAG);
         htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
+        removeFromNestedObjects();
     }
 
     protected void writeTOC(SemanticTOC toc) throws IOException {
-        htmlWriter.write(HtmlSyntax.HTML_UNORDERED_LIST_TAG);
+        htmlWriter.write(String.format(HtmlSyntax.HTML_UNORDERED_LIST_TAG, getListStyleAttribute(toc)));
         htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
-        for (IObject item : toc.getTOCItems()) {
+        addToNestedObjects(toc);
+        double nestedItemsHeight = 0.0;
+        for (int i = 0; i < toc.getTOCItems().size(); i++) {
+            IObject item =  toc.getTOCItems().get(i);
+            addToNestedObjects(item);
+
             if (item instanceof SemanticTOC) {
-                htmlWriter.write(HtmlSyntax.HTML_LIST_ITEM_TAG);
+                htmlWriter.write(String.format(HtmlSyntax.HTML_LIST_ITEM_TAG,
+                    getListItemStyleAttribute(nestedItemsHeight, null, i == 0)));
                 htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
                 writeTOC((SemanticTOC) item);
                 htmlWriter.write(HtmlSyntax.HTML_LIST_ITEM_CLOSE_TAG);
             } else if (item instanceof SemanticTOCI) {
                 SemanticTOCI tocItem = (SemanticTOCI) item;
-                htmlWriter.write(HtmlSyntax.HTML_LIST_ITEM_TAG);
-                htmlWriter.write(HtmlSyntax.HTML_PARAGRAPH_TAG);
-                String value = GeneratorUtils.getTextFromLines(tocItem.getLines(), OutputType.HTML);
+                htmlWriter.write(String.format(HtmlSyntax.HTML_LIST_ITEM_TAG, getListItemStyleAttribute(nestedItemsHeight,
+                    ((SemanticTOCI) item), i == 0)));
+                htmlWriter.write(String.format(HtmlSyntax.HTML_PARAGRAPH_TAG,
+                    getTextBlockStyleAttribute((SemanticTOCI) item)));
+                String value = GeneratorUtils.getTextFromLines(tocItem.getLines(), getOutputType());
                 htmlWriter.write(value);
                 htmlWriter.write(HtmlSyntax.HTML_PARAGRAPH_CLOSE_TAG);
                 for (IObject object : tocItem.getContents()) {
                     write(object);
                 }
+                if (i < toc.getTOCItems().size() - 1) {
+                    nestedItemsHeight = calculateNestedItemsHeight(tocItem, (SemanticTOCI) toc.getTOCItems().get(i + 1),
+                        nestedItemsHeight, i == 0);
+                }
                 htmlWriter.write(HtmlSyntax.HTML_LIST_ITEM_CLOSE_TAG);
             }
             htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
+            removeFromNestedObjects();
         }
         htmlWriter.write(HtmlSyntax.HTML_UNORDERED_LIST_CLOSE_TAG);
         htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
+        removeFromNestedObjects();
     }
 
     /**
@@ -361,8 +405,8 @@ public class HtmlGenerator implements Closeable {
      * @throws IOException if unable to write to the output
      */
     protected void writeSemanticTextNode(SemanticTextNode textNode) throws IOException {
-        htmlWriter.write(HtmlSyntax.HTML_FIGURE_CAPTION_TAG);
-        htmlWriter.write(GeneratorUtils.getTextFromTextNode(textNode, OutputType.HTML));
+        htmlWriter.write(String.format(HtmlSyntax.HTML_FIGURE_CAPTION_TAG, getTextNodeStyleAttribute(textNode)));
+        htmlWriter.write(GeneratorUtils.getTextFromTextNode(textNode, getOutputType()));
         htmlWriter.write(HtmlSyntax.HTML_FIGURE_CAPTION_CLOSE_TAG);
         htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
     }
@@ -374,8 +418,10 @@ public class HtmlGenerator implements Closeable {
      * @throws IOException if unable to write to the output
      */
     protected void writeTable(TableBorder table) throws IOException {
+        String styleAttribute = getTableStyleAttribute(table);
+        addToNestedObjects(table);
         enterTable();
-        htmlWriter.write(HtmlSyntax.HTML_TABLE_TAG);
+        htmlWriter.write(String.format(HtmlSyntax.HTML_TABLE_TAG, TABLE_BORDER, styleAttribute));
         htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
         for (int rowNumber = 0; rowNumber < table.getNumberOfRows(); rowNumber++) {
             TableBorderRow row = table.getRow(rowNumber);
@@ -407,6 +453,7 @@ public class HtmlGenerator implements Closeable {
         htmlWriter.write(HtmlSyntax.HTML_TABLE_CLOSE_TAG);
         htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
         leaveTable();
+        removeFromNestedObjects();
     }
 
     /**
@@ -417,12 +464,11 @@ public class HtmlGenerator implements Closeable {
      */
     protected void writeParagraph(SemanticParagraph paragraph) throws IOException {
         double paragraphIndent = paragraph.getColumns().get(0).getBlocks().get(0).getFirstLineIndent();
-
-        htmlWriter.write(HtmlSyntax.HTML_PARAGRAPH_TAG);
+        htmlWriter.write(String.format(HtmlSyntax.HTML_PARAGRAPH_TAG, getTextNodeStyleAttribute(paragraph)));
         if (paragraphIndent > 0) {
             htmlWriter.write(HtmlSyntax.HTML_INDENT);
         }
-        String paragraphValue = GeneratorUtils.getTextFromTextNode(paragraph, OutputType.HTML);
+        String paragraphValue = GeneratorUtils.getTextFromTextNode(paragraph, getOutputType());
 
         if (isInsideTable() && StaticContainers.isKeepLineBreaks()) {
             paragraphValue = paragraphValue.replace(HtmlSyntax.HTML_LINE_BREAK, HtmlSyntax.HTML_LINE_BREAK_TAG);
@@ -440,11 +486,13 @@ public class HtmlGenerator implements Closeable {
      * @throws IOException if unable to write to the output
      */
     protected void writeHeading(SemanticHeading heading) throws IOException {
+        isHeading = true;
         int headingLevel = Math.min(6, Math.max(1, heading.getHeadingLevel()));
-        htmlWriter.write("<h" + headingLevel + ">");
-        htmlWriter.write(GeneratorUtils.getTextFromTextNode(heading, OutputType.HTML));
+        htmlWriter.write("<h" + headingLevel + getTextNodeStyleAttribute(heading) + ">");
+        htmlWriter.write(GeneratorUtils.getTextFromTextNode(heading, getOutputType()));
         htmlWriter.write("</h" + headingLevel + ">");
         htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
+        isHeading = false;
     }
 
     private void writeCellTag(TableBorderCell cell) throws IOException {
@@ -459,6 +507,8 @@ public class HtmlGenerator implements Closeable {
         if (rowSpan != 1) {
             cellTag.append(" rowspan=\"").append(rowSpan).append("\"");
         }
+
+        cellTag.append(getCellStyleAttribute(cell));
         cellTag.append(">");
         htmlWriter.write(cellTag.toString());
     }
@@ -517,9 +567,9 @@ public class HtmlGenerator implements Closeable {
             .replace(">", "&gt;");
     }
 
-    public static void getTextFromLineForHTML(TextLine line, StringBuilder stringBuilder) {
+    public static void getTextFromLineForHTML(TextLine line, StringBuilder stringBuilder, OutputType outputType) {
         for (TextChunk chunk : line.getTextChunks()) {
-            String style = getTextStyle(chunk);
+            String style = outputType == OutputType.HTML ? getTextStyle(chunk) : FormattedHtmlGenerator.getTextStyle(chunk);
             if (!style.isEmpty()) {
                 String styleAttribute = String.format(HtmlSyntax.HTML_STYLE_ATTRIBUTE, style.trim());
                 stringBuilder.append(String.format(HtmlSyntax.HTML_SPAN_START_TAG, styleAttribute));
@@ -531,7 +581,31 @@ public class HtmlGenerator implements Closeable {
         }
     }
 
-    private static String getTextStyle(TextChunk chunk) {
+    protected String getTextNodeStyleAttribute(SemanticTextNode node) {
+        return EMPTY_STRING;
+    }
+
+    protected String getListItemStyleAttribute(double nestedListHeight, TextBlock block, boolean isFirstListItem) {
+        return EMPTY_STRING;
+    }
+
+    protected String getTextBlockStyleAttribute(TextBlock block) {
+        return EMPTY_STRING;
+    }
+
+    protected String getObjectStyle(BaseObject object) {
+        return EMPTY_STRING;
+    }
+
+    protected String getFormulaStyleAttribute(SemanticFormula formula) {
+        return EMPTY_STRING;
+    }
+
+    protected String getListStyleAttribute(BaseObject list) {
+        return EMPTY_STRING;
+    }
+
+    protected static String getTextStyle(TextChunk chunk) {
         StringBuilder style = new StringBuilder();
         if (chunk.getIsStrikethroughText() || chunk.getIsUnderlinedText()) {
             style.append(String.format(HtmlSyntax.HTML_TEXT_DECORATION_STYLE_PROPERTY,
@@ -540,6 +614,29 @@ public class HtmlGenerator implements Closeable {
         }
         return style.toString();
     }
+
+    protected double calculateNestedItemsHeight(TextBlock block, TextBlock nextBlock, double nestedListHeight, boolean isFirstListItem) {
+        return 0.0;
+    }
+    protected String getPositionProperty(BaseObject object) {
+        return EMPTY_STRING;
+    }
+
+    protected String getImageStyleAttribute(BaseObject image) {
+        return EMPTY_STRING;
+    }
+
+    protected String getTableStyleAttribute(TableBorder table) {
+        return EMPTY_STRING;
+    }
+
+    protected String getCellStyleAttribute(TableBorderCell cell) {
+        return EMPTY_STRING;
+    }
+
+    protected void addToNestedObjects(IObject object) {}
+
+    protected void removeFromNestedObjects() {}
 
     @Override
     public void close() throws IOException {

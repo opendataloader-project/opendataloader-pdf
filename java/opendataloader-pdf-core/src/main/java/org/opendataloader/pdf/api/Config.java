@@ -70,6 +70,7 @@ public class Config {
     private boolean isGenerateJSON = true;
     private boolean isGenerateText = false;
     private boolean isGenerateTaggedPDF = false;
+    private boolean isGenerateFormattedHtml = false;
     private boolean useStructTree = false;
     private boolean useHTMLInMarkdown = false;
     private boolean addImageToMarkdown = false;
@@ -191,7 +192,7 @@ public class Config {
      * @return true if HTML output should be generated, false otherwise.
      */
     public boolean isGenerateHtml() {
-        return isGenerateHtml;
+        return isGenerateHtml || isGenerateFormattedHtml();
     }
 
     /**
@@ -281,6 +282,14 @@ public class Config {
 
     public void setGenerateTaggedPDF(boolean generateTaggedPDF) {
         isGenerateTaggedPDF = generateTaggedPDF;
+    }
+
+    public boolean isGenerateFormattedHtml() {
+        return isGenerateFormattedHtml;
+    }
+
+    public void setGenerateFormattedHtml(boolean generateFormattedHtml) {
+        isGenerateFormattedHtml = generateFormattedHtml;
     }
 
     /**

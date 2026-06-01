@@ -216,6 +216,11 @@ public class CLIOptions {
             "Allow HTML tags inside Markdown output for complex structures such as multi-row-span tables. "
                     + "Implies --format markdown.";
 
+    // ===== HTML modifiers =====
+    public static final String FORMATTED_HTML_LONG_OPTION = "formatted-html";
+    private static final String FORMATTED_HTML_DESC =
+        "Add CSS styles for visual formatting.";
+
     // ===== Export Options (internal) =====
     public static final String EXPORT_OPTIONS_LONG_OPTION = "export-options";
 
@@ -249,6 +254,7 @@ public class CLIOptions {
                     MARKDOWN_PAGE_SEPARATOR_DESC, true),
             new OptionDefinition(HTML_IN_MARKDOWN_LONG_OPTION, null, "boolean", false,
                     HTML_IN_MARKDOWN_DESC, true),
+            new OptionDefinition(FORMATTED_HTML_LONG_OPTION, null, "boolean", false, FORMATTED_HTML_DESC, true),
             new OptionDefinition(TEXT_PAGE_SEPARATOR_LONG_OPTION, null, "string", null, TEXT_PAGE_SEPARATOR_DESC, true),
             new OptionDefinition(HTML_PAGE_SEPARATOR_LONG_OPTION, null, "string", null, HTML_PAGE_SEPARATOR_DESC, true),
             new OptionDefinition(IMAGE_OUTPUT_LONG_OPTION, null, "string", "external", IMAGE_OUTPUT_DESC, true),
@@ -346,6 +352,9 @@ public class CLIOptions {
         }
         if (commandLine.hasOption(CLIOptions.HTML_REPORT_LONG_OPTION)) {
             config.setGenerateHtml(true);
+        }
+        if (commandLine.hasOption(CLIOptions.FORMATTED_HTML_LONG_OPTION)) {
+            config.setGenerateFormattedHtml(true);
         }
         if (commandLine.hasOption(CLIOptions.HTML_IN_MARKDOWN_LONG_OPTION)) {
             config.setUseHTMLInMarkdown(true);
