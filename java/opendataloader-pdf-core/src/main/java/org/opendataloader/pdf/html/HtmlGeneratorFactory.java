@@ -30,10 +30,13 @@ public class HtmlGeneratorFactory {
      *
      * @param inputPdf the input PDF file
      * @param config the configuration settings
-     * @return a new HtmlGenerator instance
+     * @return a new HtmlGenerator or FormattedHtmlGenerator instance
      * @throws IOException if unable to create the generator
      */
     public static HtmlGenerator getHtmlGenerator(File inputPdf, Config config) throws IOException {
+        if (config.isGenerateFormattedHtml()) {
+            return new FormattedHtmlGenerator(inputPdf, config);
+        }
         return new HtmlGenerator(inputPdf, config);
     }
 }

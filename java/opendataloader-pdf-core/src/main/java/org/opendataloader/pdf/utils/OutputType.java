@@ -5,5 +5,6 @@ public enum OutputType {
     MD,
     HTML,
     JSON,
-    PDF
+    PDF,
+    FORMATTED_HTML
 }
