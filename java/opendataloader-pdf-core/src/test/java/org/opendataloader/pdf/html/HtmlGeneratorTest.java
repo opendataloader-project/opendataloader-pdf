@@ -3,20 +3,29 @@ package org.opendataloader.pdf.html;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.awt.Color;
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.entities.SemanticFormula;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
 class HtmlGeneratorTest {
+    @TempDir
+    Path tempDir;
+
     /**
      * Creates a TextChunk with the given style properties.
      * Assumptions about internal representation:
@@ -122,6 +131,56 @@ class HtmlGeneratorTest {
     }
 
     @Test
+    void testPdfTextIsEscapedForHtmlBodyContext() {
+        TextChunk chunk = createChunk("<script>alert(1)</script>&", false, false, false, 400.0, 12.0);
+        TextLine line = new TextLine(chunk);
+        StringBuilder sb = new StringBuilder();
+
+        HtmlGenerator.getTextFromLineForHTML(line, sb);
+
+        assertEquals("&lt;script&gt;alert(1)&lt;/script&gt;&amp;", sb.toString());
+    }
+
+    @Test
+    void testStyledPdfTextIsEscapedInsideSpan() {
+        TextChunk chunk = createChunk("<img src=x onerror=alert(1)>", false, true, false, 400.0, 12.0);
+        TextLine line = new TextLine(chunk);
+        StringBuilder sb = new StringBuilder();
+
+        HtmlGenerator.getTextFromLineForHTML(line, sb);
+
+        assertEquals(
+            "<span style=\"font-style: italic;\">&lt;img src=x onerror=alert(1)&gt;</span>",
+            sb.toString());
+    }
+
+    @Test
+    void testHtmlTextEscapingHandlesTitleCharactersAndNull() {
+        assertEquals("report &lt;draft&gt; &amp; notes", HtmlGenerator.escapeHtmlText("report <draft> & notes"));
+        assertEquals("", HtmlGenerator.escapeHtmlText(null));
+    }
+
+    @Test
+    void testHtmlAttributeEscapingHandlesQuotesAndNewlines() throws Exception {
+        try (HtmlGenerator generator = createHtmlGenerator()) {
+            assertEquals(
+                "quote&quot; and null byte",
+                generator.escapeHtmlAttribute("quote\" and\u0000\nnull byte"));
+        }
+    }
+
+    @Test
+    void testFormulaLatexIsEscapedForHtmlOutput() throws Exception {
+        HtmlGenerator generator = createHtmlGenerator();
+
+        generator.writeFormula(new SemanticFormula(new BoundingBox(0, 0, 10, 20, 30), "x < y & z"));
+        generator.close();
+
+        String html = Files.readString(tempDir.resolve("input.html"));
+        assertEquals("<div class=\"math-display\">\\[x &lt; y &amp; z\\]</div>\n", html);
+    }
+
+    @Test
     void testNullColor() {
         // To simulate null getTextColor(), we can either:
         // - subclass TextChunk and override getTextColor() to return null, OR
@@ -205,5 +264,13 @@ class HtmlGeneratorTest {
         assertEquals("<span style=\"text-decoration: line-through; font-style: italic; "
                 + "color: rgb(0, 255, 0); font-weight: 300;\">order</span>",
             sb.toString());
+    }
+
+    private HtmlGenerator createHtmlGenerator() throws Exception {
+        Config config = new Config();
+        config.setOutputFolder(tempDir.toString());
+        Path inputPdf = tempDir.resolve("input.pdf");
+        Files.createFile(inputPdf);
+        return new HtmlGenerator(inputPdf.toFile(), config);
     }
 }

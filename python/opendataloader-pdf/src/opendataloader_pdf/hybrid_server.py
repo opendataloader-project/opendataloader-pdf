@@ -585,6 +585,50 @@ def create_app(
         version="1.0.0",
         lifespan=lifespan,
     )
+    app.state.profile_converters_initialized = False
+    profile_init_lock = threading.Lock()
+
+    def _format_size_limit(size_bytes: int) -> str:
+        if size_bytes < 1024:
+            return f"{size_bytes} bytes"
+        if size_bytes < 1024 * 1024:
+            return f"{size_bytes / 1024:.1f}KB ({size_bytes} bytes)"
+        return f"{size_bytes / (1024 * 1024):.1f}MB ({size_bytes} bytes)"
+
+    async def _write_upload_to_temp_file(
+        upload: UploadFile,
+    ) -> tuple[str | None, JSONResponse | None]:
+        """Stream an upload to a temporary PDF while enforcing max_file_size."""
+        tmp_path = None
+        try:
+            total_size = 0
+            with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+                tmp_path = tmp.name
+                while True:
+                    chunk = await upload.read(UPLOAD_CHUNK_SIZE)
+                    if not chunk:
+                        break
+                    total_size += len(chunk)
+                    if max_file_size > 0 and total_size > max_file_size:
+                        tmp.close()
+                        os.unlink(tmp_path)
+                        tmp_path = None
+                        return None, JSONResponse(
+                            {
+                                "status": "failure",
+                                "errors": [
+                                    "File size exceeds maximum allowed "
+                                    f"({_format_size_limit(max_file_size)})"
+                                ],
+                            },
+                            status_code=413,
+                        )
+                    tmp.write(chunk)
+        except Exception:
+            if tmp_path and os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+            raise
+        return tmp_path, None
 
     @app.get("/health")
     def health():
@@ -616,6 +660,13 @@ def create_app(
                 status_code=503,
             )
 
+        tmp_path = None
+        # Stream upload to temp file and enforce size incrementally before any
+        # expensive converter or readiness work.
+        tmp_path, size_error = await _write_upload_to_temp_file(files)
+        if size_error is not None:
+            return size_error
+
         # Parse page_ranges string to tuple
         page_range_tuple = None
         if page_ranges:
@@ -625,28 +676,6 @@ def create_app(
                     page_range_tuple = (int(parts[0]), int(parts[1]))
             except ValueError:
                 pass
-
-        # Stream upload to temp file and enforce size incrementally
-        tmp_path = None
-        total_size = 0
-        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
-            tmp_path = tmp.name
-            while True:
-                chunk = await files.read(UPLOAD_CHUNK_SIZE)
-                if not chunk:
-                    break
-                total_size += len(chunk)
-                if max_file_size > 0 and total_size > max_file_size:
-                    tmp.close()
-                    os.unlink(tmp_path)
-                    return JSONResponse(
-                        {
-                            "status": "failure",
-                            "errors": [f"File size exceeds maximum allowed ({max_file_size // (1024*1024)}MB)"],
-                        },
-                        status_code=413,
-                    )
-                tmp.write(chunk)
 
         try:
             def _do_convert():
@@ -712,27 +741,31 @@ def create_app(
 
     def _ensure_profile_converters():
         """Lazily initialize profile converters on first use."""
-        if profile_converters:
-            return
-        profiles = {
-            "base": dict(enrich_formula=False, enrich_picture_description=False),
-            "picture": dict(enrich_formula=False, enrich_picture_description=True),
-            "formula": dict(enrich_formula=True, enrich_picture_description=False),
-        }
-        for name, opts in profiles.items():
-            logger.info(f"Initializing profile converter: {name} ({opts})")
-            t0 = time.perf_counter()
-            profile_converters[name] = create_converter(
-                force_full_page_ocr=force_ocr,
-                disable_ocr=disable_ocr,
-                ocr_engine=ocr_engine,
-                psm=psm,
-                ocr_lang=ocr_lang,
-                picture_description_prompt=picture_description_prompt,
-                device=device,
-                **opts,
-            )
-            logger.info(f"  {name} initialized in {time.perf_counter() - t0:.2f}s")
+        with profile_init_lock:
+            if profile_converters:
+                return
+            profiles = {
+                "base": dict(enrich_formula=False, enrich_picture_description=False),
+                "picture": dict(enrich_formula=False, enrich_picture_description=True),
+                "formula": dict(enrich_formula=True, enrich_picture_description=False),
+            }
+            initialized_converters = {}
+            for name, opts in profiles.items():
+                logger.info(f"Initializing profile converter: {name} ({opts})")
+                t0 = time.perf_counter()
+                initialized_converters[name] = create_converter(
+                    force_full_page_ocr=force_ocr,
+                    disable_ocr=disable_ocr,
+                    ocr_engine=ocr_engine,
+                    psm=psm,
+                    ocr_lang=ocr_lang,
+                    picture_description_prompt=picture_description_prompt,
+                    device=device,
+                    **opts,
+                )
+                logger.info(f"  {name} initialized in {time.perf_counter() - t0:.2f}s")
+            profile_converters.update(initialized_converters)
+            app.state.profile_converters_initialized = True
 
     @app.post("/v1/profile/file")
     async def profile_file(
@@ -742,19 +775,13 @@ def create_app(
 
         Returns per-profile timings for cost comparison.
         """
-        _ensure_profile_converters()
-
-        # Stream upload to temp file
         tmp_path = None
-        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
-            tmp_path = tmp.name
-            while True:
-                chunk = await files.read(UPLOAD_CHUNK_SIZE)
-                if not chunk:
-                    break
-                tmp.write(chunk)
+        tmp_path, size_error = await _write_upload_to_temp_file(files)
+        if size_error is not None:
+            return size_error
 
         try:
+            _ensure_profile_converters()
             results = {}
             for profile_name, conv in profile_converters.items():
                 def _run(c=conv):
