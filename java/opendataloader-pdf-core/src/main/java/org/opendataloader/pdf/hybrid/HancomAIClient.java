@@ -190,6 +190,12 @@ public class HancomAIClient implements HybridClient {
         this.sourcePdfShaShort = sha256ShortHex(pdfBytes);
         LOGGER.log(Level.INFO, "Hancom AI: processing PDF ({0} bytes)", pdfBytes.length);
 
+        // Crop / page-image destination travels with the request, not the
+        // cached client's config, so the per-document target is correct even
+        // when the client is reused across documents (and is concurrency-safe
+        // since nothing shared is mutated).
+        CropOutput cropOutput = request.getCropOutput();
+
         try (PageImageCache pageImageCache = createPageImageCache()) {
             ObjectNode merged = objectMapper.createObjectNode();
             ObjectNode timingsNode = objectMapper.createObjectNode();
@@ -209,7 +215,7 @@ public class HancomAIClient implements HybridClient {
 
             // Step 2: Table Structure — crop each Table region from page image, send to TSR individually
             long tsrStartMs = System.currentTimeMillis();
-            ArrayNode tsrResults = recognizeTableStructures(pdfBytes, dlaOcrResult, pageImageCache);
+            ArrayNode tsrResults = recognizeTableStructures(pdfBytes, dlaOcrResult, pageImageCache, cropOutput);
             long tsrMs = System.currentTimeMillis() - tsrStartMs;
             merged.set("TABLE_STRUCTURE_RECOGNITION", tsrResults);
 
@@ -223,7 +229,7 @@ public class HancomAIClient implements HybridClient {
 
             // Step 3: Figure captioning — pdf2img → crop figures → caption each
             long captionStartMs = System.currentTimeMillis();
-            ArrayNode figureCaptions = captionFigures(pdfBytes, dlaOcrResult, pageImageCache);
+            ArrayNode figureCaptions = captionFigures(pdfBytes, dlaOcrResult, pageImageCache, cropOutput);
             long captionMs = System.currentTimeMillis() - captionStartMs;
             merged.set("FIGURE_CAPTIONS", figureCaptions);
 
@@ -231,7 +237,7 @@ public class HancomAIClient implements HybridClient {
             // DLA bboxes are expressed against. TSR/FIGURE fetches already save
             // their pages; this pass fills only pages that were not otherwise
             // rendered.
-            saveDlaPageImages(pdfBytes, dlaOcrResult, pageImageCache);
+            saveDlaPageImages(pdfBytes, dlaOcrResult, pageImageCache, cropOutput);
 
             ObjectNode captionTiming = objectMapper.createObjectNode();
             captionTiming.put("total_ms", captionMs);
@@ -282,7 +288,7 @@ public class HancomAIClient implements HybridClient {
      * @return ArrayNode of {page_number, object_id, bbox, caption}
      */
     private ArrayNode captionFigures(byte[] pdfBytes, JsonNode dlaResult,
-                                     PageImageCache pageImageCache) {
+                                     PageImageCache pageImageCache, CropOutput cropOutput) {
         ArrayNode captions = objectMapper.createArrayNode();
 
         // Extract pages from DLA result
@@ -323,7 +329,7 @@ public class HancomAIClient implements HybridClient {
             BufferedImage pageImage;
             try {
                 pageImage = pageImageCache.getOrFetch(pageNum,
-                    idx -> fetchPageImage(pdfBytes, idx));
+                    idx -> fetchPageImage(pdfBytes, idx, cropOutput));
             } catch (IOException e) {
                 LOGGER.log(Level.WARNING, "Failed to get page {0} image: {1}",
                     new Object[]{pageNum, e.getMessage()});
@@ -353,9 +359,9 @@ public class HancomAIClient implements HybridClient {
                     byte[] croppedPng = imageToPng(cropped);
 
                     // Save crop if configured
-                    if (config.isSaveCrops() && config.getCropOutputDir() != null) {
+                    if (cropOutput.active()) {
                         int objId = fig.has("object_id") ? fig.get("object_id").asInt() : -1;
-                        saveCropFile(config.getCropOutputDir(), pageNum, objId, "figure", croppedPng);
+                        saveCropFile(cropOutput.directory(), pageNum, objId, "figure", croppedPng);
                     }
 
                     int objIdForCaption = fig.has("object_id") ? fig.get("object_id").asInt() : -1;
@@ -400,11 +406,12 @@ public class HancomAIClient implements HybridClient {
      * @param pdfBytes the original PDF bytes (needed for pdf2img)
      * @param dlaResult the DLA+OCR result containing detected objects
      * @param pageImageCache shared cache for page images
+     * @param cropOutput per-document destination for saved table crops
      * @return ArrayNode of per-table results:
      *         [{page_number, object_id, label, dla_bbox, tsr: {cells, num_cells, html, ...}}]
      */
     private ArrayNode recognizeTableStructures(byte[] pdfBytes, JsonNode dlaResult,
-                                                PageImageCache pageImageCache) {
+                                                PageImageCache pageImageCache, CropOutput cropOutput) {
         ArrayNode results = objectMapper.createArrayNode();
 
         // In list-only mode, LABEL_REGIONLIST is always rendered as a list and
@@ -443,7 +450,7 @@ public class HancomAIClient implements HybridClient {
             BufferedImage pageImage;
             try {
                 pageImage = pageImageCache.getOrFetch(pageNum,
-                    idx -> fetchPageImage(pdfBytes, idx));
+                    idx -> fetchPageImage(pdfBytes, idx, cropOutput));
             } catch (IOException e) {
                 LOGGER.log(Level.WARNING, "Failed to get page {0} image for TSR: {1}",
                     new Object[]{pageNum, e.getMessage()});
@@ -479,9 +486,9 @@ public class HancomAIClient implements HybridClient {
                     byte[] cropPng = imageToPng(crop);
 
                     // Save crop if configured
-                    if (config.isSaveCrops() && config.getCropOutputDir() != null) {
+                    if (cropOutput.active()) {
                         int objectId = obj.has("object_id") ? obj.get("object_id").asInt() : -1;
-                        saveCropFile(config.getCropOutputDir(), pageNum, objectId, "table", cropPng);
+                        saveCropFile(cropOutput.directory(), pageNum, objectId, "table", cropPng);
                     }
 
                     // Call TSR with crop image
@@ -603,15 +610,15 @@ public class HancomAIClient implements HybridClient {
      * capture is enabled.
      */
     private void saveDlaPageImages(byte[] pdfBytes, JsonNode dlaResult,
-                                   PageImageCache pageImageCache) {
-        if (!config.isSaveCrops() || config.getCropOutputDir() == null) return;
+                                   PageImageCache pageImageCache, CropOutput cropOutput) {
+        if (!cropOutput.active()) return;
 
         for (JsonNode page : extractPages(dlaResult)) {
             int pageNum = page.has("page_number") ? page.get("page_number").asInt() : -1;
             if (pageNum < 0) continue;
-            if (isPageImageFileSaved(config.getCropOutputDir(), pageNum)) continue;
+            if (isPageImageFileSaved(cropOutput.directory(), pageNum)) continue;
             try {
-                pageImageCache.getOrFetch(pageNum, idx -> fetchPageImage(pdfBytes, idx));
+                pageImageCache.getOrFetch(pageNum, idx -> fetchPageImage(pdfBytes, idx, cropOutput));
             } catch (IOException e) {
                 LOGGER.log(Level.FINE, "Failed to save DLA page image for page "
                     + pageNum, e);
@@ -660,7 +667,8 @@ public class HancomAIClient implements HybridClient {
     /**
      * Fetches a page image from the pdf2img endpoint.
      */
-    private BufferedImage fetchPageImage(byte[] pdfBytes, int pageIndex) throws IOException {
+    private BufferedImage fetchPageImage(byte[] pdfBytes, int pageIndex, CropOutput cropOutput)
+            throws IOException {
         MultipartBody body = new MultipartBody.Builder()
             .setType(MultipartBody.FORM)
             .addFormDataPart("REQUEST_ID",
@@ -717,8 +725,8 @@ public class HancomAIClient implements HybridClient {
             if (image == null) {
                 throw new IOException("pdf2img PAGE_PNG_DATA is not a readable image");
             }
-            if (config.isSaveCrops() && config.getCropOutputDir() != null) {
-                savePageImageFile(config.getCropOutputDir(), pageIndex, pngBytes);
+            if (cropOutput.active()) {
+                savePageImageFile(cropOutput.directory(), pageIndex, pngBytes);
             }
             return image;
         }
