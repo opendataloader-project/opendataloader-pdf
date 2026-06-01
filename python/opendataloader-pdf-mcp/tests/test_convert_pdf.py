@@ -104,8 +104,8 @@ class TestConvertPdfOptions:
             kwargs = mock_convert.call_args[1]
             assert kwargs.get("markdown_with_html") is True
 
-    def test_markdown_defaults_to_embedded_images(self, input_pdf, tmp_path):
-        """Markdown output should embed images by default so they survive the temp dir."""
+    def test_markdown_with_html_default_is_not_forwarded(self, input_pdf, tmp_path):
+        """The default markdown_with_html=False must not appear in the kwargs sent to convert()."""
         fake_output = tmp_path / "lorem.md"
         fake_output.write_text("mocked")
 
@@ -114,6 +114,20 @@ class TestConvertPdfOptions:
             mock_tmpdir.return_value.__enter__ = lambda self: str(tmp_path)
             mock_tmpdir.return_value.__exit__ = lambda *args: None
             convert_pdf(input_path=str(input_pdf), format="markdown")
+            kwargs = mock_convert.call_args[1]
+            assert "markdown_with_html" not in kwargs
+
+    @pytest.mark.parametrize("fmt", ["markdown", "html"])
+    def test_markdown_and_html_default_to_embedded_images(self, input_pdf, tmp_path, fmt):
+        """Markdown / HTML output should embed images by default so they survive the temp dir."""
+        fake_output = tmp_path / f"lorem.{'md' if fmt == 'markdown' else 'html'}"
+        fake_output.write_text("mocked")
+
+        with patch("opendataloader_pdf_mcp.server.opendataloader_pdf.convert") as mock_convert, \
+             patch("opendataloader_pdf_mcp.server.tempfile.TemporaryDirectory") as mock_tmpdir:
+            mock_tmpdir.return_value.__enter__ = lambda self: str(tmp_path)
+            mock_tmpdir.return_value.__exit__ = lambda *args: None
+            convert_pdf(input_path=str(input_pdf), format=fmt)
             kwargs = mock_convert.call_args[1]
             assert kwargs.get("image_output") == "embedded"
 
@@ -142,6 +156,37 @@ class TestConvertPdfOptions:
             convert_pdf(input_path=str(input_pdf), format="json")
             kwargs = mock_convert.call_args[1]
             assert "image_output" not in kwargs
+
+
+class TestConvertPdfImageEmbedding:
+    """End-to-end checks that markdown/html output stays self-contained.
+
+    Regression coverage for #539: the MCP server returns a single string, so
+    `image_output=external` would leave the Markdown referencing files in a
+    temp dir that's already been deleted.
+    """
+
+    def test_markdown_embeds_images_as_base64_by_default(self, input_pdf_with_images):
+        """First page of the academic sample has images; output must inline them."""
+        result = convert_pdf(
+            input_path=str(input_pdf_with_images), format="markdown", pages="1"
+        )
+        assert "![" in result, "expected markdown image syntax in output"
+        assert "data:image/" in result and ";base64," in result, (
+            "expected base64-embedded image data URI in markdown output"
+        )
+
+    def test_image_output_off_strips_images(self, input_pdf_with_images):
+        """Explicit image_output='off' must override the embedded default."""
+        result = convert_pdf(
+            input_path=str(input_pdf_with_images),
+            format="markdown",
+            pages="1",
+            image_output="off",
+        )
+        assert "data:image/" not in result, (
+            "image_output='off' should not emit base64 image data URIs"
+        )
 
 
 class TestMcpToolRegistration:
