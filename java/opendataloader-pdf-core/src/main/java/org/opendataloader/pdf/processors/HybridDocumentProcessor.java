@@ -690,7 +690,8 @@ public class HybridDocumentProcessor {
             }
 
             try {
-                HybridRequest request = HybridRequest.forPages(pdfBytes, chunkPages1Indexed, outputFormats);
+                HybridRequest request = HybridRequest.forPages(pdfBytes, chunkPages1Indexed, outputFormats)
+                    .withCropOutput(cropOutputFor(config));
                 long convertStartNs = System.nanoTime();
                 HybridResponse response;
                 try {
@@ -793,6 +794,22 @@ public class HybridDocumentProcessor {
      */
     private static HybridClient getClient(Config config) {
         return HybridClientFactory.getOrCreate(config.getHybrid(), config.getHybridConfig());
+    }
+
+    /**
+     * Resolve the per-document crop / page-image destination from the config.
+     *
+     * <p>The cached client cannot hold this — it is reused across documents and
+     * its config reflects only the first one. Carrying it on the per-document
+     * {@link HybridClient.HybridRequest} keeps the destination correct (and
+     * needs no shared mutable state) for the document being processed.
+     */
+    private static HybridClient.CropOutput cropOutputFor(Config config) {
+        HybridConfig hc = config.getHybridConfig();
+        if (hc == null || !hc.isSaveCrops() || hc.getCropOutputDir() == null) {
+            return HybridClient.CropOutput.DISABLED;
+        }
+        return new HybridClient.CropOutput(true, hc.getCropOutputDir());
     }
 
     /**

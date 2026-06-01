@@ -51,6 +51,49 @@ public interface HybridClient {
     }
 
     /**
+     * Per-document destination for crop / page-image artifacts.
+     *
+     * <p>Clients are cached and reused across documents
+     * ({@link HybridClientFactory#getOrCreate}), so the {@link HybridConfig}
+     * captured at construction reflects only the <em>first</em> document and
+     * cannot be the source of truth for where the <em>current</em> document's
+     * crops belong. This value travels with each {@link HybridRequest}
+     * instead, so the destination tracks the document being processed without
+     * any shared mutable state — safe even if convert calls run concurrently.
+     *
+     * <p>{@code enabled} controls whether crop / page-image artifacts are
+     * written; {@code directory} is the destination for this document (or
+     * {@code null} when none).
+     */
+    final class CropOutput {
+        /** Sentinel meaning "do not write crops for this request". */
+        public static final CropOutput DISABLED = new CropOutput(false, null);
+
+        private final boolean enabled;
+        private final String directory;
+
+        public CropOutput(boolean enabled, String directory) {
+            this.enabled = enabled;
+            this.directory = directory;
+        }
+
+        /** Whether crop / page-image artifacts should be written. */
+        public boolean enabled() {
+            return enabled;
+        }
+
+        /** Destination directory, or {@code null} when none is set. */
+        public String directory() {
+            return directory;
+        }
+
+        /** True when crops should be written and a destination is set. */
+        public boolean active() {
+            return enabled && directory != null;
+        }
+    }
+
+    /**
      * Output formats that can be requested from the hybrid backend.
      */
     enum OutputFormat {
@@ -83,6 +126,7 @@ public interface HybridClient {
         private final byte[] pdfBytes;
         private final Set<Integer> pageNumbers;
         private final Set<OutputFormat> outputFormats;
+        private final CropOutput cropOutput;
 
         /**
          * Creates a new HybridRequest.
@@ -93,11 +137,37 @@ public interface HybridClient {
          */
         public HybridRequest(byte[] pdfBytes, Set<Integer> pageNumbers,
                              Set<OutputFormat> outputFormats) {
+            this(pdfBytes, pageNumbers, outputFormats, CropOutput.DISABLED);
+        }
+
+        private HybridRequest(byte[] pdfBytes, Set<Integer> pageNumbers,
+                              Set<OutputFormat> outputFormats, CropOutput cropOutput) {
             this.pdfBytes = pdfBytes != null ? Arrays.copyOf(pdfBytes, pdfBytes.length) : null;
             this.pageNumbers = pageNumbers != null ? pageNumbers : Collections.emptySet();
             this.outputFormats = outputFormats != null && !outputFormats.isEmpty()
                 ? EnumSet.copyOf(outputFormats)
                 : EnumSet.allOf(OutputFormat.class);
+            this.cropOutput = cropOutput != null ? cropOutput : CropOutput.DISABLED;
+        }
+
+        /**
+         * Returns a copy of this request with the given crop-output destination.
+         * Lets the caller attach a per-document crop target without mutating the
+         * cached client. The original request is unchanged.
+         *
+         * @param cropOutput where to write crops / page images for this document
+         * @return a new request carrying {@code cropOutput}
+         */
+        public HybridRequest withCropOutput(CropOutput cropOutput) {
+            return new HybridRequest(pdfBytes, pageNumbers, outputFormats, cropOutput);
+        }
+
+        /**
+         * Per-document crop / page-image destination. Never {@code null};
+         * defaults to {@link CropOutput#DISABLED}.
+         */
+        public CropOutput getCropOutput() {
+            return cropOutput;
         }
 
         /**
