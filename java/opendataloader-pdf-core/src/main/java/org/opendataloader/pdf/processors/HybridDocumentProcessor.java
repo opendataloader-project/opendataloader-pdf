@@ -38,6 +38,17 @@ import org.opendataloader.pdf.hybrid.TriageLogger;
 import org.opendataloader.pdf.hybrid.TriageProcessor;
 import org.opendataloader.pdf.hybrid.TriageProcessor.TriageDecision;
 import org.opendataloader.pdf.hybrid.TriageProcessor.TriageResult;
+import org.opendataloader.pdf.autotagging.ChunksWriter;
+import org.verapdf.as.ASAtom;
+import org.verapdf.cos.COSBase;
+import org.verapdf.cos.COSName;
+import org.verapdf.operator.Operator;
+import org.verapdf.parser.Operators;
+import org.verapdf.pd.PDPage;
+import org.verapdf.pd.images.PDXForm;
+import org.verapdf.pd.images.PDXImage;
+import org.verapdf.pd.images.PDXObject;
+import org.verapdf.tools.StaticResources;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
@@ -910,75 +921,42 @@ public class HybridDocumentProcessor {
             List<TextChunk> javaTextChunks = new ArrayList<>();
             collectJavaChunks(javaPage, javaImageChunks, javaTextChunks);
 
-            // Replace SemanticPicture entries with matched EnrichedImageChunk
-            if (!javaImageChunks.isEmpty()) {
-                List<IObject> enriched = new ArrayList<>(backendPage.size());
-                for (IObject obj : backendPage) {
-                    if (obj instanceof SemanticPicture) {
-                        SemanticPicture picture = (SemanticPicture) obj;
-                        ImageChunk matched = findMatchingImageChunk(picture, javaImageChunks);
-                        if (matched != null) {
-                            // Author-authored /Alt wins over AI caption. If the
-                            // matched chunk is already an EnrichedImageChunk with
-                            // AltSource.ORIGINAL (TaggedDocumentProcessor extracts
-                            // the source PDF's /Alt that way), preserve it; the
-                            // backend caption is discarded because a human-authored
-                            // /Alt is more trustworthy than any AI description.
-                            String alt;
-                            EnrichedImageChunk.AltSource altSource;
-                            if (matched instanceof EnrichedImageChunk
-                                    && ((EnrichedImageChunk) matched).getAltSource()
-                                        == EnrichedImageChunk.AltSource.ORIGINAL
-                                    && ((EnrichedImageChunk) matched).hasDescription()) {
-                                alt = ((EnrichedImageChunk) matched).getDescription();
-                                altSource = EnrichedImageChunk.AltSource.ORIGINAL;
-                                // Author /Alt wins; AI caption is intentionally
-                                // discarded here. Logged so a future regression
-                                // (e.g. whitespace-only original /Alt that
-                                // passes hasDescription) is visible during
-                                // hybrid-pipeline debugging.
-                                if (picture.getDescription() != null
-                                        && !picture.getDescription().isEmpty()) {
-                                    LOGGER.log(Level.FINE,
-                                        "Page {0}: kept original /Alt over AI caption (orig len={1}, ai len={2})",
-                                        new Object[]{pageNumber, alt.length(), picture.getDescription().length()});
-                                }
-                            } else {
-                                alt = picture.getDescription();
-                                altSource = EnrichedImageChunk.AltSource.AI_GENERATED;
-                            }
-                            EnrichedImageChunk replacement = new EnrichedImageChunk(
-                                matched, alt, altSource);
-                            // Preserve the SemanticPicture's structure id so that
-                            // ElementMetadata keyed by it (ai_score, source label,
-                            // caption) survives the SemanticPicture → EnrichedImageChunk
-                            // swap. Without this, downstream metadata lookups miss
-                            // and the JSON output drops every picture-level metadata
-                            // field except `alt`.
-                            Long originalId = picture.getRecognizedStructureId();
-                            replacement.setRecognizedStructureId(originalId);
-                            if (originalId != null) {
-                                pictureSwapOriginalIds.put(replacement, originalId);
-                            }
-                            enriched.add(replacement);
-                        } else {
-                            // No Java ImageChunk overlapped this backend Figure.
-                            // We preserve the SemanticPicture rather than dropping
-                            // it: dropping silently discards the backend's caption
-                            // and the corresponding ai-raw FIGURE evidence, and
-                            // the page would no longer mention a region the
-                            // backend definitively classified as a figure.
-                            // Downstream PDF struct-tree tagging tolerates a
-                            // missing StreamInfo (the figure is tagged from its
-                            // bounding box) but the alt text and evidence remain.
-                            LOGGER.fine(() -> "Page " + pageNumber + ": kept SemanticPicture without StreamInfo (no matching Java ImageChunk) at bbox ["
-                                + String.format("%.1f,%.1f,%.1f,%.1f", picture.getLeftX(), picture.getBottomY(), picture.getRightX(), picture.getTopY()) + "]");
-                            enriched.add(picture);
+            // Replace SemanticPicture entries with EnrichedImageChunk so PDF tagging
+            // can route them through the existing ImageChunk MCID path.
+            List<XObjectDoCandidate> xObjectDoCandidates = null;
+            Set<Integer> usedBackendOnlyFigureOperators = new HashSet<>();
+            List<IObject> enriched = new ArrayList<>(backendPage.size());
+            boolean replacedPicture = false;
+            for (IObject obj : backendPage) {
+                if (obj instanceof SemanticPicture) {
+                    SemanticPicture picture = (SemanticPicture) obj;
+                    ImageChunk matched = findMatchingImageChunk(picture, javaImageChunks);
+                    if (matched == null) {
+                        if (xObjectDoCandidates == null) {
+                            xObjectDoCandidates = findPageXObjectDoCandidates(pageNumber);
                         }
-                    } else {
-                        enriched.add(obj);
+                        matched = createBackendOnlyFigureChunk(picture, pageNumber,
+                            xObjectDoCandidates, usedBackendOnlyFigureOperators);
                     }
+                    if (matched != null) {
+                        EnrichedImageChunk replacement = createEnrichedImageReplacement(
+                            picture, matched, pageNumber, pictureSwapOriginalIds);
+                        enriched.add(replacement);
+                        replacedPicture = true;
+                    } else {
+                        // No Java ImageChunk or unambiguous page-level XObject Do
+                        // overlapped this backend Figure. Preserve the SemanticPicture
+                        // so alt text/evidence are not lost, but it cannot receive
+                        // MCID content until a safe content operator is identified.
+                        LOGGER.fine(() -> "Page " + pageNumber + ": kept SemanticPicture without StreamInfo (no matching Java ImageChunk or XObject Do) at bbox ["
+                            + String.format("%.1f,%.1f,%.1f,%.1f", picture.getLeftX(), picture.getBottomY(), picture.getRightX(), picture.getTopY()) + "]");
+                        enriched.add(picture);
+                    }
+                } else {
+                    enriched.add(obj);
                 }
+            }
+            if (replacedPicture) {
                 backendPage = enriched;
                 entry.setValue(enriched);
             }
@@ -1416,6 +1394,129 @@ public class HybridDocumentProcessor {
             }
         }
         return best;
+    }
+
+    private static EnrichedImageChunk createEnrichedImageReplacement(
+            SemanticPicture picture,
+            ImageChunk matched,
+            int pageNumber,
+            Map<EnrichedImageChunk, Long> pictureSwapOriginalIds) {
+        // Author-authored /Alt wins over AI caption. If the matched chunk is
+        // already an EnrichedImageChunk with AltSource.ORIGINAL, preserve it;
+        // the backend caption is discarded because a human-authored /Alt is
+        // more trustworthy than any AI description.
+        String alt;
+        EnrichedImageChunk.AltSource altSource;
+        if (matched instanceof EnrichedImageChunk
+                && ((EnrichedImageChunk) matched).getAltSource()
+                    == EnrichedImageChunk.AltSource.ORIGINAL
+                && ((EnrichedImageChunk) matched).hasDescription()) {
+            alt = ((EnrichedImageChunk) matched).getDescription();
+            altSource = EnrichedImageChunk.AltSource.ORIGINAL;
+            if (picture.getDescription() != null && !picture.getDescription().isEmpty()) {
+                LOGGER.log(Level.FINE,
+                    "Page {0}: kept original /Alt over AI caption (orig len={1}, ai len={2})",
+                    new Object[]{pageNumber, alt.length(), picture.getDescription().length()});
+            }
+        } else {
+            alt = picture.getDescription();
+            altSource = EnrichedImageChunk.AltSource.AI_GENERATED;
+        }
+        EnrichedImageChunk replacement = new EnrichedImageChunk(matched, alt, altSource);
+        // Preserve the SemanticPicture's structure id so that ElementMetadata
+        // keyed by it survives the SemanticPicture -> EnrichedImageChunk swap.
+        Long originalId = picture.getRecognizedStructureId();
+        replacement.setRecognizedStructureId(originalId);
+        if (originalId != null) {
+            pictureSwapOriginalIds.put(replacement, originalId);
+        }
+        return replacement;
+    }
+
+    private static ImageChunk createBackendOnlyFigureChunk(
+            SemanticPicture picture,
+            int pageNumber,
+            List<XObjectDoCandidate> candidates,
+            Set<Integer> usedOperatorIndexes) {
+        if (candidates == null || candidates.isEmpty()) {
+            return null;
+        }
+        List<XObjectDoCandidate> unused = candidates.stream()
+            .filter(candidate -> !usedOperatorIndexes.contains(candidate.operatorIndex))
+            .collect(Collectors.toList());
+        if (unused.size() != 1) {
+            LOGGER.fine(() -> "Page " + pageNumber + ": skipped backend-only figure StreamInfo fallback; "
+                + unused.size() + " unused Form/Image XObject Do candidates");
+            return null;
+        }
+        XObjectDoCandidate candidate = unused.get(0);
+        usedOperatorIndexes.add(candidate.operatorIndex);
+
+        ImageChunk image = new ImageChunk(new BoundingBox(picture.getBoundingBox()));
+        image.setPageNumber(pageNumber);
+        image.setIndex(picture.getPictureIndex());
+        // xObjectName is deliberately null: the Do is invoked directly on the
+        // page content stream, so this StreamInfo must key under
+        // OperatorStreamKey(page, null) — the same page-level MCID sequence
+        // used by all page-drawn content. A non-null name would route it to
+        // the XObject's own marked-content branch (for content tagged *inside*
+        // the form), which is not what we want here.
+        image.getStreamInfos().add(new StreamInfo(candidate.operatorIndex, null, 0, 1));
+        LOGGER.fine(() -> "Page " + pageNumber + ": created backend-only figure StreamInfo for /"
+            + candidate.xObjectName + " Do at operator index " + candidate.operatorIndex);
+        return image;
+    }
+
+    private static List<XObjectDoCandidate> findPageXObjectDoCandidates(int pageNumber) {
+        PDPage page = StaticResources.getDocument().getPage(pageNumber);
+        if (page == null || page.getContent() == null || page.getResources() == null) {
+            return List.of();
+        }
+        List<Object> tokens = ChunksWriter.getTokens(page.getContent());
+        List<XObjectDoCandidate> candidates = new ArrayList<>();
+        List<COSBase> arguments = new ArrayList<>();
+        for (int index = 0; index < tokens.size(); index++) {
+            Object token = tokens.get(index);
+            if (token instanceof COSBase) {
+                arguments.add((COSBase) token);
+            } else if (token instanceof Operator) {
+                Operator operator = (Operator) token;
+                if (Operators.DO.equals(operator.getOperator())) {
+                    String xObjectName = getLastCosNameString(arguments);
+                    if (xObjectName != null && isImageOrFormXObject(page, xObjectName)) {
+                        candidates.add(new XObjectDoCandidate(index, xObjectName));
+                    }
+                }
+                arguments.clear();
+            }
+        }
+        return candidates;
+    }
+
+    private static String getLastCosNameString(List<COSBase> arguments) {
+        if (arguments.isEmpty()) {
+            return null;
+        }
+        COSBase last = arguments.get(arguments.size() - 1);
+        if (last instanceof COSName) {
+            return ((COSName) last).getString();
+        }
+        return null;
+    }
+
+    private static boolean isImageOrFormXObject(PDPage page, String xObjectName) {
+        PDXObject xObject = page.getResources().getXObject(ASAtom.getASAtom(xObjectName));
+        return xObject instanceof PDXImage || xObject instanceof PDXForm;
+    }
+
+    private static final class XObjectDoCandidate {
+        private final int operatorIndex;
+        private final String xObjectName;
+
+        private XObjectDoCandidate(int operatorIndex, String xObjectName) {
+            this.operatorIndex = operatorIndex;
+            this.xObjectName = xObjectName;
+        }
     }
 
     private static void mergeResults(
