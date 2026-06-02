@@ -5,6 +5,7 @@ import org.opendataloader.pdf.autotagging.OperatorStreamKey;
 import org.opendataloader.pdf.entities.EnrichedImageChunk;
 import org.opendataloader.pdf.entities.SemanticFootnote;
 import org.opendataloader.pdf.entities.SemanticFormula;
+import org.opendataloader.pdf.entities.SemanticPicture;
 import org.opendataloader.pdf.exceptions.EncryptedTaggedPdfNotSupportedException;
 import org.verapdf.as.ASAtom;
 import org.verapdf.as.io.ASMemoryInStream;
@@ -696,6 +697,17 @@ public class AutoTaggingProcessor {
             createFormulaStructElem((SemanticFormula) object, parentStructElem, cosDocument);
         } else if (object instanceof ImageChunk) {
             createFigureStructElem((ImageChunk) object, parentStructElem, cosDocument);
+        } else if (object instanceof SemanticPicture) {
+            // A backend-detected figure that never matched a Java-extracted
+            // ImageChunk stays a SemanticPicture (see HybridDocumentProcessor
+            // enrichBackendResults). Without this branch it would fall through
+            // untagged, so the page's figure gets no /Figure element at all.
+            // Tag it from its bounding box + alt; it carries no StreamInfo, so
+            // there is no marked-content child to attach. The image's own
+            // content-stream operators are still wrapped as /Artifact by
+            // ChunksWriter (no matching StreamInfo), so the page has no
+            // untagged content — this only adds the missing /Figure + /Alt.
+            createFigureStructElem((SemanticPicture) object, parentStructElem, cosDocument);
         }
     }
 
@@ -770,6 +782,28 @@ public class AutoTaggingProcessor {
 
     private static void createFigureStructElem(ImageChunk image, COSObject parent, COSDocument cosDocument) {
         createFigureStructElemReturning(image, parent, cosDocument);
+    }
+
+    /**
+     * Figure struct element for a backend-detected picture that has no matching
+     * Java ImageChunk (so no StreamInfo / marked content). Mirrors the
+     * ImageChunk path: /BBox layout attribute + non-empty /Alt (falling back to
+     * the synthetic "image N" text when the backend gave no description). No
+     * MCID child is attached because a SemanticPicture carries no content
+     * stream operators. Any linked caption is still attached.
+     */
+    private static void createFigureStructElem(SemanticPicture picture, COSObject parent, COSDocument cosDocument) {
+        COSObject figureObject = addStructElement(parent, cosDocument,
+                TaggedPDFConstants.FIGURE, picture.getPageNumber());
+        double[] bbox = {picture.getLeftX(), picture.getBottomY(),
+                picture.getRightX(), picture.getTopY()};
+        addAttributeToStructElem(figureObject, ASAtom.LAYOUT, ASAtom.BBOX, COSArray.construct(4, bbox));
+        // PDF/UA requires every Figure to carry a non-empty /Alt; setStringEntry
+        // falls back to the synthetic "image N" text when the description is
+        // empty, matching the ImageChunk path.
+        setStringEntry(picture.sanitizeDescription(), figureObject, IMAGE_REPLACEMENT_TEXT, ASAtom.ALT, true);
+        cosDocument.addChangedObject(figureObject);
+        addCaptionIfPresent(picture, figureObject, cosDocument);
     }
 
     private static COSObject createFigureStructElemReturning(ImageChunk image, COSObject parent, COSDocument cosDocument) {
