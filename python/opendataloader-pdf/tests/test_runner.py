@@ -7,6 +7,7 @@ yet and is allowed to print the captured streams — but only once
 (``CalledProcessError.output`` and ``.stdout`` are the same attribute).
 """
 
+import os
 import subprocess
 from unittest.mock import MagicMock
 
@@ -88,3 +89,50 @@ def test_quiet_failure_prints_captured_streams_once(monkeypatch, capsys, patched
     assert "Stderr: captured stderr text" in err
     assert "Error running opendataloader-pdf CLI." in err
     assert "Return code: 2" in err
+
+
+# --------------------------------------------------------------------------- #
+# Non-ASCII path handling (_make_jvm_safe_args)
+#
+# On Windows the Java launcher decodes argv with the system ANSI code page, so
+# non-ASCII paths become "?" and the JAR cannot find the file. The shim swaps
+# such paths for their ASCII short (8.3) form. It is a no-op on POSIX and for
+# ASCII arguments.
+# --------------------------------------------------------------------------- #
+def test_make_jvm_safe_args_passthrough_ascii():
+    """ASCII arguments are never altered, on any platform."""
+    args = ["input.pdf", "--format", "markdown", "--output-dir", "out"]
+    assert runner._make_jvm_safe_args(args) == args
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX no-op behaviour")
+def test_make_jvm_safe_args_noop_on_posix(tmp_path):
+    """On POSIX the JVM decodes argv as UTF-8, so non-ASCII paths are left
+    untouched."""
+    greek = tmp_path / "έγγραφο.pdf"
+    greek.write_bytes(b"%PDF-1.4")
+    assert runner._make_jvm_safe_args([str(greek)]) == [str(greek)]
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows short-path behaviour")
+def test_make_jvm_safe_args_shortens_non_ascii_input_on_windows(tmp_path):
+    """A non-ASCII input path is replaced by an ASCII short path pointing at
+    the same file."""
+    greek = tmp_path / "έγγραφο.pdf"
+    greek.write_bytes(b"%PDF-1.4")
+    result = runner._make_jvm_safe_args([str(greek)])
+    assert result[0].isascii()
+    assert os.path.samefile(result[0], str(greek))
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows short-path behaviour")
+def test_make_jvm_safe_args_creates_and_shortens_output_dir_on_windows(tmp_path):
+    """A non-ASCII --output-dir is created (so a short name exists) and
+    rewritten to an ASCII short path; surrounding tokens are preserved."""
+    out = tmp_path / "έξοδος"
+    result = runner._make_jvm_safe_args(["in.pdf", "--output-dir", str(out)])
+    assert result[0] == "in.pdf"
+    assert result[1] == "--output-dir"
+    assert result[2].isascii()
+    assert os.path.isdir(out)
+    assert os.path.samefile(result[2], str(out))
