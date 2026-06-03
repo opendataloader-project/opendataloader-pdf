@@ -16,16 +16,10 @@
 package org.opendataloader.pdf.text;
 
 import org.opendataloader.pdf.api.Config;
-import org.verapdf.wcag.algorithms.entities.IObject;
-import org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter;
-import org.verapdf.wcag.algorithms.entities.SemanticHeading;
-import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
-import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
-import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
+import org.verapdf.wcag.algorithms.entities.*;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
 import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
-import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 
 import java.io.Closeable;
@@ -133,6 +127,8 @@ public class TextGenerator implements Closeable {
             writeMultiline(((SemanticTextNode) object).getValue(), indentLevel);
         } else if (object instanceof PDFList) {
             writeList((PDFList) object, indentLevel);
+        } else if (object instanceof SemanticTOC) {
+            writeTOC((SemanticTOC) object, indentLevel);
         } else if (object instanceof TableBorder) {
             writeTable((TableBorder) object, indentLevel);
         }
@@ -144,15 +140,23 @@ public class TextGenerator implements Closeable {
 
     private void writeList(PDFList list, int indentLevel) throws IOException {
         for (ListItem item : list.getListItems()) {
-            String indent = indent(indentLevel);
-            String itemText = compactWhitespace(collectPlainText(item.getContents()));
-            if (!itemText.isEmpty()) {
-                textWriter.write(indent);
-                textWriter.write(itemText);
-                textWriter.write(lineSeparator);
-            }
+            writeMultiline(item.toString(), indentLevel);
             if (!item.getContents().isEmpty()) {
                 writeContents(item.getContents(), indentLevel + 1);
+            }
+        }
+    }
+
+    private void writeTOC(SemanticTOC toc, int indentLevel) throws IOException {
+        for (IObject item : toc.getTOCItems()) {
+            if (item instanceof SemanticTOC) {
+                writeTOC((SemanticTOC)item, indentLevel + 1);
+            } else if (item instanceof SemanticTOCI) {
+                SemanticTOCI tocItem = (SemanticTOCI) item;
+                writeMultiline(tocItem.toString(), indentLevel);
+                if (!tocItem.getContents().isEmpty()) {
+                    writeContents(tocItem.getContents(), indentLevel + 1);
+                }
             }
         }
     }

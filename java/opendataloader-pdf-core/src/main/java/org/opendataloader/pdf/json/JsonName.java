@@ -30,6 +30,8 @@ public class JsonName {
     public static final String TABLE_TYPE = "table";
     public static final String TEXT_BLOCK = "text block";
     public static final String LIST_TYPE = "list";
+    public static final String TOC_TYPE = "toc";
+    public static final String TOC_ITEM_TYPE = "toc item";
     public static final String TABLE_CELL_TYPE = "table cell";
     public static final String ROW_TYPE = "table row";
     public static final String FONT_TYPE = "font";
@@ -39,9 +41,12 @@ public class JsonName {
     public static final String HEADING_TYPE = "heading";
     public static final String KIDS = "kids";
     public static final String LIST_ITEMS = "list items";
+    public static final String TOC_ITEMS = "toc items";
     public static final String NUMBER_OF_LIST_ITEMS = "number of list items";
     public static final String PREVIOUS_LIST_ID = "previous list id";
     public static final String NEXT_LIST_ID = "next list id";
+    public static final String PREVIOUS_TOC_ID = "previous toc id";
+    public static final String NEXT_TOC_ID = "next toc id";
     public static final String PREVIOUS_TABLE_ID = "previous table id";
     public static final String NEXT_TABLE_ID = "next table id";
     public static final String AUTHOR = "author";
