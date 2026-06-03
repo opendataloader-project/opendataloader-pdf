@@ -22,6 +22,7 @@ import org.opendataloader.pdf.utils.TextNodeUtils;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
+import org.verapdf.wcag.algorithms.entities.content.TextBlock;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -175,6 +176,10 @@ public class SerializerUtil {
                 return "L";
             case JsonName.LIST_ITEM_TYPE:
                 return "LI";
+            case JsonName.TOC_TYPE:
+                return "TOC";
+            case JsonName.TOC_ITEM_TYPE:
+                return "TOCI";
             case JsonName.TABLE_TYPE:
                 return "Table";
             case JsonName.TABLE_CELL_TYPE:
@@ -198,5 +203,13 @@ public class SerializerUtil {
         if (textNode.isHiddenText()) {
             jsonGenerator.writeBooleanField(JsonName.HIDDEN_TEXT, true);
         }
+    }
+
+    public static void writeTextInfo(JsonGenerator jsonGenerator, TextBlock textBlock) throws IOException {
+        jsonGenerator.writeStringField(JsonName.FONT_TYPE, textBlock.getFirstLine().getFirstTextChunk().getFontName());
+        jsonGenerator.writePOJOField(JsonName.FONT_SIZE, textBlock.getFontSize());
+        jsonGenerator.writeStringField(JsonName.TEXT_COLOR, Arrays.toString(
+            textBlock.getFirstLine().getFirstTextChunk().getFontColor()));
+        jsonGenerator.writeStringField(JsonName.CONTENT, textBlock.toString());
     }
 }

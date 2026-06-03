@@ -25,11 +25,7 @@ import org.opendataloader.pdf.utils.Base64ImageUtils;
 import org.opendataloader.pdf.utils.GeneratorUtils;
 import org.opendataloader.pdf.utils.ImagesUtils;
 import org.opendataloader.pdf.utils.OutputType;
-import org.verapdf.wcag.algorithms.entities.IObject;
-import org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter;
-import org.verapdf.wcag.algorithms.entities.SemanticHeading;
-import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
-import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
+import org.verapdf.wcag.algorithms.entities.*;
 import org.verapdf.wcag.algorithms.entities.content.*;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
 import org.verapdf.wcag.algorithms.entities.lists.PDFList;
@@ -186,6 +182,8 @@ public class HtmlGenerator implements Closeable {
             writeTable((TableBorder) object);
         } else if (object instanceof PDFList) {
             writeList((PDFList) object);
+        } else if (object instanceof SemanticTOC) {
+            writeTOC((SemanticTOC) object);
         } else {
             return;
         }
@@ -323,6 +321,33 @@ public class HtmlGenerator implements Closeable {
                 write(object);
             }
             htmlWriter.write(HtmlSyntax.HTML_LIST_ITEM_CLOSE_TAG);
+            htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
+        }
+        htmlWriter.write(HtmlSyntax.HTML_UNORDERED_LIST_CLOSE_TAG);
+        htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
+    }
+
+    protected void writeTOC(SemanticTOC toc) throws IOException {
+        htmlWriter.write(HtmlSyntax.HTML_UNORDERED_LIST_TAG);
+        htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
+        for (IObject item : toc.getTOCItems()) {
+            if (item instanceof SemanticTOC) {
+                htmlWriter.write(HtmlSyntax.HTML_LIST_ITEM_TAG);
+                htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
+                writeTOC((SemanticTOC) item);
+                htmlWriter.write(HtmlSyntax.HTML_LIST_ITEM_CLOSE_TAG);
+            } else if (item instanceof SemanticTOCI) {
+                SemanticTOCI tocItem = (SemanticTOCI) item;
+                htmlWriter.write(HtmlSyntax.HTML_LIST_ITEM_TAG);
+                htmlWriter.write(HtmlSyntax.HTML_PARAGRAPH_TAG);
+                String value = GeneratorUtils.getTextFromLines(tocItem.getLines(), OutputType.HTML);
+                htmlWriter.write(getCorrectString(value));
+                htmlWriter.write(HtmlSyntax.HTML_PARAGRAPH_CLOSE_TAG);
+                for (IObject object : tocItem.getContents()) {
+                    write(object);
+                }
+                htmlWriter.write(HtmlSyntax.HTML_LIST_ITEM_CLOSE_TAG);
+            }
             htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
         }
         htmlWriter.write(HtmlSyntax.HTML_UNORDERED_LIST_CLOSE_TAG);

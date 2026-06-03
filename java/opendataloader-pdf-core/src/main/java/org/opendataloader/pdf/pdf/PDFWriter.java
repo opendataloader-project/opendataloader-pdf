@@ -101,6 +101,8 @@ public class PDFWriter {
             drawTableCells((TableBorder) content, annots);
         } else if (content instanceof PDFList) {
             drawListItems((PDFList) content, annots);
+        } else if (content instanceof SemanticTOC) {
+            drawTOCItems((SemanticTOC) content, layer, annots);
         } else if (content instanceof SemanticHeaderOrFooter) {
             for (IObject contentItem : ((SemanticHeaderOrFooter) content).getContents()) {
                 drawContent(contentItem, PDFLayer.HEADER_AND_FOOTER_CONTENT, annots);
@@ -143,6 +145,20 @@ public class PDFWriter {
             draw(listItem.getBoundingBox(), getColor(SemanticType.LIST), contentValue, null, annots, listItem.getLevel(), PDFLayer.LIST_ITEMS);
             for (IObject content : listItem.getContents()) {
                 drawContent(content, PDFLayer.LIST_CONTENT);
+            }
+        }
+    }
+
+    private void drawTOCItems(SemanticTOC toc, PDFLayer layer, Map<Integer, PDAnnotation> annots) throws IOException {
+        for (IObject tocItem : toc.getTOCItems()) {
+            if (tocItem instanceof SemanticTOC) {
+                drawContent(tocItem, layer, annots);
+            } else if (tocItem instanceof SemanticTOCI) {
+                String contentValue = String.format("TOC item: text content \"%s\"", tocItem.toString());
+                draw(tocItem.getBoundingBox(), getColor(SemanticType.TABLE_OF_CONTENT), contentValue, null, annots, tocItem.getLevel(), PDFLayer.TOC_ITEMS);
+                for (IObject content : ((SemanticTOCI)tocItem).getContents()) {
+                    drawContent(content, PDFLayer.TOC_CONTENT);
+                }
             }
         }
     }
@@ -211,6 +227,10 @@ public class PDFWriter {
             return String.format("List: number of items %s, previous list id %s, next list id %s",
                     list.getNumberOfListItems(), list.getPreviousListId(), list.getNextListId());
         }
+        if (content instanceof SemanticTOC) {
+            SemanticTOC toc = (SemanticTOC) content;
+            return String.format("TOC: previous toc id %s, next toc id %s", toc.getPreviousTOCId(), toc.getNextTOCId());
+        }
         if (content instanceof INode) {
             INode node = (INode) content;
             if (node.getSemanticType() == SemanticType.HEADER || node.getSemanticType() == SemanticType.FOOTER) {
@@ -249,6 +269,9 @@ public class PDFWriter {
         if (content instanceof PDFList) {
             return getColor(SemanticType.LIST);
         }
+        if (content instanceof SemanticTOC) {
+            return getColor(SemanticType.TABLE_OF_CONTENT);
+        }
         if (content instanceof INode) {
             INode node = (INode) content;
             return getColor(node.getSemanticType());
@@ -277,6 +300,9 @@ public class PDFWriter {
         }
         if (semanticType == SemanticType.TABLE) {
             return new float[]{1, 0, 1};
+        }
+        if (semanticType == SemanticType.TABLE_OF_CONTENT) {
+            return new float[]{0.8f, 0.2f, 0.8f};
         }
         if (semanticType == SemanticType.CAPTION) {
             return new float[]{1, 1, 0};

@@ -21,10 +21,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.opendataloader.pdf.entities.SemanticFormula;
 import org.opendataloader.pdf.entities.SemanticPicture;
 import org.opendataloader.pdf.json.serializers.*;
-import org.verapdf.wcag.algorithms.entities.SemanticCaption;
-import org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter;
-import org.verapdf.wcag.algorithms.entities.SemanticHeading;
-import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
+import org.verapdf.wcag.algorithms.entities.*;
 import org.verapdf.wcag.algorithms.entities.content.*;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
 import org.verapdf.wcag.algorithms.entities.lists.PDFList;
@@ -60,6 +57,12 @@ public class ObjectMapperHolder {
 
         ListItemSerializer listItemSerializer = new ListItemSerializer(ListItem.class);
         module.addSerializer(ListItem.class, listItemSerializer);
+
+        TOCSerializer tocSerializer = new TOCSerializer(SemanticTOC.class);
+        module.addSerializer(SemanticTOC.class, tocSerializer);
+
+        TOCItemSerializer tocItemSerializer = new TOCItemSerializer(SemanticTOCI.class);
+        module.addSerializer(SemanticTOCI.class, tocItemSerializer);
 
         LineChunkSerializer lineChunkSerializer = new LineChunkSerializer(LineChunk.class);
         module.addSerializer(LineChunk.class, lineChunkSerializer);

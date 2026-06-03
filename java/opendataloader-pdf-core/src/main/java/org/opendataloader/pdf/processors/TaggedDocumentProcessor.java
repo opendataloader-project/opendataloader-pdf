@@ -128,9 +128,9 @@ public class TaggedDocumentProcessor {
             case TABLE:
                 processTable(node);
                 break;
-//            case TABLE_OF_CONTENT:
-//                processTOC(node);
-//                break;
+            case TABLE_OF_CONTENT:
+                addObjectToContent(processTOC(node));
+                break;
             case TITLE:
                 processHeading(node);
                 break;
@@ -398,8 +398,38 @@ public class TaggedDocumentProcessor {
         addObjectToContent(caption);
     }
 
-    private static void processTOC(INode toc) {
+    private static SemanticTOC processTOC(INode node) {
+        SemanticTOC toc = new SemanticTOC();
+        toc.setBoundingBox(new MultiBoundingBox());
+        for (INode child : node.getChildren()) {
+            if (child.getInitialSemanticType() == SemanticType.TABLE_OF_CONTENT) {
+                toc.add(processTOC(child));
+            } else if (child.getInitialSemanticType() == SemanticType.TABLE_OF_CONTENT_ITEM) {
+                SemanticTOCI tocItem = processTOCItem(child);
+                if (tocItem.getPageNumber() != null) {
+                    toc.add(tocItem);
+                }
+            } else {
+                processStructElem(child, node);
+            }
+        }
+        return toc;
+    }
 
+    private static SemanticTOCI processTOCItem(INode node) {
+        SemanticTOCI tocItem = new SemanticTOCI(new MultiBoundingBox(), null);
+        List<IObject> contents = new ArrayList<>();
+        processChildContents(node, contents);
+        contents = TextLineProcessor.processTextLines(contents);
+        for (IObject content : contents) {
+            if (content instanceof TextLine) {
+                tocItem.add((TextLine)content);
+            } else {
+                tocItem.getContents().add(content);
+            }
+        }
+        tocItem.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+        return tocItem;
     }
 
     private static void processImage(SemanticFigure image, INode parent) {
