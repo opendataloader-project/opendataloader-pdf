@@ -20,22 +20,22 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import org.opendataloader.pdf.json.JsonName;
 import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.SemanticTOCI;
 import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
-import org.verapdf.wcag.algorithms.entities.lists.ListItem;
 
 import java.io.IOException;
 
-public class ListItemSerializer extends StdSerializer<ListItem> {
+public class TOCItemSerializer extends StdSerializer<SemanticTOCI> {
 
-    public ListItemSerializer(Class<ListItem> t) {
+    public TOCItemSerializer(Class<SemanticTOCI> t) {
         super(t);
     }
 
     @Override
-    public void serialize(ListItem item, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
+    public void serialize(SemanticTOCI item, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
             throws IOException {
         jsonGenerator.writeStartObject();
-        SerializerUtil.writeEssentialInfo(jsonGenerator, item, JsonName.LIST_ITEM_TYPE);
+        SerializerUtil.writeEssentialInfo(jsonGenerator, item, JsonName.TOC_ITEM_TYPE);
         SerializerUtil.writeTextInfo(jsonGenerator, item);
         jsonGenerator.writeArrayFieldStart(JsonName.KIDS);
         for (IObject content : item.getContents()) {

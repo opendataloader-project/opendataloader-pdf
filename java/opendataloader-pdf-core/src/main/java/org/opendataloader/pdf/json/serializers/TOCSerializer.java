@@ -20,30 +20,33 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import org.opendataloader.pdf.json.JsonName;
 import org.verapdf.wcag.algorithms.entities.IObject;
-import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
-import org.verapdf.wcag.algorithms.entities.lists.ListItem;
+import org.verapdf.wcag.algorithms.entities.SemanticTOC;
 
 import java.io.IOException;
 
-public class ListItemSerializer extends StdSerializer<ListItem> {
+public class TOCSerializer extends StdSerializer<SemanticTOC> {
 
-    public ListItemSerializer(Class<ListItem> t) {
+    public TOCSerializer(Class<SemanticTOC> t) {
         super(t);
     }
 
     @Override
-    public void serialize(ListItem item, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
+    public void serialize(SemanticTOC toc, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
             throws IOException {
         jsonGenerator.writeStartObject();
-        SerializerUtil.writeEssentialInfo(jsonGenerator, item, JsonName.LIST_ITEM_TYPE);
-        SerializerUtil.writeTextInfo(jsonGenerator, item);
-        jsonGenerator.writeArrayFieldStart(JsonName.KIDS);
-        for (IObject content : item.getContents()) {
-            if (!(content instanceof LineArtChunk)) {
-                jsonGenerator.writePOJO(content);
-            }
+        SerializerUtil.writeEssentialInfo(jsonGenerator, toc, JsonName.TOC_TYPE);
+        if (toc.getPreviousTOCId() != null) {
+            jsonGenerator.writeNumberField(JsonName.PREVIOUS_TOC_ID, toc.getPreviousTOCId());
+        }
+        if (toc.getNextTOCId() != null) {
+            jsonGenerator.writeNumberField(JsonName.NEXT_TOC_ID, toc.getNextTOCId());
+        }
+        jsonGenerator.writeArrayFieldStart(JsonName.TOC_ITEMS);
+        for (IObject child : toc.getTOCItems()) {
+            jsonGenerator.writePOJO(child);
         }
         jsonGenerator.writeEndArray();
+        SerializerUtil.writeMetadataIfPresent(jsonGenerator, toc);
         jsonGenerator.writeEndObject();
     }
 }

@@ -685,6 +685,8 @@ public class AutoTaggingProcessor {
             createParagraphStructElem((SemanticParagraph) object, parentStructElem, cosDocument);
         } else if (object instanceof PDFList) {
             createListStructElem((PDFList) object, parentStructElem, cosDocument);
+        } else if (object instanceof SemanticTOC) {
+            createTOCStructElem((SemanticTOC) object, parentStructElem, cosDocument);
         } else if (object instanceof TableBorder) {
             TableBorder table = (TableBorder) object;
             if (table.isTextBlock()) {
@@ -857,6 +859,24 @@ public class AutoTaggingProcessor {
             addKids(listItem.getContents(), lBodyObject, cosDocument);
         }
         addCaptionIfPresent(list, listObject, cosDocument);
+    }
+
+    private static void createTOCStructElem(SemanticTOC toc, COSObject parent, COSDocument cosDocument) {
+        COSObject tocObject = addStructElement(parent, cosDocument, TaggedPDFConstants.TOC, toc.getPageNumber());
+        for (IObject child : toc.getTOCItems()) {
+            if (child instanceof SemanticTOC) {
+                createTOCStructElem((SemanticTOC)child, tocObject, cosDocument);
+            } else if (child instanceof SemanticTOCI) {
+                SemanticTOCI tocItem = ((SemanticTOCI)child);
+                COSObject tocItemObject = addStructElement(tocObject, cosDocument, TaggedPDFConstants.TOCI, child.getPageNumber());
+                SemanticTextNode tocItemTextNode = new SemanticTextNode();
+                for (TextLine line : tocItem.getLines()) {
+                    tocItemTextNode.add(line);
+                }
+                processTextNode(tocItemTextNode, tocItemObject);
+                addKids(tocItem.getContents(), tocItemObject, cosDocument);
+            }
+        }
     }
 
     private static void createTableStructElem(TableBorder table, COSObject parent, COSDocument cosDocument) {

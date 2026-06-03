@@ -19,8 +19,10 @@ public enum PDFLayer {
     CONTENT("content"),
     TABLE_CELLS("table cells"),
     LIST_ITEMS("list items"),
+    TOC_ITEMS("toc items"),
     TABLE_CONTENT("table content"),
     LIST_CONTENT("list content"),
+    TOC_CONTENT("toc content"),
     TEXT_BLOCK_CONTENT("text blocks content"),
     HEADER_AND_FOOTER_CONTENT("header and footer content");
 
