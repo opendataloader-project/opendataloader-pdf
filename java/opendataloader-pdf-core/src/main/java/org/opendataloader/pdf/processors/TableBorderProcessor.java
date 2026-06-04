@@ -24,8 +24,8 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
-import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -239,52 +239,15 @@ public class TableBorderProcessor {
         currentTable.setPreviousTable(previousTable);
     }
 
-    public static TextChunk getTextChunkPartForRange(TextChunk textChunk, double leftX, double rightX) {
-        Integer start = textChunk.getSymbolStartIndexByCoordinate(leftX);
-        if (start == null) {
-            return null;
-        }
-        Integer end = textChunk.getSymbolEndIndexByCoordinate(rightX);
-        if (end == null) {
-            return null;
-        }
-        if (end != textChunk.getValue().length()) {
-            end++;
-        }
-        TextChunk result = TextChunk.getTextChunk(textChunk, start, end);
-        return ChunksMergeUtils.getTrimTextChunk(result);
-    }
-
-    public static TextChunk getTextChunkPartBeforeBoundingBox(TextChunk textChunk, BoundingBox bbox) {
-        Integer end = textChunk.getSymbolEndIndexByCoordinate(bbox.getLeftX());
-        if (end == null) {
-            return null;
-        }
-        if (end != textChunk.getValue().length()) {
-            end++;
-        }
-        TextChunk result = TextChunk.getTextChunk(textChunk, 0, end);
-        return ChunksMergeUtils.getTrimTextChunk(result);
-    }
-
-    private static TextChunk getTextChunkPartAfterBoundingBox(TextChunk textChunk, BoundingBox bbox) {
-        Integer start = textChunk.getSymbolStartIndexByCoordinate(bbox.getRightX());
-        if (start == null) {
-            return null;
-        }
-        TextChunk result = TextChunk.getTextChunk(textChunk, start, textChunk.getValue().length());
-        return ChunksMergeUtils.getTrimTextChunk(result);
-    }
-
     private static TextChunk getTextChunkPartForTableCell(TextChunk textChunk, TableBorderCell cell) {
-        return getTextChunkPartForRange(textChunk, cell.getLeftX(), cell.getRightX());
+        return TextChunkUtils.getTextChunkPartForRange(textChunk, cell.getLeftX(), cell.getRightX(), true);
     }
 
     public static TextChunk getTextChunkPartBeforeTable(TextChunk textChunk, TableBorder table) {
-        return getTextChunkPartBeforeBoundingBox(textChunk, table.getBoundingBox());
+        return TextChunkUtils.getTextChunkPartBeforeBoundingBox(textChunk, table.getBoundingBox());
     }
 
     public static TextChunk getTextChunkPartAfterTable(TextChunk textChunk, TableBorder table) {
-        return getTextChunkPartAfterBoundingBox(textChunk, table.getBoundingBox());
+        return TextChunkUtils.getTextChunkPartAfterBoundingBox(textChunk, table.getBoundingBox());
     }
 }
