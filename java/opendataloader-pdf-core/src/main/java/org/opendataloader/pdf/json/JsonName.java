@@ -50,6 +50,7 @@ public class JsonName {
     public static final String ROW_NUMBER = "row number";
     public static final String COLUMN_SPAN = "column span";
     public static final String ROW_SPAN = "row span";
+    public static final String IS_HEADER = "is_header";
     public static final String NUMBER_OF_ROWS = "number of rows";
     public static final String NUMBER_OF_COLUMNS = "number of columns";
     public static final String NUMBER_OF_PAGES = "number of pages";

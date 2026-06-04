@@ -40,6 +40,9 @@ public class TableCellSerializer extends StdSerializer<TableBorderCell> {
         jsonGenerator.writeNumberField(JsonName.COLUMN_NUMBER, cell.getColNumber() + 1);
         jsonGenerator.writeNumberField(JsonName.ROW_SPAN, cell.getRowSpan());
         jsonGenerator.writeNumberField(JsonName.COLUMN_SPAN, cell.getColSpan());
+        if (cell.getRowNumber() == 0) {
+            jsonGenerator.writeBooleanField(JsonName.IS_HEADER, true);
+        }
         jsonGenerator.writeArrayFieldStart(JsonName.KIDS);
         for (IObject content : cell.getContents()) {
             if (!(content instanceof LineArtChunk)) {
