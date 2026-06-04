@@ -24,6 +24,7 @@ import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -108,8 +109,8 @@ class TableStructureNormalizer {
     private static void addTextChunkToColumns(TextChunk textChunk, TableBorder tableBorder,
                                               List<ColumnSnapshot> columnSnapshots) {
         for (int columnNumber = 0; columnNumber < tableBorder.getNumberOfColumns(); columnNumber++) {
-            TextChunk columnTextChunk = TableBorderProcessor.getTextChunkPartForRange(textChunk,
-                tableBorder.getLeftX(columnNumber), tableBorder.getRightX(columnNumber));
+            TextChunk columnTextChunk = TextChunkUtils.getTextChunkPartForRange(textChunk,
+                tableBorder.getLeftX(columnNumber), tableBorder.getRightX(columnNumber), true);
             if (columnTextChunk != null && !columnTextChunk.isEmpty() && !columnTextChunk.isWhiteSpaceChunk()) {
                 columnSnapshots.get(columnNumber).addContent(columnTextChunk);
             }

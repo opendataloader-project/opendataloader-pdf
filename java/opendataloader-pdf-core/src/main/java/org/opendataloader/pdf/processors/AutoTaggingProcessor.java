@@ -32,6 +32,7 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.StreamInfo;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -982,7 +983,8 @@ public class AutoTaggingProcessor {
                 for (TextChunk textChunk : textLine.getTextChunks()) {
                     if (bBoxToAnnotation != null &&
                         (!isAnnotIntersectWithBoundingBox(bBoxToAnnotation.getKey(), textChunk.getBoundingBox()) ||
-                            TableBorderProcessor.getTextChunkPartBeforeBoundingBox(textChunk, bBoxToAnnotation.getKey()) != null)) {
+                            TextChunkUtils.getTextChunkPartForRange(textChunk, -Double.MAX_VALUE,
+                                bBoxToAnnotation.getKey().getLeftX(), false) != null)) {
                         createAnnotationStructElem(StaticResources.getDocument().getDocument(), cosObject,
                             bBoxToAnnotation.getValue(), streamInfos, textNode.getPageNumber());
                         annotationBBoxesMap.remove(bBoxToAnnotation.getKey());
@@ -1014,7 +1016,7 @@ public class AutoTaggingProcessor {
                                                                                   TextChunk textChunk,
                                                                                   SortedMap<BoundingBox, PDAnnotation> annots) {
         Map.Entry<BoundingBox, PDAnnotation> currentBBoxToAnnotation = bBoxToAnnotation;
-        double currentRightX = textChunk.getLeftX();
+        double currentRightX = -Double.MAX_VALUE;
         for (Map.Entry<BoundingBox, PDAnnotation> entry : annots.entrySet()) {
             // Reference equality is intentional: currentBBoxToAnnotation may have been
             // carried over from a previous TextChunk when the annotation spans multiple
@@ -1025,6 +1027,7 @@ public class AutoTaggingProcessor {
             // Processed annotations are removed from annotationBBoxesMap immediately after
             // createAnnotationStructElem, so they will never reappear in a subsequent
             // getAnnotationsByBBox call, making the identity check safe and unambiguous.
+            BoundingBox boundingBox = entry.getKey();
             if (currentBBoxToAnnotation == null || !Objects.equals(currentBBoxToAnnotation.getKey(), entry.getKey())) {
                 if (currentBBoxToAnnotation != null) {
                     createAnnotationStructElem(StaticResources.getDocument().getDocument(), cosObject,
@@ -1033,25 +1036,24 @@ public class AutoTaggingProcessor {
                     streamInfos.clear();
                     currentRightX = currentBBoxToAnnotation.getKey().getRightX();
                 }
-                BoundingBox boundingBox = entry.getKey();
-                TextChunk textChunkPart = TableBorderProcessor.getTextChunkPartForRange(textChunk,
-                    currentRightX, boundingBox.getLeftX());
+                TextChunk textChunkPart = TextChunkUtils.getTextChunkPartForRange(textChunk,
+                    currentRightX, boundingBox.getLeftX(), false);
                 if (textChunkPart != null) {
                     streamInfos.addAll(textChunkPart.getStreamInfos());
                 }
                 addMcidChildren(streamInfos, textChunk.getPageNumber(), cosObject);
                 streamInfos.clear();
-                textChunkPart = TableBorderProcessor.getTextChunkPartForRange(textChunk,
-                    boundingBox.getLeftX(), boundingBox.getRightX());
-                if (textChunkPart != null) {
-                    streamInfos.addAll(textChunkPart.getStreamInfos());
-                }
-                currentRightX = boundingBox.getRightX();
             }
+            TextChunk textChunkPart = TextChunkUtils.getTextChunkPartForRange(textChunk,
+                boundingBox.getLeftX(), boundingBox.getRightX(), false);
+            if (textChunkPart != null) {
+                streamInfos.addAll(textChunkPart.getStreamInfos());
+            }
+            currentRightX = boundingBox.getRightX();
             currentBBoxToAnnotation = entry;
         }
-        TextChunk textChunkPart = TableBorderProcessor.getTextChunkPartForRange(textChunk,
-            currentRightX, textChunk.getRightX());
+        TextChunk textChunkPart = TextChunkUtils.getTextChunkPartForRange(textChunk,
+            currentRightX, textChunk.getRightX(), false);
         if (textChunkPart != null) {
             createAnnotationStructElem(StaticResources.getDocument().getDocument(), cosObject,
                 currentBBoxToAnnotation.getValue(), streamInfos, textChunk.getPageNumber());
@@ -1084,7 +1086,8 @@ public class AutoTaggingProcessor {
     }
 
     private static boolean isAnnotIntersectWithBoundingBox(BoundingBox annotBoundingBox, BoundingBox boundingBox) {
-        return annotBoundingBox.getIntersectionPercent(boundingBox) > 0.5d;
+        return annotBoundingBox.getIntersectionPercent(boundingBox) > 0.5d ||
+            boundingBox.getIntersectionPercent(annotBoundingBox) > 0.5d;
     }
 
     private static void processImageNode(ImageChunk imageChunk, COSObject cosObject) {
