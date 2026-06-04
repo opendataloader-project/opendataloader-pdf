@@ -191,6 +191,52 @@ class HtmlGeneratorTest {
     }
 
     @Test
+    void testSpecialCharactersAreHtmlEscaped() {
+        // PDF text containing HTML-special characters must be escaped so the
+        // generated HTML stays well-formed. Without escaping, '<tag>' would be
+        // interpreted as markup (and dropped by renderers) and a bare '&' would
+        // form an invalid entity reference, corrupting the extracted text.
+        TextChunk chunk = new TextChunk(new BoundingBox(0, 0, 10, 20, 30),
+            "a <b> & c", 12, 100.0);
+        chunk.setFontWeight(400.0);
+        TextLine line = new TextLine(chunk);
+        StringBuilder sb = new StringBuilder();
+
+        HtmlGenerator.getTextFromLineForHTML(line, sb);
+
+        assertEquals("a &lt;b&gt; &amp; c", sb.toString());
+    }
+
+    @Test
+    void testSpecialCharactersAreEscapedInsideStyledSpan() {
+        // The escaping must apply to the chunk text only, not to the surrounding
+        // <span> markup that carries the style attribute.
+        TextChunk chunk = createChunk("x < y & z", false, true, false, 400.0, 12.0);
+        TextLine line = new TextLine(chunk);
+        StringBuilder sb = new StringBuilder();
+
+        HtmlGenerator.getTextFromLineForHTML(line, sb);
+
+        assertEquals("<span style=\"font-style: italic;\">x &lt; y &amp; z</span>",
+            sb.toString());
+    }
+
+    @Test
+    void testAmpersandIsEscapedExactlyOnce() {
+        // '&' must be escaped first; otherwise already-escaped sequences such as
+        // an explicit '&lt;' in the source would be double-escaped to '&amp;lt;'.
+        TextChunk chunk = new TextChunk(new BoundingBox(0, 0, 10, 20, 30),
+            "&lt; & &amp;", 12, 100.0);
+        chunk.setFontWeight(400.0);
+        TextLine line = new TextLine(chunk);
+        StringBuilder sb = new StringBuilder();
+
+        HtmlGenerator.getTextFromLineForHTML(line, sb);
+
+        assertEquals("&amp;lt; &amp; &amp;amp;", sb.toString());
+    }
+
+    @Test
     void testStyleOrderIsStable() {
         TextChunk chunk = new TextChunk(new BoundingBox(0,0,10,20,30), "order", 12, 100.0);
         chunk.setIsStrikethroughText();

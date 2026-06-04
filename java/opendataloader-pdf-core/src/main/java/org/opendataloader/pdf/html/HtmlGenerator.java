@@ -528,12 +528,37 @@ public class HtmlGenerator implements Closeable {
             if (!style.isEmpty()) {
                 String styleAttribute = String.format(HtmlSyntax.HTML_STYLE_ATTRIBUTE, style.trim());
                 stringBuilder.append(String.format(HtmlSyntax.HTML_SPAN_START_TAG, styleAttribute));
-                stringBuilder.append(chunk.getValue());
+                stringBuilder.append(escapeHtmlText(chunk.getValue()));
                 stringBuilder.append(HtmlSyntax.HTML_SPAN_CLOSE_TAG);
             } else {
-                stringBuilder.append(chunk.getValue());
+                stringBuilder.append(escapeHtmlText(chunk.getValue()));
             }
         }
+    }
+
+    /**
+     * Escapes the HTML special characters that are unsafe in element text content.
+     * Without this, PDF text containing {@code &}, {@code <}, or {@code >} would be
+     * emitted verbatim, producing malformed HTML: {@code <...>} is parsed as markup
+     * (and dropped by renderers) and a bare {@code &} starts an invalid entity
+     * reference, corrupting the extracted text.
+     *
+     * <p>{@code &} is replaced first so that the entities introduced for {@code <}
+     * and {@code >} are not double-escaped. Quotes are intentionally left untouched:
+     * they are legal in element text and only need escaping inside attribute values,
+     * which are handled separately by {@link #escapeHtmlAttribute(String)}.
+     *
+     * @param value the text content to escape
+     * @return the escaped text, or the input unchanged if it is null
+     */
+    static String escapeHtmlText(String value) {
+        if (value == null) {
+            return null;
+        }
+        return value
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;");
     }
 
     private static String getTextStyle(TextChunk chunk) {
