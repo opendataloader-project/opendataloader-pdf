@@ -19,10 +19,9 @@ import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
 import org.verapdf.wcag.algorithms.entities.content.LineChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
-import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
+import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Detects strikethrough text by finding horizontal line or line-art rules that
@@ -52,42 +51,27 @@ public class StrikethroughProcessor {
      * TextChunk isStrikethroughText field to true.
      *
      * @param pageContents the list of content objects for a page
+     * @param pageNumber the number of a page
      * @return the page contents (modified in place)
      */
-    public static List<IObject> processStrikethroughs(List<IObject> pageContents) {
-        return processStrikethroughs(pageContents, true, true);
-    }
-
-    /**
-     * Detects only line-art strikethroughs. This is used before table
-     * normalization because table processing can consume LineArtChunks.
-     *
-     * @param pageContents the list of content objects for a page
-     * @return the page contents (modified in place)
-     */
-    public static List<IObject> processLineArtStrikethroughs(List<IObject> pageContents) {
-        return processStrikethroughs(pageContents, false, true);
-    }
-
-    // Shared implementation lets the normal post-table pass inspect both sources,
-    // while the pre-table pass can inspect only raw LineArtChunks before table
-    // normalization has a chance to consume them.
-    private static List<IObject> processStrikethroughs(List<IObject> pageContents, boolean includeLineChunks,
-                                                       boolean includeLineArtChunks) {
+    private static List<IObject> processStrikethroughs(List<IObject> pageContents, int pageNumber) {
         if (pageContents == null) {
             return null;
         }
-
+        SortedSet<LineChunk> horizontalLines = StaticContainers.getLinesCollection() != null ?
+            StaticContainers.getLinesCollection().getHorizontalLines(pageNumber) : Collections.emptySortedSet();
         List<HorizontalRuleCandidate> horizontalRules = new ArrayList<>();
+      
+        for (LineChunk lineChunk : horizontalLines) {
+             HorizontalRuleCandidate rule = HorizontalRuleCandidate.fromLineChunk(lineChunk);
+            if (rule != null) {
+                horizontalRules.add(rule);
+            }
+        }
+      
         List<TextChunk> textChunks = new ArrayList<>();
-
         for (IObject content : pageContents) {
-            if (includeLineChunks && content instanceof LineChunk) {
-                HorizontalRuleCandidate rule = HorizontalRuleCandidate.fromLineChunk((LineChunk) content);
-                if (rule != null) {
-                    horizontalRules.add(rule);
-                }
-            } else if (includeLineArtChunks && content instanceof LineArtChunk) {
+            if (content instanceof LineArtChunk) {
                 HorizontalRuleCandidate rule = HorizontalRuleCandidate.fromLineArtChunk((LineArtChunk) content);
                 if (rule != null) {
                     horizontalRules.add(rule);

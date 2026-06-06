@@ -49,9 +49,17 @@ public class PictureSerializer extends StdSerializer<SemanticPicture> {
         jsonGenerator.writeStartObject();
         SerializerUtil.writeEssentialInfo(jsonGenerator, picture, JsonName.IMAGE_CHUNK_TYPE);
 
-        // Write description if available
-        if (picture.hasDescription()) {
-            jsonGenerator.writeStringField(JsonName.DESCRIPTION, picture.sanitizeDescription());
+        // alt / alt_source — same policy as ImageSerializer. A SemanticPicture
+        // only reaches this serializer when enrichBackendResults could not
+        // match it to a Java ImageChunk, i.e. the backend (always AI for
+        // SemanticPicture today) is the only source of alt text. Drop the
+        // legacy `description` field in favor of the unified `alt` schema.
+        String alt = picture.hasDescription() ? picture.sanitizeDescription() : "";
+        if (!alt.isEmpty()) {
+            jsonGenerator.writeStringField(JsonName.ALT, alt);
+            jsonGenerator.writeStringField(JsonName.ALT_SOURCE, "ai-generated");
+        } else {
+            jsonGenerator.writeStringField(JsonName.ALT_SOURCE, "missing");
         }
 
         if (ImagesUtils.isImageFileExists(absolutePath)) {

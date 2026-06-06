@@ -24,11 +24,7 @@ import org.opendataloader.pdf.utils.Base64ImageUtils;
 import org.opendataloader.pdf.utils.GeneratorUtils;
 import org.opendataloader.pdf.utils.ImagesUtils;
 import org.opendataloader.pdf.utils.OutputType;
-import org.verapdf.wcag.algorithms.entities.IObject;
-import org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter;
-import org.verapdf.wcag.algorithms.entities.SemanticHeading;
-import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
-import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
+import org.verapdf.wcag.algorithms.entities.*;
 import org.verapdf.wcag.algorithms.entities.content.*;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
 import org.verapdf.wcag.algorithms.entities.lists.PDFList;
@@ -135,6 +131,7 @@ public class MarkdownGenerator implements Closeable {
             content instanceof SemanticPicture ||
             content instanceof TableBorder ||
             content instanceof PDFList ||
+            content instanceof SemanticTOC ||
             (content instanceof ImageChunk && isImageSupported);
     }
 
@@ -162,6 +159,8 @@ public class MarkdownGenerator implements Closeable {
             writeTable((TableBorder) object);
         } else if (object instanceof PDFList) {
             writeList((PDFList) object);
+        } else if (object instanceof SemanticTOC) {
+            writeTOC((SemanticTOC) object);
         }
     }
 
@@ -215,9 +214,13 @@ public class MarkdownGenerator implements Closeable {
                     imageSource = formatMarkdownLinkDestination(relativePath);
                 }
                 if (imageSource != null) {
+                    // No "image N" fallback: PDF/UA forbids false alternatives,
+                    // and an empty Markdown alt lets screen readers skip the
+                    // image as a decorative element rather than reading a
+                    // meaningless synthetic label.
                     String altText = (image instanceof EnrichedImageChunk && ((EnrichedImageChunk) image).hasDescription())
                             ? ((EnrichedImageChunk) image).sanitizeDescription()
-                            : "image " + image.getIndex();
+                            : "";
                     String imageString = String.format(MarkdownSyntax.IMAGE_FORMAT, altText, imageSource);
                     markdownWriter.write(getCorrectMarkdownString(imageString));
                 }
@@ -251,7 +254,7 @@ public class MarkdownGenerator implements Closeable {
                 if (imageSource != null) {
                     String altText = picture.hasDescription()
                             ? picture.sanitizeDescription()
-                            : "image " + picture.getPictureIndex();
+                            : "";
                     String imageString = String.format(MarkdownSyntax.IMAGE_FORMAT, altText, imageSource);
                     markdownWriter.write(getCorrectMarkdownString(imageString));
                 }
@@ -296,6 +299,24 @@ public class MarkdownGenerator implements Closeable {
             if (!itemContents.isEmpty()) {
                 writeLineBreak();
                 writeContents(itemContents, false);
+            }
+        }
+    }
+
+    protected void writeTOC(SemanticTOC toc) throws IOException {
+        for (IObject item : toc.getTOCItems()) {
+            if (item instanceof SemanticTOC) {
+                writeTOC((SemanticTOC)item);
+            } else if (item instanceof SemanticTOCI) {
+                SemanticTOCI tocItem = (SemanticTOCI)item;
+                markdownWriter.write(getCorrectMarkdownString(GeneratorUtils.getTextFromLines(tocItem.getLines(), OutputType.MD)));
+                writeLineBreak();
+
+                List<IObject> itemContents = tocItem.getContents();
+                if (!itemContents.isEmpty()) {
+                    writeLineBreak();
+                    writeContents(itemContents, false);
+                }
             }
         }
     }

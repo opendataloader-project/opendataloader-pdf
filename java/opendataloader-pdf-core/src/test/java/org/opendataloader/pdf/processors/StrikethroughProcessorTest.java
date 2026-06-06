@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
 import org.verapdf.wcag.algorithms.entities.content.LineChunk;
+import org.verapdf.wcag.algorithms.entities.content.LinesCollection;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
@@ -35,6 +36,7 @@ public class StrikethroughProcessorTest {
         StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
         StaticContainers.setIsDataLoader(true);
         StaticContainers.setTableBordersCollection(null);
+        StaticContainers.setLinesCollection(new LinesCollection());
     }
 
     @Test
@@ -49,11 +51,47 @@ public class StrikethroughProcessorTest {
         // Horizontal line through the center (y=110), matching the text width
         LineChunk line = LineChunk.createLineChunk(0, 10.0, 110.0, 60.0, 110.0, 1.0,
             LineChunk.BUTT_CAP_STYLE);
-        contents.add(line);
+        StaticContainers.getLinesCollection().getHorizontalLines(0).add(line);
 
-        StrikethroughProcessor.processStrikethroughs(contents);
+        StrikethroughProcessor.processStrikethroughs(contents, 0);
 
         Assertions.assertTrue(textChunk.getIsStrikethroughText(), "Text chunk should have isStrikethroughText set to true");
+    }
+
+    @Test
+    public void testStrikethroughDetectedForSecondPage() {
+        List<IObject> contents = new ArrayList<>();
+
+        // Text chunk: "apple" at y=[100, 120], x=[10, 60]
+        TextChunk textChunk = new TextChunk(new BoundingBox(1, 10.0, 100.0, 60.0, 120.0),
+            "apple", 12, 100.0);
+        contents.add(textChunk);
+
+        // Horizontal line through the center (y=110), matching the text width
+        LineChunk line = LineChunk.createLineChunk(1, 10.0, 110.0, 60.0, 110.0, 1.0,
+            LineChunk.BUTT_CAP_STYLE);
+        StaticContainers.getLinesCollection().getHorizontalLines(1).add(line);
+
+        StrikethroughProcessor.processStrikethroughs(contents, 1);
+
+        Assertions.assertTrue(textChunk.getIsStrikethroughText(), "Text chunk should have isStrikethroughText set to true");
+    }
+
+    @Test
+    public void testLineFromDifferentPageIgnored() {
+        List<IObject> contents = new ArrayList<>();
+        TextChunk textChunk = new TextChunk(new BoundingBox(0, 10.0, 100.0, 60.0, 120.0),
+            "apple", 12, 100.0);
+        contents.add(textChunk);
+
+        LineChunk line = LineChunk.createLineChunk(0, 10.0, 110.0, 60.0, 110.0, 1.0,
+            LineChunk.BUTT_CAP_STYLE);
+        StaticContainers.getLinesCollection().getHorizontalLines(1).add(line);
+
+        StrikethroughProcessor.processStrikethroughs(contents, 0);
+
+        Assertions.assertFalse(textChunk.getIsStrikethroughText(),
+            "Line from another page must not affect current page processing");
     }
 
     @Test
@@ -67,9 +105,9 @@ public class StrikethroughProcessorTest {
         // Horizontal line near the bottom (y=101 — underline position)
         LineChunk line = LineChunk.createLineChunk(0, 10.0, 101.0, 60.0, 101.0, 1.0,
             LineChunk.BUTT_CAP_STYLE);
-        contents.add(line);
+        StaticContainers.getLinesCollection().getHorizontalLines(0).add(line);
 
-        StrikethroughProcessor.processStrikethroughs(contents);
+        StrikethroughProcessor.processStrikethroughs(contents, 0);
 
         Assertions.assertFalse(textChunk.getIsStrikethroughText(), "Underline should not be detected as strikethrough");
     }
@@ -85,9 +123,9 @@ public class StrikethroughProcessorTest {
         // Line above the text (y=130)
         LineChunk line = LineChunk.createLineChunk(0, 10.0, 130.0, 60.0, 130.0, 1.0,
             LineChunk.BUTT_CAP_STYLE);
-        contents.add(line);
+        StaticContainers.getLinesCollection().getHorizontalLines(0).add(line);
 
-        StrikethroughProcessor.processStrikethroughs(contents);
+        StrikethroughProcessor.processStrikethroughs(contents, 0);
 
         Assertions.assertFalse(textChunk.getIsStrikethroughText(), "Line above text should not be detected as strikethrough");
     }
@@ -103,9 +141,9 @@ public class StrikethroughProcessorTest {
         // Line only covers half the text width: x=[10, 30]
         LineChunk line = LineChunk.createLineChunk(0, 10.0, 110.0, 30.0, 110.0, 1.0,
             LineChunk.BUTT_CAP_STYLE);
-        contents.add(line);
+        StaticContainers.getLinesCollection().getHorizontalLines(0).add(line);
 
-        StrikethroughProcessor.processStrikethroughs(contents);
+        StrikethroughProcessor.processStrikethroughs(contents, 0);
 
         Assertions.assertFalse(textChunk.getIsStrikethroughText(), "Partial horizontal overlap should not be detected as strikethrough");
     }
@@ -118,7 +156,7 @@ public class StrikethroughProcessorTest {
             "hello", 12, 100.0);
         contents.add(textChunk);
 
-        StrikethroughProcessor.processStrikethroughs(contents);
+        StrikethroughProcessor.processStrikethroughs(contents, 0);
 
         Assertions.assertFalse(textChunk.getIsStrikethroughText(), "Text should remain unchanged when no lines exist");
     }
@@ -134,9 +172,9 @@ public class StrikethroughProcessorTest {
         // Vertical line — should be ignored
         LineChunk line = LineChunk.createLineChunk(0, 35.0, 100.0, 35.0, 120.0, 1.0,
             LineChunk.BUTT_CAP_STYLE);
-        contents.add(line);
+        StaticContainers.getLinesCollection().getHorizontalLines(0).add(line);
 
-        StrikethroughProcessor.processStrikethroughs(contents);
+        StrikethroughProcessor.processStrikethroughs(contents, 0);
 
         Assertions.assertFalse(textChunk.getIsStrikethroughText(), "Vertical line should not trigger strikethrough");
     }
@@ -156,9 +194,9 @@ public class StrikethroughProcessorTest {
         // A thin line spanning multiple chunks on one visual text line.
         LineChunk line = LineChunk.createLineChunk(0, 10.0, 110.0, 130.0, 110.0, 1.0,
             LineChunk.BUTT_CAP_STYLE);
-        contents.add(line);
+        StaticContainers.getLinesCollection().getHorizontalLines(0).add(line);
 
-        StrikethroughProcessor.processStrikethroughs(contents);
+        StrikethroughProcessor.processStrikethroughs(contents, 0);
 
         Assertions.assertTrue(chunk1.getIsStrikethroughText(),
             "Thin line matching multiple chunks should be detected");
@@ -200,9 +238,9 @@ public class StrikethroughProcessorTest {
         // Line: x=[10, 200] (width=190, much wider than text) — structural separator
         LineChunk line = LineChunk.createLineChunk(0, 10.0, 110.0, 200.0, 110.0, 1.0,
             LineChunk.BUTT_CAP_STYLE);
-        contents.add(line);
+        StaticContainers.getLinesCollection().getHorizontalLines(0).add(line);
 
-        StrikethroughProcessor.processStrikethroughs(contents);
+        StrikethroughProcessor.processStrikethroughs(contents, 0);
 
         Assertions.assertFalse(textChunk.getIsStrikethroughText(), "Line much wider than text should be rejected as structural separator");
     }
@@ -220,9 +258,9 @@ public class StrikethroughProcessorTest {
         // not a strikethrough.
         LineChunk line = LineChunk.createLineChunk(0, 10.0, 110.0, 60.0, 110.0, 30.0,
             LineChunk.BUTT_CAP_STYLE);
-        contents.add(line);
+        StaticContainers.getLinesCollection().getHorizontalLines(0).add(line);
 
-        StrikethroughProcessor.processStrikethroughs(contents);
+        StrikethroughProcessor.processStrikethroughs(contents, 0);
 
         Assertions.assertFalse(textChunk.getIsStrikethroughText(), "Thick line should be rejected");
     }

@@ -32,6 +32,7 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.StreamInfo;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -63,6 +64,11 @@ public class AutoTaggingProcessor {
     private static final int MAX_TOKENS_PER_STREAM = 100_000;
     // imageChunkCounter is per-call; tracked via the figureObject index across a document
     private static int imageChunkFigureCounter = 0;
+    // Counter for unique /ID strings on Note / FENote struct elements.
+    // PDF/UA-1 §7.9.1 and PDF 2.0 14.8.4.6 require every Note to carry
+    // an /ID entry that is unique within the document — veraPDF reports
+    // a hard failure when missing. Reset per document in tagDocument().
+    private static int footnoteCounter = 0;
 
     /**
      * Tag a PDF document in-memory without saving to disk.
@@ -81,6 +87,7 @@ public class AutoTaggingProcessor {
         annotationBBoxesMap.clear();
         currentStructParent = 0;
         imageChunkFigureCounter = 0;
+        footnoteCounter = 0;
         isPDF2_0 = pdfVersion != null ? pdfVersion == 2.0F : document.getVersion() == 2.0F;
         COSDocument cosDocument = document.getDocument();
         PDCatalog catalog = document.getCatalog();
@@ -679,6 +686,8 @@ public class AutoTaggingProcessor {
             createParagraphStructElem((SemanticParagraph) object, parentStructElem, cosDocument);
         } else if (object instanceof PDFList) {
             createListStructElem((PDFList) object, parentStructElem, cosDocument);
+        } else if (object instanceof SemanticTOC) {
+            createTOCStructElem((SemanticTOC) object, parentStructElem, cosDocument);
         } else if (object instanceof TableBorder) {
             TableBorder table = (TableBorder) object;
             if (table.isTextBlock()) {
@@ -736,6 +745,20 @@ public class AutoTaggingProcessor {
         COSObject noteObject = addStructElement(parent, cosDocument,
                 usePdf2Footnote ? TaggedPDFConstants.FENOTE : TaggedPDFConstants.NOTE,
                 footnote.getPageNumber());
+        // PDF/UA-1 §7.9.1 and PDF 2.0 14.8.4.6 require Note / FENote struct
+        // elements to carry an /ID entry that is unique within the document.
+        // The value is opaque to veraPDF — any non-empty unique string works.
+        // We use a per-document counter prefixed with "note" so the IDs are
+        // human-readable in PDF dumps. footnoteCounter is reset at the top
+        // of tagDocument(), and tagDocument is synchronized, so the counter
+        // is safe under repeated calls. US_ASCII is explicit so the byte
+        // representation does not depend on the JVM default charset — the
+        // string is pure ASCII so the choice is functionally a no-op, but
+        // it documents intent and silences SpotBugs DM_DEFAULT_ENCODING.
+        footnoteCounter++;
+        String noteId = "note-" + footnoteCounter;
+        noteObject.setKey(ASAtom.ID,
+                COSString.construct(noteId.getBytes(java.nio.charset.StandardCharsets.US_ASCII)));
         if (usePdf2Footnote) {
             noteObject.setKey(ASAtom.NS, pdf2_0Namespace);
             noteObject.setKey(ASAtom.NOTE_TYPE, COSName.construct(ASAtom.getASAtom("Footnote")));
@@ -756,8 +779,16 @@ public class AutoTaggingProcessor {
         COSObject figureObject = addStructElement(parent, cosDocument, TaggedPDFConstants.FIGURE, image.getPageNumber());
         double[] bbox = {image.getLeftX(), image.getBottomY(), image.getRightX(), image.getTopY()};
         addAttributeToStructElem(figureObject, ASAtom.LAYOUT, ASAtom.BBOX, COSArray.construct(4, bbox));
-        //PDF/UA-1 rule 7.3-1 / PDF/UA-2 rule 8.2.5.28.2-1
-        // Use enriched description if available, otherwise fallback "image N"
+        // PDF/UA-1 rule 7.3-1 / PDF/UA-2 rule 8.2.5.28.2-1: every Figure must
+        // carry a non-empty /Alt. JSON/HTML/Markdown outputs follow the
+        // alt/alt_source schema (alt absent ↔ alt_source=missing), but the
+        // PDF struct tree cannot leave /Alt empty without failing verification.
+        // The "image N" synthetic fallback below is the lesser evil: it
+        // satisfies veraPDF but is a known false alternative for AT users.
+        // TODO(a11y): when alt is missing, re-tag as /Artifact (decorative)
+        // rather than emitting synthetic text. Tracked as a follow-up to the
+        // alt/alt_source schema unification; file an issue before removing
+        // this comment.
         String altText = null;
         if (image instanceof EnrichedImageChunk) {
             altText = ((EnrichedImageChunk) image).sanitizeDescription();
@@ -829,6 +860,24 @@ public class AutoTaggingProcessor {
             addKids(listItem.getContents(), lBodyObject, cosDocument);
         }
         addCaptionIfPresent(list, listObject, cosDocument);
+    }
+
+    private static void createTOCStructElem(SemanticTOC toc, COSObject parent, COSDocument cosDocument) {
+        COSObject tocObject = addStructElement(parent, cosDocument, TaggedPDFConstants.TOC, toc.getPageNumber());
+        for (IObject child : toc.getTOCItems()) {
+            if (child instanceof SemanticTOC) {
+                createTOCStructElem((SemanticTOC)child, tocObject, cosDocument);
+            } else if (child instanceof SemanticTOCI) {
+                SemanticTOCI tocItem = ((SemanticTOCI)child);
+                COSObject tocItemObject = addStructElement(tocObject, cosDocument, TaggedPDFConstants.TOCI, child.getPageNumber());
+                SemanticTextNode tocItemTextNode = new SemanticTextNode();
+                for (TextLine line : tocItem.getLines()) {
+                    tocItemTextNode.add(line);
+                }
+                processTextNode(tocItemTextNode, tocItemObject);
+                addKids(tocItem.getContents(), tocItemObject, cosDocument);
+            }
+        }
     }
 
     private static void createTableStructElem(TableBorder table, COSObject parent, COSDocument cosDocument) {
@@ -927,50 +976,140 @@ public class AutoTaggingProcessor {
     }
 
     private static void processTextNode(SemanticTextNode textNode, COSObject cosObject) {
+        Map.Entry<BoundingBox, PDAnnotation> bBoxToAnnotation = null;
         List<StreamInfo> streamInfos = new ArrayList<>();
         for (TextColumn textColumn : textNode.getColumns()) {
             for (TextLine textLine : textColumn.getLines()) {
                 for (TextChunk textChunk : textLine.getTextChunks()) {
-                    Map.Entry<BoundingBox, PDAnnotation> entry = getAnnotationByBBox(textChunk.getBoundingBox());
-                    if (entry != null) {
-                        annotationBBoxesMap.remove(entry.getKey());
-                        if (!streamInfos.isEmpty()) {
-                            addMcidChildren(streamInfos, textNode.getPageNumber(), cosObject);
-                            streamInfos.clear();
-                        }
-                        createAnnotationStructElem(StaticResources.getDocument().getDocument(), cosObject, entry.getValue(),
-                            textChunk.getStreamInfos(), textNode.getPageNumber());
+                    if (bBoxToAnnotation != null &&
+                        (!isAnnotIntersectWithBoundingBox(bBoxToAnnotation.getKey(), textChunk.getBoundingBox()) ||
+                            TextChunkUtils.getTextChunkPartForRange(textChunk, -Double.MAX_VALUE,
+                                bBoxToAnnotation.getKey().getLeftX(), false) != null)) {
+                        createAnnotationStructElem(StaticResources.getDocument().getDocument(), cosObject,
+                            bBoxToAnnotation.getValue(), streamInfos, textNode.getPageNumber());
+                        annotationBBoxesMap.remove(bBoxToAnnotation.getKey());
+                        streamInfos.clear();
+                        bBoxToAnnotation = null;
+                    }
+                    SortedMap<BoundingBox, PDAnnotation> annots = getAnnotationsByBBox(textChunk.getBoundingBox());
+                    if (!annots.isEmpty()) {
+                        bBoxToAnnotation = processAnnotsForTextChunk(cosObject, bBoxToAnnotation, streamInfos,
+                            textChunk, annots);
                     } else {
                         streamInfos.addAll(textChunk.getStreamInfos());
                     }
                 }
             }
         }
-        addMcidChildren(streamInfos, textNode.getPageNumber(), cosObject);
+        if (bBoxToAnnotation != null) {
+            createAnnotationStructElem(StaticResources.getDocument().getDocument(), cosObject, bBoxToAnnotation.getValue(),
+                streamInfos, textNode.getPageNumber());
+            annotationBBoxesMap.remove(bBoxToAnnotation.getKey());
+        } else {
+            addMcidChildren(streamInfos, textNode.getPageNumber(), cosObject);
+        }
+    }
+
+    private static Map.Entry<BoundingBox, PDAnnotation> processAnnotsForTextChunk(COSObject cosObject,
+                                                                                  Map.Entry<BoundingBox, PDAnnotation> bBoxToAnnotation,
+                                                                                  List<StreamInfo> streamInfos,
+                                                                                  TextChunk textChunk,
+                                                                                  SortedMap<BoundingBox, PDAnnotation> annots) {
+        Map.Entry<BoundingBox, PDAnnotation> currentBBoxToAnnotation = bBoxToAnnotation;
+        double currentRightX = -Double.MAX_VALUE;
+        for (Map.Entry<BoundingBox, PDAnnotation> entry : annots.entrySet()) {
+            // Reference equality is intentional: currentBBoxToAnnotation may have been
+            // carried over from a previous TextChunk when the annotation spans multiple
+            // chunks. 'entry' comes from the freshly built 'annots' map (ordered by left X)
+            // for the current chunk. If both references point to the same Map.Entry object,
+            // we are still accumulating stream infos inside the annotation region that was
+            // started in a prior iteration and should not flush it yet.
+            // Processed annotations are removed from annotationBBoxesMap immediately after
+            // createAnnotationStructElem, so they will never reappear in a subsequent
+            // getAnnotationsByBBox call, making the identity check safe and unambiguous.
+            BoundingBox boundingBox = entry.getKey();
+            if (currentBBoxToAnnotation == null || !Objects.equals(currentBBoxToAnnotation.getKey(), entry.getKey())) {
+                if (currentBBoxToAnnotation != null) {
+                    createAnnotationStructElem(StaticResources.getDocument().getDocument(), cosObject,
+                        currentBBoxToAnnotation.getValue(), streamInfos, textChunk.getPageNumber());
+                    annotationBBoxesMap.remove(currentBBoxToAnnotation.getKey());
+                    streamInfos.clear();
+                    currentRightX = currentBBoxToAnnotation.getKey().getRightX();
+                }
+                TextChunk textChunkPart = TextChunkUtils.getTextChunkPartForRange(textChunk,
+                    currentRightX, boundingBox.getLeftX(), false);
+                if (textChunkPart != null) {
+                    streamInfos.addAll(textChunkPart.getStreamInfos());
+                }
+                addMcidChildren(streamInfos, textChunk.getPageNumber(), cosObject);
+                streamInfos.clear();
+            }
+            TextChunk textChunkPart = TextChunkUtils.getTextChunkPartForRange(textChunk,
+                boundingBox.getLeftX(), boundingBox.getRightX(), false);
+            if (textChunkPart != null) {
+                streamInfos.addAll(textChunkPart.getStreamInfos());
+            }
+            currentRightX = boundingBox.getRightX();
+            currentBBoxToAnnotation = entry;
+        }
+        TextChunk textChunkPart = TextChunkUtils.getTextChunkPartForRange(textChunk,
+            currentRightX, textChunk.getRightX(), false);
+        if (textChunkPart != null) {
+            createAnnotationStructElem(StaticResources.getDocument().getDocument(), cosObject,
+                currentBBoxToAnnotation.getValue(), streamInfos, textChunk.getPageNumber());
+            annotationBBoxesMap.remove(currentBBoxToAnnotation.getKey());
+            streamInfos.clear();
+            streamInfos.addAll(textChunkPart.getStreamInfos());
+            currentBBoxToAnnotation = null;
+        }
+        return currentBBoxToAnnotation;
     }
 
     private static Map.Entry<BoundingBox, PDAnnotation> getAnnotationByBBox(BoundingBox boundingBox) {
         for (Map.Entry<BoundingBox, PDAnnotation> entry : annotationBBoxesMap.entrySet()) {
-            if (entry.getKey().getIntersectionPercent(boundingBox) > 0.5d) {
+            if (isAnnotIntersectWithBoundingBox(entry.getKey(), boundingBox)) {
                 return entry;
             }
         }
         return null;
     }
 
+    private static SortedMap<BoundingBox, PDAnnotation> getAnnotationsByBBox(BoundingBox boundingBox) {
+        SortedMap<BoundingBox, PDAnnotation> result = new TreeMap<>(
+            Comparator.comparingDouble((BoundingBox b) -> b.getLeftX()).thenComparingInt(BoundingBox::hashCode));
+        for (Map.Entry<BoundingBox, PDAnnotation> entry : annotationBBoxesMap.entrySet()) {
+            if (isAnnotIntersectWithBoundingBox(entry.getKey(), boundingBox)) {
+                result.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return result;
+    }
+
+    private static boolean isAnnotIntersectWithBoundingBox(BoundingBox annotBoundingBox, BoundingBox boundingBox) {
+        return annotBoundingBox.getIntersectionPercent(boundingBox) > 0.5d ||
+            boundingBox.getIntersectionPercent(annotBoundingBox) > 0.5d;
+    }
+
     private static void processImageNode(ImageChunk imageChunk, COSObject cosObject) {
-        addMcidChildren(imageChunk.getStreamInfos(), imageChunk.getPageNumber(), cosObject);
+        Map.Entry<BoundingBox, PDAnnotation> entry = getAnnotationByBBox(imageChunk.getBoundingBox());
+        if (entry != null) {
+            annotationBBoxesMap.remove(entry.getKey());
+            createAnnotationStructElem(StaticResources.getDocument().getDocument(), cosObject, entry.getValue(),
+                imageChunk.getStreamInfos(), imageChunk.getPageNumber());
+        } else {
+            addMcidChildren(imageChunk.getStreamInfos(), imageChunk.getPageNumber(), cosObject);
+        }
     }
 
     private static void addMcidChildren(List<StreamInfo> streamInfos, Integer pageNumber, COSObject parentStructElement) {
+        if (streamInfos.isEmpty()) {
+            return;
+        }
         COSObject kids = parentStructElement.getKey(ASAtom.K);
         if (kids.getType() != COSObjType.COS_ARRAY) {
             COSObject array = COSArray.construct();
             parentStructElement.setKey(ASAtom.K, array);
             kids = array;
-        }
-        if (streamInfos.isEmpty()) {
-            return;
         }
         List<StreamInfo> streamInfoList = getMergedStreamInfos(streamInfos);
         for (StreamInfo streamInfo : streamInfoList) {
