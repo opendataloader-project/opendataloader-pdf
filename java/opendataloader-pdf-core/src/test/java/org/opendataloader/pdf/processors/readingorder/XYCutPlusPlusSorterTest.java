@@ -911,4 +911,32 @@ class XYCutPlusPlusSorterTest {
             assertEquals(17, result.size());  // 15 grid + 2 header/footer
         });
     }
+
+    @Test
+    void sort_tocPageLayout_rowByRow() {
+        List<IObject> objects = new ArrayList<>();
+        // Row 1
+        objects.add(createTextLine(50, 500, 150, 490, "Chapter 1"));
+        objects.add(createTextLine(450, 500, 470, 490, "1"));
+        // Row 2
+        objects.add(createTextLine(50, 485, 150, 475, "Chapter 2"));
+        objects.add(createTextLine(450, 485, 470, 475, "10"));
+        // Row 3
+        objects.add(createTextLine(50, 470, 150, 460, "Chapter 3"));
+        objects.add(createTextLine(450, 470, 470, 460, "20"));
+        // Row 4
+        objects.add(createTextLine(50, 455, 150, 445, "Chapter 4"));
+        objects.add(createTextLine(450, 455, 470, 445, "30"));
+
+        List<IObject> sorted = XYCutPlusPlusSorter.sort(objects);
+        assertEquals(8, sorted.size());
+        assertEquals("Chapter 1", getText(sorted.get(0)));
+        assertEquals("1", getText(sorted.get(1)));
+        assertEquals("Chapter 2", getText(sorted.get(2)));
+        assertEquals("10", getText(sorted.get(3)));
+        assertEquals("Chapter 3", getText(sorted.get(4)));
+        assertEquals("20", getText(sorted.get(5)));
+        assertEquals("Chapter 4", getText(sorted.get(6)));
+        assertEquals("30", getText(sorted.get(7)));
+    }
 }

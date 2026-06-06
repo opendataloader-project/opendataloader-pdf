@@ -43,4 +43,20 @@ public class ParagraphProcessorTest {
         Assertions.assertEquals(1, contents.size());
         Assertions.assertTrue(contents.get(0) instanceof SemanticParagraph);
     }
+
+    @Test
+    public void testProcessParagraphsWithDifferentFontWeights() {
+        StaticContainers.setIsDataLoader(true);
+        List<IObject> contents = new ArrayList<>();
+        TextChunk chunk1 = new TextChunk(new BoundingBox(1, 10.0, 30.0, 20.0, 40.0), "Heading", 10, 30.0);
+        chunk1.setFontWeight(700);
+        contents.add(new TextLine(chunk1));
+
+        TextChunk chunk2 = new TextChunk(new BoundingBox(1, 10.0, 20.0, 20.0, 30.0), "Body", 10, 20.0);
+        chunk2.setFontWeight(400);
+        contents.add(new TextLine(chunk2));
+
+        contents = ParagraphProcessor.processParagraphs(contents);
+        Assertions.assertEquals(2, contents.size());
+    }
 }
