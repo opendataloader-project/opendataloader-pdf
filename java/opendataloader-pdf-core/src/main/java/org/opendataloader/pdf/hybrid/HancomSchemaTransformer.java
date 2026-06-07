@@ -25,6 +25,7 @@ import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
+import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
@@ -447,6 +448,7 @@ public class HancomSchemaTransformer implements HybridSchemaTransformer {
                 }
 
                 TableBorderCell cell = new TableBorderCell(row, col, rowSpan, colSpan, 0L);
+                cell.setSemanticType(row == 0 ? SemanticType.TABLE_HEADER : SemanticType.TABLE_CELL);
                 double cellLeft = tableBbox.getLeftX() + (col * colWidth);
                 double cellRight = cellLeft + (colSpan * colWidth);
                 double cellTop = tableBbox.getTopY() - (row * rowHeight);

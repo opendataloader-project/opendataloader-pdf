@@ -128,8 +128,9 @@ public class PDFWriter {
                             contentValue.append(((SemanticTextNode) object).getValue());
                         }
                     }
-                    String cellValue = String.format("Table cell: row number %s, column number %s, row span %s, column span %s, text content \"%s\"",
-                            cell.getRowNumber() + 1, cell.getColNumber() + 1, cell.getRowSpan(), cell.getColSpan(), contentValue);
+                    String cellValue = String.format("Table %scell: row number %s, column number %s, row span %s, column span %s, text content \"%s\"",
+                        cell.isHeaderCell() ? "header " : "", cell.getRowNumber() + 1, cell.getColNumber() + 1,
+                        cell.getRowSpan(), cell.getColSpan(), contentValue);
                     draw(cell.getBoundingBox(), getColor(SemanticType.TABLE), cellValue, null, annots, cell.getLevel(), PDFLayer.TABLE_CELLS);
                     for (IObject content : cell.getContents()) {
                         drawContent(content, PDFLayer.TABLE_CONTENT);
