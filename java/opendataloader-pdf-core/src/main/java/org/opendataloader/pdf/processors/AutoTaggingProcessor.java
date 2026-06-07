@@ -891,7 +891,7 @@ public class AutoTaggingProcessor {
         // First row uses TH + Scope="Column" for header identification.
         // This is compatible with both Adobe Acrobat and veraPDF PDF/UA-2 validation.
         for (int rowNumber = 0; rowNumber < table.getNumberOfRows(); rowNumber++) {
-            addTableRow(table, rowNumber, tableObject, cosDocument, rowNumber == 0);
+            addTableRow(table, rowNumber, tableObject, cosDocument);
         }
 
         addCaptionIfPresent(table, tableObject, cosDocument);
@@ -899,17 +899,23 @@ public class AutoTaggingProcessor {
     }
 
     private static void addTableRow(TableBorder table, int rowNumber, COSObject parent,
-                                    COSDocument cosDocument, boolean isHeaderRow) {
+                                    COSDocument cosDocument) {
         TableBorderRow row = table.getRow(rowNumber);
         COSObject rowObject = addStructElement(parent, cosDocument, TaggedPDFConstants.TR, row.getPageNumber());
         for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
             TableBorderCell cell = row.getCell(colNumber);
             if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
-                String cellTag = isHeaderRow ? TaggedPDFConstants.TH : TaggedPDFConstants.TD;
+                String cellTag = cell.isHeaderCell() ? TaggedPDFConstants.TH : TaggedPDFConstants.TD;
                 COSObject cellObject = addStructElement(rowObject, cosDocument, cellTag, cell.getPageNumber());
-                if (isHeaderRow) {
+                if (cell.isHeaderCell()) {
+                    String scope = "Both";
+                    if (rowNumber == 0 && colNumber != 0) {
+                        scope = "Column";
+                    } else if (rowNumber != 0 && colNumber == 0) {
+                        scope = "Row";
+                    }
                     addAttributeToStructElem(cellObject, ASAtom.TABLE,
-                        ASAtom.SCOPE, COSName.construct(ASAtom.getASAtom("Column")));
+                        ASAtom.SCOPE, COSName.construct(ASAtom.getASAtom(scope)));
                 }
                 if (cell.getColSpan() != 1) {
                     addAttributeToStructElem(cellObject, ASAtom.TABLE, ASAtom.COL_SPAN, COSInteger.construct(cell.getColSpan()));

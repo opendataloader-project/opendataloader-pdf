@@ -20,6 +20,7 @@ import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
 import org.verapdf.wcag.algorithms.entities.content.LineChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
+import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
@@ -243,6 +244,7 @@ class TableStructureNormalizer {
             for (int columnNumber = 0; columnNumber < originalTable.getNumberOfColumns(); columnNumber++) {
                 TableBorderCell rebuiltCell = new TableBorderCell(rowNumber, columnNumber, 1, 1,
                     originalTable.getRecognizedStructureId());
+                rebuiltCell.setSemanticType(rowNumber == 0 ? SemanticType.TABLE_HEADER : SemanticType.TABLE_CELL);
                 rebuiltCell.setContents(rowBand.getContents(columnNumber));
                 rebuiltCell.setBoundingBox(rowBand.createCellBoundingBox(originalTable, columnNumber));
                 rebuiltRow.getCells()[columnNumber] = rebuiltCell;

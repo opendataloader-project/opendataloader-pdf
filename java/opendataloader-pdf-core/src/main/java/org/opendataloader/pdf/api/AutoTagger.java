@@ -21,7 +21,6 @@ import org.opendataloader.pdf.processors.ExtractionResult;
 import org.verapdf.pd.PDDocument;
 import org.verapdf.tools.StaticResources;
 
-import java.io.File;
 import java.io.IOException;
 
 /**

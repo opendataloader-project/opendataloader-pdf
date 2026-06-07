@@ -17,6 +17,7 @@ package org.opendataloader.pdf.processors;
 
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
+import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
@@ -72,17 +73,20 @@ public class SpecialTableProcessor {
             table.getRows()[rowNumber] = tableBorderRow;
             if (isOneCellRow) {
                 TableBorderCell tableBorderCell = new TableBorderCell(rowNumber, 0, 1, 2, null);
+                tableBorderCell.setSemanticType(SemanticType.TABLE_CELL);
                 tableBorderCell.addContentObject(line);
                 tableBorderCell.setBoundingBox(box);
                 tableBorderRow.getCells()[0] = tableBorderCell;
                 tableBorderRow.getCells()[1] = tableBorderCell;
             } else {
                 TableBorderCell cell1 = new TableBorderCell(rowNumber, 0, 1, 1, null);
+                cell1.setSemanticType(SemanticType.TABLE_CELL);
                 TextLine line1 = new TextLine(line, 0, index - 1);
                 cell1.addContentObject(line1);
                 cell1.setBoundingBox(line1.getBoundingBox());
                 tableBorderRow.getCells()[0] = cell1;
                 TableBorderCell cell2 = new TableBorderCell(rowNumber, 1, 1, 1, null);
+                cell2.setSemanticType(SemanticType.TABLE_CELL);
                 TextLine line2 = new TextLine(line, index + 1, line.getValue().length());
                 cell2.addContentObject(line2);
                 cell2.setBoundingBox(line2.getBoundingBox());
