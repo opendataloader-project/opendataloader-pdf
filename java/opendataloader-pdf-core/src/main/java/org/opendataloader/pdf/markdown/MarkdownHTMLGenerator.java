@@ -44,13 +44,12 @@ public class MarkdownHTMLGenerator extends MarkdownGenerator {
             for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
                 TableBorderCell cell = row.getCell(colNumber);
                 if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
-                    boolean isHeader = rowNumber == 0;
-                    writeCellTagBegin(cell, isHeader);
+                    writeCellTagBegin(cell);
 
                     List<IObject> cellContents = cell.getContents();
                     writeContents(cellContents, true);
 
-                    writeCellTagEnd(isHeader);
+                    writeCellTagEnd(cell.isHeaderCell());
                     markdownWriter.write(MarkdownSyntax.LINE_BREAK);
                 }
             }
@@ -65,10 +64,10 @@ public class MarkdownHTMLGenerator extends MarkdownGenerator {
         leaveTable();
     }
 
-    private void writeCellTagBegin(TableBorderCell cell, boolean isHeader) throws IOException {
+    private void writeCellTagBegin(TableBorderCell cell) throws IOException {
         markdownWriter.write(MarkdownSyntax.INDENT);
         markdownWriter.write(MarkdownSyntax.INDENT);
-        String tag = isHeader ? "<th" : "<td";
+        String tag = cell.isHeaderCell() ? "<th" : "<td";
         StringBuilder cellTag = new StringBuilder(tag);
         int colSpan = cell.getColSpan();
         if (colSpan != 1) {

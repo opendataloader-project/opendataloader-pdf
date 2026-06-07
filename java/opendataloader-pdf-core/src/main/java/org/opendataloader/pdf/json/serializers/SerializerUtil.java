@@ -19,10 +19,12 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import org.opendataloader.pdf.hybrid.ElementMetadata;
 import org.opendataloader.pdf.json.JsonName;
 import org.opendataloader.pdf.utils.TextNodeUtils;
+import org.verapdf.tools.TaggedPDFConstants;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.TextBlock;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -165,27 +167,29 @@ public class SerializerUtil {
                 // plain "H" tag in favor of H1..H6; emit it only because we
                 // cannot infer a level. Downstream remediation may upgrade
                 // this when more context is available.
-                return "H";
+                return TaggedPDFConstants.H;
             case JsonName.PARAGRAPH_TYPE:
-                return "P";
+                return TaggedPDFConstants.P;
             case JsonName.IMAGE_CHUNK_TYPE:
-                return "Figure";
+                return TaggedPDFConstants.FIGURE;
             case JsonName.FORMULA_TYPE:
-                return "Formula";
+                return TaggedPDFConstants.FORMULA;
+            case JsonName.CAPTION_TYPE:
+                return TaggedPDFConstants.CAPTION;
             case JsonName.LIST_TYPE:
-                return "L";
+                return TaggedPDFConstants.L;
             case JsonName.LIST_ITEM_TYPE:
-                return "LI";
+                return TaggedPDFConstants.LI;
             case JsonName.TOC_TYPE:
-                return "TOC";
+                return TaggedPDFConstants.TOC;
             case JsonName.TOC_ITEM_TYPE:
-                return "TOCI";
+                return TaggedPDFConstants.TOCI;
             case JsonName.TABLE_TYPE:
-                return "Table";
+                return TaggedPDFConstants.TABLE;
             case JsonName.TABLE_CELL_TYPE:
-                return "TD";
+                return ((TableBorderCell)object).isHeaderCell() ? TaggedPDFConstants.TH : TaggedPDFConstants.TD;
             default:
-                // header/footer/footnote/caption/line/text-chunk/text-block
+                // header/footer/footnote/line/text-chunk/text-block
                 // either become Artifact or are not promoted to their own
                 // PDF/UA structure element. Leave the tag unset for now.
                 return null;

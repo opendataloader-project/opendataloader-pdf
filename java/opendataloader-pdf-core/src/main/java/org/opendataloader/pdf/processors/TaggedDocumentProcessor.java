@@ -243,6 +243,7 @@ public class TaggedDocumentProcessor {
                     ++columnNumber;
                 }
                 TableBorderCell cell = new TableBorderCell(elem, rowNumber, columnNumber);
+                cell.setSemanticType(type);
                 processTableCell(cell, elem);
                 tableBoundingBox.union(cell.getBoundingBox());
                 for (int i = 0; i < cell.getRowSpan(); i++) {
@@ -358,8 +359,10 @@ public class TaggedDocumentProcessor {
             for (int colNumber = 0; colNumber < numberOfColumns; colNumber++) {
                 rows[rowNumber].getCells()[colNumber] = table.get(rowNumber).get(colNumber);
                 if (rows[rowNumber].getCell(colNumber) == null) {
-                    rows[rowNumber].getCells()[colNumber] = new TableBorderCell(rowNumber, colNumber, 1, 1, 0L);
-                    rows[rowNumber].getCells()[colNumber].setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+                    TableBorderCell cell = new TableBorderCell(rowNumber, colNumber, 1, 1, 0L);
+                    cell.setSemanticType(SemanticType.TABLE_CELL);
+                    cell.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+                    rows[rowNumber].getCells()[colNumber] = cell;
                 }
             }
         }

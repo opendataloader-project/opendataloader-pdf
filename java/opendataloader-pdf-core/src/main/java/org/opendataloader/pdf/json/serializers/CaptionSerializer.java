@@ -18,6 +18,7 @@ package org.opendataloader.pdf.json.serializers;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import org.opendataloader.pdf.json.JsonName;
 import org.verapdf.wcag.algorithms.entities.SemanticCaption;
 
 import java.io.IOException;
@@ -41,7 +42,7 @@ public class CaptionSerializer extends StdSerializer<SemanticCaption> {
     public void serialize(SemanticCaption caption, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
             throws IOException {
         jsonGenerator.writeStartObject();
-        SerializerUtil.writeEssentialInfo(jsonGenerator, caption, "caption");
+        SerializerUtil.writeEssentialInfo(jsonGenerator, caption, JsonName.CAPTION_TYPE);
         if (caption.getLinkedContentId() != null) {
             jsonGenerator.writeNumberField("linked content id", caption.getLinkedContentId());
         }

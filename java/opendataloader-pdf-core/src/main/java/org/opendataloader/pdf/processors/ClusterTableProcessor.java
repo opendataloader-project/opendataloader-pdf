@@ -18,9 +18,11 @@ package org.opendataloader.pdf.processors;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
+import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 import org.verapdf.wcag.algorithms.entities.tables.Table;
 import org.verapdf.wcag.algorithms.entities.tables.TableToken;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ClusterTableConsumer;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
 
@@ -71,10 +73,22 @@ public class ClusterTableProcessor extends AbstractTableProcessor {
         for (Table table : clusterTableConsumer.getTables()) {
             TableBorder tableBorder = table.createTableBorderFromTable();
             if (tableBorder != null) {
+                setTableCellsSemanticTypes(tableBorder);
                 result.add(tableBorder);
             }
         }
         return result;
+    }
+
+    private static void setTableCellsSemanticTypes(TableBorder table) {
+        for (int rowNumber = 0; rowNumber < table.getNumberOfRows(); rowNumber++) {
+            for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
+                TableBorderCell cell = table.getCell(rowNumber, colNumber);
+                if (cell.getColNumber() == colNumber && cell.getRowNumber() == rowNumber) {
+                    cell.setSemanticType(rowNumber == 0 ? SemanticType.TABLE_HEADER : SemanticType.TABLE_CELL);
+                }
+            }
+        }
     }
 
 //    public static void findListAndTablesImageMethod(List<SemanticTextNode> nodes) {

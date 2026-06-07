@@ -384,15 +384,14 @@ public class HtmlGenerator implements Closeable {
             for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
                 TableBorderCell cell = row.getCell(colNumber);
                 if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
-                    boolean isHeader = rowNumber == 0;
-                    writeCellTag(cell, isHeader);
+                    writeCellTag(cell);
                     List<IObject> contents = cell.getContents();
                     if (!contents.isEmpty()) {
                         for (IObject contentItem : contents) {
                             this.write(contentItem);
                         }
                     }
-                    if (isHeader) {
+                    if (cell.isHeaderCell()) {
                         htmlWriter.write(HtmlSyntax.HTML_TABLE_HEADER_CLOSE_TAG);
                     } else {
                         htmlWriter.write(HtmlSyntax.HTML_TABLE_CELL_CLOSE_TAG);
@@ -448,8 +447,8 @@ public class HtmlGenerator implements Closeable {
         htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
     }
 
-    private void writeCellTag(TableBorderCell cell, boolean isHeader) throws IOException {
-        String tag = isHeader ? "<th" : "<td";
+    private void writeCellTag(TableBorderCell cell) throws IOException {
+        String tag = cell.isHeaderCell() ? "<th" : "<td";
         StringBuilder cellTag = new StringBuilder(tag);
         int colSpan = cell.getColSpan();
         if (colSpan != 1) {

@@ -25,6 +25,7 @@ import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
+import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
@@ -515,6 +516,7 @@ public class DoclingSchemaTransformer implements HybridSchemaTransformer {
                 int effectiveRowSpan = Math.max(1, Math.min(rowSpan, numRows - row));
 
                 TableBorderCell cell = new TableBorderCell(row, col, effectiveRowSpan, effectiveColSpan, 0L);
+                cell.setSemanticType(row == 0 ? SemanticType.TABLE_HEADER : SemanticType.TABLE_CELL);
                 double cellLeft = tableBbox.getLeftX() + (col * colWidth);
                 double cellRight = cellLeft + (effectiveColSpan * colWidth);
                 double cellTop = tableBbox.getTopY() - (row * rowHeight);

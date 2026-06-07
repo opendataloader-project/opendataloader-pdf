@@ -31,6 +31,7 @@ import org.verapdf.wcag.algorithms.entities.SemanticNode;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
+import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
 import org.verapdf.wcag.algorithms.entities.lists.PDFList;
@@ -624,6 +625,7 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
 
             for (int c = 0; c < numCols; c++) {
                 TableBorderCell emptyCell = new TableBorderCell(r, c, 1, 1, 0L);
+                emptyCell.setSemanticType(r == 0 ? SemanticType.TABLE_HEADER : SemanticType.TABLE_CELL);
                 emptyCell.setBoundingBox(new BoundingBox(pageIndex,
                     tableBbox.getLeftX() + c * colWidth, rowBottom,
                     tableBbox.getLeftX() + (c + 1) * colWidth, rowTop));
@@ -676,6 +678,7 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
             colspan = Math.min(colspan, numCols - startCol);
             {
                 TableBorderCell cell = new TableBorderCell(startRow, startCol, rowspan, colspan, 0L);
+                cell.setSemanticType(startRow == 0 ? SemanticType.TABLE_HEADER : SemanticType.TABLE_CELL);
 
                 // Compute cell bbox: use TSR cell bbox if available, otherwise fall back to grid
                 BoundingBox cellBbox;

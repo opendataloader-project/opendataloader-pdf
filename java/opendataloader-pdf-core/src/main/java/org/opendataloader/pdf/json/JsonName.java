@@ -39,6 +39,7 @@ public class JsonName {
     public static final String TEXT_COLOR = "text color";
     public static final String PARAGRAPH_TYPE = "paragraph";
     public static final String HEADING_TYPE = "heading";
+    public static final String CAPTION_TYPE = "caption";
     public static final String KIDS = "kids";
     public static final String LIST_ITEMS = "list items";
     public static final String TOC_ITEMS = "toc items";
