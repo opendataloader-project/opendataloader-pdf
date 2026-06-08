@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.opendataloader.pdf.entities.SemanticFormula;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
@@ -205,5 +206,61 @@ class HtmlGeneratorTest {
         assertEquals("<span style=\"text-decoration: line-through; font-style: italic; "
                 + "color: rgb(0, 255, 0); font-weight: 300;\">order</span>",
             sb.toString());
+    }
+
+    @Test
+    void testPdfTextIsEscapedForHtmlBodyContext() {
+        TextChunk chunk = createChunk("<script>alert(1)</script>&", false, false, false, 400.0, 12.0);
+        TextLine line = new TextLine(chunk);
+        StringBuilder sb = new StringBuilder();
+
+        HtmlGenerator.getTextFromLineForHTML(line, sb);
+
+        assertEquals("&lt;script&gt;alert(1)&lt;/script&gt;&amp;", sb.toString());
+    }
+
+    @Test
+    void testStyledPdfTextIsEscapedInsideSpan() {
+        TextChunk chunk = createChunk("<img src=x onerror=alert(1)>", false, true, false, 400.0, 12.0);
+        TextLine line = new TextLine(chunk);
+        StringBuilder sb = new StringBuilder();
+
+        HtmlGenerator.getTextFromLineForHTML(line, sb);
+
+        assertEquals(
+            "<span style=\"font-style: italic;\">&lt;img src=x onerror=alert(1)&gt;</span>",
+            sb.toString());
+    }
+
+    @Test
+    void testHtmlTextEscapingHandlesTitleCharactersAndNull() {
+        assertEquals("report &lt;draft&gt; &amp; notes", HtmlGenerator.escapeHtmlText("report <draft> & notes"));
+        assertEquals("", HtmlGenerator.escapeHtmlText(null));
+    }
+
+    @Test
+    void testAmpersandIsEscapedExactlyOnce() {
+        TextChunk chunk = new TextChunk(new BoundingBox(0, 0, 10, 20, 30),
+            "&lt; & &amp;", 12, 100.0);
+        chunk.setFontWeight(400.0);
+        TextLine line = new TextLine(chunk);
+        StringBuilder sb = new StringBuilder();
+
+        HtmlGenerator.getTextFromLineForHTML(line, sb);
+
+        assertEquals("&amp;lt; &amp; &amp;amp;", sb.toString());
+    }
+
+    @Test
+    void testFormulaLatexIsEscaped() {
+        String formulaLatex = "x < y & z";
+        String result = HtmlGenerator.escapeHtmlText(formulaLatex);
+        assertEquals("x &lt; y &amp; z", result);
+    }
+
+    @Test
+    void testHtmlAttributeEscapingHandlesQuotesAndNewlines() {
+        assertEquals("quote&quot; and null byte",
+            HtmlGenerator.escapeHtmlAttribute("quote\" and\u0000\nnull byte"));
     }
 }
