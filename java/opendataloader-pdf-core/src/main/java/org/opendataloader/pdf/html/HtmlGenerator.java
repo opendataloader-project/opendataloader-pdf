@@ -120,7 +120,7 @@ public class HtmlGenerator implements Closeable {
         try {
             htmlWriter.write("<!DOCTYPE html>\n");
             htmlWriter.write("<html lang=\"und\">\n<head>\n<meta charset=\"utf-8\">\n");
-            htmlWriter.write("<title>" + pdfFileName + "</title>\n");
+            htmlWriter.write("<title>" + escapeHtmlText(pdfFileName) + "</title>\n");
             htmlWriter.write("</head>\n<body>\n");
 
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
@@ -214,7 +214,7 @@ public class HtmlGenerator implements Closeable {
     protected void writeFormula(SemanticFormula formula) throws IOException {
         htmlWriter.write(HtmlSyntax.HTML_MATH_DISPLAY_TAG);
         htmlWriter.write("\\[");
-        htmlWriter.write(getCorrectString(formula.getLatex()));
+        htmlWriter.write(escapeHtmlText(formula.getLatex()));
         htmlWriter.write("\\]");
         htmlWriter.write(HtmlSyntax.HTML_MATH_DISPLAY_CLOSE_TAG);
         htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
@@ -249,7 +249,8 @@ public class HtmlGenerator implements Closeable {
                     String altText = (image instanceof EnrichedImageChunk && ((EnrichedImageChunk) image).hasDescription())
                             ? ((EnrichedImageChunk) image).sanitizeDescription()
                             : "";
-                    String imageString = String.format("<img src=\"%s\" alt=\"%s\">", escapedSource, altText);
+                    String escapedAltText = escapeHtmlAttribute(altText);
+                    String imageString = String.format("<img src=\"%s\" alt=\"%s\">", escapedSource, escapedAltText);
                     htmlWriter.write(imageString);
                     htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
                 }
@@ -285,10 +286,11 @@ public class HtmlGenerator implements Closeable {
                             ? picture.sanitizeDescription()
                             : "";
                     String escapedSource = escapeHtmlAttribute(imageSource);
+                    String escapedAltText = escapeHtmlAttribute(altText);
 
                     htmlWriter.write(HtmlSyntax.HTML_FIGURE_TAG);
                     htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
-                    String imageString = String.format("<img src=\"%s\" alt=\"%s\">", escapedSource, altText);
+                    String imageString = String.format("<img src=\"%s\" alt=\"%s\">", escapedSource, escapedAltText);
                     htmlWriter.write(imageString);
                     htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
                     htmlWriter.write(HtmlSyntax.HTML_FIGURE_CLOSE_TAG);
@@ -502,6 +504,23 @@ public class HtmlGenerator implements Closeable {
     }
 
     /**
+     * Escapes PDF-derived text for use in HTML text nodes.
+     *
+     * @param value the text to escape
+     * @return the escaped text safe for HTML body contexts
+     */
+    protected static String escapeHtmlText(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value
+            .replace("\u0000", "")
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;");
+    }
+
+    /**
      * Escapes special characters for use in HTML attributes.
      * Handles quotes, ampersands, less-than, greater-than, and newlines.
      *
@@ -513,6 +532,7 @@ public class HtmlGenerator implements Closeable {
             return null;
         }
         return value
+            .replace("\u0000", "")
             .replace("&", "&amp;")
             .replace("\"", "&quot;")
             .replace("<", "&lt;")
@@ -527,10 +547,10 @@ public class HtmlGenerator implements Closeable {
             if (!style.isEmpty()) {
                 String styleAttribute = String.format(HtmlSyntax.HTML_STYLE_ATTRIBUTE, style.trim());
                 stringBuilder.append(String.format(HtmlSyntax.HTML_SPAN_START_TAG, styleAttribute));
-                stringBuilder.append(chunk.getValue());
+                stringBuilder.append(escapeHtmlText(chunk.getValue()));
                 stringBuilder.append(HtmlSyntax.HTML_SPAN_CLOSE_TAG);
             } else {
-                stringBuilder.append(chunk.getValue());
+                stringBuilder.append(escapeHtmlText(chunk.getValue()));
             }
         }
     }
