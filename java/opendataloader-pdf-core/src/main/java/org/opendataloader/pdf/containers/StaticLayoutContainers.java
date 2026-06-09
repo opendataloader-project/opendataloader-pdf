@@ -106,9 +106,10 @@ public class StaticLayoutContainers {
 
     /**
      * Returns the cached ContrastRatioConsumer if present, or null without creating it.
-     * Package-private for testing — verifies that writeImage populates the ThreadLocal.
+     * Lets tests verify that writeImage populates the ThreadLocal without triggering
+     * the lazy initializer in {@link #getContrastRatioConsumer}.
      */
-    static ContrastRatioConsumer getCachedContrastRatioConsumer() {
+    public static ContrastRatioConsumer getCachedContrastRatioConsumer() {
         return contrastRatioConsumer.get();
     }
 
