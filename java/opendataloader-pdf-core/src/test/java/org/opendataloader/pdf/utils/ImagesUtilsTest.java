@@ -88,7 +88,8 @@ class ImagesUtilsTest {
             // Initializing contrastRatioConsumer inside writeImage() via StaticLayoutContainers.
             imagesUtils.writeImage(imageChunk, testPdf.getAbsolutePath(),"");
             // After writeImage, StaticLayoutContainers must hold a non-null cached consumer.
-            assertNotNull(StaticLayoutContainers.getContrastRatioConsumer(testPdf.getAbsolutePath(), "", false, null),
+            // Use getCachedContrastRatioConsumer to verify the cached state without invoking the initializer.
+            assertNotNull(StaticLayoutContainers.getCachedContrastRatioConsumer(),
                     "writeImage should populate the StaticLayoutContainers ContrastRatioConsumer ThreadLocal");
             // Verify file was created
             Path pngPath = Path.of(StaticLayoutContainers.getImagesDirectory(), "imageFile1.png");
@@ -317,6 +318,18 @@ class ImagesUtilsTest {
         StaticLayoutContainers.clearContainers();
         Path tempDir = Files.createTempDirectory("retain-test");
         try {
+            // Structural assertion: ImagesUtils MUST NOT have a contrastRatioConsumer field.
+            // A regression that re-introduces this field would cause the GC test to pass
+            // spuriously (weak-ref collected) while still accumulating BufferedImages
+            // in the ContrastRatioConsumer's internal cache across pages.
+            java.lang.reflect.Field[] fields = ImagesUtils.class.getDeclaredFields();
+            for (java.lang.reflect.Field field : fields) {
+                assertFalse(field.getName().equals("contrastRatioConsumer"),
+                    "ImagesUtils MUST NOT declare a 'contrastRatioConsumer' field (issue #458 — M2 regression guard)");
+                assertFalse(field.getType().getSimpleName().equals("ContrastRatioConsumer"),
+                    "ImagesUtils MUST NOT declare a field of type ContrastRatioConsumer (issue #458 — M2 regression guard)");
+            }
+
             String fileName = tempDir.resolve("retained.png").toString();
             ImagesUtils imagesUtils = new ImagesUtils();
 
