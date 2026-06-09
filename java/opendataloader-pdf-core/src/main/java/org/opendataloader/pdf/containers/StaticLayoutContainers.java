@@ -97,10 +97,18 @@ public class StaticLayoutContainers {
             // PDFBox failures very hard to diagnose downstream.
             LOGGER.log(Level.SEVERE,
                 "Failed to initialize ContrastRatioConsumer for PDF '" + sourcePdfPath
-                    + "'. Image extraction and hidden-text filtering will be silently skipped for this document.",
+                    + "'. Image extraction and hidden-text filtering will be skipped for this document.",
                 e);
             isContrastRatioConsumerFailedToCreate.set(true);
         }
+        return contrastRatioConsumer.get();
+    }
+
+    /**
+     * Returns the cached ContrastRatioConsumer if present, or null without creating it.
+     * Package-private for testing — verifies that writeImage populates the ThreadLocal.
+     */
+    static ContrastRatioConsumer getCachedContrastRatioConsumer() {
         return contrastRatioConsumer.get();
     }
 
