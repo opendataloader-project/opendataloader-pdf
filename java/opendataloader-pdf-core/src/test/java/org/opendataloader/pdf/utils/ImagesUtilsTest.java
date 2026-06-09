@@ -314,6 +314,10 @@ class ImagesUtilsTest {
      * {@code ContrastRatioConsumer} and accumulate across pages.
      */
     @Test
+    // The `image = null` below is a deliberate, load-bearing assignment: it drops the
+    // only strong reference so the WeakReference can be collected. PMD flags it as an
+    // UnusedAssignment, but removing it would defeat the GC check, so suppress here.
+    @SuppressWarnings("PMD.UnusedAssignment")
     void writeBufferedImageToFile_doesNotRetainImageReference() throws IOException {
         StaticLayoutContainers.clearContainers();
         Path tempDir = Files.createTempDirectory("retain-test");
