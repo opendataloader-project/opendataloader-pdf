@@ -91,7 +91,14 @@ public class StaticLayoutContainers {
                 contrastRatioConsumer.set(new ContrastRatioConsumer(sourcePdfPath, password, enableAntialias, imagePixelSize));
             }
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Error setting contrast ratio consumer: " + e.getMessage());
+            // Issue #458: surface init failures at SEVERE with full throwable.
+            // Previously a WARNING-only log silently disabled image extraction and
+            // hidden-text filtering for the rest of the document, making OOM /
+            // PDFBox failures very hard to diagnose downstream.
+            LOGGER.log(Level.SEVERE,
+                "Failed to initialize ContrastRatioConsumer for PDF '" + sourcePdfPath
+                    + "'. Image extraction and hidden-text filtering will be silently skipped for this document.",
+                e);
             isContrastRatioConsumerFailedToCreate.set(true);
         }
         return contrastRatioConsumer.get();
