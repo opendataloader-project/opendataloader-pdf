@@ -250,6 +250,29 @@ public class HancomSchemaTransformerTest {
     }
 
     @Test
+    void testTransformTableWithSpansReusesSameCellInstanceAcrossCoveredSlots() {
+        ObjectNode json = createVisualInfoDto();
+        ArrayNode elements = (ArrayNode) json.get("elements");
+
+        ObjectNode tableElement = addTableElement(elements, 0, 50, 200, 300, 200);
+        ArrayNode cells = addTableContentStructure(tableElement);
+
+        addTableCell(cells, "Header", 0, 0, 1, 2, 50, 200, 300, 100);
+        addTableCell(cells, "A2", 1, 0, 1, 1, 50, 300, 150, 100);
+        addTableCell(cells, "B2", 1, 1, 1, 1, 200, 300, 150, 100);
+
+        HybridResponse response = new HybridResponse("", json, null);
+        Map<Integer, Double> pageHeights = new HashMap<>();
+        pageHeights.put(1, 842.0);
+
+        List<List<IObject>> result = transformer.transform(response, pageHeights);
+
+        TableBorder table = (TableBorder) result.get(0).get(0);
+        Assertions.assertSame(table.getRow(0).getCell(0), table.getRow(0).getCell(1));
+        Assertions.assertEquals(2, table.getRow(0).getCell(0).getColSpan());
+    }
+
+    @Test
     void testTransformMultiplePages() {
         ObjectNode json = createVisualInfoDto();
         ArrayNode elements = (ArrayNode) json.get("elements");
