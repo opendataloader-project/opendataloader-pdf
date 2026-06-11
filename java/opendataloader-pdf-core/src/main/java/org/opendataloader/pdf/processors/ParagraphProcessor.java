@@ -46,9 +46,9 @@ public class ParagraphProcessor {
         blocks = detectParagraphsWithLeftAlignments(blocks, true);
         blocks = detectParagraphsWithLeftAlignments(blocks, false);
         blocks = detectFirstLinesOfParagraphWithLeftAlignments(blocks);
-        blocks = detectTwoLinesParagraphs(blocks);
         blocks = detectParagraphsWithCenterAlignments(blocks);
         blocks = detectParagraphsWithRightAlignments(blocks);
+        blocks = detectTwoLinesParagraphs(blocks);
         blocks = processOtherLines(blocks);
         return getContentsWithDetectedParagraphs(contents, blocks);
     }
