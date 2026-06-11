@@ -15,9 +15,10 @@
  */
 package org.opendataloader.pdf.hybrid;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,10 +30,11 @@ import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * Unit tests for HancomSchemaTransformer.
@@ -292,12 +294,12 @@ public class HancomSchemaTransformerTest {
         List<List<IObject>> result = transformer.transform(response, pageHeights);
 
         TableBorder table = (TableBorder) result.get(0).get(0);
-        
+
         // Verify that the spanning cell is reused across covered rows
         TableBorderCell spanningCell = table.getRow(0).getCell(0);
         Assertions.assertSame(spanningCell, table.getRow(1).getCell(0),
             "Cell at (0,0) should be the same instance at (1,0)");
-        
+
         // Verify the rowspan value is correct
         Assertions.assertEquals(2, spanningCell.getRowSpan(),
             "Spanning cell should report rowspan=2");
