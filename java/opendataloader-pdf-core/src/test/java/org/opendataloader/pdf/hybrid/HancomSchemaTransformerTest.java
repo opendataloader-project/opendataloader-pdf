@@ -273,6 +273,37 @@ public class HancomSchemaTransformerTest {
     }
 
     @Test
+    void testTransformTableWithRowspanReusesSameCellInstanceAcrossRows() {
+        ObjectNode json = createVisualInfoDto();
+        ArrayNode elements = (ArrayNode) json.get("elements");
+
+        ObjectNode tableElement = addTableElement(elements, 0, 50, 200, 300, 200);
+        ArrayNode cells = addTableContentStructure(tableElement);
+
+        // Create a 2x2 table with cell at (0,0) spanning 2 rows
+        addTableCell(cells, "Spanning", 0, 0, 2, 1, 50, 200, 150, 200);
+        addTableCell(cells, "B1", 0, 1, 1, 1, 200, 200, 100, 100);
+        addTableCell(cells, "B2", 1, 1, 1, 1, 200, 100, 100, 100);
+
+        HybridResponse response = new HybridResponse("", json, null);
+        Map<Integer, Double> pageHeights = new HashMap<>();
+        pageHeights.put(1, 842.0);
+
+        List<List<IObject>> result = transformer.transform(response, pageHeights);
+
+        TableBorder table = (TableBorder) result.get(0).get(0);
+        
+        // Verify that the spanning cell is reused across covered rows
+        TableBorderCell spanningCell = table.getRow(0).getCell(0);
+        Assertions.assertSame(spanningCell, table.getRow(1).getCell(0),
+            "Cell at (0,0) should be the same instance at (1,0)");
+        
+        // Verify the rowspan value is correct
+        Assertions.assertEquals(2, spanningCell.getRowSpan(),
+            "Spanning cell should report rowspan=2");
+    }
+
+    @Test
     void testTransformMultiplePages() {
         ObjectNode json = createVisualInfoDto();
         ArrayNode elements = (ArrayNode) json.get("elements");
