@@ -159,7 +159,10 @@ public class CLIMain {
      */
     private static PathResult processPath(File file, Config config, InputSource source) {
         if (!file.exists()) {
-            LOGGER.log(Level.WARNING, "File or folder " + file.getAbsolutePath() + " not found.");
+            // Log the file name only, not the absolute path: WARNING lines are
+            // routinely shipped to CI/centralized logging, and an absolute path
+            // would leak the system username and directory layout (CWE-200).
+            LOGGER.log(Level.WARNING, "File or folder '" + displayName(file) + "' not found.");
             return new PathResult(false, 0);
         }
         if (file.isDirectory()) {
@@ -199,7 +202,8 @@ public class CLIMain {
     private static PathResult processDirectory(File file, Config config, InputSource source) {
         File[] children = file.listFiles();
         if (children == null) {
-            LOGGER.log(Level.WARNING, "Unable to read folder " + file.getAbsolutePath());
+            // File name only — see the not-found branch above (CWE-200).
+            LOGGER.log(Level.WARNING, "Unable to read folder '" + displayName(file) + "'.");
             return new PathResult(false, 0);
         }
         boolean allSucceeded = true;
@@ -286,5 +290,16 @@ public class CLIMain {
         }
         String name = file.getName();
         return name.toLowerCase(Locale.ROOT).endsWith(".pdf");
+    }
+
+    /**
+     * Returns the file name without its parent directories, so WARNING logs do
+     * not disclose the absolute path (and with it the system username and
+     * directory layout). Falls back to the literal path when the name is empty
+     * (e.g. {@code .} or a filesystem root) so the message is never blank.
+     */
+    private static String displayName(File file) {
+        String name = file.getName();
+        return name.isEmpty() ? file.getPath() : name;
     }
 }
