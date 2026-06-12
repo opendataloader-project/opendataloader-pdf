@@ -68,7 +68,28 @@ jobs:
         run: ./scripts/build-all.sh ${{ env.VERSION }}
 
       # =================================================================
-      # 3. DEPLOY (only on tag push)
+      # 3. VERIFY CLI OPTIONS (before deploy)
+      # =================================================================
+      - name: Install opendataloader-pdf CLI
+        # --system installs into the setup-python interpreter; without it (or an
+        # active venv) `uv pip install` aborts with "No virtual environment found".
+        run: uv pip install --system ./python/opendataloader-pdf/dist/*.whl
+
+      - name: Run CLI verification
+        # ci-verify.py writes its own markdown table to $GITHUB_STEP_SUMMARY,
+        # so no separate summary step is needed here.
+        run: python verification/ci-verify.py
+
+      - name: Upload verification report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: verification-report-release
+          path: verification/verification-report-ci.txt
+          retention-days: 30
+
+      # =================================================================
+      # 4. DEPLOY (only on tag push)
       # =================================================================
       - name: '[Java] Deploy to Maven Central'
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
@@ -94,7 +115,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       # =================================================================
-      # 4. GITHUB RELEASE (only on tag push)
+      # 5. GITHUB RELEASE (only on tag push)
       # =================================================================
       - name: Package CLI as ZIP
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
@@ -123,7 +144,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # =================================================================
-      # 5. SYNC DOCS TO HOMEPAGE (only on tag push)
+      # 6. SYNC DOCS TO HOMEPAGE (only on tag push)
       # =================================================================
       - name: Generate reference docs
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')

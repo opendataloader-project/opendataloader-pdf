@@ -79,3 +79,11 @@ content/docs/
 .claude/settings.local.json
 .claude/plans/
 
+# Verification reports (local runs only; CI reports are uploaded as artifacts)
+verification/verification-report-local.txt
+verification/verification-report-ci.txt
+
+# Local fixture generator (kept out of the repo: fixtures are committed
+# binaries; regeneration is rare and the generator needs pikepdf/reportlab)
+scripts/generate-test-fixtures.py
+
