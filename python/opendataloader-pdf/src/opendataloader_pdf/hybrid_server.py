@@ -839,7 +839,10 @@ def main():
     ocr_mode_group.add_argument(
         "--no-ocr",
         action="store_true",
-        help="Disable OCR entirely. Use when input PDFs already have reliable embedded text — "
+        # ASCII only: argparse --help crashes with UnicodeEncodeError on
+        # non-UTF-8 consoles (e.g. cp949 on Korean Windows) if help text
+        # contains characters the locale codec cannot encode.
+        help="Disable OCR entirely. Use when input PDFs already have reliable embedded text - "
              "prevents duplicate text extraction from images (charts, diagrams, screenshots). "
              "Mutually exclusive with --force-ocr.",
     )
@@ -979,7 +982,7 @@ def main():
         if torch.cuda.is_available():
             gpu_name = torch.cuda.get_device_name(0)
             cuda_version = torch.version.cuda
-            logger.info(f"Accelerator: CUDA — {gpu_name} (CUDA {cuda_version})")
+            logger.info(f"Accelerator: CUDA - {gpu_name} (CUDA {cuda_version})")
         elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
             logger.info("Accelerator: MPS (Apple Silicon)")
         elif hasattr(torch, "xpu") and torch.xpu.is_available():
