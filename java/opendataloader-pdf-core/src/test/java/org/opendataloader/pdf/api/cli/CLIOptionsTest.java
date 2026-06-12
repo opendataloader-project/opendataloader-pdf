@@ -611,6 +611,26 @@ class CLIOptionsTest {
     }
 
     @Test
+    void testCreateConfig_withThreadsZero_throws() throws ParseException {
+        String[] args = {"--threads", "0", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            CLIOptions.createConfigFromCommandLine(cmd);
+        });
+    }
+
+    @Test
+    void testCreateConfig_withInvalidTableMethod_throws() throws ParseException {
+        String[] args = {"--table-method", "invalid", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            CLIOptions.createConfigFromCommandLine(cmd);
+        });
+    }
+
+    @Test
     void testAddAllTo_registersAllOptions() {
         Options ext = new Options();
         CLIOptions.addAllTo(ext);
@@ -668,7 +688,7 @@ class CLIOptionsTest {
         assertEquals(afterFirst, ext.getOptions().size());
     }
 
-    // ===== PDFDLOSP-6: --format spec separation =====
+    // ===== --format spec separation =====
 
     @Test
     void testDefineOptions_markdownWithHtmlIsExportedAsBooleanFlag() {
@@ -702,7 +722,7 @@ class CLIOptionsTest {
 
     @Test
     void testCreateConfig_formatMarkdownWithImagesEmitsDeprecationWarning() throws ParseException {
-        // PDFDLOSP-6: --format markdown-with-images used to look distinct but produced the same output
+        // --format markdown-with-images used to look distinct but produced the same output
         // as --format markdown. Now it warns and behaves the same; image extraction is controlled by
         // --image-output instead.
         String stderr = captureStderr(() -> {
