@@ -7,6 +7,7 @@ yet and is allowed to print the captured streams — but only once
 (``CalledProcessError.output`` and ``.stdout`` are the same attribute).
 """
 
+import io
 import subprocess
 from unittest.mock import MagicMock
 
@@ -88,6 +89,43 @@ def test_quiet_success_relays_stdout_but_not_stderr(monkeypatch, capsys, patched
     assert "java log noise" not in captured.err
     # Return value is unchanged for library callers.
     assert returned == "extracted text payload\n"
+
+
+def test_quiet_relays_through_stdout_buffer_byte_path(monkeypatch, patched_jar):
+    """The production CLI writes the relayed payload through
+    ``sys.stdout.buffer`` (bytes), not the ``sys.stdout.write`` (str)
+    fallback. ``capsys`` replaces ``sys.stdout`` with an object whose
+    ``.buffer`` semantics differ, so the sibling test only exercises the
+    str branch. This drives the real byte-relay path and asserts the
+    payload is encoded to UTF-8 and written exactly once, intact — covering
+    the ``encode("utf-8", "replace")`` step that the str branch skips.
+    """
+    payload = "héllo 한글 payload\n"  # non-ASCII: exercises the utf-8 encode
+    result = subprocess.CompletedProcess(
+        args=["java", "-jar", "fake.jar"],
+        returncode=0,
+        stdout=payload,
+        stderr="[INFO] java log noise\n",
+    )
+    monkeypatch.setattr(runner.subprocess, "run", MagicMock(return_value=result))
+
+    # Fake stdout with a real binary buffer, mirroring a genuine TextIOWrapper
+    # (hasattr(sys.stdout, "buffer") is True), so run_jar takes the byte path.
+    fake_stdout = MagicMock()
+    fake_stdout.buffer = io.BytesIO()
+    monkeypatch.setattr(runner.sys, "stdout", fake_stdout)
+
+    returned = runner.run_jar(["doc.pdf", "--quiet", "--to-stdout"], quiet=True)
+
+    written = fake_stdout.buffer.getvalue()
+    # Byte path was taken: payload written as UTF-8 exactly once, intact.
+    assert written == payload.encode("utf-8")
+    assert written.decode("utf-8") == payload
+    # The str fallback branch was NOT used.
+    fake_stdout.write.assert_not_called()
+    fake_stdout.buffer.flush()  # buffer is flushed by run_jar; no error
+    # Return value is unchanged for library callers.
+    assert returned == payload
 
 
 def test_quiet_failure_prints_captured_streams_once(monkeypatch, capsys, patched_jar):
