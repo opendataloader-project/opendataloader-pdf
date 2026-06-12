@@ -65,6 +65,31 @@ def test_streaming_failure_does_not_duplicate_output(monkeypatch, capsys, patche
     assert "Return code: 2" in captured.err
 
 
+def test_quiet_success_relays_stdout_but_not_stderr(monkeypatch, capsys, patched_jar):
+    """Quiet mode must relay the JAR's stdout (--to-stdout payload, folder
+    summary line) to the caller while still suppressing the JAR's log
+    stream (stderr). Regression: --quiet + --to-stdout produced no output,
+    breaking pipe consumers."""
+    result = subprocess.CompletedProcess(
+        args=["java", "-jar", "fake.jar"],
+        returncode=0,
+        stdout="extracted text payload\n",
+        stderr="[INFO] java log noise\n",
+    )
+    monkeypatch.setattr(runner.subprocess, "run", MagicMock(return_value=result))
+
+    returned = runner.run_jar(["doc.pdf", "--quiet", "--to-stdout"], quiet=True)
+
+    captured = capsys.readouterr()
+    # Payload reaches the caller's stdout exactly once.
+    assert captured.out.count("extracted text payload") == 1
+    # The JAR's log stream stays suppressed (that is what quiet means).
+    assert "java log noise" not in captured.out
+    assert "java log noise" not in captured.err
+    # Return value is unchanged for library callers.
+    assert returned == "extracted text payload\n"
+
+
 def test_quiet_failure_prints_captured_streams_once(monkeypatch, capsys, patched_jar):
     """Quiet mode captures output, so the except handler surfaces it — but
     must avoid the old bug where Output and Stdout (aliases) both printed."""
