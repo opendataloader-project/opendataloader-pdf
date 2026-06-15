@@ -43,6 +43,7 @@ public class StaticLayoutContainers {
     private static final ThreadLocal<String> imageFormat = new ThreadLocal<>();
     private static final ThreadLocal<Map<Integer, Double>> replacementCharRatios = ThreadLocal.withInitial(ConcurrentHashMap::new);
     private static final ThreadLocal<Map<String, byte[]>> embeddedImageBytes = ThreadLocal.withInitial(ConcurrentHashMap::new);
+    private static final ThreadLocal<Map<Integer, double[]>> pageCropBoxes = ThreadLocal.withInitial(ConcurrentHashMap::new);
 
     public static void clearContainers() {
         currentContentId.set(1L);
@@ -56,6 +57,7 @@ public class StaticLayoutContainers {
         imageFormat.set(Config.IMAGE_FORMAT_PNG);
         replacementCharRatios.get().clear();
         embeddedImageBytes.get().clear();
+        pageCropBoxes.get().clear();
     }
 
     public static long getCurrentContentId() {
@@ -197,6 +199,16 @@ public class StaticLayoutContainers {
 
     public static void setEmbeddedImageBytesMap(Map<String, byte[]> map) {
         embeddedImageBytes.set(map);
+    }
+
+    // Crop boxes precomputed on the main thread and propagated to workers so off-page / background
+    // filtering can read page bounds without touching the shared PDDocument from worker threads.
+    public static Map<Integer, double[]> getPageCropBoxesMap() {
+        return pageCropBoxes.get();
+    }
+
+    public static void setPageCropBoxesMap(Map<Integer, double[]> map) {
+        pageCropBoxes.set(map);
     }
 
     // Image paths flow through String.format with File.separator (cache write side) and

@@ -261,6 +261,8 @@ public class DocumentProcessor {
         final long contentId = StaticLayoutContainers.getCurrentContentId();
         final boolean useStructTree = StaticLayoutContainers.isUseStructTree();
         final var embeddedImageBytesMap = StaticLayoutContainers.getEmbeddedImageBytesMap();
+        // Crop boxes populated on this (main) thread below and propagated to workers.
+        final var pageCropBoxes = StaticLayoutContainers.getPageCropBoxesMap();
 
         // Runnable that propagates ThreadLocal state to the current (worker) thread
         final Runnable propagateState = () -> {
@@ -278,12 +280,22 @@ public class DocumentProcessor {
             StaticLayoutContainers.setCurrentContentId(contentId);
             StaticLayoutContainers.setIsUseStructTree(useStructTree);
             StaticLayoutContainers.setEmbeddedImageBytesMap(embeddedImageBytesMap);
+            StaticLayoutContainers.setPageCropBoxesMap(pageCropBoxes);
         };
 
-        // Pre-fetch all page artifacts on main thread (document access is ThreadLocal)
+        // Pre-fetch all page artifacts and page crop boxes on main thread (document access is
+        // ThreadLocal). Crop boxes are cached so worker threads can resolve page bounds for
+        // off-page / background filtering without reading the shared PDDocument concurrently.
+        PDDocument pdDocument = StaticResources.getDocument();
         List<?>[] pageArtifacts = new List<?>[totalPages];
         for (int i = 0; i < totalPages; i++) {
             pageArtifacts[i] = document.getArtifacts(i);
+            if (pdDocument != null) {
+                double[] cropBox = pdDocument.getPage(i).getCropBox();
+                if (cropBox != null) {
+                    pageCropBoxes.put(i, cropBox.clone());
+                }
+            }
         }
 
         int parallelism = config.getThreads();
@@ -787,13 +799,19 @@ public class DocumentProcessor {
      * @return the page bounding box, or null if not available
      */
     public static BoundingBox getPageBoundingBox(int pageNumber) {
-        PDDocument document = StaticResources.getDocument();
-        if (document == null) {
-            return null;
-        }
-        double[] cropBox = document.getPage(pageNumber).getCropBox();
+        // Prefer the crop box cached on the main thread (see process()): StaticResources.getDocument()
+        // is a ThreadLocal that is null on ForkJoinPool worker threads, which previously made
+        // off-page / background filtering silently no-op during parallel processing.
+        double[] cropBox = StaticLayoutContainers.getPageCropBoxesMap().get(pageNumber);
         if (cropBox == null) {
-            return null;
+            PDDocument document = StaticResources.getDocument();
+            if (document == null) {
+                return null;
+            }
+            cropBox = document.getPage(pageNumber).getCropBox();
+            if (cropBox == null) {
+                return null;
+            }
         }
         return new BoundingBox(pageNumber, cropBox);
     }
