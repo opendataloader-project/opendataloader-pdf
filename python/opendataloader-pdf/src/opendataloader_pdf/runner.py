@@ -30,15 +30,27 @@ def run_jar(args: List[str], quiet: bool = False) -> str:
             ]
 
             if quiet:
-                # Quiet mode → capture all output
+                # Quiet mode → suppress the JAR's log stream (stderr) but
+                # relay its stdout to the caller: --to-stdout content and the
+                # folder summary line arrive on stdout, and swallowing them
+                # breaks pipe consumers (`... --quiet --to-stdout | jq`).
                 result = subprocess.run(
                     command,
-                    capture_output=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
                     text=True,
                     check=True,
                     encoding="utf-8",
                     errors="replace",
                 )
+                if result.stdout:
+                    if hasattr(sys.stdout, "buffer"):
+                        sys.stdout.buffer.write(
+                            result.stdout.encode("utf-8", errors="replace")
+                        )
+                        sys.stdout.buffer.flush()
+                    else:
+                        sys.stdout.write(result.stdout)
                 return result.stdout
 
             # Streaming mode → live output
