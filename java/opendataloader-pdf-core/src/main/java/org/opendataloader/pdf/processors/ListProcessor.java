@@ -175,6 +175,10 @@ public class ListProcessor {
         for (int index = listIntervals.size() - 1; index >= minIndex; index--) {
             TextListInterval interval = listIntervals.get(index);
             ListItemTextInfo preivousListItemTextInfo = interval.getLastListItemInfo();
+            if (Objects.equals(listItemTextInfo.getPageNumber(), preivousListItemTextInfo.getPageNumber()) &&
+                listItemTextInfo.getListItemValue().getTopY() > preivousListItemTextInfo.getListItemValue().getTopY()) {
+                break;
+            }
             double leftDifference = listItemTextInfo.getListItemValue().getLeftX() -
                     preivousListItemTextInfo.getListItemValue().getLeftX();
             boolean haveSameLeft = NodeUtils.areCloseNumbers(leftDifference, 0, maxXGap);
