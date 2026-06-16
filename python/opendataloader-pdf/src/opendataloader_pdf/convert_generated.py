@@ -16,6 +16,7 @@ def convert(
     format: Optional[Union[str, List[str]]] = None,
     quiet: bool = False,
     content_safety_off: Optional[Union[str, List[str]]] = None,
+    filter_hidden_text: Optional[str] = None,
     sanitize: bool = False,
     keep_line_breaks: bool = False,
     replace_invalid_chars: Optional[str] = None,
@@ -53,6 +54,7 @@ def convert(
         format: Output formats (comma-separated). Values: json, text, html, pdf, markdown, tagged-pdf. Default: json. For HTML inside Markdown use --markdown-with-html. For image extraction control use --image-output.
         quiet: Suppress console logging output
         content_safety_off: Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg
+        filter_hidden_text: Filter hidden (low-contrast) text via per-page rendering. Values: on, off. Default: off (opt-in; expensive, runs as sequential post-processing)
         sanitize: Enable sensitive data sanitization. Replaces emails, phone numbers, IPs, credit cards, and URLs with placeholders
         keep_line_breaks: Preserve original line breaks in extracted text
         replace_invalid_chars: Replacement character for invalid/unrecognized characters. Default: space
@@ -106,6 +108,8 @@ def convert(
                 args.extend(["--content-safety-off", ",".join(content_safety_off)])
         else:
             args.extend(["--content-safety-off", content_safety_off])
+    if filter_hidden_text:
+        args.extend(["--filter-hidden-text", filter_hidden_text])
     if sanitize:
         args.append("--sanitize")
     if keep_line_breaks:
