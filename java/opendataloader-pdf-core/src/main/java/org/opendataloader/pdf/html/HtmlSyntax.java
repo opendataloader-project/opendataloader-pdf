@@ -79,12 +79,6 @@ public class HtmlSyntax {
     public static final String HTML_SPAN_CLOSE_TAG = "</span>";
     /** Strikethrough text property. */
     public static final String HTML_STRIKETHROUGH_STYLE_PROPERTY = "text-decoration: line-through; ";
-    /** Italic font property. */
-    public static final String HTML_ITALIC_STYLE_PROPERTY = "font-style: italic; ";
-    /** Font color property. */
-    public static final String HTML_FONT_COLOR_PROPERTY = "color: rgb(%d, %d, %d); ";
-    /** Font weight property. */
-    public static final String HTML_FONT_WEIGHT_PROPERTY = "font-weight: %d; ";
-    /** Font size property. */
-    public static final String HTML_FONT_SIZE_PROPERTY = "font-size: %.3fpx; ";
+    /** Underline text property. */
+    public static final String HTML_UNDERLINE_STYLE_PROPERTY = "text-decoration: underline; ";
 }

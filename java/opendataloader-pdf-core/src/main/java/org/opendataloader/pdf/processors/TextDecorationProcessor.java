@@ -21,22 +21,23 @@ import org.verapdf.wcag.algorithms.entities.content.LineChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
 import java.util.*;
 
 /**
- * Detects strikethrough text by finding horizontal line or line-art rules that
- * pass through the vertical center of text chunks. Marks affected TextChunks by
- * setting their isStrikethroughText field to true.
+ * Detects strikethrough and underlined text by finding horizontal line or line-art rules that
+ * pass through the vertical center or baseline of text chunks. Marks affected TextChunks by
+ * setting their isStrikethroughText or isUnderlinedText fields to true.
  *
  * Filters to avoid false positives:
  * 1. Rule-to-text-height ratio (rejects thick background fills/borders)
  * 2. Rule-to-text width ratio (rejects rules wider than text)
- * 3. Vertical center alignment
+ * 3. Vertical center or baseline alignment
  * 4. Horizontal overlap requirement
  * 5. Multi-chunk matching using the combined text width
  */
-public class StrikethroughProcessor {
+public class TextDecorationProcessor {
 
     private static final double VERTICAL_CENTER_TOLERANCE = 0.2;
     private static final double MIN_HORIZONTAL_OVERLAP_RATIO = 0.8;
@@ -48,23 +49,24 @@ public class StrikethroughProcessor {
     private static final double MAX_RULE_TO_TEXT_HEIGHT_RATIO = 0.25;
 
     /**
-     * Detects strikethrough lines among page contents and sets affected
-     * TextChunk isStrikethroughText field to true.
+     * Detects strikethrough and underlined lines among page contents and sets affected
+     * TextChunk isStrikethroughText or isUnderlinedText field to true.
      *
      * @param pageContents the list of content objects for a page
-     * @param pageNumber the number of a page
-     * @return the page contents (modified in place)
+     * @param pageNumber   the number of a page
+     * @param detectStrikethrough wether strikethrough text should be detected
      */
-    public static List<IObject> processStrikethroughs(List<IObject> pageContents, int pageNumber) {
+    public static void processStrikethroughAndUnderlinedText(List<IObject> pageContents, int pageNumber, boolean detectStrikethrough) {
         if (pageContents == null) {
-            return null;
+            return;
         }
+
         SortedSet<LineChunk> horizontalLines = StaticContainers.getLinesCollection() != null ?
             StaticContainers.getLinesCollection().getHorizontalLines(pageNumber) : Collections.emptySortedSet();
         List<HorizontalRuleCandidate> horizontalRules = new ArrayList<>();
 
         for (LineChunk lineChunk : horizontalLines) {
-             HorizontalRuleCandidate rule = HorizontalRuleCandidate.fromLineChunk(lineChunk);
+            HorizontalRuleCandidate rule = HorizontalRuleCandidate.fromLineChunk(lineChunk);
             if (rule != null) {
                 horizontalRules.add(rule);
             }
@@ -72,41 +74,54 @@ public class StrikethroughProcessor {
 
         List<TextChunk> textChunks = new ArrayList<>();
         for (IObject content : pageContents) {
-            if (content instanceof LineArtChunk) {
-                HorizontalRuleCandidate rule = HorizontalRuleCandidate.fromLineArtChunk((LineArtChunk) content);
-                if (rule != null) {
-                    horizontalRules.add(rule);
-                }
-            } else if (content instanceof TextChunk) {
+//            if (content instanceof LineArtChunk) {
+//                HorizontalRuleCandidate rule = HorizontalRuleCandidate.fromLineArtChunk((LineArtChunk) content);
+//                if (rule != null) {
+//                    horizontalRules.add(rule);
+//                }
+//            } else
+            if (content instanceof TextChunk) {
                 textChunks.add((TextChunk) content);
             }
         }
 
         if (horizontalRules.isEmpty() || textChunks.isEmpty()) {
-            return pageContents;
+            return;
         }
 
         for (HorizontalRuleCandidate rule : horizontalRules) {
-            List<TextChunk> matchingChunks = new ArrayList<>();
+            List<TextChunk> strikethroughMatches = new ArrayList<>();
+            List<TextChunk> underlineMatches = new ArrayList<>();
+
             for (TextChunk textChunk : textChunks) {
                 if (textChunk.isWhiteSpaceChunk() || textChunk.isEmpty()) {
                     continue;
                 }
-                if (isStrikethroughRule(rule, textChunk)) {
-                    matchingChunks.add(textChunk);
+                if (detectStrikethrough && isStrikethroughRule(rule, textChunk)) {
+                    strikethroughMatches.add(textChunk);
+                }
+                if (isUnderlineRule(rule, textChunk)) {
+                    underlineMatches.add(textChunk);
                 }
             }
 
-            if (isValidMatch(rule, matchingChunks)) {
-                for (TextChunk chunk : matchingChunks) {
+            if (detectStrikethrough && isValidMatch(rule, strikethroughMatches)) {
+                for (TextChunk chunk : strikethroughMatches) {
                     if (!chunk.getIsStrikethroughText()) {
                         chunk.setIsStrikethroughText();
                     }
                 }
             }
+
+            if (isValidMatch(rule, underlineMatches)) {
+                for (TextChunk chunk : underlineMatches) {
+                    if (!chunk.getIsUnderlinedText()) {
+                        chunk.setIsUnderlinedText();
+                    }
+                }
+            }
         }
 
-        return pageContents;
     }
 
     /**
@@ -125,6 +140,22 @@ public class StrikethroughProcessor {
         // Line-art rectangles are also used for table/background artwork, so
         // apply the width-ratio guard even for direct single-chunk checks.
         return rule != null && isStrikethroughRule(rule, textChunk) && isValidMatch(rule, List.of(textChunk));
+    }
+
+    /**
+     * Determines whether a horizontal line is an underlined for the given text chunk.
+     */
+    public static boolean isUnderlineLine(LineChunk line, TextChunk textChunk) {
+        HorizontalRuleCandidate rule = HorizontalRuleCandidate.fromLineChunk(line);
+        return rule != null && isUnderlineRule(rule, textChunk) && isValidMatch(rule, Collections.singletonList(textChunk));
+    }
+
+    /**
+     * Determines whether a line-art rectangle is an underlined for the given text chunk.
+     */
+    public static boolean isUnderlineLineArt(LineArtChunk lineArt, TextChunk textChunk) {
+        HorizontalRuleCandidate rule = HorizontalRuleCandidate.fromLineArtChunk(lineArt);
+        return rule != null && isUnderlineRule(rule, textChunk) && isValidMatch(rule, List.of(textChunk));
     }
 
     private static boolean isHorizontalLineArt(LineArtChunk lineArt) {
@@ -175,6 +206,41 @@ public class StrikethroughProcessor {
 
         double textWidth = textChunk.getWidth();
         if (textWidth <= 0 || (overlapWidth / textWidth) < MIN_HORIZONTAL_OVERLAP_RATIO) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static boolean isUnderlineRule(HorizontalRuleCandidate rule, TextChunk textChunk) {
+        if (rule == null || textChunk == null) {
+            return false;
+        }
+        double textHeight = textChunk.getHeight();
+        if (textHeight <= 0) return false;
+
+        // Thickness: line width must be less than eps[2] * textHeight
+        // (eps[2] = 0.3, i.e. 30% of text height)
+        if (rule.thickness >= NodeUtils.UNDERLINED_TEXT_EPSILONS[2] * textHeight) {
+            return false;
+        }
+
+        // Vertical position: line must be between the baseline and
+        // (baseline - eps[1] * textHeight)
+        double baseline = textChunk.getBaseLine();
+        double lineY = rule.centerY;
+        double lowerBound = baseline - NodeUtils.UNDERLINED_TEXT_EPSILONS[1] * textHeight;
+        // Assuming Y increases upward, baseline is above the descender zone.
+        // lineY should be <= baseline and >= lowerBound.
+        if (lineY > baseline || lineY < lowerBound) {
+            return false;
+        }
+
+        // Horizontal overlap: at least eps[0] * textWidth overlap
+        double textLeftX = textChunk.getLeftX();
+        double textRightX = textChunk.getRightX();
+        double overlap = Math.min(rule.rightX - textLeftX, textRightX - rule.leftX);
+        if (overlap <= NodeUtils.UNDERLINED_TEXT_EPSILONS[0] * textChunk.getWidth()) {
             return false;
         }
 

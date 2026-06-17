@@ -29,7 +29,7 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainer
 import java.util.ArrayList;
 import java.util.List;
 
-public class StrikethroughProcessorTest {
+public class TextDecorationProcessorTest {
 
     @BeforeEach
     public void setUp() {
@@ -53,7 +53,7 @@ public class StrikethroughProcessorTest {
             LineChunk.BUTT_CAP_STYLE);
         StaticContainers.getLinesCollection().getHorizontalLines(0).add(line);
 
-        StrikethroughProcessor.processStrikethroughs(contents, 0);
+        TextDecorationProcessor.processStrikethroughAndUnderlinedText(contents, 0, true);
 
         Assertions.assertTrue(textChunk.getIsStrikethroughText(), "Text chunk should have isStrikethroughText set to true");
     }
@@ -72,7 +72,7 @@ public class StrikethroughProcessorTest {
             LineChunk.BUTT_CAP_STYLE);
         StaticContainers.getLinesCollection().getHorizontalLines(1).add(line);
 
-        StrikethroughProcessor.processStrikethroughs(contents, 1);
+        TextDecorationProcessor.processStrikethroughAndUnderlinedText(contents, 1, true);
 
         Assertions.assertTrue(textChunk.getIsStrikethroughText(), "Text chunk should have isStrikethroughText set to true");
     }
@@ -88,7 +88,7 @@ public class StrikethroughProcessorTest {
             LineChunk.BUTT_CAP_STYLE);
         StaticContainers.getLinesCollection().getHorizontalLines(1).add(line);
 
-        StrikethroughProcessor.processStrikethroughs(contents, 0);
+        TextDecorationProcessor.processStrikethroughAndUnderlinedText(contents, 0, true);
 
         Assertions.assertFalse(textChunk.getIsStrikethroughText(),
             "Line from another page must not affect current page processing");
@@ -107,7 +107,7 @@ public class StrikethroughProcessorTest {
             LineChunk.BUTT_CAP_STYLE);
         StaticContainers.getLinesCollection().getHorizontalLines(0).add(line);
 
-        StrikethroughProcessor.processStrikethroughs(contents, 0);
+        TextDecorationProcessor.processStrikethroughAndUnderlinedText(contents, 0, true);
 
         Assertions.assertFalse(textChunk.getIsStrikethroughText(), "Underline should not be detected as strikethrough");
     }
@@ -125,7 +125,7 @@ public class StrikethroughProcessorTest {
             LineChunk.BUTT_CAP_STYLE);
         StaticContainers.getLinesCollection().getHorizontalLines(0).add(line);
 
-        StrikethroughProcessor.processStrikethroughs(contents, 0);
+        TextDecorationProcessor.processStrikethroughAndUnderlinedText(contents, 0, true);
 
         Assertions.assertFalse(textChunk.getIsStrikethroughText(), "Line above text should not be detected as strikethrough");
     }
@@ -143,7 +143,7 @@ public class StrikethroughProcessorTest {
             LineChunk.BUTT_CAP_STYLE);
         StaticContainers.getLinesCollection().getHorizontalLines(0).add(line);
 
-        StrikethroughProcessor.processStrikethroughs(contents, 0);
+        TextDecorationProcessor.processStrikethroughAndUnderlinedText(contents, 0, true);
 
         Assertions.assertFalse(textChunk.getIsStrikethroughText(), "Partial horizontal overlap should not be detected as strikethrough");
     }
@@ -156,7 +156,7 @@ public class StrikethroughProcessorTest {
             "hello", 12, 100.0);
         contents.add(textChunk);
 
-        StrikethroughProcessor.processStrikethroughs(contents, 0);
+        TextDecorationProcessor.processStrikethroughAndUnderlinedText(contents, 0, true);
 
         Assertions.assertFalse(textChunk.getIsStrikethroughText(), "Text should remain unchanged when no lines exist");
     }
@@ -174,7 +174,7 @@ public class StrikethroughProcessorTest {
             LineChunk.BUTT_CAP_STYLE);
         StaticContainers.getLinesCollection().getHorizontalLines(0).add(line);
 
-        StrikethroughProcessor.processStrikethroughs(contents, 0);
+        TextDecorationProcessor.processStrikethroughAndUnderlinedText(contents, 0, true);
 
         Assertions.assertFalse(textChunk.getIsStrikethroughText(), "Vertical line should not trigger strikethrough");
     }
@@ -196,7 +196,7 @@ public class StrikethroughProcessorTest {
             LineChunk.BUTT_CAP_STYLE);
         StaticContainers.getLinesCollection().getHorizontalLines(0).add(line);
 
-        StrikethroughProcessor.processStrikethroughs(contents, 0);
+        TextDecorationProcessor.processStrikethroughAndUnderlinedText(contents, 0, true);
 
         Assertions.assertTrue(chunk1.getIsStrikethroughText(),
             "Thin line matching multiple chunks should be detected");
@@ -218,7 +218,7 @@ public class StrikethroughProcessorTest {
         LineArtChunk lineArt = new LineArtChunk(new BoundingBox(0, 10.0, 109.5, 90.0, 110.5));
         contents.add(lineArt);
 
-        StrikethroughProcessor.processStrikethroughs(contents, 0);
+        TextDecorationProcessor.processStrikethroughAndUnderlinedText(contents, 0, true);
 
         Assertions.assertTrue(chunk1.getIsStrikethroughText(),
             "Line-art strikethrough should support multiple chunks on one visual line");
@@ -240,7 +240,7 @@ public class StrikethroughProcessorTest {
             LineChunk.BUTT_CAP_STYLE);
         StaticContainers.getLinesCollection().getHorizontalLines(0).add(line);
 
-        StrikethroughProcessor.processStrikethroughs(contents, 0);
+        TextDecorationProcessor.processStrikethroughAndUnderlinedText(contents, 0, true);
 
         Assertions.assertFalse(textChunk.getIsStrikethroughText(), "Line much wider than text should be rejected as structural separator");
     }
@@ -260,7 +260,7 @@ public class StrikethroughProcessorTest {
             LineChunk.BUTT_CAP_STYLE);
         StaticContainers.getLinesCollection().getHorizontalLines(0).add(line);
 
-        StrikethroughProcessor.processStrikethroughs(contents, 0);
+        TextDecorationProcessor.processStrikethroughAndUnderlinedText(contents, 0, true);
 
         Assertions.assertFalse(textChunk.getIsStrikethroughText(), "Thick line should be rejected");
     }
@@ -279,7 +279,7 @@ public class StrikethroughProcessorTest {
             LineChunk.BUTT_CAP_STYLE);
         StaticContainers.getLinesCollection().getHorizontalLines(0).add(line);
 
-        StrikethroughProcessor.processStrikethroughs(contents, 0);
+        TextDecorationProcessor.processStrikethroughAndUnderlinedText(contents, 0, true);
 
         Assertions.assertFalse(textChunk.getIsStrikethroughText(), "Text-height line should be rejected");
     }
@@ -292,7 +292,7 @@ public class StrikethroughProcessorTest {
         LineChunk line = LineChunk.createLineChunk(0, 10.0, 110.0, 60.0, 110.0, 0.6,
             LineChunk.BUTT_CAP_STYLE);
 
-        Assertions.assertTrue(StrikethroughProcessor.isStrikethroughLine(line, textChunk),
+        Assertions.assertTrue(TextDecorationProcessor.isStrikethroughLine(line, textChunk),
             "Thin line at center should be detected as strikethrough");
     }
 
@@ -301,9 +301,9 @@ public class StrikethroughProcessorTest {
         TextChunk textChunk = new TextChunk(new BoundingBox(0, 10.0, 100.0, 60.0, 120.0),
             "test", 12, 100.0);
 
-        Assertions.assertFalse(StrikethroughProcessor.isStrikethroughLine(null, textChunk),
+        Assertions.assertFalse(TextDecorationProcessor.isStrikethroughLine(null, textChunk),
             "Null LineChunk should not throw or match");
-        Assertions.assertFalse(StrikethroughProcessor.isStrikethroughLineArt(null, textChunk),
+        Assertions.assertFalse(TextDecorationProcessor.isStrikethroughLineArt(null, textChunk),
             "Null LineArtChunk should not throw or match");
     }
 
@@ -319,7 +319,7 @@ public class StrikethroughProcessorTest {
         LineArtChunk lineArt = new LineArtChunk(new BoundingBox(0, 10.0, 109.5, 60.0, 110.5));
         contents.add(lineArt);
 
-        StrikethroughProcessor.processStrikethroughs(contents, 0);
+        TextDecorationProcessor.processStrikethroughAndUnderlinedText(contents, 0, true);
 
         Assertions.assertTrue(textChunk.getIsStrikethroughText(), "Thin centered line art should trigger strikethrough");
     }
@@ -330,7 +330,7 @@ public class StrikethroughProcessorTest {
             "hi", 12, 100.0);
         LineArtChunk lineArt = new LineArtChunk(new BoundingBox(0, 10.0, 109.5, 200.0, 110.5));
 
-        Assertions.assertFalse(StrikethroughProcessor.isStrikethroughLineArt(lineArt, textChunk),
+        Assertions.assertFalse(TextDecorationProcessor.isStrikethroughLineArt(lineArt, textChunk),
             "Direct line-art helper should reject rules much wider than the text");
     }
 
@@ -346,7 +346,7 @@ public class StrikethroughProcessorTest {
         LineArtChunk lineArt = new LineArtChunk(new BoundingBox(0, 10.0, 100.5, 60.0, 101.5));
         contents.add(lineArt);
 
-        StrikethroughProcessor.processStrikethroughs(contents, 0);
+        TextDecorationProcessor.processStrikethroughAndUnderlinedText(contents, 0, true);
 
         Assertions.assertFalse(textChunk.getIsStrikethroughText(), "Underline-position line art should be ignored");
     }
@@ -363,7 +363,7 @@ public class StrikethroughProcessorTest {
         LineArtChunk lineArt = new LineArtChunk(new BoundingBox(0, 10.0, 95.0, 60.0, 125.0));
         contents.add(lineArt);
 
-        StrikethroughProcessor.processStrikethroughs(contents, 0);
+        TextDecorationProcessor.processStrikethroughAndUnderlinedText(contents, 0, true);
 
         Assertions.assertFalse(textChunk.getIsStrikethroughText(), "Tall line art should be rejected");
     }
@@ -380,7 +380,7 @@ public class StrikethroughProcessorTest {
         LineArtChunk lineArt = new LineArtChunk(new BoundingBox(0, 10.0, 109.5, 200.0, 110.5));
         contents.add(lineArt);
 
-        StrikethroughProcessor.processStrikethroughs(contents, 0);
+        TextDecorationProcessor.processStrikethroughAndUnderlinedText(contents, 0, true);
 
         Assertions.assertFalse(textChunk.getIsStrikethroughText(), "Large background-like line art should be rejected");
     }
@@ -393,7 +393,104 @@ public class StrikethroughProcessorTest {
         LineChunk line = LineChunk.createLineChunk(0, 10.0, 110.0, 60.0, 110.0, 1.0,
             LineChunk.BUTT_CAP_STYLE);
 
-        Assertions.assertTrue(StrikethroughProcessor.isStrikethroughLine(line, textChunk),
+        Assertions.assertTrue(TextDecorationProcessor.isStrikethroughLine(line, textChunk),
             "Line at exact center should be detected as strikethrough");
+    }
+
+    @Test
+    public void testUnderlineDetected() {
+        TextChunk textChunk = new TextChunk(new BoundingBox(0, 10.0, 100.0, 60.0, 120.0),
+            "apple", 12, 100.0);
+        // Thin line in the underline zone: baseline to baseline - 0.35*height = [93,100]
+        LineChunk line = LineChunk.createLineChunk(0, 12.0, 97.0, 58.0, 97.0, 1.0,
+            LineChunk.BUTT_CAP_STYLE);
+
+        Assertions.assertTrue(TextDecorationProcessor.isUnderlineLine(line, textChunk),
+            "Thin line at underline position should be detected");
+    }
+
+    @Test
+    public void testUnderlineNotDetectedWhenTooThick() {
+        // Height=20, max underline thickness = 0.3*20 = 6.0
+        TextChunk textChunk = new TextChunk(new BoundingBox(0, 10.0, 100.0, 60.0, 120.0),
+            "apple", 12, 100.0);
+        // Line thickness=8.0 (>6.0)
+        LineChunk line = LineChunk.createLineChunk(0, 12.0, 97.0, 58.0, 97.0, 8.0,
+            LineChunk.BUTT_CAP_STYLE);
+
+        Assertions.assertFalse(TextDecorationProcessor.isUnderlineLine(line, textChunk),
+            "Thick underline should be rejected");
+    }
+
+    @Test
+    public void testUnderlineNotDetectedAboveBaseline() {
+        TextChunk textChunk = new TextChunk(new BoundingBox(0, 10.0, 100.0, 60.0, 120.0),
+            "apple", 12, 100.0);
+        // Line y=105 (above baseline=100)
+        LineChunk line = LineChunk.createLineChunk(0, 12.0, 105.0, 58.0, 105.0, 1.0,
+            LineChunk.BUTT_CAP_STYLE);
+
+        Assertions.assertFalse(TextDecorationProcessor.isUnderlineLine(line, textChunk),
+            "Line above baseline must not be an underline");
+    }
+
+    @Test
+    public void testUnderlineNotDetectedTooFarBelowBaseline() {
+        // Height=20, lower bound = 100 - 0.35*20 = 93. y=92 is below that.
+        TextChunk textChunk = new TextChunk(new BoundingBox(0, 10.0, 100.0, 60.0, 120.0),
+            "apple", 12, 100.0);
+        LineChunk line = LineChunk.createLineChunk(0, 12.0, 92.0, 58.0, 92.0, 1.0,
+            LineChunk.BUTT_CAP_STYLE);
+
+        Assertions.assertFalse(TextDecorationProcessor.isUnderlineLine(line, textChunk),
+            "Line too far below baseline must not be an underline");
+    }
+
+    @Test
+    public void testUnderlineNotDetectedWithInsufficientOverlap() {
+        // Text width=50, min overlap = 0.08*50 = 4
+        TextChunk textChunk = new TextChunk(new BoundingBox(0, 10.0, 100.0, 60.0, 120.0),
+            "apple", 12, 100.0);
+        // Line from x=10 to x=13, overlap = min(3, 50) = 3 < 4
+        LineChunk line = LineChunk.createLineChunk(0, 10.0, 97.0, 13.0, 97.0, 1.0,
+            LineChunk.BUTT_CAP_STYLE);
+
+        Assertions.assertFalse(TextDecorationProcessor.isUnderlineLine(line, textChunk),
+            "Line with too little horizontal overlap must be rejected");
+    }
+
+    @Test
+    public void testUnderlineDetectedWhenStrikethroughDisabled() {
+        // Even though strikethrough processing is off, the helper method itself must
+        // still recognise an underline – i.e. the detection logic is independent.
+        TextChunk textChunk = new TextChunk(new BoundingBox(0, 10.0, 100.0, 60.0, 120.0),
+            "hello", 12, 100.0);
+        LineChunk line = LineChunk.createLineChunk(0, 12.0, 97.0, 58.0, 97.0, 1.0,
+            LineChunk.BUTT_CAP_STYLE);
+
+        Assertions.assertTrue(TextDecorationProcessor.isUnderlineLine(line, textChunk),
+            "Underline helper should return true regardless of the strikethrough flag");
+    }
+
+    @Test
+    public void testUnderlineLineArtDetected() {
+        TextChunk textChunk = new TextChunk(new BoundingBox(0, 10.0, 100.0, 60.0, 120.0),
+            "world", 12, 100.0);
+        // Thin horizontal rectangle in the underline zone: y bottom=97, top=98, thickness=1
+        LineArtChunk lineArt = new LineArtChunk(new BoundingBox(0, 12.0, 97.0, 58.0, 98.0));
+
+        Assertions.assertTrue(TextDecorationProcessor.isUnderlineLineArt(lineArt, textChunk),
+            "Thin line‑art in underline zone must be detected");
+    }
+
+    @Test
+    public void testUnderlineLineArtTooThickRejected() {
+        TextChunk textChunk = new TextChunk(new BoundingBox(0, 10.0, 100.0, 60.0, 120.0),
+            "test", 12, 100.0);
+        // Tall rectangle (height=10, which is > 0.3*20=6)
+        LineArtChunk lineArt = new LineArtChunk(new BoundingBox(0, 12.0, 90.0, 58.0, 100.0));
+
+        Assertions.assertFalse(TextDecorationProcessor.isUnderlineLineArt(lineArt, textChunk),
+            "Overly tall line‑art must be rejected");
     }
 }
