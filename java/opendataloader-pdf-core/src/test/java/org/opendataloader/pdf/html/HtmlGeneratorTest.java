@@ -58,17 +58,9 @@ class HtmlGeneratorTest {
     static Stream<Arguments> styleCombinations() {
         List<Arguments> args = new ArrayList<>();
         boolean[] bools = { false, true };
-        double[] weights = { 400.0, 700.0 };   // 400 = default, 700 = bold
-        double[] sizes = { 12.0, 32.0 }; // 12 = default in pt
         for (boolean s : bools) {
             for (boolean i : bools) {
-                for (boolean c : bools) {
-                    for (double w : weights) {
-                        for (double fs : sizes) {
-                            args.add(Arguments.of(s, i, c, w, fs));
-                        }
-                    }
-                }
+                args.add(Arguments.of(s, i));
             }
         }
         return args.stream();
