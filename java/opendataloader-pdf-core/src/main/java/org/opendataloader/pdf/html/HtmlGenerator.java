@@ -533,11 +533,10 @@ public class HtmlGenerator implements Closeable {
 
     private static String getTextStyle(TextChunk chunk) {
         StringBuilder style = new StringBuilder();
-        if (chunk.getIsUnderlinedText()) {
-            style.append(HtmlSyntax.HTML_UNDERLINE_STYLE_PROPERTY);
-        }
-        if (chunk.getIsStrikethroughText()) {
-            style.append(HtmlSyntax.HTML_STRIKETHROUGH_STYLE_PROPERTY);
+        if (chunk.getIsStrikethroughText() || chunk.getIsUnderlinedText()) {
+            style.append(String.format(HtmlSyntax.HTML_TEXT_DECORATION_STYLE_PROPERTY,
+                (chunk.getIsStrikethroughText() ? HtmlSyntax.HTML_STRIKETHROUGH_VALUE : "") +
+                    (chunk.getIsUnderlinedText() ? HtmlSyntax.HTML_UNDERLINE_VALUE : "")));
         }
         return style.toString();
     }
