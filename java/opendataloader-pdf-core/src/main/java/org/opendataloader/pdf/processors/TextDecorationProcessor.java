@@ -135,12 +135,12 @@ public class TextDecorationProcessor {
     /**
      * Determines whether a line-art rectangle is a strikethrough for the given text chunk.
      */
-    static boolean isStrikethroughLineArt(LineArtChunk lineArt, TextChunk textChunk) {
-        HorizontalRuleCandidate rule = HorizontalRuleCandidate.fromLineArtChunk(lineArt);
-        // Line-art rectangles are also used for table/background artwork, so
-        // apply the width-ratio guard even for direct single-chunk checks.
-        return rule != null && isStrikethroughRule(rule, textChunk) && isValidMatch(rule, List.of(textChunk));
-    }
+//    static boolean isStrikethroughLineArt(LineArtChunk lineArt, TextChunk textChunk) {
+//        HorizontalRuleCandidate rule = HorizontalRuleCandidate.fromLineArtChunk(lineArt);
+//        // Line-art rectangles are also used for table/background artwork, so
+//        // apply the width-ratio guard even for direct single-chunk checks.
+//        return rule != null && isStrikethroughRule(rule, textChunk) && isValidMatch(rule, List.of(textChunk));
+//    }
 
     /**
      * Determines whether a horizontal line is an underlined for the given text chunk.
@@ -153,15 +153,15 @@ public class TextDecorationProcessor {
     /**
      * Determines whether a line-art rectangle is an underlined for the given text chunk.
      */
-    public static boolean isUnderlineLineArt(LineArtChunk lineArt, TextChunk textChunk) {
-        HorizontalRuleCandidate rule = HorizontalRuleCandidate.fromLineArtChunk(lineArt);
-        return rule != null && isUnderlineRule(rule, textChunk) && isValidMatch(rule, List.of(textChunk));
-    }
+//    public static boolean isUnderlineLineArt(LineArtChunk lineArt, TextChunk textChunk) {
+//        HorizontalRuleCandidate rule = HorizontalRuleCandidate.fromLineArtChunk(lineArt);
+//        return rule != null && isUnderlineRule(rule, textChunk) && isValidMatch(rule, List.of(textChunk));
+//    }
 
-    private static boolean isHorizontalLineArt(LineArtChunk lineArt) {
-        BoundingBox bbox = lineArt.getBoundingBox();
-        return bbox != null && bbox.getWidth() > bbox.getHeight();
-    }
+//    private static boolean isHorizontalLineArt(LineArtChunk lineArt) {
+//        BoundingBox bbox = lineArt.getBoundingBox();
+//        return bbox != null && bbox.getWidth() > bbox.getHeight();
+//    }
 
     private static boolean isStrikethroughRule(HorizontalRuleCandidate rule, TextChunk textChunk) {
         if (rule == null || textChunk == null) {
@@ -289,13 +289,13 @@ public class TextDecorationProcessor {
                 bbox.getWidth(), line.getWidth());
         }
 
-        private static HorizontalRuleCandidate fromLineArtChunk(LineArtChunk lineArt) {
-            if (lineArt == null || !isHorizontalLineArt(lineArt)) {
-                return null;
-            }
-            BoundingBox bbox = lineArt.getBoundingBox();
-            return new HorizontalRuleCandidate(lineArt.getLeftX(), lineArt.getRightX(), lineArt.getCenterY(),
-                bbox.getWidth(), bbox.getHeight());
-        }
+//        private static HorizontalRuleCandidate fromLineArtChunk(LineArtChunk lineArt) {
+//            if (lineArt == null || !isHorizontalLineArt(lineArt)) {
+//                return null;
+//            }
+//            BoundingBox bbox = lineArt.getBoundingBox();
+//            return new HorizontalRuleCandidate(lineArt.getLeftX(), lineArt.getRightX(), lineArt.getCenterY(),
+//                bbox.getWidth(), bbox.getHeight());
+//        }
     }
 }
