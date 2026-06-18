@@ -81,10 +81,16 @@
             <groupId>commons-cli</groupId>
             <artifactId>commons-cli</artifactId>
         </dependency>
+        <!--
+          okhttp 5's plain `okhttp` artifact is an empty Kotlin-Multiplatform
+          metadata jar; the JVM classes live in `okhttp-jvm`, and Maven cannot
+          resolve the JVM variant from Gradle module metadata — so depend on
+          `okhttp-jvm` explicitly. Version is managed by the okhttp-bom in the
+          parent pom (see java/pom.xml dependencyManagement).
+        -->
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>okhttp</artifactId>
-            <version>4.12.0</version>
+            <artifactId>okhttp-jvm</artifactId>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -93,8 +99,7 @@
         </dependency>
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>mockwebserver</artifactId>
-            <version>4.12.0</version>
+            <artifactId>mockwebserver3</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

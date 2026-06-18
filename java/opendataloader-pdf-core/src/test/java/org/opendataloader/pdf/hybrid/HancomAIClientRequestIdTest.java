@@ -2,9 +2,9 @@ package org.opendataloader.pdf.hybrid;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.OkHttpClient;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.RecordedRequest;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
+import mockwebserver3.RecordedRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,7 +32,7 @@ class HancomAIClientRequestIdTest {
 
     @AfterEach
     void tearDown() throws Exception {
-        server.shutdown();
+        server.close();
     }
 
     @Test
@@ -40,15 +40,16 @@ class HancomAIClientRequestIdTest {
         byte[] pdfBytes = "PDF_CONTENT_FOR_TEST".getBytes();
         String shaShort = sha256Hex(pdfBytes).substring(0, 12);
 
-        server.enqueue(new MockResponse()
-            .setResponseCode(200)
-            .setBody("{\"SUCCESS\":true,\"RESULT\":[]}"));
+        server.enqueue(new MockResponse.Builder()
+            .code(200)
+            .body("{\"SUCCESS\":true,\"RESULT\":[]}")
+            .build());
 
         // invokeCallModule is a package-private test hook added by the patch.
         client.invokeCallModule(pdfBytes, "DOCUMENT_LAYOUT_WITH_OCR");
 
         RecordedRequest req = server.takeRequest();
-        String body = req.getBody().readUtf8();
+        String body = req.getBody().utf8();
         assertTrue(body.contains("odl-" + shaShort + "-dla-ocr"),
             "REQUEST_ID should include sha_short and module short name; body=" + body);
     }
@@ -59,14 +60,15 @@ class HancomAIClientRequestIdTest {
         String shaShort = sha256Hex(pdfBytes).substring(0, 12);
         client.setSourcePdfShaShort(shaShort); // test hook
 
-        server.enqueue(new MockResponse()
-            .setResponseCode(200)
-            .setBody("{\"SUCCESS\":true,\"RESULT\":[[{\"caption\":\"x\"}]]}"));
+        server.enqueue(new MockResponse.Builder()
+            .code(200)
+            .body("{\"SUCCESS\":true,\"RESULT\":[[{\"caption\":\"x\"}]]}")
+            .build());
 
         client.invokeCallImageCaptioning(new byte[]{1, 2, 3}, /*pageNum*/ 2, /*objectId*/ 7);
 
         RecordedRequest req = server.takeRequest();
-        String body = req.getBody().readUtf8();
+        String body = req.getBody().utf8();
         assertTrue(body.contains("odl-" + shaShort + "-p2-o7-caption"),
             "image REQUEST_ID format mismatch; body=" + body);
     }

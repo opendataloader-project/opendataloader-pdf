@@ -16,9 +16,9 @@
 package org.opendataloader.pdf.hybrid;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.RecordedRequest;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
+import mockwebserver3.RecordedRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,7 +60,7 @@ public class HancomClientTest {
     @AfterEach
     void tearDown() throws IOException {
         client.shutdown();
-        mockServer.shutdown();
+        mockServer.close();
     }
 
     @Test
@@ -75,18 +75,20 @@ public class HancomClientTest {
     void testConvertFullWorkflow() throws Exception {
         // Mock upload response (Hancom API format: data.fileId)
         String uploadResponse = "{\"codeNum\":0,\"code\":\"file.upload.success\",\"data\":{\"fileId\":\"test-file-123\",\"fileName\":\"test.pdf\"}}";
-        mockServer.enqueue(new MockResponse()
-            .setBody(uploadResponse)
-            .setHeader("Content-Type", "application/json"));
+        mockServer.enqueue(new MockResponse.Builder()
+            .body(uploadResponse)
+            .addHeader("Content-Type", "application/json")
+            .build());
 
         // Mock visualinfo response
         String visualInfoResponse = createVisualInfoResponse();
-        mockServer.enqueue(new MockResponse()
-            .setBody(visualInfoResponse)
-            .setHeader("Content-Type", "application/json"));
+        mockServer.enqueue(new MockResponse.Builder()
+            .body(visualInfoResponse)
+            .addHeader("Content-Type", "application/json")
+            .build());
 
         // Mock delete response
-        mockServer.enqueue(new MockResponse().setResponseCode(200));
+        mockServer.enqueue(new MockResponse.Builder().code(200).build());
 
         HybridRequest request = HybridRequest.allPages(SAMPLE_PDF_BYTES);
         HybridResponse response = client.convert(request);
@@ -99,19 +101,19 @@ public class HancomClientTest {
 
         // Verify upload request
         RecordedRequest uploadReq = mockServer.takeRequest(1, TimeUnit.SECONDS);
-        Assertions.assertTrue(uploadReq.getPath().contains("/v1/dl/files/upload"));
-        Assertions.assertTrue(uploadReq.getHeader("Content-Type").contains("multipart/form-data"));
+        Assertions.assertTrue(uploadReq.getTarget().contains("/v1/dl/files/upload"));
+        Assertions.assertTrue(uploadReq.getHeaders().get("Content-Type").contains("multipart/form-data"));
 
         // Verify visualinfo request
         RecordedRequest visualInfoReq = mockServer.takeRequest(1, TimeUnit.SECONDS);
-        Assertions.assertTrue(visualInfoReq.getPath().contains("/v1/dl/files/test-file-123/visualinfo"));
-        Assertions.assertTrue(visualInfoReq.getPath().contains("engine=pdf_ai_dl"));
-        Assertions.assertTrue(visualInfoReq.getPath().contains("dlaMode=ENABLED"));
-        Assertions.assertTrue(visualInfoReq.getPath().contains("ocrMode=FORCE"));
+        Assertions.assertTrue(visualInfoReq.getTarget().contains("/v1/dl/files/test-file-123/visualinfo"));
+        Assertions.assertTrue(visualInfoReq.getTarget().contains("engine=pdf_ai_dl"));
+        Assertions.assertTrue(visualInfoReq.getTarget().contains("dlaMode=ENABLED"));
+        Assertions.assertTrue(visualInfoReq.getTarget().contains("ocrMode=FORCE"));
 
         // Verify delete request
         RecordedRequest deleteReq = mockServer.takeRequest(1, TimeUnit.SECONDS);
-        Assertions.assertTrue(deleteReq.getPath().contains("/v1/dl/files/test-file-123"));
+        Assertions.assertTrue(deleteReq.getTarget().contains("/v1/dl/files/test-file-123"));
         Assertions.assertEquals("DELETE", deleteReq.getMethod());
     }
 
@@ -119,17 +121,19 @@ public class HancomClientTest {
     void testConvertWithCleanupOnProcessingError() throws Exception {
         // Mock upload response (Hancom API format: data.fileId)
         String uploadResponse = "{\"codeNum\":0,\"code\":\"file.upload.success\",\"data\":{\"fileId\":\"test-file-456\",\"fileName\":\"test.pdf\"}}";
-        mockServer.enqueue(new MockResponse()
-            .setBody(uploadResponse)
-            .setHeader("Content-Type", "application/json"));
+        mockServer.enqueue(new MockResponse.Builder()
+            .body(uploadResponse)
+            .addHeader("Content-Type", "application/json")
+            .build());
 
         // Mock visualinfo error response
-        mockServer.enqueue(new MockResponse()
-            .setResponseCode(500)
-            .setBody("{\"error\": \"Internal server error\"}"));
+        mockServer.enqueue(new MockResponse.Builder()
+            .code(500)
+            .body("{\"error\": \"Internal server error\"}")
+            .build());
 
         // Mock delete response - should still be called
-        mockServer.enqueue(new MockResponse().setResponseCode(200));
+        mockServer.enqueue(new MockResponse.Builder().code(200).build());
 
         HybridRequest request = HybridRequest.allPages(SAMPLE_PDF_BYTES);
 
@@ -145,18 +149,20 @@ public class HancomClientTest {
     void testConvertWithSpecificPages() throws Exception {
         // Mock upload response (Hancom API format: data.fileId)
         String uploadResponse = "{\"codeNum\":0,\"code\":\"file.upload.success\",\"data\":{\"fileId\":\"test-file-pages\",\"fileName\":\"test.pdf\"}}";
-        mockServer.enqueue(new MockResponse()
-            .setBody(uploadResponse)
-            .setHeader("Content-Type", "application/json"));
+        mockServer.enqueue(new MockResponse.Builder()
+            .body(uploadResponse)
+            .addHeader("Content-Type", "application/json")
+            .build());
 
         // Mock visualinfo response
         String visualInfoResponse = createVisualInfoResponse();
-        mockServer.enqueue(new MockResponse()
-            .setBody(visualInfoResponse)
-            .setHeader("Content-Type", "application/json"));
+        mockServer.enqueue(new MockResponse.Builder()
+            .body(visualInfoResponse)
+            .addHeader("Content-Type", "application/json")
+            .build());
 
         // Mock delete response
-        mockServer.enqueue(new MockResponse().setResponseCode(200));
+        mockServer.enqueue(new MockResponse.Builder().code(200).build());
 
         Set<Integer> pages = new HashSet<>();
         pages.add(1);
@@ -171,9 +177,10 @@ public class HancomClientTest {
     @Test
     void testUploadFailure() throws Exception {
         // Mock upload error
-        mockServer.enqueue(new MockResponse()
-            .setResponseCode(400)
-            .setBody("{\"error\": \"Invalid file format\"}"));
+        mockServer.enqueue(new MockResponse.Builder()
+            .code(400)
+            .body("{\"error\": \"Invalid file format\"}")
+            .build());
 
         HybridRequest request = HybridRequest.allPages(SAMPLE_PDF_BYTES);
 
@@ -189,18 +196,20 @@ public class HancomClientTest {
     void testDeleteFailureIsIgnored() throws Exception {
         // Mock upload response (Hancom API format: data.fileId)
         String uploadResponse = "{\"codeNum\":0,\"code\":\"file.upload.success\",\"data\":{\"fileId\":\"test-file-del\",\"fileName\":\"test.pdf\"}}";
-        mockServer.enqueue(new MockResponse()
-            .setBody(uploadResponse)
-            .setHeader("Content-Type", "application/json"));
+        mockServer.enqueue(new MockResponse.Builder()
+            .body(uploadResponse)
+            .addHeader("Content-Type", "application/json")
+            .build());
 
         // Mock visualinfo response
         String visualInfoResponse = createVisualInfoResponse();
-        mockServer.enqueue(new MockResponse()
-            .setBody(visualInfoResponse)
-            .setHeader("Content-Type", "application/json"));
+        mockServer.enqueue(new MockResponse.Builder()
+            .body(visualInfoResponse)
+            .addHeader("Content-Type", "application/json")
+            .build());
 
         // Mock delete failure - should be ignored
-        mockServer.enqueue(new MockResponse().setResponseCode(404));
+        mockServer.enqueue(new MockResponse.Builder().code(404).build());
 
         HybridRequest request = HybridRequest.allPages(SAMPLE_PDF_BYTES);
         HybridResponse response = client.convert(request);
@@ -214,16 +223,18 @@ public class HancomClientTest {
     void testConvertAsync() throws Exception {
         // Mock responses (Hancom API format: data.fileId)
         String uploadResponse = "{\"codeNum\":0,\"code\":\"file.upload.success\",\"data\":{\"fileId\":\"async-file\",\"fileName\":\"test.pdf\"}}";
-        mockServer.enqueue(new MockResponse()
-            .setBody(uploadResponse)
-            .setHeader("Content-Type", "application/json"));
+        mockServer.enqueue(new MockResponse.Builder()
+            .body(uploadResponse)
+            .addHeader("Content-Type", "application/json")
+            .build());
 
         String visualInfoResponse = createVisualInfoResponse();
-        mockServer.enqueue(new MockResponse()
-            .setBody(visualInfoResponse)
-            .setHeader("Content-Type", "application/json"));
+        mockServer.enqueue(new MockResponse.Builder()
+            .body(visualInfoResponse)
+            .addHeader("Content-Type", "application/json")
+            .build());
 
-        mockServer.enqueue(new MockResponse().setResponseCode(200));
+        mockServer.enqueue(new MockResponse.Builder().code(200).build());
 
         HybridRequest request = HybridRequest.allPages(SAMPLE_PDF_BYTES);
         HybridResponse response = client.convertAsync(request).get(10, TimeUnit.SECONDS);

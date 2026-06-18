@@ -17,8 +17,8 @@ package org.opendataloader.pdf.hybrid;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.OkHttpClient;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,7 +55,7 @@ class DoclingFastServerClientTest {
     @AfterEach
     void tearDown() throws IOException {
         client.shutdown();
-        server.shutdown();
+        server.close();
     }
 
     @Test
@@ -68,9 +68,10 @@ class DoclingFastServerClientTest {
             + "\"failed_pages\": []"
             + "}";
 
-        server.enqueue(new MockResponse()
-            .setBody(responseJson)
-            .addHeader("Content-Type", "application/json"));
+        server.enqueue(new MockResponse.Builder()
+            .body(responseJson)
+            .addHeader("Content-Type", "application/json")
+            .build());
 
         HybridRequest request = HybridRequest.allPages(new byte[]{0x25, 0x50, 0x44, 0x46});
         HybridResponse response = client.convert(request);
@@ -89,9 +90,10 @@ class DoclingFastServerClientTest {
             + "\"failed_pages\": [3]"
             + "}";
 
-        server.enqueue(new MockResponse()
-            .setBody(responseJson)
-            .addHeader("Content-Type", "application/json"));
+        server.enqueue(new MockResponse.Builder()
+            .body(responseJson)
+            .addHeader("Content-Type", "application/json")
+            .build());
 
         HybridRequest request = HybridRequest.allPages(new byte[]{0x25, 0x50, 0x44, 0x46});
         HybridResponse response = client.convert(request);
@@ -110,9 +112,10 @@ class DoclingFastServerClientTest {
             + "\"failed_pages\": [2, 4]"
             + "}";
 
-        server.enqueue(new MockResponse()
-            .setBody(responseJson)
-            .addHeader("Content-Type", "application/json"));
+        server.enqueue(new MockResponse.Builder()
+            .body(responseJson)
+            .addHeader("Content-Type", "application/json")
+            .build());
 
         HybridRequest request = HybridRequest.allPages(new byte[]{0x25, 0x50, 0x44, 0x46});
         HybridResponse response = client.convert(request);
@@ -128,9 +131,10 @@ class DoclingFastServerClientTest {
             + "\"errors\": [\"PDF conversion failed: ValueError: corrupted file\"]"
             + "}";
 
-        server.enqueue(new MockResponse()
-            .setBody(responseJson)
-            .addHeader("Content-Type", "application/json"));
+        server.enqueue(new MockResponse.Builder()
+            .body(responseJson)
+            .addHeader("Content-Type", "application/json")
+            .build());
 
         HybridRequest request = HybridRequest.allPages(new byte[]{0x25, 0x50, 0x44, 0x46});
 
@@ -147,9 +151,10 @@ class DoclingFastServerClientTest {
             + "\"processing_time\": 1.0"
             + "}";
 
-        server.enqueue(new MockResponse()
-            .setBody(responseJson)
-            .addHeader("Content-Type", "application/json"));
+        server.enqueue(new MockResponse.Builder()
+            .body(responseJson)
+            .addHeader("Content-Type", "application/json")
+            .build());
 
         HybridRequest request = HybridRequest.allPages(new byte[]{0x25, 0x50, 0x44, 0x46});
         HybridResponse response = client.convert(request);
@@ -169,9 +174,10 @@ class DoclingFastServerClientTest {
             + "\"failed_pages\": [3, \"bad\", null, 5]"
             + "}";
 
-        server.enqueue(new MockResponse()
-            .setBody(responseJson)
-            .addHeader("Content-Type", "application/json"));
+        server.enqueue(new MockResponse.Builder()
+            .body(responseJson)
+            .addHeader("Content-Type", "application/json")
+            .build());
 
         HybridRequest request = HybridRequest.allPages(new byte[]{0x25, 0x50, 0x44, 0x46});
         HybridResponse response = client.convert(request);
@@ -183,7 +189,7 @@ class DoclingFastServerClientTest {
 
     @Test
     void testCheckAvailabilitySucceeds() throws IOException {
-        server.enqueue(new MockResponse().setResponseCode(200).setBody("ok"));
+        server.enqueue(new MockResponse.Builder().code(200).body("ok").build());
 
         // Should not throw
         client.checkAvailability();
@@ -192,7 +198,7 @@ class DoclingFastServerClientTest {
     @Test
     void testCheckAvailabilityFailsWhenServerUnavailable() throws IOException {
         // Shut down the server to simulate unavailability
-        server.shutdown();
+        server.close();
 
         IOException exception = assertThrows(IOException.class, () -> client.checkAvailability());
         assertTrue(exception.getMessage().contains("Hybrid server is not available"));
@@ -204,7 +210,7 @@ class DoclingFastServerClientTest {
 
     @Test
     void testCheckAvailabilityFailsOnUnhealthyServer() {
-        server.enqueue(new MockResponse().setResponseCode(503));
+        server.enqueue(new MockResponse.Builder().code(503).build());
 
         IOException exception = assertThrows(IOException.class, () -> client.checkAvailability());
         assertTrue(exception.getMessage().contains("returned HTTP 503"));
@@ -221,9 +227,10 @@ class DoclingFastServerClientTest {
             + "\"failed_pages\": [1, 2, 3]"
             + "}";
 
-        server.enqueue(new MockResponse()
-            .setBody(responseJson)
-            .addHeader("Content-Type", "application/json"));
+        server.enqueue(new MockResponse.Builder()
+            .body(responseJson)
+            .addHeader("Content-Type", "application/json")
+            .build());
 
         HybridRequest request = HybridRequest.allPages(new byte[]{0x25, 0x50, 0x44, 0x46});
         HybridResponse response = client.convert(request);
