@@ -99,27 +99,24 @@ public class TextLineProcessor {
                                                    Set<TextChunk> chunksAfterWhitespace) {
         List<TextChunk> textChunks = textLine.getTextChunks();
         TextChunk currentTextChunk = textChunks.get(0);
-        double previousEnd = currentTextChunk.getBoundingBox().getRightX();
+        double previousEnd = currentTextChunk.getTextEnd();
         TextLine newLine = new TextLine();
         newLine.add(currentTextChunk);
         for (int i = 1; i < textChunks.size(); i++) {
             currentTextChunk = textChunks.get(i);
-            double currentStart = currentTextChunk.getBoundingBox().getLeftX();
+            double currentStart = currentTextChunk.getTextStart();
             boolean hasGap = currentStart - previousEnd > threshold;
             boolean hadWhitespace = chunksAfterWhitespace.contains(currentTextChunk);
             if (hasGap || hadWhitespace) {
-                double spaceLeft = Math.min(previousEnd, currentStart);
-                double spaceRight = Math.max(previousEnd, currentStart);
-                BoundingBox spaceBBox = new BoundingBox(currentTextChunk.getBoundingBox());
-                spaceBBox.setLeftX(spaceLeft);
-                spaceBBox.setRightX(spaceRight);
-                TextChunk spaceChunk = new TextChunk(spaceBBox, " ", currentTextChunk.getFontName(), textLine.getFontSize(),
-                    currentTextChunk.getFontWeight(), currentTextChunk.getItalicAngle(), textLine.getBaseLine(),
+                TextChunk spaceChunk = new TextChunk(new BoundingBox(currentTextChunk.getBoundingBox()), " ", currentTextChunk.getFontName(),
+                    currentTextChunk.getFontSize(), currentTextChunk.getFontWeight(), currentTextChunk.getItalicAngle(), currentTextChunk.getBaseLine(),
                     currentTextChunk.getFontColor(), null, currentTextChunk.getSlantDegree());
+                spaceChunk.setTextStart(previousEnd);
+                spaceChunk.setTextEnd(currentStart);
                 spaceChunk.adjustSymbolEndsToBoundingBox(null);
                 newLine.add(spaceChunk);
             }
-            previousEnd = currentTextChunk.getBoundingBox().getRightX();
+            previousEnd = currentTextChunk.getTextEnd();
             newLine.add(currentTextChunk);
         }
 
