@@ -61,7 +61,7 @@
         <verapdf.version>1.31.86</verapdf.version>
         <verapdf.wcag.algs.version>1.31.27</verapdf.wcag.algs.version>
         <jackson.databind.version>2.22.0</jackson.databind.version>
-        <junit.jupiter.version>5.14.3</junit.jupiter.version>
+        <junit.jupiter.version>6.1.0</junit.jupiter.version>
         <assertj.version>3.27.7</assertj.version>
         <commons.cli.version>1.11.0</commons.cli.version>
         <maven-compiler.plugin.version>3.15.0</maven-compiler.plugin.version>
