@@ -16,7 +16,6 @@
 package org.opendataloader.pdf.processors;
 
 import org.opendataloader.pdf.api.Config;
-import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.entities.EnrichedImageChunk;
 import org.opendataloader.pdf.entities.SemanticFormula;
 import org.opendataloader.pdf.entities.SemanticPicture;
@@ -51,7 +50,6 @@ import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextColumn;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
-import org.verapdf.wcag.algorithms.semanticalgorithms.utils.StreamInfo;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
 import java.io.IOException;
@@ -574,9 +572,7 @@ public class HybridDocumentProcessor {
         for (int pageNumber : pageNumbers) {
             try {
                 List<IObject> pageContents = workingContents.get(pageNumber);
-                if (config.isDetectStrikethrough()) {
-                    StrikethroughProcessor.processStrikethroughs(pageContents, pageNumber);
-                }
+                TextDecorationProcessor.processStrikethroughAndUnderlinedText(pageContents, pageNumber, config.isDetectStrikethrough());
                 pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber);
                 pageContents = pageContents.stream()
                     .filter(x -> !(x instanceof LineChunk))

@@ -533,30 +533,12 @@ public class HtmlGenerator implements Closeable {
 
     private static String getTextStyle(TextChunk chunk) {
         StringBuilder style = new StringBuilder();
-        if (chunk.getIsStrikethroughText()) {
-            style.append(HtmlSyntax.HTML_STRIKETHROUGH_STYLE_PROPERTY);
-        }
-        if (chunk.isItalic()) {
-            style.append(HtmlSyntax.HTML_ITALIC_STYLE_PROPERTY);
-        }
-        double fontSizeInPx = getFontSizeInPx(chunk.getFontSize());
-        if (!NodeUtils.areCloseNumbers(fontSizeInPx, 16.0)) {
-            style.append(String.format(HtmlSyntax.HTML_FONT_SIZE_PROPERTY, fontSizeInPx));
-        }
-        Color color = chunk.getTextColor();
-        if (color != null && (color.getRGB() & 0x00FFFFFF) != (Color.BLACK.getRGB() & 0x00FFFFFF)) {
-            style.append(String.format(HtmlSyntax.HTML_FONT_COLOR_PROPERTY,
-                color.getRed(), color.getGreen(), color.getBlue()));
-        }
-        int fontWeight = chunk.getRoundedFontWeight();
-        if (fontWeight != 400) {
-            style.append(String.format(HtmlSyntax.HTML_FONT_WEIGHT_PROPERTY, fontWeight));
+        if (chunk.getIsStrikethroughText() || chunk.getIsUnderlinedText()) {
+            style.append(String.format(HtmlSyntax.HTML_TEXT_DECORATION_STYLE_PROPERTY,
+                (chunk.getIsStrikethroughText() ? HtmlSyntax.HTML_STRIKETHROUGH_VALUE : "") +
+                    (chunk.getIsUnderlinedText() ? HtmlSyntax.HTML_UNDERLINE_VALUE : "")));
         }
         return style.toString();
-    }
-
-    public static double getFontSizeInPx(double sizeInPt) {
-        return sizeInPt * 4.0 / 3.0;
     }
 
     @Override
