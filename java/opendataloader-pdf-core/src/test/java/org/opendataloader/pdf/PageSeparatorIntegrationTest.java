@@ -171,7 +171,7 @@ class PageSeparatorIntegrationTest {
         assertTrue(Files.exists(htmlOutput), "HTML output should exist");
 
         String htmlContent = Files.readString(htmlOutput);
-        assertTrue(htmlContent.contains("<hr class=\"page-break\"/>"), "HTML should contain the page separator");
+        assertTrue(htmlContent.contains("&lt;hr class=&quot;page-break&quot;/&gt;"), "HTML should contain the page separator");
     }
 
     @Test
@@ -188,7 +188,7 @@ class PageSeparatorIntegrationTest {
         assertTrue(Files.exists(htmlOutput), "HTML output should exist");
 
         String htmlContent = Files.readString(htmlOutput);
-        assertTrue(htmlContent.contains("<div class=\"page\" data-page=\"1\">"), "HTML should contain page separator with page number 1");
+        assertTrue(htmlContent.contains("&lt;div class=&quot;page&quot; data-page=&quot;1&quot;&gt;"), "HTML should contain page separator with page number 1");
     }
 
     @Test
@@ -272,7 +272,7 @@ class PageSeparatorIntegrationTest {
     }
 
     private static String htmlMarker(int page) {
-        return "data-page=\"" + page + "\"";
+        return "data-page=&quot;" + page + "&quot;";
     }
 
     @Test

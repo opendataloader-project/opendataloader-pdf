@@ -104,7 +104,7 @@ public class HtmlGenerator implements Closeable {
         this.htmlFileName = pdfFileName.substring(0, pdfFileName.length() - 3) + "html";
         this.htmlFilePath = Path.of(config.getOutputFolder(), htmlFileName);
         this.htmlWriter = new FileWriter(htmlFilePath.toFile(), StandardCharsets.UTF_8);
-        this.htmlPageSeparator = config.getHtmlPageSeparator();
+        this.htmlPageSeparator = escapeHtmlAttribute(config.getHtmlPageSeparator());
         this.selectedPageNumbers = new HashSet<>(config.getPageNumbers());
         this.embedImages = config.isEmbedImages();
         this.imageFormat = config.getImageFormat();
