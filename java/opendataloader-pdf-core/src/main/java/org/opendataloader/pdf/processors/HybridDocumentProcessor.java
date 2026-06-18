@@ -16,7 +16,6 @@
 package org.opendataloader.pdf.processors;
 
 import org.opendataloader.pdf.api.Config;
-import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.entities.EnrichedImageChunk;
 import org.opendataloader.pdf.entities.SemanticFormula;
 import org.opendataloader.pdf.entities.SemanticPicture;
@@ -51,20 +50,23 @@ import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextColumn;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
-import org.verapdf.wcag.algorithms.semanticalgorithms.utils.StreamInfo;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -94,6 +96,16 @@ public class HybridDocumentProcessor {
     private static volatile JsonNode lastHybridTimings;
 
     /**
+     * Cumulative client-side wall-clock for {@code client.convert(...)} calls during
+     * the most recent {@link #processDocument} run. Includes network RTT, JSON
+     * (de)serialization, and any queueing — i.e. the time the user actually waited
+     * on the backend. May exceed the server-reported {@code total_ms} (which
+     * counts only on-GPU work) and is the truer figure for SLA / throughput
+     * reasoning. {@code null} when no backend chunks were attempted.
+     */
+    private static volatile Long lastHybridClientMs;
+
+    /**
      * Stores element metadata from the most recent hybrid backend processing.
      * Reset at the start of each {@code processDocument} call.
      */
@@ -106,9 +118,61 @@ public class HybridDocumentProcessor {
      */
     private static volatile Map<Integer, List<OcrWordInfo>> lastOcrWordsByPage;
 
+    /**
+     * Stores the raw merged JSON returned by the hybrid backend's most recent
+     * {@code HybridResponse.getJson()}. Downstream tools (e.g. opendataloader-pdfua
+     * evidence reports) need per-module raw outputs to file as L2 evidence.
+     *
+     * <p>Single-threaded by contract: this static is overwritten on each
+     * {@code processDocument} call, so concurrent invocations would race. Callers
+     * that need per-document raw JSON must serialize {@code processDocument}
+     * invocations (or wrap with their own ThreadLocal).
+     *
+     * <p>Multi-chunk documents (&gt;{@link #BACKEND_CHUNK_SIZE} backend pages) currently
+     * keep only the last chunk's JSON. Single-chunk documents capture the full
+     * response.
+     */
+    private static volatile JsonNode lastHybridRawJson;
+
+    /**
+     * Snapshot of the hybrid backend's {@code /health} response taken at the
+     * start of the most recent {@link #processDocument} call. Downstream
+     * tools surface this so server-side timings can be interpreted against
+     * the hardware that produced them. {@code null} if hybrid was off or
+     * the backend did not provide a health endpoint.
+     */
+    private static volatile JsonNode lastHybridHealth;
+
     /** Returns the hybrid server timings from the most recent {@link #processDocument} call. */
     public static JsonNode getLastHybridTimings() {
         return lastHybridTimings;
+    }
+
+    /**
+     * Returns cumulative client-side wall-clock for hybrid backend calls during
+     * the most recent {@link #processDocument} call, or {@code null} if hybrid
+     * was off or the backend was never invoked. Always measured client-side, so
+     * mock and real backends are directly comparable on the same scale.
+     */
+    public static Long getLastHybridClientMs() {
+        return lastHybridClientMs;
+    }
+
+    /**
+     * Returns the raw merged hybrid backend JSON from the most recent
+     * {@link #processDocument} call, or {@code null} if hybrid was not used.
+     */
+    public static JsonNode getLastHybridRawJson() {
+        return lastHybridRawJson;
+    }
+
+    /**
+     * Returns the hybrid backend's reported {@code /health} payload
+     * (hardware + models + version) from the most recent processing run,
+     * or {@code null} if hybrid was off or the backend didn't report one.
+     */
+    public static JsonNode getLastHybridHealth() {
+        return lastHybridHealth;
     }
 
     /** Returns the element metadata from the most recent {@link #processDocument} call. */
@@ -171,6 +235,9 @@ public class HybridDocumentProcessor {
         lastHybridTimings = null; // Reset for this processing run
         lastElementMetadata = null;
         lastOcrWordsByPage = null;
+        lastHybridRawJson = null;
+        lastHybridHealth = null;
+        lastHybridClientMs = null;
 
         int totalPages = StaticContainers.getDocument().getNumberOfPages();
         LOGGER.log(Level.INFO, "Starting hybrid processing for {0} pages", totalPages);
@@ -183,7 +250,20 @@ public class HybridDocumentProcessor {
         // Phase 0: Check backend availability before any processing.
         // Runs before triage intentionally — if the user explicitly requested hybrid mode,
         // they expect the server to be available regardless of how pages would be routed.
-        getClient(config).checkAvailability();
+        // When the health check fails and --hybrid-fallback is enabled, route every page
+        // through the Java path instead of aborting the whole run (PDFDLOSP-21).
+        try {
+            getClient(config).checkAvailability();
+        } catch (IOException e) {
+            if (config.getHybridConfig().isFallbackToJava()) {
+                LOGGER.log(Level.WARNING,
+                    "Hybrid backend unavailable; falling back to Java-only processing: {0}",
+                    e.getMessage());
+                return processAllPagesAsJavaFallback(
+                    inputPdfName, config, pagesToProcess, totalPages);
+            }
+            throw e;
+        }
 
         // Phase 1: Filter all pages and collect filtered contents
         Map<Integer, List<IObject>> filteredContents = filterAllPages(inputPdfName, config, pagesToProcess, totalPages);
@@ -236,10 +316,15 @@ public class HybridDocumentProcessor {
         // Process backend path (synchronous)
         Map<Integer, List<IObject>> backendResults;
         Set<Integer> backendFailedPages = new HashSet<>();
+        // Track SemanticPicture→EnrichedImageChunk swaps so we can rekey
+        // ElementMetadata after Phase 6 cross-page processors (HeaderFooter,
+        // List, etc.) re-run setIDs and mutate the picture's structure id.
+        Map<EnrichedImageChunk, Long> pictureSwapOriginalIds = new IdentityHashMap<>();
         try {
             backendResults = processBackendPath(inputPdfName, backendPages, config, backendFailedPages);
             // Enrich backend results: copy StreamInfos from Java-extracted content for MCID linkage
-            enrichBackendResults(backendResults, filteredContents, config.getHybridConfig());
+            enrichBackendResults(backendResults, filteredContents, config.getHybridConfig(),
+                pictureSwapOriginalIds);
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Backend processing failed: {0}", e.getMessage());
             if (config.getHybridConfig().isFallbackToJava()) {
@@ -263,8 +348,9 @@ public class HybridDocumentProcessor {
                 );
                 backendResults.putAll(fallbackResults);
             } else {
-                LOGGER.log(Level.WARNING, "Backend returned partial_success: {0} page(s) failed (pages {1}), fallback disabled — skipping failed pages",
+                LOGGER.log(Level.WARNING, "Backend returned partial_success: {0} page(s) failed (pages {1}), fallback disabled — failing fast",
                     new Object[]{backendFailedPages.size(), failedPages1Indexed});
+                failFastIfBackendFailedWithoutFallback(backendFailedPages, config.getHybridConfig());
             }
         }
 
@@ -274,6 +360,104 @@ public class HybridDocumentProcessor {
         // Phase 6: Post-processing (cross-page operations)
         postProcess(contents, config, pagesToProcess, totalPages);
 
+        // Phase 7: Final metadata rekey. setIDs runs inside HeaderFooterProcessor /
+        // ListProcessor / TableBorderProcessor during Phase 6 and may rewrite the
+        // structure id of any IObject on the page — including EnrichedImageChunks
+        // we just created from SemanticPicture. Without this final pass, an image
+        // node downstream of a list (or header/footer container that triggers
+        // setIDs) drops ai_score / source label / caption metadata.
+        if (!pictureSwapOriginalIds.isEmpty() && lastElementMetadata != null
+                && !lastElementMetadata.isEmpty()) {
+            Map<Long, Long> oldToFinal = new HashMap<>(pictureSwapOriginalIds.size());
+            for (Map.Entry<EnrichedImageChunk, Long> e : pictureSwapOriginalIds.entrySet()) {
+                Long oldId = e.getValue();
+                Long finalId = e.getKey().getRecognizedStructureId();
+                if (oldId != null && finalId != null && !oldId.equals(finalId)) {
+                    oldToFinal.put(oldId, finalId);
+                }
+            }
+            if (!oldToFinal.isEmpty()) {
+                Map<Long, ElementMetadata> rebuilt = new HashMap<>(lastElementMetadata);
+                // Two-phase apply: first detach every (oldId → meta) we plan
+                // to move, then re-attach under finalId. This prevents a
+                // finalId that coincides with another picture's oldId from
+                // clobbering unrelated metadata.
+                Map<Long, ElementMetadata> detached = new HashMap<>(oldToFinal.size());
+                for (Long oldId : oldToFinal.keySet()) {
+                    ElementMetadata meta = rebuilt.remove(oldId);
+                    if (meta != null) {
+                        detached.put(oldId, meta);
+                    }
+                }
+                for (Map.Entry<Long, Long> e : oldToFinal.entrySet()) {
+                    Long oldId = e.getKey();
+                    ElementMetadata meta = detached.get(oldId);
+                    if (meta == null) continue;
+                    Long finalId = e.getValue();
+                    if (rebuilt.containsKey(finalId)) {
+                        // Another node already owns finalId after setIDs ran.
+                        // Re-attaching here would silently overwrite that
+                        // node's metadata. Try to restore the detached entry
+                        // under its original key — but only if oldId is also
+                        // unowned. With HashMap iteration order, an earlier
+                        // iteration in this same loop may have migrated some
+                        // other picture *into* oldId (its finalId == this
+                        // oldId), and rolling back would clobber that
+                        // legitimately-migrated entry. Permanent metadata
+                        // loss is the lesser evil there: the WARNING flags
+                        // it for investigation.
+                        if (!rebuilt.containsKey(oldId)) {
+                            LOGGER.log(Level.WARNING,
+                                "PhaseRekey: finalId {0} already owned in metadata map, keeping picture entry at oldId {1} (alt may not surface in JSON output)",
+                                new Object[]{finalId, oldId});
+                            rebuilt.put(oldId, meta);
+                        } else {
+                            LOGGER.log(Level.WARNING,
+                                "PhaseRekey: both finalId {0} and oldId {1} already owned in metadata map; dropping picture metadata to preserve migrated entries",
+                                new Object[]{finalId, oldId});
+                        }
+                        continue;
+                    }
+                    rebuilt.put(finalId, meta);
+                }
+                lastElementMetadata = Collections.unmodifiableMap(rebuilt);
+            }
+        }
+
+        return contents;
+    }
+
+    /**
+     * Runs the full document through the Java path when the hybrid backend health check
+     * fails and {@code --hybrid-fallback} is enabled. Mirrors the structure of
+     * {@link #processDocument} so the caller still gets a per-page result list, but
+     * skips triage and the backend chunk loop entirely.
+     */
+    private static List<List<IObject>> processAllPagesAsJavaFallback(
+            String inputPdfName,
+            Config config,
+            Set<Integer> pagesToProcess,
+            int totalPages) throws IOException {
+
+        Map<Integer, List<IObject>> filteredContents =
+            filterAllPages(inputPdfName, config, pagesToProcess, totalPages);
+
+        Set<Integer> allPages = new HashSet<>();
+        for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
+            if (shouldProcessPage(pageNumber, pagesToProcess)) {
+                allPages.add(pageNumber);
+            }
+        }
+
+        Map<Integer, List<IObject>> javaResults =
+            processJavaPath(filteredContents, allPages, config, totalPages);
+
+        List<List<IObject>> contents = new ArrayList<>();
+        for (int i = 0; i < totalPages; i++) {
+            contents.add(new ArrayList<>());
+        }
+        mergeResults(contents, javaResults, new HashMap<>(), pagesToProcess, totalPages);
+        postProcess(contents, config, pagesToProcess, totalPages);
         return contents;
     }
 
@@ -283,6 +467,32 @@ public class HybridDocumentProcessor {
             contents.add(new ArrayList<>());
         }
         return contents;
+    }
+
+    /**
+     * Fails fast when the backend left pages unprocessed and fallback to Java is disabled.
+     * Without this, the CLI would exit 0 with a sparse JSON that drops failed pages,
+     * making backend failures invisible to automation.
+     *
+     * @param backendFailedPages 0-indexed pages that the backend failed to process.
+     * @param hybridConfig       Hybrid configuration; consulted for the fallback flag.
+     * @throws IOException if {@code backendFailedPages} is non-empty and
+     *                     {@code hybridConfig.isFallbackToJava()} returns false. The
+     *                     exception message lists the 1-indexed failed page numbers.
+     */
+    static void failFastIfBackendFailedWithoutFallback(
+            Set<Integer> backendFailedPages,
+            HybridConfig hybridConfig) throws IOException {
+        Objects.requireNonNull(backendFailedPages, "backendFailedPages");
+        Objects.requireNonNull(hybridConfig, "hybridConfig");
+        if (backendFailedPages.isEmpty() || hybridConfig.isFallbackToJava()) {
+            return;
+        }
+        List<Integer> failedPages1Indexed = backendFailedPages.stream()
+            .map(p -> p + 1).sorted().collect(Collectors.toList());
+        throw new IOException(String.format(
+            "Backend processing failed for %d page(s) with fallback disabled: pages %s",
+            backendFailedPages.size(), failedPages1Indexed));
     }
 
     /**
@@ -362,10 +572,8 @@ public class HybridDocumentProcessor {
         for (int pageNumber : pageNumbers) {
             try {
                 List<IObject> pageContents = workingContents.get(pageNumber);
+                TextDecorationProcessor.processStrikethroughAndUnderlinedText(pageContents, pageNumber, config.isDetectStrikethrough());
                 pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber);
-                if (config.isDetectStrikethrough()) {
-                    StrikethroughProcessor.processStrikethroughs(pageContents);
-                }
                 pageContents = pageContents.stream()
                     .filter(x -> !(x instanceof LineChunk))
                     .collect(Collectors.toList());
@@ -434,6 +642,17 @@ public class HybridDocumentProcessor {
         // Get or create cached client
         HybridClient client = getClient(config);
 
+        // Best-effort: snapshot backend health (hardware, models, version)
+        // so downstream tooling can interpret server timings against the
+        // environment that produced them. Narrow catch to Exception so
+        // JVM-fatal errors (OutOfMemoryError etc.) still propagate.
+        try {
+            lastHybridHealth = client.fetchHealth();
+        } catch (Exception e) {
+            lastHybridHealth = null;
+            LOGGER.log(Level.FINE, "fetchHealth failed", e);
+        }
+
         // Read PDF bytes
         byte[] pdfBytes = Files.readAllBytes(Path.of(inputPdfName));
 
@@ -467,13 +686,32 @@ public class HybridDocumentProcessor {
             }
 
             try {
-                HybridRequest request = HybridRequest.forPages(pdfBytes, chunkPages1Indexed, outputFormats);
-                HybridResponse response = client.convert(request);
+                HybridRequest request = HybridRequest.forPages(pdfBytes, chunkPages1Indexed, outputFormats)
+                    .withCropOutput(cropOutputFor(config));
+                long convertStartNs = System.nanoTime();
+                HybridResponse response;
+                try {
+                    response = client.convert(request);
+                } finally {
+                    // Accumulate client wall-clock for this convert call whether
+                    // it succeeded, failed with IOException, or otherwise unwound
+                    // — the user waited that long regardless of outcome, and
+                    // that's what this metric exists to measure (SLA / throughput).
+                    // nanoTime() is monotonic; safe against wall-clock jumps
+                    // (NTP / DST / manual changes).
+                    long convertElapsedMs = TimeUnit.NANOSECONDS.toMillis(
+                        System.nanoTime() - convertStartNs);
+                    lastHybridClientMs = (lastHybridClientMs == null ? 0L : lastHybridClientMs)
+                        + convertElapsedMs;
+                }
 
                 // Capture hybrid server pipeline timings (last chunk wins for now;
                 // in single-chunk documents this is exact)
                 if (response.getTimings() != null) {
                     lastHybridTimings = response.getTimings();
+                }
+                if (response.getJson() != null) {
+                    lastHybridRawJson = response.getJson();
                 }
 
                 // Collect failed pages (convert from 1-indexed to 0-indexed)
@@ -509,7 +747,15 @@ public class HybridDocumentProcessor {
                     if (page0 < transformedContents.size()) {
                         List<IObject> pageContents = transformedContents.get(page0);
                         TextProcessor.replaceUndefinedCharacters(pageContents, config.getReplaceInvalidChars());
+                        // Capture transformer-assigned IDs before setIDs rewrites them
+                        // so ElementMetadata keyed by the original ID can be migrated
+                        // to the renumbered structure ID.
+                        List<Long> oldIds = new ArrayList<>(pageContents.size());
+                        for (IObject obj : pageContents) {
+                            oldIds.add(obj.getRecognizedStructureId());
+                        }
                         DocumentProcessor.setIDs(pageContents);
+                        rekeyMetadata(transformer, oldIds, pageContents);
                         results.put(page0, pageContents);
                     } else {
                         results.put(page0, new ArrayList<>());
@@ -544,6 +790,42 @@ public class HybridDocumentProcessor {
      */
     private static HybridClient getClient(Config config) {
         return HybridClientFactory.getOrCreate(config.getHybrid(), config.getHybridConfig());
+    }
+
+    /**
+     * Resolve the per-document crop / page-image destination from the config.
+     *
+     * <p>The cached client cannot hold this — it is reused across documents and
+     * its config reflects only the first one. Carrying it on the per-document
+     * {@link HybridClient.HybridRequest} keeps the destination correct (and
+     * needs no shared mutable state) for the document being processed.
+     */
+    private static HybridClient.CropOutput cropOutputFor(Config config) {
+        HybridConfig hc = config.getHybridConfig();
+        if (hc == null || !hc.isSaveCrops() || hc.getCropOutputDir() == null) {
+            return HybridClient.CropOutput.DISABLED;
+        }
+        return new HybridClient.CropOutput(true, hc.getCropOutputDir());
+    }
+
+    /**
+     * Migrate ElementMetadata entries from transformer-assigned IDs onto the
+     * structure IDs that {@code setIDs} just renumbered each IObject with.
+     * Without this, the metadata map keeps pointing at the throwaway IDs the
+     * transformer minted and downstream metadata lookups all miss.
+     */
+    private static void rekeyMetadata(HybridSchemaTransformer transformer,
+                                       List<Long> oldIds, List<IObject> pageContents) {
+        Map<Long, Long> oldToNew = new java.util.HashMap<>(pageContents.size());
+        for (int i = 0; i < pageContents.size(); i++) {
+            Long oldId = oldIds.get(i);
+            Long newId = pageContents.get(i).getRecognizedStructureId();
+            if (oldId == null || newId == null || oldId.equals(newId)) continue;
+            oldToNew.put(oldId, newId);
+        }
+        if (!oldToNew.isEmpty()) {
+            transformer.rekeyMetadata(oldToNew);
+        }
     }
 
     /**
@@ -610,7 +892,8 @@ public class HybridDocumentProcessor {
     private static void enrichBackendResults(
             Map<Integer, List<IObject>> backendResults,
             Map<Integer, List<IObject>> filteredContents,
-            HybridConfig hybridConfig) {
+            HybridConfig hybridConfig,
+            Map<EnrichedImageChunk, Long> pictureSwapOriginalIds) {
 
         for (Map.Entry<Integer, List<IObject>> entry : backendResults.entrySet()) {
             int pageNumber = entry.getKey();
@@ -631,10 +914,62 @@ public class HybridDocumentProcessor {
                         SemanticPicture picture = (SemanticPicture) obj;
                         ImageChunk matched = findMatchingImageChunk(picture, javaImageChunks);
                         if (matched != null) {
-                            enriched.add(new EnrichedImageChunk(matched, picture.getDescription()));
+                            // Author-authored /Alt wins over AI caption. If the
+                            // matched chunk is already an EnrichedImageChunk with
+                            // AltSource.ORIGINAL (TaggedDocumentProcessor extracts
+                            // the source PDF's /Alt that way), preserve it; the
+                            // backend caption is discarded because a human-authored
+                            // /Alt is more trustworthy than any AI description.
+                            String alt;
+                            EnrichedImageChunk.AltSource altSource;
+                            if (matched instanceof EnrichedImageChunk
+                                    && ((EnrichedImageChunk) matched).getAltSource()
+                                        == EnrichedImageChunk.AltSource.ORIGINAL
+                                    && ((EnrichedImageChunk) matched).hasDescription()) {
+                                alt = ((EnrichedImageChunk) matched).getDescription();
+                                altSource = EnrichedImageChunk.AltSource.ORIGINAL;
+                                // Author /Alt wins; AI caption is intentionally
+                                // discarded here. Logged so a future regression
+                                // (e.g. whitespace-only original /Alt that
+                                // passes hasDescription) is visible during
+                                // hybrid-pipeline debugging.
+                                if (picture.getDescription() != null
+                                        && !picture.getDescription().isEmpty()) {
+                                    LOGGER.log(Level.FINE,
+                                        "Page {0}: kept original /Alt over AI caption (orig len={1}, ai len={2})",
+                                        new Object[]{pageNumber, alt.length(), picture.getDescription().length()});
+                                }
+                            } else {
+                                alt = picture.getDescription();
+                                altSource = EnrichedImageChunk.AltSource.AI_GENERATED;
+                            }
+                            EnrichedImageChunk replacement = new EnrichedImageChunk(
+                                matched, alt, altSource);
+                            // Preserve the SemanticPicture's structure id so that
+                            // ElementMetadata keyed by it (ai_score, source label,
+                            // caption) survives the SemanticPicture → EnrichedImageChunk
+                            // swap. Without this, downstream metadata lookups miss
+                            // and the JSON output drops every picture-level metadata
+                            // field except `alt`.
+                            Long originalId = picture.getRecognizedStructureId();
+                            replacement.setRecognizedStructureId(originalId);
+                            if (originalId != null) {
+                                pictureSwapOriginalIds.put(replacement, originalId);
+                            }
+                            enriched.add(replacement);
                         } else {
-                            LOGGER.fine(() -> "Page " + pageNumber + ": dropped SemanticPicture (no matching ImageChunk) at bbox ["
+                            // No Java ImageChunk overlapped this backend Figure.
+                            // We preserve the SemanticPicture rather than dropping
+                            // it: dropping silently discards the backend's caption
+                            // and the corresponding ai-raw FIGURE evidence, and
+                            // the page would no longer mention a region the
+                            // backend definitively classified as a figure.
+                            // Downstream PDF struct-tree tagging tolerates a
+                            // missing StreamInfo (the figure is tagged from its
+                            // bounding box) but the alt text and evidence remain.
+                            LOGGER.fine(() -> "Page " + pageNumber + ": kept SemanticPicture without StreamInfo (no matching Java ImageChunk) at bbox ["
                                 + String.format("%.1f,%.1f,%.1f,%.1f", picture.getLeftX(), picture.getBottomY(), picture.getRightX(), picture.getTopY()) + "]");
+                            enriched.add(picture);
                         }
                     } else {
                         enriched.add(obj);

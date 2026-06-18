@@ -37,6 +37,7 @@ import org.verapdf.cos.COSDictionary;
 import org.verapdf.cos.COSObjType;
 import org.verapdf.cos.COSObject;
 import org.verapdf.cos.COSTrailer;
+import org.verapdf.exceptions.InvalidPasswordException;
 import org.verapdf.gf.model.impl.containers.StaticStorages;
 import org.verapdf.gf.model.impl.cos.GFCosInfo;
 import org.verapdf.gf.model.impl.sa.GFSAPDFDocument;
@@ -52,9 +53,15 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.LinesPreprocessi
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 import org.verapdf.xmp.containers.StaticXmpCoreContainers;
 
+import org.opendataloader.pdf.exceptions.InvalidPdfFileException;
+
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ForkJoinPool;
@@ -245,6 +252,7 @@ public class DocumentProcessor {
         final var tableBordersCollection = StaticContainers.getTableBordersCollection();
         final var accumulatedNodeMapper = StaticContainers.getAccumulatedNodeMapper();
         final var objectKeyMapper = StaticContainers.getObjectKeyMapper();
+        final var linesCollection = StaticContainers.getLinesCollection();
         final boolean keepLineBreaks = StaticContainers.isKeepLineBreaks();
         final boolean isDataLoader = StaticContainers.isDataLoader();
         final var isIgnoreCharsWithoutUnicode = StaticContainers.getIsIgnoreCharactersWithoutUnicode();
@@ -253,6 +261,7 @@ public class DocumentProcessor {
         final var headings = StaticLayoutContainers.getHeadings();
         final long contentId = StaticLayoutContainers.getCurrentContentId();
         final boolean useStructTree = StaticLayoutContainers.isUseStructTree();
+        final var embeddedImageBytesMap = StaticLayoutContainers.getEmbeddedImageBytesMap();
 
         // Runnable that propagates ThreadLocal state to the current (worker) thread
         final Runnable propagateState = () -> {
@@ -261,6 +270,7 @@ public class DocumentProcessor {
             StaticContainers.setTableBordersCollection(tableBordersCollection);
             StaticContainers.setAccumulatedNodeMapper(accumulatedNodeMapper);
             StaticContainers.setObjectKeyMapper(objectKeyMapper);
+            StaticContainers.setLinesCollection(linesCollection);
             StaticContainers.setKeepLineBreaks(keepLineBreaks);
             StaticContainers.setIsDataLoader(isDataLoader);
             StaticContainers.setIsIgnoreCharactersWithoutUnicode(isIgnoreCharsWithoutUnicode);
@@ -268,6 +278,7 @@ public class DocumentProcessor {
             StaticLayoutContainers.setHeadings(headings);
             StaticLayoutContainers.setCurrentContentId(contentId);
             StaticLayoutContainers.setIsUseStructTree(useStructTree);
+            StaticLayoutContainers.setEmbeddedImageBytesMap(embeddedImageBytesMap);
         };
 
         // Pre-fetch all page artifacts on main thread (document access is ThreadLocal)
@@ -278,7 +289,8 @@ public class DocumentProcessor {
 
         int parallelism = config.getThreads();
         ForkJoinPool pool = new ForkJoinPool(parallelism);
-        LOGGER.log(Level.INFO, "Processing {0} pages with {1} threads", new Object[]{totalPages, parallelism});
+        int pagesToProcessCount = (pagesToProcess != null) ? pagesToProcess.size() : totalPages;
+        LOGGER.log(Level.INFO, "Processing {0} pages with {1} threads", new Object[]{pagesToProcessCount, parallelism});
 
         try {
             // Loop 1: ContentFilter per-page (largest bottleneck)
@@ -329,10 +341,8 @@ public class DocumentProcessor {
                     propagateState.run();
                     List<IObject> pageContents = contents.get(pageNumber);
                     if (structured) {
+                        TextDecorationProcessor.processStrikethroughAndUnderlinedText(pageContents, pageNumber, config.isDetectStrikethrough());
                         pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber);
-                        if (config.isDetectStrikethrough()) {
-                            StrikethroughProcessor.processStrikethroughs(pageContents);
-                        }
                         pageContents = pageContents.stream().filter(x -> !(x instanceof LineChunk)).collect(Collectors.toList());
                         pageContents = SpecialTableProcessor.detectSpecialTables(pageContents);
                     }
@@ -418,15 +428,75 @@ public class DocumentProcessor {
         Map<Long, ElementMetadata> remapped = new LinkedHashMap<>();
         for (List<IObject> pageContents : contents) {
             for (IObject obj : pageContents) {
-                Long id = obj.getRecognizedStructureId();
-                if (id == null || id == 0L) continue;
-                ElementMetadata meta = rawMetadata.get(id);
-                if (meta != null) {
-                    remapped.put(id, meta);
-                }
+                collectMetadata(obj, rawMetadata, remapped);
             }
         }
         return remapped;
+    }
+
+    /**
+     * Walks an IObject tree and copies any metadata entry keyed by its
+     * recognized structure id into {@code remapped}. Containers like
+     * {@code ListItem} hold their own children via {@code getContents()}, so
+     * a shallow iteration over the top-level page list would miss nested
+     * images / pictures — their metadata (ai_score, source label, caption)
+     * would silently disappear from the JSON output. We recurse through the
+     * containers we actually emit at this level (lists, tables, headers,
+     * footers); leaf nodes terminate naturally.
+     */
+    private static void collectMetadata(IObject obj,
+            Map<Long, ElementMetadata> rawMetadata,
+            Map<Long, ElementMetadata> remapped) {
+        if (obj == null) return;
+        Long id = obj.getRecognizedStructureId();
+        if (id != null && id != 0L) {
+            ElementMetadata meta = rawMetadata.get(id);
+            if (meta != null) {
+                remapped.put(id, meta);
+            }
+        }
+        // Recurse into every container the JSON serializers walk. This keeps
+        // the metadata visibility surface aligned with the serialized tree —
+        // any image / picture / heading that ends up in the JSON output also
+        // gets its ElementMetadata copied through. Add new container types
+        // here when their serializer descends into child IObjects.
+        if (obj instanceof org.verapdf.wcag.algorithms.entities.lists.ListItem) {
+            for (IObject child : ((org.verapdf.wcag.algorithms.entities.lists.ListItem) obj).getContents()) {
+                collectMetadata(child, rawMetadata, remapped);
+            }
+        } else if (obj instanceof org.verapdf.wcag.algorithms.entities.lists.PDFList) {
+            for (org.verapdf.wcag.algorithms.entities.lists.ListItem item :
+                    ((org.verapdf.wcag.algorithms.entities.lists.PDFList) obj).getListItems()) {
+                collectMetadata(item, rawMetadata, remapped);
+            }
+        } else if (obj instanceof org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder) {
+            org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder table =
+                (org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder) obj;
+            if (table.isTextBlock()) {
+                // Text-block tables serialize as a single anonymous cell. Recurse
+                // through the cell IObject itself so its own structureId metadata
+                // is captured alongside the children — going straight to
+                // getContents() would skip the cell-level entry.
+                org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell cell = table.getCell(0, 0);
+                if (cell != null) {
+                    collectMetadata(cell, rawMetadata, remapped);
+                }
+            } else {
+                for (org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow row : table.getRows()) {
+                    for (org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell cell : row.getCells()) {
+                        collectMetadata(cell, rawMetadata, remapped);
+                    }
+                }
+            }
+        } else if (obj instanceof org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell) {
+            for (IObject child : ((org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell) obj).getContents()) {
+                collectMetadata(child, rawMetadata, remapped);
+            }
+        } else if (obj instanceof org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter) {
+            for (IObject child : ((org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter) obj).getContents()) {
+                collectMetadata(child, rawMetadata, remapped);
+            }
+        }
     }
 
     private static boolean shouldProcessPage(int pageNumber, Set<Integer> pagesToProcess) {
@@ -488,7 +558,8 @@ public class DocumentProcessor {
             pdfWriter.updatePDF(inputPDF, config.getPassword(), config.getOutputFolder(), contents);
         }
         if (config.isGenerateJSON()) {
-            JsonWriter.writeToJson(inputPDF, config.getOutputFolder(), contents, elementMetadata);
+            JsonWriter.writeToJson(inputPDF, config.getOutputFolder(), contents, elementMetadata,
+                    null, config.isIncludeHeaderFooter());
         }
         if (config.isGenerateMarkdown()) {
             try (MarkdownGenerator markdownGenerator = MarkdownGeneratorFactory.getMarkdownGenerator(inputPDF,
@@ -518,8 +589,24 @@ public class DocumentProcessor {
      */
     public static void preprocessing(String pdfName, Config config) throws IOException {
         LOGGER.log(Level.INFO, () -> "File name: " + pdfName);
+        validatePdfMagicNumber(pdfName);
         updateStaticContainers(config);
-        PDDocument pdDocument = new PDDocument(pdfName);
+        PDDocument pdDocument;
+        try {
+            pdDocument = new PDDocument(pdfName);
+        } catch (InvalidPasswordException pw) {
+            // Encrypted PDFs are not a content-validity failure — let the
+            // password-handling branch in callers (e.g. CLIMain) take over.
+            throw pw;
+        } catch (IOException cause) {
+            // Magic number was present, so the user expected a real PDF, but
+            // veraPDF could not parse the document (truncated download, body
+            // corruption, missing xref). Surface a friendly message instead
+            // of letting the raw veraPDF IOException leak as a stack trace.
+            throw new InvalidPdfFileException(
+                "'" + displayName(pdfName) + "' is not a valid PDF file (corrupted or truncated content).",
+                cause);
+        }
         StaticResources.setDocument(pdDocument);
         GFSAPDFDocument document = new GFSAPDFDocument(pdDocument);
 //        org.verapdf.gf.model.impl.containers.StaticContainers.setFlavour(Collections.singletonList(PDFAFlavour.WCAG_2_2));
@@ -544,6 +631,59 @@ public class DocumentProcessor {
         LinesPreprocessingConsumer linesPreprocessingConsumer = new LinesPreprocessingConsumer();
         linesPreprocessingConsumer.findTableBorders();
         StaticContainers.setTableBordersCollection(new TableBordersCollection(linesPreprocessingConsumer.getTableBorders()));
+    }
+
+    /**
+     * Verifies the input file contains the PDF magic number ({@code %PDF-})
+     * within its first 1024 bytes.
+     *
+     * <p>ISO 32000-1 §7.5.2 allows the {@code %PDF-} header to appear "near
+     * the beginning" of the file rather than strictly at byte 0; real-world
+     * PDFs sometimes have a leading UTF-8 BOM or whitespace. A 1024-byte
+     * search window matches that tolerance while still rejecting any
+     * JPG/PNG/HTML/empty file.
+     *
+     * @throws InvalidPdfFileException if the magic number is not present
+     * @throws IOException if the file cannot be opened or read
+     */
+    private static void validatePdfMagicNumber(String pdfName) throws IOException {
+        Path path = Path.of(pdfName);
+        byte[] head;
+        try (InputStream in = Files.newInputStream(path)) {
+            head = in.readNBytes(1024);
+        }
+        byte[] marker = "%PDF-".getBytes(StandardCharsets.US_ASCII);
+        if (indexOfBytes(head, marker) < 0) {
+            throw new InvalidPdfFileException(
+                "'" + displayName(pdfName) + "' is not a valid PDF file (missing %PDF- header).");
+        }
+    }
+
+    /**
+     * Path.getFileName() returns null for filesystem roots (e.g. {@code C:\}).
+     * Fall back to the original input string in that case so the user-facing
+     * error message is never empty.
+     */
+    private static String displayName(String pdfName) {
+        Path fileName = Path.of(pdfName).getFileName();
+        return fileName != null ? fileName.toString() : pdfName;
+    }
+
+    private static int indexOfBytes(byte[] haystack, byte[] needle) {
+        if (needle.length == 0 || haystack.length < needle.length) {
+            return -1;
+        }
+        int last = haystack.length - needle.length;
+        outer:
+        for (int i = 0; i <= last; i++) {
+            for (int j = 0; j < needle.length; j++) {
+                if (haystack[i + j] != needle[j]) {
+                    continue outer;
+                }
+            }
+            return i;
+        }
+        return -1;
     }
 
     private static void updateStaticContainers(Config config) {

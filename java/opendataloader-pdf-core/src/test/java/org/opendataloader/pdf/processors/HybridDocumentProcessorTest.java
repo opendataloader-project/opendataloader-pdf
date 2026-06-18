@@ -483,4 +483,113 @@ public class HybridDocumentProcessorTest {
         }
         Assertions.assertEquals(pages, allChunked);
     }
+
+    // failFastIfBackendFailedWithoutFallback — fail-fast contract for backend failures.
+
+    @Test
+    public void testFailFast_EmptyFailedPages_NoFallback_DoesNotThrow() throws Exception {
+        // Contract: no failed pages means processing succeeded — never throw,
+        // regardless of fallback flag.
+        HybridConfig config = new HybridConfig();
+        config.setFallbackToJava(false);
+
+        HybridDocumentProcessor.failFastIfBackendFailedWithoutFallback(new HashSet<>(), config);
+    }
+
+    @Test
+    public void testFailFast_EmptyFailedPages_WithFallback_DoesNotThrow() throws Exception {
+        HybridConfig config = new HybridConfig();
+        config.setFallbackToJava(true);
+
+        HybridDocumentProcessor.failFastIfBackendFailedWithoutFallback(new HashSet<>(), config);
+    }
+
+    @Test
+    public void testFailFast_NonEmptyFailedPages_WithFallback_DoesNotThrow() throws Exception {
+        // Contract: when fallback is enabled, failed pages are reprocessed via Java
+        // path elsewhere — this helper must stay silent and never throw.
+        HybridConfig config = new HybridConfig();
+        config.setFallbackToJava(true);
+
+        Set<Integer> failed = new HashSet<>();
+        failed.add(0);
+        failed.add(3);
+
+        HybridDocumentProcessor.failFastIfBackendFailedWithoutFallback(failed, config);
+    }
+
+    @Test
+    public void testFailFast_AllPagesFailed_NoFallback_ThrowsWithPageNumbers() {
+        // Contract: backend left every page unprocessed and fallback is disabled —
+        // throw so the caller (CLI / library wrapper) can surface a non-zero exit
+        // instead of producing an empty result silently.
+        HybridConfig config = new HybridConfig();
+        config.setFallbackToJava(false);
+
+        Set<Integer> failed = new HashSet<>();
+        for (int i = 0; i < 21; i++) {
+            failed.add(i);
+        }
+
+        java.io.IOException ex = Assertions.assertThrows(java.io.IOException.class, () ->
+            HybridDocumentProcessor.failFastIfBackendFailedWithoutFallback(failed, config));
+
+        // Message must carry enough information that automation reading stderr can
+        // identify which pages failed without re-running with verbose logs.
+        // Anchor on the rendered list prefix/suffix so the assertion fails if the
+        // list itself disappears — a bare contains("1") would pass on "1 page(s)".
+        Assertions.assertTrue(ex.getMessage().contains("21 page(s)"),
+            "message should include failed page count: " + ex.getMessage());
+        Assertions.assertTrue(ex.getMessage().contains("[1, 2,"),
+            "message should render 1-indexed page list starting at 1: " + ex.getMessage());
+        Assertions.assertTrue(ex.getMessage().contains(", 21]"),
+            "message should render 1-indexed page list ending at 21: " + ex.getMessage());
+        Assertions.assertTrue(ex.getMessage().contains("fallback disabled"),
+            "message should explain why processing failed: " + ex.getMessage());
+    }
+
+    @Test
+    public void testFailFast_PartialPagesFailed_NoFallback_ThrowsWithPageNumbers() {
+        // Contract: partial failure is treated the same as total failure when
+        // fallback is disabled — any unprocessed page must surface as a non-zero
+        // exit, otherwise downstream consumers cannot tell a sparse result from
+        // a successful one.
+        HybridConfig config = new HybridConfig();
+        config.setFallbackToJava(false);
+
+        Set<Integer> failed = new HashSet<>();
+        failed.add(1); // page 2 (1-indexed)
+        failed.add(5); // page 6
+        failed.add(20); // page 21
+
+        java.io.IOException ex = Assertions.assertThrows(java.io.IOException.class, () ->
+            HybridDocumentProcessor.failFastIfBackendFailedWithoutFallback(failed, config));
+
+        Assertions.assertTrue(ex.getMessage().contains("3 page(s)"),
+            "message should include failed page count: " + ex.getMessage());
+        // The exact rendered list — both that the right pages are present and
+        // that they are sorted 1-indexed ascending.
+        Assertions.assertTrue(ex.getMessage().contains("[2, 6, 21]"),
+            "message should render sorted 1-indexed list [2, 6, 21]: " + ex.getMessage());
+    }
+
+    @Test
+    public void testFailFast_SinglePageFailed_RendersSingleElementList() {
+        // Contract guard for single-element list rendering. Keeps the
+        // [<page>] form honest when only one page failed (the most common
+        // partial-failure case in practice).
+        HybridConfig config = new HybridConfig();
+        config.setFallbackToJava(false);
+
+        Set<Integer> failed = new HashSet<>();
+        failed.add(6); // page 7 (1-indexed)
+
+        java.io.IOException ex = Assertions.assertThrows(java.io.IOException.class, () ->
+            HybridDocumentProcessor.failFastIfBackendFailedWithoutFallback(failed, config));
+
+        Assertions.assertTrue(ex.getMessage().contains("1 page(s)"),
+            "message should include failed page count: " + ex.getMessage());
+        Assertions.assertTrue(ex.getMessage().contains("[7]"),
+            "message should render single-element list as [7]: " + ex.getMessage());
+    }
 }

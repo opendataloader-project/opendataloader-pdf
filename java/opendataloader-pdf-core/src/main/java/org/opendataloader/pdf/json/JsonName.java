@@ -30,6 +30,8 @@ public class JsonName {
     public static final String TABLE_TYPE = "table";
     public static final String TEXT_BLOCK = "text block";
     public static final String LIST_TYPE = "list";
+    public static final String TOC_TYPE = "toc";
+    public static final String TOC_ITEM_TYPE = "toc item";
     public static final String TABLE_CELL_TYPE = "table cell";
     public static final String ROW_TYPE = "table row";
     public static final String FONT_TYPE = "font";
@@ -37,11 +39,15 @@ public class JsonName {
     public static final String TEXT_COLOR = "text color";
     public static final String PARAGRAPH_TYPE = "paragraph";
     public static final String HEADING_TYPE = "heading";
+    public static final String CAPTION_TYPE = "caption";
     public static final String KIDS = "kids";
     public static final String LIST_ITEMS = "list items";
+    public static final String TOC_ITEMS = "toc items";
     public static final String NUMBER_OF_LIST_ITEMS = "number of list items";
     public static final String PREVIOUS_LIST_ID = "previous list id";
     public static final String NEXT_LIST_ID = "next list id";
+    public static final String PREVIOUS_TOC_ID = "previous toc id";
+    public static final String NEXT_TOC_ID = "next toc id";
     public static final String PREVIOUS_TABLE_ID = "previous table id";
     public static final String NEXT_TABLE_ID = "next table id";
     public static final String AUTHOR = "author";
@@ -50,6 +56,7 @@ public class JsonName {
     public static final String ROW_NUMBER = "row number";
     public static final String COLUMN_SPAN = "column span";
     public static final String ROW_SPAN = "row span";
+    public static final String IS_HEADER = "is_header";
     public static final String NUMBER_OF_ROWS = "number of rows";
     public static final String NUMBER_OF_COLUMNS = "number of columns";
     public static final String NUMBER_OF_PAGES = "number of pages";
@@ -65,7 +72,10 @@ public class JsonName {
     public static final String IMAGE_FORMAT = "format";
     public static final String FORMULA_TYPE = "formula";
     public static final String DESCRIPTION = "description";
-    public static final String CONFIDENCE = "confidence";
+    public static final String ALT = "alt";
+    public static final String ALT_SOURCE = "alt_source";
+    public static final String AI_SCORE = "ai_score";
+    public static final String PDFUA_TAG = "pdfua_tag";
     public static final String SOURCE_LABEL = "source label";
     public static final String HYBRID = "hybrid";
 }

@@ -23,6 +23,7 @@ def convert(
     table_method: Optional[str] = None,
     reading_order: Optional[str] = None,
     markdown_page_separator: Optional[str] = None,
+    markdown_with_html: bool = False,
     text_page_separator: Optional[str] = None,
     html_page_separator: Optional[str] = None,
     image_output: Optional[str] = None,
@@ -49,21 +50,22 @@ def convert(
         input_path: One or more input PDF file paths or directories
         output_dir: Directory where output files are written. Default: input file directory
         password: Password for encrypted PDF files
-        format: Output formats (comma-separated). Values: json, text, html, pdf, markdown, markdown-with-html, markdown-with-images, tagged-pdf. Default: json
+        format: Output formats (comma-separated). Values: json, text, html, pdf, markdown, tagged-pdf. Default: json. For HTML inside Markdown use --markdown-with-html. For image extraction control use --image-output.
         quiet: Suppress console logging output
         content_safety_off: Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg
         sanitize: Enable sensitive data sanitization. Replaces emails, phone numbers, IPs, credit cards, and URLs with placeholders
         keep_line_breaks: Preserve original line breaks in extracted text
         replace_invalid_chars: Replacement character for invalid/unrecognized characters. Default: space
-        use_struct_tree: Use PDF structure tree (tagged PDF) for reading order and semantic structure
+        use_struct_tree: Use PDF structure tree (tagged PDF) for reading order and semantic structure. Output quality depends on tag quality
         table_method: Table detection method. Values: default (border-based), cluster (border + cluster). Default: default
         reading_order: Reading order algorithm. Values: off, xycut. Default: xycut
         markdown_page_separator: Separator between pages in Markdown output. Use %page-number% for page numbers. Default: none
+        markdown_with_html: Allow HTML tags inside Markdown output for complex structures such as multi-row-span tables. Implies --format markdown.
         text_page_separator: Separator between pages in text output. Use %page-number% for page numbers. Default: none
         html_page_separator: Separator between pages in HTML output. Use %page-number% for page numbers. Default: none
         image_output: Image output mode. Values: off (no images), embedded (Base64 data URIs), external (file references). Default: external
         image_format: Output format for extracted images. Values: png, jpeg. Default: png
-        image_dir: Directory for extracted images
+        image_dir: Directory for extracted images (applies only with --image-output external)
         pages: Pages to extract (e.g., "1,3,5-7"). Default: all pages
         include_header_footer: Include page headers and footers in output
         detect_strikethrough: Detect strikethrough text and wrap with ~~ in Markdown output or <del></del> tag in HTML output (experimental)
@@ -118,6 +120,8 @@ def convert(
         args.extend(["--reading-order", reading_order])
     if markdown_page_separator:
         args.extend(["--markdown-page-separator", markdown_page_separator])
+    if markdown_with_html:
+        args.append("--markdown-with-html")
     if text_page_separator:
         args.extend(["--text-page-separator", text_page_separator])
     if html_page_separator:

@@ -1,6 +1,7 @@
 package org.opendataloader.pdf.processors;
 
 import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.entities.EnrichedImageChunk;
 import org.verapdf.gf.model.impl.sa.GFSANode;
 import org.verapdf.wcag.algorithms.entities.*;
@@ -50,6 +51,7 @@ public class TaggedDocumentProcessor {
             if (!shouldProcessPage(pageNumber)) {
                 continue;
             }
+            DocumentProcessor.setIDs(artifacts.get(pageNumber));
             contents.get(pageNumber).addAll(artifacts.get(pageNumber));
         }
         for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
@@ -126,9 +128,9 @@ public class TaggedDocumentProcessor {
             case TABLE:
                 processTable(node);
                 break;
-//            case TABLE_OF_CONTENT:
-//                processTOC(node);
-//                break;
+            case TABLE_OF_CONTENT:
+                addObjectToContent(processTOC(node));
+                break;
             case TITLE:
                 processHeading(node);
                 break;
@@ -148,6 +150,7 @@ public class TaggedDocumentProcessor {
                 contentsStack.peek().add(object);
             }
         }
+        object.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
     }
 
     private static void processParagraph(INode paragraph) {
@@ -213,6 +216,7 @@ public class TaggedDocumentProcessor {
                 listItem.getContents().add(content);
             }
         }
+        listItem.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
         return listItem;
     }
 
@@ -239,6 +243,7 @@ public class TaggedDocumentProcessor {
                     ++columnNumber;
                 }
                 TableBorderCell cell = new TableBorderCell(elem, rowNumber, columnNumber);
+                cell.setSemanticType(type);
                 processTableCell(cell, elem);
                 tableBoundingBox.union(cell.getBoundingBox());
                 for (int i = 0; i < cell.getRowSpan(); i++) {
@@ -334,6 +339,7 @@ public class TaggedDocumentProcessor {
             cellBoundingBox.union(content.getBoundingBox());
         }
         cell.setBoundingBox(cellBoundingBox);
+        cell.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
     }
 
     private static void processChildContents(INode elem, List<IObject> contents) {
@@ -353,7 +359,10 @@ public class TaggedDocumentProcessor {
             for (int colNumber = 0; colNumber < numberOfColumns; colNumber++) {
                 rows[rowNumber].getCells()[colNumber] = table.get(rowNumber).get(colNumber);
                 if (rows[rowNumber].getCell(colNumber) == null) {
-                    rows[rowNumber].getCells()[colNumber] = new TableBorderCell(rowNumber, colNumber, 1, 1, 0L);
+                    TableBorderCell cell = new TableBorderCell(rowNumber, colNumber, 1, 1, 0L);
+                    cell.setSemanticType(SemanticType.TABLE_CELL);
+                    cell.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+                    rows[rowNumber].getCells()[colNumber] = cell;
                 }
             }
         }
@@ -392,8 +401,38 @@ public class TaggedDocumentProcessor {
         addObjectToContent(caption);
     }
 
-    private static void processTOC(INode toc) {
+    private static SemanticTOC processTOC(INode node) {
+        SemanticTOC toc = new SemanticTOC();
+        toc.setBoundingBox(new MultiBoundingBox());
+        for (INode child : node.getChildren()) {
+            if (child.getInitialSemanticType() == SemanticType.TABLE_OF_CONTENT) {
+                toc.add(processTOC(child));
+            } else if (child.getInitialSemanticType() == SemanticType.TABLE_OF_CONTENT_ITEM) {
+                SemanticTOCI tocItem = processTOCItem(child);
+                if (tocItem.getPageNumber() != null) {
+                    toc.add(tocItem);
+                }
+            } else {
+                processStructElem(child, node);
+            }
+        }
+        return toc;
+    }
 
+    private static SemanticTOCI processTOCItem(INode node) {
+        SemanticTOCI tocItem = new SemanticTOCI(new MultiBoundingBox(), null);
+        List<IObject> contents = new ArrayList<>();
+        processChildContents(node, contents);
+        contents = TextLineProcessor.processTextLines(contents);
+        for (IObject content : contents) {
+            if (content instanceof TextLine) {
+                tocItem.add((TextLine)content);
+            } else {
+                tocItem.getContents().add(content);
+            }
+        }
+        tocItem.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+        return tocItem;
     }
 
     private static void processImage(SemanticFigure image, INode parent) {

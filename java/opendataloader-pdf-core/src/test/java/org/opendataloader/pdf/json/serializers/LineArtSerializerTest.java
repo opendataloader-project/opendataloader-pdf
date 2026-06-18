@@ -19,8 +19,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.opendataloader.pdf.json.JsonName;
 import org.opendataloader.pdf.json.ObjectMapperHolder;
 import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
+import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 
@@ -62,5 +64,23 @@ class LineArtSerializerTest {
                 "TableBorderCell kids must be empty when its only child is a LineArtChunk");
         assertFalse(json.contains("lineChunks"),
                 "LineArtChunk POJO fields must not appear in serialized output");
+    }
+
+    @Test
+    void tableCellSerializerMarksFirstRowCellsAsHeaders() throws JsonProcessingException {
+        ObjectMapper objectMapper = ObjectMapperHolder.getObjectMapper();
+        TableBorderCell headerCell = new TableBorderCell(0, 0, 1, 1, 0L);
+        headerCell.setBoundingBox(new BoundingBox(0, 0.0, 0.0, 100.0, 100.0));
+        headerCell.setSemanticType(SemanticType.TABLE_HEADER);
+        TableBorderCell bodyCell = new TableBorderCell(1, 0, 1, 1, 0L);
+        bodyCell.setBoundingBox(new BoundingBox(0, 0.0, 0.0, 100.0, 100.0));
+
+        JsonNode headerNode = objectMapper.readTree(objectMapper.writeValueAsString(headerCell));
+        JsonNode bodyNode = objectMapper.readTree(objectMapper.writeValueAsString(bodyCell));
+
+        assertTrue(headerNode.path(JsonName.IS_HEADER).asBoolean(),
+                "First-row table cells must be serialized as headers");
+        assertFalse(bodyNode.has(JsonName.IS_HEADER),
+                "Body table cells must not include is_header");
     }
 }

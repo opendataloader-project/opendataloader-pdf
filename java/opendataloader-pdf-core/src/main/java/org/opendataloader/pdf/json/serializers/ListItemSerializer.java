@@ -24,7 +24,6 @@ import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 public class ListItemSerializer extends StdSerializer<ListItem> {
 
@@ -37,11 +36,7 @@ public class ListItemSerializer extends StdSerializer<ListItem> {
             throws IOException {
         jsonGenerator.writeStartObject();
         SerializerUtil.writeEssentialInfo(jsonGenerator, item, JsonName.LIST_ITEM_TYPE);
-        jsonGenerator.writeStringField(JsonName.FONT_TYPE, item.getFirstLine().getFirstTextChunk().getFontName());
-        jsonGenerator.writePOJOField(JsonName.FONT_SIZE, item.getFontSize());
-        jsonGenerator.writeStringField(JsonName.TEXT_COLOR, Arrays.toString(
-                item.getFirstLine().getFirstTextChunk().getFontColor()));
-        jsonGenerator.writeStringField(JsonName.CONTENT, item.toString());
+        SerializerUtil.writeTextInfo(jsonGenerator, item);
         jsonGenerator.writeArrayFieldStart(JsonName.KIDS);
         for (IObject content : item.getContents()) {
             if (!(content instanceof LineArtChunk)) {

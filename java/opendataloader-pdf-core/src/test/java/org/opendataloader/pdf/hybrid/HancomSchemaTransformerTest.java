@@ -15,9 +15,10 @@
  */
 package org.opendataloader.pdf.hybrid;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,10 +30,11 @@ import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * Unit tests for HancomSchemaTransformer.
@@ -247,6 +249,60 @@ public class HancomSchemaTransformerTest {
         Assertions.assertEquals(2, table.getNumberOfRows());
         Assertions.assertEquals(2, table.getNumberOfColumns());
         Assertions.assertEquals(2, table.getRow(0).getCell(0).getColSpan());
+    }
+
+    @Test
+    void testTransformTableWithSpansReusesSameCellInstanceAcrossCoveredSlots() {
+        ObjectNode json = createVisualInfoDto();
+        ArrayNode elements = (ArrayNode) json.get("elements");
+
+        ObjectNode tableElement = addTableElement(elements, 0, 50, 200, 300, 200);
+        ArrayNode cells = addTableContentStructure(tableElement);
+
+        addTableCell(cells, "Header", 0, 0, 1, 2, 50, 200, 300, 100);
+        addTableCell(cells, "A2", 1, 0, 1, 1, 50, 300, 150, 100);
+        addTableCell(cells, "B2", 1, 1, 1, 1, 200, 300, 150, 100);
+
+        HybridResponse response = new HybridResponse("", json, null);
+        Map<Integer, Double> pageHeights = new HashMap<>();
+        pageHeights.put(1, 842.0);
+
+        List<List<IObject>> result = transformer.transform(response, pageHeights);
+
+        TableBorder table = (TableBorder) result.get(0).get(0);
+        Assertions.assertSame(table.getRow(0).getCell(0), table.getRow(0).getCell(1));
+        Assertions.assertEquals(2, table.getRow(0).getCell(0).getColSpan());
+    }
+
+    @Test
+    void testTransformTableWithRowspanReusesSameCellInstanceAcrossRows() {
+        ObjectNode json = createVisualInfoDto();
+        ArrayNode elements = (ArrayNode) json.get("elements");
+
+        ObjectNode tableElement = addTableElement(elements, 0, 50, 200, 300, 200);
+        ArrayNode cells = addTableContentStructure(tableElement);
+
+        // Create a 2x2 table with cell at (0,0) spanning 2 rows
+        addTableCell(cells, "Spanning", 0, 0, 2, 1, 50, 200, 150, 200);
+        addTableCell(cells, "B1", 0, 1, 1, 1, 200, 200, 100, 100);
+        addTableCell(cells, "B2", 1, 1, 1, 1, 200, 100, 100, 100);
+
+        HybridResponse response = new HybridResponse("", json, null);
+        Map<Integer, Double> pageHeights = new HashMap<>();
+        pageHeights.put(1, 842.0);
+
+        List<List<IObject>> result = transformer.transform(response, pageHeights);
+
+        TableBorder table = (TableBorder) result.get(0).get(0);
+
+        // Verify that the spanning cell is reused across covered rows
+        TableBorderCell spanningCell = table.getRow(0).getCell(0);
+        Assertions.assertSame(spanningCell, table.getRow(1).getCell(0),
+            "Cell at (0,0) should be the same instance at (1,0)");
+
+        // Verify the rowspan value is correct
+        Assertions.assertEquals(2, spanningCell.getRowSpan(),
+            "Spanning cell should report rowspan=2");
     }
 
     @Test

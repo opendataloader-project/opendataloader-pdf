@@ -20,6 +20,9 @@ import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.api.OpenDataLoaderPDF;
 import org.opendataloader.pdf.api.cli.CLIOptions;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
+import org.opendataloader.pdf.exceptions.EncryptedTaggedPdfNotSupportedException;
+import org.opendataloader.pdf.exceptions.InvalidPdfFileException;
+import org.verapdf.exceptions.InvalidPasswordException;
 
 import java.io.File;
 import java.util.Locale;
@@ -32,6 +35,24 @@ public class CLIMain {
     private static final Logger LOGGER = Logger.getLogger(CLIMain.class.getCanonicalName());
 
     private static final String HELP = "[options] <INPUT FILE OR FOLDER>...\n Options:";
+
+    private enum InputSource { CLI_ARGUMENT, DIRECTORY_CHILD }
+
+    /**
+     * Result of processing a path: whether all files succeeded, and how many
+     * PDF files were processed under it (counted recursively for directories,
+     * 1 or 0 for a single file). Used by {@link #processDirectory} to print a
+     * clear summary when a user-supplied folder contains no PDFs (PDFDLOSP-15).
+     */
+    private static final class PathResult {
+        final boolean allSucceeded;
+        final int pdfCount;
+
+        PathResult(boolean allSucceeded, int pdfCount) {
+            this.allSucceeded = allSucceeded;
+            this.pdfCount = pdfCount;
+        }
+    }
 
     public static void main(String[] args) {
         int exitCode = run(args);
@@ -85,7 +106,7 @@ public class CLIMain {
         boolean hasFailure = false;
         try {
             for (String argument : arguments) {
-                if (!processPath(new File(argument), config)) {
+                if (!processPath(new File(argument), config, InputSource.CLI_ARGUMENT).allSucceeded) {
                     hasFailure = true;
                 }
             }
@@ -110,41 +131,94 @@ public class CLIMain {
 
     /**
      * Processes a file or directory, returning true if all files succeeded.
+     *
+     * <p>{@code source} distinguishes user-provided arguments
+     * ({@link InputSource#CLI_ARGUMENT}) from files discovered during directory
+     * traversal ({@link InputSource#DIRECTORY_CHILD}): a non-PDF given directly
+     * on the command line is reported as an error, while non-PDF files inside a
+     * directory are silently skipped (preserves batch-folder processing).
      */
-    private static boolean processPath(File file, Config config) {
+    private static PathResult processPath(File file, Config config, InputSource source) {
         if (!file.exists()) {
             LOGGER.log(Level.WARNING, "File or folder " + file.getAbsolutePath() + " not found.");
-            return false;
+            return new PathResult(false, 0);
         }
         if (file.isDirectory()) {
-            return processDirectory(file, config);
-        } else if (file.isFile()) {
-            return processFile(file, config);
+            return processDirectory(file, config, source);
         }
-        return true;
+        if (file.isFile()) {
+            boolean isPdf = isPdfFile(file);
+            if (source == InputSource.CLI_ARGUMENT && !isPdf) {
+                System.out.println("Error: '" + file.getName()
+                    + "' is not a PDF file. Input must be a PDF file or a folder containing PDF files.");
+                return new PathResult(false, 0);
+            }
+            return new PathResult(processFile(file, config, source), isPdf ? 1 : 0);
+        }
+        return new PathResult(true, 0);
     }
 
-    private static boolean processDirectory(File file, Config config) {
+    /**
+     * Counts PDF files processed under the directory rooted at {@code file}
+     * (recursively), so the CLI can surface a clear summary when a
+     * user-supplied folder contains no PDFs. Without this feedback the program
+     * would exit silently with status 0 and the user could not distinguish
+     * "wrong folder", "empty folder", and "successful run" (PDFDLOSP-15).
+     *
+     * <p>The summary is only printed for folders given directly on the command
+     * line ({@link InputSource#CLI_ARGUMENT}) — nested subdirectories aggregate
+     * upward into the top-level count rather than each printing their own line.
+     *
+     * <p>The summary line is the final <em>result</em> of the run, not a log
+     * entry, and is therefore intentionally emitted on stdout even under
+     * {@code --quiet}. {@code --quiet} suppresses processing logs; users
+     * still need to see whether anything was actually processed. The path
+     * shown is {@link File#getPath()} (the literal argument the user typed,
+     * e.g. {@code .} or {@code basic_images}) rather than {@link File#getName()},
+     * which would be empty for {@code .} or trailing-slash inputs.
+     */
+    private static PathResult processDirectory(File file, Config config, InputSource source) {
         File[] children = file.listFiles();
         if (children == null) {
             LOGGER.log(Level.WARNING, "Unable to read folder " + file.getAbsolutePath());
-            return false;
+            return new PathResult(false, 0);
         }
         boolean allSucceeded = true;
+        int pdfCount = 0;
         for (File child : children) {
-            if (!processPath(child, config)) {
+            PathResult childResult = processPath(child, config, InputSource.DIRECTORY_CHILD);
+            if (!childResult.allSucceeded) {
                 allSucceeded = false;
             }
+            pdfCount += childResult.pdfCount;
         }
-        return allSucceeded;
+        if (source == InputSource.CLI_ARGUMENT) {
+            if (pdfCount == 0) {
+                System.out.println("No PDF files found in '" + file.getPath() + "'.");
+            } else {
+                System.out.println("Processed " + pdfCount + " PDF file"
+                    + (pdfCount == 1 ? "" : "s") + " in '" + file.getPath() + "'.");
+            }
+        }
+        return new PathResult(allSucceeded, pdfCount);
     }
 
     /**
      * Processes a single PDF file.
      *
-     * @return true if processing succeeded, false if an error occurred.
+     * <p>{@code source} controls how an {@link InvalidPdfFileException} from
+     * the magic-number guard is surfaced: {@link InputSource#CLI_ARGUMENT}
+     * routes it to stdout as a user-facing error and fails the run;
+     * {@link InputSource#DIRECTORY_CHILD} logs a WARNING and treats the file
+     * as silently skipped so batch-folder runs can still exit 0.
+     *
+     * @param file the file to process
+     * @param config the processing configuration
+     * @param source whether the file came from a CLI argument or directory traversal
+     * @return true if processing succeeded (or the file was a silently
+     *         skipped non-PDF inside a directory), false on error.
      */
-    private static boolean processFile(File file, Config config) {
+    private static boolean processFile(File file, Config config, InputSource source) {
         if (!isPdfFile(file)) {
             LOGGER.log(Level.FINE, "Skipping non-PDF file " + file.getAbsolutePath());
             return true;
@@ -152,6 +226,23 @@ public class CLIMain {
         try {
             OpenDataLoaderPDF.processFile(file.getAbsolutePath(), config);
             return true;
+        } catch (InvalidPdfFileException invalid) {
+            if (source == InputSource.CLI_ARGUMENT) {
+                System.out.println("Error: " + invalid.getMessage());
+                return false;
+            }
+            LOGGER.log(Level.WARNING, invalid.getMessage() + " Skipping.");
+            return true;
+        } catch (InvalidPasswordException exception) {
+            String password = config.getPassword();
+            String message = (password == null || password.isEmpty())
+                ? "Error: '" + file.getName() + "' is password-protected. Use --password option."
+                : "Error: Incorrect password for '" + file.getName() + "'.";
+            System.out.println(message);
+            return false;
+        } catch (EncryptedTaggedPdfNotSupportedException exception) {
+            System.out.println("Error: " + exception.getMessage());
+            return false;
         } catch (Exception exception) {
             LOGGER.log(Level.SEVERE, "Exception during processing file " + file.getAbsolutePath() + ": " +
                 exception.getMessage(), exception);

@@ -37,6 +37,7 @@ class EmbedImagesIntegrationTest {
 
     private static final String SAMPLE_PDF_WITH_IMAGES = "../../samples/pdf/1901.03003.pdf";
     private static final String SAMPLE_PDF_BASENAME = "1901.03003";
+    private static final String SAMPLE_PDF_IMAGES_DIR = SAMPLE_PDF_BASENAME + "_images";
     private static final String BASE64_DATA_URI_PREFIX = "data:image/png;base64,";
     private static final String BASE64_JPEG_PREFIX = "data:image/jpeg;base64,";
 
@@ -82,14 +83,16 @@ class EmbedImagesIntegrationTest {
         assertTrue(Files.exists(jsonOutput), "JSON output should exist");
 
         String jsonContent = Files.readString(jsonOutput);
-        // Check for Base64 data URI in JSON output
-        if (jsonContent.contains("\"type\" : \"image\"")) {
-            assertTrue(
-                jsonContent.contains(BASE64_DATA_URI_PREFIX) || jsonContent.contains(BASE64_JPEG_PREFIX),
-                "JSON should contain Base64 data URI for images when embedImages is true"
-            );
-            assertTrue(jsonContent.contains("\"format\""), "JSON should contain format field");
-        }
+        assertTrue(jsonContent.contains("\"type\" : \"image\""),
+            "Sample PDF should produce at least one image entry");
+        assertTrue(
+            jsonContent.contains(BASE64_DATA_URI_PREFIX) || jsonContent.contains(BASE64_JPEG_PREFIX),
+            "JSON should contain Base64 data URI for images when embedImages is true");
+        assertTrue(jsonContent.contains("\"format\""), "JSON should contain format field");
+
+        Path imagesDir = tempDir.resolve(SAMPLE_PDF_IMAGES_DIR);
+        assertFalse(Files.exists(imagesDir),
+            "Embedded mode must be self-contained: external image directory should not be created");
     }
 
     @Test
@@ -116,13 +119,14 @@ class EmbedImagesIntegrationTest {
         assertTrue(Files.exists(htmlOutput), "HTML output should exist");
 
         String htmlContent = Files.readString(htmlOutput);
-        // Check for Base64 data URI in img src
-        if (htmlContent.contains("<img")) {
-            assertTrue(
-                htmlContent.contains("src=\"data:image/"),
-                "HTML img tags should use Base64 data URI when embedImages is true"
-            );
-        }
+        assertTrue(htmlContent.contains("<img"),
+            "Sample PDF should produce at least one <img> tag");
+        assertTrue(htmlContent.contains("src=\"data:image/"),
+            "HTML img tags should use Base64 data URI when embedImages is true");
+
+        Path imagesDir = tempDir.resolve(SAMPLE_PDF_IMAGES_DIR);
+        assertFalse(Files.exists(imagesDir),
+            "Embedded mode must be self-contained: external image directory should not be created");
     }
 
     @Test
@@ -149,13 +153,14 @@ class EmbedImagesIntegrationTest {
         assertTrue(Files.exists(mdOutput), "Markdown output should exist");
 
         String mdContent = Files.readString(mdOutput);
-        // Check for Base64 data URI in markdown image syntax
-        if (mdContent.contains("![")) {
-            assertTrue(
-                mdContent.contains("](data:image/"),
-                "Markdown images should use Base64 data URI when embedImages is true"
-            );
-        }
+        assertTrue(mdContent.contains("!["),
+            "Sample PDF should produce at least one markdown image block");
+        assertTrue(mdContent.contains("](data:image/"),
+            "Markdown images should use Base64 data URI when embedImages is true");
+
+        Path imagesDir = tempDir.resolve(SAMPLE_PDF_IMAGES_DIR);
+        assertFalse(Files.exists(imagesDir),
+            "Embedded mode must be self-contained: external image directory should not be created");
     }
 
     @Test
@@ -180,11 +185,14 @@ class EmbedImagesIntegrationTest {
         assertTrue(Files.exists(jsonOutput), "JSON output should exist");
 
         String jsonContent = Files.readString(jsonOutput);
-        // When embedImages is false, should use source field with file path
-        if (jsonContent.contains("\"type\" : \"image\"")) {
-            assertTrue(jsonContent.contains("\"source\""), "JSON should contain source field for file path");
-            assertFalse(jsonContent.contains("\"data\" : \"data:image"), "JSON should not contain Base64 data");
-        }
+        assertTrue(jsonContent.contains("\"type\" : \"image\""),
+            "Sample PDF should produce at least one image entry");
+        assertTrue(jsonContent.contains("\"source\""), "JSON should contain source field for file path");
+        assertFalse(jsonContent.contains("\"data\" : \"data:image"), "JSON should not contain Base64 data");
+
+        Path imagesDir = tempDir.resolve(SAMPLE_PDF_IMAGES_DIR);
+        assertTrue(Files.exists(imagesDir),
+            "External mode must extract images to disk: image directory should be created");
     }
 
     @Test
@@ -210,8 +218,14 @@ class EmbedImagesIntegrationTest {
         assertTrue(Files.exists(jsonOutput), "JSON output should exist");
 
         String jsonContent = Files.readString(jsonOutput);
-        if (jsonContent.contains("\"type\" : \"image\"") && jsonContent.contains("\"data\"")) {
-            assertTrue(jsonContent.contains("\"format\" : \"jpeg\""), "Format should be jpeg");
-        }
+        assertTrue(jsonContent.contains("\"type\" : \"image\""),
+            "Sample PDF should produce at least one image entry");
+        assertTrue(jsonContent.contains(BASE64_JPEG_PREFIX),
+            "JSON should contain JPEG Base64 data URI when imageFormat is jpeg");
+        assertTrue(jsonContent.contains("\"format\" : \"jpeg\""), "Format field should be jpeg");
+
+        Path imagesDir = tempDir.resolve(SAMPLE_PDF_IMAGES_DIR);
+        assertFalse(Files.exists(imagesDir),
+            "Embedded mode must be self-contained: external image directory should not be created");
     }
 }

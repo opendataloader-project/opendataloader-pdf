@@ -15,10 +15,11 @@
  */
 package org.opendataloader.pdf.hybrid;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.OkHttpClient;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,16 +47,17 @@ class HealthCheckTest {
     @AfterEach
     void tearDown() throws IOException {
         if (server != null) {
-            server.shutdown();
+            server.close();
         }
     }
 
     @Test
     void testDoclingHealthCheckSucceeds() throws IOException {
         server.start();
-        server.enqueue(new MockResponse()
-            .setBody("{\"status\": \"ok\"}")
-            .addHeader("Content-Type", "application/json"));
+        server.enqueue(new MockResponse.Builder()
+            .body("{\"status\": \"ok\"}")
+            .addHeader("Content-Type", "application/json")
+            .build());
 
         String baseUrl = stripTrailingSlash(server.url("").toString());
         DoclingFastServerClient client = new DoclingFastServerClient(
@@ -96,7 +98,7 @@ class HealthCheckTest {
     @Test
     void testDoclingHealthCheckFailsOnServerError() throws IOException {
         server.start();
-        server.enqueue(new MockResponse().setResponseCode(503));
+        server.enqueue(new MockResponse.Builder().code(503).build());
 
         String baseUrl = stripTrailingSlash(server.url("").toString());
         DoclingFastServerClient client = new DoclingFastServerClient(
@@ -116,7 +118,7 @@ class HealthCheckTest {
     @Test
     void testHancomHealthCheckSucceeds() throws IOException {
         server.start();
-        server.enqueue(new MockResponse().setResponseCode(200));
+        server.enqueue(new MockResponse.Builder().code(200).build());
 
         String baseUrl = stripTrailingSlash(server.url("").toString());
         HancomClient client = new HancomClient(
@@ -169,6 +171,75 @@ class HealthCheckTest {
         } finally {
             client.shutdown();
         }
+    }
+
+    // -- fetchHealth() on HancomAIClient ------------------------------------
+    //
+    // checkAvailability() above is the fail-fast probe used before the run
+    // starts; fetchHealth() is the best-effort snapshot captured during the
+    // run for downstream tooling to attach to its evidence report. It must
+    // never throw — a null return is the documented signal that the backend
+    // doesn't expose /health or returned something unreadable.
+
+    @Test
+    void testHancomFetchHealthReturnsParsedJsonOnSuccess() throws IOException {
+        server.start();
+        server.enqueue(new MockResponse.Builder()
+            .body("{\"hardware\":{\"cpu\":\"Xeon\"},\"backend_version\":\"v1\"}")
+            .addHeader("Content-Type", "application/json")
+            .build());
+
+        String baseUrl = stripTrailingSlash(server.url("").toString());
+        HancomAIClient client = new HancomAIClient(
+            baseUrl, new OkHttpClient(), new ObjectMapper());
+
+        JsonNode health = client.fetchHealth();
+        assertNotNull(health, "expected parsed /health JSON");
+        assertEquals("Xeon", health.path("hardware").path("cpu").asText());
+        assertEquals("v1", health.path("backend_version").asText());
+    }
+
+    @Test
+    void testHancomFetchHealthReturnsNullOnNotFound() throws IOException {
+        server.start();
+        server.enqueue(new MockResponse.Builder().code(404).build());
+
+        String baseUrl = stripTrailingSlash(server.url("").toString());
+        HancomAIClient client = new HancomAIClient(
+            baseUrl, new OkHttpClient(), new ObjectMapper());
+
+        assertNull(client.fetchHealth(),
+            "non-2xx response should be treated as 'no health' (null), not throw");
+    }
+
+    @Test
+    void testHancomFetchHealthReturnsNullOnNonJsonBody() throws IOException {
+        server.start();
+        server.enqueue(new MockResponse.Builder()
+            .body("not json at all")
+            .addHeader("Content-Type", "text/plain")
+            .build());
+
+        String baseUrl = stripTrailingSlash(server.url("").toString());
+        HancomAIClient client = new HancomAIClient(
+            baseUrl, new OkHttpClient(), new ObjectMapper());
+
+        assertNull(client.fetchHealth(),
+            "unparseable body should be treated as 'no health' (null), not throw");
+    }
+
+    @Test
+    void testHancomFetchHealthReturnsNullWhenServerDown() throws IOException {
+        int unusedPort;
+        try (ServerSocket s = new ServerSocket(0)) {
+            unusedPort = s.getLocalPort();
+        }
+
+        HancomAIClient client = new HancomAIClient(
+            "http://localhost:" + unusedPort, new OkHttpClient(), new ObjectMapper());
+
+        assertNull(client.fetchHealth(),
+            "connection failure should be treated as 'no health' (null), not throw");
     }
 
     private static String stripTrailingSlash(String url) {

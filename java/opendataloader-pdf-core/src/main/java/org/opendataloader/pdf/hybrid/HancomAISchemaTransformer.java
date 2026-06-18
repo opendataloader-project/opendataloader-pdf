@@ -31,6 +31,7 @@ import org.verapdf.wcag.algorithms.entities.SemanticNode;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
+import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
 import org.verapdf.wcag.algorithms.entities.lists.PDFList;
@@ -62,22 +63,24 @@ import java.util.regex.Pattern;
  *
  * <h2>Label Mapping (DLA integer labels → IObject types)</h2>
  * <pre>
- *   0  → Title (SemanticHeading level 1)
- *   1  → Heading (SemanticHeading level 2)
- *   2  → Paragraph (SemanticParagraph)
- *   3  → List item (SemanticParagraph)
- *   4  → Subheading (SemanticHeading level 3)
- *   6  → Author/Meta (SemanticParagraph)
- *   7  → Regionlist (Table/List region, handled via TABLE_STRUCTURE_RECOGNITION or as list)
- *   8  → TableName (SemanticCaption linked to nearest Table)
- *   9  → Table (handled via TABLE_STRUCTURE_RECOGNITION)
- *  10  → Figure (SemanticPicture)
- *  11  → FigureName (SemanticCaption linked to nearest Figure)
- *  12  → Formula (SemanticFormula)
- *  13  → Footnote (SemanticFootnote → FENote)
- *  14  → Page header (filtered)
- *  15  → Page footer (filtered)
- *  17  → Page number (filtered)
+ *   0  → DocTitle    (SemanticHeading level 1)
+ *   1  → ParaTitle   (SemanticHeading level 2)
+ *   2  → ParaText    (SemanticParagraph)
+ *   3  → ListText    (SemanticParagraph)
+ *   4  → RegionTitle (SemanticHeading level 3)
+ *   5  → Date        (currently passed through as paragraph text)
+ *   6  → OtherText   (SemanticParagraph)
+ *   7  → Regionlist  (Table/List region, handled via TABLE_STRUCTURE_RECOGNITION or as list)
+ *   8  → TableName   (SemanticCaption linked to nearest Table)
+ *   9  → Table       (handled via TABLE_STRUCTURE_RECOGNITION)
+ *  10  → Figure      (SemanticPicture)
+ *  11  → FigureName  (SemanticCaption linked to nearest Figure)
+ *  12  → Equation    (SemanticFormula)
+ *  13  → Footnote    (SemanticFootnote → FENote)
+ *  14  → PageHeader  (filtered)
+ *  15  → PageFooter  (filtered)
+ *  16  → Number      (currently passed through as paragraph text)
+ *  17  → PageNumber  (filtered)
  * </pre>
  *
  * <h2>Coordinate System</h2>
@@ -92,21 +95,27 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
     private static final String BACKEND_TYPE = "hancom-ai";
 
     // DLA label constants
-    private static final int LABEL_TITLE = 0;
-    private static final int LABEL_HEADING = 1;
-    private static final int LABEL_PARAGRAPH = 2;
-    private static final int LABEL_LIST_ITEM = 3;
-    private static final int LABEL_SUBHEADING = 4;
-    private static final int LABEL_AUTHOR = 6;
+    // DLA label codes — authoritative table from the hancom-ai backend
+    // (0-indexed). Names mirror the backend's classification labels so
+    // grepping the codebase for "ParaText" or "DocTitle" matches what the
+    // model actually reports.
+    private static final int LABEL_DOC_TITLE = 0;
+    private static final int LABEL_PARA_TITLE = 1;
+    private static final int LABEL_PARA_TEXT = 2;
+    private static final int LABEL_LIST_TEXT = 3;
+    private static final int LABEL_REGION_TITLE = 4;
+    private static final int LABEL_DATE = 5;
+    private static final int LABEL_OTHER_TEXT = 6;
     private static final int LABEL_REGIONLIST = 7;
     private static final int LABEL_TABLE_NAME = 8;
     private static final int LABEL_TABLE = 9;
     private static final int LABEL_FIGURE = 10;
     private static final int LABEL_FIGURE_NAME = 11;
-    private static final int LABEL_FORMULA = 12;
+    private static final int LABEL_EQUATION = 12;
     private static final int LABEL_FOOTNOTE = 13;
     private static final int LABEL_PAGE_HEADER = 14;
     private static final int LABEL_PAGE_FOOTER = 15;
+    private static final int LABEL_NUMBER = 16;
     private static final int LABEL_PAGE_NUMBER = 17;
 
     // DPI conversion: API renders at 300 DPI, PDF uses 72 DPI
@@ -140,6 +149,17 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
     @Override
     public Map<Long, ElementMetadata> getElementMetadata() {
         return Collections.unmodifiableMap(elementMetadataMap);
+    }
+
+    @Override
+    public void rekeyMetadata(Map<Long, Long> oldToNew) {
+        if (oldToNew == null || oldToNew.isEmpty() || elementMetadataMap.isEmpty()) return;
+        Map<Long, ElementMetadata> rebuilt = new LinkedHashMap<>(elementMetadataMap.size());
+        for (Map.Entry<Long, ElementMetadata> entry : elementMetadataMap.entrySet()) {
+            Long mapped = oldToNew.get(entry.getKey());
+            rebuilt.put(mapped != null ? mapped : entry.getKey(), entry.getValue());
+        }
+        elementMetadataMap = rebuilt;
     }
 
     @Override
@@ -377,18 +397,18 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
 
         IObject iobj;
         switch (label) {
-            case LABEL_TITLE:
+            case LABEL_DOC_TITLE:
                 iobj = createHeading(text, bbox, 1);
                 break;
-            case LABEL_HEADING:
-            case LABEL_SUBHEADING: {
+            case LABEL_PARA_TITLE:
+            case LABEL_REGION_TITLE: {
                 double pixelHeight = bboxNode.get(3).asDouble() - bboxNode.get(1).asDouble();
                 int level = headingHeightToLevel.getOrDefault(pixelHeight, 2);
                 iobj = createHeading(text, bbox, level);
                 break;
             }
 
-            case LABEL_LIST_ITEM:
+            case LABEL_LIST_TEXT:
                 iobj = text.isEmpty() ? null : createListItem(text, bbox);
                 break;
 
@@ -401,8 +421,16 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
                 iobj = text.isEmpty() ? null : createFootnote(text, bbox);
                 break;
 
-            case LABEL_PARAGRAPH:
-            case LABEL_AUTHOR:
+            case LABEL_PARA_TEXT:
+            case LABEL_OTHER_TEXT:
+            case LABEL_DATE:
+            case LABEL_NUMBER:
+                // Date and Number are textual annotations on the page
+                // (e.g. "March 2024", "€42.00") — distinct from LABEL_PAGE_NUMBER
+                // which carries the page-number footer/header. Listing them as
+                // explicit cases keeps the routing intent visible and prevents
+                // future silent misrouting if the default branch behavior
+                // changes.
                 iobj = text.isEmpty() ? null : createParagraph(text, bbox);
                 break;
 
@@ -431,7 +459,7 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
                 break;
             }
 
-            case LABEL_FORMULA:
+            case LABEL_EQUATION:
                 iobj = createFormula(text, bbox);
                 break;
 
@@ -440,24 +468,36 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
                 break;
         }
 
-        // Map confidence to correctSemanticScore (only for SemanticNode subtypes)
-        if (iobj instanceof SemanticNode) {
-            double confidence = obj.has("confidence") ? obj.get("confidence").asDouble(1.0) : 1.0;
-            ((SemanticNode) iobj).setCorrectSemanticScore(confidence);
+        // Hancom AI DLA reports each object's overall detection score in the
+        // "confidence" field (numeric, 0..1). The per-word "score" entries
+        // inside "words" are OCR confidences, not object scores.
+        double aiScore = -1.0;
+        if (obj.has("confidence")) {
+            aiScore = obj.get("confidence").asDouble(-1.0);
+        }
+
+        // Map AI score to correctSemanticScore (only for SemanticNode subtypes)
+        if (iobj instanceof SemanticNode && aiScore >= 0.0) {
+            ((SemanticNode) iobj).setCorrectSemanticScore(aiScore);
         }
 
         // Produce ElementMetadata for this IObject
         if (iobj != null && iobj.getRecognizedStructureId() != null) {
-            double confidence = obj.has("confidence") ? obj.get("confidence").asDouble(1.0) : 1.0;
+            // Carry the raw DLA detection id so downstream tooling (evidence
+            // report) can line a reading-ordered node back to its DLA row
+            // without re-matching by bbox. Same field the FIGURE branch
+            // already reads — pulled out here so every label gets it.
+            int rawObjectId = obj.has("object_id") ? obj.get("object_id").asInt() : -1;
             ElementMetadata meta = new ElementMetadata()
-                .setConfidence(confidence)
-                .setSourceLabel(label);
+                .setAiScore(aiScore)
+                .setSourceLabel(label)
+                .setDlaObjectId(rawObjectId);
 
-            if (label == LABEL_HEADING || label == LABEL_SUBHEADING) {
+            if (label == LABEL_PARA_TITLE || label == LABEL_REGION_TITLE) {
                 double pixelHeight = bboxNode.get(3).asDouble() - bboxNode.get(1).asDouble();
                 meta.setHeadingInferenceMethod("bbox-height")
                     .setBboxHeightPx(pixelHeight);
-            } else if (label == LABEL_TITLE) {
+            } else if (label == LABEL_DOC_TITLE) {
                 meta.setHeadingInferenceMethod("fixed");
             } else if (label == LABEL_FIGURE) {
                 int objectId = obj.has("object_id") ? obj.get("object_id").asInt() : -1;
@@ -585,6 +625,7 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
 
             for (int c = 0; c < numCols; c++) {
                 TableBorderCell emptyCell = new TableBorderCell(r, c, 1, 1, 0L);
+                emptyCell.setSemanticType(r == 0 ? SemanticType.TABLE_HEADER : SemanticType.TABLE_CELL);
                 emptyCell.setBoundingBox(new BoundingBox(pageIndex,
                     tableBbox.getLeftX() + c * colWidth, rowBottom,
                     tableBbox.getLeftX() + (c + 1) * colWidth, rowTop));
@@ -637,6 +678,7 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
             colspan = Math.min(colspan, numCols - startCol);
             {
                 TableBorderCell cell = new TableBorderCell(startRow, startCol, rowspan, colspan, 0L);
+                cell.setSemanticType(startRow == 0 ? SemanticType.TABLE_HEADER : SemanticType.TABLE_CELL);
 
                 // Compute cell bbox: use TSR cell bbox if available, otherwise fall back to grid
                 BoundingBox cellBbox;
@@ -695,8 +737,14 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
         }
 
         // Produce ElementMetadata for the table
+        double tableAiScore = tableEntry.has("confidence")
+            ? tableEntry.get("confidence").asDouble(-1.0) : -1.0;
+        int tableRawObjectId = tableEntry.has("object_id")
+            ? tableEntry.get("object_id").asInt() : -1;
         ElementMetadata tableMeta = new ElementMetadata()
-            .setSourceLabel(tableEntry.has("label") ? tableEntry.get("label").asInt() : LABEL_TABLE);
+            .setAiScore(tableAiScore)
+            .setSourceLabel(tableEntry.has("label") ? tableEntry.get("label").asInt() : LABEL_TABLE)
+            .setDlaObjectId(tableRawObjectId);
         if (tsr != null) {
             ElementMetadata.TsrMetadata tsrMeta = new ElementMetadata.TsrMetadata();
             tsrMeta.setNumCells(tsr.has("num_cells") ? tsr.get("num_cells").asInt() : 0);
@@ -960,7 +1008,7 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
 
             for (JsonNode obj : objects) {
                 int label = obj.has("label") ? obj.get("label").asInt() : -1;
-                if (label != LABEL_HEADING && label != LABEL_SUBHEADING) continue;
+                if (label != LABEL_PARA_TITLE && label != LABEL_REGION_TITLE) continue;
 
                 JsonNode bboxNode = obj.get("bbox");
                 if (bboxNode == null || !bboxNode.isArray() || bboxNode.size() < 4) continue;

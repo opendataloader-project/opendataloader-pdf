@@ -15,6 +15,8 @@
  */
 package org.opendataloader.pdf.utils;
 
+import org.opendataloader.pdf.containers.StaticLayoutContainers;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -48,13 +50,25 @@ public final class Base64ImageUtils {
      */
     public static String toDataUri(File imageFile, String format) {
         try {
-            long fileSize = imageFile.length();
-            if (fileSize > MAX_EMBEDDED_IMAGE_SIZE) {
+            // Embedded mode keeps encoded image bytes in memory keyed by the path
+            // generators expect — no disk roundtrip in production.
+            byte[] fileContent = StaticLayoutContainers.getEmbeddedImageBytes(imageFile.getPath());
+            if (fileContent == null) {
+                // Disk fallback: runs in external mode (where files exist on disk) and
+                // also serves unit tests that prepare PNG files directly and bypass
+                // the in-memory pipeline (see ImageSerializerTest, MarkdownGenerator tests).
+                long fileSize = imageFile.length();
+                if (fileSize > MAX_EMBEDDED_IMAGE_SIZE) {
+                    LOGGER.log(Level.WARNING, "Image too large to embed ({0} bytes, max {1} bytes): {2}",
+                        new Object[]{fileSize, MAX_EMBEDDED_IMAGE_SIZE, imageFile.getName()});
+                    return null;
+                }
+                fileContent = Files.readAllBytes(imageFile.toPath());
+            } else if (fileContent.length > MAX_EMBEDDED_IMAGE_SIZE) {
                 LOGGER.log(Level.WARNING, "Image too large to embed ({0} bytes, max {1} bytes): {2}",
-                    new Object[]{fileSize, MAX_EMBEDDED_IMAGE_SIZE, imageFile.getName()});
+                    new Object[]{(long) fileContent.length, MAX_EMBEDDED_IMAGE_SIZE, imageFile.getName()});
                 return null;
             }
-            byte[] fileContent = Files.readAllBytes(imageFile.toPath());
             String base64 = Base64.getEncoder().encodeToString(fileContent);
             String mimeType = getMimeType(format);
             return String.format("data:%s;base64,%s", mimeType, base64);

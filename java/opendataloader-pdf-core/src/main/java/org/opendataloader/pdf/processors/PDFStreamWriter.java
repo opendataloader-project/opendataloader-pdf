@@ -61,7 +61,12 @@ public class PDFStreamWriter {
                     if (currentByte == 40 || currentByte == 41 || currentByte == 92) {
                         out.write('\\');
                     }
-                    out.write(currentByte);
+                    if (currentByte == 13) {
+                        out.write('\\');
+                        out.write('r');
+                    } else {
+                        out.write(currentByte);
+                    }
                 }
                 out.write(")".getBytes());
                 out.write(" ".getBytes());

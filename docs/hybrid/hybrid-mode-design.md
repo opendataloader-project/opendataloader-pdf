@@ -41,7 +41,7 @@ opendataloader-pdf --hybrid hancom input.pdf
 | `--hybrid <name>` | Hybrid backend: `off` (default), `docling`, `hancom`, etc. |
 | `--hybrid-url <url>` | Backend server URL (overrides default) |
 | `--hybrid-timeout <ms>` | Request timeout in milliseconds (default: 0, no timeout) |
-| `--hybrid-fallback` | Fallback to Java on backend error (default: true) |
+| `--hybrid-fallback` | Opt in to Java fallback on backend error (default: disabled — backend failures fail fast with non-zero exit) |
 
 ## Supported Backends
 
@@ -109,7 +109,7 @@ opendataloader-pdf --hybrid hancom input.pdf
 
 | Risk | Mitigation |
 |------|------------|
-| Backend unavailable | `--hybrid-fallback` (default: true) |
+| Backend unavailable or returns failed pages | Fail fast with non-zero exit (default). Opt in to `--hybrid-fallback` to fall back to Java for backend-routed pages. |
 | Triage FN (missed tables) | Conservative threshold, benchmark monitoring |
 | Schema mismatch | Step-by-step validation, type checking |
 | Slow processing | Parallel execution, batch API calls |

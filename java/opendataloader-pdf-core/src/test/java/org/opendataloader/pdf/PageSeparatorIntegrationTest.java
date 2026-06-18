@@ -171,7 +171,7 @@ class PageSeparatorIntegrationTest {
         assertTrue(Files.exists(htmlOutput), "HTML output should exist");
 
         String htmlContent = Files.readString(htmlOutput);
-        assertTrue(htmlContent.contains("<hr class=\"page-break\"/>"), "HTML should contain the page separator");
+        assertTrue(htmlContent.contains("&lt;hr class=&quot;page-break&quot;/&gt;"), "HTML should contain the page separator");
     }
 
     @Test
@@ -188,7 +188,7 @@ class PageSeparatorIntegrationTest {
         assertTrue(Files.exists(htmlOutput), "HTML output should exist");
 
         String htmlContent = Files.readString(htmlOutput);
-        assertTrue(htmlContent.contains("<div class=\"page\" data-page=\"1\">"), "HTML should contain page separator with page number 1");
+        assertTrue(htmlContent.contains("&lt;div class=&quot;page&quot; data-page=&quot;1&quot;&gt;"), "HTML should contain page separator with page number 1");
     }
 
     @Test
@@ -237,5 +237,421 @@ class PageSeparatorIntegrationTest {
     @Test
     void testConfigPageNumberConstant() {
         assertEquals("%page-number%", Config.PAGE_NUMBER_STRING, "PAGE_NUMBER_STRING constant should be correct");
+    }
+
+    // --- Page Separator x --pages Filter Combination Tests ---
+    // Contract: when --pages selects a subset, separators must appear only for the selected pages
+    // and exactly once each. Assertions use occurrence counts so a stray substring in the PDF body
+    // text cannot mask a regression.
+
+    private static final int SAMPLE_PAGE_COUNT = 15;
+
+    /**
+     * Counts non-overlapping occurrences of {@code needle} in {@code haystack}.
+     * Used by separator assertions so a stray substring in extracted PDF body
+     * text cannot mask a regression. Markers used here include a trailing
+     * delimiter (e.g. {@code "<!-- Page 1 -->"}, {@code "data-page=\"1\""})
+     * so page 1 does not falsely match inside page 10..15.
+     */
+    private static int countOccurrences(String haystack, String needle) {
+        int count = 0;
+        int idx = 0;
+        while ((idx = haystack.indexOf(needle, idx)) != -1) {
+            count++;
+            idx += needle.length();
+        }
+        return count;
+    }
+
+    private static String mdMarker(int page) {
+        return "<!-- Page " + page + " -->";
+    }
+
+    private static String textMarker(int page) {
+        return "[Page " + page + "]";
+    }
+
+    private static String htmlMarker(int page) {
+        return "data-page=&quot;" + page + "&quot;";
+    }
+
+    @Test
+    void testMarkdownPageSeparatorRespectsPagesFilter() throws IOException {
+        Config config = new Config();
+        config.setOutputFolder(tempDir.toString());
+        config.setGenerateJSON(false);
+        config.setGenerateMarkdown(true);
+        config.setMarkdownPageSeparator("<!-- Page %page-number% -->");
+        config.setPages("1,3");
+
+        DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
+
+        Path mdOutput = tempDir.resolve(OUTPUT_BASENAME + ".md");
+        String mdContent = Files.readString(mdOutput);
+
+        for (int page = 1; page <= SAMPLE_PAGE_COUNT; page++) {
+            int expected = (page == 1 || page == 3) ? 1 : 0;
+            assertEquals(expected, countOccurrences(mdContent, mdMarker(page)),
+                "Markdown page " + page + " marker count mismatch");
+        }
+    }
+
+    @Test
+    void testTextPageSeparatorRespectsPagesFilter() throws IOException {
+        Config config = new Config();
+        config.setOutputFolder(tempDir.toString());
+        config.setGenerateJSON(false);
+        config.setGenerateText(true);
+        config.setTextPageSeparator("[Page %page-number%]");
+        config.setPages("1,3");
+
+        DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
+
+        Path txtOutput = tempDir.resolve(OUTPUT_BASENAME + ".txt");
+        String txtContent = Files.readString(txtOutput);
+
+        for (int page = 1; page <= SAMPLE_PAGE_COUNT; page++) {
+            int expected = (page == 1 || page == 3) ? 1 : 0;
+            assertEquals(expected, countOccurrences(txtContent, textMarker(page)),
+                "Text page " + page + " marker count mismatch");
+        }
+    }
+
+    @Test
+    void testHtmlPageSeparatorRespectsPagesFilter() throws IOException {
+        Config config = new Config();
+        config.setOutputFolder(tempDir.toString());
+        config.setGenerateJSON(false);
+        config.setGenerateHtml(true);
+        config.setHtmlPageSeparator("<div data-page=\"%page-number%\">");
+        config.setPages("1,3");
+
+        DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
+
+        Path htmlOutput = tempDir.resolve(OUTPUT_BASENAME + ".html");
+        String htmlContent = Files.readString(htmlOutput);
+
+        for (int page = 1; page <= SAMPLE_PAGE_COUNT; page++) {
+            int expected = (page == 1 || page == 3) ? 1 : 0;
+            assertEquals(expected, countOccurrences(htmlContent, htmlMarker(page)),
+                "HTML page " + page + " marker count mismatch");
+        }
+    }
+
+    // No-filter regression guard: every page must emit its separator exactly once when --pages
+    // is unset. Ensures the filter change does not regress to "select none" when the set is empty.
+
+    @Test
+    void testMarkdownPageSeparatorWithoutPagesFilterEmitsAllPages() throws IOException {
+        Config config = new Config();
+        config.setOutputFolder(tempDir.toString());
+        config.setGenerateJSON(false);
+        config.setGenerateMarkdown(true);
+        config.setMarkdownPageSeparator("<!-- Page %page-number% -->");
+
+        DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
+
+        Path mdOutput = tempDir.resolve(OUTPUT_BASENAME + ".md");
+        String mdContent = Files.readString(mdOutput);
+
+        for (int page = 1; page <= SAMPLE_PAGE_COUNT; page++) {
+            assertEquals(1, countOccurrences(mdContent, mdMarker(page)),
+                "Markdown page " + page + " marker should appear exactly once without filter");
+        }
+    }
+
+    @Test
+    void testTextPageSeparatorWithoutPagesFilterEmitsAllPages() throws IOException {
+        Config config = new Config();
+        config.setOutputFolder(tempDir.toString());
+        config.setGenerateJSON(false);
+        config.setGenerateText(true);
+        config.setTextPageSeparator("[Page %page-number%]");
+
+        DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
+
+        Path txtOutput = tempDir.resolve(OUTPUT_BASENAME + ".txt");
+        String txtContent = Files.readString(txtOutput);
+
+        for (int page = 1; page <= SAMPLE_PAGE_COUNT; page++) {
+            assertEquals(1, countOccurrences(txtContent, textMarker(page)),
+                "Text page " + page + " marker should appear exactly once without filter");
+        }
+    }
+
+    @Test
+    void testHtmlPageSeparatorWithoutPagesFilterEmitsAllPages() throws IOException {
+        Config config = new Config();
+        config.setOutputFolder(tempDir.toString());
+        config.setGenerateJSON(false);
+        config.setGenerateHtml(true);
+        config.setHtmlPageSeparator("<div data-page=\"%page-number%\">");
+
+        DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
+
+        Path htmlOutput = tempDir.resolve(OUTPUT_BASENAME + ".html");
+        String htmlContent = Files.readString(htmlOutput);
+
+        for (int page = 1; page <= SAMPLE_PAGE_COUNT; page++) {
+            assertEquals(1, countOccurrences(htmlContent, htmlMarker(page)),
+                "HTML page " + page + " marker should appear exactly once without filter");
+        }
+    }
+
+    // Boundary scenarios — lock in contract corners most likely to regress in future refactors.
+
+    @Test
+    void testMarkdownPageSeparatorLastPageOnly() throws IOException {
+        Config config = new Config();
+        config.setOutputFolder(tempDir.toString());
+        config.setGenerateJSON(false);
+        config.setGenerateMarkdown(true);
+        config.setMarkdownPageSeparator("<!-- Page %page-number% -->");
+        config.setPages(String.valueOf(SAMPLE_PAGE_COUNT));
+
+        DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
+
+        Path mdOutput = tempDir.resolve(OUTPUT_BASENAME + ".md");
+        String mdContent = Files.readString(mdOutput);
+
+        for (int page = 1; page <= SAMPLE_PAGE_COUNT; page++) {
+            int expected = (page == SAMPLE_PAGE_COUNT) ? 1 : 0;
+            assertEquals(expected, countOccurrences(mdContent, mdMarker(page)),
+                "Markdown page " + page + " marker count mismatch for last-page-only selection");
+        }
+    }
+
+    @Test
+    void testMarkdownPageSeparatorWithOutOfRangePages() throws IOException {
+        Config config = new Config();
+        config.setOutputFolder(tempDir.toString());
+        config.setGenerateJSON(false);
+        config.setGenerateMarkdown(true);
+        config.setMarkdownPageSeparator("<!-- Page %page-number% -->");
+        // Mix valid + out-of-range: the in-range page must still emit; the out-of-range page must not.
+        config.setPages("1,99");
+
+        DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
+
+        Path mdOutput = tempDir.resolve(OUTPUT_BASENAME + ".md");
+        String mdContent = Files.readString(mdOutput);
+
+        assertEquals(1, countOccurrences(mdContent, mdMarker(1)), "Page 1 marker should appear once");
+        assertEquals(0, countOccurrences(mdContent, mdMarker(99)), "Out-of-range page 99 marker must not appear");
+        for (int page = 2; page <= SAMPLE_PAGE_COUNT; page++) {
+            assertEquals(0, countOccurrences(mdContent, mdMarker(page)),
+                "Markdown page " + page + " marker must not appear");
+        }
+    }
+
+    @Test
+    void testMarkdownPageSeparatorWithNonContiguousPages() throws IOException {
+        Config config = new Config();
+        config.setOutputFolder(tempDir.toString());
+        config.setGenerateJSON(false);
+        config.setGenerateMarkdown(true);
+        config.setMarkdownPageSeparator("<!-- Page %page-number% -->");
+        config.setPages("1,4,5");
+
+        DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
+
+        Path mdOutput = tempDir.resolve(OUTPUT_BASENAME + ".md");
+        String mdContent = Files.readString(mdOutput);
+
+        for (int page = 1; page <= SAMPLE_PAGE_COUNT; page++) {
+            int expected = (page == 1 || page == 4 || page == 5) ? 1 : 0;
+            assertEquals(expected, countOccurrences(mdContent, mdMarker(page)),
+                "Markdown page " + page + " marker count mismatch for non-contiguous selection");
+        }
+    }
+
+    @Test
+    void testMarkdownEmptyPageSeparatorWithPagesFilter() throws IOException {
+        Config config = new Config();
+        config.setOutputFolder(tempDir.toString());
+        config.setGenerateJSON(false);
+        config.setGenerateMarkdown(true);
+        // Empty separator combined with --pages: the filter must not introduce any marker.
+        config.setPages("1,3");
+
+        DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
+
+        Path mdOutput = tempDir.resolve(OUTPUT_BASENAME + ".md");
+        String mdContent = Files.readString(mdOutput);
+
+        for (int page = 1; page <= SAMPLE_PAGE_COUNT; page++) {
+            assertEquals(0, countOccurrences(mdContent, mdMarker(page)),
+                "Markdown page " + page + " marker must not appear with empty separator");
+        }
+    }
+
+    // Boundary scenarios — Text format
+
+    @Test
+    void testTextPageSeparatorLastPageOnly() throws IOException {
+        Config config = new Config();
+        config.setOutputFolder(tempDir.toString());
+        config.setGenerateJSON(false);
+        config.setGenerateText(true);
+        config.setTextPageSeparator("[Page %page-number%]");
+        config.setPages(String.valueOf(SAMPLE_PAGE_COUNT));
+
+        DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
+
+        Path txtOutput = tempDir.resolve(OUTPUT_BASENAME + ".txt");
+        String txtContent = Files.readString(txtOutput);
+
+        for (int page = 1; page <= SAMPLE_PAGE_COUNT; page++) {
+            int expected = (page == SAMPLE_PAGE_COUNT) ? 1 : 0;
+            assertEquals(expected, countOccurrences(txtContent, textMarker(page)),
+                "Text page " + page + " marker count mismatch for last-page-only selection");
+        }
+    }
+
+    @Test
+    void testTextPageSeparatorWithOutOfRangePages() throws IOException {
+        Config config = new Config();
+        config.setOutputFolder(tempDir.toString());
+        config.setGenerateJSON(false);
+        config.setGenerateText(true);
+        config.setTextPageSeparator("[Page %page-number%]");
+        config.setPages("1,99");
+
+        DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
+
+        Path txtOutput = tempDir.resolve(OUTPUT_BASENAME + ".txt");
+        String txtContent = Files.readString(txtOutput);
+
+        assertEquals(1, countOccurrences(txtContent, textMarker(1)), "Page 1 marker should appear once");
+        assertEquals(0, countOccurrences(txtContent, textMarker(99)), "Out-of-range page 99 marker must not appear");
+        for (int page = 2; page <= SAMPLE_PAGE_COUNT; page++) {
+            assertEquals(0, countOccurrences(txtContent, textMarker(page)),
+                "Text page " + page + " marker must not appear");
+        }
+    }
+
+    @Test
+    void testTextPageSeparatorWithNonContiguousPages() throws IOException {
+        Config config = new Config();
+        config.setOutputFolder(tempDir.toString());
+        config.setGenerateJSON(false);
+        config.setGenerateText(true);
+        config.setTextPageSeparator("[Page %page-number%]");
+        config.setPages("1,4,5");
+
+        DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
+
+        Path txtOutput = tempDir.resolve(OUTPUT_BASENAME + ".txt");
+        String txtContent = Files.readString(txtOutput);
+
+        for (int page = 1; page <= SAMPLE_PAGE_COUNT; page++) {
+            int expected = (page == 1 || page == 4 || page == 5) ? 1 : 0;
+            assertEquals(expected, countOccurrences(txtContent, textMarker(page)),
+                "Text page " + page + " marker count mismatch for non-contiguous selection");
+        }
+    }
+
+    @Test
+    void testTextEmptyPageSeparatorWithPagesFilter() throws IOException {
+        Config config = new Config();
+        config.setOutputFolder(tempDir.toString());
+        config.setGenerateJSON(false);
+        config.setGenerateText(true);
+        config.setPages("1,3");
+
+        DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
+
+        Path txtOutput = tempDir.resolve(OUTPUT_BASENAME + ".txt");
+        String txtContent = Files.readString(txtOutput);
+
+        for (int page = 1; page <= SAMPLE_PAGE_COUNT; page++) {
+            assertEquals(0, countOccurrences(txtContent, textMarker(page)),
+                "Text page " + page + " marker must not appear with empty separator");
+        }
+    }
+
+    // Boundary scenarios — HTML format
+
+    @Test
+    void testHtmlPageSeparatorLastPageOnly() throws IOException {
+        Config config = new Config();
+        config.setOutputFolder(tempDir.toString());
+        config.setGenerateJSON(false);
+        config.setGenerateHtml(true);
+        config.setHtmlPageSeparator("<div data-page=\"%page-number%\">");
+        config.setPages(String.valueOf(SAMPLE_PAGE_COUNT));
+
+        DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
+
+        Path htmlOutput = tempDir.resolve(OUTPUT_BASENAME + ".html");
+        String htmlContent = Files.readString(htmlOutput);
+
+        for (int page = 1; page <= SAMPLE_PAGE_COUNT; page++) {
+            int expected = (page == SAMPLE_PAGE_COUNT) ? 1 : 0;
+            assertEquals(expected, countOccurrences(htmlContent, htmlMarker(page)),
+                "HTML page " + page + " marker count mismatch for last-page-only selection");
+        }
+    }
+
+    @Test
+    void testHtmlPageSeparatorWithOutOfRangePages() throws IOException {
+        Config config = new Config();
+        config.setOutputFolder(tempDir.toString());
+        config.setGenerateJSON(false);
+        config.setGenerateHtml(true);
+        config.setHtmlPageSeparator("<div data-page=\"%page-number%\">");
+        config.setPages("1,99");
+
+        DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
+
+        Path htmlOutput = tempDir.resolve(OUTPUT_BASENAME + ".html");
+        String htmlContent = Files.readString(htmlOutput);
+
+        assertEquals(1, countOccurrences(htmlContent, htmlMarker(1)), "Page 1 marker should appear once");
+        assertEquals(0, countOccurrences(htmlContent, htmlMarker(99)), "Out-of-range page 99 marker must not appear");
+        for (int page = 2; page <= SAMPLE_PAGE_COUNT; page++) {
+            assertEquals(0, countOccurrences(htmlContent, htmlMarker(page)),
+                "HTML page " + page + " marker must not appear");
+        }
+    }
+
+    @Test
+    void testHtmlPageSeparatorWithNonContiguousPages() throws IOException {
+        Config config = new Config();
+        config.setOutputFolder(tempDir.toString());
+        config.setGenerateJSON(false);
+        config.setGenerateHtml(true);
+        config.setHtmlPageSeparator("<div data-page=\"%page-number%\">");
+        config.setPages("1,4,5");
+
+        DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
+
+        Path htmlOutput = tempDir.resolve(OUTPUT_BASENAME + ".html");
+        String htmlContent = Files.readString(htmlOutput);
+
+        for (int page = 1; page <= SAMPLE_PAGE_COUNT; page++) {
+            int expected = (page == 1 || page == 4 || page == 5) ? 1 : 0;
+            assertEquals(expected, countOccurrences(htmlContent, htmlMarker(page)),
+                "HTML page " + page + " marker count mismatch for non-contiguous selection");
+        }
+    }
+
+    @Test
+    void testHtmlEmptyPageSeparatorWithPagesFilter() throws IOException {
+        Config config = new Config();
+        config.setOutputFolder(tempDir.toString());
+        config.setGenerateJSON(false);
+        config.setGenerateHtml(true);
+        config.setPages("1,3");
+
+        DocumentProcessor.processFile(samplePdf.getAbsolutePath(), config);
+
+        Path htmlOutput = tempDir.resolve(OUTPUT_BASENAME + ".html");
+        String htmlContent = Files.readString(htmlOutput);
+
+        for (int page = 1; page <= SAMPLE_PAGE_COUNT; page++) {
+            assertEquals(0, countOccurrences(htmlContent, htmlMarker(page)),
+                "HTML page " + page + " marker must not appear with empty separator");
+        }
     }
 }

@@ -46,7 +46,7 @@ jobs:
         run: ./scripts/build-all.sh
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           files: java/opendataloader-pdf-core/target/site/jacoco/jacoco.xml
           fail_ci_if_error: false

@@ -117,6 +117,7 @@ public class DoclingFastServerClient implements HybridClient {
                 + "  1. Install: pip install \"opendataloader-pdf[hybrid]\"\n"
                 + "  2. Start:   opendataloader-pdf-hybrid --port 5002\n"
                 + "To use a remote server or custom port: --hybrid-url http://host:port\n"
+                + "Or pass --hybrid-fallback to fall back to Java-only output for this run.\n"
                 + "Or run without --hybrid flag for Java-only processing.", e);
         }
         try (response) {
