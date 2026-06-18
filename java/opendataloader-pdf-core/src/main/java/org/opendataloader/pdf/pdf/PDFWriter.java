@@ -16,6 +16,7 @@
 package org.opendataloader.pdf.pdf;
 
 import org.opendataloader.pdf.processors.DocumentProcessor;
+import org.opendataloader.pdf.utils.FileUtils;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
@@ -79,7 +80,7 @@ public class PDFWriter {
             document.setAllSecurityToBeRemoved(true);
 
             String outputFileName = outputFolder + File.separator +
-                    inputPDF.getName().substring(0, inputPDF.getName().length() - 4) + "_annotated.pdf";
+                    FileUtils.getBaseName(inputPDF.getName()) + "_annotated.pdf";
             document.save(outputFileName);
             LOGGER.log(Level.INFO, "Created {0}", outputFileName);
         } catch (Exception ex) {
