@@ -26,12 +26,15 @@ class HtmlGeneratorTest {
      * - setFontWeight(double) is stored and getRoundedFontWeight() rounds it.
      */
     private TextChunk createChunk(String text, boolean strikethrough, boolean italic,
-                                  boolean colorNonBlack, double fontWeight, double fontSize) {
+                                  boolean colorNonBlack, double fontWeight, double fontSize, boolean underline) {
         BoundingBox dummyBox = new BoundingBox(0, 0, 10, 20, 30);
         TextChunk chunk = new TextChunk(dummyBox, text, fontSize, 100.0);
 
         if (strikethrough) {
             chunk.setIsStrikethroughText();      // sets the flag to true
+        }
+        if (underline) {
+            chunk.setIsUnderlinedText();      // sets the flag to true
         }
         // italic angle: 10.0 for italic, 0.0 for normal
         chunk.setItalicAngle(italic ? 10.0 : 0.0);
@@ -52,10 +55,14 @@ class HtmlGeneratorTest {
      * The order matches getTextStyle(): strikethrough → italic → color → weight.
      */
     private String expectedStyle(boolean strikethrough, boolean italic,
-                                 boolean colorNonBlack, double fontWeight, double fontSize) {
+                                 boolean colorNonBlack, double fontWeight, double fontSize, boolean underline) {
         StringBuilder style = new StringBuilder();
-        if (strikethrough) {
+        if (strikethrough && underline) {
+            style.append("text-decoration: line-through underline; ");
+        } else if (strikethrough) {
             style.append("text-decoration: line-through; ");
+        } else if (underline) {
+            style.append("text-decoration: underline; ");
         }
         if (italic) {
             style.append("font-style: italic; ");
@@ -85,7 +92,9 @@ class HtmlGeneratorTest {
                 for (boolean c : bools) {
                     for (double w : weights) {
                         for (double fs : sizes) {
-                            args.add(Arguments.of(s, i, c, w, fs));
+                            for (boolean u : bools) {
+                                args.add(Arguments.of(s, i, c, w, fs, u));
+                            }
                         }
                     }
                 }
@@ -97,16 +106,16 @@ class HtmlGeneratorTest {
     @ParameterizedTest(name = "strikethrough={0}, italic={1}, color={2}, weight={3}")
     @MethodSource("styleCombinations")
     void testAllStyleCombinations(boolean strikethrough, boolean italic,
-                                  boolean colorNonBlack, double fontWeight, double fontSize) {
-        TextChunk chunk = createChunk("A", strikethrough, italic, colorNonBlack, fontWeight, fontSize);
+                                  boolean colorNonBlack, double fontWeight, double fontSize, boolean underline) {
+        TextChunk chunk = createChunk("A", strikethrough, italic, colorNonBlack, fontWeight, fontSize, underline);
         TextLine line = new TextLine(chunk);
         StringBuilder sb = new StringBuilder();
 
         HtmlGenerator.getTextFromLineForHTML(line, sb, OutputType.FORMATTED_HTML);
 
         String expected;
-        if (strikethrough || italic || colorNonBlack || (int) Math.round(fontWeight) != 400 || !NodeUtils.areCloseNumbers(fontSize, 12.0)) {
-            String styleAttr = expectedStyle(strikethrough, italic, colorNonBlack, fontWeight, fontSize);
+        if (strikethrough || underline || italic || colorNonBlack || (int) Math.round(fontWeight) != 400 || !NodeUtils.areCloseNumbers(fontSize, 12.0)) {
+            String styleAttr = expectedStyle(strikethrough, italic, colorNonBlack, fontWeight, fontSize, underline);
             expected = "<span style=\"" + styleAttr + "\">A</span>";
         } else {
             expected = "A";
@@ -161,7 +170,7 @@ class HtmlGeneratorTest {
 
     @Test
     void testFontWeightZero() {
-        TextChunk chunk = createChunk("z", false, false, false, 0.0, 12.0);
+        TextChunk chunk = createChunk("z", false, false, false, 0.0, 12.0, false);
         TextLine line = new TextLine(chunk);
         StringBuilder sb = new StringBuilder();
         HtmlGenerator.getTextFromLineForHTML(line, sb, OutputType.FORMATTED_HTML);
@@ -175,8 +184,8 @@ class HtmlGeneratorTest {
         helloChunk.setFontColor(new double[] {0.0, 0.0, 1.0});   // blue
         helloChunk.setFontWeight(400.0);
 
-        TextChunk spaceChunk = createChunk(" ", false, false, false, 400.0, 12.0);
-        TextChunk worldChunk = createChunk("World", true, true, true, 700.0, 12.0);
+        TextChunk spaceChunk = createChunk(" ", false, false, false, 400.0, 12.0, false);
+        TextChunk worldChunk = createChunk("World", true, true, true, 700.0, 12.0, false);
 
         TextLine line = new TextLine(helloChunk);
         line.add(spaceChunk);
@@ -210,7 +219,7 @@ class HtmlGeneratorTest {
 
     @Test
     void testPdfTextIsEscapedForHtmlBodyContext() {
-        TextChunk chunk = createChunk("<script>alert(1)</script>&", false, false, false, 400.0, 12.0);
+        TextChunk chunk = createChunk("<script>alert(1)</script>&", false, false, false, 400.0, 12.0, false);
         TextLine line = new TextLine(chunk);
         StringBuilder sb = new StringBuilder();
 
@@ -221,7 +230,7 @@ class HtmlGeneratorTest {
 
     @Test
     void testStyledPdfTextIsEscapedInsideSpan() {
-        TextChunk chunk = createChunk("<img src=x onerror=alert(1)>", false, true, false, 400.0, 12.0);
+        TextChunk chunk = createChunk("<img src=x onerror=alert(1)>", false, true, false, 400.0, 12.0, false);
         TextLine line = new TextLine(chunk);
         StringBuilder sb = new StringBuilder();
 
