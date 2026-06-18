@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.opendataloader.pdf.json.JsonName;
 import org.opendataloader.pdf.json.ObjectMapperHolder;
 import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
+import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 
@@ -70,6 +71,7 @@ class LineArtSerializerTest {
         ObjectMapper objectMapper = ObjectMapperHolder.getObjectMapper();
         TableBorderCell headerCell = new TableBorderCell(0, 0, 1, 1, 0L);
         headerCell.setBoundingBox(new BoundingBox(0, 0.0, 0.0, 100.0, 100.0));
+        headerCell.setSemanticType(SemanticType.TABLE_HEADER);
         TableBorderCell bodyCell = new TableBorderCell(1, 0, 1, 1, 0L);
         bodyCell.setBoundingBox(new BoundingBox(0, 0.0, 0.0, 100.0, 100.0));
 
