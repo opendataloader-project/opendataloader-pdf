@@ -15,8 +15,8 @@
  */
 package org.opendataloader.pdf;
 
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -79,7 +79,7 @@ class HybridBackendFailureIntegrationTest {
             // before the assignment). JUnit 5 still calls tearDown, so the guard
             // prevents an NPE from masking the real setup failure.
             if (server != null) {
-                server.shutdown();
+                server.close();
             }
         } finally {
             // Drop the cached HybridClient holding the mock server's URL so other
@@ -92,7 +92,7 @@ class HybridBackendFailureIntegrationTest {
     @Test
     void backendPartialSuccessFailsFastWhenFallbackDisabled() {
         // /health probe (Phase 0 checkAvailability)
-        server.enqueue(new MockResponse().setResponseCode(200).setBody("ok"));
+        server.enqueue(new MockResponse.Builder().code(200).body("ok").build());
         // /v1/convert/file response — the single page of lorem.pdf is marked
         // failed. Listing just the requested pages keeps the test's intent
         // explicit instead of relying on the processor's intersection logic.
@@ -103,9 +103,10 @@ class HybridBackendFailureIntegrationTest {
             + "\"errors\": [\"Unknown page: pipeline terminated early\"],"
             + "\"failed_pages\": [1]"
             + "}";
-        server.enqueue(new MockResponse()
-            .setBody(partialSuccess)
-            .addHeader("Content-Type", "application/json"));
+        server.enqueue(new MockResponse.Builder()
+            .body(partialSuccess)
+            .addHeader("Content-Type", "application/json")
+            .build());
 
         Config config = new Config();
         config.setOutputFolder(tempDir.toString());
