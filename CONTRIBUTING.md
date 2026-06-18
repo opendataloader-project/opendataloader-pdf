@@ -134,5 +134,19 @@ git commit -s -m "your message"
 
 Make sure your Git config contains your real name and email.
 
+## Agent Skills Maintenance
+
+This project ships a built-in agent skill at `skills/odl-pdf/`. When you add
+or modify CLI options:
+
+1. Run `npm run sync` as usual
+2. Update `skills/odl-pdf/references/options-matrix.md` — add the new option
+   to the appropriate category with its type, default, and description
+3. If the new option has interaction rules with existing options (e.g., requires
+   another option to be set), document the rule in the "Interaction Rules" section
+
+The CI workflow `skill-drift-check.yml` will flag any mismatch between
+`options.json` and `options-matrix.md`.
+
 Thank you again for helping us improve this project! 🙌
 If you have any questions, open an issue or join the discussion.

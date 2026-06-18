@@ -23,3 +23,80 @@ Manual docs live in opendataloader.org repo. Reference docs (CLI options, JSON s
 - `./scripts/bench.sh --check-regression` — CI mode with threshold check
 - Benchmark code lives in [opendataloader-bench](https://github.com/opendataloader-project/opendataloader-bench)
 - Metrics: **NID** (reading order), **TEDS** (table structure), **MHS** (heading structure), **Table Detection F1**, **Speed**
+
+## Agent Skills
+
+`skills/odl-pdf/` contains the public agent skill shipped with this project.
+
+When adding or changing CLI options in Java, the following files may need
+manual updates. The drift CI (`skill-drift-check.yml`) only enforces step 2;
+the others are NOT auto-checked and will silently go stale if missed:
+
+1. Run `npm run sync` (regenerates `options.json` + Python/Node bindings)
+2. **Always**: update `skills/odl-pdf/references/options-matrix.md` to add /
+   rename / remove the row matching `options.json`. Drift CI enforces option
+   **names** here; description text is not auto-checked.
+3. **If the option is hybrid-related** (`--hybrid-*`, server flags like
+   `--enrich-*`, `--force-ocr`, `--ocr-lang`): also update
+   `skills/odl-pdf/references/hybrid-guide.md` — Client Options table, Server
+   Configuration table, or both.
+4. **If the option is a new output format or affects format selection** (touches
+   the `--format` enum, image handling, page separators): also update
+   `skills/odl-pdf/references/format-guide.md` and the Output Pipeline section
+   of `skills/odl-pdf/references/integration-examples.md`.
+5. **If the option introduces a silent failure mode, an unsafe default, or a
+   prerequisite**: also add it to the **Critical Gotchas** section of
+   `skills/odl-pdf/SKILL.md`. Silent failures (e.g., enrichments skipped in
+   `--hybrid-mode auto`, JVM cold-start cost on per-file calls) are the class
+   of issue the skill exists to surface — keep the gotchas list current.
+6. **If the option changes the recommended escalation path** for a quality
+   metric (NID / TEDS / MHS / Table Detection F1): also update the
+   corresponding Low-* section of `skills/odl-pdf/references/eval-metrics.md`.
+
+The `skill-smoke-test.yml` workflow runs automatically on push and
+verifies cross-platform shell and Python script behavior on
+ubuntu/windows/macos; it does not exercise model behavior.
+
+When bumping the minimum Java version (raising
+`<maven.compiler.source>` / `<maven.compiler.target>` in `java/pom.xml`),
+also update every explicit "Java 11" / "Java 11+" mention in these
+skill files — pip-installed users do not have `java/pom.xml` on disk
+and rely on the skill to state the concrete minimum:
+
+- `skills/odl-pdf/SKILL.md` — Persona, Phase 2A prerequisite and the
+  user-facing message, Action Mode A1 environment check, Gotcha 1
+  (title, body, Resolution, user-facing message), Session Checklist
+- `skills/odl-pdf/references/installation-matrix.md` — Prerequisites
+  paragraph and the Version Compatibility table's footer note
+- `skills/odl-pdf/references/integration-examples.md` — opening
+  requirement line
+- `skills/odl-pdf/evals/evals.json` — eval-006 `must_mention` array
+  (currently `"Java 11"`)
+
+The same pattern applies when the Python or Node.js runtime floor
+bumps, though the urgency is asymmetric:
+
+- **Node.js — peer to Java in silent-failure terms.** `npm` treats
+  `engines.node` in `node/opendataloader-pdf/package.json` as advisory
+  by default (`npm warn EBADENGINE` then installs anyway), so a user
+  below the floor gets a cryptic runtime error rather than a blocked
+  install. When bumping `engines.node`, grep for the current value
+  (e.g. `Node.js 20.19+`) across `skills/odl-pdf/` and update every
+  match. `pnpm` is strict by default, but the skill cannot assume the
+  user's package manager.
+- **Python — loud install failure.** Modern `pip` strictly enforces
+  `requires-python` in `python/opendataloader-pdf/pyproject.toml` and
+  refuses to install with a clear error. Surfacing the floor still
+  saves an agent-user round-trip, so when bumping `requires-python`,
+  grep for the current value (e.g. `Python 3.10+`) across
+  `skills/odl-pdf/` and update every match.
+
+Current Python/Node.js floor mentions live in the same skill locations
+as the Java ones: `SKILL.md` Persona, Phase 2A decision tree and
+default note, Session Checklist; `installation-matrix.md` Decision
+Tree and Prerequisites; `integration-examples.md` opening line. Grep
+is the authoritative discovery method for either bump — the file list
+above is a navigation aid, not a substitute for a fresh grep.
+
+The skill is written in English for external users. Do not include internal
+team terminology or company-specific policies.

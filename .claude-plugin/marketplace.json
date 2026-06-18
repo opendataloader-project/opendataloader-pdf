@@ -1,0 +1,22 @@
+{
+  "name": "opendataloader-pdf",
+  "owner": {
+    "name": "OpenDataLoader Project"
+  },
+  "metadata": {
+    "description": "AI-powered PDF extraction guidance and automation",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "odl-pdf-skills",
+      "version": "0.1.0",
+      "description": "Expert guidance for opendataloader-pdf — environment detection, option recommendations, hybrid mode setup, quality diagnostics, and direct conversion execution",
+      "homepage": "https://github.com/opendataloader-project/opendataloader-pdf/tree/main/skills/odl-pdf",
+      "source": "./",
+      "skills": [
+        "./skills/odl-pdf"
+      ]
+    }
+  ]
+}

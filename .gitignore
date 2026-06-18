@@ -78,4 +78,4 @@ content/docs/
 # Configuration files
 .claude/settings.local.json
 .claude/plans/
-
+.claude/review-rounds.md
