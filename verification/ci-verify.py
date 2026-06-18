@@ -7,6 +7,7 @@ Three-level verification: Smoke / Content assertion / Comparison.
 import glob
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -837,12 +838,14 @@ def main() -> None:
                 "--format markdown", md_file, must_contain=None
             )
             if ok:
-                # Check for markdown markers: # or *
+                # Require a real ATX heading line ("# ..."), which is a
+                # structural markdown signal. A bare "*" (the old check) occurs
+                # in almost any prose, so it passed even on non-markdown output.
                 with open(md_file, "r", encoding="utf-8", errors="replace") as fh:
                     content = fh.read()
-                ok = "#" in content or "*" in content
+                ok = bool(re.search(r"(?m)^#{1,6} ", content))
                 if not ok:
-                    print("       [content] missing '#' or '*' in markdown output")
+                    print("       [content] no markdown heading ('# ...') in output")
         record("--format markdown", ok)
 
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -1031,9 +1034,13 @@ def main() -> None:
         record("--replace-invalid-chars [SKIPPED: fixture missing]", None)
     else:
         with tempfile.TemporaryDirectory() as tmpdir:
+            # Collision-free sentinel: a bare "_" occurs in ordinary text, so the
+            # old check passed even if the option were ignored. This token cannot
+            # appear unless the replacement actually fired on the fixture's
+            # unmappable glyphs.
             result = run_cli([
                 PDF_INVALID_CHARS,
-                "--replace-invalid-chars", "_",
+                "--replace-invalid-chars", "ODLINVALIDCHAR",
                 "--format", "text",
                 "--output-dir", tmpdir,
             ])
@@ -1041,9 +1048,9 @@ def main() -> None:
             if ok:
                 txt_file = _find_file_by_ext(tmpdir, ".txt")
                 ok = txt_file is not None and assert_content(
-                    "--replace-invalid-chars", txt_file, must_contain=["_"]
+                    "--replace-invalid-chars", txt_file, must_contain=["ODLINVALIDCHAR"]
                 )
-            record("--replace-invalid-chars \"_\"", ok)
+            record("--replace-invalid-chars ODLINVALIDCHAR", ok)
 
     # ------------------------------------------------------------------
     # --pages
