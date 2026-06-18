@@ -192,7 +192,7 @@ def assert_content(
         # to a non-empty check so an empty output file never passes vacuously.
         if not must_contain and not must_not_contain:
             if not content.strip():
-                print(f"       [content] file is empty")
+                print("       [content] file is empty")
                 return False
         return True
     except Exception as exc:
@@ -274,7 +274,6 @@ def run_comparison(
     label: str,
     cmd_baseline: list[str],
     cmd_variant: list[str],
-    outdir: str,
     expect: str = "differ",
 ) -> bool:
     """Level 3: compare baseline vs variant output. expect='differ'|'identical'."""
@@ -299,8 +298,10 @@ def run_comparison(
                 print(f"       [compare] missing output file (base={base_file}, var={var_file})")
                 return False
 
-            base_content = open(base_file, "rb").read()
-            var_content  = open(var_file,  "rb").read()
+            with open(base_file, "rb") as fh:
+                base_content = fh.read()
+            with open(var_file, "rb") as fh:
+                var_content = fh.read()
 
             are_same = base_content == var_content
             if expect == "differ":
@@ -788,8 +789,10 @@ def verify_sanitization_rules() -> None:
                 record(f"--sanitize {label} [missing output file]", False)
             return
 
-        base_text = open(base_file, encoding="utf-8", errors="replace").read()
-        san_text  = open(san_file,  encoding="utf-8", errors="replace").read()
+        with open(base_file, encoding="utf-8", errors="replace") as fh:
+            base_text = fh.read()
+        with open(san_file, encoding="utf-8", errors="replace") as fh:
+            san_text = fh.read()
 
         for label, trigger, replacement in SANITIZATION_SCENARIOS:
             if trigger not in base_text:
@@ -1021,7 +1024,6 @@ def main() -> None:
             "--keep-line-breaks",
             cmd_baseline=[PDF_MULTIPAGE, "--format", "text"],
             cmd_variant=[PDF_MULTIPAGE, "--format", "text", "--keep-line-breaks"],
-            outdir="",
             expect="differ",
         )
         record("--keep-line-breaks", result)
@@ -1145,7 +1147,6 @@ def main() -> None:
             "--sanitize",
             cmd_baseline=[PDF_SANITIZE, "--format", "text"],
             cmd_variant=[PDF_SANITIZE, "--format", "text", "--sanitize"],
-            outdir="",
             expect="differ",
         )
         record("--sanitize", result)
@@ -1177,7 +1178,6 @@ def main() -> None:
             "--use-struct-tree",
             cmd_baseline=[PDF_STRUCTURED, "--format", "text"],
             cmd_variant=[PDF_STRUCTURED, "--format", "text", "--use-struct-tree"],
-            outdir="",
             expect="differ",
         )
         record("--use-struct-tree", result)
@@ -1212,7 +1212,6 @@ def main() -> None:
             "--reading-order off",
             cmd_baseline=[PDF_MULTIPAGE, "--format", "text"],
             cmd_variant=[PDF_MULTIPAGE, "--format", "text", "--reading-order", "off"],
-            outdir="",
             expect="differ",
         )
         record("--reading-order off", result)
