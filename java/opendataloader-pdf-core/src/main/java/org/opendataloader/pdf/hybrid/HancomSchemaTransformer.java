@@ -419,14 +419,25 @@ public class HancomSchemaTransformer implements HybridSchemaTransformer {
         double rowHeight = (tableBbox.getTopY() - tableBbox.getBottomY()) / numRows;
         double colWidth = (tableBbox.getRightX() - tableBbox.getLeftX()) / numCols;
 
+        // Pass 1: Initialize all row containers to prevent NPE when backfilling spans
         for (int row = 0; row < numRows; row++) {
             TableBorderRow borderRow = new TableBorderRow(row, numCols, 0L);
             double rowTop = tableBbox.getTopY() - (row * rowHeight);
             double rowBottom = rowTop - rowHeight;
             borderRow.setBoundingBox(new BoundingBox(pageIndex,
                 tableBbox.getLeftX(), rowBottom, tableBbox.getRightX(), rowTop));
+            table.getRows()[row] = borderRow;
+        }
+
+        // Pass 2: Fill cells with proper span backfill
+        for (int row = 0; row < numRows; row++) {
+            TableBorderRow borderRow = table.getRows()[row];
 
             for (int col = 0; col < numCols; col++) {
+                if (borderRow.getCells()[col] != null) {
+                    continue;
+                }
+
                 String key = row + "," + col;
                 JsonNode cellNode = cellMap.get(key);
 
@@ -447,12 +458,15 @@ public class HancomSchemaTransformer implements HybridSchemaTransformer {
                     }
                 }
 
-                TableBorderCell cell = new TableBorderCell(row, col, rowSpan, colSpan, 0L);
+                int effectiveRowSpan = Math.max(1, Math.min(rowSpan, numRows - row));
+                int effectiveColSpan = Math.max(1, Math.min(colSpan, numCols - col));
+
+                TableBorderCell cell = new TableBorderCell(row, col, effectiveRowSpan, effectiveColSpan, 0L);
                 cell.setSemanticType(row == 0 ? SemanticType.TABLE_HEADER : SemanticType.TABLE_CELL);
                 double cellLeft = tableBbox.getLeftX() + (col * colWidth);
-                double cellRight = cellLeft + (colSpan * colWidth);
+                double cellRight = cellLeft + (effectiveColSpan * colWidth);
                 double cellTop = tableBbox.getTopY() - (row * rowHeight);
-                double cellBottom = cellTop - (rowSpan * rowHeight);
+                double cellBottom = cellTop - (effectiveRowSpan * rowHeight);
                 cell.setBoundingBox(new BoundingBox(pageIndex, cellLeft, cellBottom, cellRight, cellTop));
 
                 // Add cell content if present
@@ -462,9 +476,15 @@ public class HancomSchemaTransformer implements HybridSchemaTransformer {
                 }
 
                 borderRow.getCells()[col] = cell;
-            }
 
-            table.getRows()[row] = borderRow;
+                // Backfill: assign same cell instance to all slots it covers
+                // All target rows are guaranteed to exist from Pass 1
+                for (int r = row; r < row + effectiveRowSpan; r++) {
+                    for (int c = col; c < col + effectiveColSpan; c++) {
+                        table.getRows()[r].getCells()[c] = cell;
+                    }
+                }
+            }
         }
 
         return table;
