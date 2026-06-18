@@ -113,7 +113,9 @@ public class TextLineProcessor {
                 BoundingBox spaceBBox = new BoundingBox(currentTextChunk.getBoundingBox());
                 spaceBBox.setLeftX(spaceLeft);
                 spaceBBox.setRightX(spaceRight);
-                TextChunk spaceChunk = new TextChunk(spaceBBox, " ", textLine.getFontSize(), textLine.getBaseLine());
+                TextChunk spaceChunk = new TextChunk(spaceBBox, " ", currentTextChunk.getFontName(), textLine.getFontSize(),
+                    currentTextChunk.getFontWeight(), currentTextChunk.getItalicAngle(), textLine.getBaseLine(),
+                    currentTextChunk.getFontColor(), null, currentTextChunk.getSlantDegree());
                 spaceChunk.adjustSymbolEndsToBoundingBox(null);
                 newLine.add(spaceChunk);
             }
