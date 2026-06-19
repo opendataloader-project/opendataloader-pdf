@@ -509,11 +509,22 @@ public class ListProcessor {
     }
 
     private static void addFirstLBodyToList(PDFList currentList, SemanticTextNode middleContent) {
-        ListItem listItem = new ListItem(new BoundingBox(), middleContent.getRecognizedStructureId());
+        BoundingBox contentBBox = middleContent.getBoundingBox();
+        ListItem listItem = new ListItem(contentBBox, middleContent.getRecognizedStructureId());
         for (TextColumn textColumn : middleContent.getColumns()) {
             listItem.add(textColumn.getLines());
         }
-        currentList.add(0, listItem);
+
+        int insertIndex = 0;
+        for (int i = 0; i < currentList.getNumberOfListItems(); i++) {
+            ListItem existingItem = currentList.getListItems().get(i);
+            BoundingBox existingBBox = existingItem.getBoundingBox();
+            if (contentBBox.getTopY() > existingBBox.getTopY()) {
+                break;
+            }
+            insertIndex++;
+        }
+        currentList.add(insertIndex, listItem);
     }
 
     public static boolean isNeighborLists(PDFList previousList, PDFList currentList, SemanticTextNode middleContent) {
