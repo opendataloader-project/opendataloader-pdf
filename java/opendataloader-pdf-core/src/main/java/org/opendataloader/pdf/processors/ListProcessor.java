@@ -455,8 +455,7 @@ public class ListProcessor {
                         if (previousList.getNextList() == null && currentList.getPreviousList() == null) {
                             if (isNeighborLists(previousList, currentList, middleContent)) {
                                 if (middleContent != null) {
-                                    pageContents.set(middleContent.getIndex(), null);
-                                    addMiddleContentToList(previousList, currentList, middleContent);
+                                    addMiddleContentToList(previousList, currentList, middleContent, pageContents);
                                 }
                                 if (Objects.equals(previousList.getPageNumber(), currentList.getPageNumber()) &&
                                         BoundingBox.areHorizontalOverlapping(previousList.getBoundingBox(), currentList.getBoundingBox())) {
@@ -469,8 +468,7 @@ public class ListProcessor {
                             }
                         } else if (Objects.equals(previousList.getNextListId(), currentList.getRecognizedStructureId())) {
                             if (middleContent != null && isMiddleContentPartOfList(previousList, middleContent, currentList)) {
-                                pageContents.set(middleContent.getIndex(), null);
-                                addMiddleContentToList(previousList, currentList, middleContent);
+                                addMiddleContentToList(previousList, currentList, middleContent, pageContents);
                             }
                         }
                     }
@@ -495,7 +493,7 @@ public class ListProcessor {
         contents.replaceAll(DocumentProcessor::removeNullObjectsFromList);
     }
 
-    private static void addMiddleContentToList(PDFList previousList, PDFList currentList, SemanticTextNode middleContent) {
+    private static void addMiddleContentToList(PDFList previousList, PDFList currentList, SemanticTextNode middleContent, List<IObject> pageContents) {
         ListItem lastListItem = previousList.getLastListItem();
         if (Objects.equals(lastListItem.getPageNumber(), middleContent.getPageNumber()) &&
                 BoundingBox.areHorizontalOverlapping(lastListItem.getBoundingBox(), middleContent.getBoundingBox())) {
@@ -503,8 +501,12 @@ public class ListProcessor {
                 lastListItem.add(textColumn.getLines());
             }
             previousList.getBoundingBox().union(middleContent.getBoundingBox());
+            pageContents.set(middleContent.getIndex(), null);
         } else {
-            addFirstLBodyToList(currentList, middleContent);
+            if (middleContent.getTopY() > currentList.getTopY()) {
+                addFirstLBodyToList(currentList, middleContent);
+                pageContents.set(middleContent.getIndex(), null);
+            }
         }
     }
 
