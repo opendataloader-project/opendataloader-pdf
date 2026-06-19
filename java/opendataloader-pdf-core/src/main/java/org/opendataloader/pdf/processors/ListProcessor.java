@@ -511,7 +511,7 @@ public class ListProcessor {
     }
 
     private static void addFirstLBodyToList(PDFList currentList, SemanticTextNode middleContent) {
-        ListItem listItem = new ListItem(middleContent.getBoundingBox(), middleContent.getRecognizedStructureId());
+        ListItem listItem = new ListItem(new BoundingBox(), middleContent.getRecognizedStructureId());
         for (TextColumn textColumn : middleContent.getColumns()) {
             listItem.add(textColumn.getLines());
         }
