@@ -19,6 +19,13 @@ import org.opendataloader.pdf.hybrid.HybridClientFactory;
 import org.opendataloader.pdf.processors.DocumentProcessor;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * The main entry point for the opendataloader-pdf library.
@@ -26,18 +33,81 @@ import java.io.IOException;
  */
 public final class OpenDataLoaderPDF {
 
+    private static final Logger LOGGER = Logger.getLogger(OpenDataLoaderPDF.class.getName());
+
+    /** Utility class; do not instantiate. */
     private OpenDataLoaderPDF() {
     }
 
     /**
      * Processes a PDF file to extract its content and structure based on the provided configuration.
      *
+     * <p>Input validation is performed before processing. Callers may catch
+     * {@link IllegalArgumentException} to skip invalid entries in a batch loop:
+     * <pre>{@code
+     * for (String pdf : paths) {
+     *     try {
+     *         OpenDataLoaderPDF.processFile(pdf, config);
+     *     } catch (IllegalArgumentException e) {
+     *         // skip invalid path and continue
+     *     }
+     * }
+     * }</pre>
+     *
      * @param inputPdfName The path to the input PDF file.
      * @param config       The configuration object specifying output formats and other options.
-     * @throws IOException If an error occurs during file reading or processing.
+     * @throws IllegalArgumentException if {@code inputPdfName} is null, blank, syntactically
+     *                                  invalid, does not exist, is not a regular file, or does
+     *                                  not have a {@code .pdf} extension.
+     * @throws IOException              If an error occurs during file reading or processing.
      */
     public static void processFile(String inputPdfName, Config config) throws IOException {
+        validateInputFile(inputPdfName);
         DocumentProcessor.processFile(inputPdfName, config);
+    }
+
+    /**
+     * Validates that {@code inputPdfName} refers to an existing, regular PDF file.
+     *
+     * @param inputPdfName the path string to validate
+     * @throws IllegalArgumentException if the path is null, blank, syntactically invalid,
+     *                                  non-existent, not a regular file, or lacks a {@code .pdf} extension
+     */
+    private static void validateInputFile(String inputPdfName) {
+        if (inputPdfName == null || inputPdfName.isBlank()) {
+            LOGGER.log(Level.WARNING, "Input PDF path is null or blank");
+            throw new IllegalArgumentException("Input PDF path must not be null or blank");
+        }
+
+        final Path path;
+        try {
+            path = Paths.get(inputPdfName);
+        } catch (InvalidPathException ex) {
+            LOGGER.log(Level.WARNING, "Syntactically invalid path supplied");
+            throw new IllegalArgumentException("Invalid file path: " + ex.getReason(), ex);
+        }
+
+        final Path fileNamePath = path.getFileName();
+        if (fileNamePath == null) {
+            LOGGER.log(Level.WARNING, "Path has no file name component (root path not allowed)");
+            throw new IllegalArgumentException("Path has no file name component (root paths are not allowed)");
+        }
+        final String fileName = fileNamePath.toString();
+
+        if (!Files.exists(path)) {
+            LOGGER.log(Level.WARNING, "PDF file does not exist: {0}", fileName);
+            throw new IllegalArgumentException("File does not exist: " + fileName);
+        }
+
+        if (!Files.isRegularFile(path)) {
+            LOGGER.log(Level.WARNING, "Path does not point to a regular file: {0}", fileName);
+            throw new IllegalArgumentException("Path is not a regular file: " + fileName);
+        }
+
+        if (!fileName.toLowerCase(Locale.ROOT).endsWith(".pdf")) {
+            LOGGER.log(Level.WARNING, "File does not have a .pdf extension: {0}", fileName);
+            throw new IllegalArgumentException("File must have a .pdf extension: " + fileName);
+        }
     }
 
     /**
