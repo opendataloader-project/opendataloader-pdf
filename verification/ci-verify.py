@@ -327,8 +327,11 @@ def check_option_coverage() -> None:
     """Read options.json and verify all non-hybrid options are in COVERED_OPTIONS."""
     options_path = os.path.join(REPO_ROOT, "options.json")
     if not os.path.exists(options_path):
-        print(f"WARNING: options.json not found at {options_path}, skipping coverage check")
-        return
+        # Fail closed: this is the authoritative option registry for the
+        # coverage gate. Skipping when it is absent would let CI pass with
+        # coverage checking silently disabled (e.g. if the path regresses).
+        print(f"ERROR: options.json not found at {options_path}; cannot verify option coverage")
+        sys.exit(1)
 
     with open(options_path, "r", encoding="utf-8") as fh:
         data = json.load(fh)
@@ -375,12 +378,17 @@ def _find_image_files(directory: str) -> list[str]:
 # Encoding safety helpers
 # ---------------------------------------------------------------------------
 
-def _verify_help_cp949_safe(command: list[str]) -> bool | None:
+def _verify_help_cp949_safe(command: list[str], required: bool = False) -> bool | None:
     """Run `command --help` with PYTHONIOENCODING=cp949 and check for UnicodeEncodeError.
 
     Returns True (PASS), False (FAIL — UnicodeEncodeError detected), or None (SKIP).
     Korean Windows console uses cp949; non-ASCII chars (em-dash etc.) in help text
     crash argparse output when stdout codec cannot encode them.
+
+    When ``required`` is True the CLI is known to be installed, so a hang
+    (TimeoutExpired) or any execution failure is a real regression and is
+    reported as FAIL rather than swallowed into a SKIP — otherwise a broken
+    --help would pass the release gate unnoticed.
     """
     env = os.environ.copy()
     env["PYTHONIOENCODING"] = "cp949"
@@ -389,11 +397,11 @@ def _verify_help_cp949_safe(command: list[str]) -> bool | None:
             command + ["--help"],
             env=env,
             capture_output=True,
-            timeout=30,
+            timeout=60,
         )
     except Exception as exc:
         print(f"       [cp949 help] exception: {exc}")
-        return None
+        return False if required else None
 
     stderr_text = result.stderr.decode("utf-8", errors="replace")
     stdout_text = result.stdout.decode("utf-8", errors="replace")
@@ -423,8 +431,9 @@ def _verify_hybrid_help_cp949_safe() -> bool | None:
         if "Missing dependencies" in stderr or "ImportError" in stderr:
             print("       [cp949 help] hybrid deps missing, skipping")
             return None
+    # Availability is confirmed above; from here a failure is a real regression.
     return _verify_help_cp949_safe(
-        [sys.executable, "-m", "opendataloader_pdf.hybrid_server"]
+        [sys.executable, "-m", "opendataloader_pdf.hybrid_server"], required=True
     )
 
 
@@ -1483,7 +1492,7 @@ def main() -> None:
     # ------------------------------------------------------------------
     print("\n--- --help cp949 encoding safety ---")
     record("--help cp949 safe (main)", _verify_help_cp949_safe(
-        [sys.executable, "-m", "opendataloader_pdf"]
+        [sys.executable, "-m", "opendataloader_pdf"], required=True
     ))
     record("--help cp949 safe (hybrid)", _verify_hybrid_help_cp949_safe())
 
