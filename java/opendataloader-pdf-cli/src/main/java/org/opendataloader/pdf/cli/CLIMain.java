@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,6 +34,42 @@ public class CLIMain {
 
     private static final Logger LOGGER = Logger.getLogger(CLIMain.class.getCanonicalName());
 
+    /**
+     * Configures the global logging levels based on the verbose flag.
+     * * @param verbose If true, sets logging to FINE/DEBUG level.
+     */
+    private static void configureLogging(boolean verbose) {
+        Level targetLevel = verbose ? Level.FINE : Level.INFO;
+        Logger rootLogger = Logger.getLogger("");
+        rootLogger.setLevel(targetLevel);
+        for (Handler handler : rootLogger.getHandlers()) {
+            handler.setLevel(targetLevel);
+        }
+        LOGGER.log(Level.CONFIG, "Logging level initialized to: {0}", targetLevel);
+    }
+
+    public static void main(String[] args) {
+        CommandLineParser parser = new DefaultParser();
+        Options options = new Options();
+
+        // Adding the new Verbose Feature flag
+        options.addOption("v", "verbose", false, "Enable detailed debug logging output.");
+        
+        // Assuming pre-existing CLIOptions setup here or similar fallback logic
+        try {
+            CommandLine cmd = parser.parse(options, args, true);
+            boolean isVerbose = cmd.hasOption("v");
+            configureLogging(isVerbose);
+            
+            LOGGER.info("Starting OpenDataLoaderPDF CLI application...");
+            // Remainder of your processing logic continues below...
+            
+        } catch (ParseException e) {
+            LOGGER.log(Level.SEVERE, "Failed to parse command line arguments", e);
+            System.exit(1);
+        }
+    }
+}
     private static final String HELP = "[options] <INPUT FILE OR FOLDER>...\n Options:";
 
     private enum InputSource { CLI_ARGUMENT, DIRECTORY_CHILD }
