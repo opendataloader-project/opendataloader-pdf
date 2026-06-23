@@ -249,6 +249,7 @@ public class DocumentProcessor {
 
         // Capture ALL ThreadLocal state from main thread for propagation to workers
         final var document = StaticContainers.getDocument();
+        final var pdDocument = StaticResources.getDocument();
         final var tableBordersCollection = StaticContainers.getTableBordersCollection();
         final var accumulatedNodeMapper = StaticContainers.getAccumulatedNodeMapper();
         final var objectKeyMapper = StaticContainers.getObjectKeyMapper();
@@ -265,6 +266,7 @@ public class DocumentProcessor {
 
         // Runnable that propagates ThreadLocal state to the current (worker) thread
         final Runnable propagateState = () -> {
+            StaticResources.setDocument(pdDocument);
             // veraPDF StaticContainers
             StaticContainers.setDocument(document);
             StaticContainers.setTableBordersCollection(tableBordersCollection);
