@@ -501,6 +501,13 @@ def create_converter(
         else generate_picture_images
     )
 
+    if enrich_picture_description and not effective_generate_picture_images:
+        raise ValueError(
+            "Invalid configuration: picture description requires picture image "
+            "generation. Use --attach-picture-images or disable picture "
+            "description."
+        )
+
     pipeline_kwargs = {
         "do_ocr": not disable_ocr,
         "do_table_structure": True,

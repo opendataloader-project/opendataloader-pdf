@@ -120,11 +120,10 @@ def test_picture_images_can_be_enabled_without_description():
     assert opts.generate_picture_images is True
 
 
-def test_picture_images_can_be_disabled_with_description():
-    """`generate_picture_images=False` suppresses crops even when VLM is enabled."""
-    opts = _capture_pipeline_options(
-        enrich_picture_description=True,
-        generate_picture_images=False,
-    )
-    assert opts.do_picture_description is True
-    assert opts.generate_picture_images is False
+def test_picture_images_cannot_be_disabled_with_description():
+    """Picture description requires picture image generation."""
+    with pytest.raises(ValueError, match="picture description requires picture image generation"):
+        _capture_pipeline_options(
+            enrich_picture_description=True,
+            generate_picture_images=False,
+        )
