@@ -3,6 +3,7 @@ package org.opendataloader.pdf.processors;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.entities.EnrichedImageChunk;
+import org.opendataloader.pdf.entities.SemanticFootnote;
 import org.verapdf.gf.model.impl.sa.GFSANode;
 import org.verapdf.wcag.algorithms.entities.*;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
@@ -134,6 +135,9 @@ public class TaggedDocumentProcessor {
             case TITLE:
                 processHeading(node);
                 break;
+            case NOTE:
+                processFootnote(node);
+                break;
             default:
                 for (INode child : node.getChildren()) {
                     processStructElem(child, node);
@@ -176,6 +180,11 @@ public class TaggedDocumentProcessor {
         SemanticHeading heading = new SemanticHeading(createParagraph(node));
         heading.setHeadingLevel(1);//update
         addObjectToContent(heading);
+    }
+
+    private static void processFootnote(INode node) {
+        SemanticFootnote footnote = new SemanticFootnote(createParagraph(node));
+        addObjectToContent(footnote);
     }
 
     private static void processNumberedHeading(INode node) {
