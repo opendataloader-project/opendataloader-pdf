@@ -754,6 +754,7 @@ def create_app(
                 ocr_engine=ocr_engine,
                 psm=psm,
                 ocr_lang=ocr_lang,
+                generate_picture_images=generate_picture_images,
                 picture_description_prompt=picture_description_prompt,
                 device=device,
                 **opts,
