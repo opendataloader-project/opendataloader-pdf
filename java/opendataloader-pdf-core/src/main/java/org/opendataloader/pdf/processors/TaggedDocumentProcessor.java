@@ -115,6 +115,7 @@ public class TaggedDocumentProcessor {
                 processCaption(node);
                 break;
             case HEADING:
+            case TITLE:
                 processHeading(node);
                 break;
             case LIST:
@@ -132,10 +133,8 @@ public class TaggedDocumentProcessor {
             case TABLE_OF_CONTENT:
                 addObjectToContent(processTOC(node));
                 break;
-            case TITLE:
-                processHeading(node);
-                break;
             case NOTE:
+            case FENOTE:
                 processFootnote(node);
                 break;
             default:
