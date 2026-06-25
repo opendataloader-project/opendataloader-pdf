@@ -100,13 +100,13 @@ public class MarkdownTableTest {
         String markdown = generateMarkdownTable(table);
         String[] lines = markdown.split("\n");
 
-        // Row 0 (header): "수신" must appear exactly once
-        assertEquals(1, countOccurrences(lines[0], "수신"),
-            "Merged cell '수신' should appear once. Got: " + lines[0]);
+        // Row 0 (header): "수신" repeated across colspan (2 columns)
+        assertEquals(2, countOccurrences(lines[0], "수신"),
+            "Merged cell '수신' should appear twice (colspan=2). Got: " + lines[0]);
 
-        // Row 1 (after header + separator): "경유" must appear exactly once
-        assertEquals(1, countOccurrences(lines[2], "경유"),
-            "Merged cell '경유' should appear once. Got: " + lines[2]);
+        // Row 1 (after header + separator): "경유" repeated across colspan (2 columns)
+        assertEquals(2, countOccurrences(lines[2], "경유"),
+            "Merged cell '경유' should appear twice (colspan=2). Got: " + lines[2]);
 
         // Row 2: "제목" and "테스트" in separate cells
         String row2Line = lines[3];
@@ -115,15 +115,16 @@ public class MarkdownTableTest {
     }
 
     /**
-     * A 3-column table where cell (0,0) has colspan=2 should produce
-     * 3 column separators per row in the header separator line,
-     * and the content row should not duplicate the merged cell's content.
+     * A 3-column table where cell (0,0) has colspan=2 should repeat
+     * the merged cell content across the spanned columns for better
+     * Markdown readability and proper table alignment.
      *
-     * Before fix: the merged cell content was written twice because
-     * getCells() returns duplicated references for spanned columns.
+     * Expected behavior: merged cell content is repeated for each
+     * spanned column to ensure consistent table column count and
+     * readable Markdown output when viewing raw text.
      */
     @Test
-    void testColspanCellsAreNotDuplicated() throws IOException {
+    void testColspanCellsAreRepeatedAcrossColumns() throws IOException {
         // Row 0: [A (colspan=2)] [B]   — 3 columns
         // Row 1: [C] [D] [E]
         TableBorderCell cell00 = new TableBorderCell(0, 0, 2, 1, null);
@@ -154,10 +155,10 @@ public class MarkdownTableTest {
 
         assertTrue(lines.length >= 3, "Expected at least 3 lines, got: " + lines.length);
 
-        // Header row: content "A" should appear once
+        // Header row: content "A" repeated across colspan (2 columns)
         String headerRow = lines[0];
-        assertEquals(1, countOccurrences(headerRow, "A"),
-            "Merged cell content 'A' should appear exactly once in header row. Got: " + headerRow);
+        assertEquals(2, countOccurrences(headerRow, "A"),
+            "Merged cell content 'A' should appear twice (colspan=2) in header row. Got: " + headerRow);
 
         // Header separator: |---|---|---|
         assertEquals(3, countOccurrences(lines[1], "---"),
@@ -200,10 +201,11 @@ public class MarkdownTableTest {
     }
 
     /**
-     * A table with rowspan should not duplicate the cell content in subsequent rows.
+     * A table with rowspan should repeat the cell content in subsequent rows
+     * for better Markdown readability and proper table alignment.
      */
     @Test
-    void testRowspanCellsAreNotDuplicated() throws IOException {
+    void testRowspanCellsAreRepeatedDownRows() throws IOException {
         // Row 0: [A (rowspan=2)] [B]
         // Row 1: [A (span)]      [C]
         // Row 2: [D]             [E]
@@ -234,10 +236,10 @@ public class MarkdownTableTest {
         String[] lines = markdown.split("\n");
 
         assertTrue(lines.length >= 4, "Should have 4+ lines for 3-row table");
-        // Row 1 (index 2 after header+separator) should NOT contain 'A'
+        // Row 1 (index 2 after header+separator) should contain 'A' (filled down from rowspan)
         String row1Line = lines[2];
-        assertEquals(0, countOccurrences(row1Line, "A"),
-            "Rowspan cell 'A' should not appear in row 1. Got: " + row1Line);
+        assertEquals(1, countOccurrences(row1Line, "A"),
+            "Rowspan cell 'A' should appear in row 1 (fill-down). Got: " + row1Line);
         assertTrue(row1Line.contains("C"), "Row 1 should contain 'C'. Got: " + row1Line);
     }
 
