@@ -349,19 +349,10 @@ public class MarkdownGenerator implements Closeable {
                 if (cell == null) {
                     // Null cell - use space to keep the markdown table shape intact
                     writeSpace();
-                } else if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
-                    // This is the cell origin - write its content
-                    List<IObject> cellContents = cell.getContents();
-                    writeContents(cellContents, true);
-                } else if (cell != null && cell.getRowNumber() == rowNumber) {
-                    // Merged cell (colspan) in the same row - repeat parent content for markdown alignment
-                    // This ensures the column count is consistent for proper markdown table formatting
-                    List<IObject> cellContents = cell.getContents();
-                    writeContents(cellContents, true);
                 } else {
-                    // Merged cell (rowspan) in a different row - repeat parent content to fill down values
-                    List<IObject> cellContents = cell.getContents();
-                    writeContents(cellContents, true);
+                    // Origin cell, or a merged colspan/rowspan continuation slot:
+                    // repeat content in every non-null table slot.
+                    writeContents(cell.getContents(), true);
                 }
                 markdownWriter.write(MarkdownSyntax.TABLE_COLUMN_SEPARATOR);
             }
