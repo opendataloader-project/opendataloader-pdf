@@ -748,13 +748,16 @@ def create_app(
         for name, opts in profiles.items():
             logger.info(f"Initializing profile converter: {name} ({opts})")
             t0 = time.perf_counter()
+            profile_generate_picture_images = (
+                True if name == "picture" else generate_picture_images
+            )
             profile_converters[name] = create_converter(
                 force_full_page_ocr=force_ocr,
                 disable_ocr=disable_ocr,
                 ocr_engine=ocr_engine,
                 psm=psm,
                 ocr_lang=ocr_lang,
-                generate_picture_images=generate_picture_images,
+                generate_picture_images=profile_generate_picture_images,
                 picture_description_prompt=picture_description_prompt,
                 device=device,
                 **opts,
