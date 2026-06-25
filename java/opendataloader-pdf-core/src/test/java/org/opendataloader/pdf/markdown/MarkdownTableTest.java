@@ -242,6 +242,64 @@ public class MarkdownTableTest {
             "Rowspan cell 'A' should appear in row 1 (fill-down). Got: " + row1Line);
         assertTrue(row1Line.contains("C"), "Row 1 should contain 'C'. Got: " + row1Line);
     }
+    
+    /**
+     * A mixed-merge table (colspan + rowspan on the same parent cell) should
+     * preserve repeated content across all covered coordinates.
+     */
+    @Test
+    void testMixedColspanAndRowspanAreRepeated() throws IOException {
+        // Row 0: [A (colspan=2,rowspan=2)] [B] [C]
+        // Row 1: [A (span)] [A (span)]      [D] [E]
+        // Row 2: [F] [G] [H] [I]
+        TableBorderCell cellA = new TableBorderCell(0, 0, 2, 2, null);
+        addTextContent(cellA, "A");
+        TableBorderCell cellB = new TableBorderCell(0, 2, 1, 1, null);
+        addTextContent(cellB, "B");
+        TableBorderCell cellC = new TableBorderCell(0, 3, 1, 1, null);
+        addTextContent(cellC, "C");
+        TableBorderRow row0 = new TableBorderRow(0, 4, null);
+        row0.getCells()[0] = cellA;
+        row0.getCells()[1] = cellA;
+        row0.getCells()[2] = cellB;
+        row0.getCells()[3] = cellC;
+
+        TableBorderCell cellD = new TableBorderCell(1, 2, 1, 1, null);
+        addTextContent(cellD, "D");
+        TableBorderCell cellE = new TableBorderCell(1, 3, 1, 1, null);
+        addTextContent(cellE, "E");
+        TableBorderRow row1 = new TableBorderRow(1, 4, null);
+        row1.getCells()[0] = cellA;
+        row1.getCells()[1] = cellA;
+        row1.getCells()[2] = cellD;
+        row1.getCells()[3] = cellE;
+
+        TableBorderCell cellF = new TableBorderCell(2, 0, 1, 1, null);
+        addTextContent(cellF, "F");
+        TableBorderCell cellG = new TableBorderCell(2, 1, 1, 1, null);
+        addTextContent(cellG, "G");
+        TableBorderCell cellH = new TableBorderCell(2, 2, 1, 1, null);
+        addTextContent(cellH, "H");
+        TableBorderCell cellI = new TableBorderCell(2, 3, 1, 1, null);
+        addTextContent(cellI, "I");
+        TableBorderRow row2 = new TableBorderRow(2, 4, null);
+        row2.getCells()[0] = cellF;
+        row2.getCells()[1] = cellG;
+        row2.getCells()[2] = cellH;
+        row2.getCells()[3] = cellI;
+
+        TableBorder table = new TableBorder(null, new TableBorderRow[]{row0, row1, row2}, 3, 4);
+        String markdown = generateMarkdownTable(table);
+        String[] lines = markdown.split("\\n");
+
+        assertTrue(lines.length >= 4, "Expected at least 4 lines, got: " + lines.length);
+        assertEquals(2, countOccurrences(lines[0], "A"),
+            "Row 0 should contain two 'A' cells from colspan=2. Got: " + lines[0]);
+        assertEquals(2, countOccurrences(lines[2], "A"),
+            "Row 1 should contain two 'A' cells from rowspan+colspan coverage. Got: " + lines[2]);
+        assertTrue(lines[2].contains("D") && lines[2].contains("E"),
+            "Row 1 should include D and E. Got: " + lines[2]);
+    }
 
     private void addTextContent(TableBorderCell cell, String text) {
         TextChunk chunk = new TextChunk(text);
