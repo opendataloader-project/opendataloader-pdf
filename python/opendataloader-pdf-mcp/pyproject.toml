@@ -19,3 +19,8 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/opendataloader_pdf_mcp"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]

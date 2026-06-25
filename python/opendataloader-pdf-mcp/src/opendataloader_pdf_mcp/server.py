@@ -15,6 +15,7 @@ mcp = FastMCP("opendataloader-pdf")
 def convert_pdf(
     input_path: str,
     format: str = "markdown",
+    markdown_with_html: bool = False,
     password: str | None = None,
     pages: str | None = None,
     keep_line_breaks: bool = False,
@@ -42,8 +43,9 @@ def convert_pdf(
 
     Args:
         input_path: Path to the input PDF file.
-        format: Output format. Values: json, text, html, markdown,
-            markdown-with-html, markdown-with-images. Default: markdown.
+        format: Output format. Values: json, text, html, markdown. Default: markdown.
+        markdown_with_html: Allow HTML tags inside Markdown output for complex structures
+            such as multi-row-span tables. Only applies when format is markdown.
         password: Password for encrypted PDF files.
         pages: Pages to extract (e.g., "1,3,5-7"). Default: all pages.
         keep_line_breaks: Preserve original line breaks in extracted text.
@@ -59,6 +61,8 @@ def convert_pdf(
         text_page_separator: Separator between pages in text output.
         html_page_separator: Separator between pages in HTML output.
         image_output: Image output mode. Values: off, embedded, external.
+            Defaults to embedded for markdown and html formats so images survive
+            the internal temp directory used by the MCP server.
         image_format: Image format. Values: png, jpeg.
         include_header_footer: Include page headers and footers in output.
         detect_strikethrough: Detect strikethrough text (experimental).
@@ -76,20 +80,22 @@ def convert_pdf(
     if not input_file.is_file():
         raise FileNotFoundError(f"Input file not found: {input_path}")
 
-    # Determine output file extension from format
-    ext_map = {
-        "json": ".json",
-        "text": ".txt",
-        "html": ".html",
-        "markdown": ".md",
-        "markdown-with-html": ".md",
-        "markdown-with-images": ".md",
-    }
-    if format not in ext_map:
+    _VALID_FORMATS = {"json", "text", "html", "markdown"}
+    _REMOVED_FORMATS = {"markdown-with-html", "markdown-with-images"}
+
+    if format in _REMOVED_FORMATS:
+        raise ValueError(
+            f"{format!r} is no longer a valid format value. "
+            "Use format=\"markdown\" with markdown_with_html=True for HTML-in-Markdown, "
+            "or set image_output=\"embedded\"/\"external\" for image extraction control."
+        )
+    if format not in _VALID_FORMATS:
         raise ValueError(
             f"Unsupported format: {format!r}. "
-            f"Supported formats: {', '.join(ext_map)}"
+            f"Supported formats: {', '.join(sorted(_VALID_FORMATS))}"
         )
+
+    ext_map = {"json": ".json", "text": ".txt", "html": ".html", "markdown": ".md"}
     ext = ext_map[format]
 
     with tempfile.TemporaryDirectory() as tmp_dir:
@@ -125,8 +131,8 @@ def convert_pdf(
             kwargs["text_page_separator"] = text_page_separator
         if html_page_separator is not None:
             kwargs["html_page_separator"] = html_page_separator
-        if format == "markdown-with-images" and image_output is None:
-            # Force embedded images so they survive the temp directory cleanup
+        if format in ("markdown", "html") and image_output is None:
+            # Default to embedded so images survive the temp directory cleanup
             kwargs["image_output"] = "embedded"
         elif image_output is not None:
             kwargs["image_output"] = image_output
@@ -136,6 +142,8 @@ def convert_pdf(
             kwargs["include_header_footer"] = True
         if detect_strikethrough:
             kwargs["detect_strikethrough"] = True
+        if markdown_with_html:
+            kwargs["markdown_with_html"] = True
         if hybrid is not None:
             kwargs["hybrid"] = hybrid
         if hybrid_mode is not None:
