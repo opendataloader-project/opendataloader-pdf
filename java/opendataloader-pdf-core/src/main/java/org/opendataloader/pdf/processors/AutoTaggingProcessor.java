@@ -1,6 +1,7 @@
 package org.opendataloader.pdf.processors;
 
 import org.opendataloader.pdf.autotagging.ChunksWriter;
+import org.opendataloader.pdf.autotagging.ContentStreamUid;
 import org.opendataloader.pdf.autotagging.OperatorStreamKey;
 import org.opendataloader.pdf.entities.EnrichedImageChunk;
 import org.opendataloader.pdf.entities.SemanticFootnote;
@@ -48,26 +49,26 @@ public class AutoTaggingProcessor {
     private static final Map<OperatorStreamKey, Map<Integer, Set<StreamInfo>>> operatorIndexesToStreamInfosMap = new LinkedHashMap<>();
     private static final Map<OperatorStreamKey, List<COSObject>> structParents = new LinkedHashMap<>();
 
-    // P0 (accessibility-source-editor walking skeleton): per-object alt-text
-    // overrides keyed by IObject.recognizedStructureId. Lets the pdfua layer
+    // accessibility-source-editor: per-object alt-text overrides keyed by the
+    // STABLE physical object_uid (see ContentStreamUid). Lets the pdfua layer
     // inject human-edited alt (from annotations) without re-running extraction
     // or touching the AI/heuristic alt source — see docs/design/
     // 2026-06-29-accessibility-source-editor-architecture.md (invariant I3).
-    // Transitional: recognizedStructureId is the P0 join key; a stable
-    // physically-derived object_uid replaces it in P1.
-    private static final Map<Long, String> altOverridesByStructureId = new HashMap<>();
+    // The uid is derived from content-stream position so it survives
+    // reading-order / grouping changes that shift recognizedStructureId (P1).
+    private static final Map<String, String> altOverridesByUid = new HashMap<>();
 
-    /** Replace the alt-override map (recognizedStructureId -&gt; alt). Set before tagging. */
-    public static void setAltOverrides(Map<Long, String> overrides) {
-        altOverridesByStructureId.clear();
+    /** Replace the alt-override map (object_uid -&gt; alt). Set before tagging. */
+    public static void setAltOverrides(Map<String, String> overrides) {
+        altOverridesByUid.clear();
         if (overrides != null) {
-            altOverridesByStructureId.putAll(overrides);
+            altOverridesByUid.putAll(overrides);
         }
     }
 
     /** Clear alt overrides (call after a document to avoid leaking across runs). */
     public static void clearAltOverrides() {
-        altOverridesByStructureId.clear();
+        altOverridesByUid.clear();
     }
     private static final Map<OperatorStreamKey, Integer> structParentsIntegers = new LinkedHashMap<>();
     // annotation StructParent entries: int key -> single struct element (Link)
@@ -813,12 +814,12 @@ public class AutoTaggingProcessor {
         // alt/alt_source schema unification; file an issue before removing
         // this comment.
         String altText = null;
-        // P0: a human-edited alt override (from annotations) wins over the
-        // AI/heuristic source. Keyed by recognizedStructureId (I3: structure
-        // edit only — bindings untouched).
-        Long structId = image.getRecognizedStructureId();
-        if (structId != null && altOverridesByStructureId.containsKey(structId)) {
-            altText = altOverridesByStructureId.get(structId);
+        // A human-edited alt override (from annotations) wins over the
+        // AI/heuristic source. Keyed by the stable physical object_uid (I3:
+        // structure edit only — bindings untouched).
+        String uid = ContentStreamUid.compute(image);
+        if (altOverridesByUid.containsKey(uid)) {
+            altText = altOverridesByUid.get(uid);
         } else if (image instanceof EnrichedImageChunk) {
             altText = ((EnrichedImageChunk) image).sanitizeDescription();
         }
