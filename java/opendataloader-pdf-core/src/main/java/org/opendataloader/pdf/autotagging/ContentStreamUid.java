@@ -21,6 +21,11 @@ import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.TextColumn;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
+import org.verapdf.wcag.algorithms.entities.lists.ListItem;
+import org.verapdf.wcag.algorithms.entities.lists.PDFList;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.StreamInfo;
 
 import java.util.ArrayList;
@@ -51,8 +56,23 @@ public final class ContentStreamUid {
      * StreamInfo (still deterministic for the page).
      */
     public static String compute(Integer page, List<StreamInfo> streamInfos) {
+        return compute(page, streamInfos, null);
+    }
+
+    /**
+     * As {@link #compute(Integer, List)}, but when there is no StreamInfo (e.g. a
+     * vector LineArtChunk), fall back to the bbox so multiple bound-less objects
+     * on the same page do not collide on a single {@code noinfo} uid. bbox is
+     * {@code [x0,y0,x1,y1]} in PDF points (deterministic for a given PDF). The
+     * resulting uid is {@code p{page}:noinfo:{x0}_{y0}_{x1}_{y1}}.
+     */
+    public static String compute(Integer page, List<StreamInfo> streamInfos, double[] bbox) {
         String p = page == null ? "?" : page.toString();
         if (streamInfos == null || streamInfos.isEmpty()) {
+            if (bbox != null && bbox.length == 4) {
+                return "p" + p + ":noinfo:"
+                    + r(bbox[0]) + "_" + r(bbox[1]) + "_" + r(bbox[2]) + "_" + r(bbox[3]);
+            }
             return "p" + p + ":noinfo";
         }
         StreamInfo min = null;
@@ -93,14 +113,60 @@ public final class ContentStreamUid {
             }
             return out;
         }
+        if (obj instanceof TableBorder) {
+            // Table keeps StreamInfos in its cells' contents, not on the table.
+            for (TableBorderRow row : ((TableBorder) obj).getRows()) {
+                for (TableBorderCell cell : row.getCells()) {
+                    if (cell == null) {
+                        continue;
+                    }
+                    for (IObject child : cell.getContents()) {
+                        out.addAll(collectStreamInfos(child));
+                    }
+                }
+            }
+            return out;
+        }
+        if (obj instanceof PDFList) {
+            // A ListItem extends TextBlock, so its text lives in getLines()
+            // (TextLine → TextChunk), NOT in getContents() (which is often
+            // empty). Collect both: lines for the item's own text, contents for
+            // any nested objects.
+            for (ListItem item : ((PDFList) obj).getListItems()) {
+                if (item == null) {
+                    continue;
+                }
+                for (TextLine line : item.getLines()) {
+                    for (TextChunk chunk : line.getTextChunks()) {
+                        out.addAll(chunk.getStreamInfos());
+                    }
+                }
+                for (IObject child : item.getContents()) {
+                    out.addAll(collectStreamInfos(child));
+                }
+            }
+            return out;
+        }
+        // Formula (core SemanticFormula) and other leaf chunks carry StreamInfos
+        // directly on the BaseObject.
         if (obj instanceof BaseObject) {
             out.addAll(((BaseObject) obj).getStreamInfos());
         }
         return out;
     }
 
-    /** Convenience: stable uid from an object, collecting its StreamInfos. */
+    /** Convenience: stable uid from an object, collecting its StreamInfos and
+     *  falling back to bbox when there is none (e.g. vector LineArtChunk). */
     public static String compute(IObject obj) {
-        return compute(obj == null ? null : obj.getPageNumber(), collectStreamInfos(obj));
+        if (obj == null) {
+            return compute(null, null, null);
+        }
+        double[] bbox = {obj.getLeftX(), obj.getBottomY(), obj.getRightX(), obj.getTopY()};
+        return compute(obj.getPageNumber(), collectStreamInfos(obj), bbox);
+    }
+
+    /** Round a PDF-point coordinate to a stable integer string for the uid. */
+    private static String r(double v) {
+        return Long.toString(Math.round(v));
     }
 }
