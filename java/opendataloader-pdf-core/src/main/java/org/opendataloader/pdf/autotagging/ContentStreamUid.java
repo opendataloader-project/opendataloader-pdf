@@ -23,6 +23,7 @@ import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
 import org.verapdf.wcag.algorithms.entities.lists.PDFList;
+import org.verapdf.wcag.algorithms.entities.tables.TableToken;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
@@ -114,11 +115,18 @@ public final class ContentStreamUid {
             return out;
         }
         if (obj instanceof TableBorder) {
-            // Table keeps StreamInfos in its cells' contents, not on the table.
+            // A cell's text lives in getContent() as TableTokens (TableToken
+            // extends TextChunk → carries StreamInfos directly). getContents()
+            // (the IObject list) is usually empty, which made tables bind only
+            // ~1 StreamInfo before. Collect both: tokens for cell text, contents
+            // for any nested objects.
             for (TableBorderRow row : ((TableBorder) obj).getRows()) {
                 for (TableBorderCell cell : row.getCells()) {
                     if (cell == null) {
                         continue;
+                    }
+                    for (TableToken token : cell.getContent()) {
+                        out.addAll(token.getStreamInfos());
                     }
                     for (IObject child : cell.getContents()) {
                         out.addAll(collectStreamInfos(child));
