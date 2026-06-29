@@ -16,6 +16,7 @@
 package org.opendataloader.pdf.entities;
 
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
+import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 
 /**
  * Represents a footnote/endnote element.
@@ -24,5 +25,10 @@ import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 public class SemanticFootnote extends SemanticParagraph {
     public SemanticFootnote() {
         super();
+    }
+
+    public SemanticFootnote(SemanticParagraph node) {
+        super(node);
+        this.setSemanticType(SemanticType.NOTE);
     }
 }
