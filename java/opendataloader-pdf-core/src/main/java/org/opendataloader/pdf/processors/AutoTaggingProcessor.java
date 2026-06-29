@@ -47,6 +47,28 @@ public class AutoTaggingProcessor {
 
     private static final Map<OperatorStreamKey, Map<Integer, Set<StreamInfo>>> operatorIndexesToStreamInfosMap = new LinkedHashMap<>();
     private static final Map<OperatorStreamKey, List<COSObject>> structParents = new LinkedHashMap<>();
+
+    // P0 (accessibility-source-editor walking skeleton): per-object alt-text
+    // overrides keyed by IObject.recognizedStructureId. Lets the pdfua layer
+    // inject human-edited alt (from annotations) without re-running extraction
+    // or touching the AI/heuristic alt source — see docs/design/
+    // 2026-06-29-accessibility-source-editor-architecture.md (invariant I3).
+    // Transitional: recognizedStructureId is the P0 join key; a stable
+    // physically-derived object_uid replaces it in P1.
+    private static final Map<Long, String> altOverridesByStructureId = new HashMap<>();
+
+    /** Replace the alt-override map (recognizedStructureId -&gt; alt). Set before tagging. */
+    public static void setAltOverrides(Map<Long, String> overrides) {
+        altOverridesByStructureId.clear();
+        if (overrides != null) {
+            altOverridesByStructureId.putAll(overrides);
+        }
+    }
+
+    /** Clear alt overrides (call after a document to avoid leaking across runs). */
+    public static void clearAltOverrides() {
+        altOverridesByStructureId.clear();
+    }
     private static final Map<OperatorStreamKey, Integer> structParentsIntegers = new LinkedHashMap<>();
     // annotation StructParent entries: int key -> single struct element (Link)
     private static final Map<Integer, COSObject> annotationStructParents = new HashMap<>();
@@ -791,7 +813,13 @@ public class AutoTaggingProcessor {
         // alt/alt_source schema unification; file an issue before removing
         // this comment.
         String altText = null;
-        if (image instanceof EnrichedImageChunk) {
+        // P0: a human-edited alt override (from annotations) wins over the
+        // AI/heuristic source. Keyed by recognizedStructureId (I3: structure
+        // edit only — bindings untouched).
+        Long structId = image.getRecognizedStructureId();
+        if (structId != null && altOverridesByStructureId.containsKey(structId)) {
+            altText = altOverridesByStructureId.get(structId);
+        } else if (image instanceof EnrichedImageChunk) {
             altText = ((EnrichedImageChunk) image).sanitizeDescription();
         }
         // Write as hex string (isHex=true). UTF-16BE code units whose low byte is 0x5C (e.g. U+D55C "한")
