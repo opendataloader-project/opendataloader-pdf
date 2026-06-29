@@ -19,6 +19,7 @@ import org.opendataloader.pdf.utils.BulletedParagraphUtils;
 import org.verapdf.as.ASAtom;
 import org.verapdf.wcag.algorithms.entities.INode;
 import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.*;
 import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
@@ -378,6 +379,9 @@ public class ListProcessor {
     }
 
     public static List<IObject> processListsFromTextNodes(List<IObject> contents) {
+        ExpandedTextNodesResult expandedResult = expandMultiLineListTextNodes(contents);
+        contents = expandedResult.getContents();
+
         List<SemanticTextNode> textNodes = new ArrayList<>();
         List<Integer> textNodesIndexes = new ArrayList<>();
         for (int index = 0; index < contents.size(); index++) {
@@ -402,7 +406,109 @@ public class ListProcessor {
                 processTextNodeListItemContent(listItem.getContents());
             }
         }
+        restoreExpandedTextNodes(contents, expandedResult.getCandidates());
         return DocumentProcessor.removeNullObjectsFromList(contents);
+    }
+
+    private static ExpandedTextNodesResult expandMultiLineListTextNodes(List<IObject> contents) {
+        List<IObject> expanded = new ArrayList<>(contents.size());
+        List<ExpandedTextNodeCandidate> candidates = new ArrayList<>();
+        for (IObject content : contents) {
+            if (!(content instanceof SemanticTextNode)) {
+                expanded.add(content);
+                continue;
+            }
+
+            SemanticTextNode textNode = (SemanticTextNode) content;
+            List<SemanticTextNode> splitNodes = splitMultiLineListTextNode(textNode);
+            if (splitNodes == null) {
+                expanded.add(textNode);
+            } else {
+                int startIndex = expanded.size();
+                expanded.addAll(splitNodes);
+                candidates.add(new ExpandedTextNodeCandidate(textNode, startIndex, expanded.size() - 1));
+            }
+        }
+        return new ExpandedTextNodesResult(expanded, candidates);
+    }
+
+    private static List<SemanticTextNode> splitMultiLineListTextNode(SemanticTextNode textNode) {
+        TextColumn firstColumn = textNode.getFirstColumn();
+        if (firstColumn == null || firstColumn.getLines() == null) {
+            return null;
+        }
+
+        List<TextLine> nonSpaceLines = new ArrayList<>();
+        for (TextLine line : firstColumn.getLines()) {
+            if (!line.getValue().isBlank()) {
+                nonSpaceLines.add(line);
+            }
+        }
+
+        if (nonSpaceLines.size() < 2) {
+            return null;
+        }
+
+        long labeledLineCount = nonSpaceLines.stream()
+            .filter(BulletedParagraphUtils::isLabeledLine)
+            .count();
+        if (labeledLineCount < 2 || isDoubles(nonSpaceLines)) {
+            return null;
+        }
+
+        List<SemanticTextNode> splitNodes = new ArrayList<>();
+        SemanticParagraph currentNode = null;
+        for (TextLine line : nonSpaceLines) {
+            if (BulletedParagraphUtils.isLabeledLine(line)) {
+                currentNode = new SemanticParagraph();
+                currentNode.add(line);
+                splitNodes.add(currentNode);
+            } else if (currentNode != null) {
+                currentNode.add(line);
+            } else {
+                return null;
+            }
+        }
+
+        return splitNodes.size() > 1 ? splitNodes : null;
+    }
+
+    private static void restoreExpandedTextNodes(List<IObject> contents, List<ExpandedTextNodeCandidate> candidates) {
+        for (ExpandedTextNodeCandidate candidate : candidates) {
+            boolean consumedByList = false;
+            for (int index = candidate.getStartIndex(); index <= candidate.getEndIndex(); index++) {
+                IObject content = contents.get(index);
+                if (content == null || content instanceof PDFList) {
+                    consumedByList = true;
+                    break;
+                }
+            }
+            if (consumedByList) {
+                continue;
+            }
+            contents.set(candidate.getStartIndex(), candidate.getOriginalNode());
+            for (int index = candidate.getStartIndex() + 1; index <= candidate.getEndIndex(); index++) {
+                contents.set(index, null);
+            }
+        }
+    }
+
+    private static boolean isDoubles(List<TextLine> lines) {
+        List<TextLine> labeledLines = new ArrayList<>();
+        for (TextLine line : lines) {
+            if (BulletedParagraphUtils.isLabeledLine(line)) {
+                labeledLines.add(line);
+            }
+        }
+        if (labeledLines.isEmpty()) {
+            return false;
+        }
+        for (TextLine line : labeledLines) {
+            if (!line.getValue().matches("^\\d+\\.\\d+$")) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static List<ListItemTextInfo> calculateTextChildrenInfo(List<SemanticTextNode> textNodes) {
@@ -441,6 +547,48 @@ public class ListProcessor {
             }
         }
         return true;
+    }
+
+    private static class ExpandedTextNodesResult {
+        private final List<IObject> contents;
+        private final List<ExpandedTextNodeCandidate> candidates;
+
+        private ExpandedTextNodesResult(List<IObject> contents, List<ExpandedTextNodeCandidate> candidates) {
+            this.contents = contents;
+            this.candidates = candidates;
+        }
+
+        private List<IObject> getContents() {
+            return contents;
+        }
+
+        private List<ExpandedTextNodeCandidate> getCandidates() {
+            return candidates;
+        }
+    }
+
+    private static class ExpandedTextNodeCandidate {
+        private final SemanticTextNode originalNode;
+        private final int startIndex;
+        private final int endIndex;
+
+        private ExpandedTextNodeCandidate(SemanticTextNode originalNode, int startIndex, int endIndex) {
+            this.originalNode = originalNode;
+            this.startIndex = startIndex;
+            this.endIndex = endIndex;
+        }
+
+        private SemanticTextNode getOriginalNode() {
+            return originalNode;
+        }
+
+        private int getStartIndex() {
+            return startIndex;
+        }
+
+        private int getEndIndex() {
+            return endIndex;
+        }
     }
 
     public static void checkNeighborLists(List<List<IObject>> contents) {
