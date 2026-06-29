@@ -612,7 +612,8 @@ public class DocumentProcessor {
         StaticResources.setDocument(pdDocument);
         GFSAPDFDocument document = new GFSAPDFDocument(pdDocument);
 //        org.verapdf.gf.model.impl.containers.StaticContainers.setFlavour(Collections.singletonList(PDFAFlavour.WCAG_2_2));
-        StaticResources.setFlavour(Collections.singletonList(PDFFlavour.WCAG_2_2_PDF_2_0_HUMAN));
+        StaticResources.setFlavour(Collections.singletonList(Objects.equals(pdDocument.getVersion(), 2.0F) ?
+            PDFFlavour.WCAG_2_2_PDF_2_0_HUMAN : PDFFlavour.WCAG_2_2_HUMAN));
         StaticStorages.setIsFilterInvisibleLayers(config.getFilterConfig().isFilterHiddenOCG());
         StaticContainers.setDocument(document);
         if (config.isUseStructTree()) {
