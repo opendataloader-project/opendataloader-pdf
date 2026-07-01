@@ -97,6 +97,13 @@ public class TriageProcessor {
     /** Minimum image aspect ratio (width/height) for table/chart detection. */
     private static final double MIN_IMAGE_ASPECT_RATIO = 1.75;
 
+    /**
+     * Image area ratio at which a page is considered a full-page image (scan).
+     * A page dominated by a single image with no extractable text is an image-only
+     * scan and must route to the backend regardless of aspect ratio.
+     */
+    private static final double FULL_PAGE_IMAGE_RATIO = 0.5;
+
     /** High pattern count threshold (skip consecutive check). */
     private static final int HIGH_PATTERN_COUNT_THRESHOLD = 30;
 
@@ -462,6 +469,13 @@ public class TriageProcessor {
          * @return true if largest image meets size and aspect ratio criteria.
          */
         public boolean hasLargeImage() {
+            // Full-page image with no extractable text = scanned/image-only page. It must
+            // route to the backend: the Java path yields an empty transcription. The aspect
+            // gate below targets wide table/chart images and would otherwise exclude standard
+            // scans (portrait A4 ~0.71, landscape ~1.41 < 1.75), silently dropping their content.
+            if (largeImageRatio >= FULL_PAGE_IMAGE_RATIO && textChunkCount == 0) {
+                return true;
+            }
             return largeImageRatio >= MIN_LARGE_IMAGE_RATIO
                     && largeImageAspectRatio >= MIN_IMAGE_ASPECT_RATIO;
         }
