@@ -475,10 +475,19 @@ public class TriageProcessor {
         }
 
         /**
-         * Checks if a large image is present (potential table/chart image).
-         * Requires both size (>= 11% of page) and aspect ratio (>= 1.7, wider than tall).
+         * Checks whether the page's largest image should route to the backend.
          *
-         * @return true if largest image meets size and aspect ratio criteria.
+         * <p>Returns {@code true} in either of two cases:
+         * <ul>
+         *   <li><b>Full-page image-only scan:</b> the image dominates the page
+         *       ({@code largeImageRatio >= FULL_PAGE_IMAGE_RATIO}) and there is no extractable
+         *       text ({@code nonWhitespaceTextCount == 0}); routed regardless of aspect ratio.</li>
+         *   <li><b>Wide table/chart image:</b> it meets both the size
+         *       ({@code >= MIN_LARGE_IMAGE_RATIO}) and aspect-ratio
+         *       ({@code >= MIN_IMAGE_ASPECT_RATIO}, wider than tall) criteria.</li>
+         * </ul>
+         *
+         * @return true if the largest image meets either criterion.
          */
         public boolean hasLargeImage() {
             // Full-page image with no extractable text = scanned/image-only page. It must
