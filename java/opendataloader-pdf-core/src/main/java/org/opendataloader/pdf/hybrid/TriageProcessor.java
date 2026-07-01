@@ -355,6 +355,15 @@ public class TriageProcessor {
         }
 
         /**
+         * Gets the number of non-whitespace TextChunk objects (actual extractable text).
+         *
+         * @return The non-whitespace text chunk count.
+         */
+        public int getNonWhitespaceTextCount() {
+            return nonWhitespaceTextCount;
+        }
+
+        /**
          * Gets the ratio of LineChunk to total content.
          *
          * @return The line to text ratio.
