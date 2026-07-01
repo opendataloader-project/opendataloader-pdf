@@ -97,6 +97,13 @@ public class TriageProcessor {
     /** Minimum image aspect ratio (width/height) for table/chart detection. */
     private static final double MIN_IMAGE_ASPECT_RATIO = 1.75;
 
+    /**
+     * Image area ratio at which a page is considered a full-page image (scan).
+     * A page dominated by a single image with no extractable text is an image-only
+     * scan and must route to the backend regardless of aspect ratio.
+     */
+    private static final double FULL_PAGE_IMAGE_RATIO = 0.5;
+
     /** High pattern count threshold (skip consecutive check). */
     private static final int HIGH_PATTERN_COUNT_THRESHOLD = 30;
 
@@ -242,6 +249,7 @@ public class TriageProcessor {
     public static final class TriageSignals {
         private final int lineChunkCount;
         private final int textChunkCount;
+        private final int nonWhitespaceTextCount;
         private final double lineToTextRatio;
         private final int alignedLineGroups;
         private final boolean hasTableBorder;
@@ -281,7 +289,7 @@ public class TriageProcessor {
             this(lineChunkCount, textChunkCount, lineToTextRatio, alignedLineGroups,
                     hasTableBorder, hasSuspiciousPattern,
                     0, 0, 0, false, false, false, false,
-                    0, 0, 0.0, false, 0.0, 0.0);
+                    0, 0, 0.0, false, 0.0, 0.0, 0);
         }
 
         /**
@@ -293,7 +301,8 @@ public class TriageProcessor {
                              boolean hasGridLines, boolean hasTableBorderLines,
                              boolean hasRowSeparatorPattern, boolean hasAlignedShortLines,
                              int tablePatternCount, int maxConsecutiveStreak, double patternDensity,
-                             boolean hasConsecutivePatterns, double largeImageRatio, double largeImageAspectRatio) {
+                             boolean hasConsecutivePatterns, double largeImageRatio, double largeImageAspectRatio,
+                             int nonWhitespaceTextCount) {
             this.lineChunkCount = lineChunkCount;
             this.textChunkCount = textChunkCount;
             this.lineToTextRatio = lineToTextRatio;
@@ -313,6 +322,7 @@ public class TriageProcessor {
             this.hasConsecutivePatterns = hasConsecutivePatterns;
             this.largeImageRatio = largeImageRatio;
             this.largeImageAspectRatio = largeImageAspectRatio;
+            this.nonWhitespaceTextCount = nonWhitespaceTextCount;
         }
 
         /**
@@ -323,7 +333,7 @@ public class TriageProcessor {
         public static TriageSignals empty() {
             return new TriageSignals(0, 0, 0.0, 0, false, false,
                     0, 0, 0, false, false, false, false,
-                    0, 0, 0.0, false, 0.0, 0.0);
+                    0, 0, 0.0, false, 0.0, 0.0, 0);
         }
 
         /**
@@ -342,6 +352,15 @@ public class TriageProcessor {
          */
         public int getTextChunkCount() {
             return textChunkCount;
+        }
+
+        /**
+         * Gets the number of non-whitespace TextChunk objects (actual extractable text).
+         *
+         * @return The non-whitespace text chunk count.
+         */
+        public int getNonWhitespaceTextCount() {
+            return nonWhitespaceTextCount;
         }
 
         /**
@@ -456,12 +475,30 @@ public class TriageProcessor {
         }
 
         /**
-         * Checks if a large image is present (potential table/chart image).
-         * Requires both size (>= 11% of page) and aspect ratio (>= 1.7, wider than tall).
+         * Checks whether the page's largest image should route to the backend.
          *
-         * @return true if largest image meets size and aspect ratio criteria.
+         * <p>Returns {@code true} in either of two cases:
+         * <ul>
+         *   <li><b>Full-page image-only scan:</b> the image dominates the page
+         *       ({@code largeImageRatio >= FULL_PAGE_IMAGE_RATIO}) and there is no extractable
+         *       text ({@code nonWhitespaceTextCount == 0}); routed regardless of aspect ratio.</li>
+         *   <li><b>Wide table/chart image:</b> it meets both the size
+         *       ({@code >= MIN_LARGE_IMAGE_RATIO}) and aspect-ratio
+         *       ({@code >= MIN_IMAGE_ASPECT_RATIO}, wider than tall) criteria.</li>
+         * </ul>
+         *
+         * @return true if the largest image meets either criterion.
          */
         public boolean hasLargeImage() {
+            // Full-page image with no extractable text = scanned/image-only page. It must
+            // route to the backend: the Java path yields an empty transcription. The aspect
+            // gate below targets wide table/chart images and would otherwise exclude standard
+            // scans (portrait A4 ~0.71, landscape ~1.41 < 1.75), silently dropping their content.
+            // Use nonWhitespaceTextCount (not textChunkCount): whitespace-only chunks are common
+            // in OCR'd/reflowed scans and must not count as extractable text.
+            if (largeImageRatio >= FULL_PAGE_IMAGE_RATIO && nonWhitespaceTextCount == 0) {
+                return true;
+            }
             return largeImageRatio >= MIN_LARGE_IMAGE_RATIO
                     && largeImageAspectRatio >= MIN_IMAGE_ASPECT_RATIO;
         }
@@ -498,7 +535,8 @@ public class TriageProcessor {
                    Double.compare(that.patternDensity, patternDensity) == 0 &&
                    hasConsecutivePatterns == that.hasConsecutivePatterns &&
                    Double.compare(that.largeImageRatio, largeImageRatio) == 0 &&
-                   Double.compare(that.largeImageAspectRatio, largeImageAspectRatio) == 0;
+                   Double.compare(that.largeImageAspectRatio, largeImageAspectRatio) == 0 &&
+                   nonWhitespaceTextCount == that.nonWhitespaceTextCount;
         }
 
         @Override
@@ -509,7 +547,7 @@ public class TriageProcessor {
                                 hasGridLines, hasTableBorderLines, hasRowSeparatorPattern,
                                 hasAlignedShortLines, tablePatternCount, maxConsecutiveStreak,
                                 patternDensity, hasConsecutivePatterns, largeImageRatio,
-                                largeImageAspectRatio);
+                                largeImageAspectRatio, nonWhitespaceTextCount);
         }
 
         @Override
@@ -534,6 +572,7 @@ public class TriageProcessor {
                    ", hasConsecutivePatterns=" + hasConsecutivePatterns +
                    ", largeImageRatio=" + largeImageRatio +
                    ", largeImageAspectRatio=" + largeImageAspectRatio +
+                   ", nonWhitespaceTextCount=" + nonWhitespaceTextCount +
                    '}';
         }
     }
@@ -800,7 +839,8 @@ public class TriageProcessor {
             patternDensity,
             hasConsecutivePatterns,
             largeImageRatio,
-            largeImageAspectRatio
+            largeImageAspectRatio,
+            accumulator.nonWhitespaceTextCount
         );
     }
 
