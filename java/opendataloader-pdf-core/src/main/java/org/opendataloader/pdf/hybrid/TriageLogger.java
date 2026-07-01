@@ -202,6 +202,8 @@ public class TriageLogger {
         signalsNode.put("alignedLineGroups", signals.getAlignedLineGroups());
         signalsNode.put("hasTableBorder", signals.hasTableBorder());
         signalsNode.put("hasSuspiciousPattern", signals.hasSuspiciousPattern());
+        signalsNode.put("largeImageRatio", signals.getLargeImageRatio());
+        signalsNode.put("nonWhitespaceTextCount", signals.getNonWhitespaceTextCount());
         return signalsNode;
     }
 
