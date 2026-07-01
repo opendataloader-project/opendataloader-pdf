@@ -249,6 +249,7 @@ public class TriageProcessor {
     public static final class TriageSignals {
         private final int lineChunkCount;
         private final int textChunkCount;
+        private final int nonWhitespaceTextCount;
         private final double lineToTextRatio;
         private final int alignedLineGroups;
         private final boolean hasTableBorder;
@@ -288,7 +289,7 @@ public class TriageProcessor {
             this(lineChunkCount, textChunkCount, lineToTextRatio, alignedLineGroups,
                     hasTableBorder, hasSuspiciousPattern,
                     0, 0, 0, false, false, false, false,
-                    0, 0, 0.0, false, 0.0, 0.0);
+                    0, 0, 0.0, false, 0.0, 0.0, 0);
         }
 
         /**
@@ -300,7 +301,8 @@ public class TriageProcessor {
                              boolean hasGridLines, boolean hasTableBorderLines,
                              boolean hasRowSeparatorPattern, boolean hasAlignedShortLines,
                              int tablePatternCount, int maxConsecutiveStreak, double patternDensity,
-                             boolean hasConsecutivePatterns, double largeImageRatio, double largeImageAspectRatio) {
+                             boolean hasConsecutivePatterns, double largeImageRatio, double largeImageAspectRatio,
+                             int nonWhitespaceTextCount) {
             this.lineChunkCount = lineChunkCount;
             this.textChunkCount = textChunkCount;
             this.lineToTextRatio = lineToTextRatio;
@@ -320,6 +322,7 @@ public class TriageProcessor {
             this.hasConsecutivePatterns = hasConsecutivePatterns;
             this.largeImageRatio = largeImageRatio;
             this.largeImageAspectRatio = largeImageAspectRatio;
+            this.nonWhitespaceTextCount = nonWhitespaceTextCount;
         }
 
         /**
@@ -330,7 +333,7 @@ public class TriageProcessor {
         public static TriageSignals empty() {
             return new TriageSignals(0, 0, 0.0, 0, false, false,
                     0, 0, 0, false, false, false, false,
-                    0, 0, 0.0, false, 0.0, 0.0);
+                    0, 0, 0.0, false, 0.0, 0.0, 0);
         }
 
         /**
@@ -473,7 +476,9 @@ public class TriageProcessor {
             // route to the backend: the Java path yields an empty transcription. The aspect
             // gate below targets wide table/chart images and would otherwise exclude standard
             // scans (portrait A4 ~0.71, landscape ~1.41 < 1.75), silently dropping their content.
-            if (largeImageRatio >= FULL_PAGE_IMAGE_RATIO && textChunkCount == 0) {
+            // Use nonWhitespaceTextCount (not textChunkCount): whitespace-only chunks are common
+            // in OCR'd/reflowed scans and must not count as extractable text.
+            if (largeImageRatio >= FULL_PAGE_IMAGE_RATIO && nonWhitespaceTextCount == 0) {
                 return true;
             }
             return largeImageRatio >= MIN_LARGE_IMAGE_RATIO
@@ -512,7 +517,8 @@ public class TriageProcessor {
                    Double.compare(that.patternDensity, patternDensity) == 0 &&
                    hasConsecutivePatterns == that.hasConsecutivePatterns &&
                    Double.compare(that.largeImageRatio, largeImageRatio) == 0 &&
-                   Double.compare(that.largeImageAspectRatio, largeImageAspectRatio) == 0;
+                   Double.compare(that.largeImageAspectRatio, largeImageAspectRatio) == 0 &&
+                   nonWhitespaceTextCount == that.nonWhitespaceTextCount;
         }
 
         @Override
@@ -523,7 +529,7 @@ public class TriageProcessor {
                                 hasGridLines, hasTableBorderLines, hasRowSeparatorPattern,
                                 hasAlignedShortLines, tablePatternCount, maxConsecutiveStreak,
                                 patternDensity, hasConsecutivePatterns, largeImageRatio,
-                                largeImageAspectRatio);
+                                largeImageAspectRatio, nonWhitespaceTextCount);
         }
 
         @Override
@@ -548,6 +554,7 @@ public class TriageProcessor {
                    ", hasConsecutivePatterns=" + hasConsecutivePatterns +
                    ", largeImageRatio=" + largeImageRatio +
                    ", largeImageAspectRatio=" + largeImageAspectRatio +
+                   ", nonWhitespaceTextCount=" + nonWhitespaceTextCount +
                    '}';
         }
     }
@@ -814,7 +821,8 @@ public class TriageProcessor {
             patternDensity,
             hasConsecutivePatterns,
             largeImageRatio,
-            largeImageAspectRatio
+            largeImageAspectRatio,
+            accumulator.nonWhitespaceTextCount
         );
     }
 
