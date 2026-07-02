@@ -61,6 +61,8 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -591,6 +593,10 @@ public class DocumentProcessor {
      */
     public static void preprocessing(String pdfName, Config config) throws IOException {
         LOGGER.log(Level.INFO, () -> "File name: " + pdfName);
+        // Validate the path syntax and extension first (cheap, no I/O); existence
+        // and content are then checked just-in-time by validatePdfMagicNumber to
+        // avoid a time-of-check/time-of-use race.
+        validateInputPath(pdfName);
         validatePdfMagicNumber(pdfName);
         updateStaticContainers(config);
         PDDocument pdDocument;
@@ -637,6 +643,45 @@ public class DocumentProcessor {
     }
 
     /**
+     * Validates the input path before any file content is read: rejects a
+     * {@code null}/blank path, a syntactically invalid path, and a name that
+     * does not end in {@code .pdf} (case-insensitive).
+     *
+     * <p>Existence, regular-file and readability are intentionally <em>not</em>
+     * checked here — those are surfaced just-in-time by
+     * {@link #validatePdfMagicNumber(String)} when the stream is opened, which
+     * avoids a time-of-check/time-of-use race (the file could be removed
+     * between an {@code exists()} check and the open).
+     *
+     * <p>All failures are reported as {@link InvalidPdfFileException} (a checked
+     * subtype of {@link IOException}) so a batch caller can catch a single
+     * exception type to skip the bad input and continue, exactly as the CLI
+     * already does for content-validity failures.
+     *
+     * @param pdfName the path to the input file
+     * @throws InvalidPdfFileException if the path is null/blank, syntactically
+     *         invalid, or does not have a {@code .pdf} extension
+     */
+    private static void validateInputPath(String pdfName) throws InvalidPdfFileException {
+        if (pdfName == null || pdfName.isBlank()) {
+            throw new InvalidPdfFileException("Input PDF path is null or blank.");
+        }
+        Path path;
+        try {
+            path = Path.of(pdfName);
+        } catch (InvalidPathException cause) {
+            throw new InvalidPdfFileException(
+                "'" + displayName(pdfName) + "' is not a valid file path.", cause);
+        }
+        Path fileName = path.getFileName();
+        String name = fileName != null ? fileName.toString() : pdfName;
+        if (!name.toLowerCase(Locale.ROOT).endsWith(".pdf")) {
+            throw new InvalidPdfFileException(
+                "'" + displayName(pdfName) + "' is not a PDF file (expected a .pdf extension).");
+        }
+    }
+
+    /**
      * Verifies the input file contains the PDF magic number ({@code %PDF-})
      * within its first 1024 bytes.
      *
@@ -646,14 +691,28 @@ public class DocumentProcessor {
      * search window matches that tolerance while still rejecting any
      * JPG/PNG/HTML/empty file.
      *
-     * @throws InvalidPdfFileException if the magic number is not present
-     * @throws IOException if the file cannot be opened or read
+     * <p>This is also where a missing file or a directory passed in place of a
+     * file is detected: a directory is rejected up front, and a missing path
+     * surfaces as {@link NoSuchFileException} when the stream is opened. Both are
+     * translated into a friendly {@link InvalidPdfFileException} so callers see
+     * one consistent type.
+     *
+     * @throws InvalidPdfFileException if the file is missing, is a directory, or
+     *         the magic number is not present
+     * @throws IOException if the file cannot be read for another reason
      */
     private static void validatePdfMagicNumber(String pdfName) throws IOException {
         Path path = Path.of(pdfName);
+        if (Files.isDirectory(path)) {
+            throw new InvalidPdfFileException(
+                "'" + displayName(pdfName) + "' is a directory, not a PDF file.");
+        }
         byte[] head;
         try (InputStream in = Files.newInputStream(path)) {
             head = in.readNBytes(1024);
+        } catch (NoSuchFileException cause) {
+            throw new InvalidPdfFileException(
+                "'" + displayName(pdfName) + "' was not found.", cause);
         }
         byte[] marker = "%PDF-".getBytes(StandardCharsets.US_ASCII);
         if (indexOfBytes(head, marker) < 0) {
