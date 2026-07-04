@@ -356,6 +356,7 @@ public class DocumentProcessor {
             if (structured) {
                 // Cross-page operations (must be sequential)
                 HeaderFooterProcessor.processHeadersAndFooters(contents, false);
+                new TableOfContentsProcessor().processTableOfContents(contents);
                 ListProcessor.processLists(contents, false);
             }
 
