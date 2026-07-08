@@ -215,6 +215,7 @@ public class TaggedDocumentProcessor {
     private static ListItem processListItem(INode node) {
         ListItem listItem = new ListItem(new MultiBoundingBox(), null);
         List<IObject> contents = new ArrayList<>();
+        listItem.setLabelLength(calculateLabelLength(node));
         processChildContents(node, contents);
         contents = TextLineProcessor.processTextLines(contents);
         for (IObject content : contents) {
@@ -226,6 +227,29 @@ public class TaggedDocumentProcessor {
         }
         listItem.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
         return listItem;
+    }
+
+    private static int calculateLabelLength(INode listItem) {
+        List<INode> children = listItem.getChildren();
+        if (!children.isEmpty()) {
+            INode firstChild = children.get(0);
+            if (firstChild.getInitialSemanticType() == SemanticType.LIST_LABEL) {
+                return getTextChunksLength(firstChild);
+            }
+        }
+        return 0;
+    }
+
+    private static int getTextChunksLength(INode node) {
+        int result = 0;
+        for (INode child : node.getChildren()) {
+            if (child instanceof SemanticSpan) {
+                result += (((SemanticSpan)child).getColumns().get(0).getFirstLine().getFirstTextChunk().getValue().length());
+            } else {
+                result += getTextChunksLength(child);
+            }
+        }
+        return result;
     }
 
     private static void processTable(INode tableNode) {
