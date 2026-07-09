@@ -60,8 +60,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <verapdf.version>1.31.99</verapdf.version>
         <verapdf.wcag.algs.version>1.31.33</verapdf.wcag.algs.version>
-        <jackson.databind.version>2.22.0</jackson.databind.version>
-        <junit.jupiter.version>6.1.0</junit.jupiter.version>
+        <jackson.databind.version>2.22.1</jackson.databind.version>
+        <junit.jupiter.version>6.1.1</junit.jupiter.version>
         <assertj.version>3.27.7</assertj.version>
         <okhttp.version>5.4.0</okhttp.version>
         <commons.cli.version>1.11.0</commons.cli.version>
