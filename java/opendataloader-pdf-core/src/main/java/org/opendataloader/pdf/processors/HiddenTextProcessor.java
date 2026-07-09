@@ -15,50 +15,56 @@
  */
 package org.opendataloader.pdf.processors;
 
-import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioConsumer;
+import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Processor for detecting hidden text in PDF documents.
  * Identifies text with low contrast ratio against the background.
  */
 public class HiddenTextProcessor {
+    private static final Logger LOGGER = Logger.getLogger(HiddenTextProcessor.class.getCanonicalName());
+
     private static final double MIN_CONTRAST_RATIO = 1.2d;
 
     /**
      * Finds and marks or filters hidden text based on contrast ratio.
      *
-     * @param pdfName the path to the PDF file
      * @param contents the page contents to process
      * @param isFilterHiddenText whether to filter out hidden text or just mark it
-     * @param password the PDF password if required
      * @return the processed list of content objects
      */
-    public static List<IObject> findHiddenText(String pdfName, List<IObject> contents, boolean isFilterHiddenText,
-                                               String password) {
-        List<IObject> result = new LinkedList<>();
-        ContrastRatioConsumer contrastRatioConsumer = StaticLayoutContainers.getContrastRatioConsumer(pdfName, password, false, null);
-        if (contrastRatioConsumer == null) {
+    public static List<IObject> findHiddenText(List<IObject> contents, boolean isFilterHiddenText) {
+        if (StaticContainers.getImagesUtils() == null) {
+            LOGGER.log(Level.WARNING, "Hidden-text filtering will be skipped for this document.");
             return contents;
         }
-        for (IObject content : contents) {
-            if (content instanceof TextChunk) {
-                TextChunk textChunk = (TextChunk) content;
-                contrastRatioConsumer.calculateContrastRatio(textChunk);
-                if (textChunk.getContrastRatio() < MIN_CONTRAST_RATIO) {
-                    if (!isFilterHiddenText) {
-                        textChunk.setHiddenText(true);
-                    } else {
-                        continue;
+        List<IObject> result = new LinkedList<>();
+        try {
+            ContrastRatioConsumer contrastRatioConsumer = new ContrastRatioConsumer();
+            for (IObject content : contents) {
+                if (content instanceof TextChunk) {
+                    TextChunk textChunk = (TextChunk) content;
+                    contrastRatioConsumer.calculateContrastRatio(textChunk);
+                    if (textChunk.getContrastRatio() < MIN_CONTRAST_RATIO) {
+                        if (!isFilterHiddenText) {
+                            textChunk.setHiddenText(true);
+                        } else {
+                            continue;
+                        }
                     }
                 }
+                result.add(content);
             }
-            result.add(content);
+        } finally {
+            StaticContainers.getImagesUtils().clearRenderedPages();
         }
         return result;
     }

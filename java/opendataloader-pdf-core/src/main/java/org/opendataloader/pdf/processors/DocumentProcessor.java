@@ -90,7 +90,7 @@ public class DocumentProcessor {
                 document.close();
             }
         });
-        clearCleanupStep("ContrastRatioConsumer", StaticLayoutContainers::closeContrastRatioConsumer);
+        clearCleanupStep("ImagesUtils", StaticContainers::closeImagesUtils);
 
         clearCleanupStep("StaticResources", StaticResources::clear);
         clearCleanupStep("StaticContainers", () -> StaticContainers.updateContainers(null));
@@ -276,6 +276,8 @@ public class DocumentProcessor {
             StaticContainers.setKeepLineBreaks(keepLineBreaks);
             StaticContainers.setIsDataLoader(isDataLoader);
             StaticContainers.setIsIgnoreCharactersWithoutUnicode(isIgnoreCharsWithoutUnicode);
+            StaticContainers.setFileName(inputPdfName);
+            StaticContainers.setPassword(config.getPassword());
             // Project StaticLayoutContainers — share the same headings list across workers
             StaticLayoutContainers.setHeadings(headings);
             StaticLayoutContainers.setCurrentContentId(contentId);
@@ -318,8 +320,7 @@ public class DocumentProcessor {
             if (config.getFilterConfig().isFilterHiddenText()) {
                 for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
                     if (shouldProcessPage(pageNumber, pagesToProcess)) {
-                        List<IObject> pageContents = HiddenTextProcessor.findHiddenText(
-                            inputPdfName, contents.get(pageNumber), true, config.getPassword());
+                        List<IObject> pageContents = HiddenTextProcessor.findHiddenText(contents.get(pageNumber), true);
                         contents.set(pageNumber, pageContents);
                     }
                 }
@@ -550,7 +551,7 @@ public class DocumentProcessor {
             }
             StaticLayoutContainers.setImagesDirectory(imagesDirectory);
             ImagesUtils imagesUtils = new ImagesUtils();
-            imagesUtils.write(contents, inputPdfName, config.getPassword());
+            imagesUtils.write(contents);
         }
         if (config.isGenerateTaggedPDF()) {
             AutoTaggingProcessor.createTaggedPDF(inputPDF, config.getOutputFolder(),
@@ -626,6 +627,8 @@ public class DocumentProcessor {
                 LOGGER.log(Level.WARNING, "The document has no structure tree. The 'use-struct-tree' option will be ignored.");
             }
         }
+        StaticContainers.setFileName(pdfName);
+        StaticContainers.setPassword(config.getPassword());
         StaticContainers.setIsDataLoader(true);
         StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
         StaticResources.setIsFontProgramsParsing(true);

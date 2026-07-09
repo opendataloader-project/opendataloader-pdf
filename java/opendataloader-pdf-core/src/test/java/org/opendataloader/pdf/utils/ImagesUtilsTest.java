@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
+import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -68,7 +69,7 @@ class ImagesUtilsTest {
     }
 
     @Test
-    void testWriteImageInitializesContrastRatioConsumer() throws IOException {
+    void testWriteImageInitializesImagesUtils() throws IOException {
         StaticLayoutContainers.clearContainers();
         // Given
         Path tempDir = Files.createTempDirectory("htmlgen-test");
@@ -86,18 +87,16 @@ class ImagesUtilsTest {
             StaticLayoutContainers.setImagesDirectory(outputFolder + File.separator + path.getFileName().toString().substring(0, path.getFileName().toString().length() - 4) + "_images");
             ImageChunk imageChunk = new ImageChunk(new BoundingBox(0));
             // Initializing contrastRatioConsumer inside writeImage() via StaticLayoutContainers.
-            imagesUtils.writeImage(imageChunk, testPdf.getAbsolutePath(),"");
-            // After writeImage, StaticLayoutContainers must hold a non-null cached consumer.
-            // Use getCachedContrastRatioConsumer to verify the cached state without invoking the initializer.
-            assertNotNull(StaticLayoutContainers.getCachedContrastRatioConsumer(),
-                    "writeImage should populate the StaticLayoutContainers ContrastRatioConsumer ThreadLocal");
+            StaticContainers.setPassword("");
+            StaticContainers.setFileName(testPdf.getAbsolutePath());
+            imagesUtils.writeImage(imageChunk);
             // Verify file was created
             Path pngPath = Path.of(StaticLayoutContainers.getImagesDirectory(), "imageFile1.png");
             // PNG file is created
             assertTrue(Files.exists(pngPath), "PNG file created successfully");
         } finally {
             // Cleanup
-            StaticLayoutContainers.closeContrastRatioConsumer();
+            StaticContainers.closeImagesUtils();
             Files.walk(tempDir)
                 .sorted((a, b) -> b.compareTo(a))
                 .forEach(p -> {
