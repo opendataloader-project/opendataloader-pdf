@@ -17,16 +17,13 @@ package org.opendataloader.pdf.containers;
 
 import org.opendataloader.pdf.api.Config;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
-import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioConsumer;
 
-import java.awt.*;
 import java.io.File;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class StaticLayoutContainers {
@@ -36,8 +33,6 @@ public class StaticLayoutContainers {
     private static final ThreadLocal<List<SemanticHeading>> headings = new ThreadLocal<>();
     private static final ThreadLocal<Integer> imageIndex = new ThreadLocal<>();
     private static final ThreadLocal<Boolean> isUseStructTree = new ThreadLocal<>();
-    private static final ThreadLocal<ContrastRatioConsumer>  contrastRatioConsumer = new ThreadLocal<>();
-    private static final ThreadLocal<Boolean> isContrastRatioConsumerFailedToCreate =  new ThreadLocal<>();
     private static final ThreadLocal<String> imagesDirectory = new ThreadLocal<>();
     private static final ThreadLocal<Boolean> embedImages = new ThreadLocal<>();
     private static final ThreadLocal<String> imageFormat = new ThreadLocal<>();
@@ -49,8 +44,6 @@ public class StaticLayoutContainers {
         headings.set(Collections.synchronizedList(new LinkedList<>()));
         imageIndex.set(1);
         isUseStructTree.set(false);
-        contrastRatioConsumer.remove();
-        isContrastRatioConsumerFailedToCreate.set(false);
         imagesDirectory.set("");
         embedImages.set(false);
         imageFormat.set(Config.IMAGE_FORMAT_PNG);
@@ -83,45 +76,6 @@ public class StaticLayoutContainers {
 
     public static void setImagesDirectory(String imagesDirectory) {
         StaticLayoutContainers.imagesDirectory.set(imagesDirectory);
-    }
-
-    public static ContrastRatioConsumer getContrastRatioConsumer(String sourcePdfPath, String password, boolean enableAntialias, Float imagePixelSize) {
-        try {
-            if (contrastRatioConsumer.get() == null && !Boolean.TRUE.equals(isContrastRatioConsumerFailedToCreate.get())) {
-                contrastRatioConsumer.set(new ContrastRatioConsumer(sourcePdfPath, password, enableAntialias, imagePixelSize));
-            }
-        } catch (Exception e) {
-            // Issue #458: surface init failures at SEVERE with full throwable.
-            // Previously a WARNING-only log silently disabled image extraction and
-            // hidden-text filtering for the rest of the document, making OOM /
-            // PDFBox failures very hard to diagnose downstream.
-            LOGGER.log(Level.SEVERE,
-                "Failed to initialize ContrastRatioConsumer for PDF '" + sourcePdfPath
-                    + "'. Image extraction and hidden-text filtering will be skipped for this document.",
-                e);
-            isContrastRatioConsumerFailedToCreate.set(true);
-        }
-        return contrastRatioConsumer.get();
-    }
-
-    /**
-     * Returns the cached ContrastRatioConsumer if present, or null without creating it.
-     * Lets tests verify that writeImage populates the ThreadLocal without triggering
-     * the lazy initializer in {@link #getContrastRatioConsumer}.
-     */
-    public static ContrastRatioConsumer getCachedContrastRatioConsumer() {
-        return contrastRatioConsumer.get();
-    }
-
-    public static void closeContrastRatioConsumer() {
-        try {
-            if (contrastRatioConsumer.get() != null) {
-                contrastRatioConsumer.get().close();
-                contrastRatioConsumer.remove();
-            }
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Error closing contrast ratio consumer: " + e.getMessage());
-        }
     }
 
     public static List<SemanticHeading> getHeadings() {

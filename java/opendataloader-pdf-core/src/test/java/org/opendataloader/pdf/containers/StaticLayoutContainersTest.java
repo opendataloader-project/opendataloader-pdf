@@ -18,6 +18,8 @@ package org.opendataloader.pdf.containers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioConsumer;
+import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ImagesUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -147,7 +149,7 @@ class StaticLayoutContainersTest {
      */
     @Test
     void getContrastRatioConsumer_logsSevereWithThrowableOnInitFailure() {
-        Logger logger = Logger.getLogger(StaticLayoutContainers.class.getCanonicalName());
+        Logger logger = Logger.getLogger(StaticContainers.class.getCanonicalName());
         List<LogRecord> captured = new ArrayList<>();
         Handler capture = new Handler() {
             @Override
@@ -164,18 +166,17 @@ class StaticLayoutContainersTest {
         logger.setUseParentHandlers(false);
         try {
             String bogusPath = "/nonexistent/issue458-oom-trigger.pdf";
-
-            ContrastRatioConsumer result =
-                StaticLayoutContainers.getContrastRatioConsumer(bogusPath, "", false, null);
+            StaticContainers.setFileName(bogusPath);
+            ImagesUtils result = StaticContainers.getImagesUtils();
 
             assertNull(result,
-                "getContrastRatioConsumer must return null after init failure (issue #458)");
+                "getImagesUtils must return null after init failure (issue #458)");
 
             LogRecord severe = captured.stream()
                 .filter(r -> r.getLevel() == Level.SEVERE)
                 .findFirst()
                 .orElseThrow(() -> new AssertionError(
-                    "Expected a SEVERE log record on ContrastRatioConsumer init failure (issue #458). " +
+                    "Expected a SEVERE log record on ImagesUtils init failure (issue #458). " +
                     "Captured levels: " + captured.stream().map(LogRecord::getLevel).collect(Collectors.toList())));
             assertNotNull(severe.getThrown(),
                 "SEVERE log record must include the causing Throwable so the stack trace is preserved (issue #458)");
@@ -185,8 +186,7 @@ class StaticLayoutContainersTest {
             // The latch is part of the documented silent-skip behaviour the hotfix
             // makes visible — it must be set so callers know subsequent gets will
             // short-circuit to null without re-attempting construction.
-            ContrastRatioConsumer second =
-                StaticLayoutContainers.getContrastRatioConsumer(bogusPath, "", false, null);
+            ImagesUtils second = StaticContainers.getImagesUtils();
             assertNull(second,
                 "After init failure, subsequent calls must keep returning null without retrying (issue #458)");
             long severeCount = captured.stream().filter(r -> r.getLevel() == Level.SEVERE).count();

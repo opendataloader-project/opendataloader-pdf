@@ -19,6 +19,7 @@ import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.entities.SemanticPicture;
 import org.opendataloader.pdf.markdown.MarkdownSyntax;
 import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.ObjectKey;
 import org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
@@ -29,6 +30,7 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioConsumer;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.StreamInfo;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -61,23 +63,23 @@ public class ImagesUtils {
         }
     }
 
-    public void write(List<List<IObject>> contents, String pdfFilePath, String password) {
+    public void write(List<List<IObject>> contents) {
         for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
             for (IObject content : contents.get(pageNumber)) {
-                writeFromContents(content, pdfFilePath, password);
+                writeFromContents(content);
             }
         }
     }
 
-    private void writeFromContents(IObject content, String pdfFilePath, String password) {
+    private void writeFromContents(IObject content) {
         if (content instanceof ImageChunk) {
-            writeImage((ImageChunk) content, pdfFilePath, password);
+            writeImage((ImageChunk) content);
         } else if (content instanceof SemanticPicture) {
-            writePicture((SemanticPicture) content, pdfFilePath, password);
+            writePicture((SemanticPicture) content);
         } else if (content instanceof PDFList) {
             for (ListItem listItem : ((PDFList) content).getListItems()) {
                 for (IObject item : listItem.getContents()) {
-                    writeFromContents(item, pdfFilePath, password);
+                    writeFromContents(item);
                 }
             }
         } else if (content instanceof TableBorder) {
@@ -87,33 +89,36 @@ public class ImagesUtils {
                     TableBorderCell cell = cells[columnNumber];
                     if (cell.getColNumber() == columnNumber && cell.getRowNumber() == row.getRowNumber()) {
                         for (IObject item : cell.getContents()) {
-                            writeFromContents(item, pdfFilePath, password);
+                            writeFromContents(item);
                         }
                     }
                 }
             }
         } else if (content instanceof SemanticHeaderOrFooter) {
             for (IObject item : ((SemanticHeaderOrFooter) content).getContents()) {
-                writeFromContents(item, pdfFilePath, password);
+                writeFromContents(item);
             }
         }
     }
 
-    protected void writeImage(ImageChunk chunk, String pdfFilePath, String password) {
+    protected void writeImage(ImageChunk chunk) {
         int currentImageIndex = StaticLayoutContainers.incrementImageIndex();
         ensureImagesDirectoryInitialized();
         String imageFormat = StaticLayoutContainers.getImageFormat();
-        String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, currentImageIndex, imageFormat);
+        String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(),
+            File.separator, currentImageIndex, imageFormat);
         chunk.setIndex(currentImageIndex);
-        createImageFile(chunk.getBoundingBox(), fileName, imageFormat, pdfFilePath, password);
+        StreamInfo streamInfo = chunk.getStreamInfos() != null && !chunk.getStreamInfos().isEmpty() ? chunk.getStreamInfos().get(0) : null;
+        createImageFile(chunk.getBoundingBox(), fileName, imageFormat, streamInfo != null ? streamInfo.getXImageObjectKey() : null);
     }
 
-    protected void writePicture(SemanticPicture picture, String pdfFilePath, String password) {
+    protected void writePicture(SemanticPicture picture) {
         int pictureIndex = picture.getPictureIndex();
         ensureImagesDirectoryInitialized();
         String imageFormat = StaticLayoutContainers.getImageFormat();
-        String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, pictureIndex, imageFormat);
-        createImageFile(picture.getBoundingBox(), fileName, imageFormat, pdfFilePath, password);
+        String fileName = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(),
+            File.separator, pictureIndex, imageFormat);
+        createImageFile(picture.getBoundingBox(), fileName, imageFormat, null);
     }
 
     private void ensureImagesDirectoryInitialized() {
@@ -131,10 +136,18 @@ public class ImagesUtils {
      * dropped — letting the JVM reclaim the rendered BufferedImage as
      * soon as {@link #writeBufferedImageToFile} returns.
      */
-    private void createImageFile(BoundingBox imageBox, String fileName, String imageFormat,
-                                 String pdfFilePath, String password) {
-        ContrastRatioConsumer consumer = StaticLayoutContainers.getContrastRatioConsumer(pdfFilePath, password, false, null);
-        BufferedImage targetImage = consumer != null ? consumer.getPageSubImage(imageBox) : null;
+    private void createImageFile(BoundingBox imageBox, String fileName, String imageFormat, ObjectKey xImageObjectKey) {
+        if (StaticContainers.getImagesUtils() == null) {
+            LOGGER.log(Level.WARNING, "Image extraction will be skipped for this document.");
+            return;
+        }
+        BufferedImage targetImage = null;
+        if (xImageObjectKey != null) {
+            targetImage = StaticContainers.getImagesUtils().getXObjectImage(imageBox.getPageNumber(), xImageObjectKey);
+        }
+        if (targetImage == null) {
+            targetImage = StaticContainers.getImagesUtils().getPageSubImage(imageBox);
+        }
         if (targetImage == null) {
             return;
         }

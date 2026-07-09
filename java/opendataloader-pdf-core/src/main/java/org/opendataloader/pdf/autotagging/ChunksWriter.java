@@ -292,15 +292,15 @@ public class ChunksWriter {
         while (streamInfoIterator.hasNext()) {
             streamInfo = streamInfoIterator.next();
             if (currentIndex < streamInfo.getStartIndex()) {
-                newStreamInfos.add(new StreamInfo(streamInfo.getOperatorIndex(), streamInfo.getXObjectName(), currentIndex,
-                    streamInfo.getStartIndex(), streamInfo.getLength(), null));
+                newStreamInfos.add(new StreamInfo(streamInfo.getOperatorIndex(), streamInfo.getXObjectName(),
+                    streamInfo.getXImageObjectKey(), currentIndex, streamInfo.getStartIndex(), streamInfo.getLength(), null));
             }
             currentIndex = streamInfo.getEndIndex();
             newStreamInfos.add(streamInfo);
         }
         if (currentIndex < streamInfo.getLength()) {
-            newStreamInfos.add(new StreamInfo(streamInfo.getOperatorIndex(), streamInfo.getXObjectName(), streamInfo.getEndIndex(),
-                streamInfo.getLength(), streamInfo.getLength(), null));
+            newStreamInfos.add(new StreamInfo(streamInfo.getOperatorIndex(), streamInfo.getXObjectName(),
+                streamInfo.getXImageObjectKey(), streamInfo.getEndIndex(), streamInfo.getLength(), streamInfo.getLength(), null));
         }
         return newStreamInfos;
     }

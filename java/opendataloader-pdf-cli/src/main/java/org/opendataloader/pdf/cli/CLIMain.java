@@ -19,10 +19,10 @@ import org.apache.commons.cli.*;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.api.OpenDataLoaderPDF;
 import org.opendataloader.pdf.api.cli.CLIOptions;
-import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.exceptions.EncryptedTaggedPdfNotSupportedException;
 import org.opendataloader.pdf.exceptions.InvalidPdfFileException;
 import org.verapdf.exceptions.InvalidPasswordException;
+import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
 import java.io.File;
 import java.util.Locale;
@@ -248,7 +248,7 @@ public class CLIMain {
                 exception.getMessage(), exception);
             return false;
         } finally {
-            StaticLayoutContainers.closeContrastRatioConsumer();
+            StaticContainers.closeImagesUtils();
         }
     }
 
