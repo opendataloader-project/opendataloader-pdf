@@ -15,7 +15,7 @@ export interface ConvertOptions {
   quiet?: boolean;
   /** Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg */
   contentSafetyOff?: string | string[];
-  /** Enable sensitive data sanitization. Replaces emails, phone numbers, IPs, credit cards, and URLs with placeholders */
+  /** Enable sensitive data sanitization. Replaces recognizable patterns (emails, phone numbers, IPs, MACs, credit-card shapes, URLs, and some long-digit/ID tokens) with placeholders. Best-effort pattern matching, not compliance-grade de-identification: it misses names, addresses, dates, and SSNs, and may over-mask ordinary numbers; review output before sharing */
   sanitize?: boolean;
   /** Preserve original line breaks in extracted text */
   keepLineBreaks?: boolean;

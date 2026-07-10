@@ -53,7 +53,7 @@ def convert(
         format: Output formats (comma-separated). Values: json, text, html, pdf, markdown, tagged-pdf. Default: json. For HTML inside Markdown use --markdown-with-html. For image extraction control use --image-output.
         quiet: Suppress console logging output
         content_safety_off: Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg
-        sanitize: Enable sensitive data sanitization. Replaces emails, phone numbers, IPs, credit cards, and URLs with placeholders
+        sanitize: Enable sensitive data sanitization. Replaces recognizable patterns (emails, phone numbers, IPs, MACs, credit-card shapes, URLs, and some long-digit/ID tokens) with placeholders. Best-effort pattern matching, not compliance-grade de-identification: it misses names, addresses, dates, and SSNs, and may over-mask ordinary numbers; review output before sharing
         keep_line_breaks: Preserve original line breaks in extracted text
         replace_invalid_chars: Replacement character for invalid/unrecognized characters. Default: space
         use_struct_tree: Use PDF structure tree (tagged PDF) for reading order and semantic structure. Output quality depends on tag quality

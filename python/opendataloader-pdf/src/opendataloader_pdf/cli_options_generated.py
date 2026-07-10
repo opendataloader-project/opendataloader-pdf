@@ -61,7 +61,7 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "type": "boolean",
         "required": False,
         "default": False,
-        "description": "Enable sensitive data sanitization. Replaces emails, phone numbers, IPs, credit cards, and URLs with placeholders",
+        "description": "Enable sensitive data sanitization. Replaces recognizable patterns (emails, phone numbers, IPs, MACs, credit-card shapes, URLs, and some long-digit/ID tokens) with placeholders. Best-effort pattern matching, not compliance-grade de-identification: it misses names, addresses, dates, and SSNs, and may over-mask ordinary numbers; review output before sharing",
     },
     {
         "name": "keep-line-breaks",

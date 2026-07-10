@@ -12,7 +12,7 @@ export function registerCliOptions(program: Command): void {
   program.option('-f, --format <value>', 'Output formats (comma-separated). Values: json, text, html, pdf, markdown, tagged-pdf. Default: json. For HTML inside Markdown use --markdown-with-html. For image extraction control use --image-output.');
   program.option('-q, --quiet', 'Suppress console logging output');
   program.option('--content-safety-off <value>', 'Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg');
-  program.option('--sanitize', 'Enable sensitive data sanitization. Replaces emails, phone numbers, IPs, credit cards, and URLs with placeholders');
+  program.option('--sanitize', 'Enable sensitive data sanitization. Replaces recognizable patterns (emails, phone numbers, IPs, MACs, credit-card shapes, URLs, and some long-digit/ID tokens) with placeholders. Best-effort pattern matching, not compliance-grade de-identification: it misses names, addresses, dates, and SSNs, and may over-mask ordinary numbers; review output before sharing');
   program.option('--keep-line-breaks', 'Preserve original line breaks in extracted text');
   program.option('--replace-invalid-chars <value>', 'Replacement character for invalid/unrecognized characters. Default: space');
   program.option('--use-struct-tree', 'Use PDF structure tree (tagged PDF) for reading order and semantic structure. Output quality depends on tag quality');

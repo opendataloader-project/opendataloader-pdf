@@ -33,7 +33,22 @@ public class FilterConfig {
     private boolean filterSensitiveData = false;
     private final List<SanitizationRule> filterRules;
 
-    /** Default rules */
+    /**
+     * Default sanitization rules. The built-in set targets identifiers whose
+     * format is internationally recognizable, e.g. email, phone number, URL, IP,
+     * MAC, and credit-card number shapes (illustrative, not exhaustive). It also
+     * masks some generic long-digit and alphanumeric ID tokens, which may
+     * over-mask ordinary numbers such as quantities or order IDs.
+     *
+     * <p><b>This is best-effort pattern matching, not compliance-grade
+     * de-identification.</b> It does not detect names, addresses, dates, or SSNs,
+     * does not validate matches (e.g. no credit-card checksum), and does not
+     * guarantee removal of every email/phone/card. Do not rely on it to satisfy
+     * HIPAA, GDPR, or any regulatory requirement; review output before sharing.
+     *
+     * <p>Identifiers outside this set are not sanitized by default; add them as
+     * custom rules via {@link #addFilterRule(String, String)}.
+     */
     private void initializeDefaultRules() {
         filterRules.add(new SanitizationRule(
             Pattern.compile("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"),

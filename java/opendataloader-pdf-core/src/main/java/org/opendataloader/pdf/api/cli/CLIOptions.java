@@ -94,7 +94,10 @@ public class CLIOptions {
     // ===== Sanitize =====
     private static final String SANITIZE_LONG_OPTION = "sanitize";
     private static final String SANITIZE_DESC = "Enable sensitive data sanitization. "
-            + "Replaces emails, phone numbers, IPs, credit cards, and URLs with placeholders";
+            + "Replaces recognizable patterns (emails, phone numbers, IPs, MACs, credit-card shapes, URLs, "
+            + "and some long-digit/ID tokens) with placeholders. "
+            + "Best-effort pattern matching, not compliance-grade de-identification: it misses names, "
+            + "addresses, dates, and SSNs, and may over-mask ordinary numbers; review output before sharing";
 
     // ===== Keep Line Breaks =====
     private static final String KEEP_LINE_BREAKS_LONG_OPTION = "keep-line-breaks";

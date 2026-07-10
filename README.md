@@ -349,12 +349,16 @@ PDFs can contain hidden prompt injection attacks. OpenDataLoader automatically f
 - Off-page content
 - Suspicious invisible layers
 
-To sanitize sensitive data (emails, URLs, phone numbers → placeholders), enable it explicitly:
+To sanitize sensitive data (emails, URLs, phone numbers, IPs, MACs, credit cards → placeholders), enable it explicitly:
 
 ```bash
 # Batch all files in one call — each invocation spawns a JVM process, so repeated calls are slow
 opendataloader-pdf file1.pdf file2.pdf folder/ --sanitize
 ```
+
+The built-in rules target identifiers whose format is internationally recognizable (emails, phone numbers, URLs, IPs, MACs, credit-card shapes). They also mask some generic long-digit/ID tokens, which can over-mask ordinary numbers. Anything else is not sanitized by default.
+
+> **`--sanitize` is best-effort pattern matching, not compliance-grade de-identification.** It does not detect names, addresses, dates, or SSNs, does not validate matches (there is no credit-card checksum), and does not guarantee removal of every email/phone/card. Do not rely on it to satisfy HIPAA, GDPR, or any regulatory requirement — review the output before sharing.
 
 [AI Safety Guide](https://opendataloader.org/docs/ai-safety)
 
