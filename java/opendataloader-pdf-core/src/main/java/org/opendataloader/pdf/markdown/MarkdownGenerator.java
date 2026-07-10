@@ -21,6 +21,7 @@ import org.opendataloader.pdf.entities.SemanticFormula;
 import org.opendataloader.pdf.entities.EnrichedImageChunk;
 import org.opendataloader.pdf.entities.SemanticPicture;
 import org.opendataloader.pdf.utils.Base64ImageUtils;
+import org.opendataloader.pdf.utils.BulletedParagraphUtils;
 import org.opendataloader.pdf.utils.GeneratorUtils;
 import org.opendataloader.pdf.utils.ImagesUtils;
 import org.opendataloader.pdf.utils.OutputType;
@@ -288,11 +289,13 @@ public class MarkdownGenerator implements Closeable {
 
     protected void writeList(PDFList list) throws IOException {
         for (ListItem item : list.getListItems()) {
+            String itemText = GeneratorUtils.getTextFromLines(item.getLines(), OutputType.MD);
             if (!isInsideTable()) {
                 markdownWriter.write(MarkdownSyntax.LIST_ITEM);
                 markdownWriter.write(MarkdownSyntax.SPACE);
+                itemText = stripRedundantBulletLabel(itemText);
             }
-            markdownWriter.write(getCorrectMarkdownString(GeneratorUtils.getTextFromLines(item.getLines(), OutputType.MD)));
+            markdownWriter.write(getCorrectMarkdownString(itemText));
             writeLineBreak();
 
             List<IObject> itemContents = item.getContents();
@@ -301,6 +304,33 @@ public class MarkdownGenerator implements Closeable {
                 writeContents(itemContents, false);
             }
         }
+    }
+
+    /**
+     * Removes a leading bullet glyph (and the whitespace separating it from the
+     * content) from list item text. {@code writeList} already emits the Markdown
+     * {@code - } marker, so a bullet carried over from the source PDF would render
+     * as a doubled marker like {@code - •} (#584). Only symbol bullets followed by
+     * whitespace are stripped: ordered labels ("1.", "a)") carry numbering
+     * information, and a leading label character with no separator ("-5") may be
+     * real content.
+     */
+    static String stripRedundantBulletLabel(String text) {
+        if (text == null || text.length() < 2) {
+            return text;
+        }
+        if (!BulletedParagraphUtils.isSymbolLabel(text.charAt(0)) || !isInlineWhitespace(text.charAt(1))) {
+            return text;
+        }
+        int contentStart = 2;
+        while (contentStart < text.length() && isInlineWhitespace(text.charAt(contentStart))) {
+            contentStart++;
+        }
+        return text.substring(contentStart);
+    }
+
+    private static boolean isInlineWhitespace(char character) {
+        return character == ' ' || character == '\t' || character == '\u00A0';
     }
 
     protected void writeTOC(SemanticTOC toc) throws IOException {

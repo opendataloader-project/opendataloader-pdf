@@ -180,4 +180,62 @@ public class MarkdownGeneratorTest {
     void testFormatLinkDestination_handlesNull() {
         assertNull(MarkdownGenerator.formatMarkdownLinkDestination(null));
     }
+
+    // ----- stripRedundantBulletLabel (#584) -----
+    //
+    // writeList() emits its own `- ` marker for every list item, but the item
+    // text extracted from the PDF still starts with the original bullet glyph,
+    // producing doubled markers like `- • Configuration Files`.
+
+    @ParameterizedTest
+    @ValueSource(strings = {"•", "●", "◦", "▪", "‣", "∙", "○", "◆", "➤", "✓", "-", "*", "+"})
+    void testStripBulletLabel_stripsLeadingBulletFollowedBySpace(String bullet) {
+        assertEquals("Configuration Files",
+                MarkdownGenerator.stripRedundantBulletLabel(bullet + " Configuration Files"),
+                "Bullet '" + bullet + "' followed by a space should be stripped");
+    }
+
+    @Test
+    void testStripBulletLabel_stripsAllWhitespaceAfterBullet() {
+        assertEquals("item", MarkdownGenerator.stripRedundantBulletLabel("•   item"));
+        assertEquals("item", MarkdownGenerator.stripRedundantBulletLabel("•\titem"));
+        // Non-breaking space is common in extracted PDF text.
+        assertEquals("item", MarkdownGenerator.stripRedundantBulletLabel("\u2022\u00A0item"));
+    }
+
+    @Test
+    void testStripBulletLabel_keepsBulletNotFollowedByWhitespace() {
+        // Without a separating space the leading char may be real content
+        // (negative numbers, dashed identifiers), so leave it untouched.
+        assertEquals("-5 degrees", MarkdownGenerator.stripRedundantBulletLabel("-5 degrees"));
+        assertEquals("*emphasis*", MarkdownGenerator.stripRedundantBulletLabel("*emphasis*"));
+    }
+
+    @Test
+    void testStripBulletLabel_keepsNumberedAndLetteredLabels() {
+        // Ordered labels carry meaning (numbering); only symbol bullets are
+        // redundant next to the `- ` marker.
+        assertEquals("1. First step", MarkdownGenerator.stripRedundantBulletLabel("1. First step"));
+        assertEquals("a) Option", MarkdownGenerator.stripRedundantBulletLabel("a) Option"));
+        assertEquals("1.1.1 Software", MarkdownGenerator.stripRedundantBulletLabel("1.1.1 Software"));
+    }
+
+    @Test
+    void testStripBulletLabel_keepsPlainText() {
+        assertEquals("Configuration Files",
+                MarkdownGenerator.stripRedundantBulletLabel("Configuration Files"));
+    }
+
+    @Test
+    void testStripBulletLabel_stripsOnlyFirstLineOfMultilineItem() {
+        assertEquals("first line\n• second line",
+                MarkdownGenerator.stripRedundantBulletLabel("• first line\n• second line"));
+    }
+
+    @Test
+    void testStripBulletLabel_handlesNullAndEmpty() {
+        assertNull(MarkdownGenerator.stripRedundantBulletLabel(null));
+        assertEquals("", MarkdownGenerator.stripRedundantBulletLabel(""));
+        assertEquals("•", MarkdownGenerator.stripRedundantBulletLabel("•"));
+    }
 }
