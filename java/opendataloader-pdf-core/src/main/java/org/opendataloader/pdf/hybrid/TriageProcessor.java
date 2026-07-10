@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.SortedSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Processor for triaging PDF pages to determine the optimal processing path.
@@ -47,6 +49,8 @@ import java.util.SortedSet;
  * since the backend can process them correctly, just slower.
  */
 public class TriageProcessor {
+
+    private static final Logger LOGGER = Logger.getLogger(TriageProcessor.class.getCanonicalName());
 
     /** Default threshold for LineChunk to total content ratio. */
     public static final double DEFAULT_LINE_RATIO_THRESHOLD = 0.3;
@@ -103,6 +107,20 @@ public class TriageProcessor {
      * scan and must route to the backend regardless of aspect ratio.
      */
     private static final double FULL_PAGE_IMAGE_RATIO = 0.5;
+
+    /**
+     * Maximum non-whitespace text chunks for a page to still count as an image-only scan.
+     * A small, non-zero threshold absorbs stray OCR/whitespace text artifacts common in
+     * scanned or reflowed PDFs, without matching genuine text pages.
+     */
+    private static final int MAX_SCANNED_PAGE_TEXT_CHUNKS = 2;
+
+    /**
+     * Upper bound on non-whitespace text chunks for the "likely scan routed to Java" warning.
+     * Above this, a page-dominating image accompanied by substantial text is clearly not a
+     * scan (e.g. a magazine hero image with body copy), so no warning is emitted.
+     */
+    private static final int SCANNED_PAGE_WARN_MAX_TEXT_CHUNKS = 20;
 
     /** High pattern count threshold (skip consecutive check). */
     private static final int HIGH_PATTERN_COUNT_THRESHOLD = 30;
@@ -475,32 +493,30 @@ public class TriageProcessor {
         }
 
         /**
-         * Checks whether the page's largest image should route to the backend.
+         * Checks if a large image is present (potential table/chart image).
+         * Requires both size (>= 11% of page) and aspect ratio (>= 1.7, wider than tall).
          *
-         * <p>Returns {@code true} in either of two cases:
-         * <ul>
-         *   <li><b>Full-page image-only scan:</b> the image dominates the page
-         *       ({@code largeImageRatio >= FULL_PAGE_IMAGE_RATIO}) and there is no extractable
-         *       text ({@code nonWhitespaceTextCount == 0}); routed regardless of aspect ratio.</li>
-         *   <li><b>Wide table/chart image:</b> it meets both the size
-         *       ({@code >= MIN_LARGE_IMAGE_RATIO}) and aspect-ratio
-         *       ({@code >= MIN_IMAGE_ASPECT_RATIO}, wider than tall) criteria.</li>
-         * </ul>
-         *
-         * @return true if the largest image meets either criterion.
+         * @return true if largest image meets size and aspect ratio criteria.
          */
         public boolean hasLargeImage() {
-            // Full-page image with no extractable text = scanned/image-only page. It must
-            // route to the backend: the Java path yields an empty transcription. The aspect
-            // gate below targets wide table/chart images and would otherwise exclude standard
-            // scans (portrait A4 ~0.71, landscape ~1.41 < 1.75), silently dropping their content.
-            // Use nonWhitespaceTextCount (not textChunkCount): whitespace-only chunks are common
-            // in OCR'd/reflowed scans and must not count as extractable text.
-            if (largeImageRatio >= FULL_PAGE_IMAGE_RATIO && nonWhitespaceTextCount == 0) {
-                return true;
-            }
             return largeImageRatio >= MIN_LARGE_IMAGE_RATIO
                     && largeImageAspectRatio >= MIN_IMAGE_ASPECT_RATIO;
+        }
+
+        /**
+         * Checks whether the page is a full-page image-only scan that the Java path cannot
+         * transcribe. Unlike {@link #hasLargeImage()}, this ignores aspect ratio, so ordinary
+         * portrait/landscape document scans (aspect &lt; 1.75) are still routed to the backend.
+         * A page-dominating image ({@code largeImageRatio >= FULL_PAGE_IMAGE_RATIO}) carrying
+         * (almost) no extractable text ({@code nonWhitespaceTextCount <= MAX_SCANNED_PAGE_TEXT_CHUNKS})
+         * is treated as a scan. {@code nonWhitespaceTextCount} (not {@code textChunkCount})
+         * is used because whitespace-only chunks are common in OCR'd/reflowed scans.
+         *
+         * @return true if a page-dominating image carries (almost) no extractable text.
+         */
+        public boolean isLikelyScannedPage() {
+            return largeImageRatio >= FULL_PAGE_IMAGE_RATIO
+                    && nonWhitespaceTextCount <= MAX_SCANNED_PAGE_TEXT_CHUNKS;
         }
 
         /**
@@ -741,8 +757,42 @@ public class TriageProcessor {
         //     return TriageResult.backend(pageNumber, 0.7, signals);
         // }
 
+        // Signal 7: Full-page image-only scan (no aspect gate). The Java path yields an empty
+        // transcription for these pages, so route them to the backend for OCR/transcription.
+        if (signals.isLikelyScannedPage()) {
+            return TriageResult.backend(pageNumber, 0.95, signals);
+        }
+
+        // Observability: a page-dominating image with a thin text layer is routed to Java but
+        // may be a scan whose content will be lost. Flag it (see --hybrid-mode full escape hatch).
+        if (shouldWarnLikelyScanRoutedToJava(signals)) {
+            LOGGER.log(Level.WARNING,
+                "Page {0}: full-page image ({1}) with only {2} text chunk(s) routed to the Java "
+                + "path; if this is a scan its content may be dropped. Use --hybrid-mode full to "
+                + "force backend processing.",
+                new Object[]{pageNumber,
+                    String.format("%.0f%% of page", signals.getLargeImageRatio() * 100),
+                    signals.getNonWhitespaceTextCount()});
+        }
+
         // Default: Route to JAVA for simple text-only content
         return TriageResult.java(pageNumber, 0.9, signals);
+    }
+
+    /**
+     * Whether a page routed to the Java path looks like it might be a scan with an OCR text
+     * layer — a page-dominating image with more text than a pure scan (so {@link
+     * TriageSignals#isLikelyScannedPage()} did not fire) but not so much that it is clearly a
+     * text page. Such pages are the ambiguous middle ground worth flagging for observability.
+     *
+     * @param signals the page's triage signals.
+     * @return true if a diagnostic warning should be emitted for this Java-routed page.
+     */
+    static boolean shouldWarnLikelyScanRoutedToJava(TriageSignals signals) {
+        int text = signals.getNonWhitespaceTextCount();
+        return signals.getLargeImageRatio() >= FULL_PAGE_IMAGE_RATIO
+                && text > MAX_SCANNED_PAGE_TEXT_CHUNKS
+                && text <= SCANNED_PAGE_WARN_MAX_TEXT_CHUNKS;
     }
 
     /**
