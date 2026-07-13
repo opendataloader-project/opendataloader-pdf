@@ -259,8 +259,8 @@ class PictureDescriptionE2ETest {
                 String altText = picture.hasDescription()
                         ? picture.sanitizeDescription()
                         : "image " + picture.getPictureIndex();
-                String imageString = String.format("![%s](%s)", altText, imageSource);
-                markdownWriter.write(getCorrectMarkdownString(imageString));
+                String imageString = String.format("![%s](%s)", getCorrectMarkdownString(altText), imageSource);
+                markdownWriter.write(imageString);
             } catch (java.io.IOException e) {
                 throw new RuntimeException(e);
             }

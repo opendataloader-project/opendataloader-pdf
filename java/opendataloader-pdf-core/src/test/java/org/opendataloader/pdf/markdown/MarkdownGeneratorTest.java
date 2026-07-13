@@ -18,6 +18,7 @@ package org.opendataloader.pdf.markdown;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.opendataloader.pdf.api.Config;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -179,5 +180,65 @@ public class MarkdownGeneratorTest {
     @Test
     void testFormatLinkDestination_handlesNull() {
         assertNull(MarkdownGenerator.formatMarkdownLinkDestination(null));
+    }
+
+    // ----- getCorrectMarkdownString (`#637`) -----
+
+    private MarkdownGenerator newGeneratorForEscaping() {
+        Config config = new Config();
+        return new MarkdownGenerator(new java.io.StringWriter(), config);
+    }
+
+    @Test
+    void testGetCorrectMarkdownString_handlesNull() {
+        MarkdownGenerator generator = newGeneratorForEscaping();
+        assertEquals("", generator.getCorrectMarkdownString(null));
+    }
+
+    @Test
+    void testGetCorrectMarkdownString_removesNullCharacter() {
+        MarkdownGenerator generator = newGeneratorForEscaping();
+        assertEquals("ab", generator.getCorrectMarkdownString("a\u0000b"));
+    }
+
+    @Test
+    void testGetCorrectMarkdownString_escapesAmpersand() {
+        MarkdownGenerator generator = newGeneratorForEscaping();
+        assertEquals("A &amp; B", generator.getCorrectMarkdownString("A & B"));
+    }
+
+    @Test
+    void testGetCorrectMarkdownString_escapesLessThan() {
+        MarkdownGenerator generator = newGeneratorForEscaping();
+        assertEquals("a &lt; b", generator.getCorrectMarkdownString("a < b"));
+    }
+
+    @Test
+    void testGetCorrectMarkdownString_escapesGreaterThan() {
+        MarkdownGenerator generator = newGeneratorForEscaping();
+        assertEquals("a &gt; b", generator.getCorrectMarkdownString("a > b"));
+    }
+
+    @Test
+    void testGetCorrectMarkdownString_escapesAllReservedCharsTogether() {
+        MarkdownGenerator generator = newGeneratorForEscaping();
+        assertEquals("&lt;tag&gt; A &amp; B &lt;/tag&gt;",
+            generator.getCorrectMarkdownString("<tag> A & B </tag>"));
+    }
+
+    @Test
+    void testGetCorrectMarkdownString_leavesPlainTextUnchanged() {
+        MarkdownGenerator generator = newGeneratorForEscaping();
+        assertEquals("Plain text 123", generator.getCorrectMarkdownString("Plain text 123"));
+    }
+
+    @Test
+    void testGetCorrectMarkdownString_doubleEscapesExistingEntities() {
+        // Documents current behavior: since '&' is escaped first, any text that
+        // already contains an HTML entity (e.g. "&amp;") gets double-escaped
+        // (e.g. "&amp;amp;"). This is a known limitation, not necessarily the
+        // desired long-term behavior.
+        MarkdownGenerator generator = newGeneratorForEscaping();
+        assertEquals("&amp;amp;", generator.getCorrectMarkdownString("&amp;"));
     }
 }

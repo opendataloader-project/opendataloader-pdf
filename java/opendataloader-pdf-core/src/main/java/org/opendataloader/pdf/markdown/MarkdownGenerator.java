@@ -221,8 +221,8 @@ public class MarkdownGenerator implements Closeable {
                     String altText = (image instanceof EnrichedImageChunk && ((EnrichedImageChunk) image).hasDescription())
                             ? ((EnrichedImageChunk) image).sanitizeDescription()
                             : "";
-                    String imageString = String.format(MarkdownSyntax.IMAGE_FORMAT, altText, imageSource);
-                    markdownWriter.write(getCorrectMarkdownString(imageString));
+                    String imageString = String.format(MarkdownSyntax.IMAGE_FORMAT, getCorrectMarkdownString(altText), imageSource);
+                    markdownWriter.write(imageString);
                 }
             }
         } catch (IOException e) {
@@ -255,8 +255,8 @@ public class MarkdownGenerator implements Closeable {
                     String altText = picture.hasDescription()
                             ? picture.sanitizeDescription()
                             : "";
-                    String imageString = String.format(MarkdownSyntax.IMAGE_FORMAT, altText, imageSource);
-                    markdownWriter.write(getCorrectMarkdownString(imageString));
+                    String imageString = String.format(MarkdownSyntax.IMAGE_FORMAT, getCorrectMarkdownString(altText), imageSource);
+                    markdownWriter.write(imageString);
                 }
             }
         } catch (IOException e) {
@@ -434,10 +434,14 @@ public class MarkdownGenerator implements Closeable {
     }
 
     protected String getCorrectMarkdownString(String value) {
-        if (value != null) {
-            return value.replace("\u0000", " ");
+        if (value == null) {
+            return "";
         }
-        return null;
+        return value
+            .replace("\u0000", "")
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;");
     }
 
     public static void getTextFromLineForMarkdown(TextLine line, StringBuilder stringBuilder) {
