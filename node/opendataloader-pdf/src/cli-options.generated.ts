@@ -15,7 +15,7 @@ export function registerCliOptions(program: Command): void {
   program.option('--sanitize', 'Enable sensitive data sanitization. Replaces emails, phone numbers, IPs, credit cards, and URLs with placeholders');
   program.option('--keep-line-breaks', 'Preserve original line breaks in extracted text');
   program.option('--replace-invalid-chars <value>', 'Replacement character for invalid/unrecognized characters. Default: space');
-  program.option('--use-struct-tree', 'Use PDF structure tree (tagged PDF) for reading order and semantic structure. Output quality depends on tag quality');
+  program.option('--use-struct-tree', 'Use PDF structure tree (tagged PDF) for reading order and semantic structure. Output quality depends on tag quality. Takes precedence over --hybrid: when both are set on a tagged PDF, the structure tree is used and the hybrid backend is not called');
   program.option('--table-method <value>', 'Table detection method. Values: default (border-based), cluster (border + cluster). Default: default');
   program.option('--reading-order <value>', 'Reading order algorithm. Values: off, xycut. Default: xycut');
   program.option('--markdown-page-separator <value>', 'Separator between pages in Markdown output. Use %page-number% for page numbers. Default: none');
@@ -28,7 +28,7 @@ export function registerCliOptions(program: Command): void {
   program.option('--pages <value>', 'Pages to extract (e.g., "1,3,5-7"). Default: all pages');
   program.option('--include-header-footer', 'Include page headers and footers in output');
   program.option('--detect-strikethrough', 'Detect strikethrough text and wrap with ~~ in Markdown output or <del></del> tag in HTML output (experimental)');
-  program.option('--hybrid <value>', 'Hybrid backend (requires a running server). Quick start: pip install "opendataloader-pdf[hybrid]" && opendataloader-pdf-hybrid --port 5002. For remote servers use --hybrid-url. Values: off (default), docling-fast, hancom-ai');
+  program.option('--hybrid <value>', 'Hybrid backend (requires a running server). Quick start: pip install "opendataloader-pdf[hybrid]" && opendataloader-pdf-hybrid --port 5002. For remote servers use --hybrid-url. Values: off (default), docling-fast, hancom-ai. Ignored when --use-struct-tree is set on a tagged PDF (structure tree takes precedence)');
   program.option('--hybrid-mode <value>', 'Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)');
   program.option('--hybrid-url <value>', 'Hybrid backend server URL (overrides default)');
   program.option('--hybrid-timeout <value>', 'Hybrid backend request timeout in milliseconds (0 = no timeout). Default: 0');
