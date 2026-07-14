@@ -21,7 +21,7 @@ export interface ConvertOptions {
   keepLineBreaks?: boolean;
   /** Replacement character for invalid/unrecognized characters. Default: space */
   replaceInvalidChars?: string;
-  /** Use PDF structure tree (tagged PDF) for reading order and semantic structure. Output quality depends on tag quality */
+  /** Use PDF structure tree (tagged PDF) for reading order and semantic structure. Output quality depends on tag quality. Takes precedence over --hybrid: when both are set on a tagged PDF, the structure tree is used and the hybrid backend is not called */
   useStructTree?: boolean;
   /** Table detection method. Values: default (border-based), cluster (border + cluster). Default: default */
   tableMethod?: string;
@@ -47,7 +47,7 @@ export interface ConvertOptions {
   includeHeaderFooter?: boolean;
   /** Detect strikethrough text and wrap with ~~ in Markdown output or <del></del> tag in HTML output (experimental) */
   detectStrikethrough?: boolean;
-  /** Hybrid backend (requires a running server). Quick start: pip install "opendataloader-pdf[hybrid]" && opendataloader-pdf-hybrid --port 5002. For remote servers use --hybrid-url. Values: off (default), docling-fast, hancom-ai */
+  /** Hybrid backend (requires a running server). Quick start: pip install "opendataloader-pdf[hybrid]" && opendataloader-pdf-hybrid --port 5002. For remote servers use --hybrid-url. Values: off (default), docling-fast, hancom-ai. Ignored when --use-struct-tree is set on a tagged PDF (structure tree takes precedence) */
   hybrid?: string;
   /** Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend) */
   hybridMode?: string;

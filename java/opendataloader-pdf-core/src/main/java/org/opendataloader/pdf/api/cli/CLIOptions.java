@@ -106,7 +106,8 @@ public class CLIOptions {
 
     // ===== Use Struct Tree =====
     private static final String USE_STRUCT_TREE_LONG_OPTION = "use-struct-tree";
-    private static final String USE_STRUCT_TREE_DESC = "Use PDF structure tree (tagged PDF) for reading order and semantic structure. Output quality depends on tag quality";
+    private static final String USE_STRUCT_TREE_DESC = "Use PDF structure tree (tagged PDF) for reading order and semantic structure. Output quality depends on tag quality. "
+            + "Takes precedence over --hybrid: when both are set on a tagged PDF, the structure tree is used and the hybrid backend is not called";
 
     // ===== Table Method =====
     private static final String TABLE_METHOD_LONG_OPTION = "table-method";
@@ -152,7 +153,8 @@ public class CLIOptions {
     private static final String HYBRID_LONG_OPTION = "hybrid";
     private static final String HYBRID_DESC = "Hybrid backend (requires a running server). "
             + "Quick start: pip install \"opendataloader-pdf[hybrid]\" && opendataloader-pdf-hybrid --port 5002. "
-            + "For remote servers use --hybrid-url. Values: off (default), docling-fast, hancom-ai";
+            + "For remote servers use --hybrid-url. Values: off (default), docling-fast, hancom-ai. "
+            + "Ignored when --use-struct-tree is set on a tagged PDF (structure tree takes precedence)";
 
     private static final String HYBRID_MODE_LONG_OPTION = "hybrid-mode";
     private static final String HYBRID_MODE_DESC = "Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)";

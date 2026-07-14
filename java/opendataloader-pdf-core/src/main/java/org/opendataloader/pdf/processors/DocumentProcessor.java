@@ -178,6 +178,16 @@ public class DocumentProcessor {
         Set<Integer> pagesToProcess = getValidPageNumbers(config);
         List<List<IObject>> contents;
         if (StaticLayoutContainers.isUseStructTree()) {
+            if (config.isHybridEnabled()) {
+                // Counterpart to the "no structure tree" warning emitted in preprocessing():
+                // here the struct-tree path wins, so the hybrid backend is never called.
+                // Warn at this branch (where precedence is resolved) instead of silently
+                // dropping the hybrid request (#633).
+                LOGGER.log(Level.WARNING, "Both --use-struct-tree and --hybrid were set on a tagged PDF. "
+                    + "The structure tree takes precedence, so the hybrid backend was NOT called. "
+                    + "A well-tagged PDF already carries reading order and structure; "
+                    + "drop --use-struct-tree if you want the hybrid backend instead.");
+            }
             contents = TaggedDocumentProcessor.processDocument(inputPdfName, config, pagesToProcess);
         } else if (config.isHybridEnabled()) {
             contents = HybridDocumentProcessor.processDocument(inputPdfName, config, pagesToProcess);
