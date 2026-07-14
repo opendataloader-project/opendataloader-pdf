@@ -56,7 +56,7 @@ def convert(
         sanitize: Enable sensitive data sanitization. Replaces emails, phone numbers, IPs, credit cards, and URLs with placeholders
         keep_line_breaks: Preserve original line breaks in extracted text
         replace_invalid_chars: Replacement character for invalid/unrecognized characters. Default: space
-        use_struct_tree: Use PDF structure tree (tagged PDF) for reading order and semantic structure. Output quality depends on tag quality
+        use_struct_tree: Use PDF structure tree (tagged PDF) for reading order and semantic structure. Output quality depends on tag quality. Takes precedence over --hybrid: when both are set on a tagged PDF, the structure tree is used and the hybrid backend is not called
         table_method: Table detection method. Values: default (border-based), cluster (border + cluster). Default: default
         reading_order: Reading order algorithm. Values: off, xycut. Default: xycut
         markdown_page_separator: Separator between pages in Markdown output. Use %page-number% for page numbers. Default: none
@@ -69,7 +69,7 @@ def convert(
         pages: Pages to extract (e.g., "1,3,5-7"). Default: all pages
         include_header_footer: Include page headers and footers in output
         detect_strikethrough: Detect strikethrough text and wrap with ~~ in Markdown output or <del></del> tag in HTML output (experimental)
-        hybrid: Hybrid backend (requires a running server). Quick start: pip install "opendataloader-pdf[hybrid]" && opendataloader-pdf-hybrid --port 5002. For remote servers use --hybrid-url. Values: off (default), docling-fast, hancom-ai
+        hybrid: Hybrid backend (requires a running server). Quick start: pip install "opendataloader-pdf[hybrid]" && opendataloader-pdf-hybrid --port 5002. For remote servers use --hybrid-url. Values: off (default), docling-fast, hancom-ai. Ignored when --use-struct-tree is set on a tagged PDF (structure tree takes precedence)
         hybrid_mode: Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)
         hybrid_url: Hybrid backend server URL (overrides default)
         hybrid_timeout: Hybrid backend request timeout in milliseconds (0 = no timeout). Default: 0
