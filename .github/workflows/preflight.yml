@@ -1,0 +1,50 @@
+name: Preflight
+
+# Verify every deploy credential actually authenticates. Reused by release.yml
+# (as a gate before the ~30-40 min build) and runnable on its own from the
+# Actions tab (Run workflow) to check credentials in ~1 min without a build.
+on:
+  # When called by release.yml, secrets are passed explicitly (least privilege
+  # — NOT `secrets: inherit`, which would hand preflight every repo secret).
+  workflow_call:
+    secrets:
+      NPM_TOKEN:
+        required: true
+      MAVEN_CENTRAL_USERNAME:
+        required: true
+      MAVEN_CENTRAL_PASSWORD:
+        required: true
+      MAVEN_GPG_KEY:
+        required: true
+      MAVEN_GPG_PASSPHRASE:
+        required: true
+      HOMEPAGE_SYNC_TOKEN:
+        required: true
+  # When run on its own from the Actions tab, the job reads repo secrets directly.
+  workflow_dispatch:
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read    # checkout + GitHub repo read (homepage-sync PAT check)
+      id-token: write   # mint OIDC token for the PyPI check
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Verify deploy credentials
+        run: ./scripts/preflight.sh
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          MAVEN_GPG_KEY: ${{ secrets.MAVEN_GPG_KEY }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+          HOMEPAGE_SYNC_TOKEN: ${{ secrets.HOMEPAGE_SYNC_TOKEN }}

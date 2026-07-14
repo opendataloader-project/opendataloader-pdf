@@ -7,7 +7,29 @@ on:
   workflow_dispatch:
 
 jobs:
+  # =================================================================
+  # 0. PREFLIGHT — verify deploy credentials authenticate BEFORE the
+  #    long build, so an expired token / missing scope fails in ~1 min
+  #    instead of after ~30-40 min (and avoids a partial publish).
+  #    Defined in preflight.yml so it can also be run on its own from
+  #    the Actions tab (Run workflow) to check credentials without a build.
+  # =================================================================
+  preflight:
+    uses: ./.github/workflows/preflight.yml
+    permissions:
+      contents: read
+      id-token: write
+    # Explicit pass-through (least privilege) — only the 6 secrets preflight uses.
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+      MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+      MAVEN_GPG_KEY: ${{ secrets.MAVEN_GPG_KEY }}
+      MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+      HOMEPAGE_SYNC_TOKEN: ${{ secrets.HOMEPAGE_SYNC_TOKEN }}
+
   release:
+    needs: preflight
     runs-on: ubuntu-latest
     env:
       VERSION: '0.0.0'
