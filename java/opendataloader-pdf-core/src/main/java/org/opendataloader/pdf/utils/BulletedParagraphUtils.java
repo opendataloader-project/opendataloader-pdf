@@ -81,8 +81,7 @@ public class BulletedParagraphUtils {
         if (value == null || value.isEmpty()) {
             return false;
         }
-        char character = value.charAt(0);
-        if (POSSIBLE_LABELS.indexOf(character) != -1) {
+        if (isSymbolLabel(value.charAt(0))) {
             return true;
         }
         if (textLine.getConnectedLineArtLabel() != null) {
@@ -94,6 +93,16 @@ public class BulletedParagraphUtils {
             }
         }
         return false;
+    }
+
+    /**
+     * Checks if a character is one of the recognized symbol bullet labels.
+     *
+     * @param character the character to check
+     * @return true if the character is a symbol bullet label, false otherwise
+     */
+    public static boolean isSymbolLabel(char character) {
+        return POSSIBLE_LABELS.indexOf(character) != -1;
     }
 
     /**
