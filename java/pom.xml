@@ -61,7 +61,7 @@
         <verapdf.version>1.31.99</verapdf.version>
         <verapdf.wcag.algs.version>1.31.33</verapdf.wcag.algs.version>
         <jackson.databind.version>2.22.1</jackson.databind.version>
-        <junit.jupiter.version>6.1.1</junit.jupiter.version>
+        <junit.jupiter.version>6.1.2</junit.jupiter.version>
         <assertj.version>3.27.7</assertj.version>
         <okhttp.version>5.4.0</okhttp.version>
         <commons.cli.version>1.11.0</commons.cli.version>
@@ -75,7 +75,7 @@
         <maven-surefire.plugin.version>3.5.6</maven-surefire.plugin.version>
         <central-publishing.plugin.version>0.11.0</central-publishing.plugin.version>
         <checkstyle.plugin.version>3.6.0</checkstyle.plugin.version>
-        <spotbugs.plugin.version>4.10.2.0</spotbugs.plugin.version>
+        <spotbugs.plugin.version>4.10.3.0</spotbugs.plugin.version>
     </properties>
 
     <modules>
