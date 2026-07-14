@@ -367,7 +367,16 @@ public class DocumentProcessor {
             if (structured) {
                 // Cross-page operations (must be sequential)
                 HeaderFooterProcessor.processHeadersAndFooters(contents, false);
-                new TableOfContentsProcessor().processTableOfContents(contents);
+                // TOC detection is temporarily disabled. It is not yet complete:
+                //  - the heuristic has heavy false positives (any line ending in a
+                //    bare number is treated as a TOC item), so it can restructure
+                //    ordinary body content;
+                //  - it never resolves a TOCI target (destination), so the tagged
+                //    struct tree cannot emit a valid /Ref and the output is not a
+                //    conformant table of contents (PDF/UA-2 clause 8.2.5.8.1).
+                // Re-enable once detection precision and target resolution are in
+                // place. (Remaining hardening is tracked in the internal tasks tracker.)
+                // new TableOfContentsProcessor().processTableOfContents(contents);
                 ListProcessor.processLists(contents, false);
             }
 
