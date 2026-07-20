@@ -175,12 +175,12 @@ def main(argv: list[str] | None = None) -> int:
 
     # Report drift
     if new_options:
-        print(f"\nNEW options (in options.json, not in skill):")
+        print("\nNEW options (in options.json, not in skill):")
         for name in new_options:
             print(f"  - {name}")
 
     if removed_options:
-        print(f"\nREMOVED options (in skill, not in options.json):")
+        print("\nREMOVED options (in skill, not in options.json):")
         for name in removed_options:
             print(f"  - {name}")
 
