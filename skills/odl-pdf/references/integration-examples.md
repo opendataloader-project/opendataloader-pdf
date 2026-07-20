@@ -140,7 +140,8 @@ def iter_elements(node):
             yield from iter_elements(v)
 
 def chunk_with_citations(json_path, max_chars=1000):
-    doc = json.loads(open(json_path, encoding="utf-8").read())
+    with open(json_path, encoding="utf-8") as f:
+        doc = json.load(f)
     chunks, buf, buf_len = [], [], 0
     for el in iter_elements(doc):
         text = _text_of(el).strip()
@@ -160,6 +161,9 @@ def chunk_with_citations(json_path, max_chars=1000):
 
 # Each chunk carries the (page, bbox) of every element it contains, so a
 # retrieved chunk can cite the exact page and region it came from.
+# max_chars bounds size BETWEEN elements: a single element longer than max_chars
+# becomes its own chunk that exceeds the bound (elements are not split, to keep
+# each citation's (page, bbox) intact).
 ```
 
 ### LangChain
@@ -285,13 +289,15 @@ opendataloader-pdf input.pdf \
 For multi-machine deployments, run the server on a GPU host and point clients at it.
 
 ```bash
-# GPU host — bind an explicit private address; the server has NO built-in auth
-opendataloader-pdf-hybrid --host <PRIVATE_BIND_ADDRESS> --port 5002
+# GPU host — bind an explicit private address; the server has NO built-in auth.
+# Set this to the host's actual private address (quoted so it is not parsed as a shell redirect).
+HYBRID_HOST=10.0.0.5
+opendataloader-pdf-hybrid --host "$HYBRID_HOST" --port 5002
 
 # Client
 opendataloader-pdf input.pdf \
   --hybrid docling-fast \
-  --hybrid-url http://<gpu-host>:5002 \
+  --hybrid-url "http://$HYBRID_HOST:5002" \
   --hybrid-timeout 30000
 ```
 

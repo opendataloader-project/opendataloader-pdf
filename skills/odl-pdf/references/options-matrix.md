@@ -111,8 +111,10 @@ from the output, check that `--hybrid-mode full` is set.
 
 **2. `--hybrid` requires a running server**
 
-Setting `--hybrid docling-fast` (or any non-`off` value) without a reachable hybrid server will
-cause requests to fail. Quick start:
+Setting `--hybrid docling-fast` (or any non-`off` value) without a reachable hybrid server makes
+requests fail — **unless `--hybrid-fallback` is set, in which case the run completes via the local
+Java path and returns fallback output (no hybrid OCR/enrichment), which is easy to mistake for a
+successful hybrid extraction** (VERIFY the enrichments actually landed). Quick start:
 
 ```bash
 pip install "opendataloader-pdf[hybrid]"
@@ -226,7 +228,7 @@ opendataloader-pdf input.pdf \
   --hybrid-url http://127.0.0.1:5002
 ```
 
-Do **not** add `--hybrid-fallback` here: this example's goal is enrichment, and on a backend error fallback would yield enrichment-less output that still "succeeds." Add it only when partial local output beats failure — and then verify the enrichments actually landed.
+This is the **client** command; the enrichments only run if the hybrid **server** was started with the matching flags (`--enrich-formula` and/or `--enrich-picture-description`) — `--hybrid-mode full` alone routes pages to the backend but enables neither (Gotcha 2). Do **not** add `--hybrid-fallback` here: this example's goal is enrichment, and on a backend error fallback would yield enrichment-less output that still "succeeds." Add it only when partial local output beats failure — and then verify the enrichments actually landed.
 
 ---
 
