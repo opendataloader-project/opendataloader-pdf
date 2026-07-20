@@ -1,0 +1,38 @@
+# odl-pdf — Agent Skill for using OpenDataLoader PDF
+
+A skill that helps an **AI coding assistant use [opendataloader-pdf](https://github.com/opendataloader-project/opendataloader-pdf) (ODL) correctly** — choosing the right mode/format, verifying that extraction actually succeeded, and diagnosing failures (empty output on exit 0, OCR for scanned PDFs, silent enrichment skips, slow batches).
+
+This README is for **humans** (how to install/enable the skill). `SKILL.md` is the instruction set the **agent** reads.
+
+## What it does
+
+Given a user asking to extract/parse a PDF with ODL, an agent that has this skill will: discover the environment → decide mode (local / hybrid / OCR) and format → run it → **verify the output is real** (not just exit 0) → diagnose problems. Options are read at runtime from the installed CLI's `--help`, so **option specifics** don't go stale between releases (decision prose and server-side behavior still get a release review).
+
+Validated against **ODL 2.5.0**. It does **not** cover PDF/UA accessibility-compliance, PDF merge/split, or Office conversion (out of scope).
+
+## Install / enable
+
+The skill is the folder `skills/odl-pdf/` in the [agentskills.io open format](https://agentskills.io) (`SKILL.md` + `references/` + `scripts/`).
+
+- **Claude Code / claude.ai**: copy `skills/odl-pdf/` into your skills location (e.g. `~/.claude/skills/odl-pdf/` for user scope, or your project's `.claude/skills/`), or install it via a plugin/marketplace that bundles it.
+- **Other agents that read Agent Skills** (e.g. Codex): point them at this folder per your tool's skill mechanism.
+- **Agents that do not yet read `SKILL.md`** (e.g. Copilot, Gemini today): this skill does not auto-load there yet. A portable `llms.txt` / `AGENTS.md` derivation is planned as a follow-up.
+
+No build step. The skill drives ODL's CLI/SDK directly; it does not require an MCP server.
+
+## Requirements
+
+The skill assumes the user has (or will install) **opendataloader-pdf** and **Java 11+**. The skill itself walks the user through installing these — see `references/installation-matrix.md`. Hybrid mode (OCR / complex tables / enrichment) additionally needs the `opendataloader-pdf-hybrid` server; the skill explains when and how.
+
+## Contents
+
+| Path | For | Purpose |
+|------|-----|---------|
+| `SKILL.md` | agent | The workflow + guardrails the agent follows |
+| `references/` | agent | Loaded on demand: installation, options, hybrid, formats, integration, eval metrics |
+| `scripts/` | agent | `detect-env.sh`, `hybrid-health.sh`, `verify-json.py`, `quick-eval.py` (helpers the skill runs) |
+| `evals/` | maintainers | Decision-correctness eval scenarios (agent-judged, no automated runner) |
+
+## Maintainer note
+
+Option names in `references/options-matrix.md` are kept in sync with the repo's `options.json` by the `skill-drift-check` CI workflow — **option names only**, not values/defaults, not server-side `opendataloader-pdf-hybrid` flags, and not `SKILL.md` prose. The skill's runtime authority is the installed CLI's `--help`; the reference matrices are version-tagged fallbacks. See `../../CLAUDE.md` for the "which file to update when an option changes" checklist.

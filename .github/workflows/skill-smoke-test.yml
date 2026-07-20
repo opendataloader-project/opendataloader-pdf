@@ -1,0 +1,176 @@
+# skill-smoke-test.yml
+# Cross-platform smoke test for the odl-pdf skill's executable assets.
+# Runs the shell scripts and Python scripts on ubuntu / windows / macos
+# to catch platform-specific regressions (line endings, console encoding,
+# shell portability) BEFORE a PR merges. Does NOT hit any external API.
+
+name: Skill Smoke Test
+
+on:
+  push:
+    paths:
+      - 'skills/odl-pdf/scripts/**'
+      - 'skills/odl-pdf/SKILL.md'
+      - 'skills/odl-pdf/references/**'
+      - 'skills/odl-pdf/evals/**'
+      - '.github/workflows/skill-smoke-test.yml'
+  pull_request:
+    paths:
+      - 'skills/odl-pdf/scripts/**'
+      - 'skills/odl-pdf/SKILL.md'
+      - 'skills/odl-pdf/references/**'
+      - 'skills/odl-pdf/evals/**'
+      - '.github/workflows/skill-smoke-test.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+
+    defaults:
+      run:
+        # Use bash on every platform. Windows runners have Git Bash pre-installed.
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Show runner info
+        run: |
+          echo "OS: ${{ matrix.os }}"
+          bash --version | head -1
+          python --version
+
+      # --- evals.json schema validation ----------------------------------
+      # Guards the eval contract: valid JSON, unique IDs, and eval_outcome_type
+      # covering exactly the eval set with only allowed outcome types. Operates
+      # solely on the checked-in file (no external input).
+      - name: evals.json schema is valid
+        run: |
+          python - <<'PYEOF'
+          import json, sys
+          d = json.load(open("skills/odl-pdf/evals/evals.json", encoding="utf-8"))
+          errs = []
+          evals = d.get("evals", [])
+          ids = [e.get("id") for e in evals]
+          if not evals: errs.append("no evals")
+          if any(i is None for i in ids): errs.append("an eval is missing 'id'")
+          if len(ids) != len(set(ids)): errs.append("duplicate eval ids: %s" % [i for i in set(ids) if ids.count(i) > 1])
+          required = ("scenario", "expected_decision")
+          for e in evals:
+              for f in required:
+                  if f not in e: errs.append("eval %s missing required field '%s'" % (e.get("id"), f))
+          allowed = set(d["scoring"]["outcome_types"])
+          omap = d["scoring"]["eval_outcome_type"]
+          missing = set(ids) - set(omap)
+          extra = set(omap) - set(ids)
+          if missing: errs.append("eval_outcome_type missing ids: %s" % sorted(missing))
+          if extra: errs.append("eval_outcome_type has unknown ids: %s" % sorted(extra))
+          bad = {k: v for k, v in omap.items() if v not in allowed}
+          if bad: errs.append("eval_outcome_type has unknown types: %s (allowed: %s)" % (bad, sorted(allowed)))
+          if errs:
+              print("EVALS SCHEMA INVALID:"); [print(" -", e) for e in errs]; sys.exit(1)
+          print("evals.json OK: %d evals, all mapped to allowed outcome types" % len(evals))
+          PYEOF
+
+      # --- detect-env.sh -------------------------------------------------
+      - name: detect-env.sh emits all keys
+        run: |
+          out=$(bash skills/odl-pdf/scripts/detect-env.sh)
+          echo "$out"
+          for key in OS JAVA PYTHON NODE ODL_INSTALLED ODL_VERSION ODL_VERSION_SOURCE HYBRID_EXTRAS; do
+            echo "$out" | grep -q "^${key}=" \
+              || { echo "MISSING KEY: $key"; exit 1; }
+          done
+          echo "all keys present"
+
+      # --- hybrid-health.sh (no server running is expected) --------------
+      - name: hybrid-health.sh handles no-server gracefully
+        run: |
+          out=$(bash skills/odl-pdf/scripts/hybrid-health.sh)
+          echo "$out"
+          echo "$out" | grep -q "HYBRID_SERVER=" \
+            || { echo "missing HYBRID_SERVER key"; exit 1; }
+
+      # --- quick-eval.py -------------------------------------------------
+      - name: quick-eval.py --help
+        run: python skills/odl-pdf/scripts/quick-eval.py --help
+
+      - name: quick-eval.py identical files -> PASS
+        run: |
+          tmp=$(mktemp -d)
+          printf '# Test\n\nSample paragraph one.\nSample paragraph two.\n' > "$tmp/a.md"
+          cp "$tmp/a.md" "$tmp/b.md"
+          python skills/odl-pdf/scripts/quick-eval.py "$tmp/a.md" "$tmp/b.md"
+          rm -rf "$tmp"
+
+      - name: quick-eval.py different files -> FAIL (exit 1)
+        run: |
+          tmp=$(mktemp -d)
+          printf 'apple pie recipe\n' > "$tmp/a.md"
+          printf 'quantum physics lecture\n' > "$tmp/b.md"
+          set +e
+          python skills/odl-pdf/scripts/quick-eval.py "$tmp/a.md" "$tmp/b.md"
+          rc=$?
+          set -e
+          rm -rf "$tmp"
+          [ "$rc" = "1" ] || { echo "expected exit 1, got $rc"; exit 1; }
+
+      # --- verify-json.py ------------------------------------------------
+      - name: verify-json.py no arg -> exit 1
+        run: |
+          set +e; python skills/odl-pdf/scripts/verify-json.py; rc=$?; set -e
+          [ "$rc" = "1" ] || { echo "expected exit 1 on no arg, got $rc"; exit 1; }
+
+      - name: verify-json.py ODL-like JSON -> exit 0, has_text/has_tables
+        run: |
+          tmp=$(mktemp -d)
+          printf '{"number of pages":1,"kids":[{"type":"heading","content":"T"},{"type":"table","kids":[{"type":"table cell","content":"x"}]},{"type":"image"}]}' > "$tmp/o.json"
+          out=$(python skills/odl-pdf/scripts/verify-json.py "$tmp/o.json"); echo "$out"
+          echo "$out" | grep -q "has_text: True" || { echo "expected has_text True"; exit 1; }
+          echo "$out" | grep -q "has_tables: True" || { echo "expected has_tables True"; exit 1; }
+          rm -rf "$tmp"
+
+      - name: verify-json.py empty file -> exit 1
+        run: |
+          tmp=$(mktemp -d); : > "$tmp/e.json"
+          set +e; python skills/odl-pdf/scripts/verify-json.py "$tmp/e.json"; rc=$?; set -e
+          rm -rf "$tmp"
+          [ "$rc" = "1" ] || { echo "expected exit 1 on empty, got $rc"; exit 1; }
+
+      - name: verify-json.py malformed JSON -> exit 1
+        run: |
+          tmp=$(mktemp -d); printf '{not json' > "$tmp/m.json"
+          set +e; python skills/odl-pdf/scripts/verify-json.py "$tmp/m.json"; rc=$?; set -e
+          rm -rf "$tmp"
+          [ "$rc" = "1" ] || { echo "expected exit 1 on malformed, got $rc"; exit 1; }
+
+      - name: verify-json.py valid-but-unexpected JSON -> exit 0, 0 typed elements
+        run: |
+          tmp=$(mktemp -d); printf '{"foo":"bar"}' > "$tmp/u.json"
+          out=$(python skills/odl-pdf/scripts/verify-json.py "$tmp/u.json"); echo "$out"
+          echo "$out" | grep -q "typed elements: 0" || { echo "expected 0 typed elements"; exit 1; }
+          rm -rf "$tmp"
+
+      - name: quick-eval.py prints em-dash-free output on cp1252 locale (Windows regression)
+        if: matrix.os == 'windows-latest'
+        shell: cmd
+        run: |
+          chcp 1252
+          python skills\odl-pdf\scripts\quick-eval.py skills\odl-pdf\evals\evals.json skills\odl-pdf\evals\evals.json
+
+      # --- sync-skill-refs.py --------------------------------------------
+      - name: sync-skill-refs.py reports no drift
+        run: python skills/odl-pdf/scripts/sync-skill-refs.py
