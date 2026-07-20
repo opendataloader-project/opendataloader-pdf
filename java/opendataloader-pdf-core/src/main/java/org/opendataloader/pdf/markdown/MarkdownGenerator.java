@@ -32,6 +32,7 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.listLabelsDetection.NumberingStyleNames;
 
 import java.io.Closeable;
 import java.io.File;
@@ -288,11 +289,15 @@ public class MarkdownGenerator implements Closeable {
 
     protected void writeList(PDFList list) throws IOException {
         for (ListItem item : list.getListItems()) {
+            String itemText = GeneratorUtils.getTextFromLines(item.getLines(), OutputType.MD);
             if (!isInsideTable()) {
                 markdownWriter.write(MarkdownSyntax.LIST_ITEM);
                 markdownWriter.write(MarkdownSyntax.SPACE);
+                if (NumberingStyleNames.UNORDERED.equals(list.getNumberingStyle())) {
+                    itemText = itemText.substring(item.getLabelLength());
+                }
             }
-            markdownWriter.write(getCorrectMarkdownString(GeneratorUtils.getTextFromLines(item.getLines(), OutputType.MD)));
+            markdownWriter.write(getCorrectMarkdownString(itemText));
             writeLineBreak();
 
             List<IObject> itemContents = item.getContents();

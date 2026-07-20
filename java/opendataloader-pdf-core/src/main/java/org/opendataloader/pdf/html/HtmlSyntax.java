@@ -44,7 +44,7 @@ public class HtmlSyntax {
     /** Closing ordered list tag. */
     public static final String HTML_ORDERED_LIST_CLOSE_TAG = "</ol>";
     /** Opening unordered list tag. */
-    public static final String HTML_UNORDERED_LIST_TAG = "<ul>";
+    public static final String HTML_UNORDERED_LIST_TAG = "<ul style=\"list-style-type: none;\">";
     /** Closing unordered list tag. */
     public static final String HTML_UNORDERED_LIST_CLOSE_TAG = "</ul>";
     /** Opening list item tag. */
