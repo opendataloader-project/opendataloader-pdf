@@ -148,12 +148,14 @@ def chunk_with_citations(json_path, max_chars=1000):
         if not text:
             continue
         meta = {"page": _page_of(el), "bbox": _bbox_of(el)}
-        if buf_len + len(text) > max_chars and buf:
+        separator_len = 1 if buf else 0   # the "\n" that will join this element
+        if buf_len + separator_len + len(text) > max_chars and buf:
             chunks.append({"text": "\n".join(t for t, _ in buf),
                            "citations": [m for _, m in buf]})
             buf, buf_len = [], 0
+            separator_len = 0
         buf.append((text, meta))
-        buf_len += len(text)
+        buf_len += separator_len + len(text)
     if buf:
         chunks.append({"text": "\n".join(t for t, _ in buf),
                        "citations": [m for _, m in buf]})
