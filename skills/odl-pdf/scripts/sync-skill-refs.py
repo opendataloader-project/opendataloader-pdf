@@ -76,6 +76,41 @@ def load_client_option_names(options_json_path: Path) -> set[str]:
     data = json.loads(options_json_path.read_text(encoding="utf-8"))
     return {o["name"] for o in data["options"]}
 
+# Parse the "Values: a (..), b, c. Default: .." segment of an option description.
+def parse_allowed_values(description: str) -> set[str]:
+    if not description or "Values:" not in description:
+        return set()
+    seg = description.split("Values:", 1)[1]
+    seg = re.split(r"\bDefault:", seg, 1)[0]        # drop the Default: tail
+    seg = re.sub(r"\([^)]*\)", "", seg)             # drop parenthetical prose (and its commas)
+    vals = set()
+    for chunk in seg.split(","):
+        m = re.match(r"\s*([a-z0-9][a-z0-9-]*)", chunk)
+        if m:
+            vals.add(m.group(1))
+    return vals
+
+def load_client_option_values(options_json_path: Path) -> dict:
+    data = json.loads(options_json_path.read_text(encoding="utf-8"))
+    out = {}
+    for o in data["options"]:
+        vals = parse_allowed_values(o.get("description", ""))
+        if o.get("default") is not None:
+            vals.add(str(o["default"]))
+        out[o["name"]] = vals
+    return out
+
+# Decision-critical option VALUES the skill's prose depends on. SMALL + reasoned.
+# Each must exist in options.json; a removed/renamed value fails CI.
+REFERENCED_VALUES = {
+    "table-method": {"default", "cluster"},
+    "reading-order": {"xycut"},
+    "hybrid": {"off", "docling-fast", "hancom-ai"},
+    "hybrid-mode": {"auto", "full"},
+    "image-output": {"off", "embedded", "external"},
+    "format": {"json", "text", "html", "pdf", "markdown", "tagged-pdf"},
+}
+
 def categorize(tok: str, client_names: set[str]) -> str:
     if tok in client_names:
         return "client"
@@ -96,11 +131,24 @@ def main(argv=None) -> int:
     client = load_client_option_names(args.options_json)
     tokens = scan_referenced_tokens(args.skill_dir)
     unknown = [(f, ln, t) for (f, ln, t) in tokens if categorize(t, client) == "unknown"]
-    # (Task 2 inserts Tier-2 value validation here.)
+
+    values = load_client_option_values(args.options_json)
+    value_errs = []
+    for opt, needed in REFERENCED_VALUES.items():
+        declared = values.get(opt, set())
+        missing = needed - declared
+        if missing:
+            value_errs.append((opt, sorted(missing), sorted(declared)))
+
     if unknown:
         print("UNKNOWN option tokens (no client/server/deprecated/excluded source):")
         for f, ln, t in unknown:
             print(f"  {f}:{ln}  --{t}  category=unknown  expected=options.json|SERVER_OPTIONS|EXCLUDED_TOKENS")
+    if value_errs:
+        print("Decision-critical VALUES not found in options.json:")
+        for opt, miss, decl in value_errs:
+            print(f"  --{opt}: missing {miss}  (options.json declares {decl})  source=REFERENCED_VALUES")
+    if unknown or value_errs:
         return 1
     print(f"OK: {len(tokens)} referenced option tokens all resolve to a known source.")
     return 0
