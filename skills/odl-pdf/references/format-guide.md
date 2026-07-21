@@ -1,19 +1,9 @@
 # Output Format Guide
 
-opendataloader-pdf supports 6 output formats via the `format` option. This guide helps you choose the right format for your use case.
-
-> This file documents the 2.5.0 snapshot (matching SKILL.md `# Version & option authority`). If the project's `options.json` lists a format not covered here, prefer that file — it is the repository's exported option snapshot (generated from the CLI definitions). The runtime authority for the user's actual environment is still the installed `--help`.
-
-## Format Overview
-
-| Format | Best For | Bounding Boxes | Tables | Images |
-|---|---|---|---|---|
-| `json` | Programmatic processing, source citation | Yes | Structured | As references |
-| `text` | Plain text extraction, search indexing | No | Flattened | Omitted |
-| `html` | Web display | No | Native `<table>` | External refs by default (`--image-output embedded` for inline Base64) |
-| `pdf` | Visual debugging of extraction results | Yes (annotated) | Highlighted | Preserved |
-| `markdown` | Documentation, RAG chunking | No | Markdown syntax | Via `--image-output` |
-| `tagged-pdf` | Tagged-PDF extraction output (structure tags) | — | — | — |
+Which format to choose for which use case — version-stable guidance. For the authoritative
+list of format *values* and per-option defaults (e.g. `--image-output`), use the discovery
+sources in SKILL.md "Version & option authority" (`--help` / `options.json` / homepage), not
+a table here.
 
 > `tagged-pdf` is an **extraction output format** that emits a PDF carrying structure tags. It is **not** PDF/UA accessibility-compliance certification — that is out of scope for this tool (see SKILL.md Stage 0).
 >
