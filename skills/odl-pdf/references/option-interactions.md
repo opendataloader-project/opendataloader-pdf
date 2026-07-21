@@ -1,12 +1,10 @@
-# ODL-PDF CLI Options Matrix
+# ODL-PDF Option Interactions & Combinations
 
-This file contains a built-in summary of every CLI option for the `opendataloader-pdf` tool.
-If `options.json` is present in the project root, prefer it over the descriptions here — it is the
-machine-readable option surface **exported from the Java CLI's option definitions** (`CLIOptions.java`;
-the CLI is not generated from this file), so it is the accurate snapshot for that checkout. Ground
-truth for the user's actual environment is still the installed `--help`. This document exists so the
-agent skill can reason about options without loading the full JSON on every invocation, and adds **category groupings**,
-**Interaction Rules**, and **Common Combinations** that the raw schema does not express.
+This file documents **how options interact and combine** — the version-stable knowledge.
+It does **not** list the option inventory. For the current option names, values, and defaults,
+use the discovery sources (SKILL.md "Version & option authority"): the installed CLI's `--help`
+(authority for the user's version), a checkout's `options.json`, or the homepage CLI Options
+Reference. Option names/values referenced below are guarded by `scripts/sync-skill-refs.py`.
 
 ---
 
@@ -16,27 +14,11 @@ agent skill can reason about options without loading the full JSON on every invo
 
 Controls where data comes from and where results are written.
 
-| Option | Short | Type | Default | Description |
-|---|---|---|---|---|
-| `output-dir` | `-o` | string | null (input file dir) | Directory where output files are written. Defaults to the same directory as the input file. |
-| `to-stdout` | — | boolean | false | Write output to stdout instead of a file. Streams one text-like format only (`text`/`markdown`); multiple formats → silently one; `json`/`html` → empty stdout. Pass `-q`. |
-| `quiet` | `-q` | boolean | false | Suppress all console logging output. |
-| `password` | `-p` | string | null | Password for encrypted PDF files. |
-| `pages` | — | string | null (all) | Pages to extract, e.g. `"1,3,5-7"`. Defaults to all pages. |
-| `format` | `-f` | string | json | Output format(s), comma-separated. Values: `json`, `text`, `html`, `pdf`, `markdown`, `tagged-pdf`. For HTML inside Markdown use the `markdown-with-html` flag; for image extraction use `image-output`. |
-| `threads` | — | string | 1 | Worker threads for per-page processing. Default `1` (sequential, stable). Values >1 (experimental) run pages in parallel; output may vary slightly on some PDFs. Capped at available CPU cores. Native Java pipeline only; ignored in `--hybrid` mode. |
-
 ---
 
 ### Quality — Extraction Quality
 
 Controls the accuracy and structure of the extracted content.
-
-| Option | Short | Type | Default | Description |
-|---|---|---|---|---|
-| `table-method` | — | string | `default` | Table detection method. `default` = border-based; `cluster` = border + borderless cluster detection (slower). |
-| `reading-order` | — | string | `xycut` | Reading order algorithm. `xycut` = XY-cut layout analysis; `off` = no reordering. |
-| `use-struct-tree` | — | boolean | false | Use the PDF structure tree (tagged PDF) for reading order and semantic structure. Only effective on tagged PDFs. |
 
 ---
 
@@ -44,27 +26,11 @@ Controls the accuracy and structure of the extracted content.
 
 Controls content filtering and sensitive data handling.
 
-| Option | Short | Type | Default | Description |
-|---|---|---|---|---|
-| `content-safety-off` | — | string | null | Disable specific content safety filters. Values: `all`, `hidden-text`, `off-page`, `tiny`, `hidden-ocg`. ⚠ Do not disable on untrusted PDFs — re-exposes hidden/injected content (see SKILL.md "Caution — content-safety filters"). |
-| `sanitize` | — | boolean | false | Replace emails, phone numbers, IP addresses, credit card numbers, and URLs with placeholders. |
-
 ---
 
 ### Hybrid — AI Backend
 
 Options for routing pages through an optional AI enrichment server (e.g. formula OCR, picture descriptions).
-
-| Option | Short | Type | Default | Description |
-|---|---|---|---|---|
-| `hybrid` | — | string | `off` | Hybrid backend to use. Values: `off`, `docling-fast`, `hancom-ai`. Requires a running hybrid server. |
-| `hybrid-mode` | — | string | `auto` | Triage mode. `auto` = dynamic page-level triage; `full` = send all pages to the backend (required for server-side enrichments). |
-| `hybrid-url` | — | string | null | Override the default hybrid server URL. |
-| `hybrid-timeout` | — | string | `0` | Per-request timeout in milliseconds (`0` = no timeout). |
-| `hybrid-fallback` | — | boolean | false | Fall back to the Java extraction path if the hybrid backend returns an error. |
-| `hybrid-hancom-ai-ocr-strategy` | — | string | `auto` | OCR strategy. Requires `--hybrid=hancom-ai`. Values: `off` (stream-only), `auto` (default; stream first, OCR fallback), `force` (OCR-only). |
-| `hybrid-hancom-ai-regionlist-strategy` | — | string | `table-first` | DLA label 7 (regionlist) handling. Requires `--hybrid=hancom-ai`. Values: `table-first` (default; check TSR overlap), `list-only` (skip TSR, always treat as list). |
-| `hybrid-hancom-ai-image-cache` | — | string | `memory` | Page image cache backing. Requires `--hybrid=hancom-ai`. Values: `memory` (default), `disk`. |
 
 ---
 
@@ -72,28 +38,11 @@ Options for routing pages through an optional AI enrichment server (e.g. formula
 
 Controls how images and page separators appear in output files.
 
-| Option | Short | Type | Default | Description |
-|---|---|---|---|---|
-| `markdown-with-html` | — | boolean | false | Allow HTML tags inside Markdown output for complex structures such as multi-row-span tables. Implies `--format markdown`. This is a flag, not a `--format` value. |
-| `image-output` | — | string | `external` | Image output mode. `off` = skip images; `embedded` = Base64 data URIs inline; `external` = write separate image files and embed references. |
-| `image-format` | — | string | `png` | Format for extracted images. Values: `png`, `jpeg`. |
-| `image-dir` | — | string | null | Directory for extracted image files (used when `image-output` is `external`). |
-| `markdown-page-separator` | — | string | null | String inserted between pages in Markdown output. Use `%page-number%` to include the page number. |
-| `text-page-separator` | — | string | null | String inserted between pages in plain-text output. Use `%page-number%` for page numbers. |
-| `html-page-separator` | — | string | null | String inserted between pages in HTML output. Use `%page-number%` for page numbers. |
-
 ---
 
 ### Text — Text Processing
 
 Fine-grained control over how extracted text is cleaned and formatted.
-
-| Option | Short | Type | Default | Description |
-|---|---|---|---|---|
-| `keep-line-breaks` | — | boolean | false | Preserve the original line breaks from the PDF. By default, soft line breaks are merged. |
-| `replace-invalid-chars` | — | string | `" "` (space) | Replacement character for invalid or unrecognized characters in the extracted text. |
-| `include-header-footer` | — | boolean | false | Include page headers and footers in the output. Excluded by default. |
-| `detect-strikethrough` | — | boolean | false | Detect strikethrough text (experimental). |
 
 ---
 
