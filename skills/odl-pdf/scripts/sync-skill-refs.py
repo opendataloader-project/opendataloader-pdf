@@ -5,7 +5,7 @@ The skill does not carry an option inventory; the option truth is the installed
 CLI --help (authority), a checkout options.json (SSOT), or the homepage reference.
 This check guards the small surface the skill's prose actually names:
   Tier 1 — every referenced `--<option>` resolves to a category+source.
-  Tier 2 — decision-critical option VALUES exist in options.json (see task 2).
+  Tier 2 — decision-critical option VALUES exist in options.json.
 
 Categories (no single catch-all ignore list; every token has a source + reason):
   client     -> name present in options.json
@@ -17,7 +17,8 @@ Categories (no single catch-all ignore list; every token has a source + reason):
   unknown    -> FAIL
 
 Usage: sync-skill-refs.py [--skill-dir DIR] [--options-json PATH]
-Exit: 0 all referenced tokens (+ registered values, task 2) resolve; 1 otherwise.
+Exit: 0 all referenced tokens (+ registered values) resolve; 1 drift found;
+      2 input/config error (bad --skill-dir, missing/corrupt --options-json).
 """
 import argparse
 import json
@@ -28,6 +29,10 @@ from pathlib import Path
 _SCRIPT_DIR = Path(__file__).parent.resolve()
 _BUNDLE = _SCRIPT_DIR.parent                       # skills/odl-pdf
 _PROJECT_ROOT = _BUNDLE.parent.parent              # repo root (has options.json)
+
+class ConfigError(Exception):
+    """Bad input/config (missing --skill-dir, unreadable/corrupt --options-json, etc.).
+    Caught in main() and reported as exit code 2 — distinct from exit 1 (drift found)."""
 
 # --- registries: small + reasoned. Not an inventory. ---
 # Server (opendataloader-pdf-hybrid) flags the skill names; not in the client
@@ -50,9 +55,14 @@ EXCLUDED_TOKENS = {
 # NOTE: deprecated FORMAT VALUES (markdown-with-html/-images) are prose-documented values,
 # not `--` option tokens, so they are out of scope for this token check (no category needed).
 
-# Files scanned (agent-facing prose only).
+# Files scanned (agent-facing prose only). Raises ConfigError if skill_dir doesn't look
+# like a skill bundle (no SKILL.md) — an empty/nonexistent --skill-dir must not silently
+# scan 0 files and report a false PASS.
 def _scanned_files(skill_dir: Path):
-    files = [skill_dir / "SKILL.md"]
+    skill_md = skill_dir / "SKILL.md"
+    if not skill_md.is_file():
+        raise ConfigError(f"no SKILL.md found under {skill_dir} (nothing to check)")
+    files = [skill_md]
     files += sorted((skill_dir / "references").glob("*.md"))
     return [f for f in files if f.is_file()]
 
@@ -62,7 +72,11 @@ _TOKEN_RE = re.compile(r"--([a-z0-9][a-z0-9-]*)")
 def scan_referenced_tokens(skill_dir: Path):
     out = []
     for f in _scanned_files(skill_dir):
-        for i, line in enumerate(f.read_text(encoding="utf-8").splitlines(), 1):
+        try:
+            text = f.read_text(encoding="utf-8")
+        except OSError as e:
+            raise ConfigError(f"{f}: {e}") from e
+        for i, line in enumerate(text.splitlines(), 1):
             for m in _TOKEN_RE.finditer(line):
                 tok = m.group(1)
                 # ignore wildcard/meta (e.g. --enrich-* rendered as enrich- then *)
@@ -72,9 +86,20 @@ def scan_referenced_tokens(skill_dir: Path):
                 out.append((f.relative_to(skill_dir).as_posix(), i, tok))
     return out
 
+def _load_options_json(options_json_path: Path) -> dict:
+    try:
+        return json.loads(options_json_path.read_text(encoding="utf-8"))
+    except OSError as e:
+        raise ConfigError(f"{options_json_path}: {e}") from e
+    except json.JSONDecodeError as e:
+        raise ConfigError(f"{options_json_path}: invalid JSON ({e})") from e
+
 def load_client_option_names(options_json_path: Path) -> set[str]:
-    data = json.loads(options_json_path.read_text(encoding="utf-8"))
-    return {o["name"] for o in data["options"]}
+    data = _load_options_json(options_json_path)
+    try:
+        return {o["name"] for o in data["options"]}
+    except (KeyError, TypeError) as e:
+        raise ConfigError(f"{options_json_path}: missing/malformed 'options' ({e})") from e
 
 # Parse the "Values: a (..), b, c. Default: .." segment of an option description.
 def parse_allowed_values(description: str) -> set[str]:
@@ -90,10 +115,14 @@ def parse_allowed_values(description: str) -> set[str]:
             vals.add(m.group(1))
     return vals
 
-def load_client_option_values(options_json_path: Path) -> dict:
-    data = json.loads(options_json_path.read_text(encoding="utf-8"))
+def load_client_option_values(options_json_path: Path) -> dict[str, set[str]]:
+    data = _load_options_json(options_json_path)
+    try:
+        options = data["options"]
+    except (KeyError, TypeError) as e:
+        raise ConfigError(f"{options_json_path}: missing/malformed 'options' ({e})") from e
     out = {}
-    for o in data["options"]:
+    for o in options:
         vals = parse_allowed_values(o.get("description", ""))
         if o.get("default") is not None:
             vals.add(str(o["default"]))
@@ -128,11 +157,16 @@ def parse_args(argv=None):
 
 def main(argv=None) -> int:
     args = parse_args(argv)
-    client = load_client_option_names(args.options_json)
-    tokens = scan_referenced_tokens(args.skill_dir)
+    try:
+        client = load_client_option_names(args.options_json)
+        tokens = scan_referenced_tokens(args.skill_dir)
+        values = load_client_option_values(args.options_json)
+    except ConfigError as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        return 2
+
     unknown = [(f, ln, t) for (f, ln, t) in tokens if categorize(t, client) == "unknown"]
 
-    values = load_client_option_values(args.options_json)
     value_errs = []
     for opt, needed in REFERENCED_VALUES.items():
         declared = values.get(opt, set())
@@ -141,7 +175,7 @@ def main(argv=None) -> int:
             value_errs.append((opt, sorted(missing), sorted(declared)))
 
     if unknown:
-        print("UNKNOWN option tokens (no client/server/deprecated/excluded source):")
+        print("UNKNOWN option tokens (no client/server/excluded source):")
         for f, ln, t in unknown:
             print(f"  {f}:{ln}  --{t}  category=unknown  expected=options.json|SERVER_OPTIONS|EXCLUDED_TOKENS")
     if value_errs:

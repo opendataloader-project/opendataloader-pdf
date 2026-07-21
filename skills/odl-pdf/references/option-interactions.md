@@ -10,6 +10,10 @@ Reference. Option names/values referenced below are guarded by `scripts/sync-ski
 
 ## Categories
 
+This section names the category vocabulary used elsewhere in this file and the skill; the
+per-option inventory itself lives in the discovery sources (SKILL.md "Version & option
+authority"), not here.
+
 ### IO — Input / Output Control
 
 Controls where data comes from and where results are written.

@@ -41,8 +41,10 @@ jobs:
           EXIT_CODE=$?
           if [ $EXIT_CODE -eq 1 ]; then
             echo ""
-            echo "Drift detected: skill references are out of sync with options.json."
-            echo "Update skills/odl-pdf/references/option-interactions.md to match options.json."
+            echo "Drift detected: a referenced option name/value in SKILL.md or references/"
+            echo "is not in options.json (or a registered value is stale). Fix the reference,"
+            echo "or update the registry (SERVER_OPTIONS/EXCLUDED_TOKENS/REFERENCED_VALUES) in"
+            echo "skills/odl-pdf/scripts/sync-skill-refs.py."
             exit 1
           elif [ $EXIT_CODE -ne 0 ]; then
             echo ""
