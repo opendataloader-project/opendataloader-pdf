@@ -115,11 +115,18 @@ local before hybrid; add OCR/enrichment only when the document needs it.
 Digital + bordered tables      → local, --table-method default        (fastest, no server)
 Digital + borderless/complex   → --table-method cluster                (local)
    still wrong?                → --hybrid docling-fast
-Scanned / image-only           → hybrid + OCR (see "OCR paths" below)
+Scanned / image-only           → verify it parses locally FIRST, then hybrid + OCR (see note below)
 Formulas (LaTeX)               → --hybrid docling-fast --hybrid-mode full  (+ server --enrich-formula)
 Charts needing descriptions    → --hybrid docling-fast --hybrid-mode full  (+ server --enrich-picture-description)
 Mixed/unknown batch            → run a representative sample LOCAL first + VERIFY; escalate to --hybrid docling-fast only where local fails (privacy/offline: stay local)
 ```
+
+**Scanned/image-only: confirm the file parses locally before provisioning a server.**
+Do a quick local run first (e.g. `--format json -o <dir> -q`). A preprocessing/font
+crash (Stage 5) happens client-side *before* anything is sent to a backend, so this
+avoids standing up a hybrid+OCR server for a file ODL cannot open. If the local run
+completes but yields image nodes and no text (a clean run, not a crash), proceed to
+an OCR path below.
 
 **OCR paths (two, verify flags against `--help`):**
 - **docling-fast** — OCR runs on the **server**: client `--hybrid docling-fast`;
@@ -164,7 +171,9 @@ Formats combine: `--format json,markdown,html`. `--markdown-with-html` is a flag
 **deprecated `--format` aliases** (accepted, emit a warning) — prefer the flag /
 `--image-output`. `--to-stdout` streams **at most one** text-like format — `text`
 takes precedence over `markdown`; `json`/`html` never stream, so some combinations
-(e.g. `json,html`) produce empty stdout on exit 0.
+(e.g. `json,html`) produce empty stdout on exit 0. When piping `--to-stdout`, keep
+`-q/--quiet`: without it ODL's log lines are written to **stdout** (not stderr) and
+corrupt the downstream pipe.
 
 ## Stage 3 — EXECUTE
 
@@ -240,7 +249,10 @@ NullPointerException in `StandardFontMetrics` / `PDFontDescriptor` / `PDType1Fon
 it is an upstream parser bug on THAT file, hit in preprocessing *before* page triage
 — so `--pages` / `--use-struct-tree` / `--hybrid` / OCR do **not** bypass it. Report
 the file + stack to the ODL maintainers; as a workaround repair/flatten the font or
-rasterize the page with another tool, then re-run (outside this skill's scope).
+rasterize the page with another tool, then re-run (outside this skill's scope). For a
+single (non-batch) file this crash yields **zero** output — the batch "partial outputs
+may still exist" caveat does not apply; report the failure honestly rather than
+retrying other modes.
 
 Confirm results by inspecting artifact **existence and completeness** (`ls` the output
 dir) — a non-zero batch may still have produced valid outputs — not the exit code alone.
@@ -289,6 +301,17 @@ reranking, and prompting are out of scope.
   matters. See `references/integration-examples.md` for a JSON element →
   (page, bbox) chunking recipe (generic first; LangChain/LlamaIndex examples
   after).
+- **JSON into a shell pipe** (the natural "`--format json --to-stdout | jq`" ask):
+  JSON never streams to stdout (Stage 2), so a literal pure-stdout JSON one-liner is
+  not possible with ODL — tell the user that. Route it through a temp file and pipe the
+  `jq` *result* instead (the ODL output artifacts never touch disk; one ephemeral temp
+  file remains):
+  ```bash
+  T="$(mktemp -d)"; opendataloader-pdf input.pdf --format json -o "$T" -q \
+    && jq -r '.. | objects | select(.content? and (.type|IN("paragraph","heading","list","caption")))
+              | "[\(.type) p\(."page number")] \(.content)"' "$T"/*.json; rm -rf "$T"
+  ```
+  (In a restricted sandbox where `/var/folders` is blocked, use `mktemp -d -p "$TMPDIR"`.)
 
 ## Critical Gotchas
 
