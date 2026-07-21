@@ -41,10 +41,10 @@ jobs:
           EXIT_CODE=$?
           if [ $EXIT_CODE -eq 1 ]; then
             echo ""
-            echo "Drift detected: a referenced option name/value in SKILL.md or references/"
-            echo "is not in options.json (or a registered value is stale). Fix the reference,"
-            echo "or update the registry (SERVER_OPTIONS/EXCLUDED_TOKENS/REFERENCED_VALUES) in"
-            echo "skills/odl-pdf/scripts/sync-skill-refs.py."
+            echo "Drift detected: a referenced option name/value/default in SKILL.md or"
+            echo "references/ is not in options.json (or a registered value/default is stale)."
+            echo "Fix the reference, or update the registry (SERVER_OPTIONS/EXCLUDED_TOKENS/"
+            echo "REFERENCED_VALUES/REFERENCED_DEFAULTS) in skills/odl-pdf/scripts/sync-skill-refs.py."
             exit 1
           elif [ $EXIT_CODE -ne 0 ]; then
             echo ""

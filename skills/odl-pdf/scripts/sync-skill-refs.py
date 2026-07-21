@@ -140,6 +140,25 @@ REFERENCED_VALUES = {
     "format": {"json", "text", "html", "pdf", "markdown", "tagged-pdf"},
 }
 
+# Defaults the skill's decision prose relies on (e.g. Gotcha 2 depends on hybrid-mode=auto,
+# format-guide on image-output=external). A flip is semantic drift Tier-2 value-existence
+# misses; options.json carries `default`, so validate it directly. Small + reasoned.
+REFERENCED_DEFAULTS = {
+    "table-method": "default",
+    "reading-order": "xycut",
+    "hybrid": "off",
+    "hybrid-mode": "auto",
+    "image-output": "external",
+}
+
+def load_client_option_defaults(options_json_path: Path) -> dict:
+    data = _load_options_json(options_json_path)
+    try:
+        options = data["options"]
+    except (KeyError, TypeError) as e:
+        raise ConfigError(f"{options_json_path}: missing/malformed 'options' ({e})") from e
+    return {o["name"]: (None if o.get("default") is None else str(o["default"])) for o in options}
+
 def categorize(tok: str, client_names: set[str]) -> str:
     if tok in client_names:
         return "client"
@@ -161,6 +180,7 @@ def main(argv=None) -> int:
         client = load_client_option_names(args.options_json)
         tokens = scan_referenced_tokens(args.skill_dir)
         values = load_client_option_values(args.options_json)
+        defaults = load_client_option_defaults(args.options_json)
     except ConfigError as e:
         print(f"ERROR: {e}", file=sys.stderr)
         return 2
@@ -182,7 +202,18 @@ def main(argv=None) -> int:
         print("Decision-critical VALUES not found in options.json:")
         for opt, miss, decl in value_errs:
             print(f"  --{opt}: missing {miss}  (options.json declares {decl})  source=REFERENCED_VALUES")
-    if unknown or value_errs:
+
+    default_errs = []
+    for opt, expected in REFERENCED_DEFAULTS.items():
+        actual = defaults.get(opt)
+        if actual != expected:
+            default_errs.append((opt, expected, actual))
+    if default_errs:
+        print("Default drift — options.json default differs from what the skill assumes:")
+        for opt, exp, act in default_errs:
+            print(f"  --{opt}: skill assumes default '{exp}' but options.json default is '{act}'  source=REFERENCED_DEFAULTS")
+
+    if unknown or value_errs or default_errs:
         return 1
     print(f"OK: {len(tokens)} referenced option tokens all resolve to a known source.")
     return 0
