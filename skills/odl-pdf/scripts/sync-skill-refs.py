@@ -11,9 +11,9 @@ Categories (no single catch-all ignore list; every token has a source + reason):
   client     -> name present in options.json
   server     -> opendataloader-pdf-hybrid flag (SERVER_OPTIONS; validate vs a
                 hybrid --help snapshot when available, else listed explicitly)
-  excluded   -> validly-referenced non-client token: standard CLI (--help/--version),
-                third-party (tesseract --help-extra), or bundled-script flag (EXCLUDED_TOKENS,
-                each with a reason; kept minimal)
+  excluded   -> validly-referenced non-client token: standard CLI (--help/--version)
+                or bundled-script flag (EXCLUDED_TOKENS, each with a reason; kept minimal;
+                add a third-party entry like tesseract --help-extra only if the skill cites it)
   unknown    -> FAIL
 
 Usage: sync-skill-refs.py [--skill-dir DIR] [--options-json PATH]
@@ -38,18 +38,20 @@ class ConfigError(Exception):
 # Server (opendataloader-pdf-hybrid) flags the skill names; not in the client
 # options.json. Reason: server-scoped, validated against `--help` on the server.
 SERVER_OPTIONS = {
-    "force-ocr", "no-ocr", "ocr-engine", "ocr-lang", "psm", "device",
+    # Hybrid-server (opendataloader-pdf-hybrid) flags the skill names by hand. The server is
+    # a separate package NOT in options.json, so these resolve names only — hybrid-guide.md
+    # points to `opendataloader-pdf-hybrid --help` as the value/default authority. Keep this
+    # set to flags the skill actually references (a server rename is caught by release review,
+    # not CI — see MAINTAINING.md).
+    "force-ocr", "no-ocr", "ocr-engine", "ocr-lang", "psm",
     "enrich-formula", "enrich-picture-description", "host", "port",
-    # server-config flags documented in hybrid-guide.md (Server Configuration / troubleshooting):
-    "log-level", "max-file-size", "no-enrich-formula",
-    "no-enrich-picture-description", "picture-description-prompt",
+    "picture-description-prompt",
 }
 # Validly-referenced tokens that are NOT ODL client options. Each carries a reason and is
 # reviewed on every addition — this is NOT a catch-all for unresolved tokens.
 EXCLUDED_TOKENS = {
     "help",        # standard CLI --help (the authority mechanism itself)
     "version",     # referenced only to state that ODL has NO --version flag
-    "help-extra",  # tesseract's flag, cited in an OCR troubleshooting note
     "verbose",     # flag of the bundled quick-eval.py, documented in eval-metrics.md
 }
 # NOTE: deprecated FORMAT VALUES (markdown-with-html/-images) are prose-documented values,
@@ -149,6 +151,7 @@ REFERENCED_DEFAULTS = {
     "hybrid": "off",
     "hybrid-mode": "auto",
     "image-output": "external",
+    "threads": "1",   # SKILL.md batch note relies on sequential-by-default (>1 opts into parallelism)
 }
 
 def load_client_option_defaults(options_json_path: Path) -> dict:

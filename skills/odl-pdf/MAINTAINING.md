@@ -17,7 +17,7 @@ runs this check on that same PR. It is a lightweight consumer-driven contract:
 
 - **Tier 1 — referenced option names.** Every `--option` the skill names must resolve to a
   category: client (in `options.json`), server (`SERVER_OPTIONS`), or a small `EXCLUDED_TOKENS`
-  set (standard CLI `--help`/`--version`, tesseract `--help-extra`, the bundled `quick-eval.py`
+  set (standard CLI `--help`/`--version`, the bundled `quick-eval.py`
   `--verbose`). An unknown token fails the check.
 - **Tier 2 — decision-critical values (`REFERENCED_VALUES`) and defaults (`REFERENCED_DEFAULTS`).**
   Each registered value must exist in `options.json`, and each registered default must match
