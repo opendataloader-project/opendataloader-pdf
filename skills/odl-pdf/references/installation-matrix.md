@@ -61,6 +61,36 @@ pip install langchain-opendataloader-pdf
 
 The `opendataloader-pdf` CLI command is included automatically with the pip install.
 
+### Virtual environments (Python)
+
+Install the pip package **into the environment you will run it from** — the
+`opendataloader-pdf` CLI shim lands in that env's `bin/` (`Scripts\` on Windows) and is on
+PATH only while the env is active. `detect-env.sh` reports the active one as `PY_ENV` and
+flags a PEP 668 base interpreter as `PY_EXTERNALLY_MANAGED=true`.
+
+venv (recommended):
+
+```bash
+python3 -m venv .venv
+. .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install opendataloader-pdf
+```
+
+conda:
+
+```bash
+conda create -n odl python=3.11 && conda activate odl
+pip install opendataloader-pdf
+```
+
+**PEP 668 (`externally-managed-environment`):** an OS-managed system Python refuses a bare
+`pip install`. Use a venv/conda env as above, or — for a CLI-only need — `pipx install
+opendataloader-pdf` (it manages its own isolated env and puts the CLI on PATH). Prefer
+these over overriding the system-package protection.
+
+Run the install **and** every later ODL command in the same activated env; the JVM
+(Java 11+) must be visible there too.
+
 ### npm (Node.js)
 
 ```bash
