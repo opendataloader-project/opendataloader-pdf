@@ -35,6 +35,7 @@ vendor-specific instructions.
   |-------|------|------|
   | runtime authority | the installed CLI's `--help` (`opendataloader-pdf --help`, and `opendataloader-pdf-hybrid --help` for OCR/enrichment) | the truth for *this* environment |
   | repository snapshot | `options.json` at repo root — a machine-readable option surface **exported from** the Java CLI's option definitions (`CLIOptions.java`); the CLI is not generated from it | only in a repo checkout |
+  | public reference | homepage CLI Options Reference (`/docs/reference/cli-options`, generated from `options.json`) | discovery fallback; not proof for the user's installed version |
 
   **`--help` confirms an option's *syntax availability*, not its *operational
   availability*** — e.g. a hybrid flag can be listed while no backend server is
