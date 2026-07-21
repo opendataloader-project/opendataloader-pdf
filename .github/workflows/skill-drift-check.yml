@@ -7,14 +7,18 @@ name: Skill Drift Check
 on:
   push:
     paths:
-      - 'options.json'
-      - 'skills/odl-pdf/scripts/sync-skill-refs.py'
+      - 'skills/odl-pdf/SKILL.md'
       - 'skills/odl-pdf/references/**'
+      - 'skills/odl-pdf/scripts/sync-skill-refs.py'
+      - 'options.json'
+      - '.github/workflows/skill-drift-check.yml'
   pull_request:
     paths:
-      - 'options.json'
-      - 'skills/odl-pdf/scripts/sync-skill-refs.py'
+      - 'skills/odl-pdf/SKILL.md'
       - 'skills/odl-pdf/references/**'
+      - 'skills/odl-pdf/scripts/sync-skill-refs.py'
+      - 'options.json'
+      - '.github/workflows/skill-drift-check.yml'
   workflow_dispatch:
 
 permissions:

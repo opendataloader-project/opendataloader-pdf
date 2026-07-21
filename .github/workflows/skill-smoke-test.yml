@@ -174,3 +174,16 @@ jobs:
       # --- sync-skill-refs.py --------------------------------------------
       - name: sync-skill-refs.py reports no drift
         run: python skills/odl-pdf/scripts/sync-skill-refs.py
+
+      - name: drift-check passes on real skill, fails on a bad token
+        run: |
+          python skills/odl-pdf/scripts/sync-skill-refs.py
+          echo "real skill: PASS"
+          tmp=$(mktemp -d)
+          mkdir -p "$tmp/skill/references"
+          printf 'Use `--totally-made-up-flag`.\n' > "$tmp/skill/SKILL.md"
+          cp options.json "$tmp/options.json"
+          if python skills/odl-pdf/scripts/sync-skill-refs.py --skill-dir "$tmp/skill" --options-json "$tmp/options.json"; then
+            echo "ERROR: drift-check did not fail on a bad token"; exit 1
+          fi
+          echo "bad token: correctly failed"
