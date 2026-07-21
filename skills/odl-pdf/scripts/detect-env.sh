@@ -91,6 +91,34 @@ detect_node() {
 }
 
 # ---------------------------------------------------------------------------
+# Active Python environment — where a `pip install` and the CLI shim will land.
+# The odl-pdf CLI is placed in the active env's bin and is only on PATH while
+# that env is active, so install + run must happen in the SAME env.
+# ---------------------------------------------------------------------------
+detect_python_env() {
+  local env="none"
+  if [[ -n "${VIRTUAL_ENV:-}" ]]; then
+    env="venv:${VIRTUAL_ENV}"
+  elif [[ -n "${CONDA_PREFIX:-}" ]]; then
+    env="conda:${CONDA_DEFAULT_ENV:-${CONDA_PREFIX}}"
+  fi
+  printf '%s\n' "PY_ENV=${env}"
+
+  # PEP 668: a base/system interpreter may refuse a bare `pip install`
+  # (externally-managed-environment). If true, install into a venv/conda env
+  # or use pipx — do NOT force a system-wide install.
+  local pycmd=""
+  if command -v python3 &>/dev/null; then pycmd="python3"
+  elif command -v python &>/dev/null; then pycmd="python"; fi
+  local managed="unknown"
+  if [[ -n "${pycmd}" ]]; then
+    managed="$("${pycmd}" -c "import os,sysconfig; print('true' if os.path.exists(os.path.join(sysconfig.get_path('stdlib'),'EXTERNALLY-MANAGED')) else 'false')" 2>/dev/null || echo unknown)"
+    [[ -z "${managed}" ]] && managed="unknown"
+  fi
+  printf '%s\n' "PY_EXTERNALLY_MANAGED=${managed}"
+}
+
+# ---------------------------------------------------------------------------
 # ODL installed + version
 # Tries CLI first, then Python module.
 # ---------------------------------------------------------------------------
@@ -180,5 +208,6 @@ printf '%s\n' "OS=$(detect_os)"
 printf '%s\n' "JAVA=$(detect_java)"
 printf '%s\n' "PYTHON=$(detect_python)"
 printf '%s\n' "NODE=$(detect_node)"
+detect_python_env
 detect_odl
 detect_hybrid_extras

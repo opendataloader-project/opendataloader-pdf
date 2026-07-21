@@ -22,6 +22,13 @@ select the right mode, run it, **verify the result**, and diagnose failures.
 This skill is written for any AI agent; it uses generic steps, not
 vendor-specific instructions.
 
+**Reading this skill's own files.** Every `references/…` and `scripts/…` path is relative
+to the directory containing **this SKILL.md**, not your current working directory. Resolve
+them against the skill's base directory (your harness exposes it — e.g. Claude Code's
+"Base directory for this skill"). If such a path does not resolve, locate this SKILL.md's
+directory first and read the sibling from there — do **not** skip the reference or invent
+its contents.
+
 ## Version & option authority
 
 - **Minimum supported version**: not yet established — this v1 is validated
@@ -74,7 +81,8 @@ run the full intake questionnaire first.
 ## Stage 1 — Environment discovery
 
 Run `scripts/detect-env.sh` if present; it emits `OS`, `JAVA`, `PYTHON`, `NODE`,
-`ODL_INSTALLED`, `ODL_VERSION`, `ODL_VERSION_SOURCE`, `HYBRID_EXTRAS`. Otherwise
+`PY_ENV`, `PY_EXTERNALLY_MANAGED`, `ODL_INSTALLED`, `ODL_VERSION`,
+`ODL_VERSION_SOURCE`, `HYBRID_EXTRAS`. Otherwise
 ask: OS, `java -version`, which runtime (Python/Node/Java), and whether ODL is
 installed. To read the ODL version, use `detect-env.sh`'s `ODL_VERSION` (when
 `ODL_VERSION_SOURCE=ambiguous`, a Python and a Node package with different versions
@@ -85,10 +93,35 @@ do not invent one** (the CLI exposes only `-h`/`--help`).
 
 Then, if ODL is installed, capture the real option surface:
 `opendataloader-pdf --help` (and `opendataloader-pdf-hybrid --help` if OCR or
-enrichment is in play). If not installed yet, load
-`references/installation-matrix.md` for install guidance; until the CLI is
-runnable, get the option surface from a repo checkout's `options.json` if one is
-available, otherwise the homepage CLI Options Reference (version-caveated per
+enrichment is in play).
+
+**If ODL is not installed, install it as an action — then verify** (don't just
+point at the guide):
+1. **Java 11+ is the user's prerequisite — the skill does not install it.** ODL needs a
+   JVM. If `JAVA` is `none` or `<11`, **stop and ask the user to install a JDK 11+
+   themselves** — state only the requirement (a JDK 11+ for their OS) and point them to
+   installation-matrix Prerequisites. Do **not** run a JDK install, set `JAVA_HOME`, hand
+   over a package-manager one-liner (`brew` / `apt` / `winget` / …), or name a distribution
+   (Temurin / Zulu / Corretto / …) — those are the vendor/command specifics to avoid;
+   "install any JDK 11+ for your OS" is the right level. Continue only once `java -version`
+   reports ≥ 11. (The skill installs only the ODL *package*, below — never system-level
+   runtimes.)
+2. **Method by stack:** CLI-only / Python → `pip install opendataloader-pdf`; a Node
+   project → `npm install @opendataloader/pdf`; a Java app → the Maven/Gradle coordinate.
+3. **Python: install into a virtual environment, never the system Python.** Install
+   into the active env named by `PY_ENV` (venv/conda). If `PY_ENV=none` **and**
+   `PY_EXTERNALLY_MANAGED=true`, a bare `pip install` is refused (PEP 668) — create and
+   activate a venv, or use `pipx` for a CLI-only need (see installation-matrix "Virtual
+   environments"); do **not** force a system-wide install. The CLI shim lands in that
+   env's bin and is on PATH only while the env is active.
+4. **Confirm before running** — installing mutates the environment. Guide mode hands the
+   user the command; action mode runs it only after they agree.
+5. **Verify in the same env:** `opendataloader-pdf --help` succeeds (and `java -version`
+   ≥ 11); run every later ODL command in that same env. Only then do you have the real
+   option surface.
+
+Until the CLI is runnable, get the option surface from a repo checkout's `options.json`
+if one is available, otherwise the homepage CLI Options Reference (version-caveated per
 "Version & option authority" above).
 
 **Gather (only what's needed):** PDF type (digital / scanned-image / mixed;
@@ -96,10 +129,9 @@ tables/formulas/charts?), volume (count, one-off vs batch), and downstream use
 (RAG, LangChain, display, index, LLM input). For an error-first user, infer from
 the error instead of interrogating.
 
-> Install guidance: load `references/installation-matrix.md`. Java 11+ is
-> required for **all** paths (Python/Node wrappers spawn a JVM; a Java consumer runs
-> inside its application's JVM) — see Gotcha 1. Do not
-> recommend a specific JDK vendor.
+> Java 11+ is required for **all** paths (Python/Node wrappers spawn a JVM; a Java
+> consumer runs inside its application's JVM — see Gotcha 1); do not recommend a specific
+> JDK vendor. Full install methods + virtual-environment detail: `references/installation-matrix.md`.
 
 ## Stage 2 — DECIDE (mode + format)
 
@@ -320,7 +352,8 @@ Check these first — they cause most reported problems.
 **Gotcha 1 — Java 11+ is always required.** Every path (Python/Node/CLI) spawns a
 JVM; there is no pure-Python/JS path. Symptom: `UnsupportedClassVersionError`,
 `java not found`, or silent import failure. `java -version` must be ≥ 11. If not:
-"Java 11 or higher is required; please install a JDK." Do not name a vendor.
+"Java 11 or higher is required; please install a JDK." Do not name a vendor or hand over
+an install command (`brew`/`apt`/…) — the user installs Java their own way.
 (This floor is what the skill states because pip users don't have the repo's
 `java/pom.xml`; if the project raises it, this text is updated.)
 
