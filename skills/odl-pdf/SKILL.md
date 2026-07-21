@@ -35,16 +35,28 @@ vendor-specific instructions.
   |-------|------|------|
   | runtime authority | the installed CLI's `--help` (`opendataloader-pdf --help`, and `opendataloader-pdf-hybrid --help` for OCR/enrichment) | the truth for *this* environment |
   | repository snapshot | `options.json` at repo root — a machine-readable option surface **exported from** the Java CLI's option definitions (`CLIOptions.java`); the CLI is not generated from it | only in a repo checkout |
-  | fallback | version-tagged `references/*-matrix.md` snapshots | only when neither above is runnable |
 
   **`--help` confirms an option's *syntax availability*, not its *operational
   availability*** — e.g. a hybrid flag can be listed while no backend server is
   running. Confirm operation with the health check (Stage 4), not just `--help`.
 
   **Invariant — never put an unconfirmed option in a command you generate.** If
-  live discovery is unavailable, use the snapshot but state its version may
-  differ from the user's, and do not assert a snapshot option exists in their
-  version.
+  live discovery is unavailable, fall back to the homepage CLI Options Reference
+  and state its version may differ from the user's; if that's unavailable too,
+  give workflow-level guidance only. Never assert an option exists in the
+  user's version without confirming it there.
+
+The skill intentionally does **not** bundle an option inventory — resolve the option surface
+from the discovery sources, in this order:
+
+- **Installed CLI available** → `opendataloader-pdf --help` (authority for the user's version);
+  do not fetch public docs merely to confirm an option.
+- **No CLI, but a repo checkout** → repo-root `options.json` (generated SSOT); mark any generated
+  command provisional until confirmed at runtime.
+- **Neither, but online** → the homepage CLI Options Reference (`/docs/reference/cli-options`,
+  generated from `options.json`) — a discovery aid, **not** proof the option exists in the
+  user's installed version.
+- **None available** → give workflow-level guidance only; do not emit a supposedly-verified command.
 
 ## Stage 0 — Trigger / non-trigger
 
@@ -73,8 +85,9 @@ do not invent one** (the CLI exposes only `-h`/`--help`).
 Then, if ODL is installed, capture the real option surface:
 `opendataloader-pdf --help` (and `opendataloader-pdf-hybrid --help` if OCR or
 enrichment is in play). If not installed yet, load
-`references/installation-matrix.md` for install guidance, and use the snapshot
-with the version caveat above until the CLI is runnable.
+`references/installation-matrix.md` for install guidance; until the CLI is
+runnable, get the option surface from the homepage CLI Options Reference
+(version-caveated per "Version & option authority" above).
 
 **Gather (only what's needed):** PDF type (digital / scanned-image / mixed;
 tables/formulas/charts?), volume (count, one-off vs batch), and downstream use
@@ -352,9 +365,9 @@ trigger.
 | File / script | Read or run when |
 |---------------|------------------|
 | `references/installation-matrix.md` | installing for a specific environment |
-| `references/options-matrix.md` | need option details/defaults — *after* checking live `--help` |
+| `references/option-interactions.md` | how options interact and combine (not an option inventory) |
 | `references/hybrid-guide.md` | hybrid server setup, server flags, remote/OCR |
-| `references/format-guide.md` | output-format comparison/selection |
+| `references/format-guide.md` | which format for which use case |
 | `references/integration-examples.md` | code for CLI/Python/Node/LangChain/Java |
 | `references/eval-metrics.md` | deeper quality analysis of a bad extraction |
 | `scripts/detect-env.sh` | Stage 1 — environment detection |

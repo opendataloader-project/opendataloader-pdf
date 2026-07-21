@@ -35,4 +35,4 @@ The skill assumes the user has (or will install) **opendataloader-pdf** and **Ja
 
 ## Maintainer note
 
-Option names in `references/options-matrix.md` are kept in sync with the repo's `options.json` by the `skill-drift-check` CI workflow — **option names only**, not values/defaults, not server-side `opendataloader-pdf-hybrid` flags, and not `SKILL.md` prose. The skill's runtime authority is the installed CLI's `--help`; the reference matrices are version-tagged fallbacks. See `../../CLAUDE.md` for the "which file to update when an option changes" checklist.
+Option names and decision-critical values referenced anywhere in the skill (SKILL.md + references) are checked against the repo's `options.json` by the `skill-drift-check` CI workflow (`scripts/sync-skill-refs.py`): every referenced `--option` must resolve to a known source (client/server/standard-CLI) and each registered decision-critical value must exist in `options.json`. The skill does not carry an option inventory; runtime authority is the installed CLI's `--help`.
