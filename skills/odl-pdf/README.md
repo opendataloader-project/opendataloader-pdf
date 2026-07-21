@@ -36,3 +36,18 @@ The skill assumes the user has (or will install) **opendataloader-pdf** and **Ja
 ## Maintainer note
 
 Option names and decision-critical values referenced anywhere in the skill (SKILL.md + references) are checked against the repo's `options.json` by the `skill-drift-check` CI workflow (`scripts/sync-skill-refs.py`): every referenced `--option` must resolve to a known source (client/server/standard-CLI) and each registered decision-critical value must exist in `options.json`. The skill does not carry an option inventory; runtime authority is the installed CLI's `--help`.
+
+### If an ODL option changes — what it touches and how to fix
+
+Because the skill lives in the ODL repo, changing a client option regenerates `options.json` (`npm run sync`) and runs `skill-drift-check` on that same PR. Use this map when an option changes; `MAINTAINING.md` has the full behavioral release-review checklist.
+
+| What changed on the ODL side | Drift-check catches it? | What to fix in the skill |
+|------------------------------|-------------------------|--------------------------|
+| **Client** option renamed or removed (it lives in `options.json`) | ✅ CI fails on the PR — the old `--name` no longer resolves | Rename/remove it wherever the skill mentions it (SKILL.md + `references/`); if it was decision-critical, update the guidance and the eval that covers it |
+| **Client** option default flipped, or a value dropped, that the skill relies on | ✅ CI fails **iff** it's registered in `REFERENCED_DEFAULTS` / `REFERENCED_VALUES` | Update the stated default/value in the prose; re-check any decision branch that assumed the old one |
+| Client value/default the skill states but **hasn't registered** | ❌ silent | Add it to `REFERENCED_VALUES` / `REFERENCED_DEFAULTS` in `scripts/sync-skill-refs.py` (with a one-line reason), then fix the prose — now it's guarded next time |
+| **Server** (hybrid) option renamed/removed | ❌ silent — the server isn't in `options.json` | `references/hybrid-guide.md` points to `opendataloader-pdf-hybrid --help` as the value/default authority, so it self-heals for readers; update the decision-critical note if an *interaction* changed, and update `SERVER_OPTIONS` if a name the skill still cites changed |
+| Option **behavior/semantics** change (same name, same default) | ❌ silent — a name/value contract can't see it | Update the affected prose + eval; this is exactly the case the `MAINTAINING.md` release-review list exists for (stdout precedence, enrichment↔full-mode, hidden-text default, veraPDF crash class, batch semantics, …) |
+| You want the skill to **use a new option** | n/a | Reference it by name only where a decision needs it — do **not** re-introduce a full inventory; the installed `--help` stays the runtime authority |
+
+Rule of thumb: **names and registered values/defaults fail loudly at the source PR; behavior and the server surface need the human release review.** Keep the registries in `sync-skill-refs.py` small and reasoned — they are the decision-critical surface, not a duplicated inventory.
