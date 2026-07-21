@@ -32,8 +32,8 @@ Choose your format based on what you're building:
 These options affect output when using image-bearing or multi-page formats:
 
 - `markdown-with-html` — Flag (not a `--format` value). Allows HTML tags inside Markdown output for complex structures such as multi-row-span tables. Implies `--format markdown`.
-- `image-output` — Controls whether images are off, embedded (base64), or written to external files. Values: `off`, `embedded`, `external` (default).
-- `image-format` — Image encoding format for extracted images. Values: `png` (default), `jpeg`.
+- `image-output` — controls image handling (off / embedded as Base64 / external files). See the installed `--help` or `options.json` for the current values and default.
+- `image-format` — image encoding for extracted images. See `--help` / `options.json` for the current values and default.
 - `image-dir` — Directory path for externalized images when `image-output=external`.
 - `*-page-separator` — Format-specific option to insert a custom separator between pages (e.g., `markdown-page-separator`, `text-page-separator`).
 
