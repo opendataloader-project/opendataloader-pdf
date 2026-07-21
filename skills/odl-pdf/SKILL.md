@@ -87,8 +87,9 @@ Then, if ODL is installed, capture the real option surface:
 `opendataloader-pdf --help` (and `opendataloader-pdf-hybrid --help` if OCR or
 enrichment is in play). If not installed yet, load
 `references/installation-matrix.md` for install guidance; until the CLI is
-runnable, get the option surface from the homepage CLI Options Reference
-(version-caveated per "Version & option authority" above).
+runnable, get the option surface from a repo checkout's `options.json` if one is
+available, otherwise the homepage CLI Options Reference (version-caveated per
+"Version & option authority" above).
 
 **Gather (only what's needed):** PDF type (digital / scanned-image / mixed;
 tables/formulas/charts?), volume (count, one-off vs batch), and downstream use

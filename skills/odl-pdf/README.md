@@ -30,7 +30,7 @@ The skill assumes the user has (or will install) **opendataloader-pdf** and **Ja
 |------|-----|---------|
 | `SKILL.md` | agent | The workflow + guardrails the agent follows |
 | `references/` | agent | Loaded on demand: installation, options, hybrid, formats, integration, eval metrics |
-| `scripts/` | agent | `detect-env.sh`, `hybrid-health.sh`, `verify-json.py`, `quick-eval.py` (helpers the skill runs) |
+| `scripts/` | agent + CI | `detect-env.sh`, `hybrid-health.sh`, `verify-json.py`, `quick-eval.py` (helpers the skill runs) · `sync-skill-refs.py` (CI/maintainer drift-check vs `options.json`) |
 | `evals/` | maintainers | Decision-correctness eval scenarios (agent-judged, no automated runner) |
 
 ## Maintainer note
