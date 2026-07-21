@@ -102,7 +102,7 @@ Expected throughput with `full`: noticeably slower than Java-only or `auto`, dep
 |--------|--------|---------|-------------|
 | `--hybrid <name>` | `off`, `docling-fast`, `hancom-ai` | `off` | Select the backend. `off` disables hybrid mode entirely. |
 | `--hybrid-mode <mode>` | `auto`, `full` | `auto` | Page routing strategy. |
-| `--hybrid-url <url>` | Any URL | unset (client falls back to `http://localhost:5002` for docling-fast; `hancom-ai` defaults to `http://localhost:18008`) | Override the server URL for remote or non-default setups. |
+| `--hybrid-url <url>` | Any URL | unset (client falls back to `http://localhost:5002` for docling-fast; `hancom-ai` defaults to `http://localhost:18008/api/v1`) | Override the server URL for remote or non-default setups. |
 | `--hybrid-timeout <ms>` | Integer | `0` (no timeout) | Request timeout in milliseconds. `0` means no timeout. |
 | `--hybrid-fallback` | Flag | Disabled | Fall back to the Java path if the backend returns an error. ⚠ Preserves completion, **not** quality — the run "succeeds" but requested OCR/enrichment did not happen. When those are mandatory, VERIFY them explicitly (or fail closed). |
 
@@ -120,23 +120,27 @@ These flags apply **only** when `--hybrid hancom-ai` is selected (they are clien
 
 ## Server Configuration
 
-All options are passed when starting `opendataloader-pdf-hybrid` (the `docling-fast` backend server).
+Server options are passed when starting `opendataloader-pdf-hybrid`. **Authority for the
+current server option surface, values, and defaults: `opendataloader-pdf-hybrid --help`**
+(available once the hybrid extras are installed — Quick Setup). The server is a separate
+package and its options are **not** in the client `options.json`, so this guide does not
+re-list them as an inventory — the OCR flags appear under "OCR paths" and the routing
+flags under "Triage Modes" above. A few decision-critical details `--help` does not make
+obvious:
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `--host <addr>` | `0.0.0.0` | Host to bind to. Default binds all interfaces and the server has **no auth** — restrict to a trusted network / firewall, or bind `127.0.0.1` for local-only. |
-| `--port <n>` | `5002` | Port the server listens on. |
-| `--log-level <lvl>` | `info` | Log level. Values: `debug`, `info`, `warning`, `error`. |
-| `--device <name>` | `auto` | Accelerator for model inference. Values: `auto`, `cpu`, `cuda`, `mps`, `xpu`. `auto` selects the best available device. Use `mps` explicitly on Apple Silicon, or `cpu` to force CPU-only processing. |
-| `--force-ocr` | Off | Run OCR on every page, even pages with embedded text. Use for scanned PDFs where embedded text is unreliable. **Mutually exclusive with `--no-ocr`.** |
-| `--no-ocr` | Off | Disable OCR entirely. Use when input PDFs already have reliable embedded text — prevents duplicate text extraction from images. **Mutually exclusive with `--force-ocr`.** |
-| `--ocr-engine <name>` | `easyocr` | OCR engine. Values: `auto`, `easyocr`, `ocrmac`, `rapidocr`, `tesseract`, `tesserocr`. `auto` delegates per-page engine choice to docling. Each engine has its own license, language coverage, and accuracy; the server does not validate engine accuracy. |
-| `--ocr-lang "<langs>"` | engine default | Comma-separated OCR language codes. **The code system depends on `--ocr-engine`:** EasyOCR uses its own codes (ISO 639-1-like for many — `ko,en` — but `ch_sim`/`ch_tra` for Chinese), Tesseract uses ISO 639-2 (`kor,eng`), RapidOCR uses `english,chinese`, ocrmac uses BCP-47 (`en-US`). If omitted, the engine's default languages are used — there is no fixed `en` default. |
-| `--psm <n>` | — | Tesseract Page Segmentation Mode. Applied **only** when `--ocr-engine` is `tesseract` or `tesserocr`; ignored otherwise. See `tesseract --help-extra` for valid values. |
-| `--max-file-size <MB>` | `0` | Maximum upload file size in MB. `0` means no limit. |
-| `--enrich-formula` / `--no-enrich-formula` | Off | Extract mathematical formulas as LaTeX. **Requires `--hybrid-mode full` on the client.** |
-| `--enrich-picture-description` / `--no-enrich-picture-description` | Off | Generate AI descriptions (alt text) for charts and images using SmolVLM. **Requires `--hybrid-mode full` on the client.** |
-| `--picture-description-prompt "<text>"` | docling default | Custom prompt for picture description. Blank/whitespace-only falls back to docling's default prompt. |
+- **`--ocr-lang` code system depends on `--ocr-engine`** (the detail deferred from OCR
+  paths): EasyOCR uses its own codes (`ko,en`, but `ch_sim`/`ch_tra` for Chinese),
+  Tesseract ISO 639-2 (`kor,eng`), RapidOCR `english,chinese`, ocrmac BCP-47 (`en-US`).
+  If omitted, the engine's default languages are used — there is no fixed `en` default,
+  so confirm the engine before setting the language.
+- **`--host` binds all interfaces by default and the server is unauthenticated** — bind
+  `127.0.0.1` for local use or restrict by firewall; never expose it unprotected.
+- **`--enrich-formula` / `--enrich-picture-description` require the client to run
+  `--hybrid-mode full`** — in `auto` they are silently skipped (see Triage Modes / the
+  enrichment note). `--picture-description-prompt` blank/whitespace-only falls back to
+  docling's default prompt.
+- **`--psm` applies only to Tesseract engines** (`tesseract` / `tesserocr`); ignored
+  otherwise. `--force-ocr` and `--no-ocr` are mutually exclusive (see OCR paths).
 
 **Example — scanned Korean document with formula extraction (docling-fast path):**
 
