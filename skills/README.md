@@ -12,7 +12,7 @@ folder's `README.md` explains the skill for **humans** (what it does, how to ena
 
 | Skill | What it does |
 |-------|--------------|
-| [`odl-pdf/`](odl-pdf/README.md) | Use opendataloader-pdf to extract structured data from PDFs correctly: choose install path + mode (local / hybrid / OCR) + output format, run it, **verify the result** (a zero exit does not mean success), and diagnose silent failures. Validated against 2.5.0. |
+| [`odl-pdf/`](odl-pdf/README.md) | A durable procedure for using opendataloader-pdf correctly: read the installed tool's own `--help` at runtime to build the minimal command for the user's goal, **verify the result** (a zero exit does not mean success), and diagnose the silent failures the tool does not report. |
 
 ## Enabling a skill
 

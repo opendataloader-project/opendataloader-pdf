@@ -1,218 +1,129 @@
-# Hybrid Mode Reference Guide
+# AI / OCR backend guide
 
-Hybrid mode extends opendataloader-pdf by routing complex PDF pages to an external AI backend while keeping simple pages on the fast local Java path. This gives you the speed of the Java engine for most content, with AI-quality output for tables, scanned pages, formulas, and charts.
+When to reach for an AI/OCR backend, how to set one up, how to confirm it is
+actually reachable, and the two hazards the backend path hides. This file is
+durable procedure; the exact option names, backend names, and values come from the
+installed `--help` (SKILL.md "Source-of-truth rule"), not from here.
 
----
+## ToC
+- When to reach for a backend
+- Choosing a backend, neutrally
+- Setup procedure
+- Probe for reachability (don't assume)
+- Routing: per-page vs. whole-document
+- HAZARD — enrichment needs whole-document routing
+- HAZARD — OCR quality depends on setting the document language
+- Troubleshooting
 
-## Overview
+## When to reach for a backend
 
-By default, opendataloader-pdf processes everything locally in Java. Hybrid mode adds a second processing path and routes pages between the two based on complexity. Two backends are available (`--hybrid`):
+Default to the local path. Reach for a backend only when a *verified* local result
+falls short and the content calls for it:
 
-- **`docling-fast`** — a built-in Python server (`opendataloader-pdf-hybrid`) that uses the docling library internally. This is the neutral, open default; prefer it unless you specifically need the other backend.
-- **`hancom-ai`** — a vendor backend selected on the client. Do not steer users to it unasked.
+- scanned or image-only pages (OCR needed to get text at all);
+- complex tables the local heuristics miss;
+- mathematical formulas needing structured (e.g. LaTeX) extraction;
+- charts/figures needing generated descriptions;
+- documents whose language needs language-specific OCR.
 
-**When you need hybrid mode:**
+Local-first is not only about speed: the backend sends the PDF to a separate
+service (a privacy boundary) and is an extra moving part. Escalate to it only after
+a verified local run is insufficient (SKILL.md "Representative workflow", step 6).
 
-- PDFs with scanned or image-based pages (OCR required)
-- Complex table structures that the Java heuristics miss
-- Documents containing mathematical formulas (LaTeX extraction)
-- Charts or images that need AI-generated descriptions
-- Non-English documents requiring language-specific OCR
+## Choosing a backend, neutrally
 
----
+The installed help lists the available backends. Prefer the neutral, open, local
+option unless the user specifically needs another; do not steer a user to a vendor
+backend unasked. `--help` does not rank backends by accuracy and neither does this
+guide — choose by the control you need (see the OCR-language hazard below), not by
+reputation.
 
-## Quick Setup
+## Setup procedure (two processes)
 
-Hybrid mode requires two running processes: the server and the client.
+A backend needs a server process and a client that calls it.
 
-**Terminal 1 — Start the hybrid server:**
+1. **Install the backend extras** for your package (the install adds the server
+   entry point) — see `installation-matrix.md`.
+2. **Start the server, bound to loopback.** It is unauthenticated, so bind it to
+   `127.0.0.1` (not `0.0.0.0`) for local use; expose it on a network only behind a
+   firewall / reverse-proxy auth and with explicit user consent (SKILL.md "Where
+   the human decides"). Confirm the server's own option surface from **its own**
+   `--help` — the server is a separate package, so its options are not in the
+   client's help.
+3. **Point the client at the server.** From the client `--help`, find the option
+   that selects the backend, the option that routes pages, and the option that sets
+   the server address.
+4. **Probe reachability** before trusting a run (next section).
 
-```bash
-# Install with hybrid extras (includes the server)
-pip install "opendataloader-pdf[hybrid]"
+**Remote setup:** run the server on a capable (e.g. GPU) host bound to an explicit
+private address, point the client's server-address option at it, and treat the
+network hop as the same privacy/security boundary — there is no built-in auth.
 
-# Start the hybrid server on loopback (unauthenticated — do not bind 0.0.0.0 for local use)
-opendataloader-pdf-hybrid --host 127.0.0.1 --port 5002
-```
+## Probe for reachability (don't assume)
 
-**Terminal 2 — Run the client:**
-
-```bash
-# Basic hybrid: per-page triage, docling-fast backend
-opendataloader-pdf --hybrid docling-fast input.pdf
-
-# Full mode: send all pages to the backend
-opendataloader-pdf --hybrid docling-fast --hybrid-mode full input.pdf
-```
-
-The client connects to `http://localhost:5002` by default. No additional configuration is needed for a local setup.
-
----
-
-## OCR paths
-
-There are **two distinct OCR paths**, depending on the backend. They differ in *where* OCR runs and *how* it is configured. Verify every flag against `--help` before using it.
-
-**(a) `docling-fast` — OCR runs on the server.**
-- Client: `--hybrid docling-fast` (add `--hybrid-mode full` to force all pages through the backend).
-- Server: `--force-ocr` (or `--no-ocr`; mutually exclusive), `--ocr-engine` (default `easyocr`), `--ocr-lang` (code system depends on the engine — see Server Configuration), `--psm` (Tesseract engines only).
-- **This is the path with explicit language control.** Prefer it when the document language must be set — e.g. Korean: `--ocr-lang "ko,en"` (EasyOCR supports the `ko` code; pass it explicitly — Korean is not guaranteed in the engine's default language set).
-
-**(b) `hancom-ai` — OCR *strategy* is a client flag; the OCR runs on the backend.**
-- Client: `--hybrid hancom-ai --hybrid-hancom-ai-ocr-strategy force` (values `off` / `auto` / `force`) selects the strategy. The OCR itself is executed by the **Hancom AI backend service**, which must be reachable — the PDF is sent to it (same privacy boundary as any hybrid backend).
-- **No language-code control is exposed** on this path.
-
-The `--help` output does not rank backends by accuracy, and neither does this guide. Choose the path that matches your control needs; when the document language matters, use `docling-fast`.
-
----
-
-## Triage Modes
-
-Control how pages are routed with `--hybrid-mode`.
-
-| Mode | Flag | Behavior |
-|------|------|----------|
-| auto | `--hybrid-mode auto` | Per-page triage. Simple pages stay on Java; complex pages go to the backend. **Default.** |
-| full | `--hybrid-mode full` | All pages go to the backend. Required for enrichment features. |
-
-### When to use `auto`
-
-`auto` is the default and works well for mixed documents. The triage strategy is conservative: it prefers to send borderline pages to the backend (minimizing missed complex content) at the cost of some extra backend calls.
-
-Expected throughput shape:
-- Simple pages (Java path): fastest
-- Complex pages (backend path): varies by content and hardware
-- Overall for a mixed document: between the two extremes
-
-Actual numbers depend on your documents and hardware; measure on your own corpus rather than relying on fixed figures.
-
-### When to use `full`
-
-Use `full` when you need enrichment features (`--enrich-formula`, `--enrich-picture-description`) or when the entire document is scanned and you want consistent OCR output across all pages.
-
-Expected throughput with `full`: noticeably slower than Java-only or `auto`, depending on backend and GPU availability.
-
-> **Important:** `--enrich-formula` and `--enrich-picture-description` are server-side options, but they only take effect when the client is running with `--hybrid-mode full`. In `auto` mode, enrichments are silently skipped — no warning or error is shown. If your output is missing formulas or image descriptions, check that you have `--hybrid-mode full` set on the client side.
-
----
-
-## Client Options
-
-| Option | Values | Default | Description |
-|--------|--------|---------|-------------|
-| `--hybrid <name>` | `off`, `docling-fast`, `hancom-ai` | `off` | Select the backend. `off` disables hybrid mode entirely. |
-| `--hybrid-mode <mode>` | `auto`, `full` | `auto` | Page routing strategy. |
-| `--hybrid-url <url>` | Any URL | unset (client falls back to `http://localhost:5002` for docling-fast; `hancom-ai` defaults to `http://localhost:18008/api/v1`) | Override the server URL for remote or non-default setups. |
-| `--hybrid-timeout <ms>` | Integer | `0` (no timeout) | Request timeout in milliseconds. `0` means no timeout. |
-| `--hybrid-fallback` | Flag | Disabled | Fall back to the Java path if the backend returns an error. ⚠ Preserves completion, **not** quality — the run "succeeds" but requested OCR/enrichment did not happen. When those are mandatory, VERIFY them explicitly (or fail closed). |
-
-### `hancom-ai` client flags
-
-These flags apply **only** when `--hybrid hancom-ai` is selected (they are client-side *configuration*; the OCR itself is executed by the Hancom AI backend service, which must be reachable). `docling-fast` ignores them.
-
-| Option | Values | Default | Description |
-|--------|--------|---------|-------------|
-| `--hybrid-hancom-ai-ocr-strategy <s>` | `off`, `auto`, `force` | `auto` | OCR strategy. `off` = stream-only; `auto` = stream first, OCR fallback; `force` = OCR-only. No language-code control is exposed on this path. |
-| `--hybrid-hancom-ai-regionlist-strategy <s>` | `table-first`, `list-only` | `table-first` | DLA label 7 (regionlist) handling. `table-first` = check TSR overlap; `list-only` = skip TSR, always treat as list. |
-| `--hybrid-hancom-ai-image-cache <s>` | `memory`, `disk` | `memory` | Page image cache backing. |
-
----
-
-## Server Configuration
-
-Server options are passed when starting `opendataloader-pdf-hybrid`. **Authority for the
-current server option surface, values, and defaults: `opendataloader-pdf-hybrid --help`**
-(available once the hybrid extras are installed — Quick Setup). The server is a separate
-package and its options are **not** in the client `options.json`, so this guide does not
-re-list them as an inventory — the OCR flags appear under "OCR paths" and the routing
-flags under "Triage Modes" above. A few decision-critical details `--help` does not make
-obvious:
-
-- **`--ocr-lang` code system depends on `--ocr-engine`** (the detail deferred from OCR
-  paths): EasyOCR uses its own codes (`ko,en`, but `ch_sim`/`ch_tra` for Chinese),
-  Tesseract ISO 639-2 (`kor,eng`), RapidOCR `english,chinese`, ocrmac BCP-47 (`en-US`).
-  If omitted, the engine's default languages are used — there is no fixed `en` default,
-  so confirm the engine before setting the language.
-- **`--host` binds all interfaces by default and the server is unauthenticated** — bind
-  `127.0.0.1` for local use or restrict by firewall; never expose it unprotected.
-- **`--enrich-formula` / `--enrich-picture-description` require the client to run
-  `--hybrid-mode full`** — in `auto` they are silently skipped (see Triage Modes / the
-  enrichment note). `--picture-description-prompt` blank/whitespace-only falls back to
-  docling's default prompt.
-- **`--psm` applies only to Tesseract engines** (`tesseract` / `tesserocr`); ignored
-  otherwise. `--force-ocr` and `--no-ocr` are mutually exclusive (see OCR paths).
-
-**Example — scanned Korean document with formula extraction (docling-fast path):**
+A backend option can be *listed* and *accepted* while no server is actually
+answering — and if a fallback is in effect, the run then completes on the local
+path with a clean exit and none of the backend's OCR/enrichment (hazard A.2 in
+`option-interactions.md`). So confirm the endpoint answers before the run:
 
 ```bash
-# Server (EasyOCR uses its own codes, e.g. ko, en, ch_sim)
-opendataloader-pdf-hybrid --host 127.0.0.1 --port 5002 --force-ocr --ocr-engine easyocr --ocr-lang "ko,en" --enrich-formula
-
-# Client (must use --hybrid-mode full)
-opendataloader-pdf --hybrid docling-fast --hybrid-mode full input.pdf
+# bundled helper: reports reachable / stopped / error for a backend endpoint
+bash scripts/hybrid-health.sh
 ```
 
----
+Reachability confirms only that the endpoint answers — **not** that the OCR engine
+or enrichment model is healthy. That is what the post-run VERIFY checks (SKILL.md
+"VERIFY").
+
+## Routing: per-page vs. whole-document
+
+Backends typically offer a per-page triage mode (simple pages stay local, complex
+pages go to the backend) and a whole-document mode (every page to the backend).
+Triage is cheaper for mixed documents; whole-document is needed when every page
+must get the backend's treatment — most importantly for enrichment (next), and for
+a fully-scanned document that needs uniform OCR. Confirm the exact routing option
+and its values in the installed `--help`, and measure throughput on your own
+corpus rather than relying on fixed figures.
+
+## HAZARD — enrichment needs whole-document routing
+
+Enrichment features (formula extraction, figure descriptions) run only on pages
+that reach the backend. Under per-page triage, pages judged simple stay local and
+their enrichment is **silently skipped** — no error, clean exit. To enrich the
+whole document, route the whole document to the backend, then VERIFY the enriched
+content is actually present. (This is SKILL.md's enrichment-silently-skipped
+hazard; see `option-interactions.md` §A.1.)
+
+## HAZARD — OCR quality depends on setting the document language
+
+OCR accuracy depends on telling the engine what language(s) the document is in. If
+the language is not set, the engine falls back to its own default language set,
+which may not include the document's language — so text comes back wrong or empty,
+with no error. **The language-code system is engine-specific**: different OCR
+engines expect different code spellings for the same language, and the codes are
+*not* interchangeable. Confirm both the language option **and** the exact codes it
+expects from the backend's own `--help` for the engine you selected — do not carry
+codes over from another engine or from memory. Note that not every backend path
+exposes language control at all; where it is not exposed you cannot set it, and OCR
+runs with the backend's built-in behavior.
 
 ## Troubleshooting
 
-### "Connection refused" or server not reachable
-
-The server is not running or is on a different port/host.
-
-1. Confirm the server started without errors in Terminal 1.
-2. Check the port matches on both sides (`--port` on server, `--hybrid-url` on client).
-3. For a remote server, ensure the host is reachable and the firewall allows the port.
-
-```bash
-# Test connectivity manually
-curl http://localhost:5002/health
-```
-
-### Request timeout
-
-The backend is taking longer than the configured timeout.
-
-- Increase the timeout: `--hybrid-timeout 30000` (30 seconds)
-- Or disable it: `--hybrid-timeout 0`
-- If this is persistent, check backend resource usage (CPU/GPU).
-
-### Formulas or image descriptions missing from output
-
-This is the most common silent failure. Enrichment options on the server are only applied when the client sends the page to the backend.
-
-- In `auto` mode, pages classified as simple stay on Java — enrichments are never applied to them.
-- **Fix:** Add `--hybrid-mode full` to your client command.
-
-No error or warning is emitted when enrichments are skipped. This is by design (the server processes what it receives), but it can be surprising.
-
-### Output quality is lower than expected for complex tables
-
-In `auto` mode, the triage heuristic may occasionally classify a complex table as simple. Switch to `--hybrid-mode full` to force all pages through the backend.
+- **Endpoint unreachable** ("connection refused" and the like): the server is not
+  running, or the client's server-address option points at the wrong host/port.
+  Confirm the server started cleanly and that the address matches on both sides;
+  re-probe with `scripts/hybrid-health.sh`.
+- **Requests time out:** the backend is slower than the configured timeout. Raise
+  or disable it via the client's timeout option (from `--help`), and check backend
+  CPU/GPU load.
+- **Enrichment missing from output:** the whole-document routing hazard above — the
+  most common silent failure. Route the whole document and re-VERIFY.
+- **Complex tables still weak under triage:** triage may have classified them
+  simple; route the whole document (SKILL.md "DIAGNOSE by symptom" → weak quality).
 
 ---
 
-## Backend Registry
-
-| Backend | Status | OCR location | Features |
-|---------|--------|--------------|----------|
-| `docling-fast` | Available | Server | OCR (engine + language configurable), formula extraction (LaTeX), chart descriptions, table enhancement |
-| `hancom-ai` | Available | Server (Hancom AI backend) | OCR strategy via client flag `--hybrid-hancom-ai-ocr-strategy`, but executed on the backend; regionlist strategy; image-cache control. No language-code control. |
-
-Backends are selected with `--hybrid <name>`. Only one backend can be active per run. `docling-fast` is the neutral, open default; `hancom-ai` is a vendor backend — do not steer users to it unasked.
-
----
-
-## Performance Notes
-
-Relative throughput:
-
-- **Java only (no hybrid)**: fastest path
-- **Hybrid `auto`** (mixed document): close to Java speed for most pages; only triaged pages pay the backend round-trip
-- **Hybrid `full`**: slowest path; GPU-accelerated backend recommended
-
-Latency figures depend on document complexity, available hardware, and backend configuration. Running the hybrid server on a machine with a GPU significantly reduces the per-page time in `full` mode. Measure against your own corpus for representative numbers.
-
-For throughput-sensitive workloads, use `auto` mode and reserve `full` mode for documents where enrichment or uniform OCR quality is required.
-
-**Large documents** — do not pre-split on assumption. There is no client-side batching flag, and how pages are sent to the backend can vary by backend and version. Test a representative large document first and watch memory, upload limits, timeouts, and backend behavior; split only when an observed operational limit requires it.
+**Cross-references:** SKILL.md "Source-of-truth rule", "VERIFY", "DIAGNOSE by
+symptom", "Where the human decides"; `option-interactions.md` (interaction
+principles); `installation-matrix.md` (installing the backend extras);
+`scripts/hybrid-health.sh`.
