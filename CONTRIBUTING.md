@@ -119,6 +119,19 @@ Use the following format:
 - Fix: Bug fix
 - Update: Code update
 
+## 🤖 Agent Skill Maintenance
+
+This repo ships an AI-agent skill under `skills/odl-pdf/`. It is a **version-independent procedure** — it reads the installed CLI's own `--help` at runtime and bakes no option name, value, or default into its prose, so renaming a flag or flipping a default does **not** require touching the skill.
+
+What still needs manual review when you change the CLI:
+
+- **Silent-failure behavior** (e.g. an enrichment that is skipped unless the whole document is routed to the backend; structured output that does not stream to stdout). If you add, remove, or change such behavior, update the hazard principles and the release-review checklist in `skills/odl-pdf-maintenance/MAINTAINING.md`.
+- The **version-coupling lint** (`skills/odl-pdf-maintenance/sync-skill-refs.py`, run in CI) fails the build if a version number or an option name is ever baked into the skill. If it fails, fix the skill text — do not add to its allowlist.
+
+The `skills/odl-pdf-maintenance/` directory is developer-only and is **not** part of the installable skill.
+
+---
+
 ## 📝 CLA / DCO Requirements
 
 Depending on your contribution, we may ask you to sign:
