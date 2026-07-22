@@ -12,14 +12,14 @@ on:
       - 'skills/odl-pdf/scripts/**'
       - 'skills/odl-pdf/SKILL.md'
       - 'skills/odl-pdf/references/**'
-      - 'skills/odl-pdf/evals/**'
+      - 'skills/odl-pdf-maintenance/**'
       - '.github/workflows/skill-smoke-test.yml'
   pull_request:
     paths:
       - 'skills/odl-pdf/scripts/**'
       - 'skills/odl-pdf/SKILL.md'
       - 'skills/odl-pdf/references/**'
-      - 'skills/odl-pdf/evals/**'
+      - 'skills/odl-pdf-maintenance/**'
       - '.github/workflows/skill-smoke-test.yml'
   workflow_dispatch:
 
@@ -61,7 +61,7 @@ jobs:
         run: |
           python - <<'PYEOF'
           import json, sys
-          d = json.load(open("skills/odl-pdf/evals/evals.json", encoding="utf-8"))
+          d = json.load(open("skills/odl-pdf-maintenance/evals/evals.json", encoding="utf-8"))
           errs = []
           evals = d.get("evals", [])
           ids = [e.get("id") for e in evals]
@@ -169,21 +169,31 @@ jobs:
         shell: cmd
         run: |
           chcp 1252
-          python skills\odl-pdf\scripts\quick-eval.py skills\odl-pdf\evals\evals.json skills\odl-pdf\evals\evals.json
+          python skills\odl-pdf\scripts\quick-eval.py skills\odl-pdf-maintenance\evals\evals.json skills\odl-pdf-maintenance\evals\evals.json
 
-      # --- sync-skill-refs.py --------------------------------------------
-      - name: sync-skill-refs.py reports no drift
-        run: python skills/odl-pdf/scripts/sync-skill-refs.py
+      # --- sync-skill-refs.py (version-coupling lint) --------------------
+      - name: lint reports no version coupling
+        run: python skills/odl-pdf-maintenance/sync-skill-refs.py
 
-      - name: drift-check passes on real skill, fails on a bad token
+      - name: lint passes on real skill, fails on baked coupling
         run: |
-          python skills/odl-pdf/scripts/sync-skill-refs.py
+          python skills/odl-pdf-maintenance/sync-skill-refs.py
           echo "real skill: PASS"
+          # Negative test: a prose file that bakes an ODL option name as fact
+          # (the very coupling the skill forbids) must FAIL the lint (exit 1).
+          # The fixture is otherwise clean — valid frontmatter, the source-of-truth
+          # phrase, balanced fences — so the only violation is the baked --flag,
+          # proving the coupling check itself fires (not just a broken bundle).
           tmp=$(mktemp -d)
           mkdir -p "$tmp/skill/references"
-          printf 'Use `--totally-made-up-flag`.\n' > "$tmp/skill/SKILL.md"
-          cp options.json "$tmp/options.json"
-          if python skills/odl-pdf/scripts/sync-skill-refs.py --skill-dir "$tmp/skill" --options-json "$tmp/options.json"; then
-            echo "ERROR: drift-check did not fail on a bad token"; exit 1
+          {
+            printf -- '---\n'
+            printf 'name: odl-pdf-fixture\n'
+            printf -- '---\n'
+            printf 'Read the installed tool own help to discover options.\n'
+            printf 'This line bakes an option as fact: pass `--totally-made-up-flag`.\n'
+          } > "$tmp/skill/SKILL.md"
+          if python skills/odl-pdf-maintenance/sync-skill-refs.py --skill-dir "$tmp/skill"; then
+            echo "ERROR: lint did not fail on a baked option"; exit 1
           fi
-          echo "bad token: correctly failed"
+          echo "baked coupling: correctly failed"

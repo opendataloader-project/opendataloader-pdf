@@ -1,32 +1,48 @@
-# Integration Examples
+# Integration examples — worked handoffs
 
-Ready-to-run code for each supported interface. Load this file when the user asks for copy-pasteable examples in a specific language or framework.
+Copy-shaped code for calling ODL from each interface and handing its output to a
+downstream pipeline.
 
-Every path requires **Java 11+** at runtime (current floor per `java/pom.xml`). Language wrappers additionally require **Python 3.10+** (pip, per `pyproject.toml`) or **Node.js 20.19+** (npm, per `package.json`). See `installation-matrix.md` § Prerequisites for details.
+**Read the convention first.** Every ODL-specific option is written as a
+placeholder — `<the … option help lists>` — which you replace with the real
+name/value from the installed `--help` (SKILL.md "Source-of-truth rule"); never
+type the placeholder literally. Output-schema field names (where the text, page,
+and bounding box live) are **confirmed by inspecting one of your own output files**
+(a probe), not treated as fixed facts — they vary by version. The file-handling
+*structure* of these examples is real and concrete; the ODL syntax inside is yours
+to fill in from help.
 
----
+Runtime prerequisites (which runtimes, how their floors are declared):
+`installation-matrix.md`. Prefer the local path; add a backend only after a
+verified local run shows it is needed and a server is reachable (`hybrid-guide.md`;
+SKILL.md "Representative workflow").
+
+## ToC
+- CLI
+- Python / Node — batch in one call
+- The RAG handoff (structured output → file → parse → citations)
+- Framework loaders (LangChain / LlamaIndex)
+- Java (in-process)
+- Pipe patterns & remote backend
 
 ## CLI
 
 ```bash
-# Local (default). Add --hybrid docling-fast only when DECIDE selected hybrid AND the server is running.
-opendataloader-pdf input.pdf \
-  --format markdown \
-  --output-dir ./output \
-  --quiet
+# Local, minimal. Fill each <…> from the installed --help.
+opendataloader-pdf <input> <the output-format option help lists> <the output-destination option> <the quiet option>
 ```
 
-For multiple formats in one pass:
+Add a backend selector only when a verified local run is insufficient **and** the
+server is reachable (`hybrid-guide.md`).
 
-```bash
-opendataloader-pdf input.pdf --format json,markdown,html
-```
+## Python / Node — batch in one call
 
----
-
-## Python
-
-Batch all files in **one** `convert()` call — each call spawns a JVM, so repeated calls are slow (see Gotcha 3 in SKILL.md). For crash-isolation or memory limits, split into a few reasonably sized batches rather than one giant call: ordinary per-file errors are recorded and the run continues to the remaining files (non-zero exit at the end), but a JVM-level crash or out-of-memory can still take down the whole call.
+Each invocation spawns a JVM, so repeated one-file calls are slow: pass all files
+to a single call. For crash-isolation or memory limits, split into a few
+reasonably-sized batches rather than one giant call — ordinary per-file errors are
+recorded and the run continues (non-zero exit at the end), but a JVM-level crash or
+out-of-memory can still take down the whole call. (Confirm the current parameter
+names/values against the installed package and its `--help`.)
 
 ```python
 import opendataloader_pdf
@@ -34,89 +50,54 @@ import opendataloader_pdf
 opendataloader_pdf.convert(
     input_path=["file1.pdf", "file2.pdf", "file3.pdf"],
     output_dir="./output",
-    format="markdown",
-    # hybrid="docling-fast",  # add only when DECIDE selected hybrid AND the server is running
+    # remaining keyword arguments name capabilities (output format, backend, …);
+    # confirm the current parameter names/values against the installed package.
 )
 ```
-
----
-
-## Node.js
-
-Same JVM-spawn concern — pass all files to one `convert()` call (optionally chunked into a few batches for crash-isolation).
 
 ```javascript
 import { convert } from '@opendataloader/pdf';
 
+// Same JVM-per-call concern: pass all files to one convert() call.
 await convert(['file1.pdf', 'file2.pdf'], {
   outputDir: './output',
-  format: 'markdown',
-  // hybrid: 'docling-fast',  // add only when DECIDE selected hybrid AND the server is running
+  // other options name capabilities — confirm names/values against the package.
 });
 ```
 
----
+## The RAG handoff — route structured output through a file, then parse it
 
-## LangChain
+This is the concrete method. A structured output that carries **position metadata**
+(page + region) is what lets a retrieved chunk cite its exact source. Two hazards
+shape the method (SKILL.md "Silent-failure hazards"; `option-interactions.md` §A.3):
 
-Basic loader:
+- the structured format may **not stream to stdout** — so write it to a **file**
+  and read the file;
+- chunking on rendered markup (e.g. heading separators) **drops** the position
+  metadata — so chunk from the structured file, not from the markup.
 
-```python
-from langchain_opendataloader_pdf import OpenDataLoaderPDFLoader
+**Step 1 — produce the structured file** (not stdout):
 
-loader = OpenDataLoaderPDFLoader(
-    file_path="document.pdf",
-    format="text",
-    # hybrid="docling-fast",  # local-first: enable ONLY for scanned/complex PDFs,
-                              # and only after pre-flighting the hybrid server
-)
-
-documents = loader.load()
-# documents is a list of LangChain Document objects with page_content and metadata
+```bash
+opendataloader-pdf <input> <the structured-format option help lists> <the output-destination option> <the quiet option>
+# then read the written file; if you must pipe, parse the file and pipe the PARSED result:
+#   … && jq . <the written output file>
 ```
 
-### Full RAG pipeline
+**Step 2 — confirm the field names by probing your own output.** Open one output
+file and see where the element **text**, **page number**, and **bounding box**
+actually live and what they are called — do not assume spellings. The helpers below
+try several spellings so they survive version differences, but eyeball one real
+file first.
 
-Load → chunk → hand off. Use `format="json"` and the "JSON Citation Chunking" recipe below when you need page + bounding box for citation.
-
-```python
-from langchain_opendataloader_pdf import OpenDataLoaderPDFLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-
-# 1. Load PDFs as markdown so the heading separators below are meaningful.
-#    Add hybrid="docling-fast" only when DECIDE selected hybrid AND the server is running.
-loader = OpenDataLoaderPDFLoader(file_path="document.pdf", format="markdown")
-documents = loader.load()
-
-# 2. Chunk with overlap on structural separators.
-splitter = RecursiveCharacterTextSplitter(
-    chunk_size=1000,
-    chunk_overlap=200,
-    separators=["\n## ", "\n### ", "\n\n", "\n", " "],
-)
-chunks = splitter.split_documents(documents)
-
-# 3. Embed + index with the vector store and embeddings YOUR app chose —
-#    those integrations are outside this skill's scope (SKILL.md Stage 6).
-```
-
----
-
-## JSON Citation Chunking (page + bounding box)
-
-When citations matter (SKILL.md Stage 6), extract with `--format json` and keep each element's **page number** and **bounding box** on the chunk. Chunking on markdown headers (`\n## `) drops that spatial metadata — JSON preserves it.
-
-> ODL 2.5.0 emits `content` (text), `page number`, and `bounding box` on each element (under `kids`). The helpers below try those real keys first, then fall back to alias spellings for other/older versions. Confirm against one of your own output files before trusting the field names.
-
-### Generic (no framework)
-
-Parse the JSON, flatten the element tree to `(text, page, bbox)`, then pack elements into character-bounded chunks (bounded by `max_chars`) while carrying the metadata:
+**Step 3 — flatten the element tree to `(text, page, bbox)` and pack into
+size-bounded chunks that carry the metadata:**
 
 ```python
 import json
 
-# ODL 2.5.0 keys are "content" / "page number" / "bounding box".
-# The alias spellings after them are fallbacks for other/older versions.
+# Field names vary by version — confirm against your own output (Step 2).
+# Each accessor tries the likely spellings; keep whichever your file actually uses.
 def _page_of(el):
     return (el.get("page number") or el.get("page")
             or el.get("pageNumber") or el.get("page_number"))
@@ -161,27 +142,24 @@ def chunk_with_citations(json_path, max_chars=1000):
                        "citations": [m for _, m in buf]})
     return chunks
 
-# Each chunk carries the (page, bbox) of every element it contains, so a
-# retrieved chunk can cite the exact page and region it came from.
-# max_chars bounds size BETWEEN elements: a single element longer than max_chars
-# becomes its own chunk that exceeds the bound (elements are not split, to keep
-# each citation's (page, bbox) intact).
+# Each chunk carries the (page, bbox) of every element it contains, so a retrieved
+# chunk can cite the exact page and region it came from. max_chars bounds size
+# BETWEEN elements: a single element longer than max_chars becomes its own chunk
+# that exceeds the bound (elements are never split, to keep each citation intact).
 ```
 
-### LangChain
-
-Wrap each chunk as a `Document`, keeping page/bbox in `metadata` so retrieval can surface the citation:
+**Step 4 — wrap chunks for your framework, keeping the page/bbox pairs intact:**
 
 ```python
 import json
 from langchain_core.documents import Document
 
-chunks = chunk_with_citations("output.json")
+chunks = chunk_with_citations("<the written output file>")
 docs = [
     Document(
         page_content=c["text"],
-        # Keep each (page, bbox) PAIR. A chunk can span pages, so a single "page"
-        # plus a flat "bboxes" list loses which region is on which page. Many vector
+        # Keep each (page, bbox) PAIR. A chunk can span pages, so one scalar "page"
+        # plus a flat bbox list loses which region is on which page. Many vector
         # stores allow only scalar metadata, so serialize the pairs to a JSON string.
         metadata={
             "page": next((m["page"] for m in c["citations"] if m["page"] is not None), None),
@@ -190,42 +168,41 @@ docs = [
     )
     for c in chunks
 ]
-# Retrieval: json.loads(doc.metadata["citations"]) -> [{"page":.., "bbox":..}, ..];
-# metadata["page"] is a convenience for coarse filtering only.
+# Retrieval: json.loads(doc.metadata["citations"]) -> [{"page":.., "bbox":..}, …]
 ```
 
-### LlamaIndex
+LlamaIndex is the same shape — emit `TextNode(text=…, metadata=…)` with the
+identical serialized-pairs metadata and feed the nodes into your index. Embedding
+and the vector store itself are your app's choice and outside this skill's scope
+(SKILL.md "Where the human decides").
 
-Emit `TextNode`s with the same metadata:
+## Framework loaders (LangChain / LlamaIndex)
+
+If you use the framework's own ODL loader instead of the CLI, its constructor takes
+a file path and a format-like parameter; confirm the parameter names and their
+defaults in the **loader package's** docs (they are the loader's surface, not the
+CLI's). Enable a backend in the loader only for scanned/complex PDFs and only after
+pre-flighting the server (`hybrid-guide.md`).
 
 ```python
-import json
-from llama_index.core.schema import TextNode
+from langchain_opendataloader_pdf import OpenDataLoaderPDFLoader
 
-chunks = chunk_with_citations("output.json")
-nodes = [
-    TextNode(
-        text=c["text"],
-        # Same pairing concern as LangChain above: keep the (page, bbox) pairs
-        # intact (serialized) instead of collapsing to one page + a flat bbox list.
-        metadata={
-            "page": next((m["page"] for m in c["citations"] if m["page"] is not None), None),
-            "citations": json.dumps(c["citations"]),
-        },
-    )
-    for c in chunks
-]
-# Feed nodes into a VectorStoreIndex; json.loads(node.metadata["citations"])
-# recovers the exact (page, bbox) of every element in the chunk.
+loader = OpenDataLoaderPDFLoader(
+    file_path="document.pdf",
+    # format / backend parameters: confirm names + defaults in the loader's docs
+)
+documents = loader.load()   # list of Document objects with page_content + metadata
 ```
 
----
+## Java (in-process)
 
-## Java (Maven)
-
-Local (default). Output formats are per-format toggles, **not** a `setFormat`
-string, and **JSON is on by default** — turn it off if you only want Markdown.
-The Java library runs in your application's own JVM (no wrapper process).
+The Java library runs inside your application's own JVM (no wrapper process). Its
+output is controlled by per-format toggles on a config object, **not** a single
+format string, and at least one kind is on by default — so disable the ones you do
+not want. Confirm the exact setter names and which defaults are on against the
+**Javadoc/source of the Maven artifact you pinned** (a Java consumer uses that API,
+not the installed CLI; CLI option names and Java setters are related but not
+interchangeable).
 
 ```java
 import org.opendataloader.pdf.api.Config;
@@ -233,74 +210,34 @@ import org.opendataloader.pdf.api.OpenDataLoaderPDF;
 
 Config config = new Config();
 config.setOutputFolder("./output");
-config.setGenerateJSON(false);      // JSON defaults to true — disable if unwanted
-config.setGenerateMarkdown(true);
+// Toggle the output kinds you want via the config's setters — confirm names and
+// which defaults are on against the Javadoc for your pinned artifact version.
 
 OpenDataLoaderPDF.processFile("file1.pdf", config);
 ```
 
-Hybrid is a separate opt-in — only after DECIDE selected it **and** a server is
-reachable (local-first otherwise). Set the backend on the same `Config`:
+Selecting a backend is a separate opt-in on the same config, only after a verified
+local run needs it and a server is reachable. The backend **name string the client
+accepts may differ from the constant the API documents** — confirm the accepted
+value by probing (a wrong name fails at runtime), and see `hybrid-guide.md`. The
+Maven/Gradle dependency block is in `installation-matrix.md`.
 
-```java
-// requires a running hybrid server — see hybrid-guide.md
-config.setHybrid("docling-fast");   // in 2.5.0 the client factory only wires "docling-fast"; passing "docling" (which the Config constants name as canonical) throws "Unknown hybrid backend" at runtime
-```
+## Pipe patterns & remote backend
 
-Verify the exact setters against the **API for your pinned library version**
-(Javadoc/source of the Maven artifact — a Java consumer uses that, not the installed
-CLI). CLI option names and Java setter names are related conceptually but are not
-interchangeable. See `installation-matrix.md` for the Maven dependency block.
-
----
-
-## Output Pipeline Patterns
-
-**Quiet mode for automated pipelines** — suppress progress output:
-
-```bash
-opendataloader-pdf input.pdf --format markdown --quiet
-```
-
-**Stdout for pipe-based workflows** — text-like formats only, one at a time. On 2.5.0 `--to-stdout` emits **nothing for `json`/`html`** (they must go to files); use `text`/`markdown`, and pass `-q` so log lines don't pollute stdout:
-
-```bash
-opendataloader-pdf input.pdf --format text --to-stdout -q | my-indexer
-# JSON does NOT stream to stdout — write a file, then read it:
-opendataloader-pdf input.pdf --format json --output-dir ./out -q && jq . ./out/input.json
-```
-
-**Page range extraction**:
-
-```bash
-opendataloader-pdf input.pdf --pages "1,3,5-10" --format markdown
-```
-
-**Custom page separators** for downstream splitting:
-
-```bash
-opendataloader-pdf input.pdf \
-  --format markdown \
-  --markdown-page-separator "---PAGE %page-number%---"
-```
+- **Quiet for automated pipelines:** find the quiet/no-log option in `--help` so
+  progress output doesn't pollute the pipe.
+- **Piping:** stream a text-like output to the next tool; but a structured output
+  may not stream (write a file, then parse it — the RAG handoff above). VERIFY the
+  pipe carried real content.
+- **Page range / separators:** find the page-selection and per-page-separator
+  options in `--help` when a downstream splitter needs them.
+- **Remote backend:** run the server on a private address with no built-in auth;
+  point the client's server-address option at it; treat the hop as a privacy
+  boundary and protect it (firewall / private network / reverse-proxy auth).
+  Details + reachability probe: `hybrid-guide.md`.
 
 ---
 
-## Remote Hybrid Server
-
-For multi-machine deployments, run the server on a GPU host and point clients at it.
-
-```bash
-# GPU host — bind an explicit private address; the server has NO built-in auth.
-# Set this to the host's actual private address (quoted so it is not parsed as a shell redirect).
-HYBRID_HOST=10.0.0.5
-opendataloader-pdf-hybrid --host "$HYBRID_HOST" --port 5002
-
-# Client
-opendataloader-pdf input.pdf \
-  --hybrid docling-fast \
-  --hybrid-url "http://$HYBRID_HOST:5002" \
-  --hybrid-timeout 30000
-```
-
-**Security:** the hybrid server has no authentication — restrict access with a firewall, a private network, or reverse-proxy auth. `--hybrid-fallback` is optional and preserves *completion*, not quality; omit it when OCR/enrichment is mandatory, or verify those outputs explicitly.
+**Cross-references:** SKILL.md "Representative workflow", "VERIFY", "Where the human
+decides"; `installation-matrix.md`; `hybrid-guide.md`; `format-guide.md`;
+`option-interactions.md` (§A.3 stdout trap).

@@ -1,198 +1,119 @@
-# ODL-PDF Option Interactions & Combinations
+# Interaction & silent-hazard principles
 
-This file documents **how options interact and combine** — the version-stable knowledge.
-It does **not** list the option inventory. For the current option names, values, and defaults,
-use the discovery sources (SKILL.md "Version & option authority"): the installed CLI's `--help`
-(authority for the user's version), a checkout's `options.json`, or the homepage CLI Options
-Reference. Option names/values referenced below are guarded by `scripts/sync-skill-refs.py`.
+The fuller catalog behind SKILL.md's five headline hazards. Every entry is a
+durable, **capability-level principle** — it never names an option, value, or
+default, because those change between releases; discover the current names from
+the installed `--help` (SKILL.md "Source-of-truth rule"). These are the effects
+that return a *false success*: a clean exit while what the user asked for was
+quietly dropped. `--help` may name the underlying mechanism — some of these
+precedences are even spelled out in an option's own help text — but it never
+names the silent-failure *consequence*, and a casual probe often looks fine
+because the trap succeeds silently. So VERIFY the specific consequence each
+principle names, regardless of what help says.
 
----
+**How to use:** match the user's intent to the relevant principle *before* you
+run; then find the current option expressing that capability in `--help`; then
+VERIFY the specific thing the principle says could be silently missing.
 
-## Categories
+## ToC
+- A. Silent-failure hazards (A.1 enrichment routing · A.2 fallback hides quality ·
+  A.3 structured output doesn't stream · A.4 tagged path pre-empts backend ·
+  A.5 crash before page handling)
+- B. Quieter cross-option trade-offs (B.6 struct-tree no-op · B.7 sanitize fidelity
+  cost · B.8 inline vs. external images · B.9 borderless-table throughput)
+- Applying a principle
 
-This section names the category vocabulary used elsewhere in this file and the skill; the
-per-option inventory itself lives in the discovery sources (SKILL.md "Version & option
-authority"), not here.
+## A. Silent-failure hazards (false success)
 
-### IO — Input / Output Control
+### A.1 Enrichment is silently skipped unless the whole document is routed to the backend
+(routing / enrichment interplay.) In a mixed / per-page routing mode, pages the
+tool judges "simple" stay on the local path and never reach the AI backend, so
+any enrichment requested for those pages quietly does not happen — no error, clean
+exit. Requesting an enrichment is necessary but not sufficient; you must also route
+the *whole* document to the backend. **VERIFY** the enriched content (formula
+markup, figure descriptions) actually appears in the output, not merely that a
+file was produced. See `hybrid-guide.md` for the routing/enrichment mechanics.
 
-Controls where data comes from and where results are written.
+### A.2 A fallback can preserve completion while dropping requested quality
+If the backend errors and a fallback to the local path is in effect, the run still
+produces an output file and exits zero — but the OCR or enrichment you required did
+**not** occur. Completion is preserved; quality is not. When OCR/enrichment is
+mandatory, do not rely on the exit code or the file's existence; VERIFY the
+required content is present, or fail closed.
 
----
+### A.3 Some structured outputs never stream to stdout
+Certain output kinds are only ever written to files. Asking to stream one yields
+**empty stdout on a zero exit** — and a zero exit with an empty pipe is not
+success. Route such an output through a file and read the file (or parse the file
+and pipe the parsed *result*). A related trap: a stream that carries "at most one"
+text-like output will **silently drop the rest** if you request several at once —
+expect exactly one, and confirm what actually arrived.
 
-### Quality — Extraction Quality
+### A.4 A structure-tagged input path can pre-empt the backend
+When the source already carries a usable structure tree and you *also* request the
+backend, the tool may honor the existing structure and **not call the backend**
+(often with only a warning). Only one of the two runs. The installed `--help`
+documents this precedence — it is named in the descriptions of both the
+structure-tree and the backend options — but help documenting the precedence does
+not tell you which path *actually ran* on your document. Decide which you want —
+author-intended structure from the tag tree, or backend processing — do not force
+both at once, and VERIFY which one actually ran.
 
-Controls the accuracy and structure of the extracted content.
+### A.5 A parser/preprocessing crash happens before page-level handling
+A malformed font or a parse failure aborts *before* any page-level mode, page
+selection, or OCR decision is reached. Those options operate at a later stage the
+run never gets to, so switching mode, selecting pages, or enabling OCR **cannot
+bypass** the failure. Treat it as a file-specific upstream defect: report the file
+(and any captured stack) to the maintainers; as a workaround, repair/flatten or
+rasterize the file with another tool and re-run. For a single (non-batch) file this
+yields zero output — report it honestly rather than cycling other modes.
 
----
+## B. Quieter cross-option interactions (quality / size trade-offs, not hard failures)
 
-### Safety — Security and Privacy
+### B.6 A structure-tree option is silently ignored on an untagged source
+The option that reads semantic order from the PDF's tag tree only does something
+when a tag tree exists. On an untagged PDF it is quietly ignored and default layout
+analysis runs instead — no error, and you may wrongly credit it for the result.
+Confirm the PDF is actually tagged (inspect its document properties / run a
+preflight) before attributing any improvement to this path. On a *tagged* source
+this same option can pre-empt the backend — hazard A.4.
 
-Controls content filtering and sensitive data handling.
+### B.7 A content-safety / sanitize capability trades fidelity for privacy
+A capability that redacts sensitive data (emails, phone numbers, URLs, and the
+like) will also drop legitimate content that happens to match — citation URLs, for
+instance — reducing fidelity. Enable it only when the input may carry data that
+must not flow downstream, and treat it as a fidelity cost, not free. Never disable
+a safety filter merely to "get more content," especially on untrusted input — that
+re-exposes the hidden-text / injection vectors the filter removes (SKILL.md "Where
+the human decides").
 
----
+### B.8 Inlining images vs. writing them externally is a size / portability trade
+A mode that embeds each image inline (as a data URI) makes the output
+self-contained but can balloon its size on image-heavy documents; a mode that
+writes images to a directory keeps the output small but non-self-contained. Choose
+by whether the consumer needs one portable file or many small ones — neither is a
+failure, but the inline path can surprise a downstream store with huge documents.
 
-### Hybrid — AI Backend
+### B.9 A borderless-table capability costs throughput
+A stronger table-detection capability that finds borderless tables adds processing
+time over the default bordered-table path. Escalate to it when recall on borderless
+tables matters; prefer the cheaper default when throughput matters and the tables
+are conventionally bordered. (Escalation order for weak tables: default → borderless
+detection → backend → whole-document backend routing; one change at a time — SKILL.md
+"DIAGNOSE by symptom".)
 
-Options for routing pages through an optional AI enrichment server (e.g. formula OCR, picture descriptions).
+## Applying a principle
 
----
-
-### Output — Output Formatting
-
-Controls how images and page separators appear in output files.
-
----
-
-### Text — Text Processing
-
-Fine-grained control over how extracted text is cleaned and formatted.
-
----
-
-## Interaction Rules
-
-These rules document option combinations that have non-obvious or silent failure modes.
-
-**1. Hybrid enrichments require `--hybrid-mode full`**
-
-Server-side enrichments such as `--enrich-formula` and `--enrich-picture-description` run on the
-hybrid backend. On the client side, they are only applied if `--hybrid-mode full` is set. With the
-default `auto` mode, pages that the triage step classifies as "simple" bypass the backend entirely,
-and any enrichment instructions for those pages are silently ignored. If enrichments are missing
-from the output, check that `--hybrid-mode full` is set.
-
-**2. `--hybrid` requires a running server**
-
-Setting `--hybrid docling-fast` (or any non-`off` value) without a reachable hybrid server makes
-requests fail — **unless `--hybrid-fallback` is set, in which case the run completes via the local
-Java path and returns fallback output (no hybrid OCR/enrichment), which is easy to mistake for a
-successful hybrid extraction** (VERIFY the enrichments actually landed). Quick start:
-
-```bash
-pip install "opendataloader-pdf[hybrid]"
-opendataloader-pdf-hybrid --host 127.0.0.1 --port 5002
-```
-
-Then pass `--hybrid docling-fast --hybrid-url http://localhost:5002` to the client.
-
-**3. `--to-stdout` streams one text-like format — two silent traps**
-
-`--to-stdout` writes extracted content to standard output, both exit-0-with-no-error traps:
-(a) with multiple comma-separated `--format` values it emits **one** and silently drops the rest
-— pass exactly one; (b) `json` and `html` produce **no stdout** on 2.5.0 — only `text`/`markdown`
-stream, so write `json`/`html` to a file with `-o` instead. Also pass `-q` so log lines don't
-pollute the stream.
-
-**4. `--image-output embedded` produces large output for image-heavy PDFs**
-
-`embedded` mode encodes each image as a Base64 data URI and inlines it in the output document.
-For PDFs with many or large images this can produce very large output files. Prefer `external`
-(the default) unless the consumer requires self-contained output.
-
-**5. `--table-method cluster` may be slower**
-
-The `cluster` method adds borderless table detection on top of the default border-based approach.
-It improves recall on tables without visible borders but increases processing time. Use `default`
-when throughput matters and the PDFs have standard bordered tables.
-
-**6. `--use-struct-tree` has no effect on untagged PDFs**
-
-The structure tree option reads semantic order from the PDF's tag tree, which is only present in
-PDFs with a structure tag tree. On a PDF without one the option is ignored and the default layout
-analysis is used instead. To check whether a PDF is tagged, inspect its document properties or
-run a preflight check before enabling this option. On a *tagged* PDF, `--use-struct-tree` also **takes precedence over `--hybrid`**: when both are set the hybrid backend is not called (a warning is emitted), so do not combine them expecting hybrid enrichment (see SKILL.md "Option interactions").
-
----
-
-## Common Combinations
-
-### RAG pipeline (retrieval-augmented generation)
-
-Extract clean, structured text with accurate reading order for vector indexing:
-
-```bash
-opendataloader-pdf input.pdf \
-  --format json \
-  --reading-order xycut \
-  --table-method cluster \
-  --image-output off
-```
-
-Add `--sanitize` **only** when the PDF may contain PII that must not enter the vector store. It replaces emails / phone numbers / URLs / etc. with placeholders, which can drop citation URLs and reduce fidelity — so it is **not** included by default here.
+1. Identify which principle the user's intent touches.
+2. Find the current option(s) expressing the relevant capability in the installed
+   `--help`.
+3. Run the minimal command.
+4. VERIFY the specific content the principle warns could be silently missing — not
+   just that the command exited zero (SKILL.md "VERIFY").
 
 ---
 
-### Extract using a tagged PDF's own structure
-
-Leverage the PDF's tag tree to preserve author-intended reading order and export HTML from that structure (not an accessibility-conformance guarantee):
-
-```bash
-opendataloader-pdf input.pdf \
-  --format html \
-  --use-struct-tree \
-  --include-header-footer \
-  --html-page-separator "<!-- page %page-number% -->"
-```
-
----
-
-### Quick plain-text extraction
-
-Minimal options for fast extraction of readable prose:
-
-```bash
-opendataloader-pdf input.pdf \
-  --format text \
-  --quiet \
-  --to-stdout
-```
-
-Pipe directly to downstream tools: `opendataloader-pdf input.pdf -f text -q --to-stdout | wc -w`
-
----
-
-### Markdown with images for documentation
-
-Export a Markdown file with images written to a directory, suitable for wikis or documentation sites. Images are controlled by `--image-output` (`markdown-with-images` is a deprecated `--format` alias that still warns; prefer `--image-output`):
-
-```bash
-opendataloader-pdf input.pdf \
-  --format markdown \
-  --image-output external \
-  --image-format png \
-  --image-dir ./images \
-  --output-dir ./output
-```
-
-For self-contained Markdown (no separate image files), use `--image-output embedded` to inline images as Base64 data URIs.
-
----
-
-### AI-enriched extraction (hybrid mode)
-
-Extract all pages through the hybrid backend for formula OCR and picture descriptions:
-
-```bash
-opendataloader-pdf input.pdf \
-  --format markdown \
-  --hybrid docling-fast \
-  --hybrid-mode full \
-  --hybrid-url http://127.0.0.1:5002
-```
-
-This is the **client** command; the enrichments only run if the hybrid **server** was started with the matching flags (`--enrich-formula` and/or `--enrich-picture-description`) — `--hybrid-mode full` alone routes pages to the backend but enables neither (Gotcha 2). Do **not** add `--hybrid-fallback` here: this example's goal is enrichment, and on a backend error fallback would yield enrichment-less output that still "succeeds." Add it only when partial local output beats failure — and then verify the enrichments actually landed.
-
----
-
-### Selective page extraction for large PDFs
-
-Extract only a specific page range to reduce processing time:
-
-```bash
-opendataloader-pdf large-report.pdf \
-  --pages "1,5-10,15" \
-  --format json \
-  --output-dir ./extracted \
-  --quiet
-```
+**Cross-references:** SKILL.md "Silent-failure hazards", "VERIFY", "DIAGNOSE by
+symptom", "Where the human decides"; `hybrid-guide.md` (backend setup +
+OCR-language hazard); `format-guide.md` (which output capability fits which use);
+`eval-metrics.md` (judging a weak extraction).

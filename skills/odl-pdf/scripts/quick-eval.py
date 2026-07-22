@@ -201,14 +201,14 @@ def build_report(
         suggestions: list[str] = []
         if score < 0.70:
             suggestions.extend([
-                "  - Try --hybrid docling-fast for better OCR coverage.",
-                "  - Check --format is appropriate for this document type.",
+                "  - Route the whole document to the AI/OCR backend for better coverage (see the tool's --help).",
+                "  - Check the output format is appropriate for this document type (see --help).",
                 "  - Inspect whether the PDF is scanned (image-only) vs. native.",
             ])
         elif score < 0.85:
             suggestions.extend([
-                "  - Consider --hybrid docling-fast or --table-method cluster.",
-                "  - Try --use-struct-tree if the PDF is tagged (accessible).",
+                "  - Try a stronger table-detection method, or route to the AI backend (see --help).",
+                "  - Use the structure-tree reading-order option if the PDF is tagged (see --help).",
             ])
         else:
             # Score is above the general-quality bar but below the caller's

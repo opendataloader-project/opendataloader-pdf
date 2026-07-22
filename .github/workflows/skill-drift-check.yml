@@ -1,23 +1,24 @@
 # skill-drift-check.yml
-# Ensures skill references stay in sync with options.json when CLI options change.
-# Runs sync-skill-refs.py and fails the check if drift is detected (exit code 1).
+# Version-coupling lint over the odl-pdf skill's agent-facing prose.
+# The skill is a durable procedure: it tells the agent to read the installed
+# tool's own --help at runtime and never bakes an option name, value, or version
+# as fact. sync-skill-refs.py is the mechanical floor that guards that contract
+# (a tripwire, not proof) and fails the check on a violation (exit code 1).
 
-name: Skill Drift Check
+name: Skill Lint (version-coupling)
 
 on:
   push:
     paths:
       - 'skills/odl-pdf/SKILL.md'
       - 'skills/odl-pdf/references/**'
-      - 'skills/odl-pdf/scripts/sync-skill-refs.py'
-      - 'options.json'
+      - 'skills/odl-pdf-maintenance/sync-skill-refs.py'
       - '.github/workflows/skill-drift-check.yml'
   pull_request:
     paths:
       - 'skills/odl-pdf/SKILL.md'
       - 'skills/odl-pdf/references/**'
-      - 'skills/odl-pdf/scripts/sync-skill-refs.py'
-      - 'options.json'
+      - 'skills/odl-pdf-maintenance/sync-skill-refs.py'
       - '.github/workflows/skill-drift-check.yml'
   workflow_dispatch:
 
@@ -25,7 +26,7 @@ permissions:
   contents: read
 
 jobs:
-  check-drift:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -34,20 +35,22 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Check skill drift
+      - name: Lint skill prose for version coupling
         run: |
           set +e
-          python skills/odl-pdf/scripts/sync-skill-refs.py
+          python skills/odl-pdf-maintenance/sync-skill-refs.py
           EXIT_CODE=$?
           if [ $EXIT_CODE -eq 1 ]; then
             echo ""
-            echo "Drift detected: a referenced option name/value/default in SKILL.md or"
-            echo "references/ is not in options.json (or a registered value/default is stale)."
-            echo "Fix the reference, or update the registry (SERVER_OPTIONS/EXCLUDED_TOKENS/"
-            echo "REFERENCED_VALUES/REFERENCED_DEFAULTS) in skills/odl-pdf/scripts/sync-skill-refs.py."
+            echo "Version-coupling lint failed: SKILL.md or references/ contains a baked"
+            echo "version/option, or is missing the source-of-truth concept, in the skill's"
+            echo "prose. Express the intent as a capability and let the agent discover the"
+            echo "flag/value/version from the installed tool's --help at runtime; keep the"
+            echo "source-of-truth rule in SKILL.md. This lint is a tripwire, not proof —"
+            echo "authoring discipline + release review remain the real guard."
             exit 1
           elif [ $EXIT_CODE -ne 0 ]; then
             echo ""
-            echo "Drift check failed due to an input/script error (exit $EXIT_CODE)."
+            echo "Lint failed due to an input/script error (exit $EXIT_CODE)."
             exit $EXIT_CODE
           fi
