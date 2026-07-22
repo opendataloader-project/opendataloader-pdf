@@ -1,60 +1,63 @@
-# Output Format Guide
+# Output format guide — goal → capability
 
-Which format to choose for which use case — version-stable guidance. For the authoritative
-list of format *values* and per-option defaults (e.g. `--image-output`), use the discovery
-sources in SKILL.md "Version & option authority" (`--help` / `options.json` / homepage), not
-a table here.
+Pick the output by what you're building, expressed as a **capability**. The current
+*names* of the formats and the options that modify them come from the installed
+`--help` (SKILL.md "Source-of-truth rule") — this guide never spells them, because
+they change between releases. Match your goal to a capability here, then find the
+option that provides it in the installed help.
 
-> `tagged-pdf` is an **extraction output format** that emits a PDF carrying structure tags. It is **not** PDF/UA accessibility-compliance certification — that is out of scope for this tool (see SKILL.md Stage 0).
->
-> `--markdown-with-html` is a **flag**, not a `--format` value. It allows raw HTML tags inside Markdown output for complex structures such as multi-row-span tables, and implies `--format markdown`. See Related Options below.
->
-> Images are controlled by `--image-output` (`off` / `embedded` / `external`). `markdown-with-images` is a **deprecated `--format` alias** — still accepted (emits a warning, slated for removal) and not listed in `--help`; use `--image-output` instead.
+Scope note: producing a structure-tagged PDF as an extraction *output* is a format
+capability; it is **not** PDF/UA accessibility-compliance certification, which is
+out of scope for this tool (SKILL.md frontmatter / "Purpose").
 
-## Downstream Use Mapping
+## Goal → capability
 
-Choose your format based on what you're building:
-
-| Use Case | Recommended Format | Notes |
+| Your goal | Capability you need | How to find it |
 |---|---|---|
-| RAG + source citation | `json` | Bounding boxes enable precise page/region references |
-| RAG text chunking | `markdown` | Clean structure maps well to chunk boundaries |
-| LangChain integration | `text` (or json/markdown/html) | Use with `langchain-opendataloader-pdf`; verify the loader's default and params in its package docs |
-| Web display | `html` | Renders natively in browsers |
-| Quality / extraction debugging | `pdf` + `json` | Annotated PDF shows what was detected; JSON shows coordinates |
-| Plain text search | `text` | Smallest output, no markup overhead |
-| Documentation with images | `markdown` + `--image-output` | Use `--image-output embedded` (inline Base64) or `external` (files in `--image-dir`) |
-| Complex table fidelity | `markdown` + `--markdown-with-html` | The flag falls back to HTML `<table>` where Markdown syntax loses structure |
-| Tagged-PDF extraction output | `tagged-pdf` | Structure-tagged PDF; not PDF/UA compliance |
+| RAG with source citation (page + region) | a structured format that carries per-element **position metadata** (page number, bounding box) | find the structured/data output format in `--help`; confirm it carries position by probing one output (`integration-examples.md`) |
+| RAG text chunking on structure | a format whose **structure maps to chunk boundaries** (headings/sections) | the rich-text / markup output format |
+| Plain-text search, smallest output | a **plain-text** format, no markup | the text output format |
+| Web display | a **browser-renderable markup** format | the HTML-family output format |
+| Quality / detection debugging | an **annotated** output (boxes over a copy of the input) plus the structured data to correlate | the annotated-PDF output + the structured format together (`eval-metrics.md`) |
+| Docs with images | a markup format **plus an image-handling capability** (self-contained vs. referenced) | the markup format + the image-output option; see the size/portability trade in `option-interactions.md` §B.8 |
+| Complex-table fidelity in markup | a markup format that can **fall back to richer table markup** where plain syntax loses structure | the markup format + its rich-table modifier |
+| Framework loader (LangChain / LlamaIndex) | the **loader's** own format parameter | the loader package's docs; verify its default there (`integration-examples.md`) |
 
-## Related Options
+## Capabilities are not all values of one format option
 
-These options affect output when using image-bearing or multi-page formats:
+A durable distinction that survives renames: **the choice of output file kind is
+one thing; modifiers that change how a kind is rendered are usually separate
+options.** Image handling (inlined / external / dropped), rich-table-in-markup, and
+per-page separators are typically their own options, not values of the format
+selector — and some values that once lived on the format selector migrate to
+dedicated options over releases (old spellings may linger as deprecated aliases
+that emit a warning). Read the current `--help` to see which capability is a format
+*value* and which is a separate option; don't assume a value you remember is still
+one.
 
-- `markdown-with-html` — Flag (not a `--format` value). Allows HTML tags inside Markdown output for complex structures such as multi-row-span tables. Implies `--format markdown`.
-- `image-output` — controls image handling (off / embedded as Base64 / external files). See the installed `--help` or `options.json` for the current values and default.
-- `image-format` — image encoding for extracted images. See `--help` / `options.json` for the current values and default.
-- `image-dir` — Directory path for externalized images when `image-output=external`.
-- `*-page-separator` — Format-specific option to insert a custom separator between pages (e.g., `markdown-page-separator`, `text-page-separator`).
+## Producing several formats at once
 
-## Tips
+The tool can usually emit multiple output kinds in a single pass — parsing the PDF
+once and keeping the outputs consistent. Find the multi-value form in `--help`. But
+see the streaming hazard next.
 
-**Multiple formats in one call**
+## Streaming to stdout — a hazard, not just a convenience
 
-You can produce multiple formats in a single invocation by passing a comma-separated list:
+Streaming output to stdout is handy for piping, but two silent traps apply (SKILL.md
+"Silent-failure hazards"; `option-interactions.md` §A.3):
 
-```
-opendataloader-pdf input.pdf --format markdown,json
-```
+- Some output kinds (typically the structured / markup-heavy ones) **never stream**
+  — you get empty stdout on a zero exit. Write those to a file and read the file.
+- A stdout stream carries **at most one** text-like kind; request several and the
+  rest are silently dropped.
 
-This avoids parsing the PDF twice and ensures both outputs are consistent.
+Also suppress the tool's own log lines (find the quiet option in `--help`) so they
+don't pollute the stream, and VERIFY the pipe actually carried non-empty, parseable
+content.
 
-**Piping output with `--to-stdout`**
+---
 
-Use `--to-stdout` to write output directly to standard output instead of a file. Pass `-q` so log lines don't pollute the stream, and note it streams **text-like formats only** — `json`/`html` emit nothing to stdout on 2.5.0 (write those to files):
-
-```
-opendataloader-pdf input.pdf --format text --to-stdout -q | my-indexer
-```
-
-Note: `--to-stdout` streams **at most one** text-like format and does **not** error on multiple. `text` takes precedence over `markdown`; `json`/`html` never stream. So `text,markdown`→text, `json,text`→text, and `json,html`→**empty stdout** (exit 0). Pass exactly one text-like format.
+**Cross-references:** SKILL.md "Representative workflow", "VERIFY", "Silent-failure
+hazards"; `option-interactions.md` (§B.8 image size trade, §A.3 stdout trap);
+`integration-examples.md` (citation-carrying RAG handoff); `eval-metrics.md`
+(annotated-output debugging).
