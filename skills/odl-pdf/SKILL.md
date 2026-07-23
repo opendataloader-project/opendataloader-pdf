@@ -242,7 +242,8 @@ Escalate least-invasive first, one change at a time.
 
 Deeper quality analysis: `references/eval-metrics.md` and
 `python scripts/quick-eval.py <output> <reference>` (a rough text-similarity
-check, not a structure metric).
+check, not a structure metric; `scripts/` resolves against this skill's
+directory, not your CWD — see "Reading this skill's own files" above).
 
 ## Where the human decides
 
