@@ -67,6 +67,8 @@ export interface ConvertOptions {
   toStdout?: boolean;
   /** Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode */
   threads?: string;
+  /** Set custom TextLine space ratio (with a "."). Default: 0.17 */
+  textLineSpaceRatio?: string;
 }
 
 /**
@@ -104,6 +106,7 @@ export interface CliOptions {
   hybridHancomAiImageCache?: string;
   toStdout?: boolean;
   threads?: string;
+  textLineSpaceRatio?: string;
 }
 
 /**
@@ -204,6 +207,9 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   }
   if (cliOptions.threads) {
     convertOptions.threads = cliOptions.threads;
+  }
+  if (cliOptions.textLineSpaceRatio) {
+    convertOptions.textLineSpaceRatio = cliOptions.textLineSpaceRatio;
   }
 
   return convertOptions;
@@ -319,6 +325,9 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.threads) {
     args.push('--threads', options.threads);
+  }
+  if (options.textLineSpaceRatio) {
+    args.push('--text-line-space-ratio', options.textLineSpaceRatio);
   }
 
   return args;

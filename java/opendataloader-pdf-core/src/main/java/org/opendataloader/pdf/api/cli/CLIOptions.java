@@ -104,6 +104,10 @@ public class CLIOptions {
     private static final String REPLACE_INVALID_CHARS_LONG_OPTION = "replace-invalid-chars";
     private static final String REPLACE_INVALID_CHARS_DESC = "Replacement character for invalid/unrecognized characters. Default: space";
 
+    // ===== Set TextLine space ratio =====
+    private static final String TEXT_LINE_SPACE_RATIO_LONG_OPTION = "text-line-space-ratio";
+    private static final String TEXT_LINE_SPACE_RATIO_DESC = "Set custom TextLine space ratio (with a \".\"). Default: 0.17";
+
     // ===== Use Struct Tree =====
     private static final String USE_STRUCT_TREE_LONG_OPTION = "use-struct-tree";
     private static final String USE_STRUCT_TREE_DESC = "Use PDF structure tree (tagged PDF) for reading order and semantic structure. Output quality depends on tag quality. "
@@ -275,6 +279,7 @@ public class CLIOptions {
             new OptionDefinition(TO_STDOUT_LONG_OPTION, null, "boolean", false, TO_STDOUT_DESC, true),
             new OptionDefinition(THREADS_LONG_OPTION, null, "string", "1", THREADS_DESC, true),
             new OptionDefinition(EXPORT_OPTIONS_LONG_OPTION, null, "boolean", null, null, false),
+            new OptionDefinition(TEXT_LINE_SPACE_RATIO_LONG_OPTION, null, "string", null, TEXT_LINE_SPACE_RATIO_DESC, true),
 
             // Legacy options (not exported, for backward compatibility)
             new OptionDefinition(HYBRID_OCR_LONG_OPTION, null, "string", null, HYBRID_OCR_DESC, false),
@@ -381,6 +386,15 @@ public class CLIOptions {
         }
         if (commandLine.hasOption(CLIOptions.HTML_PAGE_SEPARATOR_LONG_OPTION)) {
             config.setHtmlPageSeparator(commandLine.getOptionValue(CLIOptions.HTML_PAGE_SEPARATOR_LONG_OPTION));
+        }
+        if (commandLine.hasOption(CLIOptions.TEXT_LINE_SPACE_RATIO_LONG_OPTION)) {
+            try {
+                Double textLineSpaceRatio = Double.parseDouble(commandLine.getOptionValue(CLIOptions.TEXT_LINE_SPACE_RATIO_LONG_OPTION));
+                config.setTextLineSpaceRatio(textLineSpaceRatio);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException(
+                    "Option --text-line-space-ratio requires valid double value.");
+            }
         }
         applyContentSafetyOption(config, commandLine);
         applySanitizeOption(config, commandLine);

@@ -653,6 +653,10 @@ public class DocumentProcessor {
         StaticResources.setIsFontProgramsParsing(true);
         StaticStorages.setIsIgnoreMCIDs(!StaticLayoutContainers.isUseStructTree());
         StaticStorages.setIsAddSpacesBetweenTextPieces(true);
+        Double textLineSpaceRatio = config.getTextLineSpaceRatio();
+        if (textLineSpaceRatio != null) {
+            StaticContainers.setTextLineSpaceRatio(textLineSpaceRatio);
+        }
         document.parseChunks();
         LinesPreprocessingConsumer linesPreprocessingConsumer = new LinesPreprocessingConsumer();
         linesPreprocessingConsumer.findTableBorders();

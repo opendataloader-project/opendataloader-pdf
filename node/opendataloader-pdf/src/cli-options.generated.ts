@@ -38,4 +38,5 @@ export function registerCliOptions(program: Command): void {
   program.option('--hybrid-hancom-ai-image-cache <value>', 'Page image cache backing. Requires --hybrid=hancom-ai. Values: memory (default), disk');
   program.option('--to-stdout', 'Write output to stdout instead of file (single format only)');
   program.option('--threads <value>', 'Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode');
+  program.option('--text-line-space-ratio <value>', 'Set custom TextLine space ratio (with a "."). Default: 0.17');
 }
