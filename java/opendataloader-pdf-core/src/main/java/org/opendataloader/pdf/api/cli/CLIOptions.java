@@ -395,7 +395,7 @@ public class CLIOptions {
                 config.setSpaceRatio(spaceRatio);
             } catch (NumberFormatException e) {
                 throw new IllegalArgumentException(
-                    "Option --text-line-space-ratio requires valid double value.", e);
+                    "Option --space-ratio requires valid double value.", e);
             }
         }
         applyContentSafetyOption(config, commandLine);
