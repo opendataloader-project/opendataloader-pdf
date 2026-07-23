@@ -42,7 +42,7 @@ def convert(
     hybrid_hancom_ai_image_cache: Optional[str] = None,
     to_stdout: bool = False,
     threads: Optional[str] = None,
-    text_line_space_ratio: Optional[str] = None,
+    space_ratio: Optional[str] = None,
 ) -> None:
     """
     Convert PDF(s) into the requested output format(s).
@@ -80,7 +80,7 @@ def convert(
         hybrid_hancom_ai_image_cache: Page image cache backing. Requires --hybrid=hancom-ai. Values: memory (default), disk
         to_stdout: Write output to stdout instead of file (single format only)
         threads: Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode
-        text_line_space_ratio: Set custom TextLine space ratio (with a "."). Default: 0.17
+        space_ratio: Set the ratio used to calculate the automatic space-insertion threshold (threshold = space-ratio * font size). If the horizontal gap between two adjacent symbols exceeds this threshold, an extra space is inserted to text value. Accepts decimals (e.g., 0.17). Default: 0.17
     """
     args: List[str] = []
 
@@ -160,7 +160,7 @@ def convert(
         args.append("--to-stdout")
     if threads:
         args.extend(["--threads", threads])
-    if text_line_space_ratio:
-        args.extend(["--text-line-space-ratio", text_line_space_ratio])
+    if space_ratio:
+        args.extend(["--space-ratio", space_ratio])
 
     run_jar(args, quiet)

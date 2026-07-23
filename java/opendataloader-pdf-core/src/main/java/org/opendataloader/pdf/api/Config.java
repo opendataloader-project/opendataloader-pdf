@@ -90,7 +90,7 @@ public class Config {
     private final HybridConfig hybridConfig = new HybridConfig();
     private boolean includeHeaderFooter = false;
     private boolean detectStrikethrough = false;
-    private Double textLineSpaceRatio;
+    private Double spaceRatio;
 
     /** Table detection method: default (border-based detection). */
     public static final String TABLE_METHOD_DEFAULT = "default";
@@ -382,17 +382,17 @@ public class Config {
      *
      * @return textLineSpaceRatio.
      */
-    public Double getTextLineSpaceRatio() {
-        return textLineSpaceRatio;
+    public Double getSpaceRatio() {
+        return spaceRatio;
     }
 
     /**
      * Sets space ratio for TextLines parsing.
      *
-     * @param textLineSpaceRatio The space ratio (default 0.17).
+     * @param spaceRatio The space ratio (default 0.17).
      */
-    public void setTextLineSpaceRatio(Double textLineSpaceRatio) {
-        this.textLineSpaceRatio = textLineSpaceRatio;
+    public void setSpaceRatio(Double spaceRatio) {
+        this.spaceRatio = spaceRatio;
     }
 
     /**

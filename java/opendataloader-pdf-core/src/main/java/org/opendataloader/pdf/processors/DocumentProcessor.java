@@ -267,6 +267,7 @@ public class DocumentProcessor {
         final boolean keepLineBreaks = StaticContainers.isKeepLineBreaks();
         final boolean isDataLoader = StaticContainers.isDataLoader();
         final var isIgnoreCharsWithoutUnicode = StaticContainers.getIsIgnoreCharactersWithoutUnicode();
+        final var textLineSpaceRatio =  StaticContainers.getTextLineSpaceRatio();
 
         // Capture StaticLayoutContainers state (shared mutable — synchronized list for headings)
         final var headings = StaticLayoutContainers.getHeadings();
@@ -293,6 +294,9 @@ public class DocumentProcessor {
             StaticLayoutContainers.setCurrentContentId(contentId);
             StaticLayoutContainers.setIsUseStructTree(useStructTree);
             StaticLayoutContainers.setEmbeddedImageBytesMap(embeddedImageBytesMap);
+            if (textLineSpaceRatio != null) {
+                StaticContainers.setTextLineSpaceRatio(textLineSpaceRatio);
+            }
         };
 
         // Pre-fetch all page artifacts on main thread (document access is ThreadLocal)
@@ -653,7 +657,7 @@ public class DocumentProcessor {
         StaticResources.setIsFontProgramsParsing(true);
         StaticStorages.setIsIgnoreMCIDs(!StaticLayoutContainers.isUseStructTree());
         StaticStorages.setIsAddSpacesBetweenTextPieces(true);
-        Double textLineSpaceRatio = config.getTextLineSpaceRatio();
+        Double textLineSpaceRatio = config.getSpaceRatio();
         if (textLineSpaceRatio != null) {
             StaticContainers.setTextLineSpaceRatio(textLineSpaceRatio);
         }
