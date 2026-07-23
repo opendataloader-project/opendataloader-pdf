@@ -14,11 +14,15 @@ the options you would reach for to improve a weak metric are named only as
 
 ## What to measure (metric definitions)
 
-**NID — Normalized Indel similarity** (`1 − normalized Indel distance`). *Reading
-order accuracy*: how well the extracted text preserves the correct reading
-sequence. A two-column page must interleave text in the right column order, not
-left-to-right across both columns. Range 0–1, higher is better. Weak on
-multi-column layouts, merged-cell tables, inline footnotes, sidebars.
+**NID — Normalized Indel similarity** (`1 − normalized Indel distance`).
+Normalized text-sequence similarity between the extracted linear text and the
+ground truth. ODL's benchmark uses it as its *reading-order* proxy — a two-column
+page read left-to-right across both columns diverges from the correct sequence and
+scores lower. But NID also drops on any text divergence (OCR errors, missing or
+extra text), so a low score is **not necessarily** a reading-order problem: to
+isolate reading order, inspect the ordered output directly. Range 0–1, higher is
+better. Weakest signal on multi-column layouts, merged-cell tables, inline
+footnotes, sidebars.
 
 **TEDS — Tree-Edit Distance Similarity.** *Table structure accuracy*: structural
 similarity between the extracted table tree and ground truth via tree edit
@@ -103,11 +107,12 @@ non-tables flagged (low precision).
 ## Quick self-check (bundled script)
 
 `scripts/quick-eval.py` gives a **rough text-similarity** score against a reference
-file — it does **not** measure table structure, cell spans, reading order (NID), or
+file — it does **not** measure table structure, cell spans, reading order, or
 detection precision/recall. Use it as a smoke check, not a substitute for the
 metrics above.
 
 ```bash
+# scripts/ resolves against this skill's directory, not your CWD
 python scripts/quick-eval.py extracted.md ground-truth.md
 python scripts/quick-eval.py extracted.md ground-truth.md --verbose   # diff snippets
 ```

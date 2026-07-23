@@ -106,7 +106,8 @@ pip install opendataloader-pdf
 conda:
 
 ```bash
-conda create -n odl python=<a version the package supports> && conda activate odl
+# 3.XX = a Python version opendataloader-pdf supports (see Prerequisites)
+conda create -n odl "python=3.XX" && conda activate odl
 pip install opendataloader-pdf
 ```
 

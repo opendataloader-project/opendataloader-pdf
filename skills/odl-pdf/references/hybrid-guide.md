@@ -68,6 +68,7 @@ path with a clean exit and none of the backend's OCR/enrichment (hazard A.2 in
 
 ```bash
 # bundled helper: reports reachable / stopped / error for a backend endpoint
+# scripts/ resolves against this skill's directory, not your CWD
 bash scripts/hybrid-health.sh
 ```
 
@@ -114,8 +115,10 @@ runs with the backend's built-in behavior.
   Confirm the server started cleanly and that the address matches on both sides;
   re-probe with `scripts/hybrid-health.sh`.
 - **Requests time out:** the backend is slower than the configured timeout. Raise
-  or disable it via the client's timeout option (from `--help`), and check backend
-  CPU/GPU load.
+  it within a bounded limit via the client's timeout option (from `--help`) and
+  diagnose backend CPU/GPU load and connectivity; disable the timeout only if you
+  control cancellation yourself and accept that a stuck request can hang
+  indefinitely.
 - **Enrichment missing from output:** the whole-document routing hazard above — the
   most common silent failure. Route the whole document and re-VERIFY.
 - **Complex tables still weak under triage:** triage may have classified them
