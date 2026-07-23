@@ -1,15 +1,91 @@
 import argparse
+import functools
 import subprocess
 import sys
 import warnings
-from typing import List, Optional
+from typing import Dict, List, Optional, Union
 
 from .cli_options_generated import add_options_to_parser
-from .convert_generated import convert
+from .convert_generated import convert as _convert_impl
 from .runner import run_jar
 
 # Re-export for backward compatibility
-__all__ = ["convert", "run", "run_jar", "main"]
+__all__ = ["convert", "batch_convert", "run", "run_jar", "main"]
+
+# Formats not yet supported by the JAR's --to-stdout path
+_STDOUT_UNSUPPORTED_FORMATS = frozenset({"json", "html", "pdf", "tagged-pdf"})
+
+
+@functools.wraps(_convert_impl)
+def convert(*args, **kwargs):
+    """Convert PDF(s) into the requested output format(s).
+
+    Thin wrapper around the auto-generated convert() that adds early
+    validation for argument combinations the JAR does not support,
+    surfacing a clear error rather than silently producing empty output.
+
+    Raises:
+        ValueError: If to_stdout=True is combined with a format that does
+            not support stdout output (json, html, pdf, tagged-pdf).
+    """
+    to_stdout = kwargs.get("to_stdout", False)
+    fmt = kwargs.get("format", None)
+    if to_stdout and fmt:
+        formats = [fmt] if isinstance(fmt, str) else fmt
+        flat = {f.strip() for part in formats for f in part.split(",")}
+        unsupported = flat & _STDOUT_UNSUPPORTED_FORMATS
+        if unsupported:
+            names = ", ".join(sorted(unsupported))
+            raise ValueError(
+                f"--to-stdout does not support format(s): {names}. "
+                "Supported formats for --to-stdout: text, markdown."
+            )
+    return _convert_impl(*args, **kwargs)
+
+
+def batch_convert(
+    input_paths: List[str],
+    errors: str = "raise",
+    **kwargs,
+) -> Dict[str, Optional[Exception]]:
+    """Convert multiple PDF files, optionally tolerating per-file failures.
+
+    Args:
+        input_paths: List of paths to input PDF files.
+        errors: How to handle per-file conversion errors.
+            ``"raise"`` (default) — re-raise the first error immediately,
+            same as calling :func:`convert` in a loop without try/except.
+            ``"ignore"`` — log a warning and continue; failed paths are
+            recorded in the returned dict with their exception as the value.
+        **kwargs: All keyword arguments accepted by :func:`convert` except
+            ``input_path`` (that is set per-file by this function).
+
+    Returns:
+        A dict mapping each input path to ``None`` on success or the caught
+        ``Exception`` on failure (only populated when ``errors="ignore"``).
+
+    Raises:
+        ValueError: If ``errors`` is not ``"raise"`` or ``"ignore"``.
+        Exception: The first conversion error when ``errors="raise"``.
+    """
+    if errors not in ("raise", "ignore"):
+        raise ValueError(f"errors must be 'raise' or 'ignore', got {errors!r}")
+
+    results: Dict[str, Optional[Exception]] = {}
+    for path in input_paths:
+        try:
+            convert(input_path=path, **kwargs)
+            results[path] = None
+        except Exception as exc:
+            if errors == "raise":
+                raise
+            warnings.warn(
+                f"batch_convert: skipping {path!r} due to error: {exc}",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+            results[path] = exc
+    return results
 
 
 # Deprecated : Use `convert()` instead. This function will be removed in a future version.
