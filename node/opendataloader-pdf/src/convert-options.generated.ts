@@ -67,6 +67,8 @@ export interface ConvertOptions {
   toStdout?: boolean;
   /** Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode */
   threads?: string;
+  /** Set the ratio used to calculate the automatic space-insertion threshold (threshold = space-ratio * font size). If the horizontal gap between two adjacent symbols exceeds this threshold, an extra space is inserted to text value. Accepts decimals (e.g., 0.17). Default: 0.17 */
+  spaceRatio?: string;
 }
 
 /**
@@ -104,6 +106,7 @@ export interface CliOptions {
   hybridHancomAiImageCache?: string;
   toStdout?: boolean;
   threads?: string;
+  spaceRatio?: string;
 }
 
 /**
@@ -204,6 +207,9 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   }
   if (cliOptions.threads) {
     convertOptions.threads = cliOptions.threads;
+  }
+  if (cliOptions.spaceRatio) {
+    convertOptions.spaceRatio = cliOptions.spaceRatio;
   }
 
   return convertOptions;
@@ -319,6 +325,9 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.threads) {
     args.push('--threads', options.threads);
+  }
+  if (options.spaceRatio) {
+    args.push('--space-ratio', options.spaceRatio);
   }
 
   return args;

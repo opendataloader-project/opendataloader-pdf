@@ -288,6 +288,15 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "default": "1",
         "description": "Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode",
     },
+    {
+        "name": "space-ratio",
+        "python_name": "space_ratio",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": None,
+        "description": "Set the ratio used to calculate the automatic space-insertion threshold (threshold = space-ratio * font size). If the horizontal gap between two adjacent symbols exceeds this threshold, an extra space is inserted to text value. Accepts decimals (e.g., 0.17). Default: 0.17",
+    },
 ]
 
 

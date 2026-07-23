@@ -104,6 +104,12 @@ public class CLIOptions {
     private static final String REPLACE_INVALID_CHARS_LONG_OPTION = "replace-invalid-chars";
     private static final String REPLACE_INVALID_CHARS_DESC = "Replacement character for invalid/unrecognized characters. Default: space";
 
+    // ===== Set space ratio =====
+    private static final String SPACE_RATIO_LONG_OPTION = "space-ratio";
+    private static final String SPACE_RATIO_DESC = "Set the ratio used to calculate the automatic space-insertion threshold (threshold = space-ratio * font size). " +
+        "If the horizontal gap between two adjacent symbols exceeds this threshold, an extra space is inserted to text value. " +
+        "Accepts decimals (e.g., 0.17). Default: 0.17";
+
     // ===== Use Struct Tree =====
     private static final String USE_STRUCT_TREE_LONG_OPTION = "use-struct-tree";
     private static final String USE_STRUCT_TREE_DESC = "Use PDF structure tree (tagged PDF) for reading order and semantic structure. Output quality depends on tag quality. "
@@ -275,6 +281,7 @@ public class CLIOptions {
             new OptionDefinition(TO_STDOUT_LONG_OPTION, null, "boolean", false, TO_STDOUT_DESC, true),
             new OptionDefinition(THREADS_LONG_OPTION, null, "string", "1", THREADS_DESC, true),
             new OptionDefinition(EXPORT_OPTIONS_LONG_OPTION, null, "boolean", null, null, false),
+            new OptionDefinition(SPACE_RATIO_LONG_OPTION, null, "string", null, SPACE_RATIO_DESC, true),
 
             // Legacy options (not exported, for backward compatibility)
             new OptionDefinition(HYBRID_OCR_LONG_OPTION, null, "string", null, HYBRID_OCR_DESC, false),
@@ -381,6 +388,15 @@ public class CLIOptions {
         }
         if (commandLine.hasOption(CLIOptions.HTML_PAGE_SEPARATOR_LONG_OPTION)) {
             config.setHtmlPageSeparator(commandLine.getOptionValue(CLIOptions.HTML_PAGE_SEPARATOR_LONG_OPTION));
+        }
+        if (commandLine.hasOption(CLIOptions.SPACE_RATIO_LONG_OPTION)) {
+            try {
+                Double spaceRatio = Double.parseDouble(commandLine.getOptionValue(CLIOptions.SPACE_RATIO_LONG_OPTION));
+                config.setSpaceRatio(spaceRatio);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException(
+                    "Option --space-ratio requires valid double value.", e);
+            }
         }
         applyContentSafetyOption(config, commandLine);
         applySanitizeOption(config, commandLine);
