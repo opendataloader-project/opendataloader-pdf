@@ -50,6 +50,7 @@ public class ListProcessor {
     private static final double LIST_ITEM_BASELINE_DIFFERENCE = 1.2;
     private static final double LIST_ITEM_X_INTERVAL_RATIO = 0.3;
     private static final Pattern ATTACHMENTS_PATTERN = Pattern.compile("^붙\\s*임\\s*(?=.)");
+    private static final Pattern DOUBLE_PATTERN = Pattern.compile("\\d+\\.\\d+");
 
     /**
      * Maximum number of intervals to scan backward when matching a TextLine to an existing list.
@@ -433,7 +434,7 @@ public class ListProcessor {
     private static boolean isDoubles(TextListInterval interval) {
         for (ListItemTextInfo listItemTextInfo : interval.getListItemsInfos()) {
             if (listItemTextInfo != null) {
-                if (!listItemTextInfo.getListItemValue().getValue().matches("^\\d+\\.\\d+$")) {
+                if (!DOUBLE_PATTERN.matcher(listItemTextInfo.getListItemValue().getValue()).matches()) {
                     return false;
                 }
             } else {
