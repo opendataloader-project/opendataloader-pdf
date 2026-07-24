@@ -25,10 +25,11 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class SpecialTableProcessor {
 
-    private static final String KOREAN_TABLE_REGEX = "\\(?(수신|경유|제목)\\)?.*";
+    private static final Pattern KOREAN_TABLE_PATTERN = Pattern.compile("^\\(?(수신|경유|제목)\\)?");
 
     public static List<IObject> detectSpecialTables(List<IObject> contents) {
         detectSpecialKoreanTables(contents);
@@ -42,7 +43,7 @@ public class SpecialTableProcessor {
             IObject content = contents.get(currentIndex);
             if (content instanceof TextLine) {
                 TextLine line = ((TextLine) content);
-                if (line.getValue().matches(KOREAN_TABLE_REGEX)) {
+                if (KOREAN_TABLE_PATTERN.matcher(line.getValue()).find()) {
                     lines.add(line);
                     contents.set(currentIndex, null);
                     if (index == null) {

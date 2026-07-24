@@ -25,12 +25,15 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainer
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 public class TableOfContentsProcessor {
 
     private static final double TOC_ITEM_X_INTERVAL_RATIO = 0.3;
 
     private final Set<String> pageLabels = new HashSet<>();
+    private static final Pattern PAGE_NUMBER_END_PATTERN = Pattern.compile("[" + TOCDetectionConsumer.SPACES + "\\.]\\d+$");
+    private static final Pattern DOUBLE_END_PATTERN = Pattern.compile("\\d\\.\\d+$");
 
     public void processTableOfContents(List<List<IObject>> contents) {
         pageLabels.clear();
@@ -159,7 +162,7 @@ public class TableOfContentsProcessor {
 
     private boolean hasPageNumber(TOCIInfo tocItem) {
         String textValue = tocItem.getText();
-        if (textValue.matches(".+[" + TOCDetectionConsumer.SPACES + "\\.]\\d+") && !textValue.matches(".*\\d+\\.\\d+")) {
+        if (PAGE_NUMBER_END_PATTERN.matcher(textValue).find() && !DOUBLE_END_PATTERN.matcher(textValue).find()) {
             return true;
         }
         for (String pageLabel : pageLabels) {
