@@ -15,3 +15,13 @@ def input_pdf():
 def input_pdf_academic():
     """Return path to the sample academic PDF."""
     return Path(__file__).resolve().parents[3] / "samples" / "pdf" / "1901.03003.pdf"
+
+
+@pytest.fixture
+def input_pdf_with_images():
+    """Return path to a sample PDF whose first page contains raster images.
+
+    Used to assert that Markdown / HTML output keeps images self-contained
+    (base64 data URIs) after the MCP server's temp-dir round-trip.
+    """
+    return Path(__file__).resolve().parents[3] / "samples" / "pdf" / "1901.03003.pdf"
