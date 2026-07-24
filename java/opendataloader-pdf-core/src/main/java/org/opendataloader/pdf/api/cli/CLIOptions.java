@@ -91,6 +91,11 @@ public class CLIOptions {
     private static final String CONTENT_SAFETY_OFF_DESC = "Disable content safety filters. "
             + "Values: all, hidden-text, off-page, tiny, hidden-ocg";
 
+    // ===== Filter Hidden Text =====
+    private static final String FILTER_HIDDEN_TEXT_LONG_OPTION = "filter-hidden-text";
+    private static final String FILTER_HIDDEN_TEXT_DESC = "Filter hidden (low-contrast) text via per-page rendering. "
+            + "Values: on, off. Default: off (opt-in; expensive, runs as sequential post-processing)";
+
     // ===== Sanitize =====
     private static final String SANITIZE_LONG_OPTION = "sanitize";
     private static final String SANITIZE_DESC = "Enable sensitive data sanitization. "
@@ -240,6 +245,7 @@ public class CLIOptions {
             new OptionDefinition(FORMAT_LONG_OPTION, FORMAT_OPTION, "string", null, FORMAT_DESC, true),
             new OptionDefinition(QUIET_LONG_OPTION, QUIET_OPTION, "boolean", false, QUIET_DESC, true),
             new OptionDefinition(CONTENT_SAFETY_OFF_LONG_OPTION, null, "string", null, CONTENT_SAFETY_OFF_DESC, true),
+            new OptionDefinition(FILTER_HIDDEN_TEXT_LONG_OPTION, null, "string", "off", FILTER_HIDDEN_TEXT_DESC, true),
             new OptionDefinition(SANITIZE_LONG_OPTION, null, "boolean", false, SANITIZE_DESC, true),
             new OptionDefinition(KEEP_LINE_BREAKS_LONG_OPTION, null, "boolean", false, KEEP_LINE_BREAKS_DESC, true),
             new OptionDefinition(REPLACE_INVALID_CHARS_LONG_OPTION, null, "string", " ", REPLACE_INVALID_CHARS_DESC,
@@ -383,6 +389,7 @@ public class CLIOptions {
             config.setHtmlPageSeparator(commandLine.getOptionValue(CLIOptions.HTML_PAGE_SEPARATOR_LONG_OPTION));
         }
         applyContentSafetyOption(config, commandLine);
+        applyFilterHiddenTextOption(config, commandLine);
         applySanitizeOption(config, commandLine);
         applyFormatOption(config, commandLine);
         applyTableMethodOption(config, commandLine);
@@ -523,6 +530,31 @@ public class CLIOptions {
                             "Unsupported value '%s'. Supported values: all, hidden-text, off-page, tiny, hidden-ocg",
                             value));
             }
+        }
+    }
+
+    /**
+     * Applies {@code --filter-hidden-text on|off}. Runs after
+     * {@link #applyContentSafetyOption} so an explicit opt-in wins over a
+     * {@code --content-safety-off hidden-text} disable.
+     */
+    private static void applyFilterHiddenTextOption(Config config, CommandLine commandLine) {
+        if (!commandLine.hasOption(FILTER_HIDDEN_TEXT_LONG_OPTION)) {
+            return;
+        }
+        String value = commandLine.getOptionValue(FILTER_HIDDEN_TEXT_LONG_OPTION);
+        String normalized = value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
+        switch (normalized) {
+            case "on":
+                config.getFilterConfig().setFilterHiddenText(true);
+                break;
+            case "off":
+                config.getFilterConfig().setFilterHiddenText(false);
+                break;
+            default:
+                throw new IllegalArgumentException(String.format(
+                        "Option --%s requires a value of 'on' or 'off' (got '%s').",
+                        FILTER_HIDDEN_TEXT_LONG_OPTION, value));
         }
     }
 
