@@ -890,6 +890,7 @@ public class AutoTaggingProcessor {
             } else if (child instanceof SemanticTOCI) {
                 SemanticTOCI tocItem = ((SemanticTOCI)child);
                 COSObject tocItemObject = addStructElement(tocObject, cosDocument, TaggedPDFConstants.TOCI, child.getPageNumber());
+                tocItemObject.setKey(ASAtom.REF, COSArray.construct());
                 SemanticTextNode tocItemTextNode = new SemanticTextNode();
                 for (TextLine line : tocItem.getLines()) {
                     tocItemTextNode.add(line);
