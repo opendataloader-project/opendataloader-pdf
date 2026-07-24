@@ -826,7 +826,7 @@ public class AutoTaggingProcessor {
             addAttributeToStructElem(listObject, ASAtom.LIST, ASAtom.CONTINUED_FROM,
                 COSString.construct(String.valueOf(list.getPreviousList().getRecognizedStructureId()).getBytes()));
         }
-        ASAtom numbering = ListProcessor.getListNumbering(list.getNumberingStyle());
+        ASAtom numbering = ListProcessor.getASAtomFromListNumbering(list.getNumberingStyle());
         // ListProcessor.getListNumbering returns null for unmapped styles. Fold
         // null into NONE so the hasLabel promotion and COSName.construct below
         // never receive null.

@@ -4,7 +4,10 @@ import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.entities.EnrichedImageChunk;
 import org.opendataloader.pdf.entities.SemanticFootnote;
+import org.verapdf.as.ASAtom;
 import org.verapdf.gf.model.impl.sa.GFSANode;
+import org.verapdf.gf.model.impl.sa.structelems.GFSAL;
+import org.verapdf.tools.AttributeHelper;
 import org.verapdf.wcag.algorithms.entities.*;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextBlock;
@@ -196,6 +199,9 @@ public class TaggedDocumentProcessor {
 
     private static void processList(INode node) {
         PDFList list = new PDFList();
+        GFSAL gfsal = (GFSAL) ((GFSANode) node).getStructElem();
+        String listNumbering = AttributeHelper.getListNumbering(gfsal.getStructElemDictionary().getObject());
+        list.setNumberingStyle(ListProcessor.getListNumberingFromASAtom(ASAtom.getASAtom(listNumbering)));
         list.setBoundingBox(new MultiBoundingBox());
         for (INode child : node.getChildren()) {
             if (child.getInitialSemanticType() == SemanticType.LIST) {
