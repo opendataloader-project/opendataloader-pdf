@@ -33,9 +33,7 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
-import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
-import java.awt.Color;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileWriter;

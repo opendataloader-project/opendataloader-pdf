@@ -317,6 +317,7 @@ public class MarkdownGenerator implements Closeable {
                     writeLineBreak();
                     writeContents(itemContents, false);
                 }
+                writeLineBreak();
             }
         }
     }
