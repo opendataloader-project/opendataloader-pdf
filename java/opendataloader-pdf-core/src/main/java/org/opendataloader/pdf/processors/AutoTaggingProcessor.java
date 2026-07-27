@@ -826,30 +826,27 @@ public class AutoTaggingProcessor {
             addAttributeToStructElem(listObject, ASAtom.LIST, ASAtom.CONTINUED_FROM,
                 COSString.construct(String.valueOf(list.getPreviousList().getRecognizedStructureId()).getBytes()));
         }
-        ASAtom numbering = ListProcessor.getASAtomFromListNumbering(list.getNumberingStyle());
+        ASAtom numbering = ListProcessor.getListNumbering(list.getNumberingStyle());
         // ListProcessor.getListNumbering returns null for unmapped styles. Fold
         // null into NONE so the hasLabel promotion and COSName.construct below
         // never receive null.
         if (numbering == null || numbering == ASAtom.NONE) {
-            if (list.getListItems().size() == 1) {
-                numbering = ASAtom.NONE;
-            } else {
-                boolean hasLabel = false;
-                for (ListItem item : list.getListItems()) {
-                    if (item.getLabelLength() > 0) { hasLabel = true; break; }
-                }
-                if (hasLabel) {
-                    ListItem first = list.getListItems().get(0);
+            boolean hasLabel;
+            ListItem first = list.getListItems().get(0);
+            hasLabel = first.getLabelLength() > 0;
+            if (hasLabel) {
+                if (list.getListItems().size() == 1) {
+                    numbering = ASAtom.UNORDERED;
+                } else {
                     ListItem second = list.getListItems().get(1);
-                    if (Objects.equals(first.toString().substring(0, first.getLabelLength()),
-                        second.toString().substring(0, second.getLabelLength()))) {
+                    if (Objects.equals(first.getLabelText(), second.getLabelText())) {
                         numbering = ASAtom.UNORDERED;
                     } else {
                         numbering = ASAtom.ORDERED;
                     }
-                } else {
-                    numbering = ASAtom.NONE;
                 }
+            } else {
+                numbering = ASAtom.NONE;
             }
         }
         if (!isPDF2_0) {

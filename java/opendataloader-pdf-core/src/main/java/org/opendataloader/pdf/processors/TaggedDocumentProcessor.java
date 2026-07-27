@@ -201,7 +201,7 @@ public class TaggedDocumentProcessor {
         PDFList list = new PDFList();
         GFSAL gfsal = (GFSAL) ((GFSANode) node).getStructElem();
         String listNumbering = AttributeHelper.getListNumbering(gfsal.getStructElemDictionary().getObject());
-        list.setNumberingStyle(ListProcessor.getListNumberingFromASAtom(ASAtom.getASAtom(listNumbering)));
+        list.setNumberingStyle(ListProcessor.getNumberingStyle(ASAtom.getASAtom(listNumbering)));
         list.setBoundingBox(new MultiBoundingBox());
         for (INode child : node.getChildren()) {
             if (child.getInitialSemanticType() == SemanticType.LIST) {
