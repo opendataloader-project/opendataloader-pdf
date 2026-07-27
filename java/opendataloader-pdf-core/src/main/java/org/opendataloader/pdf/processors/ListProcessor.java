@@ -73,6 +73,7 @@ public class ListProcessor {
         listNumberingToASAtomMap.put(NumberingStyleNames.UNORDERED,ASAtom.UNORDERED);
         listNumberingToASAtomMap.put(NumberingStyleNames.UNKNOWN, ASAtom.NONE);
         listNumberingToASAtomMap.put(NumberingStyleNames.ORDERED, ASAtom.ORDERED);
+        listNumberingToASAtomMap.put(NumberingStyleNames.DESCRIPTION, ASAtom.DESCRIPTION);
 
         asAtomMapToListNumbering.put(ASAtom.UPPER_ALPHA, NumberingStyleNames.ENGLISH_LETTERS_UPPER_CASE);
         asAtomMapToListNumbering.put(ASAtom.LOWER_ALPHA,  NumberingStyleNames.ENGLISH_LETTERS_LOWER_CASE);
@@ -81,10 +82,11 @@ public class ListProcessor {
         asAtomMapToListNumbering.put(ASAtom.DECIMAL, NumberingStyleNames.ARABIC_NUMBERS);
         asAtomMapToListNumbering.put(ASAtom.CIRCLE, NumberingStyleNames.UNORDERED);
         asAtomMapToListNumbering.put(ASAtom.DISC, NumberingStyleNames.UNORDERED);
-        asAtomMapToListNumbering.put(ASAtom.SQUARE, NumberingStyleNames.ARABIC_NUMBERS);
+        asAtomMapToListNumbering.put(ASAtom.SQUARE, NumberingStyleNames.UNORDERED);
         asAtomMapToListNumbering.put(ASAtom.UNORDERED, NumberingStyleNames.UNORDERED);
         asAtomMapToListNumbering.put(ASAtom.ORDERED, NumberingStyleNames.ORDERED);
         asAtomMapToListNumbering.put(ASAtom.NONE, NumberingStyleNames.UNKNOWN);
+        asAtomMapToListNumbering.put(ASAtom.DESCRIPTION, NumberingStyleNames.DESCRIPTION);
     }
 
     public static ASAtom getASAtomFromListNumbering(String numberingStyle) {

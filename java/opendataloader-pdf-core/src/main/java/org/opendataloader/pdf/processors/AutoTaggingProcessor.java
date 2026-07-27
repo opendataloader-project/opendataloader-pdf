@@ -855,7 +855,7 @@ public class AutoTaggingProcessor {
         if (!isPDF2_0) {
             if (numbering == ASAtom.UNORDERED) {
                 numbering = ASAtom.DISC;
-            } else if (numbering == ASAtom.ORDERED) {
+            } else if (numbering == ASAtom.ORDERED || numbering == ASAtom.DESCRIPTION) {
                 numbering = ASAtom.NONE;
             }
         }
