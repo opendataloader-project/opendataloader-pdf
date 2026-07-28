@@ -178,7 +178,7 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "type": "string",
         "required": False,
         "default": None,
-        "description": "Set the rendering resolution for images in DPI. Higher values improve image quality but increase memory consumption; lower values reduce memory usage at the cost of detail. Accepts integer DPI values. Default: 288.",
+        "description": "Set the rendering resolution for images in DPI. Higher values improve image quality but increase memory consumption; lower values reduce memory usage at the cost of detail. Accepts decimal DPI values (e.g., 288.0). Default: 288.0.",
     },
     {
         "name": "pages",

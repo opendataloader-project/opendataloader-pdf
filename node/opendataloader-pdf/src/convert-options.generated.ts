@@ -41,7 +41,7 @@ export interface ConvertOptions {
   imageFormat?: string;
   /** Directory for extracted images (applies only with --image-output external) */
   imageDir?: string;
-  /** Set the rendering resolution for images in DPI. Higher values improve image quality but increase memory consumption; lower values reduce memory usage at the cost of detail. Accepts integer DPI values. Default: 288. */
+  /** Set the rendering resolution for images in DPI. Higher values improve image quality but increase memory consumption; lower values reduce memory usage at the cost of detail. Accepts decimal DPI values (e.g., 288.0). Default: 288.0. */
   imageResolution?: string;
   /** Pages to extract (e.g., "1,3,5-7"). Default: all pages */
   pages?: string;

@@ -44,6 +44,7 @@ import java.util.logging.Logger;
 public class ImagesUtils {
     private static final Logger LOGGER = Logger.getLogger(ImagesUtils.class.getCanonicalName());
 
+    private final Double imageResolution;
     /**
      * Tracks whether the images output directory has already been created for this
      * ImagesUtils instance, so we only invoke {@link #createImagesDirectory(String)}
@@ -51,6 +52,10 @@ public class ImagesUtils {
      * (now removed) {@code contrastRatioConsumer} field as a "first call" sentinel.
      */
     private boolean imagesDirectoryInitialized = false;
+
+    public ImagesUtils(Double imageResolution) {
+        this.imageResolution = imageResolution;
+    }
 
     public void createImagesDirectory(String path) {
         // Embedded mode is self-contained: no external image directory is created.
@@ -146,7 +151,7 @@ public class ImagesUtils {
             targetImage = StaticContainers.getImagesUtils().getXObjectImage(imageBox.getPageNumber(), xImageObjectKey);
         }
         if (targetImage == null) {
-            targetImage = StaticContainers.getImagesUtils().getPageSubImage(imageBox);
+            targetImage = StaticContainers.getImagesUtils().getPageSubImage(imageBox, imageResolution);
         }
         if (targetImage == null) {
             return;

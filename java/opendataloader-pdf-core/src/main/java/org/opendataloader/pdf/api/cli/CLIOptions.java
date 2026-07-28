@@ -141,7 +141,7 @@ public class CLIOptions {
     private static final String IMAGE_RESOLUTION_DESC = "Set the rendering resolution for images in DPI. " +
         "Higher values improve image quality but increase memory consumption; " +
         "lower values reduce memory usage at the cost of detail. " +
-        "Accepts integer DPI values. Default: 288.";
+        "Accepts decimal DPI values (e.g., 288.0). Default: 288.0.";
 
     // ===== Pages =====
     private static final String PAGES_LONG_OPTION = "pages";
@@ -459,11 +459,11 @@ public class CLIOptions {
         }
         if (commandLine.hasOption(IMAGE_RESOLUTION_LONG_OPTION)) {
             try {
-                Integer imageResolution = Integer.parseInt(commandLine.getOptionValue(IMAGE_RESOLUTION_LONG_OPTION));
+                Double imageResolution = Double.parseDouble(commandLine.getOptionValue(IMAGE_RESOLUTION_LONG_OPTION));
                 config.setImageResolution(imageResolution);
             } catch (NumberFormatException e) {
                 throw new IllegalArgumentException(
-                    "Option --image-resolution requires valid integer value.", e);
+                    "Option --image-resolution requires valid double value.", e);
             }
         }
     }

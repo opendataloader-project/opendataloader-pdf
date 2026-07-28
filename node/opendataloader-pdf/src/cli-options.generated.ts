@@ -25,7 +25,7 @@ export function registerCliOptions(program: Command): void {
   program.option('--image-output <value>', 'Image output mode. Values: off (no images), embedded (Base64 data URIs), external (file references). Default: external');
   program.option('--image-format <value>', 'Output format for extracted images. Values: png, jpeg. Default: png');
   program.option('--image-dir <value>', 'Directory for extracted images (applies only with --image-output external)');
-  program.option('--image-resolution <value>', 'Set the rendering resolution for images in DPI. Higher values improve image quality but increase memory consumption; lower values reduce memory usage at the cost of detail. Accepts integer DPI values. Default: 288.');
+  program.option('--image-resolution <value>', 'Set the rendering resolution for images in DPI. Higher values improve image quality but increase memory consumption; lower values reduce memory usage at the cost of detail. Accepts decimal DPI values (e.g., 288.0). Default: 288.0.');
   program.option('--pages <value>', 'Pages to extract (e.g., "1,3,5-7"). Default: all pages');
   program.option('--include-header-footer', 'Include page headers and footers in output');
   program.option('--detect-strikethrough', 'Detect strikethrough text and wrap with ~~ in Markdown output or <del></del> tag in HTML output (experimental)');

@@ -83,7 +83,7 @@ public class Config {
     private String imageOutput = IMAGE_OUTPUT_EXTERNAL;
     private String imageFormat = IMAGE_FORMAT_PNG;
     private String imageDir;
-    private Integer imageResolution;
+    private Double imageResolution;
     private String pages;
     private List<Integer> cachedPageNumbers;
     private final FilterConfig filterConfig = new FilterConfig();
@@ -662,7 +662,7 @@ public class Config {
      *
      * @return The integer value of resolution or null for default.
      */
-    public Integer getImageResolution() {
+    public Double getImageResolution() {
         return imageResolution;
     }
 
@@ -671,7 +671,7 @@ public class Config {
      *
      * @param imageResolution The resolution value.
      */
-    public void setImageResolution(Integer imageResolution) {
+    public void setImageResolution(Double imageResolution) {
         this.imageResolution = imageResolution;
     }
 

@@ -46,7 +46,7 @@ class ImagesUtilsTest {
         try {
             Path path = Paths.get(testPdf.getPath());
             StaticLayoutContainers.setImagesDirectory(outputFolder + File.separator + path.getFileName().toString().substring(0, path.getFileName().toString().length() - 4) + "_images");
-            ImagesUtils imagesUtils = new ImagesUtils();
+            ImagesUtils imagesUtils = new ImagesUtils(null);
             imagesUtils.createImagesDirectory(StaticLayoutContainers.getImagesDirectory());
             // Then - verify images directory was created in createImagesDirectory()
             String expectedImagesDirName = testPdf.getName().substring(0, testPdf.getName().length() - 4) + "_images";
@@ -80,7 +80,7 @@ class ImagesUtilsTest {
             // Then - if ContrastRatioConsumer wasn't initialized,
             // it would be null and cause NPE when used
             Path path = Paths.get(testPdf.getAbsolutePath());
-            ImagesUtils imagesUtils = new ImagesUtils();
+            ImagesUtils imagesUtils = new ImagesUtils(null);
             // Issue #458 hotfix: ImagesUtils no longer keeps a local ContrastRatioConsumer
             // field/getter. Verify the consumer is created in StaticLayoutContainers'
             // ThreadLocal on first writeImage call (same observable semantic as before).
@@ -136,7 +136,7 @@ class ImagesUtilsTest {
             };
             String fileName = tempDir.resolve("flush_image.png").toString();
 
-            ImagesUtils imagesUtils = new ImagesUtils();
+            ImagesUtils imagesUtils = new ImagesUtils(null);
             imagesUtils.writeBufferedImageToFile(tracking, fileName, "png");
 
             assertEquals(1, flushCalls.get(),
@@ -180,7 +180,7 @@ class ImagesUtilsTest {
             // and a bogus directory to force a write failure.
             String fileName = tempDir.resolve("does/not/exist/img.png").toString();
 
-            ImagesUtils imagesUtils = new ImagesUtils();
+            ImagesUtils imagesUtils = new ImagesUtils(null);
             // Should not throw, but MUST still flush.
             imagesUtils.writeBufferedImageToFile(tracking, fileName, "png");
 
@@ -224,7 +224,7 @@ class ImagesUtilsTest {
             };
             String fileName = "embedded/page1_image1.png";
 
-            ImagesUtils imagesUtils = new ImagesUtils();
+            ImagesUtils imagesUtils = new ImagesUtils(null);
             imagesUtils.writeBufferedImageToFile(tracking, fileName, "png");
 
             assertEquals(1, flushCalls.get(),
@@ -263,7 +263,7 @@ class ImagesUtilsTest {
             StaticLayoutContainers.setImagesDirectory(imagesDir);
 
             AtomicInteger createCalls = new AtomicInteger(0);
-            ImagesUtils imagesUtils = new ImagesUtils() {
+            ImagesUtils imagesUtils = new ImagesUtils(null) {
                 @Override
                 public void createImagesDirectory(String path) {
                     createCalls.incrementAndGet();
@@ -334,7 +334,7 @@ class ImagesUtilsTest {
             }
 
             String fileName = tempDir.resolve("retained.png").toString();
-            ImagesUtils imagesUtils = new ImagesUtils();
+            ImagesUtils imagesUtils = new ImagesUtils(null);
 
             WeakReference<BufferedImage> weakRef;
             {
