@@ -460,9 +460,9 @@ public class CLIOptions {
         if (commandLine.hasOption(IMAGE_RESOLUTION_LONG_OPTION)) {
             try {
                 double imageResolution = Double.parseDouble(commandLine.getOptionValue(IMAGE_RESOLUTION_LONG_OPTION));
-                if (imageResolution < 0) {
+                if (!Double.isFinite(imageResolution) || imageResolution <= 0) {
                     throw new IllegalArgumentException(
-                        "Option --image-resolution requires positive double value.");
+                        "Option --image-resolution requires a finite positive double value.");
                 }
                 config.setImageResolution(imageResolution);
             } catch (NumberFormatException e) {

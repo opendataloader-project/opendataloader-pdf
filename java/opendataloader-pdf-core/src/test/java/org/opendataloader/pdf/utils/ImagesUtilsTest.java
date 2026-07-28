@@ -428,12 +428,15 @@ class ImagesUtilsTest {
                 "Height must equal custom DPI for a 1-inch bounding box");
         } finally {
             StaticContainers.closeImagesUtils();
-            Files.walk(tempDir)
-                .sorted((a, b) -> b.compareTo(a))
-                .forEach(p -> {
-                    try { Files.deleteIfExists(p); }
-                    catch (IOException ignored) { }
-                });
+            try (java.util.stream.Stream<Path> paths = Files.walk(tempDir)) {
+                paths.sorted((a, b) -> b.compareTo(a))
+                    .forEach(p -> {
+                        try {
+                            Files.deleteIfExists(p);
+                        } catch (IOException ignored) {
+                        }
+                    });
+            }
         }
     }
 }
