@@ -21,6 +21,7 @@ import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -375,6 +376,67 @@ class ImagesUtilsTest {
                         // ignore
                     }
                 });
+        }
+    }
+
+    /**
+     * Regression guard for the non‑default DPI path.
+     *
+     * When ImagesUtils is constructed with a custom resolution
+     * (e.g. {@code new ImagesUtils(388.5)}), the subsequent
+     * {@link ImagesUtils#writeImage(ImageChunk)} must scale the
+     * rendered page sub‑image so that its pixel dimensions are
+     * proportional to the bounding‑box size (in points) and the
+     * custom DPI.
+     *
+     * This test uses a 72‑point square bounding box (1 inch) so that
+     * the expected side length in pixels equals the custom DPI value.
+     */
+    @Test
+    void writeImage_withCustomResolution_scalesImageDimensions() throws IOException {
+        StaticLayoutContainers.clearContainers();
+        Path tempDir = Files.createTempDirectory("dpi-regression");
+        File testPdf = new File("../../samples/pdf/lorem.pdf");
+        String outputFolder = tempDir.toString();
+
+        try {
+            Path path = Paths.get(testPdf.getAbsolutePath());
+            StaticLayoutContainers.setImagesDirectory(
+                outputFolder + File.separator +
+                    path.getFileName().toString().substring(0, path.getFileName().toString().length() - 4) +
+                    "_images"
+            );
+            StaticContainers.setPassword("");
+            StaticContainers.setFileName(testPdf.getAbsolutePath());
+
+            double customDpi = 388.5;
+            ImagesUtils imagesUtils = new ImagesUtils(customDpi);
+
+            // 72 points = 1 inch → expected pixels = customDpi
+            ImageChunk imageChunk = new ImageChunk(new BoundingBox(0,72, 72, 0 ,0));
+            imagesUtils.writeImage(imageChunk);
+
+            Path pngPath = Path.of(StaticLayoutContainers.getImagesDirectory(), "imageFile1.png");
+            assertTrue(Files.exists(pngPath), "PNG file must be created with custom DPI");
+
+            BufferedImage image = ImageIO.read(pngPath.toFile());
+            assertNotNull(image, "Generated image must be readable");
+            int expectedPixels = (int) Math.round(customDpi);
+            assertEquals(expectedPixels, image.getWidth(),
+                "Width must equal custom DPI for a 1-inch bounding box");
+            assertEquals(expectedPixels, image.getHeight(),
+                "Height must equal custom DPI for a 1-inch bounding box");
+        } finally {
+            StaticContainers.closeImagesUtils();
+            try (java.util.stream.Stream<Path> paths = Files.walk(tempDir)) {
+                paths.sorted((a, b) -> b.compareTo(a))
+                    .forEach(p -> {
+                        try {
+                            Files.deleteIfExists(p);
+                        } catch (IOException ignored) {
+                        }
+                    });
+            }
         }
     }
 }

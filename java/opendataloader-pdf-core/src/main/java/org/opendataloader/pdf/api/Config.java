@@ -83,6 +83,7 @@ public class Config {
     private String imageOutput = IMAGE_OUTPUT_EXTERNAL;
     private String imageFormat = IMAGE_FORMAT_PNG;
     private String imageDir;
+    private Double imageResolution;
     private String pages;
     private List<Integer> cachedPageNumbers;
     private final FilterConfig filterConfig = new FilterConfig();
@@ -654,6 +655,24 @@ public class Config {
         } else {
             this.imageDir = imageDir;
         }
+    }
+
+    /**
+     * Gets the resolution for extracted images.
+     *
+     * @return The integer value of resolution or null for default.
+     */
+    public Double getImageResolution() {
+        return imageResolution;
+    }
+
+    /**
+     * Sets the resolution for extracted images.
+     *
+     * @param imageResolution The resolution value.
+     */
+    public void setImageResolution(Double imageResolution) {
+        this.imageResolution = imageResolution;
     }
 
     private static final String INVALID_PAGE_RANGE_FORMAT = "Invalid page range format: '%s'. Expected format: 1,3,5-7";
