@@ -106,7 +106,7 @@ public class ContentFilterProcessor {
             }
         }
         if (!backgrounds.isEmpty()) {
-            LOGGER.log(Level.WARNING, "Detected background on page " + pageNumber);
+            LOGGER.log(Level.WARNING, "Detected background on page " + (pageNumber + 1));
             contents.removeAll(backgrounds);
         }
     }
