@@ -42,6 +42,7 @@ def convert(
     hybrid_hancom_ai_image_cache: Optional[str] = None,
     to_stdout: bool = False,
     threads: Optional[str] = None,
+    image_resolution: Optional[str] = None,
 ) -> None:
     """
     Convert PDF(s) into the requested output format(s).
@@ -79,6 +80,7 @@ def convert(
         hybrid_hancom_ai_image_cache: Page image cache backing. Requires --hybrid=hancom-ai. Values: memory (default), disk
         to_stdout: Write output to stdout instead of file (single format only)
         threads: Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode
+        image_resolution: Set the rendering resolution for images in DPI. Higher values improve image quality but increase memory consumption; lower values reduce memory usage at the cost of detail. Accepts positive decimal DPI values (e.g., 288.0). Default: 288.0.
     """
     args: List[str] = []
 
@@ -158,5 +160,7 @@ def convert(
         args.append("--to-stdout")
     if threads:
         args.extend(["--threads", threads])
+    if image_resolution:
+        args.extend(["--image-resolution", image_resolution])
 
     run_jar(args, quiet)

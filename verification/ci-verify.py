@@ -78,6 +78,7 @@ COVERED_OPTIONS = {
     "--image-output", "--image-format", "--image-dir",
     "--markdown-with-html",
     "--markdown-page-separator", "--text-page-separator", "--html-page-separator",
+    "--image-resolution",
 }
 
 HYBRID_OPTIONS = {

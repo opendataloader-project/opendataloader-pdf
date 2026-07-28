@@ -569,7 +569,7 @@ public class DocumentProcessor {
                 imagesDirectory = config.getOutputFolder() + File.separator + FileUtils.getBaseName(fileName) + MarkdownSyntax.IMAGES_DIRECTORY_SUFFIX;
             }
             StaticLayoutContainers.setImagesDirectory(imagesDirectory);
-            ImagesUtils imagesUtils = new ImagesUtils();
+            ImagesUtils imagesUtils = new ImagesUtils(config.getImageResolution());
             imagesUtils.write(contents);
         }
         if (config.isGenerateTaggedPDF()) {

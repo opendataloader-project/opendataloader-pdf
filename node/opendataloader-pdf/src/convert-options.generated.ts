@@ -67,6 +67,8 @@ export interface ConvertOptions {
   toStdout?: boolean;
   /** Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode */
   threads?: string;
+  /** Set the rendering resolution for images in DPI. Higher values improve image quality but increase memory consumption; lower values reduce memory usage at the cost of detail. Accepts positive decimal DPI values (e.g., 288.0). Default: 288.0. */
+  imageResolution?: string;
 }
 
 /**
@@ -104,6 +106,7 @@ export interface CliOptions {
   hybridHancomAiImageCache?: string;
   toStdout?: boolean;
   threads?: string;
+  imageResolution?: string;
 }
 
 /**
@@ -204,6 +207,9 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   }
   if (cliOptions.threads) {
     convertOptions.threads = cliOptions.threads;
+  }
+  if (cliOptions.imageResolution) {
+    convertOptions.imageResolution = cliOptions.imageResolution;
   }
 
   return convertOptions;
@@ -319,6 +325,9 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.threads) {
     args.push('--threads', options.threads);
+  }
+  if (options.imageResolution) {
+    args.push('--image-resolution', options.imageResolution);
   }
 
   return args;

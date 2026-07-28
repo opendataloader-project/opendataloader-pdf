@@ -137,6 +137,12 @@ public class CLIOptions {
     private static final String IMAGE_DIR_LONG_OPTION = "image-dir";
     private static final String IMAGE_DIR_DESC = "Directory for extracted images (applies only with --image-output external)";
 
+    private static final String IMAGE_RESOLUTION_LONG_OPTION = "image-resolution";
+    private static final String IMAGE_RESOLUTION_DESC = "Set the rendering resolution for images in DPI. " +
+        "Higher values improve image quality but increase memory consumption; " +
+        "lower values reduce memory usage at the cost of detail. " +
+        "Accepts positive decimal DPI values (e.g., 288.0). Default: 288.0.";
+
     // ===== Pages =====
     private static final String PAGES_LONG_OPTION = "pages";
     private static final String PAGES_DESC = "Pages to extract (e.g., \"1,3,5-7\"). Default: all pages";
@@ -274,6 +280,7 @@ public class CLIOptions {
                     "memory", HYBRID_HANCOM_AI_IMAGE_CACHE_DESC, true),
             new OptionDefinition(TO_STDOUT_LONG_OPTION, null, "boolean", false, TO_STDOUT_DESC, true),
             new OptionDefinition(THREADS_LONG_OPTION, null, "string", "1", THREADS_DESC, true),
+            new OptionDefinition(IMAGE_RESOLUTION_LONG_OPTION, null, "string", null, IMAGE_RESOLUTION_DESC, true),
             new OptionDefinition(EXPORT_OPTIONS_LONG_OPTION, null, "boolean", null, null, false),
 
             // Legacy options (not exported, for backward compatibility)
@@ -449,6 +456,19 @@ public class CLIOptions {
         }
         if (commandLine.hasOption(IMAGE_DIR_LONG_OPTION)) {
             config.setImageDir(commandLine.getOptionValue(IMAGE_DIR_LONG_OPTION));
+        }
+        if (commandLine.hasOption(IMAGE_RESOLUTION_LONG_OPTION)) {
+            try {
+                double imageResolution = Double.parseDouble(commandLine.getOptionValue(IMAGE_RESOLUTION_LONG_OPTION));
+                if (!Double.isFinite(imageResolution) || imageResolution <= 0) {
+                    throw new IllegalArgumentException(
+                        "Option --image-resolution requires a finite positive double value.");
+                }
+                config.setImageResolution(imageResolution);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException(
+                    "Option --image-resolution requires valid double value.", e);
+            }
         }
     }
 
