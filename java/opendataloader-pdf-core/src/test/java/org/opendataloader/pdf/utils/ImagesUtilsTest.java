@@ -21,6 +21,7 @@ import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -46,7 +47,7 @@ class ImagesUtilsTest {
         try {
             Path path = Paths.get(testPdf.getPath());
             StaticLayoutContainers.setImagesDirectory(outputFolder + File.separator + path.getFileName().toString().substring(0, path.getFileName().toString().length() - 4) + "_images");
-            ImagesUtils imagesUtils = new ImagesUtils(null);
+            ImagesUtils imagesUtils = new ImagesUtils();
             imagesUtils.createImagesDirectory(StaticLayoutContainers.getImagesDirectory());
             // Then - verify images directory was created in createImagesDirectory()
             String expectedImagesDirName = testPdf.getName().substring(0, testPdf.getName().length() - 4) + "_images";
@@ -80,7 +81,7 @@ class ImagesUtilsTest {
             // Then - if ContrastRatioConsumer wasn't initialized,
             // it would be null and cause NPE when used
             Path path = Paths.get(testPdf.getAbsolutePath());
-            ImagesUtils imagesUtils = new ImagesUtils(null);
+            ImagesUtils imagesUtils = new ImagesUtils();
             // Issue #458 hotfix: ImagesUtils no longer keeps a local ContrastRatioConsumer
             // field/getter. Verify the consumer is created in StaticLayoutContainers'
             // ThreadLocal on first writeImage call (same observable semantic as before).
@@ -136,7 +137,7 @@ class ImagesUtilsTest {
             };
             String fileName = tempDir.resolve("flush_image.png").toString();
 
-            ImagesUtils imagesUtils = new ImagesUtils(null);
+            ImagesUtils imagesUtils = new ImagesUtils();
             imagesUtils.writeBufferedImageToFile(tracking, fileName, "png");
 
             assertEquals(1, flushCalls.get(),
@@ -180,7 +181,7 @@ class ImagesUtilsTest {
             // and a bogus directory to force a write failure.
             String fileName = tempDir.resolve("does/not/exist/img.png").toString();
 
-            ImagesUtils imagesUtils = new ImagesUtils(null);
+            ImagesUtils imagesUtils = new ImagesUtils();
             // Should not throw, but MUST still flush.
             imagesUtils.writeBufferedImageToFile(tracking, fileName, "png");
 
@@ -224,7 +225,7 @@ class ImagesUtilsTest {
             };
             String fileName = "embedded/page1_image1.png";
 
-            ImagesUtils imagesUtils = new ImagesUtils(null);
+            ImagesUtils imagesUtils = new ImagesUtils();
             imagesUtils.writeBufferedImageToFile(tracking, fileName, "png");
 
             assertEquals(1, flushCalls.get(),
@@ -263,7 +264,7 @@ class ImagesUtilsTest {
             StaticLayoutContainers.setImagesDirectory(imagesDir);
 
             AtomicInteger createCalls = new AtomicInteger(0);
-            ImagesUtils imagesUtils = new ImagesUtils(null) {
+            ImagesUtils imagesUtils = new ImagesUtils() {
                 @Override
                 public void createImagesDirectory(String path) {
                     createCalls.incrementAndGet();
@@ -334,7 +335,7 @@ class ImagesUtilsTest {
             }
 
             String fileName = tempDir.resolve("retained.png").toString();
-            ImagesUtils imagesUtils = new ImagesUtils(null);
+            ImagesUtils imagesUtils = new ImagesUtils();
 
             WeakReference<BufferedImage> weakRef;
             {
@@ -374,6 +375,64 @@ class ImagesUtilsTest {
                     } catch (IOException e) {
                         // ignore
                     }
+                });
+        }
+    }
+
+    /**
+     * Regression guard for the non‑default DPI path.
+     *
+     * When ImagesUtils is constructed with a custom resolution
+     * (e.g. {@code new ImagesUtils(388.5)}), the subsequent
+     * {@link ImagesUtils#writeImage(ImageChunk)} must scale the
+     * rendered page sub‑image so that its pixel dimensions are
+     * proportional to the bounding‑box size (in points) and the
+     * custom DPI.
+     *
+     * This test uses a 72‑point square bounding box (1 inch) so that
+     * the expected side length in pixels equals the custom DPI value.
+     */
+    @Test
+    void writeImage_withCustomResolution_scalesImageDimensions() throws IOException {
+        StaticLayoutContainers.clearContainers();
+        Path tempDir = Files.createTempDirectory("dpi-regression");
+        File testPdf = new File("../../samples/pdf/lorem.pdf");
+        String outputFolder = tempDir.toString();
+
+        try {
+            Path path = Paths.get(testPdf.getAbsolutePath());
+            StaticLayoutContainers.setImagesDirectory(
+                outputFolder + File.separator +
+                    path.getFileName().toString().substring(0, path.getFileName().toString().length() - 4) +
+                    "_images"
+            );
+            StaticContainers.setPassword("");
+            StaticContainers.setFileName(testPdf.getAbsolutePath());
+
+            double customDpi = 388.5;
+            ImagesUtils imagesUtils = new ImagesUtils(customDpi);
+
+            // 72 points = 1 inch → expected pixels = customDpi
+            ImageChunk imageChunk = new ImageChunk(new BoundingBox(0,72, 72, 0 ,0));
+            imagesUtils.writeImage(imageChunk);
+
+            Path pngPath = Path.of(StaticLayoutContainers.getImagesDirectory(), "imageFile1.png");
+            assertTrue(Files.exists(pngPath), "PNG file must be created with custom DPI");
+
+            BufferedImage image = ImageIO.read(pngPath.toFile());
+            assertNotNull(image, "Generated image must be readable");
+            int expectedPixels = (int) Math.round(customDpi);
+            assertEquals(expectedPixels, image.getWidth(),
+                "Width must equal custom DPI for a 1-inch bounding box");
+            assertEquals(expectedPixels, image.getHeight(),
+                "Height must equal custom DPI for a 1-inch bounding box");
+        } finally {
+            StaticContainers.closeImagesUtils();
+            Files.walk(tempDir)
+                .sorted((a, b) -> b.compareTo(a))
+                .forEach(p -> {
+                    try { Files.deleteIfExists(p); }
+                    catch (IOException ignored) { }
                 });
         }
     }

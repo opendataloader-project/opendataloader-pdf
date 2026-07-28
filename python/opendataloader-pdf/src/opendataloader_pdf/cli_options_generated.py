@@ -172,15 +172,6 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "description": "Directory for extracted images (applies only with --image-output external)",
     },
     {
-        "name": "image-resolution",
-        "python_name": "image_resolution",
-        "short_name": None,
-        "type": "string",
-        "required": False,
-        "default": None,
-        "description": "Set the rendering resolution for images in DPI. Higher values improve image quality but increase memory consumption; lower values reduce memory usage at the cost of detail. Accepts decimal DPI values (e.g., 288.0). Default: 288.0.",
-    },
-    {
         "name": "pages",
         "python_name": "pages",
         "short_name": None,
@@ -296,6 +287,15 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "required": False,
         "default": "1",
         "description": "Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode",
+    },
+    {
+        "name": "image-resolution",
+        "python_name": "image_resolution",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": None,
+        "description": "Set the rendering resolution for images in DPI. Higher values improve image quality but increase memory consumption; lower values reduce memory usage at the cost of detail. Accepts positive decimal DPI values (e.g., 288.0). Default: 288.0.",
     },
 ]
 

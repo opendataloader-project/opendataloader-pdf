@@ -53,6 +53,10 @@ public class ImagesUtils {
      */
     private boolean imagesDirectoryInitialized = false;
 
+    public ImagesUtils () {
+        this(null);
+    }
+
     public ImagesUtils(Double imageResolution) {
         this.imageResolution = imageResolution;
     }

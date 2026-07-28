@@ -141,7 +141,7 @@ public class CLIOptions {
     private static final String IMAGE_RESOLUTION_DESC = "Set the rendering resolution for images in DPI. " +
         "Higher values improve image quality but increase memory consumption; " +
         "lower values reduce memory usage at the cost of detail. " +
-        "Accepts decimal DPI values (e.g., 288.0). Default: 288.0.";
+        "Accepts positive decimal DPI values (e.g., 288.0). Default: 288.0.";
 
     // ===== Pages =====
     private static final String PAGES_LONG_OPTION = "pages";
@@ -262,7 +262,6 @@ public class CLIOptions {
             new OptionDefinition(IMAGE_OUTPUT_LONG_OPTION, null, "string", "external", IMAGE_OUTPUT_DESC, true),
             new OptionDefinition(IMAGE_FORMAT_LONG_OPTION, null, "string", "png", IMAGE_FORMAT_DESC, true),
             new OptionDefinition(IMAGE_DIR_LONG_OPTION, null, "string", null, IMAGE_DIR_DESC, true),
-            new OptionDefinition(IMAGE_RESOLUTION_LONG_OPTION, null, "string", null, IMAGE_RESOLUTION_DESC, true),
             new OptionDefinition(PAGES_LONG_OPTION, null, "string", null, PAGES_DESC, true),
             new OptionDefinition(INCLUDE_HEADER_FOOTER_LONG_OPTION, null, "boolean", false,
                     INCLUDE_HEADER_FOOTER_DESC, true),
@@ -281,6 +280,7 @@ public class CLIOptions {
                     "memory", HYBRID_HANCOM_AI_IMAGE_CACHE_DESC, true),
             new OptionDefinition(TO_STDOUT_LONG_OPTION, null, "boolean", false, TO_STDOUT_DESC, true),
             new OptionDefinition(THREADS_LONG_OPTION, null, "string", "1", THREADS_DESC, true),
+            new OptionDefinition(IMAGE_RESOLUTION_LONG_OPTION, null, "string", null, IMAGE_RESOLUTION_DESC, true),
             new OptionDefinition(EXPORT_OPTIONS_LONG_OPTION, null, "boolean", null, null, false),
 
             // Legacy options (not exported, for backward compatibility)
@@ -459,7 +459,11 @@ public class CLIOptions {
         }
         if (commandLine.hasOption(IMAGE_RESOLUTION_LONG_OPTION)) {
             try {
-                Double imageResolution = Double.parseDouble(commandLine.getOptionValue(IMAGE_RESOLUTION_LONG_OPTION));
+                double imageResolution = Double.parseDouble(commandLine.getOptionValue(IMAGE_RESOLUTION_LONG_OPTION));
+                if (imageResolution < 0) {
+                    throw new IllegalArgumentException(
+                        "Option --image-resolution requires positive double value.");
+                }
                 config.setImageResolution(imageResolution);
             } catch (NumberFormatException e) {
                 throw new IllegalArgumentException(
