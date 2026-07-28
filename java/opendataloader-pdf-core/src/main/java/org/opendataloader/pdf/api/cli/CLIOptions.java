@@ -137,6 +137,12 @@ public class CLIOptions {
     private static final String IMAGE_DIR_LONG_OPTION = "image-dir";
     private static final String IMAGE_DIR_DESC = "Directory for extracted images (applies only with --image-output external)";
 
+    private static final String IMAGE_RESOLUTION_LONG_OPTION = "image-resolution";
+    private static final String IMAGE_RESOLUTION_DESC = "Set the rendering resolution for images in DPI. " +
+        "Higher values improve image quality but increase memory consumption; " +
+        "lower values reduce memory usage at the cost of detail. " +
+        "Accepts integer DPI values. Default: 288.";
+
     // ===== Pages =====
     private static final String PAGES_LONG_OPTION = "pages";
     private static final String PAGES_DESC = "Pages to extract (e.g., \"1,3,5-7\"). Default: all pages";
@@ -256,6 +262,7 @@ public class CLIOptions {
             new OptionDefinition(IMAGE_OUTPUT_LONG_OPTION, null, "string", "external", IMAGE_OUTPUT_DESC, true),
             new OptionDefinition(IMAGE_FORMAT_LONG_OPTION, null, "string", "png", IMAGE_FORMAT_DESC, true),
             new OptionDefinition(IMAGE_DIR_LONG_OPTION, null, "string", null, IMAGE_DIR_DESC, true),
+            new OptionDefinition(IMAGE_RESOLUTION_LONG_OPTION, null, "string", null, IMAGE_RESOLUTION_DESC, true),
             new OptionDefinition(PAGES_LONG_OPTION, null, "string", null, PAGES_DESC, true),
             new OptionDefinition(INCLUDE_HEADER_FOOTER_LONG_OPTION, null, "boolean", false,
                     INCLUDE_HEADER_FOOTER_DESC, true),
@@ -449,6 +456,15 @@ public class CLIOptions {
         }
         if (commandLine.hasOption(IMAGE_DIR_LONG_OPTION)) {
             config.setImageDir(commandLine.getOptionValue(IMAGE_DIR_LONG_OPTION));
+        }
+        if (commandLine.hasOption(IMAGE_RESOLUTION_LONG_OPTION)) {
+            try {
+                Integer imageResolution = Integer.parseInt(commandLine.getOptionValue(IMAGE_RESOLUTION_LONG_OPTION));
+                config.setImageResolution(imageResolution);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException(
+                    "Option --image-resolution requires valid integer value.", e);
+            }
         }
     }
 

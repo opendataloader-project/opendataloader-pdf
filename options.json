@@ -145,6 +145,14 @@
       "description": "Directory for extracted images (applies only with --image-output external)"
     },
     {
+      "name": "image-resolution",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": null,
+      "description": "Set the rendering resolution for images in DPI. Higher values improve image quality but increase memory consumption; lower values reduce memory usage at the cost of detail. Accepts integer DPI values. Default: 288."
+    },
+    {
       "name": "pages",
       "shortName": null,
       "type": "string",

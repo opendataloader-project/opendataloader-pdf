@@ -267,6 +267,7 @@ public class DocumentProcessor {
         final boolean keepLineBreaks = StaticContainers.isKeepLineBreaks();
         final boolean isDataLoader = StaticContainers.isDataLoader();
         final var isIgnoreCharsWithoutUnicode = StaticContainers.getIsIgnoreCharactersWithoutUnicode();
+        final var imageResolution = StaticContainers.getImageResolution();
 
         // Capture StaticLayoutContainers state (shared mutable — synchronized list for headings)
         final var headings = StaticLayoutContainers.getHeadings();
@@ -288,6 +289,9 @@ public class DocumentProcessor {
             StaticContainers.setIsIgnoreCharactersWithoutUnicode(isIgnoreCharsWithoutUnicode);
             StaticContainers.setFileName(inputPdfName);
             StaticContainers.setPassword(config.getPassword());
+            if (imageResolution != null) {
+                StaticContainers.setImageResolution(imageResolution);
+            }
             // Project StaticLayoutContainers — share the same headings list across workers
             StaticLayoutContainers.setHeadings(headings);
             StaticLayoutContainers.setCurrentContentId(contentId);
@@ -650,6 +654,10 @@ public class DocumentProcessor {
         StaticContainers.setPassword(config.getPassword());
         StaticContainers.setIsDataLoader(true);
         StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
+        Integer imageResolution = config.getImageResolution();
+        if (imageResolution != null) {
+            StaticContainers.setImageResolution(imageResolution);
+        }
         StaticResources.setIsFontProgramsParsing(true);
         StaticStorages.setIsIgnoreMCIDs(!StaticLayoutContainers.isUseStructTree());
         StaticStorages.setIsAddSpacesBetweenTextPieces(true);

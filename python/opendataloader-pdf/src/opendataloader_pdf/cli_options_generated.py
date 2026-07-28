@@ -172,6 +172,15 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "description": "Directory for extracted images (applies only with --image-output external)",
     },
     {
+        "name": "image-resolution",
+        "python_name": "image_resolution",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": None,
+        "description": "Set the rendering resolution for images in DPI. Higher values improve image quality but increase memory consumption; lower values reduce memory usage at the cost of detail. Accepts integer DPI values. Default: 288.",
+    },
+    {
         "name": "pages",
         "python_name": "pages",
         "short_name": None,
