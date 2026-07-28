@@ -57,24 +57,44 @@ public class ListProcessor {
      */
     private static final int MAX_LIST_INTERVAL_LOOKBACK = 500;
 
-    private static final Map<String, ASAtom> listNumberingMap = new HashMap<>();
+    private static final Map<String, ASAtom> numberingStyleToListNumbering = new HashMap<>();
+    private static final Map<ASAtom, String> listNumberingToNumberingStyle = new HashMap<>();
 
     static {
-        listNumberingMap.put(NumberingStyleNames.ENGLISH_LETTERS, ASAtom.ORDERED);
-        listNumberingMap.put(NumberingStyleNames.ENGLISH_LETTERS_UPPER_CASE, ASAtom.UPPER_ALPHA);
-        listNumberingMap.put(NumberingStyleNames.ENGLISH_LETTERS_LOWER_CASE, ASAtom.LOWER_ALPHA);
-        listNumberingMap.put(NumberingStyleNames.ROMAN_NUMBERS_LOWER_CASE, ASAtom.LOWER_ROMAN);
-        listNumberingMap.put(NumberingStyleNames.ROMAN_NUMBERS, ASAtom.ORDERED);
-        listNumberingMap.put(NumberingStyleNames.ROMAN_NUMBERS_UPPER_CASE, ASAtom.UPPER_ROMAN);
-        listNumberingMap.put(NumberingStyleNames.KOREAN_LETTERS, ASAtom.ORDERED);
-        listNumberingMap.put(NumberingStyleNames.ARABIC_NUMBERS, ASAtom.DECIMAL);
-        listNumberingMap.put(NumberingStyleNames.CIRCLED_ARABIC_NUMBERS, ASAtom.ORDERED);
-        listNumberingMap.put(NumberingStyleNames.UNORDERED,ASAtom.UNORDERED);
-        listNumberingMap.put(NumberingStyleNames.UNKNOWN, ASAtom.NONE);
+        numberingStyleToListNumbering.put(NumberingStyleNames.ENGLISH_LETTERS, ASAtom.ORDERED);
+        numberingStyleToListNumbering.put(NumberingStyleNames.ENGLISH_LETTERS_UPPER_CASE, ASAtom.UPPER_ALPHA);
+        numberingStyleToListNumbering.put(NumberingStyleNames.ENGLISH_LETTERS_LOWER_CASE, ASAtom.LOWER_ALPHA);
+        numberingStyleToListNumbering.put(NumberingStyleNames.ROMAN_NUMBERS_LOWER_CASE, ASAtom.LOWER_ROMAN);
+        numberingStyleToListNumbering.put(NumberingStyleNames.ROMAN_NUMBERS, ASAtom.ORDERED);
+        numberingStyleToListNumbering.put(NumberingStyleNames.ROMAN_NUMBERS_UPPER_CASE, ASAtom.UPPER_ROMAN);
+        numberingStyleToListNumbering.put(NumberingStyleNames.KOREAN_LETTERS, ASAtom.ORDERED);
+        numberingStyleToListNumbering.put(NumberingStyleNames.ARABIC_NUMBERS, ASAtom.DECIMAL);
+        numberingStyleToListNumbering.put(NumberingStyleNames.CIRCLED_ARABIC_NUMBERS, ASAtom.ORDERED);
+        numberingStyleToListNumbering.put(NumberingStyleNames.UNORDERED,ASAtom.UNORDERED);
+        numberingStyleToListNumbering.put(NumberingStyleNames.UNKNOWN, ASAtom.NONE);
+        numberingStyleToListNumbering.put(NumberingStyleNames.ORDERED, ASAtom.ORDERED);
+        numberingStyleToListNumbering.put(NumberingStyleNames.DESCRIPTION, ASAtom.DESCRIPTION);
+
+        listNumberingToNumberingStyle.put(ASAtom.UPPER_ALPHA, NumberingStyleNames.ENGLISH_LETTERS_UPPER_CASE);
+        listNumberingToNumberingStyle.put(ASAtom.LOWER_ALPHA,  NumberingStyleNames.ENGLISH_LETTERS_LOWER_CASE);
+        listNumberingToNumberingStyle.put(ASAtom.UPPER_ROMAN, NumberingStyleNames.ROMAN_NUMBERS_UPPER_CASE);
+        listNumberingToNumberingStyle.put(ASAtom.LOWER_ROMAN, NumberingStyleNames.ROMAN_NUMBERS_LOWER_CASE);
+        listNumberingToNumberingStyle.put(ASAtom.DECIMAL, NumberingStyleNames.ARABIC_NUMBERS);
+        listNumberingToNumberingStyle.put(ASAtom.CIRCLE, NumberingStyleNames.UNORDERED);
+        listNumberingToNumberingStyle.put(ASAtom.DISC, NumberingStyleNames.UNORDERED);
+        listNumberingToNumberingStyle.put(ASAtom.SQUARE, NumberingStyleNames.UNORDERED);
+        listNumberingToNumberingStyle.put(ASAtom.UNORDERED, NumberingStyleNames.UNORDERED);
+        listNumberingToNumberingStyle.put(ASAtom.ORDERED, NumberingStyleNames.ORDERED);
+        listNumberingToNumberingStyle.put(ASAtom.NONE, NumberingStyleNames.UNKNOWN);
+        listNumberingToNumberingStyle.put(ASAtom.DESCRIPTION, NumberingStyleNames.DESCRIPTION);
     }
 
     public static ASAtom getListNumbering(String numberingStyle) {
-        return listNumberingMap.get(numberingStyle);
+        return numberingStyleToListNumbering.get(numberingStyle);
+    }
+
+    public static String getNumberingStyle(ASAtom listNumbering) {
+        return listNumberingToNumberingStyle.get(listNumbering);
     }
 
     public static void processLists(List<List<IObject>> contents, boolean isTableCell) {

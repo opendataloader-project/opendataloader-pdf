@@ -831,11 +831,30 @@ public class AutoTaggingProcessor {
         // null into NONE so the hasLabel promotion and COSName.construct below
         // never receive null.
         if (numbering == null || numbering == ASAtom.NONE) {
-            boolean hasLabel = false;
-            for (ListItem item : list.getListItems()) {
-                if (item.getLabelLength() > 0) { hasLabel = true; break; }
+            boolean hasLabel;
+            ListItem first = list.getListItems().get(0);
+            hasLabel = first.getLabelLength() > 0;
+            if (hasLabel) {
+                if (list.getListItems().size() == 1) {
+                    numbering = ASAtom.UNORDERED;
+                } else {
+                    ListItem second = list.getListItems().get(1);
+                    if (Objects.equals(first.getLabelText(), second.getLabelText())) {
+                        numbering = ASAtom.UNORDERED;
+                    } else {
+                        numbering = ASAtom.ORDERED;
+                    }
+                }
+            } else {
+                numbering = ASAtom.NONE;
             }
-            numbering = hasLabel ? ASAtom.ORDERED : ASAtom.NONE;
+        }
+        if (!isPDF2_0) {
+            if (numbering == ASAtom.UNORDERED) {
+                numbering = ASAtom.DISC;
+            } else if (numbering == ASAtom.ORDERED || numbering == ASAtom.DESCRIPTION) {
+                numbering = ASAtom.NONE;
+            }
         }
         addAttributeToStructElem(listObject, ASAtom.LIST, ASAtom.LIST_NUMBERING, COSName.construct(numbering));
 
