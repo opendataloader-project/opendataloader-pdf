@@ -602,7 +602,7 @@ public class HtmlGenerator implements Closeable {
     }
 
     protected String getListStyleAttribute(BaseObject list) {
-        return EMPTY_STRING;
+        return String.format(HtmlSyntax.HTML_STYLE_ATTRIBUTE, HtmlSyntax.HTML_LIST_STYLE_TYPE_NONE_PROPERTY);
     }
 
     protected static String getTextStyle(TextChunk chunk) {
