@@ -22,6 +22,7 @@ import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
+import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ListUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
@@ -87,7 +88,7 @@ public class TextLineProcessor {
             if (content instanceof TextLine) {
                 TextLine textLine = (TextLine) content;
                 textLine.getTextChunks().sort(TEXT_CHUNK_COMPARATOR);
-                double threshold = textLine.getFontSize() * TextChunkUtils.TEXT_LINE_SPACE_RATIO;
+                double threshold = textLine.getFontSize() * StaticContainers.getTextLineSpaceRatio();
                 newContents.set(i, getTextLineWithSpaces(textLine, threshold, chunksAfterWhitespace));
             }
         }
