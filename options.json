@@ -254,7 +254,15 @@
       "type": "string",
       "required": false,
       "default": null,
-      "description": "Set the rendering resolution for images in DPI. Higher values improve image quality but increase memory consumption; lower values reduce memory usage at the cost of detail. Accepts positive decimal DPI values (e.g., 288.0). Default: 288.0."
+      "description": "Set the rendering resolution for images in DPI. Higher values improve image quality but increase memory consumption; lower values reduce memory usage at the cost of detail. Accepts positive decimal DPI values (e.g., 144.0). Default: 144.0."
+    },
+    {
+      "name": "space-ratio",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": null,
+      "description": "Set the ratio used to calculate the automatic space-insertion threshold (threshold = space-ratio * font size). If the horizontal gap between two adjacent symbols exceeds this threshold, an extra space is inserted to text value. Accepts decimals (e.g., 0.17). Default: 0.17"
     }
   ]
 }
