@@ -67,8 +67,10 @@ export interface ConvertOptions {
   toStdout?: boolean;
   /** Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode */
   threads?: string;
-  /** Set the rendering resolution for images in DPI. Higher values improve image quality but increase memory consumption; lower values reduce memory usage at the cost of detail. Accepts positive decimal DPI values (e.g., 288.0). Default: 288.0. */
+  /** Set the rendering resolution for images in DPI. Higher values improve image quality but increase memory consumption; lower values reduce memory usage at the cost of detail. Accepts positive decimal DPI values (e.g., 144.0). Default: 144.0. */
   imageResolution?: string;
+  /** Set the ratio used to calculate the automatic space-insertion threshold (threshold = space-ratio * font size). If the horizontal gap between two adjacent symbols exceeds this threshold, an extra space is inserted to text value. Accepts decimals (e.g., 0.17). Default: 0.17 */
+  spaceRatio?: string;
 }
 
 /**
@@ -107,6 +109,7 @@ export interface CliOptions {
   toStdout?: boolean;
   threads?: string;
   imageResolution?: string;
+  spaceRatio?: string;
 }
 
 /**
@@ -210,6 +213,9 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   }
   if (cliOptions.imageResolution) {
     convertOptions.imageResolution = cliOptions.imageResolution;
+  }
+  if (cliOptions.spaceRatio) {
+    convertOptions.spaceRatio = cliOptions.spaceRatio;
   }
 
   return convertOptions;
@@ -328,6 +334,9 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.imageResolution) {
     args.push('--image-resolution', options.imageResolution);
+  }
+  if (options.spaceRatio) {
+    args.push('--space-ratio', options.spaceRatio);
   }
 
   return args;

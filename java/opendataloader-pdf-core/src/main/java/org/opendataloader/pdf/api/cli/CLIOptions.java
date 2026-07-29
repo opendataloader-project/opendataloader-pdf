@@ -147,7 +147,7 @@ public class CLIOptions {
     private static final String IMAGE_RESOLUTION_DESC = "Set the rendering resolution for images in DPI. " +
         "Higher values improve image quality but increase memory consumption; " +
         "lower values reduce memory usage at the cost of detail. " +
-        "Accepts positive decimal DPI values (e.g., 288.0). Default: 288.0.";
+        "Accepts positive decimal DPI values (e.g., 144.0). Default: 144.0.";
 
     // ===== Pages =====
     private static final String PAGES_LONG_OPTION = "pages";
@@ -398,7 +398,11 @@ public class CLIOptions {
         }
         if (commandLine.hasOption(CLIOptions.SPACE_RATIO_LONG_OPTION)) {
             try {
-                Double spaceRatio = Double.parseDouble(commandLine.getOptionValue(CLIOptions.SPACE_RATIO_LONG_OPTION));
+                double spaceRatio = Double.parseDouble(commandLine.getOptionValue(CLIOptions.SPACE_RATIO_LONG_OPTION));
+                if (!Double.isFinite(spaceRatio) || spaceRatio <= 0) {
+                    throw new IllegalArgumentException(
+                        "Option --space-ratio requires a finite positive double value.");
+                }
                 config.setSpaceRatio(spaceRatio);
             } catch (NumberFormatException e) {
                 throw new IllegalArgumentException(

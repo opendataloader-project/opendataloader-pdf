@@ -267,7 +267,7 @@ public class DocumentProcessor {
         final boolean keepLineBreaks = StaticContainers.isKeepLineBreaks();
         final boolean isDataLoader = StaticContainers.isDataLoader();
         final var isIgnoreCharsWithoutUnicode = StaticContainers.getIsIgnoreCharactersWithoutUnicode();
-        final var textLineSpaceRatio =  StaticContainers.getTextLineSpaceRatio();
+        final var textLineSpaceRatio = StaticContainers.getTextLineSpaceRatio();
 
         // Capture StaticLayoutContainers state (shared mutable — synchronized list for headings)
         final var headings = StaticLayoutContainers.getHeadings();
