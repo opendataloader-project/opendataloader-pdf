@@ -101,17 +101,19 @@ public class HeadingProcessorTest {
 
         SemanticParagraph item1 = new SemanticParagraph();
         item1.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 30.0, 20.0, 40.0),
-            "I. First item", "Font1", 10, 400, 0, 12.0, new double[]{0.0}, null, 0)));
+            "I. First item", "Font1", 14, 700, 0, 20.0, new double[]{0.0}, null, 0)));
         contents.add(item1);
 
         SemanticParagraph item2 = new SemanticParagraph();
         item2.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 20.0, 20.0, 30.0),
-            "II. Second item", "Font1", 10, 400, 0, 12.0, new double[]{0.0}, null, 0)));
+            "II. Second item", "Font1", 14, 700, 0, 20.0, new double[]{0.0}, null, 0)));
         contents.add(item2);
 
         HeadingProcessor.processHeadings(contents, false);
         Assertions.assertFalse(contents.get(0) instanceof SemanticHeading,
-            "Consecutive roman numerals should stay as a list, not become a heading");
+            "First consecutive roman item should stay as a list, not become a heading");
+        Assertions.assertFalse(contents.get(1) instanceof SemanticHeading,
+            "Second consecutive roman item should stay as a list, not become a heading");
     }
 
     @Test

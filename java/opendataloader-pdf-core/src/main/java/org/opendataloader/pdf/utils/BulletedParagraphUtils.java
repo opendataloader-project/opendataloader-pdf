@@ -42,19 +42,19 @@ public class BulletedParagraphUtils {
      * Roman numeral section title: "I. INTRODUCTION", "III. METHODOLOGY", etc.
      */
     private static final Pattern ROMAN_SECTION_PATTERN =
-            Pattern.compile("^(XII|VIII|VII|XI|VI|IV|IX|III|II|X|V|I)\\.\\s+[A-Za-z0-9]");
+            Pattern.compile("^(XII|VIII|VII|XI|VI|IV|IX|III|II|X|V|I)\\.\\s+[A-Za-z0-9].*$");
 
     /**
      * Alpha subsection title: "A. Network Architecture", "B. Experimental Results", etc.
      */
     private static final Pattern ALPHA_SUBSECTION_PATTERN =
-            Pattern.compile("^[A-Z]\\.\\s+[A-Z][A-Za-z0-9]");
+            Pattern.compile("^[A-Z]\\.\\s+[A-Za-z0-9].*$");
 
     /**
      * Numeric section title: "1. Introduction", "2. Related Work", "1.1 Overview", etc.
      */
     private static final Pattern NUMERIC_SECTION_PATTERN =
-            Pattern.compile("^(\\d+\\.|\\d+\\.\\d+|\\d+\\))\\s+[A-Z][A-Za-z0-9]");
+            Pattern.compile("^(\\d+\\.|\\d+\\.\\d+|\\d+\\))\\s+[A-Za-z0-9].*$");
 
     /**
      * Standard unnumbered major section headers across academic papers and technical reports.
@@ -111,19 +111,20 @@ public class BulletedParagraphUtils {
             return false;
         }
         String val = line.getValue().trim();
-        if (val.isEmpty() || val.length() > 100) {
-            return false;
-        }
-
-        // Exclude author affiliation metadata blocks (emails, department, university)
         if (isAuthorAffiliationLine(val)) {
             return false;
         }
+        if (val.length() > 80 || val.split("\\s+").length > 10) {
+            return false;
+        }
+        if (val.matches("^(A\\.|\\d+\\.)\\s+(This|The|We|In|Here|Our|For|With|By|To|From)\\b.*")) {
+            return false;
+        }
 
-        return ROMAN_SECTION_PATTERN.matcher(val).find()
-            || ALPHA_SUBSECTION_PATTERN.matcher(val).find()
-            || NUMERIC_SECTION_PATTERN.matcher(val).find()
-            || (val.length() < 60 && STANDARD_SECTION_NAMES_PATTERN.matcher(val).find());
+        return ROMAN_SECTION_PATTERN.matcher(val).matches()
+            || ALPHA_SUBSECTION_PATTERN.matcher(val).matches()
+            || NUMERIC_SECTION_PATTERN.matcher(val).matches()
+            || STANDARD_SECTION_NAMES_PATTERN.matcher(val).matches();
     }
 
     /**
