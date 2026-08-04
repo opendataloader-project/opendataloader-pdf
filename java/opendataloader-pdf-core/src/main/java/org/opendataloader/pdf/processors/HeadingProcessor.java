@@ -66,16 +66,15 @@ public class HeadingProcessor {
         }
         for (int index = 0; index < textNodesCount; index++) {
             SemanticTextNode textNode = textNodes.get(index);
+            SemanticTextNode prevNode = index != 0 ? textNodes.get(index - 1) : null;
+            SemanticTextNode nextNode = index + 1 < textNodesCount ? textNodes.get(index + 1) : null;
 
-            if (isDropCap(textNode) || isEquation(textNode) || isTableContent(textNode)) {
+            if (isDropCap(textNode, nextNode) || isEquation(textNode) || isTableContent(textNode)) {
                 if (textNode.getSemanticType() == SemanticType.HEADING) {
                     textNode.setSemanticType(SemanticType.PARAGRAPH);
                 }
                 continue;
             }
-
-            SemanticTextNode prevNode = index != 0 ? textNodes.get(index - 1) : null;
-            SemanticTextNode nextNode = index + 1 < textNodesCount ? textNodes.get(index + 1) : null;
             
             boolean isIeeeSection = BulletedParagraphUtils.isIeeeSectionTitle(textNode.getFirstLine());
             boolean isConsecutiveList = isConsecutiveSameStyleList(prevNode, textNode) || isConsecutiveSameStyleList(textNode, nextNode);
@@ -89,7 +88,7 @@ public class HeadingProcessor {
                 if (BulletedParagraphUtils.isBulletedParagraph(textNode)) {
                     probability += BULLETED_HEADING_PROBABILITY;
                 }
-                if (probability > HEADING_PROBABILITY && textNode.getSemanticType() != SemanticType.LIST) {
+                if (probability > HEADING_PROBABILITY && textNode.getSemanticType() != SemanticType.LIST && !isConsecutiveList) {
                     textNode.setSemanticType(SemanticType.HEADING);
                 }
             }
@@ -193,7 +192,8 @@ public class HeadingProcessor {
             IObject content = contents.get(index);
             if (content instanceof SemanticTextNode) {
                 SemanticTextNode textNode = (SemanticTextNode) content;
-                if (isDropCap(textNode) || isEquation(textNode) || isTableContent(textNode)) {
+                SemanticTextNode nextNode = (index + 1 < contents.size() && contents.get(index + 1) instanceof SemanticTextNode) ? (SemanticTextNode) contents.get(index + 1) : null;
+                if (isDropCap(textNode, nextNode) || isEquation(textNode) || isTableContent(textNode)) {
                     textNode.setSemanticType(SemanticType.PARAGRAPH);
                     continue;
                 }
@@ -229,6 +229,10 @@ public class HeadingProcessor {
         TextLine line2 = nextNode.getFirstLine();
         if (line1 == null || line2 == null) return false;
 
+        if (BulletedParagraphUtils.isIeeeSectionTitle(line1) && BulletedParagraphUtils.isIeeeSectionTitle(line2)) {
+            return false;
+        }
+
         boolean isRoman1 = BulletedParagraphUtils.isRomanSectionTitle(line1);
         boolean isRoman2 = BulletedParagraphUtils.isRomanSectionTitle(line2);
         if (isRoman1 && isRoman2) {
@@ -251,22 +255,57 @@ public class HeadingProcessor {
     }
 
     /**
-     * Checks if a text node is a decorative drop cap fragment or orphan symbol (≤ 2 characters without trailing section punctuation).
+     * Checks if a text node is a decorative drop cap fragment (1–2 characters followed by uppercase continuation text).
      *
      * @param node the text node to check
-     * @return true if the node is a drop cap or orphan symbol, false otherwise
+     * @param nextNode the following text node in layout order
+     * @return true if the node is a decorative drop cap fragment, false otherwise
      */
-    private static boolean isDropCap(SemanticTextNode node) {
-        String value = node.getValue();
-        if (value == null) return false;
-        String trimmed = value.trim();
-        if (trimmed.isEmpty()) return false;
-        int codePoints = trimmed.codePointCount(0, trimmed.length());
-        if (codePoints <= 2) {
-            char lastChar = trimmed.charAt(trimmed.length() - 1);
-            return lastChar != '.' && lastChar != ':' && lastChar != ')' && lastChar != ']';
+    private static boolean isDropCap(SemanticTextNode node, SemanticTextNode nextNode) {
+        if (node == null || nextNode == null) {
+            return false;
         }
-        return false;
+
+        String text = node.getValue();
+        if (text == null) {
+            return false;
+        }
+
+        text = text.trim();
+        if (text.isEmpty()) {
+            return false;
+        }
+
+        int codePoints = text.codePointCount(0, text.length());
+        if (codePoints < 1 || codePoints > 2) {
+            return false;
+        }
+
+        if (text.contains(".") || text.contains(":") || Character.isWhitespace(text.charAt(0))) {
+            return false;
+        }
+
+        String next = nextNode.getValue();
+        if (next == null) {
+            return false;
+        }
+
+        next = next.stripLeading();
+        if (next.length() < 3) {
+            return false;
+        }
+
+        int uppercasePrefix = 0;
+        for (int i = 0; i < next.length();) {
+            int cp = next.codePointAt(i);
+            if (!Character.isUpperCase(cp)) {
+                break;
+            }
+            uppercasePrefix++;
+            i += Character.charCount(cp);
+        }
+
+        return uppercasePrefix >= 3;
     }
 
     /**
@@ -322,8 +361,8 @@ public class HeadingProcessor {
     }
 
     /**
-     * Checks if a text node belongs to a table structure (table header or table cell)
-     * or contains multi-column horizontal spacing / tabular column header notation.
+     * Checks if a text node belongs to a table structure using parser table metadata,
+     * horizontal chunk gap alignment, and column header notation.
      *
      * @param node the text node to check
      * @return true if the node is part of a table or multi-column layout, false otherwise
@@ -338,40 +377,39 @@ public class HeadingProcessor {
         }
 
         TextLine firstLine = node.getFirstLine();
+        if (firstLine == null) {
+            return false;
+        }
 
-        // 1. Geometric layout check: multi-column line with horizontal gap > fontSize * 1.2 between adjacent chunks
-        if (firstLine != null && firstLine.getTextChunks() != null) {
-            List<TextChunk> chunks = firstLine.getTextChunks();
-            if (chunks.size() >= 2) {
-                double fontSize = firstLine.getFontSize();
-                if (fontSize <= 0) fontSize = 10.0;
-                for (int i = 0; i < chunks.size() - 1; i++) {
-                    TextChunk c1 = chunks.get(i);
-                    TextChunk c2 = chunks.get(i + 1);
-                    if (c1.getBoundingBox() != null && c2.getBoundingBox() != null) {
-                        double gap = c2.getBoundingBox().getLeftX() - c1.getBoundingBox().getRightX();
-                        // Gap > font size indicates a multi-column tabular gap
-                        if (gap > Math.max(8.0, fontSize)) {
-                            return true;
-                        }
+        // 2. Document layout check: multi-column line with horizontal gap > fontSize * 1.0 between adjacent chunks
+        List<TextChunk> chunks = firstLine.getTextChunks();
+        if (chunks != null && chunks.size() >= 2) {
+            double fontSize = firstLine.getFontSize();
+            if (fontSize <= 0) fontSize = 10.0;
+            for (int i = 0; i < chunks.size() - 1; i++) {
+                TextChunk c1 = chunks.get(i);
+                TextChunk c2 = chunks.get(i + 1);
+                if (c1.getBoundingBox() != null && c2.getBoundingBox() != null) {
+                    double gap = c2.getBoundingBox().getLeftX() - c1.getBoundingBox().getRightX();
+                    if (gap > Math.max(8.0, fontSize)) {
+                        return true;
                     }
                 }
             }
         }
 
-        // 2. Tabular column header notation: line with 3+ words containing column header tokens (metrics, symbols, abbreviated headers)
+        // 3. Tabular column header notation & metric token check
         String val = node.getValue();
         if (val != null) {
             String[] words = val.trim().split("\\s+");
             if (words.length >= 3) {
-                int colHeaderTokens = 0;
+                int metricTokens = 0;
                 for (String w : words) {
-                    if (w.contains("@") || w.contains("%") || w.contains("±")
-                            || w.matches("^[A-Z][a-z]+\\.$") || w.matches("^[A-Z0-9]{2,10}$")) {
-                        colHeaderTokens++;
+                    if (w.contains("@") || w.contains("%") || w.contains("±") || w.matches("^[A-Z][a-z]+\\.$")) {
+                        metricTokens++;
                     }
                 }
-                if (colHeaderTokens >= 2 && !BulletedParagraphUtils.isIeeeSectionTitle(firstLine)) {
+                if (metricTokens >= 2 && !BulletedParagraphUtils.isIeeeSectionTitle(firstLine)) {
                     return true;
                 }
             }
