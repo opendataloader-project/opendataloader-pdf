@@ -78,7 +78,7 @@ public class HeadingProcessor {
             SemanticTextNode nextNode = index + 1 < textNodesCount ? textNodes.get(index + 1) : null;
             
             boolean isIeeeSection = BulletedParagraphUtils.isIeeeSectionTitle(textNode.getFirstLine());
-            boolean isConsecutiveList = isConsecutiveSameStyleList(textNode, nextNode);
+            boolean isConsecutiveList = isConsecutiveSameStyleList(prevNode, textNode) || isConsecutiveSameStyleList(textNode, nextNode);
 
             if (isIeeeSection && !isConsecutiveList) {
                 textNode.setSemanticType(SemanticType.HEADING);

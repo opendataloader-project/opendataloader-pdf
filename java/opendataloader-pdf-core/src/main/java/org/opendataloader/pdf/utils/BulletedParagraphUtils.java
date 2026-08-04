@@ -60,7 +60,7 @@ public class BulletedParagraphUtils {
      * Standard unnumbered major section headers across academic papers and technical reports.
      */
     private static final Pattern STANDARD_SECTION_NAMES_PATTERN =
-            Pattern.compile("^(ABSTRACT|INTRODUCTION|RELATED WORK|BACKGROUND|PRELIMINARIES|METHOD|METHODOLOGY|MODEL|PROPOSED APPROACH|EXPERIMENTS|EXPERIMENTAL SETUP|RESULTS|DISCUSSION|EVALUATION|LIMITATIONS|CONCLUSION|CONCLUSIONS|FUTURE WORK|REFERENCES|BIBLIOGRAPHY|APPENDIX|APPENDICES|ACKNOWLEDGMENT|ACKNOWLEDGMENTS)\\b", Pattern.CASE_INSENSITIVE);
+            Pattern.compile("^(ABSTRACT|INTRODUCTION|RELATED WORK|BACKGROUND|PRELIMINARIES|METHOD|METHODOLOGY|MODEL|PROPOSED APPROACH|EXPERIMENTS|EXPERIMENTAL SETUP|RESULTS|DISCUSSION|EVALUATION|LIMITATIONS|CONCLUSION|CONCLUSIONS|FUTURE WORK|REFERENCES|BIBLIOGRAPHY|APPENDIX|APPENDICES|ACKNOWLEDGMENT|ACKNOWLEDGMENTS)\\s*[:\\.\\-—–]?$", Pattern.CASE_INSENSITIVE);
 
     /**
      * Checks if a text line is a Roman numeral section title (e.g. "I. INTRODUCTION", "III. METHODOLOGY").
@@ -144,16 +144,6 @@ public class BulletedParagraphUtils {
             return true;
         }
         return false;
-    }
-
-    /**
-     * Checks if a text line is an IEEE Roman section title. Retained for backwards compatibility.
-     *
-     * @param line the text line to check
-     * @return true if the line is an IEEE section title, false otherwise
-     */
-    public static boolean isIeeeRomanSectionTitle(TextLine line) {
-        return isIeeeSectionTitle(line);
     }
 
     /**

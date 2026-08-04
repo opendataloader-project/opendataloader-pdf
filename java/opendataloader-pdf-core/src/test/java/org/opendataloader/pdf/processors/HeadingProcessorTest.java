@@ -137,6 +137,22 @@ public class HeadingProcessorTest {
     }
 
     @Test
+    public void testTwoCharacterHeadingIsPreserved() {
+        StaticContainers.setIsDataLoader(true);
+        StaticLayoutContainers.setHeadings(new ArrayList<>());
+        List<IObject> contents = new ArrayList<>();
+
+        SemanticParagraph shortHeading = new SemanticParagraph();
+        shortHeading.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 30.0, 20.0, 40.0),
+            "AI", "Font1", 16, 700, 0, 50.0, new double[]{0.0}, null, 0)));
+        contents.add(shortHeading);
+
+        HeadingProcessor.processHeadings(contents, false);
+        Assertions.assertTrue(contents.get(0) instanceof SemanticHeading,
+            "A two-character standalone uppercase title like AI should be classified as a heading");
+    }
+
+    @Test
     public void testEquationIsNotHeading() {
         StaticContainers.setIsDataLoader(true);
         StaticLayoutContainers.setHeadings(new ArrayList<>());
