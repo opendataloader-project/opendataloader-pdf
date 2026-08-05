@@ -185,4 +185,41 @@ public class HeadingProcessorTest {
         Assertions.assertFalse(contents.get(0) instanceof SemanticHeading,
             "A table header row should not be classified as a heading");
     }
+
+    @Test
+    public void testNumberedTableHeaderIsNotHeading() {
+        StaticContainers.setIsDataLoader(true);
+        StaticLayoutContainers.setHeadings(new ArrayList<>());
+        List<IObject> contents = new ArrayList<>();
+
+        SemanticParagraph th = new SemanticParagraph();
+        th.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 30.0, 20.0, 40.0),
+            "1. Strategy Acc. P@100R R@100P", "Font1", 10, 700, 0, 20.0, new double[]{0.0}, null, 0)));
+        contents.add(th);
+
+        HeadingProcessor.processHeadings(contents, false);
+        Assertions.assertFalse(contents.get(0) instanceof SemanticHeading,
+            "A numbered table header row should not be classified as a heading");
+    }
+
+    @Test
+    public void testShortHeadingWithoutDropCapLayoutEvidenceIsPreserved() {
+        StaticContainers.setIsDataLoader(true);
+        StaticLayoutContainers.setHeadings(new ArrayList<>());
+        List<IObject> contents = new ArrayList<>();
+
+        SemanticParagraph shortHeading = new SemanticParagraph();
+        shortHeading.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 30.0, 20.0, 40.0),
+            "ML", "Font1", 16, 700, 0, 50.0, new double[]{0.0}, null, 0)));
+        contents.add(shortHeading);
+
+        SemanticParagraph body = new SemanticParagraph();
+        body.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 10.0, 20.0, 20.0),
+            "CNN-based models are used...", "Font1", 14, 400, 0, 12.0, new double[]{0.5}, null, 0)));
+        contents.add(body);
+
+        HeadingProcessor.processHeadings(contents, false);
+        Assertions.assertTrue(contents.get(0) instanceof SemanticHeading,
+            "ML heading followed by CNN-based text should remain a heading without drop cap layout evidence");
+    }
 }

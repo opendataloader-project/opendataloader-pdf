@@ -216,6 +216,10 @@ public class HeadingProcessor {
         }
     }
 
+    private static String extractHeadingNumber(TextLine line) {
+        return line.getValue() != null ? line.getValue().trim() : "";
+    }
+
     /**
      * Checks if two consecutive text nodes form an ordered list of the exact same numbering style.
      *
@@ -230,7 +234,11 @@ public class HeadingProcessor {
         if (line1 == null || line2 == null) return false;
 
         if (BulletedParagraphUtils.isIeeeSectionTitle(line1) && BulletedParagraphUtils.isIeeeSectionTitle(line2)) {
-            return false;
+            String val1 = extractHeadingNumber(line1);
+            String val2 = extractHeadingNumber(line2);
+            if (val1.equals(val1.toUpperCase()) && val2.equals(val2.toUpperCase())) {
+                return false;
+            }
         }
 
         boolean isRoman1 = BulletedParagraphUtils.isRomanSectionTitle(line1);
@@ -263,6 +271,12 @@ public class HeadingProcessor {
      */
     private static boolean isDropCap(SemanticTextNode node, SemanticTextNode nextNode) {
         if (node == null || nextNode == null) {
+            return false;
+        }
+
+        TextLine line1 = node.getFirstLine();
+        TextLine line2 = nextNode.getFirstLine();
+        if (line1 == null || line2 == null || line1.getFontSize() <= line2.getFontSize() * 1.2) {
             return false;
         }
 
@@ -409,7 +423,7 @@ public class HeadingProcessor {
                         metricTokens++;
                     }
                 }
-                if (metricTokens >= 2 && !BulletedParagraphUtils.isIeeeSectionTitle(firstLine)) {
+                if (metricTokens >= 2) {
                     return true;
                 }
             }
