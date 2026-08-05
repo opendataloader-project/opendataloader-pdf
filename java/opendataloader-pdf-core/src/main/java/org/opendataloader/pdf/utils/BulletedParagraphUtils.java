@@ -117,7 +117,7 @@ public class BulletedParagraphUtils {
         if (val.length() > 80 || val.split("\\s+").length > 10) {
             return false;
         }
-        if (val.matches("^(A\\.|\\d+\\.)\\s+(This|The|We|In|Here|Our|For|With|By|To|From)\\b.*")) {
+        if (val.matches("^(XII|VIII|VII|XI|VI|IV|IX|III|II|X|V|I|[A-Z]|\\d+)[\\.\\)]\\s+(This|The|We|In|Here|Our|For|With|By|To|From)\\b.*")) {
             return false;
         }
 
@@ -139,6 +139,22 @@ public class BulletedParagraphUtils {
         // Email address or URL in line (e.g. {user1, user2}@domain.edu or https://...)
         if (trimmed.contains("@") || trimmed.toLowerCase().contains("http:") || trimmed.toLowerCase().contains("https:")) {
             return true;
+        }
+        // Short or long comma-delimited author lists with initials (e.g. "A. Smith, B. Jones")
+        if (trimmed.contains(",")) {
+            String[] parts = trimmed.split(",");
+            if (parts.length >= 2) {
+                boolean allInitials = true;
+                for (String part : parts) {
+                    if (!part.trim().matches("^[A-Z]\\.\\s+.*")) {
+                        allInitials = false;
+                        break;
+                    }
+                }
+                if (allInitials) {
+                    return true;
+                }
+            }
         }
         // Long author block lines with multiple comma-separated names and affiliations
         if (trimmed.length() > 100 && trimmed.chars().filter(ch -> ch == ',').count() >= 3) {
