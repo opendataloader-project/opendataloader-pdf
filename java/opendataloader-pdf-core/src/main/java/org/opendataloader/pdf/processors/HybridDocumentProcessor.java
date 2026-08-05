@@ -16,6 +16,7 @@
 package org.opendataloader.pdf.processors;
 
 import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.autotagging.ChunksWriter;
 import org.opendataloader.pdf.entities.EnrichedImageChunk;
 import org.opendataloader.pdf.entities.SemanticFormula;
 import org.opendataloader.pdf.entities.SemanticPicture;
@@ -37,6 +38,20 @@ import org.opendataloader.pdf.hybrid.TriageLogger;
 import org.opendataloader.pdf.hybrid.TriageProcessor;
 import org.opendataloader.pdf.hybrid.TriageProcessor.TriageDecision;
 import org.opendataloader.pdf.hybrid.TriageProcessor.TriageResult;
+import org.verapdf.as.ASAtom;
+import org.verapdf.cos.COSDictionary;
+import org.verapdf.cos.COSDocument;
+import org.verapdf.cos.COSInteger;
+import org.verapdf.cos.COSName;
+import org.verapdf.cos.COSObject;
+import org.verapdf.cos.COSReal;
+import org.verapdf.cos.COSString;
+import org.verapdf.operator.Operator;
+import org.verapdf.parser.Operators;
+import org.verapdf.pd.PDContentStream;
+import org.verapdf.pd.PDPage;
+import org.verapdf.pd.PDResources;
+import org.verapdf.tools.StaticResources;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
@@ -51,8 +66,10 @@ import org.verapdf.wcag.algorithms.entities.content.TextColumn;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.StreamInfo;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -195,6 +212,18 @@ public class HybridDocumentProcessor {
      * @see <a href="https://github.com/opendataloader-project/opendataloader-pdf/issues/352">#352</a>
      */
     static final int BACKEND_CHUNK_SIZE = 50;
+
+    /**
+     * Font resource name reserved for Phase B's synthesized invisible text (see
+     * {@link #appendSynthesizedTextOperator}). A dedicated, always-added Standard-14 Helvetica
+     * resource — not a font actually embedded in the source document — since this text is never
+     * rendered visibly (render mode 3) and Standard-14 base fonts need no font-file embedding at
+     * all, sidestepping re-encoding into whatever complex (e.g. CID/Identity-H) fonts the original
+     * document's own visible text already uses. Namespaced to avoid any realistic collision with a
+     * real document's own resource names.
+     */
+    private static final ASAtom OCR_FALLBACK_FONT_NAME = ASAtom.getASAtom("ODLOcrFallbackHelv");
+    private static final float OCR_FALLBACK_FONT_SIZE = 10f;
 
     private HybridDocumentProcessor() {
         // Static utility class
@@ -992,13 +1021,15 @@ public class HybridDocumentProcessor {
                 markAllTextSourcesAsOcr(backendPage);
             }
 
-            // OCR fallback: log elements that still lack StreamInfo after enrichment
+            // OCR fallback: log elements that still lack StreamInfo after enrichment, then
+            // synthesize real (invisible) content for them — see synthesizeInvisibleTextForOcrFallback.
             if (hybridConfig.isOcrAuto() || hybridConfig.isOcrForce()) {
                 Map<Integer, List<OcrWordInfo>> ocrWords = lastOcrWordsByPage;
                 if (ocrWords != null) {
                     List<OcrWordInfo> pageOcrWords = ocrWords.getOrDefault(pageNumber, List.of());
                     logOcrFallbackCandidates(backendPage, pageNumber, pageOcrWords);
                 }
+                synthesizeInvisibleTextForOcrFallback(backendPage, pageNumber);
             }
 
             final int pg = pageNumber;
@@ -1013,8 +1044,10 @@ public class HybridDocumentProcessor {
      * benefit from OCR fallback. Walks the IObject tree recursively to find
      * SemanticTextNodes with no StreamInfo in any of their TextChunks.
      *
-     * <p>This is Phase A (logging only). Phase B will actually insert invisible
-     * text operators into the content stream for these elements.
+     * <p>Diagnostic logging only — {@link #synthesizeInvisibleTextForOcrFallback} is the pass
+     * that actually inserts invisible text operators into the content stream for this content
+     * (called alongside this method, not from within it, so a failure/no-op in one doesn't
+     * affect the other).
      */
     private static void logOcrFallbackCandidates(
             List<IObject> backendPage, int pageNumber, List<OcrWordInfo> ocrWords) {
@@ -1073,6 +1106,443 @@ public class HybridDocumentProcessor {
             LOGGER.info(() -> "Page " + pageNumber + ": " + cc
                 + " element(s) need OCR fallback, " + owm + " OCR words available");
         }
+    }
+
+    /**
+     * Number of tokens {@link #appendSynthesizedTextOperator} appends per chunk — {@code q BT
+     * /ODLOcrFallbackHelv 10 Tf 3 Tr 1 0 0 1 x y Tm (text) Tj ET Q}. Used to size the index shift
+     * every insertion causes for whatever pre-existing content follows it — see
+     * {@link #rewritePageContentStream}.
+     */
+    private static final int TOKENS_PER_SYNTHESIZED_CHUNK = 18;
+
+    /**
+     * Phase B: walks the IObject tree (see {@link #forEachIObject}) collecting every TextChunk in
+     * reading order, and for each one that still has no StreamInfo after enrichment, records where
+     * a synthesized invisible operator for it should be inserted into the page's content stream —
+     * immediately after the nearest preceding TextChunk that does have real StreamInfo (i.e., the
+     * closest native/already-tagged content before it in reading order), or at the very start of
+     * the stream if no such content precedes it on the page.
+     *
+     * <p><b>Fixes a confirmed bug</b>: this previously appended every fallback chunk's operator to
+     * the *end* of the content stream, one chunk at a time, regardless of where that chunk actually
+     * belongs. Since a page's fallback chunks are scattered across many different tree branches,
+     * that systematically scrambled physical content-stream order — anything that follows raw
+     * content-stream order (a naive text extractor, "select all" in many viewers, `pdftotext -raw`)
+     * would see a page's fallback content as one big, out-of-place, reading-order-scrambled block
+     * tacked onto the end, even though the struct-tree/MCID order (and therefore the JSON model) was
+     * already correct. Confirmed via direct content-stream inspection of a previously-patched run
+     * against WetlandsTest.pdf: native text stayed in order, but every OCR-fallback bullet/heading/
+     * paragraph on a page reappeared, out of place and in tree-walk order, after all of that page's
+     * native text — including some content duplicated (once natively, once as an unmatched fallback
+     * chunk for a sibling run of the same text).
+     *
+     * <p>Batches all of a page's insertions into one content-stream rewrite (see
+     * {@link #rewritePageContentStream}) instead of one rewrite per chunk — also fixes the O(n²)
+     * per-chunk-rewrite cost previously called out here as a known inefficiency.
+     */
+    private static void synthesizeInvisibleTextForOcrFallback(List<IObject> objects, int pageNumber) {
+        List<TextChunk> orderedChunks = new ArrayList<>();
+        forEachIObject(objects, obj -> {
+            if (obj instanceof TextChunk) {
+                orderedChunks.add((TextChunk) obj);
+            }
+        });
+
+        Map<Integer, List<TextChunk>> pendingByInsertIndex = new HashMap<>();
+        int insertIndex = 0; // token index to anchor the next fallback chunk after; 0 = start of stream
+        for (TextChunk chunk : orderedChunks) {
+            List<StreamInfo> streamInfos = chunk.getStreamInfos();
+            if (!streamInfos.isEmpty()) {
+                int anchorOperatorIndex = -1;
+                for (StreamInfo streamInfo : streamInfos) {
+                    if (streamInfo.getXObjectName() == null) {
+                        anchorOperatorIndex = Math.max(anchorOperatorIndex, streamInfo.getOperatorIndex());
+                    }
+                }
+                if (anchorOperatorIndex >= 0) {
+                    insertIndex = anchorOperatorIndex + 1;
+                }
+                continue;
+            }
+            if (toAsciiOrReplacementChar(chunk.getValue()).isEmpty()) {
+                continue;
+            }
+            pendingByInsertIndex.computeIfAbsent(insertIndex, k -> new ArrayList<>()).add(chunk);
+        }
+
+        if (pendingByInsertIndex.isEmpty()) {
+            return;
+        }
+        try {
+            rewritePageContentStream(pageNumber, objects, pendingByInsertIndex);
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING,
+                "Failed to synthesize invisible text for OCR-fallback chunks on page {0}: {1}",
+                new Object[]{pageNumber, e.getMessage()});
+        }
+    }
+
+    /**
+     * Visits every IObject reachable from {@code objects} — each top-level node itself, plus
+     * (recursively) SemanticTextNode's TextChunks, TableBorder cells' contents in row/column order,
+     * and PDFList items' nested contents. {@code getStreamInfos()} is declared on {@code IObject}
+     * itself, so this single generic walk is enough both to collect TextChunks (see
+     * {@link #synthesizeInvisibleTextForOcrFallback}) and to reach every StreamInfo-bearing object
+     * on a page — text, image, and formula alike — when that page's content stream is about to be
+     * rewritten (see {@link #rewritePageContentStream}).
+     */
+    private static void forEachIObject(List<IObject> objects, java.util.function.Consumer<IObject> visitor) {
+        for (IObject obj : objects) {
+            visitor.accept(obj);
+            if (obj instanceof SemanticTextNode) {
+                SemanticTextNode textNode = (SemanticTextNode) obj;
+                for (TextColumn col : textNode.getColumns()) {
+                    for (TextLine line : col.getLines()) {
+                        for (TextChunk chunk : line.getTextChunks()) {
+                            visitor.accept(chunk);
+                        }
+                    }
+                }
+            } else if (obj instanceof TableBorder) {
+                TableBorder table = (TableBorder) obj;
+                for (int rowNumber = 0; rowNumber < table.getNumberOfRows(); rowNumber++) {
+                    TableBorderRow row = table.getRow(rowNumber);
+                    for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
+                        TableBorderCell cell = row.getCell(colNumber);
+                        if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
+                            forEachIObject(cell.getContents(), visitor);
+                        }
+                    }
+                }
+            } else if (obj instanceof PDFList) {
+                PDFList list = (PDFList) obj;
+                for (ListItem item : list.getListItems()) {
+                    forEachIObject(item.getContents(), visitor);
+                }
+            }
+        }
+    }
+
+    /**
+     * Rewrites a page's content stream once, splicing a synthesized, invisible (render mode 3)
+     * text-showing operator sequence — {@code BT /ODLOcrFallbackHelv 10 Tf 3 Tr 1 0 0 1 x y Tm
+     * (text) Tj ET} — in for each pending OCR-fallback chunk at the token position it was anchored
+     * to by {@link #synthesizeInvisibleTextForOcrFallback}, and attaching a matching
+     * {@link StreamInfo} to each chunk pointing at its operator's resulting index in the rewritten
+     * stream. {@link AutoTaggingProcessor}/{@link ChunksWriter} need no changes to pick these up:
+     * they generically wrap any operator that has a matching StreamInfo, exactly the same as native
+     * content — the only thing missing for OCR-recovered content was a real operator to point at,
+     * since it never existed in the original content stream (that's precisely why OCR was needed
+     * for it in the first place).
+     *
+     * <p>Inserting anywhere but the tail shifts the token index of everything that follows the
+     * insertion point — so before splicing anything in, every <em>pre-existing</em> StreamInfo on
+     * the page whose operator lives in this same main content stream (i.e., not one scoped to a
+     * Form XObject's own separate stream via a non-null {@code xObjectName} — those are untouched,
+     * since this method never rewrites an XObject's stream) gets remapped to where its operator will
+     * land in the rewritten stream. Skipping this step was the bug in an earlier version of this
+     * fix: newly-inserted chunks anchored mid-stream, but every pre-existing StreamInfo positioned
+     * after the insertion point was left pointing at its old (now wrong) index — silently mis-tagging
+     * unrelated content, or crashing {@code ChunksWriter} outright when two StreamInfo entries
+     * collided on the same now-stale index.
+     */
+    private static void rewritePageContentStream(
+            int pageNumber, List<IObject> objects, Map<Integer, List<TextChunk>> pendingByInsertIndex)
+            throws IOException {
+        PDPage page = StaticResources.getDocument().getPage(pageNumber);
+        ensureOcrFallbackFont(page);
+
+        PDContentStream contentStream = page.getContent();
+        List<Object> originalTokens = ChunksWriter.getTokens(contentStream);
+        int originalLength = originalTokens.size();
+
+        // A native chunk's anchor is its own Tj/TJ operatorIndex + 1 — almost always still inside
+        // that operator's enclosing BT/ET text object (a single BT commonly wraps several
+        // consecutive show operators). Splicing a self-contained BT..ET sequence in there would
+        // nest one text object inside another, which PDF forbids — content-stream interpreters
+        // handle that by breaking or silently skipping content, which is exactly what a visual diff
+        // against the source PDF caught: real, visible native bullets disappearing from the
+        // rendered page even though the inserted text itself is invisible (Tr 3). Snap every
+        // pending insertion point forward to the nearest boundary that is not inside any BT/ET
+        // span before doing anything else with it.
+        Map<Integer, List<TextChunk>> boundaryAlignedPending =
+            alignToTopLevelBoundaries(originalTokens, pendingByInsertIndex);
+
+        // cumulativeShiftThrough[k] = total tokens that will end up inserted at or before original
+        // index k — i.e. a pre-existing StreamInfo whose operatorIndex is k needs to become
+        // k + cumulativeShiftThrough[k] to still point at the same physical operator afterward.
+        int[] insertedCountAt = new int[originalLength + 1];
+        for (Map.Entry<Integer, List<TextChunk>> entry : boundaryAlignedPending.entrySet()) {
+            insertedCountAt[entry.getKey()] += entry.getValue().size() * TOKENS_PER_SYNTHESIZED_CHUNK;
+        }
+        int[] cumulativeShiftThrough = new int[originalLength + 1];
+        int runningShift = 0;
+        for (int i = 0; i <= originalLength; i++) {
+            runningShift += insertedCountAt[i];
+            cumulativeShiftThrough[i] = runningShift;
+        }
+        remapExistingStreamInfoIndexes(objects, cumulativeShiftThrough);
+
+        List<Object> finalTokens = new ArrayList<>(originalLength + runningShift);
+        for (int index = 0; index <= originalLength; index++) {
+            List<TextChunk> chunksHere = boundaryAlignedPending.get(index);
+            if (chunksHere != null) {
+                for (TextChunk chunk : chunksHere) {
+                    appendSynthesizedTextOperator(finalTokens, chunk);
+                }
+            }
+            if (index < originalLength) {
+                finalTokens.add(originalTokens.get(index));
+            }
+        }
+
+        COSDocument cosDocument = StaticResources.getDocument().getDocument();
+        COSObject newContents = AutoTaggingProcessor.createContentsIndirect(cosDocument, finalTokens);
+        // Both the cached PDContentStream wrapper (what ChunksWriter.getTokens reads) and the
+        // page dictionary's own /Contents key need updating — PDPage#getContent() returns a
+        // cached field, not a live read of /Contents, so mutating only the dictionary would be
+        // invisible to the later tagging pass.
+        contentStream.setContents(newContents);
+        page.getObject().setKey(ASAtom.CONTENTS, newContents);
+        cosDocument.addChangedObject(page.getObject());
+    }
+
+    /** Path-construction operators — starting or extending a path that isn't painted/cleared yet. */
+    private static final java.util.Set<String> PATH_CONSTRUCTION_OPERATORS =
+        new HashSet<>(java.util.Arrays.asList("m", "l", "c", "v", "y", "h", "re"));
+
+    /**
+     * Path-painting (and no-op path-clearing, {@code n}) operators — every operator that consumes
+     * and terminates whatever path is currently under construction.
+     */
+    private static final java.util.Set<String> PATH_PAINTING_OPERATORS = new HashSet<>(java.util.Arrays.asList(
+        "S", "s", "f", "F", "f*", "B", "B*", "b", "b*", "n"));
+
+    /**
+     * Remaps every key in {@code pendingByInsertIndex} forward to the nearest index that is both
+     * outside any BT/ET (text object) span and outside any open (unpainted) path-construction
+     * sequence in {@code originalTokens}, merging insertion lists together whenever more than one
+     * original key lands on the same aligned boundary.
+     *
+     * <p>Two distinct ways a naive insertion point corrupts real content, both found by rendering a
+     * fixed page and diffing it pixel-for-pixel against the source PDF:
+     * <ul>
+     *   <li>PDF forbids nesting one text object inside another — an insertion point still inside an
+     *   open BT would split a native text object in two, silently dropped or misrendered by a real
+     *   content-stream interpreter even though the inserted operators are themselves invisible.</li>
+     *   <li>A path built across several construction operators (e.g. {@code m l l l h}) and only
+     *   painted at the very end (e.g. {@code f}) has no defined meaning if something else — even a
+     *   fully self-contained, state-restoring {@code q ... Q} block — is spliced into the middle of
+     *   it; this document's "Print to PDF" output draws headings/bullets as vector paths rather than
+     *   font glyphs in several places, and splitting one of those silently dropped the visible shape
+     *   entirely (observed as real bullet text vanishing from the rendered page).</li>
+     * </ul>
+     * BT/ET is not nestable per spec (at most one is open at a time) and a path is either open or
+     * not, so a single forward scan tracking both as booleans is enough to find every span's end.
+     */
+    private static Map<Integer, List<TextChunk>> alignToTopLevelBoundaries(
+            List<Object> originalTokens, Map<Integer, List<TextChunk>> pendingByInsertIndex) {
+        int originalLength = originalTokens.size();
+        // safeToInsertBefore[i] == true means index i (0..originalLength) is not inside a text
+        // object and not in the middle of an unpainted path — a valid place to splice.
+        boolean[] safeToInsertBefore = new boolean[originalLength + 1];
+        boolean inTextObject = false;
+        boolean pathOpen = false;
+        safeToInsertBefore[0] = true;
+        for (int i = 0; i < originalLength; i++) {
+            Object token = originalTokens.get(i);
+            if (token instanceof Operator) {
+                String operatorName = ((Operator) token).getOperator();
+                if (Operators.BT.equals(operatorName)) {
+                    inTextObject = true;
+                } else if (Operators.ET.equals(operatorName)) {
+                    inTextObject = false;
+                } else if (PATH_CONSTRUCTION_OPERATORS.contains(operatorName)) {
+                    pathOpen = true;
+                } else if (PATH_PAINTING_OPERATORS.contains(operatorName)) {
+                    pathOpen = false;
+                }
+            }
+            safeToInsertBefore[i + 1] = !inTextObject && !pathOpen;
+        }
+
+        Map<Integer, List<TextChunk>> aligned = new HashMap<>();
+        for (Map.Entry<Integer, List<TextChunk>> entry : pendingByInsertIndex.entrySet()) {
+            int target = Math.max(0, Math.min(entry.getKey(), originalLength));
+            while (target < originalLength && !safeToInsertBefore[target]) {
+                target++;
+            }
+            aligned.computeIfAbsent(target, k -> new ArrayList<>()).addAll(entry.getValue());
+        }
+        return aligned;
+    }
+
+    /**
+     * Reflective handle onto {@code StreamInfo.operatorIndex} — see
+     * {@link #remapExistingStreamInfoIndexes} for why this is mutated in place via reflection rather
+     * than replaced with a new {@code StreamInfo} instance.
+     */
+    private static final java.lang.reflect.Field STREAM_INFO_OPERATOR_INDEX_FIELD;
+
+    static {
+        try {
+            STREAM_INFO_OPERATOR_INDEX_FIELD = StreamInfo.class.getDeclaredField("operatorIndex");
+            STREAM_INFO_OPERATOR_INDEX_FIELD.setAccessible(true);
+        } catch (NoSuchFieldException e) {
+            throw new ExceptionInInitializerError(e);
+        }
+    }
+
+    /**
+     * Remaps the {@code operatorIndex} of every pre-existing, main-content-stream StreamInfo
+     * reachable from {@code objects} (text, image, and formula alike — see {@link #forEachIObject})
+     * via {@code cumulativeShiftThrough} (see {@link #rewritePageContentStream}). Entries scoped to
+     * a Form XObject's own stream ({@code xObjectName != null}) are left alone, since their indices
+     * are relative to a stream this method never touches.
+     *
+     * <p><b>Mutates the existing StreamInfo object's field via reflection, in place — deliberately,
+     * not replaces it with a new instance.</b> {@code StreamInfo} exposes no
+     * {@code setOperatorIndex}, so replacing each shifted entry with
+     * {@code new StreamInfo(shifted, ...)} swapped into the chunk's own list (via
+     * {@code streamInfos.set(i, ...)}) looks like the natural fix, and the shift arithmetic itself
+     * is correct under that approach too (verified exhaustively — every original token really does
+     * land at {@code original + cumulativeShiftThrough[original]} in the rewritten stream). But it
+     * silently broke real content anyway: rendering a fixed page and diffing it against the source
+     * PDF showed native, visible bullet text vanishing specifically in regions *after* at least one
+     * insertion had already happened earlier on the same page — i.e., exactly the entries whose
+     * StreamInfo actually got replaced (an entry with zero shift is left untouched either way).
+     * Something later in the pipeline evidently holds its own reference to the original
+     * {@code StreamInfo} instance rather than re-reading {@code chunk.getStreamInfos()} fresh, so a
+     * replacement orphans that reference on the stale, pre-shift index while the chunk's own list
+     * moves on — silently splitting or dropping whatever content that stale index ends up
+     * mis-resolving to once {@code AutoTaggingProcessor} re-parses the final stream. Mutating in
+     * place keeps every existing reference — wherever it lives — pointing at the same object with
+     * the corrected value, side-stepping the identity mismatch entirely. MCID has not been assigned
+     * to any StreamInfo yet at this point in the pipeline (that happens later, during
+     * {@code AutoTaggingProcessor.tagDocument}), so there's no other field this could disturb.
+     */
+    private static void remapExistingStreamInfoIndexes(List<IObject> objects, int[] cumulativeShiftThrough) {
+        forEachIObject(objects, obj -> {
+            for (StreamInfo streamInfo : obj.getStreamInfos()) {
+                if (streamInfo.getXObjectName() != null) {
+                    continue;
+                }
+                int original = streamInfo.getOperatorIndex();
+                if (original < 0 || original >= cumulativeShiftThrough.length) {
+                    continue;
+                }
+                int shifted = original + cumulativeShiftThrough[original];
+                if (shifted != original) {
+                    try {
+                        STREAM_INFO_OPERATOR_INDEX_FIELD.setInt(streamInfo, shifted);
+                    } catch (IllegalAccessException e) {
+                        throw new IllegalStateException(
+                            "Failed to remap StreamInfo.operatorIndex via reflection", e);
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Appends one chunk's synthesized invisible text-showing operator sequence to {@code tokens}
+     * (being built into the page's new content stream — see {@link #rewritePageContentStream}) and
+     * attaches a matching {@link StreamInfo} to the chunk pointing at the resulting {@code Tj}
+     * operator's index in that same list — matches how {@code ChunksWriter.processTokens} later
+     * indexes operators when it re-parses this exact list once serialized to bytes and back.
+     *
+     * <p>ASCII-only: non-ASCII characters are replaced with {@code '?'}, since a non-embedded
+     * Standard-14 base font's default encoding has no wider coverage, and full Unicode font
+     * embedding is out of scope for this fix (the same problem the retired downstream
+     * `TaggedPdfWriterAdapter` tool needed a bundled TrueType font for).
+     *
+     * <p>Wrapped in {@code q ... Q} (save/restore graphics state), not just {@code BT ... ET}: text
+     * state parameters set inside a text object — font ({@code Tf}), rendering mode ({@code Tr}),
+     * the text matrix — are graphics state and persist across {@code ET}; {@code BT} only resets the
+     * text matrix, nothing else. Without {@code q}/{@code Q}, this block's {@code 3 Tr} (invisible)
+     * and font selection would leak into whatever native content follows it in the rewritten stream,
+     * silently turning subsequent real, visible text invisible until the next operator that happens
+     * to set {@code Tr} again. Confirmed by rendering a fixed page and diffing it against the source
+     * PDF: real bullet text that should have been visible was missing exactly where a fallback
+     * insertion preceded it, even though the fallback text itself is correctly invisible.
+     */
+    private static void appendSynthesizedTextOperator(List<Object> tokens, TextChunk chunk) {
+        String text = toAsciiOrReplacementChar(chunk.getValue());
+        tokens.add(Operator.getOperator(Operators.Q_GSAVE));
+        tokens.add(Operator.getOperator(Operators.BT));
+        tokens.add(COSName.construct(OCR_FALLBACK_FONT_NAME).getDirectBase());
+        tokens.add(COSReal.construct(OCR_FALLBACK_FONT_SIZE).getDirectBase());
+        tokens.add(Operator.getOperator(Operators.TF));
+        tokens.add(COSInteger.construct(3).getDirectBase()); // Tr 3 = invisible: no fill, no stroke, no clip
+        tokens.add(Operator.getOperator(Operators.TR));
+        tokens.add(COSReal.construct(1).getDirectBase());
+        tokens.add(COSReal.construct(0).getDirectBase());
+        tokens.add(COSReal.construct(0).getDirectBase());
+        tokens.add(COSReal.construct(1).getDirectBase());
+        tokens.add(COSReal.construct(chunk.getLeftX()).getDirectBase());
+        tokens.add(COSReal.construct(chunk.getBottomY()).getDirectBase());
+        tokens.add(Operator.getOperator(Operators.TM));
+        tokens.add(COSString.construct(text.getBytes(StandardCharsets.US_ASCII), false).getDirectBase());
+        int operatorIndex = tokens.size();
+        tokens.add(Operator.getOperator(Operators.TJ_SHOW));
+        tokens.add(Operator.getOperator(Operators.ET));
+        tokens.add(Operator.getOperator(Operators.Q_GRESTORE));
+
+        // Single StreamInfo covering the whole synthesized string — no splitting needed since
+        // this operator exists solely for this one chunk.
+        chunk.getStreamInfos().add(new StreamInfo(operatorIndex, null, 0, text.length()));
+    }
+
+    /**
+     * Ensures the page has an {@link #OCR_FALLBACK_FONT_NAME} font resource, adding a minimal
+     * Standard-14 Helvetica entry if one isn't already present.
+     *
+     * <p>Mutates the page's existing (possibly inherited/shared) resources in place rather than
+     * replacing them with a new {@code /Resources} object — {@code PDPage#getResources()} caches
+     * its {@code PDResources} instance internally with no public invalidation hook, so a later,
+     * separate call to it (from {@code AutoTaggingProcessor.updatePages}) would still see the old
+     * instance if we swapped in a new one here. Purely additive under one reserved, namespaced
+     * key, so it's safe even if the underlying dictionary turns out to be shared with sibling
+     * pages. {@code PDResources#getFont} itself lazily resolves an unqueried name from the live
+     * underlying dictionary on first lookup and caches it from then on — since this reserved name
+     * is never queried before this method adds it, both this method's own idempotency check and
+     * the later tagging pass's resolution correctly see whatever's been added here.
+     */
+    private static void ensureOcrFallbackFont(PDPage page) {
+        PDResources resources = page.getResources();
+        if (resources.getFont(OCR_FALLBACK_FONT_NAME) != null) {
+            return;
+        }
+        COSObject resourcesObj = resources.getObject();
+        COSObject fontDictObj = resourcesObj.getKey(ASAtom.getASAtom("Font"));
+        if (fontDictObj == null || fontDictObj.empty()) {
+            fontDictObj = COSDictionary.construct();
+            resourcesObj.setKey(ASAtom.getASAtom("Font"), fontDictObj);
+        }
+        COSObject fontEntry = COSDictionary.construct();
+        fontEntry.setKey(ASAtom.TYPE, COSName.construct(ASAtom.getASAtom("Font")));
+        fontEntry.setKey(ASAtom.getASAtom("Subtype"), COSName.construct(ASAtom.getASAtom("Type1")));
+        fontEntry.setKey(ASAtom.getASAtom("BaseFont"), COSName.construct(ASAtom.getASAtom("Helvetica")));
+        fontDictObj.setKey(OCR_FALLBACK_FONT_NAME, fontEntry);
+    }
+
+    /**
+     * Replaces every character outside printable ASCII with {@code '?'}. A non-embedded Standard-14
+     * base font's default encoding (used by {@link #appendSynthesizedTextOperator}) has no
+     * broader coverage — see that method's doc comment for why full Unicode font embedding is out
+     * of scope here.
+     */
+    private static String toAsciiOrReplacementChar(String text) {
+        if (text == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder(text.length());
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            sb.append((c >= 0x20 && c <= 0x7E) ? c : '?');
+        }
+        return sb.toString();
     }
 
     /**
