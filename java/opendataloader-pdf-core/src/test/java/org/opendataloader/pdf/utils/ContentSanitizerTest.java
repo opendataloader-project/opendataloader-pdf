@@ -93,6 +93,31 @@ class ContentSanitizerTest {
     }
 
     @Test
+    void testSanitizesUsFormattedPhoneNumbers() {
+        TextChunk chunk = createTextChunk(
+            "Call 800-555-0100 or (800) 555-0199 or 800.555.0188", 0f, 40f, 100f, 20f);
+
+        List<ContentSanitizer.ReplacementInfo> replacements = sanitizer.findAllReplacements(chunk.getValue());
+        List<TextChunk> result = sanitizer.applyReplacementsToChunks(
+            Collections.singletonList(chunk), replacements);
+
+        assertChunksContainValues(result,
+            "Call ", "000-000-0000", " or ", "000-000-0000", " or ", "000-000-0000");
+    }
+
+    @Test
+    void testDoesNotDoubleReplaceInternationalPhoneNumber() {
+        TextChunk chunk = createTextChunk(
+            "Call +1-800-555-0100 now", 0f, 40f, 100f, 20f);
+
+        List<ContentSanitizer.ReplacementInfo> replacements = sanitizer.findAllReplacements(chunk.getValue());
+        List<TextChunk> result = sanitizer.applyReplacementsToChunks(
+            Collections.singletonList(chunk), replacements);
+
+        assertChunksContainValues(result, "Call ", "+00-0000-0000", " now");
+    }
+
+    @Test
     void testReplaceCoveringOneFullChunkInArray() {
         List<TextChunk> originalChunks = new ArrayList<>();
         originalChunks.add(createTextChunk("User: ", 0f, 60f, 10f, 20f));
