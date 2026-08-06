@@ -395,7 +395,7 @@ public class AutoTaggingProcessor {
         } else {
             //PDF/UA-1 rules 7.18.1-1, 7.18.4-1, 7.18.5-1
             return !ASAtom.PRINTER_MARK.equals(annotation.getSubtype()) &&
-                !PDAnnotation.isOutsideCropBox(page, annotation) && PDAnnotation.isVisibleAnnotation(annotation);
+                !Boolean.TRUE.equals(PDAnnotation.isOutsideCropBox(page, annotation)) && PDAnnotation.isVisibleAnnotation(annotation);
         }
     }
 
