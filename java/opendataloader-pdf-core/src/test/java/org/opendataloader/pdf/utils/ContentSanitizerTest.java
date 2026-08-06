@@ -95,14 +95,16 @@ class ContentSanitizerTest {
     @Test
     void testSanitizesUsFormattedPhoneNumbers() {
         TextChunk chunk = createTextChunk(
-            "Call 800-555-0100 or (800) 555-0199 or 800.555.0188", 0f, 40f, 100f, 20f);
+            "Call 800-555-0100 or (800) 555-0199 or 800.555.0188 or 800 555 0177",
+            0f, 40f, 100f, 20f);
 
         List<ContentSanitizer.ReplacementInfo> replacements = sanitizer.findAllReplacements(chunk.getValue());
         List<TextChunk> result = sanitizer.applyReplacementsToChunks(
             Collections.singletonList(chunk), replacements);
 
         assertChunksContainValues(result,
-            "Call ", "000-000-0000", " or ", "000-000-0000", " or ", "000-000-0000");
+            "Call ", "000-000-0000", " or ", "000-000-0000", " or ", "000-000-0000",
+            " or ", "000-000-0000");
     }
 
     @Test
