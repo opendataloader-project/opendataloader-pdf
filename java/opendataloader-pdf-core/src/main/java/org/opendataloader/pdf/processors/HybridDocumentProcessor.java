@@ -1337,18 +1337,23 @@ public class HybridDocumentProcessor {
      *   it; this document's "Print to PDF" output draws headings/bullets as vector paths rather than
      *   font glyphs in several places, and splitting one of those silently dropped the visible shape
      *   entirely (observed as real bullet text vanishing from the rendered page).</li>
+     *   <li>A splice inside an existing BMC/BDC ... EMC marked-content span would nest the inserted
+     *   {@code q BT ... ET Q} block inside unrelated marked content instead of leaving it top-level.</li>
      * </ul>
      * BT/ET is not nestable per spec (at most one is open at a time) and a path is either open or
      * not, so a single forward scan tracking both as booleans is enough to find every span's end.
+     * Marked content *is* nestable, so that's tracked as a depth counter instead of a boolean.
      */
     private static Map<Integer, List<TextChunk>> alignToTopLevelBoundaries(
             List<Object> originalTokens, Map<Integer, List<TextChunk>> pendingByInsertIndex) {
         int originalLength = originalTokens.size();
         // safeToInsertBefore[i] == true means index i (0..originalLength) is not inside a text
-        // object and not in the middle of an unpainted path — a valid place to splice.
+        // object, not in the middle of an unpainted path, and not inside marked content — a valid
+        // place to splice.
         boolean[] safeToInsertBefore = new boolean[originalLength + 1];
         boolean inTextObject = false;
         boolean pathOpen = false;
+        int markedContentDepth = 0;
         safeToInsertBefore[0] = true;
         for (int i = 0; i < originalLength; i++) {
             Object token = originalTokens.get(i);
@@ -1362,9 +1367,13 @@ public class HybridDocumentProcessor {
                     pathOpen = true;
                 } else if (PATH_PAINTING_OPERATORS.contains(operatorName)) {
                     pathOpen = false;
+                } else if (Operators.BMC.equals(operatorName) || Operators.BDC.equals(operatorName)) {
+                    markedContentDepth++;
+                } else if (Operators.EMC.equals(operatorName)) {
+                    markedContentDepth--;
                 }
             }
-            safeToInsertBefore[i + 1] = !inTextObject && !pathOpen;
+            safeToInsertBefore[i + 1] = !inTextObject && !pathOpen && markedContentDepth == 0;
         }
 
         Map<Integer, List<TextChunk>> aligned = new HashMap<>();
