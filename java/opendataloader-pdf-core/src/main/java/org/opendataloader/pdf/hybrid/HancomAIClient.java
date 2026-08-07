@@ -621,7 +621,7 @@ public class HancomAIClient implements HybridClient {
                 pageImageCache.getOrFetch(pageNum, idx -> fetchPageImage(pdfBytes, idx, cropOutput));
             } catch (IOException e) {
                 LOGGER.log(Level.FINE, "Failed to save DLA page image for page "
-                    + pageNum, e);
+                    + pageNum);
             } finally {
                 pageImageCache.evict(pageNum);
             }
@@ -646,7 +646,7 @@ public class HancomAIClient implements HybridClient {
             String filename = String.format("page-%d_%s-o%d.png", pageNum, labelName, objectId);
             Files.write(new File(dir, filename).toPath(), pngBytes);
         } catch (IOException e) {
-            LOGGER.log(Level.FINE, "Failed to save crop file", e);
+            LOGGER.log(Level.FINE, "Failed to save crop file");
         }
     }
 
@@ -660,7 +660,7 @@ public class HancomAIClient implements HybridClient {
             String filename = String.format("page-%d.png", pageNum);
             Files.write(new File(dir, filename).toPath(), pngBytes);
         } catch (IOException e) {
-            LOGGER.log(Level.FINE, "Failed to save page image file", e);
+            LOGGER.log(Level.FINE, "Failed to save page image file");
         }
     }
 

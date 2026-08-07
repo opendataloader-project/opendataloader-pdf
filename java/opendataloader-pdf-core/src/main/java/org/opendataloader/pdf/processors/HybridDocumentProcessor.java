@@ -650,7 +650,7 @@ public class HybridDocumentProcessor {
             lastHybridHealth = client.fetchHealth();
         } catch (Exception e) {
             lastHybridHealth = null;
-            LOGGER.log(Level.FINE, "fetchHealth failed", e);
+            LOGGER.log(Level.FINE, "fetchHealth failed");
         }
 
         // Read PDF bytes
