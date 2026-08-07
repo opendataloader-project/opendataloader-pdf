@@ -271,7 +271,7 @@ public class HancomClient implements HybridClient {
                     new Object[]{fileId, response.code()});
             }
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Error deleting file " + fileId, e);
+            LOGGER.log(Level.WARNING, "Error deleting file " + fileId);
         }
     }
 

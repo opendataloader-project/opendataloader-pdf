@@ -115,7 +115,7 @@ public class DocumentProcessor {
         try {
             cleanup.run();
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Error clearing " + name, e);
+            LOGGER.log(Level.WARNING, "Error clearing " + name);
         }
     }
 
