@@ -245,7 +245,7 @@ public class CLIMain {
             return false;
         } catch (Exception exception) {
             LOGGER.log(Level.SEVERE, "Exception during processing file " + file.getAbsolutePath() + ": " +
-                exception.getMessage(), exception);
+                exception.getMessage());
             return false;
         } finally {
             StaticContainers.closeImagesUtils();
