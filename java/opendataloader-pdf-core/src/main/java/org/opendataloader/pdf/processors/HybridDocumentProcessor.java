@@ -1382,16 +1382,41 @@ public class HybridDocumentProcessor {
      * Reflective handle onto {@code StreamInfo.operatorIndex} — see
      * {@link #remapExistingStreamInfoIndexes} for why this is mutated in place via reflection rather
      * than replaced with a new {@code StreamInfo} instance.
+     *
+     * <p>Resolved lazily by {@link #getStreamInfoOperatorIndexField()}, not eagerly at class-load —
+     * deliberately, so that a verapdf-library version whose {@code StreamInfo} shape no longer
+     * matches only breaks the one remap call that actually needed this field, not every code path
+     * through this class (plain startup and OCR-disabled runs have no reason to care whether this
+     * internal field still exists).
      */
-    private static final java.lang.reflect.Field STREAM_INFO_OPERATOR_INDEX_FIELD;
+    private static java.lang.reflect.Field streamInfoOperatorIndexField;
 
-    static {
-        try {
-            STREAM_INFO_OPERATOR_INDEX_FIELD = StreamInfo.class.getDeclaredField("operatorIndex");
-            STREAM_INFO_OPERATOR_INDEX_FIELD.setAccessible(true);
-        } catch (NoSuchFieldException e) {
-            throw new ExceptionInInitializerError(e);
+    /**
+     * Lazily resolves and caches {@link #streamInfoOperatorIndexField}, called only when
+     * {@link #remapExistingStreamInfoIndexes} actually needs to shift a {@code StreamInfo}.
+     *
+     * <p><b>Fails closed</b>: a lookup or {@code setAccessible} failure throws
+     * {@code IllegalStateException} instead of silently skipping the remap, which would leave a
+     * stale index and quietly reintroduce this file's reading-order bug. Also catches
+     * {@code RuntimeException} to cover {@code InaccessibleObjectException} ({@code setAccessible}
+     * can throw this unchecked on Java 9+ for an unopened module).
+     */
+    private static synchronized java.lang.reflect.Field getStreamInfoOperatorIndexField() {
+        if (streamInfoOperatorIndexField == null) {
+            try {
+                java.lang.reflect.Field field = StreamInfo.class.getDeclaredField("operatorIndex");
+                field.setAccessible(true);
+                streamInfoOperatorIndexField = field;
+            } catch (NoSuchFieldException | RuntimeException e) {
+                throw new IllegalStateException(
+                    "org.verapdf.wcag.algorithms.entities.content.StreamInfo no longer exposes a "
+                    + "reflectively-accessible 'operatorIndex' field on this verapdf-library version — "
+                    + "incompatible with HybridDocumentProcessor's OCR-fallback content-stream remap. "
+                    + "Update the reflection target (or the remap strategy) for the new StreamInfo shape.",
+                    e);
+            }
         }
+        return streamInfoOperatorIndexField;
     }
 
     /**
@@ -1448,7 +1473,7 @@ public class HybridDocumentProcessor {
                 int shifted = original + cumulativeShiftThrough[original];
                 if (shifted != original) {
                     try {
-                        STREAM_INFO_OPERATOR_INDEX_FIELD.setInt(streamInfo, shifted);
+                        getStreamInfoOperatorIndexField().setInt(streamInfo, shifted);
                     } catch (IllegalAccessException e) {
                         throw new IllegalStateException(
                             "Failed to remap StreamInfo.operatorIndex via reflection", e);
