@@ -1218,6 +1218,14 @@ public class HybridDocumentProcessor {
             } else if (obj instanceof PDFList) {
                 PDFList list = (PDFList) obj;
                 for (ListItem item : list.getListItems()) {
+                    // ListItem (via TextBlock) can hold TextChunks directly in getLines(), separate
+                    // from getContents() — miss these and their OCR-fallback text/StreamInfo remap
+                    // never happens.
+                    for (TextLine line : item.getLines()) {
+                        for (TextChunk chunk : line.getTextChunks()) {
+                            visitor.accept(chunk);
+                        }
+                    }
                     forEachIObject(item.getContents(), visitor);
                 }
             }
