@@ -1421,11 +1421,24 @@ public class HybridDocumentProcessor {
      * the corrected value, side-stepping the identity mismatch entirely. MCID has not been assigned
      * to any StreamInfo yet at this point in the pipeline (that happens later, during
      * {@code AutoTaggingProcessor.tagDocument}), so there's no other field this could disturb.
+     *
+     * <p>Tracks visited instances by identity ({@code visited}) so a {@code StreamInfo} reachable
+     * more than once in a single {@link #forEachIObject} walk is shifted exactly once. The same
+     * aliasing this method's in-place mutation is designed around (see above — some other part of
+     * the pipeline holds its own reference to a given {@code StreamInfo} rather than re-reading the
+     * owning chunk's list fresh) means the reverse can happen too: two different {@code IObject}s
+     * visited by this same walk can point at the *same* {@code StreamInfo} instance. Without the
+     * dedup, a second visit would read the already-shifted index as {@code original} and shift it
+     * again, silently displacing that content a second time.
      */
     private static void remapExistingStreamInfoIndexes(List<IObject> objects, int[] cumulativeShiftThrough) {
+        Set<StreamInfo> visited = Collections.newSetFromMap(new IdentityHashMap<>());
         forEachIObject(objects, obj -> {
             for (StreamInfo streamInfo : obj.getStreamInfos()) {
                 if (streamInfo.getXObjectName() != null) {
+                    continue;
+                }
+                if (!visited.add(streamInfo)) {
                     continue;
                 }
                 int original = streamInfo.getOperatorIndex();
