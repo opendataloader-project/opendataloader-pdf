@@ -1545,21 +1545,19 @@ public class HybridDocumentProcessor {
      * Ensures the page has an {@link #OCR_FALLBACK_FONT_NAME} font resource, adding a minimal
      * Standard-14 Helvetica entry if one isn't already present.
      *
-     * <p>Mutates the page's existing (possibly inherited/shared) resources in place rather than
-     * replacing them with a new {@code /Resources} object — {@code PDPage#getResources()} caches
-     * its {@code PDResources} instance internally with no public invalidation hook, so a later,
-     * separate call to it (from {@code AutoTaggingProcessor.updatePages}) would still see the old
-     * instance if we swapped in a new one here. Purely additive under one reserved, namespaced
-     * key, so it's safe even if the underlying dictionary turns out to be shared with sibling
-     * pages. {@code PDResources#getFont} itself lazily resolves an unqueried name from the live
-     * underlying dictionary on first lookup and caches it from then on — since this reserved name
-     * is never queried before this method adds it, both this method's own idempotency check and
-     * the later tagging pass's resolution correctly see whatever's been added here.
+     * <p>If the page has no {@code /Resources} of its own (inherited from an ancestor /Pages node,
+     * or missing entirely), {@link #localizePageResources} gives it a page-owned copy first — this
+     * used to mutate whatever {@code PDPage#getResources()} returned in place, which silently
+     * leaked this font (and a page-owned {@code /Font} dict) onto every sibling page sharing that
+     * ancestor's resources.
      */
     private static void ensureOcrFallbackFont(PDPage page) {
         PDResources resources = page.getResources();
-        if (resources.getFont(OCR_FALLBACK_FONT_NAME) != null) {
+        if (resources != null && resources.getFont(OCR_FALLBACK_FONT_NAME) != null) {
             return;
+        }
+        if (resources == null || Boolean.TRUE.equals(page.isInheritedResources())) {
+            resources = localizePageResources(page, resources);
         }
         COSObject resourcesObj = resources.getObject();
         COSObject fontDictObj = resourcesObj.getKey(ASAtom.getASAtom("Font"));
@@ -1572,6 +1570,35 @@ public class HybridDocumentProcessor {
         fontEntry.setKey(ASAtom.getASAtom("Subtype"), COSName.construct(ASAtom.getASAtom("Type1")));
         fontEntry.setKey(ASAtom.getASAtom("BaseFont"), COSName.construct(ASAtom.getASAtom("Helvetica")));
         fontDictObj.setKey(OCR_FALLBACK_FONT_NAME, fontEntry);
+    }
+
+    /**
+     * Gives {@code page} its own {@code /Resources} dictionary — a copy of {@code inherited} (or
+     * empty, if the page had none) — and assigns it via {@code page.setResources}, which also
+     * writes the page's own {@code /Resources} key. Top-level entries are copied by reference
+     * (their targets aren't mutated, so sharing them back is fine); {@code /Font} is deep-copied
+     * one level so {@link #ensureOcrFallbackFont}'s write can't land in a Font dict another page
+     * still shares.
+     */
+    private static PDResources localizePageResources(PDPage page, PDResources inherited) {
+        COSObject localResourcesObj = COSDictionary.construct();
+        if (inherited != null) {
+            COSObject inheritedObj = inherited.getObject();
+            for (ASAtom key : inheritedObj.getKeySet()) {
+                localResourcesObj.setKey(key, inheritedObj.getKey(key));
+            }
+            COSObject inheritedFontDict = inheritedObj.getKey(ASAtom.getASAtom("Font"));
+            if (inheritedFontDict != null && !inheritedFontDict.empty()) {
+                COSObject localFontDict = COSDictionary.construct();
+                for (ASAtom fontName : inheritedFontDict.getKeySet()) {
+                    localFontDict.setKey(fontName, inheritedFontDict.getKey(fontName));
+                }
+                localResourcesObj.setKey(ASAtom.getASAtom("Font"), localFontDict);
+            }
+        }
+        PDResources localResources = new PDResources(localResourcesObj);
+        page.setResources(localResources);
+        return localResources;
     }
 
     /**
