@@ -58,15 +58,15 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <verapdf.version>1.31.115</verapdf.version>
-        <verapdf.wcag.algs.version>1.31.40</verapdf.wcag.algs.version>
+        <verapdf.version>1.31.135</verapdf.version>
+        <verapdf.wcag.algs.version>1.31.41</verapdf.wcag.algs.version>
         <jackson.databind.version>2.22.1</jackson.databind.version>
         <junit.jupiter.version>6.1.2</junit.jupiter.version>
         <assertj.version>3.27.7</assertj.version>
         <okhttp.version>5.4.0</okhttp.version>
         <commons.cli.version>1.11.0</commons.cli.version>
         <maven-compiler.plugin.version>3.15.0</maven-compiler.plugin.version>
-        <flatten.plugin.version>1.7.3</flatten.plugin.version>
+        <flatten.plugin.version>1.8.0</flatten.plugin.version>
         <jacoco.plugin.version>0.8.15</jacoco.plugin.version>
         <maven-source.plugin.version>3.4.0</maven-source.plugin.version>
         <maven-javadoc.plugin.version>3.12.0</maven-javadoc.plugin.version>
