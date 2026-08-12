@@ -32,9 +32,28 @@ public final class OpenDataLoaderPDF {
     /**
      * Processes a PDF file to extract its content and structure based on the provided configuration.
      *
+     * <p>Invalid input — a {@code null}/blank path, a path that does not exist, a directory, a
+     * non-{@code .pdf} name, or a file whose content is not a usable PDF — is reported as an
+     * {@link org.opendataloader.pdf.exceptions.InvalidPdfFileException} (a checked subtype of
+     * {@link IOException}). Because every input-validity failure maps to that single type, a batch
+     * caller can catch it to skip the bad file and continue, rather than aborting the whole run:
+     *
+     * <pre>{@code
+     * for (String pdf : pdfPaths) {
+     *     try {
+     *         OpenDataLoaderPDF.processFile(pdf, config);
+     *     } catch (InvalidPdfFileException skip) {
+     *         logger.warning(skip.getMessage()); // bad input — move on to the next file
+     *     }
+     * }
+     * }</pre>
+     *
      * @param inputPdfName The path to the input PDF file.
      * @param config       The configuration object specifying output formats and other options.
-     * @throws IOException If an error occurs during file reading or processing.
+     * @throws org.opendataloader.pdf.exceptions.InvalidPdfFileException if {@code inputPdfName} is
+     *         null/blank, syntactically invalid, missing, a directory, not a {@code .pdf}, or not a
+     *         valid PDF.
+     * @throws IOException If another error occurs during file reading or processing.
      */
     public static void processFile(String inputPdfName, Config config) throws IOException {
         DocumentProcessor.processFile(inputPdfName, config);

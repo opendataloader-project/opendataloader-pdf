@@ -18,9 +18,15 @@ package org.opendataloader.pdf.exceptions;
 import java.io.IOException;
 
 /**
- * Thrown when an input file cannot be processed as a PDF. Two failure modes
+ * Thrown when an input file cannot be processed as a PDF. Several failure modes
  * share this exception type, distinguished by message wording:
  * <ul>
+ *   <li><em>Invalid path</em> — the path is {@code null}/blank, is not a
+ *       syntactically valid path, or does not end in {@code .pdf}. Detected
+ *       before any file content is read.</li>
+ *   <li><em>Missing file or directory</em> — the path does not resolve to an
+ *       existing file, or a directory was passed in place of a file. Detected
+ *       just-in-time when the input stream is opened.</li>
  *   <li><em>Missing header</em> — the {@code %PDF-} magic number is absent
  *       from the first 1024 bytes (JPEG renamed to {@code .pdf}, empty file,
  *       arbitrary text). Detected before veraPDF is invoked.</li>
@@ -34,7 +40,10 @@ import java.io.IOException;
  * <p>This is a checked subtype of {@link IOException} so callers that already
  * handle {@code IOException} keep compiling, while callers that want to
  * distinguish "not a usable PDF" from other I/O failures can catch this type
- * specifically.
+ * specifically. Collapsing every input-validity failure onto this single type
+ * lets a batch caller (the CLI directory scan, or any user loop over many
+ * files) catch it to skip the bad input and continue, instead of aborting the
+ * whole run.
  *
  * <p>Public entry points that may surface this exception:
  * <ul>
