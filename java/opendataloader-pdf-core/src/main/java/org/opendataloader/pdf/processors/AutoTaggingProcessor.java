@@ -12,7 +12,6 @@ import org.verapdf.cos.*;
 
 import org.verapdf.gf.model.factory.chunks.GraphicsState;
 import org.verapdf.gf.model.impl.operator.textshow.PUAHelper;
-import org.verapdf.gf.model.impl.sa.util.ResourceHandler;
 import org.verapdf.pd.*;
 import org.verapdf.pd.actions.PDAction;
 import org.verapdf.pd.form.PDAcroForm;
@@ -135,7 +134,7 @@ public class AutoTaggingProcessor {
                 cosDocument.addChangedObject(page.getObject());
             }
             COSObject contentsObject = page.getKey(ASAtom.CONTENTS);
-            ResourceHandler resourceHandler = ResourceHandler.getInstance(page.getResources());
+            PDResourcesHandler resourceHandler = PDResourcesHandler.getInstance(page.getResources(), page.isInheritedResources());
             List<Object> processedTokens = new ChunksWriter(new GraphicsState(resourceHandler),
                 resourceHandler).processTokens(ChunksWriter.getTokens(page.getContent()), operatorStreamKey);
             if (processedTokens.size() <= MAX_TOKENS_PER_STREAM) {
