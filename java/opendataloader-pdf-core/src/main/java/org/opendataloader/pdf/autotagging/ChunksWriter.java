@@ -6,12 +6,12 @@ import org.verapdf.as.io.ASInputStream;
 import org.verapdf.cos.*;
 import org.verapdf.gf.model.factory.chunks.ChunkParser;
 import org.verapdf.gf.model.factory.chunks.GraphicsState;
-import org.verapdf.gf.model.impl.sa.util.ResourceHandler;
 import org.verapdf.operator.Operator;
 import org.verapdf.parser.Operators;
 import org.verapdf.parser.PDFStreamParser;
 import org.verapdf.pd.PDContentStream;
 import org.verapdf.pd.PDExtGState;
+import org.verapdf.pd.PDResourcesHandler;
 import org.verapdf.pd.images.PDXForm;
 import org.verapdf.pd.images.PDXObject;
 import org.verapdf.tools.StaticResources;
@@ -28,10 +28,10 @@ public class ChunksWriter {
 
     private static final java.util.logging.Logger CHUNKS_LOGGER = java.util.logging.Logger.getLogger(ChunksWriter.class.getName());
 
-    private final ResourceHandler resourceHandler;
+    private final PDResourcesHandler resourceHandler;
     private final GraphicsState graphicsState;
 
-    public ChunksWriter(GraphicsState inheritedGraphicState, ResourceHandler resourceHandler) {
+    public ChunksWriter(GraphicsState inheritedGraphicState, PDResourcesHandler resourceHandler) {
         this.graphicsState = inheritedGraphicState.clone();
         this.resourceHandler = resourceHandler;
     }
