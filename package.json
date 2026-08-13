@@ -2,6 +2,10 @@
   "name": "opendataloader-pdf-workspace",
   "private": true,
   "description": "OpenDataLoader PDF - Monorepo workspace",
+  "packageManager": "pnpm@11.21.0",
+  "engines": {
+    "node": ">=22.13"
+  },
   "scripts": {
     "build-java": "bash scripts/build-java.sh",
     "export-options": "npm run build-java && java -Djava.awt.headless=true -Dapple.awt.UIElement=true -jar java/opendataloader-pdf-cli/target/opendataloader-pdf-cli-0.0.0.jar --export-options > options.json",
