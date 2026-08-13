@@ -54,6 +54,7 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainer
 import org.verapdf.xmp.containers.StaticXmpCoreContainers;
 
 import org.opendataloader.pdf.exceptions.InvalidPdfFileException;
+import org.opendataloader.pdf.exceptions.TempDirectoryNotWritableException;
 
 import java.io.File;
 import java.io.IOException;
@@ -612,10 +613,12 @@ public class DocumentProcessor {
      *
      * @param pdfName the path to the PDF file
      * @param config the configuration settings
-     * @throws IOException if unable to read the PDF file
+     * @throws IOException if unable to read the PDF file, or if the JVM
+     *         temporary directory is not writable
      */
     public static void preprocessing(String pdfName, Config config) throws IOException {
         LOGGER.log(Level.INFO, () -> "File name: " + pdfName);
+        validateTempDirWritable();
         validatePdfMagicNumber(pdfName);
         updateStaticContainers(config);
         PDDocument pdDocument;
@@ -690,6 +693,60 @@ public class DocumentProcessor {
         if (indexOfBytes(head, marker) < 0) {
             throw new InvalidPdfFileException(
                 "'" + displayName(pdfName) + "' is not a valid PDF file (missing %PDF- header).");
+        }
+    }
+
+    /**
+     * Verifies the JVM temporary directory is writable.
+     *
+     * <p>veraPDF streams anything larger than a small in-memory threshold
+     * through a temporary file: the Standard 14 font metrics embedded in the
+     * jar, embedded font programs, CMaps and decoded content streams all take
+     * that path. A PDF stream has no size bound while memory does, so writing
+     * to disk is by design and cannot be avoided by buffering.
+     *
+     * <p>When the temporary directory is not writable those reads fail deep
+     * inside veraPDF, where the failure is logged at {@code FINE} and
+     * swallowed. Processing then continues on missing data and surfaces as an
+     * unrelated {@code NullPointerException}, or — worse — completes with
+     * exit code 0 while silently dropping most of the text. Failing up front
+     * keeps a broken environment from being reported as a successful run.
+     *
+     * <p>Runs per file rather than once per JVM. The answer is not stable for
+     * the lifetime of the process — {@code java.io.tmpdir} is a mutable system
+     * property, and the directory itself can be remounted read-only, filled up
+     * or have its permissions revoked. Caching a success would let a
+     * long-running embedder latch onto a stale {@code true} and silently return
+     * to the very data loss this guards against. One create-and-delete against
+     * a working directory is negligible next to parsing a PDF.
+     *
+     * @throws TempDirectoryNotWritableException if the temporary directory
+     *         cannot be written to
+     */
+    private static void validateTempDirWritable() throws TempDirectoryNotWritableException {
+        String tempDir = System.getProperty("java.io.tmpdir");
+        Path probe = null;
+        try {
+            // Resolve java.io.tmpdir explicitly rather than calling the no-arg
+            // Files.createTempFile: that one resolves the directory once when the
+            // JVM starts, so it would ignore a -Djava.io.tmpdir override applied
+            // later and probe a different directory than veraPDF ends up using.
+            // RuntimeException covers InvalidPathException from a malformed override.
+            probe = Files.createTempFile(Path.of(tempDir), "opendataloader-", ".probe");
+        } catch (IOException | RuntimeException e) {
+            throw new TempDirectoryNotWritableException(
+                "Cannot write to the temporary directory '" + tempDir + "'."
+                + " PDF processing needs it to read font metrics and decode content streams."
+                + " Point java.io.tmpdir or the TMPDIR environment variable at a writable"
+                + " directory, or grant write access to this one.", e);
+        } finally {
+            if (probe != null) {
+                try {
+                    Files.deleteIfExists(probe);
+                } catch (IOException e) {
+                    LOGGER.log(Level.FINE, "Could not delete temporary directory probe file " + probe, e);
+                }
+            }
         }
     }
 
