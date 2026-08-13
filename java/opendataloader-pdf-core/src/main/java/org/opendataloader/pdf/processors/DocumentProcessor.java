@@ -725,28 +725,25 @@ public class DocumentProcessor {
      */
     private static void validateTempDirWritable() throws TempDirectoryNotWritableException {
         String tempDir = System.getProperty("java.io.tmpdir");
-        Path probe = null;
         try {
             // Resolve java.io.tmpdir explicitly rather than calling the no-arg
             // Files.createTempFile: that one resolves the directory once when the
             // JVM starts, so it would ignore a -Djava.io.tmpdir override applied
             // later and probe a different directory than veraPDF ends up using.
             // RuntimeException covers InvalidPathException from a malformed override.
-            probe = Files.createTempFile(Path.of(tempDir), "opendataloader-", ".probe");
+            Path probe = Files.createTempFile(Path.of(tempDir), "opendataloader-", ".probe");
+            // Deleting is part of what is being verified, not just cleanup: veraPDF
+            // removes its spill files, so a directory that allows creation but
+            // refuses deletion (a sticky bit the process does not own, say) would
+            // accumulate one file per stream. Failing here also keeps the probe
+            // itself from leaking.
+            Files.delete(probe);
         } catch (IOException | RuntimeException e) {
             throw new TempDirectoryNotWritableException(
-                "Cannot write to the temporary directory '" + tempDir + "'."
+                "Cannot use the temporary directory '" + tempDir + "'."
                 + " PDF processing needs it to read font metrics and decode content streams."
                 + " Point java.io.tmpdir or the TMPDIR environment variable at a writable"
                 + " directory, or grant write access to this one.", e);
-        } finally {
-            if (probe != null) {
-                try {
-                    Files.deleteIfExists(probe);
-                } catch (IOException e) {
-                    LOGGER.log(Level.FINE, "Could not delete temporary directory probe file " + probe, e);
-                }
-            }
         }
     }
 
