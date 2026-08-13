@@ -45,8 +45,9 @@
     "url": "https://github.com/opendataloader-project/opendataloader-pdf/issues"
   },
   "homepage": "https://github.com/opendataloader-project/opendataloader-pdf#readme",
+  "packageManager": "pnpm@11.21.0",
   "engines": {
-    "node": ">=20.19.0"
+    "node": ">=22.13"
   },
   "publishConfig": {
     "access": "public"
@@ -68,13 +69,7 @@
     "vite": "^8.0.8",
     "vitest": "^4.1.4"
   },
-  "pnpm": {
-    "overrides": {
-      "minimatch@<10.2.3": ">=10.2.3",
-      "flatted@<3.4.2": ">=3.4.2",
-      "postcss@<8.5.10": ">=8.5.10"
-    }
-  },
+
   "files": [
     "dist",
     "lib",
