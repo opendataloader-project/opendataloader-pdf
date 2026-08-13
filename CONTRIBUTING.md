@@ -72,7 +72,12 @@ To suggest a new feature:
 
 4. **Build** the project:
 
-   **Prerequisites:** Java 11+, Maven, Python 3.10+, uv, Node.js 20+, pnpm
+   **Prerequisites:** Java 11+, Maven, Python 3.10+, uv, Node.js 24 (current active LTS), pnpm via `corepack enable pnpm`
+
+   Node 24 and pnpm 11.21.0 are what CI builds against. Enabling Corepack once
+   picks the pnpm version up from the `packageManager` field, so there is no
+   global install and no version to remember. Node must be >=22.13 — pnpm 11
+   refuses to install on anything older.
    See the [Development Workflow guide](https://opendataloader.org/docs/development-workflow) for OS-specific install instructions.
 
    ```bash
