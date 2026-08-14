@@ -59,6 +59,7 @@ Requirements:
 
 import argparse
 import asyncio
+import locale
 import logging
 import os
 import re
@@ -300,8 +301,15 @@ def _reexec_with_utf8_if_needed():
     running this file directly (e.g. ``python hybrid_server.py``) from an
     uninstalled checkout. Re-running the same file path has no such
     requirement and preserves that invocation shape exactly.
+
+    Skips the re-exec when the locale's preferred encoding is already UTF-8
+    (true on most Linux/macOS deployments), even though ``sys.flags.utf8_mode``
+    itself is 0 there - open() already defaults to UTF-8 via the locale, so
+    re-execing would only add an unnecessary process restart on every startup.
     """
     if sys.flags.utf8_mode:
+        return
+    if locale.getpreferredencoding(False).lower() == "utf-8":
         return
     try:
         os.execv(

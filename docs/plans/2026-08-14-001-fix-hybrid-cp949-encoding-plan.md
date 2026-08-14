@@ -103,16 +103,21 @@ to force `encoding="utf-8"` — more invasive, harder to reason about, and risks
 masking encoding bugs in *other* dependencies in surprising ways. UTF-8 mode
 is the standard, documented mechanism for exactly this problem (PEP 540).
 
-**KTD2 — Re-exec via `os.execv(sys.executable, [..., "-X", "utf8", "-m", "opendataloader_pdf.hybrid_server", ...sys.argv[1:]])`, not by setting `os.environ["PYTHONUTF8"]` alone.**
+**KTD2 — Re-exec via `os.execv(sys.executable, [sys.executable, "-X", "utf8", __file__] + sys.argv[1:])`, not by setting `os.environ["PYTHONUTF8"]` alone.**
 `PYTHONUTF8` (like `-X utf8`) is only read by the interpreter at startup;
 setting it on `os.environ` after the interpreter has already started has no
-effect on the running process's UTF-8 mode. The module already supports
-`python -m opendataloader_pdf.hybrid_server` (`if __name__ == "__main__":
-main()` at the bottom of the file), so re-invoking via `-m` is safe and needs
-no new entry point. `sys.executable` is the running interpreter, so the
-re-exec targets the exact same Python regardless of how the original process
-was launched (console-script wrapper or `-m`).
-*Alternative rejected:* documenting the workaround instead of fixing it —
+effect on the running process's UTF-8 mode. `sys.executable` is the running
+interpreter, so the re-exec targets the exact same Python regardless of how
+the original process was launched.
+*Alternative rejected:* re-invoking via `-m opendataloader_pdf.hybrid_server`
+— caught in review: `-m` requires the package to already be import-resolvable,
+which broke running this file directly (`python hybrid_server.py`) from an
+uninstalled checkout with a `ModuleNotFoundError` that did not exist before
+this fix. Re-execing by `__file__` instead has no such requirement and
+preserves that invocation shape exactly, since the module's own
+`if __name__ == "__main__": main()` block makes re-running the same file path
+equivalent regardless of how it was originally launched.
+*Alternative also rejected:* documenting the workaround instead of fixing it —
 rejected per the issue itself, which asks for an automatic fix, not a doc
 note, since Korean-locale Windows users should not need to know Python
 internals to run the tool.
@@ -125,6 +130,19 @@ a re-exec loop: after the one re-exec (which passes `-X utf8` explicitly),
 the child process's `sys.flags.utf8_mode` is `1`, so the guard short-circuits
 and no second re-exec happens. No extra environment-variable bookkeeping is
 needed.
+
+**KTD4 — Also skip the re-exec when `locale.getpreferredencoding(False)` is already UTF-8.**
+Caught in review: `sys.flags.utf8_mode` is `0` on most Linux/macOS systems
+even though their locale already defaults `open()` to UTF-8 (verified: this
+dev environment has `utf8_mode == 0` and `getpreferredencoding(False) ==
+"UTF-8"`). Without this check, the guard re-execs on every single startup on
+the common case, adding an avoidable process restart for users who were never
+affected by #673. Checking the locale first narrows the re-exec to genuinely
+non-UTF-8-locale systems (cp949 and similar), which is the only case that
+needs it.
+*Alternative rejected:* relying on `sys.flags.utf8_mode` alone — technically
+sufficient to fix #673, but forces an unnecessary restart on the vast
+majority of deployments where it isn't needed.
 
 ---
 
@@ -148,12 +166,16 @@ platform's default text encoding.
 1. Add a module-level helper, e.g. `_reexec_with_utf8_if_needed()`, placed
    near the top of `hybrid_server.py` (after imports, before `_check_dependencies`).
 2. Guard: if `sys.flags.utf8_mode` is already truthy, return immediately —
-   no-op (R2).
-3. Otherwise, re-exec: `os.execv(sys.executable, [sys.executable, "-X", "utf8", "-m", "opendataloader_pdf.hybrid_server"] + sys.argv[1:])`.
-   This replaces the current process (on POSIX, a true `exec`; on Windows,
-   CPython's `os.execv` spawns the child and exits the parent with the
-   child's exit code — either way the caller observes one continuous
-   process). Preserves original argv (R3).
+   no-op (R2). Also return immediately if `locale.getpreferredencoding(False)`
+   is already `"UTF-8"` (KTD4) — avoids an unnecessary restart on the common
+   case where the locale already defaults `open()` to UTF-8.
+3. Otherwise, re-exec: `os.execv(sys.executable, [sys.executable, "-X", "utf8", __file__] + sys.argv[1:])`
+   (KTD2 — by file path, not `-m`). This replaces the current process (on
+   POSIX, a true `exec`; on Windows, CPython's `os.execv` spawns the child and
+   exits the parent with the child's exit code — either way the caller
+   observes one continuous process). Preserves original argv (R3). Wrap in
+   try/except `OSError` and log a clear error instead of letting a failed
+   `execv` surface a raw traceback.
 4. Call `_reexec_with_utf8_if_needed()` as the **first statement** inside
    `main()`, before `_check_dependencies()` and before any other logic —
    this is what guarantees `docling`'s later import/model-load happens only
@@ -170,11 +192,14 @@ even though the code technique here (UTF-8 mode re-exec) differs from that
 fix's ASCII-substitution technique.
 
 **Test scenarios:**
-- `sys.flags.utf8_mode` already `1` (e.g., simulate via `monkeypatch.setattr(sys.flags, ...)` is not possible since `sys.flags` is read-only — instead patch the helper's read of the flag, or run the check function against a small wrapper that takes the flag as a parameter for testability) → `os.execv` is NOT called.
-- `sys.flags.utf8_mode` falsy → `os.execv` IS called exactly once, with `sys.executable` as the program, and an argv list that contains `"-X"`, `"utf8"`, `"-m"`, `"opendataloader_pdf.hybrid_server"`, followed by the original `sys.argv[1:]` (test with a representative arg list, e.g. `["--port", "5002", "--ocr-lang", "ko"]`).
+- `sys.flags.utf8_mode` already `1` (patch `sys.flags` with a `SimpleNamespace(utf8_mode=1)` — `sys.flags` itself is read-only, so replace the whole object rather than one attribute) → `os.execv` is NOT called.
+- `sys.flags.utf8_mode` falsy but `locale.getpreferredencoding(False)` is already `"UTF-8"` (patch that function) → `os.execv` is NOT called (KTD4 — the common non-Windows case).
+- `sys.flags.utf8_mode` falsy AND locale is non-UTF-8 (e.g. `"cp949"`) → `os.execv` IS called exactly once, with `sys.executable` as the program, and an argv list that contains `"-X"`, `"utf8"`, `__file__`, followed by the original `sys.argv[1:]` (test with a representative arg list, e.g. `["--port", "5002", "--ocr-lang", "ko"]`); assert `"-m"` is NOT in argv (KTD2 regression guard).
 - Original CLI arguments are passed through unchanged and in order (covers R3) — assert the tail of the constructed argv exactly equals `sys.argv[1:]`.
-- `main()` calls the re-exec guard before `_check_dependencies()` — verify via call-order assertion (e.g., patch both and assert the guard's mock was invoked first, or patch the guard to raise and assert `_check_dependencies` is never reached before it in that code path only when the guard decides to re-exec — since in the no-op case both still run, assert ordering by call sequence, not by short-circuit).
-- Test expectation: none for the "no-op" path beyond the assertion above — no behavioral change to server startup, argument parsing, or request handling when UTF-8 mode is already active.
+- A failed `os.execv` (e.g. `OSError`) is logged with a clear error message and does not raise.
+- `main()` calls the re-exec guard before `_check_dependencies()` — verify via call-order assertion.
+- Test expectation: none for the "no-op" paths beyond the assertions above — no behavioral change to server startup, argument parsing, or request handling when UTF-8 mode or the locale is already UTF-8.
+- End-to-end: run the real file directly as a subprocess (`[sys.executable, __file__, "--help"]`) under a forced non-UTF-8 locale (`LC_ALL=C`) and assert it never regresses to `ModuleNotFoundError: No module named 'opendataloader_pdf'` — the exact class of regression the `__file__`-based re-exec (vs `-m`) avoids.
 
 **Verification:** All new and existing tests in
 `python/opendataloader-pdf/tests/` pass. Manually confirm intent by reasoning
@@ -237,8 +262,11 @@ Windows verification that didn't happen.
 - [ ] `_reexec_with_utf8_if_needed()` (or equivalently named helper) added to
       `hybrid_server.py`, called as the first statement in `main()`.
 - [ ] New unit tests in `test_hybrid_server_utf8_reexec.py` cover: no-op when
-      UTF-8 mode already active; re-exec triggered with correct `sys.executable`,
-      `-X utf8`, `-m opendataloader_pdf.hybrid_server`, and preserved argv when not.
+      UTF-8 mode already active; no-op when the locale is already UTF-8;
+      re-exec triggered with correct `sys.executable`, `-X utf8`, `__file__`
+      (not `-m`), and preserved argv otherwise; a failed `execv` logged, not
+      raised; and a real-subprocess end-to-end check under a forced non-UTF-8
+      locale.
 - [ ] Full existing Python test suite (`python/opendataloader-pdf/tests/`)
       still passes.
 - [ ] PR description follows this repo's commit/PR conventions (see
