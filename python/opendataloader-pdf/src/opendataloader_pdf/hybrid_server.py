@@ -281,6 +281,38 @@ def _get_loop_setting() -> str:
     return "auto"
 
 
+def _reexec_with_utf8_if_needed():
+    """Re-launch this process in Python UTF-8 mode (PEP 540) if it isn't already.
+
+    docling opens its bundled model config files without an explicit
+    ``encoding=``, so on a non-UTF-8-locale platform (e.g. cp949 on Korean
+    Windows) that read falls back to the OS codepage and raises
+    ``UnicodeDecodeError`` while loading the layout model (#673). UTF-8 mode
+    changes the *default* text encoding for every ``open()`` call that
+    doesn't pass one explicitly, closing this for docling too - but it can
+    only be enabled at interpreter startup, so an already-running process
+    must re-exec itself with ``-X utf8`` rather than just setting
+    ``os.environ["PYTHONUTF8"]``, which the running interpreter would ignore.
+
+    Must run before ``docling`` (or anything else) is imported. Re-execs by
+    file path (``__file__``), not ``-m opendataloader_pdf.hybrid_server`` -
+    ``-m`` requires the package to already be import-resolvable, which breaks
+    running this file directly (e.g. ``python hybrid_server.py``) from an
+    uninstalled checkout. Re-running the same file path has no such
+    requirement and preserves that invocation shape exactly.
+    """
+    if sys.flags.utf8_mode:
+        return
+    try:
+        os.execv(
+            sys.executable,
+            [sys.executable, "-X", "utf8", __file__] + sys.argv[1:],
+        )
+    except OSError as e:
+        logger.error(f"Failed to re-exec into UTF-8 mode: {e}. Continuing without it - "
+                     "on a non-UTF-8-locale system, docling model loading may still fail (#673).")
+
+
 def _check_dependencies():
     """Check if hybrid dependencies are installed."""
     missing = []
@@ -806,6 +838,7 @@ def create_app(
 
 def main():
     """Run the server."""
+    _reexec_with_utf8_if_needed()
     _check_dependencies()
     import uvicorn
 
