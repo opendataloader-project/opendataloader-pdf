@@ -59,6 +59,7 @@ Requirements:
 
 import argparse
 import asyncio
+import codecs
 import locale
 import logging
 import os
@@ -282,6 +283,22 @@ def _get_loop_setting() -> str:
     return "auto"
 
 
+def _is_utf8_encoding_name(encoding_name):
+    """True if `encoding_name` names a UTF-8 codec, including aliases.
+
+    A naive ``encoding_name.lower() == "utf-8"`` string comparison misses
+    aliases such as ``cp65001`` - the name Windows' ANSI codepage API
+    reports when the system codepage is set to 65001/UTF-8 (e.g. via the
+    "Beta: Use Unicode UTF-8" system setting, a common fix for the mojibake
+    class of issue #673). ``codecs.lookup(...).name`` canonicalizes aliases
+    to their real codec name, so ``cp65001`` correctly resolves to ``utf-8``.
+    """
+    try:
+        return codecs.lookup(encoding_name).name == "utf-8"
+    except LookupError:
+        return False
+
+
 def _reexec_with_utf8_if_needed():
     """Re-launch this process in Python UTF-8 mode (PEP 540) if it isn't already.
 
@@ -303,13 +320,15 @@ def _reexec_with_utf8_if_needed():
     requirement and preserves that invocation shape exactly.
 
     Skips the re-exec when the locale's preferred encoding is already UTF-8
-    (true on most Linux/macOS deployments), even though ``sys.flags.utf8_mode``
-    itself is 0 there - open() already defaults to UTF-8 via the locale, so
-    re-execing would only add an unnecessary process restart on every startup.
+    (true on most Linux/macOS deployments, and on Windows systems with the
+    "Beta: Use Unicode UTF-8" setting enabled), even though
+    ``sys.flags.utf8_mode`` itself is 0 there - open() already defaults to
+    UTF-8 via the locale, so re-execing would only add an unnecessary
+    process restart on every startup.
     """
     if sys.flags.utf8_mode:
         return
-    if locale.getpreferredencoding(False).lower() == "utf-8":
+    if _is_utf8_encoding_name(locale.getpreferredencoding(False)):
         return
     try:
         os.execv(
