@@ -66,7 +66,7 @@ echo "[3/3] Node.js: Building and testing..."
 echo "----------------------------------------"
 
 cd "$ROOT_DIR/node/opendataloader-pdf"
-pnpm version "$VERSION" --no-git-tag-version --allow-same-version
+pnpm version "$VERSION" --no-git-tag-version --allow-same-version --no-git-checks
 "$SCRIPT_DIR/build-node.sh"
 
 echo "[3/3] Node.js: Done"
