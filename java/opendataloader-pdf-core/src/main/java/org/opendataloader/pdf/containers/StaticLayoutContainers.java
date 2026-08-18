@@ -57,9 +57,7 @@ public class StaticLayoutContainers {
     }
 
     public static long incrementContentId() {
-        long id = getCurrentContentId();
-        StaticLayoutContainers.setCurrentContentId(id + 1);
-        return id;
+        return currentContentId.getAndIncrement();
     }
 
     public static void setCurrentContentId(long currentContentId) {

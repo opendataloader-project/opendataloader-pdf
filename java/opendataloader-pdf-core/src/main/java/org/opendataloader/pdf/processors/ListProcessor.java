@@ -135,7 +135,6 @@ public class ListProcessor {
             PDFList list = calculateList(interval, index, interval.getNumberOfListItems() - 1, contents.get(isTableCell ? 0 : currentPageNumber));
             for (ListItem listItem : list.getListItems()) {
                 listItem.setContents(processListItemContent(listItem.getContents()));
-                listItem.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
             }
             if (previousList != null) {
                 PDFList.setListConnected(previousList, list);
@@ -287,6 +286,7 @@ public class ListProcessor {
                 addContentToLastPageListItem(nextIndex, currentInfo, pageContents, listItem);
             }
             listItem.setLabelLength(currentInfo.getLabelLength());
+            listItem.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
             list.add(listItem);
         }
         if (list.getListItems().isEmpty()) {
