@@ -7,6 +7,7 @@
   "modification date" : "D:20251010112501+09'00'",
   "kids" : [ {
     "type" : "heading",
+    "pdfua_tag" : "H1",
     "id" : 1,
     "level" : "Doctitle",
     "page number" : 1,
@@ -18,6 +19,7 @@
     "content" : "Lorem Ipsum"
   }, {
     "type" : "paragraph",
+    "pdfua_tag" : "P",
     "id" : 2,
     "page number" : 1,
     "bounding box" : [ 85.034, 567.936, 502.306, 659.761 ],
