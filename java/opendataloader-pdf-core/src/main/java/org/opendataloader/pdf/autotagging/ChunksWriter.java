@@ -248,7 +248,7 @@ public class ChunksWriter {
             int available = inputStream.available();
             while (inputStream.available() > 0) {
                 int code = graphicsState.getTextState().getTextFont().readCode(inputStream);
-                String value = graphicsState.getTextState().getTextFont().toUnicode(code);
+                String value = graphicsState.getTextState().getTextFont().toUnicode(code, false);
                 if (value == null) {
                     value = StaticContainers.getIsIgnoreCharactersWithoutUnicode() ? "" : ChunkParser.REPLACEMENT_CHARACTER_STRING;
                 }
