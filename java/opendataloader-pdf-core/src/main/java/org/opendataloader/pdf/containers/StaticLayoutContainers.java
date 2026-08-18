@@ -24,12 +24,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 
 public class StaticLayoutContainers {
     protected static final Logger LOGGER = Logger.getLogger(StaticLayoutContainers.class.getCanonicalName());
 
-    private static final ThreadLocal<Long> currentContentId = new ThreadLocal<>();
+    private static final AtomicLong currentContentId = new AtomicLong(0);
     private static final ThreadLocal<List<SemanticHeading>> headings = new ThreadLocal<>();
     private static final ThreadLocal<Integer> imageIndex = new ThreadLocal<>();
     private static final ThreadLocal<Boolean> isUseStructTree = new ThreadLocal<>();

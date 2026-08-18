@@ -15,6 +15,7 @@
  */
 package org.opendataloader.pdf.processors;
 
+import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.utils.BulletedParagraphUtils;
 import org.verapdf.as.ASAtom;
 import org.verapdf.wcag.algorithms.entities.INode;
@@ -134,6 +135,7 @@ public class ListProcessor {
             PDFList list = calculateList(interval, index, interval.getNumberOfListItems() - 1, contents.get(isTableCell ? 0 : currentPageNumber));
             for (ListItem listItem : list.getListItems()) {
                 listItem.setContents(processListItemContent(listItem.getContents()));
+                listItem.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
             }
             if (previousList != null) {
                 PDFList.setListConnected(previousList, list);

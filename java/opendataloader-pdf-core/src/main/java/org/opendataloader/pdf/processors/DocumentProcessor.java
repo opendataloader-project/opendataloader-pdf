@@ -272,7 +272,6 @@ public class DocumentProcessor {
 
         // Capture StaticLayoutContainers state (shared mutable — synchronized list for headings)
         final var headings = StaticLayoutContainers.getHeadings();
-        final long contentId = StaticLayoutContainers.getCurrentContentId();
         final boolean useStructTree = StaticLayoutContainers.isUseStructTree();
         final var embeddedImageBytesMap = StaticLayoutContainers.getEmbeddedImageBytesMap();
 
@@ -292,7 +291,6 @@ public class DocumentProcessor {
             StaticContainers.setPassword(config.getPassword());
             // Project StaticLayoutContainers — share the same headings list across workers
             StaticLayoutContainers.setHeadings(headings);
-            StaticLayoutContainers.setCurrentContentId(contentId);
             StaticLayoutContainers.setIsUseStructTree(useStructTree);
             StaticLayoutContainers.setEmbeddedImageBytesMap(embeddedImageBytesMap);
             if (textLineSpaceRatio != null) {
