@@ -15,7 +15,6 @@
  */
 package org.opendataloader.pdf.processors;
 
-import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
 import org.verapdf.wcag.algorithms.entities.content.LineChunk;
@@ -175,10 +174,8 @@ public class TableBorderProcessor {
     private static void processTableBorderContents(TableBorder tableBorder, int pageNumber) {
         for (int rowNumber = 0; rowNumber < tableBorder.getNumberOfRows(); rowNumber++) {
             TableBorderRow row = tableBorder.getRow(rowNumber);
-            row.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
             for (int colNumber = 0; colNumber < tableBorder.getNumberOfColumns(); colNumber++) {
                 TableBorderCell tableBorderCell = row.getCell(colNumber);
-                tableBorderCell.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
                 if (tableBorderCell.getRowNumber() == rowNumber && tableBorderCell.getColNumber() == colNumber) {
                     tableBorderCell.setContents(processTableCellContent(tableBorderCell.getContents(), pageNumber));
                 }
@@ -196,11 +193,6 @@ public class TableBorderProcessor {
         newContents = ParagraphProcessor.processParagraphs(newContents);
         newContents = ListProcessor.processListsFromTextNodes(newContents);
         HeadingProcessor.processHeadings(newContents, true);
-        DocumentProcessor.setIDs(newContents);
-        CaptionProcessor.processCaptions(newContents);
-        contentsList.set(0, newContents);
-        ListProcessor.checkNeighborLists(contentsList);
-        newContents = contentsList.get(0);
         return newContents;
     }
 

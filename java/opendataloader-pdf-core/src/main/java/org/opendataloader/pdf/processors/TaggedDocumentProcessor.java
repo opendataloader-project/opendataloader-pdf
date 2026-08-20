@@ -55,7 +55,6 @@ public class TaggedDocumentProcessor {
             if (!shouldProcessPage(pageNumber)) {
                 continue;
             }
-            DocumentProcessor.setIDs(artifacts.get(pageNumber));
             contents.get(pageNumber).addAll(artifacts.get(pageNumber));
         }
         for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
@@ -64,6 +63,7 @@ public class TaggedDocumentProcessor {
             }
             List<IObject> pageContents = TextLineProcessor.processTextLines(contents.get(pageNumber));
             contents.set(pageNumber, ParagraphProcessor.processParagraphs(pageContents));
+            DocumentProcessor.setIDs(contents.get(pageNumber));
         }
         return contents;
     }
@@ -150,13 +150,15 @@ public class TaggedDocumentProcessor {
     private static void addObjectToContent(IObject object) {
         Integer pageNumber = object.getPageNumber();
         if (pageNumber != null && shouldProcessPage(pageNumber)) {
+            if (!(object instanceof TextChunk) && object.getRecognizedStructureId() == null) {
+                object.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+            }
             if (contentsStack.isEmpty()) {
                 contents.get(pageNumber).add(object);
             } else {
                 contentsStack.peek().add(object);
             }
         }
-        object.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
     }
 
     private static void processParagraph(INode paragraph) {
@@ -231,7 +233,6 @@ public class TaggedDocumentProcessor {
                 listItem.getContents().add(content);
             }
         }
-        listItem.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
         return listItem;
     }
 
@@ -306,6 +307,7 @@ public class TaggedDocumentProcessor {
         }
         TableBorder tableBorder = new TableBorder(tableBoundingBox, createRowsForTable(table, numberOfRows, numberOfColumns),
             numberOfRows, numberOfColumns);
+        tableBorder.setRecognizedStructureId(null);
         setBoundingBoxesForTableRowsAndTableCells(tableBorder);
         addObjectToContent(tableBorder);
     }
@@ -370,14 +372,15 @@ public class TaggedDocumentProcessor {
             }
         }
         if (!textBlock.isEmpty()) {
-            cell.getContents().add(ParagraphProcessor.createParagraphFromTextBlock(textBlock));
+            SemanticParagraph newParagraph = ParagraphProcessor.createParagraphFromTextBlock(textBlock);
+            newParagraph.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+            cell.getContents().add(newParagraph);
         }
         BoundingBox cellBoundingBox = new MultiBoundingBox();
         for (IObject content : cell.getContents()) {
             cellBoundingBox.union(content.getBoundingBox());
         }
         cell.setBoundingBox(cellBoundingBox);
-        cell.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
     }
 
     private static void processChildContents(INode elem, List<IObject> contents) {
@@ -399,7 +402,6 @@ public class TaggedDocumentProcessor {
                 if (rows[rowNumber].getCell(colNumber) == null) {
                     TableBorderCell cell = new TableBorderCell(rowNumber, colNumber, 1, 1, 0L);
                     cell.setSemanticType(SemanticType.TABLE_CELL);
-                    cell.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
                     rows[rowNumber].getCells()[colNumber] = cell;
                 }
             }
@@ -469,7 +471,6 @@ public class TaggedDocumentProcessor {
                 tocItem.getContents().add(content);
             }
         }
-        tocItem.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
         return tocItem;
     }
 

@@ -16,6 +16,7 @@
 package org.opendataloader.pdf.processors;
 
 import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.entities.EnrichedImageChunk;
 import org.opendataloader.pdf.entities.SemanticFormula;
 import org.opendataloader.pdf.entities.SemanticPicture;
@@ -754,7 +755,7 @@ public class HybridDocumentProcessor {
                         for (IObject obj : pageContents) {
                             oldIds.add(obj.getRecognizedStructureId());
                         }
-                        DocumentProcessor.setIDs(pageContents);
+                        DocumentProcessor.setIDs(pageContents, true);
                         rekeyMetadata(transformer, oldIds, pageContents);
                         results.put(page0, pageContents);
                     } else {

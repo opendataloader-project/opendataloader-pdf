@@ -30,7 +30,7 @@ import java.util.logging.Logger;
 public class StaticLayoutContainers {
     protected static final Logger LOGGER = Logger.getLogger(StaticLayoutContainers.class.getCanonicalName());
 
-    private static final AtomicLong currentContentId = new AtomicLong(0);
+    private static final ThreadLocal<Long> currentContentId = new ThreadLocal<>();
     private static final ThreadLocal<List<SemanticHeading>> headings = new ThreadLocal<>();
     private static final ThreadLocal<Integer> imageIndex = new ThreadLocal<>();
     private static final ThreadLocal<Boolean> isUseStructTree = new ThreadLocal<>();
@@ -57,7 +57,9 @@ public class StaticLayoutContainers {
     }
 
     public static long incrementContentId() {
-        return currentContentId.getAndIncrement();
+        long id = getCurrentContentId();
+        StaticLayoutContainers.setCurrentContentId(id + 1);
+        return id;
     }
 
     public static void setCurrentContentId(long currentContentId) {
