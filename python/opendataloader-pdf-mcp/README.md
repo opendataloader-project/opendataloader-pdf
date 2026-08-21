@@ -104,7 +104,9 @@ Convert a PDF file to the specified format.
 **Parameters:**
 
 - `input_path` (required): Path to the input PDF file
-- `format`: Output format — `json`, `text`, `html`, `markdown` (default), `markdown-with-html`, `markdown-with-images`
+- `format`: Output format — `json`, `text`, `html`, `markdown` (default)
+- `markdown_with_html`: Set to `true` to allow HTML tags inside Markdown output (e.g. for multi-row-span tables). Only applies when `format` is `markdown`.
+- `image_output`: Image output mode — `off`, `embedded`, `external`. Defaults to `embedded` for `markdown` and `html` formats so images are not lost when the server's temporary directory is cleaned up.
 - `pages`: Pages to extract (e.g., `"1,3,5-7"`)
 - `password`: Password for encrypted PDFs
 - All other [OpenDataLoader PDF options](https://opendataloader.org/docs/options) are supported
