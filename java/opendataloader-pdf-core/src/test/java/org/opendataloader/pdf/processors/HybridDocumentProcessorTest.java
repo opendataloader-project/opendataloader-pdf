@@ -377,6 +377,80 @@ public class HybridDocumentProcessorTest {
         Assertions.assertInstanceOf(HancomAISchemaTransformer.class, transformer);
     }
 
+    // ===== Per-backend chunk size =====
+
+    /**
+     * The hancom-ai client splits the document itself, sized to its layout
+     * module's page limit. Splitting again out here would add calls that each
+     * re-upload the file and re-run the crop passes, and since only the last
+     * call's raw JSON is kept, a long document would lose the earlier pages'
+     * evidence entirely.
+     */
+    @Test
+    public void testBackendChunkSize_hancomAiIsUnchunked() {
+        Config config = new Config();
+        config.setHybrid("hancom-ai");
+
+        Assertions.assertEquals(Integer.MAX_VALUE,
+                HybridDocumentProcessor.backendChunkSize(config));
+    }
+
+    /**
+     * docling-fast sends a page range instead of a sliced file and has no
+     * internal split, so it keeps the chunking that issue #352 added.
+     */
+    @Test
+    public void testBackendChunkSize_otherBackendsStayChunked() {
+        Config config = new Config();
+        config.setHybrid("docling-fast");
+
+        Assertions.assertEquals(HybridDocumentProcessor.BACKEND_CHUNK_SIZE,
+                HybridDocumentProcessor.backendChunkSize(config));
+    }
+
+    /**
+     * An unbounded chunk size must not be added to a loop counter as-is: the
+     * second iteration would overflow past Integer.MAX_VALUE into a negative
+     * start and run forever. This pins the clamp that prevents it.
+     */
+    @Test
+    public void testChunkSplitting_unboundedChunkSizeTerminates() {
+        Set<Integer> pages = new HashSet<>();
+        for (int i = 0; i < 120; i++) {
+            pages.add(i);
+        }
+
+        Config config = new Config();
+        config.setHybrid("hancom-ai");
+
+        // The production clamp, not a copy of it: a test that recomputed the
+        // expression would still pass with the clamp deleted.
+        List<List<Integer>> chunks = splitIntoChunks(pages,
+                HybridDocumentProcessor.effectiveChunkSize(config, pages.size()));
+
+        Assertions.assertEquals(1, chunks.size());
+        Assertions.assertEquals(120, chunks.get(0).size());
+    }
+
+    /** An empty page set must still yield a positive step rather than 0. */
+    @Test
+    public void testEffectiveChunkSize_neverZero() {
+        Config config = new Config();
+        config.setHybrid("hancom-ai");
+
+        Assertions.assertEquals(1, HybridDocumentProcessor.effectiveChunkSize(config, 0));
+    }
+
+    /** A chunked backend keeps its own size when the document is longer. */
+    @Test
+    public void testEffectiveChunkSize_keepsBackendSizeForLongDocuments() {
+        Config config = new Config();
+        config.setHybrid("docling-fast");
+
+        Assertions.assertEquals(HybridDocumentProcessor.BACKEND_CHUNK_SIZE,
+                HybridDocumentProcessor.effectiveChunkSize(config, 500));
+    }
+
     // ===== Backend Chunk Splitting Tests =====
 
     /** Helper that mirrors the chunk-splitting logic in processBackendPath. */

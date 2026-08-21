@@ -87,6 +87,7 @@ HYBRID_OPTIONS = {
     "--hybrid-hancom-ai-regionlist-strategy",
     "--hybrid-hancom-ai-ocr-strategy",
     "--hybrid-hancom-ai-image-cache",
+    "--hybrid-hancom-ai-layout-page-chunk",
 }
 
 # ---------------------------------------------------------------------------
