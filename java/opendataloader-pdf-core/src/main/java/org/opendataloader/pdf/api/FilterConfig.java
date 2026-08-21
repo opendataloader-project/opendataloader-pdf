@@ -44,6 +44,10 @@ public class FilterConfig {
             "+00-0000-0000"
         ));
         filterRules.add(new SanitizationRule(
+            Pattern.compile("(?:\\(\\d{3}\\)[ .-]?|\\b\\d{3}[ .-])\\d{3}[ .-]\\d{4}\\b"),
+            "000-000-0000"
+        ));
+        filterRules.add(new SanitizationRule(
             Pattern.compile("[A-Z]{1,2}\\d{6,9}"),
             "AA0000000"
         ));
