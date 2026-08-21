@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.SortedSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Processor for triaging PDF pages to determine the optimal processing path.
@@ -47,6 +49,8 @@ import java.util.SortedSet;
  * since the backend can process them correctly, just slower.
  */
 public class TriageProcessor {
+
+    private static final Logger LOGGER = Logger.getLogger(TriageProcessor.class.getCanonicalName());
 
     /** Default threshold for LineChunk to total content ratio. */
     public static final double DEFAULT_LINE_RATIO_THRESHOLD = 0.3;
@@ -96,6 +100,27 @@ public class TriageProcessor {
 
     /** Minimum image aspect ratio (width/height) for table/chart detection. */
     private static final double MIN_IMAGE_ASPECT_RATIO = 1.75;
+
+    /**
+     * Image area ratio at which a page is considered a full-page image (scan).
+     * A page dominated by a single image with no extractable text is an image-only
+     * scan and must route to the backend regardless of aspect ratio.
+     */
+    private static final double FULL_PAGE_IMAGE_RATIO = 0.5;
+
+    /**
+     * Maximum non-whitespace text chunks for a page to still count as an image-only scan.
+     * A small, non-zero threshold absorbs stray OCR/whitespace text artifacts common in
+     * scanned or reflowed PDFs, without matching genuine text pages.
+     */
+    private static final int MAX_SCANNED_PAGE_TEXT_CHUNKS = 2;
+
+    /**
+     * Upper bound on non-whitespace text chunks for the "likely scan routed to Java" warning.
+     * Above this, a page-dominating image accompanied by substantial text is clearly not a
+     * scan (e.g. a magazine hero image with body copy), so no warning is emitted.
+     */
+    private static final int SCANNED_PAGE_WARN_MAX_TEXT_CHUNKS = 20;
 
     /** High pattern count threshold (skip consecutive check). */
     private static final int HIGH_PATTERN_COUNT_THRESHOLD = 30;
@@ -242,6 +267,7 @@ public class TriageProcessor {
     public static final class TriageSignals {
         private final int lineChunkCount;
         private final int textChunkCount;
+        private final int nonWhitespaceTextCount;
         private final double lineToTextRatio;
         private final int alignedLineGroups;
         private final boolean hasTableBorder;
@@ -281,7 +307,7 @@ public class TriageProcessor {
             this(lineChunkCount, textChunkCount, lineToTextRatio, alignedLineGroups,
                     hasTableBorder, hasSuspiciousPattern,
                     0, 0, 0, false, false, false, false,
-                    0, 0, 0.0, false, 0.0, 0.0);
+                    0, 0, 0.0, false, 0.0, 0.0, 0);
         }
 
         /**
@@ -293,7 +319,8 @@ public class TriageProcessor {
                              boolean hasGridLines, boolean hasTableBorderLines,
                              boolean hasRowSeparatorPattern, boolean hasAlignedShortLines,
                              int tablePatternCount, int maxConsecutiveStreak, double patternDensity,
-                             boolean hasConsecutivePatterns, double largeImageRatio, double largeImageAspectRatio) {
+                             boolean hasConsecutivePatterns, double largeImageRatio, double largeImageAspectRatio,
+                             int nonWhitespaceTextCount) {
             this.lineChunkCount = lineChunkCount;
             this.textChunkCount = textChunkCount;
             this.lineToTextRatio = lineToTextRatio;
@@ -313,6 +340,7 @@ public class TriageProcessor {
             this.hasConsecutivePatterns = hasConsecutivePatterns;
             this.largeImageRatio = largeImageRatio;
             this.largeImageAspectRatio = largeImageAspectRatio;
+            this.nonWhitespaceTextCount = nonWhitespaceTextCount;
         }
 
         /**
@@ -323,7 +351,7 @@ public class TriageProcessor {
         public static TriageSignals empty() {
             return new TriageSignals(0, 0, 0.0, 0, false, false,
                     0, 0, 0, false, false, false, false,
-                    0, 0, 0.0, false, 0.0, 0.0);
+                    0, 0, 0.0, false, 0.0, 0.0, 0);
         }
 
         /**
@@ -342,6 +370,15 @@ public class TriageProcessor {
          */
         public int getTextChunkCount() {
             return textChunkCount;
+        }
+
+        /**
+         * Gets the number of non-whitespace TextChunk objects (actual extractable text).
+         *
+         * @return The non-whitespace text chunk count.
+         */
+        public int getNonWhitespaceTextCount() {
+            return nonWhitespaceTextCount;
         }
 
         /**
@@ -467,6 +504,22 @@ public class TriageProcessor {
         }
 
         /**
+         * Checks whether the page is a full-page image-only scan that the Java path cannot
+         * transcribe. Unlike {@link #hasLargeImage()}, this ignores aspect ratio, so ordinary
+         * portrait/landscape document scans (aspect &lt; 1.75) are still routed to the backend.
+         * A page-dominating image ({@code largeImageRatio >= FULL_PAGE_IMAGE_RATIO}) carrying
+         * (almost) no extractable text ({@code nonWhitespaceTextCount <= MAX_SCANNED_PAGE_TEXT_CHUNKS})
+         * is treated as a scan. {@code nonWhitespaceTextCount} (not {@code textChunkCount})
+         * is used because whitespace-only chunks are common in OCR'd/reflowed scans.
+         *
+         * @return true if a page-dominating image carries (almost) no extractable text.
+         */
+        public boolean isLikelyScannedPage() {
+            return largeImageRatio >= FULL_PAGE_IMAGE_RATIO
+                    && nonWhitespaceTextCount <= MAX_SCANNED_PAGE_TEXT_CHUNKS;
+        }
+
+        /**
          * Gets the aspect ratio (width/height) of the largest image.
          *
          * @return The aspect ratio of the largest image.
@@ -498,7 +551,8 @@ public class TriageProcessor {
                    Double.compare(that.patternDensity, patternDensity) == 0 &&
                    hasConsecutivePatterns == that.hasConsecutivePatterns &&
                    Double.compare(that.largeImageRatio, largeImageRatio) == 0 &&
-                   Double.compare(that.largeImageAspectRatio, largeImageAspectRatio) == 0;
+                   Double.compare(that.largeImageAspectRatio, largeImageAspectRatio) == 0 &&
+                   nonWhitespaceTextCount == that.nonWhitespaceTextCount;
         }
 
         @Override
@@ -509,7 +563,7 @@ public class TriageProcessor {
                                 hasGridLines, hasTableBorderLines, hasRowSeparatorPattern,
                                 hasAlignedShortLines, tablePatternCount, maxConsecutiveStreak,
                                 patternDensity, hasConsecutivePatterns, largeImageRatio,
-                                largeImageAspectRatio);
+                                largeImageAspectRatio, nonWhitespaceTextCount);
         }
 
         @Override
@@ -534,6 +588,7 @@ public class TriageProcessor {
                    ", hasConsecutivePatterns=" + hasConsecutivePatterns +
                    ", largeImageRatio=" + largeImageRatio +
                    ", largeImageAspectRatio=" + largeImageAspectRatio +
+                   ", nonWhitespaceTextCount=" + nonWhitespaceTextCount +
                    '}';
         }
     }
@@ -702,8 +757,42 @@ public class TriageProcessor {
         //     return TriageResult.backend(pageNumber, 0.7, signals);
         // }
 
+        // Signal 7: Full-page image-only scan (no aspect gate). The Java path yields an empty
+        // transcription for these pages, so route them to the backend for OCR/transcription.
+        if (signals.isLikelyScannedPage()) {
+            return TriageResult.backend(pageNumber, 0.95, signals);
+        }
+
+        // Observability: a page-dominating image with a thin text layer is routed to Java but
+        // may be a scan whose content will be lost. Flag it (see --hybrid-mode full escape hatch).
+        if (shouldWarnLikelyScanRoutedToJava(signals)) {
+            LOGGER.log(Level.WARNING,
+                "Page {0}: full-page image ({1}) with only {2} text chunk(s) routed to the Java "
+                + "path; if this is a scan its content may be dropped. Use --hybrid-mode full to "
+                + "force backend processing.",
+                new Object[]{pageNumber,
+                    String.format("%.0f%% of page", signals.getLargeImageRatio() * 100),
+                    signals.getNonWhitespaceTextCount()});
+        }
+
         // Default: Route to JAVA for simple text-only content
         return TriageResult.java(pageNumber, 0.9, signals);
+    }
+
+    /**
+     * Whether a page routed to the Java path looks like it might be a scan with an OCR text
+     * layer — a page-dominating image with more text than a pure scan (so {@link
+     * TriageSignals#isLikelyScannedPage()} did not fire) but not so much that it is clearly a
+     * text page. Such pages are the ambiguous middle ground worth flagging for observability.
+     *
+     * @param signals the page's triage signals.
+     * @return true if a diagnostic warning should be emitted for this Java-routed page.
+     */
+    static boolean shouldWarnLikelyScanRoutedToJava(TriageSignals signals) {
+        int text = signals.getNonWhitespaceTextCount();
+        return signals.getLargeImageRatio() >= FULL_PAGE_IMAGE_RATIO
+                && text > MAX_SCANNED_PAGE_TEXT_CHUNKS
+                && text <= SCANNED_PAGE_WARN_MAX_TEXT_CHUNKS;
     }
 
     /**
@@ -800,7 +889,8 @@ public class TriageProcessor {
             patternDensity,
             hasConsecutivePatterns,
             largeImageRatio,
-            largeImageAspectRatio
+            largeImageAspectRatio,
+            accumulator.nonWhitespaceTextCount
         );
     }
 
