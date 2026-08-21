@@ -63,6 +63,8 @@ export interface ConvertOptions {
   hybridHancomAiOcrStrategy?: string;
   /** Page image cache backing. Requires --hybrid=hancom-ai. Values: memory (default), disk */
   hybridHancomAiImageCache?: string;
+  /** Pages per layout request. Requires --hybrid=hancom-ai. The backend accepts at most 30 pages per request, so longer documents are sliced; 0 disables slicing and sends every page in one request. Default: 20 */
+  hybridHancomAiLayoutPageChunk?: string;
   /** Write output to stdout instead of file (single format only) */
   toStdout?: boolean;
   /** Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode */
@@ -106,6 +108,7 @@ export interface CliOptions {
   hybridHancomAiRegionlistStrategy?: string;
   hybridHancomAiOcrStrategy?: string;
   hybridHancomAiImageCache?: string;
+  hybridHancomAiLayoutPageChunk?: string;
   toStdout?: boolean;
   threads?: string;
   imageResolution?: string;
@@ -204,6 +207,9 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   }
   if (cliOptions.hybridHancomAiImageCache) {
     convertOptions.hybridHancomAiImageCache = cliOptions.hybridHancomAiImageCache;
+  }
+  if (cliOptions.hybridHancomAiLayoutPageChunk) {
+    convertOptions.hybridHancomAiLayoutPageChunk = cliOptions.hybridHancomAiLayoutPageChunk;
   }
   if (cliOptions.toStdout) {
     convertOptions.toStdout = true;
@@ -325,6 +331,9 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.hybridHancomAiImageCache) {
     args.push('--hybrid-hancom-ai-image-cache', options.hybridHancomAiImageCache);
+  }
+  if (options.hybridHancomAiLayoutPageChunk) {
+    args.push('--hybrid-hancom-ai-layout-page-chunk', options.hybridHancomAiLayoutPageChunk);
   }
   if (options.toStdout) {
     args.push('--to-stdout');

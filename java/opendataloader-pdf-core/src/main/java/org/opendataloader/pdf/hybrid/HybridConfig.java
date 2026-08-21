@@ -41,10 +41,23 @@ public class HybridConfig {
     /** Default URL for Hancom AI HOCR SDK API. */
     public static final String HANCOM_AI_DEFAULT_URL = "http://localhost:18008/api/v1";
 
+    /**
+     * Pages per layout request when a document is longer than the backend
+     * accepts at once.
+     *
+     * <p>The Hancom AI layout module accepts at most 30 pages per request by
+     * specification, so longer documents are sliced. The default leaves headroom
+     * under that limit rather than sitting on it, and stays large enough that a
+     * long document does not pay a network round trip per page — total time is
+     * dominated by per-page processing, so a smaller chunk buys little.
+     */
+    public static final int DEFAULT_LAYOUT_PAGE_CHUNK = 20;
+
     private String url;
     private int timeoutMs = DEFAULT_TIMEOUT_MS;
     private boolean fallbackToJava = false;
     private int maxConcurrentRequests = DEFAULT_MAX_CONCURRENT_REQUESTS;
+    private int layoutPageChunk = DEFAULT_LAYOUT_PAGE_CHUNK;
     /** Hybrid triage mode: auto (dynamic triage based on page content). */
     public static final String MODE_AUTO = "auto";
     /** Hybrid triage mode: full (skip triage, send all pages to backend). */
@@ -161,6 +174,30 @@ public class HybridConfig {
             throw new IllegalArgumentException("Max concurrent requests must be positive: " + maxConcurrentRequests);
         }
         this.maxConcurrentRequests = maxConcurrentRequests;
+    }
+
+    /**
+     * Gets the number of pages sent per layout request.
+     *
+     * @return the pages per layout request; 0 or less means send every page at once.
+     */
+    public int getLayoutPageChunk() {
+        return layoutPageChunk;
+    }
+
+    /**
+     * Sets the number of pages sent per layout request.
+     *
+     * <p>Zero or negative disables slicing and sends the whole document in one
+     * request. Exposed on the CLI as
+     * {@code --hybrid-hancom-ai-layout-page-chunk} so a backend whose real limit
+     * differs from the documented 30 pages can be accommodated without a code
+     * change, and so the sliced and unsliced paths can be compared.
+     *
+     * @param layoutPageChunk pages per layout request.
+     */
+    public void setLayoutPageChunk(int layoutPageChunk) {
+        this.layoutPageChunk = layoutPageChunk;
     }
 
     /**

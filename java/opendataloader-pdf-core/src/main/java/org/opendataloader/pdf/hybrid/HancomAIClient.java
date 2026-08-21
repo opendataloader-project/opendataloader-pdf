@@ -26,6 +26,8 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -38,8 +40,11 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -95,6 +100,9 @@ public class HancomAIClient implements HybridClient {
      * language is decided here and nowhere else.
      */
     private static final String CAPTION_MODULE = "IMAGE_CAPTIONING_EN";
+
+    /** Layout + OCR module: the required first pass every other pass reads. */
+    private static final String LAYOUT_MODULE = "DOCUMENT_LAYOUT_WITH_OCR";
 
     /** Formula module; returns LaTeX in a {@code formula} field. */
     private static final String FORMULA_MODULE = "FORMULA_RECOGNITION";
@@ -211,7 +219,13 @@ public class HancomAIClient implements HybridClient {
 
     // Visible for testing
     HancomAIClient(String baseUrl, OkHttpClient httpClient, ObjectMapper objectMapper) {
-        this.config = new HybridConfig();
+        this(baseUrl, httpClient, objectMapper, new HybridConfig());
+    }
+
+    // Visible for testing
+    HancomAIClient(String baseUrl, OkHttpClient httpClient, ObjectMapper objectMapper,
+                   HybridConfig config) {
+        this.config = config;
         this.baseUrl = baseUrl;
         this.httpClient = httpClient;
         this.objectMapper = objectMapper;
@@ -284,14 +298,20 @@ public class HancomAIClient implements HybridClient {
             // to process without it, so treat an empty response as a failure so the
             // caller can fall back to the Java pipeline instead of silently emitting
             // an empty document.
-            JsonNode dlaOcrResult = callModule(pdfBytes, "DOCUMENT_LAYOUT_WITH_OCR");
-            if (dlaOcrResult == null || !dlaOcrResult.isArray() || dlaOcrResult.size() == 0) {
+            List<Integer> failedPages1Indexed = new ArrayList<>();
+            JsonNode dlaOcrResult = callLayout(pdfBytes, request.getPageNumbers(),
+                failedPages1Indexed);
+            // Counted in pages rather than array entries: the result is nested,
+            // so an empty reply is [[]] and its outer array holds one element.
+            // A document sent whole never goes through the per-slice accounting,
+            // so this is the only place that catches it on that path.
+            if (HancomPageRenumber.pagesOf(dlaOcrResult).isEmpty()) {
                 throw new IOException(
                     "Hancom AI DOCUMENT_LAYOUT_WITH_OCR returned empty result — "
                     + "backend unavailable or rejected the document");
             }
-            merged.set("DOCUMENT_LAYOUT_WITH_OCR", dlaOcrResult);
-            addTimings(timingsNode, "DOCUMENT_LAYOUT_WITH_OCR", dlaOcrResult);
+            merged.set(LAYOUT_MODULE, dlaOcrResult);
+            addTimings(timingsNode, LAYOUT_MODULE, dlaOcrResult);
 
             // Step 2: Table Structure — crop each Table region from page image, send to TSR individually
             long tsrStartMs = System.currentTimeMillis();
@@ -362,7 +382,213 @@ public class HancomAIClient implements HybridClient {
             }
 
             return new HybridResponse(null, null, merged, Collections.emptyMap(),
-                Collections.emptyList(), timingsNode);
+                failedPages1Indexed, timingsNode);
+        }
+    }
+
+    /**
+     * Runs DOCUMENT_LAYOUT_WITH_OCR over the requested pages, splitting the
+     * document when it holds more pages than the backend takes at once.
+     *
+     * <p>The module accepts a whole PDF and offers no page-selection parameter,
+     * so a page range is expressed by sending a shorter PDF. Each slice's
+     * response is numbered from 0 relative to the slice, and is mapped back onto
+     * absolute pages before anything downstream sees it — the table, formula and
+     * caption passes all take their page number from these records, so getting
+     * this right here is what keeps them right.
+     *
+     * <p>A document that fits in one slice is sent as-is, byte for byte, so the
+     * common single-page case behaves exactly as it did before splitting existed.
+     *
+     * @param pdfBytes            the whole document
+     * @param pageNumbers1Indexed pages to process; empty means every page
+     * @param failedPages1Indexed collects pages whose slice failed, 1-indexed
+     * @return the merged layout result with absolute page numbers
+     */
+    private JsonNode callLayout(byte[] pdfBytes, Set<Integer> pageNumbers1Indexed,
+                                List<Integer> failedPages1Indexed) throws IOException {
+        ResolvedPages resolved = resolvePages(pdfBytes, pageNumbers1Indexed);
+        List<Integer> pages0Based = resolved.pages;
+        int chunk = config.getLayoutPageChunk();
+
+        // A selection that named pages and kept none of them is a caller error.
+        // Sending the document whole here would answer with pages nobody asked
+        // for, which the caller cannot tell apart from a document that really
+        // does have them.
+        if (pages0Based.isEmpty()) {
+            throw new IOException(
+                "None of the requested pages exist in the document ("
+                + resolved.pageCount + " pages)");
+        }
+
+        // Send the original bytes only when every page is wanted, which keeps
+        // that path identical to how it behaved before slicing existed. Turning
+        // splitting off means "do not divide the pages", not "ignore which pages
+        // were asked for": uploading the whole file for a subset would return
+        // records for pages the caller never requested, and the crop passes
+        // would go on to process them.
+        //
+        // Selection size alone is not enough to decide either: 10 pages of a
+        // 100-page document fit under the limit, but sending the file whole would
+        // upload all 100 and make the backend process them — the work the page
+        // limit exists to refuse.
+        boolean wholeDocument = pages0Based.size() == resolved.pageCount;
+        if (wholeDocument && (chunk <= 0 || pages0Based.size() <= chunk)) {
+            JsonNode whole = callModule(pdfBytes, LAYOUT_MODULE);
+            // Page numbers are already absolute on this path — the backend saw
+            // the whole file — so there is nothing to renumber, but the pages
+            // still have to be accounted for. A reply covering fewer pages than
+            // were asked for would otherwise leave the rest as blank pages that
+            // the Java pipeline never revisits.
+            reportUnplacedPages(HancomPageRenumber.pagesOf(whole), pages0Based,
+                failedPages1Indexed);
+            return whole;
+        }
+
+        // Reaching here with splitting off means a page subset was asked for: it
+        // goes as a single slice, so the whole selection is one step. A
+        // non-positive step would leave the loop below standing still.
+        int step = chunk > 0 ? chunk : pages0Based.size();
+
+        LOGGER.log(Level.INFO, "Hancom AI: sending {0} pages in requests of {1}",
+            new Object[]{pages0Based.size(), step});
+
+        List<JsonNode> sliceResults = new ArrayList<>();
+        for (int start = 0; start < pages0Based.size(); start += step) {
+            List<Integer> slice =
+                pages0Based.subList(start, Math.min(start + step, pages0Based.size()));
+            JsonNode sliceResult = null;
+            try {
+                byte[] slicePdf = HancomPdfPageSlicer.extractPages(pdfBytes, slice);
+                sliceResult = callModule(slicePdf, LAYOUT_MODULE, slice);
+            } catch (IOException | RuntimeException e) {
+                // A slice that fails to build or send is a per-slice problem:
+                // losing 20 pages must not cost the other 200, so the failure is
+                // contained and those pages fall back to the Java pipeline.
+                //
+                // RuntimeException is included because a malformed page tree
+                // reaches us that way, not as IOException — PDFBox reads the
+                // page count from /Count, which a damaged document can leave
+                // disagreeing with the real tree, and the page fetch then throws
+                // IllegalStateException. Letting that escape would cost the whole
+                // document the backend path, which is exactly what slicing per
+                // page range is meant to avoid. Errors still propagate.
+                LOGGER.log(Level.WARNING, "Layout slice starting at page {0} failed: {1}",
+                    new Object[]{slice.get(0) + 1, e.toString()});
+            }
+
+            // Counted in pages, not array entries: the layout RESULT is nested,
+            // so an empty reply is [[]] — one outer entry holding nothing. An
+            // array-size check passes that as a success and the slice's pages
+            // reach the output as blank pages that nothing ever retries.
+            JsonNode placed = sliceResult == null
+                ? null
+                : HancomPageRenumber.toAbsolutePages(sliceResult, slice, objectMapper);
+            List<JsonNode> placedPages = placed == null
+                ? Collections.emptyList()
+                : HancomPageRenumber.pagesOf(placed);
+
+            if (!placedPages.isEmpty()) {
+                sliceResults.add(placed);
+            }
+
+            // Any page of this slice with no record of its own is reported so the
+            // caller can retry it, rather than being left as an empty page. This
+            // covers a slice that failed outright, one that came back holding no
+            // pages, and one that came back short.
+            reportUnplacedPages(placedPages, slice, failedPages1Indexed);
+        }
+
+        if (sliceResults.isEmpty()) {
+            // Nothing came back at all. Returning an empty result here would read
+            // as "a document with no content"; the caller needs the failure so the
+            // whole document falls back to the Java pipeline.
+            return null;
+        }
+        if (!failedPages1Indexed.isEmpty()) {
+            LOGGER.log(Level.WARNING,
+                "Hancom AI: {0} of {1} pages failed layout and will fall back",
+                new Object[]{failedPages1Indexed.size(), pages0Based.size()});
+        }
+        return HancomPageRenumber.merge(sliceResults, objectMapper);
+    }
+
+    /**
+     * Records every expected page that came back without a layout record.
+     *
+     * <p>A page reported here is retried by the Java pipeline. Left unreported it
+     * becomes an empty page in the output, which reads as a page that genuinely
+     * had no content — so silence is the worse outcome, whether the pages went
+     * missing from one slice or from a whole-document reply.
+     *
+     * @param placedPages         layout records that arrived, with absolute page numbers
+     * @param expectedPages0Based the absolute 0-based pages that were asked for
+     * @param failedPages1Indexed collects the unplaced pages, 1-indexed
+     */
+    private static void reportUnplacedPages(List<JsonNode> placedPages,
+                                            List<Integer> expectedPages0Based,
+                                            List<Integer> failedPages1Indexed) {
+        if (placedPages.size() >= expectedPages0Based.size()) {
+            return;
+        }
+        Set<Integer> placedPageNumbers = new HashSet<>();
+        for (JsonNode page : placedPages) {
+            placedPageNumbers.add(page.has("page_number")
+                ? page.get("page_number").asInt(-1) : -1);
+        }
+        for (int page0 : expectedPages0Based) {
+            if (!placedPageNumbers.contains(page0)) {
+                failedPages1Indexed.add(page0 + 1);
+            }
+        }
+    }
+
+    /**
+     * The absolute 0-based pages to process, in ascending order.
+     *
+     * <p>Request page numbers are 1-indexed by contract. An empty set means the
+     * whole document, so the page count is read from the PDF itself.
+     */
+    private ResolvedPages resolvePages(byte[] pdfBytes, Set<Integer> pageNumbers1Indexed)
+            throws IOException {
+        List<Integer> pages0Based = new ArrayList<>();
+        int documentPages;
+        try (PDDocument document = Loader.loadPDF(pdfBytes)) {
+            int pageCount = document.getNumberOfPages();
+            documentPages = pageCount;
+            if (pageNumbers1Indexed == null || pageNumbers1Indexed.isEmpty()) {
+                for (int page0 = 0; page0 < pageCount; page0++) {
+                    pages0Based.add(page0);
+                }
+                return new ResolvedPages(pages0Based, pageCount);
+            }
+            // Filtered against the real page count here, before slicing. The
+            // slicer skips pages it cannot find, so an unfiltered list would
+            // leave the slice list longer than the PDF built from it — and since
+            // response page k is looked up as slice.get(k), every page after the
+            // gap would be attributed to the wrong page.
+            for (int page1 : new TreeSet<>(pageNumbers1Indexed)) {
+                int page0 = page1 - 1;
+                if (page0 < 0 || page0 >= pageCount) {
+                    LOGGER.log(Level.WARNING,
+                        "Ignoring requested page {0}: document has {1} pages",
+                        new Object[]{page1, pageCount});
+                    continue;
+                }
+                pages0Based.add(page0);
+            }
+        }
+        return new ResolvedPages(pages0Based, documentPages);
+    }
+
+    /** Pages to send, alongside how many pages the document actually holds. */
+    private static final class ResolvedPages {
+        final List<Integer> pages;
+        final int pageCount;
+
+        ResolvedPages(List<Integer> pages, int pageCount) {
+            this.pages = pages;
+            this.pageCount = pageCount;
         }
     }
 
@@ -1128,10 +1354,28 @@ public class HancomAIClient implements HybridClient {
      * Calls a single HOCR SDK module with PDF input.
      */
     private JsonNode callModule(byte[] pdfBytes, String moduleName) throws IOException {
+        return callModule(pdfBytes, moduleName, null);
+    }
+
+    /**
+     * Calls a PDF-input module.
+     *
+     * <p>{@code slice}, when given, names the absolute pages this PDF holds and is
+     * recorded in the REQUEST_ID. The uploaded bytes are a slice, so its hash
+     * identifies neither the source document nor the pages within it; carrying
+     * both in the request id keeps every call traceable to real page numbers, on
+     * the server's side as well as ours.
+     */
+    private JsonNode callModule(byte[] pdfBytes, String moduleName, List<Integer> slice)
+            throws IOException {
+        String requestId = "odl-" + sourcePdfShaShort + "-"
+            + MODULE_SHORT.getOrDefault(moduleName, moduleName);
+        if (slice != null) {
+            requestId += "-p" + slice.get(0) + "-" + slice.get(slice.size() - 1);
+        }
         MultipartBody body = new MultipartBody.Builder()
             .setType(MultipartBody.FORM)
-            .addFormDataPart("REQUEST_ID",
-                "odl-" + sourcePdfShaShort + "-" + MODULE_SHORT.getOrDefault(moduleName, moduleName))
+            .addFormDataPart("REQUEST_ID", requestId)
             .addFormDataPart("OPEN_API_NAME", moduleName)
             .addFormDataPart("DATA_FORMAT", "pdf")
             .addFormDataPart("FILE", DEFAULT_FILENAME,
