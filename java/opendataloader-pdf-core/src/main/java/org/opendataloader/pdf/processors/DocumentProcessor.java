@@ -907,33 +907,25 @@ public class DocumentProcessor {
             if (b2 == null) {
                 return -1;
             }
-
-            int cmp;
-            cmp = Integer.compare(b1.getPageNumber(), b2.getPageNumber());
-            if (cmp != 0) {
-                return cmp;
+            if (!Objects.equals(b1.getPageNumber(), b2.getPageNumber())) {
+                return b1.getPageNumber() - b2.getPageNumber();
             }
-            cmp = Integer.compare(b1.getLastPageNumber(), b2.getLastPageNumber());
-            if (cmp != 0) {
-                return cmp;
+            if (!Objects.equals(b1.getLastPageNumber(), b2.getLastPageNumber())) {
+                return b1.getLastPageNumber() - b2.getLastPageNumber();
             }
-
-            cmp = Double.compare(b2.getTopY(), b1.getTopY());
-            if (cmp != 0) {
-                return cmp;
+            if (!Objects.equals(b1.getTopY(), b2.getTopY())) {
+                return b2.getTopY() - b1.getTopY() > 0 ? 1 : -1;
             }
-            cmp = Double.compare(b1.getLeftX(), b2.getLeftX());
-            if (cmp != 0) {
-                return cmp;
+            if (!Objects.equals(b1.getLeftX(), b2.getLeftX())) {
+                return b1.getLeftX() - b2.getLeftX() > 0 ? 1 : -1;
             }
-            cmp = Double.compare(b1.getBottomY(), b2.getBottomY());
-            if (cmp != 0) {
-                return cmp;
+            if (!Objects.equals(b1.getBottomY(), b2.getBottomY())) {
+                return b1.getBottomY() - b2.getBottomY() > 0 ? 1 : -1;
             }
-            cmp = Double.compare(b1.getRightX(), b2.getRightX());
-            {
-                return cmp;
+            if (!Objects.equals(b1.getRightX(), b2.getRightX())) {
+                return b1.getRightX() - b2.getRightX() > 0 ? 1 : -1;
             }
+            return 0;
         });
         return sortedContents;
     }
