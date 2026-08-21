@@ -53,7 +53,8 @@ import java.util.logging.Logger;
  *   <li>pdf2img — convert each page to PNG image</li>
  *   <li>DOCUMENT_LAYOUT_WITH_OCR — layout analysis + OCR on full PDF</li>
  *   <li>TABLE_STRUCTURE_RECOGNITION — crop each Table/Regionlist from page image, send to TSR individually</li>
- *   <li>IMAGE_CAPTIONING — crop each Figure region from page image, caption individually</li>
+ *   <li>IMAGE_CAPTIONING_EN — crop each visual region (Figure/Chart/Image) and caption it in English</li>
+ *   <li>FORMULA_RECOGNITION — crop each Equation region and read it as LaTeX</li>
  * </ol>
  *
  * @see HancomAISchemaTransformer
@@ -82,8 +83,37 @@ public class HancomAIClient implements HybridClient {
     // DLA label 10 = Figure
     private static final int LABEL_FIGURE = 10;
 
+    // DLA label 12 = Equation
+    private static final int LABEL_EQUATION = 12;
+
     /** Padding (pixels) added around table crops before sending to TSR. */
     private static final int TSR_CROP_PADDING = 20;
+
+    /**
+     * Captioning module. {@code IMAGE_CAPTIONING} and {@code IMAGE_CAPTIONING_EN}
+     * are separate engines writing the same response field, so the caption
+     * language is decided here and nowhere else.
+     */
+    private static final String CAPTION_MODULE = "IMAGE_CAPTIONING_EN";
+
+    /** Formula module; returns LaTeX in a {@code formula} field. */
+    private static final String FORMULA_MODULE = "FORMULA_RECOGNITION";
+
+    /**
+     * What the server puts in {@code RESULT[0][0].MSG} for a module name it does
+     * not know. Such a response still carries HTTP 200 and {@code SUCCESS:true},
+     * so without checking this a misspelled module name would look like a
+     * document that simply had nothing to caption.
+     */
+    private static final String MSG_NO_ENGINE = "not existed engine";
+
+    /**
+     * Field carrying an object's position within its page's {@code objects}
+     * array. Enrichment results are matched back to their region by this rather
+     * than by {@code object_id}, which DLA leaves off some objects and repeats
+     * across others within a single page.
+     */
+    static final String OBJECT_INDEX_FIELD = "odl_object_index";
 
     private final String baseUrl;
     private final OkHttpClient httpClient;
@@ -91,6 +121,53 @@ public class HancomAIClient implements HybridClient {
     private final HybridConfig config;
 
     private String sourcePdfShaShort = "unknown";
+
+    /**
+     * Modules the server reported as absent during one {@code convert} call.
+     *
+     * <p>A per-call WARNING is easy to lose in a long log, so {@code convert}
+     * raises one summary at the end: a module-name typo otherwise looks like a
+     * document that simply had nothing to enrich.
+     *
+     * <p>Deliberately a local passed down the call chain rather than a field.
+     * {@link HybridClientFactory} caches one client across documents and
+     * {@link #convertAsync} lets calls overlap, so a field would let one
+     * document clear or claim another's findings.
+     */
+    /**
+     * A DLA object together with its position in its page's {@code objects}
+     * array. Enrichment results are matched back to their region by that
+     * position, because {@code object_id} is optional and repeats within a
+     * page. The pairing lives here rather than as a field written into the
+     * response tree: those nodes are handed back to the caller, and a synthetic
+     * key the backend never sent would travel with them.
+     */
+    private static final class IndexedObject {
+        final JsonNode node;
+        final int index;
+
+        IndexedObject(JsonNode node, int index) {
+            this.node = node;
+            this.index = index;
+        }
+    }
+
+    private static final class MissingEngines {
+        private final java.util.Set<String> names = new java.util.LinkedHashSet<>();
+
+        void add(String moduleName) {
+            names.add(moduleName);
+        }
+
+        boolean isEmpty() {
+            return names.isEmpty();
+        }
+
+        @Override
+        public String toString() {
+            return String.join(", ", names);
+        }
+    }
 
     private static final java.util.Map<String, String> MODULE_SHORT;
     static {
@@ -100,6 +177,8 @@ public class HancomAIClient implements HybridClient {
         m.put("TEXT_RECOGNITION", "ocr");
         m.put("TABLE_STRUCTURE_RECOGNITION", "tsr");
         m.put("IMAGE_CAPTIONING", "caption");
+        m.put("IMAGE_CAPTIONING_EN", "caption");
+        m.put("FORMULA_RECOGNITION", "formula");
         m.put("CHART_IMAGE_UNDERSTANDING", "chart");
         MODULE_SHORT = java.util.Collections.unmodifiableMap(m);
     }
@@ -188,6 +267,7 @@ public class HancomAIClient implements HybridClient {
     public HybridResponse convert(HybridRequest request) throws IOException {
         byte[] pdfBytes = request.getPdfBytes();
         this.sourcePdfShaShort = sha256ShortHex(pdfBytes);
+        MissingEngines missingEngines = new MissingEngines();
         LOGGER.log(Level.INFO, "Hancom AI: processing PDF ({0} bytes)", pdfBytes.length);
 
         // Crop / page-image destination travels with the request, not the
@@ -227,9 +307,29 @@ public class HancomAIClient implements HybridClient {
             }
             timingsNode.set("TABLE_STRUCTURE_RECOGNITION", tsrTiming);
 
-            // Step 3: Figure captioning — pdf2img → crop figures → caption each
+            // Step 3: Formula recognition — crop each equation, read it as LaTeX.
+            // Runs before captioning because captionFigures() evicts each page
+            // image it visits; a page holding both an equation and a figure
+            // would otherwise need a second full-resolution pdf2img render.
+            long formulaStartMs = System.currentTimeMillis();
+            ArrayNode formulaResults =
+                recognizeFormulas(pdfBytes, dlaOcrResult, pageImageCache, cropOutput,
+                    missingEngines);
+            long formulaMs = System.currentTimeMillis() - formulaStartMs;
+            merged.set("FORMULA_RESULTS", formulaResults);
+
+            ObjectNode formulaTiming = objectMapper.createObjectNode();
+            formulaTiming.put("total_ms", formulaMs);
+            formulaTiming.put("count", formulaResults.size());
+            if (formulaResults.size() > 0) {
+                formulaTiming.put("avg_ms", formulaMs / formulaResults.size());
+            }
+            timingsNode.set("FORMULA_RECOGNITION", formulaTiming);
+
+            // Step 4: Figure captioning — pdf2img → crop figures → caption each
             long captionStartMs = System.currentTimeMillis();
-            ArrayNode figureCaptions = captionFigures(pdfBytes, dlaOcrResult, pageImageCache, cropOutput);
+            ArrayNode figureCaptions = captionFigures(pdfBytes, dlaOcrResult, pageImageCache,
+                cropOutput, missingEngines);
             long captionMs = System.currentTimeMillis() - captionStartMs;
             merged.set("FIGURE_CAPTIONS", figureCaptions);
 
@@ -249,8 +349,17 @@ public class HancomAIClient implements HybridClient {
 
             merged.set("timings", timingsNode);
 
-            LOGGER.log(Level.INFO, "Hancom AI: completed — {0} table crops, {1} figure captions",
-                new Object[]{tsrResults.size(), figureCaptions.size()});
+            LOGGER.log(Level.INFO,
+                "Hancom AI: completed — {0} table crops, {1} figure captions, {2} formulas",
+                new Object[]{tsrResults.size(), figureCaptions.size(), formulaResults.size()});
+
+            if (!missingEngines.isEmpty()) {
+                LOGGER.log(Level.SEVERE,
+                    "Hancom AI: the server does not provide {0} — everything those "
+                    + "modules would have produced is missing from this response. "
+                    + "Compare the module names against GET /hocr/sdk/openProcess.",
+                    missingEngines.toString());
+            }
 
             return new HybridResponse(null, null, merged, Collections.emptyMap(),
                 Collections.emptyList(), timingsNode);
@@ -288,15 +397,20 @@ public class HancomAIClient implements HybridClient {
      * @return ArrayNode of {page_number, object_id, bbox, caption}
      */
     private ArrayNode captionFigures(byte[] pdfBytes, JsonNode dlaResult,
-                                     PageImageCache pageImageCache, CropOutput cropOutput) {
+                                     PageImageCache pageImageCache, CropOutput cropOutput,
+                                     MissingEngines missingEngines) {
         ArrayNode captions = objectMapper.createArrayNode();
 
         // Extract pages from DLA result
         List<JsonNode> dlaPages = extractPages(dlaResult);
         if (dlaPages.isEmpty()) return captions;
 
-        // Collect Figure objects per page
-        Map<Integer, List<JsonNode>> figuresByPage = new HashMap<>();
+        // Collect visual objects per page. The same graphic is occasionally
+        // reported under two of the three visual labels; captioning it twice
+        // would spend a GPU call per duplicate and hand the transformer two
+        // captions for one picture, so drop the weaker detection here using the
+        // same rule the transformer applies.
+        Map<Integer, List<IndexedObject>> figuresByPage = new HashMap<>();
         for (JsonNode page : dlaPages) {
             int pageNum = page.has("page_number") ? page.get("page_number").asInt() : -1;
             if (pageNum < 0) continue;
@@ -304,11 +418,17 @@ public class HancomAIClient implements HybridClient {
             JsonNode objects = page.get("objects");
             if (objects == null || !objects.isArray()) continue;
 
+            java.util.Set<Integer> duplicates =
+                HancomAISchemaTransformer.findDuplicateVisualIndexes(objects);
+
+            int objectIndex = -1;
             for (JsonNode obj : objects) {
+                objectIndex++;
                 int label = obj.has("label") ? obj.get("label").asInt() : -1;
-                if (label == LABEL_FIGURE) {
-                    figuresByPage.computeIfAbsent(pageNum, k -> new ArrayList<>()).add(obj);
-                }
+                if (!HancomAISchemaTransformer.isVisualLabel(label)) continue;
+                if (duplicates.contains(objectIndex)) continue;
+                figuresByPage.computeIfAbsent(pageNum, k -> new ArrayList<>())
+                    .add(new IndexedObject(obj, objectIndex));
             }
         }
 
@@ -321,9 +441,9 @@ public class HancomAIClient implements HybridClient {
             new Object[]{figuresByPage.values().stream().mapToInt(List::size).sum(),
                           figuresByPage.size()});
 
-        for (Map.Entry<Integer, List<JsonNode>> entry : figuresByPage.entrySet()) {
+        for (Map.Entry<Integer, List<IndexedObject>> entry : figuresByPage.entrySet()) {
             int pageNum = entry.getKey();
-            List<JsonNode> figures = entry.getValue();
+            List<IndexedObject> figures = entry.getValue();
 
             // Get page image via cache
             BufferedImage pageImage;
@@ -337,7 +457,8 @@ public class HancomAIClient implements HybridClient {
             }
 
             // Caption each figure
-            for (JsonNode fig : figures) {
+            for (IndexedObject figure : figures) {
+                JsonNode fig = figure.node;
                 JsonNode bboxNode = fig.get("bbox");
                 if (bboxNode == null || !bboxNode.isArray() || bboxNode.size() < 4) continue;
 
@@ -365,12 +486,14 @@ public class HancomAIClient implements HybridClient {
                     }
 
                     int objIdForCaption = fig.has("object_id") ? fig.get("object_id").asInt() : -1;
-                    CaptionResult captionResult = callImageCaptioning(croppedPng, pageNum, objIdForCaption);
+                    CaptionResult captionResult =
+                        callImageCaptioning(croppedPng, pageNum, objIdForCaption, missingEngines);
                     String caption = captionResult != null ? captionResult.caption : null;
 
                     ObjectNode capNode = objectMapper.createObjectNode();
                     capNode.put("page_number", pageNum);
                     capNode.put("object_id", fig.has("object_id") ? fig.get("object_id").asInt() : -1);
+                    capNode.put(OBJECT_INDEX_FIELD, figure.index);
                     ArrayNode bboxArr = objectMapper.createArrayNode();
                     bboxArr.add(left).add(top).add(right).add(bottom);
                     capNode.set("bbox", bboxArr);
@@ -533,19 +656,20 @@ public class HancomAIClient implements HybridClient {
             }
             // Evict the page image here only if captionFigures() will not revisit
             // this page. captionFigures() iterates pages that contain at least one
-            // LABEL_FIGURE object; for table-only pages (no figures) the cached
+            // visual or equation object; for table-only pages the cached
             // full-resolution image would otherwise sit in memory until the
             // try-with-resources in convert() closes the cache — ~25MB per page
             // for the memory cache, which is costly on large table-heavy PDFs.
-            boolean hasFigure = false;
+            boolean revisited = false;
             for (JsonNode obj : objects) {
                 int objLabel = obj.has("label") ? obj.get("label").asInt() : -1;
-                if (objLabel == LABEL_FIGURE) {
-                    hasFigure = true;
+                if (HancomAISchemaTransformer.isVisualLabel(objLabel)
+                        || objLabel == LABEL_EQUATION) {
+                    revisited = true;
                     break;
                 }
             }
-            if (!hasFigure) {
+            if (!revisited) {
                 pageImageCache.evict(pageNum);
             }
         }
@@ -745,12 +869,225 @@ public class HancomAIClient implements HybridClient {
         }
     }
 
-    private CaptionResult callImageCaptioning(byte[] pngBytes, int pageNum, int objectId) throws IOException {
+    /**
+     * For each Equation region (label 12) found by DLA, crops the region from
+     * the page image and runs FORMULA_RECOGNITION on it.
+     *
+     * <p>Without this the transformer falls back to the region's OCR text, which
+     * loses the structure of the expression — OCR reads an integral sign as a
+     * character, while this returns LaTeX.
+     *
+     * @return ArrayNode of {page_number, object_id, formula}
+     */
+    private ArrayNode recognizeFormulas(byte[] pdfBytes, JsonNode dlaResult,
+                                        PageImageCache pageImageCache, CropOutput cropOutput,
+                                        MissingEngines missingEngines) {
+        ArrayNode formulas = objectMapper.createArrayNode();
+
+        List<JsonNode> dlaPages = extractPages(dlaResult);
+        if (dlaPages.isEmpty()) return formulas;
+
+        Map<Integer, List<IndexedObject>> equationsByPage = new HashMap<>();
+        // Pages captionFigures() will render anyway; those must stay cached.
+        java.util.Set<Integer> visualPages = new java.util.HashSet<>();
+        for (JsonNode page : dlaPages) {
+            int pageNum = page.has("page_number") ? page.get("page_number").asInt() : -1;
+            if (pageNum < 0) continue;
+
+            JsonNode objects = page.get("objects");
+            if (objects == null || !objects.isArray()) continue;
+
+            int objectIndex = -1;
+            for (JsonNode obj : objects) {
+                objectIndex++;
+                int label = obj.has("label") ? obj.get("label").asInt() : -1;
+                if (label == LABEL_EQUATION) {
+                    equationsByPage.computeIfAbsent(pageNum, k -> new ArrayList<>())
+                        .add(new IndexedObject(obj, objectIndex));
+                } else if (HancomAISchemaTransformer.isVisualLabel(label)) {
+                    visualPages.add(pageNum);
+                }
+            }
+        }
+
+        if (equationsByPage.isEmpty()) {
+            return formulas;
+        }
+
+        LOGGER.log(Level.INFO, "Hancom AI: recognizing {0} equations across {1} pages",
+            new Object[]{equationsByPage.values().stream().mapToInt(List::size).sum(),
+                         equationsByPage.size()});
+
+        for (Map.Entry<Integer, List<IndexedObject>> entry : equationsByPage.entrySet()) {
+            int pageNum = entry.getKey();
+
+            BufferedImage pageImage;
+            try {
+                pageImage = pageImageCache.getOrFetch(pageNum,
+                    idx -> fetchPageImage(pdfBytes, idx, cropOutput));
+            } catch (IOException e) {
+                LOGGER.log(Level.WARNING, "Failed to get page {0} image: {1}",
+                    new Object[]{pageNum, e.getMessage()});
+                continue;
+            }
+
+            for (IndexedObject equation : entry.getValue()) {
+                JsonNode eq = equation.node;
+                JsonNode bboxNode = eq.get("bbox");
+                if (bboxNode == null || !bboxNode.isArray() || bboxNode.size() < 4) continue;
+
+                int left = Math.max(0, bboxNode.get(0).asInt());
+                int top = Math.max(0, bboxNode.get(1).asInt());
+                int right = Math.min(pageImage.getWidth(), bboxNode.get(2).asInt());
+                int bottom = Math.min(pageImage.getHeight(), bboxNode.get(3).asInt());
+                if (right <= left || bottom <= top) continue;
+
+                int objectId = eq.has("object_id") ? eq.get("object_id").asInt() : -1;
+                try {
+                    BufferedImage cropped =
+                        pageImage.getSubimage(left, top, right - left, bottom - top);
+                    byte[] croppedPng = imageToPng(cropped);
+
+                    if (cropOutput.active()) {
+                        saveCropFile(cropOutput.directory(), pageNum, objectId,
+                            "equation", croppedPng);
+                    }
+
+                    String latex =
+                        callFormulaRecognition(croppedPng, pageNum, objectId, missingEngines);
+                    if (latex == null) continue;
+
+                    ObjectNode node = objectMapper.createObjectNode();
+                    node.put("page_number", pageNum);
+                    node.put("object_id", objectId);
+                    node.put(OBJECT_INDEX_FIELD, equation.index);
+                    // The clamped crop rectangle, as the caption results carry:
+                    // evidence tooling shows the region a result came from, and
+                    // without it the formula row has nowhere to point.
+                    ArrayNode bboxArr = objectMapper.createArrayNode();
+                    bboxArr.add(left).add(top).add(right).add(bottom);
+                    node.set("bbox", bboxArr);
+                    node.put("formula", latex);
+                    formulas.add(node);
+                } catch (Exception e) {
+                    LOGGER.log(Level.WARNING, "Failed to recognize formula on page {0}: {1}",
+                        new Object[]{pageNum, e.getMessage()});
+                }
+            }
+
+            // Release the page unless captionFigures() still has to visit it,
+            // so equation-only pages do not hold a ~25MB render until convert()
+            // closes the cache.
+            if (!visualPages.contains(pageNum)) {
+                pageImageCache.evict(pageNum);
+            }
+        }
+
+        return formulas;
+    }
+
+    /**
+     * Detects the "module does not exist" reply, which arrives as HTTP 200 with
+     * a true top-level SUCCESS and is otherwise indistinguishable from a region
+     * the engine had nothing to say about.
+     */
+    private boolean reportsMissingEngine(JsonNode page, String moduleName,
+                                         MissingEngines missingEngines) {
+        if (page == null) {
+            return false;
+        }
+        boolean noEngine = page.has("MSG")
+            && MSG_NO_ENGINE.equalsIgnoreCase(page.get("MSG").asText("").trim());
+        if (noEngine) {
+            missingEngines.add(moduleName);
+            LOGGER.log(Level.WARNING,
+                "Hancom AI module {0} is not available on the server "
+                + "(response: \"{1}\") — check the module name against /hocr/sdk/openProcess",
+                new Object[]{moduleName, page.has("MSG") ? page.get("MSG").asText("") : ""});
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Whether a page declares itself failed.
+     *
+     * <p>{@code IS_SUCCESS:false} is how the server marks a page it could not
+     * process. It accompanies the missing-engine reply but is not limited to
+     * it, and a failed page can still carry a populated {@code caption} or
+     * {@code formula} field — so the flag has to be honoured on its own rather
+     * than inferred from the message.
+     */
+    private boolean reportsFailure(JsonNode page, String moduleName) {
+        if (page == null || !page.has("IS_SUCCESS")) {
+            return false;
+        }
+        if (page.get("IS_SUCCESS").asBoolean(true)) {
+            return false;
+        }
+        LOGGER.log(Level.WARNING,
+            "Hancom AI module {0} reported a failed page (response: \"{1}\") — "
+            + "ignoring its output",
+            new Object[]{moduleName, page.has("MSG") ? page.get("MSG").asText("") : ""});
+        return true;
+    }
+
+    /**
+     * Sends a cropped equation region to FORMULA_RECOGNITION.
+     *
+     * @return the LaTeX string, or {@code null} when unavailable
+     */
+    private String callFormulaRecognition(byte[] pngBytes, int pageNum, int objectId,
+                                         MissingEngines missingEngines) throws IOException {
+        String requestId = "odl-" + sourcePdfShaShort + "-p" + pageNum + "-o" + objectId
+            + "-formula";
+        MultipartBody body = new MultipartBody.Builder()
+            .setType(MultipartBody.FORM)
+            .addFormDataPart("REQUEST_ID", requestId)
+            .addFormDataPart("OPEN_API_NAME", FORMULA_MODULE)
+            .addFormDataPart("DATA_FORMAT", "image")
+            .addFormDataPart("FILE", "equation.png",
+                RequestBody.create(pngBytes, MEDIA_TYPE_PNG))
+            .build();
+
+        Request httpRequest = new Request.Builder()
+            .url(baseUrl + SDK_ENDPOINT)
+            .post(body)
+            .build();
+
+        try (Response response = httpClient.newCall(httpRequest).execute()) {
+            if (!response.isSuccessful()) return null;
+
+            ResponseBody respBody = response.body();
+            if (respBody == null) return null;
+
+            JsonNode root = objectMapper.readTree(respBody.string());
+            if (!root.has("SUCCESS") || !root.get("SUCCESS").asBoolean()) return null;
+
+            JsonNode result = root.get("RESULT");
+            if (result == null || !result.isArray() || result.size() == 0) return null;
+
+            JsonNode page = result.get(0);
+            if (page.isArray() && page.size() > 0) page = page.get(0);
+
+            if (reportsMissingEngine(page, FORMULA_MODULE, missingEngines)) return null;
+            if (reportsFailure(page, FORMULA_MODULE)) return null;
+
+            // Blank counts as nothing recognized: returning whitespace would
+            // suppress the transformer's fall back to the region's OCR text and
+            // leave an empty formula in its place.
+            String formula = page.has("formula") ? page.get("formula").asText("") : null;
+            return formula == null || formula.trim().isEmpty() ? null : formula;
+        }
+    }
+
+    private CaptionResult callImageCaptioning(byte[] pngBytes, int pageNum, int objectId,
+                                             MissingEngines missingEngines) throws IOException {
         String requestId = "odl-" + sourcePdfShaShort + "-p" + pageNum + "-o" + objectId + "-caption";
         MultipartBody body = new MultipartBody.Builder()
             .setType(MultipartBody.FORM)
             .addFormDataPart("REQUEST_ID", requestId)
-            .addFormDataPart("OPEN_API_NAME", "IMAGE_CAPTIONING")
+            .addFormDataPart("OPEN_API_NAME", CAPTION_MODULE)
             .addFormDataPart("DATA_FORMAT", "image")
             .addFormDataPart("FILE", "figure.png",
                 RequestBody.create(pngBytes, MEDIA_TYPE_PNG))
@@ -775,6 +1112,9 @@ public class HancomAIClient implements HybridClient {
 
             JsonNode page = result.get(0);
             if (page.isArray() && page.size() > 0) page = page.get(0);
+
+            if (reportsMissingEngine(page, CAPTION_MODULE, missingEngines)) return null;
+            if (reportsFailure(page, CAPTION_MODULE)) return null;
 
             String caption = page.has("caption") ? page.get("caption").asText("") : null;
             JsonNode confNode = page.get("confidence");
@@ -889,7 +1229,35 @@ public class HancomAIClient implements HybridClient {
         callModule(pdfBytes, moduleName);
     }
 
-    void invokeCallImageCaptioning(byte[] pngBytes, int pageNum, int objectId) throws IOException {
-        callImageCaptioning(pngBytes, pageNum, objectId);
+    CaptionResult invokeCallImageCaptioning(byte[] pngBytes, int pageNum, int objectId)
+            throws IOException {
+        return callImageCaptioning(pngBytes, pageNum, objectId, new MissingEngines());
+    }
+
+    String invokeCallFormulaRecognition(byte[] pngBytes, int pageNum, int objectId)
+            throws IOException {
+        return callFormulaRecognition(pngBytes, pageNum, objectId, new MissingEngines());
+    }
+
+    JsonNode invokeCaptionFigures(byte[] pdfBytes, JsonNode dlaResult) throws IOException {
+        try (PageImageCache cache = createPageImageCache()) {
+            return invokeCaptionFigures(pdfBytes, dlaResult, cache);
+        }
+    }
+
+    JsonNode invokeCaptionFigures(byte[] pdfBytes, JsonNode dlaResult, PageImageCache cache) {
+        return captionFigures(pdfBytes, dlaResult, cache, CropOutput.DISABLED,
+            new MissingEngines());
+    }
+
+    JsonNode invokeRecognizeFormulas(byte[] pdfBytes, JsonNode dlaResult) throws IOException {
+        try (PageImageCache cache = createPageImageCache()) {
+            return invokeRecognizeFormulas(pdfBytes, dlaResult, cache);
+        }
+    }
+
+    JsonNode invokeRecognizeFormulas(byte[] pdfBytes, JsonNode dlaResult, PageImageCache cache) {
+        return recognizeFormulas(pdfBytes, dlaResult, cache, CropOutput.DISABLED,
+            new MissingEngines());
     }
 }

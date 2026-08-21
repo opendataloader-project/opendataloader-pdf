@@ -22,6 +22,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.entities.SemanticFootnote;
+import org.opendataloader.pdf.entities.SemanticFormula;
 import org.opendataloader.pdf.entities.SemanticPicture;
 import org.opendataloader.pdf.hybrid.HybridClient.HybridResponse;
 import org.verapdf.wcag.algorithms.entities.IObject;
@@ -1074,6 +1075,468 @@ public class HancomAISchemaTransformerTest {
 
         assertThat(result.get(0)).hasSize(1);
         assertThat(result.get(0).get(0)).isInstanceOf(SemanticPicture.class);
+    }
+
+    // --- Figure subdivision: labels 10 (Figure), 18 (Chart), 19 (Image) ---
+    //
+    // The DLA model split its old single "figure" class into three. All three
+    // are pictures as far as the document model is concerned, so they take the
+    // same route as label 10 always has. Before this, 18 and 19 fell through to
+    // the default branch and became paragraphs.
+
+    @Test
+    void label18_chart_createsPicture() {
+        ObjectNode json = createHancomAIJson(
+            createObject(18, "", 100, 100, 500, 400)
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        assertThat(result.get(0)).hasSize(1);
+        assertThat(result.get(0).get(0)).isInstanceOf(SemanticPicture.class);
+    }
+
+    @Test
+    void label19_image_createsPicture() {
+        ObjectNode json = createHancomAIJson(
+            createObject(19, "", 100, 100, 500, 400)
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        assertThat(result.get(0)).hasSize(1);
+        assertThat(result.get(0).get(0)).isInstanceOf(SemanticPicture.class);
+    }
+
+    /**
+     * A label the subdivision does not cover must not become a picture — this
+     * pins down that the fall-through covers exactly 10/18/19.
+     */
+    @Test
+    void label17_pageNumber_isNotPicture() {
+        ObjectNode json = createHancomAIJson(
+            createObject(17, "6", 100, 100, 140, 130)
+        );
+
+        List<List<IObject>> result = transform(json);
+
+        assertThat(result.get(0)).noneMatch(o -> o instanceof SemanticPicture);
+    }
+
+    @Test
+    void label18_chart_attachesCaptionMetadata() {
+        assertCaptionAttachedForLabel(18);
+    }
+
+    @Test
+    void label19_image_attachesCaptionMetadata() {
+        assertCaptionAttachedForLabel(19);
+    }
+
+    /**
+     * Builds a one-object document at {@code label} with a matching
+     * FIGURE_CAPTIONS entry, then asserts the caption reached the picture's
+     * metadata and that the originating DLA label was preserved.
+     */
+    private void assertCaptionAttachedForLabel(int label) {
+        ObjectNode json = objectMapper.createObjectNode();
+
+        ArrayNode dlaOcr = json.putArray("DOCUMENT_LAYOUT_WITH_OCR");
+        ArrayNode dlaPages = dlaOcr.addArray();
+        ObjectNode page = dlaPages.addObject();
+        page.put("page_number", 0);
+        page.put("image_height", 3508);
+        ArrayNode objects = page.putArray("objects");
+        ObjectNode visual = objects.addObject();
+        visual.put("label", label);
+        visual.put("ocrtext", "");
+        visual.put("confidence", 0.93);
+        visual.put("object_id", 5);
+        ArrayNode bbox = visual.putArray("bbox");
+        bbox.add(100); bbox.add(100); bbox.add(500); bbox.add(400);
+
+        ArrayNode figureCaptions = json.putArray("FIGURE_CAPTIONS");
+        ObjectNode cap = figureCaptions.addObject();
+        cap.put("page_number", 0);
+        cap.put("object_id", 5);
+        cap.put("caption", "a sea turtle swimming over a group of colorful fish");
+
+        List<List<IObject>> result = transform(json);
+
+        assertThat(result.get(0).get(0)).isInstanceOf(SemanticPicture.class);
+        SemanticPicture pic = (SemanticPicture) result.get(0).get(0);
+        ElementMetadata meta = transformer.getElementMetadata().get(pic.getRecognizedStructureId());
+
+        assertThat(meta).isNotNull();
+        assertThat(meta.getSourceLabel()).isEqualTo(label);
+        assertThat(meta.getCaption()).isNotNull();
+        assertThat(meta.getCaption().getText())
+            .isEqualTo("a sea turtle swimming over a group of colorful fish");
+    }
+
+    // --- Overlapping Figure/Chart detections ---
+    //
+    // The subdivision is meant to be exclusive, but the model sometimes reports
+    // the same region as both Figure and Chart. Observed on 01030000000107
+    // (Figure 0.814 vs Chart 0.450, IoU 0.964) and on a synthetic chart page
+    // (Figure 0.349 vs Chart 0.562, IoU 0.990). Left alone this yields two
+    // pictures for one graphic — a phantom Figure tag in PDF/UA terms.
+    //
+    // Confidence order flips between documents, so the lower-confidence
+    // detection is the one dropped rather than a fixed label priority.
+
+    @Test
+    void overlappingFigureAndChart_keepsOnlyHigherConfidence() {
+        ObjectNode json = twoVisualsJson(
+            10, 0.814, 491, 677, 1878, 1635,
+            18, 0.450, 537, 679, 1878, 1634);
+
+        List<List<IObject>> result = transform(json);
+
+        assertThat(result.get(0)).hasSize(1);
+    }
+
+    /** Same overlap with the confidences reversed must also collapse to one. */
+    @Test
+    void overlappingFigureAndChart_dropsLowConfidenceEitherDirection() {
+        ObjectNode json = twoVisualsJson(
+            10, 0.349, 97, 1838, 1195, 2998,
+            18, 0.562, 97, 1840, 1195, 2988);
+
+        List<List<IObject>> result = transform(json);
+
+        assertThat(result.get(0)).hasSize(1);
+    }
+
+    /**
+     * Figure and Image are separate graphics that happen to share a page, as on
+     * 01030000000005 where a photo sits above an unrelated figure. Both must
+     * survive — de-duplication must not collapse distinct pictures.
+     */
+    @Test
+    void nonOverlappingFigureAndImage_keepsBoth() {
+        ObjectNode json = twoVisualsJson(
+            19, 0.873, 272, 286, 1575, 1178,
+            10, 0.900, 272, 1454, 1573, 2284);
+
+        List<List<IObject>> result = transform(json);
+
+        assertThat(result.get(0)).hasSize(2);
+    }
+
+    /** Partial overlap below the threshold is two separate graphics. */
+    @Test
+    void slightlyOverlappingVisuals_keepsBoth() {
+        ObjectNode json = twoVisualsJson(
+            10, 0.90, 100, 100, 500, 500,
+            18, 0.80, 400, 400, 800, 800);
+
+        List<List<IObject>> result = transform(json);
+
+        assertThat(result.get(0)).hasSize(2);
+    }
+
+    /** Builds a page holding exactly two visual objects. */
+    private ObjectNode twoVisualsJson(int labelA, double confA,
+                                      int leftA, int topA, int rightA, int bottomA,
+                                      int labelB, double confB,
+                                      int leftB, int topB, int rightB, int bottomB) {
+        ObjectNode json = objectMapper.createObjectNode();
+        ArrayNode dlaOcr = json.putArray("DOCUMENT_LAYOUT_WITH_OCR");
+        ArrayNode dlaPages = dlaOcr.addArray();
+        ObjectNode page = dlaPages.addObject();
+        page.put("page_number", 0);
+        page.put("image_height", 3508);
+        ArrayNode objects = page.putArray("objects");
+
+        addVisual(objects, 1, labelA, confA, leftA, topA, rightA, bottomA);
+        addVisual(objects, 2, labelB, confB, leftB, topB, rightB, bottomB);
+        return json;
+    }
+
+    private void addVisual(ArrayNode objects, int objectId, int label, double confidence,
+                           int left, int top, int right, int bottom) {
+        ObjectNode obj = objects.addObject();
+        obj.put("object_id", objectId);
+        obj.put("label", label);
+        obj.put("ocrtext", "");
+        obj.put("confidence", confidence);
+        ArrayNode bbox = obj.putArray("bbox");
+        bbox.add(left); bbox.add(top); bbox.add(right); bbox.add(bottom);
+    }
+
+    /**
+     * De-duplication identifies objects by position, so it works on a page
+     * where DLA emitted no object_id at all: the overlapping pair collapses to
+     * its more confident half and unrelated content survives. Keying on
+     * object_id instead collapsed every id-less object onto one sentinel, which
+     * discarded the page's body text along with the duplicate.
+     */
+    @Test
+    void duplicateVisuals_withoutObjectIds_keepOtherPageContent() {
+        ObjectNode json = objectMapper.createObjectNode();
+        ArrayNode dlaOcr = json.putArray("DOCUMENT_LAYOUT_WITH_OCR");
+        ArrayNode dlaPages = dlaOcr.addArray();
+        ObjectNode page = dlaPages.addObject();
+        page.put("page_number", 0);
+        page.put("image_height", 3508);
+        ArrayNode objects = page.putArray("objects");
+
+        // An overlapping duplicate pair, neither carrying an object_id.
+        addVisualNoId(objects, 10, 0.814, 491, 677, 1878, 1635);
+        addVisualNoId(objects, 18, 0.450, 537, 679, 1878, 1634);
+        // Unrelated body text on the same page, also without an object_id.
+        ObjectNode para = objects.addObject();
+        para.put("label", 2);
+        para.put("ocrtext", "Body text that must survive");
+        para.put("confidence", 0.99);
+        ArrayNode pbox = para.putArray("bbox");
+        pbox.add(100); pbox.add(2000); pbox.add(1800); pbox.add(2100);
+
+        List<List<IObject>> result = transform(json);
+
+        // One picture (the confident one) plus the paragraph.
+        assertThat(result.get(0)).hasSize(2);
+    }
+
+    private void addVisualNoId(ArrayNode objects, int label, double confidence,
+                               int left, int top, int right, int bottom) {
+        ObjectNode obj = objects.addObject();
+        obj.put("label", label);
+        obj.put("ocrtext", "");
+        obj.put("confidence", confidence);
+        ArrayNode bbox = obj.putArray("bbox");
+        bbox.add(left); bbox.add(top); bbox.add(right); bbox.add(bottom);
+    }
+
+    /**
+     * Three regions overlapping in a chain must collapse to the single most
+     * confident one, whatever order DLA emitted them in. A pairwise sweep can
+     * drop a detection it had already chosen to keep.
+     */
+    @Test
+    void chainOfOverlappingVisuals_keepsOnlyMostConfident() {
+        ObjectNode json = objectMapper.createObjectNode();
+        ArrayNode dlaOcr = json.putArray("DOCUMENT_LAYOUT_WITH_OCR");
+        ArrayNode dlaPages = dlaOcr.addArray();
+        ObjectNode page = dlaPages.addObject();
+        page.put("page_number", 0);
+        page.put("image_height", 3508);
+        ArrayNode objects = page.putArray("objects");
+
+        // Weakest first, so a naive sweep would keep the wrong ones.
+        addVisual(objects, 1, 18, 0.30, 100, 100, 900, 900);
+        addVisual(objects, 2, 10, 0.95, 105, 100, 905, 900);
+        addVisual(objects, 3, 19, 0.60, 110, 100, 910, 900);
+
+        List<List<IObject>> result = transform(json);
+
+        assertThat(result.get(0)).hasSize(1);
+        SemanticPicture pic = (SemanticPicture) result.get(0).get(0);
+        ElementMetadata meta = transformer.getElementMetadata().get(pic.getRecognizedStructureId());
+        assertThat(meta.getSourceLabel()).isEqualTo(10);
+    }
+
+    /**
+     * Which detection survives an overlap, not merely how many. Pins that
+     * confidence decides rather than array position.
+     */
+    @Test
+    void overlappingVisuals_survivorIsTheConfidentOne() {
+        // Chart is more confident and listed second.
+        ObjectNode json = twoVisualsJson(
+            10, 0.387, 100, 100, 900, 900,
+            18, 0.745, 105, 100, 905, 900);
+
+        List<List<IObject>> result = transform(json);
+
+        assertThat(result.get(0)).hasSize(1);
+        SemanticPicture pic = (SemanticPicture) result.get(0).get(0);
+        ElementMetadata meta = transformer.getElementMetadata().get(pic.getRecognizedStructureId());
+        assertThat(meta.getSourceLabel()).isEqualTo(18);
+    }
+
+    /**
+     * Two visuals on one page can carry the same object_id; the caption lookup
+     * must not hand one picture's caption to the other.
+     */
+    @Test
+    void duplicateObjectIds_doNotCrossAttachCaptions() {
+        ObjectNode json = objectMapper.createObjectNode();
+        ArrayNode dlaOcr = json.putArray("DOCUMENT_LAYOUT_WITH_OCR");
+        ArrayNode dlaPages = dlaOcr.addArray();
+        ObjectNode page = dlaPages.addObject();
+        page.put("page_number", 0);
+        page.put("image_height", 3508);
+        ArrayNode objects = page.putArray("objects");
+        // Same object_id, far apart so de-duplication does not merge them.
+        addVisual(objects, 5, 10, 0.90, 100, 100, 500, 400);
+        addVisual(objects, 5, 19, 0.90, 100, 2000, 500, 2400);
+
+        // Shaped as HancomAIClient emits it: the position disambiguates the two
+        // regions that share an object_id.
+        ArrayNode caps = json.putArray("FIGURE_CAPTIONS");
+        ObjectNode c1 = caps.addObject();
+        c1.put("page_number", 0); c1.put("object_id", 5);
+        c1.put(HancomAIClient.OBJECT_INDEX_FIELD, 0); c1.put("caption", "FIRST");
+        ObjectNode c2 = caps.addObject();
+        c2.put("page_number", 0); c2.put("object_id", 5);
+        c2.put(HancomAIClient.OBJECT_INDEX_FIELD, 1); c2.put("caption", "SECOND");
+
+        List<List<IObject>> result = transform(json);
+        assertThat(result.get(0)).hasSize(2);
+        java.util.List<String> caption = new java.util.ArrayList<>();
+        for (IObject o : result.get(0)) {
+            ElementMetadata m = transformer.getElementMetadata()
+                .get(((SemanticPicture) o).getRecognizedStructureId());
+            caption.add(m != null && m.getCaption() != null ? m.getCaption().getText() : null);
+        }
+        // Each picture keeps its own caption rather than both taking the last one.
+        assertThat(caption).containsExactlyInAnyOrder("FIRST", "SECOND");
+    }
+
+    /**
+     * De-duplication is driven by response data, so its cost must not be
+     * quadratic in the number of detections a page claims to hold. Scanning
+     * every survivor for every candidate took 19s at 50k detections, twice per
+     * page (client and transformer).
+     *
+     * <p>Asserts on how the cost scales rather than on a wall-clock budget: an
+     * absolute threshold turns a loaded CI agent or a GC pause into a failure
+     * that says nothing about the algorithm. Quadratic growth would show up as
+     * ~4x for a doubled input; the allowance below is far looser than that and
+     * still fails the quadratic path.
+     */
+    @Test
+    void manyNonOverlappingVisuals_deduplicateWithoutQuadraticGrowth() {
+        // Warm up so JIT compilation is not charged to the first measurement.
+        dedupeNanos(2000);
+
+        long small = dedupeNanos(10000);
+        long large = dedupeNanos(20000);
+
+        // Guard against a near-zero baseline making the ratio meaningless.
+        long baseline = Math.max(small, 1_000_000L);
+        assertThat((double) large / baseline)
+            .as("doubling the input must not multiply the cost like an O(n^2) scan would")
+            .isLessThan(3.0);
+    }
+
+    /** Runs de-duplication over {@code count} non-overlapping visuals. */
+    private long dedupeNanos(int count) {
+        ArrayNode objects = objectMapper.createArrayNode();
+        for (int i = 0; i < count; i++) {
+            addVisual(objects, i, 19, 0.9, i * 10, 0, i * 10 + 5, 5);
+        }
+
+        long start = System.nanoTime();
+        java.util.Set<Integer> discarded =
+            HancomAISchemaTransformer.findDuplicateVisualIndexes(objects);
+        long elapsed = System.nanoTime() - start;
+
+        assertThat(discarded).isEmpty();
+        return elapsed;
+    }
+
+    /**
+     * Coordinates that overflow to infinity make the overlap ratio NaN, and
+     * every comparison against NaN is false — which would wave a duplicate
+     * through unnoticed.
+     */
+    @Test
+    void infiniteBboxes_areStillTreatedAsDuplicates() {
+        ArrayNode objects = objectMapper.createArrayNode();
+        for (int i = 0; i < 2; i++) {
+            ObjectNode obj = objects.addObject();
+            obj.put("object_id", i);
+            obj.put("label", 19);
+            obj.put("ocrtext", "");
+            obj.put("confidence", 0.9 - i * 0.5);
+            ArrayNode bbox = obj.putArray("bbox");
+            bbox.add(0); bbox.add(0);
+            bbox.add(Double.POSITIVE_INFINITY); bbox.add(Double.POSITIVE_INFINITY);
+        }
+
+        assertThat(HancomAISchemaTransformer.findDuplicateVisualIndexes(objects))
+            .containsExactly(1);
+    }
+
+    // --- Equations: FORMULA_RECOGNITION LaTeX, with OCR text as fallback ---
+
+    @Test
+    void equation_usesLatexWhenAvailable() {
+        ObjectNode json = equationJson("Loss = - sum log p", "L _ { 1 } = \\frac { 1 } { 2 }");
+
+        List<List<IObject>> result = transform(json);
+
+        SemanticFormula formula = (SemanticFormula) result.get(0).get(0);
+        assertThat(formula.getLatex()).isEqualTo("L _ { 1 } = \\frac { 1 } { 2 }");
+    }
+
+    /**
+     * When formula recognition is unavailable the equation must keep the OCR
+     * text it used before, rather than coming out blank.
+     */
+    @Test
+    void equation_fallsBackToOcrTextWhenNoFormulaResults() {
+        ObjectNode json = equationJson("Loss = - sum log p", null);
+
+        List<List<IObject>> result = transform(json);
+
+        SemanticFormula formula = (SemanticFormula) result.get(0).get(0);
+        assertThat(formula.getLatex()).isEqualTo("Loss = - sum log p");
+    }
+
+    /** Whitespace is not a recognition result; the OCR text must still win. */
+    @Test
+    void equation_fallsBackWhenFormulaIsBlank() {
+        ObjectNode json = equationJson("Loss = - sum log p", "   ");
+
+        List<List<IObject>> result = transform(json);
+
+        SemanticFormula formula = (SemanticFormula) result.get(0).get(0);
+        assertThat(formula.getLatex()).isEqualTo("Loss = - sum log p");
+    }
+
+    @Test
+    void equation_fallsBackWhenFormulaIsEmpty() {
+        ObjectNode json = equationJson("Loss = - sum log p", "");
+
+        List<List<IObject>> result = transform(json);
+
+        SemanticFormula formula = (SemanticFormula) result.get(0).get(0);
+        assertThat(formula.getLatex()).isEqualTo("Loss = - sum log p");
+    }
+
+    /**
+     * Builds a single-equation document, optionally carrying a FORMULA_RESULTS
+     * entry for it. A null {@code latex} omits the section entirely.
+     */
+    private ObjectNode equationJson(String ocrText, String latex) {
+        ObjectNode json = objectMapper.createObjectNode();
+
+        ArrayNode dlaOcr = json.putArray("DOCUMENT_LAYOUT_WITH_OCR");
+        ArrayNode dlaPages = dlaOcr.addArray();
+        ObjectNode page = dlaPages.addObject();
+        page.put("page_number", 0);
+        page.put("image_height", 3508);
+        ArrayNode objects = page.putArray("objects");
+        ObjectNode eq = objects.addObject();
+        eq.put("label", 12);
+        eq.put("ocrtext", ocrText);
+        eq.put("confidence", 0.9);
+        eq.put("object_id", 3);
+        ArrayNode bbox = eq.putArray("bbox");
+        bbox.add(100); bbox.add(100); bbox.add(500); bbox.add(200);
+
+        if (latex != null) {
+            ArrayNode results = json.putArray("FORMULA_RESULTS");
+            ObjectNode entry = results.addObject();
+            entry.put("page_number", 0);
+            entry.put("object_id", 3);
+            entry.put("formula", latex);
+        }
+        return json;
     }
 
     // --- Task 8: AI score → correctSemanticScore ---
