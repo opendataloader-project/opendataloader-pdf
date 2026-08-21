@@ -100,13 +100,13 @@ public class MarkdownTableTest {
         String markdown = generateMarkdownTable(table);
         String[] lines = markdown.split("\n");
 
-        // Row 0 (header): "수신" must appear exactly once
-        assertEquals(1, countOccurrences(lines[0], "수신"),
-            "Merged cell '수신' should appear once. Got: " + lines[0]);
+        // Row 0 (header): "수신" repeated across colspan (2 columns)
+        assertEquals(2, countOccurrences(lines[0], "수신"),
+            "Merged cell '수신' should appear twice (colspan=2). Got: " + lines[0]);
 
-        // Row 1 (after header + separator): "경유" must appear exactly once
-        assertEquals(1, countOccurrences(lines[2], "경유"),
-            "Merged cell '경유' should appear once. Got: " + lines[2]);
+        // Row 1 (after header + separator): "경유" repeated across colspan (2 columns)
+        assertEquals(2, countOccurrences(lines[2], "경유"),
+            "Merged cell '경유' should appear twice (colspan=2). Got: " + lines[2]);
 
         // Row 2: "제목" and "테스트" in separate cells
         String row2Line = lines[3];
@@ -115,15 +115,16 @@ public class MarkdownTableTest {
     }
 
     /**
-     * A 3-column table where cell (0,0) has colspan=2 should produce
-     * 3 column separators per row in the header separator line,
-     * and the content row should not duplicate the merged cell's content.
+     * A 3-column table where cell (0,0) has colspan=2 should repeat
+     * the merged cell content across the spanned columns for better
+     * Markdown readability and proper table alignment.
      *
-     * Before fix: the merged cell content was written twice because
-     * getCells() returns duplicated references for spanned columns.
+     * Expected behavior: merged cell content is repeated for each
+     * spanned column to ensure consistent table column count and
+     * readable Markdown output when viewing raw text.
      */
     @Test
-    void testColspanCellsAreNotDuplicated() throws IOException {
+    void testColspanCellsAreRepeatedAcrossColumns() throws IOException {
         // Row 0: [A (colspan=2)] [B]   — 3 columns
         // Row 1: [C] [D] [E]
         TableBorderCell cell00 = new TableBorderCell(0, 0, 2, 1, null);
@@ -154,10 +155,10 @@ public class MarkdownTableTest {
 
         assertTrue(lines.length >= 3, "Expected at least 3 lines, got: " + lines.length);
 
-        // Header row: content "A" should appear once
+        // Header row: content "A" repeated across colspan (2 columns)
         String headerRow = lines[0];
-        assertEquals(1, countOccurrences(headerRow, "A"),
-            "Merged cell content 'A' should appear exactly once in header row. Got: " + headerRow);
+        assertEquals(2, countOccurrences(headerRow, "A"),
+            "Merged cell content 'A' should appear twice (colspan=2) in header row. Got: " + headerRow);
 
         // Header separator: |---|---|---|
         assertEquals(3, countOccurrences(lines[1], "---"),
@@ -200,10 +201,11 @@ public class MarkdownTableTest {
     }
 
     /**
-     * A table with rowspan should not duplicate the cell content in subsequent rows.
+     * A table with rowspan should repeat the cell content in subsequent rows
+     * for better Markdown readability and proper table alignment.
      */
     @Test
-    void testRowspanCellsAreNotDuplicated() throws IOException {
+    void testRowspanCellsAreRepeatedDownRows() throws IOException {
         // Row 0: [A (rowspan=2)] [B]
         // Row 1: [A (span)]      [C]
         // Row 2: [D]             [E]
@@ -234,11 +236,69 @@ public class MarkdownTableTest {
         String[] lines = markdown.split("\n");
 
         assertTrue(lines.length >= 4, "Should have 4+ lines for 3-row table");
-        // Row 1 (index 2 after header+separator) should NOT contain 'A'
+        // Row 1 (index 2 after header+separator) should contain 'A' (filled down from rowspan)
         String row1Line = lines[2];
-        assertEquals(0, countOccurrences(row1Line, "A"),
-            "Rowspan cell 'A' should not appear in row 1. Got: " + row1Line);
+        assertEquals(1, countOccurrences(row1Line, "A"),
+            "Rowspan cell 'A' should appear in row 1 (fill-down). Got: " + row1Line);
         assertTrue(row1Line.contains("C"), "Row 1 should contain 'C'. Got: " + row1Line);
+    }
+    
+    /**
+     * A mixed-merge table (colspan + rowspan on the same parent cell) should
+     * preserve repeated content across all covered coordinates.
+     */
+    @Test
+    void testMixedColspanAndRowspanAreRepeated() throws IOException {
+        // Row 0: [A (colspan=2,rowspan=2)] [B] [C]
+        // Row 1: [A (span)] [A (span)]      [D] [E]
+        // Row 2: [F] [G] [H] [I]
+        TableBorderCell cellA = new TableBorderCell(0, 0, 2, 2, null);
+        addTextContent(cellA, "A");
+        TableBorderCell cellB = new TableBorderCell(0, 2, 1, 1, null);
+        addTextContent(cellB, "B");
+        TableBorderCell cellC = new TableBorderCell(0, 3, 1, 1, null);
+        addTextContent(cellC, "C");
+        TableBorderRow row0 = new TableBorderRow(0, 4, null);
+        row0.getCells()[0] = cellA;
+        row0.getCells()[1] = cellA;
+        row0.getCells()[2] = cellB;
+        row0.getCells()[3] = cellC;
+
+        TableBorderCell cellD = new TableBorderCell(1, 2, 1, 1, null);
+        addTextContent(cellD, "D");
+        TableBorderCell cellE = new TableBorderCell(1, 3, 1, 1, null);
+        addTextContent(cellE, "E");
+        TableBorderRow row1 = new TableBorderRow(1, 4, null);
+        row1.getCells()[0] = cellA;
+        row1.getCells()[1] = cellA;
+        row1.getCells()[2] = cellD;
+        row1.getCells()[3] = cellE;
+
+        TableBorderCell cellF = new TableBorderCell(2, 0, 1, 1, null);
+        addTextContent(cellF, "F");
+        TableBorderCell cellG = new TableBorderCell(2, 1, 1, 1, null);
+        addTextContent(cellG, "G");
+        TableBorderCell cellH = new TableBorderCell(2, 2, 1, 1, null);
+        addTextContent(cellH, "H");
+        TableBorderCell cellI = new TableBorderCell(2, 3, 1, 1, null);
+        addTextContent(cellI, "I");
+        TableBorderRow row2 = new TableBorderRow(2, 4, null);
+        row2.getCells()[0] = cellF;
+        row2.getCells()[1] = cellG;
+        row2.getCells()[2] = cellH;
+        row2.getCells()[3] = cellI;
+
+        TableBorder table = new TableBorder(null, new TableBorderRow[]{row0, row1, row2}, 3, 4);
+        String markdown = generateMarkdownTable(table);
+        String[] lines = markdown.split("\\n");
+
+        assertTrue(lines.length >= 4, "Expected at least 4 lines, got: " + lines.length);
+        assertEquals(2, countOccurrences(lines[0], "A"),
+            "Row 0 should contain two 'A' cells from colspan=2. Got: " + lines[0]);
+        assertEquals(2, countOccurrences(lines[2], "A"),
+            "Row 1 should contain two 'A' cells from rowspan+colspan coverage. Got: " + lines[2]);
+        assertTrue(lines[2].contains("D") && lines[2].contains("E"),
+            "Row 1 should include D and E. Got: " + lines[2]);
     }
 
     private void addTextContent(TableBorderCell cell, String text) {
