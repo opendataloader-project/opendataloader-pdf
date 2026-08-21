@@ -91,7 +91,6 @@ public class TableOfContentsProcessor {
 
     private static List<IObject> processTOCItemContent(List<IObject> contents) {
         List<IObject> newContents = ParagraphProcessor.processParagraphs(contents);
-        DocumentProcessor.setIDs(newContents);
         return newContents;
     }
 
