@@ -58,7 +58,8 @@ import java.util.regex.Pattern;
  * <ul>
  *   <li>{@code DOCUMENT_LAYOUT_WITH_OCR} — objects with label + bbox + ocrtext</li>
  *   <li>{@code TABLE_STRUCTURE_RECOGNITION} — table cells with html + bbox</li>
- *   <li>{@code IMAGE_CAPTIONING} — per-page captions</li>
+ *   <li>{@code IMAGE_CAPTIONING_EN} — per-figure captions (English)</li>
+ *   <li>{@code FORMULA_RECOGNITION} — per-equation LaTeX</li>
  * </ul>
  *
  * <h2>Label Mapping (DLA integer labels → IObject types)</h2>
@@ -81,6 +82,8 @@ import java.util.regex.Pattern;
  *  15  → PageFooter  (filtered)
  *  16  → Number      (currently passed through as paragraph text)
  *  17  → PageNumber  (filtered)
+ *  18  → Chart       (SemanticPicture)
+ *  19  → Image       (SemanticPicture)
  * </pre>
  *
  * <h2>Coordinate System</h2>
@@ -117,6 +120,175 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
     private static final int LABEL_PAGE_FOOTER = 15;
     private static final int LABEL_NUMBER = 16;
     private static final int LABEL_PAGE_NUMBER = 17;
+
+    // The DLA model subdivided its original "figure" class into three: Chart
+    // (18) for charts a chart-to-table model can read, Image (19) for
+    // rectangular photos, and Figure (10) for everything left over — icons,
+    // logos, QR codes, diagrams, maps, stamps.
+    private static final int LABEL_CHART = 18;
+    private static final int LABEL_IMAGE = 19;
+
+    /**
+     * Whether a DLA label denotes a visual object — one of the three classes the
+     * model split its original "figure" class into.
+     *
+     * <p>Captioning deliberately does not filter on which of the three a region
+     * landed in. The subdivision is not reliable enough to gate on: a
+     * rectangular photograph was observed classified as Figure (10) with
+     * confidence 0.900, so trusting the class would drop alt text for real
+     * photos with no sign that anything went missing. A caption on a logo is a
+     * smaller problem than a photo with no caption at all.
+     */
+    static boolean isVisualLabel(int label) {
+        return label == LABEL_FIGURE || label == LABEL_CHART || label == LABEL_IMAGE;
+    }
+
+    /**
+     * Overlap above which two visual detections are taken to be the same
+     * graphic reported twice.
+     *
+     * <p>Measured over a 140-document corpus: every duplicate pair sat at IoU
+     * 0.964-0.989, while genuinely distinct pictures on a page did not overlap
+     * at all. 0.8 sits in that empty band.
+     */
+    private static final double VISUAL_DUPLICATE_IOU = 0.8;
+
+    /**
+     * Finds visual detections that duplicate a more confident detection of the
+     * same region, and returns their positions within {@code objects}.
+     *
+     * <p>The three visual classes are supposed to partition a page, but the
+     * model sometimes emits the same graphic under two of them — observed as
+     * Figure/Chart and also Image/Figure. Keeping both would put two pictures
+     * where the document has one, which reads as a phantom figure to a screen
+     * reader.
+     *
+     * <p>In every observed duplicate the wrong reading was also the less
+     * confident one (0.305-0.450 against 0.745-0.977), while which *label* won
+     * varied between documents. So confidence decides and the label does not.
+     *
+     * <p>Positions rather than {@code object_id}s identify the survivors,
+     * because DLA does not guarantee an {@code object_id} on every object and
+     * every object missing one would otherwise share a single sentinel key —
+     * discarding one duplicate would then discard unrelated content, body text
+     * included, from the same page.
+     *
+     * <p>Candidates are walked in descending confidence and each is compared
+     * only against detections already kept. A pairwise sweep would depend on
+     * array order once three regions overlap in a chain, and could drop the
+     * very detection it had just chosen to keep.
+     */
+    static java.util.Set<Integer> findDuplicateVisualIndexes(JsonNode objects) {
+        List<Integer> candidates = new ArrayList<>();
+        int index = 0;
+        for (JsonNode obj : objects) {
+            int label = obj.has("label") ? obj.get("label").asInt() : -1;
+            if (isVisualLabel(label) && hasUsableBbox(obj)) {
+                candidates.add(index);
+            }
+            index++;
+        }
+        if (candidates.size() < 2) {
+            return Collections.emptySet();
+        }
+
+        List<JsonNode> byIndex = new ArrayList<>();
+        for (JsonNode obj : objects) {
+            byIndex.add(obj);
+        }
+
+        // Highest confidence first; ties keep the earlier object so that this
+        // ordering — and therefore the outcome — is identical in the client.
+        candidates.sort((left, right) -> {
+            int byConfidence = Double.compare(
+                confidenceOf(byIndex.get(right)), confidenceOf(byIndex.get(left)));
+            return byConfidence != 0 ? byConfidence : Integer.compare(left, right);
+        });
+
+        java.util.Set<Integer> discarded = new java.util.HashSet<>();
+        // Survivors ordered by left edge, so the search below can stop once it
+        // passes the candidate's own box instead of scanning every survivor.
+        // Without that, a response carrying tens of thousands of non-overlapping
+        // detections on one page costs quadratic time — measured at 19s for
+        // 50,000, and this runs once here and once in the client.
+        java.util.NavigableMap<Long, List<Integer>> keptByLeft = new java.util.TreeMap<>();
+        for (int candidate : candidates) {
+            JsonNode obj = byIndex.get(candidate);
+            JsonNode bbox = obj.get("bbox");
+            double left = bbox.get(0).asDouble();
+            double right = bbox.get(2).asDouble();
+            double width = right - left;
+            if (!(width > 0)) {
+                // Degenerate or non-numeric box: nothing can duplicate it.
+                continue;
+            }
+
+            // An overlap of VISUAL_DUPLICATE_IOU forces near-identical boxes, so
+            // only survivors whose left edge is within this box's own width can
+            // possibly qualify.
+            boolean duplicate = false;
+            for (List<Integer> bucket :
+                    keptByLeft.subMap((long) Math.floor(left - width), true,
+                                      (long) Math.ceil(left + width), true).values()) {
+                for (int survivor : bucket) {
+                    if (pixelIou(bbox, byIndex.get(survivor).get("bbox"))
+                            >= VISUAL_DUPLICATE_IOU) {
+                        duplicate = true;
+                        break;
+                    }
+                }
+                if (duplicate) {
+                    break;
+                }
+            }
+
+            if (duplicate) {
+                discarded.add(candidate);
+                LOGGER.log(Level.FINE,
+                    "Hancom AI: dropping duplicate visual detection label={0} conf={1}",
+                    new Object[]{obj.get("label"), confidenceOf(obj)});
+            } else {
+                keptByLeft.computeIfAbsent((long) Math.floor(left), k -> new ArrayList<>())
+                    .add(candidate);
+            }
+        }
+        return discarded;
+    }
+
+    private static boolean hasUsableBbox(JsonNode obj) {
+        JsonNode bbox = obj.get("bbox");
+        return bbox != null && bbox.isArray() && bbox.size() >= 4;
+    }
+
+    private static double confidenceOf(JsonNode obj) {
+        return obj.has("confidence") ? obj.get("confidence").asDouble(-1.0) : -1.0;
+    }
+
+    /** Intersection-over-union of two DLA pixel bboxes, [left, top, right, bottom]. */
+    private static double pixelIou(JsonNode a, JsonNode b) {
+        double left = Math.max(a.get(0).asDouble(), b.get(0).asDouble());
+        double top = Math.max(a.get(1).asDouble(), b.get(1).asDouble());
+        double right = Math.min(a.get(2).asDouble(), b.get(2).asDouble());
+        double bottom = Math.min(a.get(3).asDouble(), b.get(3).asDouble());
+        if (right <= left || bottom <= top) {
+            return 0.0;
+        }
+        double intersection = (right - left) * (bottom - top);
+        double areaA = (a.get(2).asDouble() - a.get(0).asDouble())
+            * (a.get(3).asDouble() - a.get(1).asDouble());
+        double areaB = (b.get(2).asDouble() - b.get(0).asDouble())
+            * (b.get(3).asDouble() - b.get(1).asDouble());
+        double union = areaA + areaB - intersection;
+        double iou = union <= 0 ? 0.0 : intersection / union;
+        // Coordinates large enough to overflow to infinity make the ratio NaN,
+        // and every comparison against NaN is false — which would silently wave
+        // a duplicate through. Treat an unusable ratio as complete overlap: two
+        // boxes spanning an infinite area are not distinct pictures.
+        if (Double.isNaN(iou)) {
+            return 1.0;
+        }
+        return iou;
+    }
 
     // DPI conversion: API renders at 300 DPI, PDF uses 72 DPI
     private static final double PIXEL_TO_POINT = 72.0 / 300.0;
@@ -206,6 +378,7 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
         JsonNode dlaOcr = json.get("DOCUMENT_LAYOUT_WITH_OCR");
         JsonNode tables = json.get("TABLE_STRUCTURE_RECOGNITION");
         JsonNode figureCaptions = json.get("FIGURE_CAPTIONS");
+        JsonNode formulaResults = json.get("FORMULA_RESULTS");
 
         // Determine page count from DLA results
         List<JsonNode> dlaPages = extractPages(dlaOcr);
@@ -220,6 +393,9 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
 
         // Build per-figure caption lookup: "pageNum:objectId" → caption
         Map<String, String> figureCaptionMap = buildFigureCaptionMap(figureCaptions);
+
+        // Build per-equation LaTeX lookup: "pageNum:objectId" -> formula
+        Map<String, String> formulaMap = buildFormulaMap(formulaResults);
 
         // Build map: page_number -> list of TSR table entries
         // New format: TSR is an ArrayNode of per-table entries with dla_bbox + tsr sub-object
@@ -300,9 +476,17 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
             JsonNode objects = page.get("objects");
             if (objects == null || !objects.isArray()) continue;
 
+            java.util.Set<Integer> duplicateVisuals = findDuplicateVisualIndexes(objects);
+
+            int objectIndex = -1;
             for (JsonNode obj : objects) {
-                IObject iobj = transformObject(obj, pageNumber, pageHeight, figureCaptionMap,
-                    headingHeightToLevel, tsrTableBboxes);
+                objectIndex++;
+                if (duplicateVisuals.contains(objectIndex)) {
+                    continue;
+                }
+
+                IObject iobj = transformObject(obj, pageNumber, objectIndex, pageHeight,
+                    figureCaptionMap, formulaMap, headingHeightToLevel, tsrTableBboxes);
 
                 if (iobj != null) {
                     result.get(pageNumber).add(iobj);
@@ -376,8 +560,10 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
     /**
      * Transforms a single DLA object to an IObject based on its label.
      */
-    private IObject transformObject(JsonNode obj, int pageIndex, double pageHeight,
+    private IObject transformObject(JsonNode obj, int pageIndex, int objectIndex,
+                                     double pageHeight,
                                      Map<String, String> figureCaptionMap,
+                                     Map<String, String> formulaMap,
                                      Map<Double, Integer> headingHeightToLevel,
                                      List<BoundingBox> tsrTableBboxes) {
         int label = obj.has("label") ? obj.get("label").asInt() : -1;
@@ -450,18 +636,30 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
                 // Table regions are handled separately by transformTableEntry() via TSR
                 return null;
 
-            case LABEL_FIGURE: {
+            // All three subdivided figure classes are pictures in the document
+            // model, so they share label 10's route.
+            case LABEL_FIGURE:
+            case LABEL_CHART:
+            case LABEL_IMAGE: {
                 // Look up per-figure caption from IMAGE_CAPTIONING
                 int objectId = obj.has("object_id") ? obj.get("object_id").asInt() : -1;
-                String key = pageIndex + ":" + objectId;
-                String caption = figureCaptionMap.get(key);
+                String caption =
+                    lookupEnrichment(figureCaptionMap, pageIndex, objectIndex, objectId);
                 iobj = createPicture(bbox, caption);
                 break;
             }
 
-            case LABEL_EQUATION:
-                iobj = createFormula(text, bbox);
+            case LABEL_EQUATION: {
+                // FORMULA_RECOGNITION returns LaTeX, which preserves the
+                // structure of the expression; OCR text of an equation loses it.
+                // Fall back to OCR text when recognition produced nothing so an
+                // equation never comes out blank.
+                int objectId = obj.has("object_id") ? obj.get("object_id").asInt() : -1;
+                String latex =
+                    lookupEnrichment(formulaMap, pageIndex, objectIndex, objectId);
+                iobj = createFormula(latex != null ? latex : text, bbox);
                 break;
+            }
 
             default:
                 iobj = text.isEmpty() ? null : createParagraph(text, bbox);
@@ -499,10 +697,10 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
                     .setBboxHeightPx(pixelHeight);
             } else if (label == LABEL_DOC_TITLE) {
                 meta.setHeadingInferenceMethod("fixed");
-            } else if (label == LABEL_FIGURE) {
+            } else if (isVisualLabel(label)) {
                 int objectId = obj.has("object_id") ? obj.get("object_id").asInt() : -1;
-                String key = pageIndex + ":" + objectId;
-                String captionText = figureCaptionMap.get(key);
+                String captionText =
+                    lookupEnrichment(figureCaptionMap, pageIndex, objectIndex, objectId);
                 if (captionText != null) {
                     ElementMetadata.CaptionMetadata capMeta = new ElementMetadata.CaptionMetadata();
                     capMeta.setText(captionText);
@@ -1050,21 +1248,70 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
     }
 
     /**
-     * Builds a lookup map from FIGURE_CAPTIONS: "pageNumber:objectId" → caption text.
+     * Builds a lookup map from FORMULA_RESULTS: "pageNumber:objectId" → LaTeX.
      */
-    private Map<String, String> buildFigureCaptionMap(JsonNode figureCaptions) {
-        Map<String, String> map = new HashMap<>();
-        if (figureCaptions == null || !figureCaptions.isArray()) return map;
+    private Map<String, String> buildFormulaMap(JsonNode formulaResults) {
+        return buildEnrichmentMap(formulaResults, "formula");
+    }
 
-        for (JsonNode cap : figureCaptions) {
-            int pageNum = cap.has("page_number") ? cap.get("page_number").asInt() : -1;
-            int objectId = cap.has("object_id") ? cap.get("object_id").asInt() : -1;
-            String caption = cap.has("caption") ? cap.get("caption").asText("") : "";
-            if (pageNum >= 0 && objectId >= 0 && !caption.isEmpty()) {
-                map.put(pageNum + ":" + objectId, caption);
+    /**
+     * Indexes enrichment results by the region they belong to.
+     *
+     * <p>Keyed on the object's position within its page rather than on
+     * {@code object_id}: DLA omits that field on some objects and repeats it
+     * across others on the same page, so an id-keyed map silently hands one
+     * region's caption to another. Entries that predate the index field fall
+     * back to the id so an older merged JSON still resolves.
+     */
+    private Map<String, String> buildEnrichmentMap(JsonNode results, String valueField) {
+        Map<String, String> map = new HashMap<>();
+        if (results == null || !results.isArray()) return map;
+
+        for (JsonNode entry : results) {
+            int pageNum = entry.has("page_number") ? entry.get("page_number").asInt() : -1;
+            String value = entry.has(valueField) ? entry.get(valueField).asText("") : "";
+            // Blank is treated as absent so an equation still falls back to its
+            // OCR text, and a picture is not given an empty alt string.
+            if (pageNum < 0 || value.trim().isEmpty()) continue;
+
+            int objectIndex = entry.has(HancomAIClient.OBJECT_INDEX_FIELD)
+                ? entry.get(HancomAIClient.OBJECT_INDEX_FIELD).asInt(-1) : -1;
+            if (objectIndex >= 0) {
+                map.put(indexKey(pageNum, objectIndex), value);
+                continue;
+            }
+            int objectId = entry.has("object_id") ? entry.get("object_id").asInt(-1) : -1;
+            if (objectId >= 0) {
+                map.put(idKey(pageNum, objectId), value);
             }
         }
         return map;
+    }
+
+    private static String indexKey(int pageNum, int objectIndex) {
+        return pageNum + "#" + objectIndex;
+    }
+
+    private static String idKey(int pageNum, int objectId) {
+        return pageNum + ":" + objectId;
+    }
+
+    /**
+     * Looks up an enrichment for one region, preferring the position-based key
+     * and falling back to the id-based one.
+     */
+    private static String lookupEnrichment(Map<String, String> map, int pageIndex,
+                                           int objectIndex, int objectId) {
+        String byIndex = objectIndex >= 0 ? map.get(indexKey(pageIndex, objectIndex)) : null;
+        if (byIndex != null) return byIndex;
+        return objectId >= 0 ? map.get(idKey(pageIndex, objectId)) : null;
+    }
+
+    /**
+     * Builds a lookup map from FIGURE_CAPTIONS: "pageNumber:objectId" → caption text.
+     */
+    private Map<String, String> buildFigureCaptionMap(JsonNode figureCaptions) {
+        return buildEnrichmentMap(figureCaptions, "caption");
     }
 
     /**
