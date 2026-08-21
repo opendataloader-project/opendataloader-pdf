@@ -41,10 +41,22 @@ public class HybridConfig {
     /** Default URL for Hancom AI HOCR SDK API. */
     public static final String HANCOM_AI_DEFAULT_URL = "http://localhost:18008/api/v1";
 
+    /**
+     * Pages per layout request when a document is longer than the backend
+     * accepts at once.
+     *
+     * <p>The Hancom AI layout module rejects requests beyond roughly 30 pages, so
+     * longer documents are sliced. The default leaves headroom under that limit
+     * rather than sitting on it, and stays large enough that a long document does
+     * not pay a network round trip per page.
+     */
+    public static final int DEFAULT_LAYOUT_PAGE_CHUNK = 20;
+
     private String url;
     private int timeoutMs = DEFAULT_TIMEOUT_MS;
     private boolean fallbackToJava = false;
     private int maxConcurrentRequests = DEFAULT_MAX_CONCURRENT_REQUESTS;
+    private int layoutPageChunk = DEFAULT_LAYOUT_PAGE_CHUNK;
     /** Hybrid triage mode: auto (dynamic triage based on page content). */
     public static final String MODE_AUTO = "auto";
     /** Hybrid triage mode: full (skip triage, send all pages to backend). */
@@ -161,6 +173,32 @@ public class HybridConfig {
             throw new IllegalArgumentException("Max concurrent requests must be positive: " + maxConcurrentRequests);
         }
         this.maxConcurrentRequests = maxConcurrentRequests;
+    }
+
+    /**
+     * Gets the number of pages sent per layout request.
+     *
+     * @return the pages per layout request; 0 or less means send every page at once.
+     */
+    public int getLayoutPageChunk() {
+        return layoutPageChunk;
+    }
+
+    /**
+     * Sets the number of pages sent per layout request.
+     *
+     * <p>Zero or negative disables slicing and sends the whole document in one
+     * request, which is what to reach for if a backend's real limit turns out to
+     * be something other than a page count.
+     *
+     * <p>Settable through this API only — there is deliberately no CLI option,
+     * since the value tracks a backend limit rather than anything a user of the
+     * tool would decide.
+     *
+     * @param layoutPageChunk pages per layout request.
+     */
+    public void setLayoutPageChunk(int layoutPageChunk) {
+        this.layoutPageChunk = layoutPageChunk;
     }
 
     /**

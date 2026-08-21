@@ -484,6 +484,11 @@ class CLIOptionsTest {
     }
 
     @Test
+    void testDefineOptions_containsHybridHancomAiLayoutPageChunk() {
+        assertTrue(options.hasOption("hybrid-hancom-ai-layout-page-chunk"));
+    }
+
+    @Test
     void testDefineOptions_containsHybridHancomAiSaveCrops() {
         assertTrue(options.hasOption("hybrid-hancom-ai-save-crops"));
     }
@@ -521,6 +526,55 @@ class CLIOptionsTest {
         CommandLine cmd = parser.parse(options, args);
         Config config = CLIOptions.createConfigFromCommandLine(cmd);
         assertEquals("disk", config.getHybridConfig().getImageCache());
+    }
+
+    @Test
+    void testCreateConfig_withHybridHancomAiLayoutPageChunk() throws ParseException {
+        String[] args = {"--hybrid", "hancom-ai",
+                         "--hybrid-hancom-ai-layout-page-chunk", "5",
+                         testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+        assertEquals(5, config.getHybridConfig().getLayoutPageChunk());
+    }
+
+    /**
+     * Zero is the documented way to send every page in one request, so it has to
+     * survive rather than be rejected as a non-positive count.
+     */
+    @Test
+    void testCreateConfig_hybridHancomAiLayoutPageChunkZeroDisablesSlicing()
+            throws ParseException {
+        String[] args = {"--hybrid", "hancom-ai",
+                         "--hybrid-hancom-ai-layout-page-chunk", "0",
+                         testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+        assertEquals(0, config.getHybridConfig().getLayoutPageChunk());
+    }
+
+    @Test
+    void testCreateConfig_hybridHancomAiLayoutPageChunkRejectsNonNumeric() throws ParseException {
+        String[] args = {"--hybrid", "hancom-ai",
+                         "--hybrid-hancom-ai-layout-page-chunk", "twenty",
+                         testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+        assertThrows(IllegalArgumentException.class,
+                () -> CLIOptions.createConfigFromCommandLine(cmd));
+    }
+
+    /**
+     * The option only means anything on the hancom-ai backend, so using it with
+     * another one is a mistake worth naming rather than silently ignoring.
+     */
+    @Test
+    void testCreateConfig_hybridHancomAiLayoutPageChunkRequiresHancomAi() throws ParseException {
+        String[] args = {"--hybrid", "docling-fast",
+                         "--hybrid-hancom-ai-layout-page-chunk", "5",
+                         testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+        assertThrows(IllegalArgumentException.class,
+                () -> CLIOptions.createConfigFromCommandLine(cmd));
     }
 
     @Test

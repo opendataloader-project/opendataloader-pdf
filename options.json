@@ -233,6 +233,14 @@
       "description": "Page image cache backing. Requires --hybrid=hancom-ai. Values: memory (default), disk"
     },
     {
+      "name": "hybrid-hancom-ai-layout-page-chunk",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": "20",
+      "description": "Pages per layout request. Requires --hybrid=hancom-ai. The backend rejects requests past roughly 30 pages, so longer documents are sliced; 0 disables slicing and sends every page in one request. Default: 20"
+    },
+    {
       "name": "to-stdout",
       "shortName": null,
       "type": "boolean",
