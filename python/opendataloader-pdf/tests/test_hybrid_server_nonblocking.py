@@ -137,3 +137,46 @@ async def test_health_responds_during_conversion(app_with_converter):
 
         convert_response = await convert_task
         assert convert_response.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_profile_picture_converter_forces_picture_images(mock_docling):
+    """The picture profile must still enable image generation when global attachment is off."""
+    from httpx import ASGITransport, AsyncClient
+    import importlib
+    from opendataloader_pdf import hybrid_server
+
+    importlib.reload(hybrid_server)
+
+    captured_calls = []
+    mock_result = MagicMock()
+    mock_result.document.export_to_dict.return_value = {
+        "pictures": [],
+        "texts": [],
+        "tables": [],
+    }
+    mock_profile_converter = MagicMock()
+    mock_profile_converter.convert.return_value = mock_result
+
+    def fake_create_converter(**kwargs):
+        captured_calls.append(kwargs)
+        return mock_profile_converter
+
+    with patch.object(
+        hybrid_server,
+        "create_converter",
+        side_effect=fake_create_converter,
+    ):
+        app = hybrid_server.create_app(generate_picture_images=False)
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.post(
+                "/v1/profile/file",
+                files={"files": ("test.pdf", b"%PDF-1.4 minimal", "application/pdf")},
+            )
+
+        assert response.status_code == 200
+
+    picture_calls = [call for call in captured_calls if call.get("enrich_picture_description")]
+    assert picture_calls, "Expected at least one picture profile converter call"
+    assert any(call.get("generate_picture_images") is True for call in picture_calls)
