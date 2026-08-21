@@ -56,15 +56,7 @@ public class CaptionProcessor {
             }
             if (content instanceof TableBorder) {
                 TableBorder tableBorder = (TableBorder) content;
-                for (int rowNumber = 0; rowNumber < tableBorder.getNumberOfRows(); rowNumber++) {
-                    TableBorderRow row = tableBorder.getRow(rowNumber);
-                    for (int colNumber = 0; colNumber < tableBorder.getNumberOfColumns(); colNumber++) {
-                        TableBorderCell tableBorderCell = row.getCell(colNumber);
-                        if (tableBorderCell.getRowNumber() == rowNumber && tableBorderCell.getColNumber() == colNumber) {
-                            processCaptions(tableBorderCell.getContents());
-                        }
-                    }
-                }
+                processCaptionsInTable(tableBorder);
             }
             if (content instanceof SemanticTextNode) {
                 SemanticTextNode textNode = (SemanticTextNode) content;
@@ -110,6 +102,18 @@ public class CaptionProcessor {
 //                }
 //            }
 //        }
+    }
+
+    private static void processCaptionsInTable(TableBorder tableBorder) {
+        for (int rowNumber = 0; rowNumber < tableBorder.getNumberOfRows(); rowNumber++) {
+            TableBorderRow row = tableBorder.getRow(rowNumber);
+            for (int colNumber = 0; colNumber < tableBorder.getNumberOfColumns(); colNumber++) {
+                TableBorderCell tableBorderCell = row.getCell(colNumber);
+                if (tableBorderCell.getRowNumber() == rowNumber && tableBorderCell.getColNumber() == colNumber) {
+                    processCaptions(tableBorderCell.getContents());
+                }
+            }
+        }
     }
 
     private static boolean isImageSubtle(ImageChunk imageChunk) {

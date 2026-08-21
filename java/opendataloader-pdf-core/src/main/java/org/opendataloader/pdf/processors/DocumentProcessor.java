@@ -807,38 +807,42 @@ public class DocumentProcessor {
                 object.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
             }
             if (!isHybridMode) {
-                if (object instanceof TableBorder) {
-                    TableBorder tableBorder = (TableBorder) object;
-                    for (int rowNumber = 0; rowNumber < tableBorder.getNumberOfRows(); rowNumber++) {
-                        TableBorderRow row = tableBorder.getRow(rowNumber);
-                        row.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
-                        for (int colNumber = 0; colNumber < tableBorder.getNumberOfColumns(); colNumber++) {
-                            TableBorderCell tableBorderCell = row.getCell(colNumber);
-                            if (tableBorderCell.getRowNumber() == rowNumber && tableBorderCell.getColNumber() == colNumber) {
-                                tableBorderCell.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
-                                setIDs(tableBorderCell.getContents());
-                            }
-                        }
+                setIDsInComplexObject(object);
+            }
+        }
+    }
+
+    public static void setIDsInComplexObject(IObject object) {
+        if (object instanceof TableBorder) {
+            TableBorder tableBorder = (TableBorder) object;
+            for (int rowNumber = 0; rowNumber < tableBorder.getNumberOfRows(); rowNumber++) {
+                TableBorderRow row = tableBorder.getRow(rowNumber);
+                row.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+                for (int colNumber = 0; colNumber < tableBorder.getNumberOfColumns(); colNumber++) {
+                    TableBorderCell tableBorderCell = row.getCell(colNumber);
+                    if (tableBorderCell.getRowNumber() == rowNumber && tableBorderCell.getColNumber() == colNumber) {
+                        tableBorderCell.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+                        setIDs(tableBorderCell.getContents());
                     }
-                } else if (object instanceof PDFList) {
-                    for (ListItem listItem : ((PDFList) object).getListItems()) {
-                        listItem.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
-                        setIDs(listItem.getContents());
-                    }
-                } else if (object instanceof SemanticTOC) {
-                    for (IObject tocItem : ((SemanticTOC) object).getTOCItems()) {
-                        if (tocItem instanceof SemanticTOCI) {
-                            SemanticTOCI toci = (SemanticTOCI) tocItem;
-                            toci.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
-                            setIDs(toci.getContents());
-                        } else {
-                            //
-                        }
-                    }
-                } else if (object instanceof SemanticHeaderOrFooter) {
-                    setIDs(((SemanticHeaderOrFooter) object).getContents());
                 }
             }
+        } else if (object instanceof PDFList) {
+            for (ListItem listItem : ((PDFList) object).getListItems()) {
+                listItem.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+                setIDs(listItem.getContents());
+            }
+        } else if (object instanceof SemanticTOC) {
+            for (IObject tocItem : ((SemanticTOC) object).getTOCItems()) {
+                if (tocItem instanceof SemanticTOCI) {
+                    SemanticTOCI toci = (SemanticTOCI) tocItem;
+                    toci.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+                    setIDs(toci.getContents());
+                } else {
+                    //
+                }
+            }
+        } else if (object instanceof SemanticHeaderOrFooter) {
+            setIDs(((SemanticHeaderOrFooter) object).getContents());
         }
     }
 

@@ -480,6 +480,21 @@ public class ListProcessor {
         return true;
     }
 
+    public static void checkNeighborListsInTable(TableBorder tableBorder) {
+        for (int rowNumber = 0; rowNumber < tableBorder.getNumberOfRows(); rowNumber++) {
+            TableBorderRow row = tableBorder.getRow(rowNumber);
+            for (int colNumber = 0; colNumber < tableBorder.getNumberOfColumns(); colNumber++) {
+                TableBorderCell tableBorderCell = row.getCell(colNumber);
+                if (tableBorderCell.getRowNumber() == rowNumber && tableBorderCell.getColNumber() == colNumber) {
+                    List<List<IObject>> contentsList = new ArrayList<>(1);
+                    contentsList.add(tableBorderCell.getContents());
+                    checkNeighborLists(contentsList);
+                    tableBorderCell.setContents(contentsList.get(0));
+                }
+            }
+        }
+    }
+
     public static void checkNeighborLists(List<List<IObject>> contents) {
         PDFList previousList = null;
         SemanticTextNode middleContent = null;
@@ -488,17 +503,7 @@ public class ListProcessor {
             for (IObject content : pageContents) {
                 if (content instanceof TableBorder) {
                     TableBorder tableBorder = (TableBorder) content;
-                    for (int rowNumber = 0; rowNumber < tableBorder.getNumberOfRows(); rowNumber++) {
-                        TableBorderRow row = tableBorder.getRow(rowNumber);
-                        for (int colNumber = 0; colNumber < tableBorder.getNumberOfColumns(); colNumber++) {
-                            TableBorderCell tableBorderCell = row.getCell(colNumber);
-                            if (tableBorderCell.getRowNumber() == rowNumber && tableBorderCell.getColNumber() == colNumber) {
-                                List<List<IObject>> contentsList = new ArrayList<>(1);
-                                contentsList.add(tableBorderCell.getContents());
-                                checkNeighborLists(contentsList);
-                            }
-                        }
-                    }
+                    checkNeighborListsInTable(tableBorder);
                 }
                 if (content instanceof PDFList) {
                     PDFList currentList = (PDFList) content;
