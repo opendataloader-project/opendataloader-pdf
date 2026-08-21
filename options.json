@@ -41,6 +41,14 @@
       "description": "Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg"
     },
     {
+      "name": "filter-hidden-text",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": "off",
+      "description": "Filter hidden (low-contrast) text via per-page rendering. Values: on, off. Default: off (opt-in; expensive, runs as sequential post-processing)"
+    },
+    {
       "name": "sanitize",
       "shortName": null,
       "type": "boolean",
