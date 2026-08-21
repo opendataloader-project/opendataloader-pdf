@@ -68,6 +68,148 @@ public class ListProcessorTest {
     }
 
     @Test
+    public void testProcessListsFromSingleMultilineTextNode() {
+        StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
+        StaticContainers.setIsDataLoader(true);
+        StaticContainers.setAccumulatedNodeMapper(new AccumulatedNodeMapper());
+        List<IObject> contents = new ArrayList<>();
+        SemanticParagraph paragraph = new SemanticParagraph();
+        contents.add(paragraph);
+        paragraph.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 50.0, 120.0, 60.0),
+            "1. Revenue from Operations", 10, 50.0)));
+        paragraph.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 40.0, 120.0, 50.0),
+            "2. Other Income", 10, 40.0)));
+        paragraph.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 30.0, 120.0, 40.0),
+            "3. Total Income", 10, 30.0)));
+        contents = ListProcessor.processListsFromTextNodes(contents);
+        Assertions.assertEquals(1, contents.size());
+        Assertions.assertTrue(contents.get(0) instanceof PDFList);
+        Assertions.assertEquals(3, ((PDFList) contents.get(0)).getNumberOfListItems());
+    }
+
+    @Test
+    public void testProcessListsFromSingleMultilineTextNodeKeepsContinuationLines() {
+        StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
+        StaticContainers.setIsDataLoader(true);
+        StaticContainers.setAccumulatedNodeMapper(new AccumulatedNodeMapper());
+        List<IObject> contents = new ArrayList<>();
+        SemanticParagraph paragraph = new SemanticParagraph();
+        contents.add(paragraph);
+        paragraph.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 60.0, 160.0, 70.0),
+            "1. Changes in Inventories", 10, 60.0)));
+        paragraph.add(new TextLine(new TextChunk(new BoundingBox(0, 24.0, 50.0, 160.0, 60.0),
+            "Work In Progress", 10, 50.0)));
+        paragraph.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 40.0, 160.0, 50.0),
+            "2. Employee Benefits Expense", 10, 40.0)));
+        contents = ListProcessor.processListsFromTextNodes(contents);
+        Assertions.assertEquals(1, contents.size());
+        Assertions.assertTrue(contents.get(0) instanceof PDFList);
+        PDFList list = (PDFList) contents.get(0);
+        Assertions.assertEquals(2, list.getNumberOfListItems());
+        Assertions.assertEquals(2, list.getListItems().get(0).getLinesNumber());
+    }
+
+    @Test
+    public void testProcessListsFromSingleLabeledLineIsNotExpanded() {
+        StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
+        StaticContainers.setIsDataLoader(true);
+        StaticContainers.setAccumulatedNodeMapper(new AccumulatedNodeMapper());
+        List<IObject> contents = new ArrayList<>();
+        SemanticParagraph paragraph = new SemanticParagraph();
+        contents.add(paragraph);
+        paragraph.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 50.0, 120.0, 60.0),
+            "1. Only Item", 10, 50.0)));
+        paragraph.add(new TextLine(new TextChunk(new BoundingBox(0, 24.0, 40.0, 120.0, 50.0),
+            "Continuation text", 10, 40.0)));
+        contents = ListProcessor.processListsFromTextNodes(contents);
+        Assertions.assertFalse(contents.stream().anyMatch(o -> o instanceof PDFList),
+            "Single-label node should not be expanded into a PDFList");
+        Assertions.assertEquals(1, contents.size(),
+            "Original node count should be unchanged");
+        Assertions.assertInstanceOf(SemanticParagraph.class, contents.get(0),
+            "Original SemanticParagraph should remain in contents");
+        SemanticParagraph result = (SemanticParagraph) contents.get(0);
+        Assertions.assertEquals(2, result.getLinesNumber(),
+            "Original SemanticParagraph lines should remain intact");
+    }
+
+    @Test
+    public void testProcessListsFromAdjacentExpandedNodesDoesNotRestoreConsumedNode() {
+        StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
+        StaticContainers.setIsDataLoader(true);
+        StaticContainers.setAccumulatedNodeMapper(new AccumulatedNodeMapper());
+        List<IObject> contents = new ArrayList<>();
+
+        SemanticParagraph paragraph1 = new SemanticParagraph();
+        contents.add(paragraph1);
+        paragraph1.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 60.0, 160.0, 70.0),
+            "1. Revenue from Operations", 10, 60.0)));
+        paragraph1.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 50.0, 160.0, 60.0),
+            "2. Other Income", 10, 50.0)));
+
+        SemanticParagraph paragraph2 = new SemanticParagraph();
+        contents.add(paragraph2);
+        paragraph2.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 40.0, 160.0, 50.0),
+            "3. Total Income", 10, 40.0)));
+        paragraph2.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 30.0, 160.0, 40.0),
+            "4. Total Expenses", 10, 30.0)));
+
+        contents = ListProcessor.processListsFromTextNodes(contents);
+
+        Assertions.assertEquals(1, contents.size(),
+            "Consumed expanded nodes should not be restored alongside the merged list");
+        Assertions.assertInstanceOf(PDFList.class, contents.get(0),
+            "Adjacent expanded nodes should collapse into a single PDFList");
+        Assertions.assertEquals(4, ((PDFList) contents.get(0)).getNumberOfListItems());
+    }
+
+    @Test
+    public void testProcessListsFromDoublesNodeIsNotExpanded() {
+        StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
+        StaticContainers.setIsDataLoader(true);
+        StaticContainers.setAccumulatedNodeMapper(new AccumulatedNodeMapper());
+        List<IObject> contents = new ArrayList<>();
+        SemanticParagraph paragraph = new SemanticParagraph();
+        contents.add(paragraph);
+        paragraph.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 50.0, 120.0, 60.0),
+            "1.5", 10, 50.0)));
+        paragraph.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 40.0, 120.0, 50.0),
+            "2.3", 10, 40.0)));
+        contents = ListProcessor.processListsFromTextNodes(contents);
+        Assertions.assertFalse(contents.stream().anyMatch(o -> o instanceof PDFList),
+            "Doubles-format node should not be expanded into a PDFList");
+        Assertions.assertEquals(1, contents.size(),
+            "Original node count should be unchanged");
+        Assertions.assertInstanceOf(SemanticParagraph.class, contents.get(0),
+            "Original SemanticParagraph should remain in contents");
+    }
+
+    @Test
+    public void testProcessListsFromExpandedNodeRestoresOriginalWhenNoListIsBuilt() {
+        StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
+        StaticContainers.setIsDataLoader(true);
+        StaticContainers.setAccumulatedNodeMapper(new AccumulatedNodeMapper());
+        List<IObject> contents = new ArrayList<>();
+        SemanticParagraph paragraph = new SemanticParagraph();
+        contents.add(paragraph);
+        paragraph.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 50.0, 160.0, 60.0),
+            "1. Revenue", 10, 50.0)));
+        paragraph.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 40.0, 160.0, 50.0),
+            "A. Other Income", 10, 40.0)));
+
+        contents = ListProcessor.processListsFromTextNodes(contents);
+
+        Assertions.assertEquals(1, contents.size(),
+            "Original node count should be unchanged after restore");
+        Assertions.assertInstanceOf(SemanticParagraph.class, contents.get(0),
+            "Original SemanticParagraph should be restored when no list is built");
+        Assertions.assertFalse(contents.get(0) instanceof PDFList,
+            "Mixed-label expanded node should not become a PDFList");
+        Assertions.assertEquals(2, ((SemanticParagraph) contents.get(0)).getLinesNumber(),
+            "Restored SemanticParagraph should keep both original lines");
+    }
+
+    @Test
     public void testCheckNeighborLists() {
         StaticContainers.setIsDataLoader(true);
         List<IObject> pageContents = new ArrayList<>();
