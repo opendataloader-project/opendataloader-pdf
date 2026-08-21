@@ -128,9 +128,10 @@ public class HybridDocumentProcessor {
      * that need per-document raw JSON must serialize {@code processDocument}
      * invocations (or wrap with their own ThreadLocal).
      *
-     * <p>Multi-chunk documents (&gt;{@link #BACKEND_CHUNK_SIZE} backend pages) currently
-     * keep only the last chunk's JSON. Single-chunk documents capture the full
-     * response.
+     * <p>Multi-chunk documents keep only the last chunk's JSON; single-chunk
+     * documents capture the full response. {@code hancom-ai} therefore runs
+     * unchunked here — see {@link #backendChunkSize} — so its evidence covers
+     * every page however long the document is.
      */
     private static volatile JsonNode lastHybridRawJson;
 
@@ -195,6 +196,40 @@ public class HybridDocumentProcessor {
      * @see <a href="https://github.com/opendataloader-project/opendataloader-pdf/issues/352">#352</a>
      */
     static final int BACKEND_CHUNK_SIZE = 50;
+
+    /**
+     * Pages per {@code convert} call for a given backend.
+     *
+     * <p>{@code hancom-ai} splits the document itself, sized to its own layout
+     * module's page limit, so chunking again here would only add outer calls that
+     * each re-upload the file and re-run the crop passes. Worse, only the last
+     * call's raw JSON is kept, so an outer split would drop the earlier pages'
+     * evidence. One call per document lets that client do the splitting.
+     *
+     * @param config the run configuration
+     * @return pages per backend call
+     */
+    static int backendChunkSize(Config config) {
+        if (HybridClientFactory.BACKEND_HANCOM_AI.equals(config.getHybrid())) {
+            return Integer.MAX_VALUE;
+        }
+        return BACKEND_CHUNK_SIZE;
+    }
+
+    /**
+     * Pages per backend call, capped at the page count.
+     *
+     * <p>The cap is what keeps an unbounded backend size usable as a loop
+     * step: adding {@link Integer#MAX_VALUE} twice overflows to a negative
+     * start, which would restart the loop and never terminate.
+     *
+     * @param config    the run configuration
+     * @param pageCount how many pages are going to the backend
+     * @return pages per call, at least 1
+     */
+    static int effectiveChunkSize(Config config, int pageCount) {
+        return Math.min(backendChunkSize(config), Math.max(pageCount, 1));
+    }
 
     private HybridDocumentProcessor() {
         // Static utility class
@@ -668,9 +703,10 @@ public class HybridDocumentProcessor {
         // Split backend pages into chunks to prevent hang on large documents (#352).
         // Pages are sorted so that page_ranges sent to the server are contiguous.
         List<Integer> sortedPages = new ArrayList<>(new TreeSet<>(pageNumbers));
+        int chunkSize = effectiveChunkSize(config, sortedPages.size());
 
-        for (int chunkStart = 0; chunkStart < sortedPages.size(); chunkStart += BACKEND_CHUNK_SIZE) {
-            int chunkEnd = Math.min(chunkStart + BACKEND_CHUNK_SIZE, sortedPages.size());
+        for (int chunkStart = 0; chunkStart < sortedPages.size(); chunkStart += chunkSize) {
+            int chunkEnd = Math.min(chunkStart + chunkSize, sortedPages.size());
             List<Integer> chunkPages = sortedPages.subList(chunkStart, chunkEnd);
 
             // Convert 0-indexed page numbers to 1-indexed for the server API
@@ -679,7 +715,7 @@ public class HybridDocumentProcessor {
                 chunkPages1Indexed.add(page0 + 1);
             }
 
-            if (sortedPages.size() > BACKEND_CHUNK_SIZE) {
+            if (sortedPages.size() > chunkSize) {
                 LOGGER.log(Level.INFO, "Sending pages {0}-{1} of {2} backend pages",
                     new Object[]{chunkPages.get(0) + 1, chunkPages.get(chunkPages.size() - 1) + 1,
                                  sortedPages.size()});

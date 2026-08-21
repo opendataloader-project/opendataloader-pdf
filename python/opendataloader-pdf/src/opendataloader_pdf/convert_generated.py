@@ -40,6 +40,7 @@ def convert(
     hybrid_hancom_ai_regionlist_strategy: Optional[str] = None,
     hybrid_hancom_ai_ocr_strategy: Optional[str] = None,
     hybrid_hancom_ai_image_cache: Optional[str] = None,
+    hybrid_hancom_ai_layout_page_chunk: Optional[str] = None,
     to_stdout: bool = False,
     threads: Optional[str] = None,
     image_resolution: Optional[str] = None,
@@ -79,6 +80,7 @@ def convert(
         hybrid_hancom_ai_regionlist_strategy: DLA label 7 (regionlist) handling. Requires --hybrid=hancom-ai. Values: table-first (default; check TSR overlap), list-only (skip TSR, always treat as list)
         hybrid_hancom_ai_ocr_strategy: OCR strategy. Requires --hybrid=hancom-ai. Values: off (stream-only), auto (default; stream first, OCR fallback), force (OCR-only)
         hybrid_hancom_ai_image_cache: Page image cache backing. Requires --hybrid=hancom-ai. Values: memory (default), disk
+        hybrid_hancom_ai_layout_page_chunk: Pages per layout request. Requires --hybrid=hancom-ai. The backend rejects requests past roughly 30 pages, so longer documents are sliced; 0 disables slicing and sends every page in one request. Default: 20
         to_stdout: Write output to stdout instead of file (single format only)
         threads: Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode
         image_resolution: Set the rendering resolution for images in DPI. Higher values improve image quality but increase memory consumption; lower values reduce memory usage at the cost of detail. Accepts positive decimal DPI values (e.g., 144.0). Default: 144.0.
@@ -158,6 +160,8 @@ def convert(
         args.extend(["--hybrid-hancom-ai-ocr-strategy", hybrid_hancom_ai_ocr_strategy])
     if hybrid_hancom_ai_image_cache:
         args.extend(["--hybrid-hancom-ai-image-cache", hybrid_hancom_ai_image_cache])
+    if hybrid_hancom_ai_layout_page_chunk:
+        args.extend(["--hybrid-hancom-ai-layout-page-chunk", hybrid_hancom_ai_layout_page_chunk])
     if to_stdout:
         args.append("--to-stdout")
     if threads:

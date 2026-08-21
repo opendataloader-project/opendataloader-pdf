@@ -203,6 +203,14 @@ public class CLIOptions {
             "Page image cache backing. Requires --hybrid=hancom-ai. "
             + "Values: memory (default), disk";
 
+    private static final String HYBRID_HANCOM_AI_LAYOUT_PAGE_CHUNK_LONG_OPTION =
+            "hybrid-hancom-ai-layout-page-chunk";
+    private static final String HYBRID_HANCOM_AI_LAYOUT_PAGE_CHUNK_DESC =
+            "Pages per layout request. Requires --hybrid=hancom-ai. "
+            + "The backend rejects requests past roughly 30 pages, so longer documents "
+            + "are sliced; 0 disables slicing and sends every page in one request. "
+            + "Default: " + HybridConfig.DEFAULT_LAYOUT_PAGE_CHUNK;
+
     private static final String HYBRID_HANCOM_AI_SAVE_CROPS_LONG_OPTION =
             "hybrid-hancom-ai-save-crops";
     private static final String HYBRID_HANCOM_AI_SAVE_CROPS_DESC =
@@ -284,6 +292,12 @@ public class CLIOptions {
                     "auto", HYBRID_HANCOM_AI_OCR_STRATEGY_DESC, true),
             new OptionDefinition(HYBRID_HANCOM_AI_IMAGE_CACHE_LONG_OPTION, null, "string",
                     "memory", HYBRID_HANCOM_AI_IMAGE_CACHE_DESC, true),
+            // "string" rather than a numeric type: the option table only knows
+            // string and boolean, and string is what carries a value. The number
+            // is parsed and reported on where the option is applied.
+            new OptionDefinition(HYBRID_HANCOM_AI_LAYOUT_PAGE_CHUNK_LONG_OPTION, null, "string",
+                    String.valueOf(HybridConfig.DEFAULT_LAYOUT_PAGE_CHUNK),
+                    HYBRID_HANCOM_AI_LAYOUT_PAGE_CHUNK_DESC, true),
             new OptionDefinition(TO_STDOUT_LONG_OPTION, null, "boolean", false, TO_STDOUT_DESC, true),
             new OptionDefinition(THREADS_LONG_OPTION, null, "string", "1", THREADS_DESC, true),
             new OptionDefinition(IMAGE_RESOLUTION_LONG_OPTION, null, "string", null, IMAGE_RESOLUTION_DESC, true),
@@ -745,6 +759,20 @@ public class CLIOptions {
                 config.getHybridConfig().setImageCache(normalized);
             }
         }
+        if (commandLine.hasOption(HYBRID_HANCOM_AI_LAYOUT_PAGE_CHUNK_LONG_OPTION)) {
+            String value = commandLine.getOptionValue(HYBRID_HANCOM_AI_LAYOUT_PAGE_CHUNK_LONG_OPTION);
+            if (value != null && !value.trim().isEmpty()) {
+                int pages;
+                try {
+                    pages = Integer.parseInt(value.trim());
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException(String.format(
+                            "Option --%s: '%s' is not a number",
+                            HYBRID_HANCOM_AI_LAYOUT_PAGE_CHUNK_LONG_OPTION, value.trim()));
+                }
+                config.getHybridConfig().setLayoutPageChunk(pages);
+            }
+        }
         if (commandLine.hasOption(HYBRID_HANCOM_AI_SAVE_CROPS_LONG_OPTION)) {
             config.getHybridConfig().setSaveCrops(true);
         }
@@ -762,6 +790,7 @@ public class CLIOptions {
                 commandLine.hasOption(HYBRID_HANCOM_AI_REGIONLIST_STRATEGY_LONG_OPTION) ||
                 commandLine.hasOption(HYBRID_HANCOM_AI_OCR_STRATEGY_LONG_OPTION) ||
                 commandLine.hasOption(HYBRID_HANCOM_AI_IMAGE_CACHE_LONG_OPTION) ||
+                commandLine.hasOption(HYBRID_HANCOM_AI_LAYOUT_PAGE_CHUNK_LONG_OPTION) ||
                 commandLine.hasOption(HYBRID_HANCOM_AI_SAVE_CROPS_LONG_OPTION) ||
                 commandLine.hasOption(HYBRID_HANCOM_AI_CROP_OUTPUT_DIR_LONG_OPTION);
         if (usesHancomAiOnly && !Config.HYBRID_HANCOM_AI.equals(config.getHybrid())) {
