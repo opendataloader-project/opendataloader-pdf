@@ -167,6 +167,7 @@ public class TableBorderProcessor {
 
     static TableBorder normalizeAndProcessTableBorder(List<IObject> rawPageContents, TableBorder tableBorder, int pageNumber) {
         TableBorder normalizedTable = TableStructureNormalizer.normalize(rawPageContents, tableBorder);
+        normalizedTable.setRecognizedStructureId(null);
         processTableBorderContents(normalizedTable, pageNumber);
         return normalizedTable;
     }
@@ -193,11 +194,6 @@ public class TableBorderProcessor {
         newContents = ParagraphProcessor.processParagraphs(newContents);
         newContents = ListProcessor.processListsFromTextNodes(newContents);
         HeadingProcessor.processHeadings(newContents, true);
-        DocumentProcessor.setIDs(newContents);
-        CaptionProcessor.processCaptions(newContents);
-        contentsList.set(0, newContents);
-        ListProcessor.checkNeighborLists(contentsList);
-        newContents = contentsList.get(0);
         return newContents;
     }
 

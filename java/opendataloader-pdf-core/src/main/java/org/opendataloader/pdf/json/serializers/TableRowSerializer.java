@@ -36,6 +36,7 @@ public class TableRowSerializer extends StdSerializer<TableBorderRow> {
         jsonGenerator.writeStartObject();
         jsonGenerator.writeStringField(JsonName.TYPE, JsonName.ROW_TYPE);
         jsonGenerator.writeNumberField(JsonName.ROW_NUMBER, row.getRowNumber() + 1);
+        jsonGenerator.writeNumberField(JsonName.ID, row.getRecognizedStructureId());
         jsonGenerator.writeArrayFieldStart(JsonName.CELLS);
         TableBorderCell[] cells = row.getCells();
         for (int columnNumber = 0; columnNumber < cells.length; columnNumber++) {
