@@ -158,8 +158,8 @@
               than four numbers copied into this file.
 
               Only wcag-algorithms stays a range in the released pom, which is
-              why it is pinned separately above and excluded from the enforcer
-              rule below.
+              why it is pinned separately above. That pin is what keeps the
+              enforcer rule below satisfied.
             -->
             <dependency>
                 <groupId>org.verapdf</groupId>
@@ -337,23 +337,19 @@
                         </goals>
                         <configuration>
                             <rules>
+                                <!--
+                                  No <ignores>. wcag-validation declares
+                                  wcag-algorithms as a range, but the pin in
+                                  <properties> replaces it before this rule sees
+                                  the graph, so the rule passes as configured.
+                                  Ignoring the coordinate would only suppress the
+                                  failure that the pin's removal is supposed to
+                                  cause: without the pin the range resolves to
+                                  whatever is newest upstream rather than the
+                                  version we tested.
+                                -->
                                 <banDynamicVersions>
                                     <allowSnapshots>false</allowSnapshots>
-                                    <!--
-                                      wcag-validation declares wcag-algorithms as
-                                      a range. Redundant while the pin in
-                                      <properties> stands, since dependency-
-                                      Management replaces the range before this
-                                      rule inspects the graph. Retained so that
-                                      dropping the pin fails loudly on the range
-                                      instead of silently drifting: with the pin
-                                      removed the range resolves to whatever is
-                                      newest upstream, not to the version we
-                                      tested against.
-                                    -->
-                                    <ignores>
-                                        <ignore>org.verapdf:wcag-algorithms</ignore>
-                                    </ignores>
                                 </banDynamicVersions>
                             </rules>
                         </configuration>
