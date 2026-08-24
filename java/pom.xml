@@ -58,9 +58,44 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!--
+          Entry-point pin. veraPDF publishes no BOM, but its released `validation`
+          pom resolves the modules below validation-model to fixed versions even
+          though its source tree expresses them as ranges. Importing that pom as
+          a BOM below lets those artifacts be declared without a version, so the
+          combination vera tested stays intact.
+
+          SECURITY FLOOR - do not lower past these:
+            validation-model >= 1.31.71  XXE via RichText / XFA / default
+                                         DocumentBuilderFactory
+                                         (CVE-2026-54078, -54079, -54082)
+            parser           >= 1.31.23  crafted-CMap and Type1-font DoS
+                                         (CVE-2026-54080, -54081)
+          The parser floor is inherited through this coordinate, so bumping or
+          rolling back verapdf.version moves four dependency versions at once
+          with no diff line showing it. Re-check the resolved tree when you do.
+        -->
         <verapdf.version>1.31.160</verapdf.version>
+        <!--
+          Pin required — do not remove. wcag-validation references
+          wcag-algorithms as the range [1.31.0,1.32.0-RC), the only ranged
+          coordinate that reaches this build. Without this pin the resolved
+          version changes between builds of the same commit.
+        -->
         <verapdf.wcag.algs.version>1.31.43</verapdf.wcag.algs.version>
+        <!--
+          core (PDFWriter, PDFStreamWriter, hybrid) uses PDFBox directly, so it
+          is declared rather than inherited from wcag-algorithms. Held at the
+          version wcag-algorithms itself requires, so vera's classes compile and
+          run against the same PDFBox. Keep in step with odl-pdfua, which pins
+          this same version for its own direct use.
+        -->
+        <pdfbox.version>3.0.4</pdfbox.version>
         <jackson.databind.version>2.22.1</jackson.databind.version>
+        <!-- jackson-annotations is released on its own version line, one minor
+             behind databind. Kept separate so a databind bump does not silently
+             invent an annotations version that was never published. -->
+        <jackson.annotations.version>2.22</jackson.annotations.version>
         <junit.jupiter.version>6.1.2</junit.jupiter.version>
         <assertj.version>3.27.7</assertj.version>
         <okhttp.version>5.4.0</okhttp.version>
@@ -74,6 +109,7 @@
         <maven-gpg.plugin.version>3.2.8</maven-gpg.plugin.version>
         <maven-surefire.plugin.version>3.5.6</maven-surefire.plugin.version>
         <central-publishing.plugin.version>0.11.0</central-publishing.plugin.version>
+        <maven-enforcer.plugin.version>3.6.3</maven-enforcer.plugin.version>
         <checkstyle.plugin.version>3.6.0</checkstyle.plugin.version>
         <spotbugs.plugin.version>4.10.3.0</spotbugs.plugin.version>
     </properties>
@@ -110,6 +146,33 @@
                     </exclusion>
                 </exclusions>
             </dependency>
+            <!--
+              veraPDF ships no BOM, but its released `validation` parent is
+              packaging=pom and carries a dependencyManagement for parser,
+              pdf-model, core and verapdf-xmp-core. Those entries reference
+              properties, and the same pom defines those properties as fixed
+              versions - veraPDF's source tree states them as ranges, which its
+              release process substitutes. Importing this pom therefore lets the
+              modules below declare those artifacts without a version, keeping
+              the combination vera released as the single source of truth rather
+              than four numbers copied into this file.
+
+              Only wcag-algorithms stays a range in the released pom, which is
+              why it is pinned separately above and excluded from the enforcer
+              rule below.
+            -->
+            <dependency>
+                <groupId>org.verapdf</groupId>
+                <artifactId>validation</artifactId>
+                <version>${verapdf.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.pdfbox</groupId>
+                <artifactId>pdfbox</artifactId>
+                <version>${pdfbox.version}</version>
+            </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
@@ -135,10 +198,25 @@
         </dependencies>
     </dependencyManagement>
 
+    <!--
+      veraPDF is absent from Maven Central, so it resolves from this repository.
+      Artifacts here ship .sha1 checksums but no GPG signatures, which makes the
+      two settings below worth stating explicitly rather than inheriting Maven's
+      laxer defaults:
+        snapshots disabled     - a -SNAPSHOT coordinate can change content under
+                                 a fixed version string; only released veraPDF
+                                 versions are ever wanted here.
+        checksumPolicy=fail    - Maven's default only WARNS on a checksum
+                                 mismatch and carries on.
+      Kept in step with odl-pdfua, which already pins both.
+    -->
     <repositories>
         <repository>
+            <releases>
+                <checksumPolicy>fail</checksumPolicy>
+            </releases>
             <snapshots>
-                <enabled>true</enabled>
+                <enabled>false</enabled>
             </snapshots>
             <id>vera-dev</id>
             <name>Vera development</name>
@@ -239,6 +317,48 @@
                 <configuration>
                     <skip>true</skip>
                 </configuration>
+            </plugin>
+            <!--
+              Version ranges resolve at build time, so the same commit can pick
+              up a different dependency weeks apart and break with no code
+              change. This fails the build instead. The rule walks the whole
+              transitive graph, which is the point: ranges normally arrive from a
+              dependency's own pom rather than from ours.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>${maven-enforcer.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>ban-dynamic-versions</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <banDynamicVersions>
+                                    <allowSnapshots>false</allowSnapshots>
+                                    <!--
+                                      wcag-validation declares wcag-algorithms as
+                                      a range. Redundant while the pin in
+                                      <properties> stands, since dependency-
+                                      Management replaces the range before this
+                                      rule inspects the graph. Retained so that
+                                      dropping the pin fails loudly on the range
+                                      instead of silently drifting: with the pin
+                                      removed the range resolves to whatever is
+                                      newest upstream, not to the version we
+                                      tested against.
+                                    -->
+                                    <ignores>
+                                        <ignore>org.verapdf:wcag-algorithms</ignore>
+                                    </ignores>
+                                </banDynamicVersions>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
