@@ -15,6 +15,7 @@
  */
 package org.opendataloader.pdf.processors;
 
+import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.utils.BulletedParagraphUtils;
 import org.verapdf.as.ASAtom;
 import org.verapdf.wcag.algorithms.entities.INode;
@@ -30,6 +31,9 @@ import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 import org.verapdf.wcag.algorithms.entities.lists.TextListInterval;
 import org.verapdf.wcag.algorithms.entities.lists.info.ListItemInfo;
 import org.verapdf.wcag.algorithms.entities.lists.info.ListItemTextInfo;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ListLabelsUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ListUtils;
@@ -145,7 +149,6 @@ public class ListProcessor {
     private static List<IObject> processListItemContent(List<IObject> contents) {
         List<IObject> newContents = ParagraphProcessor.processParagraphs(contents);
         newContents = ListProcessor.processListsFromTextNodes(newContents);
-        DocumentProcessor.setIDs(newContents);
         List<List<IObject>> contentsList = new ArrayList<>(1);
         contentsList.add(newContents);
         ListProcessor.checkNeighborLists(contentsList);
@@ -154,7 +157,7 @@ public class ListProcessor {
     }
 
     private static void processTextNodeListItemContent(List<IObject> contents) {
-        DocumentProcessor.setIDs(contents);
+        DocumentProcessor.setIDs(contents, true);
     }
 
     private static List<TextListInterval> getTextLabelListIntervals(List<List<IObject>> contents) {
@@ -255,6 +258,10 @@ public class ListProcessor {
     }
 
     private static PDFList calculateList(TextListInterval interval, int startIndex, int endIndex, List<IObject> pageContents) {
+        return calculateList(interval, startIndex, endIndex, pageContents, false);
+    }
+
+    private static PDFList calculateList(TextListInterval interval, int startIndex, int endIndex, List<IObject> pageContents, boolean isHybrid) {
         PDFList list = new PDFList();
         list.setNumberingStyle(interval.getNumberingStyle());
         list.setCommonPrefix(interval.getCommonPrefix());
@@ -285,6 +292,9 @@ public class ListProcessor {
                 addContentToLastPageListItem(nextIndex, currentInfo, pageContents, listItem);
             }
             listItem.setLabelLength(currentInfo.getLabelLength());
+            if (isHybrid) {
+                listItem.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+            }
             list.add(listItem);
         }
         if (list.getListItems().isEmpty()) {
@@ -399,6 +409,10 @@ public class ListProcessor {
     }
 
     public static List<IObject> processListsFromTextNodes(List<IObject> contents) {
+        return processListsFromTextNodes(contents, false);
+    }
+
+    public static List<IObject> processListsFromTextNodes(List<IObject> contents, boolean isHybrid) {
         List<SemanticTextNode> textNodes = new ArrayList<>();
         List<Integer> textNodesIndexes = new ArrayList<>();
         for (int index = 0; index < contents.size(); index++) {
@@ -418,9 +432,11 @@ public class ListProcessor {
                 continue;
             }
             textListInterval.setCommonSuffixLengthToAllInfos();
-            PDFList list = calculateList(textListInterval, 0, interval.getNumberOfListItems() - 1, contents);
-            for (ListItem listItem : list.getListItems()) {
-                processTextNodeListItemContent(listItem.getContents());
+            PDFList list = calculateList(textListInterval, 0, interval.getNumberOfListItems() - 1, contents, isHybrid);
+            if (isHybrid) {
+                for (ListItem listItem : list.getListItems()) {
+                    processTextNodeListItemContent(listItem.getContents());
+                }
             }
         }
         return DocumentProcessor.removeNullObjectsFromList(contents);
@@ -464,12 +480,31 @@ public class ListProcessor {
         return true;
     }
 
+    public static void checkNeighborListsInTable(TableBorder tableBorder) {
+        for (int rowNumber = 0; rowNumber < tableBorder.getNumberOfRows(); rowNumber++) {
+            TableBorderRow row = tableBorder.getRow(rowNumber);
+            for (int colNumber = 0; colNumber < tableBorder.getNumberOfColumns(); colNumber++) {
+                TableBorderCell tableBorderCell = row.getCell(colNumber);
+                if (tableBorderCell.getRowNumber() == rowNumber && tableBorderCell.getColNumber() == colNumber) {
+                    List<List<IObject>> contentsList = new ArrayList<>(1);
+                    contentsList.add(tableBorderCell.getContents());
+                    checkNeighborLists(contentsList);
+                    tableBorderCell.setContents(contentsList.get(0));
+                }
+            }
+        }
+    }
+
     public static void checkNeighborLists(List<List<IObject>> contents) {
         PDFList previousList = null;
         SemanticTextNode middleContent = null;
         for (List<IObject> pageContents : contents) {
             DocumentProcessor.setIndexesForContentsList(pageContents);
             for (IObject content : pageContents) {
+                if (content instanceof TableBorder) {
+                    TableBorder tableBorder = (TableBorder) content;
+                    checkNeighborListsInTable(tableBorder);
+                }
                 if (content instanceof PDFList) {
                     PDFList currentList = (PDFList) content;
                     if (previousList != null) {

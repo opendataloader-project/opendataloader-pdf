@@ -44,11 +44,15 @@ import org.verapdf.gf.model.impl.sa.GFSAPDFDocument;
 import org.verapdf.parser.PDFFlavour;
 import org.verapdf.pd.PDDocument;
 import org.verapdf.tools.StaticResources;
-import org.verapdf.wcag.algorithms.entities.IObject;
-import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
+import org.verapdf.wcag.algorithms.entities.*;
 import org.verapdf.wcag.algorithms.entities.content.LineChunk;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
+import org.verapdf.wcag.algorithms.entities.lists.ListItem;
+import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 import org.verapdf.wcag.algorithms.entities.tables.TableBordersCollection;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.LinesPreprocessingConsumer;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 import org.verapdf.xmp.containers.StaticXmpCoreContainers;
@@ -794,8 +798,51 @@ public class DocumentProcessor {
      * @param contents the list of content objects
      */
     public static void setIDs(List<IObject> contents) {
+        setIDs(contents, false);
+    }
+
+    public static void setIDs(List<IObject> contents, boolean isHybridMode) {
         for (IObject object : contents) {
-            object.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+            if (object.getRecognizedStructureId() == null) {
+                object.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+            }
+            if (!isHybridMode) {
+                setIDsInComplexObject(object);
+            }
+        }
+    }
+
+    public static void setIDsInComplexObject(IObject object) {
+        if (object instanceof TableBorder) {
+            TableBorder tableBorder = (TableBorder) object;
+            for (int rowNumber = 0; rowNumber < tableBorder.getNumberOfRows(); rowNumber++) {
+                TableBorderRow row = tableBorder.getRow(rowNumber);
+                row.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+                for (int colNumber = 0; colNumber < tableBorder.getNumberOfColumns(); colNumber++) {
+                    TableBorderCell tableBorderCell = row.getCell(colNumber);
+                    if (tableBorderCell.getRowNumber() == rowNumber && tableBorderCell.getColNumber() == colNumber) {
+                        tableBorderCell.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+                        setIDs(tableBorderCell.getContents());
+                    }
+                }
+            }
+        } else if (object instanceof PDFList) {
+            for (ListItem listItem : ((PDFList) object).getListItems()) {
+                listItem.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+                setIDs(listItem.getContents());
+            }
+        } else if (object instanceof SemanticTOC) {
+            for (IObject tocItem : ((SemanticTOC) object).getTOCItems()) {
+                if (tocItem instanceof SemanticTOCI) {
+                    SemanticTOCI toci = (SemanticTOCI) tocItem;
+                    toci.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+                    setIDs(toci.getContents());
+                } else {
+                    //
+                }
+            }
+        } else if (object instanceof SemanticHeaderOrFooter) {
+            setIDs(((SemanticHeaderOrFooter) object).getContents());
         }
     }
 

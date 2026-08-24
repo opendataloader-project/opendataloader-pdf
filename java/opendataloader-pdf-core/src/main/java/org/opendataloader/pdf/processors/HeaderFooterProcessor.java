@@ -132,7 +132,6 @@ public class HeaderFooterProcessor {
             }
             SemanticHeaderOrFooter semanticHeaderOrFooter = new SemanticHeaderOrFooter(isHeaderDetection ? SemanticType.HEADER : SemanticType.FOOTER);
             semanticHeaderOrFooter.addContents(headerContents);
-            semanticHeaderOrFooter.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
             headersOrFooters.add(semanticHeaderOrFooter);
         }
         return headersOrFooters;
@@ -142,7 +141,6 @@ public class HeaderFooterProcessor {
         List<IObject> newContents = ParagraphProcessor.processParagraphs(contents);
         newContents = ListProcessor.processListsFromTextNodes(newContents);
         HeadingProcessor.processHeadings(newContents, false);
-        DocumentProcessor.setIDs(newContents);
         CaptionProcessor.processCaptions(newContents);
         return newContents;
     }

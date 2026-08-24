@@ -15,12 +15,15 @@
  */
 package org.opendataloader.pdf.processors;
 
+import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticCaption;
 import org.verapdf.wcag.algorithms.entities.SemanticFigure;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.CaptionUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
@@ -50,6 +53,10 @@ public class CaptionProcessor {
         for (IObject content : contents) {
             if (content == null) {
                 continue;
+            }
+            if (content instanceof TableBorder) {
+                TableBorder tableBorder = (TableBorder) content;
+                processCaptionsInTable(tableBorder);
             }
             if (content instanceof SemanticTextNode) {
                 SemanticTextNode textNode = (SemanticTextNode) content;
@@ -95,6 +102,18 @@ public class CaptionProcessor {
 //                }
 //            }
 //        }
+    }
+
+    private static void processCaptionsInTable(TableBorder tableBorder) {
+        for (int rowNumber = 0; rowNumber < tableBorder.getNumberOfRows(); rowNumber++) {
+            TableBorderRow row = tableBorder.getRow(rowNumber);
+            for (int colNumber = 0; colNumber < tableBorder.getNumberOfColumns(); colNumber++) {
+                TableBorderCell tableBorderCell = row.getCell(colNumber);
+                if (tableBorderCell.getRowNumber() == rowNumber && tableBorderCell.getColNumber() == colNumber) {
+                    processCaptions(tableBorderCell.getContents());
+                }
+            }
+        }
     }
 
     private static boolean isImageSubtle(ImageChunk imageChunk) {
