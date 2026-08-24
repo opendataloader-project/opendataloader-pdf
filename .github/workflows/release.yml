@@ -182,6 +182,6 @@ jobs:
           destination-github-username: 'opendataloader-project'
           destination-repository-name: 'opendataloader.org'
           target-directory: 'apps/v1/content/docs/reference'
-          target-branch: main
+          target-branch: staging
         env:
           API_TOKEN_GITHUB: ${{ secrets.HOMEPAGE_SYNC_TOKEN }}
