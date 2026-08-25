@@ -82,7 +82,9 @@ public class ContentFilterProcessor {
                 new Object[]{pageNumber + 1, replacementCharRatio});
         }
         TextProcessor.replaceUndefinedCharacters(pageContents, config.getReplaceInvalidChars());
-        processBackgrounds(pageNumber, pageContents);
+        if (config.getFilterConfig().isFilterBackgrounds()) {
+            processBackgrounds(pageNumber, pageContents);
+        }
         return pageContents;
     }
 

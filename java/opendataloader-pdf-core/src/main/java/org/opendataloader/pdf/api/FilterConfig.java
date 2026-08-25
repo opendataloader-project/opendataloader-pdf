@@ -23,13 +23,15 @@ import java.util.regex.Pattern;
 
 /**
  * Configuration class for content filtering options.
- * Controls filtering of hidden text, out-of-page content, tiny text, and hidden OCGs.
+ * Controls filtering of hidden text, out-of-page content, tiny text, hidden OCGs,
+ * and background vector graphics.
  */
 public class FilterConfig {
     private boolean filterHiddenText = false;
     private boolean filterOutOfPage = true;
     private boolean filterTinyText = true;
     private boolean filterHiddenOCG = true;
+    private boolean filterBackgrounds = true;
     private boolean filterSensitiveData = false;
     private final List<SanitizationRule> filterRules;
 
@@ -155,6 +157,30 @@ public class FilterConfig {
      */
     public void setFilterHiddenOCG(boolean filterHiddenOCG) {
         this.filterHiddenOCG = filterHiddenOCG;
+    }
+
+    /**
+     * Checks if the processor should remove page-sized vector graphics detected
+     * as backgrounds.
+     *
+     * @return true if filter is enabled, false otherwise.
+     */
+    public boolean isFilterBackgrounds() {
+        return filterBackgrounds;
+    }
+
+    /**
+     * Enables or disables removal of vector graphics detected as backgrounds.
+     *
+     * <p>Background detection is a size heuristic, so a large chart or diagram
+     * drawn with vector operators can be classified as a background and dropped
+     * before tagging. Disable this filter to keep every {@code LineArtChunk} in
+     * the content list, at the cost of also keeping real page backgrounds.
+     *
+     * @param filterBackgrounds true to enable filter, false to disable.
+     */
+    public void setFilterBackgrounds(boolean filterBackgrounds) {
+        this.filterBackgrounds = filterBackgrounds;
     }
 
     /**
