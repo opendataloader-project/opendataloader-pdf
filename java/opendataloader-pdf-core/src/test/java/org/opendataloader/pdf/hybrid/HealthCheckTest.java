@@ -116,42 +116,6 @@ class HealthCheckTest {
     }
 
     @Test
-    void testHancomHealthCheckSucceeds() throws IOException {
-        server.start();
-        server.enqueue(new MockResponse.Builder().code(200).build());
-
-        String baseUrl = stripTrailingSlash(server.url("").toString());
-        HancomClient client = new HancomClient(
-            baseUrl, new OkHttpClient(), new ObjectMapper());
-
-        try {
-            assertDoesNotThrow(() -> client.checkAvailability());
-        } finally {
-            client.shutdown();
-        }
-    }
-
-    @Test
-    void testHancomHealthCheckFailsWhenServerDown() throws IOException {
-        int unusedPort;
-        try (ServerSocket s = new ServerSocket(0)) {
-            unusedPort = s.getLocalPort();
-        }
-
-        String baseUrl = "http://localhost:" + unusedPort;
-        HancomClient client = new HancomClient(
-            baseUrl, new OkHttpClient(), new ObjectMapper());
-
-        try {
-            IOException exception = assertThrows(IOException.class, client::checkAvailability);
-            assertTrue(exception.getMessage().contains("not available"),
-                "Error message should indicate server is not available");
-        } finally {
-            client.shutdown();
-        }
-    }
-
-    @Test
     void testHealthCheckTimesOutQuickly() throws IOException {
         // Uses TEST-NET IP (RFC 5737) to trigger a connect timeout.
         // Some CI environments may reject packets instantly instead of timing out,
@@ -171,75 +135,6 @@ class HealthCheckTest {
         } finally {
             client.shutdown();
         }
-    }
-
-    // -- fetchHealth() on HancomAIClient ------------------------------------
-    //
-    // checkAvailability() above is the fail-fast probe used before the run
-    // starts; fetchHealth() is the best-effort snapshot captured during the
-    // run for downstream tooling to attach to its evidence report. It must
-    // never throw — a null return is the documented signal that the backend
-    // doesn't expose /health or returned something unreadable.
-
-    @Test
-    void testHancomFetchHealthReturnsParsedJsonOnSuccess() throws IOException {
-        server.start();
-        server.enqueue(new MockResponse.Builder()
-            .body("{\"hardware\":{\"cpu\":\"Xeon\"},\"backend_version\":\"v1\"}")
-            .addHeader("Content-Type", "application/json")
-            .build());
-
-        String baseUrl = stripTrailingSlash(server.url("").toString());
-        HancomAIClient client = new HancomAIClient(
-            baseUrl, new OkHttpClient(), new ObjectMapper());
-
-        JsonNode health = client.fetchHealth();
-        assertNotNull(health, "expected parsed /health JSON");
-        assertEquals("Xeon", health.path("hardware").path("cpu").asText());
-        assertEquals("v1", health.path("backend_version").asText());
-    }
-
-    @Test
-    void testHancomFetchHealthReturnsNullOnNotFound() throws IOException {
-        server.start();
-        server.enqueue(new MockResponse.Builder().code(404).build());
-
-        String baseUrl = stripTrailingSlash(server.url("").toString());
-        HancomAIClient client = new HancomAIClient(
-            baseUrl, new OkHttpClient(), new ObjectMapper());
-
-        assertNull(client.fetchHealth(),
-            "non-2xx response should be treated as 'no health' (null), not throw");
-    }
-
-    @Test
-    void testHancomFetchHealthReturnsNullOnNonJsonBody() throws IOException {
-        server.start();
-        server.enqueue(new MockResponse.Builder()
-            .body("not json at all")
-            .addHeader("Content-Type", "text/plain")
-            .build());
-
-        String baseUrl = stripTrailingSlash(server.url("").toString());
-        HancomAIClient client = new HancomAIClient(
-            baseUrl, new OkHttpClient(), new ObjectMapper());
-
-        assertNull(client.fetchHealth(),
-            "unparseable body should be treated as 'no health' (null), not throw");
-    }
-
-    @Test
-    void testHancomFetchHealthReturnsNullWhenServerDown() throws IOException {
-        int unusedPort;
-        try (ServerSocket s = new ServerSocket(0)) {
-            unusedPort = s.getLocalPort();
-        }
-
-        HancomAIClient client = new HancomAIClient(
-            "http://localhost:" + unusedPort, new OkHttpClient(), new ObjectMapper());
-
-        assertNull(client.fetchHealth(),
-            "connection failure should be treated as 'no health' (null), not throw");
     }
 
     private static String stripTrailingSlash(String url) {

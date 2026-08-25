@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
  * <pre>
  * {
  *   "document": "example.pdf",
- *   "hybrid": "docling",
+ *   "hybrid": "docling-fast",
  *   "triage": [
  *     {
  *       "page": 1,
@@ -86,7 +86,7 @@ public class TriageLogger {
      *
      * @param outputDir      The output directory path.
      * @param documentName   The name of the processed document.
-     * @param hybridBackend  The hybrid backend used (e.g., "docling").
+     * @param hybridBackend  The hybrid backend used (e.g., "docling-fast").
      * @param triageResults  Map of page number to triage result.
      * @throws IOException If writing the file fails.
      */
@@ -113,7 +113,7 @@ public class TriageLogger {
      *
      * @param writer         The Writer to write to.
      * @param documentName   The name of the processed document.
-     * @param hybridBackend  The hybrid backend used (e.g., "docling").
+     * @param hybridBackend  The hybrid backend used (e.g., "docling-fast").
      * @param triageResults  Map of page number to triage result.
      * @throws IOException If writing fails.
      */

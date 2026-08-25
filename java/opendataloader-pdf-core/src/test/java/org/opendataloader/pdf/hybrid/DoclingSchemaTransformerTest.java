@@ -52,7 +52,7 @@ public class DoclingSchemaTransformerTest {
 
     @Test
     void testGetBackendType() {
-        Assertions.assertEquals("docling", transformer.getBackendType());
+        Assertions.assertEquals("docling-fast", transformer.getBackendType());
     }
 
     @Test

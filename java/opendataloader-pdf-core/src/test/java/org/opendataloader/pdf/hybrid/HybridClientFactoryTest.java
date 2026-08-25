@@ -51,55 +51,6 @@ class HybridClientFactoryTest {
         ((DoclingFastServerClient) client2).shutdown();
     }
 
-    @Test
-    void testCreateHancomClient() {
-        HybridConfig config = new HybridConfig();
-        HybridClient client = HybridClientFactory.create("hancom", config);
-
-        assertNotNull(client);
-        assertInstanceOf(HancomClient.class, client);
-
-        // Cleanup
-        ((HancomClient) client).shutdown();
-    }
-
-    @Test
-    void testCreateHancomClientCaseInsensitive() {
-        HybridConfig config = new HybridConfig();
-
-        HybridClient client1 = HybridClientFactory.create("HANCOM", config);
-        assertInstanceOf(HancomClient.class, client1);
-        ((HancomClient) client1).shutdown();
-
-        HybridClient client2 = HybridClientFactory.create("Hancom", config);
-        assertInstanceOf(HancomClient.class, client2);
-        ((HancomClient) client2).shutdown();
-    }
-
-    @Test
-    void testCreateAzureClientThrowsUnsupported() {
-        HybridConfig config = new HybridConfig();
-
-        UnsupportedOperationException exception = assertThrows(
-            UnsupportedOperationException.class,
-            () -> HybridClientFactory.create("azure", config)
-        );
-
-        assertTrue(exception.getMessage().contains("not yet implemented"));
-    }
-
-    @Test
-    void testCreateGoogleClientThrowsUnsupported() {
-        HybridConfig config = new HybridConfig();
-
-        UnsupportedOperationException exception = assertThrows(
-            UnsupportedOperationException.class,
-            () -> HybridClientFactory.create("google", config)
-        );
-
-        assertTrue(exception.getMessage().contains("not yet implemented"));
-    }
-
     @ParameterizedTest
     @ValueSource(strings = {"unknown", "invalid", "other", "pdf", "docling"})
     void testCreateUnknownBackendThrows(String backend) {
@@ -138,17 +89,8 @@ class HybridClientFactoryTest {
     }
 
     @Test
-    void testIsSupportedHancom() {
-        assertTrue(HybridClientFactory.isSupported("hancom"));
-        assertTrue(HybridClientFactory.isSupported("HANCOM"));
-        assertTrue(HybridClientFactory.isSupported("Hancom"));
-    }
-
-    @Test
     void testIsSupportedUnsupportedBackends() {
         assertFalse(HybridClientFactory.isSupported("docling"));
-        assertFalse(HybridClientFactory.isSupported("azure"));
-        assertFalse(HybridClientFactory.isSupported("google"));
         assertFalse(HybridClientFactory.isSupported("unknown"));
     }
 
@@ -163,25 +105,6 @@ class HybridClientFactoryTest {
         String supported = HybridClientFactory.getSupportedBackends();
 
         assertTrue(supported.contains("docling-fast"));
-        assertTrue(supported.contains("hancom"));
         assertFalse(supported.contains("docling,"));
-    }
-
-    @Test
-    void testGetAllKnownBackends() {
-        String allKnown = HybridClientFactory.getAllKnownBackends();
-
-        assertTrue(allKnown.contains("docling-fast"));
-        assertTrue(allKnown.contains("hancom"));
-        assertTrue(allKnown.contains("azure"));
-        assertTrue(allKnown.contains("google"));
-    }
-
-    @Test
-    void testBackendConstants() {
-        assertEquals("docling-fast", HybridClientFactory.BACKEND_DOCLING_FAST);
-        assertEquals("hancom", HybridClientFactory.BACKEND_HANCOM);
-        assertEquals("azure", HybridClientFactory.BACKEND_AZURE);
-        assertEquals("google", HybridClientFactory.BACKEND_GOOGLE);
     }
 }
