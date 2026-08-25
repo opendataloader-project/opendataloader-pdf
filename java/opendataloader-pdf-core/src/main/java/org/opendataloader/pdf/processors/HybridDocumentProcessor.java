@@ -1185,11 +1185,7 @@ public class HybridDocumentProcessor {
                     // Enrich ListItem's own text lines (used by AutoTaggingProcessor for Lbl/LBody)
                     if (config == null || !config.isOcrForce()) {
                         for (TextLine line : item.getLines()) {
-                            for (TextChunk backendChunk : line.getTextChunks()) {
-                                if (backendChunk.getStreamInfos().isEmpty()) {
-                                    matchAndReplaceStreamInfos(backendChunk, javaTextChunks, usedJavaIndices, config);
-                                }
-                            }
+                            replaceLineChunksWithJava(line, javaTextChunks, usedJavaIndices, config);
                         }
                     }
                     // Enrich nested contents (images, paragraphs, sub-lists)
@@ -1355,33 +1351,93 @@ public class HybridDocumentProcessor {
      * rather than in a SemanticTextNode wrapper.
      * In OCR auto mode, compares stream vs OCR text similarity before copying.
      */
-    private static void matchAndReplaceStreamInfos(
-            TextChunk backendChunk, List<TextChunk> javaTextChunks, Set<Integer> usedJavaIndices,
+    /**
+     * Swaps a list line's backend chunks for the Java chunks drawn inside it.
+     *
+     * <p>Two things were wrong with matching each backend chunk to one Java chunk
+     * by centre proximity. A backend chunk is a whole OCR line while a Java chunk
+     * is often a single word, so their centres sit far apart even when the word
+     * lies inside the line -- measured 5-12pt on 01030000000115, where the chunk
+     * "1. When changing objectives..." had "scanning" as its nearest Java chunk.
+     * Every match failed, the chunk kept no StreamInfo, and Lbl/LBody were built
+     * with no MCID: empty shells whose text fell through to /Artifact and out of
+     * the structure tree.
+     *
+     * <p>Copying StreamInfos onto the backend chunk is not enough either. The Lbl
+     * and LBody split in AutoTaggingProcessor slices the first line by character
+     * offset, which needs the per-symbol coordinates only a Java chunk carries; a
+     * backend chunk has none, so slicing it fails outright.
+     *
+     * <p>So replace the line's chunks with the matched Java chunks, exactly as
+     * {@link #enrichSingleTextNode} already does for paragraphs. That asymmetry
+     * between paragraphs and lists was the defect.
+     */
+    private static void replaceLineChunksWithJava(
+            TextLine line, List<TextChunk> javaTextChunks, Set<Integer> usedJavaIndices,
             HybridConfig config) {
-        double bCx = backendChunk.getCenterX();
-        double bCy = backendChunk.getCenterY();
+        if (line.getTextChunks().isEmpty()) {
+            return;
+        }
+        // Already carrying stream provenance: nothing to recover.
+        boolean allHaveStreamInfo = true;
+        for (TextChunk c : line.getTextChunks()) {
+            if (c.getStreamInfos().isEmpty()) {
+                allHaveStreamInfo = false;
+                break;
+            }
+        }
+        if (allHaveStreamInfo) {
+            return;
+        }
+
+        double lLeft = line.getLeftX();
+        double lRight = line.getRightX();
+        double lBottom = line.getBottomY();
+        double lTop = line.getTopY();
         double tol = 5.0;
+
+        List<TextChunk> matched = new ArrayList<>();
+        List<Integer> matchedIndices = new ArrayList<>();
         for (int i = 0; i < javaTextChunks.size(); i++) {
             if (usedJavaIndices.contains(i)) continue;
             TextChunk javaChunk = javaTextChunks.get(i);
             if (javaChunk.getStreamInfos().isEmpty()) continue;
             double jCx = javaChunk.getCenterX();
             double jCy = javaChunk.getCenterY();
-            if (Math.abs(bCx - jCx) <= tol && Math.abs(bCy - jCy) <= tol) {
-                // In auto mode, check if stream text is trustworthy
-                if (config != null && config.isOcrAuto()) {
-                    String streamText = javaChunk.getValue();
-                    String ocrText = backendChunk.getValue();
-                    if (!TextSimilarity.trustStream(streamText, ocrText, TextSimilarity.DEFAULT_THRESHOLD)) {
-                        LOGGER.fine(() -> "OCR auto: stream text untrusted for ListItem chunk, keeping OCR");
-                        return;
-                    }
-                }
-                backendChunk.getStreamInfos().addAll(javaChunk.getStreamInfos());
-                usedJavaIndices.add(i);
+            if (jCx >= lLeft - tol && jCx <= lRight + tol
+                    && jCy >= lBottom - tol && jCy <= lTop + tol) {
+                matched.add(javaChunk);
+                matchedIndices.add(i);
+            }
+        }
+        if (matched.isEmpty()) {
+            LOGGER.fine(() -> "replaceLineChunksWithJava: no Java TextChunk inside list line");
+            return;
+        }
+
+        // Auto mode: only take the stream text when it is trustworthy, comparing
+        // the whole line since one backend chunk spans several Java chunks.
+        if (config != null && config.isOcrAuto()) {
+            String streamText = extractTextFromChunks(matched);
+            String ocrText = extractTextFromLine(line);
+            if (!TextSimilarity.trustStream(streamText, ocrText, TextSimilarity.DEFAULT_THRESHOLD)) {
+                LOGGER.fine(() -> "OCR auto: stream text untrusted for list line, keeping OCR");
                 return;
             }
         }
+
+        line.getTextChunks().clear();
+        line.getTextChunks().addAll(matched);
+        usedJavaIndices.addAll(matchedIndices);
+    }
+
+    /** Joins a line's chunk values, for stream-vs-OCR similarity comparison. */
+    private static String extractTextFromLine(TextLine line) {
+        StringBuilder sb = new StringBuilder();
+        for (TextChunk c : line.getTextChunks()) {
+            sb.append(c.getValue());
+        }
+        return sb.toString();
     }
 
     /**
