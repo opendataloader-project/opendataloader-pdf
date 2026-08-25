@@ -62,7 +62,7 @@
         <!-- CLIMainTest and FormatLogRegressionTest build fixture PDFs with
              PDDocument / PDPage / StandardProtectionPolicy. No main code here
              touches PDFBox, but the scope must stay compile: core reaches
-             PDFBox at runtime (HancomAIClient, PDFWriter), and declaring it
+             PDFBox at runtime (PDFWriter, PDFStreamWriter), and declaring it
              test-scope here downgrades that transitive compile dependency and
              drops the artifact out of the shaded CLI jar. -->
         <dependency>

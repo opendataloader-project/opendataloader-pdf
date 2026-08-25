@@ -384,7 +384,7 @@ class CLIOptionsTest {
 
     @Test
     void testCreateConfig_withHybridModeAuto() throws ParseException {
-        String[] args = {"--hybrid", "docling", "--hybrid-mode", "auto", testPdf.getAbsolutePath()};
+        String[] args = {"--hybrid", "docling-fast", "--hybrid-mode", "auto", testPdf.getAbsolutePath()};
         CommandLine cmd = parser.parse(options, args);
 
         Config config = CLIOptions.createConfigFromCommandLine(cmd);
@@ -395,7 +395,7 @@ class CLIOptionsTest {
 
     @Test
     void testCreateConfig_withHybridModeFull() throws ParseException {
-        String[] args = {"--hybrid", "docling", "--hybrid-mode", "full", testPdf.getAbsolutePath()};
+        String[] args = {"--hybrid", "docling-fast", "--hybrid-mode", "full", testPdf.getAbsolutePath()};
         CommandLine cmd = parser.parse(options, args);
 
         Config config = CLIOptions.createConfigFromCommandLine(cmd);
@@ -417,7 +417,7 @@ class CLIOptionsTest {
     @Test
     void testCreateConfig_withDeprecatedHybridOcr() throws ParseException {
         // --hybrid-ocr is deprecated; it should print a warning but not throw
-        String[] args = {"--hybrid", "docling", "--hybrid-ocr", "force", testPdf.getAbsolutePath()};
+        String[] args = {"--hybrid", "docling-fast", "--hybrid-ocr", "force", testPdf.getAbsolutePath()};
         CommandLine cmd = parser.parse(options, args);
 
         // Should not throw, just prints deprecation warning
@@ -427,7 +427,7 @@ class CLIOptionsTest {
 
     @Test
     void testCreateConfig_defaultHybridMode() throws ParseException {
-        String[] args = {"--hybrid", "docling", testPdf.getAbsolutePath()};
+        String[] args = {"--hybrid", "docling-fast", testPdf.getAbsolutePath()};
         CommandLine cmd = parser.parse(options, args);
 
         Config config = CLIOptions.createConfigFromCommandLine(cmd);
@@ -437,18 +437,18 @@ class CLIOptionsTest {
 
     @Test
     void testCreateConfig_withDoclingBackend() throws ParseException {
-        String[] args = {"--hybrid", "docling", testPdf.getAbsolutePath()};
+        String[] args = {"--hybrid", "docling-fast", testPdf.getAbsolutePath()};
         CommandLine cmd = parser.parse(options, args);
 
         Config config = CLIOptions.createConfigFromCommandLine(cmd);
 
-        assertEquals("docling", config.getHybrid());
+        assertEquals("docling-fast", config.getHybrid());
         assertTrue(config.isHybridEnabled());
     }
 
     @Test
     void testCreateConfig_defaultHybridFallbackIsFalse() throws ParseException {
-        String[] args = {"--hybrid", "docling", testPdf.getAbsolutePath()};
+        String[] args = {"--hybrid", "docling-fast", testPdf.getAbsolutePath()};
         CommandLine cmd = parser.parse(options, args);
 
         Config config = CLIOptions.createConfigFromCommandLine(cmd);
@@ -459,209 +459,13 @@ class CLIOptionsTest {
 
     @Test
     void testCreateConfig_withHybridFallbackExplicit() throws ParseException {
-        String[] args = {"--hybrid", "docling", "--hybrid-fallback", testPdf.getAbsolutePath()};
+        String[] args = {"--hybrid", "docling-fast", "--hybrid-fallback", testPdf.getAbsolutePath()};
         CommandLine cmd = parser.parse(options, args);
 
         Config config = CLIOptions.createConfigFromCommandLine(cmd);
 
         assertTrue(config.getHybridConfig().isFallbackToJava(),
             "hybrid fallback should be enabled when explicitly passed");
-    }
-
-    @Test
-    void testDefineOptions_containsHybridHancomAiRegionlistStrategy() {
-        assertTrue(options.hasOption("hybrid-hancom-ai-regionlist-strategy"));
-    }
-
-    @Test
-    void testDefineOptions_containsHybridHancomAiOcrStrategy() {
-        assertTrue(options.hasOption("hybrid-hancom-ai-ocr-strategy"));
-    }
-
-    @Test
-    void testDefineOptions_containsHybridHancomAiImageCache() {
-        assertTrue(options.hasOption("hybrid-hancom-ai-image-cache"));
-    }
-
-    @Test
-    void testDefineOptions_containsHybridHancomAiLayoutPageChunk() {
-        assertTrue(options.hasOption("hybrid-hancom-ai-layout-page-chunk"));
-    }
-
-    @Test
-    void testDefineOptions_containsHybridHancomAiSaveCrops() {
-        assertTrue(options.hasOption("hybrid-hancom-ai-save-crops"));
-    }
-
-    @Test
-    void testDefineOptions_containsHybridHancomAiCropOutputDir() {
-        assertTrue(options.hasOption("hybrid-hancom-ai-crop-output-dir"));
-    }
-
-    @Test
-    void testCreateConfig_withHybridHancomAiRegionlistStrategy() throws ParseException {
-        String[] args = {"--hybrid", "hancom-ai",
-                         "--hybrid-hancom-ai-regionlist-strategy", "list-only",
-                         testPdf.getAbsolutePath()};
-        CommandLine cmd = parser.parse(options, args);
-        Config config = CLIOptions.createConfigFromCommandLine(cmd);
-        assertEquals("list-only", config.getHybridConfig().getRegionlistStrategy());
-    }
-
-    @Test
-    void testCreateConfig_withHybridHancomAiOcrStrategy() throws ParseException {
-        String[] args = {"--hybrid", "hancom-ai",
-                         "--hybrid-hancom-ai-ocr-strategy", "force",
-                         testPdf.getAbsolutePath()};
-        CommandLine cmd = parser.parse(options, args);
-        Config config = CLIOptions.createConfigFromCommandLine(cmd);
-        assertEquals("force", config.getHybridConfig().getOcrStrategy());
-    }
-
-    @Test
-    void testCreateConfig_withHybridHancomAiImageCache() throws ParseException {
-        String[] args = {"--hybrid", "hancom-ai",
-                         "--hybrid-hancom-ai-image-cache", "disk",
-                         testPdf.getAbsolutePath()};
-        CommandLine cmd = parser.parse(options, args);
-        Config config = CLIOptions.createConfigFromCommandLine(cmd);
-        assertEquals("disk", config.getHybridConfig().getImageCache());
-    }
-
-    @Test
-    void testCreateConfig_withHybridHancomAiLayoutPageChunk() throws ParseException {
-        String[] args = {"--hybrid", "hancom-ai",
-                         "--hybrid-hancom-ai-layout-page-chunk", "5",
-                         testPdf.getAbsolutePath()};
-        CommandLine cmd = parser.parse(options, args);
-        Config config = CLIOptions.createConfigFromCommandLine(cmd);
-        assertEquals(5, config.getHybridConfig().getLayoutPageChunk());
-    }
-
-    /**
-     * Zero is the documented way to send every page in one request, so it has to
-     * survive rather than be rejected as a non-positive count.
-     */
-    @Test
-    void testCreateConfig_hybridHancomAiLayoutPageChunkZeroDisablesSlicing()
-            throws ParseException {
-        String[] args = {"--hybrid", "hancom-ai",
-                         "--hybrid-hancom-ai-layout-page-chunk", "0",
-                         testPdf.getAbsolutePath()};
-        CommandLine cmd = parser.parse(options, args);
-        Config config = CLIOptions.createConfigFromCommandLine(cmd);
-        assertEquals(0, config.getHybridConfig().getLayoutPageChunk());
-    }
-
-    @Test
-    void testCreateConfig_hybridHancomAiLayoutPageChunkRejectsNonNumeric() throws ParseException {
-        String[] args = {"--hybrid", "hancom-ai",
-                         "--hybrid-hancom-ai-layout-page-chunk", "twenty",
-                         testPdf.getAbsolutePath()};
-        CommandLine cmd = parser.parse(options, args);
-        assertThrows(IllegalArgumentException.class,
-                () -> CLIOptions.createConfigFromCommandLine(cmd));
-    }
-
-    /**
-     * The option only means anything on the hancom-ai backend, so using it with
-     * another one is a mistake worth naming rather than silently ignoring.
-     */
-    @Test
-    void testCreateConfig_hybridHancomAiLayoutPageChunkRequiresHancomAi() throws ParseException {
-        String[] args = {"--hybrid", "docling-fast",
-                         "--hybrid-hancom-ai-layout-page-chunk", "5",
-                         testPdf.getAbsolutePath()};
-        CommandLine cmd = parser.parse(options, args);
-        assertThrows(IllegalArgumentException.class,
-                () -> CLIOptions.createConfigFromCommandLine(cmd));
-    }
-
-    @Test
-    void testCreateConfig_withHybridHancomAiSaveCrops() throws ParseException {
-        String[] args = {"--hybrid", "hancom-ai",
-                         "--hybrid-hancom-ai-save-crops",
-                         testPdf.getAbsolutePath()};
-        CommandLine cmd = parser.parse(options, args);
-        Config config = CLIOptions.createConfigFromCommandLine(cmd);
-        assertTrue(config.getHybridConfig().isSaveCrops());
-    }
-
-    @Test
-    void testCreateConfig_withHybridHancomAiCropOutputDir() throws ParseException {
-        String[] args = {"--hybrid", "hancom-ai",
-                         "--hybrid-hancom-ai-crop-output-dir", "/tmp/crops",
-                         testPdf.getAbsolutePath()};
-        CommandLine cmd = parser.parse(options, args);
-        Config config = CLIOptions.createConfigFromCommandLine(cmd);
-        assertEquals("/tmp/crops", config.getHybridConfig().getCropOutputDir());
-    }
-
-    @Test
-    void testCreateConfig_hybridHancomAiRegionlistStrategy_invalidValue_throws() {
-        String[] args = {"--hybrid", "hancom-ai",
-                         "--hybrid-hancom-ai-regionlist-strategy", "bogus",
-                         testPdf.getAbsolutePath()};
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
-            CommandLine cmd = parser.parse(options, args);
-            CLIOptions.createConfigFromCommandLine(cmd);
-        });
-        assertTrue(ex.getMessage().contains("--hybrid-hancom-ai-regionlist-strategy"),
-                "Error should name the offending CLI flag, got: " + ex.getMessage());
-        assertTrue(ex.getMessage().contains("table-first") && ex.getMessage().contains("list-only"),
-                "Error should list valid values, got: " + ex.getMessage());
-    }
-
-    @Test
-    void testCreateConfig_hybridHancomAiOcrStrategy_invalidValue_throws() {
-        String[] args = {"--hybrid", "hancom-ai",
-                         "--hybrid-hancom-ai-ocr-strategy", "bogus",
-                         testPdf.getAbsolutePath()};
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
-            CommandLine cmd = parser.parse(options, args);
-            CLIOptions.createConfigFromCommandLine(cmd);
-        });
-        assertTrue(ex.getMessage().contains("--hybrid-hancom-ai-ocr-strategy"),
-                "Error should name the offending CLI flag, got: " + ex.getMessage());
-    }
-
-    @Test
-    void testCreateConfig_hybridHancomAiImageCache_invalidValue_throws() {
-        String[] args = {"--hybrid", "hancom-ai",
-                         "--hybrid-hancom-ai-image-cache", "bogus",
-                         testPdf.getAbsolutePath()};
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
-            CommandLine cmd = parser.parse(options, args);
-            CLIOptions.createConfigFromCommandLine(cmd);
-        });
-        assertTrue(ex.getMessage().contains("--hybrid-hancom-ai-image-cache"),
-                "Error should name the offending CLI flag, got: " + ex.getMessage());
-    }
-
-    @Test
-    void testCreateConfig_hybridHancomAiOption_withoutHancomAi_throws() {
-        String[] args = {"--hybrid-hancom-ai-regionlist-strategy", "list-only",
-                         testPdf.getAbsolutePath()};
-        // No --hybrid set, defaults to off.
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
-            CommandLine cmd = parser.parse(options, args);
-            CLIOptions.createConfigFromCommandLine(cmd);
-        });
-        assertTrue(ex.getMessage().contains("--hybrid-hancom-ai-"),
-                "Error should mention the offending prefix, got: " + ex.getMessage());
-        assertTrue(ex.getMessage().contains("hancom-ai"),
-                "Error should mention required backend, got: " + ex.getMessage());
-    }
-
-    @Test
-    void testCreateConfig_hybridHancomAiOption_withDoclingFast_throws() {
-        String[] args = {"--hybrid", "docling-fast",
-                         "--hybrid-hancom-ai-ocr-strategy", "force",
-                         testPdf.getAbsolutePath()};
-        assertThrows(IllegalArgumentException.class, () -> {
-            CommandLine cmd = parser.parse(options, args);
-            CLIOptions.createConfigFromCommandLine(cmd);
-        });
     }
 
     @Test
@@ -690,7 +494,6 @@ class CLIOptionsTest {
         CLIOptions.addAllTo(ext);
         assertTrue(ext.hasOption("hybrid"));
         assertTrue(ext.hasOption("hybrid-mode"));
-        assertTrue(ext.hasOption("hybrid-hancom-ai-regionlist-strategy"));
         assertTrue(ext.hasOption("format"));
         assertTrue(ext.hasOption("threads"));
     }

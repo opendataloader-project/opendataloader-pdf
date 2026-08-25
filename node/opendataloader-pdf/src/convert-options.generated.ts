@@ -47,24 +47,16 @@ export interface ConvertOptions {
   includeHeaderFooter?: boolean;
   /** Detect strikethrough text and wrap with ~~ in Markdown output or <del></del> tag in HTML output (experimental) */
   detectStrikethrough?: boolean;
-  /** Hybrid backend (requires a running server). Quick start: pip install "opendataloader-pdf[hybrid]" && opendataloader-pdf-hybrid --port 5002. For remote servers use --hybrid-url. Values: off (default), docling-fast, hancom-ai. Ignored when --use-struct-tree is set on a tagged PDF (structure tree takes precedence) */
+  /** Hybrid backend (requires a running server). Quick start: pip install "opendataloader-pdf[hybrid]" && opendataloader-pdf-hybrid --port 5002. For remote servers use --hybrid-url. Values: off (default), docling-fast. Ignored when --use-struct-tree is set on a tagged PDF (structure tree takes precedence) */
   hybrid?: string;
   /** Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend) */
   hybridMode?: string;
   /** Hybrid backend server URL (overrides default) */
   hybridUrl?: string;
-  /** Hybrid backend request timeout in milliseconds (0 = use the backend's own default; hancom-ai then caps a single call at 1 hour). Regardless of this value, hancom-ai makes up to 3 attempts per request when a failure looks transient. Default: 0 */
+  /** Hybrid backend request timeout in milliseconds (0 = use the backend's own default). Default: 0 */
   hybridTimeout?: string;
   /** Opt in to Java fallback on hybrid backend error (default: disabled) */
   hybridFallback?: boolean;
-  /** DLA label 7 (regionlist) handling. Requires --hybrid=hancom-ai. Values: table-first (default; check TSR overlap), list-only (skip TSR, always treat as list) */
-  hybridHancomAiRegionlistStrategy?: string;
-  /** OCR strategy. Requires --hybrid=hancom-ai. Values: off (default; stream-only, uses the cheaper OCR-free layout module), auto (stream first, OCR fallback), force (OCR-only). Scanned documents need auto or force */
-  hybridHancomAiOcrStrategy?: string;
-  /** Page image cache backing. Requires --hybrid=hancom-ai. Values: memory (default), disk */
-  hybridHancomAiImageCache?: string;
-  /** Pages per layout request. Requires --hybrid=hancom-ai. The backend accepts at most 30 pages per request, so longer documents are sliced; 0 disables slicing and sends every page in one request. Default: 20 */
-  hybridHancomAiLayoutPageChunk?: string;
   /** Write output to stdout instead of file (single format only) */
   toStdout?: boolean;
   /** Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode */
@@ -105,10 +97,6 @@ export interface CliOptions {
   hybridUrl?: string;
   hybridTimeout?: string;
   hybridFallback?: boolean;
-  hybridHancomAiRegionlistStrategy?: string;
-  hybridHancomAiOcrStrategy?: string;
-  hybridHancomAiImageCache?: string;
-  hybridHancomAiLayoutPageChunk?: string;
   toStdout?: boolean;
   threads?: string;
   imageResolution?: string;
@@ -198,18 +186,6 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   }
   if (cliOptions.hybridFallback) {
     convertOptions.hybridFallback = true;
-  }
-  if (cliOptions.hybridHancomAiRegionlistStrategy) {
-    convertOptions.hybridHancomAiRegionlistStrategy = cliOptions.hybridHancomAiRegionlistStrategy;
-  }
-  if (cliOptions.hybridHancomAiOcrStrategy) {
-    convertOptions.hybridHancomAiOcrStrategy = cliOptions.hybridHancomAiOcrStrategy;
-  }
-  if (cliOptions.hybridHancomAiImageCache) {
-    convertOptions.hybridHancomAiImageCache = cliOptions.hybridHancomAiImageCache;
-  }
-  if (cliOptions.hybridHancomAiLayoutPageChunk) {
-    convertOptions.hybridHancomAiLayoutPageChunk = cliOptions.hybridHancomAiLayoutPageChunk;
   }
   if (cliOptions.toStdout) {
     convertOptions.toStdout = true;
@@ -322,18 +298,6 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.hybridFallback) {
     args.push('--hybrid-fallback');
-  }
-  if (options.hybridHancomAiRegionlistStrategy) {
-    args.push('--hybrid-hancom-ai-regionlist-strategy', options.hybridHancomAiRegionlistStrategy);
-  }
-  if (options.hybridHancomAiOcrStrategy) {
-    args.push('--hybrid-hancom-ai-ocr-strategy', options.hybridHancomAiOcrStrategy);
-  }
-  if (options.hybridHancomAiImageCache) {
-    args.push('--hybrid-hancom-ai-image-cache', options.hybridHancomAiImageCache);
-  }
-  if (options.hybridHancomAiLayoutPageChunk) {
-    args.push('--hybrid-hancom-ai-layout-page-chunk', options.hybridHancomAiLayoutPageChunk);
   }
   if (options.toStdout) {
     args.push('--to-stdout');
