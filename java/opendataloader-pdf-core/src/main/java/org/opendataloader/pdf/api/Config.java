@@ -40,18 +40,8 @@ public class Config {
 
     /** Hybrid mode: off (Java-only processing, no external dependency). */
     public static final String HYBRID_OFF = "off";
-    /** Hybrid mode: docling backend (Docling FastAPI server). */
-    public static final String HYBRID_DOCLING = "docling";
-    /** Hybrid mode: docling-fast backend (deprecated alias for docling). */
+    /** Hybrid mode: docling-fast backend (docling-fast-server). */
     public static final String HYBRID_DOCLING_FAST = "docling-fast";
-    /** Hybrid mode: hancom backend (Hancom Document AI). */
-    public static final String HYBRID_HANCOM = "hancom";
-    /** Hybrid mode: hancom-ai backend (Hancom AI HOCR SDK — individual modules). */
-    public static final String HYBRID_HANCOM_AI = "hancom-ai";
-    /** Hybrid mode: azure backend (Azure Document Intelligence). */
-    public static final String HYBRID_AZURE = "azure";
-    /** Hybrid mode: google backend (Google Document AI). */
-    public static final String HYBRID_GOOGLE = "google";
     private static Set<String> hybridOptions = new HashSet<>();
 
     /** Hybrid triage mode: auto (dynamic triage based on page content). */
@@ -124,11 +114,7 @@ public class Config {
         imageOutputOptions.add(IMAGE_OUTPUT_EMBEDDED);
         imageOutputOptions.add(IMAGE_OUTPUT_EXTERNAL);
         hybridOptions.add(HYBRID_OFF);
-        hybridOptions.add(HYBRID_DOCLING);
-        hybridOptions.add(HYBRID_DOCLING_FAST);  // deprecated alias
-        hybridOptions.add(HYBRID_HANCOM);
-        hybridOptions.add(HYBRID_HANCOM_AI);
-        // azure, google added when implemented
+        hybridOptions.add(HYBRID_DOCLING_FAST);
         hybridModeOptions.add(HYBRID_MODE_AUTO);
         hybridModeOptions.add(HYBRID_MODE_FULL);
     }
@@ -804,7 +790,7 @@ public class Config {
     /**
      * Gets the hybrid backend name.
      *
-     * @return The hybrid backend (off, docling, hancom, azure, google).
+     * @return The hybrid backend (off or docling-fast).
      */
     public String getHybrid() {
         return hybrid;
@@ -813,7 +799,7 @@ public class Config {
     /**
      * Sets the hybrid backend.
      *
-     * @param hybrid The hybrid backend (off, docling, hancom, azure, google).
+     * @param hybrid The hybrid backend (off or docling-fast).
      * @throws IllegalArgumentException if the backend is not supported.
      */
     public void setHybrid(String hybrid) {

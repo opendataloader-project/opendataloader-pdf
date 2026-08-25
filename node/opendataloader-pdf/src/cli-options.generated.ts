@@ -28,15 +28,11 @@ export function registerCliOptions(program: Command): void {
   program.option('--pages <value>', 'Pages to extract (e.g., "1,3,5-7"). Default: all pages');
   program.option('--include-header-footer', 'Include page headers and footers in output');
   program.option('--detect-strikethrough', 'Detect strikethrough text and wrap with ~~ in Markdown output or <del></del> tag in HTML output (experimental)');
-  program.option('--hybrid <value>', 'Hybrid backend (requires a running server). Quick start: pip install "opendataloader-pdf[hybrid]" && opendataloader-pdf-hybrid --port 5002. For remote servers use --hybrid-url. Values: off (default), docling-fast, hancom-ai. Ignored when --use-struct-tree is set on a tagged PDF (structure tree takes precedence)');
+  program.option('--hybrid <value>', 'Hybrid backend (requires a running server). Quick start: pip install "opendataloader-pdf[hybrid]" && opendataloader-pdf-hybrid --port 5002. For remote servers use --hybrid-url. Values: off (default), docling-fast. Ignored when --use-struct-tree is set on a tagged PDF (structure tree takes precedence)');
   program.option('--hybrid-mode <value>', 'Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)');
   program.option('--hybrid-url <value>', 'Hybrid backend server URL (overrides default)');
-  program.option('--hybrid-timeout <value>', 'Hybrid backend request timeout in milliseconds (0 = use the backend\'s own default; hancom-ai then caps a single call at 1 hour). Regardless of this value, hancom-ai makes up to 3 attempts per request when a failure looks transient. Default: 0');
+  program.option('--hybrid-timeout <value>', 'Hybrid backend request timeout in milliseconds (0 = use the backend\'s own default). Default: 0');
   program.option('--hybrid-fallback', 'Opt in to Java fallback on hybrid backend error (default: disabled)');
-  program.option('--hybrid-hancom-ai-regionlist-strategy <value>', 'DLA label 7 (regionlist) handling. Requires --hybrid=hancom-ai. Values: table-first (default; check TSR overlap), list-only (skip TSR, always treat as list)');
-  program.option('--hybrid-hancom-ai-ocr-strategy <value>', 'OCR strategy. Requires --hybrid=hancom-ai. Values: off (default; stream-only, uses the cheaper OCR-free layout module), auto (stream first, OCR fallback), force (OCR-only). Scanned documents need auto or force');
-  program.option('--hybrid-hancom-ai-image-cache <value>', 'Page image cache backing. Requires --hybrid=hancom-ai. Values: memory (default), disk');
-  program.option('--hybrid-hancom-ai-layout-page-chunk <value>', 'Pages per layout request. Requires --hybrid=hancom-ai. The backend accepts at most 30 pages per request, so longer documents are sliced; 0 disables slicing and sends every page in one request. Default: 20');
   program.option('--to-stdout', 'Write output to stdout instead of file (single format only)');
   program.option('--threads <value>', 'Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode');
   program.option('--image-resolution <value>', 'Set the rendering resolution for images in DPI. Higher values improve image quality but increase memory consumption; lower values reduce memory usage at the cost of detail. Accepts positive decimal DPI values (e.g., 144.0). Default: 144.0.');

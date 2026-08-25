@@ -30,12 +30,6 @@ import java.util.concurrent.ConcurrentHashMap;
  *   <li>{@code docling-fast} - Optimized docling SDK server</li>
  * </ul>
  *
- * <p>Future backends (not yet implemented):
- * <ul>
- *   <li>{@code hancom} - Hancom document parsing service</li>
- *   <li>{@code azure} - Azure Document Intelligence</li>
- *   <li>{@code google} - Google Document AI</li>
- * </ul>
  *
  * @see HybridClient
  * @see HybridConfig
@@ -44,18 +38,6 @@ public class HybridClientFactory {
 
     /** Backend type constant for Docling Fast Server. */
     public static final String BACKEND_DOCLING_FAST = "docling-fast";
-
-    /** Backend type constant for Hancom (Studio Lite API). */
-    public static final String BACKEND_HANCOM = "hancom";
-
-    /** Backend type constant for Hancom AI (HOCR SDK individual modules). */
-    public static final String BACKEND_HANCOM_AI = "hancom-ai";
-
-    /** Backend type constant for Azure (not yet implemented). */
-    public static final String BACKEND_AZURE = "azure";
-
-    /** Backend type constant for Google (not yet implemented). */
-    public static final String BACKEND_GOOGLE = "google";
 
     /** Cache of created clients, keyed by backend type. */
     private static final Map<String, HybridClient> CLIENT_CACHE = new ConcurrentHashMap<>();
@@ -71,7 +53,7 @@ public class HybridClientFactory {
      * creating new thread pools for each document. Call {@link #shutdown()}
      * when processing is complete to release resources.
      *
-     * @param hybrid The backend type (e.g., "docling", "hancom", "azure", "google").
+     * @param hybrid The backend type (e.g., "docling-fast").
      * @param config The configuration for the hybrid client.
      * @return A HybridClient instance for the specified backend.
      * @throws IllegalArgumentException If the backend type is unknown or not supported.
@@ -92,14 +74,6 @@ public class HybridClientFactory {
     private static HybridClient createClient(String hybrid, HybridConfig config) {
         if (BACKEND_DOCLING_FAST.equals(hybrid)) {
             return new DoclingFastServerClient(config);
-        } else if (BACKEND_HANCOM.equals(hybrid)) {
-            return new HancomClient(config);
-        } else if (BACKEND_HANCOM_AI.equals(hybrid)) {
-            return new HancomAIClient(config);
-        } else if (BACKEND_AZURE.equals(hybrid)) {
-            throw new UnsupportedOperationException("Azure Document Intelligence backend is not yet implemented");
-        } else if (BACKEND_GOOGLE.equals(hybrid)) {
-            throw new UnsupportedOperationException("Google Document AI backend is not yet implemented");
         } else {
             throw new IllegalArgumentException("Unknown hybrid backend: " + hybrid +
                 ". Supported backends: " + getSupportedBackends());
@@ -109,7 +83,7 @@ public class HybridClientFactory {
     /**
      * Creates a hybrid client for the specified backend.
      *
-     * @param hybrid The backend type (e.g., "docling", "hancom", "azure", "google").
+     * @param hybrid The backend type (e.g., "docling-fast").
      * @param config The configuration for the hybrid client.
      * @return A new HybridClient instance for the specified backend.
      * @throws IllegalArgumentException If the backend type is unknown or not supported.
@@ -123,7 +97,7 @@ public class HybridClientFactory {
     /**
      * Creates a hybrid client for the specified backend with default configuration.
      *
-     * @param hybrid The backend type (e.g., "docling").
+     * @param hybrid The backend type (e.g., "docling-fast").
      * @return A new HybridClient instance for the specified backend.
      * @throws IllegalArgumentException If the backend type is unknown or not supported.
      * @deprecated Use {@link #getOrCreate(String, HybridConfig)} instead to reuse clients.
@@ -143,10 +117,6 @@ public class HybridClientFactory {
         for (HybridClient client : CLIENT_CACHE.values()) {
             if (client instanceof DoclingFastServerClient) {
                 ((DoclingFastServerClient) client).shutdown();
-            } else if (client instanceof HancomClient) {
-                ((HancomClient) client).shutdown();
-            } else if (client instanceof HancomAIClient) {
-                ((HancomAIClient) client).shutdown();
             }
         }
         CLIENT_CACHE.clear();
@@ -164,8 +134,7 @@ public class HybridClientFactory {
         }
 
         String lowerHybrid = hybrid.toLowerCase();
-        return BACKEND_DOCLING_FAST.equals(lowerHybrid) || BACKEND_HANCOM.equals(lowerHybrid)
-            || BACKEND_HANCOM_AI.equals(lowerHybrid);
+        return BACKEND_DOCLING_FAST.equals(lowerHybrid);
     }
 
     /**
@@ -174,15 +143,7 @@ public class HybridClientFactory {
      * @return A string listing all supported backends.
      */
     public static String getSupportedBackends() {
-        return String.join(", ", BACKEND_DOCLING_FAST, BACKEND_HANCOM, BACKEND_HANCOM_AI);
+        return BACKEND_DOCLING_FAST;
     }
 
-    /**
-     * Gets a comma-separated list of all known backend types (including not yet implemented).
-     *
-     * @return A string listing all known backends.
-     */
-    public static String getAllKnownBackends() {
-        return String.join(", ", BACKEND_DOCLING_FAST, BACKEND_HANCOM, BACKEND_AZURE, BACKEND_GOOGLE);
-    }
 }

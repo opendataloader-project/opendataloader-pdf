@@ -96,8 +96,8 @@
             <artifactId>verapdf-xmp-core</artifactId>
         </dependency>
         <!--
-          PDFBox is used directly by PDFWriter, PDFStreamWriter, HancomAIClient
-          and HancomPdfPageSlicer, so it is declared here rather than inherited
+          PDFBox is used directly by PDFWriter and PDFStreamWriter, so it is
+          declared here rather than inherited
           through wcag-algorithms. Version comes from the parent pom, held at
           what wcag-algorithms itself requires.
         -->

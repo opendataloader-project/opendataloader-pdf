@@ -84,10 +84,6 @@ COVERED_OPTIONS = {
 HYBRID_OPTIONS = {
     "--hybrid", "--hybrid-mode", "--hybrid-timeout",
     "--hybrid-fallback", "--hybrid-url",
-    "--hybrid-hancom-ai-regionlist-strategy",
-    "--hybrid-hancom-ai-ocr-strategy",
-    "--hybrid-hancom-ai-image-cache",
-    "--hybrid-hancom-ai-layout-page-chunk",
 }
 
 # ---------------------------------------------------------------------------

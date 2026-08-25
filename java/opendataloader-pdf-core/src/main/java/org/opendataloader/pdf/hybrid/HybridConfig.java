@@ -19,7 +19,7 @@ package org.opendataloader.pdf.hybrid;
  * Configuration class for hybrid PDF processing with external AI backends.
  *
  * <p>Hybrid processing routes pages to either Java-based processing or external
- * AI backends (like docling, hancom, azure, google) based on page triage decisions.
+ * AI backend (docling-fast) based on page triage decisions.
  */
 public class HybridConfig {
 
@@ -29,73 +29,19 @@ public class HybridConfig {
     /** Default maximum concurrent requests to the backend. */
     public static final int DEFAULT_MAX_CONCURRENT_REQUESTS = 4;
 
-    /** Default URL for docling-serve. */
-    public static final String DOCLING_DEFAULT_URL = "http://localhost:5001";
-
     /** Default URL for docling-fast-server. */
     public static final String DOCLING_FAST_DEFAULT_URL = "http://localhost:5002";
-
-    /** Default URL for Hancom Document AI API. */
-    public static final String HANCOM_DEFAULT_URL = "https://dataloader.cloud.hancom.com/studio-lite/api";
-
-    /** Default URL for Hancom AI HOCR SDK API. */
-    public static final String HANCOM_AI_DEFAULT_URL = "http://localhost:18008/api/v1";
-
-    /**
-     * Pages per layout request when a document is longer than the backend
-     * accepts at once.
-     *
-     * <p>The Hancom AI layout module accepts at most 30 pages per request by
-     * specification, so longer documents are sliced. The default leaves headroom
-     * under that limit rather than sitting on it, and stays large enough that a
-     * long document does not pay a network round trip per page — total time is
-     * dominated by per-page processing, so a smaller chunk buys little.
-     */
-    public static final int DEFAULT_LAYOUT_PAGE_CHUNK = 20;
 
     private String url;
     private int timeoutMs = DEFAULT_TIMEOUT_MS;
     private boolean fallbackToJava = false;
     private int maxConcurrentRequests = DEFAULT_MAX_CONCURRENT_REQUESTS;
-    private int layoutPageChunk = DEFAULT_LAYOUT_PAGE_CHUNK;
     /** Hybrid triage mode: auto (dynamic triage based on page content). */
     public static final String MODE_AUTO = "auto";
     /** Hybrid triage mode: full (skip triage, send all pages to backend). */
     public static final String MODE_FULL = "full";
 
     private String mode = MODE_AUTO;
-
-    /** Regionlist strategy: table-first (default) — check TSR overlap, skip if TSR exists. */
-    public static final String REGIONLIST_TABLE_FIRST = "table-first";
-    /** Regionlist strategy: list-only — always treat label 7 as list, skip TSR check. */
-    public static final String REGIONLIST_LIST_ONLY = "list-only";
-
-    private String regionlistStrategy = REGIONLIST_TABLE_FIRST;
-
-    /** OCR strategy: off (stream only, no OCR fallback). */
-    public static final String OCR_OFF = "off";
-    /** OCR strategy: auto (stream first, OCR fallback when enrichment fails). */
-    public static final String OCR_AUTO = "auto";
-    /** OCR strategy: force (OCR only, skip stream-based enrichment). */
-    public static final String OCR_FORCE = "force";
-
-    /**
-     * Default {@link #OCR_OFF}: text is taken from the PDF content stream, so
-     * the layout pass can use the cheaper OCR-free module. On a born-digital
-     * corpus this is ~4x cheaper than running OCR whose output the stream text
-     * then replaces. Scanned documents, which have no stream text to use, need
-     * {@link #OCR_AUTO} or {@link #OCR_FORCE}.
-     */
-    private String ocrStrategy = OCR_OFF;
-
-    /** Page image cache strategy: "memory" (default) or "disk". */
-    private String imageCache = "memory";
-
-    /** Whether to save cropped figure images to disk for debugging. */
-    private boolean saveCrops = false;
-
-    /** Output directory for saved crops (set by CLI when --save-crops is used). */
-    private String cropOutputDir = null;
 
     /**
      * Default constructor initializing the configuration with default values.
@@ -184,33 +130,9 @@ public class HybridConfig {
     }
 
     /**
-     * Gets the number of pages sent per layout request.
-     *
-     * @return the pages per layout request; 0 or less means send every page at once.
-     */
-    public int getLayoutPageChunk() {
-        return layoutPageChunk;
-    }
-
-    /**
-     * Sets the number of pages sent per layout request.
-     *
-     * <p>Zero or negative disables slicing and sends the whole document in one
-     * request. Exposed on the CLI as
-     * {@code --hybrid-hancom-ai-layout-page-chunk} so a backend whose real limit
-     * differs from the documented 30 pages can be accommodated without a code
-     * change, and so the sliced and unsliced paths can be compared.
-     *
-     * @param layoutPageChunk pages per layout request.
-     */
-    public void setLayoutPageChunk(int layoutPageChunk) {
-        this.layoutPageChunk = layoutPageChunk;
-    }
-
-    /**
      * Gets the default URL for a given hybrid backend.
      *
-     * @param hybrid The hybrid backend name (docling, docling-fast, hancom, azure, google).
+     * @param hybrid The hybrid backend name (docling-fast).
      * @return The default URL, or null if the backend requires explicit URL.
      */
     public static String getDefaultUrl(String hybrid) {
@@ -218,17 +140,9 @@ public class HybridConfig {
             return null;
         }
         String lowerHybrid = hybrid.toLowerCase();
-        // Both "docling" and "docling-fast" (deprecated) use the same server
-        if ("docling".equals(lowerHybrid) || "docling-fast".equals(lowerHybrid)) {
+        if ("docling-fast".equals(lowerHybrid)) {
             return DOCLING_FAST_DEFAULT_URL;
         }
-        if ("hancom".equals(lowerHybrid)) {
-            return HANCOM_DEFAULT_URL;
-        }
-        if ("hancom-ai".equals(lowerHybrid)) {
-            return HANCOM_AI_DEFAULT_URL;
-        }
-        // azure, google require explicit URL
         return null;
     }
 
@@ -273,152 +187,4 @@ public class HybridConfig {
         return MODE_FULL.equals(mode);
     }
 
-    /**
-     * Gets the regionlist strategy for label 7 (Table region) handling.
-     *
-     * @return The regionlist strategy (table-first or list-only).
-     */
-    public String getRegionlistStrategy() {
-        return regionlistStrategy;
-    }
-
-    /**
-     * Sets the regionlist strategy for label 7 (Table region) handling.
-     *
-     * <ul>
-     *   <li>{@code "table-first"} (default): check TSR overlap, skip if TSR exists, else treat as list</li>
-     *   <li>{@code "list-only"}: always treat as list, skip TSR check entirely</li>
-     * </ul>
-     *
-     * @param regionlistStrategy The regionlist strategy to use.
-     */
-    public void setRegionlistStrategy(String regionlistStrategy) {
-        if (regionlistStrategy != null
-                && !REGIONLIST_TABLE_FIRST.equals(regionlistStrategy)
-                && !REGIONLIST_LIST_ONLY.equals(regionlistStrategy)) {
-            throw new IllegalArgumentException("Invalid regionlistStrategy: "
-                + regionlistStrategy + " (expected " + REGIONLIST_TABLE_FIRST
-                + " or " + REGIONLIST_LIST_ONLY + ")");
-        }
-        this.regionlistStrategy = regionlistStrategy;
-    }
-
-    /**
-     * Checks if regionlist strategy is list-only (always treat label 7 as list).
-     *
-     * @return true if strategy is list-only, false otherwise.
-     */
-    public boolean isRegionlistListOnly() {
-        return REGIONLIST_LIST_ONLY.equals(regionlistStrategy);
-    }
-
-    /**
-     * Gets the page image cache strategy.
-     *
-     * @return "memory" or "disk".
-     */
-    public String getImageCache() {
-        return imageCache;
-    }
-
-    /**
-     * Sets the page image cache strategy.
-     *
-     * @param imageCache "memory" (in-heap HashMap) or "disk" (temp PNG files).
-     */
-    public void setImageCache(String imageCache) {
-        if (imageCache != null
-                && !"memory".equals(imageCache) && !"disk".equals(imageCache)) {
-            throw new IllegalArgumentException("Invalid imageCache: "
-                + imageCache + " (expected \"memory\" or \"disk\")");
-        }
-        this.imageCache = imageCache;
-    }
-
-    /**
-     * Checks if cropped figure images should be saved to disk.
-     *
-     * @return true if save-crops is enabled.
-     */
-    public boolean isSaveCrops() {
-        return saveCrops;
-    }
-
-    /**
-     * Sets whether to save cropped figure images to disk.
-     *
-     * @param saveCrops true to save crops.
-     */
-    public void setSaveCrops(boolean saveCrops) {
-        this.saveCrops = saveCrops;
-    }
-
-    /**
-     * Gets the output directory for saved crops.
-     *
-     * @return the crop output directory path, or null if not set.
-     */
-    public String getCropOutputDir() {
-        return cropOutputDir;
-    }
-
-    /**
-     * Sets the output directory for saved crops.
-     *
-     * @param cropOutputDir the directory path.
-     */
-    public void setCropOutputDir(String cropOutputDir) {
-        this.cropOutputDir = cropOutputDir;
-    }
-
-    /**
-     * Gets the OCR strategy for enrichment fallback.
-     *
-     * @return The OCR strategy (off, auto, or force).
-     */
-    public String getOcrStrategy() {
-        return ocrStrategy;
-    }
-
-    /**
-     * Sets the OCR strategy for enrichment fallback.
-     *
-     * <ul>
-     *   <li>{@code "off"} (default): stream-based enrichment only, no OCR
-     *       fallback; the layout pass then uses the cheaper OCR-free module</li>
-     *   <li>{@code "auto"}: try stream enrichment first, fall back to OCR words when no match</li>
-     *   <li>{@code "force"}: skip stream enrichment, always use OCR words</li>
-     * </ul>
-     *
-     * @param ocrStrategy The OCR strategy to use.
-     */
-    public void setOcrStrategy(String ocrStrategy) {
-        if (ocrStrategy != null
-                && !OCR_OFF.equals(ocrStrategy)
-                && !OCR_AUTO.equals(ocrStrategy)
-                && !OCR_FORCE.equals(ocrStrategy)) {
-            throw new IllegalArgumentException("Invalid ocrStrategy: "
-                + ocrStrategy + " (expected " + OCR_OFF + ", " + OCR_AUTO
-                + ", or " + OCR_FORCE + ")");
-        }
-        this.ocrStrategy = ocrStrategy;
-    }
-
-    /**
-     * Checks if OCR strategy is auto (stream first, OCR fallback).
-     *
-     * @return true if strategy is auto, false otherwise.
-     */
-    public boolean isOcrAuto() {
-        return OCR_AUTO.equals(ocrStrategy);
-    }
-
-    /**
-     * Checks if OCR strategy is force (OCR only).
-     *
-     * @return true if strategy is force, false otherwise.
-     */
-    public boolean isOcrForce() {
-        return OCR_FORCE.equals(ocrStrategy);
-    }
 }

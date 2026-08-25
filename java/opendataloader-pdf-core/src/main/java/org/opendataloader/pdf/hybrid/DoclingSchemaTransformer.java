@@ -73,7 +73,7 @@ public class DoclingSchemaTransformer implements HybridSchemaTransformer {
 
     private static final Logger LOGGER = Logger.getLogger(DoclingSchemaTransformer.class.getCanonicalName());
 
-    private static final String BACKEND_TYPE = "docling";
+    private static final String BACKEND_TYPE = "docling-fast";
 
     // Picture index counter — accumulates across transform() calls on the same instance
     // to ensure document-unique indices when processing chunked responses (#352).

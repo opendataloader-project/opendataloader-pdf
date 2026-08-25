@@ -165,7 +165,7 @@ public class CLIOptions {
     private static final String HYBRID_LONG_OPTION = "hybrid";
     private static final String HYBRID_DESC = "Hybrid backend (requires a running server). "
             + "Quick start: pip install \"opendataloader-pdf[hybrid]\" && opendataloader-pdf-hybrid --port 5002. "
-            + "For remote servers use --hybrid-url. Values: off (default), docling-fast, hancom-ai. "
+            + "For remote servers use --hybrid-url. Values: off (default), docling-fast. "
             + "Ignored when --use-struct-tree is set on a tagged PDF (structure tree takes precedence)";
 
     private static final String HYBRID_MODE_LONG_OPTION = "hybrid-mode";
@@ -180,51 +180,10 @@ public class CLIOptions {
 
     private static final String HYBRID_TIMEOUT_LONG_OPTION = "hybrid-timeout";
     private static final String HYBRID_TIMEOUT_DESC = "Hybrid backend request timeout in "
-            + "milliseconds (0 = use the backend's own default; hancom-ai then caps a single "
-            + "call at 1 hour). Regardless of this value, hancom-ai makes up to 3 attempts "
-            + "per request when a failure looks transient. Default: 0";
+            + "milliseconds (0 = use the backend's own default). Default: 0";
 
     private static final String HYBRID_FALLBACK_LONG_OPTION = "hybrid-fallback";
     private static final String HYBRID_FALLBACK_DESC = "Opt in to Java fallback on hybrid backend error (default: disabled)";
-
-    // ===== Hybrid hancom-ai backend-specific =====
-    private static final String HYBRID_HANCOM_AI_REGIONLIST_STRATEGY_LONG_OPTION =
-            "hybrid-hancom-ai-regionlist-strategy";
-    private static final String HYBRID_HANCOM_AI_REGIONLIST_STRATEGY_DESC =
-            "DLA label 7 (regionlist) handling. Requires --hybrid=hancom-ai. "
-            + "Values: table-first (default; check TSR overlap), list-only (skip TSR, always treat as list)";
-
-    private static final String HYBRID_HANCOM_AI_OCR_STRATEGY_LONG_OPTION =
-            "hybrid-hancom-ai-ocr-strategy";
-    private static final String HYBRID_HANCOM_AI_OCR_STRATEGY_DESC =
-            "OCR strategy. Requires --hybrid=hancom-ai. "
-            + "Values: off (default; stream-only, uses the cheaper OCR-free layout "
-            + "module), auto (stream first, OCR fallback), force (OCR-only). "
-            + "Scanned documents need auto or force";
-
-    private static final String HYBRID_HANCOM_AI_IMAGE_CACHE_LONG_OPTION =
-            "hybrid-hancom-ai-image-cache";
-    private static final String HYBRID_HANCOM_AI_IMAGE_CACHE_DESC =
-            "Page image cache backing. Requires --hybrid=hancom-ai. "
-            + "Values: memory (default), disk";
-
-    private static final String HYBRID_HANCOM_AI_LAYOUT_PAGE_CHUNK_LONG_OPTION =
-            "hybrid-hancom-ai-layout-page-chunk";
-    private static final String HYBRID_HANCOM_AI_LAYOUT_PAGE_CHUNK_DESC =
-            "Pages per layout request. Requires --hybrid=hancom-ai. "
-            + "The backend accepts at most 30 pages per request, so longer documents "
-            + "are sliced; 0 disables slicing and sends every page in one request. "
-            + "Default: " + HybridConfig.DEFAULT_LAYOUT_PAGE_CHUNK;
-
-    private static final String HYBRID_HANCOM_AI_SAVE_CROPS_LONG_OPTION =
-            "hybrid-hancom-ai-save-crops";
-    private static final String HYBRID_HANCOM_AI_SAVE_CROPS_DESC =
-            "Persist cropped figure images to disk for debugging. Requires --hybrid=hancom-ai";
-
-    private static final String HYBRID_HANCOM_AI_CROP_OUTPUT_DIR_LONG_OPTION =
-            "hybrid-hancom-ai-crop-output-dir";
-    private static final String HYBRID_HANCOM_AI_CROP_OUTPUT_DIR_DESC =
-            "Output directory for --hybrid-hancom-ai-save-crops. Requires --hybrid=hancom-ai";
 
     // ===== Stdout Output =====
     private static final String TO_STDOUT_LONG_OPTION = "to-stdout";
@@ -291,18 +250,6 @@ public class CLIOptions {
             new OptionDefinition(HYBRID_URL_LONG_OPTION, null, "string", null, HYBRID_URL_DESC, true),
             new OptionDefinition(HYBRID_TIMEOUT_LONG_OPTION, null, "string", "0", HYBRID_TIMEOUT_DESC, true),
             new OptionDefinition(HYBRID_FALLBACK_LONG_OPTION, null, "boolean", false, HYBRID_FALLBACK_DESC, true),
-            new OptionDefinition(HYBRID_HANCOM_AI_REGIONLIST_STRATEGY_LONG_OPTION, null, "string",
-                    "table-first", HYBRID_HANCOM_AI_REGIONLIST_STRATEGY_DESC, true),
-            new OptionDefinition(HYBRID_HANCOM_AI_OCR_STRATEGY_LONG_OPTION, null, "string",
-                    HybridConfig.OCR_OFF, HYBRID_HANCOM_AI_OCR_STRATEGY_DESC, true),
-            new OptionDefinition(HYBRID_HANCOM_AI_IMAGE_CACHE_LONG_OPTION, null, "string",
-                    "memory", HYBRID_HANCOM_AI_IMAGE_CACHE_DESC, true),
-            // "string" rather than a numeric type: the option table only knows
-            // string and boolean, and string is what carries a value. The number
-            // is parsed and reported on where the option is applied.
-            new OptionDefinition(HYBRID_HANCOM_AI_LAYOUT_PAGE_CHUNK_LONG_OPTION, null, "string",
-                    String.valueOf(HybridConfig.DEFAULT_LAYOUT_PAGE_CHUNK),
-                    HYBRID_HANCOM_AI_LAYOUT_PAGE_CHUNK_DESC, true),
             new OptionDefinition(TO_STDOUT_LONG_OPTION, null, "boolean", false, TO_STDOUT_DESC, true),
             new OptionDefinition(THREADS_LONG_OPTION, null, "string", "1", THREADS_DESC, true),
             new OptionDefinition(IMAGE_RESOLUTION_LONG_OPTION, null, "string", null, IMAGE_RESOLUTION_DESC, true),
@@ -315,11 +262,7 @@ public class CLIOptions {
             new OptionDefinition(MARKDOWN_REPORT_LONG_OPTION, null, "boolean", null, null, false),
             new OptionDefinition(HTML_REPORT_LONG_OPTION, null, "boolean", null, null, false),
             new OptionDefinition(MARKDOWN_IMAGE_LONG_OPTION, null, "boolean", null, null, false),
-            new OptionDefinition(NO_JSON_REPORT_LONG_OPTION, null, "boolean", null, null, false),
-            new OptionDefinition(HYBRID_HANCOM_AI_SAVE_CROPS_LONG_OPTION, null, "boolean",
-                    false, HYBRID_HANCOM_AI_SAVE_CROPS_DESC, false),
-            new OptionDefinition(HYBRID_HANCOM_AI_CROP_OUTPUT_DIR_LONG_OPTION, null, "string",
-                    null, HYBRID_HANCOM_AI_CROP_OUTPUT_DIR_DESC, false));
+            new OptionDefinition(NO_JSON_REPORT_LONG_OPTION, null, "boolean", null, null, false));
 
     public static Options defineOptions() {
         Options options = new Options();
@@ -723,85 +666,8 @@ public class CLIOptions {
         if (commandLine.hasOption(HYBRID_FALLBACK_LONG_OPTION)) {
             config.getHybridConfig().setFallbackToJava(true);
         }
-        if (commandLine.hasOption(HYBRID_HANCOM_AI_REGIONLIST_STRATEGY_LONG_OPTION)) {
-            String value = commandLine.getOptionValue(HYBRID_HANCOM_AI_REGIONLIST_STRATEGY_LONG_OPTION);
-            if (value != null && !value.trim().isEmpty()) {
-                String normalized = value.trim().toLowerCase(Locale.ROOT);
-                if (!HybridConfig.REGIONLIST_TABLE_FIRST.equals(normalized)
-                        && !HybridConfig.REGIONLIST_LIST_ONLY.equals(normalized)) {
-                    throw new IllegalArgumentException(String.format(
-                            "Option --%s: unsupported value '%s'. Supported values: %s, %s",
-                            HYBRID_HANCOM_AI_REGIONLIST_STRATEGY_LONG_OPTION, normalized,
-                            HybridConfig.REGIONLIST_TABLE_FIRST, HybridConfig.REGIONLIST_LIST_ONLY));
-                }
-                config.getHybridConfig().setRegionlistStrategy(normalized);
-            }
-        }
-        if (commandLine.hasOption(HYBRID_HANCOM_AI_OCR_STRATEGY_LONG_OPTION)) {
-            String value = commandLine.getOptionValue(HYBRID_HANCOM_AI_OCR_STRATEGY_LONG_OPTION);
-            if (value != null && !value.trim().isEmpty()) {
-                String normalized = value.trim().toLowerCase(Locale.ROOT);
-                if (!HybridConfig.OCR_OFF.equals(normalized)
-                        && !HybridConfig.OCR_AUTO.equals(normalized)
-                        && !HybridConfig.OCR_FORCE.equals(normalized)) {
-                    throw new IllegalArgumentException(String.format(
-                            "Option --%s: unsupported value '%s'. Supported values: %s, %s, %s",
-                            HYBRID_HANCOM_AI_OCR_STRATEGY_LONG_OPTION, normalized,
-                            HybridConfig.OCR_OFF, HybridConfig.OCR_AUTO, HybridConfig.OCR_FORCE));
-                }
-                config.getHybridConfig().setOcrStrategy(normalized);
-            }
-        }
-        if (commandLine.hasOption(HYBRID_HANCOM_AI_IMAGE_CACHE_LONG_OPTION)) {
-            String value = commandLine.getOptionValue(HYBRID_HANCOM_AI_IMAGE_CACHE_LONG_OPTION);
-            if (value != null && !value.trim().isEmpty()) {
-                String normalized = value.trim().toLowerCase(Locale.ROOT);
-                if (!"memory".equals(normalized) && !"disk".equals(normalized)) {
-                    throw new IllegalArgumentException(String.format(
-                            "Option --%s: unsupported value '%s'. Supported values: memory, disk",
-                            HYBRID_HANCOM_AI_IMAGE_CACHE_LONG_OPTION, normalized));
-                }
-                config.getHybridConfig().setImageCache(normalized);
-            }
-        }
-        if (commandLine.hasOption(HYBRID_HANCOM_AI_LAYOUT_PAGE_CHUNK_LONG_OPTION)) {
-            String value = commandLine.getOptionValue(HYBRID_HANCOM_AI_LAYOUT_PAGE_CHUNK_LONG_OPTION);
-            if (value != null && !value.trim().isEmpty()) {
-                int pages;
-                try {
-                    pages = Integer.parseInt(value.trim());
-                } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException(String.format(
-                            "Option --%s: '%s' is not a number",
-                            HYBRID_HANCOM_AI_LAYOUT_PAGE_CHUNK_LONG_OPTION, value.trim()));
-                }
-                config.getHybridConfig().setLayoutPageChunk(pages);
-            }
-        }
-        if (commandLine.hasOption(HYBRID_HANCOM_AI_SAVE_CROPS_LONG_OPTION)) {
-            config.getHybridConfig().setSaveCrops(true);
-        }
-        if (commandLine.hasOption(HYBRID_HANCOM_AI_CROP_OUTPUT_DIR_LONG_OPTION)) {
-            String value = commandLine.getOptionValue(HYBRID_HANCOM_AI_CROP_OUTPUT_DIR_LONG_OPTION);
-            if (value != null && !value.trim().isEmpty()) {
-                config.getHybridConfig().setCropOutputDir(value.trim());
-            }
-        }
         if (commandLine.hasOption(TO_STDOUT_LONG_OPTION)) {
             config.setOutputStdout(true);
-        }
-        // Keep in sync with all HYBRID_HANCOM_AI_*_LONG_OPTION constants above.
-        boolean usesHancomAiOnly =
-                commandLine.hasOption(HYBRID_HANCOM_AI_REGIONLIST_STRATEGY_LONG_OPTION) ||
-                commandLine.hasOption(HYBRID_HANCOM_AI_OCR_STRATEGY_LONG_OPTION) ||
-                commandLine.hasOption(HYBRID_HANCOM_AI_IMAGE_CACHE_LONG_OPTION) ||
-                commandLine.hasOption(HYBRID_HANCOM_AI_LAYOUT_PAGE_CHUNK_LONG_OPTION) ||
-                commandLine.hasOption(HYBRID_HANCOM_AI_SAVE_CROPS_LONG_OPTION) ||
-                commandLine.hasOption(HYBRID_HANCOM_AI_CROP_OUTPUT_DIR_LONG_OPTION);
-        if (usesHancomAiOnly && !Config.HYBRID_HANCOM_AI.equals(config.getHybrid())) {
-            throw new IllegalArgumentException(
-                    "Options --hybrid-hancom-ai-* require --hybrid=hancom-ai (got --hybrid="
-                    + config.getHybrid() + ")");
         }
     }
 

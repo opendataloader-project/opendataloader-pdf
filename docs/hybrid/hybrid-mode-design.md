@@ -9,9 +9,9 @@ Routes pages via per-page Triage: simple pages to fast Java path, complex tables
 
 | Item | Decision |
 |------|----------|
-| CLI Option | `--hybrid <off\|docling\|hancom\|...>` |
+| CLI Option | `--hybrid <off\|docling-fast>` |
 | Default | `off` (Java-only, no external dependency) |
-| First Backend | `docling` (docling-serve REST API) |
+| First Backend | `docling-fast` (docling-fast-server REST API) |
 | Automation | Semi-automatic (benchmark/analysis auto, code changes require approval) |
 | Triage Strategy | Conservative (minimize FN, accept FP, route uncertain pages to backend) |
 
@@ -24,21 +24,18 @@ Routes pages via per-page Triage: simple pages to fast Java path, complex tables
 opendataloader-pdf input.pdf
 opendataloader-pdf --hybrid off input.pdf
 
-# Use docling backend
-opendataloader-pdf --hybrid docling input.pdf
+# Use the docling-fast backend
+opendataloader-pdf --hybrid docling-fast input.pdf
 
 # With custom backend URL
-opendataloader-pdf --hybrid docling --hybrid-url http://localhost:5001 input.pdf
-
-# Future backends
-opendataloader-pdf --hybrid hancom input.pdf
+opendataloader-pdf --hybrid docling-fast --hybrid-url http://localhost:5002 input.pdf
 ```
 
 ## Hybrid Options
 
 | Option | Description |
 |--------|-------------|
-| `--hybrid <name>` | Hybrid backend: `off` (default), `docling`, `hancom`, etc. |
+| `--hybrid <name>` | Hybrid backend: `off` (default) or `docling-fast` |
 | `--hybrid-url <url>` | Backend server URL (overrides default) |
 | `--hybrid-timeout <ms>` | Request timeout in milliseconds (default: 0, no timeout) |
 | `--hybrid-fallback` | Opt in to Java fallback on backend error (default: disabled — backend failures fail fast with non-zero exit) |
@@ -49,9 +46,6 @@ opendataloader-pdf --hybrid hancom input.pdf
 |---------|--------|-------------|
 | `off` | ✅ Default | Java-only, no external calls |
 | `docling-fast` | ✅ Available | docling-serve (local) |
-| `hancom` | 📋 Future (Priority) | Hancom Document AI |
-| `azure` | 📋 Future | Azure Document Intelligence |
-| `google` | 📋 Future | Google Document AI |
 
 ---
 
