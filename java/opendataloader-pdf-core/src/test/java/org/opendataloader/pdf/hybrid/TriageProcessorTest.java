@@ -393,4 +393,122 @@ public class TriageProcessorTest {
         row2.getCells()[1].setBoundingBox(new BoundingBox(0, 55.0, 10.0, 100.0, 55.0));
         tableBorder.getRows()[1] = row2;
     }
+
+    /**
+     * Builds a TriageSignals carrying only image-related fields, for directly exercising
+     * {@code hasLargeImage()} / {@code isLikelyScannedPage()} truth tables. The public
+     * 20-arg constructor takes nonWhitespaceTextCount as its last argument.
+     */
+    private TriageSignals imageSignals(double largeImageRatio, double largeImageAspectRatio,
+                                       int nonWhitespaceTextCount) {
+        return new TriageSignals(0, 0, 0.0, 0, false, false,
+                0, 0, 0, false, false, false, false,
+                0, 0, 0.0, false, largeImageRatio, largeImageAspectRatio, nonWhitespaceTextCount);
+    }
+
+    // --- hasLargeImage(): Experiment 005 wide-image gate (size + aspect), scan-agnostic ---
+
+    @Test
+    public void hasLargeImage_wideChartImage_true() {
+        Assertions.assertTrue(imageSignals(0.12, 1.8, 0).hasLargeImage());
+    }
+
+    @Test
+    public void hasLargeImage_smallImage_false() {
+        Assertions.assertFalse(imageSignals(0.10, 1.8, 0).hasLargeImage());
+    }
+
+    @Test
+    public void hasLargeImage_narrowAspect_false() {
+        Assertions.assertFalse(imageSignals(0.12, 1.74, 0).hasLargeImage());
+    }
+
+    @Test
+    public void hasLargeImage_fullPagePortraitScan_false() {
+        // Regression guard: a portrait full-page scan (aspect < 1.75) must NOT be caught by
+        // hasLargeImage(); that belongs to isLikelyScannedPage().
+        Assertions.assertFalse(imageSignals(0.95, 0.71, 0).hasLargeImage());
+    }
+
+    // --- isLikelyScannedPage(): full-page image + near-zero text, aspect-agnostic ---
+
+    @Test
+    public void isLikelyScannedPage_portraitScan_true() {
+        Assertions.assertTrue(imageSignals(0.95, 0.71, 0).isLikelyScannedPage());
+    }
+
+    @Test
+    public void isLikelyScannedPage_landscapeScan_true() {
+        // aspect ~1.41 (< 1.75) must still be caught — the predicate is aspect-agnostic.
+        Assertions.assertTrue(imageSignals(0.95, 1.41, 0).isLikelyScannedPage());
+    }
+
+    @Test
+    public void isLikelyScannedPage_scanWithOcrWhitespaceArtifacts_true() {
+        // Up to MAX_SCANNED_PAGE_TEXT_CHUNKS (2) stray chunks still count as a scan.
+        Assertions.assertTrue(imageSignals(0.95, 0.71, 2).isLikelyScannedPage());
+    }
+
+    @Test
+    public void isLikelyScannedPage_pageWithRealText_false() {
+        Assertions.assertFalse(imageSignals(0.95, 0.71, 3).isLikelyScannedPage());
+    }
+
+    @Test
+    public void isLikelyScannedPage_dominanceRatioBoundary_true() {
+        Assertions.assertTrue(imageSignals(0.5, 0.71, 0).isLikelyScannedPage());
+    }
+
+    @Test
+    public void isLikelyScannedPage_belowDominanceRatio_false() {
+        Assertions.assertFalse(imageSignals(0.49, 0.71, 0).isLikelyScannedPage());
+    }
+
+    @Test
+    public void isLikelyScannedPage_emptyPage_false() {
+        Assertions.assertFalse(imageSignals(0.0, 0.0, 0).isLikelyScannedPage());
+        Assertions.assertFalse(TriageSignals.empty().isLikelyScannedPage());
+    }
+
+    // --- shouldWarnLikelyScanRoutedToJava(): observability for the ambiguous middle ground ---
+
+    @Test
+    public void shouldWarn_fullPageImageWithSomeText_true() {
+        Assertions.assertTrue(
+            TriageProcessor.shouldWarnLikelyScanRoutedToJava(imageSignals(0.95, 0.71, 5)));
+    }
+
+    @Test
+    public void shouldWarn_boundaryJustAboveScanThreshold_true() {
+        // one chunk above MAX_SCANNED_PAGE_TEXT_CHUNKS (2): isLikelyScannedPage no longer fires,
+        // so the page went to Java though it may well be a scan with a thin OCR text layer.
+        Assertions.assertTrue(
+            TriageProcessor.shouldWarnLikelyScanRoutedToJava(imageSignals(0.95, 0.71, 3)));
+    }
+
+    @Test
+    public void shouldWarn_boundaryUpperText_true() {
+        Assertions.assertTrue(
+            TriageProcessor.shouldWarnLikelyScanRoutedToJava(imageSignals(0.95, 0.71, 20)));
+    }
+
+    @Test
+    public void shouldWarn_tooMuchText_false() {
+        // clearly a text page (e.g. magazine hero image + body copy) — no warning noise.
+        Assertions.assertFalse(
+            TriageProcessor.shouldWarnLikelyScanRoutedToJava(imageSignals(0.95, 0.71, 21)));
+    }
+
+    @Test
+    public void shouldWarn_scanAlreadyRoutedToBackend_false() {
+        // <= 2 text chunks: isLikelyScannedPage already routed it to BACKEND, so no warning.
+        Assertions.assertFalse(
+            TriageProcessor.shouldWarnLikelyScanRoutedToJava(imageSignals(0.95, 0.71, 2)));
+    }
+
+    @Test
+    public void shouldWarn_notFullPageImage_false() {
+        Assertions.assertFalse(
+            TriageProcessor.shouldWarnLikelyScanRoutedToJava(imageSignals(0.49, 0.71, 5)));
+    }
 }
