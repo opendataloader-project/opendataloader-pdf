@@ -394,7 +394,6 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
 
         // Get DLA+OCR results (primary source for layout + text)
         JsonNode dlaOcr = json.get(HancomAIClient.LAYOUT_RESULT_KEY);
-        JsonNode tables = json.get("TABLE_STRUCTURE_RECOGNITION");
         JsonNode figureCaptions = json.get("FIGURE_CAPTIONS");
         JsonNode formulaResults = json.get("FORMULA_RESULTS");
 
@@ -677,14 +676,22 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
                 break;
 
             case LABEL_REGIONLIST:
+                // Not routed through dropEmpty: a list's items come from
+                // splitting the region text on newlines, so with no text there
+                // is nothing to build items from and createListFromText returns
+                // null regardless. A text-free label 7 region is therefore lost
+                // even under a geometry-only layout module — enrichment fills
+                // existing nodes but cannot invent the list structure. Tracked
+                // separately; keeping the plain check here states the limit
+                // instead of implying the region survives.
                 if (HybridConfig.REGIONLIST_LIST_ONLY.equals(regionlistStrategy)) {
                     // list-only: always treat as list, skip TSR check
-                    iobj = dropEmpty(text) ? null : createListFromText(text, bbox);
+                    iobj = createListFromText(text, bbox);
                 } else {
                     // table-first (default): if TSR covers it, skip (table handled separately)
                     if (hasOverlappingTsr(bbox, tsrTableBboxes)) return null;
                     // No TSR data — treat as list (parse text by newlines into ListItems)
-                    iobj = dropEmpty(text) ? null : createListFromText(text, bbox);
+                    iobj = createListFromText(text, bbox);
                 }
                 break;
 
