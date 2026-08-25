@@ -10,6 +10,7 @@ Usage:
                               [--force-ocr | --no-ocr] [--ocr-engine ENGINE] [--psm N]
                               [--device DEVICE]
                               [--enrich-formula] [--enrich-picture-description]
+                              [--attach-picture-images]
                               [--max-file-size MB]
 
     # Default: http://localhost:5002
@@ -41,6 +42,9 @@ Usage:
 
     # With picture description (alt text generation)
     opendataloader-pdf-hybrid --enrich-picture-description
+
+    # Attach picture crops without VLM picture description
+    opendataloader-pdf-hybrid --no-enrich-picture-description --attach-picture-images
 
     # Combined: OCR + enrichments
     opendataloader-pdf-hybrid --ocr-lang "en" --enrich-formula --enrich-picture-description
@@ -393,6 +397,7 @@ def create_converter(
     ocr_lang: list[str] | None = None,
     enrich_formula: bool = False,
     enrich_picture_description: bool = False,
+    generate_picture_images: bool | None = None,
     picture_description_prompt: str | None = None,
     device: str = "auto",
 ):
@@ -418,6 +423,9 @@ def create_converter(
                   languages are used.
         enrich_formula: If True, enable formula enrichment (LaTeX extraction).
         enrich_picture_description: If True, enable picture description (alt text generation).
+        generate_picture_images: If set, explicitly control whether picture image
+                                 payloads are attached to picture elements. If None,
+                                 inherit the picture-description setting.
         picture_description_prompt: Custom prompt forwarded to the VLM. If None or blank/whitespace-only, docling's default prompt is used.
         device: Accelerator device for model inference. Options: "auto", "cpu", "cuda", "mps", "xpu".
                 "auto" lets Docling select the best available device. Default: "auto".
@@ -487,6 +495,19 @@ def create_converter(
             vlm_kwargs["prompt"] = picture_description_prompt
         picture_description_options = PictureDescriptionVlmOptions(**vlm_kwargs)
 
+    effective_generate_picture_images = (
+        enrich_picture_description 
+        if generate_picture_images is None 
+        else generate_picture_images
+    )
+
+    if enrich_picture_description and not effective_generate_picture_images:
+        raise ValueError(
+            "Invalid configuration: picture description requires picture image "
+            "generation. Use --attach-picture-images or disable picture "
+            "description."
+        )
+
     pipeline_kwargs = {
         "do_ocr": not disable_ocr,
         "do_table_structure": True,
@@ -494,7 +515,7 @@ def create_converter(
         "table_structure_options": TableStructureOptions(mode=TableFormerMode.ACCURATE),
         "do_formula_enrichment": enrich_formula,
         "do_picture_description": enrich_picture_description,
-        "generate_picture_images": enrich_picture_description,
+        "generate_picture_images": effective_generate_picture_images,
         "accelerator_options": AcceleratorOptions(device=device),
     }
     if picture_description_options is not None:
@@ -520,6 +541,7 @@ def create_app(
     ocr_lang: list[str] | None = None,
     enrich_formula: bool = False,
     enrich_picture_description: bool = False,
+    generate_picture_images: bool | None = None,
     picture_description_prompt: str | None = None,
     max_file_size: int = MAX_FILE_SIZE,
     device: str = "auto",
@@ -534,6 +556,9 @@ def create_app(
         ocr_lang: List of OCR language codes (engine-specific format).
         enrich_formula: If True, enable formula enrichment (LaTeX extraction).
         enrich_picture_description: If True, enable picture description (alt text generation).
+        generate_picture_images: If set, explicitly control whether picture image
+                                 payloads are attached to picture elements. If None,
+                                 inherit the picture-description setting.
         picture_description_prompt: Custom prompt forwarded to the VLM. If None or blank/whitespace-only, docling's default prompt is used.
         max_file_size: Maximum file size in bytes. 0 means no limit (default).
         device: Accelerator device for model inference ("auto", "cpu", "cuda", "mps", "xpu").
@@ -570,6 +595,7 @@ def create_app(
             ocr_lang=ocr_lang,
             enrich_formula=enrich_formula,
             enrich_picture_description=enrich_picture_description,
+            generate_picture_images=generate_picture_images,
             picture_description_prompt=picture_description_prompt,
             device=device,
         )
@@ -722,12 +748,16 @@ def create_app(
         for name, opts in profiles.items():
             logger.info(f"Initializing profile converter: {name} ({opts})")
             t0 = time.perf_counter()
+            profile_generate_picture_images = (
+                True if name == "picture" else generate_picture_images
+            )
             profile_converters[name] = create_converter(
                 force_full_page_ocr=force_ocr,
                 disable_ocr=disable_ocr,
                 ocr_engine=ocr_engine,
                 psm=psm,
                 ocr_lang=ocr_lang,
+                generate_picture_images=profile_generate_picture_images,
                 picture_description_prompt=picture_description_prompt,
                 device=device,
                 **opts,
@@ -910,6 +940,18 @@ def main():
         dest="enrich_picture_description",
     )
     parser.add_argument(
+        "--attach-picture-images",
+        action="store_true",
+        default=None,
+        dest="attach_picture_images",
+        help="Attach picture image payloads to picture elements. Defaults to the picture-description setting.",
+    )
+    parser.add_argument(
+        "--no-attach-picture-images",
+        action="store_false",
+        dest="attach_picture_images",
+    )
+    parser.add_argument(
         "--picture-description-prompt",
         type=str,
         default=None,
@@ -975,6 +1017,8 @@ def main():
         enrichments.append("formula")
     if args.enrich_picture_description:
         enrichments.append("picture-description")
+    if args.attach_picture_images is True:
+        enrichments.append("picture-images")
 
     # Log accelerator detection
     try:
@@ -1018,6 +1062,7 @@ def main():
         ocr_lang=ocr_lang,
         enrich_formula=args.enrich_formula,
         enrich_picture_description=args.enrich_picture_description,
+        generate_picture_images=args.attach_picture_images,
         picture_description_prompt=args.picture_description_prompt,
         max_file_size=max_file_size_bytes,
         device=args.device,

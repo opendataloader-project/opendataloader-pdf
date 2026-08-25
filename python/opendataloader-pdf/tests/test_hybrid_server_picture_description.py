@@ -99,3 +99,31 @@ def test_prompt_ignored_when_enrichment_disabled():
         picture_description_prompt="HELLO WORLD",
     )
     assert opts.do_picture_description is False
+
+
+def test_picture_images_default_follows_picture_description_flag():
+    """If unset, generate_picture_images inherits enrich_picture_description."""
+    opts_enabled = _capture_pipeline_options(enrich_picture_description=True)
+    assert opts_enabled.generate_picture_images is True
+    
+    opts_disabled = _capture_pipeline_options(enrich_picture_description=False)
+    assert opts_disabled.generate_picture_images is False
+
+
+def test_picture_images_can_be_enabled_without_description():
+    """`generate_picture_images=True` works independently from picture description."""
+    opts = _capture_pipeline_options(
+        enrich_picture_description=False,
+        generate_picture_images=True,
+    )
+    assert opts.do_picture_description is False
+    assert opts.generate_picture_images is True
+
+
+def test_picture_images_cannot_be_disabled_with_description():
+    """Picture description requires picture image generation."""
+    with pytest.raises(ValueError, match="picture description requires picture image generation"):
+        _capture_pipeline_options(
+            enrich_picture_description=True,
+            generate_picture_images=False,
+        )
