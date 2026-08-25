@@ -75,7 +75,7 @@ def convert(
         hybrid: Hybrid backend (requires a running server). Quick start: pip install "opendataloader-pdf[hybrid]" && opendataloader-pdf-hybrid --port 5002. For remote servers use --hybrid-url. Values: off (default), docling-fast, hancom-ai. Ignored when --use-struct-tree is set on a tagged PDF (structure tree takes precedence)
         hybrid_mode: Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)
         hybrid_url: Hybrid backend server URL (overrides default)
-        hybrid_timeout: Hybrid backend request timeout in milliseconds (0 = no timeout). Default: 0
+        hybrid_timeout: Hybrid backend request timeout in milliseconds (0 = use the backend's own default; hancom-ai then caps a single call at 1 hour). Regardless of this value, hancom-ai makes up to 3 attempts per request when a failure looks transient. Default: 0
         hybrid_fallback: Opt in to Java fallback on hybrid backend error (default: disabled)
         hybrid_hancom_ai_regionlist_strategy: DLA label 7 (regionlist) handling. Requires --hybrid=hancom-ai. Values: table-first (default; check TSR overlap), list-only (skip TSR, always treat as list)
         hybrid_hancom_ai_ocr_strategy: OCR strategy. Requires --hybrid=hancom-ai. Values: off (default; stream-only, uses the cheaper OCR-free layout module), auto (stream first, OCR fallback), force (OCR-only). Scanned documents need auto or force

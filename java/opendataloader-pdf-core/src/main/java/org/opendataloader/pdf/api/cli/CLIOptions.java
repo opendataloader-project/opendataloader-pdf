@@ -179,7 +179,10 @@ public class CLIOptions {
     private static final String HYBRID_URL_DESC = "Hybrid backend server URL (overrides default)";
 
     private static final String HYBRID_TIMEOUT_LONG_OPTION = "hybrid-timeout";
-    private static final String HYBRID_TIMEOUT_DESC = "Hybrid backend request timeout in milliseconds (0 = no timeout). Default: 0";
+    private static final String HYBRID_TIMEOUT_DESC = "Hybrid backend request timeout in "
+            + "milliseconds (0 = use the backend's own default; hancom-ai then caps a single "
+            + "call at 1 hour). Regardless of this value, hancom-ai makes up to 3 attempts "
+            + "per request when a failure looks transient. Default: 0";
 
     private static final String HYBRID_FALLBACK_LONG_OPTION = "hybrid-fallback";
     private static final String HYBRID_FALLBACK_DESC = "Opt in to Java fallback on hybrid backend error (default: disabled)";

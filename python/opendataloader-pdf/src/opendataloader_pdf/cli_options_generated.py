@@ -232,7 +232,7 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "type": "string",
         "required": False,
         "default": "0",
-        "description": "Hybrid backend request timeout in milliseconds (0 = no timeout). Default: 0",
+        "description": "Hybrid backend request timeout in milliseconds (0 = use the backend's own default; hancom-ai then caps a single call at 1 hour). Regardless of this value, hancom-ai makes up to 3 attempts per request when a failure looks transient. Default: 0",
     },
     {
         "name": "hybrid-fallback",
