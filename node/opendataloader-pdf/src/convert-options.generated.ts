@@ -13,7 +13,7 @@ export interface ConvertOptions {
   format?: string | string[];
   /** Suppress console logging output */
   quiet?: boolean;
-  /** Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg */
+  /** Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg, background */
   contentSafetyOff?: string | string[];
   /** Enable sensitive data sanitization. Replaces emails, phone numbers, IPs, credit cards, and URLs with placeholders */
   sanitize?: boolean;

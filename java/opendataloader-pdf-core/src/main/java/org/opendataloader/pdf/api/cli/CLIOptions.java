@@ -89,7 +89,7 @@ public class CLIOptions {
     // ===== Content Safety =====
     private static final String CONTENT_SAFETY_OFF_LONG_OPTION = "content-safety-off";
     private static final String CONTENT_SAFETY_OFF_DESC = "Disable content safety filters. "
-            + "Values: all, hidden-text, off-page, tiny, hidden-ocg";
+            + "Values: all, hidden-text, off-page, tiny, hidden-ocg, background";
 
     // ===== Sanitize =====
     private static final String SANITIZE_LONG_OPTION = "sanitize";
@@ -486,13 +486,13 @@ public class CLIOptions {
         String[] optionValues = commandLine.getOptionValues(CONTENT_SAFETY_OFF_LONG_OPTION);
         if (optionValues == null || optionValues.length == 0) {
             throw new IllegalArgumentException(
-                    "Option --content-safety-off requires at least one value. Supported values: all, hidden-text, off-page, tiny, hidden-ocg");
+                    "Option --content-safety-off requires at least one value. Supported values: all, hidden-text, off-page, tiny, hidden-ocg, background");
         }
 
         Set<String> values = parseOptionValues(optionValues);
         if (values.isEmpty()) {
             throw new IllegalArgumentException(
-                    "Option --content-safety-off requires at least one value. Supported values: all, hidden-text, off-page, tiny, hidden-ocg");
+                    "Option --content-safety-off requires at least one value. Supported values: all, hidden-text, off-page, tiny, hidden-ocg, background");
         }
 
         for (String value : values) {
@@ -509,6 +509,9 @@ public class CLIOptions {
                 case "hidden-ocg":
                     config.getFilterConfig().setFilterHiddenOCG(false);
                     break;
+                case "background":
+                    config.getFilterConfig().setFilterBackgrounds(false);
+                    break;
                 case "sensitive-data":
                     System.err.println("Warning: '--content-safety-off sensitive-data' is deprecated and has no effect. "
                             + "Sensitive data sanitization is now opt-in. "
@@ -519,10 +522,11 @@ public class CLIOptions {
                     config.getFilterConfig().setFilterOutOfPage(false);
                     config.getFilterConfig().setFilterTinyText(false);
                     config.getFilterConfig().setFilterHiddenOCG(false);
+                    config.getFilterConfig().setFilterBackgrounds(false);
                     break;
                 default:
                     throw new IllegalArgumentException(String.format(
-                            "Unsupported value '%s'. Supported values: all, hidden-text, off-page, tiny, hidden-ocg",
+                            "Unsupported value '%s'. Supported values: all, hidden-text, off-page, tiny, hidden-ocg, background",
                             value));
             }
         }

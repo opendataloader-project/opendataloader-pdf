@@ -51,7 +51,7 @@ def convert(
         password: Password for encrypted PDF files
         format: Output formats (comma-separated). Values: json, text, html, pdf, markdown, tagged-pdf. Default: json. For HTML inside Markdown use --markdown-with-html. For image extraction control use --image-output.
         quiet: Suppress console logging output
-        content_safety_off: Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg
+        content_safety_off: Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg, background
         sanitize: Enable sensitive data sanitization. Replaces emails, phone numbers, IPs, credit cards, and URLs with placeholders
         keep_line_breaks: Preserve original line breaks in extracted text
         replace_invalid_chars: Replacement character for invalid/unrecognized characters. Default: space
