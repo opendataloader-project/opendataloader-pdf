@@ -195,7 +195,9 @@ public class CLIOptions {
             "hybrid-hancom-ai-ocr-strategy";
     private static final String HYBRID_HANCOM_AI_OCR_STRATEGY_DESC =
             "OCR strategy. Requires --hybrid=hancom-ai. "
-            + "Values: off (stream-only), auto (default; stream first, OCR fallback), force (OCR-only)";
+            + "Values: off (default; stream-only, uses the cheaper OCR-free layout "
+            + "module), auto (stream first, OCR fallback), force (OCR-only). "
+            + "Scanned documents need auto or force";
 
     private static final String HYBRID_HANCOM_AI_IMAGE_CACHE_LONG_OPTION =
             "hybrid-hancom-ai-image-cache";
@@ -289,7 +291,7 @@ public class CLIOptions {
             new OptionDefinition(HYBRID_HANCOM_AI_REGIONLIST_STRATEGY_LONG_OPTION, null, "string",
                     "table-first", HYBRID_HANCOM_AI_REGIONLIST_STRATEGY_DESC, true),
             new OptionDefinition(HYBRID_HANCOM_AI_OCR_STRATEGY_LONG_OPTION, null, "string",
-                    "auto", HYBRID_HANCOM_AI_OCR_STRATEGY_DESC, true),
+                    HybridConfig.OCR_OFF, HYBRID_HANCOM_AI_OCR_STRATEGY_DESC, true),
             new OptionDefinition(HYBRID_HANCOM_AI_IMAGE_CACHE_LONG_OPTION, null, "string",
                     "memory", HYBRID_HANCOM_AI_IMAGE_CACHE_DESC, true),
             // "string" rather than a numeric type: the option table only knows

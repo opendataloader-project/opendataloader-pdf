@@ -44,9 +44,11 @@ public class OcrStrategyTest {
     class HybridConfigOcrStrategy {
 
         @Test
-        void defaultOcrStrategy_isAuto() {
+        void defaultOcrStrategy_isOff() {
+            // Text comes from the PDF content stream by default, which lets the
+            // layout pass use the cheaper OCR-free module.
             HybridConfig config = new HybridConfig();
-            assertThat(config.getOcrStrategy()).isEqualTo(HybridConfig.OCR_AUTO);
+            assertThat(config.getOcrStrategy()).isEqualTo(HybridConfig.OCR_OFF);
         }
 
         @Test
