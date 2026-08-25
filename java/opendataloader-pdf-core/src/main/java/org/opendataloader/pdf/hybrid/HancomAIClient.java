@@ -56,7 +56,9 @@ import java.util.logging.Logger;
  * <p>Pipeline:
  * <ol>
  *   <li>pdf2img — convert each page to PNG image</li>
- *   <li>DOCUMENT_LAYOUT_WITH_OCR — layout analysis + OCR on full PDF</li>
+ *   <li>layout on the full PDF — DOCUMENT_LAYOUT_ANALYSIS, or
+ *       DOCUMENT_LAYOUT_WITH_OCR when the OCR strategy needs the text
+ *       (see {@link #layoutModule()})</li>
  *   <li>TABLE_STRUCTURE_RECOGNITION — crop each Table/Regionlist from page image, send to TSR individually</li>
  *   <li>IMAGE_CAPTIONING_EN — crop each visual region (Figure/Chart/Image) and caption it in English</li>
  *   <li>FORMULA_RECOGNITION — crop each Equation region and read it as LaTeX</li>
@@ -101,8 +103,30 @@ public class HancomAIClient implements HybridClient {
      */
     private static final String CAPTION_MODULE = "IMAGE_CAPTIONING_EN";
 
-    /** Layout + OCR module: the required first pass every other pass reads. */
-    private static final String LAYOUT_MODULE = "DOCUMENT_LAYOUT_WITH_OCR";
+    /**
+     * Layout module that also returns OCR text, used when the OCR strategy
+     * asks for it.
+     */
+    private static final String LAYOUT_MODULE_WITH_OCR = "DOCUMENT_LAYOUT_WITH_OCR";
+
+    /**
+     * Layout-only module: geometry with no {@code ocrtext} and no
+     * {@code words[]}. Roughly 4x cheaper than the OCR variant, which is the
+     * whole point of preferring it when the text is going to come from the PDF
+     * content stream anyway.
+     */
+    private static final String LAYOUT_MODULE_DLA_ONLY = "DOCUMENT_LAYOUT_ANALYSIS";
+
+    /**
+     * Key the layout result is filed under in the merged response.
+     *
+     * <p>Deliberately not the wire module name: which layout module runs is a
+     * per-call decision (see {@link #layoutModule()}), while this key is a
+     * fixed contract with {@link HancomAISchemaTransformer}. Keeping them
+     * separate means switching layout modules cannot silently empty the
+     * transformer's input.
+     */
+    static final String LAYOUT_RESULT_KEY = "DOCUMENT_LAYOUT_WITH_OCR";
 
     /** Formula module; returns LaTeX in a {@code formula} field. */
     private static final String FORMULA_MODULE = "FORMULA_RECOGNITION";
@@ -189,6 +213,21 @@ public class HancomAIClient implements HybridClient {
         m.put("FORMULA_RECOGNITION", "formula");
         m.put("CHART_IMAGE_UNDERSTANDING", "chart");
         MODULE_SHORT = java.util.Collections.unmodifiableMap(m);
+    }
+
+    /**
+     * The layout module this call should use.
+     *
+     * <p>With {@code --hybrid-hancom-ai-ocr-strategy off} the text comes from
+     * the PDF content stream, so paying for OCR would buy nothing: the
+     * layout-only module returns the same geometry for a fraction of the cost.
+     * {@code auto} needs the OCR text to compare the stream against, and
+     * {@code force} uses it outright, so both keep the OCR variant.
+     */
+    private String layoutModule() {
+        return config != null && HybridConfig.OCR_OFF.equals(config.getOcrStrategy())
+            ? LAYOUT_MODULE_DLA_ONLY
+            : LAYOUT_MODULE_WITH_OCR;
     }
 
     private static String sha256ShortHex(byte[] data) {
@@ -307,11 +346,14 @@ public class HancomAIClient implements HybridClient {
             // so this is the only place that catches it on that path.
             if (HancomPageRenumber.pagesOf(dlaOcrResult).isEmpty()) {
                 throw new IOException(
-                    "Hancom AI DOCUMENT_LAYOUT_WITH_OCR returned empty result — "
+                    "Hancom AI " + layoutModule() + " returned empty result — "
                     + "backend unavailable or rejected the document");
             }
-            merged.set(LAYOUT_MODULE, dlaOcrResult);
-            addTimings(timingsNode, LAYOUT_MODULE, dlaOcrResult);
+            merged.set(LAYOUT_RESULT_KEY, dlaOcrResult);
+            // Timings are filed under the module actually called, not the fixed
+            // result key: the two layout modules differ ~2.7x in cost, so a
+            // shared label would compare unlike things across runs.
+            addTimings(timingsNode, layoutModule(), dlaOcrResult);
 
             // Step 2: Table Structure — crop each Table region from page image, send to TSR individually
             long tsrStartMs = System.currentTimeMillis();
@@ -434,7 +476,7 @@ public class HancomAIClient implements HybridClient {
         // limit exists to refuse.
         boolean wholeDocument = pages0Based.size() == resolved.pageCount;
         if (wholeDocument && (chunk <= 0 || pages0Based.size() <= chunk)) {
-            JsonNode whole = callModule(pdfBytes, LAYOUT_MODULE);
+            JsonNode whole = callModule(pdfBytes, layoutModule());
             // Page numbers are already absolute on this path — the backend saw
             // the whole file — so there is nothing to renumber, but the pages
             // still have to be accounted for. A reply covering fewer pages than
@@ -460,7 +502,7 @@ public class HancomAIClient implements HybridClient {
             JsonNode sliceResult = null;
             try {
                 byte[] slicePdf = HancomPdfPageSlicer.extractPages(pdfBytes, slice);
-                sliceResult = callModule(slicePdf, LAYOUT_MODULE, slice);
+                sliceResult = callModule(slicePdf, layoutModule(), slice);
             } catch (IOException | RuntimeException e) {
                 // A slice that fails to build or send is a per-slice problem:
                 // losing 20 pages must not cost the other 200, so the failure is

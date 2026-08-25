@@ -56,7 +56,11 @@ import java.util.regex.Pattern;
  *
  * <p>The merged JSON from {@link HancomAIClient} contains results from three modules:
  * <ul>
- *   <li>{@code DOCUMENT_LAYOUT_WITH_OCR} — objects with label + bbox + ocrtext</li>
+ *   <li>{@code DOCUMENT_LAYOUT_WITH_OCR} — objects with label + bbox, plus
+ *       {@code ocrtext} and {@code words[]} when the layout module ran OCR.
+ *       With {@code --hybrid-hancom-ai-ocr-strategy off} the layout module
+ *       returns geometry only and the text is filled in later from the PDF
+ *       content stream; the key is fixed either way.</li>
  *   <li>{@code TABLE_STRUCTURE_RECOGNITION} — table cells with html + bbox</li>
  *   <li>{@code IMAGE_CAPTIONING_EN} — per-figure captions (English)</li>
  *   <li>{@code FORMULA_RECOGNITION} — per-equation LaTeX</li>
@@ -314,6 +318,20 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
     }
 
     private int pictureIndex;
+
+    /**
+     * True when the layout response carried no per-object text at all.
+     *
+     * <p>{@code DOCUMENT_LAYOUT_ANALYSIS} returns geometry only — no
+     * {@code ocrtext}, no {@code words[]} — so every text region arrives empty
+     * and the text is supplied later from the PDF content stream by
+     * {@code HybridDocumentProcessor}. Dropping empty regions here, as is right
+     * when OCR ran and genuinely found nothing, would discard the very regions
+     * that enrichment is about to fill: it matches Java TextChunks to a region's
+     * bbox, so the region must survive this far to receive its text.
+     */
+    private boolean layoutTextAbsent;
+
     private String regionlistStrategy = HybridConfig.REGIONLIST_TABLE_FIRST;
     private Map<Long, ElementMetadata> elementMetadataMap = new LinkedHashMap<>();
     private Map<Integer, List<OcrWordInfo>> ocrWordsByPage = new HashMap<>();
@@ -375,13 +393,14 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
         ocrWordsByPage.clear();
 
         // Get DLA+OCR results (primary source for layout + text)
-        JsonNode dlaOcr = json.get("DOCUMENT_LAYOUT_WITH_OCR");
+        JsonNode dlaOcr = json.get(HancomAIClient.LAYOUT_RESULT_KEY);
         JsonNode tables = json.get("TABLE_STRUCTURE_RECOGNITION");
         JsonNode figureCaptions = json.get("FIGURE_CAPTIONS");
         JsonNode formulaResults = json.get("FORMULA_RESULTS");
 
         // Determine page count from DLA results
         List<JsonNode> dlaPages = extractPages(dlaOcr);
+        layoutTextAbsent = !anyObjectCarriesText(dlaPages);
         int numPages = Math.max(dlaPages.size(), pageHeights != null ?
             pageHeights.keySet().stream().mapToInt(Integer::intValue).max().orElse(0) : 0);
 
@@ -539,7 +558,7 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
         // When the caller passes a raw single-page DLA node (no wrapper), rewrap it so
         // extractPages() can find it; otherwise transform() sees no pages and returns empty.
         JsonNode wrapped = pageContent;
-        if (pageContent != null && pageContent.get("DOCUMENT_LAYOUT_WITH_OCR") == null) {
+        if (pageContent != null && pageContent.get(HancomAIClient.LAYOUT_RESULT_KEY) == null) {
             ObjectNode page = pageContent.isObject()
                 ? ((ObjectNode) pageContent).deepCopy()
                 : JsonNodeFactory.instance.objectNode();
@@ -547,7 +566,7 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
             ArrayNode pages = JsonNodeFactory.instance.arrayNode();
             pages.add(page);
             ObjectNode root = JsonNodeFactory.instance.objectNode();
-            root.set("DOCUMENT_LAYOUT_WITH_OCR", pages);
+            root.set(HancomAIClient.LAYOUT_RESULT_KEY, pages);
             wrapped = root;
         }
 
@@ -560,6 +579,43 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
     /**
      * Transforms a single DLA object to an IObject based on its label.
      */
+    /**
+     * Whether any object in the layout response carries text.
+     *
+     * <p>Decided from the response rather than from the configured module name:
+     * what matters downstream is whether text actually arrived, and a layout
+     * module that stops returning it would otherwise change behaviour silently.
+     * A document whose every region is legitimately empty reads the same as a
+     * text-free module here, which is harmless — there is no text to drop.
+     */
+    private static boolean anyObjectCarriesText(List<JsonNode> dlaPages) {
+        for (JsonNode page : dlaPages) {
+            JsonNode objects = page.get("objects");
+            if (objects == null || !objects.isArray()) continue;
+            for (JsonNode obj : objects) {
+                if (obj.hasNonNull("ocrtext") && !obj.get("ocrtext").asText("").isEmpty()) {
+                    return true;
+                }
+                JsonNode words = obj.get("words");
+                if (words != null && words.isArray() && words.size() > 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Whether a region carrying no text should be dropped.
+     *
+     * <p>Only when the layout module supplied text for this document: an empty
+     * region then means OCR looked and found nothing. When the module returns
+     * geometry only, the region is kept so stream enrichment can fill it.
+     */
+    private boolean dropEmpty(String text) {
+        return text.isEmpty() && !layoutTextAbsent;
+    }
+
     private IObject transformObject(JsonNode obj, int pageIndex, int objectIndex,
                                      double pageHeight,
                                      Map<String, String> figureCaptionMap,
@@ -595,16 +651,16 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
             }
 
             case LABEL_LIST_TEXT:
-                iobj = text.isEmpty() ? null : createListItem(text, bbox);
+                iobj = dropEmpty(text) ? null : createListItem(text, bbox);
                 break;
 
             case LABEL_TABLE_NAME:
             case LABEL_FIGURE_NAME:
-                iobj = text.isEmpty() ? null : createCaption(text, bbox);
+                iobj = dropEmpty(text) ? null : createCaption(text, bbox);
                 break;
 
             case LABEL_FOOTNOTE:
-                iobj = text.isEmpty() ? null : createFootnote(text, bbox);
+                iobj = dropEmpty(text) ? null : createFootnote(text, bbox);
                 break;
 
             case LABEL_PARA_TEXT:
@@ -617,18 +673,18 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
                 // explicit cases keeps the routing intent visible and prevents
                 // future silent misrouting if the default branch behavior
                 // changes.
-                iobj = text.isEmpty() ? null : createParagraph(text, bbox);
+                iobj = dropEmpty(text) ? null : createParagraph(text, bbox);
                 break;
 
             case LABEL_REGIONLIST:
                 if (HybridConfig.REGIONLIST_LIST_ONLY.equals(regionlistStrategy)) {
                     // list-only: always treat as list, skip TSR check
-                    iobj = text.isEmpty() ? null : createListFromText(text, bbox);
+                    iobj = dropEmpty(text) ? null : createListFromText(text, bbox);
                 } else {
                     // table-first (default): if TSR covers it, skip (table handled separately)
                     if (hasOverlappingTsr(bbox, tsrTableBboxes)) return null;
                     // No TSR data — treat as list (parse text by newlines into ListItems)
-                    iobj = text.isEmpty() ? null : createListFromText(text, bbox);
+                    iobj = dropEmpty(text) ? null : createListFromText(text, bbox);
                 }
                 break;
 
@@ -662,7 +718,7 @@ public class HancomAISchemaTransformer implements HybridSchemaTransformer {
             }
 
             default:
-                iobj = text.isEmpty() ? null : createParagraph(text, bbox);
+                iobj = dropEmpty(text) ? null : createParagraph(text, bbox);
                 break;
         }
 

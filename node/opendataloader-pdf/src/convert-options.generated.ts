@@ -59,7 +59,7 @@ export interface ConvertOptions {
   hybridFallback?: boolean;
   /** DLA label 7 (regionlist) handling. Requires --hybrid=hancom-ai. Values: table-first (default; check TSR overlap), list-only (skip TSR, always treat as list) */
   hybridHancomAiRegionlistStrategy?: string;
-  /** OCR strategy. Requires --hybrid=hancom-ai. Values: off (stream-only), auto (default; stream first, OCR fallback), force (OCR-only) */
+  /** OCR strategy. Requires --hybrid=hancom-ai. Values: off (default; stream-only, uses the cheaper OCR-free layout module), auto (stream first, OCR fallback), force (OCR-only). Scanned documents need auto or force */
   hybridHancomAiOcrStrategy?: string;
   /** Page image cache backing. Requires --hybrid=hancom-ai. Values: memory (default), disk */
   hybridHancomAiImageCache?: string;

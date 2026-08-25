@@ -34,7 +34,7 @@ export function registerCliOptions(program: Command): void {
   program.option('--hybrid-timeout <value>', 'Hybrid backend request timeout in milliseconds (0 = no timeout). Default: 0');
   program.option('--hybrid-fallback', 'Opt in to Java fallback on hybrid backend error (default: disabled)');
   program.option('--hybrid-hancom-ai-regionlist-strategy <value>', 'DLA label 7 (regionlist) handling. Requires --hybrid=hancom-ai. Values: table-first (default; check TSR overlap), list-only (skip TSR, always treat as list)');
-  program.option('--hybrid-hancom-ai-ocr-strategy <value>', 'OCR strategy. Requires --hybrid=hancom-ai. Values: off (stream-only), auto (default; stream first, OCR fallback), force (OCR-only)');
+  program.option('--hybrid-hancom-ai-ocr-strategy <value>', 'OCR strategy. Requires --hybrid=hancom-ai. Values: off (default; stream-only, uses the cheaper OCR-free layout module), auto (stream first, OCR fallback), force (OCR-only). Scanned documents need auto or force');
   program.option('--hybrid-hancom-ai-image-cache <value>', 'Page image cache backing. Requires --hybrid=hancom-ai. Values: memory (default), disk');
   program.option('--hybrid-hancom-ai-layout-page-chunk <value>', 'Pages per layout request. Requires --hybrid=hancom-ai. The backend accepts at most 30 pages per request, so longer documents are sliced; 0 disables slicing and sends every page in one request. Default: 20');
   program.option('--to-stdout', 'Write output to stdout instead of file (single format only)');

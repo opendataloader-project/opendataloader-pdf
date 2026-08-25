@@ -78,7 +78,7 @@ def convert(
         hybrid_timeout: Hybrid backend request timeout in milliseconds (0 = no timeout). Default: 0
         hybrid_fallback: Opt in to Java fallback on hybrid backend error (default: disabled)
         hybrid_hancom_ai_regionlist_strategy: DLA label 7 (regionlist) handling. Requires --hybrid=hancom-ai. Values: table-first (default; check TSR overlap), list-only (skip TSR, always treat as list)
-        hybrid_hancom_ai_ocr_strategy: OCR strategy. Requires --hybrid=hancom-ai. Values: off (stream-only), auto (default; stream first, OCR fallback), force (OCR-only)
+        hybrid_hancom_ai_ocr_strategy: OCR strategy. Requires --hybrid=hancom-ai. Values: off (default; stream-only, uses the cheaper OCR-free layout module), auto (stream first, OCR fallback), force (OCR-only). Scanned documents need auto or force
         hybrid_hancom_ai_image_cache: Page image cache backing. Requires --hybrid=hancom-ai. Values: memory (default), disk
         hybrid_hancom_ai_layout_page_chunk: Pages per layout request. Requires --hybrid=hancom-ai. The backend accepts at most 30 pages per request, so longer documents are sliced; 0 disables slicing and sends every page in one request. Default: 20
         to_stdout: Write output to stdout instead of file (single format only)

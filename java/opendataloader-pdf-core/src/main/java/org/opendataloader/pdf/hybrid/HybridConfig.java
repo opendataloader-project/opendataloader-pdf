@@ -79,7 +79,14 @@ public class HybridConfig {
     /** OCR strategy: force (OCR only, skip stream-based enrichment). */
     public static final String OCR_FORCE = "force";
 
-    private String ocrStrategy = OCR_AUTO;
+    /**
+     * Default {@link #OCR_OFF}: text is taken from the PDF content stream, so
+     * the layout pass can use the cheaper OCR-free module. On a born-digital
+     * corpus this is ~4x cheaper than running OCR whose output the stream text
+     * then replaces. Scanned documents, which have no stream text to use, need
+     * {@link #OCR_AUTO} or {@link #OCR_FORCE}.
+     */
+    private String ocrStrategy = OCR_OFF;
 
     /** Page image cache strategy: "memory" (default) or "disk". */
     private String imageCache = "memory";
@@ -377,8 +384,9 @@ public class HybridConfig {
      * Sets the OCR strategy for enrichment fallback.
      *
      * <ul>
-     *   <li>{@code "off"}: stream-based enrichment only, no OCR fallback</li>
-     *   <li>{@code "auto"} (default): try stream enrichment first, fall back to OCR words when no match</li>
+     *   <li>{@code "off"} (default): stream-based enrichment only, no OCR
+     *       fallback; the layout pass then uses the cheaper OCR-free module</li>
+     *   <li>{@code "auto"}: try stream enrichment first, fall back to OCR words when no match</li>
      *   <li>{@code "force"}: skip stream enrichment, always use OCR words</li>
      * </ul>
      *

@@ -82,6 +82,73 @@ class HancomAIPageChunkingTest {
             new OkHttpClient(), mapper, config);
     }
 
+    private HancomAIClient clientWithOcrStrategy(String ocrStrategy) {
+        HybridConfig config = new HybridConfig();
+        config.setOcrStrategy(ocrStrategy);
+        return new HancomAIClient(
+            server.url("").toString().replaceAll("/$", ""),
+            new OkHttpClient(), mapper, config);
+    }
+
+    /**
+     * The module name in the next recorded request's multipart body.
+     */
+    private String nextRequestModule() throws Exception {
+        String body = nextRequestBody();
+        int at = body.indexOf("OPEN_API_NAME");
+        assertThat(at).as("request carries a module name").isGreaterThanOrEqualTo(0);
+        String after = body.substring(at);
+        int blank = after.indexOf("\r\n\r\n");
+        String value = after.substring(blank + 4);
+        return value.substring(0, value.indexOf("\r\n")).trim();
+    }
+
+    /**
+     * With OCR off the text comes from the PDF content stream, so the layout
+     * pass must ask for the cheaper module that returns geometry only. Asserted
+     * on the wire because that request is what the cost is paid for.
+     */
+    @Test
+    void ocrOffRequestsTheLayoutOnlyModule() throws Exception {
+        enqueueLayoutSlices(1);
+
+        clientWithOcrStrategy(HybridConfig.OCR_OFF)
+            .convert(requestFor(pdfWithPages(1), pages1Indexed(1, 1)));
+
+        assertThat(nextRequestModule()).isEqualTo("DOCUMENT_LAYOUT_ANALYSIS");
+    }
+
+    /**
+     * auto compares stream text against OCR text, so it must keep asking for the
+     * module that returns both. force uses the OCR text outright.
+     */
+    @Test
+    void ocrAutoAndForceRequestTheModuleThatReturnsText() throws Exception {
+        enqueueLayoutSlices(1);
+        clientWithOcrStrategy(HybridConfig.OCR_AUTO)
+            .convert(requestFor(pdfWithPages(1), pages1Indexed(1, 1)));
+        assertThat(nextRequestModule()).isEqualTo("DOCUMENT_LAYOUT_WITH_OCR");
+
+        enqueueLayoutSlices(1);
+        clientWithOcrStrategy(HybridConfig.OCR_FORCE)
+            .convert(requestFor(pdfWithPages(1), pages1Indexed(1, 1)));
+        assertThat(nextRequestModule()).isEqualTo("DOCUMENT_LAYOUT_WITH_OCR");
+    }
+
+    /**
+     * Whichever module ran, the transformer reads the layout result under one
+     * fixed key. A mismatch here would silently empty its input.
+     */
+    @Test
+    void layoutResultKeyDoesNotDependOnTheModule() throws Exception {
+        enqueueLayoutSlices(1);
+
+        HybridClient.HybridResponse response = clientWithOcrStrategy(HybridConfig.OCR_OFF)
+            .convert(requestFor(pdfWithPages(1), pages1Indexed(1, 1)));
+
+        assertThat(response.getJson().has(HancomAIClient.LAYOUT_RESULT_KEY)).isTrue();
+    }
+
     /** A PDF whose page <i>i</i> is {@code 100 + i} points wide. */
     private static byte[] pdfWithPages(int count) throws IOException {
         try (PDDocument doc = new PDDocument()) {
@@ -366,13 +433,14 @@ class HancomAIPageChunkingTest {
             requestIds.add(body.substring(at, body.indexOf("\r\n", at)));
         }
         // Absolute 0-based first and last page of each slice.
-        assertThat(requestIds.get(0)).endsWith("-dla-ocr-p0-1");
-        assertThat(requestIds.get(1)).endsWith("-dla-ocr-p2-3");
+        assertThat(requestIds.get(0)).endsWith("-dla-p0-1");
+        assertThat(requestIds.get(1)).endsWith("-dla-p2-3");
     }
 
     /**
-     * An unsliced document keeps the request id it always had, so existing
-     * recordings and log greps still match.
+     * An unsliced document's request id carries no page-range suffix, so it
+     * stays distinguishable from a slice of the same document. The module slug
+     * tracks the layout module in use ("dla" for DOCUMENT_LAYOUT_ANALYSIS).
      */
     @Test
     void unslicedRequestIdIsUnchanged() throws Exception {
@@ -382,7 +450,7 @@ class HancomAIPageChunkingTest {
 
         String body = nextRequestBody();
         int at = body.indexOf("odl-");
-        assertThat(body.substring(at, body.indexOf("\r\n", at))).endsWith("-dla-ocr");
+        assertThat(body.substring(at, body.indexOf("\r\n", at))).endsWith("-dla");
     }
 
     /**
