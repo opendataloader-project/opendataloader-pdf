@@ -53,7 +53,7 @@ export interface ConvertOptions {
   hybridMode?: string;
   /** Hybrid backend server URL (overrides default) */
   hybridUrl?: string;
-  /** Hybrid backend request timeout in milliseconds (0 = no timeout). Default: 0 */
+  /** Hybrid backend request timeout in milliseconds (0 = use the backend's own default; hancom-ai then caps a single call at 1 hour). Regardless of this value, hancom-ai makes up to 3 attempts per request when a failure looks transient. Default: 0 */
   hybridTimeout?: string;
   /** Opt in to Java fallback on hybrid backend error (default: disabled) */
   hybridFallback?: boolean;

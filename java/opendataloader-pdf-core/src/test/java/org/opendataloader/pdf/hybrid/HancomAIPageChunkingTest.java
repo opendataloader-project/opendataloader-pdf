@@ -77,17 +77,26 @@ class HancomAIPageChunkingTest {
     private HancomAIClient clientWithChunk(int chunk) {
         HybridConfig config = new HybridConfig();
         config.setLayoutPageChunk(chunk);
-        return new HancomAIClient(
+        return newClient(config);
+    }
+
+    /**
+     * Client with the retry backoff collapsed. Several tests here drive a
+     * transient failure on purpose; at the real 5s/45s waits the class would
+     * take minutes to assert behaviour that does not depend on the delay.
+     */
+    private HancomAIClient newClient(HybridConfig config) {
+        HancomAIClient client = new HancomAIClient(
             server.url("").toString().replaceAll("/$", ""),
             new OkHttpClient(), mapper, config);
+        client.setRetryBackoffMsForTest(1L, 1L);
+        return client;
     }
 
     private HancomAIClient clientWithOcrStrategy(String ocrStrategy) {
         HybridConfig config = new HybridConfig();
         config.setOcrStrategy(ocrStrategy);
-        return new HancomAIClient(
-            server.url("").toString().replaceAll("/$", ""),
-            new OkHttpClient(), mapper, config);
+        return newClient(config);
     }
 
     /**
@@ -526,6 +535,10 @@ class HancomAIPageChunkingTest {
     @Test
     void oneFailedSliceKeepsTheOtherPages() throws Exception {
         server.enqueue(new MockResponse.Builder().code(200).body(layoutResponse(2)).build());
+        // 500 is transient, so the middle slice is retried to its budget before
+        // being given up on; every one of those attempts consumes a response.
+        server.enqueue(new MockResponse.Builder().code(500).body("boom").build());
+        server.enqueue(new MockResponse.Builder().code(500).body("boom").build());
         server.enqueue(new MockResponse.Builder().code(500).body("boom").build());
         server.enqueue(new MockResponse.Builder().code(200).body(layoutResponse(2)).build());
 
@@ -614,7 +627,9 @@ class HancomAIPageChunkingTest {
      */
     @Test
     void allSlicesFailingIsAnError() throws Exception {
-        for (int i = 0; i < 3; i++) {
+        // Three slices, each retried to its budget: queue a response for every
+        // attempt, or the unanswered ones sit until the call timeout.
+        for (int i = 0; i < 3 * 3; i++) {
             server.enqueue(new MockResponse.Builder().code(500).body("boom").build());
         }
 

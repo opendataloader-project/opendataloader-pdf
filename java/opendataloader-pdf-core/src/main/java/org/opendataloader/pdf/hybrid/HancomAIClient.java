@@ -64,6 +64,13 @@ import java.util.logging.Logger;
  *   <li>FORMULA_RECOGNITION — crop each Equation region and read it as LaTeX</li>
  * </ol>
  *
+ * <p><b>Not thread-safe.</b> One {@code convert} call at a time per instance:
+ * the retry breakers and the source hash are per-document state held in fields,
+ * so two overlapping calls would trip each other's breakers and stamp each
+ * other's request ids. {@link HybridClientFactory} caches one client per backend
+ * and the conversion path is sequential, so this holds today; the public
+ * {@link #convertAsync} is the way to break it.
+ *
  * @see HancomAISchemaTransformer
  */
 public class HancomAIClient implements HybridClient {
@@ -95,6 +102,94 @@ public class HancomAIClient implements HybridClient {
 
     /** Padding (pixels) added around table crops before sending to TSR. */
     private static final int TSR_CROP_PADDING = 20;
+
+    /**
+     * Ceiling on one whole HTTP call, applied when no explicit
+     * {@code --hybrid-timeout} is given.
+     *
+     * <p>Deliberately far above real work rather than tuned to it: a 20-page
+     * OCR chunk measured 268s, so this never truncates a request that is still
+     * making progress. Its job is only to stop an indefinite hang — without it
+     * the default (0) waits forever, which in a batch is indistinguishable from
+     * a crash.
+     *
+     * <p>Not applied as readTimeout: the backend computes for minutes and then
+     * answers at once, so an idle-byte limit would kill healthy requests. This
+     * bounds the call as a whole instead.
+     */
+    private static final int DEFAULT_CALL_TIMEOUT_MS = 3_600_000;
+
+    /**
+     * Connect timeout. A TCP connect either succeeds promptly or the backend is
+     * not there, so this stays short regardless of how long the work takes.
+     */
+    private static final int CONNECT_TIMEOUT_MS = 10_000;
+
+    /** Total attempts per request, first try included. */
+    private static final int MAX_ATTEMPTS = 3;
+
+    /**
+     * Waits before the 2nd and 3rd attempts, in milliseconds.
+     *
+     * <p>The second wait clears a backend restart rather than a blip:
+     * scripts/dla-corpus-scan/scan.sh records restarts taking 45-60s to come
+     * back, and a retry that returns sooner than that just spends an attempt
+     * on a server still starting. The first is short because a one-off error
+     * needs no such wait.
+     */
+    private static final long[] RETRY_BACKOFF_MS = {5_000L, 45_000L};
+
+    /**
+     * Backoff actually used. Overridden only by tests, which would otherwise
+     * have to sleep out the real 50s to assert a retry happened.
+     */
+    private long[] retryBackoffMs = RETRY_BACKOFF_MS;
+
+    /**
+     * Consecutive enrichment calls that exhausted their retries.
+     *
+     * <p>Retrying is scoped to one request, but a backend that is refusing
+     * everything makes every page pay the full backoff: measured, a document
+     * whose pdf2img calls all failed spent 50s per page and ran past ten
+     * minutes doing nothing but waiting. Past the threshold the retries are
+     * dropped so the remaining pages fail fast, while single failures — one bad
+     * page in a healthy document — still get their attempts.
+     *
+     * <p>Enrichment only. The layout pass keeps retrying regardless: losing it
+     * costs the whole document, and there are far fewer such calls.
+     */
+    private int consecutiveEnrichmentFailures;
+
+    /** Consecutive layout slices that produced no pages. See the streak limit. */
+    private int consecutiveLayoutSliceFailures;
+
+    /**
+     * Consecutive exhausted enrichment calls after which retrying is treated as
+     * futile for the rest of the document.
+     */
+    private static final int ENRICHMENT_FAILURE_STREAK_LIMIT = 3;
+
+    /**
+     * Consecutive failed layout slices after which the remaining slices stop
+     * being retried.
+     *
+     * <p>The retry budget is per request, so a long document against a dead
+     * backend pays it once per slice: a 400-page document is 20 slices, and at
+     * 3 attempts plus 50s of backoff each that is over a thousand seconds of
+     * sleeping to produce the blank pages it would have produced immediately.
+     * Once this many slices in a row have come back empty, the rest are sent
+     * once each — enough to pick the backend back up if it recovers, without
+     * paying the full budget twenty times over.
+     */
+    private static final int LAYOUT_SLICE_FAILURE_STREAK_LIMIT = 3;
+
+    // Visible for testing
+    void setRetryBackoffMsForTest(long... backoffMs) {
+        if (backoffMs == null || backoffMs.length == 0) {
+            throw new IllegalArgumentException("backoffMs must hold at least one wait");
+        }
+        this.retryBackoffMs = backoffMs;
+    }
 
     /**
      * Captioning module. {@code IMAGE_CAPTIONING} and {@code IMAGE_CAPTIONING_EN}
@@ -245,15 +340,29 @@ public class HancomAIClient implements HybridClient {
     // Test hook
     void setSourcePdfShaShort(String s) { this.sourcePdfShaShort = s; }
 
+    // Visible for testing: lets a test assert the timeouts actually built.
+    OkHttpClient httpClientForTest() { return httpClient; }
+
     public HancomAIClient(HybridConfig config) {
         this.config = config;
         this.baseUrl = config.getEffectiveUrl("hancom-ai");
         this.objectMapper = new ObjectMapper();
-        this.httpClient = new OkHttpClient.Builder()
-            .connectTimeout(config.getTimeoutMs(), TimeUnit.MILLISECONDS)
-            .readTimeout(config.getTimeoutMs(), TimeUnit.MILLISECONDS)
-            .writeTimeout(config.getTimeoutMs(), TimeUnit.MILLISECONDS)
-            .build();
+        // An explicit --hybrid-timeout keeps its exact meaning, 0 (no limit)
+        // included, so anyone who set it deliberately is unaffected. Only the
+        // unset case gains a ceiling, and it lands on callTimeout rather than
+        // the per-stage timeouts for the reason given on the constant.
+        int configured = config.getTimeoutMs();
+        OkHttpClient.Builder builder = new OkHttpClient.Builder()
+            .readTimeout(configured, TimeUnit.MILLISECONDS)
+            .writeTimeout(configured, TimeUnit.MILLISECONDS);
+        if (configured > 0) {
+            builder.connectTimeout(configured, TimeUnit.MILLISECONDS)
+                .callTimeout(configured, TimeUnit.MILLISECONDS);
+        } else {
+            builder.connectTimeout(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+                .callTimeout(DEFAULT_CALL_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        }
+        this.httpClient = builder.build();
     }
 
     // Visible for testing
@@ -272,9 +381,13 @@ public class HancomAIClient implements HybridClient {
 
     @Override
     public JsonNode fetchHealth() {
+        // callTimeout is overridden too: it is inherited from the conversion
+        // client, where it is deliberately an hour, and a health probe that can
+        // hang for an hour is not a health probe.
         OkHttpClient healthClient = httpClient.newBuilder()
             .connectTimeout(HEALTH_CHECK_TIMEOUT_MS, TimeUnit.MILLISECONDS)
             .readTimeout(HEALTH_CHECK_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+            .callTimeout(HEALTH_CHECK_TIMEOUT_MS, TimeUnit.MILLISECONDS)
             .build();
         Request request = new Request.Builder()
             .url(baseUrl + HEALTH_ENDPOINT)
@@ -294,9 +407,13 @@ public class HancomAIClient implements HybridClient {
 
     @Override
     public void checkAvailability() throws IOException {
+        // callTimeout is overridden too: it is inherited from the conversion
+        // client, where it is deliberately an hour, and a health probe that can
+        // hang for an hour is not a health probe.
         OkHttpClient healthClient = httpClient.newBuilder()
             .connectTimeout(HEALTH_CHECK_TIMEOUT_MS, TimeUnit.MILLISECONDS)
             .readTimeout(HEALTH_CHECK_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+            .callTimeout(HEALTH_CHECK_TIMEOUT_MS, TimeUnit.MILLISECONDS)
             .build();
 
         Request request = new Request.Builder()
@@ -320,6 +437,10 @@ public class HancomAIClient implements HybridClient {
     public HybridResponse convert(HybridRequest request) throws IOException {
         byte[] pdfBytes = request.getPdfBytes();
         this.sourcePdfShaShort = sha256ShortHex(pdfBytes);
+        // The breaker is a judgement about this document's run, not a lasting
+        // verdict on the backend: one cached client serves many documents.
+        this.consecutiveEnrichmentFailures = 0;
+        this.consecutiveLayoutSliceFailures = 0;
         MissingEngines missingEngines = new MissingEngines();
         LOGGER.log(Level.INFO, "Hancom AI: processing PDF ({0} bytes)", pdfBytes.length);
 
@@ -502,7 +623,8 @@ public class HancomAIClient implements HybridClient {
             JsonNode sliceResult = null;
             try {
                 byte[] slicePdf = HancomPdfPageSlicer.extractPages(pdfBytes, slice);
-                sliceResult = callModule(slicePdf, layoutModule(), slice);
+                sliceResult = callModule(slicePdf, layoutModule(), slice,
+                    consecutiveLayoutSliceFailures >= LAYOUT_SLICE_FAILURE_STREAK_LIMIT);
             } catch (IOException | RuntimeException e) {
                 // A slice that fails to build or send is a per-slice problem:
                 // losing 20 pages must not cost the other 200, so the failure is
@@ -532,6 +654,15 @@ public class HancomAIClient implements HybridClient {
 
             if (!placedPages.isEmpty()) {
                 sliceResults.add(placed);
+                consecutiveLayoutSliceFailures = 0;
+            } else {
+                consecutiveLayoutSliceFailures++;
+                if (consecutiveLayoutSliceFailures == LAYOUT_SLICE_FAILURE_STREAK_LIMIT) {
+                    LOGGER.log(Level.WARNING,
+                        "Hancom AI: {0} layout slices failed in a row — sending the "
+                        + "remaining slices once each instead of retrying",
+                        LAYOUT_SLICE_FAILURE_STREAK_LIMIT);
+                }
             }
 
             // Any page of this slice with no record of its own is reported so the
@@ -970,31 +1101,12 @@ public class HancomAIClient implements HybridClient {
         LOGGER.log(Level.FINE, "Calling Hancom AI module (image): {0} [{1}]",
             new Object[]{moduleName, requestId});
 
-        try (Response response = httpClient.newCall(httpRequest).execute()) {
-            if (!response.isSuccessful()) {
-                ResponseBody respBody = response.body();
-                String errorMsg = respBody != null ? respBody.string() : "";
-                LOGGER.log(Level.WARNING, "Hancom AI module {0} (image) returned HTTP {1}: {2}",
-                    new Object[]{moduleName, response.code(), errorMsg});
-                return objectMapper.createArrayNode();
-            }
-
-            ResponseBody respBody = response.body();
-            if (respBody == null) {
-                return objectMapper.createArrayNode();
-            }
-
-            JsonNode root = objectMapper.readTree(respBody.string());
-            boolean success = root.has("SUCCESS") && root.get("SUCCESS").asBoolean();
-            if (!success) {
-                LOGGER.log(Level.WARNING, "Hancom AI module {0} (image) returned SUCCESS=false: {1}",
-                    new Object[]{moduleName, root.has("MSG") ? root.get("MSG").asText() : ""});
-                return objectMapper.createArrayNode();
-            }
-
-            JsonNode result = root.get("RESULT");
-            return result != null ? result : objectMapper.createArrayNode();
-        }
+        // Retried on the same terms as the layout call, and counted towards the
+        // enrichment breaker: these per-region calls are the numerous ones, so a
+        // restart lands here hardest — without a retry every table on the page
+        // comes back structurally empty and nothing reports it.
+        return withRetry(moduleName + " (image)", requestId, true, false,
+            () -> attemptModule(httpRequest, moduleName + " (image)"));
     }
 
     /**
@@ -1061,6 +1173,13 @@ public class HancomAIClient implements HybridClient {
      */
     private BufferedImage fetchPageImage(byte[] pdfBytes, int pageIndex, CropOutput cropOutput)
             throws IOException {
+        // Retried as a unit: every later pass on this page reads this image.
+        return withIoRetry("pdf2img page " + pageIndex,
+            () -> fetchPageImageOnce(pdfBytes, pageIndex, cropOutput));
+    }
+
+    private BufferedImage fetchPageImageOnce(byte[] pdfBytes, int pageIndex, CropOutput cropOutput)
+            throws IOException {
         MultipartBody body = new MultipartBody.Builder()
             .setType(MultipartBody.FORM)
             .addFormDataPart("REQUEST_ID",
@@ -1077,7 +1196,14 @@ public class HancomAIClient implements HybridClient {
 
         try (Response response = httpClient.newCall(httpRequest).execute()) {
             if (!response.isSuccessful()) {
-                throw new IOException("pdf2img returned HTTP " + response.code());
+                String detail = "pdf2img returned HTTP " + response.code();
+                // A 4xx is the request's own fault — a wrong endpoint or a
+                // rejected upload answers the same way however often it is
+                // sent, and retrying it would cost the backoff on every page.
+                if (response.code() < 500) {
+                    throw new PermanentIOException(detail);
+                }
+                throw new IOException(detail);
             }
 
             ResponseBody respBody = response.body();
@@ -1410,6 +1536,11 @@ public class HancomAIClient implements HybridClient {
      */
     private JsonNode callModule(byte[] pdfBytes, String moduleName, List<Integer> slice)
             throws IOException {
+        return callModule(pdfBytes, moduleName, slice, false);
+    }
+
+    private JsonNode callModule(byte[] pdfBytes, String moduleName, List<Integer> slice,
+                                boolean singleAttempt) throws IOException {
         String requestId = "odl-" + sourcePdfShaShort + "-"
             + MODULE_SHORT.getOrDefault(moduleName, moduleName);
         if (slice != null) {
@@ -1430,32 +1561,285 @@ public class HancomAIClient implements HybridClient {
             .build();
 
         LOGGER.log(Level.INFO, "Calling Hancom AI module: {0}", moduleName);
+        return withRetry(moduleName, requestId, false, singleAttempt,
+            () -> attemptModule(httpRequest, moduleName));
+    }
 
+    /**
+     * Outcome of one module call: the parsed result, plus whether a failure is
+     * worth another attempt.
+     *
+     * <p>An empty result is not on its own a failure — a page really can hold
+     * no tables — so the two are tracked separately rather than inferring one
+     * from the other.
+     */
+    private static final class Attempt {
+        final JsonNode result;
+        final boolean retryable;
+        /**
+         * Retryable, but not worth the full budget. Carried as a field rather
+         * than re-derived from the log message: keying the attempt budget off
+         * the wording of {@code reason} would silently change GPU cost the next
+         * time that message is reworded.
+         */
+        final boolean cheapRetryOnly;
+        final String reason;
+
+        private Attempt(JsonNode result, boolean retryable, boolean cheapRetryOnly,
+                        String reason) {
+            this.result = result;
+            this.retryable = retryable;
+            this.cheapRetryOnly = cheapRetryOnly;
+            this.reason = reason;
+        }
+
+        static Attempt ok(JsonNode result) {
+            return new Attempt(result, false, false, null);
+        }
+
+        static Attempt fail(JsonNode empty, boolean retryable, String reason) {
+            return new Attempt(empty, retryable, false, reason);
+        }
+
+        static Attempt failCheap(JsonNode empty, String reason) {
+            return new Attempt(empty, true, true, reason);
+        }
+    }
+
+    /**
+     * Runs one attempt, classifying any failure as retryable or not.
+     *
+     * <p>What is worth retrying is a narrow set. 5xx and a body the server
+     * could not produce are transient — the backend restarts, and
+     * scan.sh treats 502/503 exactly this way. 4xx is not: the request itself
+     * is wrong and will be wrong again. A module the server does not have
+     * ({@link #MSG_NO_ENGINE}) is a name error, permanent by definition.
+     *
+     * <p>{@code SUCCESS:false} is the hard case. It arrives with HTTP 500 and
+     * {@code RESULT:[[]]} both when the backend is restarting and when it has
+     * genuinely rejected a document — measured: one 2.2MB PDF returned it three
+     * times in a row. Retrying it is therefore a bet, and losing the bet costs
+     * GPU time per attempt on a document that will never succeed, so it gets
+     * one retry rather than the full budget.
+     */
+    private Attempt attemptModule(Request httpRequest, String moduleName) throws IOException {
         try (Response response = httpClient.newCall(httpRequest).execute()) {
             if (!response.isSuccessful()) {
                 ResponseBody respBody = response.body();
                 String errorMsg = respBody != null ? respBody.string() : "";
                 LOGGER.log(Level.WARNING, "Hancom AI module {0} returned HTTP {1}: {2}",
                     new Object[]{moduleName, response.code(), errorMsg});
-                return objectMapper.createArrayNode();
+                boolean transientCode = response.code() >= 500;
+                return Attempt.fail(objectMapper.createArrayNode(), transientCode,
+                    "HTTP " + response.code());
             }
 
             ResponseBody respBody = response.body();
             if (respBody == null) {
-                return objectMapper.createArrayNode();
+                return Attempt.fail(objectMapper.createArrayNode(), true, "empty body");
             }
 
             JsonNode root = objectMapper.readTree(respBody.string());
             boolean success = root.has("SUCCESS") && root.get("SUCCESS").asBoolean();
             if (!success) {
+                String msg = root.has("MSG") ? root.get("MSG").asText() : "";
                 LOGGER.log(Level.WARNING, "Hancom AI module {0} returned SUCCESS=false: {1}",
-                    new Object[]{moduleName, root.has("MSG") ? root.get("MSG").asText() : ""});
-                return objectMapper.createArrayNode();
+                    new Object[]{moduleName, msg});
+                if (msg.contains(MSG_NO_ENGINE)) {
+                    return Attempt.fail(objectMapper.createArrayNode(), false,
+                        "SUCCESS=false (" + msg + ")");
+                }
+                return Attempt.failCheap(objectMapper.createArrayNode(),
+                    "SUCCESS=false" + (msg.isEmpty() ? "" : " (" + msg + ")"));
             }
 
             JsonNode result = root.get("RESULT");
-            return result != null ? result : objectMapper.createArrayNode();
+            return Attempt.ok(result != null ? result : objectMapper.createArrayNode());
         }
+    }
+
+    private boolean breakerTripped() {
+        return consecutiveEnrichmentFailures >= ENRICHMENT_FAILURE_STREAK_LIMIT;
+    }
+
+    private void noteEnrichmentFailure() {
+        consecutiveEnrichmentFailures++;
+        if (consecutiveEnrichmentFailures == ENRICHMENT_FAILURE_STREAK_LIMIT) {
+            LOGGER.log(Level.WARNING,
+                "Hancom AI: {0} enrichment calls failed in a row — dropping retries "
+                + "for the rest of this document so the remaining pages fail fast",
+                ENRICHMENT_FAILURE_STREAK_LIMIT);
+        }
+    }
+
+    /** One attempt at a call, so {@link #withRetry} can repeat it. */
+    private interface ModuleCall {
+        Attempt run() throws IOException;
+    }
+
+    /**
+     * A failure that repeating cannot fix, on a path whose only failure channel
+     * is {@link IOException}.
+     */
+    private static final class PermanentIOException extends IOException {
+        private static final long serialVersionUID = 1L;
+
+        PermanentIOException(String message) {
+            super(message);
+        }
+    }
+
+    /** One attempt at a call that reports failure by throwing. */
+    private interface ThrowingCall<T> {
+        T run() throws IOException;
+    }
+
+    /**
+     * Retries a call whose only failure signal is an {@link IOException}.
+     *
+     * <p>Used by the image and enrichment passes, where the page image is the
+     * shared input: losing it costs that page its tables, captions and
+     * formulas, so it is worth the same retry budget as the layout call.
+     * Retries every IOException, since these paths raise it for connect
+     * failures, timeouts and unusable payloads alike, and none of those
+     * distinguish a restarting backend from a broken one.
+     */
+    private <T> T withIoRetry(String what, ThrowingCall<T> call) throws IOException {
+        IOException last = null;
+        // A backend that has already refused several calls in a row is not
+        // going to answer this one either; skip straight to the failure rather
+        // than spending the backoff again on every remaining page.
+        int attempts = breakerTripped() ? 1 : MAX_ATTEMPTS;
+        for (int attempt = 1; attempt <= attempts; attempt++) {
+            try {
+                T value = call.run();
+                if (attempt > 1) {
+                    LOGGER.log(Level.INFO, "Hancom AI {0} succeeded on attempt {1}",
+                        new Object[]{what, attempt});
+                }
+                consecutiveEnrichmentFailures = 0;
+                return value;
+            } catch (PermanentIOException e) {
+                // Nothing to gain from another identical request.
+                LOGGER.log(Level.WARNING,
+                    "Hancom AI {0} failed permanently ({1}) — not retrying",
+                    new Object[]{what, e.getMessage()});
+                noteEnrichmentFailure();
+                throw e;
+            } catch (IOException e) {
+                last = e;
+                if (attempt == attempts) break;
+                long waitMs = retryBackoffMs[Math.min(attempt - 1, retryBackoffMs.length - 1)];
+                LOGGER.log(Level.WARNING,
+                    "Hancom AI {0} attempt {1}/{2} failed ({3}); retrying in {4}s",
+                    new Object[]{what, attempt, attempts, e.getMessage(), waitMs / 1000});
+                try {
+                    Thread.sleep(waitMs);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new IOException("Interrupted while retrying " + what, ie);
+                }
+            }
+        }
+        noteEnrichmentFailure();
+        throw last;
+    }
+
+    /**
+     * Repeats a call while its failure looks transient.
+     *
+     * <p>Every retry is logged at WARNING with the attempt number and the wait.
+     * Without that, a backend that hangs and is retried is silent for up to an
+     * hour per attempt, which in a batch run cannot be told apart from a hung
+     * client.
+     *
+     * <p>A {@code SUCCESS:false} reply is capped at a single retry, for the
+     * reason on {@link #attemptModule}. Exhausting the attempts returns the
+     * empty result rather than throwing: callers already treat an empty layout
+     * as a failed page and route it to fallback, and the enrichment passes
+     * treat it as nothing to enrich.
+     */
+    private JsonNode withRetry(String moduleName, String requestId,
+                               boolean countsTowardBreaker, boolean singleAttempt,
+                               ModuleCall call)
+            throws IOException {
+        IOException lastIoError = null;
+        IOException firstIoError = null;
+        Attempt last = null;
+
+        // Enrichment calls share the breaker with the image fetches: a backend
+        // refusing everything should stop costing every region its backoff. The
+        // layout call opts out — losing it costs the whole document.
+        int ceiling = singleAttempt || (countsTowardBreaker && breakerTripped())
+            ? 1 : MAX_ATTEMPTS;
+
+        for (int attempt = 1; attempt <= ceiling; attempt++) {
+            String failure;
+            try {
+                last = call.run();
+                if (last.reason == null) {
+                    if (attempt > 1) {
+                        LOGGER.log(Level.INFO,
+                            "Hancom AI module {0} succeeded on attempt {1} ({2})",
+                            new Object[]{moduleName, attempt, requestId});
+                    }
+                    if (countsTowardBreaker) {
+                        consecutiveEnrichmentFailures = 0;
+                    }
+                    return last.result;
+                }
+                if (!last.retryable) {
+                    LOGGER.log(Level.WARNING,
+                        "Hancom AI module {0} failed permanently ({1}) — not retrying: {2}",
+                        new Object[]{moduleName, last.reason, requestId});
+                    return last.result;
+                }
+                failure = last.reason;
+                lastIoError = null;
+            } catch (IOException e) {
+                // Connect failure, read timeout, or the call ceiling: all
+                // transient by nature, so these stay in the retry loop.
+                lastIoError = e;
+                if (firstIoError == null) {
+                    firstIoError = e;
+                }
+                failure = e.getClass().getSimpleName() + ": " + e.getMessage();
+            }
+
+            // A server-side rejection repeats for a document the backend cannot
+            // process, so it does not get the full attempt budget.
+            int budget = Math.min(ceiling,
+                (lastIoError == null && last != null && last.cheapRetryOnly) ? 2 : MAX_ATTEMPTS);
+            if (attempt >= budget) {
+                LOGGER.log(Level.WARNING,
+                    "Hancom AI module {0} failed after {1} attempt(s) ({2}): {3}",
+                    new Object[]{moduleName, attempt, failure, requestId});
+                break;
+            }
+
+            long waitMs = retryBackoffMs[Math.min(attempt - 1, retryBackoffMs.length - 1)];
+            LOGGER.log(Level.WARNING,
+                "Hancom AI module {0} attempt {1}/{2} failed ({3}); retrying in {4}s: {5}",
+                new Object[]{moduleName, attempt, budget, failure, waitMs / 1000, requestId});
+            try {
+                Thread.sleep(waitMs);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                throw new IOException("Interrupted while retrying " + moduleName, ie);
+            }
+        }
+
+        // An IOException from any attempt outranks a later soft failure: a
+        // parse error against a changed response shape would otherwise be
+        // reported as "backend rejected the document" and look identical to a
+        // genuine rejection.
+        if (countsTowardBreaker) {
+            noteEnrichmentFailure();
+        }
+        if (firstIoError != null) {
+            throw firstIoError;
+        }
+        return last != null ? last.result : objectMapper.createArrayNode();
     }
 
     // --- Helpers ---
