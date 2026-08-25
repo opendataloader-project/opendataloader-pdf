@@ -59,6 +59,8 @@ Requirements:
 
 import argparse
 import asyncio
+import codecs
+import locale
 import logging
 import os
 import re
@@ -279,6 +281,63 @@ def _get_loop_setting() -> str:
     if sys.platform == "win32":
         return "asyncio"
     return "auto"
+
+
+def _is_utf8_encoding_name(encoding_name):
+    """True if `encoding_name` names a UTF-8 codec, including aliases.
+
+    A naive ``encoding_name.lower() == "utf-8"`` string comparison misses
+    aliases such as ``cp65001`` - the name Windows' ANSI codepage API
+    reports when the system codepage is set to 65001/UTF-8 (e.g. via the
+    "Beta: Use Unicode UTF-8" system setting, a common fix for the mojibake
+    class of issue #673). ``codecs.lookup(...).name`` canonicalizes aliases
+    to their real codec name, so ``cp65001`` correctly resolves to ``utf-8``.
+    """
+    try:
+        return codecs.lookup(encoding_name).name == "utf-8"
+    except LookupError:
+        return False
+
+
+def _reexec_with_utf8_if_needed():
+    """Re-launch this process in Python UTF-8 mode (PEP 540) if it isn't already.
+
+    docling opens its bundled model config files without an explicit
+    ``encoding=``, so on a non-UTF-8-locale platform (e.g. cp949 on Korean
+    Windows) that read falls back to the OS codepage and raises
+    ``UnicodeDecodeError`` while loading the layout model (#673). UTF-8 mode
+    changes the *default* text encoding for every ``open()`` call that
+    doesn't pass one explicitly, closing this for docling too - but it can
+    only be enabled at interpreter startup, so an already-running process
+    must re-exec itself with ``-X utf8`` rather than just setting
+    ``os.environ["PYTHONUTF8"]``, which the running interpreter would ignore.
+
+    Must run before ``docling`` (or anything else) is imported. Re-execs by
+    file path (``__file__``), not ``-m opendataloader_pdf.hybrid_server`` -
+    ``-m`` requires the package to already be import-resolvable, which breaks
+    running this file directly (e.g. ``python hybrid_server.py``) from an
+    uninstalled checkout. Re-running the same file path has no such
+    requirement and preserves that invocation shape exactly.
+
+    Skips the re-exec when the locale's preferred encoding is already UTF-8
+    (true on most Linux/macOS deployments, and on Windows systems with the
+    "Beta: Use Unicode UTF-8" setting enabled), even though
+    ``sys.flags.utf8_mode`` itself is 0 there - open() already defaults to
+    UTF-8 via the locale, so re-execing would only add an unnecessary
+    process restart on every startup.
+    """
+    if sys.flags.utf8_mode:
+        return
+    if _is_utf8_encoding_name(locale.getpreferredencoding(False)):
+        return
+    try:
+        os.execv(
+            sys.executable,
+            [sys.executable, "-X", "utf8", __file__] + sys.argv[1:],
+        )
+    except OSError as e:
+        logger.error(f"Failed to re-exec into UTF-8 mode: {e}. Continuing without it - "
+                     "on a non-UTF-8-locale system, docling model loading may still fail (#673).")
 
 
 def _check_dependencies():
@@ -806,6 +865,7 @@ def create_app(
 
 def main():
     """Run the server."""
+    _reexec_with_utf8_if_needed()
     _check_dependencies()
     import uvicorn
 
