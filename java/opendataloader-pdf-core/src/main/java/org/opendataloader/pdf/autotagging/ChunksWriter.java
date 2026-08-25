@@ -55,6 +55,21 @@ public class ChunksWriter {
         return Collections.emptyList();
     }
 
+    /**
+     * Path-construction operators (re/m/l/c/v/y/h) seen since the last paint or
+     * clip operator, together with their operands.
+     *
+     * <p>A path is built by one or more construction operators and then realised
+     * by a paint operator. Only the paint operator used to reach
+     * {@link #processContentOperator}, so the BDC/EMC pair wrapped the paint
+     * alone and every preceding construction operator stayed outside it -- the
+     * shape was drawn but sat in no marked-content sequence, unreachable from
+     * the structure tree. Buffering them here lets the whole path be emitted
+     * inside its span. Charts are the visible casualty: their bars and gridlines
+     * are construction operators almost entirely.
+     */
+    private final List<Object> pendingPath = new ArrayList<>();
+
     public List<Object> processTokens(List<Object> processTokens, OperatorStreamKey operatorStreamKey) throws IOException {
         Map<Integer, Set<StreamInfo>> operatorIndexesToStreamInfosMap = AutoTaggingProcessor.getOperatorIndexesToStreamInfosMap().get(operatorStreamKey);
         if (operatorIndexesToStreamInfosMap == null) {
@@ -119,6 +134,11 @@ public class ChunksWriter {
             case Operators.F_STAR_FILL:
             case Operators.B_CLOSEPATH_FILL_STROKE:
             case Operators.B_STAR_CLOSEPATH_EOFILL_STROKE:
+            // B and B* (fill-then-stroke without closing) were absent, so those
+            // paints were never wrapped. Left out, they would also carry the
+            // buffered path back outside its span.
+            case Operators.B_FILL_STROKE:
+            case Operators.B_STAR_EOFILL_STROKE:
             case Operators.S_CLOSE_STROKE:
             case Operators.S_STROKE:
                 processContentOperator(result, rawOperator, arguments, operatorIndex, operatorIndexesToStreamInfosMap, operatorName, operatorStreamKey);
@@ -131,6 +151,27 @@ public class ChunksWriter {
                 break;
             case org.verapdf.model.tools.constants.Operators.TF:
                 this.graphicsState.getTextState().setTextFont(resourceHandler.getFont(getFirstCOSName(arguments)));
+                result.addAll(arguments);
+                result.add(rawOperator);
+                break;
+            case Operators.RE:
+            case Operators.M_MOVE_TO:
+            case Operators.L_LINE_TO:
+            case Operators.C_CURVE_TO:
+            case Operators.V:
+            case Operators.Y:
+            case Operators.H_CLOSEPATH:
+                // Hold the path until its paint operator arrives, so both land
+                // inside the same marked-content sequence.
+                pendingPath.addAll(arguments);
+                pendingPath.add(rawOperator);
+                break;
+            case Operators.N:
+            case Operators.W_CLIP:
+            case Operators.W_STAR_EOCLIP:
+                // A clip consumes the path without painting it: nothing is drawn,
+                // so there is no content to tag. Emit as-is.
+                flushPendingPath(result);
                 result.addAll(arguments);
                 result.add(rawOperator);
                 break;
@@ -182,7 +223,20 @@ public class ChunksWriter {
         return typeObj.getString();
     }
 
-    private static void writeMarkedContent(List<Object> result, List<COSBase> arguments, Operator token,
+    /**
+     * Emits any buffered path outside a marked-content sequence.
+     *
+     * <p>Used when the path is discarded or consumed as a clip rather than
+     * painted: nothing reaches the page, so there is nothing to tag.
+     */
+    private void flushPendingPath(List<Object> result) {
+        if (!pendingPath.isEmpty()) {
+            result.addAll(pendingPath);
+            pendingPath.clear();
+        }
+    }
+
+    private void writeMarkedContent(List<Object> result, List<COSBase> arguments, Operator token,
                                            String operatorName, Integer mcid, OperatorStreamKey operatorStreamKey) {
         if (mcid == null) {
             result.add(COSName.construct(TaggedPDFConstants.ARTIFACT).getDirectBase());
@@ -201,6 +255,10 @@ public class ChunksWriter {
             result.add(dictionary.getDirectBase());
             result.add(Operator.getOperator(Operators.BDC));
         }
+        // Inside the span: the construction operators that define what this
+        // paint operator draws, then the paint operator itself.
+        result.addAll(pendingPath);
+        pendingPath.clear();
         result.addAll(arguments);
         result.add(token);
         result.add(Operator.getOperator(Operators.EMC));
