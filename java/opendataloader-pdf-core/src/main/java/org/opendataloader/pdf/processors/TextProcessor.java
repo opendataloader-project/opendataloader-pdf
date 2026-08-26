@@ -85,7 +85,7 @@ public class TextProcessor {
                 if (textChunk.getBoundingBox().getHeight() <= TEXT_MIN_HEIGHT) {
                     contents.set(i, null);
                     if (textChunk.getBoundingBox().getHeight() == 0) {
-                        LOGGER.log(Level.WARNING, "Text with zero height \"{0}\" has been filtered out", textChunk.getValue());
+                        LOGGER.log(Level.WARNING, "Text with zero height on page {0} has been filtered out", textChunk.getPageNumber());
                     }
                 }
             }
