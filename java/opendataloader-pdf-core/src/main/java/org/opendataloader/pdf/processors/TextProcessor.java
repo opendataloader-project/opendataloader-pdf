@@ -26,9 +26,13 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class TextProcessor {
+
+    private static final Logger LOGGER = Logger.getLogger(TextProcessor.class.getName());
 
     private static final double MIN_TEXT_INTERSECTION_PERCENT = 0.5;
     private static final double MAX_TOP_DECORATION_IMAGE_EPSILON = 0.3;
@@ -80,6 +84,9 @@ public class TextProcessor {
                 TextChunk textChunk = ((TextChunk) object);
                 if (textChunk.getBoundingBox().getHeight() <= TEXT_MIN_HEIGHT) {
                     contents.set(i, null);
+                    if (textChunk.getBoundingBox().getHeight() == 0) {
+                        LOGGER.log(Level.WARNING, "Text with zero height \"{0}\" has been filtered out", textChunk.getValue());
+                    }
                 }
             }
         }
