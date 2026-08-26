@@ -87,8 +87,7 @@
           core (PDFWriter, PDFStreamWriter, hybrid) uses PDFBox directly, so it
           is declared rather than inherited from wcag-algorithms. Held at the
           version wcag-algorithms itself requires, so vera's classes compile and
-          run against the same PDFBox. Keep in step with odl-pdfua, which pins
-          this same version for its own direct use.
+          run against the same PDFBox.
         -->
         <pdfbox.version>3.0.4</pdfbox.version>
         <jackson.databind.version>2.22.1</jackson.databind.version>
@@ -208,7 +207,6 @@
                                  versions are ever wanted here.
         checksumPolicy=fail    - Maven's default only WARNS on a checksum
                                  mismatch and carries on.
-      Kept in step with odl-pdfua, which already pins both.
     -->
     <repositories>
         <repository>

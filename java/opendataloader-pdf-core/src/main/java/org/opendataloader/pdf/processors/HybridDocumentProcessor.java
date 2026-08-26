@@ -109,8 +109,8 @@ public class HybridDocumentProcessor {
 
     /**
      * Stores the raw merged JSON returned by the hybrid backend's most recent
-     * {@code HybridResponse.getJson()}. Downstream tools (e.g. opendataloader-pdfua
-     * evidence reports) need per-module raw outputs to file as L2 evidence.
+     * {@code HybridResponse.getJson()}. Downstream tools need the per-module raw
+     * output to record alongside their own results.
      *
      * <p>Single-threaded by contract: this static is overwritten on each
      * {@code processDocument} call, so concurrent invocations would race. Callers

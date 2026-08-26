@@ -33,8 +33,8 @@ import java.util.stream.Collectors;
 /**
  * Adapter that maps Apache Commons CLI options to {@link Config} / {@link HybridConfig}.
  *
- * <p><b>Stable API for downstream tools</b> (e.g. opendataloader-pdfua) — these four
- * members are the supported integration surface and will not break compatibly:
+ * <p><b>Stable API for downstream tools</b> — these four members are the supported
+ * integration surface and will not break compatibly:
  * <ul>
  *   <li>{@link #defineOptions()} — get a fully populated {@code Options} instance</li>
  *   <li>{@link #addAllTo(Options)} — add core options into an externally-built {@code Options}</li>
@@ -50,7 +50,7 @@ import java.util.stream.Collectors;
  * <i>not</i> part of the supported API and may be renamed, moved, or removed in any
  * release. Downstream consumers depending on them do so at their own risk.
  *
- * <p>Pdfua's usage pattern (build your own {@code Options}, add core's, parse, then
+ * <p>The expected usage pattern (build your own {@code Options}, add core's, parse, then
  * populate {@code Config}):
  * <pre>{@code
  *   Options options = new Options();
@@ -272,8 +272,8 @@ public class CLIOptions {
 
     /**
      * Registers every core CLI option onto an external {@link Options} instance.
-     * Used by downstream CLIs (e.g. opendataloader-pdfua) that want to inherit
-     * the entire core option set and add their own options on top.
+     * Used by downstream CLIs that want to inherit the entire core option set
+     * and add their own options on top.
      *
      * @param options the Options instance to populate
      */
