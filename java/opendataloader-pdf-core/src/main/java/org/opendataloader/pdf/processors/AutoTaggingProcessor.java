@@ -206,19 +206,28 @@ public class AutoTaggingProcessor {
         structTreeRoot.setKey(ASAtom.PARENT_TREE, parentTree);
         COSObject nums = COSArray.construct();
         parentTree.setKey(ASAtom.NUMS, nums);
-        int nextKey = 0;
+
+        // A number tree's keys must ascend (ISO 32000-1 7.9.7), because a reader
+        // binary-searches /Nums. Page keys and annotation keys are allocated
+        // from one counter and interleave, so writing each group in its own pass
+        // emitted descending runs: the search then missed entries that were
+        // present, and Acrobat showed no structure tag for the page's content.
+        // Collect both groups, then write once in key order. The spec constrains
+        // the emitted order, not the allocation order, so nothing upstream of
+        // here changes.
+        Map<Integer, COSObject> byKey = new TreeMap<>();
         for (Map.Entry<OperatorStreamKey, List<COSObject>> entry : structParents.entrySet()) {
-            int key = structParentsIntegers.get(entry.getKey());
-            nums.add(COSInteger.construct(key));
             COSObject array = COSArray.construct();
             for (COSObject structParent : entry.getValue()) {
                 array.add(structParent);
             }
-            nums.add(array);
-            if (key >= nextKey) nextKey = key + 1;
+            byKey.put(structParentsIntegers.get(entry.getKey()), array);
         }
-        // Add single-entry annotations (Link annotations) to parent tree
-        for (Map.Entry<Integer, COSObject> entry : annotationStructParents.entrySet()) {
+        // Single-entry annotations (Link annotations).
+        byKey.putAll(annotationStructParents);
+
+        int nextKey = 0;
+        for (Map.Entry<Integer, COSObject> entry : byKey.entrySet()) {
             nums.add(COSInteger.construct(entry.getKey()));
             nums.add(entry.getValue());
             if (entry.getKey() >= nextKey) nextKey = entry.getKey() + 1;
