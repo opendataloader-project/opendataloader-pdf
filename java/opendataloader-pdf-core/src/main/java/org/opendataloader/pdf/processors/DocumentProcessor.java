@@ -316,7 +316,10 @@ public class DocumentProcessor {
         LOGGER.log(Level.INFO, "Processing {0} pages with {1} threads", new Object[]{pagesToProcessCount, parallelism});
 
         try {
-            // Loop 1: ContentFilter per-page (largest bottleneck)
+            // Loop 1: ContentFilter per-page (largest bottleneck).
+            // Drop unused text/images from veraPDF artifacts by identity.
+            // Reused non-lines stay; LineChunks stay for loop 2.
+            // Skipped --pages: null live contents drops non-lines, keeps LineChunks.
             pool.submit(() ->
                 IntStream.range(0, totalPages).parallel().forEach(pageNumber -> {
                     try {
@@ -325,8 +328,10 @@ public class DocumentProcessor {
                             List<IObject> pageContents = ContentFilterProcessor.getFilteredContents(inputPdfName,
                                 (List) pageArtifacts[pageNumber], pageNumber, config);
                             contents.set(pageNumber, pageContents);
+                            pruneArtifactsToLiveChunks(pageArtifacts[pageNumber], pageContents, pageNumber);
                         } else {
                             contents.set(pageNumber, new ArrayList<>());
+                            pruneArtifactsToLiveChunks(pageArtifacts[pageNumber], null, pageNumber);
                         }
                     } catch (IOException e) {
                         throw new UncheckedIOException(e);
@@ -372,6 +377,11 @@ public class DocumentProcessor {
                     contents.set(pageNumber, pageContents);
                 })
             ).get();
+
+            // Main thread only: LineChunks leave artifacts after strikethrough.
+            // Do not prune inside the parallel loop — parseLines walks all pages.
+            // Skipped pages drop LineChunks here too (already in LinesCollection).
+            pruneLineChunksFromArtifacts(pageArtifacts, totalPages);
 
             if (structured) {
                 // Cross-page operations (must be sequential)
@@ -533,6 +543,70 @@ public class DocumentProcessor {
 
     private static boolean shouldProcessPage(int pageNumber, Set<Integer> pagesToProcess) {
         return pagesToProcess == null || pagesToProcess.contains(pageNumber);
+    }
+
+    /**
+     * After content-filter: drop veraPDF artifact entries that are not still
+     * referenced from {@code liveContents}, except {@link LineChunk}s. Identity
+     * ({@code ==}), not {@code equals}. Unused text/images leave artifacts;
+     * reused non-lines stay. Merged/split {@code TextChunk}s are not copied into
+     * veraPDF. {@code LineChunk}s stay until
+     * {@link #pruneLineChunksFromArtifacts} after loop 2 so a lazy
+     * {@code parseLines} can still see them. This method is only used from the
+     * local {@code processDocument} path.
+     *
+     * @param liveContents filtered page contents, or {@code null} for a skipped
+     *                     {@code --pages} page (drop every non-{@link LineChunk})
+     */
+    @SuppressWarnings("unchecked")
+    static void pruneArtifactsToLiveChunks(List<?> artifacts, List<IObject> liveContents,
+                                           int pageNumber) {
+        if (artifacts == null) {
+            return;
+        }
+        try {
+            if (liveContents == null || liveContents.isEmpty()) {
+                ((List<Object>) artifacts).removeIf(chunk -> !(chunk instanceof LineChunk));
+                return;
+            }
+            Set<Object> live = Collections.newSetFromMap(new IdentityHashMap<>());
+            for (IObject object : liveContents) {
+                if (object != null) {
+                    live.add(object);
+                }
+            }
+            ((List<Object>) artifacts).removeIf(chunk ->
+                !(chunk instanceof LineChunk) && !live.contains(chunk));
+        } catch (UnsupportedOperationException e) {
+            LOGGER.log(Level.WARNING,
+                "Could not prune veraPDF artifacts on page {0}: unmodifiable list",
+                pageNumber + 1);
+        }
+    }
+
+    /**
+     * After loop 2 strikethrough: drop every {@link LineChunk} from per-page
+     * artifact lists, including skipped pages. Call on the main thread after the
+     * parallel loop finishes. {@code LinesCollection} keeps the live line rules.
+     */
+    @SuppressWarnings("unchecked")
+    static void pruneLineChunksFromArtifacts(List<?>[] pageArtifacts, int totalPages) {
+        if (pageArtifacts == null) {
+            return;
+        }
+        for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
+            List<?> artifacts = pageArtifacts[pageNumber];
+            if (artifacts == null) {
+                continue;
+            }
+            try {
+                ((List<Object>) artifacts).removeIf(chunk -> chunk instanceof LineChunk);
+            } catch (UnsupportedOperationException e) {
+                LOGGER.log(Level.WARNING,
+                    "Could not prune veraPDF line artifacts on page {0}: unmodifiable list",
+                    pageNumber + 1);
+            }
+        }
     }
 
     /**
