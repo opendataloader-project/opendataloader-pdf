@@ -661,6 +661,17 @@ class CLIOptionsTest {
         });
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"", "  "})
+    void testCreateConfig_emptyHybridChunkSizeKeepsDefault(String value) throws ParseException {
+        String[] args = {"--hybrid-chunk-size", value, testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertEquals(HybridConfig.DEFAULT_CHUNK_SIZE, config.getHybridConfig().getChunkSize());
+    }
+
     @Test
     void testCreateConfig_defaultHybridChunkSize() throws ParseException {
         String[] args = {testPdf.getAbsolutePath()};

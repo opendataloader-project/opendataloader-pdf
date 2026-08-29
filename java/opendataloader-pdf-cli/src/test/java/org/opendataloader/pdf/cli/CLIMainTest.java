@@ -102,6 +102,24 @@ class CLIMainTest {
     }
 
     /**
+     * An invalid --hybrid-chunk-size value must fail fast with a non-zero exit
+     * code before any processing starts.
+     */
+    @Test
+    void testInvalidHybridChunkSizeReturnsNonZeroExitCode() throws IOException {
+        Path testPdf = tempDir.resolve("test.pdf");
+        Files.write(testPdf, "%PDF-1.4 minimal".getBytes());
+
+        int exitCode = CLIMain.run(new String[]{
+            "--hybrid-chunk-size", "0",
+            testPdf.toString()
+        });
+
+        assertNotEquals(0, exitCode,
+            "Exit code must be non-zero for an invalid --hybrid-chunk-size value");
+    }
+
+    /**
      * Normal invocation with no arguments should return 0 (just prints help).
      */
     @Test

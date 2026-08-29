@@ -73,7 +73,7 @@ def convert(
         hybrid_mode: Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)
         hybrid_url: Hybrid backend server URL (overrides default)
         hybrid_timeout: Hybrid backend request timeout in milliseconds (0 = use the backend's own default). Default: 0
-        hybrid_chunk_size: Maximum number of pages to send to the hybrid backend in a single request. Large documents are split into batches of this size. Default: 50
+        hybrid_chunk_size: Maximum number of pages to send to the hybrid backend in a single request. Large documents are split into batches of this size; smaller values increase the number of backend requests (the full PDF is re-sent per batch). Default: 50
         hybrid_fallback: Opt in to Java fallback on hybrid backend error (default: disabled)
         to_stdout: Write output to stdout instead of file (single format only)
         threads: Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode

@@ -55,7 +55,7 @@ export interface ConvertOptions {
   hybridUrl?: string;
   /** Hybrid backend request timeout in milliseconds (0 = use the backend's own default). Default: 0 */
   hybridTimeout?: string;
-  /** Maximum number of pages to send to the hybrid backend in a single request. Large documents are split into batches of this size. Default: 50 */
+  /** Maximum number of pages to send to the hybrid backend in a single request. Large documents are split into batches of this size; smaller values increase the number of backend requests (the full PDF is re-sent per batch). Default: 50 */
   hybridChunkSize?: string;
   /** Opt in to Java fallback on hybrid backend error (default: disabled) */
   hybridFallback?: boolean;

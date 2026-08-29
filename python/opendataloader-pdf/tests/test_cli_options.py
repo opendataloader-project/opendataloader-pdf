@@ -163,3 +163,14 @@ class TestConvertHybridChunkSize:
         args = mock_run.call_args[0][0]
         assert "--hybrid-chunk-size" in args
         assert args[args.index("--hybrid-chunk-size") + 1] == "10"
+
+    def test_convert_default_does_not_emit_hybrid_chunk_size(self):
+        from unittest.mock import patch
+
+        from opendataloader_pdf.convert_generated import convert
+
+        with patch("opendataloader_pdf.convert_generated.run_jar", return_value="") as mock_run:
+            convert(input_path="test.pdf", output_dir="out")
+
+        args = mock_run.call_args[0][0]
+        assert "--hybrid-chunk-size" not in args

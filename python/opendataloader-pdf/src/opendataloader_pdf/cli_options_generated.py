@@ -241,7 +241,7 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "type": "string",
         "required": False,
         "default": "50",
-        "description": "Maximum number of pages to send to the hybrid backend in a single request. Large documents are split into batches of this size. Default: 50",
+        "description": "Maximum number of pages to send to the hybrid backend in a single request. Large documents are split into batches of this size; smaller values increase the number of backend requests (the full PDF is re-sent per batch). Default: 50",
     },
     {
         "name": "hybrid-fallback",
