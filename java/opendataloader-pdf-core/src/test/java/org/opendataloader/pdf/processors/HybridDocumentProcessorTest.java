@@ -382,6 +382,14 @@ public class HybridDocumentProcessorTest {
         Assertions.assertEquals(1, HybridDocumentProcessor.effectiveChunkSize(0, 10));
     }
 
+    /** A non-positive configured chunk size must still yield a positive step. */
+    @Test
+    public void testEffectiveChunkSize_nonPositiveConfiguredSizeClamped() {
+        Assertions.assertEquals(1, HybridDocumentProcessor.effectiveChunkSize(500, 0));
+        Assertions.assertEquals(1, HybridDocumentProcessor.effectiveChunkSize(500, -5));
+        Assertions.assertEquals(1, HybridDocumentProcessor.effectiveChunkSize(0, 0));
+    }
+
     // ===== Backend Chunk Splitting Tests =====
 
     /** Helper that mirrors the chunk-splitting logic in processBackendPath. */

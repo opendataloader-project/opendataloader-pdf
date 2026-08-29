@@ -32,18 +32,20 @@ public class HybridConfig {
     /** Default number of pages sent to the backend per request.
      * Large scanned PDFs (100+ pages) cause the backend to hang when sent all at once
      * due to non-linear memory/processing scaling in the AI pipeline.
-     * Chunking into smaller batches avoids this while adding negligible overhead
-     * (the model is loaded once at server startup, not per-request). */
+     * Chunking into smaller batches avoids this; note that each batch re-sends the
+     * full PDF to the backend, so smaller batches mean more transfers and re-parses.
+     *
+     * @see <a href="https://github.com/opendataloader-project/opendataloader-pdf/issues/352">#352</a> */
     public static final int DEFAULT_CHUNK_SIZE = 50;
+
+    /** Default URL for docling-fast-server. */
+    public static final String DOCLING_FAST_DEFAULT_URL = "http://localhost:5002";
 
     private String url;
     private int timeoutMs = DEFAULT_TIMEOUT_MS;
     private boolean fallbackToJava = false;
     private int maxConcurrentRequests = DEFAULT_MAX_CONCURRENT_REQUESTS;
     private int chunkSize = DEFAULT_CHUNK_SIZE;
-
-    /** Default URL for docling-fast-server. */
-    public static final String DOCLING_FAST_DEFAULT_URL = "http://localhost:5002";
 
     /** Hybrid triage mode: auto (dynamic triage based on page content). */
     public static final String MODE_AUTO = "auto";

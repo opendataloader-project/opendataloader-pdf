@@ -184,7 +184,9 @@ public class CLIOptions {
 
     private static final String HYBRID_CHUNK_SIZE_LONG_OPTION = "hybrid-chunk-size";
     private static final String HYBRID_CHUNK_SIZE_DESC = "Maximum number of pages to send to the hybrid "
-            + "backend in a single request. Large documents are split into batches of this size. Default: 50";
+            + "backend in a single request. Large documents are split into batches of this size; "
+            + "smaller values increase the number of backend requests (the full PDF is re-sent per batch). "
+            + "Default: 50";
 
     private static final String HYBRID_FALLBACK_LONG_OPTION = "hybrid-fallback";
 
@@ -673,13 +675,8 @@ public class CLIOptions {
             String chunkSizeValue = commandLine.getOptionValue(HYBRID_CHUNK_SIZE_LONG_OPTION);
             if (chunkSizeValue != null && !chunkSizeValue.trim().isEmpty()) {
                 try {
-                    int chunkSize = Integer.parseInt(chunkSizeValue.trim());
-                    if (chunkSize <= 0) {
-                        throw new IllegalArgumentException(
-                                String.format("Invalid chunk size value '%s'. Must be a positive integer.", chunkSizeValue));
-                    }
-                    config.getHybridConfig().setChunkSize(chunkSize);
-                } catch (NumberFormatException e) {
+                    config.getHybridConfig().setChunkSize(Integer.parseInt(chunkSizeValue.trim()));
+                } catch (IllegalArgumentException e) {
                     throw new IllegalArgumentException(
                             String.format("Invalid chunk size value '%s'. Must be a positive integer.", chunkSizeValue));
                 }

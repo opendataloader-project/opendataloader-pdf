@@ -181,7 +181,7 @@ public class HybridDocumentProcessor {
      * @return pages per call, at least 1
      */
     static int effectiveChunkSize(int pageCount, int configuredChunkSize) {
-        return Math.min(configuredChunkSize, Math.max(pageCount, 1));
+        return Math.min(Math.max(configuredChunkSize, 1), Math.max(pageCount, 1));
     }
 
     private HybridDocumentProcessor() {
