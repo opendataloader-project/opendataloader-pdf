@@ -32,6 +32,7 @@ export function registerCliOptions(program: Command): void {
   program.option('--hybrid-mode <value>', 'Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)');
   program.option('--hybrid-url <value>', 'Hybrid backend server URL (overrides default)');
   program.option('--hybrid-timeout <value>', 'Hybrid backend request timeout in milliseconds (0 = use the backend\'s own default). Default: 0');
+  program.option('--hybrid-chunk-size <value>', 'Maximum number of pages to send to the hybrid backend in a single request. Large documents are split into batches of this size. Default: 50');
   program.option('--hybrid-fallback', 'Opt in to Java fallback on hybrid backend error (default: disabled)');
   program.option('--to-stdout', 'Write output to stdout instead of file (single format only)');
   program.option('--threads <value>', 'Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode');

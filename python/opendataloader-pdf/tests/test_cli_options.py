@@ -64,6 +64,13 @@ class TestCLIOptions:
         assert sanitize_opt["type"] == "boolean"
         assert sanitize_opt["default"] == False
 
+    def test_hybrid_chunk_size_option_exists(self):
+        option_names = [opt["name"] for opt in CLI_OPTIONS]
+        assert "hybrid-chunk-size" in option_names
+        chunk_opt = next(opt for opt in CLI_OPTIONS if opt["name"] == "hybrid-chunk-size")
+        assert chunk_opt["type"] == "string"
+        assert chunk_opt["default"] == "50"
+
 
 
 class TestAddOptionsToParser:
@@ -140,3 +147,19 @@ class TestAddOptionsToParser:
         assert args.output_dir == "/output"
         assert args.format == "json,markdown"
         assert args.quiet is True
+
+
+class TestConvertHybridChunkSize:
+    """convert() must forward hybrid_chunk_size to the JVM CLI"""
+
+    def test_convert_passes_hybrid_chunk_size(self):
+        from unittest.mock import patch
+
+        from opendataloader_pdf.convert_generated import convert
+
+        with patch("opendataloader_pdf.convert_generated.run_jar", return_value="") as mock_run:
+            convert(input_path="test.pdf", output_dir="out", hybrid_chunk_size="10")
+
+        args = mock_run.call_args[0][0]
+        assert "--hybrid-chunk-size" in args
+        assert args[args.index("--hybrid-chunk-size") + 1] == "10"
