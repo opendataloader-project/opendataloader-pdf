@@ -169,27 +169,19 @@ public class HybridDocumentProcessor {
     }
 
     /**
-     * Maximum number of pages to send to the backend in a single request.
-     * Large scanned PDFs (100+ pages) cause the backend to hang when sent all at once
-     * due to non-linear memory/processing scaling in the AI pipeline.
-     * Chunking into smaller batches avoids this while adding negligible overhead
-     * (the model is loaded once at server startup, not per-request).
-     *
-     * @see <a href="https://github.com/opendataloader-project/opendataloader-pdf/issues/352">#352</a>
-     */
-    static final int BACKEND_CHUNK_SIZE = 50;
-
-    /**
      * Pages per backend call, capped at the page count.
      *
-     * <p>Clamped to at least 1 so an empty page set still yields a usable loop
+     * <p>The configured chunk size comes from {@code HybridConfig} and defaults
+     * to {@link org.opendataloader.pdf.hybrid.HybridConfig#DEFAULT_CHUNK_SIZE}.
+     * Clamped to at least 1 so an empty page set still yields a usable loop
      * step rather than 0, which would never advance.
      *
-     * @param pageCount how many pages are going to the backend
+     * @param pageCount           how many pages are going to the backend
+     * @param configuredChunkSize the configured pages per backend request
      * @return pages per call, at least 1
      */
-    static int effectiveChunkSize(int pageCount) {
-        return Math.min(BACKEND_CHUNK_SIZE, Math.max(pageCount, 1));
+    static int effectiveChunkSize(int pageCount, int configuredChunkSize) {
+        return Math.min(configuredChunkSize, Math.max(pageCount, 1));
     }
 
     private HybridDocumentProcessor() {
@@ -663,7 +655,7 @@ public class HybridDocumentProcessor {
         // Split backend pages into chunks to prevent hang on large documents (#352).
         // Pages are sorted so that page_ranges sent to the server are contiguous.
         List<Integer> sortedPages = new ArrayList<>(new TreeSet<>(pageNumbers));
-        int chunkSize = effectiveChunkSize(sortedPages.size());
+        int chunkSize = effectiveChunkSize(sortedPages.size(), config.getHybridConfig().getChunkSize());
 
         for (int chunkStart = 0; chunkStart < sortedPages.size(); chunkStart += chunkSize) {
             int chunkEnd = Math.min(chunkStart + chunkSize, sortedPages.size());
