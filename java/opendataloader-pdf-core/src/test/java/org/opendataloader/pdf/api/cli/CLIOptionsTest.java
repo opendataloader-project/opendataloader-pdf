@@ -656,20 +656,26 @@ class CLIOptionsTest {
         String[] args = {"--hybrid-chunk-size", value, testPdf.getAbsolutePath()};
         CommandLine cmd = parser.parse(options, args);
 
-        assertThrows(IllegalArgumentException.class, () -> {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
             CLIOptions.createConfigFromCommandLine(cmd);
         });
+
+        // The normalized message names the invalid value, and the original
+        // parse/rejection exception is preserved as the cause (R3).
+        assertEquals(String.format("Invalid chunk size value '%s'. Must be a positive integer.", value),
+                ex.getMessage());
+        assertNotNull(ex.getCause());
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"", "  "})
-    void testCreateConfig_emptyHybridChunkSizeKeepsDefault(String value) throws ParseException {
+    void testCreateConfig_blankHybridChunkSizeRejected(String value) throws ParseException {
         String[] args = {"--hybrid-chunk-size", value, testPdf.getAbsolutePath()};
         CommandLine cmd = parser.parse(options, args);
 
-        Config config = CLIOptions.createConfigFromCommandLine(cmd);
-
-        assertEquals(HybridConfig.DEFAULT_CHUNK_SIZE, config.getHybridConfig().getChunkSize());
+        assertThrows(IllegalArgumentException.class, () -> {
+            CLIOptions.createConfigFromCommandLine(cmd);
+        });
     }
 
     @Test
