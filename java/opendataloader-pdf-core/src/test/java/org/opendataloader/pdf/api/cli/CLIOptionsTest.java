@@ -661,10 +661,18 @@ class CLIOptionsTest {
         });
 
         // The normalized message names the invalid value, and the original
-        // parse/rejection exception is preserved as the cause (R3).
+        // parse/rejection exception is preserved as the cause: a
+        // NumberFormatException for non-numeric input, or the HybridConfig
+        // rejection for zero/negative values.
         assertEquals(String.format("Invalid chunk size value '%s'. Must be a positive integer.", value),
                 ex.getMessage());
         assertNotNull(ex.getCause());
+        if ("abc".equals(value)) {
+            assertInstanceOf(NumberFormatException.class, ex.getCause());
+        } else {
+            assertInstanceOf(IllegalArgumentException.class, ex.getCause());
+            assertEquals("Chunk size must be positive: " + value, ex.getCause().getMessage());
+        }
     }
 
     @ParameterizedTest
@@ -673,9 +681,13 @@ class CLIOptionsTest {
         String[] args = {"--hybrid-chunk-size", value, testPdf.getAbsolutePath()};
         CommandLine cmd = parser.parse(options, args);
 
-        assertThrows(IllegalArgumentException.class, () -> {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
             CLIOptions.createConfigFromCommandLine(cmd);
         });
+
+        // A blank value is rejected before parsing with its own message, not
+        // normalized through the invalid-value path.
+        assertEquals("Option --hybrid-chunk-size requires a positive integer.", ex.getMessage());
     }
 
     @Test

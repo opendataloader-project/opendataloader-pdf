@@ -673,12 +673,13 @@ public class CLIOptions {
         }
         if (commandLine.hasOption(HYBRID_CHUNK_SIZE_LONG_OPTION)) {
             String chunkSizeValue = commandLine.getOptionValue(HYBRID_CHUNK_SIZE_LONG_OPTION);
-            if (chunkSizeValue == null || chunkSizeValue.trim().isEmpty()) {
+            String trimmed = chunkSizeValue == null ? null : chunkSizeValue.trim();
+            if (trimmed == null || trimmed.isEmpty()) {
                 throw new IllegalArgumentException(
                         "Option --hybrid-chunk-size requires a positive integer.");
             }
             try {
-                config.getHybridConfig().setChunkSize(Integer.parseInt(chunkSizeValue.trim()));
+                config.getHybridConfig().setChunkSize(Integer.parseInt(trimmed));
             } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException(
                         String.format("Invalid chunk size value '%s'. Must be a positive integer.", chunkSizeValue), e);
