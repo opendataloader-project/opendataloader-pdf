@@ -26,6 +26,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.hybrid.HybridConfig;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -630,6 +631,44 @@ class CLIOptionsTest {
             System.setErr(originalErr);
         }
         return buf.toString(StandardCharsets.UTF_8);
+    }
+
+    // ===== Hybrid Chunk Size Option Tests =====
+
+    @Test
+    void testDefineOptions_containsHybridChunkSizeOption() {
+        assertTrue(options.hasOption("hybrid-chunk-size"));
+    }
+
+    @Test
+    void testCreateConfig_withHybridChunkSize() throws ParseException {
+        String[] args = {"--hybrid-chunk-size", "10", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertEquals(10, config.getHybridConfig().getChunkSize());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"0", "-5", "abc"})
+    void testCreateConfig_withInvalidHybridChunkSize(String value) throws ParseException {
+        String[] args = {"--hybrid-chunk-size", value, testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            CLIOptions.createConfigFromCommandLine(cmd);
+        });
+    }
+
+    @Test
+    void testCreateConfig_defaultHybridChunkSize() throws ParseException {
+        String[] args = {testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertEquals(HybridConfig.DEFAULT_CHUNK_SIZE, config.getHybridConfig().getChunkSize());
     }
 
     @FunctionalInterface
