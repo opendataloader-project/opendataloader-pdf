@@ -8,13 +8,12 @@ Automates:
 4. Post-processing & verification summary
 """
 
+import json
 import os
+import subprocess
 import sys
 import time
-import socket
-import subprocess
 import urllib.request
-import json
 from pathlib import Path
 
 # Cross-platform Java & Environment Setup
@@ -31,6 +30,7 @@ HYBRID_HOST = "127.0.0.1"
 HYBRID_PORT = 5002
 HYBRID_URL = f"http://{HYBRID_HOST}:{HYBRID_PORT}"
 
+
 def is_server_ready(host=HYBRID_HOST, port=HYBRID_PORT, timeout=2.0) -> bool:
     """Check if the hybrid server is responding."""
     try:
@@ -38,11 +38,8 @@ def is_server_ready(host=HYBRID_HOST, port=HYBRID_PORT, timeout=2.0) -> bool:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             return resp.status == 200
     except Exception:
-        try:
-            with socket.create_connection((host, port), timeout=timeout):
-                return True
-        except Exception:
-            return False
+        return False
+
 
 def detect_device() -> str:
     """Dynamically detect the fastest available hardware accelerator."""
@@ -54,9 +51,10 @@ def detect_device() -> str:
             return "mps"
     except Exception:
         pass
-    return "mps" if sys.platform == "darwin" else "cpu"
+    return "cpu"
 
-def start_hybrid_server() -> subprocess.Popen:
+
+def start_hybrid_server() -> subprocess.Popen | None:
     """Start local docling hybrid server in the background."""
     if is_server_ready():
         print(f"[*] Hybrid server is already running on {HYBRID_URL}")
@@ -66,26 +64,42 @@ def start_hybrid_server() -> subprocess.Popen:
     device = detect_device()
     print(f"[*] Detected hardware accelerator: {device.upper()}")
     print(f"[*] Starting Hybrid AI Server on {HYBRID_URL} (device={device})...")
-    
+
     cmd = [
         "opendataloader-pdf-hybrid",
         "--host", HYBRID_HOST,
         "--port", str(HYBRID_PORT),
         "--device", device,
+        "--enrich-formula",
+        "--enrich-picture-description",
         "--no-ocr",
     ]
-    
+
     proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-    print(f"[*] Initializing AI server & ML models...")
+    print("[*] Initializing AI server & ML models...")
     for _ in range(60):
         if is_server_ready():
             print("[+] Hybrid AI server is ready and listening!")
             return proc
         time.sleep(1)
-        
+
     print("[!] Server process started. Proceeding...")
     return proc
+
+
+def stop_hybrid_server(proc: subprocess.Popen | None) -> None:
+    """Stop the hybrid server if it was started by this invocation."""
+    if proc is None or proc.poll() is not None:
+        return
+
+    proc.terminate()
+    try:
+        proc.wait(timeout=10)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        proc.wait()
+
 
 def run_conversion(input_path: str = "data", output_dir: str = "data/output_perfect"):
     """Run batch conversion with maximal quality parameters."""
@@ -95,14 +109,14 @@ def run_conversion(input_path: str = "data", output_dir: str = "data/output_perf
     output_p = Path(output_dir).resolve()
     output_p.mkdir(parents=True, exist_ok=True)
 
-    print(f"\n=======================================================")
+    print("\n=======================================================")
     print(f" Parsing PDF(s) from: {input_p}")
     print(f" Output Directory:    {output_p}")
-    print(f" Mode:                Hybrid (docling-fast, smart auto triage)")
-    print(f" Acceleration:        MPS (Apple Silicon GPU) / Auto")
-    print(f" Table Handling:      Cluster + HTML tables in Markdown")
-    print(f" Image Quality:       300 DPI")
-    print(f"=======================================================\n")
+    print(" Mode:                Hybrid (docling-fast, full AI processing)")
+    print(" Acceleration:        CUDA / MPS / CPU (auto-detected)")
+    print(" Table Handling:      Cluster + HTML tables in Markdown")
+    print(" Image Quality:       300 DPI")
+    print("=======================================================\n")
 
     start_time = time.perf_counter()
 
@@ -111,7 +125,7 @@ def run_conversion(input_path: str = "data", output_dir: str = "data/output_perf
         output_dir=str(output_p),
         format="markdown,json",
         hybrid="docling-fast",
-        hybrid_mode="auto",
+        hybrid_mode="full",
         markdown_with_html=True,
         table_method="cluster",
         image_resolution="300.0",
@@ -124,6 +138,7 @@ def run_conversion(input_path: str = "data", output_dir: str = "data/output_perf
     print(f"\n[+] Conversion completed in {elapsed:.2f}s!")
 
     summarize_outputs(output_p)
+
 
 def summarize_outputs(output_p: Path):
     """Summarize the converted results."""
@@ -158,6 +173,7 @@ def summarize_outputs(output_p: Path):
             print(f"  • Could not inspect {jf.name}: {e}")
     print("------------------------------------------------------\n")
 
+
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] in ("-h", "--help"):
         print("Usage: python run_pipeline.py [INPUT_PATH] [OUTPUT_DIR]")
@@ -171,4 +187,4 @@ if __name__ == "__main__":
         out_target = sys.argv[2] if len(sys.argv) > 2 else "data/output_perfect"
         run_conversion(input_target, out_target)
     finally:
-        pass
+        stop_hybrid_server(server_proc)
