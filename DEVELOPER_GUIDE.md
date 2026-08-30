@@ -88,7 +88,7 @@ The [`run_pipeline.py`](./run_pipeline.py) script automatically manages the life
    * `--enrich-formula`: Converts complex mathematical equations into clean LaTeX markup ($$ \int ... $$).
    * `--enrich-picture-description`: Employs a Vision-Language Model (SmolVLM) to generate semantic descriptions (Alt-Text) for charts, plots, and figures.
    * `--no-ocr`: Disables redundant OCR on born-digital PDFs, preventing duplicate text fragments and false image artifacts.
-   * `--device cpu`: Provides stable, cross-platform inference across Windows, macOS, and Linux.
+   * `--device <cuda|mps|cpu>`: Dynamically selects CUDA, then MPS, and otherwise CPU.
 
 2. **Client Conversion (`opendataloader_pdf.convert`):**
    * `--hybrid-mode full`: Directs every page to the AI backend to ensure no formulas or figures are skipped by triage heuristics.
