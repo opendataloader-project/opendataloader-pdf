@@ -229,7 +229,6 @@ public class CLIOptions {
             new OptionDefinition(FORMAT_LONG_OPTION, FORMAT_OPTION, "string", null, FORMAT_DESC, true),
             new OptionDefinition(QUIET_LONG_OPTION, QUIET_OPTION, "boolean", false, QUIET_DESC, true),
             new OptionDefinition(CONTENT_SAFETY_OFF_LONG_OPTION, null, "string", null, CONTENT_SAFETY_OFF_DESC, true),
-            new OptionDefinition(FILTER_HIDDEN_TEXT_LONG_OPTION, null, "string", "off", FILTER_HIDDEN_TEXT_DESC, true),
             new OptionDefinition(SANITIZE_LONG_OPTION, null, "boolean", false, SANITIZE_DESC, true),
             new OptionDefinition(KEEP_LINE_BREAKS_LONG_OPTION, null, "boolean", false, KEEP_LINE_BREAKS_DESC, true),
             new OptionDefinition(REPLACE_INVALID_CHARS_LONG_OPTION, null, "string", " ", REPLACE_INVALID_CHARS_DESC,
@@ -261,6 +260,7 @@ public class CLIOptions {
             new OptionDefinition(IMAGE_RESOLUTION_LONG_OPTION, null, "string", null, IMAGE_RESOLUTION_DESC, true),
             new OptionDefinition(EXPORT_OPTIONS_LONG_OPTION, null, "boolean", null, null, false),
             new OptionDefinition(SPACE_RATIO_LONG_OPTION, null, "string", null, SPACE_RATIO_DESC, true),
+            new OptionDefinition(FILTER_HIDDEN_TEXT_LONG_OPTION, null, "string", "off", FILTER_HIDDEN_TEXT_DESC, true),
 
             // Legacy options (not exported, for backward compatibility)
             new OptionDefinition(HYBRID_OCR_LONG_OPTION, null, "string", null, HYBRID_OCR_DESC, false),

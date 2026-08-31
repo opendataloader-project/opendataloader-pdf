@@ -12,7 +12,6 @@ export function registerCliOptions(program: Command): void {
   program.option('-f, --format <value>', 'Output formats (comma-separated). Values: json, text, html, pdf, markdown, tagged-pdf. Default: json. For HTML inside Markdown use --markdown-with-html. For image extraction control use --image-output.');
   program.option('-q, --quiet', 'Suppress console logging output');
   program.option('--content-safety-off <value>', 'Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg, background');
-  program.option('--filter-hidden-text <value>', 'Filter hidden (low-contrast) text via per-page rendering. Values: on, off. Default: off (opt-in; expensive, runs as sequential post-processing)');
   program.option('--sanitize', 'Enable sensitive data sanitization. Replaces emails, phone numbers, IPs, credit cards, and URLs with placeholders');
   program.option('--keep-line-breaks', 'Preserve original line breaks in extracted text');
   program.option('--replace-invalid-chars <value>', 'Replacement character for invalid/unrecognized characters. Default: space');
@@ -38,4 +37,5 @@ export function registerCliOptions(program: Command): void {
   program.option('--threads <value>', 'Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode');
   program.option('--image-resolution <value>', 'Set the rendering resolution for images in DPI. Higher values improve image quality but increase memory consumption; lower values reduce memory usage at the cost of detail. Accepts positive decimal DPI values (e.g., 144.0). Default: 144.0.');
   program.option('--space-ratio <value>', 'Set the ratio used to calculate the automatic space-insertion threshold (threshold = space-ratio * font size). If the horizontal gap between two adjacent symbols exceeds this threshold, an extra space is inserted to text value. Accepts decimals (e.g., 0.17). Default: 0.17');
+  program.option('--filter-hidden-text <value>', 'Filter hidden (low-contrast) text via per-page rendering. Values: on, off. Default: off (opt-in; expensive, runs as sequential post-processing)');
 }

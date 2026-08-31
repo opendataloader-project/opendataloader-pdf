@@ -16,7 +16,6 @@ def convert(
     format: Optional[Union[str, List[str]]] = None,
     quiet: bool = False,
     content_safety_off: Optional[Union[str, List[str]]] = None,
-    filter_hidden_text: Optional[str] = None,
     sanitize: bool = False,
     keep_line_breaks: bool = False,
     replace_invalid_chars: Optional[str] = None,
@@ -42,6 +41,7 @@ def convert(
     threads: Optional[str] = None,
     image_resolution: Optional[str] = None,
     space_ratio: Optional[str] = None,
+    filter_hidden_text: Optional[str] = None,
 ) -> None:
     """
     Convert PDF(s) into the requested output format(s).
@@ -53,7 +53,6 @@ def convert(
         format: Output formats (comma-separated). Values: json, text, html, pdf, markdown, tagged-pdf. Default: json. For HTML inside Markdown use --markdown-with-html. For image extraction control use --image-output.
         quiet: Suppress console logging output
         content_safety_off: Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg, background
-        filter_hidden_text: Filter hidden (low-contrast) text via per-page rendering. Values: on, off. Default: off (opt-in; expensive, runs as sequential post-processing)
         sanitize: Enable sensitive data sanitization. Replaces emails, phone numbers, IPs, credit cards, and URLs with placeholders
         keep_line_breaks: Preserve original line breaks in extracted text
         replace_invalid_chars: Replacement character for invalid/unrecognized characters. Default: space
@@ -79,6 +78,7 @@ def convert(
         threads: Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode
         image_resolution: Set the rendering resolution for images in DPI. Higher values improve image quality but increase memory consumption; lower values reduce memory usage at the cost of detail. Accepts positive decimal DPI values (e.g., 144.0). Default: 144.0.
         space_ratio: Set the ratio used to calculate the automatic space-insertion threshold (threshold = space-ratio * font size). If the horizontal gap between two adjacent symbols exceeds this threshold, an extra space is inserted to text value. Accepts decimals (e.g., 0.17). Default: 0.17
+        filter_hidden_text: Filter hidden (low-contrast) text via per-page rendering. Values: on, off. Default: off (opt-in; expensive, runs as sequential post-processing)
     """
     args: List[str] = []
 
@@ -106,8 +106,6 @@ def convert(
                 args.extend(["--content-safety-off", ",".join(content_safety_off)])
         else:
             args.extend(["--content-safety-off", content_safety_off])
-    if filter_hidden_text:
-        args.extend(["--filter-hidden-text", filter_hidden_text])
     if sanitize:
         args.append("--sanitize")
     if keep_line_breaks:
@@ -158,5 +156,7 @@ def convert(
         args.extend(["--image-resolution", image_resolution])
     if space_ratio:
         args.extend(["--space-ratio", space_ratio])
+    if filter_hidden_text:
+        args.extend(["--filter-hidden-text", filter_hidden_text])
 
     run_jar(args, quiet)

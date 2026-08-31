@@ -15,8 +15,6 @@ export interface ConvertOptions {
   quiet?: boolean;
   /** Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg, background */
   contentSafetyOff?: string | string[];
-  /** Filter hidden (low-contrast) text via per-page rendering. Values: on, off. Default: off (opt-in; expensive, runs as sequential post-processing) */
-  filterHiddenText?: string;
   /** Enable sensitive data sanitization. Replaces emails, phone numbers, IPs, credit cards, and URLs with placeholders */
   sanitize?: boolean;
   /** Preserve original line breaks in extracted text */
@@ -67,6 +65,8 @@ export interface ConvertOptions {
   imageResolution?: string;
   /** Set the ratio used to calculate the automatic space-insertion threshold (threshold = space-ratio * font size). If the horizontal gap between two adjacent symbols exceeds this threshold, an extra space is inserted to text value. Accepts decimals (e.g., 0.17). Default: 0.17 */
   spaceRatio?: string;
+  /** Filter hidden (low-contrast) text via per-page rendering. Values: on, off. Default: off (opt-in; expensive, runs as sequential post-processing) */
+  filterHiddenText?: string;
 }
 
 /**
@@ -78,7 +78,6 @@ export interface CliOptions {
   format?: string;
   quiet?: boolean;
   contentSafetyOff?: string;
-  filterHiddenText?: string;
   sanitize?: boolean;
   keepLineBreaks?: boolean;
   replaceInvalidChars?: string;
@@ -104,6 +103,7 @@ export interface CliOptions {
   threads?: string;
   imageResolution?: string;
   spaceRatio?: string;
+  filterHiddenText?: string;
 }
 
 /**
@@ -126,9 +126,6 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   }
   if (cliOptions.contentSafetyOff) {
     convertOptions.contentSafetyOff = cliOptions.contentSafetyOff;
-  }
-  if (cliOptions.filterHiddenText) {
-    convertOptions.filterHiddenText = cliOptions.filterHiddenText;
   }
   if (cliOptions.sanitize) {
     convertOptions.sanitize = true;
@@ -205,6 +202,9 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   if (cliOptions.spaceRatio) {
     convertOptions.spaceRatio = cliOptions.spaceRatio;
   }
+  if (cliOptions.filterHiddenText) {
+    convertOptions.filterHiddenText = cliOptions.filterHiddenText;
+  }
 
   return convertOptions;
 }
@@ -241,9 +241,6 @@ export function buildArgs(options: ConvertOptions): string[] {
     } else {
       args.push('--content-safety-off', options.contentSafetyOff);
     }
-  }
-  if (options.filterHiddenText) {
-    args.push('--filter-hidden-text', options.filterHiddenText);
   }
   if (options.sanitize) {
     args.push('--sanitize');
@@ -319,6 +316,9 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.spaceRatio) {
     args.push('--space-ratio', options.spaceRatio);
+  }
+  if (options.filterHiddenText) {
+    args.push('--filter-hidden-text', options.filterHiddenText);
   }
 
   return args;

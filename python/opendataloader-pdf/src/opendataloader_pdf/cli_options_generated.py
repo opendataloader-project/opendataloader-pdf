@@ -55,15 +55,6 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "description": "Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg, background",
     },
     {
-        "name": "filter-hidden-text",
-        "python_name": "filter_hidden_text",
-        "short_name": None,
-        "type": "string",
-        "required": False,
-        "default": "off",
-        "description": "Filter hidden (low-contrast) text via per-page rendering. Values: on, off. Default: off (opt-in; expensive, runs as sequential post-processing)",
-    },
-    {
         "name": "sanitize",
         "python_name": "sanitize",
         "short_name": None,
@@ -287,6 +278,15 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "required": False,
         "default": None,
         "description": "Set the ratio used to calculate the automatic space-insertion threshold (threshold = space-ratio * font size). If the horizontal gap between two adjacent symbols exceeds this threshold, an extra space is inserted to text value. Accepts decimals (e.g., 0.17). Default: 0.17",
+    },
+    {
+        "name": "filter-hidden-text",
+        "python_name": "filter_hidden_text",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": "off",
+        "description": "Filter hidden (low-contrast) text via per-page rendering. Values: on, off. Default: off (opt-in; expensive, runs as sequential post-processing)",
     },
 ]
 
