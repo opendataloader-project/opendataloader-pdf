@@ -311,6 +311,14 @@ public class HeaderFooterProcessor {
         for (int i = 0; i < textNodes.size(); i++) {
             SemanticTextNode textNode = textNodes.get(i);
             TextLine line = textNode.getFirstNonSpaceLine();
+            if (line == null) {
+                // Every line of the node is empty or space-only, so there is no
+                // label to match a header or footer numbering against. Skipping
+                // leaves fewer than two entries, so no interval is produced and
+                // the pair is rejected -- the correct answer for a node with no
+                // visible text.
+                continue;
+            }
             TextLine secondLine = textNode.getNonSpaceLine(1);
             textChildrenInfo.add(new ListItemTextInfo(i, textNode.getSemanticType(),
                     line, line.getValue().trim(), secondLine == null));
