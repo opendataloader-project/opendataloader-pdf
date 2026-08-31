@@ -36,6 +36,9 @@ Usage:
     # Force CPU-only processing
     opendataloader-pdf-hybrid --device cpu
 
+    # Run RapidOCR on the GPU through DirectML (Windows; needs onnxruntime-directml)
+    opendataloader-pdf-hybrid --ocr-engine rapidocr --device directml
+
     # With formula enrichment (LaTeX extraction)
     opendataloader-pdf-hybrid --enrich-formula
 
@@ -92,6 +95,21 @@ UPLOAD_CHUNK_SIZE = 1024 * 1024  # 1MB chunks for streaming upload
 # Single source of truth shared by `create_converter`, `main()` argparse, and tests
 # to avoid drift between production and test code.
 _OCR_ENGINE_DENYLIST = frozenset({"kserve_v2_ocr"})
+
+# DirectML is a Windows-only ONNX Runtime execution provider. Docling's
+# AcceleratorDevice has no DirectML member, so the name is accepted on `--device`
+# and mapped onto RapidOCR in `create_converter()` instead of being forwarded to
+# AcceleratorOptions, whose validator would reject it.
+_DEVICE_DIRECTML = "directml"
+
+# Docling asks RapidOCR for DirectML by setting `Det.use_dml` / `Cls.use_dml` /
+# `Rec.use_dml`. Those are RapidOCR 2.x keys: since RapidOCR 3 the provider
+# switches live under `EngineConfig.<engine>.*`, which is where rapidocr's
+# ProviderConfig reads them. Docling's request therefore never lands and RapidOCR
+# silently stays on CPU, without a single warning. `RapidOcrOptions.rapidocr_params`
+# is merged over docling's own params last, so it is the supported way to set the
+# key that rapidocr actually reads.
+_RAPIDOCR_DML_PARAMS = {"EngineConfig.onnxruntime.use_dml": True}
 
 
 def _non_negative_int(value: str) -> int:
@@ -304,7 +322,21 @@ def _check_dependencies():
         )
 
 
-def _check_ocr_engine_available(engine_kind: str) -> tuple[bool, str]:
+def _is_directml_available() -> bool:
+    """Return True when the installed ONNX Runtime exposes DirectML.
+
+    The DirectML execution provider only ships in the `onnxruntime-directml`
+    wheel, which cannot coexist with plain `onnxruntime`: both install the same
+    `onnxruntime` module, so the two wheels must be swapped rather than combined.
+    """
+    try:
+        from onnxruntime import get_available_providers
+    except ImportError:
+        return False
+    return "DmlExecutionProvider" in get_available_providers()
+
+
+def _check_ocr_engine_available(engine_kind: str, device: str = "auto") -> tuple[bool, str]:
     """Probe runtime prerequisites for the selected OCR engine.
 
     Called at startup so a missing binary or Python package surfaces before the
@@ -314,9 +346,25 @@ def _check_ocr_engine_available(engine_kind: str) -> tuple[bool, str]:
     docling at conversion time, so both are treated as always available. Other
     engines pull in extra system or Python dependencies that are not declared
     in pyproject and must be installed by the user.
+
+    `device` is checked alongside the engine because a device can carry its own
+    prerequisite; DirectML is currently the only such case.
     """
     import importlib.util
     import shutil
+
+    if device == _DEVICE_DIRECTML and not _is_directml_available():
+        return False, (
+            "--device directml selected but the installed ONNX Runtime does not "
+            "expose DmlExecutionProvider. DirectML ships in the "
+            "`onnxruntime-directml` wheel, which cannot be installed alongside "
+            "plain `onnxruntime` (both provide the same `onnxruntime` module), so "
+            "the wheels have to be swapped:\n"
+            "  pip uninstall -y onnxruntime\n"
+            "  pip install onnxruntime-directml\n"
+            "Then confirm the provider is listed by "
+            "onnxruntime.get_available_providers()."
+        )
 
     if engine_kind in ("auto", "easyocr"):
         return True, ""
@@ -419,8 +467,10 @@ def create_converter(
         enrich_formula: If True, enable formula enrichment (LaTeX extraction).
         enrich_picture_description: If True, enable picture description (alt text generation).
         picture_description_prompt: Custom prompt forwarded to the VLM. If None or blank/whitespace-only, docling's default prompt is used.
-        device: Accelerator device for model inference. Options: "auto", "cpu", "cuda", "mps", "xpu".
-                "auto" lets Docling select the best available device. Default: "auto".
+        device: Accelerator device for model inference. Options: "auto", "cpu", "cuda", "mps",
+                "xpu", "directml". "auto" lets Docling select the best available device.
+                "directml" runs the ONNX Runtime based OCR stage (RapidOCR) on the GPU through
+                DirectML; the other models stay on the CPU path. Default: "auto".
     """
     from docling.datamodel.accelerator_options import AcceleratorOptions
     from docling.datamodel.base_models import InputFormat
@@ -428,6 +478,7 @@ def create_converter(
         AcceleratorOptions,
         PdfPipelineOptions,
         PictureDescriptionVlmOptions,
+        RapidOcrOptions,
         TableFormerMode,
         TableStructureOptions,
         TesseractCliOcrOptions,
@@ -473,6 +524,22 @@ def create_converter(
     ):
         ocr_options.psm = psm
 
+    # RapidOCR-only: DirectML execution provider.
+    # RapidOCR is the only ONNX Runtime stage in the pipeline, so it is the only
+    # part DirectML can accelerate; layout and table structure keep the device
+    # docling resolves for them. Warn — rather than pass silently — when the
+    # selected engine cannot make use of it, since `--device directml` would
+    # otherwise look accepted while doing nothing (cf. PDFDLOSP-20).
+    if device == _DEVICE_DIRECTML:
+        if isinstance(ocr_options, RapidOcrOptions):
+            ocr_options.rapidocr_params.update(_RAPIDOCR_DML_PARAMS)
+        else:
+            logger.warning(
+                "--device directml only affects the rapidocr engine; ignoring it "
+                "for ocr_engine=%r",
+                ocr_engine,
+            )
+
     # Configure picture description options with custom prompt.
     # When picture_description_prompt is None or blank, omit the field so
     # docling's built-in default prompt is used. A blank string would otherwise
@@ -495,13 +562,14 @@ def create_converter(
         "do_formula_enrichment": enrich_formula,
         "do_picture_description": enrich_picture_description,
         "generate_picture_images": enrich_picture_description,
-        "accelerator_options": AcceleratorOptions(device=device),
+        # AcceleratorOptions validates against AcceleratorDevice, which has no
+        # DirectML member, so "directml" is consumed above and must not reach here.
+        "accelerator_options": AcceleratorOptions(
+            device="cpu" if device == _DEVICE_DIRECTML else device
+        ),
     }
     if picture_description_options is not None:
         pipeline_kwargs["picture_description_options"] = picture_description_options
-
-    if device != "auto":
-        pipeline_kwargs["accelerator_options"] = AcceleratorOptions(device=device)
 
     pipeline_options = PdfPipelineOptions(**pipeline_kwargs)
 
@@ -536,7 +604,8 @@ def create_app(
         enrich_picture_description: If True, enable picture description (alt text generation).
         picture_description_prompt: Custom prompt forwarded to the VLM. If None or blank/whitespace-only, docling's default prompt is used.
         max_file_size: Maximum file size in bytes. 0 means no limit (default).
-        device: Accelerator device for model inference ("auto", "cpu", "cuda", "mps", "xpu").
+        device: Accelerator device for model inference ("auto", "cpu", "cuda", "mps", "xpu",
+                "directml").
     """
     from fastapi import FastAPI, File, Form, UploadFile
     from fastapi.responses import JSONResponse
@@ -925,8 +994,10 @@ def main():
         "--device",
         type=str,
         default="auto",
-        choices=["auto", "cpu", "cuda", "mps", "xpu"],
-        help="Accelerator device for model inference: auto (default), cpu, cuda, mps (Apple Silicon), xpu (Intel GPU).",
+        choices=["auto", "cpu", "cuda", "mps", "xpu", _DEVICE_DIRECTML],
+        help="Accelerator device for model inference: auto (default), cpu, cuda, "
+             "mps (Apple Silicon), xpu (Intel GPU), directml (Windows GPU for the "
+             "rapidocr engine; requires the onnxruntime-directml wheel).",
     )
     args = parser.parse_args()
 
@@ -964,7 +1035,7 @@ def main():
     # `tesseract` binary or Python package surfaces here as a clear, actionable
     # error rather than as a deferred runtime exception during the first request.
     if not args.no_ocr:
-        ok, err = _check_ocr_engine_available(args.ocr_engine)
+        ok, err = _check_ocr_engine_available(args.ocr_engine, device=args.device)
         if not ok:
             logger.error(err)
             sys.exit(2)
