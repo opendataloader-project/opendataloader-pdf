@@ -16,11 +16,10 @@
 package org.opendataloader.pdf.processors;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.opendataloader.pdf.api.Config;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -79,8 +78,7 @@ class BackgroundFilterTest {
     }
 
     @Test
-    void disablingTheBackgroundFilterKeepsThePageSizedVector() throws IOException {
-        Path dir = Files.createTempDirectory("bgfilter");
+    void disablingTheBackgroundFilterKeepsThePageSizedVector(@TempDir Path dir) throws IOException {
         Path pdf = writePageSizedVectorPdf(dir);
 
         long kept = countLineArt(pdf, false, dir);
@@ -90,17 +88,6 @@ class BackgroundFilterTest {
                 "with the background filter off, at least one more LineArtChunk should survive; "
                         + "kept=" + kept + " removed=" + removed);
         assertTrue(kept > 0, "the page-covering rectangle should be present when the filter is off");
-
-        deleteRecursively(dir.toFile());
     }
 
-    private static void deleteRecursively(File f) {
-        File[] children = f.listFiles();
-        if (children != null) {
-            for (File c : children) {
-                deleteRecursively(c);
-            }
-        }
-        f.delete();
-    }
 }
