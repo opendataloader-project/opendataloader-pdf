@@ -102,6 +102,31 @@ class CLIMainTest {
     }
 
     /**
+     * An invalid --hybrid-chunk-size value must fail fast with a non-zero exit
+     * code before any processing starts.
+     */
+    @Test
+    void testInvalidHybridChunkSizeReturnsNonZeroExitCode() throws IOException {
+        Path testPdf = tempDir.resolve("test.pdf");
+        // A parseable one-page PDF: a non-zero exit must be attributable to
+        // option validation, not to malformed input failing during processing.
+        try (PDDocument document = new PDDocument()) {
+            document.addPage(new PDPage());
+            document.save(testPdf.toFile());
+        }
+
+        int exitCode = CLIMain.run(new String[]{
+            "--hybrid-chunk-size", "0",
+            testPdf.toString()
+        });
+
+        // Exit code 2 is CLIMain's option-validation failure path
+        // (IllegalArgumentException from createConfigFromCommandLine).
+        assertEquals(2, exitCode,
+            "Exit code must be 2 (option validation failure) for an invalid --hybrid-chunk-size value");
+    }
+
+    /**
      * Normal invocation with no arguments should return 0 (just prints help).
      */
     @Test
