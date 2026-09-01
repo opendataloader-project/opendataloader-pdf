@@ -317,6 +317,20 @@ class TableStructureNormalizer {
         return count;
     }
 
+    static boolean hasMeaningfulContent(TableBorder tableBorder) {
+        for (int rowNumber = 0; rowNumber < tableBorder.getNumberOfRows(); rowNumber++) {
+            TableBorderRow row = tableBorder.getRow(rowNumber);
+            for (int columnNumber = 0; columnNumber < tableBorder.getNumberOfColumns(); columnNumber++) {
+                TableBorderCell cell = row.getCell(columnNumber);
+                if (cell != null && cell.getRowNumber() == rowNumber && cell.getColNumber() == columnNumber &&
+                        hasMeaningfulContent(cell.getContents())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     private static boolean hasMeaningfulContent(List<IObject> contents) {
         if (contents == null) {
             return false;
