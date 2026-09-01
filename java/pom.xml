@@ -58,46 +58,21 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <!--
-          Entry-point pin. veraPDF publishes no BOM, but its released `validation`
-          pom resolves the modules below validation-model to fixed versions even
-          though its source tree expresses them as ranges. Importing that pom as
-          a BOM below lets those artifacts be declared without a version, so the
-          combination vera tested stays intact.
-
-          SECURITY FLOOR - do not lower past these:
-            validation-model >= 1.31.71  XXE via RichText / XFA / default
-                                         DocumentBuilderFactory
-                                         (CVE-2026-54078, -54079, -54082)
-            parser           >= 1.31.23  crafted-CMap and Type1-font DoS
-                                         (CVE-2026-54080, -54081)
-          The parser floor is inherited through this coordinate, so bumping or
-          rolling back verapdf.version moves four dependency versions at once
-          with no diff line showing it. Re-check the resolved tree when you do.
-        -->
-        <verapdf.version>1.31.160</verapdf.version>
-        <!--
-          Pin required — do not remove. wcag-validation references
-          wcag-algorithms as the range [1.31.0,1.32.0-RC), the only ranged
-          coordinate that reaches this build. Without this pin the resolved
-          version changes between builds of the same commit.
-        -->
+        <verapdf.version>1.31.169</verapdf.version>
+        <!-- Removal prohibited. wcag-validation declares this as a range, so
+             identical commits resolve to differing versions without the pin. -->
         <verapdf.wcag.algs.version>1.31.43</verapdf.wcag.algs.version>
-        <!--
-          core (PDFWriter, PDFStreamWriter, hybrid) uses PDFBox directly, so it
-          is declared rather than inherited from wcag-algorithms. Held at the
-          version wcag-algorithms itself requires, so vera's classes compile and
-          run against the same PDFBox.
-        -->
+        <!-- Bump only on a wcag-algorithms bump: vera classes require the
+             PDFBox they were built against. Verification is samples/pdf with
+             -f pdf included; tests pass either way. -->
         <pdfbox.version>3.0.4</pdfbox.version>
-        <jackson.databind.version>2.22.1</jackson.databind.version>
-        <!-- jackson-annotations is released on its own version line, one minor
-             behind databind. Kept separate so a databind bump does not silently
-             invent an annotations version that was never published. -->
+        <jackson.databind.version>2.22.2</jackson.databind.version>
+        <!-- Release line separate from databind, one minor behind. Alignment
+             with a databind bump requests an unpublished version. -->
         <jackson.annotations.version>2.22</jackson.annotations.version>
-        <junit.jupiter.version>6.1.2</junit.jupiter.version>
+        <junit.jupiter.version>6.1.3</junit.jupiter.version>
         <assertj.version>3.27.7</assertj.version>
-        <okhttp.version>5.4.0</okhttp.version>
+        <okhttp.version>5.5.0</okhttp.version>
         <commons.cli.version>1.11.0</commons.cli.version>
         <maven-compiler.plugin.version>3.15.0</maven-compiler.plugin.version>
         <flatten.plugin.version>1.7.3</flatten.plugin.version>
