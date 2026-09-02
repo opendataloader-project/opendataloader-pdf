@@ -151,3 +151,82 @@ def test_quiet_failure_prints_captured_streams_once(monkeypatch, capsys, patched
     assert "Stderr: captured stderr text" in err
     assert "Error running opendataloader-pdf CLI." in err
     assert "Return code: 2" in err
+
+
+def test_quiet_forwards_timeout_to_subprocess_run(monkeypatch, patched_jar):
+    """The bound must reach ``subprocess.run``, which is what actually kills
+    the JVM. Default stays ``None`` so existing callers wait exactly as
+    before."""
+    result = subprocess.CompletedProcess(
+        args=["java", "-jar", "fake.jar"], returncode=0, stdout="", stderr=""
+    )
+    fake_run = MagicMock(return_value=result)
+    monkeypatch.setattr(runner.subprocess, "run", fake_run)
+
+    runner.run_jar(["doc.pdf"], quiet=True, timeout=12.5)
+    assert fake_run.call_args.kwargs["timeout"] == 12.5
+
+    runner.run_jar(["doc.pdf"], quiet=True)
+    assert fake_run.call_args.kwargs["timeout"] is None
+
+
+def test_quiet_timeout_is_reported_and_reraised(monkeypatch, capsys, patched_jar):
+    """A timeout must be distinguishable from a crash in the caller's logs,
+    and must propagate: swallowing it would report a truncated conversion as
+    a successful one."""
+    monkeypatch.setattr(
+        runner.subprocess,
+        "run",
+        MagicMock(side_effect=subprocess.TimeoutExpired(cmd=["java"], timeout=3)),
+    )
+
+    with pytest.raises(subprocess.TimeoutExpired):
+        runner.run_jar(["doc.pdf"], quiet=True, timeout=3)
+
+    err = capsys.readouterr().err
+    assert "timed out after 3s" in err
+    # Not misreported as a non-zero exit.
+    assert "Error running opendataloader-pdf CLI." not in err
+
+
+def test_streaming_timeout_kills_the_jvm(monkeypatch, patched_jar):
+    """Streaming mode blocks on the pipe, so the timeout is applied to the
+    process and the relay runs on a helper thread: a JVM that stops emitting
+    lines is still killed rather than waited on forever."""
+    fake_process = MagicMock()
+    fake_process.stdout = iter(["[INFO] parsing page 1\n"])
+    fake_process.wait.side_effect = [
+        subprocess.TimeoutExpired(cmd=["java"], timeout=5),
+        0,
+    ]
+    fake_process.__enter__ = lambda self: self
+    fake_process.__exit__ = lambda self, *_a: False
+    monkeypatch.setattr(runner.subprocess, "Popen", lambda *_a, **_kw: fake_process)
+
+    with pytest.raises(subprocess.TimeoutExpired) as excinfo:
+        runner.run_jar(["doc.pdf"], quiet=False, timeout=5)
+
+    # The JVM is killed, not left running behind a raised exception.
+    fake_process.kill.assert_called_once()
+    # Whatever the JAR had already emitted is attached, not discarded.
+    assert "parsing page 1" in (excinfo.value.output or "")
+
+
+def test_streaming_without_timeout_keeps_the_inline_read(monkeypatch, patched_jar):
+    """Default behaviour is unchanged: no helper thread, and ``wait()`` is
+    called without a bound."""
+    fake_process = MagicMock()
+    fake_process.stdout = iter(["line one\n", "line two\n"])
+    fake_process.wait.return_value = 0
+    fake_process.__enter__ = lambda self: self
+    fake_process.__exit__ = lambda self, *_a: False
+    monkeypatch.setattr(runner.subprocess, "Popen", lambda *_a, **_kw: fake_process)
+
+    no_threads = MagicMock()
+    monkeypatch.setattr(runner.threading, "Thread", no_threads)
+
+    returned = runner.run_jar(["doc.pdf"], quiet=False)
+
+    assert returned == "line one\nline two\n"
+    no_threads.assert_not_called()
+    fake_process.wait.assert_called_once_with()
