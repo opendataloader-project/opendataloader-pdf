@@ -9,6 +9,7 @@ yet and is allowed to print the captured streams — but only once
 
 import io
 import subprocess
+import time
 from unittest.mock import MagicMock
 
 import pytest
@@ -230,3 +231,31 @@ def test_streaming_without_timeout_keeps_the_inline_read(monkeypatch, patched_ja
     assert returned == "line one\nline two\n"
     no_threads.assert_not_called()
     fake_process.wait.assert_called_once_with()
+
+
+def test_streaming_success_waits_for_the_full_relay(monkeypatch, patched_jar):
+    """A bounded run that SUCCEEDS must still return everything the JAR wrote.
+
+    The JVM can exit while the pipe still holds buffered output, and relaying it
+    onward can outlast the relay-join bound when the parent's stdout is slow.
+    Cutting the join short there would silently truncate the return value --
+    including a ``--to-stdout`` payload -- which is worse than the wait it saves.
+    The timeout bounds the JVM; once the JVM is gone the relay runs to EOF.
+    """
+    def slow_lines():
+        yield "first line\n"
+        # Outlast the join bound while the process has already exited.
+        time.sleep(runner._RELAY_JOIN_TIMEOUT_S + 0.3)
+        yield "last line\n"
+
+    fake_process = MagicMock()
+    fake_process.stdout = slow_lines()
+    fake_process.wait.return_value = 0
+    fake_process.__enter__ = lambda self: self
+    fake_process.__exit__ = lambda self, *_a: False
+    monkeypatch.setattr(runner.subprocess, "Popen", lambda *_a, **_kw: fake_process)
+
+    returned = runner.run_jar(["doc.pdf"], quiet=False, timeout=30)
+
+    # Nothing may be dropped: the tail arrived after the join bound elapsed.
+    assert returned == "first line\nlast line\n"

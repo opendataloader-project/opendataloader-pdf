@@ -10,11 +10,12 @@ from typing import IO, List, Optional
 # The consistent name of the JAR file bundled with the package
 _JAR_NAME = "opendataloader-pdf-cli.jar"
 
-# How long to wait for the relay thread after the JVM has exited or been
-# killed. The thread only drains a pipe that is already closed, so it ends
-# immediately in practice; the bound exists so a wedged read cannot hold the
-# caller. It is a daemon thread, so overrunning it never blocks interpreter
-# exit.
+# How long to wait for the relay thread after the JVM has been KILLED. Only the
+# timeout path uses this: the output is incomplete by definition once the JVM is
+# killed mid-document, so there is nothing to be gained by waiting on it, and a
+# bound keeps a wedged read from holding the caller. The success path joins
+# without a bound instead -- see `run_jar`. The thread is a daemon, so
+# overrunning this never blocks interpreter exit.
 _RELAY_JOIN_TIMEOUT_S = 1.0
 
 
@@ -133,7 +134,15 @@ def run_jar(args: List[str], quiet: bool = False, timeout: Optional[float] = Non
                         # traceback still points at the wait() that timed out.
                         expired.output = "".join(output_lines)
                         raise
-                    reader.join(timeout=_RELAY_JOIN_TIMEOUT_S)
+                    # Success: the JVM has exited, so the pipe reaches EOF and
+                    # the relay ends on its own. Joining WITHOUT a bound here is
+                    # deliberate -- the JVM can exit while the pipe still holds
+                    # buffered output, and relaying that onward can outlast any
+                    # short bound when the parent's stdout is slow. Cutting the
+                    # join short would silently truncate `captured_output`,
+                    # including a `--to-stdout` payload. `timeout` bounds the
+                    # JVM, not the caller's own stdout.
+                    reader.join()
 
                 captured_output = "".join(output_lines)
 
