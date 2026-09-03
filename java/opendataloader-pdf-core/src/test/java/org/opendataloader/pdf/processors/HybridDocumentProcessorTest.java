@@ -18,7 +18,6 @@ package org.opendataloader.pdf.processors;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.opendataloader.pdf.api.Config;
-import org.opendataloader.pdf.hybrid.HancomAISchemaTransformer;
 import org.opendataloader.pdf.hybrid.HybridClient.HybridRequest;
 import org.opendataloader.pdf.hybrid.HybridClient.OutputFormat;
 import org.opendataloader.pdf.hybrid.HybridConfig;
@@ -339,10 +338,10 @@ public class HybridDocumentProcessorTest {
     @Test
     public void testDoclingBackendEnabled() {
         Config config = new Config();
-        config.setHybrid("docling");
+        config.setHybrid("docling-fast");
 
         Assertions.assertTrue(config.isHybridEnabled());
-        Assertions.assertEquals("docling", config.getHybrid());
+        Assertions.assertEquals("docling-fast", config.getHybrid());
     }
 
     @Test
@@ -350,31 +349,21 @@ public class HybridDocumentProcessorTest {
         HybridConfig config = new HybridConfig();
 
         // docling uses same URL as docling-fast
-        Assertions.assertEquals(HybridConfig.DOCLING_FAST_DEFAULT_URL, config.getEffectiveUrl("docling"));
+        Assertions.assertEquals(HybridConfig.DOCLING_FAST_DEFAULT_URL, config.getEffectiveUrl("docling-fast"));
         Assertions.assertEquals(HybridConfig.DOCLING_FAST_DEFAULT_URL, config.getEffectiveUrl("docling-fast"));
     }
 
+    /** The backend size holds when the document is longer than one chunk. */
     @Test
-    public void testHancomAIBackendEnabled() {
-        Config config = new Config();
-        config.setHybrid("hancom-ai");
-
-        Assertions.assertTrue(config.isHybridEnabled());
-        Assertions.assertEquals("hancom-ai", config.getHybrid());
+    public void testEffectiveChunkSize_keepsBackendSizeForLongDocuments() {
+        Assertions.assertEquals(HybridDocumentProcessor.BACKEND_CHUNK_SIZE,
+                HybridDocumentProcessor.effectiveChunkSize(500));
     }
 
+    /** An empty page set must still yield a positive step rather than 0. */
     @Test
-    public void testCreateTransformerReturnsHancomAISchemaTransformer() throws Exception {
-        Config config = new Config();
-        config.setHybrid("hancom-ai");
-
-        // createTransformer is private static — use reflection to verify it returns the correct type
-        java.lang.reflect.Method method = HybridDocumentProcessor.class.getDeclaredMethod("createTransformer", Config.class);
-        method.setAccessible(true);
-        HybridSchemaTransformer transformer = (HybridSchemaTransformer) method.invoke(null, config);
-
-        Assertions.assertNotNull(transformer);
-        Assertions.assertInstanceOf(HancomAISchemaTransformer.class, transformer);
+    public void testEffectiveChunkSize_neverZero() {
+        Assertions.assertEquals(1, HybridDocumentProcessor.effectiveChunkSize(0));
     }
 
     // ===== Backend Chunk Splitting Tests =====

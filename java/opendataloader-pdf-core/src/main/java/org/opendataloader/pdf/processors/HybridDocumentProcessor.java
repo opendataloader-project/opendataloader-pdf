@@ -21,8 +21,6 @@ import org.opendataloader.pdf.entities.SemanticFormula;
 import org.opendataloader.pdf.entities.SemanticPicture;
 import org.opendataloader.pdf.hybrid.DoclingSchemaTransformer;
 import org.opendataloader.pdf.hybrid.ElementMetadata;
-import org.opendataloader.pdf.hybrid.HancomAISchemaTransformer;
-import org.opendataloader.pdf.hybrid.HancomSchemaTransformer;
 import org.opendataloader.pdf.hybrid.HybridClient;
 import org.opendataloader.pdf.hybrid.HybridClientFactory;
 import org.opendataloader.pdf.hybrid.HybridClient.HybridRequest;
@@ -31,8 +29,6 @@ import org.opendataloader.pdf.hybrid.HybridClient.OutputFormat;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.opendataloader.pdf.hybrid.HybridConfig;
 import org.opendataloader.pdf.hybrid.HybridSchemaTransformer;
-import org.opendataloader.pdf.hybrid.TextSimilarity;
-import org.opendataloader.pdf.hybrid.OcrWordInfo;
 import org.opendataloader.pdf.hybrid.TriageLogger;
 import org.opendataloader.pdf.hybrid.TriageProcessor;
 import org.opendataloader.pdf.hybrid.TriageProcessor.TriageDecision;
@@ -112,25 +108,17 @@ public class HybridDocumentProcessor {
     private static volatile Map<Long, ElementMetadata> lastElementMetadata;
 
     /**
-     * Stores per-page OCR word data from the most recent hybrid backend processing.
-     * Used for OCR enrichment fallback when Java TextChunks are not available.
-     * Reset at the start of each {@code processDocument} call.
-     */
-    private static volatile Map<Integer, List<OcrWordInfo>> lastOcrWordsByPage;
-
-    /**
      * Stores the raw merged JSON returned by the hybrid backend's most recent
-     * {@code HybridResponse.getJson()}. Downstream tools (e.g. opendataloader-pdfua
-     * evidence reports) need per-module raw outputs to file as L2 evidence.
+     * {@code HybridResponse.getJson()}. Downstream tools need the per-module raw
+     * output to record alongside their own results.
      *
      * <p>Single-threaded by contract: this static is overwritten on each
      * {@code processDocument} call, so concurrent invocations would race. Callers
      * that need per-document raw JSON must serialize {@code processDocument}
      * invocations (or wrap with their own ThreadLocal).
      *
-     * <p>Multi-chunk documents (&gt;{@link #BACKEND_CHUNK_SIZE} backend pages) currently
-     * keep only the last chunk's JSON. Single-chunk documents capture the full
-     * response.
+     * <p>Multi-chunk documents keep only the last chunk's JSON; single-chunk
+     * documents capture the full response.
      */
     private static volatile JsonNode lastHybridRawJson;
 
@@ -180,11 +168,6 @@ public class HybridDocumentProcessor {
         return lastElementMetadata;
     }
 
-    /** Returns the OCR word data from the most recent {@link #processDocument} call. */
-    public static Map<Integer, List<OcrWordInfo>> getLastOcrWordsByPage() {
-        return lastOcrWordsByPage;
-    }
-
     /**
      * Maximum number of pages to send to the backend in a single request.
      * Large scanned PDFs (100+ pages) cause the backend to hang when sent all at once
@@ -195,6 +178,19 @@ public class HybridDocumentProcessor {
      * @see <a href="https://github.com/opendataloader-project/opendataloader-pdf/issues/352">#352</a>
      */
     static final int BACKEND_CHUNK_SIZE = 50;
+
+    /**
+     * Pages per backend call, capped at the page count.
+     *
+     * <p>Clamped to at least 1 so an empty page set still yields a usable loop
+     * step rather than 0, which would never advance.
+     *
+     * @param pageCount how many pages are going to the backend
+     * @return pages per call, at least 1
+     */
+    static int effectiveChunkSize(int pageCount) {
+        return Math.min(BACKEND_CHUNK_SIZE, Math.max(pageCount, 1));
+    }
 
     private HybridDocumentProcessor() {
         // Static utility class
@@ -234,7 +230,6 @@ public class HybridDocumentProcessor {
 
         lastHybridTimings = null; // Reset for this processing run
         lastElementMetadata = null;
-        lastOcrWordsByPage = null;
         lastHybridRawJson = null;
         lastHybridHealth = null;
         lastHybridClientMs = null;
@@ -650,7 +645,7 @@ public class HybridDocumentProcessor {
             lastHybridHealth = client.fetchHealth();
         } catch (Exception e) {
             lastHybridHealth = null;
-            LOGGER.log(Level.FINE, "fetchHealth failed", e);
+            LOGGER.log(Level.FINE, "fetchHealth failed");
         }
 
         // Read PDF bytes
@@ -668,9 +663,10 @@ public class HybridDocumentProcessor {
         // Split backend pages into chunks to prevent hang on large documents (#352).
         // Pages are sorted so that page_ranges sent to the server are contiguous.
         List<Integer> sortedPages = new ArrayList<>(new TreeSet<>(pageNumbers));
+        int chunkSize = effectiveChunkSize(sortedPages.size());
 
-        for (int chunkStart = 0; chunkStart < sortedPages.size(); chunkStart += BACKEND_CHUNK_SIZE) {
-            int chunkEnd = Math.min(chunkStart + BACKEND_CHUNK_SIZE, sortedPages.size());
+        for (int chunkStart = 0; chunkStart < sortedPages.size(); chunkStart += chunkSize) {
+            int chunkEnd = Math.min(chunkStart + chunkSize, sortedPages.size());
             List<Integer> chunkPages = sortedPages.subList(chunkStart, chunkEnd);
 
             // Convert 0-indexed page numbers to 1-indexed for the server API
@@ -679,15 +675,14 @@ public class HybridDocumentProcessor {
                 chunkPages1Indexed.add(page0 + 1);
             }
 
-            if (sortedPages.size() > BACKEND_CHUNK_SIZE) {
+            if (sortedPages.size() > chunkSize) {
                 LOGGER.log(Level.INFO, "Sending pages {0}-{1} of {2} backend pages",
                     new Object[]{chunkPages.get(0) + 1, chunkPages.get(chunkPages.size() - 1) + 1,
                                  sortedPages.size()});
             }
 
             try {
-                HybridRequest request = HybridRequest.forPages(pdfBytes, chunkPages1Indexed, outputFormats)
-                    .withCropOutput(cropOutputFor(config));
+                HybridRequest request = HybridRequest.forPages(pdfBytes, chunkPages1Indexed, outputFormats);
                 long convertStartNs = System.nanoTime();
                 HybridResponse response;
                 try {
@@ -754,7 +749,7 @@ public class HybridDocumentProcessor {
                         for (IObject obj : pageContents) {
                             oldIds.add(obj.getRecognizedStructureId());
                         }
-                        DocumentProcessor.setIDs(pageContents);
+                        DocumentProcessor.setIDs(pageContents, true);
                         rekeyMetadata(transformer, oldIds, pageContents);
                         results.put(page0, pageContents);
                     } else {
@@ -773,9 +768,8 @@ public class HybridDocumentProcessor {
             }
         }
 
-        // Capture element metadata and OCR words from the transformer (e.g., HancomAISchemaTransformer)
+        // Capture element metadata and OCR words from the transformer
         lastElementMetadata = transformer.getElementMetadata();
-        lastOcrWordsByPage = transformer.getOcrWordsByPage();
 
         // Note: Client is cached and reused across documents.
         // HybridClientFactory.shutdown() should be called at CLI exit.
@@ -790,22 +784,6 @@ public class HybridDocumentProcessor {
      */
     private static HybridClient getClient(Config config) {
         return HybridClientFactory.getOrCreate(config.getHybrid(), config.getHybridConfig());
-    }
-
-    /**
-     * Resolve the per-document crop / page-image destination from the config.
-     *
-     * <p>The cached client cannot hold this — it is reused across documents and
-     * its config reflects only the first one. Carrying it on the per-document
-     * {@link HybridClient.HybridRequest} keeps the destination correct (and
-     * needs no shared mutable state) for the document being processed.
-     */
-    private static HybridClient.CropOutput cropOutputFor(Config config) {
-        HybridConfig hc = config.getHybridConfig();
-        if (hc == null || !hc.isSaveCrops() || hc.getCropOutputDir() == null) {
-            return HybridClient.CropOutput.DISABLED;
-        }
-        return new HybridClient.CropOutput(true, hc.getCropOutputDir());
     }
 
     /**
@@ -834,27 +812,8 @@ public class HybridDocumentProcessor {
     private static HybridSchemaTransformer createTransformer(Config config) {
         String hybrid = config.getHybrid();
 
-        // docling and docling-fast (deprecated) use DoclingSchemaTransformer
-        if (Config.HYBRID_DOCLING.equals(hybrid) || Config.HYBRID_DOCLING_FAST.equals(hybrid)) {
+        if (Config.HYBRID_DOCLING_FAST.equals(hybrid)) {
             return new DoclingSchemaTransformer();
-        }
-
-        // hancom uses HancomSchemaTransformer
-        if (Config.HYBRID_HANCOM.equals(hybrid)) {
-            return new HancomSchemaTransformer();
-        }
-
-        // hancom-ai uses HancomAISchemaTransformer. Thread the regionlist strategy
-        // from HybridConfig so --regionlist-strategy is honoured instead of silently
-        // falling back to the transformer's default.
-        if (Config.HYBRID_HANCOM_AI.equals(hybrid)) {
-            HancomAISchemaTransformer transformer = new HancomAISchemaTransformer();
-            String regionlistStrategy = config.getHybridConfig() != null
-                ? config.getHybridConfig().getRegionlistStrategy() : null;
-            if (regionlistStrategy != null) {
-                transformer.setRegionlistStrategy(regionlistStrategy);
-            }
-            return transformer;
         }
 
         throw new IllegalArgumentException("Unsupported hybrid backend: " + hybrid);
@@ -982,96 +941,14 @@ public class HybridDocumentProcessor {
             // Replace backend TextChunks with Java TextChunks that carry StreamInfo,
             // and copy StreamInfos to SemanticFormula objects
             if (!javaTextChunks.isEmpty()) {
-                enrichTextStreamInfos(backendPage, javaTextChunks, hybridConfig);
+                enrichTextStreamInfos(backendPage, javaTextChunks);
                 enrichFormulaStreamInfos(backendPage, javaTextChunks);
-            } else if (hybridConfig.isOcrAuto() || hybridConfig.isOcrForce()) {
-                // OCR-only (scanned) page: no Java TextChunks to compare against,
-                // so text_source cannot be inferred from stream/OCR similarity.
-                // Record "ocr" for every SemanticTextNode so the JSON output still
-                // reflects that the text came from OCR rather than the PDF stream.
-                markAllTextSourcesAsOcr(backendPage);
-            }
-
-            // OCR fallback: log elements that still lack StreamInfo after enrichment
-            if (hybridConfig.isOcrAuto() || hybridConfig.isOcrForce()) {
-                Map<Integer, List<OcrWordInfo>> ocrWords = lastOcrWordsByPage;
-                if (ocrWords != null) {
-                    List<OcrWordInfo> pageOcrWords = ocrWords.getOrDefault(pageNumber, List.of());
-                    logOcrFallbackCandidates(backendPage, pageNumber, pageOcrWords);
-                }
             }
 
             final int pg = pageNumber;
             final int javaTotal = javaTextChunks.size();
             LOGGER.fine(() -> "Page " + pg + ": enrichment complete — "
                 + javaTotal + " Java TextChunks available");
-        }
-    }
-
-    /**
-     * Logs backend elements that still lack StreamInfo after enrichment and could
-     * benefit from OCR fallback. Walks the IObject tree recursively to find
-     * SemanticTextNodes with no StreamInfo in any of their TextChunks.
-     *
-     * <p>This is Phase A (logging only). Phase B will actually insert invisible
-     * text operators into the content stream for these elements.
-     */
-    private static void logOcrFallbackCandidates(
-            List<IObject> backendPage, int pageNumber, List<OcrWordInfo> ocrWords) {
-        int candidateCount = 0;
-        int ocrWordMatchCount = 0;
-
-        for (IObject obj : backendPage) {
-            if (obj instanceof SemanticTextNode) {
-                SemanticTextNode textNode = (SemanticTextNode) obj;
-                boolean hasStreamInfo = false;
-                for (TextColumn col : textNode.getColumns()) {
-                    for (TextLine line : col.getLines()) {
-                        for (TextChunk chunk : line.getTextChunks()) {
-                            if (!chunk.getStreamInfos().isEmpty()) {
-                                hasStreamInfo = true;
-                                break;
-                            }
-                        }
-                        if (hasStreamInfo) break;
-                    }
-                    if (hasStreamInfo) break;
-                }
-                if (!hasStreamInfo) {
-                    candidateCount++;
-                    // Count OCR words that overlap with this text node's bbox
-                    double nLeft = textNode.getLeftX();
-                    double nRight = textNode.getRightX();
-                    double nBottom = textNode.getBottomY();
-                    double nTop = textNode.getTopY();
-                    double tol = 5.0;
-                    int matchedWords = 0;
-                    for (OcrWordInfo word : ocrWords) {
-                        BoundingBox wb = word.getBbox();
-                        double cx = (wb.getLeftX() + wb.getRightX()) / 2.0;
-                        double cy = (wb.getBottomY() + wb.getTopY()) / 2.0;
-                        if (cx >= nLeft - tol && cx <= nRight + tol
-                                && cy >= nBottom - tol && cy <= nTop + tol) {
-                            matchedWords++;
-                        }
-                    }
-                    if (matchedWords > 0) {
-                        ocrWordMatchCount += matchedWords;
-                        final int mw = matchedWords;
-                        LOGGER.fine(() -> "Page " + pageNumber + ": OCR fallback candidate — "
-                            + "SemanticTextNode at ["
-                            + String.format("%.1f,%.1f,%.1f,%.1f", nLeft, nBottom, nRight, nTop)
-                            + "] has " + mw + " matching OCR words");
-                    }
-                }
-            }
-        }
-
-        if (candidateCount > 0) {
-            final int cc = candidateCount;
-            final int owm = ocrWordMatchCount;
-            LOGGER.info(() -> "Page " + pageNumber + ": " + cc
-                + " element(s) need OCR fallback, " + owm + " OCR words available");
         }
     }
 
@@ -1108,12 +985,11 @@ public class HybridDocumentProcessor {
      * This preserves the backend's structural decisions (heading/paragraph/reading order)
      * while using the Java TextChunks that carry StreamInfo.
      */
-    private static void enrichTextStreamInfos(List<IObject> backendPage, List<TextChunk> javaTextChunks,
-                                               HybridConfig config) {
+    private static void enrichTextStreamInfos(List<IObject> backendPage, List<TextChunk> javaTextChunks) {
         if (javaTextChunks.isEmpty()) return;
 
         Set<Integer> usedJavaIndices = new HashSet<>();
-        enrichTextStreamInfosRecursive(backendPage, javaTextChunks, usedJavaIndices, config);
+        enrichTextStreamInfosRecursive(backendPage, javaTextChunks, usedJavaIndices);
     }
 
     /**
@@ -1122,15 +998,14 @@ public class HybridDocumentProcessor {
      * and any other container that holds nested IObjects.
      */
     private static void enrichTextStreamInfosRecursive(
-            List<IObject> objects, List<TextChunk> javaTextChunks, Set<Integer> usedJavaIndices,
-            HybridConfig config) {
+            List<IObject> objects, List<TextChunk> javaTextChunks, Set<Integer> usedJavaIndices) {
 
         for (IObject obj : objects) {
             if (obj instanceof SemanticFormula) {
                 // Formula inside table/list — enrich StreamInfos by bbox overlap
                 enrichSingleFormula((SemanticFormula) obj, javaTextChunks);
             } else if (obj instanceof SemanticTextNode) {
-                enrichSingleTextNode((SemanticTextNode) obj, javaTextChunks, usedJavaIndices, config);
+                enrichSingleTextNode((SemanticTextNode) obj, javaTextChunks, usedJavaIndices);
             } else if (obj instanceof TableBorder) {
                 TableBorder table = (TableBorder) obj;
                 for (int rowNumber = 0; rowNumber < table.getNumberOfRows(); rowNumber++) {
@@ -1138,7 +1013,7 @@ public class HybridDocumentProcessor {
                     for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
                         TableBorderCell cell = row.getCell(colNumber);
                         if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
-                            enrichTextStreamInfosRecursive(cell.getContents(), javaTextChunks, usedJavaIndices, config);
+                            enrichTextStreamInfosRecursive(cell.getContents(), javaTextChunks, usedJavaIndices);
                         }
                     }
                 }
@@ -1146,37 +1021,23 @@ public class HybridDocumentProcessor {
                 PDFList list = (PDFList) obj;
                 for (ListItem item : list.getListItems()) {
                     // Enrich ListItem's own text lines (used by AutoTaggingProcessor for Lbl/LBody)
-                    if (config == null || !config.isOcrForce()) {
-                        for (TextLine line : item.getLines()) {
-                            for (TextChunk backendChunk : line.getTextChunks()) {
-                                if (backendChunk.getStreamInfos().isEmpty()) {
-                                    matchAndReplaceStreamInfos(backendChunk, javaTextChunks, usedJavaIndices, config);
-                                }
-                            }
-                        }
+                    for (TextLine line : item.getLines()) {
+                        replaceLineChunksWithJava(line, javaTextChunks, usedJavaIndices);
                     }
                     // Enrich nested contents (images, paragraphs, sub-lists)
-                    enrichTextStreamInfosRecursive(item.getContents(), javaTextChunks, usedJavaIndices, config);
+                    enrichTextStreamInfosRecursive(item.getContents(), javaTextChunks, usedJavaIndices);
                 }
             }
         }
     }
 
     /**
-     * Replaces a single SemanticTextNode's TextChunks with matching Java TextChunks.
-     * In OCR auto mode, compares stream vs OCR text similarity before deciding.
-     * In OCR force mode, always keeps OCR text (backend TextChunks).
-     * Records the text source decision in ElementMetadata.
+     * Replaces a single SemanticTextNode's TextChunks with the Java TextChunks
+     * drawn inside its bounding box, and records the text source in
+     * ElementMetadata: "stream" when chunks matched, "ocr-fallback" when none did.
      */
     private static void enrichSingleTextNode(
-            SemanticTextNode textNode, List<TextChunk> javaTextChunks, Set<Integer> usedJavaIndices,
-            HybridConfig config) {
-
-        // Force mode: always keep OCR text, don't replace with stream
-        if (config != null && config.isOcrForce()) {
-            recordTextSource(textNode, "ocr", null);
-            return;
-        }
+            SemanticTextNode textNode, List<TextChunk> javaTextChunks, Set<Integer> usedJavaIndices) {
 
         double nLeft = textNode.getLeftX();
         double nRight = textNode.getRightX();
@@ -1206,27 +1067,9 @@ public class HybridDocumentProcessor {
             return;
         }
 
-        // Auto mode: compare stream vs OCR text similarity
-        if (config != null && config.isOcrAuto()) {
-            String streamText = extractTextFromChunks(matched);
-            String ocrText = extractTextFromNode(textNode);
-            double sim = TextSimilarity.similarity(streamText, ocrText);
+        recordTextSource(textNode, "stream", null);
 
-            if (!TextSimilarity.trustStream(streamText, ocrText, TextSimilarity.DEFAULT_THRESHOLD)) {
-                // Stream text is corrupted — keep OCR text (backend TextChunks)
-                LOGGER.fine(() -> "OCR auto: stream text untrusted (sim="
-                    + String.format("%.2f", sim)
-                    + "), keeping OCR for node at ["
-                    + String.format("%.1f,%.1f,%.1f,%.1f", nLeft, nBottom, nRight, nTop) + "]");
-                recordTextSource(textNode, "ocr", sim);
-                return;
-            }
-            recordTextSource(textNode, "stream", sim);
-        } else {
-            recordTextSource(textNode, "stream", null);
-        }
-
-        // Off mode or auto mode with trusted stream: replace with Java TextChunks
+        // Replace the backend's text with the Java TextChunks that carry StreamInfo
         textNode.getColumns().clear();
         TextColumn newCol = new TextColumn();
         for (TextChunk tc : matched) {
@@ -1236,42 +1079,10 @@ public class HybridDocumentProcessor {
     }
 
     /**
-     * Records "ocr" as the text source for every SemanticTextNode in the page,
-     * used on scanned pages where there are no Java TextChunks to compare with.
-     * Mirrors {@link #enrichTextStreamInfosRecursive} in how it descends into
-     * TableBorder/PDFList — the shared IObject tree has no generic children API,
-     * so both walks enumerate the containers they know about.
-     */
-    private static void markAllTextSourcesAsOcr(List<IObject> objects) {
-        if (objects == null) return;
-        for (IObject obj : objects) {
-            if (obj instanceof SemanticTextNode) {
-                recordTextSource((SemanticTextNode) obj, "ocr", null);
-            } else if (obj instanceof TableBorder) {
-                TableBorder table = (TableBorder) obj;
-                for (int rowNumber = 0; rowNumber < table.getNumberOfRows(); rowNumber++) {
-                    TableBorderRow row = table.getRow(rowNumber);
-                    for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
-                        TableBorderCell cell = row.getCell(colNumber);
-                        if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
-                            markAllTextSourcesAsOcr(cell.getContents());
-                        }
-                    }
-                }
-            } else if (obj instanceof PDFList) {
-                PDFList list = (PDFList) obj;
-                for (ListItem item : list.getListItems()) {
-                    markAllTextSourcesAsOcr(item.getContents());
-                }
-            }
-        }
-    }
-
-    /**
      * Records the text source decision in ElementMetadata for a SemanticTextNode.
      *
      * @param textNode   the text node whose metadata to update
-     * @param source     "stream", "ocr", or "ocr-fallback"
+     * @param source     "stream" or "ocr-fallback"
      * @param similarity the stream-OCR similarity score, or null if not applicable
      */
     private static void recordTextSource(SemanticTextNode textNode, String source, Double similarity) {
@@ -1285,66 +1096,71 @@ public class HybridDocumentProcessor {
     }
 
     /**
-     * Extracts concatenated text from a list of TextChunks.
+     * Swaps a list line's backend chunks for the Java chunks drawn inside it.
+     *
+     * <p>Two things were wrong with matching each backend chunk to one Java chunk
+     * by centre proximity. A backend chunk is a whole OCR line while a Java chunk
+     * is often a single word, so their centres sit far apart even when the word
+     * lies inside the line -- measured 5-12pt on 01030000000115, where the chunk
+     * "1. When changing objectives..." had "scanning" as its nearest Java chunk.
+     * Every match failed, the chunk kept no StreamInfo, and Lbl/LBody were built
+     * with no MCID: empty shells whose text fell through to /Artifact and out of
+     * the structure tree.
+     *
+     * <p>Copying StreamInfos onto the backend chunk is not enough either. The Lbl
+     * and LBody split in AutoTaggingProcessor slices the first line by character
+     * offset, which needs the per-symbol coordinates only a Java chunk carries; a
+     * backend chunk has none, so slicing it fails outright.
+     *
+     * <p>So replace the line's chunks with the matched Java chunks, exactly as
+     * {@link #enrichSingleTextNode} already does for paragraphs. That asymmetry
+     * between paragraphs and lists was the defect.
      */
-    private static String extractTextFromChunks(List<TextChunk> chunks) {
-        StringBuilder sb = new StringBuilder();
-        for (TextChunk tc : chunks) {
-            if (sb.length() > 0) sb.append(' ');
-            sb.append(tc.getValue());
+    private static void replaceLineChunksWithJava(
+            TextLine line, List<TextChunk> javaTextChunks, Set<Integer> usedJavaIndices) {
+        if (line.getTextChunks().isEmpty()) {
+            return;
         }
-        return sb.toString().trim();
-    }
-
-    /**
-     * Extracts concatenated text from a SemanticTextNode's columns/lines/chunks.
-     */
-    private static String extractTextFromNode(SemanticTextNode node) {
-        StringBuilder sb = new StringBuilder();
-        for (TextColumn col : node.getColumns()) {
-            for (TextLine line : col.getLines()) {
-                for (TextChunk chunk : line.getTextChunks()) {
-                    if (sb.length() > 0) sb.append(' ');
-                    sb.append(chunk.getValue());
-                }
+        // Already carrying stream provenance: nothing to recover.
+        boolean allHaveStreamInfo = true;
+        for (TextChunk c : line.getTextChunks()) {
+            if (c.getStreamInfos().isEmpty()) {
+                allHaveStreamInfo = false;
+                break;
             }
         }
-        return sb.toString().trim();
-    }
+        if (allHaveStreamInfo) {
+            return;
+        }
 
-    /**
-     * Copies StreamInfos from matching Java TextChunks to a backend TextChunk that lacks them.
-     * Used for ListItem lines where the text is stored directly in TextLine/TextChunk
-     * rather than in a SemanticTextNode wrapper.
-     * In OCR auto mode, compares stream vs OCR text similarity before copying.
-     */
-    private static void matchAndReplaceStreamInfos(
-            TextChunk backendChunk, List<TextChunk> javaTextChunks, Set<Integer> usedJavaIndices,
-            HybridConfig config) {
-        double bCx = backendChunk.getCenterX();
-        double bCy = backendChunk.getCenterY();
+        double lLeft = line.getLeftX();
+        double lRight = line.getRightX();
+        double lBottom = line.getBottomY();
+        double lTop = line.getTopY();
         double tol = 5.0;
+
+        List<TextChunk> matched = new ArrayList<>();
+        List<Integer> matchedIndices = new ArrayList<>();
         for (int i = 0; i < javaTextChunks.size(); i++) {
             if (usedJavaIndices.contains(i)) continue;
             TextChunk javaChunk = javaTextChunks.get(i);
             if (javaChunk.getStreamInfos().isEmpty()) continue;
             double jCx = javaChunk.getCenterX();
             double jCy = javaChunk.getCenterY();
-            if (Math.abs(bCx - jCx) <= tol && Math.abs(bCy - jCy) <= tol) {
-                // In auto mode, check if stream text is trustworthy
-                if (config != null && config.isOcrAuto()) {
-                    String streamText = javaChunk.getValue();
-                    String ocrText = backendChunk.getValue();
-                    if (!TextSimilarity.trustStream(streamText, ocrText, TextSimilarity.DEFAULT_THRESHOLD)) {
-                        LOGGER.fine(() -> "OCR auto: stream text untrusted for ListItem chunk, keeping OCR");
-                        return;
-                    }
-                }
-                backendChunk.getStreamInfos().addAll(javaChunk.getStreamInfos());
-                usedJavaIndices.add(i);
-                return;
+            if (jCx >= lLeft - tol && jCx <= lRight + tol
+                    && jCy >= lBottom - tol && jCy <= lTop + tol) {
+                matched.add(javaChunk);
+                matchedIndices.add(i);
             }
         }
+        if (matched.isEmpty()) {
+            LOGGER.fine(() -> "replaceLineChunksWithJava: no Java TextChunk inside list line");
+            return;
+        }
+
+        line.getTextChunks().clear();
+        line.getTextChunks().addAll(matched);
+        usedJavaIndices.addAll(matchedIndices);
     }
 
     /**

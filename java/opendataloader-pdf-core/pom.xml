@@ -72,10 +72,66 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!--
+          Declared because this module imports them directly, not because it
+          adds anything to the resolved tree: validation-model already brings
+          all three. The version is deliberately omitted so they stay on the
+          combination vera released and tested against validation-model
+          (see the verapdf.version comment in the parent pom).
+            parser        — org.verapdf.cos / .pd / .as / .tools / .parser
+                            / .operator
+            core          — org.verapdf.containers (StaticCoreContainers)
+            xmp-core      — org.verapdf.xmp
+        -->
+        <dependency>
+            <groupId>org.verapdf</groupId>
+            <artifactId>parser</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.verapdf</groupId>
+            <artifactId>core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.verapdf</groupId>
+            <artifactId>verapdf-xmp-core</artifactId>
+        </dependency>
+        <!--
+          PDFBox is used directly by PDFWriter and PDFStreamWriter, so it is
+          declared here rather than inherited
+          through wcag-algorithms. Version comes from the parent pom, held at
+          what wcag-algorithms itself requires.
+        -->
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+        </dependency>
+        <!-- PDFStreamWriter imports org.apache.pdfbox.io.IOUtils, which lives in
+             pdfbox-io rather than the pdfbox artifact. Version comes with the
+             pdfbox dependency above. -->
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox-io</artifactId>
+            <version>${pdfbox.version}</version>
+        </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>${jackson.databind.version}</version>
+        </dependency>
+        <!-- JsonFactory/JsonGenerator (jackson-core) and JsonInclude
+             (jackson-annotations) are imported directly by the JSON writers, so
+             they are declared rather than relied on as jackson-databind
+             transitives. jackson-core tracks databind's version; annotations is
+             released on its own line. -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>${jackson.databind.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>${jackson.annotations.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-cli</groupId>

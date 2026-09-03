@@ -21,6 +21,7 @@ import org.opendataloader.pdf.api.OpenDataLoaderPDF;
 import org.opendataloader.pdf.api.cli.CLIOptions;
 import org.opendataloader.pdf.exceptions.EncryptedTaggedPdfNotSupportedException;
 import org.opendataloader.pdf.exceptions.InvalidPdfFileException;
+import org.opendataloader.pdf.exceptions.TempDirectoryNotWritableException;
 import org.verapdf.exceptions.InvalidPasswordException;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
@@ -37,6 +38,20 @@ public class CLIMain {
     private static final String HELP = "[options] <INPUT FILE OR FOLDER>...\n Options:";
 
     private enum InputSource { CLI_ARGUMENT, DIRECTORY_CHILD }
+
+    /**
+     * Unwinds the traversal when the environment itself is unusable, so a batch
+     * run reports the cause once instead of once per file. Unchecked so it can
+     * pass through {@code processDirectory} without widening its signature.
+     */
+    private static final class EnvironmentNotUsableException extends RuntimeException {
+
+        private static final long serialVersionUID = 1L;
+
+        private EnvironmentNotUsableException(Throwable cause) {
+            super(cause.getMessage(), cause);
+        }
+    }
 
     /**
      * Result of processing a path: whether all files succeeded, and how many
@@ -110,6 +125,9 @@ public class CLIMain {
                     hasFailure = true;
                 }
             }
+        } catch (EnvironmentNotUsableException exception) {
+            System.out.println("Error: " + exception.getMessage());
+            return 3;
         } finally {
             // Release resources (e.g., hybrid client thread pools)
             OpenDataLoaderPDF.shutdown();
@@ -243,9 +261,13 @@ public class CLIMain {
         } catch (EncryptedTaggedPdfNotSupportedException exception) {
             System.out.println("Error: " + exception.getMessage());
             return false;
+        } catch (TempDirectoryNotWritableException exception) {
+            // Environment failure, not a problem with this file: every remaining
+            // file would fail the same way. Abort instead of repeating it per file.
+            throw new EnvironmentNotUsableException(exception);
         } catch (Exception exception) {
             LOGGER.log(Level.SEVERE, "Exception during processing file " + file.getAbsolutePath() + ": " +
-                exception.getMessage(), exception);
+                exception.getMessage());
             return false;
         } finally {
             StaticContainers.closeImagesUtils();

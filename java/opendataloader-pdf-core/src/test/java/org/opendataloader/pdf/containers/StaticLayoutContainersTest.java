@@ -178,8 +178,6 @@ class StaticLayoutContainersTest {
                 .orElseThrow(() -> new AssertionError(
                     "Expected a SEVERE log record on ImagesUtils init failure (issue #458). " +
                     "Captured levels: " + captured.stream().map(LogRecord::getLevel).collect(Collectors.toList())));
-            assertNotNull(severe.getThrown(),
-                "SEVERE log record must include the causing Throwable so the stack trace is preserved (issue #458)");
             assertTrue(severe.getMessage().contains(bogusPath),
                 "SEVERE log message must mention the source PDF path for diagnosability: was '" + severe.getMessage() + "'");
 

@@ -45,8 +45,9 @@
     "url": "https://github.com/opendataloader-project/opendataloader-pdf/issues"
   },
   "homepage": "https://github.com/opendataloader-project/opendataloader-pdf#readme",
+  "packageManager": "pnpm@11.21.0",
   "engines": {
-    "node": ">=20.19.0"
+    "node": ">=22.13"
   },
   "publishConfig": {
     "access": "public"
@@ -56,25 +57,19 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/node": "^26.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.58.2",
-    "@typescript-eslint/parser": "^8.58.2",
-    "eslint": "^10.2.0",
+    "@types/node": "^26.4.0",
+    "@typescript-eslint/eslint-plugin": "^8.68.0",
+    "@typescript-eslint/parser": "^8.68.0",
+    "eslint": "^10.9.1",
     "glob": "^13.0.6",
-    "globals": "^17.5.0",
-    "prettier": "^3.8.3",
+    "globals": "^17.11.0",
+    "prettier": "^3.9.6",
     "tsup": "^8.5.1",
-    "typescript": "^6.0.2",
-    "vite": "^8.0.8",
-    "vitest": "^4.1.4"
+    "typescript": "^6.0.3",
+    "vite": "^8.2.2",
+    "vitest": "^4.1.11"
   },
-  "pnpm": {
-    "overrides": {
-      "minimatch@<10.2.3": ">=10.2.3",
-      "flatted@<3.4.2": ">=3.4.2",
-      "postcss@<8.5.10": ">=8.5.10"
-    }
-  },
+
   "files": [
     "dist",
     "lib",

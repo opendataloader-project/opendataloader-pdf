@@ -44,16 +44,21 @@ import org.verapdf.gf.model.impl.sa.GFSAPDFDocument;
 import org.verapdf.parser.PDFFlavour;
 import org.verapdf.pd.PDDocument;
 import org.verapdf.tools.StaticResources;
-import org.verapdf.wcag.algorithms.entities.IObject;
-import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
+import org.verapdf.wcag.algorithms.entities.*;
 import org.verapdf.wcag.algorithms.entities.content.LineChunk;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
+import org.verapdf.wcag.algorithms.entities.lists.ListItem;
+import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 import org.verapdf.wcag.algorithms.entities.tables.TableBordersCollection;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
+import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.LinesPreprocessingConsumer;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 import org.verapdf.xmp.containers.StaticXmpCoreContainers;
 
 import org.opendataloader.pdf.exceptions.InvalidPdfFileException;
+import org.opendataloader.pdf.exceptions.TempDirectoryNotWritableException;
 
 import java.io.File;
 import java.io.IOException;
@@ -115,7 +120,7 @@ public class DocumentProcessor {
         try {
             cleanup.run();
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Error clearing " + name, e);
+            LOGGER.log(Level.WARNING, "Error clearing " + name);
         }
     }
 
@@ -612,10 +617,12 @@ public class DocumentProcessor {
      *
      * @param pdfName the path to the PDF file
      * @param config the configuration settings
-     * @throws IOException if unable to read the PDF file
+     * @throws IOException if unable to read the PDF file, or if the JVM
+     *         temporary directory is not writable
      */
     public static void preprocessing(String pdfName, Config config) throws IOException {
         LOGGER.log(Level.INFO, () -> "File name: " + pdfName);
+        validateTempDirWritable();
         validatePdfMagicNumber(pdfName);
         updateStaticContainers(config);
         PDDocument pdDocument;
@@ -694,6 +701,57 @@ public class DocumentProcessor {
     }
 
     /**
+     * Verifies the JVM temporary directory is writable.
+     *
+     * <p>veraPDF streams anything larger than a small in-memory threshold
+     * through a temporary file: the Standard 14 font metrics embedded in the
+     * jar, embedded font programs, CMaps and decoded content streams all take
+     * that path. A PDF stream has no size bound while memory does, so writing
+     * to disk is by design and cannot be avoided by buffering.
+     *
+     * <p>When the temporary directory is not writable those reads fail deep
+     * inside veraPDF, where the failure is logged at {@code FINE} and
+     * swallowed. Processing then continues on missing data and surfaces as an
+     * unrelated {@code NullPointerException}, or — worse — completes with
+     * exit code 0 while silently dropping most of the text. Failing up front
+     * keeps a broken environment from being reported as a successful run.
+     *
+     * <p>Runs per file rather than once per JVM. The answer is not stable for
+     * the lifetime of the process — {@code java.io.tmpdir} is a mutable system
+     * property, and the directory itself can be remounted read-only, filled up
+     * or have its permissions revoked. Caching a success would let a
+     * long-running embedder latch onto a stale {@code true} and silently return
+     * to the very data loss this guards against. One create-and-delete against
+     * a working directory is negligible next to parsing a PDF.
+     *
+     * @throws TempDirectoryNotWritableException if the temporary directory
+     *         cannot be written to
+     */
+    private static void validateTempDirWritable() throws TempDirectoryNotWritableException {
+        String tempDir = System.getProperty("java.io.tmpdir");
+        try {
+            // Resolve java.io.tmpdir explicitly rather than calling the no-arg
+            // Files.createTempFile: that one resolves the directory once when the
+            // JVM starts, so it would ignore a -Djava.io.tmpdir override applied
+            // later and probe a different directory than veraPDF ends up using.
+            // RuntimeException covers InvalidPathException from a malformed override.
+            Path probe = Files.createTempFile(Path.of(tempDir), "opendataloader-", ".probe");
+            // Deleting is part of what is being verified, not just cleanup: veraPDF
+            // removes its spill files, so a directory that allows creation but
+            // refuses deletion (a sticky bit the process does not own, say) would
+            // accumulate one file per stream. Failing here also keeps the probe
+            // itself from leaking.
+            Files.delete(probe);
+        } catch (IOException | RuntimeException e) {
+            throw new TempDirectoryNotWritableException(
+                "Cannot use the temporary directory '" + tempDir + "'."
+                + " PDF processing needs it to read font metrics and decode content streams."
+                + " Point java.io.tmpdir or the TMPDIR environment variable at a writable"
+                + " directory, or grant write access to this one.", e);
+        }
+    }
+
+    /**
      * Path.getFileName() returns null for filesystem roots (e.g. {@code C:\}).
      * Fall back to the original input string in that case so the user-facing
      * error message is never empty.
@@ -740,8 +798,51 @@ public class DocumentProcessor {
      * @param contents the list of content objects
      */
     public static void setIDs(List<IObject> contents) {
+        setIDs(contents, false);
+    }
+
+    public static void setIDs(List<IObject> contents, boolean isHybridMode) {
         for (IObject object : contents) {
-            object.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+            if (object.getRecognizedStructureId() == null) {
+                object.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+            }
+            if (!isHybridMode) {
+                setIDsInComplexObject(object);
+            }
+        }
+    }
+
+    public static void setIDsInComplexObject(IObject object) {
+        if (object instanceof TableBorder) {
+            TableBorder tableBorder = (TableBorder) object;
+            for (int rowNumber = 0; rowNumber < tableBorder.getNumberOfRows(); rowNumber++) {
+                TableBorderRow row = tableBorder.getRow(rowNumber);
+                row.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+                for (int colNumber = 0; colNumber < tableBorder.getNumberOfColumns(); colNumber++) {
+                    TableBorderCell tableBorderCell = row.getCell(colNumber);
+                    if (tableBorderCell.getRowNumber() == rowNumber && tableBorderCell.getColNumber() == colNumber) {
+                        tableBorderCell.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+                        setIDs(tableBorderCell.getContents());
+                    }
+                }
+            }
+        } else if (object instanceof PDFList) {
+            for (ListItem listItem : ((PDFList) object).getListItems()) {
+                listItem.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+                setIDs(listItem.getContents());
+            }
+        } else if (object instanceof SemanticTOC) {
+            for (IObject tocItem : ((SemanticTOC) object).getTOCItems()) {
+                if (tocItem instanceof SemanticTOCI) {
+                    SemanticTOCI toci = (SemanticTOCI) tocItem;
+                    toci.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+                    setIDs(toci.getContents());
+                } else {
+                    //
+                }
+            }
+        } else if (object instanceof SemanticHeaderOrFooter) {
+            setIDs(((SemanticHeaderOrFooter) object).getContents());
         }
     }
 
@@ -853,25 +954,33 @@ public class DocumentProcessor {
             if (b2 == null) {
                 return -1;
             }
-            if (!Objects.equals(b1.getPageNumber(), b2.getPageNumber())) {
-                return b1.getPageNumber() - b2.getPageNumber();
+
+            int cmp;
+            cmp = Integer.compare(b1.getPageNumber(), b2.getPageNumber());
+            if (cmp != 0) {
+                return cmp;
             }
-            if (!Objects.equals(b1.getLastPageNumber(), b2.getLastPageNumber())) {
-                return b1.getLastPageNumber() - b2.getLastPageNumber();
+            cmp = Integer.compare(b1.getLastPageNumber(), b2.getLastPageNumber());
+            if (cmp != 0) {
+                return cmp;
             }
-            if (!Objects.equals(b1.getTopY(), b2.getTopY())) {
-                return b2.getTopY() - b1.getTopY() > 0 ? 1 : -1;
+
+            cmp = Double.compare(b2.getTopY(), b1.getTopY());
+            if (cmp != 0) {
+                return cmp;
             }
-            if (!Objects.equals(b1.getLeftX(), b2.getLeftX())) {
-                return b1.getLeftX() - b2.getLeftX() > 0 ? 1 : -1;
+            cmp = Double.compare(b1.getLeftX(), b2.getLeftX());
+            if (cmp != 0) {
+                return cmp;
             }
-            if (!Objects.equals(b1.getBottomY(), b2.getBottomY())) {
-                return b1.getBottomY() - b2.getBottomY() > 0 ? 1 : -1;
+            cmp = Double.compare(b1.getBottomY(), b2.getBottomY());
+            if (cmp != 0) {
+                return cmp;
             }
-            if (!Objects.equals(b1.getRightX(), b2.getRightX())) {
-                return b1.getRightX() - b2.getRightX() > 0 ? 1 : -1;
+            cmp = Double.compare(b1.getRightX(), b2.getRightX());
+            {
+                return cmp;
             }
-            return 0;
         });
         return sortedContents;
     }

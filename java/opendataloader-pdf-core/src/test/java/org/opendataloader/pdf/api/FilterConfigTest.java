@@ -15,6 +15,15 @@ class FilterConfigTest {
         assertTrue(config.isFilterOutOfPage());
         assertTrue(config.isFilterTinyText());
         assertTrue(config.isFilterHiddenOCG());
+        assertTrue(config.isFilterBackgrounds());
         assertFalse(config.isFilterSensitiveData());
+    }
+
+    @Test
+    void backgroundFilterCanBeDisabledToKeepVectorGraphics() {
+        FilterConfig config = new FilterConfig();
+        config.setFilterBackgrounds(false);
+
+        assertFalse(config.isFilterBackgrounds());
     }
 }

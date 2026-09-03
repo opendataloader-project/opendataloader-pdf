@@ -28,7 +28,7 @@ public class ElementMetadata {
     /** DLA AI score (0.0~1.0). Negative sentinel means "not provided". */
     private double aiScore = -1.0;
 
-    /** Original Hancom AI label (0~17), -1 if not applicable. */
+    /** Original backend layout label, -1 if not applicable. */
     private int sourceLabel = -1;
 
     /**

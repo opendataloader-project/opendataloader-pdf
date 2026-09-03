@@ -99,4 +99,28 @@ class CLIOptionsContentSafetyTest {
         assertTrue(config.getFilterConfig().isFilterSensitiveData(),
                 "--sanitize should win over deprecated --content-safety-off sensitive-data");
     }
+
+    @Test
+    void contentSafetyOffBackgroundKeepsVectorGraphics() throws Exception {
+        Config config = parseArgs("--output-dir", "/tmp", "--content-safety-off", "background");
+        assertFalse(config.getFilterConfig().isFilterBackgrounds(),
+                "--content-safety-off background should disable the background filter");
+        // The other filters are untouched by this value.
+        assertTrue(config.getFilterConfig().isFilterTinyText());
+        assertTrue(config.getFilterConfig().isFilterOutOfPage());
+    }
+
+    @Test
+    void contentSafetyOffAllAlsoDisablesBackgroundFilter() throws Exception {
+        Config config = parseArgs("--output-dir", "/tmp", "--content-safety-off", "all");
+        assertFalse(config.getFilterConfig().isFilterBackgrounds(),
+                "'all' should cover every filter, including backgrounds");
+    }
+
+    @Test
+    void backgroundFilterIsOnByDefault() throws Exception {
+        Config config = parseArgs("--output-dir", "/tmp");
+        assertTrue(config.getFilterConfig().isFilterBackgrounds(),
+                "background removal stays on unless explicitly disabled");
+    }
 }

@@ -37,9 +37,6 @@ def convert(
     hybrid_url: Optional[str] = None,
     hybrid_timeout: Optional[str] = None,
     hybrid_fallback: bool = False,
-    hybrid_hancom_ai_regionlist_strategy: Optional[str] = None,
-    hybrid_hancom_ai_ocr_strategy: Optional[str] = None,
-    hybrid_hancom_ai_image_cache: Optional[str] = None,
     to_stdout: bool = False,
     threads: Optional[str] = None,
     image_resolution: Optional[str] = None,
@@ -54,7 +51,7 @@ def convert(
         password: Password for encrypted PDF files
         format: Output formats (comma-separated). Values: json, text, html, pdf, markdown, tagged-pdf. Default: json. For HTML inside Markdown use --markdown-with-html. For image extraction control use --image-output.
         quiet: Suppress console logging output
-        content_safety_off: Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg
+        content_safety_off: Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg, background
         sanitize: Enable sensitive data sanitization. Replaces emails, phone numbers, IPs, credit cards, and URLs with placeholders
         keep_line_breaks: Preserve original line breaks in extracted text
         replace_invalid_chars: Replacement character for invalid/unrecognized characters. Default: space
@@ -71,14 +68,11 @@ def convert(
         pages: Pages to extract (e.g., "1,3,5-7"). Default: all pages
         include_header_footer: Include page headers and footers in output
         detect_strikethrough: Detect strikethrough text and wrap with ~~ in Markdown output or <del></del> tag in HTML output (experimental)
-        hybrid: Hybrid backend (requires a running server). Quick start: pip install "opendataloader-pdf[hybrid]" && opendataloader-pdf-hybrid --port 5002. For remote servers use --hybrid-url. Values: off (default), docling-fast, hancom-ai. Ignored when --use-struct-tree is set on a tagged PDF (structure tree takes precedence)
+        hybrid: Hybrid backend (requires a running server). Quick start: pip install "opendataloader-pdf[hybrid]" && opendataloader-pdf-hybrid --port 5002. For remote servers use --hybrid-url. Values: off (default), docling-fast. Ignored when --use-struct-tree is set on a tagged PDF (structure tree takes precedence)
         hybrid_mode: Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)
         hybrid_url: Hybrid backend server URL (overrides default)
-        hybrid_timeout: Hybrid backend request timeout in milliseconds (0 = no timeout). Default: 0
+        hybrid_timeout: Hybrid backend request timeout in milliseconds (0 = use the backend's own default). Default: 0
         hybrid_fallback: Opt in to Java fallback on hybrid backend error (default: disabled)
-        hybrid_hancom_ai_regionlist_strategy: DLA label 7 (regionlist) handling. Requires --hybrid=hancom-ai. Values: table-first (default; check TSR overlap), list-only (skip TSR, always treat as list)
-        hybrid_hancom_ai_ocr_strategy: OCR strategy. Requires --hybrid=hancom-ai. Values: off (stream-only), auto (default; stream first, OCR fallback), force (OCR-only)
-        hybrid_hancom_ai_image_cache: Page image cache backing. Requires --hybrid=hancom-ai. Values: memory (default), disk
         to_stdout: Write output to stdout instead of file (single format only)
         threads: Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode
         image_resolution: Set the rendering resolution for images in DPI. Higher values improve image quality but increase memory consumption; lower values reduce memory usage at the cost of detail. Accepts positive decimal DPI values (e.g., 144.0). Default: 144.0.
@@ -152,12 +146,6 @@ def convert(
         args.extend(["--hybrid-timeout", hybrid_timeout])
     if hybrid_fallback:
         args.append("--hybrid-fallback")
-    if hybrid_hancom_ai_regionlist_strategy:
-        args.extend(["--hybrid-hancom-ai-regionlist-strategy", hybrid_hancom_ai_regionlist_strategy])
-    if hybrid_hancom_ai_ocr_strategy:
-        args.extend(["--hybrid-hancom-ai-ocr-strategy", hybrid_hancom_ai_ocr_strategy])
-    if hybrid_hancom_ai_image_cache:
-        args.extend(["--hybrid-hancom-ai-image-cache", hybrid_hancom_ai_image_cache])
     if to_stdout:
         args.append("--to-stdout")
     if threads:

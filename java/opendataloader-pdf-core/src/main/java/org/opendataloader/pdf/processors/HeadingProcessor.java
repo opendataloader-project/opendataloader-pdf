@@ -25,7 +25,6 @@ import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextBlock;
-import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
@@ -36,7 +35,6 @@ import org.verapdf.wcag.algorithms.entities.text.TextStyle;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 
 import java.util.*;
-import java.util.regex.Pattern;
 
 /**
  * Processor for detecting and classifying headings in PDF content.
@@ -66,45 +64,30 @@ public class HeadingProcessor {
         }
         for (int index = 0; index < textNodesCount; index++) {
             SemanticTextNode textNode = textNodes.get(index);
-            SemanticTextNode prevNode = index != 0 ? textNodes.get(index - 1) : null;
-            SemanticTextNode nextNode = index + 1 < textNodesCount ? textNodes.get(index + 1) : null;
-
-            if (isDropCap(textNode, nextNode) || isEquation(textNode) || isTableContent(textNode)) {
-                if (textNode.getSemanticType() == SemanticType.HEADING) {
-                    textNode.setSemanticType(SemanticType.PARAGRAPH);
-                }
+            if (textNode.getSemanticType() == SemanticType.HEADING) {
                 continue;
             }
-            
-            boolean isIeeeSection = BulletedParagraphUtils.isIeeeSectionTitle(textNode.getFirstLine());
-            boolean isConsecutiveList = isConsecutiveSameStyleList(prevNode, textNode) || isConsecutiveSameStyleList(textNode, nextNode);
+            SemanticTextNode prevNode = index != 0 ? textNodes.get(index - 1) : null;
+            SemanticTextNode nextNode = index + 1 < textNodesCount ? textNodes.get(index + 1) : null;
+            double probability = NodeUtils.headingProbability(textNode, prevNode, nextNode, textNode);
 
-            if (isIeeeSection && !isConsecutiveList) {
-                textNode.setSemanticType(SemanticType.HEADING);
-            } else if (textNode.getSemanticType() != SemanticType.HEADING) {
-                double probability = NodeUtils.headingProbability(textNode, prevNode, nextNode, textNode);
-                probability += textNodeStatistics.fontSizeRarityBoost(textNode);
-                probability += textNodeStatistics.fontWeightRarityBoost(textNode);
-                if (BulletedParagraphUtils.isBulletedParagraph(textNode)) {
-                    probability += BULLETED_HEADING_PROBABILITY;
-                }
-                if (probability > HEADING_PROBABILITY && textNode.getSemanticType() != SemanticType.LIST && !isConsecutiveList) {
-                    textNode.setSemanticType(SemanticType.HEADING);
-                }
+            probability += textNodeStatistics.fontSizeRarityBoost(textNode);
+            probability += textNodeStatistics.fontWeightRarityBoost(textNode);
+
+            if (BulletedParagraphUtils.isBulletedParagraph(textNode)) {
+                probability += BULLETED_HEADING_PROBABILITY;
             }
-
+            if (probability > HEADING_PROBABILITY && textNode.getSemanticType() != SemanticType.LIST) {
+                textNode.setSemanticType(SemanticType.HEADING);
+            }
             if (textNode.getSemanticType() == SemanticType.HEADING && textNode.getInitialSemanticType() == SemanticType.LIST) {
                 PDFList list = textNodeToListMap.get(textNode);
-                if (list != null && isNotHeadings(list)) {
+                if (isNotHeadings(list)) {
                     continue;
                 }
-                if (list != null) {
-                    int listIndex = contents.indexOf(list);
-                    if (listIndex != -1) {
-                        contents.remove(listIndex);
-                        contents.addAll(listIndex, disassemblePDFList(list));
-                    }
-                }
+                int listIndex = contents.indexOf(list);
+                contents.remove(listIndex);
+                contents.addAll(listIndex, disassemblePDFList(list));
             }
         }
         setHeadings(contents);
@@ -152,10 +135,7 @@ public class HeadingProcessor {
             TableBorderCell cell = textBlock.getCell(0, 0);
             List<SemanticTextNode> cellTextNodes = getTextNodesFromContents(cell.getContents());
             if (cellTextNodes.size() == 1) {
-                SemanticTextNode cellNode = cellTextNodes.get(0);
-                if (BulletedParagraphUtils.isIeeeSectionTitle(cellNode.getFirstLine())) {
-                    processContent(textNodes, cellNode, textNodeStatistics, possibleHeadingsInList);
-                }
+                processContent(textNodes, cellTextNodes.get(0), textNodeStatistics, possibleHeadingsInList);
             }
         } else if (content instanceof PDFList) {
             PDFList list = (PDFList) content;
@@ -190,246 +170,19 @@ public class HeadingProcessor {
     private static void setHeadings(List<IObject> contents) {
         for (int index = 0; index < contents.size(); index++) {
             IObject content = contents.get(index);
-            if (content instanceof SemanticTextNode) {
-                SemanticTextNode textNode = (SemanticTextNode) content;
-                SemanticTextNode nextNode = (index + 1 < contents.size() && contents.get(index + 1) instanceof SemanticTextNode) ? (SemanticTextNode) contents.get(index + 1) : null;
-                if (isDropCap(textNode, nextNode) || isEquation(textNode) || isTableContent(textNode)) {
-                    textNode.setSemanticType(SemanticType.PARAGRAPH);
-                    continue;
-                }
-                if (textNode.getSemanticType() == SemanticType.HEADING && !(content instanceof SemanticHeading)) {
-                    SemanticHeading heading = new SemanticHeading(textNode);
-                    contents.set(index, heading);
-                    StaticLayoutContainers.getHeadings().add(heading);
-                }
+            if (content instanceof SemanticTextNode && ((INode) content).getSemanticType() == SemanticType.HEADING && !(content instanceof SemanticHeading)) {
+                SemanticHeading heading = new SemanticHeading((SemanticTextNode) content);
+                contents.set(index, heading);
+                StaticLayoutContainers.getHeadings().add(heading);
             }
             if (content instanceof TableBorder) {
                 TableBorder table = (TableBorder) content;
                 if (table.isTextBlock()) {
                     List<IObject> textBlockContents = table.getCell(0, 0).getContents();
-                    List<SemanticTextNode> cellNodes = getTextNodesFromContents(textBlockContents);
-                    if (cellNodes.size() == 1 && BulletedParagraphUtils.isIeeeSectionTitle(cellNodes.get(0).getFirstLine())) {
-                        setHeadings(textBlockContents);
-                    }
+                    setHeadings(textBlockContents);
                 }
             }
         }
-    }
-
-    private static String extractHeadingNumber(TextLine line) {
-        return line.getValue() != null ? line.getValue().trim() : "";
-    }
-
-    /**
-     * Checks if two consecutive text nodes form an ordered list of the exact same numbering style.
-     *
-     * @param textNode the current text node
-     * @param nextNode the next text node
-     * @return true if both nodes share the same section title numbering style, false otherwise
-     */
-    private static boolean isConsecutiveSameStyleList(SemanticTextNode textNode, SemanticTextNode nextNode) {
-        if (textNode == null || nextNode == null) return false;
-        TextLine line1 = textNode.getFirstLine();
-        TextLine line2 = nextNode.getFirstLine();
-        if (line1 == null || line2 == null) return false;
-
-        if (BulletedParagraphUtils.isIeeeSectionTitle(line1) && BulletedParagraphUtils.isIeeeSectionTitle(line2)) {
-            String val1 = extractHeadingNumber(line1);
-            String val2 = extractHeadingNumber(line2);
-            if (val1.equals(val1.toUpperCase()) && val2.equals(val2.toUpperCase())) {
-                return false;
-            }
-        }
-
-        boolean isRoman1 = BulletedParagraphUtils.isRomanSectionTitle(line1);
-        boolean isRoman2 = BulletedParagraphUtils.isRomanSectionTitle(line2);
-        if (isRoman1 && isRoman2) {
-            return true;
-        }
-
-        boolean isAlpha1 = BulletedParagraphUtils.isAlphaSubsectionTitle(line1);
-        boolean isAlpha2 = BulletedParagraphUtils.isAlphaSubsectionTitle(line2);
-        if (isAlpha1 && isAlpha2) {
-            return true;
-        }
-
-        boolean isNumeric1 = BulletedParagraphUtils.isNumericSectionTitle(line1);
-        boolean isNumeric2 = BulletedParagraphUtils.isNumericSectionTitle(line2);
-        if (isNumeric1 && isNumeric2) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Checks if a text node is a decorative drop cap fragment (1–2 characters followed by uppercase continuation text).
-     *
-     * @param node the text node to check
-     * @param nextNode the following text node in layout order
-     * @return true if the node is a decorative drop cap fragment, false otherwise
-     */
-    private static boolean isDropCap(SemanticTextNode node, SemanticTextNode nextNode) {
-        if (node == null || nextNode == null) {
-            return false;
-        }
-
-        TextLine line1 = node.getFirstLine();
-        TextLine line2 = nextNode.getFirstLine();
-        if (line1 == null || line2 == null || line1.getFontSize() <= line2.getFontSize() * 1.2) {
-            return false;
-        }
-
-        String text = node.getValue();
-        if (text == null) {
-            return false;
-        }
-
-        text = text.trim();
-        if (text.isEmpty()) {
-            return false;
-        }
-
-        int codePoints = text.codePointCount(0, text.length());
-        if (codePoints < 1 || codePoints > 2) {
-            return false;
-        }
-
-        if (text.contains(".") || text.contains(":") || Character.isWhitespace(text.charAt(0))) {
-            return false;
-        }
-
-        String next = nextNode.getValue();
-        if (next == null) {
-            return false;
-        }
-
-        next = next.stripLeading();
-        if (next.length() < 3) {
-            return false;
-        }
-
-        int uppercasePrefix = 0;
-        for (int i = 0; i < next.length();) {
-            int cp = next.codePointAt(i);
-            if (!Character.isUpperCase(cp)) {
-                break;
-            }
-            uppercasePrefix++;
-            i += Character.charCount(cp);
-        }
-
-        return uppercasePrefix >= 3;
-    }
-
-    /**
-     * Checks if a text node is a mathematical equation or formula line.
-     *
-     * @param node the text node to check
-     * @return true if the node is an equation or formula, false otherwise
-     */
-    private static boolean isEquation(SemanticTextNode node) {
-        String value = node.getValue();
-        if (value == null) return false;
-        String trimmed = value.trim();
-        if (trimmed.isEmpty()) return false;
-
-        boolean hasEqNumber = trimmed.matches(".*[\\(\\[](eq\\.?\\s*)?\\d+([a-z]|\\.\\d+)?[\\)\\]]\\s*$");
-
-        boolean hasMathSymbols = containsMathOperators(trimmed);
-
-        boolean hasSubOrSuperScript = trimmed.contains("_") || trimmed.contains("^") || trimmed.contains("ˆ")
-                || (trimmed.contains("[") && trimmed.contains("]"));
-
-        if (hasEqNumber && (hasMathSymbols || hasSubOrSuperScript)) {
-            return true;
-        }
-
-        boolean hasEqualityRelation = trimmed.contains("=") || trimmed.contains("≈") || trimmed.contains("≡")
-                || trimmed.contains("≤") || trimmed.contains("≥") || trimmed.contains("≠")
-                || trimmed.contains("∝") || trimmed.contains("∈") || trimmed.contains("→") || trimmed.contains("⇒");
-
-        if (hasEqualityRelation && (hasMathSymbols || hasSubOrSuperScript)
-                && !BulletedParagraphUtils.isIeeeSectionTitle(node.getFirstLine())) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Checks if a text string contains mathematical operators or Greek letters.
-     *
-     * @param text the text string to check
-     * @return true if the string contains math operators or Greek characters, false otherwise
-     */
-    private static boolean containsMathOperators(String text) {
-        for (int i = 0; i < text.length(); i++) {
-            char c = text.charAt(i);
-            if ((c >= '\u2200' && c <= '\u22FF') || (c >= '\u0370' && c <= '\u03FF')
-                    || c == '=' || c == '+' || c == '±' || c == '×' || c == '÷') {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Checks if a text node belongs to a table structure using parser table metadata,
-     * horizontal chunk gap alignment, and column header notation.
-     *
-     * @param node the text node to check
-     * @return true if the node is part of a table or multi-column layout, false otherwise
-     */
-    private static boolean isTableContent(SemanticTextNode node) {
-        if (node == null) {
-            return false;
-        }
-        SemanticType type = node.getSemanticType();
-        if (type == SemanticType.TABLE_HEADER || type == SemanticType.TABLE_CELL || type == SemanticType.TABLE) {
-            return true;
-        }
-
-        TextLine firstLine = node.getFirstLine();
-        if (firstLine == null) {
-            return false;
-        }
-
-        // 2. Document layout check: multi-column line with horizontal gap > fontSize * 1.0 between adjacent chunks
-        List<TextChunk> chunks = firstLine.getTextChunks();
-        if (chunks != null && chunks.size() >= 2) {
-            double fontSize = firstLine.getFontSize();
-            if (fontSize <= 0) fontSize = 10.0;
-            for (int i = 0; i < chunks.size() - 1; i++) {
-                TextChunk c1 = chunks.get(i);
-                TextChunk c2 = chunks.get(i + 1);
-                if (c1.getBoundingBox() != null && c2.getBoundingBox() != null) {
-                    double gap = c2.getBoundingBox().getLeftX() - c1.getBoundingBox().getRightX();
-                    if (gap > Math.max(8.0, fontSize)) {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        // 3. Tabular column header notation & metric token check
-        String val = node.getValue();
-        if (val != null) {
-            String[] words = val.trim().split("\\s+");
-            if (words.length >= 3) {
-                int metricTokens = 0;
-                for (String w : words) {
-                    if (w.contains("@") || w.contains("%") || w.contains("±") || w.matches("^[A-Z][a-z]+\\.$")) {
-                        metricTokens++;
-                    }
-                }
-                if (metricTokens >= 2) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 
     /**

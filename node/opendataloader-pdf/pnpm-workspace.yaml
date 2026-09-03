@@ -1,0 +1,9 @@
+# pnpm 11 no longer reads the "pnpm" field in package.json, so overrides and
+# build allowlists live here. See https://pnpm.io/settings
+allowBuilds:
+  esbuild: true
+
+overrides:
+  minimatch@<10.2.3: '>=10.2.3'
+  flatted@<3.4.2: '>=3.4.2'
+  postcss@<8.5.23: '>=8.5.23'

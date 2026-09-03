@@ -45,7 +45,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * <ul>
  *   <li>SpecialTableProcessor: Korean document tables (수신/경유/제목) always create colspan</li>
  *   <li>DoclingSchemaTransformer: Hybrid mode with Docling backend</li>
- *   <li>HancomSchemaTransformer: Hybrid mode with Hancom backend</li>
  *   <li>TaggedDocumentProcessor: Tagged PDFs with explicit merge attributes</li>
  * </ul>
  */
