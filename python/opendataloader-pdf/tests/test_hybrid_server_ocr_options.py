@@ -495,3 +495,43 @@ def test_converter_restricts_input_to_pdf():
         "create_converter must pass allowed_formats=[InputFormat.PDF]; "
         f"got {kwargs.get('allowed_formats')!r}"
     )
+
+
+def test_heading_hierarchy_defaults_off():
+    """No flag -> heading-hierarchy stage stays disabled, matching docling's own default."""
+    opts = _capture_pipeline_options()
+    assert opts.heading_hierarchy_options.enabled is False
+
+
+def test_heading_hierarchy_enabled_when_requested():
+    """`heading_hierarchy=True` reaches docling's pipeline options (#441).
+
+    Without it every section_header comes back at level 1, because the layout
+    model labels the region without a depth.
+    """
+    opts = _capture_pipeline_options(heading_hierarchy=True)
+    assert opts.heading_hierarchy_options.enabled is True
+
+
+def test_heading_hierarchy_keeps_inference_signals_on():
+    """Enabling the stage leaves docling's outline/numbering/style signals in place."""
+    opts = _capture_pipeline_options(heading_hierarchy=True)
+    hh = opts.heading_hierarchy_options
+    assert hh.use_bookmarks is True
+    assert hh.use_numbering is True
+    assert hh.use_style is True
+
+
+def test_heading_hierarchy_keeps_parsed_pages_for_style_inference():
+    """The style tier needs the parsed cells, which docling drops by default.
+
+    Without `generate_parsed_pages` docling skips style inference silently, so
+    only numbered headings get a depth — an unnumbered `Abstract` or `References`
+    stays at level 1 next to the document title, which is the #441 symptom.
+    """
+    assert _capture_pipeline_options(heading_hierarchy=True).generate_parsed_pages is True
+
+
+def test_parsed_pages_not_generated_when_hierarchy_off():
+    """Keeping the cells costs memory per page, so don't pay it when the stage is off."""
+    assert _capture_pipeline_options().generate_parsed_pages is False
