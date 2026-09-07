@@ -391,11 +391,11 @@ wheels = [
 
 [[package]]
 name = "opendataloader-pdf"
-version = "2.5.6"
+version = "2.5.7"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/9e/e6/4194204990219de8c0bd86efc93240f303cb6c0060aef25a2333b460ccb4/opendataloader_pdf-2.5.6.tar.gz", hash = "sha256:405114022f112360ddeb60a3b1086f59df1f250b3495e06a43d524fea0d25ced", size = 22507383, upload-time = "2026-08-31T02:43:33.498Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/cd/0c/ee6e9f842ff0c29ca205ce8ad192c79fadf010941fcc97dab55a3935f18d/opendataloader_pdf-2.5.7.tar.gz", hash = "sha256:12fcaedd03d4627925a6b5626e09344a4deb7882f39641cc902032b2d2ddc2b0", size = 22609282, upload-time = "2026-09-01T06:15:39.951Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/77/21/b92b0b49fb30aea3cb07f06b90cd60d87336fd1aeda9c90a4f25ec306ec9/opendataloader_pdf-2.5.6-py3-none-any.whl", hash = "sha256:2887b4238edd4d54233c9e774b08df2b2a81ff1c0196404e7a56803e497aa728", size = 22520458, upload-time = "2026-08-31T02:43:30.973Z" },
+    { url = "https://files.pythonhosted.org/packages/6e/0c/05e4e364dd175eaee548696c0717e2b1580149778c80726acafd229e8950/opendataloader_pdf-2.5.7-py3-none-any.whl", hash = "sha256:30259124325ff75d3b6f6df09f52f6ec9bfb0ae1adc10fce010abebeefbacd30", size = 22623505, upload-time = "2026-09-01T06:15:35.536Z" },
 ]
 
 [[package]]
@@ -409,8 +409,8 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "mcp", extras = ["cli"], specifier = ">=1.27.0,<2" },
-    { name = "opendataloader-pdf" },
+    { name = "mcp", extras = ["cli"], specifier = ">=1.29.1,<2" },
+    { name = "opendataloader-pdf", specifier = ">=2.5.7,<3" },
 ]
 
 [[package]]
