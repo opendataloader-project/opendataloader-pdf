@@ -445,3 +445,53 @@ def test_main_skips_engine_check_when_no_ocr(monkeypatch, caplog):
 
     hybrid_server.main()  # must not raise SystemExit
     assert called["which"] is False
+
+
+def test_every_cli_engine_choice_has_a_probe_branch():
+    """Each `--ocr-engine` choice must be recognized by the availability probe.
+
+    The CLI derives its choices from docling's factory, so a docling upgrade
+    that registers a new engine kind widens the CLI surface on its own. Without
+    a matching probe branch that engine parses, then fails closed at startup on
+    the probe's fallthrough — a selectable option that can never run. docling
+    2.124.0 added `nemotron-ocr` exactly this way.
+    """
+    from docling.models.factories import get_ocr_factory
+
+    choices = sorted(
+        set(get_ocr_factory(allow_external_plugins=False).registered_kind)
+        - hybrid_server._OCR_ENGINE_DENYLIST
+    )
+    unprobed = []
+    for kind in choices:
+        _, message = hybrid_server._check_ocr_engine_available(kind)
+        if "is not recognized by the availability probe" in message:
+            unprobed.append(kind)
+
+    assert not unprobed, (
+        f"engine kinds exposed by the CLI with no probe branch: {unprobed}. "
+        "Add a branch in `_check_ocr_engine_available()`, or add the kind to "
+        "`_OCR_ENGINE_DENYLIST` if it is unsuitable for hybrid local mode."
+    )
+
+
+def test_converter_restricts_input_to_pdf():
+    """The converter must enable PDF only, not every format docling knows.
+
+    `format_options` overrides options for the formats it lists; it does not
+    restrict input. Without `allowed_formats` docling enables all of them, so an
+    office document reaching this PDF-only server is sniffed by content and
+    parsed by that format's backend — the `.pdf` temp-file suffix does not stop
+    it. docling 2.124.0 knows 31 formats, up from 17 in 2.94.0.
+    """
+    from docling.datamodel.base_models import InputFormat
+
+    with patch("docling.document_converter.DocumentConverter") as mock_dc:
+        mock_dc.return_value = object()
+        hybrid_server.create_converter()
+
+    kwargs = mock_dc.call_args.kwargs
+    assert kwargs.get("allowed_formats") == [InputFormat.PDF], (
+        "create_converter must pass allowed_formats=[InputFormat.PDF]; "
+        f"got {kwargs.get('allowed_formats')!r}"
+    )

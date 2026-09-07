@@ -6,15 +6,15 @@ readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.10"
 dependencies = [
-    "mcp[cli]>=1.27.0,<2",
-    "opendataloader-pdf",
+    "mcp[cli]>=1.29.1,<2",
+    "opendataloader-pdf>=2.5.7,<3",
 ]
 
 [project.scripts]
 opendataloader-pdf-mcp = "opendataloader_pdf_mcp.server:main"
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.32.0,<2"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]

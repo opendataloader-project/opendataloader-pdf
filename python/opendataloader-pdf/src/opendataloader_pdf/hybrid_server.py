@@ -373,6 +373,19 @@ def _check_ocr_engine_available(engine_kind: str) -> tuple[bool, str]:
             )
         return True, ""
 
+    if engine_kind == "nemotron-ocr":
+        # docling gates this engine behind the `nemotron_ocr` package, published
+        # for Linux x86_64 / CUDA only. Without the probe the engine reaches
+        # conversion and raises ImportError from inside the pipeline.
+        if importlib.util.find_spec("nemotron_ocr") is None:
+            return False, (
+                "OCR engine 'nemotron-ocr' selected but the `nemotron_ocr` Python "
+                "package is not installed. Install it with "
+                '`pip install "docling[feat-ocr-nemotron]"` (Linux x86_64 with CUDA; '
+                "see docling's documentation for the supported Python and CUDA versions)."
+            )
+        return True, ""
+
     # Unknown engine kind — fail closed. argparse `choices` filters the CLI
     # surface, so this branch is reachable via direct programmatic calls or
     # when docling registers a new engine kind we haven't added a probe for.
@@ -505,10 +518,16 @@ def create_converter(
 
     pipeline_options = PdfPipelineOptions(**pipeline_kwargs)
 
+    # `format_options` only overrides options for the formats it lists; it does
+    # not restrict input. Without `allowed_formats` docling enables every format
+    # it knows (31 in 2.124.0, up from 17 in 2.94.0), so an office document
+    # uploaded to this PDF-only server is sniffed by content and parsed by that
+    # format's backend regardless of the `.pdf` temp-file suffix.
     return DocumentConverter(
+        allowed_formats=[InputFormat.PDF],
         format_options={
             InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)
-        }
+        },
     )
 
 
