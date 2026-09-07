@@ -133,6 +133,7 @@ opendataloader_pdf.convert(
 | Non-English scanned PDF | Hybrid + OCR | `pip install "opendataloader-pdf[hybrid]"` | `opendataloader-pdf-hybrid --port 5002 --force-ocr --ocr-lang "ko,en"` | `opendataloader-pdf --hybrid docling-fast file1.pdf file2.pdf folder/` |
 | Mathematical formulas | Hybrid + formula | `pip install "opendataloader-pdf[hybrid]"` | `opendataloader-pdf-hybrid --enrich-formula` | `opendataloader-pdf --hybrid docling-fast --hybrid-mode full file1.pdf file2.pdf folder/` |
 | Charts needing description | Hybrid + picture | `pip install "opendataloader-pdf[hybrid]"` | `opendataloader-pdf-hybrid --enrich-picture-description` | `opendataloader-pdf --hybrid docling-fast --hybrid-mode full file1.pdf file2.pdf folder/` |
+| Nested sections for RAG chunking | Hybrid + heading levels | `pip install "opendataloader-pdf[hybrid]"` | `opendataloader-pdf-hybrid --port 5002 --heading-hierarchy` | `opendataloader-pdf --hybrid docling-fast file1.pdf file2.pdf folder/` |
 | Untagged PDFs needing accessibility | Auto-tagging → Tagged PDF | `pip install opendataloader-pdf` | None needed | `opendataloader-pdf --format tagged-pdf file1.pdf file2.pdf folder/` |
 
 ## Quick Start
@@ -277,6 +278,36 @@ Output in JSON:
 ```
 
 > Uses SmolVLM (256M), a lightweight vision model. Custom prompts supported via `--picture-description-prompt`.
+
+### Heading Hierarchy
+
+The layout model labels a region as a section header without a depth, so by default every
+heading comes back at level 1 and subsections sit at the same depth as the document title.
+Flat headings make it hard to tell a section title from a document title when chunking for RAG.
+
+`--heading-hierarchy` infers the depth — from the PDF outline first, then section numbering
+(`1.` → `1.1` → `1.1.1`), then visual style:
+
+```bash
+# Server
+opendataloader-pdf-hybrid --port 5002 --heading-hierarchy
+
+# Client — no extra flag needed
+opendataloader-pdf --hybrid docling-fast file1.pdf file2.pdf folder/
+```
+
+```diff
+  # 3. Methodology
+- # 3.1. Multi-Object Rectification Network
++ ## 3.1. Multi-Object Rectification Network
+- # Abstract
++ ## Abstract
+```
+
+Numbering covers numbered sections; style is what pulls an unnumbered `Abstract` or
+`References` out from under the document title.
+
+Off by default, so existing output is unchanged. Levels are capped at H6.
 
 ### Hancom Data Loader Integration — Coming Soon
 

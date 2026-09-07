@@ -89,6 +89,13 @@ public class DoclingSchemaTransformer implements HybridSchemaTransformer {
     private static final String LABEL_LIST_ITEM = "list_item";
     private static final String LABEL_FORMULA = "formula";
 
+    // Docling section_header depth, carried as a top-level field on the text node
+    private static final String FIELD_LEVEL = "level";
+    private static final int DEFAULT_HEADING_LEVEL = 1;
+    private static final int MIN_HEADING_LEVEL = 1;
+    // Markdown stops at H6, so deeper levels are clamped rather than emitted
+    private static final int MAX_HEADING_LEVEL = 6;
+
     // Docling coordinate origins
     private static final String COORD_ORIGIN_BOTTOMLEFT = "BOTTOMLEFT";
     private static final String COORD_ORIGIN_TOPLEFT = "TOPLEFT";
@@ -302,12 +309,19 @@ public class DoclingSchemaTransformer implements HybridSchemaTransformer {
      * Creates a SemanticHeading from Docling section_header.
      */
     private SemanticHeading createHeading(String text, BoundingBox bbox, JsonNode textNode) {
-        int level = 1; // Default level
-
-        // Try to extract level from node metadata
-        JsonNode meta = textNode.get("meta");
-        if (meta != null && meta.has("level")) {
-            level = meta.get("level").asInt(1);
+        // Docling carries the depth as a top-level `level` on the text node. It is
+        // 1 for every heading unless the server runs with --heading-hierarchy, which
+        // infers the depth from the PDF outline, section numbering or visual style.
+        // Reading a nested `meta.level` instead left every heading at 1 (#441).
+        int level = DEFAULT_HEADING_LEVEL;
+        JsonNode levelNode = textNode.get(FIELD_LEVEL);
+        // isInt() alone would reject a value docling could widen to later — 2.0 or
+        // "2" — and drop it back to 1, which is the flat hierarchy this fixes.
+        if (levelNode != null && levelNode.canConvertToInt()) {
+            // Docling caps its own inference at 6 but allows 1..100 in the schema,
+            // and Markdown has no heading past H6.
+            level = Math.min(Math.max(levelNode.asInt(DEFAULT_HEADING_LEVEL), MIN_HEADING_LEVEL),
+                MAX_HEADING_LEVEL);
         }
 
         // Create a text chunk and wrap in TextLine

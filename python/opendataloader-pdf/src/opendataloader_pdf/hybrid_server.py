@@ -408,6 +408,7 @@ def create_converter(
     enrich_picture_description: bool = False,
     picture_description_prompt: str | None = None,
     device: str = "auto",
+    heading_hierarchy: bool = False,
 ):
     """Create a DocumentConverter with the specified options.
 
@@ -434,11 +435,14 @@ def create_converter(
         picture_description_prompt: Custom prompt forwarded to the VLM. If None or blank/whitespace-only, docling's default prompt is used.
         device: Accelerator device for model inference. Options: "auto", "cpu", "cuda", "mps", "xpu".
                 "auto" lets Docling select the best available device. Default: "auto".
+        heading_hierarchy: If True, infer section-header depth so subsections nest
+                under their parent instead of all landing at level 1.
     """
     from docling.datamodel.accelerator_options import AcceleratorOptions
     from docling.datamodel.base_models import InputFormat
     from docling.datamodel.pipeline_options import (
         AcceleratorOptions,
+        HeadingHierarchyOptions,
         PdfPipelineOptions,
         PictureDescriptionVlmOptions,
         TableFormerMode,
@@ -509,6 +513,19 @@ def create_converter(
         "do_picture_description": enrich_picture_description,
         "generate_picture_images": enrich_picture_description,
         "accelerator_options": AcceleratorOptions(device=device),
+        # The layout model labels a region SECTION_HEADER without a depth, so
+        # every heading the PDF path emits defaults to level 1 and the hierarchy
+        # is flat. docling's heading-hierarchy stage infers the depth from the
+        # PDF outline, then section numbering, then visual style (#441).
+        "heading_hierarchy_options": HeadingHierarchyOptions(
+            enabled=heading_hierarchy
+        ),
+        # The style tier of that stage reads the parsed PDF cells, which are
+        # discarded unless this is on — without them docling silently skips style
+        # inference and only numbered headings get a depth, leaving Abstract,
+        # References and the like at level 1. Gated on the flag because keeping
+        # the cells costs memory on every page.
+        "generate_parsed_pages": heading_hierarchy,
     }
     if picture_description_options is not None:
         pipeline_kwargs["picture_description_options"] = picture_description_options
@@ -542,6 +559,7 @@ def create_app(
     picture_description_prompt: str | None = None,
     max_file_size: int = MAX_FILE_SIZE,
     device: str = "auto",
+    heading_hierarchy: bool = False,
 ):
     """Create and configure the FastAPI application.
 
@@ -556,6 +574,8 @@ def create_app(
         picture_description_prompt: Custom prompt forwarded to the VLM. If None or blank/whitespace-only, docling's default prompt is used.
         max_file_size: Maximum file size in bytes. 0 means no limit (default).
         device: Accelerator device for model inference ("auto", "cpu", "cuda", "mps", "xpu").
+        heading_hierarchy: If True, infer section-header depth so subsections nest
+                under their parent instead of all landing at level 1.
     """
     from fastapi import FastAPI, File, Form, UploadFile
     from fastapi.responses import JSONResponse
@@ -577,7 +597,8 @@ def create_app(
         logger.info(
             f"Initializing DocumentConverter "
             f"(do_ocr={not disable_ocr}, ocr_engine={ocr_engine}, force_ocr={force_ocr}, "
-            f"lang={lang_str}, enrichments={enrichment_str}, device={device})..."
+            f"lang={lang_str}, enrichments={enrichment_str}, device={device}, "
+            f"heading_hierarchy={heading_hierarchy})..."
         )
         start = time.perf_counter()
 
@@ -591,6 +612,7 @@ def create_app(
             enrich_picture_description=enrich_picture_description,
             picture_description_prompt=picture_description_prompt,
             device=device,
+            heading_hierarchy=heading_hierarchy,
         )
 
         elapsed = time.perf_counter() - start
@@ -749,6 +771,7 @@ def create_app(
                 ocr_lang=ocr_lang,
                 picture_description_prompt=picture_description_prompt,
                 device=device,
+                heading_hierarchy=heading_hierarchy,
                 **opts,
             )
             logger.info(f"  {name} initialized in {time.perf_counter() - t0:.2f}s")
@@ -947,6 +970,19 @@ def main():
         choices=["auto", "cpu", "cuda", "mps", "xpu"],
         help="Accelerator device for model inference: auto (default), cpu, cuda, mps (Apple Silicon), xpu (Intel GPU).",
     )
+    parser.add_argument(
+        "--heading-hierarchy",
+        action="store_true",
+        default=False,
+        help="Infer section-header levels so subsections nest under their parent "
+             "(1. -> 1.1 -> 1.1.1) instead of every heading coming back as level 1. "
+             "Read from the PDF outline first, then section numbering, then visual style.",
+    )
+    parser.add_argument(
+        "--no-heading-hierarchy",
+        action="store_false",
+        dest="heading_hierarchy",
+    )
     args = parser.parse_args()
 
     # Parse ocr_lang
@@ -1040,6 +1076,7 @@ def main():
         picture_description_prompt=args.picture_description_prompt,
         max_file_size=max_file_size_bytes,
         device=args.device,
+        heading_hierarchy=args.heading_hierarchy,
     )
     uvicorn.run(
         app,

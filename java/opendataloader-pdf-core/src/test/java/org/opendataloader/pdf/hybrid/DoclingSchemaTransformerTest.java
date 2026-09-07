@@ -755,6 +755,121 @@ public class DoclingSchemaTransformerTest {
         bbox.put("coord_origin", "BOTTOMLEFT");
     }
 
+    @Test
+    void testHeadingLevelReadFromTopLevelField() {
+        // Docling carries section-header depth as a top-level `level`, set by the
+        // heading-hierarchy stage. Reading a nested `meta.level` left every heading
+        // at 1 and flattened the hierarchy (#441).
+        ObjectNode json = objectMapper.createObjectNode();
+        ArrayNode texts = json.putArray("texts");
+
+        ObjectNode parent = texts.addObject();
+        parent.put("label", "section_header");
+        parent.put("text", "3. Methodology");
+        parent.put("level", 1);
+        addProvenance(parent, 1, 100, 750, 300, 780);
+
+        ObjectNode child = texts.addObject();
+        child.put("label", "section_header");
+        child.put("text", "3.1. Rectification Network");
+        child.put("level", 2);
+        addProvenance(child, 1, 100, 700, 300, 730);
+
+        ObjectNode grandchild = texts.addObject();
+        grandchild.put("label", "section_header");
+        grandchild.put("text", "3.1.1. Details");
+        grandchild.put("level", 3);
+        addProvenance(grandchild, 1, 100, 650, 300, 680);
+
+        List<List<IObject>> result = transform(json);
+
+        Assertions.assertEquals(3, result.get(0).size());
+        Assertions.assertEquals(1, ((SemanticHeading) result.get(0).get(0)).getHeadingLevel());
+        Assertions.assertEquals(2, ((SemanticHeading) result.get(0).get(1)).getHeadingLevel());
+        Assertions.assertEquals(3, ((SemanticHeading) result.get(0).get(2)).getHeadingLevel());
+    }
+
+    @Test
+    void testHeadingLevelDefaultsToOneWhenAbsent() {
+        // With --no-heading-hierarchy docling still emits `level`, but a response
+        // without the field must not break: fall back to 1, the previous behaviour.
+        ObjectNode json = objectMapper.createObjectNode();
+        ArrayNode texts = json.putArray("texts");
+        ObjectNode header = texts.addObject();
+        header.put("label", "section_header");
+        header.put("text", "Abstract");
+        addProvenance(header, 1, 100, 750, 300, 780);
+
+        List<List<IObject>> result = transform(json);
+
+        Assertions.assertEquals(1, ((SemanticHeading) result.get(0).get(0)).getHeadingLevel());
+    }
+
+    @Test
+    void testHeadingLevelClampedToMarkdownRange() {
+        // The schema allows 1..100 but Markdown stops at H6, so deeper levels are
+        // clamped instead of emitted. A non-positive level falls back to 1.
+        ObjectNode json = objectMapper.createObjectNode();
+        ArrayNode texts = json.putArray("texts");
+
+        ObjectNode tooDeep = texts.addObject();
+        tooDeep.put("label", "section_header");
+        tooDeep.put("text", "Very deep");
+        tooDeep.put("level", 42);
+        addProvenance(tooDeep, 1, 100, 750, 300, 780);
+
+        ObjectNode nonPositive = texts.addObject();
+        nonPositive.put("label", "section_header");
+        nonPositive.put("text", "Zero");
+        nonPositive.put("level", 0);
+        addProvenance(nonPositive, 1, 100, 700, 300, 730);
+
+        List<List<IObject>> result = transform(json);
+
+        Assertions.assertEquals(6, ((SemanticHeading) result.get(0).get(0)).getHeadingLevel());
+        Assertions.assertEquals(1, ((SemanticHeading) result.get(0).get(1)).getHeadingLevel());
+    }
+
+    @Test
+    void testHeadingLevelIgnoresUnusableValues() {
+        // A level that cannot be read as an int must not be coerced: an overflowing
+        // number would wrap to a bogus level, and null carries no depth at all.
+        ObjectNode json = objectMapper.createObjectNode();
+        ArrayNode texts = json.putArray("texts");
+
+        ObjectNode overflow = texts.addObject();
+        overflow.put("label", "section_header");
+        overflow.put("text", "Overflowing");
+        overflow.put("level", 99999999999L);
+        addProvenance(overflow, 1, 100, 750, 300, 780);
+
+        ObjectNode nullLevel = texts.addObject();
+        nullLevel.put("label", "section_header");
+        nullLevel.put("text", "Null level");
+        nullLevel.putNull("level");
+        addProvenance(nullLevel, 1, 100, 700, 300, 730);
+
+        // A whole number sent as a float still carries a usable depth.
+        ObjectNode floatLevel = texts.addObject();
+        floatLevel.put("label", "section_header");
+        floatLevel.put("text", "Float level");
+        floatLevel.put("level", 2.0);
+        addProvenance(floatLevel, 1, 100, 650, 300, 680);
+
+        List<List<IObject>> result = transform(json);
+
+        Assertions.assertEquals(1, ((SemanticHeading) result.get(0).get(0)).getHeadingLevel());
+        Assertions.assertEquals(1, ((SemanticHeading) result.get(0).get(1)).getHeadingLevel());
+        Assertions.assertEquals(2, ((SemanticHeading) result.get(0).get(2)).getHeadingLevel());
+    }
+
+    private List<List<IObject>> transform(ObjectNode json) {
+        HybridResponse response = new HybridResponse("", json, null);
+        Map<Integer, Double> pageHeights = new HashMap<>();
+        pageHeights.put(1, 842.0);
+        return transformer.transform(response, pageHeights);
+    }
+
     private void addTableCell(ArrayNode tableCells, int row, int col, int rowSpan, int colSpan, String text) {
         ObjectNode cell = tableCells.addObject();
         cell.put("start_row_offset_idx", row);
