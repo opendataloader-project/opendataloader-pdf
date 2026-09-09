@@ -9,6 +9,7 @@ Covers:
     * Unknown / denylisted engines exit with a clear message
     * argparse `--no-ocr` and `--force-ocr` are mutually exclusive
     * argparse `--ocr-engine` choices exclude `kserve_v2_ocr`
+    * `--device directml` routes through `RapidOcrOptions.rapidocr_params`
 """
 
 import argparse
@@ -146,6 +147,59 @@ def test_create_converter_rejects_denylisted_engine():
     assert "_OCR_ENGINE_DENYLIST" in msg
 
 
+# ---------- --device directml ----------
+
+def test_device_directml_sets_rapidocr_use_dml():
+    """`device='directml'` lands the switch where rapidocr 3 actually reads it.
+
+    Docling emits `Det.use_dml` / `Cls.use_dml` / `Rec.use_dml`, which stopped being
+    read when rapidocr 3 moved the provider switches under `EngineConfig`. Locks in
+    that we set the key rapidocr's ProviderConfig consumes.
+    """
+    opts = _capture_pipeline_options(ocr_engine="rapidocr", device="directml")
+    assert opts.ocr_options.rapidocr_params["EngineConfig.onnxruntime.use_dml"] is True
+
+
+def test_device_directml_is_not_forwarded_to_accelerator_options():
+    """`directml` must not reach AcceleratorOptions, whose validator rejects it."""
+    opts = _capture_pipeline_options(ocr_engine="rapidocr", device="directml")
+    assert opts.accelerator_options.device == "cpu"
+
+
+def test_other_devices_leave_rapidocr_params_untouched():
+    """Without `--device directml`, RapidOCR keeps docling's own defaults."""
+    for device in ("auto", "cpu"):
+        opts = _capture_pipeline_options(ocr_engine="rapidocr", device=device)
+        assert opts.ocr_options.rapidocr_params == {}, device
+
+
+def test_device_directml_warns_for_engines_that_cannot_use_it(caplog):
+    """`--device directml` with a non-RapidOCR engine warns instead of no-op'ing."""
+    caplog.set_level("WARNING", logger=hybrid_server.logger.name)
+    _capture_pipeline_options(ocr_engine="easyocr", device="directml")
+    warnings = [r.message for r in caplog.records if r.levelname == "WARNING"]
+    assert any("directml" in w and "easyocr" in w for w in warnings), warnings
+
+
+def test_directml_probe_fails_when_provider_missing():
+    """`--device directml` without DirectML in the ONNX Runtime wheel fails closed."""
+    with patch.object(hybrid_server, "_is_directml_available", return_value=False):
+        ok, msg = hybrid_server._check_ocr_engine_available("rapidocr", device="directml")
+    assert ok is False
+    assert "DmlExecutionProvider" in msg
+    assert "onnxruntime-directml" in msg
+
+
+def test_directml_probe_passes_when_provider_present():
+    """`--device directml` is accepted once DirectML is available."""
+    with patch.object(
+        hybrid_server, "_is_directml_available", return_value=True
+    ), patch("importlib.util.find_spec", return_value=object()):
+        ok, msg = hybrid_server._check_ocr_engine_available("rapidocr", device="directml")
+    assert ok is True
+    assert msg == ""
+
+
 # ---------- argparse: --no-ocr / --force-ocr / --ocr-engine / --psm ----------
 
 def _build_parser_subset():
@@ -171,6 +225,11 @@ def _build_parser_subset():
     )
     parser.add_argument("--psm", type=int, default=None)
     parser.add_argument("--ocr-lang", default=None)
+    parser.add_argument(
+        "--device",
+        default="auto",
+        choices=["auto", "cpu", "cuda", "mps", "xpu", hybrid_server._DEVICE_DIRECTML],
+    )
     return parser
 
 
@@ -208,6 +267,15 @@ def test_argparse_tesseract_path_for_issue_439():
     assert args.ocr_lang == "mal"
     assert args.force_ocr is True
     assert args.no_ocr is False
+
+
+def test_argparse_device_directml_is_accepted():
+    """`--device directml` parses, so the flag reaches create_converter()."""
+    args = _build_parser_subset().parse_args(
+        ["--ocr-engine", "rapidocr", "--device", "directml"]
+    )
+    assert args.device == "directml"
+    assert args.ocr_engine == "rapidocr"
 
 
 def test_argparse_psm_accepted_as_integer():
