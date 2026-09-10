@@ -133,7 +133,7 @@ public class MarkdownGenerator implements Closeable {
             content instanceof TableBorder ||
             content instanceof PDFList ||
             content instanceof SemanticTOC ||
-            (content instanceof ImageChunk && isImageSupported);
+            (content instanceof ImageChunk && isImageSupported && ImagesUtils.isRenderableImage((ImageChunk) content));
     }
 
     protected void writeContentsSeparator() throws IOException {
