@@ -464,13 +464,19 @@ public class ListProcessor {
     }
 
     private static boolean isCorrectList(TextListInterval interval) {//move inside arabic numeration detection
-        return !isDoubles(interval);
+        // A single label is not enough evidence of a list. It is commonly a
+        // numeric section heading or a running header, and wrapping it changes
+        // the document semantics.
+        return interval.getNumberOfListItems() > 1 && !isDoubles(interval);
     }
 
     private static boolean isDoubles(TextListInterval interval) {
         for (ListItemTextInfo listItemTextInfo : interval.getListItemsInfos()) {
             if (listItemTextInfo != null) {
-                if (!DOUBLE_PATTERN.matcher(listItemTextInfo.getListItemValue().getValue()).matches()) {
+                String value = listItemTextInfo.getListItemValue().getValue();
+                int labelLength = listItemTextInfo.getLabelLength();
+                if (labelLength <= 0 || labelLength > value.length() ||
+                        !DOUBLE_PATTERN.matcher(value.substring(0, labelLength).trim()).matches()) {
                     return false;
                 }
             } else {
