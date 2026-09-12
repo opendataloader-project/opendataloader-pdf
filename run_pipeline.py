@@ -121,6 +121,9 @@ def run_conversion(input_path: str = "data", output_dir: str = "data/output_perf
     print(" Image Quality:       300 DPI")
     print("=======================================================\n")
 
+    existing_md = set(output_p.glob("*.md"))
+    existing_json = set(output_p.glob("*.json"))
+
     start_time = time.perf_counter()
 
     opendataloader_pdf.convert(
@@ -139,22 +142,22 @@ def run_conversion(input_path: str = "data", output_dir: str = "data/output_perf
 
     elapsed = time.perf_counter() - start_time
 
-    if not list(output_p.glob("*.md")) or not list(output_p.glob("*.json")):
+    new_md = [p for p in output_p.glob("*.md") if p not in existing_md]
+    new_json = [p for p in output_p.glob("*.json") if p not in existing_json]
+
+    if not new_md or not new_json:
         raise RuntimeError(
-            f"Conversion produced no Markdown/JSON output in {output_p} "
+            f"Conversion produced no new Markdown/JSON output in {output_p} "
             f"(check that {input_p} contains PDF files)"
         )
 
     print(f"\n[+] Conversion completed in {elapsed:.2f}s!")
 
-    summarize_outputs(output_p)
+    summarize_outputs(new_md, new_json)
 
 
-def summarize_outputs(output_p: Path):
+def summarize_outputs(md_files: list, json_files: list):
     """Summarize the converted results."""
-    json_files = list(output_p.glob("*.json"))
-    md_files = list(output_p.glob("*.md"))
-
     print("\n---------------- Extracted Files ----------------")
     for mf in md_files:
         size_kb = mf.stat().st_size / 1024
