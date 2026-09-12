@@ -79,13 +79,16 @@ def start_hybrid_server() -> subprocess.Popen | None:
 
     print("[*] Initializing AI server & ML models...")
     for _ in range(60):
+        if proc.poll() is not None:
+            raise RuntimeError("Hybrid server exited before becoming ready")
+
         if is_server_ready():
             print("[+] Hybrid AI server is ready and listening!")
             return proc
         time.sleep(1)
 
-    print("[!] Server process started. Proceeding...")
-    return proc
+    stop_hybrid_server(proc)
+    raise RuntimeError("Hybrid server did not become ready within 60 seconds")
 
 
 def stop_hybrid_server(proc: subprocess.Popen | None) -> None:
