@@ -138,6 +138,13 @@ def run_conversion(input_path: str = "data", output_dir: str = "data/output_perf
     )
 
     elapsed = time.perf_counter() - start_time
+
+    if not list(output_p.glob("*.md")) or not list(output_p.glob("*.json")):
+        raise RuntimeError(
+            f"Conversion produced no Markdown/JSON output in {output_p} "
+            f"(check that {input_p} contains PDF files)"
+        )
+
     print(f"\n[+] Conversion completed in {elapsed:.2f}s!")
 
     summarize_outputs(output_p)
