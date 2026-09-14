@@ -1100,7 +1100,7 @@ public class AutoTaggingProcessor {
         addCaptionIfPresent(table, partObject, cosDocument);
     }
 
-    private static void addAttributeToStructElem(COSObject structElement, ASAtom ownerASAtom, ASAtom attributeName,
+    public static void addAttributeToStructElem(COSObject structElement, ASAtom ownerASAtom, ASAtom attributeName,
                                                  COSObject attributeValue) {
         COSObject aObject = structElement.getKey(ASAtom.A);
         COSObject owner = COSName.construct(ownerASAtom);
