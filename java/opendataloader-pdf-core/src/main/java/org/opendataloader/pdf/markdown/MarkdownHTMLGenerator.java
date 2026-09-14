@@ -79,7 +79,7 @@ public class MarkdownHTMLGenerator extends MarkdownGenerator {
             cellTag.append(" rowspan=\"").append(rowSpan).append("\"");
         }
         cellTag.append(">");
-        markdownWriter.write(getCorrectMarkdownString(cellTag.toString()));
+        markdownWriter.write(cellTag.toString());
     }
 
     private void writeCellTagEnd(boolean isHeader) throws IOException {
