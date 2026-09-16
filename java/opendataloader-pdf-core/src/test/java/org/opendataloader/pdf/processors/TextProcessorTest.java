@@ -273,6 +273,22 @@ public class TextProcessorTest {
     }
 
     @Test
+    public void testFilterTinyTextDropsTextShrunkByTheTextMatrix() {
+        // ChunkParser builds chunks with TextChunksHelper.calculateTextSize of the
+        // text rendering matrix, so the font size a chunk carries is the size it is
+        // actually rendered at, not the raw Tf operand. A 12pt font scaled to a
+        // hundredth by the text matrix therefore arrives here as 0.12, and hiding a
+        // payload that way is caught by the same check as declaring a tiny font.
+        List<IObject> contents = new ArrayList<>();
+        contents.add(new TextChunk(new BoundingBox(1, 10.0, 10.0, 100.0, 10.12),
+            "hidden by scaling rather than by font size", 12 * 0.01, 10.0));
+
+        TextProcessor.filterTinyText(contents);
+
+        Assertions.assertNull(contents.get(0));
+    }
+
+    @Test
     public void testFilterTinyTextKeepsOrdinaryText() {
         List<IObject> contents = new ArrayList<>();
         contents.add(new TextChunk(new BoundingBox(1, 10.0, 10.0, 100.0, 22.0),
