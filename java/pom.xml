@@ -58,10 +58,10 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <verapdf.version>1.31.169</verapdf.version>
+        <verapdf.version>1.31.175</verapdf.version>
         <!-- Removal prohibited. wcag-validation declares this as a range, so
              identical commits resolve to differing versions without the pin. -->
-        <verapdf.wcag.algs.version>1.31.43</verapdf.wcag.algs.version>
+        <verapdf.wcag.algs.version>1.31.44</verapdf.wcag.algs.version>
         <!-- Bump only on a wcag-algorithms bump: vera classes require the
              PDFBox they were built against. Verification is samples/pdf with
              -f pdf included; tests pass either way. -->
