@@ -103,7 +103,6 @@ public class AutoTaggingProcessor {
         updatePages(document, cosDocument);
         createParentTree(cosDocument, structTreeRoot);
         cosDocument.getTrailer().removeKey(ASAtom.ENCRYPT);
-        cosDocument.getTrailer().removeKey(ASAtom.XREF_STM);
     }
 
     /**
