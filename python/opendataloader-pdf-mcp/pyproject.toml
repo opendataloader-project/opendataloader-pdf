@@ -1,6 +1,6 @@
 [project]
 name = "opendataloader-pdf-mcp"
-version = "0.0.0"
+version = "2.5.10.dev0"
 description = "MCP server for OpenDataLoader PDF — convert PDFs to Markdown, JSON, HTML, and more"
 readme = "README.md"
 license = "Apache-2.0"
