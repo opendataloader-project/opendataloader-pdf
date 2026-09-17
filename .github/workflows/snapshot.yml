@@ -7,17 +7,28 @@ name: Snapshot
 # neither has a coordinate that can move with main.
 #
 # The Central Portal snapshot repository rather than GitHub Packages, which
-# requires a token even for a public repository. This one reads anonymously.
-#
-# workflow_dispatch only: whether a snapshot counts against the monthly Central
-# release quota is undocumented. Confirm against the Usage Center before adding
-# a push trigger.
+# requires a token even for a public repository.
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'java/**'
+      # Embedded into the jar under META-INF, so a change here changes the
+      # artifact; LICENSE_TEMPLATE is read by the build itself.
+      - 'LICENSE'
+      - 'NOTICE'
+      - 'THIRD_PARTY/**'
+      - 'LICENSE_TEMPLATE/**'
+      - '.github/workflows/snapshot.yml'
+  # The version bump release.yml pushes does not reach this workflow: a push
+  # made with the default GITHUB_TOKEN triggers nothing. Run it by hand to
+  # publish the first snapshot of a new development version.
   workflow_dispatch:
 
 concurrency:
   group: snapshot-${{ github.ref }}
-  cancel-in-progress: false   # never interrupt a publish mid-upload
+  cancel-in-progress: false   # a queued run costs a build; a cancelled one
+                              # can stop mid-upload
 
 jobs:
   publish:
@@ -45,7 +56,7 @@ jobs:
         working-directory: ./java
         run: |
           set -euo pipefail
-          v=$(mvn -B -q help:evaluate -Dexpression=project.version -DforceStdout)
+          v=$(mvn -B -q -pl opendataloader-pdf-core help:evaluate -Dexpression=project.version -DforceStdout)
           echo "version: $v"
           [[ "$v" == *-SNAPSHOT ]] || { echo "::error::pom version '$v' is not a -SNAPSHOT" >&2; exit 1; }
 
@@ -57,7 +68,7 @@ jobs:
       # through to maven-deploy-plugin, which the parent pom skips, and the job
       # reports success having uploaded nothing.
       #
-      # GPG is skipped: the snapshot repository performs no validation.
+      # GPG is skipped: the snapshot repository does not require signatures.
       - name: Publish to the Central Portal snapshot repository
         working-directory: ./java
         env:
@@ -68,5 +79,5 @@ jobs:
       - name: Summary
         working-directory: ./java
         run: |
-          v=$(mvn -B -q help:evaluate -Dexpression=project.version -DforceStdout)
+          v=$(mvn -B -q -pl opendataloader-pdf-core help:evaluate -Dexpression=project.version -DforceStdout)
           echo "Published \`org.opendataloader:opendataloader-pdf-core:$v\`" >> "$GITHUB_STEP_SUMMARY"
