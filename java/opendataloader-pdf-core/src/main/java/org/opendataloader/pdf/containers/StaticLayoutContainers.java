@@ -144,7 +144,7 @@ public class StaticLayoutContainers {
     // Map-level accessors are used by DocumentProcessor.propagateState so worker threads
     // share the main thread's cache instance. Today the cache is only touched on the main
     // thread, but propagating it eliminates a silent-data-loss trap if generators ever
-    // run on workers — matches the CLAUDE.md ThreadLocal-propagation gotcha.
+    // run on workers.
     public static Map<String, byte[]> getEmbeddedImageBytesMap() {
         return embeddedImageBytes.get();
     }
