@@ -109,6 +109,8 @@ To suggest a new feature:
 - Write unit tests for any new or changed logic.
 - Run `./scripts/bench.sh` before submitting a PR — CI will fail if benchmark scores drop below thresholds.
 - Keep your changes minimal and focused.
+- Do not add MDX files. `content/docs/reference/` is generated at release time
+  and is not tracked.
 
 ## ✅ Commit Message Guidelines
 

@@ -280,7 +280,10 @@ public class DocumentProcessor {
         final boolean useStructTree = StaticLayoutContainers.isUseStructTree();
         final var embeddedImageBytesMap = StaticLayoutContainers.getEmbeddedImageBytesMap();
 
-        // Runnable that propagates ThreadLocal state to the current (worker) thread
+        // A worker starts with none of the caller's ThreadLocal state, so every
+        // value one reads has to be set here; values a worker writes do not.
+        // Omitting one fails silently — lost content or an NPE, in parallel mode
+        // only.
         final Runnable propagateState = () -> {
             StaticResources.setDocument(pdDocument);
             // veraPDF StaticContainers
