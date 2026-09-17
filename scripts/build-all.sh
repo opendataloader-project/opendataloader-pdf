@@ -2,17 +2,23 @@
 
 # Build and test all packages: Java, Python, Node.js
 # Usage: ./scripts/build-all.sh [VERSION]
-# Example: ./scripts/build-all.sh 1.0.0
-# If VERSION is not provided, defaults to "0.0.0"
+#
+# Without a VERSION each package keeps the version its own manifest declares.
 
 set -e
 
 # =================================================================
 # Configuration
 # =================================================================
-VERSION="${1:-0.0.0}"
+VERSION="${1:-}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Only -SNAPSHOT is translated. A prerelease version passes through, and PyPI
+# then normalizes e.g. 2.5.10-rc1 to 2.5.10rc1 — a coordinate that differs
+# textually from the Java and npm ones.
+to_pep440() { echo "${1/-SNAPSHOT/.dev0}"; }
+to_semver() { echo "${1/-SNAPSHOT/-dev.0}"; }
 
 # =================================================================
 # Prerequisites Check
@@ -40,7 +46,9 @@ echo "[1/3] Java: Building and testing..."
 echo "----------------------------------------"
 
 cd "$ROOT_DIR/java"
-mvn versions:set -DnewVersion="$VERSION" -DgenerateBackupPoms=false
+if [ -n "$VERSION" ]; then
+  mvn versions:set -DnewVersion="$VERSION" -DgenerateBackupPoms=false
+fi
 "$SCRIPT_DIR/build-java.sh"
 
 echo "[1/3] Java: Done"
@@ -53,7 +61,10 @@ echo "[2/3] Python: Building and testing..."
 echo "----------------------------------------"
 
 cd "$ROOT_DIR/python/opendataloader-pdf"
-sed -i.bak "s/^version = \"[^\"]*\"/version = \"$VERSION\"/" pyproject.toml && rm -f pyproject.toml.bak
+if [ -n "$VERSION" ]; then
+  py_version="$(to_pep440 "$VERSION")"
+  sed -i.bak "s/^version = \"[^\"]*\"/version = \"$py_version\"/" pyproject.toml && rm -f pyproject.toml.bak
+fi
 "$SCRIPT_DIR/build-python.sh"
 
 echo "[2/3] Python: Done"
@@ -66,7 +77,9 @@ echo "[3/3] Node.js: Building and testing..."
 echo "----------------------------------------"
 
 cd "$ROOT_DIR/node/opendataloader-pdf"
-pnpm version "$VERSION" --no-git-tag-version --allow-same-version --no-git-checks
+if [ -n "$VERSION" ]; then
+  pnpm version "$(to_semver "$VERSION")" --no-git-tag-version --allow-same-version --no-git-checks
+fi
 "$SCRIPT_DIR/build-node.sh"
 
 echo "[3/3] Node.js: Done"
@@ -77,5 +90,7 @@ echo "[3/3] Node.js: Done"
 echo ""
 echo "========================================"
 echo "All builds completed successfully!"
-echo "Version: $VERSION"
+if [ -n "$VERSION" ]; then
+  echo "Version: $VERSION"
+fi
 echo "========================================"

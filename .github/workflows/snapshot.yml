@@ -1,0 +1,72 @@
+name: Snapshot
+
+# Publishes java/pom.xml's -SNAPSHOT version, so building against unreleased
+# work does not require cloning this repository.
+#
+# Java only: PyPI and npm reject a re-upload under an existing version, so
+# neither has a coordinate that can move with main.
+#
+# The Central Portal snapshot repository rather than GitHub Packages, which
+# requires a token even for a public repository. This one reads anonymously.
+#
+# workflow_dispatch only: whether a snapshot counts against the monthly Central
+# release quota is undocumented. Confirm against the Usage Center before adding
+# a push trigger.
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: snapshot-${{ github.ref }}
+  cancel-in-progress: false   # never interrupt a publish mid-upload
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read   # publishing goes to Maven Central, not to this repository
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+          server-id: central
+          server-username: MAVEN_CENTRAL_USERNAME
+          server-password: MAVEN_CENTRAL_PASSWORD
+
+      # Deploying a release coordinate from main would put content behind a
+      # version someone has already pinned.
+      - name: Check the version is a snapshot
+        working-directory: ./java
+        run: |
+          set -euo pipefail
+          v=$(mvn -B -q help:evaluate -Dexpression=project.version -DforceStdout)
+          echo "version: $v"
+          [[ "$v" == *-SNAPSHOT ]] || { echo "::error::pom version '$v' is not a -SNAPSHOT" >&2; exit 1; }
+
+      - name: Verify
+        working-directory: ./java
+        run: mvn -B clean verify
+
+      # -P release carries central-publishing. Without the profile, deploy falls
+      # through to maven-deploy-plugin, which the parent pom skips, and the job
+      # reports success having uploaded nothing.
+      #
+      # GPG is skipped: the snapshot repository performs no validation.
+      - name: Publish to the Central Portal snapshot repository
+        working-directory: ./java
+        env:
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+        run: mvn -B -pl opendataloader-pdf-core deploy -P release -DskipTests -Dgpg.skip=true
+
+      - name: Summary
+        working-directory: ./java
+        run: |
+          v=$(mvn -B -q help:evaluate -Dexpression=project.version -DforceStdout)
+          echo "Published \`org.opendataloader:opendataloader-pdf-core:$v\`" >> "$GITHUB_STEP_SUMMARY"

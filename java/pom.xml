@@ -23,7 +23,7 @@
 
     <groupId>org.opendataloader</groupId>
     <artifactId>opendataloader-pdf-parent</artifactId>
-    <version>0.0.0</version>
+    <version>2.5.10-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>OpenDataLoader PDF</name>
@@ -320,9 +320,17 @@
                                   cause: without the pin the range resolves to
                                   whatever is newest upstream rather than the
                                   version we tested.
+
+                                  Snapshots are allowed because this reactor's
+                                  own modules are snapshots between releases:
+                                  the rule walks the whole graph and does not
+                                  distinguish a sibling module from a
+                                  third-party jar. Maven Central rejects a
+                                  release whose pom declares a snapshot, so the
+                                  third-party case is still caught.
                                 -->
                                 <banDynamicVersions>
-                                    <allowSnapshots>false</allowSnapshots>
+                                    <allowSnapshots>true</allowSnapshots>
                                 </banDynamicVersions>
                             </rules>
                         </configuration>
