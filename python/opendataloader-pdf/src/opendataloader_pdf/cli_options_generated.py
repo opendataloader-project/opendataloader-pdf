@@ -235,6 +235,15 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "description": "Hybrid backend request timeout in milliseconds (0 = use the backend's own default). Default: 0",
     },
     {
+        "name": "hybrid-chunk-size",
+        "python_name": "hybrid_chunk_size",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": "50",
+        "description": "Maximum number of pages to send to the hybrid backend in a single request. Large documents are split into batches of this size; smaller values increase the number of backend requests (the full PDF is re-sent per batch). Default: 50",
+    },
+    {
         "name": "hybrid-fallback",
         "python_name": "hybrid_fallback",
         "short_name": None,

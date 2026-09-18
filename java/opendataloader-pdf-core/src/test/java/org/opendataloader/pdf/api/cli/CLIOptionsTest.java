@@ -26,6 +26,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.hybrid.HybridConfig;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -630,6 +631,73 @@ class CLIOptionsTest {
             System.setErr(originalErr);
         }
         return buf.toString(StandardCharsets.UTF_8);
+    }
+
+    // ===== Hybrid Chunk Size Option Tests =====
+
+    @Test
+    void testDefineOptions_containsHybridChunkSizeOption() {
+        assertTrue(options.hasOption("hybrid-chunk-size"));
+    }
+
+    @Test
+    void testCreateConfig_withHybridChunkSize() throws ParseException {
+        String[] args = {"--hybrid-chunk-size", "10", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertEquals(10, config.getHybridConfig().getChunkSize());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"0", "-5", "abc"})
+    void testCreateConfig_withInvalidHybridChunkSize(String value) throws ParseException {
+        String[] args = {"--hybrid-chunk-size", value, testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+            CLIOptions.createConfigFromCommandLine(cmd);
+        });
+
+        // The normalized message names the invalid value, and the original
+        // parse/rejection exception is preserved as the cause: a
+        // NumberFormatException for non-numeric input, or the HybridConfig
+        // rejection for zero/negative values.
+        assertEquals(String.format("Invalid chunk size value '%s'. Must be a positive integer.", value),
+                ex.getMessage());
+        assertNotNull(ex.getCause());
+        if ("abc".equals(value)) {
+            assertInstanceOf(NumberFormatException.class, ex.getCause());
+        } else {
+            assertInstanceOf(IllegalArgumentException.class, ex.getCause());
+            assertEquals("Chunk size must be positive: " + value, ex.getCause().getMessage());
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "  "})
+    void testCreateConfig_blankHybridChunkSizeRejected(String value) throws ParseException {
+        String[] args = {"--hybrid-chunk-size", value, testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+            CLIOptions.createConfigFromCommandLine(cmd);
+        });
+
+        // A blank value is rejected before parsing with its own message, not
+        // normalized through the invalid-value path.
+        assertEquals("Option --hybrid-chunk-size requires a positive integer.", ex.getMessage());
+    }
+
+    @Test
+    void testCreateConfig_defaultHybridChunkSize() throws ParseException {
+        String[] args = {testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertEquals(HybridConfig.DEFAULT_CHUNK_SIZE, config.getHybridConfig().getChunkSize());
     }
 
     @FunctionalInterface

@@ -55,6 +55,8 @@ export interface ConvertOptions {
   hybridUrl?: string;
   /** Hybrid backend request timeout in milliseconds (0 = use the backend's own default). Default: 0 */
   hybridTimeout?: string;
+  /** Maximum number of pages to send to the hybrid backend in a single request. Large documents are split into batches of this size; smaller values increase the number of backend requests (the full PDF is re-sent per batch). Default: 50 */
+  hybridChunkSize?: string;
   /** Opt in to Java fallback on hybrid backend error (default: disabled) */
   hybridFallback?: boolean;
   /** Write output to stdout instead of file (single format only) */
@@ -96,6 +98,7 @@ export interface CliOptions {
   hybridMode?: string;
   hybridUrl?: string;
   hybridTimeout?: string;
+  hybridChunkSize?: string;
   hybridFallback?: boolean;
   toStdout?: boolean;
   threads?: string;
@@ -183,6 +186,9 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   }
   if (cliOptions.hybridTimeout) {
     convertOptions.hybridTimeout = cliOptions.hybridTimeout;
+  }
+  if (cliOptions.hybridChunkSize) {
+    convertOptions.hybridChunkSize = cliOptions.hybridChunkSize;
   }
   if (cliOptions.hybridFallback) {
     convertOptions.hybridFallback = true;
@@ -295,6 +301,9 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.hybridTimeout) {
     args.push('--hybrid-timeout', options.hybridTimeout);
+  }
+  if (options.hybridChunkSize) {
+    args.push('--hybrid-chunk-size', options.hybridChunkSize);
   }
   if (options.hybridFallback) {
     args.push('--hybrid-fallback');

@@ -29,6 +29,15 @@ public class HybridConfig {
     /** Default maximum concurrent requests to the backend. */
     public static final int DEFAULT_MAX_CONCURRENT_REQUESTS = 4;
 
+    /** Default number of pages sent to the backend per request.
+     * Large scanned PDFs (100+ pages) cause the backend to hang when sent all at once
+     * due to non-linear memory/processing scaling in the AI pipeline.
+     * Chunking into smaller batches avoids this; note that each batch re-sends the
+     * full PDF to the backend, so smaller batches mean more transfers and re-parses.
+     *
+     * @see <a href="https://github.com/opendataloader-project/opendataloader-pdf/issues/352">#352</a> */
+    public static final int DEFAULT_CHUNK_SIZE = 50;
+
     /** Default URL for docling-fast-server. */
     public static final String DOCLING_FAST_DEFAULT_URL = "http://localhost:5002";
 
@@ -36,6 +45,8 @@ public class HybridConfig {
     private int timeoutMs = DEFAULT_TIMEOUT_MS;
     private boolean fallbackToJava = false;
     private int maxConcurrentRequests = DEFAULT_MAX_CONCURRENT_REQUESTS;
+    private int chunkSize = DEFAULT_CHUNK_SIZE;
+
     /** Hybrid triage mode: auto (dynamic triage based on page content). */
     public static final String MODE_AUTO = "auto";
     /** Hybrid triage mode: full (skip triage, send all pages to backend). */
@@ -127,6 +138,28 @@ public class HybridConfig {
             throw new IllegalArgumentException("Max concurrent requests must be positive: " + maxConcurrentRequests);
         }
         this.maxConcurrentRequests = maxConcurrentRequests;
+    }
+
+    /**
+     * Gets the number of pages sent to the backend per request.
+     *
+     * @return The pages per backend request.
+     */
+    public int getChunkSize() {
+        return chunkSize;
+    }
+
+    /**
+     * Sets the number of pages sent to the backend per request.
+     *
+     * @param chunkSize The pages per backend request.
+     * @throws IllegalArgumentException if the value is not positive.
+     */
+    public void setChunkSize(int chunkSize) {
+        if (chunkSize <= 0) {
+            throw new IllegalArgumentException("Chunk size must be positive: " + chunkSize);
+        }
+        this.chunkSize = chunkSize;
     }
 
     /**
