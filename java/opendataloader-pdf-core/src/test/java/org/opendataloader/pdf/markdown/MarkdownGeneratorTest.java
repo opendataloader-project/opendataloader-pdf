@@ -241,4 +241,88 @@ public class MarkdownGeneratorTest {
         MarkdownGenerator generator = newGeneratorForEscaping();
         assertEquals("&amp;amp;", generator.getCorrectMarkdownString("&amp;"));
     }
+
+    // ----- unordered list label stripping (#648 regression: first character lost) -----
+
+    @Test
+    void testStartsWithLabelGlyph_bulletGlyphsAreStripped() {
+        assertTrue(MarkdownGenerator.startsWithLabelGlyph("• item", 1));
+        assertTrue(MarkdownGenerator.startsWithLabelGlyph("- item", 1));
+        assertTrue(MarkdownGenerator.startsWithLabelGlyph("◦ 진영농협", 1));
+        assertTrue(MarkdownGenerator.startsWithLabelGlyph("□ 화훼 생산 현황", 1));
+    }
+
+    @Test
+    void testStartsWithLabelGlyph_textWithoutBulletKeepsFirstCharacter() {
+        // Items assembled from plain text nodes carry labelLength == 1 although nothing was a label:
+        // letters, digits and ordinary punctuation must survive.
+        assertFalse(MarkdownGenerator.startsWithLabelGlyph("단감시즌 외 선별작업이 없어", 1));
+        assertFalse(MarkdownGenerator.startsWithLabelGlyph("2022년 파프리카 글로벌GAP 인증", 1));
+        assertFalse(MarkdownGenerator.startsWithLabelGlyph("Turn the focusing knob", 1));
+        assertFalse(MarkdownGenerator.startsWithLabelGlyph("(note) see below", 1));
+        assertFalse(MarkdownGenerator.startsWithLabelGlyph("$100 per unit", 1));
+        assertFalse(MarkdownGenerator.startsWithLabelGlyph("_config", 1));
+        assertFalse(MarkdownGenerator.startsWithLabelGlyph(" leading space", 1));
+    }
+
+    @Test
+    void testStartsWithLabelGlyph_invalidLengths() {
+        assertFalse(MarkdownGenerator.startsWithLabelGlyph("• item", 0));
+        assertFalse(MarkdownGenerator.startsWithLabelGlyph("•", 2));
+        assertFalse(MarkdownGenerator.startsWithLabelGlyph("", 1));
+        assertFalse(MarkdownGenerator.startsWithLabelGlyph(null, 1));
+    }
+
+    private static org.verapdf.wcag.algorithms.entities.lists.ListItem unorderedItem(String text, int labelLength) {
+        org.verapdf.wcag.algorithms.entities.geometry.BoundingBox bbox =
+                new org.verapdf.wcag.algorithms.entities.geometry.BoundingBox(0, 10.0, 10.0, 200.0, 22.0);
+        org.verapdf.wcag.algorithms.entities.content.TextChunk chunk =
+                new org.verapdf.wcag.algorithms.entities.content.TextChunk(bbox, text, 12.0, 12.0);
+        chunk.adjustSymbolEndsToBoundingBox(null);
+        // a fixed id keeps the test independent of the thread-local content-id counter
+        org.verapdf.wcag.algorithms.entities.lists.ListItem item =
+                new org.verapdf.wcag.algorithms.entities.lists.ListItem(bbox, Long.valueOf(text.hashCode()));
+        item.add(new org.verapdf.wcag.algorithms.entities.content.TextLine(chunk));
+        item.setLabelLength(labelLength);
+        return item;
+    }
+
+    private static String renderUnorderedList(org.verapdf.wcag.algorithms.entities.lists.ListItem... items) throws java.io.IOException {
+        java.io.StringWriter out = new java.io.StringWriter();
+        MarkdownGenerator generator = new MarkdownGenerator(out, new Config());
+        org.verapdf.wcag.algorithms.entities.lists.PDFList list = new org.verapdf.wcag.algorithms.entities.lists.PDFList();
+        list.setNumberingStyle(org.verapdf.wcag.algorithms.semanticalgorithms.utils.listLabelsDetection.NumberingStyleNames.UNORDERED);
+        for (org.verapdf.wcag.algorithms.entities.lists.ListItem item : items) {
+            list.add(item);
+        }
+        generator.writeList(list);
+        return out.toString();
+    }
+
+    @Test
+    void testWriteList_dropsBulletGlyphLabel() throws java.io.IOException {
+        // the label detection records the glyph plus the following space as the label (length 2)
+        String markdown = renderUnorderedList(
+                unorderedItem("• first item", 2), unorderedItem("◦ 진영농협", 2), unorderedItem("- dashed item", 2));
+        assertTrue(markdown.contains("- first item"), markdown);
+        assertTrue(markdown.contains("- 진영농협"), markdown);
+        assertTrue(markdown.contains("- dashed item"), markdown);
+        assertFalse(markdown.contains("- - dashed item"), markdown);
+        assertFalse(markdown.contains("• "), markdown);
+        assertFalse(markdown.contains("◦ "), markdown);
+    }
+
+    @Test
+    void testWriteList_keepsFirstCharacterWhenItemHasNoBulletGlyph() throws java.io.IOException {
+        // items assembled from plain text nodes carry labelLength == 1: the first character is the "label"
+        String markdown = renderUnorderedList(
+                unorderedItem("단감시즌 외 선별작업", 1), unorderedItem("2022년 파프리카", 1),
+                unorderedItem("(note) see below", 1), unorderedItem("$100 per unit", 1));
+        assertTrue(markdown.contains("- 단감시즌 외 선별작업"), markdown);
+        assertTrue(markdown.contains("- 2022년 파프리카"), markdown);
+        assertTrue(markdown.contains("- (note) see below"), markdown);
+        assertTrue(markdown.contains("- $100 per unit"), markdown);
+        assertFalse(markdown.contains("- 감시즌"), markdown);
+        assertFalse(markdown.contains("- 022년"), markdown);
+    }
 }
