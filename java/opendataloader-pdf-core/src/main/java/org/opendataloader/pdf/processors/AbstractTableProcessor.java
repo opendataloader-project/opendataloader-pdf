@@ -117,6 +117,9 @@ public abstract class AbstractTableProcessor {
     }
 
     private static boolean areSuspiciousTextChunks(TextChunk previousTextChunk, TextChunk currentTextChunk) {
+        if (isUrlOnly(previousTextChunk) || isUrlOnly(currentTextChunk)) {
+            return false;
+        }
         if (previousTextChunk.getTopY() < currentTextChunk.getBottomY()) {
             return true;
         }
@@ -128,5 +131,10 @@ public abstract class AbstractTableProcessor {
             }
         }
         return false;
+    }
+
+    private static boolean isUrlOnly(TextChunk chunk) {
+        String value = chunk.getValue();
+        return value != null && value.trim().matches("https?://\\S+");
     }
 }
