@@ -40,7 +40,7 @@ public class TextProcessor {
     private static final double MAX_LEFT_DECORATION_IMAGE_EPSILON = 0.1;
     private static final double MAX_RIGHT_DECORATION_IMAGE_EPSILON = 1.5;
     private static final double NEIGHBORS_TEXT_CHUNKS_EPSILON = 0.1;
-    private static final double TEXT_MIN_HEIGHT = 1;
+    private static final double TEXT_MIN_FONT_SIZE = 1;
 
     public static void replaceUndefinedCharacters(List<IObject> contents, String replacementCharacterString) {
         if (ChunkParser.REPLACEMENT_CHARACTER_STRING.equals(replacementCharacterString)) {
@@ -77,15 +77,30 @@ public class TextProcessor {
         return (double) replacementChars / totalChars;
     }
 
+    /**
+     * Drops text too small to be read, which is a common way to hide prompt
+     * injection payloads in a PDF.
+     *
+     * <p>Smallness is measured by font size rather than by the height of the
+     * chunk's bounding box. A bounding box covers the glyph's ink, and several
+     * ordinary characters draw little or none of it: a space draws nothing at
+     * all and so reports height 0, while a hyphen or an em dash is a thin
+     * horizontal stroke. Judged on ink height those are indistinguishable from
+     * a two-point font, and dropping them does more than lose the characters -
+     * it silently glues the surrounding words together, because the chunks on
+     * either side are merged afterwards with spacing inferred from geometry.
+     * "e-post" becomes "e post" and "mer AI" becomes "merAI", which a downstream
+     * consumer reads as spelling errors rather than as extraction damage.
+     */
     public static void filterTinyText(List<IObject> contents) {
         for (int i = 0; i < contents.size(); i++) {
             IObject object = contents.get(i);
             if (object instanceof TextChunk) {
                 TextChunk textChunk = ((TextChunk) object);
-                if (textChunk.getBoundingBox().getHeight() <= TEXT_MIN_HEIGHT) {
+                if (textChunk.getFontSize() <= TEXT_MIN_FONT_SIZE) {
                     contents.set(i, null);
-                    if (textChunk.getBoundingBox().getHeight() == 0) {
-                        LOGGER.log(Level.WARNING, "Text with zero height on page {0} has been filtered out", textChunk.getPageNumber());
+                    if (textChunk.getFontSize() == 0) {
+                        LOGGER.log(Level.WARNING, "Text with zero font size on page {0} has been filtered out", textChunk.getPageNumber());
                     }
                 }
             }
