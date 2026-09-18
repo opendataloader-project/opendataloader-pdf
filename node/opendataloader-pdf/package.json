@@ -1,6 +1,6 @@
 {
   "name": "@opendataloader/pdf",
-  "version": "2.5.10-dev.0",
+  "version": "2.5.11-dev.0",
   "description": "A Node.js wrapper for the opendataloader-pdf Java CLI.",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -69,7 +69,6 @@
     "vite": "^8.3.0",
     "vitest": "^5.0.0"
   },
-
   "files": [
     "dist",
     "lib",
