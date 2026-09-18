@@ -1,6 +1,6 @@
 [project]
 name = "opendataloader-pdf"
-version = "2.5.10.dev0"
+version = "2.5.11.dev0"
 description = "A Python wrapper for the opendataloader-pdf Java CLI."
 readme = "README.md"
 license = "Apache-2.0"
