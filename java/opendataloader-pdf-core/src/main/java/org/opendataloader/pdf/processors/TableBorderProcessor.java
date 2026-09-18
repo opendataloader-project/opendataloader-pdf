@@ -69,9 +69,11 @@ public class TableBorderProcessor {
 
             List<IObject> newContents = new ArrayList<>();
             Set<TableBorder> processedTableBorders = new LinkedHashSet<>();
+            Map<TableBorder, List<IObject>> tableBorderContents = new HashMap<>();
             for (IObject content : contents) {
                 TableBorder tableBorder = addContentToTableBorder(content);
                 if (tableBorder != null) {
+                    tableBorderContents.computeIfAbsent(tableBorder, key -> new ArrayList<>()).add(content);
                     if (content instanceof LineChunk && tableBorder.isOneCellTable()) {
                         continue;
                     }
@@ -98,7 +100,8 @@ public class TableBorderProcessor {
             for (TableBorder border : processedTableBorders) {
                 StaticContainers.getTableBordersCollection().removeTableBorder(border, pageNumber);
                 TableBorder normalizedTable = normalizeAndProcessTableBorder(contents, border, pageNumber);
-                normalizedTables.put(border, normalizedTable);
+                normalizedTables.put(border,
+                    TableStructureNormalizer.hasMeaningfulContent(normalizedTable) ? normalizedTable : null);
                 // Remove the outer table while processing its contents, then restore the page index
                 // with the final instance so later lookups still see the normalized table.
 //                StaticContainers.getTableBordersCollection().getTableBorders(pageNumber).add(normalizedTable);
@@ -106,7 +109,19 @@ public class TableBorderProcessor {
             for (int index = 0; index < newContents.size(); index++) {
                 IObject content = newContents.get(index);
                 if (content instanceof TableBorder && normalizedTables.containsKey(content)) {
-                    newContents.set(index, normalizedTables.get(content));
+                    TableBorder normalizedTable = normalizedTables.get(content);
+                    if (normalizedTable == null) {
+                        newContents.remove(index);
+                        List<IObject> originalContents = tableBorderContents.get(content);
+                        if (originalContents != null) {
+                            newContents.addAll(index, originalContents);
+                            index += originalContents.size() - 1;
+                        } else {
+                            index--;
+                        }
+                    } else {
+                        newContents.set(index, normalizedTable);
+                    }
                 }
             }
             return newContents;
