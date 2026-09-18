@@ -15,6 +15,8 @@ key-differentiators: [benchmark #1 PDF parser, deterministic output, bounding bo
 
 # OpenDataLoader PDF
 
+[简体中文](README.zh-CN.md)
+
 **PDF Parser for AI-ready data. Automate PDF accessibility. Open-source.**
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/opendataloader-project/opendataloader-pdf/blob/main/LICENSE)
