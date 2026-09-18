@@ -20,9 +20,11 @@ on:
       - 'THIRD_PARTY/**'
       - 'LICENSE_TEMPLATE/**'
       - '.github/workflows/snapshot.yml'
-  # The version bump release.yml pushes does not reach this workflow: a push
-  # made with the default GITHUB_TOKEN triggers nothing. Run it by hand to
-  # publish the first snapshot of a new development version.
+  # The version bump release.yml pushes DOES reach this workflow: it goes in
+  # with a PAT, and the loop-prevention rule that silences pushes made with the
+  # default GITHUB_TOKEN does not apply to those. So a release publishes the
+  # first snapshot of the next development version on its own, and this is here
+  # for reruns.
   workflow_dispatch:
 
 concurrency:

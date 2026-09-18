@@ -9,7 +9,8 @@
 #   npm     : `npm whoami` with NODE_AUTH_TOKEN
 #   maven   : Sonatype Central Portal /published (200 vs 401)
 #   gpg     : import key + sign+verify a dummy file with the passphrase
-#   github  : repo read + push permission for the homepage-sync PAT
+#   github  : push permission for the homepage-sync PAT — on the homepage repo
+#             (reference docs) and on this one (the version bump to main)
 #   pypi    : mint a GitHub Actions OIDC token for audience=pypi
 #
 # Secrets are read from the environment ONLY (never script args — they leak via
@@ -131,9 +132,11 @@ check_gpg() {
   fi
 }
 
-# --- 4. GitHub PAT (homepage sync) ------------------------------------------
-check_github() {
-  local label="GitHub PAT (HOMEPAGE_SYNC_TOKEN)"
+# --- 4. GitHub PAT (homepage sync + version bump) ---------------------------
+# Two repos, because release.yml pushes with this token twice: the reference
+# docs to the homepage repo, and the version bump to main here.
+check_github_repo() {
+  local label="$1" repo="$2"
   require_env HOMEPAGE_SYNC_TOKEN || { fail "$label"; return; }
 
   # Token via --header on a stdin config (out of argv). Body carries no secret
@@ -143,7 +146,7 @@ check_github() {
   local body
   body="$(curl -sS --config /dev/stdin \
     -H "Accept: application/vnd.github+json" \
-    "https://api.github.com/repos/${GH_REPO}" 2>/dev/null <<EOF || echo '{}'
+    "https://api.github.com/repos/${repo}" 2>/dev/null <<EOF || echo '{}'
 header = "Authorization: Bearer ${HOMEPAGE_SYNC_TOKEN}"
 EOF
 )"
@@ -151,8 +154,19 @@ EOF
   if echo "$body" | jq -e '.permissions.push == true' >/dev/null 2>&1; then
     pass "$label"
   else
-    fail "$label (no push access to ${GH_REPO})"
+    fail "$label (no push access to ${repo})"
   fi
+}
+
+check_github() {
+  check_github_repo "GitHub PAT -> homepage (HOMEPAGE_SYNC_TOKEN)" "$GH_REPO"
+  # Write access is necessary but not sufficient for the bump: main requires a
+  # pull request, and pushing past that needs the token's owner in the
+  # ruleset's bypass list. No API reports bypass state, so this check cannot
+  # cover it — a release whose publishes all succeed can still fail on the
+  # bump with GH013 if that entry is ever removed.
+  check_github_repo "GitHub PAT -> this repo, for the bump" \
+    "${GITHUB_REPOSITORY:-opendataloader-project/opendataloader-pdf}"
 }
 
 # --- 5. PyPI (OIDC issuance) ------------------------------------------------
