@@ -62,6 +62,8 @@ logs/
 **/.eggs/
 **/.mypy_cache/
 **/.pytest_cache/
+# pytest's tmp_path root, which lands here when TMPDIR points into the repo
+**/pytest-of-*/
 **/.coverage
 **/htmlcov/
 
