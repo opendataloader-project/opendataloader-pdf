@@ -28,6 +28,7 @@ import org.opendataloader.pdf.hybrid.HybridClient.HybridResponse;
 import org.opendataloader.pdf.hybrid.HybridClient.OutputFormat;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.opendataloader.pdf.hybrid.HybridConfig;
+import org.opendataloader.pdf.hybrid.TextSimilarity;
 import org.opendataloader.pdf.hybrid.HybridSchemaTransformer;
 import org.opendataloader.pdf.hybrid.TriageLogger;
 import org.opendataloader.pdf.hybrid.TriageProcessor;
@@ -1067,7 +1068,20 @@ public class HybridDocumentProcessor {
             return;
         }
 
-        recordTextSource(textNode, "stream", null);
+        // The bbox test alone is not a proof that the stream chunks belong to this node: a merged or
+        // oversized table cell box also contains its neighbours' words, and the backend's own text is
+        // then the better answer. Keep the backend text when the stream text does not resemble it.
+        String streamText = extractTextFromChunks(matched);
+        String backendText = extractTextFromNode(textNode);
+        double sim = TextSimilarity.similarity(streamText, backendText);
+        if (!TextSimilarity.trustStream(streamText, backendText, TextSimilarity.DEFAULT_THRESHOLD)) {
+            LOGGER.fine(() -> "enrichSingleTextNode: stream text untrusted (sim="
+                + String.format("%.2f", sim) + "), keeping backend text for node at ["
+                + String.format("%.1f,%.1f,%.1f,%.1f", nLeft, nBottom, nRight, nTop) + "]");
+            recordTextSource(textNode, "ocr", sim);
+            return;
+        }
+        recordTextSource(textNode, "stream", sim);
 
         // Replace the backend's text with the Java TextChunks that carry StreamInfo
         textNode.getColumns().clear();
@@ -1157,10 +1171,51 @@ public class HybridDocumentProcessor {
             LOGGER.fine(() -> "replaceLineChunksWithJava: no Java TextChunk inside list line");
             return;
         }
+        // Same protection as enrichSingleTextNode: only swap the line when the stream text resembles it.
+        String streamText = extractTextFromChunks(matched);
+        String backendText = extractTextFromLine(line);
+        if (!TextSimilarity.trustStream(streamText, backendText, TextSimilarity.DEFAULT_THRESHOLD)) {
+            LOGGER.fine(() -> "replaceLineChunksWithJava: stream text untrusted, keeping backend list line");
+            return;
+        }
 
         line.getTextChunks().clear();
         line.getTextChunks().addAll(matched);
         usedJavaIndices.addAll(matchedIndices);
+    }
+
+    /** Joins chunk values with single spaces, for the stream-vs-backend similarity test. */
+    private static String extractTextFromChunks(List<TextChunk> chunks) {
+        StringBuilder sb = new StringBuilder();
+        for (TextChunk tc : chunks) {
+            if (sb.length() > 0) sb.append(' ');
+            sb.append(tc.getValue());
+        }
+        return sb.toString().trim();
+    }
+
+    /** Joins every chunk of a text node with single spaces, for the stream-vs-backend similarity test. */
+    private static String extractTextFromNode(SemanticTextNode node) {
+        StringBuilder sb = new StringBuilder();
+        for (TextColumn col : node.getColumns()) {
+            for (TextLine line : col.getLines()) {
+                for (TextChunk chunk : line.getTextChunks()) {
+                    if (sb.length() > 0) sb.append(' ');
+                    sb.append(chunk.getValue());
+                }
+            }
+        }
+        return sb.toString().trim();
+    }
+
+    /** Joins a line's chunk values, for the stream-vs-backend similarity test. */
+    private static String extractTextFromLine(TextLine line) {
+        StringBuilder sb = new StringBuilder();
+        for (TextChunk c : line.getTextChunks()) {
+            if (sb.length() > 0) sb.append(' ');
+            sb.append(c.getValue());
+        }
+        return sb.toString().trim();
     }
 
     /**
