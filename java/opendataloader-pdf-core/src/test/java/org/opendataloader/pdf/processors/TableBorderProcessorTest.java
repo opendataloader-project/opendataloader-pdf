@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
+import org.verapdf.wcag.algorithms.entities.content.LineChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.tables.TableBordersCollection;
@@ -174,6 +175,34 @@ public class TableBorderProcessorTest {
         Assertions.assertEquals(2, resultBorder.getNumberOfRows());
         Assertions.assertEquals("r1c1", ((SemanticParagraph) resultBorder.getCell(0, 0).getContents().get(0)).getValue());
         Assertions.assertEquals("r2c2", ((SemanticParagraph) resultBorder.getCell(1, 1).getContents().get(0)).getValue());
+    }
+
+    @Test
+    public void testLineOnlyGridIsNotEmittedAsEmptyTable() {
+        StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
+        StaticContainers.setIsDataLoader(true);
+        StaticLayoutContainers.setCurrentContentId(350L);
+        TableBordersCollection tableBordersCollection = new TableBordersCollection();
+        StaticContainers.setTableBordersCollection(tableBordersCollection);
+
+        TableBorder tableBorder = createTable(0, 10.0, 10.0, 110.0, 110.0, 4, 4, 35L);
+        SortedSet<TableBorder> tables = new TreeSet<>(new TableBorder.TableBordersComparator());
+        tables.add(tableBorder);
+        tableBordersCollection.getTableBorders().add(tables);
+
+        List<IObject> contents = new ArrayList<>();
+        for (double y = 25.0; y < 100.0; y += 25.0) {
+            contents.add(new LineChunk(0, 15.0, y, 105.0, y));
+        }
+        for (double x = 25.0; x < 100.0; x += 25.0) {
+            contents.add(new LineChunk(0, x, 15.0, x, 105.0));
+        }
+
+        List<IObject> processedContents = TableBorderProcessor.processTableBorders(contents, 0);
+
+        Assertions.assertEquals(contents.size(), processedContents.size());
+        Assertions.assertTrue(processedContents.stream().noneMatch(TableBorder.class::isInstance));
+        Assertions.assertTrue(processedContents.stream().allMatch(LineChunk.class::isInstance));
     }
 
     @Test
