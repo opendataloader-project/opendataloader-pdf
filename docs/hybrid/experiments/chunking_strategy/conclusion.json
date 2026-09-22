@@ -1,0 +1,32 @@
+{
+  "conclusion": "Optimized ranges (consecutive page merging) is always the best strategy",
+  "recommendation": "Merge consecutive target pages into ranges before calling convert()",
+  "results": {
+    "25% pages": {
+      "best_method": "optimized_ranges",
+      "best_time": 4.223,
+      "chunks": 2
+    },
+    "50% pages": {
+      "best_method": "optimized_ranges",
+      "best_time": 6.052,
+      "chunks": 3
+    },
+    "75% pages": {
+      "best_method": "optimized_ranges",
+      "best_time": 9.347,
+      "chunks": 5
+    },
+    "100% pages": {
+      "best_method": "optimized_ranges",
+      "best_time": 10.277,
+      "chunks": 1
+    }
+  },
+  "key_findings": [
+    "Fixed chunk sizes always have overhead due to processing unnecessary pages",
+    "Single page chunks (chunk_1) have 7-33% overhead from extra API calls",
+    "Larger fixed chunks (chunk_2, 3, 5) have 17-88% overhead from processing unneeded pages",
+    "Optimized ranges minimize both API calls and unnecessary page processing"
+  ]
+}
