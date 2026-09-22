@@ -279,6 +279,15 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "default": None,
         "description": "Set the ratio used to calculate the automatic space-insertion threshold (threshold = space-ratio * font size). If the horizontal gap between two adjacent symbols exceeds this threshold, an extra space is inserted to text value. Accepts decimals (e.g., 0.17). Default: 0.17",
     },
+    {
+        "name": "filter-hidden-text",
+        "python_name": "filter_hidden_text",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": "off",
+        "description": "Filter hidden (low-contrast) text via per-page rendering. Values: on, off. Default: off (opt-in; expensive, runs as sequential post-processing)",
+    },
 ]
 
 
