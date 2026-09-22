@@ -127,6 +127,43 @@ _CONSOLE_HANDLER = "odl_console"
 _REQUEST_ID_BYTES = 6
 
 
+class _IndentTracebacks(logging.Formatter):
+    """Formatter that keeps a traceback from looking like separate records.
+
+    `exc_info` text is appended after the formatted message, and an exception
+    raised over caller-supplied data carries that data in its message -- a
+    parser error quoting PDF object bytes, for instance. A newline in there
+    ends the physical line, and what follows can be shaped exactly like one of
+    this module's own records, so a failed request could be made to read as a
+    successful one.
+
+    Each continuation line is prefixed so it cannot be mistaken for a record
+    of its own. The traceback's own structure is left intact, since that is
+    what makes it worth logging.
+    """
+
+    _CONTINUATION = "    | "
+
+    def format(self, record: logging.LogRecord) -> str:
+        # `logging.Formatter.format` caches the traceback it renders on the
+        # record, and every later formatter reuses that text. A handler an
+        # embedding application installed formats the same record first, so
+        # the cache would hold an unprefixed traceback by the time this
+        # formatter runs -- and the prefixing below would never happen.
+        # Cleared so the prefix is applied to whatever this handler writes.
+        cached, record.exc_text = record.exc_text, None
+        try:
+            return super().format(record)
+        finally:
+            # Put it back: the next handler is entitled to its own rendering,
+            # and leaving None would make it re-render rather than reuse.
+            record.exc_text = cached
+
+    def formatException(self, ei: Any) -> str:
+        text = super().formatException(ei)
+        return "\n".join(self._CONTINUATION + line for line in text.splitlines())
+
+
 def configure_logging(level: str = "info") -> None:
     """Point our logger, docling's and uvicorn's at one console handler.
 
@@ -149,7 +186,7 @@ def configure_logging(level: str = "info") -> None:
     level_name = level.upper()
     level_value = getattr(logging, level_name, logging.INFO)
 
-    formatter = logging.Formatter(
+    formatter = _IndentTracebacks(
         _LOG_FORMAT_DEBUG if level_name == "DEBUG" else _LOG_FORMAT,
         datefmt=_LOG_DATEFMT,
     )
@@ -288,14 +325,29 @@ def extract_timings(result: Any) -> dict[str, Any]:
         # Still said out loud once: silently dropping timings makes the
         # per-stage breakdown look absent instead of broken.
         logger.warning(
-            "could not read timings for %d of %d steps (%s); last error: %s",
-            len(unreadable),
-            len(raw_timings),
-            ", ".join(unreadable),
-            last_error,
+            "timings_unreadable %s",
+            _pairs(
+                failed=len(unreadable),
+                total=len(raw_timings),
+                steps=_bounded(",".join(unreadable)),
+                error=_bounded(str(last_error), 500),
+            ),
         )
     return timings_out
 
+
+# The docling profiling keys worth a place on the completion line, mapped to
+# shorter log keys. docling emits more than these -- layout_postprocess,
+# reading_order, doc_assemble and others -- so the whitelist keeps the line
+# short, and it also keeps a docling key from colliding with a fixed one:
+# these are splatted as keyword arguments into `_pairs`, where a duplicate
+# raises TypeError and costs the request its response.
+_STAGE_LABELS = {
+    "ocr": "ocr",
+    "layout": "layout",
+    "table_structure": "tables",
+    "page_parse": "parse",
+}
 
 # Heartbeat spacing, widening as a conversion runs on: attentive while the
 # operator is still deciding whether anything is wrong, sparse once the answer
@@ -307,6 +359,53 @@ _PROGRESS_BACKOFF = (
     (300.0, 60.0),   # to five minutes: every minute
     (None, 120.0),   # beyond: every two minutes
 )
+
+
+# The two control characters worth reading back: a newline forges a new record
+# and a carriage return overwrites the line already printed, so both are named
+# rather than dropped. Every other non-printable becomes `_REPLACEMENT` -- an
+# ANSI escape has no reading worth preserving.
+_CONTROL_ESCAPES = {"\n": "\\n", "\r": "\\r"}
+
+# Stands in for a character with no reading worth keeping. Deliberately ASCII:
+# U+FFFD cannot be encoded on a cp949 or cp1252 console, and `logging` drops a
+# record it cannot write -- so a filename holding one zero-width character
+# would have erased its own log line on a Korean Windows console, turning this
+# sanitizing into a way to go unlogged.
+_REPLACEMENT = "?"
+
+
+def _pairs(**fields: Any) -> str:
+    """Render fields as logfmt, in the order given, skipping None.
+
+    The lines this module emits are read two ways: by someone watching the
+    console, and by grep or a log reader afterwards. logfmt serves both --
+    `dur=34.5s` says what the number is without a legend, and `ocr=33.8s` can
+    be extracted without a regex per line. A value holding a space or a quote
+    is quoted, since an unquoted one would parse as two fields.
+    """
+    out = []
+    for key, value in fields.items():
+        if value is None:
+            continue
+        text = str(value)
+        # Backslashes first, so that the escapes below are the only ones in
+        # the output. Doubling afterwards would re-escape them, and `a\nb`
+        # typed literally would render identically to a real newline -- the
+        # distinction this escaping exists to preserve.
+        text = text.replace("\\", "\\\\")
+        # Quoting does not contain a newline: it still ends the physical line,
+        # and the rest parses as a record of its own, which is how a
+        # caller-supplied value forges log entries (CWE-117). So control
+        # characters are rewritten, not merely wrapped in quotes.
+        text = "".join(
+            c if c.isprintable() or c == "\t" else _CONTROL_ESCAPES.get(c, _REPLACEMENT)
+            for c in text
+        )
+        if text == "" or any(c in text for c in ' "=\t'):
+            text = '"' + text.replace('"', '\\"') + '"'
+        out.append(f"{key}={text}")
+    return " ".join(out)
 
 
 def _bounded(value: str, limit: int = 120) -> str:
@@ -331,10 +430,36 @@ def _safe_log_name(raw: str | None, limit: int = 120) -> str:
     settle what happened could instead be written by the caller.
     """
     name = os.path.basename(raw or "unnamed")
-    name = "".join(c if c.isprintable() else "\ufffd" for c in name)
+    name = "".join(c if c.isprintable() else _REPLACEMENT for c in name)
     if len(name) > limit:
         name = name[:limit] + "...(truncated)"
     return name or "unnamed"
+
+
+def _stages_slowest_first(step_timings: dict[str, Any]) -> dict[str, str]:
+    """Per-stage durations for the completion line, slowest first.
+
+    #414 was a request whose cost was almost entirely OCR, reported in a fixed
+    order that put layout ahead of it, so the number that explained the
+    request was not the one the eye landed on.
+    """
+    # Guarded on the value, not just the key: `extract_timings` builds these
+    # from docling's ProfilingItem, and a stage that reported nothing usable
+    # would otherwise reach the format string as None and cost the request its
+    # response over a log line.
+    usable = {
+        name: item["total_s"]
+        for name, item in step_timings.items()
+        if name in _STAGE_LABELS
+        and isinstance(item, dict)
+        and isinstance(item.get("total_s"), (int, float))
+    }
+    return {
+        _STAGE_LABELS[name]: f"{total:.1f}s"
+        for name, total in sorted(
+            usable.items(), key=lambda kv: kv[1], reverse=True
+        )
+    }
 
 
 def _converted_page_count(
@@ -445,17 +570,13 @@ class _ConversionHeartbeat:
             while not self._stop.wait(
                 self._interval_at(time.perf_counter() - start)
             ):
-                elapsed = time.perf_counter() - start
-                pages = (
-                    f", {self._page_count} pages"
-                    if self._page_count is not None
-                    else ""
-                )
                 logger.info(
-                    "still converting %s%s - %.0fs elapsed",
-                    self._file_name,
-                    pages,
-                    elapsed,
+                    "converting %s",
+                    _pairs(
+                        file=self._file_name,
+                        pages=self._page_count,
+                        elapsed=f"{time.perf_counter() - start:.0f}s",
+                    ),
                 )
         finally:
             _request_id.reset(token)
@@ -508,7 +629,13 @@ def build_conversion_response(
             try:
                 present_pages.add(int(k))
             except (ValueError, TypeError):
-                logger.warning("Unexpected non-integer page key in Docling output: %r", k)
+                # Bounded like the other values this module echoes. docling
+                # builds these keys, so an enormous one is a bug rather than
+                # an attack, but a log line is capped either way.
+                logger.warning(
+                    "unexpected_page_key %s",
+                    _pairs(key=_bounded(repr(k))),
+                )
 
         if requested_pages:
             expected_pages = set(range(requested_pages[0], requested_pages[1] + 1))
@@ -915,7 +1042,7 @@ def create_app(
         )
 
         elapsed = time.perf_counter() - start
-        logger.info(f"DocumentConverter constructed in {elapsed:.2f}s")
+        logger.info("converter_constructed %s", _pairs(dur=f"{elapsed:.2f}s"))
 
         # Constructing the converter does not load any model: docling builds a
         # pipeline lazily inside the first convert() call. That made the first
@@ -927,12 +1054,15 @@ def create_app(
         from docling.datamodel.base_models import InputFormat
 
         warm_start = time.perf_counter()
-        logger.info("loading models (layout, tables, ocr)...")
+        logger.info("loading_models %s", _pairs(models="layout,tables,ocr"))
         try:
             converter.initialize_pipeline(InputFormat.PDF)
             logger.info(
-                "models ready in %.2fs - server accepting requests",
-                time.perf_counter() - warm_start,
+                "models_ready %s",
+                _pairs(
+                    dur=f"{time.perf_counter() - warm_start:.2f}s",
+                    state="accepting requests",
+                ),
             )
         except Exception as e:
             # A failed warmup must not stop the server: the same load is retried
@@ -940,10 +1070,12 @@ def create_app(
             # With the traceback: this is the one report of why warmup failed,
             # and the first request only repeats the failure as a 500.
             logger.warning(
-                "model warmup failed after %.2fs (%s); models will load on the "
-                "first request instead",
-                time.perf_counter() - warm_start,
-                e,
+                "warmup_failed %s",
+                _pairs(
+                    dur=f"{time.perf_counter() - warm_start:.2f}s",
+                    error=_bounded(str(e), 500),
+                    fallback="load on first request",
+                ),
                 exc_info=True,
             )
         yield
@@ -988,7 +1120,16 @@ def create_app(
         file_name = _safe_log_name(files.filename)
 
         if converter is None:
-            logger.error("rejected 503 - server not initialized (models still loading?)")
+            logger.error(
+                "rejected %s",
+                _pairs(
+                    status=503,
+                    reason="server not initialized",
+                    # Normally means startup is still loading models, which is
+                    # worth waiting out rather than investigating.
+                    hint="models may still be loading",
+                ),
+            )
             return JSONResponse(
                 {"status": "failure", "errors": ["Server not initialized"]},
                 status_code=503,
@@ -1009,9 +1150,12 @@ def create_app(
                 # silently converted the whole document, so a caller asking
                 # for pages 1-5 got all of them with no way to tell.
                 logger.warning(
-                    "page_ranges=%r could not be parsed as 'start-end'; "
-                    "converting the whole document",
-                    _bounded(page_ranges),
+                    "bad_page_ranges %s",
+                    _pairs(
+                        value=_bounded(page_ranges),
+                        expected="start-end",
+                        action="converting whole document",
+                    ),
                 )
             page_range_tuple = parsed
 
@@ -1031,10 +1175,14 @@ def create_app(
                     # Logged server-side too: a 413 the client sees leaves no
                     # trace otherwise, so repeated rejections look like silence.
                     logger.warning(
-                        "rejected 413 from %s - file=%s exceeds max %.1fMB",
-                        _client_address(request),
-                        file_name,
-                        max_file_size / (1024 * 1024),
+                        "rejected %s",
+                        _pairs(
+                            status=413,
+                            file=file_name,
+                            size=f"{total_size / (1024 * 1024):.1f}MB",
+                            max=f"{max_file_size / (1024 * 1024):.1f}MB",
+                            client=_client_address(request),
+                        ),
                     )
                     return JSONResponse(
                         {
@@ -1055,14 +1203,16 @@ def create_app(
             # while this runs.
             page_count = await asyncio.to_thread(_probe_page_count, tmp_path)
             logger.info(
-                "POST /v1/convert/file from %s - file=%s %.1fMB, %s pages, range=%s",
-                _client_address(request),
-                file_name,
-                total_size / (1024 * 1024),
-                page_count if page_count is not None else "?",
-                f"{page_range_tuple[0]}-{page_range_tuple[1]}"
-                if page_range_tuple
-                else "all",
+                "POST /v1/convert/file %s",
+                _pairs(
+                    file=file_name,
+                    size=f"{total_size / (1024 * 1024):.1f}MB",
+                    pages=page_count if page_count is not None else "?",
+                    range=f"{page_range_tuple[0]}-{page_range_tuple[1]}"
+                    if page_range_tuple
+                    else "all",
+                    client=_client_address(request),
+                ),
             )
 
             def _do_convert():
@@ -1073,9 +1223,11 @@ def create_app(
                     waited = time.perf_counter() - queue_start
                     if waited >= 0.1:
                         logger.info(
-                            "waited %.1fs for the converter (requests are "
-                            "processed one at a time)",
-                            waited,
+                            "queued %s",
+                            _pairs(
+                                waited=f"{waited:.1f}s",
+                                reason="one conversion at a time",
+                            ),
                         )
                     t0 = time.perf_counter()
                     with _ConversionHeartbeat(file_name, page_count):
@@ -1107,8 +1259,8 @@ def create_app(
 
             if result.status == ConversionStatus.PARTIAL_SUCCESS:
                 logger.warning(
-                    "Docling returned partial_success: %d error(s), failed_pages will be reported",
-                    len(errors),
+                    "partial_success %s",
+                    _pairs(errors=len(errors), detail="see failed_pages in response"),
                 )
 
             # Extract per-step pipeline timings (layout, ocr, table_structure, etc.)
@@ -1127,12 +1279,7 @@ def create_app(
             # The per-stage breakdown already travelled in the response body,
             # where only an API caller could see it. Logging it as well is what
             # turns "slow" into "slow in OCR" without a re-run.
-            stage_names = ("layout", "ocr", "table_structure", "page_parse")
-            stages = " ".join(
-                f"{name} {step_timings[name]['total_s']:.1f}s"
-                for name in stage_names
-                if name in step_timings
-            )
+            stages = _stages_slowest_first(step_timings)
             # Count what was converted, not what the file holds: on a page
             # range the two differ, and dividing by the document's length
             # understated the per-page cost -- a 3-page range out of 14 pages
@@ -1140,33 +1287,47 @@ def create_app(
             converted_page_count = _converted_page_count(
                 page_range_tuple, input_page_count
             )
-            per_page = (
-                f" ({processing_time / converted_page_count:.2f}s/pg)"
-                if converted_page_count
-                else ""
-            )
+            request_elapsed = time.perf_counter() - request_start
             logger.info(
-                "%s %.1fs%s - %s pages%s%s",
-                "ok" if status_value == "success" else status_value,
-                processing_time,
-                per_page,
-                converted_page_count if converted_page_count is not None else "?",
-                f" - {stages}" if stages else "",
-                f" - total {time.perf_counter() - request_start:.1f}s incl. upload"
-                if (time.perf_counter() - request_start - processing_time) > 1.0
-                else "",
+                "done %s",
+                _pairs(
+                    status="ok" if status_value == "success" else status_value,
+                    dur=f"{processing_time:.1f}s",
+                    per_page=f"{processing_time / converted_page_count:.2f}s"
+                    if converted_page_count
+                    else None,
+                    pages=converted_page_count
+                    if converted_page_count is not None
+                    else "?",
+                    # Suppressed when it would merely restate dur. A gap means
+                    # time went somewhere outside convert() -- the upload, the
+                    # page probe, the queue, the JSON export -- and which one
+                    # is the next thing to find out.
+                    total=f"{request_elapsed:.1f}s"
+                    if (request_elapsed - processing_time) > 1.0
+                    else None,
+                    **stages,
+                ),
             )
 
             return JSONResponse(response)
 
         except Exception as e:
             logger.error(
-                "failed 500 after %.1fs - file=%s %.1fMB: %s\n%s",
-                time.perf_counter() - request_start,
-                file_name,
-                total_size / (1024 * 1024),
-                e,
-                traceback.format_exc(),
+                "failed %s",
+                _pairs(
+                    status=500,
+                    dur=f"{time.perf_counter() - request_start:.1f}s",
+                    file=file_name,
+                    size=f"{total_size / (1024 * 1024):.1f}MB",
+                    # Bounded like every other caller-influenced value: a
+                    # parser error can carry offsets and object data from the
+                    # uploaded file, and there is no cap on its length.
+                    error=_bounded(str(e), 500),
+                ),
+                # Let logging frame the traceback rather than splicing it into
+                # the message, so the logfmt line stays one line.
+                exc_info=True,
             )
             return JSONResponse(
                 {
@@ -1262,7 +1423,11 @@ def create_app(
             return JSONResponse({"status": "success", "profiles": results})
 
         except Exception as e:
-            logger.error(f"Profile failed: {e}\n{traceback.format_exc()}")
+            logger.error(
+                "profile_failed %s",
+                _pairs(error=_bounded(str(e), 500)),
+                exc_info=True,
+            )
             return JSONResponse(
                 {"status": "failure", "errors": ["Internal server error"]},
                 status_code=500,
@@ -1440,9 +1605,8 @@ def main():
             ignored.append(f"--psm {args.psm}")
         if ignored:
             logger.warning(
-                "OCR is disabled (--no-ocr); the following flag(s) will have no "
-                "effect: %s",
-                ", ".join(ignored),
+                "inert_flags %s",
+                _pairs(reason="--no-ocr", flags="; ".join(ignored)),
             )
 
     # Probe engine availability at startup (only when OCR is on). A missing
@@ -1454,46 +1618,55 @@ def main():
             logger.error(err)
             sys.exit(2)
 
-    # Build enrichment log message
     enrichments = []
     if args.enrich_formula:
         enrichments.append("formula")
     if args.enrich_picture_description:
         enrichments.append("picture-description")
 
-    # Log accelerator detection
     try:
         import torch
         if torch.cuda.is_available():
-            gpu_name = torch.cuda.get_device_name(0)
-            cuda_version = torch.version.cuda
-            logger.info(f"Accelerator: CUDA - {gpu_name} (CUDA {cuda_version})")
+            detected = _pairs(
+                accelerator="cuda",
+                gpu=torch.cuda.get_device_name(0),
+                cuda=torch.version.cuda,
+            )
         elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-            logger.info("Accelerator: MPS (Apple Silicon)")
+            detected = _pairs(accelerator="mps", gpu="Apple Silicon")
         elif hasattr(torch, "xpu") and torch.xpu.is_available():
-            logger.info("Accelerator: XPU (Intel GPU)")
+            detected = _pairs(accelerator="xpu", gpu="Intel GPU")
         else:
-            logger.info("Accelerator: CPU (no GPU detected)")
+            detected = _pairs(accelerator="cpu", gpu="none detected")
     except ImportError:
-        logger.info("Accelerator: CPU (PyTorch not installed)")
-    if args.device != "auto":
-        logger.info(f"Device override: --device {args.device}")
+        detected = _pairs(accelerator="cpu", gpu="torch not installed")
+    logger.info("hardware %s", detected)
 
     # Convert MB to bytes (0 stays 0 = unlimited)
     max_file_size_bytes = args.max_file_size * 1024 * 1024 if args.max_file_size > 0 else 0
 
-    logger.info(f"Starting Docling Fast Server on http://{args.host}:{args.port}")
-    psm_str = f", psm={args.psm}" if args.psm is not None else ""
     logger.info(
-        f"OCR settings: do_ocr={not args.no_ocr}, ocr_engine={args.ocr_engine}, "
-        f"force_ocr={args.force_ocr}, lang={ocr_lang or 'default'}{psm_str}"
+        "starting %s",
+        _pairs(
+            url=f"http://{args.host}:{args.port}",
+            device=args.device,
+            log_level=args.log_level,
+        ),
     )
-    if max_file_size_bytes > 0:
-        logger.info(f"Max file size: {args.max_file_size}MB")
-    else:
-        logger.info("Max file size: unlimited")
-    if enrichments:
-        logger.info(f"Enrichments enabled: {', '.join(enrichments)}")
+    logger.info(
+        "config %s",
+        _pairs(
+            ocr=not args.no_ocr,
+            ocr_engine=args.ocr_engine if not args.no_ocr else None,
+            force_ocr=args.force_ocr or None,
+            ocr_lang=",".join(ocr_lang) if ocr_lang else None,
+            psm=args.psm,
+            max_file_size=f"{args.max_file_size}MB"
+            if max_file_size_bytes > 0
+            else "unlimited",
+            enrichments=",".join(enrichments) if enrichments else None,
+        ),
+    )
 
     app = create_app(
         force_ocr=args.force_ocr,

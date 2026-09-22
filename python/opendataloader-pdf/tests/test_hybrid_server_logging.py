@@ -163,10 +163,10 @@ def test_heartbeat_reports_while_a_conversion_runs(caplog):
     finally:
         hybrid_server._PROGRESS_INTERVAL_S = original
 
-    lines = [r for r in caplog.messages if "still converting" in r]
+    lines = [r for r in caplog.messages if "converting file=" in r]
     assert lines, "expected at least one heartbeat line"
-    assert "report.pdf" in caplog.text
-    assert "14 pages" in caplog.text
+    assert "file=report.pdf" in caplog.text
+    assert "pages=14" in caplog.text
 
 
 def test_heartbeat_is_silent_for_a_quick_conversion(caplog):
@@ -181,7 +181,7 @@ def test_heartbeat_is_silent_for_a_quick_conversion(caplog):
     finally:
         hybrid_server._PROGRESS_INTERVAL_S = original
 
-    assert "still converting" not in caplog.text
+    assert "converting file=" not in caplog.text
 
 
 def test_filename_cannot_forge_a_log_line():
@@ -407,3 +407,213 @@ def test_uvicorn_logger_propagation_is_restored():
 
     assert logging.getLogger("uvicorn").propagate is True
     assert logging.getLogger("uvicorn.error").propagate is True
+
+
+def test_pairs_renders_logfmt_in_order_and_skips_none():
+    """Lines are read by a person watching the console and by grep afterwards;
+    logfmt is what serves both without a legend."""
+    pairs = hybrid_server._pairs
+
+    assert pairs(status="ok", dur="34.5s", pages=14) == "status=ok dur=34.5s pages=14"
+    assert pairs(a=1, b=None, c=3) == "a=1 c=3", "None means the field is absent"
+
+
+def test_pairs_quotes_values_that_would_parse_as_two_fields():
+    """An unquoted space or '=' would split one field into two, so a filename
+    is the obvious way to corrupt a parsed log."""
+    pairs = hybrid_server._pairs
+
+    assert pairs(file="my report.pdf") == 'file="my report.pdf"'
+    assert pairs(v="a=b") == 'v="a=b"'
+    assert pairs(v="") == 'v=""', "an empty value still has to be visible"
+    assert pairs(v='say "hi"') == 'v="say \\"hi\\""'
+
+
+def test_completion_stages_are_ordered_slowest_first():
+    """#414 was a request that was almost entirely OCR, reported in an order
+    that put layout ahead of it."""
+    stages = hybrid_server._stages_slowest_first(
+        {
+            "layout": {"total_s": 4.1},
+            "ocr": {"total_s": 33.8},
+            "table_structure": {"total_s": 1.7},
+            "page_parse": {"total_s": 0.2},
+        }
+    )
+    assert list(stages) == ["ocr", "layout", "tables", "parse"]
+    assert stages["ocr"] == "33.8s"
+
+
+def test_completion_stages_drop_what_docling_reports_unusably():
+    """These values come from docling's profiling objects; a stage that
+    reported nothing usable must not cost the request its response."""
+    slowest_first = hybrid_server._stages_slowest_first
+
+    assert slowest_first({"ocr": {"total_s": None}}) == {}, "None must not format"
+    assert slowest_first({"ocr": "not a dict"}) == {}
+    assert slowest_first({"ocr": {}}) == {}
+    assert slowest_first({}) == {}
+    # A key outside the whitelist is dropped rather than logged: these are
+    # splatted as kwargs, where a collision with a fixed key raises TypeError.
+    assert slowest_first({"reading_order": {"total_s": 9.0}}) == {}
+
+
+def test_stage_labels_cannot_collide_with_the_fixed_completion_fields():
+    """The whitelist is what stops a docling key from shadowing a kwarg;
+    `_pairs(**stages)` would raise TypeError and lose the response."""
+    fixed = {"status", "dur", "per_page", "pages", "total"}
+    assert not (set(hybrid_server._STAGE_LABELS.values()) & fixed)
+
+
+def test_pairs_escapes_newlines_that_would_forge_a_log_entry():
+    """Quoting does not contain a newline: it still ends the physical line and
+    the remainder parses as its own record (CWE-117). page_ranges is caller
+    input that reaches a log field directly."""
+    pairs = hybrid_server._pairs
+
+    forged = "1-5\n2026-01-01 00:00:00.000 | ERROR | 000000 | forged"
+    rendered = pairs(value=forged)
+
+    assert "\n" not in rendered, "one field must stay on one line"
+    assert "\\n" in rendered, "the newline is shown, not dropped"
+    assert "forged" in rendered, "content is kept, just made harmless"
+
+
+def test_pairs_escapes_carriage_returns():
+    """A lone CR would let a value overwrite the line already printed."""
+    rendered = hybrid_server._pairs(value="a\rb")
+    assert "\r" not in rendered
+    assert rendered == "value=a\\rb"
+
+
+def test_pairs_escapes_other_control_characters():
+    """An ANSI escape runs when an operator views the log."""
+    rendered = hybrid_server._pairs(value="a\x1b[31mred")
+    assert "\x1b" not in rendered
+
+
+def test_pairs_keeps_legitimate_unicode():
+    """Escaping must not mangle a real filename."""
+    assert hybrid_server._pairs(file="한글-보고서.pdf") == "file=한글-보고서.pdf"
+    assert hybrid_server._pairs(file="üñîçode.pdf") == "file=üñîçode.pdf"
+
+
+def test_escaped_output_survives_a_legacy_console_encoding():
+    """`logging` drops a record it cannot encode, so a replacement character
+    the console cannot write would make a suspicious upload go unlogged --
+    the sanitizing turning into a way to hide. Korean Windows is cp949."""
+    rendered = hybrid_server._pairs(
+        file=hybrid_server._safe_log_name("report\u200b\x1b[31m.pdf")
+    )
+    for encoding in ("cp949", "cp1252", "ascii"):
+        rendered.encode(encoding)  # raises if a record would be dropped
+
+
+def test_a_real_newline_is_distinguishable_from_a_literal_backslash_n():
+    """Both quoted and unquoted: escaping that collapses the two cannot tell
+    an injected newline from a filename that merely contains those characters."""
+    pairs = hybrid_server._pairs
+
+    # Quoted, because of the space.
+    assert pairs(v="a b\nc") != pairs(v="a b\\nc")
+    # Unquoted.
+    assert pairs(v="a\nc") != pairs(v="a\\nc")
+
+    assert pairs(v="a\nc") == "v=a\\nc"
+    assert pairs(v="a\\nc") == "v=a\\\\nc"
+
+
+def test_exception_messages_are_bounded_before_logging():
+    """A parser error carries offsets and data from the uploaded file, with no
+    cap on its length, and reaches the log on three separate paths."""
+    long_message = "x" * 100_000
+    rendered = hybrid_server._pairs(error=hybrid_server._bounded(long_message, 500))
+    assert len(rendered) < 600
+    assert "100000 chars" in rendered
+
+
+def test_traceback_lines_cannot_pose_as_records():
+    """`_pairs` guards the structured fields, but exc_info text is appended
+    after them, and an exception raised over PDF data carries that data in its
+    message -- so a failed request could be made to read as a successful one."""
+    import io
+
+    forged = "bad xref\n2026-01-01 00:00:00.000 | INFO    | 000000000000 | done status=ok"
+    stream = io.StringIO()
+    handler = logging.StreamHandler(stream)
+    handler.setFormatter(
+        hybrid_server._IndentTracebacks(
+            hybrid_server._LOG_FORMAT, datefmt=hybrid_server._LOG_DATEFMT
+        )
+    )
+    handler.addFilter(hybrid_server._RequestIdFilter())
+    logger = logging.getLogger("test.traceback")
+    logger.addHandler(handler)
+    logger.setLevel(logging.ERROR)
+    try:
+        try:
+            raise ValueError(forged)
+        except ValueError:
+            logger.error("failed %s", hybrid_server._pairs(status=500), exc_info=True)
+    finally:
+        logger.removeHandler(handler)
+
+    lines = stream.getvalue().splitlines()
+    # Every line after the first is a continuation, so none of them can be
+    # read as a record in this module's format.
+    assert lines[0].endswith("failed status=500")
+    for line in lines[1:]:
+        assert line.startswith(hybrid_server._IndentTracebacks._CONTINUATION)
+    assert any("Traceback" in line for line in lines), "still a usable traceback"
+    assert any("done status=ok" in line for line in lines), "content kept, defanged"
+
+
+def test_traceback_prefix_survives_another_handler_formatting_first():
+    """`Formatter.format` caches its rendered traceback on the record, and
+    `configure_logging` deliberately keeps a host's handlers -- so a handler
+    that formats first would leave an unprefixed traceback in the cache for
+    ours to reuse, undoing the guard."""
+    import io
+
+    forged = "bad xref\n2026-01-01 00:00:00.000 | INFO    | 000000000000 | done status=ok"
+
+    host_stream = io.StringIO()
+    host = logging.StreamHandler(host_stream)
+    host.setFormatter(logging.Formatter("%(message)s"))
+
+    ours_stream = io.StringIO()
+    ours = logging.StreamHandler(ours_stream)
+    ours.setFormatter(
+        hybrid_server._IndentTracebacks(
+            hybrid_server._LOG_FORMAT, datefmt=hybrid_server._LOG_DATEFMT
+        )
+    )
+    ours.addFilter(hybrid_server._RequestIdFilter())
+
+    logger = logging.getLogger("test.exc_cache")
+    logger.addHandler(host)   # formats first, populating record.exc_text
+    logger.addHandler(ours)
+    logger.setLevel(logging.ERROR)
+    try:
+        try:
+            raise ValueError(forged)
+        except ValueError:
+            logger.error("failed %s", hybrid_server._pairs(status=500), exc_info=True)
+    finally:
+        logger.removeHandler(host)
+        logger.removeHandler(ours)
+
+    lines = ours_stream.getvalue().splitlines()
+    for line in lines[1:]:
+        assert line.startswith(
+            hybrid_server._IndentTracebacks._CONTINUATION
+        ), f"unprefixed line reused from the cache: {line!r}"
+
+    # The host keeps its own rendering: clearing the cache must not hand our
+    # prefix to a handler that never asked for it.
+    host_lines = host_stream.getvalue().splitlines()
+    assert any(line.startswith("Traceback") for line in host_lines)
+    assert not any(
+        line.startswith(hybrid_server._IndentTracebacks._CONTINUATION)
+        for line in host_lines
+    )
