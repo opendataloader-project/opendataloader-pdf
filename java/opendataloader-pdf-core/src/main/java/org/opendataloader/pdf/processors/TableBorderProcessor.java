@@ -143,13 +143,21 @@ public class TableBorderProcessor {
                         }
                     }
                 } else {
+                    TableBorderCell bestCell = null;
+                    double bestIntersection = 0;
                     for (TableBorderCell tableBorderCell : tableBorderCells) {
-                        if (content instanceof LineArtChunk &&
-                                tableBorderCell.getBoundingBox().getIntersectionPercent(content.getBoundingBox()) > LINE_ART_PERCENT) {
+                        double intersection = tableBorderCell.getBoundingBox()
+                                .getIntersectionPercent(content.getBoundingBox());
+                        if (content instanceof LineArtChunk && intersection > LINE_ART_PERCENT) {
                             return tableBorder;
                         }
-                        tableBorderCell.addContentObject(content);
-                        break;
+                        if (intersection > bestIntersection) {
+                            bestIntersection = intersection;
+                            bestCell = tableBorderCell;
+                        }
+                    }
+                    if (bestCell != null) {
+                        bestCell.addContentObject(content);
                     }
                 }
                 return tableBorder;
