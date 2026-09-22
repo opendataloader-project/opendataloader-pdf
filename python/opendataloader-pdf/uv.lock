@@ -1720,7 +1720,7 @@ wheels = [
 
 [[package]]
 name = "opendataloader-pdf"
-version = "2.5.11.dev0"
+version = "2.5.12.dev0"
 source = { editable = "." }
 
 [package.optional-dependencies]
