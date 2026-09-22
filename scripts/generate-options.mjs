@@ -313,6 +313,9 @@ function generatePythonConvert() {
     lines.push(`    ${snakeName}: ${typeHint} = ${defaultVal},`);
   }
 
+  // Wrapper-level parameters: enforced in Python, not passed to the JAR.
+  lines.push('    timeout: Optional[float] = None,');
+
   lines.push(') -> None:');
   lines.push('    """');
   lines.push('    Convert PDF(s) into the requested output format(s).');
@@ -324,6 +327,8 @@ function generatePythonConvert() {
     const snakeName = toSnakeCase(opt.name);
     lines.push(`        ${snakeName}: ${opt.description}`);
   }
+
+  lines.push('        timeout: Wall-clock limit in seconds for the CLI process. None (default) waits indefinitely. On expiry the JVM is killed and subprocess.TimeoutExpired is raised. Not a CLI option: the JAR declares no processing bound, so this is enforced by the wrapper.');
 
   lines.push('    """');
 
@@ -359,7 +364,7 @@ function generatePythonConvert() {
   }
 
   lines.push('');
-  lines.push('    run_jar(args, quiet)');
+  lines.push('    run_jar(args, quiet, timeout=timeout)');
   lines.push('');
 
   const outputPath = join(ROOT_DIR, 'python/opendataloader-pdf/src/opendataloader_pdf/convert_generated.py');
@@ -402,6 +407,13 @@ function generatePythonConvertOptionsMdx() {
     const description = escapeMarkdown(opt.description);
     rows.push([`\`${snakeName}\``, `\`${pyType}\``, defaultVal, description]);
   }
+
+  // Wrapper-level parameter, appended last to match the convert() signature.
+  // Not in options.json because it is enforced in Python, not by the CLI --
+  // same reason input_path is added by hand above.
+  rows.push(['`timeout`', '`float`', '`None`',
+    'Wall-clock limit in seconds for the CLI process. `None` waits indefinitely. '
+    + 'On expiry the JVM is killed and `subprocess.TimeoutExpired` is raised.']);
 
   lines.push(...formatTable(['Parameter', 'Type', 'Default', 'Description'], rows));
   lines.push('');
