@@ -270,14 +270,43 @@ opendataloader-pdf --hybrid docling-fast --hybrid-mode full file1.pdf file2.pdf 
 Output in JSON:
 ```json
 {
-  "type": "picture",
+  "type": "image",
+  "pdfua_tag": "Figure",
+  "id": 285,
   "page number": 1,
   "bounding box": [72.0, 400.0, 540.0, 650.0],
-  "description": "A bar chart showing waste generation by region from 2016 to 2030..."
+  "alt": "A bar chart showing waste generation by region from 2016 to 2030...",
+  "alt_source": "ai-generated"
 }
 ```
 
+`alt_source` says where the text came from: `original` (the PDF's own /Alt), `ai-generated`,
+or `missing` — and when it is `missing`, there is no `alt` field at all.
+
+With `--enrich-picture-description`, every picture goes to the model whatever its size. The
+server reports the tally per request, so a picture that came back without a description shows
+up in the log rather than only in the output:
+
+```
+picture_description pictures=4 described=4
+```
+
+Cost follows the number of pictures, not their size: a 40×20 pt logo costs about what a
+full-page chart does, and on CPU one picture can take over a minute. A document full of icons
+is therefore minutes of work per page, and conversions are serialized, so other requests wait.
+`--picture-area-threshold 0.05` spends the model only on pictures covering at least 5% of
+their page:
+
+```
+picture_description pictures=4 described=1 skipped=3 threshold=0.05
+```
+
+Skips are logged at INFO when you set a threshold, and at WARNING when you did not — in that
+case nothing was asked to drop them, so the cause is worth a look.
+
 > Uses SmolVLM (256M), a lightweight vision model. Custom prompts supported via `--picture-description-prompt`.
+> Since the picture count comes from the uploaded file, a server reachable by untrusted
+> callers should set both `--picture-area-threshold` and `--max-file-size`.
 
 ### Heading Hierarchy
 
