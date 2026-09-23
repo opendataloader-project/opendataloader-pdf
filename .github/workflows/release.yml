@@ -170,80 +170,33 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # =================================================================
-      # 6. BEGIN THE NEXT DEVELOPMENT VERSION (only on tag push)
-      # =================================================================
-      # Without this, the next push to main would republish a snapshot under a
-      # coordinate that is now a release.
-      #
-      # After the publishes, not before: a bump ahead of a failed deploy would
-      # leave main claiming a release that does not exist.
-      #
-      # PATCH by default — raise MINOR or MAJOR by hand before tagging.
-      - name: Begin the next development version
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-        env:
-          HOMEPAGE_SYNC_TOKEN: ${{ secrets.HOMEPAGE_SYNC_TOKEN }}
-        run: |
-          set -euo pipefail
-          if [[ "$VERSION" == *-* ]]; then
-            next="${VERSION%%-*}"
-          else
-            IFS=. read -r major minor patch <<< "$VERSION"
-            next="${major}.${minor}.$((patch + 1))"
-          fi
-          git config user.name  'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
-          # Built on main as it is now, not on the tag: main has usually moved
-          # on by the time a release finishes, and committing on the tag would
-          # be rejected non-fast-forward after both publishes had succeeded.
-          # The steps after this one read options.json and schema.json from the
-          # working tree, so it has to be the tag again however this exits.
-          trap 'git checkout --force "$GITHUB_SHA"' EXIT
+  # Siblings, both gated on a release that published everything. Neither is a
+  # step of that job any more: as steps, whichever ran first could skip the
+  # other by failing, and the bump's `actions: write` sat in a job holding
+  # every deploy credential.
+  docs:
+    needs: release
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read   # the docs go to the homepage repository, not to this one
 
-          for attempt in 1 2 3; do
-            git fetch --depth=1 origin main
-            # Detached and --force, never a named branch: the build rewrote
-            # every manifest in place, and git refuses to switch while a
-            # modified file differs between the tag and main — the case this
-            # loop exists for. `git branch -f` was worse than unnecessary: it
-            # refuses to move a branch that is checked out, so every retry
-            # after the first died with exit 128 before it could retry.
-            git checkout --detach --force FETCH_HEAD
-            ./scripts/set-dev-version.sh "$next"
-            if git diff --quiet; then echo "main already declares $next"; exit 0; fi
-            git add java/pom.xml java/opendataloader-pdf-core/pom.xml \
-                    java/opendataloader-pdf-cli/pom.xml \
-                    python/opendataloader-pdf/pyproject.toml \
-                    python/opendataloader-pdf/uv.lock \
-                    python/opendataloader-pdf-mcp/pyproject.toml \
-                    python/opendataloader-pdf-mcp/uv.lock \
-                    node/opendataloader-pdf/package.json
-            git commit -m "chore: begin ${next}-SNAPSHOT"
-            # Not `origin`: that carries the default GITHUB_TOKEN, and main
-            # requires a pull request. GITHUB_TOKEN cannot be exempted from
-            # that — `github-actions` is a runtime actor, so it never appears
-            # in the ruleset's bypass list. The PAT pushes as its owner, who
-            # is covered by the admin bypass entries. Kept in the URL rather
-            # than `git config` so it stays out of .git/config.
-            git push "https://x-access-token:${HOMEPAGE_SYNC_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:main && exit 0
-            echo "push rejected, retrying ($attempt/3)" >&2
-          done
-          echo "::error::could not push the version bump — main still declares a released version" >&2
-          exit 1
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
 
-      # =================================================================
-      # 6. SYNC DOCS TO HOMEPAGE (only on tag push)
-      # =================================================================
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
       - name: Generate reference docs
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         run: |
           mkdir -p content/docs/reference
           node scripts/generate-options.mjs
           node scripts/generate-schema.mjs
 
       - name: Push reference docs to homepage
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         # Pinned to v1.7.3 for security - verify before updating
         uses: cpina/github-action-push-to-another-repository@55306faa4ed53b815ae49e564af8cfb359d32ae2  # v1.7.3
         with:
@@ -254,3 +207,43 @@ jobs:
           target-branch: staging
         env:
           API_TOKEN_GITHUB: ${{ secrets.HOMEPAGE_SYNC_TOKEN }}
+
+  # Without this, the next push to main would republish a snapshot under a
+  # coordinate that is now a release. After the publishes, never before: a bump
+  # ahead of a failed deploy would leave main claiming a release that does not
+  # exist.
+  bump:
+    needs: release
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write        # push the bump branch
+      pull-requests: write   # open and merge the bump's pull request
+      actions: write         # dispatch snapshot.yml
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      # set-dev-version.sh writes the Java version with `mvn versions:set` and
+      # the Node one with `pnpm version`; the Python manifests it edits as text.
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Begin the next development version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASED_TAG: ${{ github.ref_name }}
+        run: ./scripts/open-version-bump-pr.sh
