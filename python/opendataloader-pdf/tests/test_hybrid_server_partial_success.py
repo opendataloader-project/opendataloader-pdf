@@ -297,3 +297,100 @@ class TestBuildConversionResponseErrorParsing:
             requested_pages=(1, 3),
         )
         assert response["failed_pages"] == [2]
+
+
+class TestPagesDoclingBlamedDirectly:
+    """docling attributes a page failure to `ErrorItem.page_no` and leaves that
+    page's entry in the pages dict, so neither message parsing nor gap
+    detection sees it and the loss reaches the client unreported.
+    """
+
+    def test_attributed_pages_reach_failed_pages(self):
+        response = build_conversion_response(
+            status_value="partial_success",
+            json_content={"pages": {"1": {}, "2": {}, "3": {}}},
+            processing_time=1.0,
+            errors=["document timeout exceeded", "document timeout exceeded"],
+            requested_pages=None,
+            total_pages=3,
+            error_pages=[2, 3],
+        )
+        assert response["failed_pages"] == [2, 3]
+
+    def test_attributed_pages_merge_with_the_other_strategies(self):
+        response = build_conversion_response(
+            status_value="partial_success",
+            json_content={"pages": {"1": {}, "3": {}}},
+            processing_time=1.0,
+            errors=["Page 1: std::bad_alloc"],
+            requested_pages=None,
+            total_pages=3,
+            error_pages=[3],
+        )
+        assert response["failed_pages"] == [1, 2, 3]
+
+    def test_a_success_reports_no_failed_pages(self):
+        response = build_conversion_response(
+            status_value="success",
+            json_content={"pages": {"1": {}}},
+            processing_time=1.0,
+            errors=[],
+            requested_pages=None,
+            total_pages=1,
+            error_pages=[1],
+        )
+        assert response["failed_pages"] == []
+
+
+def _post_pdf_returning_partial_success(monkeypatch, error_pages):
+    """POST one PDF whose conversion blames the given pages.
+
+    Covers the collection in `convert_file`, which the unit tests above cannot
+    reach: dropping it there leaves them all passing.
+    """
+    from docling.datamodel.base_models import ConversionStatus
+    from fastapi.testclient import TestClient
+
+    from opendataloader_pdf import hybrid_server
+
+    errors = [
+        type("_E", (), {"error_message": "document timeout exceeded", "page_no": page})()
+        for page in error_pages
+    ]
+
+    class _Result:
+        status = ConversionStatus.PARTIAL_SUCCESS
+        input = type("_Input", (), {"page_count": 3})()
+        document = type(
+            "_Doc",
+            (),
+            {"export_to_dict": lambda self: {"pages": {"1": {}, "2": {}, "3": {}}}},
+        )()
+
+        def __init__(self):
+            self.errors = errors
+
+    class _Converter:
+        def convert(self, path, **kwargs):
+            return _Result()
+
+    app = hybrid_server.create_app()
+    monkeypatch.setattr(hybrid_server, "converter", _Converter())
+    monkeypatch.setattr(hybrid_server, "_probe_page_count", lambda path: 3)
+
+    # Not entered as a context manager: the lifespan would load real models.
+    return TestClient(app).post(
+        "/v1/convert/file",
+        files={"files": ("x.pdf", b"%PDF-1.4\n", "application/pdf")},
+    )
+
+
+def test_blamed_pages_travel_in_the_response_and_the_log(monkeypatch, caplog):
+    from opendataloader_pdf import hybrid_server
+
+    with caplog.at_level("WARNING", logger=hybrid_server.logger.name):
+        response = _post_pdf_returning_partial_success(monkeypatch, [2, 3])
+
+    assert response.status_code == 200
+    assert response.json()["failed_pages"] == [2, 3]
+    assert "pages_failed=2" in caplog.text
