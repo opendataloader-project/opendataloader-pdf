@@ -402,14 +402,26 @@ public class DoclingSchemaTransformer implements HybridSchemaTransformer {
     }
 
     /**
-     * Extracts picture description from annotations array.
+     * Extracts a picture's description from either location docling writes it to.
      *
-     * <p>Docling stores picture descriptions in the annotations array with kind="description".
+     * <p>Docling records the text in {@code meta.description} and, while the deprecated
+     * {@code annotations} array survives, in both; it plans to stop writing the array. Reading
+     * meta first and the array only as a fallback works on either side of that change.
      *
      * @param pictureNode The picture JSON node
      * @return The description text, or null if not available
      */
     private String extractPictureDescription(JsonNode pictureNode) {
+        JsonNode meta = pictureNode.get("meta");
+        if (meta != null) {
+            String description = getTextValue(meta.get("description"), "text");
+            // An empty description is not a description: falling through costs
+            // nothing while both locations are written, and salvages the text
+            // if they ever disagree.
+            if (description != null && !description.isEmpty()) {
+                return description;
+            }
+        }
         JsonNode annotations = pictureNode.get("annotations");
         if (annotations != null && annotations.isArray()) {
             for (JsonNode annotation : annotations) {

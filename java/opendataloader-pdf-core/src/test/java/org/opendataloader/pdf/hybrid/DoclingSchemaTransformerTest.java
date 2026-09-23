@@ -667,6 +667,127 @@ public class DoclingSchemaTransformerTest {
     }
 
     @Test
+    void testTransformPictureWithDescriptionOnlyInMeta() {
+        ObjectNode json = createDoclingDocument();
+        ArrayNode pictures = json.putArray("pictures");
+
+        ObjectNode pictureNode = pictures.addObject();
+        addProvenance(pictureNode, 1, 100, 300, 400, 500);
+
+        ObjectNode meta = pictureNode.putObject("meta");
+        meta.putObject("description").put("text", "A bar chart showing quarterly sales data");
+
+        HybridResponse response = new HybridResponse("", json, null);
+        Map<Integer, Double> pageHeights = new HashMap<>();
+        pageHeights.put(1, 842.0);
+
+        List<List<IObject>> result = transformer.transform(response, pageHeights);
+
+        SemanticPicture picture = (SemanticPicture) result.get(0).get(0);
+        Assertions.assertTrue(picture.hasDescription());
+        Assertions.assertEquals("A bar chart showing quarterly sales data", picture.getDescription());
+    }
+
+    @Test
+    void testMetaDescriptionWinsOverLegacyAnnotation() {
+        ObjectNode json = createDoclingDocument();
+        ArrayNode pictures = json.putArray("pictures");
+
+        ObjectNode pictureNode = pictures.addObject();
+        addProvenance(pictureNode, 1, 100, 300, 400, 500);
+
+        ObjectNode meta = pictureNode.putObject("meta");
+        meta.putObject("description").put("text", "from meta");
+
+        ArrayNode annotations = pictureNode.putArray("annotations");
+        ObjectNode descAnnotation = annotations.addObject();
+        descAnnotation.put("kind", "description");
+        descAnnotation.put("text", "from annotations");
+
+        HybridResponse response = new HybridResponse("", json, null);
+        Map<Integer, Double> pageHeights = new HashMap<>();
+        pageHeights.put(1, 842.0);
+
+        List<List<IObject>> result = transformer.transform(response, pageHeights);
+
+        SemanticPicture picture = (SemanticPicture) result.get(0).get(0);
+        Assertions.assertEquals("from meta", picture.getDescription());
+    }
+
+    @Test
+    void testMetaWithoutADescriptionFallsBackToTheLegacyAnnotation() {
+        ObjectNode json = createDoclingDocument();
+        ArrayNode pictures = json.putArray("pictures");
+
+        ObjectNode pictureNode = pictures.addObject();
+        addProvenance(pictureNode, 1, 100, 300, 400, 500);
+
+        // docling fills meta with whatever it inferred, so a picture can carry
+        // meta with no description in it while the text is still in the array.
+        ObjectNode meta = pictureNode.putObject("meta");
+        meta.putObject("classification").put("predictions", "chart");
+
+        ArrayNode annotations = pictureNode.putArray("annotations");
+        ObjectNode descAnnotation = annotations.addObject();
+        descAnnotation.put("kind", "description");
+        descAnnotation.put("text", "from annotations");
+
+        HybridResponse response = new HybridResponse("", json, null);
+        Map<Integer, Double> pageHeights = new HashMap<>();
+        pageHeights.put(1, 842.0);
+
+        List<List<IObject>> result = transformer.transform(response, pageHeights);
+
+        SemanticPicture picture = (SemanticPicture) result.get(0).get(0);
+        Assertions.assertEquals("from annotations", picture.getDescription());
+    }
+
+    @Test
+    void testEmptyMetaDescriptionFallsBackToTheLegacyAnnotation() {
+        ObjectNode json = createDoclingDocument();
+        ArrayNode pictures = json.putArray("pictures");
+
+        ObjectNode pictureNode = pictures.addObject();
+        addProvenance(pictureNode, 1, 100, 300, 400, 500);
+
+        ObjectNode meta = pictureNode.putObject("meta");
+        meta.putObject("description").put("text", "");
+
+        ArrayNode annotations = pictureNode.putArray("annotations");
+        ObjectNode descAnnotation = annotations.addObject();
+        descAnnotation.put("kind", "description");
+        descAnnotation.put("text", "from annotations");
+
+        HybridResponse response = new HybridResponse("", json, null);
+        Map<Integer, Double> pageHeights = new HashMap<>();
+        pageHeights.put(1, 842.0);
+
+        List<List<IObject>> result = transformer.transform(response, pageHeights);
+
+        SemanticPicture picture = (SemanticPicture) result.get(0).get(0);
+        Assertions.assertEquals("from annotations", picture.getDescription());
+    }
+
+    @Test
+    void testTransformPictureWithNeitherDescriptionLocation() {
+        ObjectNode json = createDoclingDocument();
+        ArrayNode pictures = json.putArray("pictures");
+
+        ObjectNode pictureNode = pictures.addObject();
+        addProvenance(pictureNode, 1, 100, 300, 400, 500);
+        pictureNode.putObject("meta");
+
+        HybridResponse response = new HybridResponse("", json, null);
+        Map<Integer, Double> pageHeights = new HashMap<>();
+        pageHeights.put(1, 842.0);
+
+        List<List<IObject>> result = transformer.transform(response, pageHeights);
+
+        SemanticPicture picture = (SemanticPicture) result.get(0).get(0);
+        Assertions.assertFalse(picture.hasDescription());
+    }
+
+    @Test
     void testTransformPictureWithoutDescription() {
         ObjectNode json = createDoclingDocument();
         ArrayNode pictures = json.putArray("pictures");
