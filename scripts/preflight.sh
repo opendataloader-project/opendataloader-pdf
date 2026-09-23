@@ -9,8 +9,7 @@
 #   npm     : `npm whoami` with NODE_AUTH_TOKEN
 #   maven   : Sonatype Central Portal /published (200 vs 401)
 #   gpg     : import key + sign+verify a dummy file with the passphrase
-#   github  : push permission for the homepage-sync PAT — on the homepage repo
-#             (reference docs) and on this one (the version bump to main)
+#   github  : push permission for the homepage-sync PAT on the homepage repo
 #   pypi    : mint a GitHub Actions OIDC token for audience=pypi
 #
 # Secrets are read from the environment ONLY (never script args — they leak via
@@ -132,9 +131,7 @@ check_gpg() {
   fi
 }
 
-# --- 4. GitHub PAT (homepage sync + version bump) ---------------------------
-# Two repos, because release.yml pushes with this token twice: the reference
-# docs to the homepage repo, and the version bump to main here.
+# --- 4. GitHub PAT (homepage sync) ------------------------------------------
 check_github_repo() {
   local label="$1" repo="$2"
   require_env HOMEPAGE_SYNC_TOKEN || { fail "$label"; return; }
@@ -159,14 +156,9 @@ EOF
 }
 
 check_github() {
+  # This repo is not checked: the version bump no longer pushes with this
+  # token, it opens a pull request with the run's own GITHUB_TOKEN.
   check_github_repo "GitHub PAT -> homepage (HOMEPAGE_SYNC_TOKEN)" "$GH_REPO"
-  # Write access is necessary but not sufficient for the bump: main requires a
-  # pull request, and pushing past that needs the token's owner in the
-  # ruleset's bypass list. No API reports bypass state, so this check cannot
-  # cover it — a release whose publishes all succeed can still fail on the
-  # bump with GH013 if that entry is ever removed.
-  check_github_repo "GitHub PAT -> this repo, for the bump" \
-    "${GITHUB_REPOSITORY:-opendataloader-project/opendataloader-pdf}"
 }
 
 # --- 5. PyPI (OIDC issuance) ------------------------------------------------
