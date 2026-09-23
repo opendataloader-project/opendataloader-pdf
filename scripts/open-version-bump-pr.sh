@@ -6,112 +6,126 @@
 # `github-actions` is a runtime actor, so it never appears in a ruleset bypass
 # list, which holds only the organization-admin and repository-admin roles. The
 # ruleset asks for zero approving reviews and declares no required status
-# checks, so the pull request opened here can be merged in the same step.
+# checks, so the pull request opened here can be merged as soon as it is open.
 #
 # PATCH by default — raise MINOR or MAJOR by hand before tagging.
-#
-# Reads VERSION (the released version, no leading v) and GH_TOKEN.
 
 set -euo pipefail
 
-: "${VERSION:?}"
+: "${RELEASED_TAG:?}"
 : "${GH_TOKEN:?}"
 : "${GITHUB_REPOSITORY:?}"
 
-# gh runs from the worktree below, where deriving the repo from the remote
-# would work but says less than naming it.
 export GH_REPO="$GITHUB_REPOSITORY"
 
-if [[ "$VERSION" == *-* ]]; then
-  next="${VERSION%%-*}"
+version="${RELEASED_TAG#v}"
+[[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]] \
+  || { echo "::error::tag '${RELEASED_TAG}' is not vN.N.N[-suffix]" >&2; exit 1; }
+
+if [[ "$version" == *-* ]]; then
+  next="${version%%-*}"
 else
-  IFS=. read -r major minor patch <<< "$VERSION"
+  IFS=. read -r major minor patch <<< "$version"
   next="${major}.${minor}.$((patch + 1))"
 fi
 
 branch="chore/begin-${next}-snapshot"
-# A worktree, not a checkout in place: the build rewrote every manifest in the
-# tag's tree, and the steps around this one read options.json and schema.json
-# from it. Nothing here touches that tree.
-work="${RUNNER_TEMP:-/tmp}/version-bump"
+url=""
 
-MANIFESTS=(
-  java/pom.xml
-  java/opendataloader-pdf-core/pom.xml
-  java/opendataloader-pdf-cli/pom.xml
-  python/opendataloader-pdf/pyproject.toml
-  python/opendataloader-pdf/uv.lock
-  python/opendataloader-pdf-mcp/pyproject.toml
-  python/opendataloader-pdf-mcp/uv.lock
-  node/opendataloader-pdf/package.json
-)
+# Called as a condition, which suspends `set -e` for the whole body, so every
+# command carries its own guard. 0 landed the bump, 2 found main already there,
+# 1 asks for another attempt — a release finishing while main moves on is the
+# normal case, and each attempt starts over from main as it is now.
+attempt_bump() {
+  git fetch --no-tags origin main || return 1
+  git checkout --detach --force FETCH_HEAD || return 1
 
-git worktree remove --force "$work" 2>/dev/null || true
-git fetch --no-tags origin main
-git worktree add --detach "$work" FETCH_HEAD
+  ./scripts/set-dev-version.sh "$next" || return 1
+  git diff --quiet && return 2
 
-cleanup() {
-  cd "${GITHUB_WORKSPACE:-/}" || return 0
-  git worktree remove --force "$work" 2>/dev/null || true
-}
-trap cleanup EXIT
+  # --update, so what gets staged is what the check above looked at. A manifest
+  # belonging to a module added later reaches both or neither.
+  git add --update || return 1
+  git commit -m "chore: begin ${next}-SNAPSHOT" || return 1
 
-cd "$work"
-git config user.name  'github-actions[bot]'
-git config user.email 'github-actions[bot]@users.noreply.github.com'
+  local head_sha
+  head_sha="$(git rev-parse HEAD)" || return 1
 
-# Each attempt restarts from main as it is now. A release that finishes while
-# main moves on is the normal case, and rebase merge only resolves a moved base
-# when the bump still applies to it.
-for attempt in 1 2 3; do
-  git fetch --no-tags origin main
-  git checkout --detach --force FETCH_HEAD
+  # --force: the branch name belongs to this script, and a commit an earlier
+  # attempt left under it is never the one to keep.
+  git push --force origin "HEAD:refs/heads/${branch}" || return 1
 
-  ./scripts/set-dev-version.sh "$next"
-  if git diff --quiet; then
-    echo "main already declares $next"
-    exit 0
-  fi
+  # `gh pr create` fails once a pull request for this head is open, so ask
+  # first. But --head filters on the ref name alone, and the name follows from
+  # the version main declares, so a fork's branch of that name matches just as
+  # well: only a pull request from this repository, at the commit just pushed,
+  # is this run's own.
+  local found
+  found="$(gh pr list --head "$branch" --base main --state open \
+             --json url,isCrossRepository,headRefOid \
+           | jq -r --arg sha "$head_sha" \
+               'map(select(.isCrossRepository == false and .headRefOid == $sha))
+                | .[0].url // empty')" || return 1
 
-  git add "${MANIFESTS[@]}"
-  git commit -m "chore: begin ${next}-SNAPSHOT"
-
-  # --force: a previous attempt may have left the branch behind, and its commit
-  # is never the one to keep.
-  if ! git push --force origin "HEAD:refs/heads/${branch}"; then
-    echo "branch push failed, retrying (${attempt}/3)" >&2
-    continue
-  fi
-
-  url="$(gh pr list --head "$branch" --base main --state open --json url --jq '.[0].url // empty')"
-  if [[ -z "$url" ]]; then
+  if [[ -n "$found" ]]; then
+    url="$found"
+  else
     url="$(gh pr create --base main --head "$branch" \
       --title "chore: begin ${next}-SNAPSHOT" \
-      --body "Opened by the v${VERSION} release run. Merging it keeps main off a coordinate that is now released, so the next push to main publishes a snapshot of ${next} rather than of ${VERSION}.
+      --body "Opened by the v${version} release run, which published ${version} and left main declaring the coordinate it was cut from. Merging this keeps the next push to main on a snapshot of ${next}.
 
-Produced by \`./scripts/set-dev-version.sh ${next}\`.")"
+Produced by \`./scripts/set-dev-version.sh ${next}\`.")" || {
+      echo "::warning::could not open the pull request — Actions may not be permitted to create one here" >&2
+      return 1
+    }
   fi
   echo "pull request: $url"
 
-  # mergeable is UNKNOWN until GitHub has computed it, and `gh pr merge` reads
-  # it rather than waiting.
-  for _ in $(seq 1 20); do
-    state="$(gh pr view "$url" --json mergeable --jq .mergeable)"
-    [[ "$state" == "UNKNOWN" ]] || break
-    sleep 3
+  # Mergeability is computed asynchronously, and a refusal read off a stale
+  # answer is worth asking again about. --match-head-commit is what makes the
+  # gap between that answer and the merge acting on it safe to leave open.
+  local _
+  for _ in $(seq 1 10); do
+    gh pr merge "$url" --rebase --match-head-commit "$head_sha" && return 0
+    sleep 6
   done
+  return 1
+}
 
-  if gh pr merge "$url" --rebase; then
-    echo "merged $url"
-    # A merge performed with GITHUB_TOKEN triggers no workflow, so the first
-    # snapshot of the new development version has to be asked for.
-    gh workflow run snapshot.yml --ref main || echo "::warning::could not dispatch snapshot.yml" >&2
-    exit 0
+discard_branch() {
+  if [[ -n "$url" ]]; then
+    gh pr close "$url" --delete-branch \
+      --comment "Superseded — the v${version} release run did not land this bump." || true
+  else
+    git push --delete origin "$branch" || true
   fi
+}
 
-  echo "merge refused, retrying (${attempt}/3)" >&2
-  gh pr view "$url" --json mergeable,mergeStateStatus,reviewDecision >&2 || true
+landed=0
+already=0
+for attempt in 1 2 3; do
+  attempt_bump && { landed=1; break; }
+  rc=$?
+  if [[ $rc -eq 2 ]]; then already=1; break; fi
+  echo "attempt ${attempt}/3 did not land the bump" >&2
+  [[ -n "$url" ]] && gh pr view "$url" --json mergeable,mergeStateStatus >&2 || true
 done
+
+if [[ $already -eq 1 ]]; then
+  echo "main already declares $next"
+  discard_branch
+fi
+
+if [[ $landed -eq 1 || $already -eq 1 ]]; then
+  # A merge performed with GITHUB_TOKEN triggers no workflow, so the first
+  # snapshot of the new development version has to be asked for.
+  gh workflow run snapshot.yml --ref main \
+    || echo "::warning::could not dispatch snapshot.yml" >&2
+  exit 0
+fi
+
+# The branch and its pull request exist only to carry a bump that did not land.
+discard_branch
 
 echo "::error::could not land the version bump — main has not moved to ${next}" >&2
 exit 1

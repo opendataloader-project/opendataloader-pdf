@@ -35,8 +35,6 @@ jobs:
       VERSION: '0.0.0'
     permissions:
       contents: write
-      pull-requests: write   # the version bump lands through a pull request
-      actions: write         # ... which then has to dispatch snapshot.yml
       id-token: write
 
     steps:
@@ -172,18 +170,33 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # =================================================================
-      # 6. SYNC DOCS TO HOMEPAGE (only on tag push)
-      # =================================================================
+  # Siblings, both gated on a release that published everything. Neither is a
+  # step of that job any more: as steps, whichever ran first could skip the
+  # other by failing, and the bump's `actions: write` sat in a job holding
+  # every deploy credential.
+  docs:
+    needs: release
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read   # the docs go to the homepage repository, not to this one
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
       - name: Generate reference docs
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         run: |
           mkdir -p content/docs/reference
           node scripts/generate-options.mjs
           node scripts/generate-schema.mjs
 
       - name: Push reference docs to homepage
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         # Pinned to v1.7.3 for security - verify before updating
         uses: cpina/github-action-push-to-another-repository@55306faa4ed53b815ae49e564af8cfb359d32ae2  # v1.7.3
         with:
@@ -195,17 +208,42 @@ jobs:
         env:
           API_TOKEN_GITHUB: ${{ secrets.HOMEPAGE_SYNC_TOKEN }}
 
-      # =================================================================
-      # 7. BEGIN THE NEXT DEVELOPMENT VERSION (only on tag push)
-      # =================================================================
-      # Without this, the next push to main would republish a snapshot under a
-      # coordinate that is now a release.
-      #
-      # After the publishes, not before: a bump ahead of a failed deploy would
-      # leave main claiming a release that does not exist. And last of all, so
-      # that a bump the ruleset refuses takes no other step down with it.
+  # Without this, the next push to main would republish a snapshot under a
+  # coordinate that is now a release. After the publishes, never before: a bump
+  # ahead of a failed deploy would leave main claiming a release that does not
+  # exist.
+  bump:
+    needs: release
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write        # push the bump branch
+      pull-requests: write   # open and merge the bump's pull request
+      actions: write         # dispatch snapshot.yml
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      # set-dev-version.sh writes the Java version with `mvn versions:set` and
+      # the Node one with `pnpm version`; the Python manifests it edits as text.
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
       - name: Begin the next development version
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASED_TAG: ${{ github.ref_name }}
         run: ./scripts/open-version-bump-pr.sh

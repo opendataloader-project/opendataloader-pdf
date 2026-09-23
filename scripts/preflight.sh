@@ -156,8 +156,6 @@ EOF
 }
 
 check_github() {
-  # This repo is not checked: the version bump no longer pushes with this
-  # token, it opens a pull request with the run's own GITHUB_TOKEN.
   check_github_repo "GitHub PAT -> homepage (HOMEPAGE_SYNC_TOKEN)" "$GH_REPO"
 }
 
