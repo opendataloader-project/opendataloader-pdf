@@ -13,6 +13,7 @@ Usage:
                               [--force-ocr | --no-ocr] [--ocr-engine ENGINE] [--psm N]
                               [--device DEVICE]
                               [--enrich-formula] [--enrich-picture-description]
+                              [--document-timeout SECONDS]
                               [--max-file-size MB]
 
     # Default: http://localhost:5002
@@ -68,6 +69,7 @@ import asyncio
 import contextvars
 import logging
 import logging.config
+import math
 import os
 import re
 import secrets
@@ -256,6 +258,20 @@ def _non_negative_int(value: str) -> int:
     parsed = int(value)
     if parsed < 0:
         raise argparse.ArgumentTypeError("--max-file-size must be >= 0")
+    return parsed
+
+
+def _non_negative_seconds(value: str) -> float:
+    """Argparse type validator that rejects negative and non-finite durations.
+
+    `inf` would otherwise be accepted and reported at startup as a limit while
+    enforcing none, since docling compares elapsed time against it.
+    """
+    parsed = float(value)
+    if not math.isfinite(parsed) or parsed < 0:
+        raise argparse.ArgumentTypeError(
+            "--document-timeout must be a finite number >= 0"
+        )
     return parsed
 
 
@@ -590,6 +606,7 @@ def build_conversion_response(
     requested_pages: tuple[int, int] | None,
     total_pages: int | None = None,
     timings: dict[str, Any] | None = None,
+    error_pages: list[int] | None = None,
 ) -> dict:
     """Build a structured conversion response with status and failed page info.
 
@@ -651,8 +668,14 @@ def build_conversion_response(
 
         gap_failed = expected_pages - present_pages
 
+        # Strategy 3: pages docling blamed directly. A timeout names its page
+        # in `ErrorItem.page_no` and nowhere else, and leaves the page's entry
+        # in `pages`, so the two strategies above both come back empty and a
+        # document cut short reads downstream as a whole one.
+        attributed_failed = set(error_pages or ())
+
         # Union: each strategy catches a different failure mode
-        failed_pages = sorted(error_failed | gap_failed)
+        failed_pages = sorted(error_failed | gap_failed | attributed_failed)
 
     response: dict[str, Any] = {
         "status": status_value,
@@ -833,6 +856,7 @@ def create_converter(
     enrich_formula: bool = False,
     enrich_picture_description: bool = False,
     picture_description_prompt: str | None = None,
+    document_timeout: float = 0.0,
     device: str = "auto",
     heading_hierarchy: bool = False,
 ):
@@ -859,6 +883,8 @@ def create_converter(
         enrich_formula: If True, enable formula enrichment (LaTeX extraction).
         enrich_picture_description: If True, enable picture description (alt text generation).
         picture_description_prompt: Custom prompt forwarded to the VLM. If None or blank/whitespace-only, docling's default prompt is used.
+        document_timeout: Seconds after which docling abandons a document and returns what it
+                has as a partial success. 0 (default) enforces no limit.
         device: Accelerator device for model inference. Options: "auto", "cpu", "cuda", "mps", "xpu".
                 "auto" lets Docling select the best available device. Default: "auto".
         heading_hierarchy: If True, infer section-header depth so subsections nest
@@ -952,6 +978,10 @@ def create_converter(
         # References and the like at level 1. Gated on the flag because keeping
         # the cells costs memory on every page.
         "generate_parsed_pages": heading_hierarchy,
+        # docling abandons the document once elapsed time exceeds this, so
+        # passing 0 through would abort every conversion after its first page
+        # batch.
+        "document_timeout": document_timeout or None,
     }
     if picture_description_options is not None:
         pipeline_kwargs["picture_description_options"] = picture_description_options
@@ -983,6 +1013,7 @@ def create_app(
     enrich_formula: bool = False,
     enrich_picture_description: bool = False,
     picture_description_prompt: str | None = None,
+    document_timeout: float = 0.0,
     max_file_size: int = MAX_FILE_SIZE,
     device: str = "auto",
     heading_hierarchy: bool = False,
@@ -998,6 +1029,8 @@ def create_app(
         enrich_formula: If True, enable formula enrichment (LaTeX extraction).
         enrich_picture_description: If True, enable picture description (alt text generation).
         picture_description_prompt: Custom prompt forwarded to the VLM. If None or blank/whitespace-only, docling's default prompt is used.
+        document_timeout: Seconds after which a conversion returns a partial success. 0 means
+                no limit (default).
         max_file_size: Maximum file size in bytes. 0 means no limit (default).
         device: Accelerator device for model inference ("auto", "cpu", "cuda", "mps", "xpu").
         heading_hierarchy: If True, infer section-header depth so subsections nest
@@ -1037,6 +1070,7 @@ def create_app(
             enrich_formula=enrich_formula,
             enrich_picture_description=enrich_picture_description,
             picture_description_prompt=picture_description_prompt,
+            document_timeout=document_timeout,
             device=device,
             heading_hierarchy=heading_hierarchy,
         )
@@ -1253,15 +1287,16 @@ def create_app(
 
             status_value = result.status.value if hasattr(result.status, "value") else str(result.status)
             errors = [getattr(e, "error_message", str(e)) for e in result.errors] if result.errors else []
+            error_pages = sorted(
+                {
+                    page
+                    for e in result.errors or ()
+                    if (page := getattr(e, "page_no", None)) is not None
+                }
+            )
 
             # Get total page count for accurate failed-page detection
             input_page_count = getattr(result.input, "page_count", None) if result.input else None
-
-            if result.status == ConversionStatus.PARTIAL_SUCCESS:
-                logger.warning(
-                    "partial_success %s",
-                    _pairs(errors=len(errors), detail="see failed_pages in response"),
-                )
 
             # Extract per-step pipeline timings (layout, ocr, table_structure, etc.)
             step_timings = extract_timings(result)
@@ -1274,7 +1309,24 @@ def create_app(
                 requested_pages=page_range_tuple,
                 total_pages=input_page_count,
                 timings=step_timings,
+                error_pages=error_pages,
             )
+
+            if result.status == ConversionStatus.PARTIAL_SUCCESS:
+                logger.warning(
+                    "partial_success %s",
+                    _pairs(
+                        errors=len(errors),
+                        # Naming the cause keeps a document cut short by the
+                        # operator's own limit from reading as a corrupt one.
+                        cause="timeout" if result.has_timeout_errors() else None,
+                        timeout=f"{document_timeout}s"
+                        if result.has_timeout_errors()
+                        else None,
+                        pages_failed=len(response["failed_pages"]) or None,
+                        detail="see failed_pages in response",
+                    ),
+                )
 
             # The per-stage breakdown already travelled in the response body,
             # where only an API caller could see it. Logging it as well is what
@@ -1359,6 +1411,7 @@ def create_app(
                 psm=psm,
                 ocr_lang=ocr_lang,
                 picture_description_prompt=picture_description_prompt,
+                document_timeout=document_timeout,
                 device=device,
                 heading_hierarchy=heading_hierarchy,
                 **opts,
@@ -1551,6 +1604,15 @@ def main():
         help="Custom prompt for picture description. If unset or blank/whitespace-only, uses docling's default prompt.",
     )
     parser.add_argument(
+        "--document-timeout",
+        type=_non_negative_seconds,
+        default=0.0,
+        help="Seconds after which page processing gives up and returns the pages "
+             "it finished, as a partial success. 0 means no limit (default). "
+             "docling checks this between page batches, so a conversion overruns "
+             "it somewhat, and the enrichment stages are not checked at all.",
+    )
+    parser.add_argument(
         "--max-file-size",
         type=_non_negative_int,
         default=MAX_FILE_SIZE,
@@ -1664,6 +1726,9 @@ def main():
             max_file_size=f"{args.max_file_size}MB"
             if max_file_size_bytes > 0
             else "unlimited",
+            document_timeout=f"{args.document_timeout}s"
+            if args.document_timeout > 0
+            else "unlimited",
             enrichments=",".join(enrichments) if enrichments else None,
         ),
     )
@@ -1677,6 +1742,7 @@ def main():
         enrich_formula=args.enrich_formula,
         enrich_picture_description=args.enrich_picture_description,
         picture_description_prompt=args.picture_description_prompt,
+        document_timeout=args.document_timeout,
         max_file_size=max_file_size_bytes,
         device=args.device,
         heading_hierarchy=args.heading_hierarchy,

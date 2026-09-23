@@ -309,6 +309,41 @@ Numbering covers numbered sections; style is what pulls an unnumbered `Abstract`
 
 Off by default, so existing output is unchanged. Levels are capped at H6.
 
+### Bounding a Conversion
+
+The server converts one document at a time, so a single long conversion holds up every other
+request. `--document-timeout` bounds the page-processing stage:
+
+```bash
+opendataloader-pdf-hybrid --document-timeout 300
+```
+
+Past the limit, docling stops taking pages in and returns what it finished, with `"status":
+"partial_success"`, `document timeout exceeded` among the `errors`, and the abandoned pages
+listed in `failed_pages` — which is what lets the client fall back on them instead of
+emitting blank pages. The log names the cause:
+
+```
+partial_success errors=833 cause=timeout timeout=300.0s pages_failed=832 detail="see failed_pages in response"
+```
+
+On the client side those pages are a hard failure unless you ask for the Java fallback, which
+reprocesses them locally:
+
+```bash
+opendataloader-pdf --hybrid docling-fast --hybrid-fallback file.pdf
+```
+
+Two limits worth knowing. docling checks the clock between page batches, so a conversion
+overruns the number by whatever work is already in flight — about 2× in local measurement.
+And the enrichment stages (`--enrich-picture-description`, `--enrich-formula`) are not checked
+at all, so a document whose cost sits in picture description can run far past the limit and
+still come back as a plain success.
+
+No limit is enforced by default, which suits a workstation converting its own files. A server
+reachable by other people wants this together with `--max-file-size`, and for now with
+picture description off, since the work a document costs is chosen by whoever uploads it.
+
 ### Hancom Data Loader Integration — Coming Soon
 
 Enterprise-grade AI document analysis via [Hancom Data Loader](https://sdk.hancom.com/en/services/1?utm_source=github&utm_medium=readme&utm_campaign=opendataloader-pdf) — customer-customized models trained on your domain-specific documents. 30+ element types (tables, charts, formulas, captions, footnotes, etc.), VLM-based image/chart understanding, complex table extraction (merged cells, nested tables), SLA-backed OCR for scanned documents, and native HWP/HWPX support. Supports PDF, DOCX, XLSX, PPTX, HWP, PNG, JPG. [Live demo](https://livedemo.sdk.hancom.com/en/dataloader?utm_source=github&utm_medium=readme&utm_campaign=opendataloader-pdf)
