@@ -13,6 +13,7 @@ Usage:
                               [--force-ocr | --no-ocr] [--ocr-engine ENGINE] [--psm N]
                               [--device DEVICE]
                               [--enrich-formula] [--enrich-picture-description]
+                              [--picture-area-threshold FRACTION]
                               [--max-file-size MB]
 
     # Default: http://localhost:5002
@@ -259,6 +260,16 @@ def _non_negative_int(value: str) -> int:
     return parsed
 
 
+def _area_fraction(value: str) -> float:
+    """Argparse type validator for a fraction of the page area."""
+    parsed = float(value)
+    if not 0.0 <= parsed <= 1.0:
+        raise argparse.ArgumentTypeError(
+            "--picture-area-threshold must be between 0 and 1"
+        )
+    return parsed
+
+
 # Global converter instance (initialized on startup with CLI options)
 converter = None
 
@@ -373,6 +384,55 @@ _CONTROL_ESCAPES = {"\n": "\\n", "\r": "\\r"}
 # would have erased its own log line on a Korean Windows console, turning this
 # sanitizing into a way to go unlogged.
 _REPLACEMENT = "?"
+
+
+def _picture_description_counts(json_content: dict) -> tuple[int, int]:
+    """Return (pictures, pictures carrying a description) in a docling export.
+
+    docling records the text in `meta.description` and, while the deprecated
+    `annotations` array survives, in both. Reading either keeps the count right
+    across that migration.
+    """
+    pictures = json_content.get("pictures") or []
+    described = 0
+    for picture in pictures:
+        annotated = any(
+            annotation.get("kind") == "description" and annotation.get("text")
+            for annotation in picture.get("annotations") or []
+        )
+        meta_description = (picture.get("meta") or {}).get("description") or {}
+        if annotated or meta_description.get("text"):
+            described += 1
+    return len(pictures), described
+
+
+def _log_picture_descriptions(
+    json_content: dict, picture_area_threshold: float
+) -> None:
+    """Report the per-request tally of described pictures.
+
+    docling skips a picture below `picture_area_threshold`, and one whose VLM
+    output comes back empty, without a word, so a document that got no alt text
+    is otherwise invisible in the log (#418).
+    """
+    total, described = _picture_description_counts(json_content)
+    if not total:
+        return
+    skipped = total - described
+    # A threshold makes skips the operator's own trade-off; without one they
+    # have no stated cause and are worth a warning. Both zeros are suppressed:
+    # `skipped=0` and `threshold=0.0` carry nothing.
+    expected_skip = picture_area_threshold > 0
+    logger.log(
+        logging.WARNING if skipped and not expected_skip else logging.INFO,
+        "picture_description %s",
+        _pairs(
+            pictures=total,
+            described=described,
+            skipped=skipped or None,
+            threshold=picture_area_threshold or None,
+        ),
+    )
 
 
 def _pairs(**fields: Any) -> str:
@@ -833,6 +893,7 @@ def create_converter(
     enrich_formula: bool = False,
     enrich_picture_description: bool = False,
     picture_description_prompt: str | None = None,
+    picture_area_threshold: float = 0.0,
     device: str = "auto",
     heading_hierarchy: bool = False,
 ):
@@ -859,6 +920,8 @@ def create_converter(
         enrich_formula: If True, enable formula enrichment (LaTeX extraction).
         enrich_picture_description: If True, enable picture description (alt text generation).
         picture_description_prompt: Custom prompt forwarded to the VLM. If None or blank/whitespace-only, docling's default prompt is used.
+        picture_area_threshold: Minimum picture area, as a fraction of its page, to
+                describe. 0 (default) describes every picture.
         device: Accelerator device for model inference. Options: "auto", "cpu", "cuda", "mps", "xpu".
                 "auto" lets Docling select the best available device. Default: "auto".
         heading_hierarchy: If True, infer section-header depth so subsections nest
@@ -925,6 +988,12 @@ def create_converter(
     if enrich_picture_description:
         vlm_kwargs: dict[str, Any] = {
             "repo_id": "HuggingFaceTB/SmolVLM-256M-Instruct",
+            # docling's own default of 0.05 skips any picture under 5% of its
+            # page, which left most figures, logos and inline charts
+            # undescribed and unmentioned -- the report in #418. Asking for
+            # descriptions means wanting one per picture, so 0 is the default
+            # here, and whoever wants the VLM time back raises the flag.
+            "picture_area_threshold": picture_area_threshold,
         }
         if picture_description_prompt and picture_description_prompt.strip():
             vlm_kwargs["prompt"] = picture_description_prompt
@@ -983,6 +1052,7 @@ def create_app(
     enrich_formula: bool = False,
     enrich_picture_description: bool = False,
     picture_description_prompt: str | None = None,
+    picture_area_threshold: float = 0.0,
     max_file_size: int = MAX_FILE_SIZE,
     device: str = "auto",
     heading_hierarchy: bool = False,
@@ -998,6 +1068,8 @@ def create_app(
         enrich_formula: If True, enable formula enrichment (LaTeX extraction).
         enrich_picture_description: If True, enable picture description (alt text generation).
         picture_description_prompt: Custom prompt forwarded to the VLM. If None or blank/whitespace-only, docling's default prompt is used.
+        picture_area_threshold: Minimum picture area, as a fraction of its page, to
+                describe. 0 (default) describes every picture.
         max_file_size: Maximum file size in bytes. 0 means no limit (default).
         device: Accelerator device for model inference ("auto", "cpu", "cuda", "mps", "xpu").
         heading_hierarchy: If True, infer section-header depth so subsections nest
@@ -1037,6 +1109,7 @@ def create_app(
             enrich_formula=enrich_formula,
             enrich_picture_description=enrich_picture_description,
             picture_description_prompt=picture_description_prompt,
+            picture_area_threshold=picture_area_threshold,
             device=device,
             heading_hierarchy=heading_hierarchy,
         )
@@ -1310,6 +1383,14 @@ def create_app(
                 ),
             )
 
+            # The shape this reads is docling's to change, and a diagnostic
+            # line has no business turning a finished conversion into a 500.
+            if enrich_picture_description:
+                try:
+                    _log_picture_descriptions(json_content, picture_area_threshold)
+                except Exception:
+                    logger.warning("picture_description_tally_failed", exc_info=True)
+
             return JSONResponse(response)
 
         except Exception as e:
@@ -1359,6 +1440,7 @@ def create_app(
                 psm=psm,
                 ocr_lang=ocr_lang,
                 picture_description_prompt=picture_description_prompt,
+                picture_area_threshold=picture_area_threshold,
                 device=device,
                 heading_hierarchy=heading_hierarchy,
                 **opts,
@@ -1377,12 +1459,40 @@ def create_app(
 
         # Stream upload to temp file
         tmp_path = None
+        total_size = 0
         with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
             tmp_path = tmp.name
             while True:
                 chunk = await files.read(UPLOAD_CHUNK_SIZE)
                 if not chunk:
                     break
+                total_size += len(chunk)
+                # This endpoint converts the upload three times, one of them
+                # with picture description on, so it costs more than
+                # /v1/convert/file while having been the only upload path that
+                # ignored the operator's limit.
+                if max_file_size > 0 and total_size > max_file_size:
+                    tmp.close()
+                    os.unlink(tmp_path)
+                    logger.warning(
+                        "rejected %s",
+                        _pairs(
+                            status=413,
+                            endpoint="/v1/profile/file",
+                            size=f"{total_size / (1024 * 1024):.1f}MB",
+                            max=f"{max_file_size / (1024 * 1024):.1f}MB",
+                        ),
+                    )
+                    return JSONResponse(
+                        {
+                            "status": "failure",
+                            "errors": [
+                                "File size exceeds maximum allowed "
+                                f"({max_file_size // (1024 * 1024)}MB)"
+                            ],
+                        },
+                        status_code=413,
+                    )
                 tmp.write(chunk)
 
         try:
@@ -1399,12 +1509,7 @@ def create_app(
 
                 # Count pictures and formulas
                 json_content = result.document.export_to_dict()
-                pictures = json_content.get("pictures", [])
-                pics_total = len(pictures)
-                pics_described = sum(
-                    1 for p in pictures
-                    if p.get("captions") or p.get("annotations")
-                )
+                pics_total, pics_described = _picture_description_counts(json_content)
                 texts = json_content.get("texts", [])
                 formulas_total = sum(1 for t in texts if t.get("label") == "formula")
                 tables_total = len(json_content.get("tables", []))
@@ -1551,6 +1656,14 @@ def main():
         help="Custom prompt for picture description. If unset or blank/whitespace-only, uses docling's default prompt.",
     )
     parser.add_argument(
+        "--picture-area-threshold",
+        type=_area_fraction,
+        default=0.0,
+        help="Describe only pictures covering at least this fraction of their page "
+             "(0-1). Default 0 describes every picture; raise it to spend the VLM "
+             "only on large figures.",
+    )
+    parser.add_argument(
         "--max-file-size",
         type=_non_negative_int,
         default=MAX_FILE_SIZE,
@@ -1609,6 +1722,31 @@ def main():
                 _pairs(reason="--no-ocr", flags="; ".join(ignored)),
             )
 
+    # The picture-description modifiers have nothing to modify without the
+    # enrichment itself, and a flag that changes nothing is what #418 and
+    # PDFDLOSP-20 were both reported as.
+    if not args.enrich_picture_description:
+        threshold_explicit = any(
+            token == "--picture-area-threshold"
+            or token.startswith("--picture-area-threshold=")
+            for token in sys.argv[1:]
+        )
+        ignored = []
+        if threshold_explicit:
+            ignored.append(f"--picture-area-threshold {args.picture_area_threshold}")
+        if args.picture_description_prompt is not None:
+            # Named without its value: the prompt is the operator's text and
+            # every other caller-supplied string in this log is bounded first.
+            ignored.append("--picture-description-prompt")
+        if ignored:
+            logger.warning(
+                "inert_flags %s",
+                _pairs(
+                    reason="--enrich-picture-description not set",
+                    flags="; ".join(ignored),
+                ),
+            )
+
     # Probe engine availability at startup (only when OCR is on). A missing
     # `tesseract` binary or Python package surfaces here as a clear, actionable
     # error rather than as a deferred runtime exception during the first request.
@@ -1665,6 +1803,9 @@ def main():
             if max_file_size_bytes > 0
             else "unlimited",
             enrichments=",".join(enrichments) if enrichments else None,
+            picture_area_threshold=args.picture_area_threshold
+            if args.enrich_picture_description
+            else None,
         ),
     )
 
@@ -1677,6 +1818,7 @@ def main():
         enrich_formula=args.enrich_formula,
         enrich_picture_description=args.enrich_picture_description,
         picture_description_prompt=args.picture_description_prompt,
+        picture_area_threshold=args.picture_area_threshold,
         max_file_size=max_file_size_bytes,
         device=args.device,
         heading_hierarchy=args.heading_hierarchy,
