@@ -590,6 +590,7 @@ def build_conversion_response(
     requested_pages: tuple[int, int] | None,
     total_pages: int | None = None,
     timings: dict[str, Any] | None = None,
+    error_pages: list[int] | None = None,
 ) -> dict:
     """Build a structured conversion response with status and failed page info.
 
@@ -608,6 +609,7 @@ def build_conversion_response(
         requested_pages: Tuple of (start, end) 1-indexed page range, or None for all pages.
         total_pages: Total page count of the input document (from Docling InputDocument).
                      Used to detect boundary page failures when requested_pages is None.
+        error_pages: Pages docling blamed directly, from `ErrorItem.page_no`.
 
     Returns:
         Response dict with status, document, errors, failed_pages, and processing_time.
@@ -651,8 +653,15 @@ def build_conversion_response(
 
         gap_failed = expected_pages - present_pages
 
+        # Strategy 3: pages docling blamed directly. It attributes a failure to
+        # a page in `ErrorItem.page_no` while leaving that page's entry in
+        # `pages`, and its message carries no "Page N:" prefix -- so the two
+        # strategies above both come back empty and a document that lost pages
+        # reads downstream as a whole one.
+        attributed_failed = set(error_pages or ())
+
         # Union: each strategy catches a different failure mode
-        failed_pages = sorted(error_failed | gap_failed)
+        failed_pages = sorted(error_failed | gap_failed | attributed_failed)
 
     response: dict[str, Any] = {
         "status": status_value,
@@ -1253,15 +1262,16 @@ def create_app(
 
             status_value = result.status.value if hasattr(result.status, "value") else str(result.status)
             errors = [getattr(e, "error_message", str(e)) for e in result.errors] if result.errors else []
+            error_pages = sorted(
+                {
+                    page
+                    for e in result.errors or ()
+                    if (page := getattr(e, "page_no", None)) is not None
+                }
+            )
 
             # Get total page count for accurate failed-page detection
             input_page_count = getattr(result.input, "page_count", None) if result.input else None
-
-            if result.status == ConversionStatus.PARTIAL_SUCCESS:
-                logger.warning(
-                    "partial_success %s",
-                    _pairs(errors=len(errors), detail="see failed_pages in response"),
-                )
 
             # Extract per-step pipeline timings (layout, ocr, table_structure, etc.)
             step_timings = extract_timings(result)
@@ -1274,7 +1284,18 @@ def create_app(
                 requested_pages=page_range_tuple,
                 total_pages=input_page_count,
                 timings=step_timings,
+                error_pages=error_pages,
             )
+
+            if result.status == ConversionStatus.PARTIAL_SUCCESS:
+                logger.warning(
+                    "partial_success %s",
+                    _pairs(
+                        errors=len(errors),
+                        pages_failed=len(response["failed_pages"]) or None,
+                        detail="see failed_pages in response",
+                    ),
+                )
 
             # The per-stage breakdown already travelled in the response body,
             # where only an API caller could see it. Logging it as well is what
