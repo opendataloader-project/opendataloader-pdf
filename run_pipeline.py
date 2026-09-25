@@ -10,8 +10,10 @@ Automates:
 
 import json
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.request
 from pathlib import Path
@@ -121,35 +123,39 @@ def run_conversion(input_path: str = "data", output_dir: str = "data/output_perf
     print(" Image Quality:       300 DPI")
     print("=======================================================\n")
 
-    existing_md = set(output_p.glob("*.md"))
-    existing_json = set(output_p.glob("*.json"))
-
     start_time = time.perf_counter()
 
-    opendataloader_pdf.convert(
-        input_path=str(input_p),
-        output_dir=str(output_p),
-        format="markdown,json",
-        hybrid="docling-fast",
-        hybrid_mode="full",
-        markdown_with_html=True,
-        table_method="cluster",
-        image_resolution="300.0",
-        hybrid_url=HYBRID_URL,
-        hybrid_timeout="0",
-        hybrid_fallback=True
-    )
+    # Isolate each run so existing outputs cannot be mistaken for fresh results.
+    # Promote artifacts only after the converter has produced both formats.
+    with tempfile.TemporaryDirectory(prefix=".conversion-", dir=output_p) as staging_dir:
+        staging_p = Path(staging_dir)
+        opendataloader_pdf.convert(
+            input_path=str(input_p),
+            output_dir=str(staging_p),
+            format="markdown,json",
+            hybrid="docling-fast",
+            hybrid_mode="full",
+            markdown_with_html=True,
+            table_method="cluster",
+            image_resolution="300.0",
+            hybrid_url=HYBRID_URL,
+            hybrid_timeout="0",
+            hybrid_fallback=True
+        )
+
+        md_names = [p.name for p in staging_p.glob("*.md")]
+        json_names = [p.name for p in staging_p.glob("*.json")]
+        if not md_names or not json_names:
+            raise RuntimeError(
+                f"Conversion produced no Markdown/JSON output "
+                f"(check that {input_p} contains PDF files)"
+            )
+
+        shutil.copytree(staging_p, output_p, dirs_exist_ok=True)
 
     elapsed = time.perf_counter() - start_time
-
-    new_md = [p for p in output_p.glob("*.md") if p not in existing_md]
-    new_json = [p for p in output_p.glob("*.json") if p not in existing_json]
-
-    if not new_md or not new_json:
-        raise RuntimeError(
-            f"Conversion produced no new Markdown/JSON output in {output_p} "
-            f"(check that {input_p} contains PDF files)"
-        )
+    new_md = [output_p / name for name in md_names]
+    new_json = [output_p / name for name in json_names]
 
     print(f"\n[+] Conversion completed in {elapsed:.2f}s!")
 

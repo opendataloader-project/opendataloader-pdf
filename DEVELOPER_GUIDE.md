@@ -91,6 +91,7 @@ The [`run_pipeline.py`](./run_pipeline.py) script automatically manages the life
    * `--device <cuda|mps|cpu>`: Dynamically selects CUDA, then MPS, and otherwise CPU.
 
 2. **Client Conversion (`opendataloader_pdf.convert`):**
+   * Each conversion writes to an isolated temporary directory, then copies validated Markdown and JSON artifacts into the requested output directory. Conversion errors and empty runs leave earlier results intact before copying.
    * `--hybrid-mode full`: Directs every page to the AI backend to ensure no formulas or figures are skipped by triage heuristics.
    * `--markdown-with-html`: Preserves multi-column and multi-row merged table structures using HTML `<table>` blocks inside Markdown.
    * `--table-method cluster`: Coordinates clustering to detect borderless and complex tables.
