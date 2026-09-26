@@ -23,6 +23,7 @@ import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
+import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
@@ -179,6 +180,21 @@ public class TableBorderProcessor {
                 TableBorderCell tableBorderCell = row.getCell(colNumber);
                 if (tableBorderCell.getRowNumber() == rowNumber && tableBorderCell.getColNumber() == colNumber) {
                     tableBorderCell.setContents(processTableCellContent(tableBorderCell.getContents(), pageNumber));
+                }
+            }
+        }
+        // Border-detected tables never receive a semantic type on their cells, so
+        // AutoTaggingProcessor emits every cell as <TD> and screen readers announce
+        // bare numbers. Mirror the cluster-path rule (see
+        // ClusterTableProcessor.setTableCellsSemanticTypes): treat the first row as the
+        // header row so <TH> + scope are emitted. Fixes #745.
+        if (tableBorder.getNumberOfRows() > 0) {
+            for (int colNumber = 0; colNumber < tableBorder.getNumberOfColumns(); colNumber++) {
+                TableBorderCell headerCell = tableBorder.getCell(0, colNumber);
+                if (headerCell != null
+                        && headerCell.getRowNumber() == 0
+                        && headerCell.getColNumber() == colNumber) {
+                    headerCell.setSemanticType(SemanticType.TABLE_HEADER);
                 }
             }
         }
