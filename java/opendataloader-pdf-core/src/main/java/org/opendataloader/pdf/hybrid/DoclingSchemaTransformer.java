@@ -391,7 +391,6 @@ public class DoclingSchemaTransformer implements HybridSchemaTransformer {
         // Get bounding box
         BoundingBox bbox = extractBoundingBox(firstProv.get("bbox"), pageIndex, pageHeights.get(pageNo));
 
-        // Extract description from annotations (if available)
         String description = extractPictureDescription(pictureNode);
 
         // Create SemanticPicture with description
@@ -402,14 +401,31 @@ public class DoclingSchemaTransformer implements HybridSchemaTransformer {
     }
 
     /**
-     * Extracts picture description from annotations array.
+     * Reads the description from {@code meta.description}, falling back to the legacy
+     * {@code annotations} entry.
      *
-     * <p>Docling stores picture descriptions in the annotations array with kind="description".
+     * <p>Docling writes the text to {@code meta.description} always and to the
+     * {@code annotations} array while that field survives; the array is marked for removal.
+     *
+     * <p>docling-core's own readers never need the fallback, because loading a document
+     * promotes a legacy description into {@code meta.description} first. This parser reads the
+     * JSON directly and skips that step, so the fallback is where it does the same promotion --
+     * per field, since a {@code meta} node can carry a classification and no description.
      *
      * @param pictureNode The picture JSON node
      * @return The description text, or null if not available
      */
     private String extractPictureDescription(JsonNode pictureNode) {
+        JsonNode meta = pictureNode.get("meta");
+        if (meta != null) {
+            JsonNode descriptionField = meta.get("description");
+            String description = getTextValue(descriptionField, "text");
+            // Docling writes both locations, so an empty one here leaves the array as the only
+            // place a real description could be.
+            if (description != null && !description.isEmpty()) {
+                return description;
+            }
+        }
         JsonNode annotations = pictureNode.get("annotations");
         if (annotations != null && annotations.isArray()) {
             for (JsonNode annotation : annotations) {
