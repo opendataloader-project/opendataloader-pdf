@@ -43,6 +43,8 @@ class ContentSanitizerTest {
         "label: value, label: value",
         "2001::db8::1, 2001::db8::1",
         "12345::1, 12345::1",
+        "dead-beef::1, dead-beef::1",
+        "token-beef::1, token-beef::1",
         "1:2:3:4:5:6:7::8, 1:2:3:4:5:6:7::8",
         "::1:2:3:4:5:6:7:8, ::1:2:3:4:5:6:7:8",
         "2001:db8::1, 0.0.0.0::1",
@@ -139,6 +141,28 @@ class ContentSanitizerTest {
             () -> new SanitizationRule(Pattern.compile("(secret)"), "hidden", -1));
         assertThrows(IllegalArgumentException.class,
             () -> new SanitizationRule(Pattern.compile("(secret)"), "hidden", 2));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "prefix(), 1, false",
+        "prefix(), 1, true",
+        "(?<=prefix), 0, false",
+        "(?<=prefix), 0, true"
+    })
+    void testEmptyReplacementSpanIsSkipped(String regex, int group, boolean trailingChunks) {
+        ContentSanitizer custom = new ContentSanitizer(Collections.singletonList(
+            new SanitizationRule(Pattern.compile(regex), "hidden", group)));
+        TextLine line = new TextLine();
+        line.add(createTextChunk("prefix", 0, 0, 100, 20));
+        if (trailingChunks) {
+            line.add(createTextChunk(" middle ", 100, 0, 200, 20));
+            line.add(createTextChunk("tail", 200, 0, 300, 20));
+        }
+
+        custom.sanitizeContents(Collections.singletonList(Collections.singletonList(line)));
+
+        assertEquals(trailingChunks ? "prefix middle tail" : "prefix", line.getValue());
     }
 
     TextChunk createTextChunk(String value, double left, double bottom, double right, double top) {

@@ -257,7 +257,7 @@ public class ContentSanitizer {
             Matcher matcher = rule.getPattern().matcher(originalText);
             while (matcher.find()) {
                 int group = rule.getMatchGroup();
-                if (matcher.start(group) >= 0) {
+                if (matcher.end(group) > matcher.start(group)) {
                     replacements.add(new ReplacementInfo(matcher.start(group), matcher.end(group), rule.getReplacement()));
                 }
             }

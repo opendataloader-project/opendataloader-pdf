@@ -77,9 +77,9 @@ public class FilterConfig {
             + "|(?:(?:" + h16 + ":){0,6}" + h16 + ")?::";
         // Consume a non-hex label (e.g. IPv6:) but replace only the captured address.
         // Do not retry within a hyphenated label; consume it without backtracking.
-        String label = "(?:(?<!-)(?=[\\w-]*[^0-9a-fA-F:])[\\w-]++:)?";
+        String label = "(?:(?=[\\w-]*[^0-9a-fA-F:])[\\w-]++:)?";
         filterRules.add(new SanitizationRule(
-            Pattern.compile("(?<![\\w:])" + label + "(" + ipv6 + ")(?![\\w:]|\\.+\\w)"),
+            Pattern.compile("(?<![\\w:-])" + label + "(" + ipv6 + ")(?![\\w:]|\\.+\\w)"),
             "0.0.0.0::1", 1
         ));
         filterRules.add(new SanitizationRule(
