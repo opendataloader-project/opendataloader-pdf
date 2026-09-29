@@ -61,9 +61,26 @@ public class FilterConfig {
             Pattern.compile("\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b"),
             "0.0.0.0"
         ));
+        String h16 = "[0-9a-fA-F]{1,4}";
+        String octet = "(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])";
+        String ipv4 = "(?:" + octet + "\\.){3}" + octet;
+        String ls32 = "(?:" + h16 + ":" + h16 + "|" + ipv4 + ")";
+        // RFC 3986 section 3.2.2: the final 32 bits may use dotted IPv4 notation.
+        String ipv6 = "(?:" + h16 + ":){6}" + ls32
+            + "|::(?:" + h16 + ":){5}" + ls32
+            + "|(?:" + h16 + ")?::(?:" + h16 + ":){4}" + ls32
+            + "|(?:(?:" + h16 + ":){0,1}" + h16 + ")?::(?:" + h16 + ":){3}" + ls32
+            + "|(?:(?:" + h16 + ":){0,2}" + h16 + ")?::(?:" + h16 + ":){2}" + ls32
+            + "|(?:(?:" + h16 + ":){0,3}" + h16 + ")?::" + h16 + ":" + ls32
+            + "|(?:(?:" + h16 + ":){0,4}" + h16 + ")?::" + ls32
+            + "|(?:(?:" + h16 + ":){0,5}" + h16 + ")?::" + h16
+            + "|(?:(?:" + h16 + ":){0,6}" + h16 + ")?::";
+        // Consume a non-hex label (e.g. IPv6:) but replace only the captured address.
+        // Do not retry within a hyphenated label; consume it without backtracking.
+        String label = "(?:(?<!-)(?=[\\w-]*[^0-9a-fA-F:])[\\w-]++:)?";
         filterRules.add(new SanitizationRule(
-            Pattern.compile("\\b([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}\\b"),
-            "0.0.0.0::1"
+            Pattern.compile("(?<![\\w:])" + label + "(" + ipv6 + ")(?![\\w:]|\\.+\\w)"),
+            "0.0.0.0::1", 1
         ));
         filterRules.add(new SanitizationRule(
             Pattern.compile("\\b(?:[0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}\\b"),
