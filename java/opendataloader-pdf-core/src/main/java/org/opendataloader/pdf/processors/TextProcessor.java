@@ -41,6 +41,7 @@ public class TextProcessor {
     private static final double MAX_RIGHT_DECORATION_IMAGE_EPSILON = 1.5;
     private static final double NEIGHBORS_TEXT_CHUNKS_EPSILON = 0.1;
     private static final double TEXT_MIN_HEIGHT = 1;
+    private static final double TEXT_MIN_FONT_SIZE = 5;
 
     public static void replaceUndefinedCharacters(List<IObject> contents, String replacementCharacterString) {
         if (ChunkParser.REPLACEMENT_CHARACTER_STRING.equals(replacementCharacterString)) {
@@ -82,10 +83,11 @@ public class TextProcessor {
             IObject object = contents.get(i);
             if (object instanceof TextChunk) {
                 TextChunk textChunk = ((TextChunk) object);
-                if (textChunk.getBoundingBox().getHeight() <= TEXT_MIN_HEIGHT) {
+                if (textChunk.getBoundingBox().getHeight() <= TEXT_MIN_HEIGHT &&
+                    textChunk.getFontSize() <= TEXT_MIN_FONT_SIZE) {
                     contents.set(i, null);
-                    if (textChunk.getBoundingBox().getHeight() == 0) {
-                        LOGGER.log(Level.WARNING, "Text with zero height on page {0} has been filtered out", textChunk.getPageNumber());
+                    if (textChunk.getBoundingBox().getHeight() == 0 || textChunk.getFontSize() == 0) {
+                        LOGGER.log(Level.WARNING, "Text with zero height or zero font size on page {0} has been filtered out", textChunk.getPageNumber());
                     }
                 }
             }
