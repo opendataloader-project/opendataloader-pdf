@@ -98,6 +98,7 @@ public class TableBorderProcessor {
             for (TableBorder border : processedTableBorders) {
                 StaticContainers.getTableBordersCollection().removeTableBorder(border, pageNumber);
                 TableBorder normalizedTable = normalizeAndProcessTableBorder(contents, border, pageNumber);
+                ClusterTableProcessor.setTableCellsSemanticTypes(normalizedTable);
                 normalizedTables.put(border, normalizedTable);
                 // Remove the outer table while processing its contents, then restore the page index
                 // with the final instance so later lookups still see the normalized table.
