@@ -130,7 +130,7 @@ opendataloader_pdf.convert(
 | Standard digital PDF | Fast (default) | `pip install opendataloader-pdf` | None needed | `opendataloader-pdf file1.pdf file2.pdf folder/` |
 | Complex or nested tables | **Hybrid** | `pip install "opendataloader-pdf[hybrid]"` | `opendataloader-pdf-hybrid --port 5002` | `opendataloader-pdf --hybrid docling-fast file1.pdf file2.pdf folder/` |
 | Scanned / image-based PDF | Hybrid + OCR | `pip install "opendataloader-pdf[hybrid]"` | `opendataloader-pdf-hybrid --port 5002 --force-ocr` | `opendataloader-pdf --hybrid docling-fast file1.pdf file2.pdf folder/` |
-| Non-English scanned PDF | Hybrid + OCR | `pip install "opendataloader-pdf[hybrid]"` | `opendataloader-pdf-hybrid --port 5002 --force-ocr --ocr-lang "ko,en"` | `opendataloader-pdf --hybrid docling-fast file1.pdf file2.pdf folder/` |
+| Non-English scanned PDF | Hybrid + OCR | `pip install "opendataloader-pdf[hybrid]"` | `opendataloader-pdf-hybrid --port 5002 --force-ocr --ocr-engine <engine> --ocr-lang <codes>` — see [Choosing an OCR Engine](#choosing-an-ocr-engine) | `opendataloader-pdf --hybrid docling-fast file1.pdf file2.pdf folder/` |
 | Mathematical formulas | Hybrid + formula | `pip install "opendataloader-pdf[hybrid]"` | `opendataloader-pdf-hybrid --enrich-formula` | `opendataloader-pdf --hybrid docling-fast --hybrid-mode full file1.pdf file2.pdf folder/` |
 | Charts needing description | Hybrid + picture | `pip install "opendataloader-pdf[hybrid]"` | `opendataloader-pdf-hybrid --enrich-picture-description` | `opendataloader-pdf --hybrid docling-fast --hybrid-mode full file1.pdf file2.pdf folder/` |
 | Nested sections for RAG chunking | Hybrid + heading levels | `pip install "opendataloader-pdf[hybrid]"` | `opendataloader-pdf-hybrid --port 5002 --heading-hierarchy` | `opendataloader-pdf --hybrid docling-fast file1.pdf file2.pdf folder/` |
@@ -229,7 +229,33 @@ For non-English documents, specify the language:
 opendataloader-pdf-hybrid --port 5002 --force-ocr --ocr-lang "ko,en"
 ```
 
-Supported languages: `en`, `ko`, `ja`, `ch_sim`, `ch_tra`, `de`, `fr`, `ar`, and more.
+The language codes above are for the default engine (EasyOCR): `en`, `ko`, `ja`, `ch_sim`, `ch_tra`, `de`, `fr`, `ar`, and more.
+
+#### Choosing an OCR Engine
+
+OCR quality varies with the engine, the language, and the document itself (scan resolution, fonts, layout). No engine is best for every document, so run a few representative pages through several engines and compare the output before processing a whole collection.
+
+Select the engine with `--ocr-engine`. Each engine uses its own language code system for `--ocr-lang`:
+
+| Engine | `--ocr-engine` | `--ocr-lang` example | Platform / extra install |
+|--------|----------------|----------------------|--------------------------|
+| EasyOCR (default) | `easyocr` | `ko,en` (ISO 639-1) | Included in `opendataloader-pdf[hybrid]` |
+| RapidOCR | `rapidocr` | `korean` (RapidOCR codes: `en`, `ch`, `japan`, `korean`, ...) | `pip install rapidocr onnxruntime` |
+| Tesseract (CLI) | `tesseract` | `kor,eng` (ISO 639-2) | Tesseract binary + language data (e.g. `tesseract-ocr-kor`) |
+| Tesseract (Python binding) | `tesserocr` | `kor,eng` (ISO 639-2) | `pip install tesserocr` + libtesseract |
+| Apple Vision | `ocrmac` | `ko-KR,en-US` (BCP-47) | macOS only, `pip install ocrmac` |
+| NVIDIA Nemotron OCR | `nemotron-ocr` | `multilingual` or `english` | Linux x86_64 + CUDA, `pip install "docling[feat-ocr-nemotron]"` |
+| Automatic | `auto` | Not configurable | Docling picks an available engine |
+
+To compare engines on a sample, start one server per engine and send the same file to each:
+
+```bash
+opendataloader-pdf-hybrid --port 5002 --force-ocr --ocr-engine easyocr --ocr-lang "ko,en"
+opendataloader-pdf-hybrid --port 5003 --force-ocr --ocr-engine tesseract --ocr-lang "kor,eng"
+
+opendataloader-pdf sample.pdf --hybrid docling-fast --hybrid-mode full --hybrid-url http://localhost:5002 -o out-easyocr
+opendataloader-pdf sample.pdf --hybrid docling-fast --hybrid-mode full --hybrid-url http://localhost:5003 -o out-tesseract
+```
 
 ### Formula Extraction (LaTeX)
 
@@ -573,11 +599,11 @@ Yes. OpenDataLoader runs 100% locally. No API calls, no data transmission — yo
 
 ### Does it support OCR for scanned PDFs?
 
-Yes, via hybrid mode. Install with `pip install "opendataloader-pdf[hybrid]"`, start the backend with `--force-ocr`, then process as usual. Supports multiple languages including Korean, Japanese, Chinese, Arabic, and more via `--ocr-lang`.
+Yes, via hybrid mode. Install with `pip install "opendataloader-pdf[hybrid]"`, start the backend with `--force-ocr`, then process as usual. Supports multiple languages including Korean, Japanese, Chinese, Arabic, and more via `--ocr-lang`, with a choice of OCR engines via `--ocr-engine`. Quality varies by engine, language, and document — see [Choosing an OCR Engine](#choosing-an-ocr-engine).
 
 ### Does it work with Korean, Japanese, or Chinese documents?
 
-Yes. For digital PDFs, text extraction works out of the box. For scanned PDFs, use hybrid mode with `--force-ocr --ocr-lang "ko,en"` (or `ja`, `ch_sim`, `ch_tra`). Coming soon: [Hancom Data Loader](https://sdk.hancom.com/en/services/1?utm_source=github&utm_medium=readme&utm_campaign=opendataloader-pdf) integration — enterprise-grade AI document analysis with built-in production-grade OCR and customer-customized models optimized for your specific document types and workflows.
+Yes. For digital PDFs, text extraction works out of the box. For scanned PDFs, use hybrid mode with `--force-ocr --ocr-lang "ko,en"` (or `ja`, `ch_sim`, `ch_tra`), and compare OCR engines on a sample of your documents — see [Choosing an OCR Engine](#choosing-an-ocr-engine). Coming soon: [Hancom Data Loader](https://sdk.hancom.com/en/services/1?utm_source=github&utm_medium=readme&utm_campaign=opendataloader-pdf) integration — enterprise-grade AI document analysis with built-in production-grade OCR and customer-customized models optimized for your specific document types and workflows.
 
 ### How fast is it?
 
