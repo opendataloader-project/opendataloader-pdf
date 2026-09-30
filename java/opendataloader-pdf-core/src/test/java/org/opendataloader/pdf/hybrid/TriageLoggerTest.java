@@ -117,6 +117,23 @@ public class TriageLoggerTest {
     }
 
     @Test
+    public void testSignalsIncludeScannedPageFields() {
+        Map<Integer, TriageResult> triageResults = new HashMap<>();
+        TriageSignals signals = new TriageSignals(0, 3, 0.0, 0, false, false,
+            0, 0, 0, false, false, false, false,
+            0, 0, 0.0, false, 1.0, 0.707, 1);
+        triageResults.put(0, TriageResult.backend(0, 0.9, signals));
+
+        ObjectNode json = triageLogger.createTriageJson("scan.pdf", "docling-fast", triageResults);
+        JsonNode signalsJson = json.get("triage").get(0).get("signals");
+
+        Assertions.assertEquals(1, signalsJson.get("nonWhitespaceTextCount").asInt());
+        Assertions.assertEquals(1.0, signalsJson.get("largeImageRatio").asDouble(), 0.001);
+        Assertions.assertEquals(0.707, signalsJson.get("largeImageAspectRatio").asDouble(), 0.001);
+        Assertions.assertTrue(signalsJson.get("likelyScannedPage").asBoolean());
+    }
+
+    @Test
     public void testToJsonString() throws IOException {
         Map<Integer, TriageResult> triageResults = new HashMap<>();
         TriageSignals signals = TriageSignals.empty();

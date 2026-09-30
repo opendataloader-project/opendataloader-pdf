@@ -18,11 +18,14 @@ package org.opendataloader.pdf.hybrid;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.hybrid.TriageProcessor.TriageDecision;
 import org.opendataloader.pdf.hybrid.TriageProcessor.TriageResult;
 import org.opendataloader.pdf.hybrid.TriageProcessor.TriageSignals;
 import org.opendataloader.pdf.hybrid.TriageProcessor.TriageThresholds;
+import org.verapdf.tools.StaticResources;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.content.LineChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
@@ -52,6 +55,7 @@ public class TriageProcessorTest {
         StaticLayoutContainers.clearContainers();
         StaticLayoutContainers.setCurrentContentId(1L);
         StaticContainers.setTableBordersCollection(new TableBordersCollection());
+        StaticResources.setDocument(null);
     }
 
     @Test
@@ -269,6 +273,8 @@ public class TriageProcessorTest {
         Assertions.assertEquals(0, signals.getAlignedLineGroups());
         Assertions.assertFalse(signals.hasTableBorder());
         Assertions.assertFalse(signals.hasSuspiciousPattern());
+        Assertions.assertEquals(0, signals.getNonWhitespaceTextCount());
+        Assertions.assertFalse(signals.isLikelyScannedPage());
     }
 
     @Test
@@ -363,6 +369,71 @@ public class TriageProcessorTest {
         Assertions.assertEquals(1.0, result.getConfidence(), 0.001);
     }
 
+    @Test
+    public void testExtractSignalsCountsNonWhitespaceTextChunks() {
+        List<IObject> contents = new ArrayList<>();
+        contents.add(createTextChunk(10, 100, 20, 120, " "));
+        contents.add(createTextChunk(30, 100, 40, 120, " "));
+        contents.add(createTextChunk(50, 100, 90, 120, "word"));
+
+        TriageSignals signals = TriageProcessor.extractSignals(contents, 0, new TriageThresholds());
+
+        Assertions.assertEquals(3, signals.getTextChunkCount());
+        Assertions.assertEquals(1, signals.getNonWhitespaceTextCount());
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @CsvSource({
+        "portrait scan,                     1.0,   0.707, 0,  0, true",
+        "landscape scan,                    1.0,   1.414, 0,  0, true",
+        "aspect ratio is ignored,           1.0,   3.0,   0,  0, true",
+        "image ratio at threshold,          0.4,   0.707, 0,  0, true",
+        "image ratio below threshold,       0.399, 0.707, 0,  0, false",
+        "image bleeding past the page box,  1.123, 0.707, 0,  0, true",
+        "text chunks at limit,              1.0,   0.707, 5,  5, true",
+        "text chunks above limit,           1.0,   0.707, 6,  6, false",
+        "whitespace chunks are not counted, 1.0,   0.707, 40, 0, true",
+        "no image,                          0.0,   0.0,   0,  0, false"
+    })
+    public void testIsLikelyScannedPage(String description, double largeImageRatio,
+                                        double largeImageAspectRatio, int textChunkCount,
+                                        int nonWhitespaceTextCount, boolean expected) {
+        TriageSignals signals = createImageSignals(largeImageRatio, largeImageAspectRatio,
+            textChunkCount, nonWhitespaceTextCount);
+
+        Assertions.assertEquals(expected, signals.isLikelyScannedPage());
+    }
+
+    @Test
+    public void testWideTableImageKeepsLargeImageSignalWithoutScanSignal() {
+        TriageSignals signals = createImageSignals(0.2, 2.0, 0, 0);
+
+        Assertions.assertTrue(signals.hasLargeImage());
+        Assertions.assertFalse(signals.isLikelyScannedPage());
+    }
+
+    @Test
+    public void testLegacyConstructorsUseTextChunkCountAsNonWhitespaceTextCount() {
+        TriageSignals basic = new TriageSignals(0, 7, 0.0, 0, false, false);
+        TriageSignals withoutNonWhitespaceCount = new TriageSignals(0, 9, 0.0, 0, false, false,
+            0, 0, 0, false, false, false, false,
+            0, 0, 0.0, false, 1.0, 0.707);
+
+        Assertions.assertEquals(7, basic.getNonWhitespaceTextCount());
+        Assertions.assertEquals(9, withoutNonWhitespaceCount.getNonWhitespaceTextCount());
+    }
+
+    @Test
+    public void testNonWhitespaceTextCountIsPartOfEquality() {
+        TriageSignals oneWord = createImageSignals(1.0, 0.707, 3, 1);
+        TriageSignals twoWords = createImageSignals(1.0, 0.707, 3, 2);
+
+        Assertions.assertNotEquals(oneWord, twoWords);
+        Assertions.assertEquals(oneWord, createImageSignals(1.0, 0.707, 3, 1));
+        Assertions.assertEquals(oneWord.hashCode(), createImageSignals(1.0, 0.707, 3, 1).hashCode());
+        Assertions.assertTrue(oneWord.toString().contains("nonWhitespaceTextCount=1"));
+    }
+
     // Helper methods
 
     private TextChunk createTextChunk(double leftX, double bottomY, double rightX, double topY, String text) {
@@ -370,6 +441,13 @@ public class TriageProcessorTest {
         TextChunk chunk = new TextChunk(bbox, text, topY - bottomY, bottomY);
         chunk.adjustSymbolEndsToBoundingBox(null);
         return chunk;
+    }
+
+    private TriageSignals createImageSignals(double largeImageRatio, double largeImageAspectRatio,
+                                             int textChunkCount, int nonWhitespaceTextCount) {
+        return new TriageSignals(0, textChunkCount, 0.0, 0, false, false,
+            0, 0, 0, false, false, false, false,
+            0, 0, 0.0, false, largeImageRatio, largeImageAspectRatio, nonWhitespaceTextCount);
     }
 
     private LineChunk createLineChunk(double x1, double y1, double x2, double y2) {
