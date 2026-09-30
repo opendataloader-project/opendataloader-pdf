@@ -247,12 +247,23 @@ Select the engine with `--ocr-engine`. Each engine uses its own language code sy
 | NVIDIA Nemotron OCR | `nemotron-ocr` | `multilingual` or `english` | Linux x86_64 + CUDA, `pip install "docling[feat-ocr-nemotron]"` |
 | Automatic | `auto` | Not configurable | Docling picks an available engine |
 
-To compare engines on a sample, start one server per engine and send the same file to each:
+To compare engines on a sample, start one server per engine and send the same file to each.
+
+**Terminal 1** — EasyOCR server:
 
 ```bash
 opendataloader-pdf-hybrid --port 5002 --force-ocr --ocr-engine easyocr --ocr-lang "ko,en"
-opendataloader-pdf-hybrid --port 5003 --force-ocr --ocr-engine tesseract --ocr-lang "kor,eng"
+```
 
+**Terminal 2** — Tesseract server:
+
+```bash
+opendataloader-pdf-hybrid --port 5003 --force-ocr --ocr-engine tesseract --ocr-lang "kor,eng"
+```
+
+**Terminal 3** — Send the same sample to both:
+
+```bash
 opendataloader-pdf sample.pdf --hybrid docling-fast --hybrid-mode full --hybrid-url http://localhost:5002 -o out-easyocr
 opendataloader-pdf sample.pdf --hybrid docling-fast --hybrid-mode full --hybrid-url http://localhost:5003 -o out-tesseract
 ```
