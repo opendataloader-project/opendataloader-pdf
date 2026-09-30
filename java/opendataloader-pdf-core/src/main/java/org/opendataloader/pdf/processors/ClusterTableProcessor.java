@@ -80,7 +80,7 @@ public class ClusterTableProcessor extends AbstractTableProcessor {
         return result;
     }
 
-    private static void setTableCellsSemanticTypes(TableBorder table) {
+    public static void setTableCellsSemanticTypes(TableBorder table) {
         for (int rowNumber = 0; rowNumber < table.getNumberOfRows(); rowNumber++) {
             for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
                 TableBorderCell cell = table.getCell(rowNumber, colNumber);
