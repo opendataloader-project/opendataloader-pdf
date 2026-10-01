@@ -206,17 +206,36 @@ jobs:
           node scripts/generate-options.mjs
           node scripts/generate-schema.mjs
 
-      - name: Push reference docs to homepage
-        # Pinned to v1.7.3 for security - verify before updating
-        uses: cpina/github-action-push-to-another-repository@55306faa4ed53b815ae49e564af8cfb359d32ae2  # v1.7.3
+      # A first-party checkout rather than a third-party push action: the
+      # token then reaches only GitHub's own code, as a header instead of in
+      # a clone URL, and the post-job step removes it.
+      - name: Check out homepage
+        uses: actions/checkout@v7
         with:
-          source-directory: 'content/docs/reference'
-          destination-github-username: 'opendataloader-project'
-          destination-repository-name: 'opendataloader.org'
-          target-directory: 'apps/v1/content/docs/reference'
-          target-branch: staging
-        env:
-          API_TOKEN_GITHUB: ${{ secrets.HOMEPAGE_SYNC_TOKEN }}
+          repository: 'opendataloader-project/opendataloader.org'
+          # develop is where site work lands before fast-forwarding into
+          # staging, then main; only those two deploy.
+          ref: 'develop'
+          token: ${{ secrets.HOMEPAGE_SYNC_TOKEN }}
+          path: homepage
+
+      - name: Push reference docs to homepage
+        working-directory: homepage
+        run: |
+          target=apps/web/content/docs/reference
+          rm -rf "$target"
+          cp -R ../content/docs/reference "$target"
+          git add -A "$target"
+          if git diff --cached --quiet; then
+            echo "Reference docs unchanged; nothing to push."
+            exit 0
+          fi
+          git config user.name opendataloader-bot
+          git config user.email open.dataloader@hancom.com
+          git commit -q -m "docs(reference): sync from opendataloader-pdf ${GITHUB_REF_NAME}" \
+            -m "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}"
+          # Site work also lands on develop, so it may have moved since the checkout.
+          git push origin HEAD || { git pull -q --rebase origin develop && git push origin HEAD; }
 
   # Without this, the next push to main would republish a snapshot under a
   # coordinate that is now a release. After the publishes, never before: a bump

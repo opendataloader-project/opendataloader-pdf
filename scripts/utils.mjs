@@ -16,7 +16,9 @@ export function escapeMarkdown(str) {
     .replace(/\*/g, String.raw`\*`)   // escape asterisks
     .replace(/_/g, String.raw`\_`)    // escape underscores
     .replace(/</g, '&lt;')            // escape HTML angle brackets
-    .replace(/>/g, '&gt;');
+    .replace(/>/g, '&gt;')
+    .replace(/\{/g, '&#123;')         // MDX evaluates {…} as a JS expression at build time
+    .replace(/\}/g, '&#125;');
 }
 
 /**
