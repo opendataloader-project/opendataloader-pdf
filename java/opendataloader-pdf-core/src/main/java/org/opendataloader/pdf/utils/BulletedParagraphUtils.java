@@ -54,6 +54,15 @@ public class BulletedParagraphUtils {
      * @param textNode the text node to check
      * @return true if the first line is bulleted, false otherwise
      */
+    /**
+     * Whether {@code codePoint} is one of the glyphs the label detection accepts as an unordered
+     * list label. The Markdown generator uses it to decide whether the leading label of a list
+     * item may be dropped: only these glyphs are, not letters, digits or ordinary punctuation.
+     */
+    public static boolean isPossibleLabelGlyph(int codePoint) {
+        return POSSIBLE_LABELS.indexOf(codePoint) >= 0;
+    }
+
     public static boolean isBulletedParagraph(SemanticTextNode textNode) {
         return isBulletedLine(textNode.getFirstLine());
     }
