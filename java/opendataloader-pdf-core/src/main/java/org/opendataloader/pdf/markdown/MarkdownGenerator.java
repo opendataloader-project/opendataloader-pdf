@@ -133,7 +133,7 @@ public class MarkdownGenerator implements Closeable {
             content instanceof TableBorder ||
             content instanceof PDFList ||
             content instanceof SemanticTOC ||
-            (content instanceof ImageChunk && isImageSupported);
+            (content instanceof ImageChunk && isImageSupported && ImagesUtils.isRenderableImage((ImageChunk) content));
     }
 
     protected void writeContentsSeparator() throws IOException {
@@ -157,7 +157,12 @@ public class MarkdownGenerator implements Closeable {
         } else if (object instanceof SemanticTextNode) {
             writeSemanticTextNode((SemanticTextNode) object);
         } else if (object instanceof TableBorder) {
-            writeTable((TableBorder) object);
+            TableBorder table = (TableBorder) object;
+            if (table.isTextBlock()) {
+                writeContents(table.getCell(0, 0).getContents(), false);
+            } else {
+                writeTable(table);
+            }
         } else if (object instanceof PDFList) {
             writeList((PDFList) object);
         } else if (object instanceof SemanticTOC) {

@@ -573,6 +573,7 @@ public class DocumentProcessor {
         File inputPDF = new File(inputPdfName);
         new File(config.getOutputFolder()).mkdirs();
         if (!config.isImageOutputOff() && (config.isGenerateHtml() || config.isGenerateMarkdown() || config.isGenerateJSON())) {
+            ImageFigureGroupingProcessor.groupFigures(contents);
             String imagesDirectory;
             if (config.getImageDir() != null && !config.getImageDir().isEmpty()) {
                 imagesDirectory = config.getImageDir();
