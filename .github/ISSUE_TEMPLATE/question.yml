@@ -1,0 +1,30 @@
+name: Question
+description: Ask how to achieve something with opendataloader-pdf
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check the [README](https://github.com/opendataloader-project/opendataloader-pdf#readme) and [existing issues](https://github.com/opendataloader-project/opendataloader-pdf/issues?q=is%3Aissue) first.
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What you want to achieve and which part you need help with.
+    validations:
+      required: true
+  - type: textarea
+    id: tried
+    attributes:
+      label: What you tried
+      description: Commands or code, and what happened.
+  - type: dropdown
+    id: ai-assistance
+    attributes:
+      label: AI assistance
+      options:
+        - None
+        - AI-assisted (a person wrote it with help from an AI tool)
+        - AI agent (drafted by an agent, reviewed by its operator)
+    validations:
+      required: true

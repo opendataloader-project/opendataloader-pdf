@@ -1,1 +1,5 @@
 blank_issues_enabled: false
+contact_links:
+  - name: Add a test document
+    url: https://github.com/opendataloader-project/opendataloader-testdocs/blob/main/CONTRIBUTING.md
+    about: Public PDFs that reproduce problems belong in opendataloader-testdocs.

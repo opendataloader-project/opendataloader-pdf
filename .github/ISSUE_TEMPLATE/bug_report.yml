@@ -1,0 +1,65 @@
+name: Bug report
+description: Wrong output, a crash, or an error, shown on a public document
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A maintainer should be able to reproduce this with one command. See [CONTRIBUTING.md](https://github.com/opendataloader-project/opendataloader-pdf/blob/main/CONTRIBUTING.md#reporting-a-bug).
+
+        **Do not attach private documents.** Use a document from [opendataloader-testdocs](https://github.com/opendataloader-project/opendataloader-testdocs), a public URL, or a document you created that shows the same problem.
+  - type: input
+    id: document
+    attributes:
+      label: Test document
+      description: A testdocs id, or a public URL and the document's license.
+      placeholder: "bordered-table-basic, or https://example.org/report.pdf (CC BY 4.0)"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: "opendataloader-pdf version (`pip show opendataloader-pdf`), plus the hybrid backend if you use one."
+      placeholder: "2.5.5"
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command
+      description: The exact command or code you ran, with every option.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected output
+      description: What correct output looks like. Be specific — a table's rows and columns, which text comes first, what must not appear.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual output
+      description: The wrong output or the full error message, quoted.
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: "Operating system and `java --version`."
+      placeholder: "Ubuntu 24.04, OpenJDK 21.0.4"
+  - type: dropdown
+    id: ai-assistance
+    attributes:
+      label: AI assistance
+      options:
+        - None
+        - AI-assisted (a person wrote it with help from an AI tool)
+        - AI agent (drafted by an agent, reviewed by its operator)
+    validations:
+      required: true

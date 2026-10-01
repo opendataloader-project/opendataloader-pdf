@@ -1,0 +1,40 @@
+name: Feature request
+description: A capability you need, shown on a public document
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What you are trying to do
+      description: The task and why the current output does not serve it.
+    validations:
+      required: true
+  - type: input
+    id: document
+    attributes:
+      label: Example document
+      description: A testdocs id, or a public URL and the document's license.
+    validations:
+      required: true
+  - type: textarea
+    id: desired
+    attributes:
+      label: Desired output
+      description: What the output should look like for that document.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: Workarounds or other tools you have tried.
+  - type: dropdown
+    id: ai-assistance
+    attributes:
+      label: AI assistance
+      options:
+        - None
+        - AI-assisted (a person wrote it with help from an AI tool)
+        - AI agent (drafted by an agent, reviewed by its operator)
+    validations:
+      required: true

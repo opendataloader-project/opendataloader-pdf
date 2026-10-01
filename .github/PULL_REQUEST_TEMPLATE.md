@@ -1,19 +1,37 @@
-<!-- Thank you for your contribution! -->
+<!-- See CONTRIBUTING.md#submitting-a-pull-request. Title: a Conventional Commit, such as "fix(table): keep cells that follow a figure". -->
 
-<!-- STEPS TO FOLLOW:
-  1. Add a description of the changes (frequently the same as the commit description)
-  2. Enter the issue number next to "Resolves #" below (if there is no tracking issue resolved, **remove that section**)
-  3. Make sure the PR title follows the **Commit Message Formatting**: https://www.conventionalcommits.org/en/v1.0.0/#summary.
-  4. Follow the steps in the checklist below, starting with the **Commit Message Formatting**.
+Fixes https://github.com/opendataloader-project/opendataloader-pdf/issues/<number>
+
+## Objective
+
+<!-- The problem, quoted from the issue. -->
+
+## Approach
+
+<!-- How this change solves it, in terms a user understands. -->
+
+## Evidence
+
+<!--
+Output of:
+  python ../opendataloader-testdocs/scripts/run_expect.py <id> \
+    --cli before="uvx opendataloader-pdf@latest" --cli after="java -jar <your build>"
+At least one expectation fails under "before"; all pass under "after".
 -->
 
-<!-- Uncomment this section with the issue number if an issue is being resolved
-**Issue resolved by this Pull Request:**
-Resolves #
---->
+**Test document:** <!-- testdocs id -->
 
-**Checklist:**
+**Benchmark:** <!-- ./scripts/bench.sh --check-regression result -->
 
-- [ ] Documentation has been updated, if necessary.
-- [ ] Examples have been added, if necessary.
-- [ ] Tests have been added, if necessary.
+## Checklist
+
+- [ ] A test fails without this change and passes with it
+- [ ] `npm run sync` was run, or no CLI option changed
+- [ ] Documentation is updated, or no user-facing behavior changed
+- [ ] Every commit is signed off (`git commit -s`)
+
+## AI assistance
+
+- [ ] None
+- [ ] AI-assisted — a person wrote it with help from an AI tool
+- [ ] AI agent — drafted by an agent, reviewed by its operator (commits carry `Assisted-by:`)
