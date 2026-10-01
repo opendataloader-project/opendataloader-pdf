@@ -97,11 +97,11 @@ public class TriageProcessor {
     /** Minimum image aspect ratio (width/height) for table/chart detection. */
     private static final double MIN_IMAGE_ASPECT_RATIO = 1.75;
 
-    /** Minimum image area ratio for a page to look like a scan (40% of page). */
+    /** Minimum image area ratio for a page to look like a scan. */
     private static final double MIN_SCANNED_PAGE_IMAGE_RATIO = 0.4;
 
     /** Maximum non-whitespace text chunks on a page that looks like a scan. */
-    private static final int MAX_SCANNED_PAGE_TEXT_CHUNKS = 5;
+    private static final int MAX_SCANNED_PAGE_NON_WHITESPACE_TEXT_CHUNKS = 5;
 
     /** High pattern count threshold (skip consecutive check). */
     private static final int HIGH_PATTERN_COUNT_THRESHOLD = 30;
@@ -248,7 +248,7 @@ public class TriageProcessor {
     public static final class TriageSignals {
         private final int lineChunkCount;
         private final int textChunkCount;
-        private final int nonWhitespaceTextCount;
+        private final int nonWhitespaceTextChunkCount;
         private final double lineToTextRatio;
         private final int alignedLineGroups;
         private final boolean hasTableBorder;
@@ -312,6 +312,9 @@ public class TriageProcessor {
 
         /**
          * Creates new triage signals with all fields.
+         *
+         * @param nonWhitespaceTextChunkCount Text chunks that are not whitespace-only, a subset of
+         *                                    {@code textChunkCount}; the scanned-page check uses it.
          */
         public TriageSignals(int lineChunkCount, int textChunkCount, double lineToTextRatio,
                              int alignedLineGroups, boolean hasTableBorder, boolean hasSuspiciousPattern,
@@ -320,10 +323,10 @@ public class TriageProcessor {
                              boolean hasRowSeparatorPattern, boolean hasAlignedShortLines,
                              int tablePatternCount, int maxConsecutiveStreak, double patternDensity,
                              boolean hasConsecutivePatterns, double largeImageRatio, double largeImageAspectRatio,
-                             int nonWhitespaceTextCount) {
+                             int nonWhitespaceTextChunkCount) {
             this.lineChunkCount = lineChunkCount;
             this.textChunkCount = textChunkCount;
-            this.nonWhitespaceTextCount = nonWhitespaceTextCount;
+            this.nonWhitespaceTextChunkCount = nonWhitespaceTextChunkCount;
             this.lineToTextRatio = lineToTextRatio;
             this.alignedLineGroups = alignedLineGroups;
             this.hasTableBorder = hasTableBorder;
@@ -377,8 +380,8 @@ public class TriageProcessor {
          *
          * @return The non-whitespace text chunk count.
          */
-        public int getNonWhitespaceTextCount() {
-            return nonWhitespaceTextCount;
+        public int getNonWhitespaceTextChunkCount() {
+            return nonWhitespaceTextChunkCount;
         }
 
         /**
@@ -507,14 +510,14 @@ public class TriageProcessor {
          * Checks if the page looks like a scan with no text layer for the Java path to extract.
          * Text chunks are split on whitespace, so the text limit is roughly a word count (a line
          * of text without spaces, such as CJK, counts once) that leaves room for a scanner-app
-         * stamp or a page number. The image ratio has no upper
-         * bound because an image bleeding past the page box covers more than 100% of it.
+         * stamp or a page number. The image ratio has no upper bound because an image bleeding
+         * past the page box covers more than 100% of it.
          *
          * @return true if the largest image covers much of the page and almost no text is present.
          */
         public boolean isLikelyScannedPage() {
             return largeImageRatio >= MIN_SCANNED_PAGE_IMAGE_RATIO
-                    && nonWhitespaceTextCount <= MAX_SCANNED_PAGE_TEXT_CHUNKS;
+                    && nonWhitespaceTextChunkCount <= MAX_SCANNED_PAGE_NON_WHITESPACE_TEXT_CHUNKS;
         }
 
         /**
@@ -533,7 +536,7 @@ public class TriageProcessor {
             TriageSignals that = (TriageSignals) obj;
             return lineChunkCount == that.lineChunkCount &&
                    textChunkCount == that.textChunkCount &&
-                   nonWhitespaceTextCount == that.nonWhitespaceTextCount &&
+                   nonWhitespaceTextChunkCount == that.nonWhitespaceTextChunkCount &&
                    Double.compare(that.lineToTextRatio, lineToTextRatio) == 0 &&
                    alignedLineGroups == that.alignedLineGroups &&
                    hasTableBorder == that.hasTableBorder &&
@@ -555,7 +558,7 @@ public class TriageProcessor {
 
         @Override
         public int hashCode() {
-            return Objects.hash(lineChunkCount, textChunkCount, nonWhitespaceTextCount, lineToTextRatio,
+            return Objects.hash(lineChunkCount, textChunkCount, nonWhitespaceTextChunkCount, lineToTextRatio,
                                 alignedLineGroups, hasTableBorder, hasSuspiciousPattern,
                                 horizontalLineCount, verticalLineCount, lineArtCount,
                                 hasGridLines, hasTableBorderLines, hasRowSeparatorPattern,
@@ -569,7 +572,7 @@ public class TriageProcessor {
             return "TriageSignals{" +
                    "lineChunkCount=" + lineChunkCount +
                    ", textChunkCount=" + textChunkCount +
-                   ", nonWhitespaceTextCount=" + nonWhitespaceTextCount +
+                   ", nonWhitespaceTextChunkCount=" + nonWhitespaceTextChunkCount +
                    ", lineToTextRatio=" + lineToTextRatio +
                    ", alignedLineGroups=" + alignedLineGroups +
                    ", hasTableBorder=" + hasTableBorder +

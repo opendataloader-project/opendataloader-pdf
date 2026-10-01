@@ -129,7 +129,9 @@ class HybridScannedPageRoutingIntegrationTest {
         String header = "name=\"" + name + "\"";
         int headerAt = multipartBody.indexOf(header);
         assertTrue(headerAt >= 0, "multipart body has no " + name + " field");
-        int valueStart = multipartBody.indexOf("\r\n\r\n", headerAt) + 4;
+        int separatorAt = multipartBody.indexOf("\r\n\r\n", headerAt);
+        assertTrue(separatorAt >= 0, "multipart " + name + " field has no header/value separator");
+        int valueStart = separatorAt + 4;
         return multipartBody.substring(valueStart, multipartBody.indexOf("\r\n", valueStart));
     }
 }

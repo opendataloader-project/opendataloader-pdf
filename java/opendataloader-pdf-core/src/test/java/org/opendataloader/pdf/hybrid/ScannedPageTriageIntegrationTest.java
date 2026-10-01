@@ -37,7 +37,6 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Triage of image-only scanned pages in hybrid auto mode (#619).
@@ -96,13 +95,13 @@ class ScannedPageTriageIntegrationTest {
                 .writeTo(tempDir.resolve("stamped.pdf")));
 
         assertRoutedAsScan(result);
-        assertEquals(3, result.getSignals().getNonWhitespaceTextCount());
+        assertEquals(3, result.getSignals().getNonWhitespaceTextChunkCount());
     }
 
     @Test
     void chineseScanSampleRoutesToBackend() throws IOException {
         File sample = new File(CHINESE_SCAN_PDF);
-        assumeTrue(sample.exists(), "Sample PDF not found at " + sample.getAbsolutePath());
+        assertTrue(sample.exists(), "Sample PDF not found at " + sample.getAbsolutePath());
 
         assertRoutedAsScan(triage(sample.toPath()));
     }
@@ -124,7 +123,7 @@ class ScannedPageTriageIntegrationTest {
                 .stampedWith("one two three four five six")
                 .writeTo(tempDir.resolve("six-words.pdf")));
 
-        assertEquals(6, result.getSignals().getNonWhitespaceTextCount());
+        assertEquals(6, result.getSignals().getNonWhitespaceTextChunkCount());
         assertEquals(TriageDecision.JAVA, result.getDecision());
         assertFalse(result.getSignals().isLikelyScannedPage());
     }

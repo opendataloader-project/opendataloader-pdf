@@ -53,7 +53,7 @@ import java.util.stream.Collectors;
  *         "alignedLineGroups": 0,
  *         "hasTableBorder": false,
  *         "hasSuspiciousPattern": false,
- *         "nonWhitespaceTextCount": 45,
+ *         "nonWhitespaceTextChunkCount": 45,
  *         "largeImageRatio": 0.0,
  *         "largeImageAspectRatio": 0.0,
  *         "likelyScannedPage": false
@@ -206,7 +206,7 @@ public class TriageLogger {
         signalsNode.put("alignedLineGroups", signals.getAlignedLineGroups());
         signalsNode.put("hasTableBorder", signals.hasTableBorder());
         signalsNode.put("hasSuspiciousPattern", signals.hasSuspiciousPattern());
-        signalsNode.put("nonWhitespaceTextCount", signals.getNonWhitespaceTextCount());
+        signalsNode.put("nonWhitespaceTextChunkCount", signals.getNonWhitespaceTextChunkCount());
         signalsNode.put("largeImageRatio", signals.getLargeImageRatio());
         signalsNode.put("largeImageAspectRatio", signals.getLargeImageAspectRatio());
         signalsNode.put("likelyScannedPage", signals.isLikelyScannedPage());
