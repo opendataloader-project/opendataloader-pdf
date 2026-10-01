@@ -127,7 +127,7 @@ public class TriageLoggerTest {
         ObjectNode json = triageLogger.createTriageJson("scan.pdf", "docling-fast", triageResults);
         JsonNode signalsJson = json.get("triage").get(0).get("signals");
 
-        Assertions.assertEquals(1, signalsJson.get("nonWhitespaceTextCount").asInt());
+        Assertions.assertEquals(1, signalsJson.get("nonWhitespaceTextChunkCount").asInt());
         Assertions.assertEquals(1.0, signalsJson.get("largeImageRatio").asDouble(), 0.001);
         Assertions.assertEquals(0.707, signalsJson.get("largeImageAspectRatio").asDouble(), 0.001);
         Assertions.assertTrue(signalsJson.get("likelyScannedPage").asBoolean());
