@@ -10,6 +10,7 @@ yet and is allowed to print the captured streams — but only once
 import io
 import subprocess
 import sys
+import threading
 import time
 from unittest.mock import MagicMock
 
@@ -328,3 +329,36 @@ def test_streaming_relay_error_does_not_wait_out_the_timeout(monkeypatch, patche
     with pytest.raises(BrokenPipeError):
         runner.run_jar(["doc.pdf"], quiet=False, timeout=5)
     assert time.monotonic() - started < 5
+
+
+def test_streaming_timeout_keeps_a_line_whose_relay_is_still_blocked(monkeypatch, patched_jar):
+    """A line already read from the JVM belongs in ``TimeoutExpired.output``
+    even while relaying it to the caller's stdout is still blocked: the kill
+    path only waits ``_RELAY_JOIN_TIMEOUT_S`` for the relay, so a line that is
+    collected only after it has been written can miss the exception."""
+    write_started = threading.Event()
+
+    class _SlowStdout:
+        def write(self, _text):
+            write_started.set()
+            time.sleep(runner._RELAY_JOIN_TIMEOUT_S + 0.5)
+
+    def wait(timeout=None):
+        if timeout is not None:
+            # Time out only once the relay has the line and is stuck writing it.
+            assert write_started.wait(5)
+            raise subprocess.TimeoutExpired(cmd=["java"], timeout=timeout)
+        return -9
+
+    fake_process = MagicMock()
+    fake_process.stdout = io.StringIO("line already read\n")
+    fake_process.wait.side_effect = wait
+    fake_process.__enter__ = lambda self: self
+    fake_process.__exit__ = lambda self, *_a: False
+    monkeypatch.setattr(runner.subprocess, "Popen", lambda *_a, **_kw: fake_process)
+    monkeypatch.setattr(runner.sys, "stdout", _SlowStdout())
+
+    with pytest.raises(subprocess.TimeoutExpired) as excinfo:
+        runner.run_jar(["doc.pdf"], quiet=False, timeout=5)
+
+    assert excinfo.value.output == b"line already read\n"

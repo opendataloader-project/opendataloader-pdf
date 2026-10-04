@@ -38,8 +38,10 @@ def _relay_lines(stream: IO[str], sink: List[str], errors: List[Exception]) -> N
     """
     try:
         for line in stream:
-            _write_stdout(line)
+            # Collect first: the kill path reads `sink` after a bounded join,
+            # possibly while this write is still blocked.
             sink.append(line)
+            _write_stdout(line)
     except Exception as error:  # re-raised on the calling thread by run_jar
         errors.append(error)
         stream.close()
