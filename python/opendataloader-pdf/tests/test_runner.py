@@ -9,6 +9,7 @@ yet and is allowed to print the captured streams — but only once
 
 import io
 import subprocess
+import sys
 import time
 from unittest.mock import MagicMock
 
@@ -259,3 +260,50 @@ def test_streaming_success_waits_for_the_full_relay(monkeypatch, patched_jar):
 
     # Nothing may be dropped: the tail arrived after the join bound elapsed.
     assert returned == "first line\nlast line\n"
+
+
+class _BrokenStdout:
+    """A parent stdout whose reader has gone away, e.g. ``| head``."""
+
+    def write(self, _text):
+        raise BrokenPipeError(32, "Broken pipe")
+
+
+def test_streaming_relay_error_propagates_instead_of_truncating(monkeypatch, patched_jar):
+    """A bounded run must not report success when relaying the output failed.
+
+    Without a timeout the relay runs inline, so a write error such as
+    ``BrokenPipeError`` reaches the caller. With a timeout it runs on a helper
+    thread, where an uncaught exception only ends the thread -- and
+    ``run_jar`` would then return the lines relayed so far as a complete,
+    successful result.
+    """
+    fake_process = MagicMock()
+    fake_process.stdout = io.StringIO("first line\nsecond line\n")
+    fake_process.wait.return_value = 0
+    fake_process.__enter__ = lambda self: self
+    fake_process.__exit__ = lambda self, *_a: False
+    monkeypatch.setattr(runner.subprocess, "Popen", lambda *_a, **_kw: fake_process)
+    monkeypatch.setattr(runner.sys, "stdout", _BrokenStdout())
+
+    with pytest.raises(BrokenPipeError):
+        runner.run_jar(["doc.pdf"], quiet=False, timeout=30)
+
+
+def test_streaming_relay_error_does_not_wait_out_the_timeout(monkeypatch, patched_jar):
+    """After a relay error nothing reads the pipe any more, so a child that
+    keeps writing fills it and blocks. The error must still surface promptly,
+    not as a ``TimeoutExpired`` once the bound runs out -- matching the inline
+    path, where leaving the ``Popen`` block closes the pipe."""
+    real_popen = subprocess.Popen
+    # Far more than a pipe buffer holds (64 KiB on Linux and macOS).
+    chatty_child = [sys.executable, "-c", "for _ in range(4000): print('x' * 99, flush=True)"]
+    monkeypatch.setattr(
+        runner.subprocess, "Popen", lambda _cmd, **kw: real_popen(chatty_child, **kw)
+    )
+    monkeypatch.setattr(runner.sys, "stdout", _BrokenStdout())
+
+    started = time.monotonic()
+    with pytest.raises(BrokenPipeError):
+        runner.run_jar(["doc.pdf"], quiet=False, timeout=5)
+    assert time.monotonic() - started < 5

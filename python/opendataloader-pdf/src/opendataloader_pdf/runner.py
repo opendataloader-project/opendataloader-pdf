@@ -28,11 +28,21 @@ def _write_stdout(text: str) -> None:
         sys.stdout.write(text)
 
 
-def _relay_lines(stream: IO[str], sink: List[str]) -> None:
-    """Write every line of ``stream`` to stdout, collecting it in ``sink``."""
-    for line in stream:
-        _write_stdout(line)
-        sink.append(line)
+def _relay_lines(stream: IO[str], sink: List[str], errors: List[Exception]) -> None:
+    """Write every line of ``stream`` to stdout, collecting it in ``sink``.
+
+    Runs on a helper thread, where an uncaught exception would only end the
+    thread, so a failure is recorded in ``errors`` for ``run_jar`` to re-raise.
+    The stream is then closed: nothing else reads it, and a child still
+    writing would otherwise block on the full pipe until the timeout.
+    """
+    try:
+        for line in stream:
+            _write_stdout(line)
+            sink.append(line)
+    except Exception as error:  # re-raised on the calling thread by run_jar
+        errors.append(error)
+        stream.close()
 
 
 def run_jar(args: List[str], quiet: bool = False, timeout: Optional[float] = None) -> str:
@@ -115,9 +125,10 @@ def run_jar(args: List[str], quiet: bool = False, timeout: Optional[float] = Non
                     # the relay runs on a helper thread and the timeout is
                     # applied to the process: a JVM that wedges without
                     # emitting another line is still stopped.
+                    relay_errors: List[Exception] = []
                     reader = threading.Thread(
                         target=_relay_lines,
-                        args=(process.stdout, output_lines),
+                        args=(process.stdout, output_lines, relay_errors),
                         daemon=True,
                     )
                     reader.start()
@@ -143,6 +154,8 @@ def run_jar(args: List[str], quiet: bool = False, timeout: Optional[float] = Non
                     # including a `--to-stdout` payload. `timeout` bounds the
                     # JVM, not the caller's own stdout.
                     reader.join()
+                    if relay_errors:
+                        raise relay_errors[0]
 
                 captured_output = "".join(output_lines)
 
