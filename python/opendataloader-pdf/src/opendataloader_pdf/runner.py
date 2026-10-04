@@ -143,7 +143,9 @@ def run_jar(args: List[str], quiet: bool = False, timeout: Optional[float] = Non
                         # Attach what the JAR had already emitted to the original
                         # exception rather than raising a second one, so the
                         # traceback still points at the wait() that timed out.
-                        expired.output = "".join(output_lines)
+                        # Bytes, or None if nothing arrived, as subprocess.run
+                        # documents for TimeoutExpired.output in quiet mode.
+                        expired.output = "".join(output_lines).encode("utf-8") or None
                         raise
                     # Success: the JVM has exited, so the pipe reaches EOF and
                     # the relay ends on its own. Joining WITHOUT a bound here is

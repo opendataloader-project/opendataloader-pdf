@@ -211,7 +211,28 @@ def test_streaming_timeout_kills_the_jvm(monkeypatch, patched_jar):
     # The JVM is killed, not left running behind a raised exception.
     fake_process.kill.assert_called_once()
     # Whatever the JAR had already emitted is attached, not discarded.
-    assert "parsing page 1" in (excinfo.value.output or "")
+    assert b"parsing page 1" in (excinfo.value.output or b"")
+
+
+def test_streaming_timeout_output_is_bytes_like_subprocess_run(monkeypatch, patched_jar):
+    """``TimeoutExpired.output`` is documented as "always bytes when any output
+    was captured regardless of the text=True setting", which is what quiet
+    mode gets from ``subprocess.run``. Streaming mode must match, so a caller
+    handling the exception does not need to know which mode raised it."""
+    fake_process = MagicMock()
+    fake_process.stdout = iter(["[INFO] página 1\n"])
+    fake_process.wait.side_effect = [
+        subprocess.TimeoutExpired(cmd=["java"], timeout=5),
+        0,
+    ]
+    fake_process.__enter__ = lambda self: self
+    fake_process.__exit__ = lambda self, *_a: False
+    monkeypatch.setattr(runner.subprocess, "Popen", lambda *_a, **_kw: fake_process)
+
+    with pytest.raises(subprocess.TimeoutExpired) as excinfo:
+        runner.run_jar(["doc.pdf"], quiet=False, timeout=5)
+
+    assert excinfo.value.output == "[INFO] página 1\n".encode("utf-8")
 
 
 def test_streaming_without_timeout_keeps_the_inline_read(monkeypatch, patched_jar):
