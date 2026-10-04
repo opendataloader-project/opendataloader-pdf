@@ -148,6 +148,10 @@ def run_jar(args: List[str], quiet: bool = False, timeout: Optional[float] = Non
                         # Bytes, or None if nothing arrived, as subprocess.run
                         # documents for TimeoutExpired.output in quiet mode.
                         expired.output = "".join(output_lines).encode("utf-8") or None
+                        if relay_errors:
+                            # The relay failed first; that is the cause the
+                            # caller needs, with the timeout attached.
+                            raise relay_errors[0] from expired
                         raise
                     # Success: the JVM has exited, so the pipe reaches EOF and
                     # the relay ends on its own. Joining WITHOUT a bound here is

@@ -362,3 +362,28 @@ def test_streaming_timeout_keeps_a_line_whose_relay_is_still_blocked(monkeypatch
         runner.run_jar(["doc.pdf"], quiet=False, timeout=5)
 
     assert excinfo.value.output == b"line already read\n"
+
+
+def test_streaming_relay_error_is_reported_when_the_bound_later_expires(
+    monkeypatch, patched_jar
+):
+    """A relay failure must not be masked by a timeout that expires afterwards.
+
+    Once the caller's stdout is gone the JVM keeps working -- Java's
+    ``System.out`` swallows write errors -- exactly as it does without a
+    timeout, where leaving the ``Popen`` block waits for it. If the bound runs
+    out first, the caller should still learn the original cause, with the
+    timeout attached, rather than a bare ``TimeoutExpired``.
+    """
+    real_popen = subprocess.Popen
+    # Writes once, then keeps working silently past the bound.
+    busy_child = [sys.executable, "-c", "import time; print('started', flush=True); time.sleep(30)"]
+    monkeypatch.setattr(
+        runner.subprocess, "Popen", lambda _cmd, **kw: real_popen(busy_child, **kw)
+    )
+    monkeypatch.setattr(runner.sys, "stdout", _BrokenStdout())
+
+    with pytest.raises(BrokenPipeError) as excinfo:
+        runner.run_jar(["doc.pdf"], quiet=False, timeout=2)
+
+    assert isinstance(excinfo.value.__cause__, subprocess.TimeoutExpired)
