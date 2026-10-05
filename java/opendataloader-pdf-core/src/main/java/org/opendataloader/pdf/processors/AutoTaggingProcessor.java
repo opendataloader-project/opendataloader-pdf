@@ -62,6 +62,7 @@ public class AutoTaggingProcessor {
     // with "Source: ..." under it is ordinary. A plain put kept only the last of
     // them and silently deleted the other's text.
     private static final Map<Long, List<SemanticCaption>> structElementIdToCaptionMap = new HashMap<>();
+    private static Map<SemanticHeading, Integer> normalizedLevels = new IdentityHashMap<>();
     private static boolean isPDF2_0 = false;
     private static final Map<BoundingBox, PDAnnotation> annotationBBoxesMap = new LinkedHashMap<>();
     private static int currentStructParent = 0;
@@ -89,6 +90,7 @@ public class AutoTaggingProcessor {
         pageNumberToFirstStructElement.clear();
         structElementIdToCaptionMap.clear();
         annotationBBoxesMap.clear();
+        normalizedLevels.clear();
         currentStructParent = 0;
         imageChunkFigureCounter = 0;
         footnoteCounter = 0;
@@ -272,11 +274,11 @@ public class AutoTaggingProcessor {
     public static COSObject createStructureTreeElements(PDDocument document, List<List<IObject>> contents,
                                                         COSObject structTreeRoot, COSDocument cosDocument) {
         COSObject seDocument = addStructElement(structTreeRoot, cosDocument, TaggedPDFConstants.DOCUMENT, null);
-        Map<SemanticHeading, Integer> normalizedLevels = buildNormalizedHeadingLevels(contents);
+        normalizedLevels = buildNormalizedHeadingLevels(contents);
         for (int pageNumber = 0; pageNumber < contents.size(); pageNumber++) {
             processAnnotations(document, cosDocument, pageNumber);
             List<IObject> pageContents = contents.get(pageNumber);
-            addKids(pageContents, seDocument, cosDocument, normalizedLevels);
+            addKids(pageContents, seDocument, cosDocument);
             processAnnotations(cosDocument, seDocument, pageNumber);
         }
         return seDocument;
@@ -287,8 +289,7 @@ public class AutoTaggingProcessor {
      * linked float (Figure/Table/List) via addCaptionIfPresent().
      * Based on Raman Kakhnovich's approach from origin/auto_tagging #377.
      */
-    private static void addKids(List<IObject> contents, COSObject parentStructElem, COSDocument cosDocument,
-                                 Map<SemanticHeading, Integer> normalizedLevels) {
+    private static void addKids(List<IObject> contents, COSObject parentStructElem, COSDocument cosDocument) {
         // First pass: collect Caption → linkedContentId mappings
         for (IObject content : contents) {
             if (content instanceof SemanticCaption) {
@@ -303,7 +304,7 @@ public class AutoTaggingProcessor {
             if (content instanceof SemanticCaption) {
                 continue;
             }
-            createStructElem(content, parentStructElem, cosDocument, normalizedLevels);
+            createStructElem(content, parentStructElem, cosDocument);
         }
     }
 
@@ -433,29 +434,29 @@ public class AutoTaggingProcessor {
         return result;
     }
 
-    private static void collectHeadings(IObject object, List<SemanticHeading> out) {
+    private static void collectHeadings(IObject object, List<SemanticHeading> headings) {
         if (object instanceof SemanticHeading) {
-            out.add((SemanticHeading) object);
+            headings.add((SemanticHeading) object);
         }
         if (object instanceof PDFList) {
             for (ListItem item : ((PDFList) object).getListItems()) {
-                checkKids(item.getContents(), out);
+                checkKids(item.getContents(), headings);
             }
         } else if (object instanceof SemanticTOC) {
-            checkKids(((SemanticTOC) object).getTOCItems(), out);
+            checkKids(((SemanticTOC) object).getTOCItems(), headings);
         } else if (object instanceof SemanticTOCI) {
-            checkKids(((SemanticTOCI) object).getContents(), out);
+            checkKids(((SemanticTOCI) object).getContents(), headings);
         } else if (object instanceof TableBorder) {
             TableBorder table = (TableBorder) object;
             if (table.isTextBlock()) {
-                checkKids(table.getCell(0,0).getContents(), out);
+                checkKids(table.getCell(0,0).getContents(), headings);
             } else if (!table.isOneCellTable()) {
                 for (int rowNumber = 0; rowNumber < table.getNumberOfRows(); rowNumber++) {
                     TableBorderRow row = table.getRow(rowNumber);
                     for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
                         TableBorderCell cell = row.getCell(colNumber);
                         if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
-                            checkKids(cell.getContents(), out);
+                            checkKids(cell.getContents(), headings);
                         }
                     }
                 }
@@ -772,7 +773,7 @@ public class AutoTaggingProcessor {
         }
     }
 
-    private static void createStructElem(IObject object, COSObject parentStructElem, COSDocument cosDocument, Map<SemanticHeading, Integer> normalizedLevels) {
+    private static void createStructElem(IObject object, COSObject parentStructElem, COSDocument cosDocument) {
         if (object instanceof SemanticHeading) {
             // Fallback: heading inside a nested context (list/table) — use original level
             createHeadingStructElem((SemanticHeading) object, parentStructElem, cosDocument,
@@ -782,15 +783,15 @@ public class AutoTaggingProcessor {
         } else if (object instanceof SemanticParagraph) {
             createParagraphStructElem((SemanticParagraph) object, parentStructElem, cosDocument);
         } else if (object instanceof PDFList) {
-            createListStructElem((PDFList) object, parentStructElem, cosDocument, normalizedLevels);
+            createListStructElem((PDFList) object, parentStructElem, cosDocument);
         } else if (object instanceof SemanticTOC) {
-            createTOCStructElem((SemanticTOC) object, parentStructElem, cosDocument, normalizedLevels);
+            createTOCStructElem((SemanticTOC) object, parentStructElem, cosDocument);
         } else if (object instanceof TableBorder) {
             TableBorder table = (TableBorder) object;
             if (table.isTextBlock()) {
-                createStructElemForTextBlock(table, parentStructElem, cosDocument, normalizedLevels);
+                createStructElemForTextBlock(table, parentStructElem, cosDocument);
             } else if (!table.isOneCellTable()) {
-                createTableStructElem(table, parentStructElem, cosDocument, normalizedLevels);
+                createTableStructElem(table, parentStructElem, cosDocument);
             }
         } else if (object instanceof SemanticFormula) {
             createFormulaStructElem((SemanticFormula) object, parentStructElem, cosDocument);
@@ -979,7 +980,7 @@ public class AutoTaggingProcessor {
         addMcidChildren(formula.getStreamInfos(), formula.getPageNumber(), formulaObject);
     }
 
-    private static void createListStructElem(PDFList list, COSObject parent, COSDocument cosDocument, Map<SemanticHeading, Integer> normalizedLevels) {
+    private static void createListStructElem(PDFList list, COSObject parent, COSDocument cosDocument) {
         COSObject listObject = addStructElement(parent, cosDocument, TaggedPDFConstants.L, list.getPageNumber());
         if (list.getNextList() != null) {
             listObject.setKey(ASAtom.ID, COSString.construct(String.valueOf(list.getRecognizedStructureId()).getBytes()));
@@ -1040,16 +1041,16 @@ public class AutoTaggingProcessor {
                     listItem.getFirstLine().getValue().length()));
             }
             processTextNode(lBodyTextNode, lBodyObject);
-            addKids(listItem.getContents(), lBodyObject, cosDocument, normalizedLevels);
+            addKids(listItem.getContents(), lBodyObject, cosDocument);
         }
         addCaptionIfPresent(list, listObject, cosDocument);
     }
 
-    private static void createTOCStructElem(SemanticTOC toc, COSObject parent, COSDocument cosDocument, Map<SemanticHeading, Integer> normalizedLevels) {
+    private static void createTOCStructElem(SemanticTOC toc, COSObject parent, COSDocument cosDocument) {
         COSObject tocObject = addStructElement(parent, cosDocument, TaggedPDFConstants.TOC, toc.getPageNumber());
         for (IObject child : toc.getTOCItems()) {
             if (child instanceof SemanticTOC) {
-                createTOCStructElem((SemanticTOC)child, tocObject, cosDocument, normalizedLevels);
+                createTOCStructElem((SemanticTOC)child, tocObject, cosDocument);
             } else if (child instanceof SemanticTOCI) {
                 SemanticTOCI tocItem = ((SemanticTOCI)child);
                 COSObject tocItemObject = addStructElement(tocObject, cosDocument, TaggedPDFConstants.TOCI, child.getPageNumber());
@@ -1059,23 +1060,23 @@ public class AutoTaggingProcessor {
                     tocItemTextNode.add(line);
                 }
                 processTextNode(tocItemTextNode, tocItemObject);
-                addKids(tocItem.getContents(), tocItemObject, cosDocument, normalizedLevels);
+                addKids(tocItem.getContents(), tocItemObject, cosDocument);
             }
         }
     }
 
-    private static void createTableStructElem(TableBorder table, COSObject parent, COSDocument cosDocument, Map<SemanticHeading, Integer> normalizedLevels) {
-        createTableStructElemReturning(table, parent, cosDocument, normalizedLevels);
+    private static void createTableStructElem(TableBorder table, COSObject parent, COSDocument cosDocument) {
+        createTableStructElemReturning(table, parent, cosDocument);
     }
 
-    private static COSObject createTableStructElemReturning(TableBorder table, COSObject parent, COSDocument cosDocument, Map<SemanticHeading, Integer> normalizedLevels) {
+    private static COSObject createTableStructElemReturning(TableBorder table, COSObject parent, COSDocument cosDocument) {
         COSObject tableObject = addStructElement(parent, cosDocument, TaggedPDFConstants.TABLE, table.getPageNumber());
 
         // Flat structure: Table > TR > TH/TD (no THead/TBody wrappers)
         // First row uses TH + Scope="Column" for header identification.
         // This is compatible with both Adobe Acrobat and veraPDF PDF/UA-2 validation.
         for (int rowNumber = 0; rowNumber < table.getNumberOfRows(); rowNumber++) {
-            addTableRow(table, rowNumber, tableObject, cosDocument, normalizedLevels);
+            addTableRow(table, rowNumber, tableObject, cosDocument);
         }
 
         addCaptionIfPresent(table, tableObject, cosDocument);
@@ -1083,7 +1084,7 @@ public class AutoTaggingProcessor {
     }
 
     private static void addTableRow(TableBorder table, int rowNumber, COSObject parent,
-                                    COSDocument cosDocument, Map<SemanticHeading, Integer> normalizedLevels) {
+                                    COSDocument cosDocument) {
         TableBorderRow row = table.getRow(rowNumber);
         COSObject rowObject = addStructElement(parent, cosDocument, TaggedPDFConstants.TR, row.getPageNumber());
         for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
@@ -1107,19 +1108,19 @@ public class AutoTaggingProcessor {
                 if (cell.getRowSpan() != 1) {
                     addAttributeToStructElem(cellObject, ASAtom.TABLE, ASAtom.ROW_SPAN, COSInteger.construct(cell.getRowSpan()));
                 }
-                addKids(cell.getContents(), cellObject, cosDocument, normalizedLevels);
+                addKids(cell.getContents(), cellObject, cosDocument);
             }
         }
     }
 
-    private static void createStructElemForTextBlock(TableBorder table, COSObject parent, COSDocument cosDocument, Map<SemanticHeading, Integer> normalizedLevels) {
+    private static void createStructElemForTextBlock(TableBorder table, COSObject parent, COSDocument cosDocument) {
         boolean useAside = isPDF2_0 && pdf2_0Namespace != null;
         COSObject partObject = addStructElement(parent, cosDocument, useAside ? TaggedPDFConstants.ASIDE : TaggedPDFConstants.ART, table.getPageNumber());
         if (useAside) {
             partObject.setKey(ASAtom.NS, pdf2_0Namespace);
         }
         TableBorderCell cell = table.getCell(0,0);
-        addKids(cell.getContents(), partObject, cosDocument, normalizedLevels);
+        addKids(cell.getContents(), partObject, cosDocument);
         addCaptionIfPresent(table, partObject, cosDocument);
     }
 
