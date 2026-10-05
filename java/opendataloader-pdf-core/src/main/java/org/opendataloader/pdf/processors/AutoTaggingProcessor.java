@@ -443,6 +443,8 @@ public class AutoTaggingProcessor {
             }
         } else if (object instanceof SemanticTOC) {
             checkKids(((SemanticTOC) object).getTOCItems(), out);
+        } else if (object instanceof SemanticTOCI) {
+            checkKids(((SemanticTOCI) object).getContents(), out);
         } else if (object instanceof TableBorder) {
             TableBorder table = (TableBorder) object;
             if (table.isTextBlock()) {
