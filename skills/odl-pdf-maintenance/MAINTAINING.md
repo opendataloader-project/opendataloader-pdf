@@ -76,6 +76,10 @@ When cutting an ODL release, re-verify the skill's principles against current be
   and still write an output file, so the run "succeeds" while the required OCR/enrichment did not.
 - **content-safety filters** — the default on/off posture of the off-page/tiny/hidden-OCG and
   hidden-text filters; the safety caution ("never disable filters to get more content") depends on it.
+- **Sensitive-data masking** — verify both intended replacements and false positives. Ordinary
+  timestamps and ratios must survive while full and compressed IPv6 addresses are masked;
+  include IPv4-embedded addresses and labels directly before addresses. Check text, JSON,
+  Markdown, and HTML because masking happens before output generation.
 - **Backend/OCR runs server-side** — OCR/enrichment execute on the hybrid backend, not the client,
   and need a reachable server; a "success" with no backend is a silent local fallback.
 - **Parser/preprocessing crash class** — the crash-before-page-handling hazard assumes a malformed
