@@ -62,6 +62,7 @@ public class AutoTaggingProcessor {
     // with "Source: ..." under it is ordinary. A plain put kept only the last of
     // them and silently deleted the other's text.
     private static final Map<Long, List<SemanticCaption>> structElementIdToCaptionMap = new HashMap<>();
+    private static Map<SemanticHeading, Integer> normalizedLevels = new IdentityHashMap<>();
     private static boolean isPDF2_0 = false;
     private static final Map<BoundingBox, PDAnnotation> annotationBBoxesMap = new LinkedHashMap<>();
     private static int currentStructParent = 0;
@@ -89,6 +90,7 @@ public class AutoTaggingProcessor {
         pageNumberToFirstStructElement.clear();
         structElementIdToCaptionMap.clear();
         annotationBBoxesMap.clear();
+        normalizedLevels.clear();
         currentStructParent = 0;
         imageChunkFigureCounter = 0;
         footnoteCounter = 0;
@@ -272,11 +274,11 @@ public class AutoTaggingProcessor {
     public static COSObject createStructureTreeElements(PDDocument document, List<List<IObject>> contents,
                                                         COSObject structTreeRoot, COSDocument cosDocument) {
         COSObject seDocument = addStructElement(structTreeRoot, cosDocument, TaggedPDFConstants.DOCUMENT, null);
-        Map<SemanticHeading, Integer> normalizedLevels = buildNormalizedHeadingLevels(contents);
+        normalizedLevels = buildNormalizedHeadingLevels(contents);
         for (int pageNumber = 0; pageNumber < contents.size(); pageNumber++) {
             processAnnotations(document, cosDocument, pageNumber);
             List<IObject> pageContents = contents.get(pageNumber);
-            addKids(pageContents, seDocument, cosDocument, normalizedLevels);
+            addKids(pageContents, seDocument, cosDocument);
             processAnnotations(cosDocument, seDocument, pageNumber);
         }
         return seDocument;
@@ -287,8 +289,7 @@ public class AutoTaggingProcessor {
      * linked float (Figure/Table/List) via addCaptionIfPresent().
      * Based on Raman Kakhnovich's approach from origin/auto_tagging #377.
      */
-    private static void addKids(List<IObject> contents, COSObject parentStructElem, COSDocument cosDocument,
-                                 Map<SemanticHeading, Integer> normalizedLevels) {
+    private static void addKids(List<IObject> contents, COSObject parentStructElem, COSDocument cosDocument) {
         // First pass: collect Caption → linkedContentId mappings
         for (IObject content : contents) {
             if (content instanceof SemanticCaption) {
@@ -303,18 +304,8 @@ public class AutoTaggingProcessor {
             if (content instanceof SemanticCaption) {
                 continue;
             }
-            if (content instanceof SemanticHeading && normalizedLevels != null) {
-                createHeadingStructElem((SemanticHeading) content, parentStructElem, cosDocument,
-                    normalizedLevels.get(content));
-            } else {
-                createStructElem(content, parentStructElem, cosDocument);
-            }
+            createStructElem(content, parentStructElem, cosDocument);
         }
-    }
-
-    /** Overload for nested contexts (list items, table cells) where heading normalization is not applicable. */
-    private static void addKids(List<IObject> contents, COSObject parentStructElem, COSDocument cosDocument) {
-        addKids(contents, parentStructElem, cosDocument, null);
     }
 
     /**
@@ -415,9 +406,7 @@ public class AutoTaggingProcessor {
         List<SemanticHeading> headings = new ArrayList<>();
         for (List<IObject> page : contents) {
             for (IObject obj : page) {
-                if (obj instanceof SemanticHeading) {
-                    headings.add((SemanticHeading) obj);
-                }
+                collectHeadings(obj, headings);
             }
         }
         Map<SemanticHeading, Integer> result = new IdentityHashMap<>();
@@ -443,6 +432,42 @@ public class AutoTaggingProcessor {
             prevOriginal = orig;
         }
         return result;
+    }
+
+    private static void collectHeadings(IObject object, List<SemanticHeading> headings) {
+        if (object instanceof SemanticHeading) {
+            headings.add((SemanticHeading) object);
+        }
+        if (object instanceof PDFList) {
+            for (ListItem item : ((PDFList) object).getListItems()) {
+                checkKids(item.getContents(), headings);
+            }
+        } else if (object instanceof SemanticTOC) {
+            checkKids(((SemanticTOC) object).getTOCItems(), headings);
+        } else if (object instanceof SemanticTOCI) {
+            checkKids(((SemanticTOCI) object).getContents(), headings);
+        } else if (object instanceof TableBorder) {
+            TableBorder table = (TableBorder) object;
+            if (table.isTextBlock()) {
+                checkKids(table.getCell(0,0).getContents(), headings);
+            } else if (!table.isOneCellTable()) {
+                for (int rowNumber = 0; rowNumber < table.getNumberOfRows(); rowNumber++) {
+                    TableBorderRow row = table.getRow(rowNumber);
+                    for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
+                        TableBorderCell cell = row.getCell(colNumber);
+                        if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
+                            checkKids(cell.getContents(), headings);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private static void checkKids(List<IObject> kids, List<SemanticHeading> out) {
+        for (IObject kid: kids) {
+            collectHeadings(kid, out);
+        }
     }
 
     private static boolean needToAddAnnotationToStructTree(PDAnnotation annotation, PDPage page, BoundingBox boundingBox) {
@@ -752,7 +777,7 @@ public class AutoTaggingProcessor {
         if (object instanceof SemanticHeading) {
             // Fallback: heading inside a nested context (list/table) — use original level
             createHeadingStructElem((SemanticHeading) object, parentStructElem, cosDocument,
-                    ((SemanticHeading) object).getHeadingLevel());
+                    normalizedLevels.get(object));
         } else if (object instanceof SemanticFootnote) {
             createFootnoteStructElem((SemanticFootnote) object, parentStructElem, cosDocument);
         } else if (object instanceof SemanticParagraph) {
