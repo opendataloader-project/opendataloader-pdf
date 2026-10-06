@@ -9,6 +9,9 @@ yet and is allowed to print the captured streams — but only once
 
 import io
 import subprocess
+import sys
+import threading
+import time
 from unittest.mock import MagicMock
 
 import pytest
@@ -151,3 +154,236 @@ def test_quiet_failure_prints_captured_streams_once(monkeypatch, capsys, patched
     assert "Stderr: captured stderr text" in err
     assert "Error running opendataloader-pdf CLI." in err
     assert "Return code: 2" in err
+
+
+def test_quiet_forwards_timeout_to_subprocess_run(monkeypatch, patched_jar):
+    """The bound must reach ``subprocess.run``, which is what actually kills
+    the JVM. Default stays ``None`` so existing callers wait exactly as
+    before."""
+    result = subprocess.CompletedProcess(
+        args=["java", "-jar", "fake.jar"], returncode=0, stdout="", stderr=""
+    )
+    fake_run = MagicMock(return_value=result)
+    monkeypatch.setattr(runner.subprocess, "run", fake_run)
+
+    runner.run_jar(["doc.pdf"], quiet=True, timeout=12.5)
+    assert fake_run.call_args.kwargs["timeout"] == 12.5
+
+    runner.run_jar(["doc.pdf"], quiet=True)
+    assert fake_run.call_args.kwargs["timeout"] is None
+
+
+def test_quiet_timeout_is_reported_and_reraised(monkeypatch, capsys, patched_jar):
+    """A timeout must be distinguishable from a crash in the caller's logs,
+    and must propagate: swallowing it would report a truncated conversion as
+    a successful one."""
+    monkeypatch.setattr(
+        runner.subprocess,
+        "run",
+        MagicMock(side_effect=subprocess.TimeoutExpired(cmd=["java"], timeout=3)),
+    )
+
+    with pytest.raises(subprocess.TimeoutExpired):
+        runner.run_jar(["doc.pdf"], quiet=True, timeout=3)
+
+    err = capsys.readouterr().err
+    assert "timed out after 3s" in err
+    # Not misreported as a non-zero exit.
+    assert "Error running opendataloader-pdf CLI." not in err
+
+
+def test_streaming_timeout_kills_the_jvm(monkeypatch, patched_jar):
+    """Streaming mode blocks on the pipe, so the timeout is applied to the
+    process and the relay runs on a helper thread: a JVM that stops emitting
+    lines is still killed rather than waited on forever."""
+    fake_process = MagicMock()
+    fake_process.stdout = iter(["[INFO] parsing page 1\n"])
+    fake_process.wait.side_effect = [
+        subprocess.TimeoutExpired(cmd=["java"], timeout=5),
+        0,
+    ]
+    fake_process.__enter__ = lambda self: self
+    fake_process.__exit__ = lambda self, *_a: False
+    monkeypatch.setattr(runner.subprocess, "Popen", lambda *_a, **_kw: fake_process)
+
+    with pytest.raises(subprocess.TimeoutExpired) as excinfo:
+        runner.run_jar(["doc.pdf"], quiet=False, timeout=5)
+
+    # The JVM is killed, not left running behind a raised exception.
+    fake_process.kill.assert_called_once()
+    # Whatever the JAR had already emitted is attached, not discarded.
+    assert b"parsing page 1" in (excinfo.value.output or b"")
+
+
+def test_streaming_timeout_output_is_bytes_like_subprocess_run(monkeypatch, patched_jar):
+    """``TimeoutExpired.output`` is documented as "always bytes when any output
+    was captured regardless of the text=True setting", which is what quiet
+    mode gets from ``subprocess.run``. Streaming mode must match, so a caller
+    handling the exception does not need to know which mode raised it."""
+    fake_process = MagicMock()
+    fake_process.stdout = iter(["[INFO] página 1\n"])
+    fake_process.wait.side_effect = [
+        subprocess.TimeoutExpired(cmd=["java"], timeout=5),
+        0,
+    ]
+    fake_process.__enter__ = lambda self: self
+    fake_process.__exit__ = lambda self, *_a: False
+    monkeypatch.setattr(runner.subprocess, "Popen", lambda *_a, **_kw: fake_process)
+
+    with pytest.raises(subprocess.TimeoutExpired) as excinfo:
+        runner.run_jar(["doc.pdf"], quiet=False, timeout=5)
+
+    assert excinfo.value.output == "[INFO] página 1\n".encode("utf-8")
+
+
+def test_streaming_without_timeout_keeps_the_inline_read(monkeypatch, patched_jar):
+    """Default behaviour is unchanged: no helper thread, and ``wait()`` is
+    called without a bound."""
+    fake_process = MagicMock()
+    fake_process.stdout = iter(["line one\n", "line two\n"])
+    fake_process.wait.return_value = 0
+    fake_process.__enter__ = lambda self: self
+    fake_process.__exit__ = lambda self, *_a: False
+    monkeypatch.setattr(runner.subprocess, "Popen", lambda *_a, **_kw: fake_process)
+
+    no_threads = MagicMock()
+    monkeypatch.setattr(runner.threading, "Thread", no_threads)
+
+    returned = runner.run_jar(["doc.pdf"], quiet=False)
+
+    assert returned == "line one\nline two\n"
+    no_threads.assert_not_called()
+    fake_process.wait.assert_called_once_with()
+
+
+def test_streaming_success_waits_for_the_full_relay(monkeypatch, patched_jar):
+    """A bounded run that SUCCEEDS must still return everything the JAR wrote.
+
+    The JVM can exit while the pipe still holds buffered output, and relaying it
+    onward can outlast the relay-join bound when the parent's stdout is slow.
+    Cutting the join short there would silently truncate the return value --
+    including a ``--to-stdout`` payload -- which is worse than the wait it saves.
+    The timeout bounds the JVM; once the JVM is gone the relay runs to EOF.
+    """
+    def slow_lines():
+        yield "first line\n"
+        # Outlast the join bound while the process has already exited.
+        time.sleep(runner._RELAY_JOIN_TIMEOUT_S + 0.3)
+        yield "last line\n"
+
+    fake_process = MagicMock()
+    fake_process.stdout = slow_lines()
+    fake_process.wait.return_value = 0
+    fake_process.__enter__ = lambda self: self
+    fake_process.__exit__ = lambda self, *_a: False
+    monkeypatch.setattr(runner.subprocess, "Popen", lambda *_a, **_kw: fake_process)
+
+    returned = runner.run_jar(["doc.pdf"], quiet=False, timeout=30)
+
+    # Nothing may be dropped: the tail arrived after the join bound elapsed.
+    assert returned == "first line\nlast line\n"
+
+
+class _BrokenStdout:
+    """A parent stdout whose reader has gone away, e.g. ``| head``."""
+
+    def write(self, _text):
+        raise BrokenPipeError(32, "Broken pipe")
+
+
+def test_streaming_relay_error_propagates_instead_of_truncating(monkeypatch, patched_jar):
+    """A bounded run must not report success when relaying the output failed.
+
+    Without a timeout the relay runs inline, so a write error such as
+    ``BrokenPipeError`` reaches the caller. With a timeout it runs on a helper
+    thread, where an uncaught exception only ends the thread -- and
+    ``run_jar`` would then return the lines relayed so far as a complete,
+    successful result.
+    """
+    fake_process = MagicMock()
+    fake_process.stdout = io.StringIO("first line\nsecond line\n")
+    fake_process.wait.return_value = 0
+    fake_process.__enter__ = lambda self: self
+    fake_process.__exit__ = lambda self, *_a: False
+    monkeypatch.setattr(runner.subprocess, "Popen", lambda *_a, **_kw: fake_process)
+    monkeypatch.setattr(runner.sys, "stdout", _BrokenStdout())
+
+    with pytest.raises(BrokenPipeError):
+        runner.run_jar(["doc.pdf"], quiet=False, timeout=30)
+
+
+def test_streaming_relay_error_does_not_wait_out_the_timeout(monkeypatch, patched_jar):
+    """After a relay error nothing reads the pipe any more, so a child that
+    keeps writing fills it and blocks. The error must still surface promptly,
+    not as a ``TimeoutExpired`` once the bound runs out -- matching the inline
+    path, where leaving the ``Popen`` block closes the pipe."""
+    real_popen = subprocess.Popen
+    # Far more than a pipe buffer holds (64 KiB on Linux and macOS).
+    chatty_child = [sys.executable, "-c", "for _ in range(4000): print('x' * 99, flush=True)"]
+    monkeypatch.setattr(
+        runner.subprocess, "Popen", lambda _cmd, **kw: real_popen(chatty_child, **kw)
+    )
+    monkeypatch.setattr(runner.sys, "stdout", _BrokenStdout())
+
+    started = time.monotonic()
+    with pytest.raises(BrokenPipeError):
+        runner.run_jar(["doc.pdf"], quiet=False, timeout=5)
+    assert time.monotonic() - started < 5
+
+
+def test_streaming_timeout_keeps_a_line_whose_relay_is_still_blocked(monkeypatch, patched_jar):
+    """A line already read from the JVM belongs in ``TimeoutExpired.output``
+    even while relaying it to the caller's stdout is still blocked: the kill
+    path only waits ``_RELAY_JOIN_TIMEOUT_S`` for the relay, so a line that is
+    collected only after it has been written can miss the exception."""
+    write_started = threading.Event()
+
+    class _SlowStdout:
+        def write(self, _text):
+            write_started.set()
+            time.sleep(runner._RELAY_JOIN_TIMEOUT_S + 0.5)
+
+    def wait(timeout=None):
+        if timeout is not None:
+            # Time out only once the relay has the line and is stuck writing it.
+            assert write_started.wait(5)
+            raise subprocess.TimeoutExpired(cmd=["java"], timeout=timeout)
+        return -9
+
+    fake_process = MagicMock()
+    fake_process.stdout = io.StringIO("line already read\n")
+    fake_process.wait.side_effect = wait
+    fake_process.__enter__ = lambda self: self
+    fake_process.__exit__ = lambda self, *_a: False
+    monkeypatch.setattr(runner.subprocess, "Popen", lambda *_a, **_kw: fake_process)
+    monkeypatch.setattr(runner.sys, "stdout", _SlowStdout())
+
+    with pytest.raises(subprocess.TimeoutExpired) as excinfo:
+        runner.run_jar(["doc.pdf"], quiet=False, timeout=5)
+
+    assert excinfo.value.output == b"line already read\n"
+
+
+def test_streaming_relay_error_is_reported_when_the_bound_later_expires(
+    monkeypatch, patched_jar
+):
+    """A relay failure must not be masked by a timeout that expires afterwards.
+
+    Once the caller's stdout is gone the JVM keeps working -- Java's
+    ``System.out`` swallows write errors -- exactly as it does without a
+    timeout, where leaving the ``Popen`` block waits for it. If the bound runs
+    out first, the caller should still learn the original cause, with the
+    timeout attached, rather than a bare ``TimeoutExpired``.
+    """
+    real_popen = subprocess.Popen
+    # Writes once, then keeps working silently past the bound.
+    busy_child = [sys.executable, "-c", "import time; print('started', flush=True); time.sleep(30)"]
+    monkeypatch.setattr(
+        runner.subprocess, "Popen", lambda _cmd, **kw: real_popen(busy_child, **kw)
+    )
+    monkeypatch.setattr(runner.sys, "stdout", _BrokenStdout())
+
+    with pytest.raises(BrokenPipeError) as excinfo:
+        runner.run_jar(["doc.pdf"], quiet=False, timeout=2)
+
+    assert isinstance(excinfo.value.__cause__, subprocess.TimeoutExpired)
