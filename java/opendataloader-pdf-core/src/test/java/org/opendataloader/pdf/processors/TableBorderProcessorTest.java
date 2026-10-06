@@ -96,6 +96,35 @@ public class TableBorderProcessorTest {
     }
 
     @Test
+    public void testImageCrossingCellsUsesCellWithLargestIntersection() {
+        StaticContainers.setIsDataLoader(true);
+        TableBordersCollection tableBordersCollection = new TableBordersCollection();
+        StaticContainers.setTableBordersCollection(tableBordersCollection);
+        TableBorder tableBorder = new TableBorder(1, 3);
+        SortedSet<TableBorder> tables = new TreeSet<>(new TableBorder.TableBordersComparator());
+        tables.add(tableBorder);
+        tableBordersCollection.getTableBorders().add(tables);
+        tableBorder.setBoundingBox(new BoundingBox(0, 0, 0, 120, 100));
+        TableBorderRow row = new TableBorderRow(0, 3, 0L);
+        row.setBoundingBox(new BoundingBox(0, 0, 0, 120, 100));
+        for (int col = 0; col < 3; col++) {
+            TableBorderCell cell = new TableBorderCell(0, col, 1, 1, 0L);
+            cell.setBoundingBox(new BoundingBox(0, col * 40, 0, (col + 1) * 40, 100));
+            row.getCells()[col] = cell;
+        }
+        tableBorder.getRows()[0] = row;
+        tableBorder.calculateCoordinatesUsingBoundingBoxesOfRowsAndColumns();
+        ImageChunk image = new ImageChunk(new BoundingBox(0, 50, 10, 115, 90));
+
+        List<IObject> result = TableBorderProcessor.processTableBorders(new ArrayList<>(List.of(image)), 0);
+
+        TableBorder processed = (TableBorder) result.get(0);
+        Assertions.assertTrue(processed.getRow(0).getCell(2).getContents().contains(image));
+        Assertions.assertTrue(processed.getRow(0).getCell(0).getContents().isEmpty());
+        Assertions.assertTrue(processed.getRow(0).getCell(1).getContents().isEmpty());
+    }
+
+    @Test
     public void testCheckNeighborTables() {
         List<List<IObject>> contents = new ArrayList<>();
         List<IObject> pageContents1 = new ArrayList<>();

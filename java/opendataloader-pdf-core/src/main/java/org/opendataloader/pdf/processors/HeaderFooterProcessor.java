@@ -139,7 +139,9 @@ public class HeaderFooterProcessor {
 
     private static List<IObject> processHeaderOrFooterContent(List<IObject> contents) {
         List<IObject> newContents = ParagraphProcessor.processParagraphs(contents);
-        newContents = ListProcessor.processListsFromTextNodes(newContents);
+        // Header/footer text is already a repeated-page artifact, not body list
+        // content. Running list detection here turns a single numeric running
+        // header (for example, "7.3 Installing ...") into a bogus one-item list.
         HeadingProcessor.processHeadings(newContents, false);
         CaptionProcessor.processCaptions(newContents);
         return newContents;
