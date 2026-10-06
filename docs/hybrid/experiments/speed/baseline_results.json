@@ -1,0 +1,1221 @@
+{
+  "approach": "baseline",
+  "description": "docling-serve HTTP API",
+  "timestamp": "2026-01-03 14:23:41",
+  "config": {
+    "do_ocr": true,
+    "do_table_structure": true,
+    "server_url": "http://localhost:5001/v1/convert/file"
+  },
+  "statistics": {
+    "total_documents": 200,
+    "successful": 200,
+    "failed": 0,
+    "total_elapsed": 456.63,
+    "elapsed_per_doc": 2.2825,
+    "min_elapsed": 2.0045,
+    "max_elapsed": 8.0182
+  },
+  "details": [
+    {
+      "filename": "01030000000001.pdf",
+      "status": "success",
+      "elapsed": 2.015875082986895,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000002.pdf",
+      "status": "success",
+      "elapsed": 6.017078874981962,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000003.pdf",
+      "status": "success",
+      "elapsed": 2.0132839589496143,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000004.pdf",
+      "status": "success",
+      "elapsed": 2.008036583021749,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000005.pdf",
+      "status": "success",
+      "elapsed": 8.018182250030804,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000006.pdf",
+      "status": "success",
+      "elapsed": 2.0475742079433985,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000007.pdf",
+      "status": "success",
+      "elapsed": 2.015844083041884,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000008.pdf",
+      "status": "success",
+      "elapsed": 2.006928707996849,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000009.pdf",
+      "status": "success",
+      "elapsed": 2.014241833006963,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000010.pdf",
+      "status": "success",
+      "elapsed": 2.038922875013668,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000011.pdf",
+      "status": "success",
+      "elapsed": 2.0237517500063404,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000012.pdf",
+      "status": "success",
+      "elapsed": 2.0229256660095416,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000013.pdf",
+      "status": "success",
+      "elapsed": 6.029008666984737,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000014.pdf",
+      "status": "success",
+      "elapsed": 2.0246772919781506,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000015.pdf",
+      "status": "success",
+      "elapsed": 4.015110083040781,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000016.pdf",
+      "status": "success",
+      "elapsed": 4.009777957980987,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000017.pdf",
+      "status": "success",
+      "elapsed": 2.015868208021857,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000018.pdf",
+      "status": "success",
+      "elapsed": 2.009977333014831,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000019.pdf",
+      "status": "success",
+      "elapsed": 2.0059859169996344,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000020.pdf",
+      "status": "success",
+      "elapsed": 2.00470204197336,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000021.pdf",
+      "status": "success",
+      "elapsed": 2.0094348749844357,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000022.pdf",
+      "status": "success",
+      "elapsed": 2.007077375019435,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000023.pdf",
+      "status": "success",
+      "elapsed": 2.008575916988775,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000024.pdf",
+      "status": "success",
+      "elapsed": 2.0070661670179106,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000025.pdf",
+      "status": "success",
+      "elapsed": 2.0072902090032585,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000026.pdf",
+      "status": "success",
+      "elapsed": 2.008566791017074,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000027.pdf",
+      "status": "success",
+      "elapsed": 2.0105779159930535,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000028.pdf",
+      "status": "success",
+      "elapsed": 2.0083992080180906,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000029.pdf",
+      "status": "success",
+      "elapsed": 2.006954458018299,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000030.pdf",
+      "status": "success",
+      "elapsed": 2.006012041994836,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000031.pdf",
+      "status": "success",
+      "elapsed": 2.0079010410117917,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000032.pdf",
+      "status": "success",
+      "elapsed": 2.008327499963343,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000033.pdf",
+      "status": "success",
+      "elapsed": 2.0113934580003843,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000034.pdf",
+      "status": "success",
+      "elapsed": 2.0120389169896953,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000035.pdf",
+      "status": "success",
+      "elapsed": 2.005979541980196,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000036.pdf",
+      "status": "success",
+      "elapsed": 2.0124754579737782,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000037.pdf",
+      "status": "success",
+      "elapsed": 2.00998516601976,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000038.pdf",
+      "status": "success",
+      "elapsed": 2.0089076250442304,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000039.pdf",
+      "status": "success",
+      "elapsed": 2.009448583004996,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000040.pdf",
+      "status": "success",
+      "elapsed": 2.010277082968969,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000041.pdf",
+      "status": "success",
+      "elapsed": 2.009156082989648,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000042.pdf",
+      "status": "success",
+      "elapsed": 2.0098838749690913,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000043.pdf",
+      "status": "success",
+      "elapsed": 2.0099699580459855,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000044.pdf",
+      "status": "success",
+      "elapsed": 2.0085992079693824,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000045.pdf",
+      "status": "success",
+      "elapsed": 2.008803666976746,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000046.pdf",
+      "status": "success",
+      "elapsed": 2.0089462909963913,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000047.pdf",
+      "status": "success",
+      "elapsed": 2.008842375013046,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000048.pdf",
+      "status": "success",
+      "elapsed": 2.0095574999577366,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000049.pdf",
+      "status": "success",
+      "elapsed": 2.0105101669905707,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000050.pdf",
+      "status": "success",
+      "elapsed": 2.0088338329805993,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000051.pdf",
+      "status": "success",
+      "elapsed": 2.0089837919804268,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000052.pdf",
+      "status": "success",
+      "elapsed": 2.0097504580044188,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000053.pdf",
+      "status": "success",
+      "elapsed": 2.0071513750008307,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000054.pdf",
+      "status": "success",
+      "elapsed": 2.0097300829947926,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000055.pdf",
+      "status": "success",
+      "elapsed": 2.0129313750076108,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000056.pdf",
+      "status": "success",
+      "elapsed": 2.0068434590357356,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000057.pdf",
+      "status": "success",
+      "elapsed": 2.0059980420046486,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000058.pdf",
+      "status": "success",
+      "elapsed": 2.006713708047755,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000059.pdf",
+      "status": "success",
+      "elapsed": 2.0111257910029963,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000060.pdf",
+      "status": "success",
+      "elapsed": 2.0099264580057934,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000061.pdf",
+      "status": "success",
+      "elapsed": 2.0138660420197994,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000062.pdf",
+      "status": "success",
+      "elapsed": 2.016690374992322,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000063.pdf",
+      "status": "success",
+      "elapsed": 2.010919041989837,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000064.pdf",
+      "status": "success",
+      "elapsed": 2.0115395419998094,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000065.pdf",
+      "status": "success",
+      "elapsed": 4.022392999962904,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000066.pdf",
+      "status": "success",
+      "elapsed": 2.0132058750023134,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000067.pdf",
+      "status": "success",
+      "elapsed": 2.0157942500081845,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000068.pdf",
+      "status": "success",
+      "elapsed": 2.010222040989902,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000069.pdf",
+      "status": "success",
+      "elapsed": 2.0097584579489194,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000070.pdf",
+      "status": "success",
+      "elapsed": 2.0112934579956345,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000071.pdf",
+      "status": "success",
+      "elapsed": 2.0105387499788776,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000072.pdf",
+      "status": "success",
+      "elapsed": 2.018585833022371,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000073.pdf",
+      "status": "success",
+      "elapsed": 2.033748999994714,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000074.pdf",
+      "status": "success",
+      "elapsed": 2.010420083999634,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000075.pdf",
+      "status": "success",
+      "elapsed": 2.0172726669698022,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000076.pdf",
+      "status": "success",
+      "elapsed": 2.0094912920030765,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000077.pdf",
+      "status": "success",
+      "elapsed": 2.0114878750173375,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000078.pdf",
+      "status": "success",
+      "elapsed": 2.007630624982994,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000079.pdf",
+      "status": "success",
+      "elapsed": 2.0101106250076555,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000080.pdf",
+      "status": "success",
+      "elapsed": 2.0070227500400506,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000081.pdf",
+      "status": "success",
+      "elapsed": 2.008618124993518,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000082.pdf",
+      "status": "success",
+      "elapsed": 2.0095061670290306,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000083.pdf",
+      "status": "success",
+      "elapsed": 2.0096776670543477,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000084.pdf",
+      "status": "success",
+      "elapsed": 2.0084117500227876,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000085.pdf",
+      "status": "success",
+      "elapsed": 2.009717167005874,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000086.pdf",
+      "status": "success",
+      "elapsed": 2.008898333006073,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000087.pdf",
+      "status": "success",
+      "elapsed": 2.008002457965631,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000088.pdf",
+      "status": "success",
+      "elapsed": 2.0079817910445854,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000089.pdf",
+      "status": "success",
+      "elapsed": 2.008650916046463,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000090.pdf",
+      "status": "success",
+      "elapsed": 2.0093328329967335,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000091.pdf",
+      "status": "success",
+      "elapsed": 2.0105257499963045,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000092.pdf",
+      "status": "success",
+      "elapsed": 2.0129166250117123,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000093.pdf",
+      "status": "success",
+      "elapsed": 2.0129139170167036,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000094.pdf",
+      "status": "success",
+      "elapsed": 2.010353874997236,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000095.pdf",
+      "status": "success",
+      "elapsed": 2.0159686250262894,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000096.pdf",
+      "status": "success",
+      "elapsed": 2.012183208949864,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000097.pdf",
+      "status": "success",
+      "elapsed": 2.0136722500319593,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000098.pdf",
+      "status": "success",
+      "elapsed": 2.0163424579659477,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000099.pdf",
+      "status": "success",
+      "elapsed": 2.0101290000020526,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000100.pdf",
+      "status": "success",
+      "elapsed": 4.057772666972596,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000101.pdf",
+      "status": "success",
+      "elapsed": 2.01847925002221,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000102.pdf",
+      "status": "success",
+      "elapsed": 2.01219050004147,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000103.pdf",
+      "status": "success",
+      "elapsed": 2.009702167008072,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000104.pdf",
+      "status": "success",
+      "elapsed": 2.00873712496832,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000105.pdf",
+      "status": "success",
+      "elapsed": 2.0075063750264235,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000106.pdf",
+      "status": "success",
+      "elapsed": 4.028725624957588,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000107.pdf",
+      "status": "success",
+      "elapsed": 6.020763458975125,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000108.pdf",
+      "status": "success",
+      "elapsed": 2.0199995830189437,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000109.pdf",
+      "status": "success",
+      "elapsed": 2.010334291961044,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000110.pdf",
+      "status": "success",
+      "elapsed": 4.0103781670331955,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000111.pdf",
+      "status": "success",
+      "elapsed": 2.0133387920213863,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000112.pdf",
+      "status": "success",
+      "elapsed": 2.011265833978541,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000113.pdf",
+      "status": "success",
+      "elapsed": 2.0208064999897033,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000114.pdf",
+      "status": "success",
+      "elapsed": 2.0121795420418493,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000115.pdf",
+      "status": "success",
+      "elapsed": 2.009583958017174,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000116.pdf",
+      "status": "success",
+      "elapsed": 2.0129801250295714,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000117.pdf",
+      "status": "success",
+      "elapsed": 2.018898750015069,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000118.pdf",
+      "status": "success",
+      "elapsed": 2.0129885419737548,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000119.pdf",
+      "status": "success",
+      "elapsed": 2.007995374966413,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000120.pdf",
+      "status": "success",
+      "elapsed": 2.009933082968928,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000121.pdf",
+      "status": "success",
+      "elapsed": 2.008029666962102,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000122.pdf",
+      "status": "success",
+      "elapsed": 2.00864516699221,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000123.pdf",
+      "status": "success",
+      "elapsed": 2.009381292038597,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000124.pdf",
+      "status": "success",
+      "elapsed": 2.018248958978802,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000125.pdf",
+      "status": "success",
+      "elapsed": 2.0157194579951465,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000126.pdf",
+      "status": "success",
+      "elapsed": 2.008307167037856,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000127.pdf",
+      "status": "success",
+      "elapsed": 2.0087038750061765,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000128.pdf",
+      "status": "success",
+      "elapsed": 4.014806249993853,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000129.pdf",
+      "status": "success",
+      "elapsed": 2.011629707994871,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000130.pdf",
+      "status": "success",
+      "elapsed": 2.0111710419878364,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000131.pdf",
+      "status": "success",
+      "elapsed": 4.015092124987859,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000132.pdf",
+      "status": "success",
+      "elapsed": 2.01749987504445,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000133.pdf",
+      "status": "success",
+      "elapsed": 2.011376874987036,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000134.pdf",
+      "status": "success",
+      "elapsed": 2.015838250052184,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000135.pdf",
+      "status": "success",
+      "elapsed": 2.013709499966353,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000136.pdf",
+      "status": "success",
+      "elapsed": 4.012792333029211,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000137.pdf",
+      "status": "success",
+      "elapsed": 2.0148868339601904,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000138.pdf",
+      "status": "success",
+      "elapsed": 2.0129687499720603,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000139.pdf",
+      "status": "success",
+      "elapsed": 2.0240703750168905,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000140.pdf",
+      "status": "success",
+      "elapsed": 2.0105999159859493,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000141.pdf",
+      "status": "success",
+      "elapsed": 4.016767291992437,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000142.pdf",
+      "status": "success",
+      "elapsed": 2.0079866659943946,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000143.pdf",
+      "status": "success",
+      "elapsed": 2.0097947499598376,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000144.pdf",
+      "status": "success",
+      "elapsed": 2.010188333981205,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000145.pdf",
+      "status": "success",
+      "elapsed": 2.010523250035476,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000146.pdf",
+      "status": "success",
+      "elapsed": 2.012444249994587,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000147.pdf",
+      "status": "success",
+      "elapsed": 2.0094745840178803,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000148.pdf",
+      "status": "success",
+      "elapsed": 2.015358250006102,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000149.pdf",
+      "status": "success",
+      "elapsed": 2.0123680839897133,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000150.pdf",
+      "status": "success",
+      "elapsed": 2.010133165982552,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000151.pdf",
+      "status": "success",
+      "elapsed": 2.011142417031806,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000152.pdf",
+      "status": "success",
+      "elapsed": 2.011020500038285,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000153.pdf",
+      "status": "success",
+      "elapsed": 2.0078533330233768,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000154.pdf",
+      "status": "success",
+      "elapsed": 2.015513958001975,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000155.pdf",
+      "status": "success",
+      "elapsed": 2.014719749975484,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000156.pdf",
+      "status": "success",
+      "elapsed": 2.0091009169700556,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000157.pdf",
+      "status": "success",
+      "elapsed": 2.008832124993205,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000158.pdf",
+      "status": "success",
+      "elapsed": 2.009412584011443,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000159.pdf",
+      "status": "success",
+      "elapsed": 2.0096555419731885,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000160.pdf",
+      "status": "success",
+      "elapsed": 2.0097247500088997,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000161.pdf",
+      "status": "success",
+      "elapsed": 2.0090610000188462,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000162.pdf",
+      "status": "success",
+      "elapsed": 2.009336917020846,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000163.pdf",
+      "status": "success",
+      "elapsed": 4.034545583999716,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000164.pdf",
+      "status": "success",
+      "elapsed": 2.0732344170100987,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000165.pdf",
+      "status": "success",
+      "elapsed": 2.0093913750024512,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000166.pdf",
+      "status": "success",
+      "elapsed": 2.0097205829806626,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000167.pdf",
+      "status": "success",
+      "elapsed": 2.0092638750211336,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000168.pdf",
+      "status": "success",
+      "elapsed": 2.0096502079977654,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000169.pdf",
+      "status": "success",
+      "elapsed": 2.0088732909644023,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000170.pdf",
+      "status": "success",
+      "elapsed": 2.0099923749803565,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000171.pdf",
+      "status": "success",
+      "elapsed": 2.00841941597173,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000172.pdf",
+      "status": "success",
+      "elapsed": 4.010605583025608,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000173.pdf",
+      "status": "success",
+      "elapsed": 2.0113287499989383,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000174.pdf",
+      "status": "success",
+      "elapsed": 2.01701208302984,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000175.pdf",
+      "status": "success",
+      "elapsed": 2.0104076670249924,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000176.pdf",
+      "status": "success",
+      "elapsed": 2.0120657079969533,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000177.pdf",
+      "status": "success",
+      "elapsed": 2.010396583995316,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000178.pdf",
+      "status": "success",
+      "elapsed": 2.0082853750209324,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000179.pdf",
+      "status": "success",
+      "elapsed": 2.016005791956559,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000180.pdf",
+      "status": "success",
+      "elapsed": 2.0131606250070035,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000181.pdf",
+      "status": "success",
+      "elapsed": 2.0091749589773826,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000182.pdf",
+      "status": "success",
+      "elapsed": 2.006028084026184,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000183.pdf",
+      "status": "success",
+      "elapsed": 2.0098955419962294,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000184.pdf",
+      "status": "success",
+      "elapsed": 2.0079047920298763,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000185.pdf",
+      "status": "success",
+      "elapsed": 2.008848041994497,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000186.pdf",
+      "status": "success",
+      "elapsed": 2.008393583993893,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000187.pdf",
+      "status": "success",
+      "elapsed": 2.004508916987106,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000188.pdf",
+      "status": "success",
+      "elapsed": 2.0051945410086773,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000189.pdf",
+      "status": "success",
+      "elapsed": 2.0074494580039755,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000190.pdf",
+      "status": "success",
+      "elapsed": 2.0048497910029255,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000191.pdf",
+      "status": "success",
+      "elapsed": 2.006556707958225,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000192.pdf",
+      "status": "success",
+      "elapsed": 2.005169374984689,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000193.pdf",
+      "status": "success",
+      "elapsed": 2.0079570419620723,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000194.pdf",
+      "status": "success",
+      "elapsed": 2.0079098750138655,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000195.pdf",
+      "status": "success",
+      "elapsed": 2.010010375001002,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000196.pdf",
+      "status": "success",
+      "elapsed": 2.0046410840004683,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000197.pdf",
+      "status": "success",
+      "elapsed": 2.0045773329911754,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000198.pdf",
+      "status": "success",
+      "elapsed": 6.015574750024825,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000199.pdf",
+      "status": "success",
+      "elapsed": 6.026787874987349,
+      "status_code": 200
+    },
+    {
+      "filename": "01030000000200.pdf",
+      "status": "success",
+      "elapsed": 6.021415374998469,
+      "status_code": 200
+    }
+  ]
+}
