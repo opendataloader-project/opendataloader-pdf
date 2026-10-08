@@ -34,6 +34,12 @@
     <name>OpenDataLoader PDF Core</name>
     <description>OpenDataLoader PDF Core</description>
 
+    <properties>
+        <!-- JaCoCo prepare-agent sets argLine. This empty default keeps @{argLine} valid when
+             prepare-agent does not run (for example mvn surefire:test, or an IDE). -->
+        <argLine></argLine>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.verapdf</groupId>
@@ -186,6 +192,16 @@
             </resource>
         </resources>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!-- The test JVM gets its own temporary folder (target/), so tests that look for
+                         leftover veraPDF temporary files (Issue408FileLockTest) do not see files
+                         of other processes. The quotes keep a path with a space in one argument. -->
+                    <argLine>@{argLine} "-Djava.io.tmpdir=${project.build.directory}"</argLine>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>flatten-maven-plugin</artifactId>

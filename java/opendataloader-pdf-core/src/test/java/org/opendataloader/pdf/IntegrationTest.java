@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.opendataloader.pdf.processors.DocumentProcessor;
 import org.opendataloader.pdf.api.Config;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -33,6 +34,11 @@ import java.nio.file.Paths;
 import java.util.stream.Stream;
 
 public class IntegrationTest {
+
+    // The output goes here, not to samples/json: writing there replaced the expected file
+    // with the result before the comparison.
+    @TempDir
+    Path tempDir;
 
     static Stream<Arguments> integrationTestParams() {
         return Stream.of(
@@ -48,10 +54,10 @@ public class IntegrationTest {
         File jsonFile = jsonPath.toFile();
 
         Config config = new Config();
-        config.setOutputFolder("../../samples/json");
+        config.setOutputFolder(tempDir.toString());
         DocumentProcessor.processFile(pdfFile.getAbsolutePath(), config);
 
-        Path resultPath = Paths.get("../../samples/json", fileName.replace(".pdf", ".json"));
+        Path resultPath = tempDir.resolve(fileName.replace(".pdf", ".json"));
         File resultJson = resultPath.toFile();
 
         ObjectMapper mapper = new ObjectMapper();

@@ -100,13 +100,23 @@ class HybridReferenceTrailerTest {
         return output;
     }
 
+    /** veraPDF's PDDocument is not AutoCloseable. An open document keeps the file open. */
+    private static int pageCount(Path pdf) throws Exception {
+        PDDocument document = new PDDocument(pdf.toString());
+        try {
+            return document.getNumberOfPages();
+        } finally {
+            document.close();
+        }
+    }
+
     /** Without this, a fixture that stopped being hybrid would let the other two pass on nothing. */
     @Test
     void theFixtureIsAReadableHybridReferenceFile(@TempDir Path tempDir) throws Exception {
         Path pdf = writeHybridReferencePdf(tempDir);
 
         assertThat(lastTrailer(pdf)).contains("/XRefStm").contains("/Prev");
-        assertThat(new PDDocument(pdf.toString()).getNumberOfPages()).isEqualTo(1);
+        assertThat(pageCount(pdf)).isEqualTo(1);
     }
 
     @Test
@@ -121,6 +131,6 @@ class HybridReferenceTrailerTest {
     void taggedOutputCanBeReopened(@TempDir Path tempDir) throws Exception {
         Path output = tagAndSave(writeHybridReferencePdf(tempDir), tempDir);
 
-        assertThat(new PDDocument(output.toString()).getNumberOfPages()).isEqualTo(1);
+        assertThat(pageCount(output)).isEqualTo(1);
     }
 }

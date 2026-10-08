@@ -224,10 +224,11 @@ class PictureDescriptionE2ETest {
     private String invokeHtmlWritePicture(SemanticPicture picture,
                                            String imageDir, String imageName) throws Exception {
         StringWriter writer = new StringWriter();
-        HtmlGenerator generator = new TestHtmlGenerator(writer, imageDir, imageName);
-        Method method = HtmlGenerator.class.getDeclaredMethod("writePicture", SemanticPicture.class);
-        method.setAccessible(true);
-        method.invoke(generator, picture);
+        try (HtmlGenerator generator = new TestHtmlGenerator(writer, imageDir, imageName)) {
+            Method method = HtmlGenerator.class.getDeclaredMethod("writePicture", SemanticPicture.class);
+            method.setAccessible(true);
+            method.invoke(generator, picture);
+        }
         return writer.toString();
     }
 
@@ -300,6 +301,13 @@ class PictureDescriptionE2ETest {
             stringWriter.write("<figure>\n");
             stringWriter.write(String.format("<img src=\"%s\" alt=\"%s\">%n", imageSource, altText));
             stringWriter.write("</figure>\n");
+        }
+
+        /** The constructor creates an empty HTML file in the output folder; nothing reads it. */
+        @Override
+        public void close() throws java.io.IOException {
+            super.close();
+            java.nio.file.Files.deleteIfExists(htmlFilePath);
         }
 
         private static java.io.File createTempFile() throws java.io.IOException {

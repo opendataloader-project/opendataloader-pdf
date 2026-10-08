@@ -88,6 +88,16 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!-- The test JVM gets its own temporary folder (target/), so temporary files
+                         that veraPDF leaves behind do not land in the system temporary folder.
+                         The quotes keep a path with a space in one argument. -->
+                    <argLine>"-Djava.io.tmpdir=${project.build.directory}"</argLine>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <executions>
                     <execution>
