@@ -15,21 +15,29 @@
  */
 package org.opendataloader.pdf.processors;
 
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Assumptions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
+import org.opendataloader.pdf.testsupport.TestSamples;
+import org.verapdf.tools.StaticResources;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
 import java.io.IOException;
-import java.nio.file.Files;
+import java.io.InputStream;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Handler;
@@ -42,28 +50,84 @@ import java.util.logging.Logger;
  *
  * Tests the full pipeline: PDF parsing -> ContentFilterProcessor ->
  * measurement -> StaticLayoutContainers storage -> warning log.
+ *
+ * <p>The test builds a synthetic PDF: a Type0 (CID) font with the Identity-H encoding
+ * and no ToUnicode map, so the text has no Unicode mapping. The font is LiberationSans
+ * (SIL OFL), which PDFBox ships. The sample stays in
+ * {@code target/test-samples/cid-font-no-tounicode/}. Only the two integration
+ * tests build it, so a problem with the sample does not stop the unit tests.
  */
 public class CidFontDetectionTest {
 
-    private static final Path CID_PDF_PATH = Paths.get(
-        "src/test/resources/cid-font-no-tounicode.pdf");
+    private static final String LIBERATION_SANS = "/org/apache/pdfbox/resources/ttf/LiberationSans-Regular.ttf";
 
-    private static boolean pdfAvailable = false;
+    private static Path cidPdfPath;
 
-    @BeforeAll
-    static void checkFixture() {
-        pdfAvailable = Files.exists(CID_PDF_PATH) && Files.isRegularFile(CID_PDF_PATH);
-        if (!pdfAvailable) {
-            System.out.println("CID font test PDF not found: " + CID_PDF_PATH.toAbsolutePath());
-            System.out.println("Skipping integration tests. Generate fixture first.");
+    /** Builds the sample on the first call and returns its path. */
+    private static synchronized Path cidSample() throws IOException {
+        if (cidPdfPath != null) {
+            return cidPdfPath;
+        }
+        Path pdf = TestSamples.emptyDirectory("cid-font-no-tounicode").resolve("cid-font-no-tounicode.pdf");
+        writeCidSample(pdf);
+        assertSampleHasTheTrigger(pdf);
+        cidPdfPath = pdf;
+        return cidPdfPath;
+    }
+
+    private static void writeCidSample(Path pdf) throws IOException {
+        try (PDDocument document = new PDDocument();
+             InputStream ttf = PDDocument.class.getResourceAsStream(LIBERATION_SANS)) {
+            Assertions.assertNotNull(ttf, "PDFBox does not ship " + LIBERATION_SANS);
+            PDType0Font font = PDType0Font.load(document, ttf, false);   // Identity-H, full font
+            PDPage page = new PDPage(PDRectangle.LETTER);
+            document.addPage(page);
+            try (PDPageContentStream content = new PDPageContentStream(document, page)) {
+                content.beginText();
+                content.setFont(font, 12);
+                content.newLineAtOffset(72, 700);
+                for (int line = 1; line <= 5; line++) {
+                    content.showText("Line " + line + " of a synthetic sample with a CID font and no ToUnicode map.");
+                    content.newLineAtOffset(0, -18);
+                }
+                content.endText();
+            }
+            font.getCOSObject().removeItem(COSName.TO_UNICODE);   // the trigger
+            document.save(pdf.toFile());
+        }
+    }
+
+    /** Checks the saved file: one Type0 (CID) font without a ToUnicode map. */
+    private static void assertSampleHasTheTrigger(Path pdf) throws IOException {
+        try (PDDocument saved = Loader.loadPDF(pdf.toFile())) {
+            PDPage page = saved.getPage(0);
+            List<PDFont> fonts = new ArrayList<>();
+            for (COSName name : page.getResources().getFontNames()) {
+                fonts.add(page.getResources().getFont(name));
+            }
+            Assertions.assertEquals(1, fonts.size(), "The sample must have exactly one font");
+            Assertions.assertTrue(fonts.get(0) instanceof PDType0Font, "The sample font must be a Type0 (CID) font");
+            Assertions.assertFalse(fonts.get(0).getCOSObject().containsKey(COSName.TO_UNICODE),
+                "The sample font must not have a ToUnicode map");
+        }
+    }
+
+    /**
+     * Closes the document that {@code preprocessing} opened. processFile does this in
+     * closePdfResources; without it, veraPDF keeps the temporary file of the decoded
+     * object stream ({@code tmp_pdf_file*.pdf}) after the JVM exits.
+     */
+    @AfterEach
+    public void closeDocument() {
+        if (StaticResources.getDocument() != null) {
+            StaticResources.getDocument().close();
+            StaticResources.setDocument(null);
         }
     }
 
     @Test
     public void testCidPdfHighReplacementRatioDetected() throws IOException {
-        Assumptions.assumeTrue(pdfAvailable, "CID font test PDF not available");
-
-        String pdfPath = CID_PDF_PATH.toAbsolutePath().toString();
+        String pdfPath = cidSample().toString();
         Config config = new Config();
 
         DocumentProcessor.preprocessing(pdfPath, config);
@@ -89,8 +153,6 @@ public class CidFontDetectionTest {
 
     @Test
     public void testCidPdfWarningLogEmitted() throws IOException {
-        Assumptions.assumeTrue(pdfAvailable, "CID font test PDF not available");
-
         // Capture warning logs
         Logger logger = Logger.getLogger(ContentFilterProcessor.class.getCanonicalName());
         List<String> warnings = new ArrayList<>();
@@ -106,7 +168,7 @@ public class CidFontDetectionTest {
         logger.addHandler(handler);
 
         try {
-            String pdfPath = CID_PDF_PATH.toAbsolutePath().toString();
+            String pdfPath = cidSample().toString();
             Config config = new Config();
 
             DocumentProcessor.preprocessing(pdfPath, config);

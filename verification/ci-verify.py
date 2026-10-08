@@ -4,6 +4,7 @@ CI verification script for opendataloader-pdf CLI options.
 Three-level verification: Smoke / Content assertion / Comparison.
 """
 
+import atexit
 import glob
 import json
 import os
@@ -29,12 +30,90 @@ if sys.platform == "win32":
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ---------------------------------------------------------------------------
+# Synthetic fixtures (written at start, removed at exit)
+# ---------------------------------------------------------------------------
+def _write_synthetic_table_pdf(path: str, bordered: bool = True) -> str:
+    """Write a synthetic PDF with one table (4 rows, 3 columns) and return the path.
+
+    The repository does not keep third-party documents for table checks. This sample uses
+    neutral text and the standard Helvetica font, and it is the same on each run.
+
+    With bordered=False the table has no ruling lines, so only --table-method cluster finds it.
+    Cluster detection needs header cells more than about 10 font sizes apart and rows 1.05 to
+    3 font sizes apart. One-word cells ("A1") leave 12.4 font sizes between columns; "Row 1 A"
+    would leave 9.9, and the header would merge into one column.
+    """
+    rows, cols, x0, y0, cell_w, cell_h = 4, 3, 72, 600, 150, 30
+    ops = []
+    if bordered:
+        ops.append("0.5 w")
+        for r in range(rows + 1):
+            y = y0 - r * cell_h
+            ops.append(f"{x0} {y} m {x0 + cols * cell_w} {y} l S")
+        for c in range(cols + 1):
+            x = x0 + c * cell_w
+            ops.append(f"{x} {y0} m {x} {y0 - rows * cell_h} l S")
+    for r in range(rows):
+        for c in range(cols):
+            text = f"Row {r + 1} {'ABC'[c]}" if bordered else f"{'ABC'[c]}{r + 1}"
+            ops.append(f"BT /F1 11 Tf {x0 + c * cell_w + 8} {y0 - (r + 1) * cell_h + 10} Td "
+                       f"({text}) Tj ET")
+    stream = "\n".join(ops).encode("latin-1")
+    objects = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
+        b"/Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+        b"<< /Length %d >>\nstream\n" % len(stream) + stream + b"\nendstream",
+    ]
+    out = bytearray(b"%PDF-1.7\n")
+    offsets = []
+    for number, body in enumerate(objects, start=1):
+        offsets.append(len(out))
+        out += b"%d 0 obj\n" % number + body + b"\nendobj\n"
+    xref = len(out)
+    out += b"xref\n0 %d\n0000000000 65535 f \n" % (len(objects) + 1)
+    out += b"".join(b"%010d 00000 n \n" % offset for offset in offsets)
+    out += b"trailer\n<< /Size %d /Root 1 0 R >>\nstartxref\n%d\n%%%%EOF\n" % (len(objects) + 1, xref)
+    with open(path, "wb") as fh:
+        fh.write(out)
+    return path
+
+
+_FIXTURE_DIR = tempfile.mkdtemp(prefix="ci-verify-fixtures-")
+atexit.register(shutil.rmtree, _FIXTURE_DIR, ignore_errors=True)
+
+# ---------------------------------------------------------------------------
+# Temp folder for child processes (removed at exit)
+#
+# The JVM ignores TMPDIR (java.io.tmpdir is /tmp on Linux and the per-user
+# folder on macOS), so files the CLI leaves in its temp folder would stay in
+# the system temp. The wrapper starts java with this process's environment,
+# so JAVA_TOOL_OPTIONS reaches the JVM; it is appended to, so existing values
+# stay, and the last -Djava.io.tmpdir wins. TMPDIR/TEMP/TMP cover Python
+# children (e.g. torch creates torchinductor_<user> during the hybrid --help
+# check). This process already resolved its own temp dir above, so its
+# TemporaryDirectory() folders are unaffected.
+# ---------------------------------------------------------------------------
+_CHILD_TMP_DIR = tempfile.mkdtemp(prefix="ci-verify-tmp-")
+atexit.register(shutil.rmtree, _CHILD_TMP_DIR, ignore_errors=True)
+os.environ["JAVA_TOOL_OPTIONS"] = " ".join(filter(None, [
+    os.environ.get("JAVA_TOOL_OPTIONS", "").strip(),
+    f'-Djava.io.tmpdir="{_CHILD_TMP_DIR}"',
+]))
+for _name in ("TMPDIR", "TEMP", "TMP"):
+    os.environ[_name] = _CHILD_TMP_DIR
+
+# ---------------------------------------------------------------------------
 # PDF Fixtures
 # ---------------------------------------------------------------------------
 PDF_BASIC      = os.path.join(REPO_ROOT, "samples/pdf/lorem.pdf")
 PDF_MULTIPAGE  = os.path.join(REPO_ROOT, "samples/pdf/2408.02509v1.pdf")
 PDF_IMAGES     = os.path.join(REPO_ROOT, "samples/pdf/pdfua-1-reference-suite-1-1/PDFUA-Ref-2-06_Brochure.pdf")
-PDF_TABLES     = os.path.join(REPO_ROOT, "samples/pdf/issue-336-conto-economico-bialetti.pdf")
+PDF_TABLES     = _write_synthetic_table_pdf(os.path.join(_FIXTURE_DIR, "synthetic-table.pdf"))
+PDF_BORDERLESS = _write_synthetic_table_pdf(
+    os.path.join(_FIXTURE_DIR, "synthetic-borderless-table.pdf"), bordered=False)
 PDF_STRUCTURED = os.path.join(REPO_ROOT, "samples/pdf/pdfua-1-reference-suite-1-1/PDFUA-Ref-2-08_BookChapter.pdf")
 PDF_PASSWORD      = os.path.join(REPO_ROOT, "samples/pdf/password-protected.pdf")
 PDF_STRIKETHROUGH = os.path.join(REPO_ROOT, "samples/pdf/strikethrough.pdf")
@@ -363,6 +442,19 @@ def _find_file_by_ext(directory: str, ext: str) -> str | None:
     return matches[0] if matches else None
 
 
+def _markdown_has_table(pdf: str, extra_args: list[str]) -> bool | None:
+    """Convert pdf to markdown and return whether it has a table, or None if the run fails."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        result = run_cli([pdf, "--format", "markdown", "--output-dir", tmpdir] + extra_args)
+        md_file = _find_file_by_ext(tmpdir, ".md") if result.returncode == 0 else None
+        if md_file is None:
+            print(f"       [table] no markdown output (exit {result.returncode}): "
+                  f"{result.stderr[:200]}")
+            return None
+        with open(md_file, "r", encoding="utf-8", errors="replace") as fh:
+            return "|---|" in fh.read()
+
+
 def _find_image_files(directory: str) -> list[str]:
     """Return all image files (.png, .jpg, .jpeg) in directory (recursive)."""
     results = []
@@ -671,12 +763,6 @@ def verify_folder_summary() -> None:
 
 def verify_markdown_with_html() -> None:
     print("\n--- --markdown-with-html ---")
-
-    if not os.path.exists(PDF_TABLES):
-        record("--markdown-with-html [SKIPPED: fixture missing]", None)
-        record("--format markdown-with-html (deprecated) [SKIPPED]", None)
-        record("--format markdown-with-images (deprecated) [SKIPPED]", None)
-        return
 
     # First-class flag: --format markdown + --markdown-with-html.
     with tempfile.TemporaryDirectory() as outdir:
@@ -1194,20 +1280,16 @@ def main() -> None:
     # --table-method
     # ------------------------------------------------------------------
     print("\n--- --table-method ---")
-    with tempfile.TemporaryDirectory() as tmpdir:
-        result = run_cli([
-            PDF_TABLES,
-            "--table-method", "cluster",
-            "--format", "markdown",
-            "--output-dir", tmpdir,
-        ])
-        ok = result.returncode == 0
-        if ok:
-            md_file = _find_file_by_ext(tmpdir, ".md")
-            ok = md_file is not None and assert_content(
-                "--table-method cluster", md_file, must_contain=["|"]
-            )
-        record("--table-method cluster", ok)
+    # The borderless sample has no ruling lines, so only cluster detection finds
+    # its table. The default run is the control: if it finds the table too, the
+    # sample no longer shows what --table-method cluster adds.
+    with_cluster = _markdown_has_table(PDF_BORDERLESS, ["--table-method", "cluster"])
+    with_default = _markdown_has_table(PDF_BORDERLESS, ["--table-method", "default"])
+    if with_cluster is False:
+        print("       [content] no table in the borderless sample with --table-method cluster")
+    if with_default:
+        print("       [content] the default method also finds the borderless table")
+    record("--table-method cluster", with_cluster is True and with_default is False)
 
     # ------------------------------------------------------------------
     # --reading-order

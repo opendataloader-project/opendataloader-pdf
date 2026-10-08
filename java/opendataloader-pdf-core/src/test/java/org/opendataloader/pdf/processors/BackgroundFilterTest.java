@@ -65,16 +65,22 @@ class BackgroundFilterTest {
         config.getFilterConfig().setFilterBackgrounds(filterBackgrounds);
 
         DocumentProcessor.preprocessing(pdf.toString(), config);
-        List<org.verapdf.wcag.algorithms.entities.IObject> page =
-                ContentFilterProcessor.getFilteredContents(
-                        pdf.toString(),
-                        org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers
-                                .getDocument().getArtifacts(0),
-                        0,
-                        config);
-        return page.stream()
-                .filter(o -> o instanceof org.verapdf.wcag.algorithms.entities.content.LineArtChunk)
-                .count();
+        try {
+            List<org.verapdf.wcag.algorithms.entities.IObject> page =
+                    ContentFilterProcessor.getFilteredContents(
+                            pdf.toString(),
+                            org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers
+                                    .getDocument().getArtifacts(0),
+                            0,
+                            config);
+            return page.stream()
+                    .filter(o -> o instanceof org.verapdf.wcag.algorithms.entities.content.LineArtChunk)
+                    .count();
+        } finally {
+            // processFile closes the document in closePdfResources; preprocessing alone does not.
+            // An open document keeps the input file open.
+            org.verapdf.tools.StaticResources.getDocument().close();
+        }
     }
 
     @Test
