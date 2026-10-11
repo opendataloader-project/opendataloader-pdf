@@ -18,6 +18,9 @@ package org.opendataloader.pdf.json;
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.SerializableString;
+import com.fasterxml.jackson.core.io.CharacterEscapes;
+import com.fasterxml.jackson.core.io.SerializedString;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.verapdf.as.ASAtom;
@@ -45,11 +48,32 @@ import java.util.logging.Logger;
 
 public class JsonWriter {
     private static final Logger LOGGER = Logger.getLogger(JsonWriter.class.getCanonicalName());
+    private static final SerializableString EMPTY_ESCAPE_SEQUENCE = new SerializedString("");
+    private static final CharacterEscapes JSON_ESCAPES = new CharacterEscapes() {
+        private final int[] escapeCodes = standardAsciiEscapesForJSON();
+
+        {
+            escapeCodes[0] = ESCAPE_CUSTOM;
+        }
+
+        @Override
+        public int[] getEscapeCodesForAscii() {
+            return escapeCodes;
+        }
+
+        @Override
+        public SerializableString getEscapeSequence(int ch) {
+            return ch == 0 ? EMPTY_ESCAPE_SEQUENCE : null;
+        }
+    };
+
     private static JsonGenerator getJsonGenerator(String fileName) throws IOException {
         JsonFactory jsonFactory = new JsonFactory();
-        return jsonFactory.createGenerator(new File(fileName), JsonEncoding.UTF8)
+        JsonGenerator generator = jsonFactory.createGenerator(new File(fileName), JsonEncoding.UTF8)
                 .setPrettyPrinter(new DefaultPrettyPrinter())
                 .setCodec(ObjectMapperHolder.getObjectMapper());
+        generator.setCharacterEscapes(JSON_ESCAPES);
+        return generator;
     }
 
     public static void writeToJson(File inputPDF, String outputFolder, List<List<IObject>> contents) throws IOException {
