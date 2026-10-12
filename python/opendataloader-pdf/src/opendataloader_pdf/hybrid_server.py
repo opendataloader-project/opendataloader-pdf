@@ -481,6 +481,59 @@ def _bounded(value: str, limit: int = 120) -> str:
     return value[:limit] + f"...({len(value)} chars)"
 
 
+# docling-parse < 7.22.2 read LOCALAPPDATA through narrow getenv while scanning
+# font directories; a non-ASCII Windows profile then failed before any page was
+# touched (opendataloader-pdf#725, docling-parse#354).
+_NON_ASCII_ENV_PATH_SIGNATURE = "Cannot convert character sequence"
+_NON_ASCII_ENV_PATH_REMEDY = (
+    "docling-parse could not read a Windows environment path outside the ANSI "
+    "code page (LOCALAPPDATA under a non-ASCII profile). Upgrade docling-parse "
+    "to 7.22.2 or later, or point LOCALAPPDATA at an ASCII-only directory for "
+    "this server process."
+)
+
+
+def _exception_chain(exc: BaseException) -> list[BaseException]:
+    """`exc` followed by what caused it, as a traceback would show them.
+
+    docling reports a backend failure as a ConversionError with a generic
+    message and keeps the original exception on __cause__, so the one line
+    that says what went wrong is never on the exception the handler catches.
+    """
+    chain: list[BaseException] = []
+    seen: set[int] = set()
+    current: BaseException | None = exc
+    while current is not None and id(current) not in seen and len(chain) < 16:
+        seen.add(id(current))
+        chain.append(current)
+        if current.__cause__ is not None:
+            current = current.__cause__
+        elif not current.__suppress_context__:
+            current = current.__context__
+        else:
+            current = None
+    return chain
+
+
+def _failure_errors(exc: BaseException) -> list[str]:
+    """Describe a failed conversion to the caller.
+
+    The CLI logs this body as a warning, so it is what a user without the
+    server console sees. It names the exception types, and the remedy for the
+    one failure met in the field, but never the exception text: a parser
+    error can quote offsets and object data from the uploaded file. The logs
+    are pointed at only when the body has nothing better to offer.
+    """
+    chain = _exception_chain(exc)
+    names = type(chain[0]).__name__
+    root = type(chain[-1]).__name__
+    if root != names:
+        names = f"{names}, caused by {root}"
+    if any(_NON_ASCII_ENV_PATH_SIGNATURE in str(e) for e in chain):
+        return [f"PDF conversion failed ({names}).", _NON_ASCII_ENV_PATH_REMEDY]
+    return [f"PDF conversion failed ({names}). Check server logs for details."]
+
+
 def _safe_log_name(raw: str | None, limit: int = 120) -> str:
     """Reduce an uploaded filename to one printable token safe to log.
 
@@ -1411,10 +1464,7 @@ def create_app(
                 exc_info=True,
             )
             return JSONResponse(
-                {
-                    "status": "failure",
-                    "errors": ["PDF conversion failed. Check server logs for details."],
-                },
+                {"status": "failure", "errors": _failure_errors(e)},
                 status_code=500,
             )
         finally:
@@ -1536,7 +1586,7 @@ def create_app(
                 exc_info=True,
             )
             return JSONResponse(
-                {"status": "failure", "errors": ["Internal server error"]},
+                {"status": "failure", "errors": _failure_errors(e)},
                 status_code=500,
             )
         finally:
