@@ -1,11 +1,13 @@
 """What a failed conversion tells the caller.
 
-The CLI relays the 500 body verbatim as its own error, so the body is the
-one place a user without the server console sees why a conversion failed.
-It has to name the cause, and for the one failure we have met in the field
-(issue #725) say what fixes it. It must not carry the exception text itself:
-a parser error can quote offsets and object data from the uploaded file.
+The CLI logs the 500 body once as a warning, so the body is the one place a
+user without the server console sees why a conversion failed. It has to name
+the cause, and for the one failure we have met in the field (issue #725) say
+what fixes it. It must not carry the exception text itself: a parser error
+can quote offsets and object data from the uploaded file.
 """
+
+import pytest
 
 from opendataloader_pdf import hybrid_server
 
@@ -104,7 +106,6 @@ def test_remedy_survives_the_real_docling_wrapping(monkeypatch, tmp_path):
     """Drives the real DocumentConverter with the parser constructor failing
     as in #725, so this breaks if docling changes how it wraps the failure.
     No model is loaded: the backend fails before the pipeline is built."""
-    import pytest
     from docling.datamodel.base_models import InputFormat
     from docling.datamodel.pipeline_options import PdfPipelineOptions
     from docling.document_converter import DocumentConverter, PdfFormatOption
@@ -126,6 +127,17 @@ def test_remedy_survives_the_real_docling_wrapping(monkeypatch, tmp_path):
     with pytest.raises(Exception) as info:
         converter.convert(pdf)
     assert "LOCALAPPDATA" in " ".join(hybrid_server._failure_errors(info.value))
+
+
+def test_conversion_phrase_outside_a_filesystem_error_gets_no_remedy(monkeypatch):
+    """The phrase alone is generic libstdc++ wording; only the filesystem
+    error form has been seen in #725."""
+    response = _post_failing_pdf(
+        monkeypatch,
+        RuntimeError("Cannot convert character sequence: Illegal byte sequence"),
+    )
+    errors = response.json()["errors"]
+    assert errors == ["PDF conversion failed (RuntimeError). Check server logs for details."]
 
 
 def test_exception_chain_walk_stops_on_a_cycle():
