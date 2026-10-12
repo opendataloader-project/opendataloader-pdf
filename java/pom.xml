@@ -61,7 +61,7 @@
         <verapdf.version>1.31.197</verapdf.version>
         <!-- Removal prohibited. wcag-validation declares this as a range, so
              identical commits resolve to differing versions without the pin. -->
-        <verapdf.wcag.algs.version>1.31.44</verapdf.wcag.algs.version>
+        <verapdf.wcag.algs.version>1.31.47</verapdf.wcag.algs.version>
         <!-- Bump only on a wcag-algorithms bump: vera classes require the
              PDFBox they were built against. Verification is samples/pdf with
              -f pdf included; tests pass either way. -->
