@@ -484,7 +484,7 @@ def _bounded(value: str, limit: int = 120) -> str:
 # docling-parse < 7.22.2 read LOCALAPPDATA through narrow getenv while scanning
 # font directories; a non-ASCII Windows profile then failed before any page was
 # touched (opendataloader-pdf#725, docling-parse#354).
-_NON_ASCII_ENV_PATH_SIGNATURE = "Cannot convert character sequence"
+_NON_ASCII_ENV_PATH_SIGNATURE = "filesystem error: Cannot convert character sequence"
 _NON_ASCII_ENV_PATH_REMEDY = (
     "docling-parse could not read a Windows environment path outside the ANSI "
     "code page (LOCALAPPDATA under a non-ASCII profile). Upgrade docling-parse "
