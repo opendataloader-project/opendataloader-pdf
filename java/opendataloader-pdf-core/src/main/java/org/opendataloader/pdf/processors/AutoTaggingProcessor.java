@@ -39,6 +39,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.DeflaterOutputStream;
 
 public class AutoTaggingProcessor {
 
@@ -174,12 +175,18 @@ public class AutoTaggingProcessor {
 
     public static void setUpContents(COSObject contentsObj, List<Object> tokens) throws IOException {
         byte[] res = new PDFStreamWriter().write(tokens);
-        try (InputStream inStream = new ByteArrayInputStream(res)) {
-            contentsObj.setData(new ASMemoryInStream(inStream));
+        // Compress in memory and store the result as raw data. veraPDF's COSStream.setFilters, and
+        // the one-argument COSStream.setData on a stream that has a filter, write the encoded data
+        // to a temporary file (tmp_pdf_file*.pdf) that PDDocument.close() does not delete.
+        ByteArrayOutputStream compressed = new ByteArrayOutputStream();
+        try (DeflaterOutputStream deflater = new DeflaterOutputStream(compressed)) {
+            deflater.write(res);
         }
+        byte[] data = compressed.toByteArray();
+        // Remove /Filter, then add it again below, so the key order and the output bytes stay as before.
         contentsObj.setKey(ASAtom.FILTER, new COSObject());
-        COSStream newStream = (COSStream) contentsObj.getDirectBase();
-        newStream.setFilters(new COSFilters(COSName.construct(ASAtom.FLATE_DECODE)));
+        contentsObj.setData(new ASMemoryInStream(data, data.length, false), COSStream.FilterFlags.RAW_DATA);
+        contentsObj.setKey(ASAtom.FILTER, COSName.construct(ASAtom.FLATE_DECODE));
     }
 
     private static COSObject createStructTreeRoot(PDCatalog catalog, COSDocument cosDocument, PDDocument document) {
