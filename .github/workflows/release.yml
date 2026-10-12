@@ -81,6 +81,14 @@ jobs:
           gpg-private-key: ${{ secrets.MAVEN_GPG_KEY }}
           gpg-passphrase: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
 
+      # The runner's Maven 3.10 cannot publish to Central with the current
+      # plugin; see the script.
+      - name: Set up Maven 3.9.16
+        run: ./scripts/pin-maven.sh
+
+      - name: Check the Maven version
+        run: mvn -v | grep '^Apache Maven 3\.9\.16 '
+
       - name: Set up Python
         uses: actions/setup-python@v6
         with:

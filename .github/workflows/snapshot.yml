@@ -51,6 +51,14 @@ jobs:
           server-username: MAVEN_CENTRAL_USERNAME
           server-password: MAVEN_CENTRAL_PASSWORD
 
+      # The runner's Maven 3.10 cannot publish to Central with the current
+      # plugin; see the script.
+      - name: Set up Maven 3.9.16
+        run: ./scripts/pin-maven.sh
+
+      - name: Check the Maven version
+        run: mvn -v | grep '^Apache Maven 3\.9\.16 '
+
       # Deploying a release coordinate from main would put content behind a
       # version someone has already pinned.
       - name: Check the version is a snapshot
