@@ -749,8 +749,9 @@ public class DocumentProcessor {
             throw new TempDirectoryNotWritableException(
                 "Cannot use the temporary directory '" + tempDir + "'."
                 + " PDF processing needs it to read font metrics and decode content streams."
-                + " Point java.io.tmpdir or the TMPDIR environment variable at a writable"
-                + " directory, or grant write access to this one.", e);
+                + " Start Java with -Djava.io.tmpdir=<writable directory>, or grant write"
+                + " access to this one. If the Python or Node package starts Java, add that"
+                + " option to the JAVA_TOOL_OPTIONS environment variable.", e);
         }
     }
 
