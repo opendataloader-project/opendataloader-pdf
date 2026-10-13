@@ -1326,6 +1326,11 @@ public class AutoTaggingProcessor {
                 continue;
             }
             List<Object> tokens = ChunksWriter.getTokens(document.getPage(key.getPageNumber()).getContent());
+            // getTokens returns an empty list when the stream cannot be read; keep the
+            // unmerged MCIDs rather than fail the whole document.
+            if (Collections.max(operators.keySet()) >= tokens.size()) {
+                continue;
+            }
             int[] anchor = new int[parents.size()];
             boolean[] merged = new boolean[parents.size()];
             Integer previousOperator = null;
