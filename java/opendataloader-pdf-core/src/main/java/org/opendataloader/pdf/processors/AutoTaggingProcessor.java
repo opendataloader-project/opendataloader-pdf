@@ -2,6 +2,8 @@ package org.opendataloader.pdf.processors;
 
 import org.opendataloader.pdf.autotagging.ChunksWriter;
 import org.opendataloader.pdf.autotagging.OperatorStreamKey;
+import org.verapdf.operator.Operator;
+import org.verapdf.parser.Operators;
 import org.opendataloader.pdf.entities.EnrichedImageChunk;
 import org.opendataloader.pdf.entities.SemanticFootnote;
 import org.opendataloader.pdf.entities.SemanticFormula;
@@ -104,6 +106,7 @@ public class AutoTaggingProcessor {
         if (isPDF2_0) {
             updateDestinationsToStructureDestinations(document, catalog, cosDocument);
         }
+        mergeAdjacentTextShows(document);
         updatePages(document, cosDocument);
         createParentTree(cosDocument, structTreeRoot);
         cosDocument.getTrailer().removeKey(ASAtom.ENCRYPT);
@@ -1308,6 +1311,117 @@ public class AutoTaggingProcessor {
         } else {
             addMcidChildren(imageChunk.getStreamInfos(), imageChunk.getPageNumber(), cosObject);
         }
+    }
+
+    /** Operators that may sit between two text-showing operators without painting or ending the text object. */
+    private static final Set<String> NON_PAINTING_OPERATORS = new HashSet<>(Arrays.asList(
+        "Td", "TD", "Tm", "T*", "Tc", "Tw", "Tz", "TL", "Tf", "Ts", "Tr",
+        "g", "G", "rg", "RG", "k", "K", "cs", "CS", "sc", "SC", "scn", "SCN"));
+
+    /**
+     * Gives adjacent {@code Tj}/{@code TJ} operators of one structure element a single MCID.
+     *
+     * <p>Producers such as Skia (Google Docs, Chrome) draw one glyph per {@code Tj}, and every
+     * operator used to get its own MCID: a paragraph ended up with one marked-content
+     * sequence per letter. Only operators with nothing painted between them are merged, so
+     * {@code ChunksWriter} can emit them as one span. The dropped MCIDs are removed from the
+     * element's {@code /K} and the later ones renumbered.
+     */
+    private static void mergeAdjacentTextShows(PDDocument document) {
+        Map<COSObject, Integer> pagesPerParent = new IdentityHashMap<>();
+        for (List<COSObject> parents : structParents.values()) {
+            for (COSObject parent : identitySet(parents)) {
+                pagesPerParent.merge(parent, 1, Integer::sum);
+            }
+        }
+        for (Map.Entry<OperatorStreamKey, List<COSObject>> entry : structParents.entrySet()) {
+            OperatorStreamKey key = entry.getKey();
+            Map<Integer, Set<StreamInfo>> operators = operatorIndexesToStreamInfosMap.get(key);
+            List<COSObject> parents = entry.getValue();
+            // Integers in /K are relative to one page, so skip elements that span pages.
+            if (key.getXObjectName() != null || operators == null
+                || identitySet(parents).stream().anyMatch(p -> pagesPerParent.get(p) > 1)) {
+                continue;
+            }
+            List<Object> tokens = ChunksWriter.getTokens(document.getPage(key.getPageNumber()).getContent());
+            int[] anchor = new int[parents.size()];
+            boolean[] merged = new boolean[parents.size()];
+            Integer previousOperator = null;
+            Integer previousMcid = null;
+            for (int operator : new TreeSet<>(operators.keySet())) {
+                Set<StreamInfo> streamInfos = operators.get(operator);
+                if (streamInfos.size() != 1 || !isTextShow(tokens, operator)) {
+                    previousOperator = null;
+                    continue;
+                }
+                int mcid = streamInfos.iterator().next().getMcid();
+                anchor[mcid] = mcid;
+                if (previousOperator != null && parents.get(mcid) == parents.get(previousMcid)
+                    && onlyNonPainting(tokens, previousOperator, operator)) {
+                    anchor[mcid] = previousMcid;
+                    merged[mcid] = true;
+                } else {
+                    previousMcid = mcid;
+                }
+                previousOperator = operator;
+            }
+            int[] newMcid = new int[parents.size()];
+            List<COSObject> compacted = new ArrayList<>();
+            for (int mcid = 0; mcid < parents.size(); mcid++) {
+                if (!merged[mcid]) {
+                    newMcid[mcid] = compacted.size();
+                    compacted.add(parents.get(mcid));
+                }
+            }
+            if (compacted.size() == parents.size()) {
+                continue;
+            }
+            for (Set<StreamInfo> streamInfos : operators.values()) {
+                for (StreamInfo streamInfo : streamInfos) {
+                    streamInfo.setMcid(newMcid[merged[streamInfo.getMcid()] ? anchor[streamInfo.getMcid()] : streamInfo.getMcid()]);
+                }
+            }
+            for (COSObject parent : identitySet(parents)) {
+                COSObject kids = parent.getKey(ASAtom.K);
+                for (int i = kids.size() - 1; i >= 0; i--) {
+                    COSObject kid = kids.at(i);
+                    if (kid.getType() != COSObjType.COS_INTEGER) {
+                        continue;
+                    }
+                    int mcid = kid.getInteger().intValue();
+                    if (merged[mcid]) {
+                        kids.remove(i);
+                    } else {
+                        kids.set(i, COSInteger.construct(newMcid[mcid]));
+                    }
+                }
+            }
+            parents.clear();
+            parents.addAll(compacted);
+        }
+    }
+
+    private static Set<COSObject> identitySet(List<COSObject> objects) {
+        Set<COSObject> set = Collections.newSetFromMap(new IdentityHashMap<>());
+        set.addAll(objects);
+        return set;
+    }
+
+    private static boolean isTextShow(List<Object> tokens, int index) {
+        Object token = tokens.get(index);
+        return token instanceof Operator
+            && (Operators.TJ_SHOW.equals(((Operator) token).getOperator())
+                || Operators.TJ_SHOW_POS.equals(((Operator) token).getOperator()));
+    }
+
+    private static boolean onlyNonPainting(List<Object> tokens, int from, int to) {
+        for (int i = from + 1; i < to; i++) {
+            Object token = tokens.get(i);
+            if (token instanceof Operator && !NON_PAINTING_OPERATORS.contains(((Operator) token).getOperator())) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static void addMcidChildren(List<StreamInfo> streamInfos, Integer pageNumber, COSObject parentStructElement) {

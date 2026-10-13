@@ -70,6 +70,15 @@ public class ChunksWriter {
      */
     private final List<Object> pendingPath = new ArrayList<>();
 
+    /**
+     * MCID of the span closed by the last EMC in the output, and that EMC's index. When the
+     * next paint operator carries the same MCID, the EMC is dropped so both share one span.
+     * {@code AutoTaggingProcessor} only hands out a shared MCID to operators with nothing
+     * painted between them, so no check is needed here.
+     */
+    private Integer lastMcid;
+    private int lastEmcIndex;
+
     public List<Object> processTokens(List<Object> processTokens, OperatorStreamKey operatorStreamKey) throws IOException {
         Map<Integer, Set<StreamInfo>> operatorIndexesToStreamInfosMap = AutoTaggingProcessor.getOperatorIndexesToStreamInfosMap().get(operatorStreamKey);
         if (operatorIndexesToStreamInfosMap == null) {
@@ -238,7 +247,10 @@ public class ChunksWriter {
 
     private void writeMarkedContent(List<Object> result, List<COSBase> arguments, Operator token,
                                            String operatorName, Integer mcid, OperatorStreamKey operatorStreamKey) {
-        if (mcid == null) {
+        boolean continuesSpan = mcid != null && mcid.equals(lastMcid);
+        if (continuesSpan) {
+            result.remove(lastEmcIndex);
+        } else if (mcid == null) {
             result.add(COSName.construct(TaggedPDFConstants.ARTIFACT).getDirectBase());
             result.add(Operator.getOperator(Operators.BMC));
         } else {
@@ -262,6 +274,8 @@ public class ChunksWriter {
         result.addAll(arguments);
         result.add(token);
         result.add(Operator.getOperator(Operators.EMC));
+        lastMcid = mcid;
+        lastEmcIndex = result.size() - 1;
     }
 
     private Map<StreamInfo, COSObject> getArguments(COSBase object, List<StreamInfo> streamInfos) {
