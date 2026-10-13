@@ -31,7 +31,8 @@ import java.io.IOException;
  * should stop rather than retry per file.
  *
  * <p>Read-only containers, restricted CI runners, sandboxes and a misconfigured
- * {@code TMPDIR} are the usual causes.
+ * {@code java.io.tmpdir} are the usual causes. The JVM does not read the
+ * {@code TMPDIR} environment variable.
  *
  * <p>Public entry points that may surface this exception:
  * <ul>

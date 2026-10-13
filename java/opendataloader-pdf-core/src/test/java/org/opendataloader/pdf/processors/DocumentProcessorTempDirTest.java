@@ -31,6 +31,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -82,8 +83,13 @@ class DocumentProcessorTempDirTest {
         assertNotNull(message);
         assertTrue(message.contains(unwritable.toString()),
             "message should name the offending directory so the user can fix it, but was: " + message);
-        assertTrue(message.contains("java.io.tmpdir") && message.contains("TMPDIR"),
+        // The JVM does not read TMPDIR, so only a java.io.tmpdir system property
+        // moves the directory. JAVA_TOOL_OPTIONS also reaches the JVM that the
+        // Python and Node packages start (#780).
+        assertTrue(message.contains("-Djava.io.tmpdir=") && message.contains("JAVA_TOOL_OPTIONS"),
             "message should tell the user how to point at a writable directory, but was: " + message);
+        assertFalse(message.contains("TMPDIR"),
+            "the JVM ignores TMPDIR, so the message must not tell the user to set it, but was: " + message);
         assertNotNull(thrown.getCause(), "underlying IOException should be preserved for diagnostics");
     }
 
