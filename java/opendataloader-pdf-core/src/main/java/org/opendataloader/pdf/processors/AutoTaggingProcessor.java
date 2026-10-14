@@ -98,7 +98,7 @@ public class AutoTaggingProcessor {
         isPDF2_0 = pdfVersion != null ? pdfVersion == 2.0F : document.getVersion() == 2.0F;
         COSDocument cosDocument = document.getDocument();
         PDCatalog catalog = document.getCatalog();
-        setMarkedEntry(catalog, cosDocument);
+        setMarkInfo(catalog, cosDocument);
         COSObject structTreeRoot = createStructTreeRoot(catalog, cosDocument, document);
         createStructureTreeElements(document, contents, structTreeRoot, cosDocument);
         if (isPDF2_0) {
@@ -167,8 +167,12 @@ public class AutoTaggingProcessor {
         }
     }
 
-    private static void setMarkedEntry(PDCatalog catalog, COSDocument cosDocument) {
-        COSObject markInfo = COSDictionary.construct(ASAtom.MARKED, COSBoolean.construct(true));
+    private static void setMarkInfo(PDCatalog catalog, COSDocument cosDocument) {
+        COSObject markInfo = catalog.getKey(ASAtom.MARK_INFO);
+        if (markInfo  == null || markInfo.empty()) {
+            markInfo = COSDictionary.construct();
+        }
+        markInfo.setKey(ASAtom.MARKED, COSBoolean.construct(true));
         catalog.setKey(ASAtom.MARK_INFO, markInfo);
         cosDocument.addChangedObject(catalog.getObject());
     }
