@@ -171,9 +171,9 @@ public class AutoTaggingProcessor {
         COSObject markInfo = catalog.getKey(ASAtom.MARK_INFO);
         if (markInfo  == null || markInfo.empty()) {
             markInfo = COSDictionary.construct();
+            catalog.setKey(ASAtom.MARK_INFO, markInfo);
         }
         markInfo.setKey(ASAtom.MARKED, COSBoolean.construct(true));
-        catalog.setKey(ASAtom.MARK_INFO, markInfo);
         cosDocument.addChangedObject(catalog.getObject());
     }
 
