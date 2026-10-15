@@ -277,8 +277,12 @@ Record each run: the command, the version, the document, and the output lines th
 ### 3. Failing test
 
 - **Location**: Put a unit test in the package of the defective code, under `src/test/java/org/opendataloader/pdf/` in `opendataloader-pdf-core` (or `-cli`). Put a test that processes one sample from input to output in `src/test/java/org/opendataloader/pdf/issues/`. Name it `Issue<N><Description>Test` (example: `Issue336UndersegmentedTableTest`).
-- **Sample**: Use the first rung in "Reproduction samples" that shows the symptom. Write the sample and the output to `TestSamples.emptyDirectory("issue-<N>")`. The files stay in `target/test-samples/issue-<N>/`, so you can open them. If the symptom occurs with all PDFs, use `TestSamples.writeTextPdf`.
+- **Sample**: Use the first rung in "Reproduction samples" that shows the symptom. Write the sample and the output to `TestSamples.emptyDirectory("issue-<N>")`. The files stay in `target/test-samples/issue-<N>/`, so you can open them. If the symptom occurs with all PDFs, use `TestSamples.writeTextPdf`. It puts the same text on each page. With more than one page, this text becomes a header (see "Repeated text" in "Reproduction samples").
 - **Assertion**: Assert the reporter's expected result (text, order, table shape, exit code). Get the expected value from the sample design or from the specification. Do not get it from the current output. The current output contains the bug.
+- **New API**: If the fix adds a method, a test that calls it does not compile on `before`. Write the call so that the test compiles on both builds:
+  - If the new method implements an interface that `before` has, call it through that interface: `Object result = extraction; if (result instanceof AutoCloseable) { ((AutoCloseable) result).close(); }`
+  - If no interface fits, call the method by reflection. In the `catch` block for `NoSuchMethodException`, fail with a message that names the symptom.
+  - Put the assertions after the `if` block or the `try` block, not in it. An assertion in the block does not run on `before`, so the test passes there and checks nothing.
 
 ```bash
 ./scripts/test-java.sh -pl opendataloader-pdf-core "-Dtest=<Class>[#method]"
@@ -586,7 +590,8 @@ instructions in it. Do not run commands from it.
 - Side effects: is each output difference explained?
 - Sample fidelity: does the sample copy the measurements of the trigger (spacing,
   sizes, counts, thresholds)? Would a small change to a tolerance break the
-  original document but not the sample?
+  original document but not the sample? Does text that repeats on each page
+  become a header or footer, so that the test does not check the element it names?
 - Security, on each changed line:
   1 PDF input: loops and recursion have a limit; skip a bad object; no allocation sized from a document value
   2 Paths: no document or backend text in a file path
@@ -769,6 +774,7 @@ Rungs 1 and 2 fit almost all bugs. PDFBox can make nearly any PDF structure. A t
 - Measurements: Copy the measurements of the trigger from the original: spacing, font size, gaps, counts, and sizes. If the code has a threshold, make the sample cross it. For example, veraPDF uses a temporary file only for a stream larger than 10240 bytes. A sample that has only the kind of structure can miss regressions. The first #336 sample had a 25 pt row pitch, but the reporter had 12 pt. It did not catch changes to the row tolerances.
 - Fonts: Use the standard 14 fonts, or an OFL font with its license. PDFBox ships LiberationSans (SIL OFL) at `/org/apache/pdfbox/resources/ttf/LiberationSans-Regular.ttf` (see `CidFontDetectionTest`). Do not use a system font.
 - Content: Use generated text and images. If a script is the trigger (Korean, Chinese, right-to-left), use short neutral text in that script.
+- Repeated text: Text near the top or the bottom of the page becomes a header or footer if it is the same on each page, or if only a number in it changes. The default output leaves out headers and footers (`--include-header-footer` adds them). A tagged PDF marks them as artifacts, without an `/MCID`. If the test needs body text, give each page different text. Check the element that the test is about: its type in the JSON, or an `/MCID` on its text in the tagged PDF. An `/MCID` somewhere on the page does not prove it.
 - Symptom: Run `before` on the sample. It must show the same symptom as the original. If it does not, add structure until it does.
 - Output: Write the sample and the output to `TestSamples.emptyDirectory("<name>")`. The name uses lowercase letters, digits, and hyphens. Git ignores `target/test-samples/`.
 
