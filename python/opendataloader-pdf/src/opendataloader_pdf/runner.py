@@ -1,13 +1,31 @@
 """
 Low-level JAR runner for opendataloader-pdf.
 """
+import os
 import subprocess
 import sys
+import tempfile
 import importlib.resources as resources
 from typing import List
 
 # The consistent name of the JAR file bundled with the package
 _JAR_NAME = "opendataloader-pdf-cli.jar"
+
+# Environment variables that the JVM reads options from
+_JAVA_OPTION_VARS = ("JAVA_TOOL_OPTIONS", "JDK_JAVA_OPTIONS", "_JAVA_OPTIONS")
+
+
+def _temp_dir_options() -> List[str]:
+    """Return the option that gives Java the temporary folder of this runtime.
+
+    The JVM does not read TMPDIR, so without this option Java can use another
+    folder than Python. A command-line option wins over JAVA_TOOL_OPTIONS and
+    JDK_JAVA_OPTIONS, so add none if the user set java.io.tmpdir there.
+    """
+    for name in _JAVA_OPTION_VARS:
+        if "-Djava.io.tmpdir=" in os.environ.get(name, ""):
+            return []
+    return [f"-Djava.io.tmpdir={tempfile.gettempdir()}"]
 
 
 def run_jar(args: List[str], quiet: bool = False) -> str:
@@ -24,6 +42,7 @@ def run_jar(args: List[str], quiet: bool = False) -> str:
                 "java",
                 "-Djava.awt.headless=true",
                 "-Dapple.awt.UIElement=true",
+                *_temp_dir_options(),
                 "-jar",
                 str(jar_path),
                 *args,

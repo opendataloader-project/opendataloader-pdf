@@ -1,6 +1,8 @@
 import { spawn } from 'child_process';
+import { randomUUID } from 'crypto';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as os from 'os';
 import { StringDecoder } from 'string_decoder';
 import { fileURLToPath } from 'url';
 
@@ -14,6 +16,34 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const JAR_NAME = 'opendataloader-pdf-cli.jar';
+
+// Environment variables that the JVM reads options from.
+const JAVA_OPTION_VARS = ['JAVA_TOOL_OPTIONS', 'JDK_JAVA_OPTIONS', '_JAVA_OPTIONS'];
+
+/**
+ * Returns the option that gives Java the temporary folder of this runtime.
+ * The JVM does not read TMPDIR, so without this option Java can use another
+ * folder than Node. A command-line option wins over JAVA_TOOL_OPTIONS and
+ * JDK_JAVA_OPTIONS, so add none if the user set java.io.tmpdir there.
+ */
+function tempDirOptions(): string[] {
+  if (JAVA_OPTION_VARS.some((name) => (process.env[name] ?? '').includes('-Djava.io.tmpdir='))) {
+    return [];
+  }
+  // os.tmpdir() returns TMPDIR without a check: it can name a missing
+  // folder, a folder without write access, or a file. Create and delete a
+  // probe file, as Java does. If that fails, add nothing and let Java keep
+  // its own default.
+  const dir = os.tmpdir();
+  const probe = path.join(dir, `opendataloader-${process.pid}-${randomUUID()}.probe`);
+  try {
+    fs.closeSync(fs.openSync(probe, 'wx'));
+    fs.unlinkSync(probe);
+  } catch {
+    return [];
+  }
+  return [`-Djava.io.tmpdir=${dir}`];
+}
 
 interface JarExecutionOptions {
   /**
@@ -43,6 +73,7 @@ function executeJar(args: string[], executionOptions: JarExecutionOptions = {}):
     const commandArgs = [
       '-Djava.awt.headless=true',
       '-Dapple.awt.UIElement=true',
+      ...tempDirOptions(),
       '-jar',
       jarPath,
       ...args,

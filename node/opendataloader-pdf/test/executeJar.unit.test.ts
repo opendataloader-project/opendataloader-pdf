@@ -22,9 +22,13 @@ vi.mock('child_process', () => ({
 // Mock fs so JAR-file-exists and input-file-exists checks always pass.
 vi.mock('fs', () => ({
   existsSync: vi.fn().mockReturnValue(true),
+  openSync: vi.fn().mockReturnValue(3),
+  closeSync: vi.fn(),
+  unlinkSync: vi.fn(),
 }));
 
 import { spawn } from 'child_process';
+import * as fs from 'fs';
 import { convert, _runForCli } from '../src/index';
 
 class FakeProcess extends EventEmitter {
@@ -286,3 +290,59 @@ describe('executeJar — CLI helper (_runForCli)', () => {
   });
 });
 
+describe('executeJar — Java temporary folder (#785)', () => {
+  const OPTION_VARS = ['JAVA_TOOL_OPTIONS', 'JDK_JAVA_OPTIONS', '_JAVA_OPTIONS'] as const;
+  const saved: Record<string, string | undefined> = {};
+
+  beforeEach(() => {
+    for (const name of OPTION_VARS) {
+      saved[name] = process.env[name];
+      delete process.env[name];
+    }
+  });
+
+  afterEach(() => {
+    for (const name of OPTION_VARS) {
+      if (saved[name] === undefined) delete process.env[name];
+      else process.env[name] = saved[name];
+    }
+    vi.clearAllMocks();
+  });
+
+  async function spawnedArgs(): Promise<string[]> {
+    const { proc, spawnMock } = makeFakeSpawn();
+    const promise = convert('input.pdf', { quiet: true });
+    proc.emit('close', 0);
+    await promise;
+    return spawnMock.mock.calls[0][1] as string[];
+  }
+
+  it('passes the Node temporary folder to Java, because the JVM does not read TMPDIR', async () => {
+    const { tmpdir } = await import('os');
+    const args = await spawnedArgs();
+    const option = `-Djava.io.tmpdir=${tmpdir()}`;
+    expect(args).toContain(option);
+    expect(args.indexOf(option)).toBeLessThan(args.indexOf('-jar'));
+  });
+
+  // os.tmpdir() returns TMPDIR without a check. TMPDIR can name a missing
+  // folder, a folder without write access, or a file. A probe file that
+  // cannot be created or deleted means Java could not use the folder either.
+  it.each(['openSync', 'unlinkSync'] as const)(
+    'passes nothing if %s fails for a probe file in the Node temporary folder',
+    async (name) => {
+      const failing = fs[name] as unknown as ReturnType<typeof vi.fn>;
+      failing.mockImplementationOnce(() => {
+        throw new Error('ENOTDIR');
+      });
+      const args = await spawnedArgs();
+      expect(args.some((arg) => arg.startsWith('-Djava.io.tmpdir='))).toBe(false);
+    },
+  );
+
+  it.each(OPTION_VARS)('keeps a java.io.tmpdir that the user set in %s', async (name) => {
+    process.env[name] = '-Xmx1g -Djava.io.tmpdir=/user/choice';
+    const args = await spawnedArgs();
+    expect(args.some((arg) => arg.startsWith('-Djava.io.tmpdir='))).toBe(false);
+  });
+});
