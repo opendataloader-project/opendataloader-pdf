@@ -46,7 +46,7 @@ public class FilterConfig {
             "+00-0000-0000"
         ));
         filterRules.add(new SanitizationRule(
-            Pattern.compile("(?:\\(\\d{3}\\)[ .-]?|\\b\\d{3}[ .-])\\d{3}[ .-]\\d{4}\\b"),
+            Pattern.compile("(?<!\\w)(?<!\\w[.-])(?:1[ .-])?(?:\\(\\d{3}\\)[ .-]?|\\d{3}[ .-])\\d{3}[ .-]\\d{4}\\b(?![.-]\\w)"),
             "000-000-0000"
         ));
         filterRules.add(new SanitizationRule(
