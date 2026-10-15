@@ -35,17 +35,18 @@ import java.io.IOException;
  * config.setGenerateJSON(true);
  * config.setGenerateMarkdown(true);
  *
- * // Phase 1: extract once
- * ExtractionResult extraction =
- *     org.opendataloader.pdf.processors.DocumentProcessor.extractContents(
- *         "input.pdf", config);
+ * // Phase 1: extract once. Closing the extraction releases the PDF document.
+ * try (ExtractionResult extraction =
+ *         org.opendataloader.pdf.processors.DocumentProcessor.extractContents(
+ *             "input.pdf", config)) {
  *
- * // Phase 2a: write output files
- * OutputWriter.writeOutputs("input.pdf", extraction, config);
+ *     // Phase 2a: write output files
+ *     OutputWriter.writeOutputs("input.pdf", extraction, config);
  *
- * // Phase 2b: tag in-memory and reuse the same extraction
- * try (TaggingResult tagged = AutoTagger.tag("input.pdf", extraction)) {
- *     // ... use tagged.getDocument()
+ *     // Phase 2b: tag in-memory and reuse the same extraction
+ *     try (TaggingResult tagged = AutoTagger.tag(extraction, null)) {
+ *         // ... use tagged.getDocument()
+ *     }
  * }
  * }</pre>
  *
