@@ -60,7 +60,13 @@ public final class AutoTagger {
      */
     public static TaggingResult tag(String inputPdf, Config config, Float pdfVersion) throws IOException {
         ExtractionResult extraction = DocumentProcessor.extractContents(inputPdf, config);
-        return tag(extraction, pdfVersion);
+        try {
+            return tag(extraction, pdfVersion);
+        } catch (Throwable failure) {
+            // The caller gets no TaggingResult to close.
+            extraction.close();
+            throw failure;
+        }
     }
 
     /**

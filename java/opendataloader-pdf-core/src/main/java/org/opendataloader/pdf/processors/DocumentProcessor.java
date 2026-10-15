@@ -222,13 +222,29 @@ public class DocumentProcessor {
      * because auto-tagging and all structured output formats depend on it.
      *
      * <p>The returned result keeps the PDF document open. Close it after its last use,
-     * for example with try-with-resources.
+     * for example with try-with-resources. If this method throws after it opened the document,
+     * it releases the document itself, because the caller gets no result to close.
      *
      * @param inputPdfName path to the input PDF file
      * @param config       configuration
      * @return extraction result with contents and timing metadata
      */
     public static ExtractionResult extractContents(String inputPdfName, Config config) throws IOException {
+        PDDocument previous = StaticResources.getDocument();
+        try {
+            return extract(inputPdfName, config);
+        } catch (Throwable failure) {
+            // Release only the document of this call. If the input fails before preprocessing
+            // opens it, the static containers still hold the document of an earlier extraction.
+            PDDocument opened = StaticResources.getDocument();
+            if (opened != null && opened != previous) {
+                closePdfResources(opened);
+            }
+            throw failure;
+        }
+    }
+
+    private static ExtractionResult extract(String inputPdfName, Config config) throws IOException {
         long t0 = System.nanoTime();
         preprocessing(inputPdfName, config);
         calculateDocumentInfo();

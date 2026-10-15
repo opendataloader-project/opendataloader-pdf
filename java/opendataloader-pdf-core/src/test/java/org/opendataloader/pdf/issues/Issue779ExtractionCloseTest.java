@@ -177,7 +177,7 @@ class Issue779ExtractionCloseTest {
         return config;
     }
 
-    private static Path writeSample(Path pdf) throws IOException {
+    static Path writeSample(Path pdf) throws IOException {
         try (PDDocument document = new PDDocument()) {
             PDFont font = new PDType1CFont(fontDictionary(document));
             PDPage page = new PDPage(PDRectangle.LETTER);
@@ -348,7 +348,7 @@ class Issue779ExtractionCloseTest {
         return created;
     }
 
-    private static Set<String> veraPdfTemporaryFiles() {
+    static Set<String> veraPdfTemporaryFiles() {
         Set<String> names = new HashSet<>();
         File[] files = new File(System.getProperty("java.io.tmpdir"))
             .listFiles((folder, name) -> name.startsWith("tmp_pdf_file") && name.endsWith(".pdf"));
