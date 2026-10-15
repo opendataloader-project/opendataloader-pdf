@@ -110,6 +110,55 @@ public class DocumentProcessor {
     }
 
     /**
+     * Releases the PDF resources of one extraction (see {@link ExtractionResult#close()}).
+     *
+     * <p>While the static containers hold another document, a later extraction owns them. Then
+     * this method only closes the document, on a new thread, and does not clear the static
+     * containers. veraPDF {@code PDDocument.close()} also clears {@code StaticResources}, so
+     * closing the earlier document on this thread would break the later one.
+     *
+     * @param document the document of the extraction; a second close does not close the file again
+     */
+    static void closePdfResources(PDDocument document) {
+        PDDocument current = StaticResources.getDocument();
+        if (current != null && current != document) {
+            if (document != null) {
+                closeOnNewThread(document);
+            }
+            return;
+        }
+        if (document != null) {
+            clearCleanupStep("PDDocument", document::close);
+        }
+        closePdfResources();
+    }
+
+    /**
+     * Closes the document on a new thread and waits until it is closed. {@code StaticResources}
+     * is thread-local, so the {@code StaticResources.clear()} of veraPDF {@code PDDocument.close()}
+     * clears the empty containers of the new thread, not the containers of the calling thread.
+     *
+     * <p>An interrupt does not stop the wait, so the close has finished when this method returns.
+     * The interrupt status of the calling thread is then set again.
+     */
+    private static void closeOnNewThread(PDDocument document) {
+        Thread closer = new Thread(() -> clearCleanupStep("PDDocument", document::close),
+            "opendataloader-pdf-close");
+        closer.start();
+        boolean interrupted = false;
+        while (closer.isAlive()) {
+            try {
+                closer.join();
+            } catch (InterruptedException e) {
+                interrupted = true;
+            }
+        }
+        if (interrupted) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    /**
      * Executes a cleanup step safely without interrupting subsequent steps.
      *
      * Each cleanup action is isolated so that a failure in one step
@@ -172,6 +221,9 @@ public class DocumentProcessor {
      * <p>Structured processing (headings, lists, tables, captions) is always enabled
      * because auto-tagging and all structured output formats depend on it.
      *
+     * <p>The returned result keeps the PDF document open. Close it after its last use,
+     * for example with try-with-resources.
+     *
      * @param inputPdfName path to the input PDF file
      * @param config       configuration
      * @return extraction result with contents and timing metadata
@@ -212,7 +264,7 @@ public class DocumentProcessor {
         Map<Long, ElementMetadata> remappedMetadata = remapMetadataToContents(rawMetadata, contents);
 
         return new ExtractionResult(contents, extractionNs, HybridDocumentProcessor.getLastHybridTimings(),
-            remappedMetadata);
+            remappedMetadata, StaticResources.getDocument());
     }
 
     /**

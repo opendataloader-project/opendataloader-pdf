@@ -34,7 +34,7 @@ import java.io.IOException;
  * Config config = new Config();
  * config.setHybrid("docling-fast");
  *
- * try (TaggingResult result = AutoTagger.tag("input.pdf", config)) {
+ * try (TaggingResult result = AutoTagger.tag("input.pdf", config, null)) {
  *     PDDocument tagged = result.getDocument();
  *     // use tagged document...
  *     result.saveTo("output_tagged.pdf");
@@ -68,6 +68,9 @@ public final class AutoTagger {
      * Use this when you need both tagged PDF and other output formats from the
      * same extraction — call {@link DocumentProcessor#extractContents} once,
      * then pass the result here and to other output generators.
+     *
+     * <p>The returned result uses the document of the extraction. Close it before
+     * you close the extraction.
      *
      * @param extraction pre-computed extraction result
      * @return result containing the tagged PDDocument and timing metadata
