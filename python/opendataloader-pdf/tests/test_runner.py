@@ -9,6 +9,7 @@ yet and is allowed to print the captured streams — but only once
 
 import io
 import subprocess
+import tempfile
 from unittest.mock import MagicMock
 
 import pytest
@@ -151,3 +152,49 @@ def test_quiet_failure_prints_captured_streams_once(monkeypatch, capsys, patched
     assert "Stderr: captured stderr text" in err
     assert "Error running opendataloader-pdf CLI." in err
     assert "Return code: 2" in err
+
+
+_JAVA_OPTION_VARS = ("JAVA_TOOL_OPTIONS", "JDK_JAVA_OPTIONS", "_JAVA_OPTIONS")
+
+
+def _capture_command(monkeypatch):
+    """Record the command that run_jar passes to subprocess.run."""
+    seen = {}
+
+    def fake_run(command, **_kwargs):
+        seen["command"] = command
+        return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(runner.subprocess, "run", fake_run)
+    return seen
+
+
+@pytest.fixture
+def no_java_options(monkeypatch):
+    for name in _JAVA_OPTION_VARS:
+        monkeypatch.delenv(name, raising=False)
+
+
+def test_passes_runtime_temp_dir_to_java(monkeypatch, patched_jar, no_java_options):
+    """The JVM does not read TMPDIR. Java must use the temporary folder of this
+    Python runtime, so that a writable TMPDIR is enough (#785)."""
+    seen = _capture_command(monkeypatch)
+
+    runner.run_jar(["input.pdf"], quiet=True)
+
+    command = seen["command"]
+    option = f"-Djava.io.tmpdir={tempfile.gettempdir()}"
+    assert option in command, command
+    assert command.index(option) < command.index("-jar"), command
+
+
+@pytest.mark.parametrize("name", _JAVA_OPTION_VARS)
+def test_keeps_user_java_tmpdir(monkeypatch, patched_jar, no_java_options, name):
+    """A command-line option wins over JAVA_TOOL_OPTIONS and JDK_JAVA_OPTIONS.
+    If the user set java.io.tmpdir there, the runner must not override it."""
+    monkeypatch.setenv(name, "-Xmx1g -Djava.io.tmpdir=/user/choice")
+    seen = _capture_command(monkeypatch)
+
+    runner.run_jar(["input.pdf"], quiet=True)
+
+    assert not any(arg.startswith("-Djava.io.tmpdir=") for arg in seen["command"]), seen["command"]
