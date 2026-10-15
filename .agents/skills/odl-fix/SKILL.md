@@ -283,6 +283,7 @@ Record each run: the command, the version, the document, and the output lines th
   - If the new method implements an interface that `before` has, call it through that interface: `Object result = extraction; if (result instanceof AutoCloseable) { ((AutoCloseable) result).close(); }`
   - If no interface fits, call the method by reflection. In the `catch` block for `NoSuchMethodException`, fail with a message that names the symptom.
   - Put the assertions after the `if` block or the `try` block, not in it. An assertion in the block does not run on `before`, so the test passes there and checks nothing.
+  - Assert the effect of the call (the symptom), for example that the document is closed. Then the test fails on `before`, where the call does not occur, with the symptom of the reporter.
 
 ```bash
 ./scripts/test-java.sh -pl opendataloader-pdf-core "-Dtest=<Class>[#method]"
