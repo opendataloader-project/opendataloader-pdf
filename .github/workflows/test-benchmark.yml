@@ -7,10 +7,14 @@ on:
       - 'java/**'
       - 'python/**'
       - 'node/**'
-      - 'scripts/**'
+      # Only the scripts that this workflow runs, directly or through build-all.sh.
+      - 'scripts/build-*.sh'
+      - 'scripts/verify-python-sdist.sh'
+      - 'scripts/bench.sh'
       - 'verification/**'
       - 'samples/**'
-      - '.github/workflows/**'
+      # Other workflows run when they change; they do not need this one.
+      - '.github/workflows/test-benchmark.yml'
   workflow_dispatch:
 
 concurrency:
