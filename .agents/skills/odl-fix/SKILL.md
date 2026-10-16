@@ -833,8 +833,10 @@ A missing or wrong sandbox row in "Troubleshooting" is also a sandbox problem.
 Find the tracking issue:
 
 ```bash
-gh issue list --repo "$REPO" --state open --search 'in:title "odl-fix skill feedback"' --json number,title,url --jq '.[] | select(.title == "odl-fix skill feedback")'
+gh issue list --repo "$REPO" --state open --search 'in:title "odl skills feedback"' --json number,title,url --jq '.[] | select(.title == "odl skills feedback")'
 ```
+
+All odl skills share this tracking issue. Each sub-issue title starts with the name of the skill that has the problem text: `odl-fix: `, `odl-review: `. If another skill uses a rule of this skill, a problem with that rule gets the `odl-fix: ` prefix.
 
 If the command prints more than one issue, ask the user which issue is the tracking issue.
 
