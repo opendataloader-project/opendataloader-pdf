@@ -1,0 +1,38 @@
+# pr-reminders.yml
+# Reminds external contributors about an unsigned CLA or open CodeRabbit
+# comments, and keeps the needs-cla label in sync. Rules and thresholds live in
+# scripts/pr-reminders.py.
+#
+# Dry run by default: the planned comments and labels go to the job summary.
+# Set the repository variable PR_REMINDERS_LIVE=true to post them.
+
+name: PR Reminders
+
+on:
+  schedule:
+    - cron: '0 1 * * *'  # 10:00 KST
+  status:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: pr-reminders
+  cancel-in-progress: false
+
+jobs:
+  remind:
+    # Of all status events, only a newly signed CLA matters (it clears needs-cla).
+    if: github.event_name != 'status' || (github.event.context == 'license/cla' && github.event.state == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check open PRs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LIVE: ${{ vars.PR_REMINDERS_LIVE == 'true' && '--live' || '' }}
+        run: python3 scripts/pr-reminders.py $LIVE
