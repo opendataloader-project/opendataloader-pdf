@@ -2,6 +2,8 @@ package org.opendataloader.pdf.utils;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.opendataloader.pdf.api.FilterConfig;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
@@ -11,8 +13,10 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.utils.StreamInfo;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ContentSanitizerTest {
     private ContentSanitizer sanitizer;
@@ -21,6 +25,144 @@ class ContentSanitizerTest {
     void setUp() {
         FilterConfig filterConfig = new FilterConfig();
         sanitizer = new ContentSanitizer(filterConfig.getFilterRules());
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "12:30:45, 12:30:45",
+        "1:2:3, 1:2:3",
+        "John 3:16:2, John 3:16:2",
+        "12:30, 12:30",
+        "Score 3:2, Score 3:2",
+        "John 3:16, John 3:16",
+        "a:b:c:d, a:b:c:d",
+        "1:2:3:4:5:6:7, 1:2:3:4:5:6:7",
+        "1:2:3:4:5:6:7:8:9, 1:2:3:4:5:6:7:8:9",
+        "2001:::1, 2001:::1",
+        "::1:, ::1:",
+        "label: value, label: value",
+        "2001::db8::1, 2001::db8::1",
+        "12345::1, 12345::1",
+        "dead-beef::1, dead-beef::1",
+        "token-beef::1, token-beef::1",
+        "1:2:3:4:5:6:7::8, 1:2:3:4:5:6:7::8",
+        "::1:2:3:4:5:6:7:8, ::1:2:3:4:5:6:7:8",
+        "2001:db8::1, 0.0.0.0::1",
+        "2001::1, 0.0.0.0::1",
+        "::1, 0.0.0.0::1",
+        "::, 0.0.0.0::1",
+        "2001:db8::, 0.0.0.0::1",
+        "1:2:3:4:5:6:7:8, 0.0.0.0::1",
+        "2001:DB8:1234:5678:9ABC:DEF0:1234:5678, 0.0.0.0::1",
+        "1::2:3:4:5:6:7, 0.0.0.0::1",
+        "1:2::3:4:5:6:7, 0.0.0.0::1",
+        "1:2:3::4:5:6:7, 0.0.0.0::1",
+        "1:2:3:4::5:6:7, 0.0.0.0::1",
+        "1:2:3:4:5::6:7, 0.0.0.0::1",
+        "1:2:3:4:5:6::7, 0.0.0.0::1",
+        "1:2:3:4:5:6:7::, 0.0.0.0::1",
+        "::1:2:3:4:5:6:7, 0.0.0.0::1",
+        "[::1], [0.0.0.0::1]",
+        "IP:2001:db8::1, IP:0.0.0.0::1",
+        "IPv6:2001:db8::1, IPv6:0.0.0.0::1",
+        "Address:2001:db8::1, Address:0.0.0.0::1",
+        "host-name:2001:db8::1, host-name:0.0.0.0::1",
+        "IP:::1, IP:0.0.0.0::1",
+        "IP:::, IP:0.0.0.0::1",
+        "IP:12:30:45, IP:12:30:45",
+        "IP:1:2:3:4:5:6:7:8:9, IP:1:2:3:4:5:6:7:8:9",
+        "::ffff:192.0.2.128, 0.0.0.0::1",
+        "0:0:0:0:0:ffff:192.0.2.128, 0.0.0.0::1",
+        "2001:db8::192.0.2.128, 0.0.0.0::1",
+        "::192.0.2.128, 0.0.0.0::1",
+        "IP:::ffff:192.0.2.128, IP:0.0.0.0::1",
+        "[::ffff:192.0.2.128]:443, [0.0.0.0::1]:443",
+        "IP:2001:db8::1., IP:0.0.0.0::1.",
+        "::ffff:192.0.2.128., 0.0.0.0::1.",
+        "IP:2001:db8::1..., IP:0.0.0.0::1...",
+        "::ffff:192.0.2.128..., 0.0.0.0::1...",
+        "::ffff:192..0.2.128, ::ffff:192..0.2.128",
+        "::255.255.255.255, 0.0.0.0::1",
+        "::0.0.0.0, 0.0.0.0::1",
+        "2001:db8::1.example.com, 2001:db8::1.example.com",
+        "aa:bb:cc:dd:ee:ff, 00:00:00:00:00:00"
+    })
+    void testSanitizeColonSeparatedText(String input, String expected) {
+        TextLine line = new TextLine();
+        line.add(createTextChunk("Value (" + input + ").", 0, 0, 400, 20));
+
+        sanitizer.sanitizeContents(Collections.singletonList(Collections.singletonList(line)));
+
+        assertEquals("Value (" + expected + ").", line.getValue());
+    }
+
+    @Test
+    void testIpv6AcrossChunksAndMaskingDisabled() {
+        TextLine line = new TextLine();
+        String[] parts = {"Time 12:", "30:45; IP:", "::ffff:", "192.0.", "2.128", "."};
+        for (int i = 0; i < parts.length; i++) {
+            line.add(createTextChunk(parts[i], i * 100, 0, (i + 1) * 100, 20));
+        }
+        new ContentSanitizer(new FilterConfig().getFilterRules(), false)
+            .sanitizeContents(Collections.singletonList(Collections.singletonList(line)));
+        assertEquals(String.join("", parts), line.getValue());
+
+        sanitizer.sanitizeContents(Collections.singletonList(Collections.singletonList(line)));
+        assertEquals("Time 12:30:45; IP:0.0.0.0::1.", line.getValue());
+    }
+
+    @Test
+    void testCustomRuleCapturingGroupsStillReplaceEntireMatch() {
+        ContentSanitizer custom = new ContentSanitizer(Collections.singletonList(
+            new SanitizationRule(Pattern.compile("prefix:(secret)"), "$1")));
+        TextLine line = new TextLine();
+        line.add(createTextChunk("prefix:secret", 0, 0, 200, 20));
+
+        custom.sanitizeContents(Collections.singletonList(Collections.singletonList(line)));
+
+        assertEquals("$1", line.getValue());
+    }
+
+    @Test
+    void testUnmatchedReplacementGroupIsSkipped() {
+        ContentSanitizer custom = new ContentSanitizer(Collections.singletonList(
+            new SanitizationRule(Pattern.compile("prefix(?::(secret))?"), "hidden", 1)));
+        TextLine line = new TextLine();
+        line.add(createTextChunk("prefix", 0, 0, 200, 20));
+
+        custom.sanitizeContents(Collections.singletonList(Collections.singletonList(line)));
+
+        assertEquals("prefix", line.getValue());
+    }
+
+    @Test
+    void testInvalidReplacementGroupIsRejected() {
+        assertThrows(IllegalArgumentException.class,
+            () -> new SanitizationRule(Pattern.compile("(secret)"), "hidden", -1));
+        assertThrows(IllegalArgumentException.class,
+            () -> new SanitizationRule(Pattern.compile("(secret)"), "hidden", 2));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "prefix(), 1, false",
+        "prefix(), 1, true",
+        "(?<=prefix), 0, false",
+        "(?<=prefix), 0, true"
+    })
+    void testEmptyReplacementSpanIsSkipped(String regex, int group, boolean trailingChunks) {
+        ContentSanitizer custom = new ContentSanitizer(Collections.singletonList(
+            new SanitizationRule(Pattern.compile(regex), "hidden", group)));
+        TextLine line = new TextLine();
+        line.add(createTextChunk("prefix", 0, 0, 100, 20));
+        if (trailingChunks) {
+            line.add(createTextChunk(" middle ", 100, 0, 200, 20));
+            line.add(createTextChunk("tail", 200, 0, 300, 20));
+        }
+
+        custom.sanitizeContents(Collections.singletonList(Collections.singletonList(line)));
+
+        assertEquals(trailingChunks ? "prefix middle tail" : "prefix", line.getValue());
     }
 
     TextChunk createTextChunk(String value, double left, double bottom, double right, double top) {
