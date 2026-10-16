@@ -44,6 +44,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 public class MarkdownGenerator implements Closeable {
 
@@ -66,6 +67,7 @@ public class MarkdownGenerator implements Closeable {
     protected String imageFormat = Config.IMAGE_FORMAT_PNG;
     protected boolean includeHeaderFooter = false;
     protected static final String strikethroughTextMD = "~~";
+    private static final Pattern ORDERED_LIST_MARKER = Pattern.compile("\\d{1,9}[.)]\\s*");
 
     MarkdownGenerator(File inputPdf, Config config) throws IOException {
         String cutPdfFileName = inputPdf.getName();
@@ -291,8 +293,11 @@ public class MarkdownGenerator implements Closeable {
         for (ListItem item : list.getListItems()) {
             String itemText = GeneratorUtils.getTextFromLines(item.getLines(), OutputType.MD);
             if (!isInsideTable()) {
-                markdownWriter.write(MarkdownSyntax.LIST_ITEM);
-                markdownWriter.write(MarkdownSyntax.SPACE);
+                if (NumberingStyleNames.UNORDERED.equals(list.getNumberingStyle())
+                        || !startsWithOrderedListMarker(itemText, item.getLabelLength())) {
+                    markdownWriter.write(MarkdownSyntax.LIST_ITEM);
+                    markdownWriter.write(MarkdownSyntax.SPACE);
+                }
                 if (NumberingStyleNames.UNORDERED.equals(list.getNumberingStyle())) {
                     itemText = itemText.substring(item.getLabelLength());
                 }
@@ -306,6 +311,22 @@ public class MarkdownGenerator implements Closeable {
                 writeContents(itemContents, false);
             }
         }
+    }
+
+    /**
+     * Whether a list item starts with a label that is a Markdown ordered list marker, such as
+     * {@code 1.} or {@code 2)}. Such a label already marks the item, so no {@code -} is written
+     * before it.
+     */
+    static boolean startsWithOrderedListMarker(String itemText, int labelLength) {
+        if (itemText == null || labelLength <= 0 || labelLength > itemText.length()) {
+            return false;
+        }
+        String label = itemText.substring(0, labelLength);
+        return ORDERED_LIST_MARKER.matcher(label).matches()
+                && (labelLength == itemText.length()
+                || Character.isWhitespace(itemText.charAt(labelLength - 1))
+                || Character.isWhitespace(itemText.charAt(labelLength)));
     }
 
     protected void writeTOC(SemanticTOC toc) throws IOException {
