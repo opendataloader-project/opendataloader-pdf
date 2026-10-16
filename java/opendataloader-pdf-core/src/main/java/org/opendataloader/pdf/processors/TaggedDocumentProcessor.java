@@ -23,6 +23,7 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.TableChecker;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.listLabelsDetection.NumberingStyleNames;
 
 import java.util.*;
 
@@ -217,7 +218,38 @@ public class TaggedDocumentProcessor {
                 processStructElem(child, node);
             }
         }
+        if (list.getNumberingStyle() == null || NumberingStyleNames.UNKNOWN.equals(list.getNumberingStyle())) {
+            if (hasOnlyBulletLabels(list)) {
+                list.setNumberingStyle(NumberingStyleNames.UNORDERED);
+            }
+        }
         addObjectToContent(list);
+    }
+
+    /**
+     * Whether every item of a list starts with a {@code Lbl} that holds a bullet glyph only.
+     * Producers can omit {@code /ListNumbering} (Chrome does so for CSS-drawn markers), so the
+     * numbering style is then taken from the labels.
+     */
+    private static boolean hasOnlyBulletLabels(PDFList list) {
+        if (list.getListItems().isEmpty()) {
+            return false;
+        }
+        for (ListItem item : list.getListItems()) {
+            int labelLength = item.getLabelLength();
+            if (labelLength <= 0 || item.getLines().isEmpty()) {
+                return false;
+            }
+            String firstLine = item.getFirstLine().getValue();
+            if (labelLength > firstLine.length()) {
+                return false;
+            }
+            String label = firstLine.substring(0, labelLength).trim();
+            if (label.isEmpty() || label.codePoints().anyMatch(Character::isLetterOrDigit)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static ListItem processListItem(INode node) {
@@ -232,6 +264,15 @@ public class TaggedDocumentProcessor {
             } else {
                 listItem.getContents().add(content);
             }
+        }
+        if (listItem.getLabelLength() > 0 && !listItem.getLines().isEmpty()) {
+            // The label covers the space that separates it from the body, so both go together.
+            String firstLine = listItem.getFirstLine().getValue();
+            int labelLength = listItem.getLabelLength();
+            while (labelLength < firstLine.length() && Character.isWhitespace(firstLine.charAt(labelLength))) {
+                labelLength++;
+            }
+            listItem.setLabelLength(labelLength);
         }
         return listItem;
     }
