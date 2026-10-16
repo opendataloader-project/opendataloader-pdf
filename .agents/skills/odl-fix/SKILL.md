@@ -204,7 +204,10 @@ Do not edit or close the original issue.
 Post the claim immediately. The request to fix the issue is the approval for this fixed comment.
 
 ```bash
-gh issue comment "$N" --repo "$REPO" --body "I'm working on this and will link a pull request here."
+gh issue comment "$N" --repo "$REPO" --body "I'm working on this and will link a pull request here.
+
+---
+<sub>🤖 This is an AI-generated comment and may contain mistakes.</sub>"
 git switch -c <type>/$N-<slug> "$UPSTREAM/main"
 ```
 
@@ -914,6 +917,8 @@ Recommendation: <what you recommend, and why>
 Proceed?
 ```
 
+Make sure that each post in the draft ends with the AI disclosure (see "Writing").
+
 Write all GitHub text in English. Use the user's language for the user. In each GitHub post and each commit message, write `base.jar`, `fix.jar`, and `$WORK` in place of local paths. Local paths contain the user name. Do not write a `--password` value.
 
 ## Writing
@@ -928,6 +933,15 @@ Use the ASD-STE100 rules for all text that you write. Apply them in the language
 - Use one term for one thing. Do not change the term in the same text.
 - Explain an abbreviation or a technical term at its first use, or do not use it.
 - Use a list or a table for steps and comparisons.
+
+**AI disclosure.** End each issue, comment, and review reply that you post with these lines:
+
+```markdown
+---
+<sub>🤖 This is an AI-generated comment and may contain mistakes.</sub>
+```
+
+This includes the claim, the sub-issues, and the skill feedback. The pull request body has the "AI assistance" section instead. A commit has the agent trailer instead.
 
 ## Stop and ask the user
 
