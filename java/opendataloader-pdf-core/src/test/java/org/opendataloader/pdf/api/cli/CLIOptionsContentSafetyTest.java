@@ -123,4 +123,48 @@ class CLIOptionsContentSafetyTest {
         assertTrue(config.getFilterConfig().isFilterBackgrounds(),
                 "background removal stays on unless explicitly disabled");
     }
+
+    @Test
+    void filterHiddenTextDefaultsOff() throws Exception {
+        Config config = parseArgs("--output-dir", "/tmp");
+        assertFalse(config.getFilterConfig().isFilterHiddenText(),
+                "Without --filter-hidden-text, hidden-text filtering should stay off (default)");
+    }
+
+    @Test
+    void filterHiddenTextOnEnablesFilter() throws Exception {
+        Config config = parseArgs("--output-dir", "/tmp", "--filter-hidden-text", "on");
+        assertTrue(config.getFilterConfig().isFilterHiddenText(),
+                "--filter-hidden-text on should enable hidden-text filtering");
+    }
+
+    @Test
+    void filterHiddenTextOffDisablesFilter() throws Exception {
+        Config config = parseArgs("--output-dir", "/tmp", "--filter-hidden-text", "off");
+        assertFalse(config.getFilterConfig().isFilterHiddenText(),
+                "--filter-hidden-text off should keep hidden-text filtering off");
+    }
+
+    @Test
+    void filterHiddenTextValueIsCaseInsensitive() throws Exception {
+        Config config = parseArgs("--output-dir", "/tmp", "--filter-hidden-text", "ON");
+        assertTrue(config.getFilterConfig().isFilterHiddenText(),
+                "--filter-hidden-text value should be case-insensitive");
+    }
+
+    @Test
+    void filterHiddenTextInvalidValueThrows() {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> parseArgs("--output-dir", "/tmp", "--filter-hidden-text", "maybe"));
+        assertTrue(ex.getMessage().contains("on")  && ex.getMessage().contains("off"),
+                "Invalid --filter-hidden-text value should report the supported on/off values");
+    }
+
+    @Test
+    void filterHiddenTextOnWinsOverContentSafetyOff() throws Exception {
+        Config config = parseArgs("--output-dir", "/tmp",
+                "--content-safety-off", "hidden-text", "--filter-hidden-text", "on");
+        assertTrue(config.getFilterConfig().isFilterHiddenText(),
+                "--filter-hidden-text on should take precedence over --content-safety-off hidden-text");
+    }
 }

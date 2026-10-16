@@ -67,6 +67,8 @@ export interface ConvertOptions {
   imageResolution?: string;
   /** Set the ratio used to calculate the automatic space-insertion threshold (threshold = space-ratio * font size). If the horizontal gap between two adjacent symbols exceeds this threshold, an extra space is inserted to text value. Accepts decimals (e.g., 0.17). Default: 0.17 */
   spaceRatio?: string;
+  /** Filter hidden (low-contrast) text via per-page rendering. Values: on, off. Default: off (opt-in; expensive, runs as sequential post-processing) */
+  filterHiddenText?: string;
 }
 
 /**
@@ -104,6 +106,7 @@ export interface CliOptions {
   threads?: string;
   imageResolution?: string;
   spaceRatio?: string;
+  filterHiddenText?: string;
 }
 
 /**
@@ -204,6 +207,9 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   }
   if (cliOptions.spaceRatio) {
     convertOptions.spaceRatio = cliOptions.spaceRatio;
+  }
+  if (cliOptions.filterHiddenText) {
+    convertOptions.filterHiddenText = cliOptions.filterHiddenText;
   }
 
   return convertOptions;
@@ -319,6 +325,9 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.spaceRatio) {
     args.push('--space-ratio', options.spaceRatio);
+  }
+  if (options.filterHiddenText) {
+    args.push('--filter-hidden-text', options.filterHiddenText);
   }
 
   return args;
