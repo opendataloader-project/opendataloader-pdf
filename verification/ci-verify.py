@@ -152,7 +152,7 @@ COVERED_OPTIONS = {
     "--format", "--output-dir", "--quiet", "--to-stdout",
     "--password", "--keep-line-breaks", "--replace-invalid-chars",
     "--pages", "--include-header-footer", "--detect-strikethrough",
-    "--sanitize", "--content-safety-off", "--use-struct-tree",
+    "--sanitize", "--sanitize-rules", "--content-safety-off", "--use-struct-tree",
     "--table-method", "--reading-order", "--threads",
     "--image-output", "--image-format", "--image-dir",
     "--markdown-with-html",
@@ -838,9 +838,10 @@ def verify_markdown_with_html() -> None:
 #
 # Triggers are chosen so each matches exactly one rule (no overlap), and
 # replacements reflect the rule that actually fires. Rules whose regex is
-# fully subsumed by an earlier rule (e.g. 15-digit caught by 10-18 digit,
-# MAC caught by IPv6) are intentionally omitted — they are dead in the
-# current rule order and listing them would falsely claim coverage.
+# fully subsumed by an earlier rule (e.g. 15-digit caught by 10-18 digit)
+# are intentionally omitted — they are dead in the current rule order and
+# listing them would falsely claim coverage. The fixture has no MAC address;
+# ContentSanitizerTest covers the MAC rule.
 # ---------------------------------------------------------------------------
 
 SANITIZATION_SCENARIOS: list[tuple[str, str, str]] = [
@@ -908,6 +909,207 @@ def verify_sanitization_rules() -> None:
                 record(f"--sanitize {label}", False)
                 continue
             record(f"--sanitize {label}", True)
+
+
+# ---------------------------------------------------------------------------
+# --sanitize-rules: only the rules of a JSON file run, in place of the
+# built-in rules. examples/sanitize-rules/default-rules.json has the
+# built-in rules, as a template to copy.
+# ---------------------------------------------------------------------------
+
+SANITIZE_RULES_TEMPLATE = os.path.join(
+    REPO_ROOT, "examples/sanitize-rules/default-rules.json"
+)
+SCENARIO_RULE_IDS = {
+    "email": "email",
+    "international phone": "phone-intl",
+    "license/passport": "passport",
+    "credit card": "card",
+    "10-18 digit string": "long-number",
+    "IPv4": "ipv4",
+    "IPv6": "ipv6",
+    "URL": "url",
+}
+# sanitize-target.pdf has the line "Phone   : 010-1234-5678". No built-in rule matches it.
+KR_MOBILE_TRIGGER = "010-1234-5678"
+KR_MOBILE_RULE = {
+    "id": "kr-mobile",
+    "pattern": r"(?<!\d)01[016789]-\d{3,4}-\d{4}(?!\d)",
+    "replacement": "010-0000-0000",
+}
+
+
+def _template_rules() -> list[dict]:
+    with open(SANITIZE_RULES_TEMPLATE, encoding="utf-8") as fh:
+        return json.load(fh)["rules"]
+
+
+def _write_rules_file(directory: str, name: str, data: dict) -> str:
+    path = os.path.join(directory, name)
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump(data, fh)
+    return path
+
+
+def _text_output(pdf: str, extra_args: list[str]) -> str | None:
+    """Convert pdf to text and return the text, or None if the run fails."""
+    with tempfile.TemporaryDirectory() as outdir:
+        r = run_cli([pdf, "--format", "text", "--output-dir", outdir] + extra_args)
+        txt = _find_file_by_ext(outdir, ".txt")
+        if r.returncode != 0 or not txt:
+            print(
+                f"       [sanitize-rules] no text output (exit {r.returncode}): "
+                f"{((r.stdout or '') + (r.stderr or ''))[:300]!r}"
+            )
+            return None
+        with open(txt, encoding="utf-8", errors="replace") as fh:
+            return fh.read()
+
+
+def _rules_file_rejected(label: str, rules_path: str, must_name: str | None) -> bool:
+    """The run must stop before any file is processed, name must_name if given, and not leak a stack trace."""
+    with tempfile.TemporaryDirectory() as outdir:
+        r = run_cli(
+            [
+                PDF_BASIC,
+                "--format",
+                "text",
+                "--sanitize-rules",
+                rules_path,
+                "--output-dir",
+                outdir,
+            ]
+        )
+        combined = (r.stdout or "") + (r.stderr or "")
+        if r.returncode == 0:
+            print(f"       [{label}] expected a non-zero exit, got 0")
+            return False
+        if must_name and must_name not in combined:
+            print(
+                f"       [{label}] the error does not name {must_name!r}: {combined[:300]!r}"
+            )
+            return False
+        if os.listdir(outdir):
+            print(f"       [{label}] output was written: {os.listdir(outdir)}")
+            return False
+        if "Exception during processing file" in combined:
+            print(f"       [{label}] a file was processed before the error")
+            return False
+        return _assert_no_leak(label, r.stdout, r.stderr)
+
+
+def verify_sanitize_rules_file() -> None:
+    print("\n--- --sanitize-rules ---")
+
+    with tempfile.TemporaryDirectory() as cfg_dir:
+        label = "--sanitize-rules template + custom rule (kr-mobile)"
+        if not (
+            os.path.exists(PDF_SANITIZE) and os.path.exists(SANITIZE_RULES_TEMPLATE)
+        ):
+            record(f"{label} [SKIPPED: fixture missing]", None)
+        else:
+            path = _write_rules_file(
+                cfg_dir, "kr.json", {"rules": _template_rules() + [KR_MOBILE_RULE]}
+            )
+            base = _text_output(PDF_SANITIZE, ["--sanitize"])
+            # No --sanitize here: the option must turn sanitization on.
+            got = _text_output(PDF_SANITIZE, ["--sanitize-rules", path])
+            if base is None or got is None:
+                record(label, False)
+            elif KR_MOBILE_TRIGGER not in base:
+                print(
+                    f"       [{label}] trigger not in --sanitize output — fixture problem. "
+                    f"trigger={KR_MOBILE_TRIGGER!r}"
+                )
+                record(f"{label} [fixture: trigger missing]", False)
+            else:
+                ok = (
+                    KR_MOBILE_TRIGGER not in got
+                    and "010-0000-0000" in got
+                    and "test@example.com" not in got
+                    and "email@example.com" in got
+                )
+                if not ok:
+                    print(f"       [{label}] unexpected output: {got[:300]!r}")
+                record(label, ok)
+
+        if not (
+            os.path.exists(PDF_SANITIZATION_TARGETS)
+            and os.path.exists(SANITIZE_RULES_TEMPLATE)
+        ):
+            record(
+                "--sanitize-rules template without email and url / custom only "
+                "[SKIPPED: fixture missing]",
+                None,
+            )
+        else:
+            label = "--sanitize-rules template without email and url"
+            removed = {"email", "url"}
+            path = _write_rules_file(
+                cfg_dir,
+                "without.json",
+                {"rules": [r for r in _template_rules() if r["id"] not in removed]},
+            )
+            got = _text_output(PDF_SANITIZATION_TARGETS, ["--sanitize-rules", path])
+            ok = got is not None
+            for scenario, trigger, replacement in SANITIZATION_SCENARIOS if ok else []:
+                if SCENARIO_RULE_IDS[scenario] in removed:
+                    if trigger not in got:
+                        print(f"       [{label}] removed rule still masked {trigger!r}")
+                        ok = False
+                elif trigger in got or replacement not in got:
+                    print(f"       [{label}] template rule did not mask {trigger!r}")
+                    ok = False
+            record(label, ok)
+
+            label = "--sanitize-rules custom rule only"
+            path = _write_rules_file(
+                cfg_dir,
+                "only.json",
+                {
+                    "rules": [
+                        {
+                            "id": "private-ipv4",
+                            "pattern": r"\b192\.168\.\d{1,3}\.\d{1,3}\b",
+                            "replacement": "10.0.0.1",
+                        }
+                    ]
+                },
+            )
+            got = _text_output(PDF_SANITIZATION_TARGETS, ["--sanitize-rules", path])
+            ok = got is not None and "192.168.0.42" not in got and "10.0.0.1" in got
+            for scenario, trigger, _replacement in SANITIZATION_SCENARIOS if ok else []:
+                if scenario != "IPv4" and trigger not in got:
+                    print(
+                        f"       [{label}] a built-in rule ran: {trigger!r} is missing"
+                    )
+                    ok = False
+            record(label, ok)
+
+        bad_regex = _write_rules_file(
+            cfg_dir,
+            "rules-invalid-pattern.json",
+            {
+                "rules": [
+                    {"id": "bad-regex", "pattern": "(unclosed", "replacement": "x"}
+                ]
+            },
+        )
+        record(
+            "--sanitize-rules invalid regex -> error names rule id, no output",
+            _rules_file_rejected("bad-regex", bad_regex, "bad-regex"),
+        )
+        empty = _write_rules_file(cfg_dir, "rules-empty.json", {"rules": []})
+        record(
+            "--sanitize-rules no rules -> error, no output",
+            _rules_file_rejected("empty", empty, "has no rules"),
+        )
+        record(
+            "--sanitize-rules missing file -> error, no leak",
+            _rules_file_rejected(
+                "missing-file", os.path.join(cfg_dir, "missing.json"), "does not exist"
+            ),
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -1593,6 +1795,7 @@ def main() -> None:
     verify_folder_summary()
     verify_markdown_with_html()
     verify_sanitization_rules()
+    verify_sanitize_rules_file()
 
     # ------------------------------------------------------------------
     # Summary

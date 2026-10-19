@@ -80,6 +80,11 @@ When cutting an ODL release, re-verify the skill's principles against current be
   timestamps and ratios must survive while full and compressed IPv6 addresses are masked;
   include IPv4-embedded addresses and labels directly before addresses. Masking runs before output
   generation. Check the text, JSON, Markdown, and HTML outputs.
+- **Sanitize rule set** — the built-in rules and `examples/sanitize-rules/default-rules.json` must
+  stay the same (a unit test checks it). A user rule that never matches
+  changes nothing, with no message. A match that overlaps a kept match is dropped. Only an INFO log
+  line tells you, and `--quiet` removes it. So a run with custom rules can succeed and still mask
+  nothing. Check one output.
 - **Backend/OCR runs server-side** — OCR/enrichment execute on the hybrid backend, not the client,
   and need a reachable server; a "success" with no backend is a silent local fallback.
 - **Parser/preprocessing crash class** — the crash-before-page-handling hazard assumes a malformed

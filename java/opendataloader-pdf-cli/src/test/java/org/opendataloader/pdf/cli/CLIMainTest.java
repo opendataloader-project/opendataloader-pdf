@@ -127,6 +127,42 @@ class CLIMainTest {
     }
 
     /**
+     * An invalid --sanitize-rules file must stop the run with exit code 2 before
+     * any file is processed, and the message must name the rule.
+     */
+    @Test
+    void testInvalidSanitizeRulesFileReturnsExitCodeTwoBeforeProcessing() throws IOException {
+        Path testPdf = tempDir.resolve("test.pdf");
+        try (PDDocument document = new PDDocument()) {
+            document.addPage(new PDPage());
+            document.save(testPdf.toFile());
+        }
+        Path rules = tempDir.resolve("rules.json");
+        Files.write(rules, ("{\"rules\": [{\"id\": \"bad-regex\", \"pattern\": \"(unclosed\","
+            + " \"replacement\": \"x\"}]}").getBytes(StandardCharsets.UTF_8));
+        Path outputDir = tempDir.resolve("out");
+
+        PrintStream originalOut = System.out;
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        int exitCode;
+        System.setOut(new PrintStream(output, true, "UTF-8"));
+        try {
+            exitCode = CLIMain.run(new String[]{
+                "--sanitize-rules", rules.toString(),
+                "--output-dir", outputDir.toString(),
+                testPdf.toString()
+            });
+        } finally {
+            System.setOut(originalOut);
+        }
+
+        assertEquals(2, exitCode, "Exit code must be 2 (option validation failure)");
+        String printed = new String(output.toByteArray(), StandardCharsets.UTF_8);
+        assertTrue(printed.contains("bad-regex"), "The message must name the rule: " + printed);
+        assertFalse(Files.exists(outputDir), "No file may be processed");
+    }
+
+    /**
      * Normal invocation with no arguments should return 0 (just prints help).
      */
     @Test

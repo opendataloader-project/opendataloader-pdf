@@ -22,6 +22,7 @@ import org.opendataloader.pdf.api.cli.CLIOptions;
 import org.opendataloader.pdf.exceptions.EncryptedTaggedPdfNotSupportedException;
 import org.opendataloader.pdf.exceptions.InvalidPdfFileException;
 import org.opendataloader.pdf.exceptions.TempDirectoryNotWritableException;
+import org.opendataloader.pdf.utils.SanitizationRuleException;
 import org.verapdf.exceptions.InvalidPasswordException;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
@@ -260,6 +261,11 @@ public class CLIMain {
             return false;
         } catch (EncryptedTaggedPdfNotSupportedException exception) {
             System.out.println("Error: " + exception.getMessage());
+            return false;
+        } catch (SanitizationRuleException exception) {
+            // A rule from --sanitize-rules failed on this file. Print it, also under --quiet,
+            // so the user knows which rule to fix. The message has no document text.
+            System.out.println("Error: '" + file.getName() + "': " + exception.getMessage());
             return false;
         } catch (TempDirectoryNotWritableException exception) {
             // Environment failure, not a problem with this file: every remaining

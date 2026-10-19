@@ -255,14 +255,26 @@ public class ContentSanitizer {
 
         for (SanitizationRule rule : rules) {
             Matcher matcher = rule.getPattern().matcher(originalText);
-            while (matcher.find()) {
-                int group = rule.getMatchGroup();
-                if (matcher.end(group) > matcher.start(group)) {
-                    replacements.add(new ReplacementInfo(matcher.start(group), matcher.end(group), rule.getReplacement()));
+            try {
+                while (matcher.find()) {
+                    // Replace only a non-empty group. This also skips zero-length matches.
+                    int group = rule.getMatchGroup();
+                    if (matcher.end(group) > matcher.start(group)) {
+                        replacements.add(new ReplacementInfo(matcher.start(group), matcher.end(group),
+                            rule.getReplacement()));
+                    }
                 }
+            } catch (StackOverflowError error) {
+                // A user pattern with nested repetition can overflow the stack on a long line.
+                throw new SanitizationRuleException("Sanitization rule '" + describe(rule)
+                        + "' is too complex for a text line of " + originalText.length() + " characters");
             }
         }
         return replacements;
+    }
+
+    private static String describe(SanitizationRule rule) {
+        return rule.getId() != null ? rule.getId() : rule.getPattern().pattern();
     }
 
     private void updateBBoxForReplacement(TextChunk replacementChunk,

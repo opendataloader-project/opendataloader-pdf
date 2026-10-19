@@ -20,14 +20,23 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.utils.SanitizationRule;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class CLIOptionsContentSafetyTest {
+
+    @TempDir
+    Path tempDir;
 
     private Config parseArgs(String... args) throws Exception {
         Options options = CLIOptions.defineOptions();
@@ -122,5 +131,35 @@ class CLIOptionsContentSafetyTest {
         Config config = parseArgs("--output-dir", "/tmp");
         assertTrue(config.getFilterConfig().isFilterBackgrounds(),
                 "background removal stays on unless explicitly disabled");
+    }
+
+    @Test
+    void sanitizeRulesFileEnablesSanitizeAndAddsItsRules() throws Exception {
+        Path rules = tempDir.resolve("rules.json");
+        Files.write(rules, ("{\"rules\": [{\"id\": \"kr-mobile\","
+                + " \"pattern\": \"(?<!\\\\d)01[016789]-\\\\d{3,4}-\\\\d{4}(?!\\\\d)\","
+                + " \"replacement\": \"010-0000-0000\"}]}").getBytes(StandardCharsets.UTF_8));
+
+        Config config = parseArgs("--output-dir", "/tmp", "--sanitize-rules", rules.toString());
+
+        assertTrue(config.getFilterConfig().isFilterSensitiveData(),
+                "--sanitize-rules should turn on sanitization");
+        List<SanitizationRule> filterRules = config.getFilterConfig().getFilterRules();
+        assertTrue(filterRules.stream().anyMatch(rule -> rule.getPattern().matcher("Phone 010-1234-5678").find()
+                        && "010-0000-0000".equals(rule.getReplacement())),
+                "The rule from the file should mask a Korean mobile number");
+        assertEquals(1, filterRules.size(), "Only the rules of the file should run");
+    }
+
+    @Test
+    void invalidSanitizeRulesFileStopsBeforeProcessing() throws Exception {
+        Path rules = tempDir.resolve("rules.json");
+        Files.write(rules, ("{\"rules\": [{\"id\": \"bad-regex\", \"pattern\": \"(unclosed\","
+                + " \"replacement\": \"x\"}]}").getBytes(StandardCharsets.UTF_8));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> parseArgs("--output-dir", "/tmp", "--sanitize-rules", rules.toString()));
+        assertTrue(exception.getMessage().contains("bad-regex"),
+                "The error should name the rule: " + exception.getMessage());
     }
 }

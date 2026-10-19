@@ -64,6 +64,12 @@ class TestCLIOptions:
         assert sanitize_opt["type"] == "boolean"
         assert sanitize_opt["default"] == False
 
+    def test_sanitize_rules_option_exists(self):
+        rules_opt = next(opt for opt in CLI_OPTIONS if opt["name"] == "sanitize-rules")
+        assert rules_opt["type"] == "string"
+        assert rules_opt["default"] is None
+        assert rules_opt["python_name"] == "sanitize_rules"
+
     def test_hybrid_chunk_size_option_exists(self):
         option_names = [opt["name"] for opt in CLI_OPTIONS]
         assert "hybrid-chunk-size" in option_names
@@ -147,6 +153,66 @@ class TestAddOptionsToParser:
         assert args.output_dir == "/output"
         assert args.format == "json,markdown"
         assert args.quiet is True
+
+
+class TestSanitizeRulesOption:
+    """--sanitize-rules is a file path; --sanitize stays a flag next to it"""
+
+    def test_parser_reads_sanitize_rules_and_keeps_sanitize(self):
+        import argparse
+
+        parser = argparse.ArgumentParser()
+        add_options_to_parser(parser)
+
+        args = parser.parse_args(["--sanitize-rules", "rules.json"])
+        assert args.sanitize_rules == "rules.json"
+        assert args.sanitize is False
+
+        args = parser.parse_args(["--sanitize"])
+        assert args.sanitize is True
+        assert args.sanitize_rules is None
+
+    def test_convert_passes_sanitize_rules(self):
+        from unittest.mock import patch
+
+        from opendataloader_pdf.convert_generated import convert
+
+        with patch("opendataloader_pdf.convert_generated.run_jar", return_value="") as mock_run:
+            convert(input_path="test.pdf", output_dir="out", sanitize_rules="rules.json")
+
+        args = mock_run.call_args[0][0]
+        assert args[args.index("--sanitize-rules") + 1] == "rules.json"
+
+    def test_convert_passes_an_empty_sanitize_rules_value(self):
+        """An empty value must reach the CLI, which rejects it, so the run cannot skip sanitization."""
+        from unittest.mock import patch
+
+        from opendataloader_pdf.convert_generated import convert
+
+        with patch("opendataloader_pdf.convert_generated.run_jar", return_value="") as mock_run:
+            convert(input_path="test.pdf", output_dir="out", sanitize_rules="")
+
+        args = mock_run.call_args[0][0]
+        assert args[args.index("--sanitize-rules") + 1] == ""
+
+    def test_sanitize_rules_is_the_last_convert_parameter(self):
+        """A new parameter at the end does not move the positional arguments of older callers."""
+        import inspect
+
+        from opendataloader_pdf.convert_generated import convert
+
+        assert list(inspect.signature(convert).parameters)[-1] == "sanitize_rules"
+
+    def test_convert_default_does_not_emit_sanitize_rules(self):
+        from unittest.mock import patch
+
+        from opendataloader_pdf.convert_generated import convert
+
+        with patch("opendataloader_pdf.convert_generated.run_jar", return_value="") as mock_run:
+            convert(input_path="test.pdf", output_dir="out")
+
+        args = mock_run.call_args[0][0]
+        assert "--sanitize-rules" not in args
 
 
 class TestConvertHybridChunkSize:

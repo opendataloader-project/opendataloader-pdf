@@ -58,6 +58,19 @@ function isListOption(opt) {
 }
 
 /**
+ * String options that the wrappers pass whenever they are set, also when the value is empty.
+ * The CLI then rejects an empty value, so a wrapper call cannot skip a safety option without an error.
+ */
+const PASS_WHEN_SET_OPTIONS = new Set(['sanitize-rules']);
+
+/**
+ * Check if a string option is passed whenever it is set.
+ */
+function isPassWhenSetOption(opt) {
+  return PASS_WHEN_SET_OPTIONS.has(opt.name);
+}
+
+/**
  * Escape string for use in generated code.
  * @param {string} str - The string to escape
  * @param {string} quote - The quote character (' or ")
@@ -164,6 +177,12 @@ function generateNodeConvertOptions() {
       lines.push(`  if (cliOptions.${camelName}) {`);
       lines.push(`    convertOptions.${camelName} = true;`);
       lines.push('  }');
+    } else if (isPassWhenSetOption(opt)) {
+      lines.push(
+        `  if (cliOptions.${camelName} !== undefined && cliOptions.${camelName} !== null) {`,
+      );
+      lines.push(`    convertOptions.${camelName} = cliOptions.${camelName};`);
+      lines.push('  }');
     } else {
       lines.push(`  if (cliOptions.${camelName}) {`);
       lines.push(`    convertOptions.${camelName} = cliOptions.${camelName};`);
@@ -201,6 +220,10 @@ function generateNodeConvertOptions() {
       lines.push('    } else {');
       lines.push(`      args.push('${cliFlag}', options.${camelName});`);
       lines.push('    }');
+      lines.push('  }');
+    } else if (isPassWhenSetOption(opt)) {
+      lines.push(`  if (options.${camelName} !== undefined && options.${camelName} !== null) {`);
+      lines.push(`    args.push('${cliFlag}', options.${camelName});`);
       lines.push('  }');
     } else {
       lines.push(`  if (options.${camelName}) {`);
@@ -352,6 +375,9 @@ function generatePythonConvert() {
       lines.push(`                args.extend(["${cliFlag}", ",".join(${snakeName})])`);
       lines.push(`        else:`);
       lines.push(`            args.extend(["${cliFlag}", ${snakeName}])`);
+    } else if (isPassWhenSetOption(opt)) {
+      lines.push(`    if ${snakeName} is not None:`);
+      lines.push(`        args.extend(["${cliFlag}", ${snakeName}])`);
     } else {
       lines.push(`    if ${snakeName}:`);
       lines.push(`        args.extend(["${cliFlag}", ${snakeName}])`);
