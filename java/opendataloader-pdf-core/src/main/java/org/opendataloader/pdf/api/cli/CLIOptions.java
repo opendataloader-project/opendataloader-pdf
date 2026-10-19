@@ -23,6 +23,9 @@ import org.opendataloader.pdf.hybrid.HybridConfig;
 
 import java.io.File;
 import java.io.PrintStream;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -95,6 +98,11 @@ public class CLIOptions {
     private static final String SANITIZE_LONG_OPTION = "sanitize";
     private static final String SANITIZE_DESC = "Enable sensitive data sanitization. "
             + "Replaces emails, phone numbers, IPs, credit cards, and URLs with placeholders";
+
+    // ===== Sanitize Rules =====
+    private static final String SANITIZE_RULES_LONG_OPTION = "sanitize-rules";
+    private static final String SANITIZE_RULES_DESC = "Path to a JSON file of sanitization rules. "
+            + "Only the rules of the file run, in place of the built-in rules. Turns on --sanitize";
 
     // ===== Keep Line Breaks =====
     private static final String KEEP_LINE_BREAKS_LONG_OPTION = "keep-line-breaks";
@@ -263,6 +271,8 @@ public class CLIOptions {
             new OptionDefinition(IMAGE_RESOLUTION_LONG_OPTION, null, "string", null, IMAGE_RESOLUTION_DESC, true),
             new OptionDefinition(EXPORT_OPTIONS_LONG_OPTION, null, "boolean", null, null, false),
             new OptionDefinition(SPACE_RATIO_LONG_OPTION, null, "string", null, SPACE_RATIO_DESC, true),
+            // Last, so the new parameter of the generated Python convert() does not move positional arguments.
+            new OptionDefinition(SANITIZE_RULES_LONG_OPTION, null, "string", null, SANITIZE_RULES_DESC, true),
 
             // Legacy options (not exported, for backward compatibility)
             new OptionDefinition(HYBRID_OCR_LONG_OPTION, null, "string", null, HYBRID_OCR_DESC, false),
@@ -542,6 +552,29 @@ public class CLIOptions {
 
     private static void applySanitizeOption(Config config, CommandLine commandLine) {
         if (commandLine.hasOption(SANITIZE_LONG_OPTION)) {
+            config.getFilterConfig().setFilterSensitiveData(true);
+        }
+        if (commandLine.hasOption(SANITIZE_RULES_LONG_OPTION)) {
+            String[] values = commandLine.getOptionValues(SANITIZE_RULES_LONG_OPTION);
+            if (values.length != 1) {
+                throw new IllegalArgumentException("Option --sanitize-rules can be given only once");
+            }
+            String value = values[0];
+            if (value == null || value.trim().isEmpty()) {
+                throw new IllegalArgumentException("Option --sanitize-rules requires a file path");
+            }
+            Path file;
+            try {
+                file = Paths.get(value);
+            } catch (InvalidPathException exception) {
+                throw new IllegalArgumentException("Option --sanitize-rules has an invalid file path: "
+                        + exception.getReason(), exception);
+            }
+            try {
+                config.getFilterConfig().loadFilterRules(file);
+            } catch (IllegalArgumentException exception) {
+                throw new IllegalArgumentException("Option --sanitize-rules: " + exception.getMessage(), exception);
+            }
             config.getFilterConfig().setFilterSensitiveData(true);
         }
     }

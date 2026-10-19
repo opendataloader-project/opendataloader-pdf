@@ -11,12 +11,14 @@ import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.StreamInfo;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ContentSanitizerTest {
     private ContentSanitizer sanitizer;
@@ -33,6 +35,8 @@ class ContentSanitizerTest {
         "12:30:45, 12:30:45",
         "1:2:3, 1:2:3",
         "John 3:16:2, John 3:16:2",
+        // A MAC address is not IPv6, so the MAC rule masks it.
+        "MAC 00:1A:2B:3C:4D:5E end, MAC 00:00:00:00:00:00 end",
         "12:30, 12:30",
         "Score 3:2, Score 3:2",
         "John 3:16, John 3:16",
@@ -194,6 +198,48 @@ class ContentSanitizerTest {
             assertEquals(expectedValues[i], chunks.get(i).getValue(),
                 "Chunk " + i + " contains wrong value");
         }
+    }
+
+    @Test
+    void testZeroLengthMatchesAreSkipped() {
+        ContentSanitizer zeroLength = new ContentSanitizer(Arrays.asList(
+            new SanitizationRule("line-end", Pattern.compile("$"), "X"),
+            new SanitizationRule("line-start", Pattern.compile("^"), "X"),
+            new SanitizationRule("word-boundary", Pattern.compile("\\b"), "X")));
+        List<TextChunk> originalChunks = new ArrayList<>();
+        originalChunks.add(createTextChunk("ab ", 0f, 40f, 30f, 20f));
+        originalChunks.add(createTextChunk("cd", 30f, 40f, 50f, 20f));
+
+        List<ContentSanitizer.ReplacementInfo> replacements = zeroLength.findAllReplacements("ab cd");
+        List<TextChunk> result = zeroLength.applyReplacementsToChunks(originalChunks, replacements);
+
+        assertTrue(replacements.isEmpty());
+        assertChunksContainValues(result, "ab ", "cd");
+    }
+
+    @Test
+    void testCustomRuleReplacementIsLiteral() {
+        ContentSanitizer custom = new ContentSanitizer(Collections.singletonList(
+            new SanitizationRule("group", Pattern.compile("(ab)c"), "$1\\")));
+        TextChunk chunk = createTextChunk("x abc y", 0f, 40f, 100f, 20f);
+
+        List<TextChunk> result = custom.applyReplacementsToChunks(
+            Collections.singletonList(chunk), custom.findAllReplacements(chunk.getValue()));
+
+        assertChunksContainValues(result, "x ", "$1\\", " y");
+    }
+
+    @Test
+    void testStackOverflowInARuleNamesTheRule() {
+        ContentSanitizer nested = new ContentSanitizer(Collections.singletonList(
+            new SanitizationRule("nested-group", Pattern.compile("(a|b)*c"), "x")));
+        char[] text = new char[1_000_000];
+        Arrays.fill(text, 'a');
+
+        SanitizationRuleException exception = assertThrows(SanitizationRuleException.class,
+            () -> nested.findAllReplacements(new String(text)));
+
+        assertTrue(exception.getMessage().contains("nested-group"), exception.getMessage());
     }
 
     @Test

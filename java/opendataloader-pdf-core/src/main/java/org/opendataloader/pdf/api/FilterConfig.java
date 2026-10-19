@@ -16,7 +16,9 @@
 package org.opendataloader.pdf.api;
 
 import org.opendataloader.pdf.utils.SanitizationRule;
+import org.opendataloader.pdf.utils.SanitizationRulesLoader;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -35,29 +37,42 @@ public class FilterConfig {
     private boolean filterSensitiveData = false;
     private final List<SanitizationRule> filterRules;
 
-    /** Default rules */
-    private void initializeDefaultRules() {
-        filterRules.add(new SanitizationRule(
+    /**
+     * Creates the built-in sanitization rules, in order of priority. All rules run on the original text.
+     * When two matches have the same start and the same length, the match of the earlier rule is kept.
+     * Each rule has an ID. examples/sanitize-rules/default-rules.json has the same rules, for a sanitize rules file.
+     *
+     * @return a new, modifiable list of the built-in rules.
+     */
+    public static List<SanitizationRule> createDefaultRules() {
+        List<SanitizationRule> rules = new ArrayList<>();
+        rules.add(new SanitizationRule(
+            "email",
             Pattern.compile("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"),
             "email@example.com"
         ));
-        filterRules.add(new SanitizationRule(
+        rules.add(new SanitizationRule(
+            "phone-intl",
             Pattern.compile("[+]\\d+(?:-\\d+)+"),
             "+00-0000-0000"
         ));
-        filterRules.add(new SanitizationRule(
+        rules.add(new SanitizationRule(
+            "passport",
             Pattern.compile("[A-Z]{1,2}\\d{6,9}"),
             "AA0000000"
         ));
-        filterRules.add(new SanitizationRule(
+        rules.add(new SanitizationRule(
+            "card",
             Pattern.compile("\\b\\d{4}-?\\d{4}-?\\d{4}-?\\d{4}\\b"),
             "0000-0000-0000-0000"
         ));
-        filterRules.add(new SanitizationRule(
+        rules.add(new SanitizationRule(
+            "long-number",
             Pattern.compile("\\b\\d{10,18}\\b"),
             "0000000000000000"
         ));
-        filterRules.add(new SanitizationRule(
+        rules.add(new SanitizationRule(
+            "ipv4",
             Pattern.compile("\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b"),
             "0.0.0.0"
         ));
@@ -78,30 +93,34 @@ public class FilterConfig {
         // The RFC 3986 grammar alone rejects ordinary timestamps and ratios. The boundaries only
         // keep a match from starting or ending inside a word, so a label, a trailing colon, a
         // port, a hyphen, or a dotted suffix stays outside the replaced span.
-        filterRules.add(new SanitizationRule(
+        rules.add(new SanitizationRule(
+            "ipv6",
             Pattern.compile("(?<!\\w)(" + ipv6 + ")(?!\\w)"),
             "0.0.0.0::1", 1
         ));
-        filterRules.add(new SanitizationRule(
+        rules.add(new SanitizationRule(
+            "mac",
             Pattern.compile("\\b(?:[0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}\\b"),
             "00:00:00:00:00:00"
         ));
-        filterRules.add(new SanitizationRule(
+        rules.add(new SanitizationRule(
+            "digits-15",
             Pattern.compile("\\b\\d{15}\\b"),
             "000000000000000"
         ));
-        filterRules.add(new SanitizationRule(
+        rules.add(new SanitizationRule(
+            "url",
             Pattern.compile("https?://[A-Za-z0-9.-]+(:\\d+)?(/\\S*)?"),
             "https://example.com"
         ));
+        return rules;
     }
 
     /**
      * Constructor initializing the configuration of filter.
      */
     public FilterConfig() {
-        this.filterRules = new ArrayList<>();
-        initializeDefaultRules();
+        this.filterRules = new ArrayList<>(createDefaultRules());
     }
 
     /**
@@ -225,6 +244,30 @@ public class FilterConfig {
      */
     public List<SanitizationRule> getFilterRules() {
         return filterRules;
+    }
+
+    /**
+     * Replaces all sanitization rules, including the built-in rules.
+     *
+     * @param rules the new rules, in order of priority.
+     */
+    public void setFilterRules(List<SanitizationRule> rules) {
+        List<SanitizationRule> copy = new ArrayList<>(rules);
+        filterRules.clear();
+        filterRules.addAll(copy);
+    }
+
+    /**
+     * Replaces all sanitization rules, including the built-in rules, with the rules of a sanitize rules
+     * file (JSON, see {@link SanitizationRulesLoader}). Only the rules of the file run. Rules that were
+     * added before with {@link #addFilterRule(String, String)} are removed. If the file is not valid,
+     * the rules do not change.
+     *
+     * @param file the rules file.
+     * @throws IllegalArgumentException if the file cannot be read or is not valid.
+     */
+    public void loadFilterRules(Path file) {
+        setFilterRules(SanitizationRulesLoader.load(file));
     }
 
     /**

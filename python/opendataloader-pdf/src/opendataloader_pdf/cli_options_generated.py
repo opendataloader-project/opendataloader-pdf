@@ -288,6 +288,15 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "default": None,
         "description": "Set the ratio used to calculate the automatic space-insertion threshold (threshold = space-ratio * font size). If the horizontal gap between two adjacent symbols exceeds this threshold, an extra space is inserted to text value. Accepts decimals (e.g., 0.17). Default: 0.17",
     },
+    {
+        "name": "sanitize-rules",
+        "python_name": "sanitize_rules",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": None,
+        "description": "Path to a JSON file of sanitization rules. Only the rules of the file run, in place of the built-in rules. Turns on --sanitize",
+    },
 ]
 
 

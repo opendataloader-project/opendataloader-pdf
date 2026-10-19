@@ -52,6 +52,19 @@ describe('buildArgs()', () => {
     expect(args).toEqual([]);
   });
 
+  it('should pass an empty sanitize rules value, so the CLI rejects it', () => {
+    expect(buildArgs({ sanitizeRules: '' })).toEqual(['--sanitize-rules', '']);
+  });
+
+  it('should handle the sanitize rules file path', () => {
+    expect(buildArgs({ sanitizeRules: 'rules.json' })).toEqual(['--sanitize-rules', 'rules.json']);
+    expect(buildArgs({ sanitize: true, sanitizeRules: 'rules.json' })).toEqual([
+      '--sanitize',
+      '--sanitize-rules',
+      'rules.json',
+    ]);
+  });
+
   it('should handle list options with string value', () => {
     const args = buildArgs({
       format: 'json,markdown',
@@ -145,6 +158,16 @@ describe('buildConvertOptions()', () => {
   it('should return empty object for empty CLI options', () => {
     const result = buildConvertOptions({});
     expect(result).toEqual({});
+  });
+
+  it('should keep an empty sanitize rules value', () => {
+    expect(buildConvertOptions({ sanitizeRules: '' })).toEqual({ sanitizeRules: '' });
+  });
+
+  it('should keep the sanitize rules file path', () => {
+    expect(buildConvertOptions({ sanitizeRules: 'rules.json' })).toEqual({
+      sanitizeRules: 'rules.json',
+    });
   });
 
   it('should convert string options', () => {
