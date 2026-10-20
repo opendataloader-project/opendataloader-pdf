@@ -15,15 +15,20 @@
  */
 package org.opendataloader.pdf.processors;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.api.OutputWriter;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
-import org.verapdf.pd.PDDocument;
 import org.verapdf.tools.StaticResources;
 import org.verapdf.wcag.algorithms.entities.content.LineChunk;
 import org.verapdf.wcag.algorithms.entities.content.LinesCollection;
+import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
 import java.io.File;
@@ -104,6 +109,49 @@ class DocumentProcessorArtifactPruneTest {
         }
     }
 
+    @Test
+    void hiddenTextFilteringAlsoPrunesDiscardedArtifacts() throws Exception {
+        Path pdf = tempDir.resolve("hidden-text.pdf");
+        try (PDDocument document = new PDDocument()) {
+            PDPage page = new PDPage();
+            document.addPage(page);
+            try (PDPageContentStream stream = new PDPageContentStream(document, page)) {
+                writeText(stream, "PUBLIC", 50, 700, false);
+                writeText(stream, "SECRET", 50, 600, true);
+            }
+            document.save(pdf.toFile());
+        }
+
+        Config config = new Config();
+        config.setImageOutput("off");
+        config.getFilterConfig().setFilterHiddenText(true);
+
+        try {
+            ExtractionResult result = DocumentProcessor.extractContents(pdf.toString(), config);
+            String outputText = result.getContents().toString();
+            assertTrue(outputText.contains("PUBLIC"), "Visible text should remain in extracted contents");
+            assertFalse(outputText.contains("SECRET"), "Hidden text should be filtered from contents");
+
+            assertFalse(StaticContainers.getDocument().getArtifacts(0).stream()
+                    .filter(TextChunk.class::isInstance)
+                    .map(TextChunk.class::cast)
+                    .anyMatch(chunk -> chunk.getValue().contains("SECRET")),
+                "Hidden text should not remain in veraPDF artifacts");
+        } finally {
+            closeCurrentPdf();
+        }
+    }
+
+    private static void writeText(PDPageContentStream stream, String value, float x, float y,
+                                  boolean hidden) throws IOException {
+        stream.setNonStrokingColor(hidden ? 1f : 0f, hidden ? 1f : 0f, hidden ? 1f : 0f);
+        stream.beginText();
+        stream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
+        stream.newLineAtOffset(x, y);
+        stream.showText(value);
+        stream.endText();
+    }
+
     private static int artifactCount() {
         int count = 0;
         int pages = StaticContainers.getDocument().getNumberOfPages();
@@ -115,7 +163,7 @@ class DocumentProcessorArtifactPruneTest {
     }
 
     private static void closeCurrentPdf() throws IOException {
-        PDDocument document = StaticResources.getDocument();
+        org.verapdf.pd.PDDocument document = StaticResources.getDocument();
         if (document != null) {
             document.close();
         }
