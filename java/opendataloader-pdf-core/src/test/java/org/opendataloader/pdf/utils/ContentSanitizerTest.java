@@ -29,6 +29,7 @@ class ContentSanitizerTest {
 
     @ParameterizedTest
     @CsvSource({
+        // Timestamps and ratios are not IPv6 and must survive.
         "12:30:45, 12:30:45",
         "1:2:3, 1:2:3",
         "John 3:16:2, John 3:16:2",
@@ -37,16 +38,20 @@ class ContentSanitizerTest {
         "John 3:16, John 3:16",
         "a:b:c:d, a:b:c:d",
         "1:2:3:4:5:6:7, 1:2:3:4:5:6:7",
-        "1:2:3:4:5:6:7:8:9, 1:2:3:4:5:6:7:8:9",
-        "2001:::1, 2001:::1",
-        "::1:, ::1:",
+        // A malformed colon run still contains a valid address, so the valid part is masked.
+        "1:2:3:4:5:6:7:8:9, 0.0.0.0::1:9",
+        "2001:::1, 0.0.0.0::1:1",
+        "2001::db8::1, 0.0.0.0::1::1",
+        "1:2:3:4:5:6:7::8, 1:0.0.0.0::1",
+        "::1:2:3:4:5:6:7:8, 0.0.0.0::1:8",
+        "IP:1:2:3:4:5:6:7:8:9, IP:0.0.0.0::1:9",
+        "::ffff:192..0.2.128, 0.0.0.0::1..0.2.128",
+        // A trailing colon, a port, a dotted suffix, or a label stays outside the replaced span.
+        "::1:, 0.0.0.0::1:",
         "label: value, label: value",
-        "2001::db8::1, 2001::db8::1",
         "12345::1, 12345::1",
-        "dead-beef::1, dead-beef::1",
-        "token-beef::1, token-beef::1",
-        "1:2:3:4:5:6:7::8, 1:2:3:4:5:6:7::8",
-        "::1:2:3:4:5:6:7:8, ::1:2:3:4:5:6:7:8",
+        "dead-beef::1, dead-0.0.0.0::1",
+        "token-beef::1, token-0.0.0.0::1",
         "2001:db8::1, 0.0.0.0::1",
         "2001::1, 0.0.0.0::1",
         "::1, 0.0.0.0::1",
@@ -70,7 +75,17 @@ class ContentSanitizerTest {
         "IP:::1, IP:0.0.0.0::1",
         "IP:::, IP:0.0.0.0::1",
         "IP:12:30:45, IP:12:30:45",
-        "IP:1:2:3:4:5:6:7:8:9, IP:1:2:3:4:5:6:7:8:9",
+        // Addresses followed by a colon, a port, a dotted suffix, or a hyphen are masked.
+        "Addr 2001:db8::1: down, Addr 0.0.0.0::1: down",
+        "'IP: 2001:db8::1:', 'IP: 0.0.0.0::1:'",
+        "Server:2001:db8::1:port, Server:0.0.0.0::1:port",
+        "2001:db8:85a3:0:0:8a2e:370:7334:, 0.0.0.0::1:",
+        "2001:db8:0:0:0:0:0:1:8080, 0.0.0.0::1:8080",
+        "2001:db8::1.Next, 0.0.0.0::1.Next",
+        "abcde:2001:db8::1, abcde:0.0.0.0::1",
+        "2001:db8::1-2001:db8::2, 0.0.0.0::1-0.0.0.0::1",
+        "a-2001:db8::1, a-0.0.0.0::1",
+        // IPv4-embedded forms.
         "::ffff:192.0.2.128, 0.0.0.0::1",
         "0:0:0:0:0:ffff:192.0.2.128, 0.0.0.0::1",
         "2001:db8::192.0.2.128, 0.0.0.0::1",
@@ -81,10 +96,9 @@ class ContentSanitizerTest {
         "::ffff:192.0.2.128., 0.0.0.0::1.",
         "IP:2001:db8::1..., IP:0.0.0.0::1...",
         "::ffff:192.0.2.128..., 0.0.0.0::1...",
-        "::ffff:192..0.2.128, ::ffff:192..0.2.128",
         "::255.255.255.255, 0.0.0.0::1",
         "::0.0.0.0, 0.0.0.0::1",
-        "2001:db8::1.example.com, 2001:db8::1.example.com",
+        "2001:db8::1.example.com, 0.0.0.0::1.example.com",
         "aa:bb:cc:dd:ee:ff, 00:00:00:00:00:00"
     })
     void testSanitizeColonSeparatedText(String input, String expected) {

@@ -75,11 +75,11 @@ public class FilterConfig {
             + "|(?:(?:" + h16 + ":){0,4}" + h16 + ")?::" + ls32
             + "|(?:(?:" + h16 + ":){0,5}" + h16 + ")?::" + h16
             + "|(?:(?:" + h16 + ":){0,6}" + h16 + ")?::";
-        // Consume a non-hex label (e.g. IPv6:) but replace only the captured address.
-        // Do not retry within a hyphenated label; consume it without backtracking.
-        String label = "(?:(?=[\\w-]*[^0-9a-fA-F:])[\\w-]++:)?";
+        // The RFC 3986 grammar alone rejects ordinary timestamps and ratios. The boundaries only
+        // keep a match from starting or ending inside a word, so a label, a trailing colon, a
+        // port, a hyphen, or a dotted suffix stays outside the replaced span.
         filterRules.add(new SanitizationRule(
-            Pattern.compile("(?<![\\w:-])" + label + "(" + ipv6 + ")(?![\\w:]|\\.+\\w)"),
+            Pattern.compile("(?<!\\w)(" + ipv6 + ")(?!\\w)"),
             "0.0.0.0::1", 1
         ));
         filterRules.add(new SanitizationRule(
