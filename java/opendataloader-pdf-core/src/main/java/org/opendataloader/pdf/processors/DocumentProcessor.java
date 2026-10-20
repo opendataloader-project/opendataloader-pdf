@@ -346,6 +346,7 @@ public class DocumentProcessor {
                     if (shouldProcessPage(pageNumber, pagesToProcess)) {
                         List<IObject> pageContents = HiddenTextProcessor.findHiddenText(contents.get(pageNumber), true);
                         contents.set(pageNumber, pageContents);
+                        pruneArtifactsToLiveChunks(pageArtifacts[pageNumber], pageContents, pageNumber);
                     }
                 }
             }
