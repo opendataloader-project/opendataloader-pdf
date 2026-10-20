@@ -7,3 +7,4 @@ overrides:
   minimatch@<10.2.3: '>=10.2.3'
   flatted@<3.4.2: '>=3.4.2'
   postcss@<8.5.23: '>=8.5.23'
+  source-map-js@<1.2.2: '>=1.2.2'
