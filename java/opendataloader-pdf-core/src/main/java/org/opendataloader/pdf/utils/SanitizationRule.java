@@ -14,7 +14,7 @@ public class SanitizationRule {
     /** Selects the capturing group to replace, or zero to replace the entire match. */
     public SanitizationRule(Pattern pattern, String replacement, int matchGroup) {
         if (matchGroup < 0 || matchGroup > pattern.matcher("").groupCount()) {
-            throw new IllegalArgumentException("Invalid replacement group: " + matchGroup);
+            throw new IllegalArgumentException("Invalid match group: " + matchGroup);
         }
         this.pattern = pattern;
         this.replacement = replacement;
