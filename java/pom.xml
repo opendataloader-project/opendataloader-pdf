@@ -66,7 +66,7 @@
              PDFBox they were built against. Verification is samples/pdf with
              -f pdf included; tests pass either way. -->
         <pdfbox.version>3.0.4</pdfbox.version>
-        <jackson.databind.version>2.22.2</jackson.databind.version>
+        <jackson.databind.version>2.22.3</jackson.databind.version>
         <!-- Release line separate from databind, one minor behind. Alignment
              with a databind bump requests an unpublished version. -->
         <jackson.annotations.version>2.22</jackson.annotations.version>
