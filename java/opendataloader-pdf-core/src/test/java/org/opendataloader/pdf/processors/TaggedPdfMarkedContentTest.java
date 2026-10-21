@@ -126,4 +126,72 @@ class TaggedPdfMarkedContentTest {
                     "structure tree references " + countMcidKids(root) + " MCIDs, content has " + sequences);
         }
     }
+
+    // Body text of an arXiv paper made by pdfTeX: 10.9091 pt, with TJ word gaps of -198
+    // (0.198 em). veraPDF inserts a space into a TJ above 0.17 em, and the text chunk keeps it up
+    // to 0.21 em. The inserted space is not in the content stream, so its stream info has the
+    // operator index -1.
+    private static final float BODY_SIZE = 10.9091f;
+    private static final float WORD_GAP = -198;
+    private static final String[] BODY_LINES = {
+        "Autoregressive models dominate the current landscape of large language",
+        "models, but they generate one token at a time and cannot revise",
+        "earlier output. Diffusion models refine all positions in parallel and",
+        "can correct a mistake in a later step. This report describes a",
+        "diffusion variant of an open model and the data that trained it.",
+        "We compare it with the base model on common tasks.",
+    };
+
+    private static Path writeKernedLines(Path dir) throws IOException {
+        Path file = dir.resolve("kerned.pdf");
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.LETTER);
+            doc.addPage(page);
+            PDType1Font font = new PDType1Font(Standard14Fonts.FontName.TIMES_ROMAN);
+            try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
+                cs.beginText();
+                cs.setFont(font, BODY_SIZE);
+                cs.newLineAtOffset(72, 500);
+                for (String line : BODY_LINES) {
+                    String[] words = line.split(" ");
+                    Object[] tj = new Object[words.length * 2 - 1];
+                    for (int i = 0; i < words.length; i++) {
+                        tj[i * 2] = words[i];
+                        if (i > 0) {
+                            tj[i * 2 - 1] = WORD_GAP;
+                        }
+                    }
+                    cs.showTextWithPositioning(tj);
+                    cs.newLineAtOffset(0, -13);
+                }
+                cs.endText();
+            }
+            doc.save(file.toFile());
+        }
+        return file;
+    }
+
+    @Test
+    void insertedSpacesGetNoMcid(@TempDir Path dir) throws IOException {
+        Path source = writeKernedLines(dir);
+        Config config = new Config();
+        config.setOutputFolder(dir.toString());
+        config.setGenerateJSON(false);
+        config.setGenerateTaggedPDF(true);
+        DocumentProcessor.processFile(source.toString(), config);
+
+        File tagged = dir.resolve("kerned_tagged.pdf").toFile();
+        assertTrue(tagged.isFile(), "expected a tagged PDF at " + tagged);
+
+        // An inserted space is in no operator, so no marked content can carry its MCID. The
+        // structure tree must reference exactly the MCIDs the content stream carries.
+        int sequences = countMarkedContentSequences(tagged);
+        assertTrue(sequences >= 1, "expected marked content on the text, got none");
+        try (PDDocument doc = Loader.loadPDF(tagged)) {
+            COSDictionary root = (COSDictionary) doc.getDocumentCatalog().getCOSObject()
+                    .getDictionaryObject(COSName.getPDFName("StructTreeRoot"));
+            assertTrue(countMcidKids(root) == sequences,
+                    "structure tree references " + countMcidKids(root) + " MCIDs, content has " + sequences);
+        }
+    }
 }
