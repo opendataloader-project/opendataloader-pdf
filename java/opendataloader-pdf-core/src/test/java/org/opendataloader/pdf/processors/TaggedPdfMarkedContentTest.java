@@ -37,7 +37,11 @@ import org.opendataloader.pdf.api.Config;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -184,14 +188,57 @@ class TaggedPdfMarkedContentTest {
         assertTrue(tagged.isFile(), "expected a tagged PDF at " + tagged);
 
         // An inserted space is in no operator, so no marked content can carry its MCID. The
-        // structure tree must reference exactly the MCIDs the content stream carries.
-        int sequences = countMarkedContentSequences(tagged);
-        assertTrue(sequences >= 1, "expected marked content on the text, got none");
+        // structure tree must reference exactly the MCIDs the content stream carries: the same
+        // values, each once.
+        List<Integer> contentMcids = contentMcids(tagged);
+        assertTrue(!contentMcids.isEmpty(), "expected marked content on the text, got none");
         try (PDDocument doc = Loader.loadPDF(tagged)) {
             COSDictionary root = (COSDictionary) doc.getDocumentCatalog().getCOSObject()
                     .getDictionaryObject(COSName.getPDFName("StructTreeRoot"));
-            assertTrue(countMcidKids(root) == sequences,
-                    "structure tree references " + countMcidKids(root) + " MCIDs, content has " + sequences);
+            List<Integer> treeMcids = new ArrayList<>();
+            addMcidKids(root, treeMcids);
+            Collections.sort(contentMcids);
+            Collections.sort(treeMcids);
+            assertEquals(contentMcids, treeMcids, "MCIDs in the structure tree and in the content stream");
+        }
+    }
+
+    /** The MCIDs of the marked-content sequences on the first page, in stream order. */
+    private static List<Integer> contentMcids(File pdf) throws IOException {
+        List<Integer> mcids = new ArrayList<>();
+        try (PDDocument doc = Loader.loadPDF(pdf)) {
+            List<Object> tokens = new PDFStreamParser(doc.getPage(0)).parse();
+            for (int i = 1; i < tokens.size(); i++) {
+                Object token = tokens.get(i);
+                if (token instanceof Operator && "BDC".equals(((Operator) token).getName())
+                        && tokens.get(i - 1) instanceof COSDictionary) {
+                    COSBase mcid = ((COSDictionary) tokens.get(i - 1)).getDictionaryObject(COSName.MCID);
+                    if (mcid instanceof COSInteger) {
+                        mcids.add(((COSInteger) mcid).intValue());
+                    }
+                }
+            }
+        }
+        return mcids;
+    }
+
+    /** Adds the MCIDs referenced from the structure tree below {@code node}, as integers or MCRs. */
+    private static void addMcidKids(COSBase node, List<Integer> mcids) {
+        COSBase base = node instanceof COSObject ? ((COSObject) node).getObject() : node;
+        if (base instanceof COSInteger) {
+            mcids.add(((COSInteger) base).intValue());
+        } else if (base instanceof COSArray) {
+            for (COSBase kid : (COSArray) base) {
+                addMcidKids(kid, mcids);
+            }
+        } else if (base instanceof COSDictionary) {
+            COSDictionary dictionary = (COSDictionary) base;
+            COSBase mcid = dictionary.getDictionaryObject(COSName.MCID);
+            if (mcid instanceof COSInteger) {
+                mcids.add(((COSInteger) mcid).intValue());
+            } else {
+                addMcidKids(dictionary.getDictionaryObject(COSName.K), mcids);
+            }
         }
     }
 }
