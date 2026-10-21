@@ -1355,7 +1355,9 @@ public class AutoTaggingProcessor {
             Integer previousMcid = null;
             for (int operator : new TreeSet<>(operators.keySet())) {
                 Set<StreamInfo> streamInfos = operators.get(operator);
-                if (streamInfos.size() != 1 || !isTextShow(tokens, operator)) {
+                // veraPDF gives -1 to a space that it inserts between the strings of one TJ.
+                // The space is not in the stream, so it is no text-show operator to merge.
+                if (operator < 0 || streamInfos.size() != 1 || !isTextShow(tokens, operator)) {
                     previousOperator = null;
                     continue;
                 }
