@@ -1435,13 +1435,24 @@ public class AutoTaggingProcessor {
         if (streamInfos.isEmpty()) {
             return;
         }
+        // veraPDF gives -1 to a space that it inserts between the strings of one TJ. The space
+        // is in no operator, so ChunksWriter cannot mark it, and an MCID for it would have no
+        // content. Leave it out after the merge, so the merge of the other pieces stays the same.
+        List<StreamInfo> streamInfoList = new ArrayList<>();
+        for (StreamInfo streamInfo : getMergedStreamInfos(streamInfos)) {
+            if (streamInfo.getOperatorIndex() >= 0) {
+                streamInfoList.add(streamInfo);
+            }
+        }
+        if (streamInfoList.isEmpty()) {
+            return;
+        }
         COSObject kids = parentStructElement.getKey(ASAtom.K);
         if (kids.getType() != COSObjType.COS_ARRAY) {
             COSObject array = COSArray.construct();
             parentStructElement.setKey(ASAtom.K, array);
             kids = array;
         }
-        List<StreamInfo> streamInfoList = getMergedStreamInfos(streamInfos);
         for (StreamInfo streamInfo : streamInfoList) {
             OperatorStreamKey operatorStreamKey = new OperatorStreamKey(pageNumber, streamInfo.getXObjectName());
             List<COSObject> list = structParents.computeIfAbsent(operatorStreamKey, x -> new ArrayList<>());
