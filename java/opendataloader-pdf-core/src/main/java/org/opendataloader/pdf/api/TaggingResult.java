@@ -2,6 +2,7 @@ package org.opendataloader.pdf.api;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.opendataloader.pdf.hybrid.ElementMetadata;
+import org.opendataloader.pdf.processors.DocumentProcessor;
 import org.verapdf.pd.PDDocument;
 
 import java.io.IOException;
@@ -74,10 +75,14 @@ public class TaggingResult implements AutoCloseable {
         document.saveAs(outputPath);
     }
 
+    /**
+     * Closes the tagged document. While a later extraction on this thread is current, the
+     * document is closed on a new thread, so the later extraction keeps its state.
+     */
     @Override
     public void close() {
         if (document != null) {
-            document.close();
+            DocumentProcessor.closeDocument(document);
         }
     }
 }
