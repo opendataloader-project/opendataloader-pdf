@@ -135,6 +135,26 @@ public class DocumentProcessor {
     }
 
     /**
+     * Closes only the document of a tagging result (see
+     * {@link org.opendataloader.pdf.api.TaggingResult#close()}). It does not clear the static
+     * containers.
+     *
+     * <p>While the static containers hold another document, a later extraction owns them. Then
+     * this method closes the document on a new thread, as {@link #closePdfResources(PDDocument)}
+     * does, so the later extraction keeps its {@code StaticResources}.
+     *
+     * @param document the document to close; a second close does not close the file again
+     */
+    public static void closeDocument(PDDocument document) {
+        PDDocument current = StaticResources.getDocument();
+        if (current != null && current != document) {
+            closeOnNewThread(document);
+        } else {
+            document.close();
+        }
+    }
+
+    /**
      * Closes the document on a new thread and waits until it is closed. {@code StaticResources}
      * is thread-local, so the {@code StaticResources.clear()} of veraPDF {@code PDDocument.close()}
      * clears the empty containers of the new thread, not the containers of the calling thread.
