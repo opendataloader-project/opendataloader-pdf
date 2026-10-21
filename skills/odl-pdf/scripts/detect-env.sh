@@ -119,6 +119,43 @@ detect_python_env() {
 }
 
 # ---------------------------------------------------------------------------
+# Python that runs the PATH `opendataloader-pdf`.
+# pipx and `uv tool` install the CLI into an isolated env that the PATH
+# python3 cannot see, so take the interpreter from the CLI's shebang. Falls
+# back to python3/python when there is no Python shebang to read (no CLI on
+# PATH, a Windows .exe launcher, a /bin/sh wrapper, or the Node CLI).
+# ---------------------------------------------------------------------------
+odl_python() {
+  local cli line interp
+  cli="$(command -v opendataloader-pdf 2>/dev/null || true)"
+  if [[ -n "${cli}" && -f "${cli}" ]]; then
+    # Drop CR (CRLF scripts) and NUL (binary launchers warn otherwise).
+    line="$(head -1 "${cli}" 2>/dev/null | tr -d '\r\000' || true)"
+    if [[ "${line}" == '#!'* ]]; then
+      interp="${line#'#!'}"
+      # `#!/usr/bin/env python3` => python3
+      if [[ "${interp}" == */env\ * ]]; then
+        interp="${interp#*/env }"
+      fi
+      interp="${interp%% *}"
+      case "${interp##*/}" in
+        python*)
+          if command -v "${interp}" &>/dev/null; then
+            printf '%s\n' "${interp}"
+            return
+          fi
+          ;;
+      esac
+    fi
+  fi
+  if command -v python3 &>/dev/null; then
+    echo "python3"
+  elif command -v python &>/dev/null; then
+    echo "python"
+  fi
+}
+
+# ---------------------------------------------------------------------------
 # ODL installed + version
 # Tries CLI first, then Python module.
 # ---------------------------------------------------------------------------
@@ -127,12 +164,8 @@ detect_odl() {
   local version="none"
 
   # Determine python binary
-  local pycmd=""
-  if command -v python3 &>/dev/null; then
-    pycmd="python3"
-  elif command -v python &>/dev/null; then
-    pycmd="python"
-  fi
+  local pycmd
+  pycmd="$(odl_python)"
 
   # Detect install + version WITHOUT a --version flag (the CLI has none;
   # see SKILL.md). CLI presence => installed; version from package metadata.
@@ -180,12 +213,8 @@ detect_odl() {
 # installed distribution by metadata rather than importing it.)
 # ---------------------------------------------------------------------------
 detect_hybrid_extras() {
-  local pycmd=""
-  if command -v python3 &>/dev/null; then
-    pycmd="python3"
-  elif command -v python &>/dev/null; then
-    pycmd="python"
-  fi
+  local pycmd
+  pycmd="$(odl_python)"
 
   if [[ -z "${pycmd}" ]]; then
     echo "HYBRID_EXTRAS=false"
