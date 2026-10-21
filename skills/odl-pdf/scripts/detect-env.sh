@@ -133,9 +133,10 @@ odl_python() {
     line="$(head -1 "${cli}" 2>/dev/null | tr -d '\r\000' || true)"
     if [[ "${line}" == '#!'* ]]; then
       interp="${line#'#!'}"
-      # `#!/usr/bin/env python3` => python3
+      # `#!/usr/bin/env python3` or `#!/usr/bin/env -S python3 ...` => python3
       if [[ "${interp}" == */env\ * ]]; then
         interp="${interp#*/env }"
+        interp="${interp#-S }"
       fi
       interp="${interp%% *}"
       case "${interp##*/}" in
