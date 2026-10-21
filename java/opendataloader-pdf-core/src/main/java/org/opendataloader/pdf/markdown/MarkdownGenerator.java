@@ -39,11 +39,13 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MarkdownGenerator implements Closeable {
@@ -67,7 +69,10 @@ public class MarkdownGenerator implements Closeable {
     protected String imageFormat = Config.IMAGE_FORMAT_PNG;
     protected boolean includeHeaderFooter = false;
     protected static final String strikethroughTextMD = "~~";
-    private static final Pattern ORDERED_LIST_MARKER = Pattern.compile("\\d{1,9}[.)]\\s*");
+    protected static final String LIST_SEPARATOR_MD = "<!-- -->";
+    private static final Pattern ORDERED_LABEL = Pattern.compile("(\\d{1,9})([.)])");
+    protected boolean useStructTree = false;
+    private boolean previousContentIsOrderedList = false;
 
     MarkdownGenerator(File inputPdf, Config config) throws IOException {
         String cutPdfFileName = inputPdf.getName();
@@ -79,6 +84,7 @@ public class MarkdownGenerator implements Closeable {
         this.embedImages = config.isEmbedImages();
         this.imageFormat = config.getImageFormat();
         this.includeHeaderFooter = config.isIncludeHeaderFooter();
+        this.useStructTree = config.isUseStructTree();
     }
 
     /**
@@ -93,6 +99,7 @@ public class MarkdownGenerator implements Closeable {
         this.embedImages = false;
         this.imageFormat = config.getImageFormat();
         this.includeHeaderFooter = config.isIncludeHeaderFooter();
+        this.useStructTree = config.isUseStructTree();
     }
 
     public void writeToMarkdown(List<List<IObject>> contents) {
@@ -144,6 +151,7 @@ public class MarkdownGenerator implements Closeable {
     }
 
     protected void write(IObject object) throws IOException {
+        boolean isOrderedList = false;
         if (object instanceof SemanticHeaderOrFooter) {
             writeHeaderOrFooter((SemanticHeaderOrFooter) object);
         } else if (object instanceof SemanticPicture) {
@@ -161,10 +169,11 @@ public class MarkdownGenerator implements Closeable {
         } else if (object instanceof TableBorder) {
             writeTable((TableBorder) object);
         } else if (object instanceof PDFList) {
-            writeList((PDFList) object);
+            isOrderedList = writeList((PDFList) object);
         } else if (object instanceof SemanticTOC) {
             writeTOC((SemanticTOC) object);
         }
+        previousContentIsOrderedList = isOrderedList;
     }
 
     /**
@@ -289,18 +298,36 @@ public class MarkdownGenerator implements Closeable {
         }
     }
 
-    protected void writeList(PDFList list) throws IOException {
-        for (ListItem item : list.getListItems()) {
+    /**
+     * Writes a list.
+     *
+     * @param list The list to write
+     * @return whether the list was written as a Markdown ordered list
+     */
+    protected boolean writeList(PDFList list) throws IOException {
+        List<String> orderedMarkers = getOrderedListMarkers(list);
+        if (orderedMarkers != null && previousContentIsOrderedList) {
+            // CommonMark joins two ordered lists that follow each other and takes the start
+            // number of the first one only, so a comment ends the previous list.
+            markdownWriter.write(LIST_SEPARATOR_MD);
+            writeContentsSeparator();
+        }
+        List<ListItem> items = list.getListItems();
+        for (int index = 0; index < items.size(); index++) {
+            ListItem item = items.get(index);
             String itemText = GeneratorUtils.getTextFromLines(item.getLines(), OutputType.MD);
             if (!isInsideTable()) {
-                if (NumberingStyleNames.UNORDERED.equals(list.getNumberingStyle())
-                        || !startsWithOrderedListMarker(itemText, item.getLabelLength())) {
+                if (orderedMarkers != null) {
+                    markdownWriter.write(orderedMarkers.get(index));
+                    itemText = stripLeadingWhitespace(itemText.substring(item.getLabelLength()));
+                } else {
                     markdownWriter.write(MarkdownSyntax.LIST_ITEM);
-                    markdownWriter.write(MarkdownSyntax.SPACE);
+                    if (NumberingStyleNames.UNORDERED.equals(list.getNumberingStyle())) {
+                        itemText = useStructTree ? stripBulletLabel(itemText, item.getLabelLength())
+                                : itemText.substring(item.getLabelLength());
+                    }
                 }
-                if (NumberingStyleNames.UNORDERED.equals(list.getNumberingStyle())) {
-                    itemText = itemText.substring(item.getLabelLength());
-                }
+                markdownWriter.write(MarkdownSyntax.SPACE);
             }
             markdownWriter.write(getCorrectMarkdownString(itemText));
             writeLineBreak();
@@ -311,22 +338,69 @@ public class MarkdownGenerator implements Closeable {
                 writeContents(itemContents, false);
             }
         }
+        return orderedMarkers != null;
     }
 
     /**
-     * Whether a list item starts with a label that is a Markdown ordered list marker, such as
-     * {@code 1.} or {@code 2)}. Such a label already marks the item, so no {@code -} is written
-     * before it.
+     * The Markdown ordered list markers of a tagged list, or {@code null} if the list is written
+     * with {@code -} markers. A list is written as a Markdown ordered list only when its
+     * {@code /ListNumbering} gives an ordered style and the labels are {@code 1.}, {@code 2.}, ...
+     * (or {@code 1)}, ...) without gaps, so that a CommonMark viewer shows the number of each label.
+     * Items with nested contents keep the {@code -} marker, because nested blocks are not indented.
      */
-    static boolean startsWithOrderedListMarker(String itemText, int labelLength) {
-        if (itemText == null || labelLength <= 0 || labelLength > itemText.length()) {
-            return false;
+    protected List<String> getOrderedListMarkers(PDFList list) {
+        String numberingStyle = list.getNumberingStyle();
+        if (!useStructTree || isInsideTable() || numberingStyle == null
+                || NumberingStyleNames.UNKNOWN.equals(numberingStyle)
+                || NumberingStyleNames.UNORDERED.equals(numberingStyle)) {
+            return null;
         }
-        String label = itemText.substring(0, labelLength);
-        return ORDERED_LIST_MARKER.matcher(label).matches()
-                && (labelLength == itemText.length()
-                || Character.isWhitespace(itemText.charAt(labelLength - 1))
-                || Character.isWhitespace(itemText.charAt(labelLength)));
+        List<String> markers = new ArrayList<>();
+        long expectedNumber = -1;
+        String delimiter = null;
+        for (ListItem item : list.getListItems()) {
+            if (!item.getContents().isEmpty()) {
+                return null;
+            }
+            String itemText = GeneratorUtils.getTextFromLines(item.getLines(), OutputType.MD);
+            int labelLength = item.getLabelLength();
+            if (labelLength <= 0 || labelLength > itemText.length()) {
+                return null;
+            }
+            Matcher matcher = ORDERED_LABEL.matcher(itemText.substring(0, labelLength).trim());
+            if (!matcher.matches()) {
+                return null;
+            }
+            long number = Long.parseLong(matcher.group(1));
+            if ((expectedNumber >= 0 && number != expectedNumber)
+                    || (delimiter != null && !delimiter.equals(matcher.group(2)))) {
+                return null;
+            }
+            delimiter = matcher.group(2);
+            expectedNumber = number + 1;
+            markers.add(number + delimiter);
+        }
+        return markers.isEmpty() ? null : markers;
+    }
+
+    /**
+     * Removes the bullet label of a list item. The label is kept if the text does not start with
+     * it any more (for example after sanitization), so that no body text is removed.
+     */
+    private static String stripBulletLabel(String itemText, int labelLength) {
+        if (labelLength <= 0 || labelLength > itemText.length()
+                || itemText.substring(0, labelLength).codePoints().anyMatch(Character::isLetterOrDigit)) {
+            return itemText;
+        }
+        return stripLeadingWhitespace(itemText.substring(labelLength));
+    }
+
+    private static String stripLeadingWhitespace(String text) {
+        int start = 0;
+        while (start < text.length() && Character.isWhitespace(text.charAt(start))) {
+            start++;
+        }
+        return text.substring(start);
     }
 
     protected void writeTOC(SemanticTOC toc) throws IOException {

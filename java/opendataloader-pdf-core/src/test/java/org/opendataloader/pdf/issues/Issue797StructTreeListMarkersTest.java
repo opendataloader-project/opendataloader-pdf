@@ -52,8 +52,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * <ul>
  *   <li>An ordered list ({@code /ListNumbering /Decimal}, {@code Lbl "1."}) gave {@code - 1. First step}
  *       instead of {@code 1. First step}.</li>
- *   <li>A list without {@code /ListNumbering} and with {@code Lbl "•"} gave {@code - • First item}
- *       instead of {@code - First item}.</li>
+ *   <li>A list without {@code /ListNumbering} and with {@code Lbl "•"} on each item gave
+ *       {@code - • First item} instead of {@code - First item}.</li>
  * </ul>
  *
  * <p>The test builds a synthetic tagged PDF: {@code L > LI > (Lbl, LBody)} for each item, with
@@ -83,12 +83,13 @@ class Issue797StructTreeListMarkersTest {
     }
 
     @Test
-    void numberedLabelWithoutListNumberingIsTheMarker() throws IOException {
+    void numberedLabelWithoutListNumberingStaysAfterTheMarker() throws IOException {
+        // Without /ListNumbering, labels that differ from item to item are content (ISO 32000-1,
+        // Table 347), so they stay in the text.
         List<String> lines = convert("issue-797-numbers-no-attribute", null,
                 new String[]{"1.", "2.", "3."});
 
-        assertThat(lines).containsSubsequence("1. First item", "2. Second item", "3. Third item");
-        assertThat(lines).noneMatch(line -> line.startsWith("- "));
+        assertThat(lines).containsSubsequence("- 1. First item", "- 2. Second item", "- 3. Third item");
     }
 
     private static List<String> convert(String name, String listNumbering, String[] labels) throws IOException {

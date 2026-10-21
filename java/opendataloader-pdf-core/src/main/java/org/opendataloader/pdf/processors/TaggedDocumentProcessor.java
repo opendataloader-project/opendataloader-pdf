@@ -219,7 +219,7 @@ public class TaggedDocumentProcessor {
             }
         }
         if (list.getNumberingStyle() == null || NumberingStyleNames.UNKNOWN.equals(list.getNumberingStyle())) {
-            if (hasOnlyBulletLabels(list)) {
+            if (hasSameLabelOnEachItem(list)) {
                 list.setNumberingStyle(NumberingStyleNames.UNORDERED);
             }
         }
@@ -227,14 +227,15 @@ public class TaggedDocumentProcessor {
     }
 
     /**
-     * Whether every item of a list starts with a {@code Lbl} that holds a bullet glyph only.
-     * Producers can omit {@code /ListNumbering} (Chrome does so for CSS-drawn markers), so the
-     * numbering style is then taken from the labels.
+     * Whether a list has two or more items and each item has the same {@code Lbl}. Without
+     * {@code /ListNumbering} such a label is a bullet: producers can omit the attribute (Chrome
+     * does so for CSS-drawn markers). Labels that differ from item to item are content.
      */
-    private static boolean hasOnlyBulletLabels(PDFList list) {
-        if (list.getListItems().isEmpty()) {
+    private static boolean hasSameLabelOnEachItem(PDFList list) {
+        if (list.getListItems().size() < 2) {
             return false;
         }
+        String firstLabel = null;
         for (ListItem item : list.getListItems()) {
             int labelLength = item.getLabelLength();
             if (labelLength <= 0 || item.getLines().isEmpty()) {
@@ -245,9 +246,10 @@ public class TaggedDocumentProcessor {
                 return false;
             }
             String label = firstLine.substring(0, labelLength).trim();
-            if (label.isEmpty() || label.codePoints().anyMatch(Character::isLetterOrDigit)) {
+            if (label.isEmpty() || (firstLabel != null && !firstLabel.equals(label))) {
                 return false;
             }
+            firstLabel = label;
         }
         return true;
     }
@@ -264,15 +266,6 @@ public class TaggedDocumentProcessor {
             } else {
                 listItem.getContents().add(content);
             }
-        }
-        if (listItem.getLabelLength() > 0 && !listItem.getLines().isEmpty()) {
-            // The label covers the space that separates it from the body, so both go together.
-            String firstLine = listItem.getFirstLine().getValue();
-            int labelLength = listItem.getLabelLength();
-            while (labelLength < firstLine.length() && Character.isWhitespace(firstLine.charAt(labelLength))) {
-                labelLength++;
-            }
-            listItem.setLabelLength(labelLength);
         }
         return listItem;
     }
