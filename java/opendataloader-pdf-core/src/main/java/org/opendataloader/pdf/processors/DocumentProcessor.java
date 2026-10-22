@@ -69,6 +69,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -388,8 +389,8 @@ public class DocumentProcessor {
 
         try {
             // Loop 1: ContentFilter per-page (largest bottleneck).
-            // Drop unused text/images from veraPDF artifacts by identity.
-            // Reused non-lines stay; LineChunks stay for loop 2.
+            // Drop unused text/images from veraPDF artifacts by identity, to free memory.
+            // Reused non-lines stay. LineChunks are dropped after loop 2.
             // Skipped --pages: null live contents drops non-lines, keeps LineChunks.
             pool.submit(() ->
                 IntStream.range(0, totalPages).parallel().forEach(pageNumber -> {
@@ -450,9 +451,10 @@ public class DocumentProcessor {
                 })
             ).get();
 
-            // Main thread only: LineChunks leave artifacts after strikethrough.
-            // Do not prune inside the parallel loop — parseLines walks all pages.
-            // Skipped pages drop LineChunks here too (already in LinesCollection).
+            // Drop the LineChunks from the artifact lists of all pages, also the skipped
+            // ones, to free memory. No reader needs them: preprocessing() already filled
+            // the LinesCollection of every page (LinesPreprocessingConsumer.findTableBorders),
+            // and loop 2 reads only that collection.
             pruneLineChunksFromArtifacts(pageArtifacts, totalPages);
 
             if (structured) {
@@ -512,7 +514,7 @@ public class DocumentProcessor {
                 HeadingProcessor.detectHeadingsLevels();
                 LevelProcessor.detectLevels(contents);
             }
-        } catch (Exception e) {
+        } catch (InterruptedException | ExecutionException | RuntimeException e) {
             throw new IOException("Parallel page processing failed", e);
         } finally {
             pool.shutdown();
@@ -622,10 +624,9 @@ public class DocumentProcessor {
      * referenced from {@code liveContents}, except {@link LineChunk}s. Identity
      * ({@code ==}), not {@code equals}. Unused text/images leave artifacts;
      * reused non-lines stay. Merged/split {@code TextChunk}s are not copied into
-     * veraPDF. {@code LineChunk}s stay until
-     * {@link #pruneLineChunksFromArtifacts} after loop 2 so a lazy
-     * {@code parseLines} can still see them. This method is only used from the
-     * local {@code processDocument} path.
+     * veraPDF. {@code LineChunk}s are dropped later, by
+     * {@link #pruneLineChunksFromArtifacts} after loop 2. This method is only used
+     * from the local {@code processDocument} path.
      *
      * @param liveContents filtered page contents, or {@code null} for a skipped
      *                     {@code --pages} page (drop every non-{@link LineChunk})
@@ -659,7 +660,8 @@ public class DocumentProcessor {
     /**
      * After loop 2 strikethrough: drop every {@link LineChunk} from per-page
      * artifact lists, including skipped pages. Call on the main thread after the
-     * parallel loop finishes. {@code LinesCollection} keeps the live line rules.
+     * parallel loop finishes. {@code LinesCollection} keeps the line rules: it was
+     * filled for all pages in {@code preprocessing()}.
      */
     @SuppressWarnings("unchecked")
     static void pruneLineChunksFromArtifacts(List<?>[] pageArtifacts, int totalPages) {
