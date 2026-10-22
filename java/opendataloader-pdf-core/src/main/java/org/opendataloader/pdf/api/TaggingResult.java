@@ -76,8 +76,9 @@ public class TaggingResult implements AutoCloseable {
     }
 
     /**
-     * Closes the tagged document. While a later extraction on this thread is current, the
-     * document is closed on a new thread, so the later extraction keeps its state.
+     * Closes the tagged document. While another document is current on this thread, such as the
+     * document of a later extraction, the tagged document is closed on a new thread, so the
+     * current document keeps its state.
      */
     @Override
     public void close() {
