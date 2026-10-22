@@ -121,8 +121,7 @@ public class DocumentProcessor {
      * @param document the document of the extraction; a second close does not close the file again
      */
     static void closePdfResources(PDDocument document) {
-        PDDocument current = StaticResources.getDocument();
-        if (current != null && current != document) {
+        if (anotherDocumentIsCurrent(document)) {
             if (document != null) {
                 closeOnNewThread(document);
             }
@@ -135,23 +134,34 @@ public class DocumentProcessor {
     }
 
     /**
-     * Closes only the document of a tagging result (see
-     * {@link org.opendataloader.pdf.api.TaggingResult#close()}). It does not clear the static
-     * containers.
+     * Closes the document of a tagging result. This method is internal: it is public only so that
+     * {@link org.opendataloader.pdf.api.TaggingResult#close()} can call it, and callers close a
+     * tagging result with that method instead.
      *
-     * <p>While the static containers hold another document, a later extraction owns them. Then
-     * this method closes the document on a new thread, as {@link #closePdfResources(PDDocument)}
-     * does, so the later extraction keeps its {@code StaticResources}.
+     * <p>If another document is current on this thread, the document is closed on a new thread,
+     * so the current document keeps its {@code StaticResources}. A failure of that close is logged
+     * with its exception. Otherwise the document is closed on this thread, a failure reaches the
+     * caller, and veraPDF {@code PDDocument.close()} also clears the {@code StaticResources} of
+     * this thread. In both cases the other static containers, such as {@code StaticContainers},
+     * are not cleared.
      *
-     * @param document the document to close; a second close does not close the file again
+     * @param document the document to close; {@code null} does nothing, and a second close does
+     *                 not close the file again
      */
     public static void closeDocument(PDDocument document) {
-        PDDocument current = StaticResources.getDocument();
-        if (current != null && current != document) {
+        if (document == null) {
+            return;
+        }
+        if (anotherDocumentIsCurrent(document)) {
             closeOnNewThread(document);
         } else {
             document.close();
         }
+    }
+
+    private static boolean anotherDocumentIsCurrent(PDDocument document) {
+        PDDocument current = StaticResources.getDocument();
+        return current != null && current != document;
     }
 
     /**
@@ -190,7 +200,7 @@ public class DocumentProcessor {
         try {
             cleanup.run();
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Error clearing " + name);
+            LOGGER.log(Level.WARNING, "Error clearing " + name, e);
         }
     }
 
