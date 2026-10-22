@@ -13,6 +13,7 @@ import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.StreamInfo;
 
 import java.util.Comparator;
 import java.util.List;
@@ -22,6 +23,12 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 
 public class ContentSanitizer {
+    /**
+     * The operator index of the stream info for the extra characters of a replacement that is longer than the
+     * replaced text. No glyph is under these characters.
+     */
+    public static final int EXTRA_CHARACTERS_OPERATOR_INDEX = -2;
+
     private static final Logger LOGGER = Logger.getLogger(ContentSanitizer.class.getName());
     private final List<SanitizationRule> rules;
     private final boolean contentSafetyEnabled;
@@ -227,7 +234,47 @@ public class ContentSanitizer {
         TextChunk replacementChunk = new TextChunk(sourceChunk);
         replacementChunk.setValue(replacementText);
         updateBBoxForReplacement(replacementChunk, originalChunks, currentChunkIndex, endChunkIndex, replacement.originalStart, replacement.originalEnd, chunkInfos);
+        updateStreamInfosForReplacement(replacementChunk, originalChunks, currentChunkIndex, endChunkIndex, replacement.originalStart, replacement.originalEnd, chunkInfos);
         return replacementChunk;
+    }
+
+    // A tagged PDF marks the glyphs of each chunk with its stream infos, so the replacement gets only those
+    // of the replaced text. A split of a chunk (for example, at a link annotation) counts the stream info
+    // lengths as characters of the value. Thus the extra characters of a longer replacement get a stream
+    // info with EXTRA_CHARACTERS_OPERATOR_INDEX. veraPDF uses -1 for a space that it inserts, so the
+    // tagged PDF can tell the two apart when it merges stream infos.
+    private static void updateStreamInfosForReplacement(TextChunk replacementChunk, List<TextChunk> originalChunks,
+                                                        int startChunkIndex, int endChunkIndex,
+                                                        int replacementStart, int replacementEnd,
+                                                        List<ChunkInfo> chunkInfos) {
+        List<StreamInfo> streamInfos = replacementChunk.getStreamInfos();
+        streamInfos.clear();
+        int length = 0;
+        for (int index = startChunkIndex; index <= endChunkIndex; index++) {
+            ChunkInfo info = chunkInfos.get(index);
+            int chunkStart = Math.max(replacementStart, info.start) - info.start;
+            int chunkEnd = Math.min(replacementEnd, info.end) - info.start;
+            // Do not use TextChunk.getTextChunk: --replace-invalid-chars can make a value longer than its
+            // symbol ends and stream infos.
+            int position = 0;
+            for (StreamInfo streamInfo : originalChunks.get(index).getStreamInfos()) {
+                int streamInfoLength = streamInfo.getEndIndex() - streamInfo.getStartIndex();
+                int start = Math.max(chunkStart, position);
+                int end = Math.min(chunkEnd, position + streamInfoLength);
+                if (start < end) {
+                    StreamInfo replacedPart = new StreamInfo(streamInfo);
+                    replacedPart.setStartIndex(streamInfo.getStartIndex() + start - position);
+                    replacedPart.setEndIndex(streamInfo.getStartIndex() + end - position);
+                    streamInfos.add(replacedPart);
+                    length += end - start;
+                }
+                position += streamInfoLength;
+            }
+        }
+        int extraLength = replacementChunk.getValue().length() - length;
+        if (extraLength > 0) {
+            streamInfos.add(new StreamInfo(EXTRA_CHARACTERS_OPERATOR_INDEX, null, 0, extraLength));
+        }
     }
 
     private int findEndChunkIndex(int currentChunkIndex, List<ChunkInfo> chunkInfos, ReplacementInfo replacement) {

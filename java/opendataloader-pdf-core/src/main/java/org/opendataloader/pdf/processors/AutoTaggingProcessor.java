@@ -33,6 +33,7 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.StreamInfo;
+import org.opendataloader.pdf.utils.ContentSanitizer;
 import org.opendataloader.pdf.utils.FileUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
 
@@ -1487,6 +1488,12 @@ public class AutoTaggingProcessor {
         streamInfoList.add(previousInfo);
         while (streamInfoIterator.hasNext()) {
             StreamInfo currentStreamInfo = streamInfoIterator.next();
+            // The extra characters of a sanitized replacement have no glyph, so they do not stop the merge
+            // of the glyphs before and after them.
+            if (currentStreamInfo.getOperatorIndex() == ContentSanitizer.EXTRA_CHARACTERS_OPERATOR_INDEX) {
+                streamInfoList.add(currentStreamInfo);
+                continue;
+            }
             if (previousInfo.getOperatorIndex() == currentStreamInfo.getOperatorIndex() &&
                 previousInfo.getEndIndex() <= currentStreamInfo.getStartIndex()) {
                 previousInfo.setEndIndex(currentStreamInfo.getEndIndex());
