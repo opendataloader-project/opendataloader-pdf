@@ -38,20 +38,21 @@ import static org.assertj.core.api.Assertions.assertThat;
  * later extraction on the same thread was current, it lost its document, and its JSON output
  * contained only the file name.
  *
- * <p>The sample is synthetic: two copies of a one-page PDF with one line of text. The output
+ * <p>The sample is synthetic: two one-page PDFs, each with a different line of text. The output
  * stays in {@code target/test-samples/issue-791}.
  */
 class Issue791TaggingResultCloseTest {
 
-    private static final String TEXT = "Closing an earlier tagging result keeps this text.";
+    private static final String FIRST_TEXT = "The earlier tagging result holds this text.";
+    private static final String SECOND_TEXT = "Closing an earlier tagging result keeps this text.";
 
     @Test
     void closeOfAnEarlierTaggingResultKeepsTheLaterDocumentOpen() throws Exception {
         Path directory = TestSamples.emptyDirectory("issue-791");
         Path first = directory.resolve("first.pdf");
         Path second = directory.resolve("second.pdf");
-        TestSamples.writeTextPdf(first, 1, TEXT);
-        TestSamples.writeTextPdf(second, 1, TEXT);
+        TestSamples.writeTextPdf(first, 1, FIRST_TEXT);
+        TestSamples.writeTextPdf(second, 1, SECOND_TEXT);
         Path output = directory.resolve("output");
         Config config = new Config();
         config.setOutputFolder(output.toString());
@@ -76,6 +77,6 @@ class Issue791TaggingResultCloseTest {
         }
 
         String json = new String(Files.readAllBytes(output.resolve("second.json")), StandardCharsets.UTF_8);
-        assertThat(json).as("JSON of the later extraction").contains(TEXT);
+        assertThat(json).as("JSON of the later extraction").contains(SECOND_TEXT).doesNotContain(FIRST_TEXT);
     }
 }
