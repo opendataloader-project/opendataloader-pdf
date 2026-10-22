@@ -313,4 +313,73 @@ class ContentSanitizerTest {
 
         assertChunksContainValues(result, "User: ", "email@example.com", ". Hi!", " Hello!");
     }
+
+    @Test
+    void testReplacementGetsTheStreamInfosOfTheReplacedText() {
+        // A tagged PDF marks the glyphs of each chunk with its stream infos. Thus the replacement
+        // gets the stream infos of the replaced text in each chunk, and the other chunks keep the rest.
+        List<TextChunk> originalChunks = new ArrayList<>();
+        originalChunks.add(createTextChunk("Write to info", 1, 0f, 130f));
+        originalChunks.add(createTextChunk("@test.org now", 2, 130f, 260f));
+
+        List<TextChunk> result = sanitizer.applyReplacementsToChunks(
+            originalChunks, sanitizer.findAllReplacements("Write to info@test.org now"));
+
+        assertChunksContainValues(result, "Write to ", "email@example.com", " now");
+        assertStreamInfos(result.get(0), "1:0-9");
+        // The replacement is 4 characters longer than "info@test.org". No glyph is under these characters,
+        // so their stream info has the operator index -2 (ContentSanitizer.EXTRA_CHARACTERS_OPERATOR_INDEX).
+        assertStreamInfos(result.get(1), "1:9-13", "2:0-9", "-2:0-4");
+        assertStreamInfos(result.get(2), "2:9-13");
+    }
+
+    @Test
+    void testReplacementSplitsAtACharacter() {
+        // The tagged PDF splits a chunk at the edge of a link annotation. The split counts the stream
+        // info lengths as characters of the chunk value.
+        TextChunk chunk = createTextChunk("info@test.org", 1, 0f, 130f);
+        TextChunk replacement = sanitizer.applyReplacementsToChunks(
+            Collections.singletonList(chunk), sanitizer.findAllReplacements(chunk.getValue())).get(0);
+
+        TextChunk first = TextChunk.getTextChunk(replacement, 0, 1);
+        TextChunk rest = TextChunk.getTextChunk(replacement, 1, replacement.getValue().length());
+
+        assertStreamInfos(first, "1:0-1");
+        assertStreamInfos(rest, "1:1-13", "-2:0-4");
+    }
+
+    @Test
+    void testReplacementInAValueThatIsLongerThanItsStreamInfos() {
+        // --replace-invalid-chars changes only the value. A replacement with two characters makes the
+        // value longer than its symbol ends and its stream infos.
+        TextChunk first = createTextChunk("Contact: #info@te", 1, 0f, 170f);
+        first.setValue("Contact: ##info@te");
+        List<TextChunk> originalChunks = new ArrayList<>();
+        originalChunks.add(first);
+        originalChunks.add(createTextChunk("st.org now.", 2, 170f, 280f));
+
+        List<TextChunk> result = sanitizer.applyReplacementsToChunks(
+            originalChunks, sanitizer.findAllReplacements("Contact: ##info@test.org now."));
+
+        assertChunksContainValues(result, "Contact: ##", "email@example.com", " now.");
+        int length = 0;
+        for (StreamInfo streamInfo : result.get(1).getStreamInfos()) {
+            length += streamInfo.getEndIndex() - streamInfo.getStartIndex();
+        }
+        assertEquals("email@example.com".length(), length, "sum of the stream info lengths of the replacement");
+    }
+
+    private TextChunk createTextChunk(String value, int operatorIndex, double left, double right) {
+        TextChunk chunk = createTextChunk(value, left, 0, right, 20);
+        chunk.getStreamInfos().set(0, new StreamInfo(operatorIndex, null, 0, value.length()));
+        return chunk;
+    }
+
+    private static void assertStreamInfos(TextChunk chunk, String... expected) {
+        List<String> actual = new ArrayList<>();
+        for (StreamInfo streamInfo : chunk.getStreamInfos()) {
+            actual.add(streamInfo.getOperatorIndex() + ":" + streamInfo.getStartIndex() + "-" + streamInfo.getEndIndex());
+        }
+        assertEquals(Arrays.asList(expected), actual, "stream infos of \"" + chunk.getValue() + "\"");
+    }
 }
