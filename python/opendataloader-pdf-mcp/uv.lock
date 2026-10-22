@@ -403,7 +403,7 @@ wheels = [
 
 [[package]]
 name = "opendataloader-pdf-mcp"
-version = "2.5.15.dev0"
+version = "2.5.16.dev0"
 source = { editable = "." }
 dependencies = [
     { name = "mcp", extra = ["cli"] },
