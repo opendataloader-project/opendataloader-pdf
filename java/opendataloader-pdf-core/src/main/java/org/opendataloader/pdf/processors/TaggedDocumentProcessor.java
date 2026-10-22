@@ -229,7 +229,8 @@ public class TaggedDocumentProcessor {
     /**
      * Whether a list has two or more items and each item has the same {@code Lbl}. Without
      * {@code /ListNumbering} such a label is a bullet: producers can omit the attribute (Chrome
-     * does so for CSS-drawn markers). Labels that differ from item to item are content.
+     * does so for CSS-drawn markers). Labels that differ from item to item are content, and so are
+     * labels with a letter or digit, as in {@code MarkdownGenerator.stripBulletLabel}.
      */
     private static boolean hasSameLabelOnEachItem(PDFList list) {
         if (list.getListItems().size() < 2) {
@@ -246,7 +247,8 @@ public class TaggedDocumentProcessor {
                 return false;
             }
             String label = firstLine.substring(0, labelLength).trim();
-            if (label.isEmpty() || (firstLabel != null && !firstLabel.equals(label))) {
+            if (label.isEmpty() || label.codePoints().anyMatch(Character::isLetterOrDigit)
+                    || (firstLabel != null && !firstLabel.equals(label))) {
                 return false;
             }
             firstLabel = label;

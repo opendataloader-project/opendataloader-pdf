@@ -15,6 +15,8 @@
  */
 package org.opendataloader.pdf.issues;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSInteger;
@@ -90,6 +92,30 @@ class Issue797StructTreeListMarkersTest {
                 new String[]{"1.", "2.", "3."});
 
         assertThat(lines).containsSubsequence("- 1. First item", "- 2. Second item", "- 3. Third item");
+    }
+
+    @Test
+    void sameTextLabelWithoutListNumberingIsNotABullet() throws IOException {
+        // A label with a letter or digit is content even when each item repeats it. The Markdown
+        // keeps it, so the JSON must not report the list as unordered.
+        String name = "issue-797-same-text-label";
+        Path directory = TestSamples.emptyDirectory(name);
+        Path pdf = directory.resolve(name + ".pdf");
+        writeSample(pdf, null, new String[]{"Q:", "Q:", "Q:"});
+
+        Config config = new Config();
+        config.setOutputFolder(directory.toString());
+        config.setGenerateJSON(true);
+        config.setGenerateMarkdown(true);
+        config.setUseStructTree(true);
+        DocumentProcessor.processFile(pdf.toString(), config);
+
+        List<String> lines = Files.readAllLines(directory.resolve(name + ".md"), StandardCharsets.UTF_8);
+        assertThat(lines).containsSubsequence("- Q: First item", "- Q: Second item", "- Q: Third item");
+        List<JsonNode> lists = new ObjectMapper().readTree(directory.resolve(name + ".json").toFile())
+                .findParents("list items");
+        assertThat(lists).hasSize(1);
+        assertThat(lists.get(0).path("numbering style").asText()).isNotEqualTo("unordered");
     }
 
     private static List<String> convert(String name, String listNumbering, String[] labels) throws IOException {
