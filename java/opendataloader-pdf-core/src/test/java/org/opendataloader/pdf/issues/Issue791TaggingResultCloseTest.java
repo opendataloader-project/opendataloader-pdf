@@ -37,6 +37,7 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 /**
  * Issue #791: {@code TaggingResult.close()} called veraPDF {@code PDDocument.close()} on the
@@ -86,16 +87,21 @@ class Issue791TaggingResultCloseTest {
     }
 
     @Test
-    void closeDocumentOfNullHasOneBehavior() throws Exception {
+    void closeDocumentOfNullDoesNothing() throws Exception {
         assertThat(StaticResources.getDocument()).as("no current document before the first call").isNull();
-        String withoutCurrent = closeDocumentOfNullOutcome();
+        assertThatCode(() -> DocumentProcessor.closeDocument(null))
+            .as("closeDocument(null) without a current document")
+            .doesNotThrowAnyException();
         Path pdf = TestSamples.emptyDirectory("issue-791-null").resolve("b.pdf");
         TestSamples.writeTextPdf(pdf, 1, SECOND_TEXT);
-        String withCurrent;
         try (ExtractionResult later = DocumentProcessor.extractContents(pdf.toString(), new Config())) {
-            withCurrent = closeDocumentOfNullOutcome();
+            PDDocument current = StaticResources.getDocument();
+            assertThatCode(() -> DocumentProcessor.closeDocument(null))
+                .as("closeDocument(null) with a current document")
+                .doesNotThrowAnyException();
+            assertThat(StaticResources.getDocument()).as("current document after the call").isSameAs(current);
+            assertThat(current.getDocument()).as("current document is still open").isNotNull();
         }
-        assertThat(withCurrent).as("outcome with a current document").isEqualTo(withoutCurrent);
     }
 
     @Test
@@ -136,15 +142,6 @@ class Issue791TaggingResultCloseTest {
         }
         visible = visible || records.stream().anyMatch(r -> hasCloseFailure(r.getThrown()));
         assertThat(visible).as("the failure reaches the caller, or a log record carries it").isTrue();
-    }
-
-    private static String closeDocumentOfNullOutcome() {
-        try {
-            DocumentProcessor.closeDocument(null);
-            return "returns";
-        } catch (RuntimeException e) {
-            return "throws " + e.getClass().getSimpleName();
-        }
     }
 
     private static boolean hasCloseFailure(Throwable t) {
