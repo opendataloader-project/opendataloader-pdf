@@ -104,6 +104,7 @@ public class AutoTaggingProcessor {
         setMarkInfo(catalog, cosDocument);
         COSObject structTreeRoot = createStructTreeRoot(catalog, cosDocument, document);
         createStructureTreeElements(document, contents, structTreeRoot, cosDocument);
+        createIDTree(structTreeRoot, cosDocument);
         if (isPDF2_0) {
             updateDestinationsToStructureDestinations(document, catalog, cosDocument);
         }
@@ -261,6 +262,59 @@ public class AutoTaggingProcessor {
             if (entry.getKey() >= nextKey) nextKey = entry.getKey() + 1;
         }
         structTreeRoot.setKey(ASAtom.PARENT_TREE_NEXT_KEY, COSInteger.construct(nextKey));
+    }
+
+    private static Set<String> createIDTree(COSObject structTreeRoot, COSDocument cosDocument) throws IOException {
+        Map<String, COSObject> idToStructElement = new TreeMap<>();
+        collectStructureElementIDs(structTreeRoot.getKey(ASAtom.K), idToStructElement, new HashSet<>());
+
+        Set<String> ids = new LinkedHashSet<>(idToStructElement.keySet());
+        COSObject names = COSArray.construct();
+        for (String id : ids) {
+            names.add(COSString.construct(id.getBytes(StandardCharsets.ISO_8859_1)));
+            names.add(idToStructElement.get(id));
+        }
+        COSObject idTree = COSDictionary.construct();
+        idTree.setKey(ASAtom.NAMES, names);
+        structTreeRoot.setKey(ASAtom.ID_TREE, idTree);
+        cosDocument.addChangedObject(structTreeRoot);
+        return ids;
+    }
+
+    private static void collectStructureElementIDs(COSObject object, Map<String, COSObject> idToStructElement,
+                                                   Set<COSKey> visitedKeys) throws IOException {
+        if (object == null || object.empty()) {
+            return;
+        }
+        COSKey key = object.getKey();
+        if (key != null && !visitedKeys.add(key)) {
+            throw new IOException("Found Loop inside of Structure tree");
+        }
+        if (object.getType() == COSObjType.COS_ARRAY) {
+            for (COSObject child : (COSArray) object.getDirectBase()) {
+                collectStructureElementIDs(child, idToStructElement, visitedKeys);
+            }
+            return;
+        }
+        if (object.getType() != COSObjType.COS_DICT
+                || !ASAtom.STRUCT_ELEM.equals(object.getNameKey(ASAtom.TYPE))) {
+            return;
+        }
+
+        COSObject id = object.getKey(ASAtom.ID);
+        if (id != null && id.getType() == COSObjType.COS_STRING) {
+            COSBase idString = id.getDirectBase();
+            byte[] idBytes = ((COSString) idString).get();
+            // ISO-8859-1 preserves each byte one-to-one, so String ordering matches byte ordering.
+            String idKey = new String(idBytes, StandardCharsets.ISO_8859_1);
+            if (idToStructElement.containsKey(idKey)) {
+                LOGGER.log(Level.WARNING, "Duplicate structure element ID {0}; keeping the first element",
+                        Arrays.toString(idBytes));
+            } else {
+                idToStructElement.put(idKey, object);
+            }
+        }
+        collectStructureElementIDs(object.getKey(ASAtom.K), idToStructElement, visitedKeys);
     }
 
     private static COSObject addStructElement(COSObject parent, COSDocument cosDocument, String type, Integer pageNumber) {
