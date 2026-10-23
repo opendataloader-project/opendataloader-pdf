@@ -1,0 +1,71 @@
+version: 2
+updates:
+  # Java — multi-module Maven (parent /java declares core/cli child modules; Dependabot auto-detects them)
+  - package-ecosystem: "maven"
+    directory: "/java"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Seoul"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+    groups:
+      maven-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Node.js SDK (pnpm; Dependabot handles pnpm under the "npm" ecosystem).
+  # Root package.json is a scripts-only workspace meta-file with no deps, so it is omitted.
+  - package-ecosystem: "npm"
+    directory: "/node/opendataloader-pdf"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Seoul"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+    groups:
+      npm-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Python SDK + MCP server (example requirements.txt excluded to avoid noise)
+  - package-ecosystem: "pip"
+    directories:
+      - "/python/opendataloader-pdf"
+      - "/python/opendataloader-pdf-mcp"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Seoul"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+    groups:
+      pip-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # GitHub Actions workflows
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Seoul"
+    labels:
+      - "dependencies"
+    groups:
+      github-actions:
+        update-types:
+          - "minor"
+          - "patch"
