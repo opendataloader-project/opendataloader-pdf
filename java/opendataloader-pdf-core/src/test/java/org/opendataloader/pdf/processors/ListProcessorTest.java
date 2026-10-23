@@ -68,6 +68,25 @@ public class ListProcessorTest {
     }
 
     @Test
+    public void testSectionNumbersAreNotConvertedToLists() {
+        StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
+        StaticContainers.setIsDataLoader(true);
+        List<IObject> pageContents = new ArrayList<>();
+        List<List<IObject>> contents = new ArrayList<>();
+        contents.add(pageContents);
+        pageContents.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 30.0, 100.0, 40.0),
+            "7.3 Installing the standard rail adapter", 10, 30.0)));
+        pageContents.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 20.0, 100.0, 30.0),
+            "7.4 Connecting the supply voltage", 10, 20.0)));
+
+        ListProcessor.processLists(contents, false);
+
+        Assertions.assertEquals(2, contents.get(0).size());
+        Assertions.assertFalse(contents.get(0).get(0) instanceof PDFList);
+        Assertions.assertFalse(contents.get(0).get(1) instanceof PDFList);
+    }
+
+    @Test
     public void testCheckNeighborLists() {
         StaticContainers.setIsDataLoader(true);
         List<IObject> pageContents = new ArrayList<>();

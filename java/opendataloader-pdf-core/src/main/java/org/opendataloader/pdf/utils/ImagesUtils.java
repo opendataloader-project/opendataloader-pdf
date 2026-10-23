@@ -30,6 +30,7 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.ContrastRatioConsumer;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.StreamInfo;
 
 import javax.imageio.ImageIO;
@@ -43,6 +44,14 @@ import java.util.logging.Logger;
 
 public class ImagesUtils {
     private static final Logger LOGGER = Logger.getLogger(ImagesUtils.class.getCanonicalName());
+
+    /**
+     * Minimum size, in PDF points, an {@link ImageChunk}'s smaller bounding-box
+     * side must have to be treated as real image content (~1.4mm). Vector-graphic
+     * and glyph fragments plus decorative hairline rules fall below this; the
+     * smallest legitimate image observed in practice (a logo) is well above it.
+     */
+    private static final double MIN_RENDERABLE_IMAGE_SIZE_PT = 4.0;
 
     private final Double imageResolution;
     /**
@@ -82,7 +91,9 @@ public class ImagesUtils {
 
     private void writeFromContents(IObject content) {
         if (content instanceof ImageChunk) {
-            writeImage((ImageChunk) content);
+            if (isRenderableImage((ImageChunk) content)) {
+                writeImage((ImageChunk) content);
+            }
         } else if (content instanceof SemanticPicture) {
             writePicture((SemanticPicture) content);
         } else if (content instanceof PDFList) {
@@ -197,6 +208,29 @@ public class ImagesUtils {
             // even if encoding/writing fails.
             targetImage.flush();
         }
+    }
+
+    /**
+     * True if an {@link ImageChunk}'s bounding box is large enough to be worth
+     * rendering — i.e. not a degenerate vector-graphic/glyph fragment or
+     * hairline decorative rule. See {@link #MIN_RENDERABLE_IMAGE_SIZE_PT}.
+     */
+    public static boolean isRenderableImage(ImageChunk chunk) {
+        return isRenderableSize(chunk.getWidth(), chunk.getHeight());
+    }
+
+    /**
+     * True if a bounding box of the given size is large enough to be worth
+     * rendering as an image. Shared by {@link #isRenderableImage(ImageChunk)}
+     * and vector-figure detection (e.g. {@code ImageFigureGroupingProcessor}),
+     * so that degenerate line art (a hairline table rule, a glyph fragment)
+     * is rejected the same way a degenerate raster tile is.
+     */
+    public static boolean isRenderableSize(double width, double height) {
+        if (NodeUtils.areCloseNumbers(width, 0) || NodeUtils.areCloseNumbers(height, 0)) {
+            return false;
+        }
+        return Math.min(width, height) >= MIN_RENDERABLE_IMAGE_SIZE_PT;
     }
 
     public static boolean isImageFileExists(String fileName) {
