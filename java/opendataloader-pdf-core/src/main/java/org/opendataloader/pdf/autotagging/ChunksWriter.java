@@ -114,7 +114,9 @@ public class ChunksWriter {
                         && xObjectStructParent != null) {
                     COSName xObjectName = getLastCOSName(arguments);
                     PDXObject pdxObject = resourceHandler.getXObject(xObjectName);
-                    if (pdxObject == null) {
+                    // The key holds only the name, so inside a Form the same name can find an Image.
+                    // Only a Form has a content stream to rewrite and takes /StructParents.
+                    if (!(pdxObject instanceof PDXForm)) {
                         processContentOperator(result, rawOperator, arguments, operatorIndex, operatorIndexesToStreamInfosMap, operatorName, operatorStreamKey);
                         break;
                     }
