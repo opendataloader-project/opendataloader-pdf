@@ -263,11 +263,13 @@ public class AutoTaggingProcessor {
         structTreeRoot.setKey(ASAtom.PARENT_TREE_NEXT_KEY, COSInteger.construct(nextKey));
     }
 
-    private static COSObject addStructElement(COSObject parent, COSDocument cosDocument, String type, Integer pageNumber) {
-        return addStructElement(parent, cosDocument, type, pageNumber, false);
+    private static COSObject addStructElement(COSObject parent, COSDocument cosDocument, String type, Integer pageNumber,
+                                              Long id) {
+        return addStructElement(parent, cosDocument, type, pageNumber, id, false);
     }
 
-    private static COSObject addStructElement(COSObject parent, COSDocument cosDocument, String type, Integer pageNumber, boolean isFirstKid) {
+    private static COSObject addStructElement(COSObject parent, COSDocument cosDocument, String type, Integer pageNumber,
+                                              Long id, boolean isFirstKid) {
         COSObject structElement = COSIndirect.construct(COSDictionary.construct(), cosDocument);
         COSObject k = parent.getKey(ASAtom.K);
         if (k.getType() == COSObjType.COS_ARRAY) {
@@ -284,6 +286,9 @@ public class AutoTaggingProcessor {
         structElement.setKey(ASAtom.S, COSName.construct(type));
         structElement.setKey(ASAtom.TYPE, COSName.construct(ASAtom.STRUCT_ELEM));
         structElement.setKey(ASAtom.P, parent);
+        if (id != null) {
+            structElement.setKey(ASAtom.ID, COSString.construct(String.valueOf(id).getBytes()));
+        }
         if (pageNumber != null) {
             structElement.setKey(ASAtom.PG, cosDocument.getPDDocument().getPages().get(pageNumber).getObject());
             pageNumberToFirstStructElement.putIfAbsent(pageNumber, structElement);
@@ -295,7 +300,7 @@ public class AutoTaggingProcessor {
 
     public static COSObject createStructureTreeElements(PDDocument document, List<List<IObject>> contents,
                                                         COSObject structTreeRoot, COSDocument cosDocument) {
-        COSObject seDocument = addStructElement(structTreeRoot, cosDocument, TaggedPDFConstants.DOCUMENT, null);
+        COSObject seDocument = addStructElement(structTreeRoot, cosDocument, TaggedPDFConstants.DOCUMENT, null, null);
         normalizedLevels = buildNormalizedHeadingLevels(contents);
         for (int pageNumber = 0; pageNumber < contents.size(); pageNumber++) {
             processAnnotations(document, cosDocument, pageNumber);
@@ -612,7 +617,7 @@ public class AutoTaggingProcessor {
         } else {
             tag = TaggedPDFConstants.ANNOT;
         }
-        COSObject structElement = addStructElement(parent, cosDocument, tag, pageNumber);
+        COSObject structElement = addStructElement(parent, cosDocument, tag, pageNumber, null);
 
         // PDF/UA-2 rule 8.9.4.2-1 requires the annotation's Contents and the enclosing
         // struct element's Alt to be identical when both are present.
@@ -829,12 +834,13 @@ public class AutoTaggingProcessor {
         // - PDF/UA-1 §7.4.2: heading levels do not skip (satisfied by normalization)
         COSObject headingObject = addStructElement(parent, cosDocument,
             TaggedPDFConstants.H + normalizedLevel,
-            heading.getPageNumber());
+            heading.getPageNumber(), heading.getRecognizedStructureId());
         processTextNode(heading, headingObject);
     }
 
     private static void createParagraphStructElem(SemanticParagraph paragraph, COSObject parent, COSDocument cosDocument) {
-        COSObject paragraphObject = addStructElement(parent, cosDocument, TaggedPDFConstants.P, paragraph.getPageNumber());
+        COSObject paragraphObject = addStructElement(parent, cosDocument, TaggedPDFConstants.P,
+            paragraph.getPageNumber(), paragraph.getRecognizedStructureId());
         processTextNode(paragraph, paragraphObject);
     }
 
@@ -864,7 +870,7 @@ public class AutoTaggingProcessor {
         boolean usePdf2Footnote = isPDF2_0 && pdf2_0Namespace != null;
         COSObject noteObject = addStructElement(parent, cosDocument,
                 usePdf2Footnote ? TaggedPDFConstants.FENOTE : TaggedPDFConstants.NOTE,
-                footnote.getPageNumber());
+                footnote.getPageNumber(), footnote.getRecognizedStructureId());
         // PDF/UA-1 §7.9.1 and PDF 2.0 14.8.4.6 require Note / FENote struct
         // elements to carry an /ID entry that is unique within the document.
         // The value is opaque to veraPDF — any non-empty unique string works.
@@ -876,9 +882,11 @@ public class AutoTaggingProcessor {
         // string is pure ASCII so the choice is functionally a no-op, but
         // it documents intent and silences SpotBugs DM_DEFAULT_ENCODING.
         footnoteCounter++;
-        String noteId = "note-" + footnoteCounter;
-        noteObject.setKey(ASAtom.ID,
+        if (!noteObject.knownKey(ASAtom.ID)) {
+            String noteId = "note-" + footnoteCounter;
+            noteObject.setKey(ASAtom.ID,
                 COSString.construct(noteId.getBytes(java.nio.charset.StandardCharsets.US_ASCII)));
+        }
         if (usePdf2Footnote) {
             noteObject.setKey(ASAtom.NS, pdf2_0Namespace);
             noteObject.setKey(ASAtom.NOTE_TYPE, COSName.construct(ASAtom.getASAtom("Footnote")));
@@ -887,7 +895,8 @@ public class AutoTaggingProcessor {
     }
 
     private static void createCaptionStructElem(SemanticCaption caption, COSObject parent, COSDocument cosDocument, boolean isFirstChild) {
-        COSObject captionObject = addStructElement(parent, cosDocument, TaggedPDFConstants.CAPTION, caption.getPageNumber(), isFirstChild);
+        COSObject captionObject = addStructElement(parent, cosDocument, TaggedPDFConstants.CAPTION, caption.getPageNumber(),
+            caption.getRecognizedStructureId(), isFirstChild);
         processTextNode(caption, captionObject);
     }
 
@@ -906,7 +915,7 @@ public class AutoTaggingProcessor {
                                                       COSObject sibling, COSDocument cosDocument,
                                                       boolean before) {
         COSObject captionObject = addStructElement(parent, cosDocument, TaggedPDFConstants.CAPTION,
-            caption.getPageNumber());
+            caption.getPageNumber(), caption.getRecognizedStructureId());
         COSObject kids = parent.getKey(ASAtom.K);
         if (kids.getType() == COSObjType.COS_ARRAY) {
             // Identity, not equals. COSIndirect.equals compares getDirect(), and
@@ -959,10 +968,11 @@ public class AutoTaggingProcessor {
         COSObject figureParent = parent;
         if (!captionsFor(image).isEmpty()) {
             figureParent = addStructElement(parent, cosDocument, TaggedPDFConstants.SECT,
-                image.getPageNumber());
+                image.getPageNumber(), null);
             cosDocument.addChangedObject(figureParent);
         }
-        COSObject figureObject = addStructElement(figureParent, cosDocument, TaggedPDFConstants.FIGURE, image.getPageNumber());
+        COSObject figureObject = addStructElement(figureParent, cosDocument, TaggedPDFConstants.FIGURE,
+            image.getPageNumber(), image.getRecognizedStructureId());
         double[] bbox = {image.getLeftX(), image.getBottomY(), image.getRightX(), image.getTopY()};
         addAttributeToStructElem(figureObject, ASAtom.LAYOUT, ASAtom.BBOX, COSArray.construct(4, bbox));
         // PDF/UA-1 rule 7.3-1 / PDF/UA-2 rule 8.2.5.28.2-1: every Figure must
@@ -992,7 +1002,8 @@ public class AutoTaggingProcessor {
 
 
     private static void createFormulaStructElem(SemanticFormula formula, COSObject parent, COSDocument cosDocument) {
-        COSObject formulaObject = addStructElement(parent, cosDocument, TaggedPDFConstants.FORMULA, formula.getPageNumber());
+        COSObject formulaObject = addStructElement(parent, cosDocument, TaggedPDFConstants.FORMULA,
+            formula.getPageNumber(), formula.getRecognizedStructureId());
         double[] bbox = {formula.getLeftX(), formula.getBottomY(), formula.getRightX(), formula.getTopY()};
         addAttributeToStructElem(formulaObject, ASAtom.LAYOUT, ASAtom.BBOX, COSArray.construct(4, bbox));
         //PDF/UA-1 rule 7.7-1
@@ -1003,9 +1014,12 @@ public class AutoTaggingProcessor {
     }
 
     private static void createListStructElem(PDFList list, COSObject parent, COSDocument cosDocument) {
-        COSObject listObject = addStructElement(parent, cosDocument, TaggedPDFConstants.L, list.getPageNumber());
+        COSObject listObject = addStructElement(parent, cosDocument, TaggedPDFConstants.L,
+            list.getPageNumber(), list.getRecognizedStructureId());
         if (list.getNextList() != null) {
-            listObject.setKey(ASAtom.ID, COSString.construct(String.valueOf(list.getRecognizedStructureId()).getBytes()));
+            if (!listObject.knownKey(ASAtom.ID)) {
+                listObject.setKey(ASAtom.ID, COSString.construct(String.valueOf(list.getRecognizedStructureId()).getBytes()));
+            }
         }
         if (list.getPreviousList() != null) {
             addAttributeToStructElem(listObject, ASAtom.LIST, ASAtom.CONTINUED_LIST, COSBoolean.construct(true));
@@ -1045,15 +1059,18 @@ public class AutoTaggingProcessor {
         addAttributeToStructElem(listObject, ASAtom.LIST, ASAtom.LIST_NUMBERING, COSName.construct(numbering));
 
         for (ListItem listItem : list.getListItems()) {
-            COSObject listItemObject = addStructElement(listObject, cosDocument, TaggedPDFConstants.LI, listItem.getPageNumber());
+            COSObject listItemObject = addStructElement(listObject, cosDocument, TaggedPDFConstants.LI,
+                listItem.getPageNumber(), listItem.getRecognizedStructureId());
             int labelLength = listItem.getLabelLength();
             if (labelLength > 0) {
-                COSObject lblObject = addStructElement(listItemObject, cosDocument, TaggedPDFConstants.LBL, listItem.getPageNumber());
+                COSObject lblObject = addStructElement(listItemObject, cosDocument, TaggedPDFConstants.LBL,
+                    listItem.getPageNumber(), listItem.getRecognizedStructureId());
                 SemanticTextNode lblTextNode = new SemanticTextNode();
                 lblTextNode.add(new TextLine(listItem.getFirstLine(), 0, listItem.getLabelLength()));
                 processTextNode(lblTextNode, lblObject);
             }
-            COSObject lBodyObject = addStructElement(listItemObject, cosDocument, TaggedPDFConstants.LBODY, listItem.getPageNumber());
+            COSObject lBodyObject = addStructElement(listItemObject, cosDocument, TaggedPDFConstants.LBODY,
+                listItem.getPageNumber(), listItem.getRecognizedStructureId());
             SemanticTextNode lBodyTextNode = new SemanticTextNode();
             for (TextLine line : listItem.getLines()) {
                 lBodyTextNode.add(line);
@@ -1069,13 +1086,15 @@ public class AutoTaggingProcessor {
     }
 
     private static void createTOCStructElem(SemanticTOC toc, COSObject parent, COSDocument cosDocument) {
-        COSObject tocObject = addStructElement(parent, cosDocument, TaggedPDFConstants.TOC, toc.getPageNumber());
+        COSObject tocObject = addStructElement(parent, cosDocument, TaggedPDFConstants.TOC,
+            toc.getPageNumber(), toc.getRecognizedStructureId());
         for (IObject child : toc.getTOCItems()) {
             if (child instanceof SemanticTOC) {
                 createTOCStructElem((SemanticTOC)child, tocObject, cosDocument);
             } else if (child instanceof SemanticTOCI) {
                 SemanticTOCI tocItem = ((SemanticTOCI)child);
-                COSObject tocItemObject = addStructElement(tocObject, cosDocument, TaggedPDFConstants.TOCI, child.getPageNumber());
+                COSObject tocItemObject = addStructElement(tocObject, cosDocument, TaggedPDFConstants.TOCI,
+                    child.getPageNumber(), tocItem.getRecognizedStructureId());
                 tocItemObject.setKey(ASAtom.REF, COSArray.construct());
                 SemanticTextNode tocItemTextNode = new SemanticTextNode();
                 for (TextLine line : tocItem.getLines()) {
@@ -1092,7 +1111,8 @@ public class AutoTaggingProcessor {
     }
 
     private static COSObject createTableStructElemReturning(TableBorder table, COSObject parent, COSDocument cosDocument) {
-        COSObject tableObject = addStructElement(parent, cosDocument, TaggedPDFConstants.TABLE, table.getPageNumber());
+        COSObject tableObject = addStructElement(parent, cosDocument, TaggedPDFConstants.TABLE,
+            table.getPageNumber(), table.getRecognizedStructureId());
 
         // Flat structure: Table > TR > TH/TD (no THead/TBody wrappers)
         // First row uses TH + Scope="Column" for header identification.
@@ -1108,12 +1128,12 @@ public class AutoTaggingProcessor {
     private static void addTableRow(TableBorder table, int rowNumber, COSObject parent,
                                     COSDocument cosDocument) {
         TableBorderRow row = table.getRow(rowNumber);
-        COSObject rowObject = addStructElement(parent, cosDocument, TaggedPDFConstants.TR, row.getPageNumber());
+        COSObject rowObject = addStructElement(parent, cosDocument, TaggedPDFConstants.TR, row.getPageNumber(), row.getRecognizedStructureId());
         for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
             TableBorderCell cell = row.getCell(colNumber);
             if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
                 String cellTag = cell.isHeaderCell() ? TaggedPDFConstants.TH : TaggedPDFConstants.TD;
-                COSObject cellObject = addStructElement(rowObject, cosDocument, cellTag, cell.getPageNumber());
+                COSObject cellObject = addStructElement(rowObject, cosDocument, cellTag, cell.getPageNumber(), cell.getRecognizedStructureId());
                 if (cell.isHeaderCell()) {
                     String scope = "Both";
                     if (rowNumber == 0 && colNumber != 0) {
@@ -1137,7 +1157,8 @@ public class AutoTaggingProcessor {
 
     private static void createStructElemForTextBlock(TableBorder table, COSObject parent, COSDocument cosDocument) {
         boolean useAside = isPDF2_0 && pdf2_0Namespace != null;
-        COSObject partObject = addStructElement(parent, cosDocument, useAside ? TaggedPDFConstants.ASIDE : TaggedPDFConstants.ART, table.getPageNumber());
+        COSObject partObject = addStructElement(parent, cosDocument, useAside ? TaggedPDFConstants.ASIDE : TaggedPDFConstants.ART,
+            table.getPageNumber(), table.getRecognizedStructureId());
         if (useAside) {
             partObject.setKey(ASAtom.NS, pdf2_0Namespace);
         }
