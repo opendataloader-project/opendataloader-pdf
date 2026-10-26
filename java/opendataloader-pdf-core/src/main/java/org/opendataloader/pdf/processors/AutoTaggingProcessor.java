@@ -1123,14 +1123,8 @@ public class AutoTaggingProcessor {
                 String cellTag = cell.isHeaderCell() ? TaggedPDFConstants.TH : TaggedPDFConstants.TD;
                 COSObject cellObject = addStructElement(rowObject, cosDocument, cellTag, cell.getPageNumber());
                 if (cell.isHeaderCell()) {
-                    String scope = "Both";
-                    if (rowNumber == 0 && colNumber != 0) {
-                        scope = "Column";
-                    } else if (rowNumber != 0 && colNumber == 0) {
-                        scope = "Row";
-                    }
                     addAttributeToStructElem(cellObject, ASAtom.TABLE,
-                        ASAtom.SCOPE, COSName.construct(ASAtom.getASAtom(scope)));
+                        ASAtom.SCOPE, COSName.construct(ASAtom.getASAtom(headerScope(table, rowNumber, colNumber))));
                 }
                 if (cell.getColSpan() != 1) {
                     addAttributeToStructElem(cellObject, ASAtom.TABLE, ASAtom.COL_SPAN, COSInteger.construct(cell.getColSpan()));
@@ -1141,6 +1135,37 @@ public class AutoTaggingProcessor {
                 addKids(cell.getContents(), cellObject, cosDocument);
             }
         }
+    }
+
+    /**
+     * The Scope of a header cell: Column in a row of headers, Row for a row's
+     * first cell among data, Both otherwise.
+     *
+     * <p>A table can carry two or three heading rows over its amounts. Placing
+     * Scope by row index alone gave the second heading row Row on its first
+     * cell and Both on the rest, as if those headings named rows.
+     */
+    static String headerScope(TableBorder table, int rowNumber, int colNumber) {
+        if (rowNumber == 0 && colNumber == 0) {
+            return "Both";
+        }
+        if (isHeaderRow(table, rowNumber)) {
+            return "Column";
+        }
+        return colNumber == 0 ? "Row" : "Both";
+    }
+
+    /** Every cell that starts in this row is a header cell. */
+    private static boolean isHeaderRow(TableBorder table, int rowNumber) {
+        TableBorderRow row = table.getRow(rowNumber);
+        for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
+            TableBorderCell cell = row.getCell(colNumber);
+            if (cell != null && cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber
+                    && !cell.isHeaderCell()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static void createStructElemForTextBlock(TableBorder table, COSObject parent, COSDocument cosDocument) {
