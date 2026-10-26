@@ -81,6 +81,41 @@ class OverlappingPiecesMcidTest {
         assertEquals(2, paragraph.getKey(ASAtom.K).size());
     }
 
+    /** A piece over two of the element's pieces fills the gap between them, without an MCID of its own. */
+    @Test
+    void aPieceOverTwoPiecesOfTheElementJoinsThemEdgeToEdge() throws Exception {
+        COSObject paragraph = COSDictionary.construct();
+        StreamInfo left = new StreamInfo(3005, null, 0, 2);
+        StreamInfo right = new StreamInfo(3005, null, 4, 6);
+        StreamInfo across = new StreamInfo(3005, null, 1, 5);
+
+        mark(paragraph, left);
+        mark(paragraph, right);
+        mark(paragraph, across);
+
+        assertEquals(2, paragraph.getKey(ASAtom.K).size(), "the two MCIDs it had, no third");
+        assertEquals(List.of(0, 4), List.of(left.getStartIndex(), left.getEndIndex()));
+        assertEquals(List.of(4, 6), List.of(right.getStartIndex(), right.getEndIndex()));
+        assertEquals(left.getMcid(), across.getMcid());
+    }
+
+    /** A stretch another element holds stays with it: the element's piece does not grow over it. */
+    @Test
+    void aPieceIsNotWidenedOverAnotherElementsPiece() throws Exception {
+        COSObject paragraph = COSDictionary.construct();
+        COSObject other = COSDictionary.construct();
+        StreamInfo own = new StreamInfo(3005, null, 0, 2);
+        StreamInfo theirs = new StreamInfo(3005, null, 3, 4);
+
+        mark(paragraph, own);
+        mark(other, theirs);
+        mark(paragraph, new StreamInfo(3005, null, 1, 5));
+
+        assertEquals(1, paragraph.getKey(ASAtom.K).size());
+        assertEquals(List.of(0, 2), List.of(own.getStartIndex(), own.getEndIndex()));
+        assertEquals(List.of(3, 4), List.of(theirs.getStartIndex(), theirs.getEndIndex()));
+    }
+
     @Test
     void overlappingPiecesOfTwoElementsAreNotFolded() throws Exception {
         COSObject first = COSDictionary.construct();
