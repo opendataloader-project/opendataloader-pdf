@@ -19,6 +19,8 @@ import org.verapdf.pd.actions.PDAction;
 import org.verapdf.pd.form.PDAcroForm;
 import org.verapdf.pd.form.PDFormField;
 import org.verapdf.pd.images.PDXObject;
+import org.verapdf.pd.images.PDXForm;
+import org.verapdf.pd.PDResources;
 import org.verapdf.tools.StaticResources;
 import org.verapdf.tools.TaggedPDFConstants;
 import org.verapdf.wcag.algorithms.entities.*;
@@ -1502,21 +1504,74 @@ public class AutoTaggingProcessor {
             sameOperator.add(streamInfo);
             list.add(parentStructElement);
             if (streamInfo.getXObjectName() != null) {
-                PDXObject pdxObject = StaticResources.getDocument().getPage(pageNumber).getResources()
-                    .getXObject(ASAtom.getASAtom(streamInfo.getXObjectName()));
+                PDXObject pdxObject = findXObject(StaticResources.getDocument().getPage(pageNumber).getResources(),
+                    ASAtom.getASAtom(streamInfo.getXObjectName()), 0);
                 if (pdxObject != null) {
                     COSObject mcrDictionary = COSDictionary.construct();
                     mcrDictionary.setKey(ASAtom.TYPE, COSName.construct(ASAtom.MCR));
                     mcrDictionary.setKey(ASAtom.MCID, mcidObject);
                     mcrDictionary.setKey(ASAtom.STM, pdxObject.getObject());
                     kids.add(mcrDictionary);
-                } else {
-                    kids.add(mcidObject);
                 }
+                // An integer MCID here would name the page's own marked content with this
+                // form's numbering: measured, a signature's Figure took MCID 0, the page's first
+                // paragraph. With no form to point at, the piece gets no reference at all.
             } else {
                 kids.add(mcidObject);
             }
         }
+    }
+
+    /** Deepest form nesting searched for an XObject; a form can draw itself. */
+    private static final int MAX_FORM_DEPTH = 8;
+
+    /**
+     * An XObject by name in these resources, or in a form they hold.
+     *
+     * <p>A piece of content inside a form inside a form names the inner form, which the
+     * page's own resources do not list: a scanned signature placed in a form that a page
+     * form draws.
+     */
+    static PDXObject findXObject(PDResources resources, ASAtom name, int depth) {
+        if (resources == null || name == null || depth > MAX_FORM_DEPTH) {
+            return null;
+        }
+        PDXObject direct = resources.getXObject(name);
+        if (direct != null) {
+            return direct;
+        }
+        for (ASAtom other : resources.getXObjectNames()) {
+            PDXObject xObject = resources.getXObject(other);
+            if (xObject instanceof PDXForm) {
+                PDXObject found = findXObject(((PDXForm) xObject).getResources(), name, depth + 1);
+                if (found != null) {
+                    return found;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Whether a form, or a form it draws, holds content this page tags. ChunksWriter
+     * rewrites a form's stream only when it enters it, so an outer form with nothing of its
+     * own to tag has to be entered for the inner one to be reached.
+     */
+    public static boolean holdsTaggedForm(PDXForm form, int pageNumber, int depth) {
+        if (form == null || depth > MAX_FORM_DEPTH || form.getResources() == null) {
+            return false;
+        }
+        PDResources resources = form.getResources();
+        for (ASAtom name : resources.getXObjectNames()) {
+            if (operatorIndexesToStreamInfosMap.containsKey(new OperatorStreamKey(pageNumber, name.getValue()))) {
+                return true;
+            }
+            PDXObject xObject = resources.getXObject(name);
+            if (xObject instanceof PDXForm && holdsTaggedForm((PDXForm) xObject, pageNumber, depth + 1)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
