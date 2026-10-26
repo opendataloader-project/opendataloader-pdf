@@ -1575,8 +1575,8 @@ public class AutoTaggingProcessor {
     }
 
     /**
-     * Folds a piece of a string into a piece of the same string that this element already
-     * marks, when the two overlap.
+     * Folds a piece of a string into the pieces of the same string that this element already
+     * marks, when it overlaps them.
      *
      * <p>ChunksWriter writes one marked-content sequence per piece and cannot nest one in
      * another, so two overlapping pieces got two MCIDs and one sequence: the other MCID pointed
@@ -1584,33 +1584,62 @@ public class AutoTaggingProcessor {
      * then [0,5), each in its own call: 7 such MCIDs over seven pages. The earlier piece is
      * widened to cover both, and no MCID is added for the later one.
      *
+     * <p>A piece can overlap more than one of them: [1,5) over [0,2) and [4,6). Each then reaches
+     * to the start of the next, the first back to the piece's start and the last to its end, so
+     * the element's pieces cover the piece and still do not overlap. A stretch that a piece of
+     * another element holds is left to it.
+     *
      * @return true when the piece was folded in, and needs no MCID of its own
      */
     private static boolean widenOverlapping(Set<StreamInfo> sameOperator, StreamInfo piece,
                                             List<COSObject> owners, COSObject parentStructElement) {
+        // The set is ordered by start index, so these come in order along the string.
+        List<StreamInfo> own = new ArrayList<>();
         for (StreamInfo held : sameOperator) {
-            if (held.getStartIndex() >= piece.getEndIndex() || piece.getStartIndex() >= held.getEndIndex()
-                || held.getMcid() == null || held.getMcid() >= owners.size()
-                || owners.get(held.getMcid()) != parentStructElement) {
-                continue;
+            if (overlaps(held, piece.getStartIndex(), piece.getEndIndex())
+                && held.getMcid() != null && held.getMcid() < owners.size()
+                && owners.get(held.getMcid()) == parentStructElement) {
+                own.add(held);
             }
-            int start = held.getStartIndex();
-            int end = held.getEndIndex();
-            // The set is ordered by start index, so the piece leaves it while its start changes.
-            sameOperator.remove(held);
-            held.setStartIndex(Math.min(start, piece.getStartIndex()));
-            held.setEndIndex(Math.max(end, piece.getEndIndex()));
-            if (!sameOperator.add(held)) {
-                // Another element's piece starts there: keep both as they were.
-                held.setStartIndex(start);
+        }
+        if (own.isEmpty()) {
+            return false;
+        }
+        for (int index = 0; index < own.size(); index++) {
+            StreamInfo held = own.get(index);
+            int end = index + 1 < own.size() ? own.get(index + 1).getStartIndex()
+                : Math.max(held.getEndIndex(), piece.getEndIndex());
+            if (end > held.getEndIndex() && isUnmarked(sameOperator, held.getEndIndex(), end)) {
                 held.setEndIndex(end);
-                sameOperator.add(held);
+            }
+        }
+        StreamInfo first = own.get(0);
+        int start = first.getStartIndex();
+        if (piece.getStartIndex() < start && isUnmarked(sameOperator, piece.getStartIndex(), start)) {
+            // The piece leaves the set while its start, the set's order, changes.
+            sameOperator.remove(first);
+            first.setStartIndex(piece.getStartIndex());
+            if (!sameOperator.add(first)) {
+                first.setStartIndex(start);
+                sameOperator.add(first);
+            }
+        }
+        piece.setMcid(first.getMcid());
+        return true;
+    }
+
+    private static boolean overlaps(StreamInfo held, int start, int end) {
+        return held.getStartIndex() < end && start < held.getEndIndex();
+    }
+
+    /** Whether no piece of the operator covers any character of [start, end). */
+    private static boolean isUnmarked(Set<StreamInfo> sameOperator, int start, int end) {
+        for (StreamInfo held : sameOperator) {
+            if (overlaps(held, start, end)) {
                 return false;
             }
-            piece.setMcid(held.getMcid());
-            return true;
         }
-        return false;
+        return true;
     }
 
     private static List<StreamInfo> getMergedStreamInfos(List<StreamInfo> streamInfos) {
