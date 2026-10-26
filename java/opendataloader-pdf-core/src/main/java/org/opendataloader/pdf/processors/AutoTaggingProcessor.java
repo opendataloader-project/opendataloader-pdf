@@ -1490,11 +1490,16 @@ public class AutoTaggingProcessor {
         for (StreamInfo streamInfo : streamInfoList) {
             OperatorStreamKey operatorStreamKey = new OperatorStreamKey(pageNumber, streamInfo.getXObjectName());
             List<COSObject> list = structParents.computeIfAbsent(operatorStreamKey, x -> new ArrayList<>());
+            Set<StreamInfo> sameOperator = operatorIndexesToStreamInfosMap
+                .computeIfAbsent(operatorStreamKey, x -> new HashMap<>())
+                .computeIfAbsent(streamInfo.getOperatorIndex(), x -> new TreeSet<>());
+            if (widenOverlapping(sameOperator, streamInfo, list, parentStructElement)) {
+                continue;
+            }
             int mcid = list.size();
             COSObject mcidObject = COSInteger.construct(mcid);
             streamInfo.setMcid(mcid);
-            operatorIndexesToStreamInfosMap.computeIfAbsent(operatorStreamKey, x -> new HashMap<>())
-                .computeIfAbsent(streamInfo.getOperatorIndex(), x -> new TreeSet<>()).add(streamInfo);
+            sameOperator.add(streamInfo);
             list.add(parentStructElement);
             if (streamInfo.getXObjectName() != null) {
                 PDXObject pdxObject = StaticResources.getDocument().getPage(pageNumber).getResources()
@@ -1512,6 +1517,45 @@ public class AutoTaggingProcessor {
                 kids.add(mcidObject);
             }
         }
+    }
+
+    /**
+     * Folds a piece of a string into a piece of the same string that this element already
+     * marks, when the two overlap.
+     *
+     * <p>ChunksWriter writes one marked-content sequence per piece and cannot nest one in
+     * another, so two overlapping pieces got two MCIDs and one sequence: the other MCID pointed
+     * at nothing. Measured on a scan's OCR layer, whose pieces of one string came as [1,2) and
+     * then [0,5), each in its own call: 7 such MCIDs over seven pages. The earlier piece is
+     * widened to cover both, and no MCID is added for the later one.
+     *
+     * @return true when the piece was folded in, and needs no MCID of its own
+     */
+    private static boolean widenOverlapping(Set<StreamInfo> sameOperator, StreamInfo piece,
+                                            List<COSObject> owners, COSObject parentStructElement) {
+        for (StreamInfo held : sameOperator) {
+            if (held.getStartIndex() >= piece.getEndIndex() || piece.getStartIndex() >= held.getEndIndex()
+                || held.getMcid() == null || held.getMcid() >= owners.size()
+                || owners.get(held.getMcid()) != parentStructElement) {
+                continue;
+            }
+            int start = held.getStartIndex();
+            int end = held.getEndIndex();
+            // The set is ordered by start index, so the piece leaves it while its start changes.
+            sameOperator.remove(held);
+            held.setStartIndex(Math.min(start, piece.getStartIndex()));
+            held.setEndIndex(Math.max(end, piece.getEndIndex()));
+            if (!sameOperator.add(held)) {
+                // Another element's piece starts there: keep both as they were.
+                held.setStartIndex(start);
+                held.setEndIndex(end);
+                sameOperator.add(held);
+                return false;
+            }
+            piece.setMcid(held.getMcid());
+            return true;
+        }
+        return false;
     }
 
     private static List<StreamInfo> getMergedStreamInfos(List<StreamInfo> streamInfos) {
