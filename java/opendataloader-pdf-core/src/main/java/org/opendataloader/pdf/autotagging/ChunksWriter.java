@@ -110,16 +110,23 @@ public class ChunksWriter {
             case Operators.DO:
                 OperatorStreamKey xObjectOperatorStreamKey = new OperatorStreamKey(operatorStreamKey.getPageNumber(), arguments.get(0).getString());
                 Integer xObjectStructParent = AutoTaggingProcessor.getStructParentsIntegers().get(xObjectOperatorStreamKey);
-                if (AutoTaggingProcessor.getOperatorIndexesToStreamInfosMap().containsKey(xObjectOperatorStreamKey)
-                        && xObjectStructParent != null) {
-                    COSName xObjectName = getLastCOSName(arguments);
-                    PDXObject pdxObject = resourceHandler.getXObject(xObjectName);
-                    if (pdxObject == null) {
+                boolean ownContent = AutoTaggingProcessor.getOperatorIndexesToStreamInfosMap().containsKey(xObjectOperatorStreamKey)
+                        && xObjectStructParent != null;
+                COSName drawnName = getLastCOSName(arguments);
+                PDXObject drawn = ownContent || drawnName == null ? null : resourceHandler.getXObject(drawnName);
+                // A form with nothing of its own to tag is still entered when a form it draws has.
+                boolean innerContent = !ownContent && drawn instanceof PDXForm
+                        && AutoTaggingProcessor.holdsTaggedForm((PDXForm) drawn, operatorStreamKey.getPageNumber(), 0);
+                if (ownContent || innerContent) {
+                    PDXObject pdxObject = drawn != null ? drawn : resourceHandler.getXObject(drawnName);
+                    if (!(pdxObject instanceof PDXForm)) {
                         processContentOperator(result, rawOperator, arguments, operatorIndex, operatorIndexesToStreamInfosMap, operatorName, operatorStreamKey);
                         break;
                     }
-                    pdxObject.setKey(ASAtom.STRUCT_PARENTS,
-                        COSInteger.construct(xObjectStructParent));
+                    if (ownContent) {
+                        pdxObject.setKey(ASAtom.STRUCT_PARENTS,
+                            COSInteger.construct(xObjectStructParent));
+                    }
                     StaticResources.getDocument().getDocument().addChangedObject(pdxObject.getObject());
                     PDXForm pdxForm = (PDXForm)pdxObject;
                     GraphicsState xFormGraphicsState = graphicsState.clone();
