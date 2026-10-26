@@ -74,6 +74,17 @@ class TableHeaderScopeTest {
         assertEquals("Row", AutoTaggingProcessor.headerScope(t, 2, 0), "a row header among data");
     }
 
+    /** A table with no heading row: the first cell names the first row, and no column. */
+    @Test
+    void theFirstCellOfAFirstRowOfDataScopesItsRow() {
+        TableBorder t = table(new boolean[][]{
+                {true, false},
+                {true, false}});
+
+        assertEquals("Row", AutoTaggingProcessor.headerScope(t, 0, 0));
+        assertEquals("Row", AutoTaggingProcessor.headerScope(t, 1, 0));
+    }
+
     @Test
     void aHeaderAmongDataOutsideTheFirstColumnIsBoth() {
         TableBorder t = table(new boolean[][]{
