@@ -55,8 +55,11 @@ import static org.assertj.core.api.Assertions.assertThat;
  * {@code NullPointerException: Cannot invoke "java.lang.Double.doubleValue()" because "this.ascent" is null}.
  * opendataloader-pdf 2.5.4 to 2.5.6 used this parser, and failed on the first page of such a document.
  *
- * <p>Fixed in the veraPDF parser 1.31.51. This test makes sure that the fix does not regress: with
- * {@code -Dverapdf.parser.version=1.31.48}, the {@code d0} cases fail and the {@code d1} case passes.
+ * <p>Fixed in the veraPDF parser 1.31.51. This test makes sure that the fix does not regress.
+ * The build does not read {@code verapdf.parser.version}. To test against an older parser,
+ * temporarily change {@code verapdf.version} in {@code java/pom.xml} to a veraPDF release that
+ * uses that parser. This also changes other veraPDF artifacts. With parser 1.31.48, the
+ * {@code d0} cases fail and the {@code d1} case passes.
  *
  * <p>The samples are synthetic. The output stays in {@code target/test-samples/type3-*}.
  */
