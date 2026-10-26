@@ -119,6 +119,20 @@ class CaptionPlacementTest {
     }
 
     /**
+     * A table's title inside the table's box — the layout region took it in —
+     * goes by height: the upper half comes first, the lower half last.
+     */
+    @Test
+    void aCaptionInsideItsTablesBoxGoesByHeight() throws Exception {
+        BoundingBox table = box(30, 180, 580, 740);
+
+        assertTrue(captionComesFirst(box(150, 700, 450, 730), table),
+                "a centred title at the top comes first");
+        assertFalse(captionComesFirst(box(150, 190, 450, 210), table),
+                "a note at the bottom comes last");
+    }
+
+    /**
      * A missing box must not throw: the caller has no fallback if it does, and
      * an unplaced caption is dropped from the tree entirely.
      */

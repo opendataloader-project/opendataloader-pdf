@@ -404,6 +404,12 @@ public class AutoTaggingProcessor {
     /**
      * Determines if the caption should be the first child (above/before) or last child
      * (below/after) of its parent struct element.
+     *
+     * <p>A caption level with its parent is placed by side: left first, right
+     * last. One inside the parent's box goes by height instead: a table's title
+     * often lies inside the table's box, because the layout region the box
+     * comes from takes the title in, and a centred title was read after the
+     * table it names.
      */
     private static boolean isCaptionFirstChild(BoundingBox caption, BoundingBox parent) {
         if (caption == null || parent == null) return true;
@@ -411,6 +417,8 @@ public class AutoTaggingProcessor {
             return true;
         } else if (caption.getCenterY() < parent.getBottomY()) {
             return false;
+        } else if (caption.getCenterX() >= parent.getLeftX() && caption.getCenterX() <= parent.getRightX()) {
+            return caption.getCenterY() >= parent.getCenterY();
         } else {
             return caption.getCenterX() < parent.getCenterX();
         }
