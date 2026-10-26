@@ -294,7 +294,7 @@ public class MarkdownGenerator implements Closeable {
                 markdownWriter.write(MarkdownSyntax.LIST_ITEM);
                 markdownWriter.write(MarkdownSyntax.SPACE);
                 if (NumberingStyleNames.UNORDERED.equals(list.getNumberingStyle())) {
-                    itemText = itemText.substring(item.getLabelLength());
+                    itemText = itemText.substring(getUnorderedLabelLength(itemText, item.getLabelLength()));
                 }
             }
             markdownWriter.write(getCorrectMarkdownString(itemText));
@@ -306,6 +306,16 @@ public class MarkdownGenerator implements Closeable {
                 writeContents(itemContents, false);
             }
         }
+    }
+
+    // The detected label also spans a word that every item starts with when no space follows the bullet
+    private static int getUnorderedLabelLength(String itemText, int labelLength) {
+        for (int i = 1; i < labelLength; i++) {
+            if (Character.isLetterOrDigit(itemText.charAt(i))) {
+                return 1;
+            }
+        }
+        return labelLength;
     }
 
     protected void writeTOC(SemanticTOC toc) throws IOException {

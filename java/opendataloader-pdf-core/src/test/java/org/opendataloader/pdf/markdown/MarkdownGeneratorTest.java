@@ -19,6 +19,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.processors.ListProcessor;
+import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.content.TextChunk;
+import org.verapdf.wcag.algorithms.entities.content.TextLine;
+import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
+import org.verapdf.wcag.algorithms.entities.lists.PDFList;
+import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
+
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -240,5 +252,50 @@ public class MarkdownGeneratorTest {
         // desired long-term behavior.
         MarkdownGenerator generator = newGeneratorForEscaping();
         assertEquals("&amp;amp;", generator.getCorrectMarkdownString("&amp;"));
+    }
+
+    // ----- writeList: unordered list labels -----
+
+    @Test
+    void testWriteList_stripsBulletAndSpace() throws IOException {
+        assertEquals("- first item\n- second item\n- third item\n",
+            writeDetectedList("- first item", "- second item", "- third item"));
+    }
+
+    @Test
+    void testWriteList_keepsWordSharedByEveryItemAfterHyphen() throws IOException {
+        assertEquals("- No electric heaters\n- No gas boiler\n- No radiator\n",
+            writeDetectedList("-No electric heaters", "-No gas boiler", "-No radiator"));
+    }
+
+    @Test
+    void testWriteList_keepsWordSharedByEveryItemAfterAsterisk() throws IOException {
+        assertEquals("- Possible delays\n- Possible changes\n",
+            writeDetectedList("*Possible delays", "*Possible changes"));
+    }
+
+    @Test
+    void testWriteList_keepsFirstWordsThatDiffer() throws IOException {
+        assertEquals("- No electric heaters\n- No gas boiler\n- All radiators\n",
+            writeDetectedList("-No electric heaters", "-No gas boiler", "-All radiators"));
+    }
+
+    private static String writeDetectedList(String... items) throws IOException {
+        StaticContainers.setIsIgnoreCharactersWithoutUnicode(false);
+        StaticContainers.setIsDataLoader(true);
+        List<IObject> pageContents = new ArrayList<>();
+        double top = 100.0;
+        for (String item : items) {
+            pageContents.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, top - 10.0, 200.0, top),
+                item, 10, top - 10.0)));
+            top -= 10.0;
+        }
+        List<List<IObject>> contents = new ArrayList<>();
+        contents.add(pageContents);
+        ListProcessor.processLists(contents, false);
+        assertInstanceOf(PDFList.class, contents.get(0).get(0));
+        StringWriter writer = new StringWriter();
+        new MarkdownGenerator(writer, new Config()).writeList((PDFList) contents.get(0).get(0));
+        return writer.toString();
     }
 }
