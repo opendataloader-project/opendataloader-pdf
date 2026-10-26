@@ -1141,18 +1141,21 @@ public class AutoTaggingProcessor {
 
     /**
      * The Scope of a header cell: Column in a row of headers, Row for a row's
-     * first cell among data, Both otherwise.
+     * first cell among data, Both otherwise. The first cell of a first row of
+     * headers is Both.
      *
      * <p>A table can carry two or three heading rows over its amounts. Placing
      * Scope by row index alone gave the second heading row Row on its first
      * cell and Both on the rest, as if those headings named rows.
+     *
+     * <p>A table can also have no heading row, so that its first row is data:
+     * a summary of revenues that starts at "Property Tax | 5,663,100". Its
+     * first cell names that row only. As Both, it was also the heading of the
+     * names under it.
      */
     static String headerScope(TableBorder table, int rowNumber, int colNumber) {
-        if (rowNumber == 0 && colNumber == 0) {
-            return "Both";
-        }
         if (isHeaderRow(table, rowNumber)) {
-            return "Column";
+            return rowNumber == 0 && colNumber == 0 ? "Both" : "Column";
         }
         return colNumber == 0 ? "Row" : "Both";
     }
