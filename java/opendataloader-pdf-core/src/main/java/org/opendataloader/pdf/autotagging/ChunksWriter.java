@@ -31,9 +31,21 @@ public class ChunksWriter {
     private final PDResourcesHandler resourceHandler;
     private final GraphicsState graphicsState;
 
+    /**
+     * The forms that this writer is inside. A form can draw itself, directly or through
+     * another form, and entering it again each time would not end.
+     */
+    private final Set<COSKey> enteredForms;
+
     public ChunksWriter(GraphicsState inheritedGraphicState, PDResourcesHandler resourceHandler) {
+        this(inheritedGraphicState, resourceHandler, new HashSet<>());
+    }
+
+    private ChunksWriter(GraphicsState inheritedGraphicState, PDResourcesHandler resourceHandler,
+                         Set<COSKey> enteredForms) {
         this.graphicsState = inheritedGraphicState.clone();
         this.resourceHandler = resourceHandler;
+        this.enteredForms = enteredForms;
     }
 
     public static List<Object> getTokens(PDContentStream pdContentStream) {
@@ -119,7 +131,10 @@ public class ChunksWriter {
                         && AutoTaggingProcessor.holdsTaggedForm((PDXForm) drawn, operatorStreamKey.getPageNumber(), 0);
                 if (ownContent || innerContent) {
                     PDXObject pdxObject = drawn != null ? drawn : resourceHandler.getXObject(drawnName);
-                    if (!(pdxObject instanceof PDXForm)) {
+                    // A form drawn from inside itself is not entered again; a cycle needs an
+                    // indirect object, so a form without a key cannot be one.
+                    COSKey formKey = pdxObject instanceof PDXForm ? pdxObject.getObject().getKey() : null;
+                    if (!(pdxObject instanceof PDXForm) || formKey != null && enteredForms.contains(formKey)) {
                         processContentOperator(result, rawOperator, arguments, operatorIndex, operatorIndexesToStreamInfosMap, operatorName, operatorStreamKey);
                         break;
                     }
@@ -130,9 +145,18 @@ public class ChunksWriter {
                     StaticResources.getDocument().getDocument().addChangedObject(pdxObject.getObject());
                     PDXForm pdxForm = (PDXForm)pdxObject;
                     GraphicsState xFormGraphicsState = graphicsState.clone();
-                    AutoTaggingProcessor.setUpContents(pdxForm.getObject(), new ChunksWriter(xFormGraphicsState,
-                        resourceHandler.getExtendedResources(pdxForm.getResources())).processTokens(
-                            ChunksWriter.getTokens(pdxForm), xObjectOperatorStreamKey));
+                    if (formKey != null) {
+                        enteredForms.add(formKey);
+                    }
+                    try {
+                        AutoTaggingProcessor.setUpContents(pdxForm.getObject(), new ChunksWriter(xFormGraphicsState,
+                            resourceHandler.getExtendedResources(pdxForm.getResources()), enteredForms).processTokens(
+                                ChunksWriter.getTokens(pdxForm), xObjectOperatorStreamKey));
+                    } finally {
+                        if (formKey != null) {
+                            enteredForms.remove(formKey);
+                        }
+                    }
                     // Preserve the Do operator in the parent stream so the XObject is still invoked
                     result.addAll(arguments);
                     result.add(rawOperator);
