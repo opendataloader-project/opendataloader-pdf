@@ -10,8 +10,13 @@ counted) and reports:
   idtree        /IDTree in the StructTreeRoot (Table 322: required if any element has /ID)
   dangling      marked-content IDs (MCIDs) that elements reference but the page content lacks
   empty         elements without /K (no content and no children)
-Exit code 1 if any file has duplicate IDs, IDs without IDTree, or dangling MCIDs.
-Limitation: MCIDs in named property lists (BDC /Tag /Name) are not resolved.
+  table         Table > TR > TH/TD (TR also in THead, TBody, TFoot), and each TH and TD has a child
+Exit code 1 if any file has no structure tree, duplicate IDs, IDs without IDTree, dangling MCIDs,
+or a table problem.
+Limitations: MCIDs in named property lists (BDC /Tag /Name) are not resolved. The MCIDs of a page
+are the "/MCID <n>" byte matches in its /Contents, so a match in a text string also counts. An MCR
+with /Stm (content in a form XObject) is checked against the page content and can show as dangling.
+Types that /RoleMap maps are not resolved.
 """
 
 from __future__ import annotations
@@ -63,7 +68,7 @@ def inspect(path: str) -> dict:
     catalog = deref(objs, trailer["/Root"]) or {}
     root_ref = catalog.get("/StructTreeRoot")
     result = {"file": path, "tagged": bool(root_ref), "types": {}, "with_id": 0, "dup_ids": {},
-              "idtree": False, "dangling": [], "empty": collections.Counter()}
+              "idtree": False, "dangling": [], "empty": collections.Counter(), "table": []}
     if not root_ref:
         return result
     root = deref(objs, root_ref) or {}
@@ -72,10 +77,10 @@ def inspect(path: str) -> dict:
     refs_by_page: dict[str, set[int]] = collections.defaultdict(set)
     seen: set[str] = set()
 
-    def walk(node, parent_pg):
+    def walk(node, parent_pg, parent_s=None):
         if isinstance(node, list):
             for kid in node:
-                walk(kid, parent_pg)
+                walk(kid, parent_pg, parent_s)
             return
         if isinstance(node, int):
             if parent_pg:
@@ -96,13 +101,20 @@ def inspect(path: str) -> dict:
             return
         if d.get("/Type") == "/OBJR":
             return
-        if "/S" in d:
-            types[d["/S"]] += 1
+        s = d.get("/S")
+        if s:
+            types[s] += 1
             if "/ID" in d:
-                ids[d["/ID"]].append(d["/S"])
+                ids[d["/ID"]].append(s)
             if "/K" not in d:
-                result["empty"][d["/S"]] += 1
-        walk(d.get("/K", []), d.get("/Pg", parent_pg))
+                result["empty"][s] += 1
+            if s in ("/TH", "/TD") and parent_s != "/TR":
+                result["table"].append(f"{s.lstrip('/')} in {str(parent_s).lstrip('/')}, not in TR")
+            elif s == "/TR" and parent_s not in ("/Table", "/THead", "/TBody", "/TFoot"):
+                result["table"].append(f"TR in {str(parent_s).lstrip('/')}, not in Table")
+            if s in ("/TH", "/TD") and d.get("/K") in (None, []):
+                result["table"].append(f"{s.lstrip('/')} without a child")
+        walk(d.get("/K", []), d.get("/Pg", parent_pg), s or parent_s)
 
     walk(root.get("/K", []), None)
     result["types"] = dict(types)
@@ -121,11 +133,13 @@ def summary(r: dict) -> str:
     t = ", ".join(f"{k.lstrip('/')} {v}" for k, v in sorted(r["types"].items()))
     lines = [f"{r['file']}: {t}",
              f"  ids: {r['with_id']} elements, {len(r['dup_ids'])} duplicate values; IDTree: {'yes' if r['idtree'] else 'no'}",
-             f"  dangling MCIDs: {len(r['dangling'])}; elements without /K: {sum(r['empty'].values())}"]
+             f"  dangling MCIDs: {len(r['dangling'])}; elements without /K: {sum(r['empty'].values())}; table problems: {len(r['table'])}"]
     for value, kinds in list(r["dup_ids"].items())[:5]:
         lines.append(f"    duplicate /ID {value}: {', '.join(k.lstrip('/') for k in kinds)}")
     for d in r["dangling"][:5]:
         lines.append(f"    dangling MCID {d['mcid']} on page {d['page']}")
+    for problem in r["table"][:5]:
+        lines.append(f"    table: {problem}")
     return "\n".join(lines)
 
 
@@ -137,7 +151,8 @@ def main(argv: list[str]) -> int:
         return 2
     results = [inspect(f) for f in files]
     print(json.dumps(results, indent=1) if as_json else "\n".join(summary(r) for r in results))
-    bad = any(r["dup_ids"] or (r["with_id"] and not r["idtree"]) or r["dangling"] for r in results)
+    bad = any(not r["tagged"] or r["dup_ids"] or (r["with_id"] and not r["idtree"]) or r["dangling"] or r["table"]
+              for r in results)  # a tagged output that lost its structure tree fails (#836)
     return 1 if bad else 0
 
 

@@ -312,12 +312,17 @@ def scan_text_changes(repo: str, old: str, new: str, oldpath: str, path: str, sc
     rules = API.get(lg or "", []) if lg or "." in path.rsplit("/", 1)[-1] else [r for rs in API.values() for r in rs]
     n = 0
     removed_asserts = 0
+    header = False
     for line in patch.split("\n"):
+        if line.startswith("diff --git "):
+            header = True
+            continue
         if line.startswith("@@"):
+            header = False
             m = re.search(r"\+(\d+)", line)
             n = int(m.group(1)) if m else 0
             continue
-        if line.startswith(("+++", "---")):
+        if header:  # "---" and "+++" are file headers only here: an added line "++i" is "+++i" (#836)
             continue
         if line.startswith("-"):
             if cat == "test" and re.search(r"\bassert|\bexpect\(|\bverify\(", line):
@@ -376,12 +381,13 @@ def main(argv: list[str] | None = None) -> int:
         result = {"range": [a.old, a.new], "hits": sc.hits}
     else:
         sc = Scan()
-        for f in a.files:
+        labels = [f"{k}:{f.rsplit('/', 1)[-1]}" for k, f in enumerate(a.files, 1)]  # before/x.txt and after/x.txt stay apart (#836)
+        for f, label in zip(a.files, labels):
             with open(f, encoding="utf-8", errors="replace") as fh:
                 for i, line in enumerate(fh, 1):
                     for rule, val in pii_hits(line):
-                        sc.add(f"pii:{rule}", "high", f.rsplit("/", 1)[-1], i, val)
-        result = {"files": [f.rsplit("/", 1)[-1] for f in a.files], "hits": sc.hits}
+                        sc.add(f"pii:{rule}", "high", label, i, val)
+        result = {"files": labels, "hits": sc.hits}
     with open(a.out, "w", encoding="utf-8") as f:
         json.dump(result, f, indent=1)
     by = {}

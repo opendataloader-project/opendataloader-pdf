@@ -31,12 +31,12 @@ ruff check <files> > /work/out/ruff.log 2>&1; echo "ruff exit $?" >> /work/out/r
 black --diff <files> > /work/out/black.log 2>&1; echo "black exit $?" >> /work/out/black.log
 cd /work/tree/node/opendataloader-pdf
 pnpm exec eslint <files> > /work/out/eslint.log 2>&1; echo "eslint exit $?" >> /work/out/eslint.log
-for f in <files>; do pnpm exec prettier "$f" | diff -u "$f" -; done > /work/out/prettier.log 2>&1
+for f in <files>; do pnpm exec prettier "$f" > "/work/out/prettier.out" 2>&1; echo "prettier $f exit $?"; diff -u "$f" /work/out/prettier.out; done > /work/out/prettier.log 2>&1
 ```
 
 - `-fn`: Maven does not skip the CLI module when core has findings. The exit code is then 0. Read the list.
 - Do not use `-q` with checkstyle. It hides the findings.
-- A tool counts only if its log shows that it ran. Each Maven log must contain the goal line (`--- checkstyle:` or `--- spotbugs:`) for `opendataloader-pdf-core` and for `opendataloader-pdf-cli`. If a goal line is missing, or the log contains `COMPILATION ERROR` or `Could not resolve`, the tool did not run. For the other tools, an exit line without a "not found" error shows that it ran.
+- A tool counts only if its log shows that it ran. Each Maven log must contain the goal line (`--- checkstyle:` or `--- spotbugs:`) for `opendataloader-pdf-core` and for `opendataloader-pdf-cli`. If a goal line is missing, or the log contains `COMPILATION ERROR` or `Could not resolve`, the tool did not run. For the other tools, an exit line without a "not found" error shows that it ran, if the exit code is 0 or 1 (prettier: 0). Any other code is an error of the tool, for example a configuration error (ruff, eslint, prettier: 2; black: 123): the tool did not check the files.
 - Formatters: a new file must have no diff. In a changed file, no hunk can touch the changed lines.
 - Skip generated files (`*.generated.ts`, `*_generated.py`).
 
@@ -54,7 +54,7 @@ Each kind of change needs changes in other files. A missing file is a finding.
 
 A pull request does not change `content/docs/` (the release makes it) or `CHANGELOG.md` (the release notes come from pull request titles).
 
-The generated files must agree with the merge. Copy `scripts/generate-options.mjs` and `scripts/utils.mjs` of `main` into the run copy of the merge (C1), then run:
+The generated files must agree with the merge. If the merge does not change `scripts/generate-options.mjs` or `scripts/utils.mjs`, copy them from `main` into the run copy of the merge (C1). If it changes them (for example `LIST_OPTIONS` for a new list option), keep the merge's copies, and review their diff as code of the PR: then this check shows only that the generated files are what the merge's generator writes. Then run:
 
 ```bash
 java -Djava.awt.headless=true -jar <merge jar> --export-options > /work/out/options.export.json \

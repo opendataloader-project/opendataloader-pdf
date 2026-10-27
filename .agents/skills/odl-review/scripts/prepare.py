@@ -418,9 +418,9 @@ def check_tree(a: argparse.Namespace) -> int:
     """Refuse a tree that is not what `trees` wrote: a path outside the git objects, or a changed file (#721)."""
     tree = os.path.abspath(a.tree).rstrip(os.sep)
     path = tree + ".manifest"
-    if not os.path.isfile(path):
-        print(f"no manifest for {tree} (made by an older prepare.py): not checked")
-        return 0
+    if not os.path.isfile(path):  # a wrong path, or a removed manifest, is not a checked tree (#836)
+        print(f"refused: no manifest for {tree}; run prepare.py trees again")
+        return 13
     with open(path, encoding="utf-8") as f:
         want = json.load(f)
     have = tree_listing(tree)
@@ -562,14 +562,17 @@ def trees(a: argparse.Namespace) -> int:
     moved = keep_old_head_files(rdir, st["head"])
     if moved:
         print(f"the head changed before a post: moved the files of the old head to {moved[0]}/: {moved[1]}")
-    for name in ("pr.json", "kind.json", "files.json", "diff.patch"):  # no file of an older head stays if this run stops
+    # No file of an older head stays if this run stops, or if this head has no new.diff (a force push, #836).
+    for name in ("pr.json", "kind.json", "files.json", "diff.patch", "earlier-review.md", "new.diff"):
         if os.path.exists(os.path.join(rdir, name)):
             os.remove(os.path.join(rdir, name))
     M, H = st["main"], st["head"]
     B = git(a.git, "merge-base", M, H).strip()
     mt = subprocess.run(["git", "-C", a.git, "merge-tree", "--write-tree", "--name-only", "--no-messages", M, H], capture_output=True)
+    if mt.returncode not in (0, 1):  # 1 is a conflict; any other code is an error of git (#836)
+        raise SystemExit(f"git merge-tree failed ({mt.returncode}): {mt.stderr.decode(errors='replace').strip()[:300]}")
     out = mt.stdout.decode().split("\n")
-    conflict = mt.returncode != 0
+    conflict = mt.returncode == 1
     C = None
     if not conflict:
         tree = out[0].strip()

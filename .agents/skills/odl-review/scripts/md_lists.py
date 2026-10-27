@@ -17,7 +17,7 @@ import sys
 
 from markdown_it import MarkdownIt
 
-NUMBER = re.compile(r"^\s*(\d{1,9})[.)]")
+NUMBER = re.compile(r"^(?:\s*>)*\s*(\d{1,9})[.)]")  # also inside a blockquote (#836)
 
 
 def check(path: str) -> list[str]:

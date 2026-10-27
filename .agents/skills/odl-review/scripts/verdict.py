@@ -127,6 +127,12 @@ def needed(check: dict, kind: str, paths: list[str], categories: set[str] | None
     return any(glob_match(p, g) for p in paths for g in check.get("paths", []))
 
 
+def must_assess(h: dict) -> bool:
+    """A precedent hit that the plan must assess: a decision, a revert, a marked comment, or reverted lines."""
+    return h["source"] in ("closed-pr", "issue-not-planned", "git-revert", "code-comment") \
+        or (h["source"] == "git-line-history" and bool(h.get("markers") or h.get("reverts")))
+
+
 def as_list(v) -> list:
     if isinstance(v, list):
         return [x for x in v if isinstance(x, str)]
@@ -313,8 +319,7 @@ def compute(rdir: str, catalog_path: str) -> dict:
             except (OSError, ValueError):
                 r["hold"].append(f"the precedents of round {pr['round'] - 1} cannot be read")
     for hid, h in hits.items():
-        must = h["source"] in ("closed-pr", "issue-not-planned", "git-revert", "code-comment") \
-            or (h["source"] == "git-line-history" and (h.get("markers") or h.get("reverts")))
+        must = must_assess(h)
         new = earlier_refs is not None and (h.get("source"), h.get("ref")) not in earlier_refs
         if (must or new) and hid not in assessed:
             why = "reverts lines of it" if h.get("reverts") else f"new since round {pr['round'] - 1}" if new else ""
@@ -329,6 +334,8 @@ def compute(rdir: str, catalog_path: str) -> dict:
             r["notes"].append(f"{hid} {h['ref']} is not a maintainer decision (no decider, or the author of this PR); ignored")
             continue
         if a.get("covers") is not True:
+            if must_assess(h) and not has_ev(a.get("evidence")):  # "does not cover" is a claim too (#836)
+                r["hold"].append(f"precedent {hid}: 'does not cover' needs passing evidence")
             continue
         if not has_ev(a.get("evidence")):
             r["hold"].append(f"precedent {hid}: its assessment has no passing evidence")
@@ -445,7 +452,7 @@ def compute(rdir: str, catalog_path: str) -> dict:
         elif r["hold"]:
             parts.append("Hold")
         else:
-            ids = [f.split(" ", 1)[0] for f in r["followup"]]
+            ids = [f.split(":", 1)[0] if f.startswith("case ") else f.split(" ", 1)[0] for f in r["followup"]]  # "case 3: ..." (#836)
             extra = ([f"unverified: {', '.join(r['gaps'])}"] if r["gaps"] else []) + ([f"follow-up by the maintainer: {', '.join(ids)}"] if ids else [])
             parts.append("Approve" + (f" ({'; '.join(extra)})" if extra else ""))
         verdict = ", then ".join(parts)

@@ -22,14 +22,15 @@ rm -rf "$OUT"; mkdir -p "$OUT"
 for side in main merge; do
   jar=$MAIN; [ $side = merge ] && jar=$MERGE
   for d in "$corpus"/*/; do
+    [ -d "$d" ] || continue  # a corpus without subfolders (#836)
     d=${d%/}; name=${d##*/}
     java -Djava.awt.headless=true -jar "$jar" -f json,markdown,html,text,tagged-pdf "$@" -o "$OUT/$side/$name" "$d" >> "$OUT/$side.log" 2>&1
     echo "$side $name: exit $?" >> "$OUT/$side.log"
   done
-  tops=$(find "$corpus" -maxdepth 1 -type f -name '*.pdf' | sort)
-  if [ -n "$tops" ]; then  # the PDFs at the top of the corpus, as one more folder
-    # shellcheck disable=SC2086
-    java -Djava.awt.headless=true -jar "$jar" -f json,markdown,html,text,tagged-pdf "$@" -o "$OUT/$side/_top" $tops >> "$OUT/$side.log" 2>&1
+  tops=()  # one element per PDF, also for a name with a space (#836)
+  while IFS= read -r -d '' p; do tops+=("$p"); done < <(find "$corpus" -maxdepth 1 -type f -name '*.pdf' -print0 | sort -z)
+  if [ ${#tops[@]} -gt 0 ]; then  # the PDFs at the top of the corpus, as one more folder
+    java -Djava.awt.headless=true -jar "$jar" -f json,markdown,html,text,tagged-pdf "$@" -o "$OUT/$side/_top" "${tops[@]}" >> "$OUT/$side.log" 2>&1
     echo "$side _top: exit $?" >> "$OUT/$side.log"
   fi
   grep -a -E '^Error|Exception during processing file' "$OUT/$side.log" | sed 's/[0-9]\{4\}-[0-9-]* [0-9:.,]*//' > "$OUT/$side.errors"

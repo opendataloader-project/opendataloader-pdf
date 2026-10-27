@@ -51,8 +51,8 @@ def compare(base_path: str, head_path: str) -> int:
     b, h = (json.load(open(p)) for p in (base_path, head_path))
     bad = []
     commits = [Path(p + ".commit").read_text().strip() if Path(p + ".commit").exists() else None for p in (base_path, head_path)]
-    if None not in commits and commits[0] != commits[1]:
-        bad.append(f"benchmark commits differ: {commits[0]} vs {commits[1]}; score both again")
+    if not all(commits) or commits[0] != commits[1]:  # a missing or empty commit is not the same revision (#836)
+        bad.append(f"benchmark commits missing or different: {commits[0]!r} vs {commits[1]!r}; score both again")
     for m in ("overall", "nid", "teds", "mhs"):
         x, y = b["metrics"]["score"][f"{m}_mean"], h["metrics"]["score"][f"{m}_mean"]
         print(f"{m}: {x:.4f} -> {y:.4f} ({y - x:+.4f})")
