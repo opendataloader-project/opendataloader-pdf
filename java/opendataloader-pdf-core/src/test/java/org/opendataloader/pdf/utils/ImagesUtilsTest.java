@@ -380,6 +380,45 @@ class ImagesUtilsTest {
     }
 
     /**
+     * A normal large image (well above the 4pt minimum on its smaller side)
+     * must be treated as renderable.
+     */
+    @Test
+    void isRenderableImage_normalLargeImage_isKept() {
+        ImageChunk imageChunk = new ImageChunk(new BoundingBox(0, 0, 0, 200, 150));
+        assertTrue(ImagesUtils.isRenderableImage(imageChunk));
+    }
+
+    /**
+     * A 3x2-pixel-scale vector-graphic/glyph fragment (min side ~1.5pt) is
+     * degenerate noise and must be dropped.
+     */
+    @Test
+    void isRenderableImage_tinyFragment_isDropped() {
+        ImageChunk imageChunk = new ImageChunk(new BoundingBox(0, 0, 0, 2.2, 1.5));
+        assertFalse(ImagesUtils.isRenderableImage(imageChunk));
+    }
+
+    /**
+     * A hairline decorative rule (very wide but under 4pt tall) must be dropped.
+     */
+    @Test
+    void isRenderableImage_hairlineRule_isDropped() {
+        ImageChunk imageChunk = new ImageChunk(new BoundingBox(0, 0, 0, 357, 1.4));
+        assertFalse(ImagesUtils.isRenderableImage(imageChunk));
+    }
+
+    /**
+     * A small-but-real logo (15.6pt x 13.6pt) is legitimate content and must
+     * be kept even though it is small.
+     */
+    @Test
+    void isRenderableImage_smallLogo_isKept() {
+        ImageChunk imageChunk = new ImageChunk(new BoundingBox(0, 0, 0, 15.6, 13.6));
+        assertTrue(ImagesUtils.isRenderableImage(imageChunk));
+    }
+
+    /**
      * Regression guard for the non‑default DPI path.
      *
      * When ImagesUtils is constructed with a custom resolution
