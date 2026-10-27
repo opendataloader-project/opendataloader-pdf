@@ -314,7 +314,10 @@ def compute(rdir: str, catalog_path: str) -> dict:
     earlier_refs = None
     if isinstance(pr.get("round"), int) and pr["round"] > 1:
         prev = os.path.join(os.path.dirname(os.path.abspath(x.rdir)), f"r{pr['round'] - 1}", "precedents.json")
-        if os.path.exists(prev):
+        if not os.path.exists(prev):  # the earlier review was made elsewhere, or its folder is gone: each hit is new (#836)
+            earlier_refs = set()
+            r["notes"].append(f"no precedents.json of round {pr['round'] - 1}: each precedent hit counts as new")
+        else:
             try:
                 with open(prev, encoding="utf-8") as f:
                     earlier_refs = {(h.get("source"), h.get("ref")) for h in json.load(f).get("hits", []) if isinstance(h, dict)}

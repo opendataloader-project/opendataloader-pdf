@@ -1660,10 +1660,12 @@ def x9_new_hits(tmp):
     complete_round(rdir, "bugfix")
     edit(rdir, "plan.json", lambda p: p.update(earlier_requests=[{"id": "R1-1", "text": "x", "status": "resolved", "evidence": "E-Q1-solves"}]))
     old = {"github": True, "hits": [{"id": "P1", "source": "merged-pr", "ref": "#10", "title": "old", "by": "maint"}], "failed_queries": []}
-    os.makedirs(os.path.join(os.path.dirname(rdir), "r1"), exist_ok=True)
-    dump(os.path.join(os.path.dirname(rdir), "r1"), "precedents.json", old)
     new = {"github": True, "hits": old["hits"] + [{"id": "P2", "source": "merged-pr", "ref": "#20", "title": "new", "by": "maint"}], "failed_queries": []}
     dump(rdir, "precedents.json", new)
+    hold = verdict(rdir)["reasons"]["hold"]  # #836: round 1 was reviewed elsewhere, so no hit is known to be old
+    assert all(any(p in x and "new since round 1" in x for x in hold) for p in ("P1", "P2")), hold
+    os.makedirs(os.path.join(os.path.dirname(rdir), "r1"), exist_ok=True)
+    dump(os.path.join(os.path.dirname(rdir), "r1"), "precedents.json", old)
     v = verdict(rdir)
     hold = v["reasons"]["hold"]
     assert any("P2" in x and "new since round 1" in x for x in hold) and not any("P1" in x for x in hold), hold
@@ -1673,7 +1675,7 @@ def x9_new_hits(tmp):
     edit(rdir, "plan.json", lambda p: p["precedents"][0].update(evidence="E-scan"))
     hold = verdict(rdir)["reasons"]["hold"]
     assert not any("P2" in x for x in hold), hold
-    return "a hit new since round 1 -> must be assessed, and 'does not cover' needs evidence; an old one is not"
+    return "a hit new since round 1 (each hit, if round 1 has no precedents.json) -> must be assessed, and 'does not cover' needs evidence; an old one is not"
 
 
 def x4_ci_old_run(tmp):
