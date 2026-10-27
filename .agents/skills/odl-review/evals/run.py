@@ -153,7 +153,8 @@ def complete_round(rdir, kind, extra_evidence=(), precedents=None):
             expl[h["id"]] = {"text": "eval", "evidence": "E-scan"}
     evidence.append({"id": "E-scan", "condition": "scan-explained", "state": "pass", "head": pr["head"], "main": pr["main"], "source": "eval"})
     for side in ("release", "main"):
-        evidence.append({"id": f"E-{side}", "condition": f"run-{side}", "state": "fail", "head": pr["head"], "main": pr["main"], "source": "eval"})
+        evidence.append({"id": f"E-{side}", "condition": f"run-{side}", "state": "fail", "head": pr["head"], "main": pr["main"],
+                         "env": "linux/arm64 eval", "source": "eval"})
     evidence += list(extra_evidence)
     plan = {"kind": kind, "checks": checks, "scan_explanations": expl, "precedents": [],
             "q1_reproduce": {"release": "fail", "main": "fail", "same_environment": True,
@@ -1666,7 +1667,13 @@ def x9_new_hits(tmp):
     v = verdict(rdir)
     hold = v["reasons"]["hold"]
     assert any("P2" in x and "new since round 1" in x for x in hold) and not any("P1" in x for x in hold), hold
-    return "a hit new since round 1 -> must be assessed; an old one is not"
+    edit(rdir, "plan.json", lambda p: p.update(precedents=[{"id": "P2", "covers": False}]))
+    hold = verdict(rdir)["reasons"]["hold"]
+    assert any("P2" in x and "does not cover" in x for x in hold), hold  # #836: a new hit is a required assessment too
+    edit(rdir, "plan.json", lambda p: p["precedents"][0].update(evidence="E-scan"))
+    hold = verdict(rdir)["reasons"]["hold"]
+    assert not any("P2" in x for x in hold), hold
+    return "a hit new since round 1 -> must be assessed, and 'does not cover' needs evidence; an old one is not"
 
 
 def x4_ci_old_run(tmp):
@@ -1839,7 +1846,7 @@ def x17_suite_new_failing(tmp):
 
 
 def x18_trees_round_files(tmp):
-    """#836: after a force push, no new.diff of the old head stays; a git error of merge-tree is not a conflict; a tree without a manifest is refused."""
+    """#836: after a force push, no new.diff of the old head stays; a git error of merge-tree is not a conflict, and after that stopped run a new head still moves the old files aside; a tree without a manifest is refused."""
     repo = new_repo(tmp)
     m = commit(repo, {"README.md": "# x\n"})
     r1 = commit(repo, {"java/x/src/main/A.java": "class A {}\n"})
@@ -1859,16 +1866,27 @@ def x18_trees_round_files(tmp):
     os.chmod(os.path.join(fake, "git"), 0o755)
     env = dict(os.environ, PATH=fake + os.pathsep + os.environ["PATH"])
     work = os.path.join(tmp, "work3")
+    r3 = os.path.join(work, "1602", "r1")
     fx = os.path.join(tmp, "state-1602.json")
-    with open(fx, "w") as f:
-        json.dump(state(h, m, number=1602), f)
-    py("prepare.py", "fetch", "--fixture", fx, "--pr", "1602", "--work", work, "--git", repo, env=env)
-    res = py("prepare.py", "trees", "--pr", "1602", "--work", work, "--git", repo, env=env, check=False)
-    assert res.returncode != 0 and "merge-tree failed (129)" in res.stderr and not os.path.exists(os.path.join(work, "1602", "r1", "pr.json")), (res.returncode, res.stderr[-300:])
+
+    def fetch_trees(head, run_env=None):
+        with open(fx, "w") as f:
+            json.dump(state(head, m, number=1602), f)
+        py("prepare.py", "fetch", "--fixture", fx, "--pr", "1602", "--work", work, "--git", repo, env=run_env)
+        return py("prepare.py", "trees", "--pr", "1602", "--work", work, "--git", repo, env=run_env, check=False)
+    fetch_trees(h)
+    with open(os.path.join(r3, "plan.json"), "w") as f:
+        f.write("{}")
+    res = fetch_trees(h, env)
+    assert res.returncode != 0 and "merge-tree failed (129)" in res.stderr and not os.path.exists(os.path.join(r3, "pr.json")), (res.returncode, res.stderr[-300:])
+    # The stopped run left the plan of head h without pr.json; head.txt still names h, so a new head moves the plan aside.
+    res = fetch_trees(h2)
+    assert res.returncode == 0 and os.path.exists(os.path.join(r3, f"old-{h[:8]}", "plan.json")) and not os.path.exists(os.path.join(r3, "plan.json")), res.stdout
     os.remove(os.path.join(rdir, "trees", "main.manifest"))
     res = py("prepare.py", "check-tree", "--tree", os.path.join(rdir, "trees", "main"), check=False)
     assert res.returncode == 13 and "no manifest" in res.stdout, (res.returncode, res.stdout)
-    return "force push: no new.diff of the old head; merge-tree exit 129 -> an error, not a conflict; no manifest -> check-tree 13"
+    return ("force push: no new.diff of the old head; merge-tree exit 129 -> an error, not a conflict; after that stopped run, "
+            "a new head moves the old plan aside (head.txt); no manifest -> check-tree 13")
 
 
 def x19_verdict_precedent_followup(tmp):
@@ -1910,6 +1928,8 @@ def x20_run_tool_copies(tmp):
     open(os.path.join(tree, "f"), "w").write("x")
     r = sh(["bash", os.path.join(SCRIPTS, "isolate.reference.sh"), "run", tree, "lbl", "60", "true"], env=env, check=False)
     assert r.returncode == 5 and "no manifest" in r.stdout, (r.returncode, r.stdout)
+    if not shutil.which("rsync"):  # without rsync, exit 4 would not show that a failed copy stops the run
+        raise Skip("rsync is not on PATH")
     src = os.path.join(tmp, "src")
     os.makedirs(src)
     secret = os.path.join(src, "unreadable")
@@ -2058,6 +2078,29 @@ def x26_kinds(tmp):
     return "test -> Q1-tests (missing -> Hold); mixed -> Q1-solves and Q3-tests"
 
 
+def x27_verdict_records(tmp):
+    """#836: verdict.md lists each refuted objection for the post gate; the release run and the main run of Q1-reproduce need the same env."""
+    rdir, pr = fixture_round(tmp, "v2", "code", ["java/x/src/main/A.java"], "no-output-change")
+    dump(rdir, "objections.json", [{"id": "O1", "panel": "evidence", "claim": "the record is of another run", "input": "x",
+                                    "severity": "major", "status": "refuted", "security": True, "evidence": "E-scan", "accepted_by": "panel round 2"}])
+    v = verdict(rdir)
+    text = V.render(v)
+    assert v["refuted_objections"] and "Refuted objections" in text and "O1 (major, security)" in text and "panel round 2" in text, text
+    rdir2, _ = fixture_round(tmp, "v3", "code", ["java/x/src/main/A.java"], "bugfix")
+    hold = verdict(rdir2)["reasons"]["hold"]
+    assert not any("same 'env'" in x for x in hold), hold
+    with open(os.path.join(rdir2, "evidence.jsonl")) as f:
+        recs = [json.loads(line) for line in f if line.strip()]
+    for rec in recs:
+        if rec["id"] == "E-main":
+            rec["env"] = "linux/amd64 other"
+    with open(os.path.join(rdir2, "evidence.jsonl"), "w") as f:
+        f.write("\n".join(json.dumps(rec) for rec in recs) + "\n")
+    hold = verdict(rdir2)["reasons"]["hold"]
+    assert any("same 'env'" in x for x in hold), hold
+    return "a refuted security objection is listed in verdict.md; release and main runs with different env -> Hold"
+
+
 EVALS = [("E1", e1_instruction_files), ("E2", e2_fake_precedent), ("E3", e3_measuring_tools_from_pr),
          ("E6", e6_dependabot_replay), ("E7", e7_fixture_pdf_replay), ("E8", e8_thead_against_earlier_decision),
          ("R703", r703_replay), ("R805", r805_replay), ("R806", r806_replay), ("U1", u_verdict_rules),
@@ -2078,7 +2121,8 @@ EVALS = [("E1", e1_instruction_files), ("E2", e2_fake_precedent), ("E3", e3_meas
          ("X18-trees-round-files", x18_trees_round_files), ("X19-verdict-precedent-followup", x19_verdict_precedent_followup),
          ("X20-runtool-copies", x20_run_tool_copies), ("X21-inspect-pdf", x21_inspect_pdf), ("X22-bench-commit", x22_bench_commit),
          ("X23-demo-count", x23_demo_count), ("X24-md-lists-quote", x24_md_lists_quote),
-         ("X25-side-effects-names", x25_side_effects_names), ("X26-kinds", x26_kinds)]
+         ("X25-side-effects-names", x25_side_effects_names), ("X26-kinds", x26_kinds),
+         ("X27-verdict-records", x27_verdict_records)]
 
 
 def main(argv):
