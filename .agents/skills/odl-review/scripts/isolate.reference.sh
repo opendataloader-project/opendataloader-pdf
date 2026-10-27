@@ -7,7 +7,8 @@
 #       Writes $VERDICT_WORK/env-check-<settings id>.txt. Exit 0 only if all properties pass.
 #       Each set of settings (image, limits, mounts) has its own check.
 #   isolate.reference.sh run <src-tree> <label> <timeout-sec> '<command in /work/tree>'
-#       Refuses to run if the last check did not pass, or used other settings.
+#       Refuses to run if the last check did not pass, or used other settings (exit 3), if
+#       prepare.py check-tree refuses a tree of trees/ (exit 5), or if a copy fails (exit 4).
 #       Copies <src-tree> (without .git and target/) to a new run folder, copies
 #       $VERDICT_WORK/extra/<label>/ over it, and runs the command in a new container, in a copy
 #       of that folder on a new Docker volume (/scratch/tree; removed after the run).
@@ -64,14 +65,15 @@ if [ "${1:-}" = check ]; then
 fi
 
 [ "${1:-}" = run ] || { sed -n '2,24p' "$0"; exit 2; }
-SRC=$2; LABEL=$3; T=$4; CMD=$5
+SRC=${2%/}; LABEL=$3; T=$4; CMD=$5
 [[ "$LABEL" =~ ^[A-Za-z0-9._-]+$ ]] || { echo "bad label: $LABEL"; exit 2; }
 CHK=$W/env-check-$settings_id.txt
 if [ ! -f "$CHK" ] || grep -q fail "$CHK" || [ "$(grep -c '=pass' "$CHK")" -ne 6 ]; then
   echo "refused: no passing isolation check for these settings. Run: $0 check"; exit 3
 fi
 # A tree of prepare.py must still be what it wrote (C6): an agent whose shell was in the tree can add files there (#721).
-if [ -f "$SRC.manifest" ]; then
+# A folder in trees/ needs its manifest (#836); other sources, for example an empty folder, have none.
+if [ -f "$SRC.manifest" ] || [ "$(basename "$(dirname "$SRC")")" = trees ]; then
   python3 -I "$HERE/prepare.py" check-tree --tree "$SRC" || { echo "refused: the tree changed since prepare.py trees (see above)"; exit 5; }
 fi
 while :; do
@@ -85,8 +87,11 @@ VOL=verdict-$(basename "$RUN" | tr -c 'A-Za-z0-9_.-' '-')
 trap 'rm -rf "$RUN"; rmdir "$SLOT" 2>/dev/null; docker volume rm -f "$VOL" >/dev/null 2>&1' EXIT
 docker volume create "$VOL" >/dev/null
 docker run --rm --network none --cap-drop ALL --cap-add CHOWN -v "$VOL":/scratch "$IMAGE" chown 1000:1000 /scratch
-rsync -a --exclude .git --exclude 'target/' "$SRC/" "$RUN/tree/"
-[ -d "$W/extra/$LABEL" ] && rsync -a "$W/extra/$LABEL/" "$RUN/tree/"
+# A run on a part of the tree can pass (for example "true"), so a failed copy stops the run (#836).
+rsync -a --exclude .git --exclude 'target/' "$SRC/" "$RUN/tree/" || { echo "refused: the copy of the tree failed"; exit 4; }
+if [ -d "$W/extra/$LABEL" ]; then
+  rsync -a "$W/extra/$LABEL/" "$RUN/tree/" || { echo "refused: the copy of extra/$LABEL failed"; exit 4; }
+fi
 mkdir -p "$RUN/out"
 rev=$(cat "$SRC.rev" 2>/dev/null || git -C "$SRC" rev-parse HEAD 2>/dev/null || echo none)
 start=$(date -u +%Y-%m-%dT%H:%M:%SZ)

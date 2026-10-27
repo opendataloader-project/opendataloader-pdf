@@ -53,7 +53,8 @@ def add(a: argparse.Namespace) -> None:
                 d = list(difflib.unified_diff(f1.read().splitlines(), f2.read().splitlines(),
                                               f"before/{name}", f"after/{name}", lineterm=""))
             diffs += d
-            rows.append(f"  {name}: {'same' if not d else str(sum(1 for x in d if x[:1] in '+-' and x[:3] not in ('+++', '---'))) + ' changed lines'}")
+            changed = sum(1 for x in d[2:] if x.startswith(("+", "-")))  # d[:2] are the file headers; "---" can be content (#836)
+            rows.append(f"  {name}: {'same' if not d else f'{changed} changed lines'}")
         else:
             state = "both" if os.path.isfile(b) and os.path.isfile(h) else ("before only" if os.path.isfile(b) else "after only")
             rows.append(f"  {name}: {state}" + ("" if state != "both" else (" (same bytes)" if sha(b) == sha(h) else " (different bytes)")))

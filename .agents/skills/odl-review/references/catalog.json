@@ -8,7 +8,7 @@
     "test": {"auto": ["test"], "forbid": ["code", "build", "workflow", "tooling"], "q1": "The tests check expected results, and no existing test is weakened"},
     "docs": {"auto": ["docs"], "forbid": ["code", "test", "build", "workflow", "tooling", "instruction", "skill", "samples"], "q1": "Earlier decisions; each command, option, and number agrees with its source"},
     "tooling": {"auto": ["tooling", "mixed"], "forbid": ["code"], "q1": "The scripts or workflows do what they say; two maintainers decide"},
-    "mixed": {"auto": ["mixed"], "q1": "Split by purpose; each purpose has its own cases"}
+    "mixed": {"auto": ["mixed"], "q1": "Split by purpose; each purpose has its own cases. Q1-solves and Q3-tests are needed: skip them with a reason if no purpose is a fix or a feature"}
   },
   "checks": [
     {"id": "Q0-direction", "question": "Q0", "title": "The approach can reach the ideal behavior", "impact": "decide", "always": true,
@@ -19,12 +19,14 @@
      "tool": "issue quote"},
     {"id": "Q1-reproduce", "question": "Q1", "title": "Users have the problem: release and main, in the same environment", "impact": "decide", "kinds": ["bugfix"],
      "tool": "release jar and main jar in the same isolated image"},
-    {"id": "Q1-solves", "question": "Q1", "title": "This PR solves it, as the user sees the output", "impact": "block", "kinds": ["bugfix", "feature"],
+    {"id": "Q1-solves", "question": "Q1", "title": "This PR solves it, as the user sees the output", "impact": "block", "kinds": ["bugfix", "feature", "mixed"],
      "tool": "acceptance tests; demo"},
     {"id": "Q1-cause", "question": "Q1", "title": "Same-cause inputs also pass; threshold changes have cases on both sides of the old and new values", "impact": "block", "kinds": ["bugfix"],
      "tool": "acceptance tests"},
     {"id": "Q1-no-change", "question": "Q1", "title": "Outputs stay the same and the changed lines ran", "impact": "block", "kinds": ["no-output-change", "dependency"],
      "tool": "scripts/side_effects.sh; coverage (P2)"},
+    {"id": "Q1-tests", "question": "Q1", "title": "The tests check expected results, and no existing test is weakened", "impact": "block", "kinds": ["test"],
+     "tool": "the tests, read; test-assertions-removed of scripts/diff_scan.py; test_source_changes of scripts/suite_compare.py"},
     {"id": "Q2-security", "question": "Q2", "title": "No security problem and no hidden behavior", "impact": "security", "always": true,
      "tool": "security reviewer; scripts/diff_scan.py"},
     {"id": "Q2-scan", "question": "Q2", "title": "Each diff_scan hit is explained", "impact": "hold", "always": true,
@@ -43,7 +45,7 @@
     {"id": "Q2-format", "question": "Q2", "title": "The output is valid: Markdown as a CommonMark renderer shows it, the JSON schema", "impact": "block",
      "paths": ["java/*/src/main/**/markdown/**", "java/*/src/main/**/html/**", "java/*/src/main/**/json/**", "java/*/src/main/**/*Markdown*", "java/*/src/main/**/*Html*", "java/*/src/main/**/*Json*", "schema.json"],
      "tool": "scripts/md_lists.py; schema validation"},
-    {"id": "Q3-tests", "question": "Q3", "title": "A test pins each changed behavior: it fails on main with the symptom and passes on the merge", "impact": "block", "kinds": ["bugfix", "feature"],
+    {"id": "Q3-tests", "question": "Q3", "title": "A test pins each changed behavior: it fails on main with the symptom and passes on the merge", "impact": "block", "kinds": ["bugfix", "feature", "mixed"],
      "tool": "the tests of the PR, copied to main"},
     {"id": "Q3-lint", "question": "Q3", "title": "No new linter finding on the changed files", "impact": "block",
      "paths": ["java/*/src/**", "python/**/*.py", "node/**/*.ts", "node/**/*.js"], "tool": "linters, main against the merge"},

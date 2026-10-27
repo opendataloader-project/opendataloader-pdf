@@ -27,7 +27,8 @@ Each finding is a case that needs a source (SKILL.md, "Cases"):
   newly-skipped      passed on main, skipped on the merge
   newly-failing      passed on main, failed or errored on the merge
   failing-on-both    failed on main and on the merge (environment or main defect; not a PR effect)
-Exit 1 if there is a finding of the first three kinds, else 0.
+  failing-new        absent on main, failed or errored on the merge (a test of the PR that fails)
+Exit 1 if there is a finding of the first three kinds or failing-new, else 0.
 """
 
 from __future__ import annotations
@@ -82,6 +83,8 @@ def test_source_changes(repo: str, old: str, new: str) -> list[dict]:
                           "--no-ext-diff", "--no-textconv", "--src-prefix=a/", "--dst-prefix=b/", "-U0", "-M", old, new, "--",
                           ":(glob)**/src/test/**", ":(glob)python/**/tests/**", ":(glob)node/**/test/**"],
                          capture_output=True)
+    if res.returncode != 0:  # an empty list would read as "no test file changed" (#836)
+        raise SystemExit(f"git diff {old}..{new}: {res.stderr.decode(errors='replace').strip()[:300]}")
     changes, cur = [], None
     for line in res.stdout.decode("utf-8", "replace").split("\n"):
         if line.startswith("diff --git"):
@@ -142,7 +145,8 @@ def main(argv: list[str] | None = None) -> int:
     m, g = results(a.main, refused, excluded), results(a.merge, refused, excluded)
     if not m:
         raise SystemExit(f"no test reports in {a.main}: the comparison has no baseline")
-    found = {"missing-on-merge": [], "newly-skipped": [], "newly-failing": [], "failing-on-both": []}
+    found = {"missing-on-merge": [], "newly-skipped": [], "newly-failing": [], "failing-on-both": [],
+             "failing-new": sorted(tid for tid in set(g) - set(m) if g[tid] == "fail")}
     for tid, state in sorted(m.items()):
         new = g.get(tid)
         if new is None:
@@ -164,7 +168,7 @@ def main(argv: list[str] | None = None) -> int:
                + (f"; review overlay classes left out {len(excluded)}" if excluded else "")
                + (f"; refused reports {len(refused)}" if refused else ""))
     print(summary)
-    bad = any(found[k] for k in ("missing-on-merge", "newly-skipped", "newly-failing"))
+    bad = any(found[k] for k in ("missing-on-merge", "newly-skipped", "newly-failing", "failing-new"))
     if a.round_dir:
         with open(os.path.join(a.round_dir, "pr.json"), encoding="utf-8") as f:
             pr = json.load(f)

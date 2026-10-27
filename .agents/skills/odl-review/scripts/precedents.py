@@ -170,23 +170,27 @@ def git_hits(repo: str, pr: dict, files: list[dict], truncated: list[str], max_l
                 hits.append({"source": "git-revert", "ref": sha[:8], "title": subj, "date": date, "file": path,
                              "body": git(repo, "log", "-1", "--format=%B", sha)})
     patch = git(repo, "diff", *DIFF_SAFE, "-U3", "-M", old, new)
-    cur, ranges = None, {}
+    cur, ranges, header = None, {}, False
     pr_added, pr_removed = {}, {}  # meaningful lines that the PR adds and removes, per old path
     for line in patch.split("\n"):
-        if cur and line.startswith("+") and not line.startswith("+++") and meaningful(line[1:]):
+        if line.startswith("diff --git "):
+            cur, header = None, True
+            continue
+        if header and not line.startswith("@@"):  # "---" and "+++" are file headers only here (#836)
+            if line.startswith("--- a/"):
+                cur = line[6:].rstrip("\t")
+            continue
+        header = False
+        if cur and line.startswith("+") and meaningful(line[1:]):
             pr_added.setdefault(cur, set()).add(line[1:].strip())
-        elif cur and line.startswith("-") and not line.startswith("---") and meaningful(line[1:]):
+        elif cur and line.startswith("-") and meaningful(line[1:]):
             pr_removed.setdefault(cur, set()).add(line[1:].strip())
-        if line.startswith("--- a/"):
-            cur = line[6:].rstrip("\t")
-        elif line.startswith("--- /dev/null"):
-            cur = None
-        elif line.startswith("@@") and cur:
+        if line.startswith("@@") and cur:
             m = re.match(r"@@ -(\d+)(?:,(\d+))?", line)
             start, count = int(m.group(1)), int(m.group(2) or "1")
             if count:
                 ranges.setdefault(cur, []).append((start, start + count - 1))
-        elif cur and line.startswith(("-", " ")) and not line.startswith("---"):
+        elif cur and line.startswith(("-", " ")):
             text = line[1:]
             if COMMENT.match(text) and MARKERS.search(text):
                 key = (cur, text.strip())

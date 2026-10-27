@@ -1792,6 +1792,272 @@ def x15_old_head_files(tmp):
     return f"old head files in old-{h1[:8]}/ (5 paths); same head: nothing moved"
 
 
+def x16_scan_headers(tmp):
+    """#836: an added line whose text starts with "++" is a "+++" line of the patch; the scan and the precedents read it. PII hits of two files with one name stay apart."""
+    repo = new_repo(tmp)
+    m = commit(repo, {"a.js": "let i = 0;\n"})
+    h = commit(repo, {"a.js": "let i = 0;\n++i; eval(atob(\"eA==\"));\nlet j = 1;\neval(atob(\"eA==\"));\n"})
+    out = os.path.join(tmp, "scan.json")
+    py("diff_scan.py", "diff", "--git", repo, "--old", m, "--new", h, "--out", out)
+    lines = sorted({x["line"] for x in json.load(open(out))["hits"] if x["rule"] == "api:reflection"})
+    assert lines == [2, 4], lines
+    repo2 = new_repo(os.path.join(tmp, "p"))
+    commit(repo2, {"src/a.js": "let count_of_items = 0;\n++count_of_items;\n"}, msg="add the count")
+    m2 = commit(repo2, {"src/a.js": "let count_of_items = 1;\n"}, msg="drop the increment")
+    h2 = commit(repo2, {"src/a.js": "let count_of_items = 1;\n++count_of_items;\n"}, msg="pr")
+    rdir, _ = prepare(repo2, os.path.join(tmp, "p"), state(h2, m2, number=1600))
+    py("precedents.py", "--repo", "o/r", "--round-dir", rdir, "--git", repo2, "--no-github")
+    rev = next(x for x in load(rdir, "precedents.json")["hits"] if x.get("title") == "drop the increment")
+    assert rev.get("reverts"), rev
+    for d, phone in (("a", "010-2345-6789"), ("b", "010-3456-7890")):
+        os.makedirs(os.path.join(tmp, d))
+        with open(os.path.join(tmp, d, "out.txt"), "w") as f:
+            f.write(f"phone {phone}\n")
+    py("diff_scan.py", "pii", "--out", os.path.join(tmp, "pii.json"), os.path.join(tmp, "a", "out.txt"), os.path.join(tmp, "b", "out.txt"))
+    files = sorted(x["file"] for x in json.load(open(os.path.join(tmp, "pii.json")))["hits"])
+    assert files == ["1:out.txt", "2:out.txt"], files
+    return "scan hits on lines 2 and 4 (the '++' line is read); the put-back '++' line reverts; PII in a/out.txt and b/out.txt: 2 hits"
+
+
+def x17_suite_new_failing(tmp):
+    """#836: a test that only the merge has and that fails makes Q2-suite fail; a git diff that fails stops the tool."""
+    rep = os.path.join(tmp, "rep")
+    for side, body in (("main", '<testcase classname="A" name="t1"/>'),
+                       ("merge", '<testcase classname="A" name="t1"/><testcase classname="A" name="tNew"><failure/></testcase>')):
+        os.makedirs(os.path.join(rep, side))
+        with open(os.path.join(rep, side, "TEST-a.xml"), "w") as f:
+            f.write(f"<testsuite>{body}</testsuite>")
+    out = os.path.join(tmp, "suite.json")
+    args = ["--isolated", "--main", os.path.join(rep, "main"), "--merge", os.path.join(rep, "merge"), "--out", out]
+    res = py("suite_compare.py", *args, check=False)
+    assert res.returncode == 1 and json.load(open(out))["failing-new"] == ["A#tNew"], (res.returncode, res.stdout)
+    repo = new_repo(tmp)
+    h = commit(repo, {"README.md": "# x\n"})
+    res = py("suite_compare.py", *args, "--git", repo, "--old", "0" * 40, "--new", h, check=False)
+    assert res.returncode == 1 and "git diff" in res.stderr, (res.returncode, res.stdout, res.stderr[-300:])
+    return "a failing new test -> exit 1 (failing-new); an unknown commit for git diff -> stops with the git error"
+
+
+def x18_trees_round_files(tmp):
+    """#836: after a force push, no new.diff of the old head stays; a git error of merge-tree is not a conflict; a tree without a manifest is refused."""
+    repo = new_repo(tmp)
+    m = commit(repo, {"README.md": "# x\n"})
+    r1 = commit(repo, {"java/x/src/main/A.java": "class A {}\n"})
+    h = commit(repo, {"java/x/src/main/A.java": "class A { int a; }\n"})
+    review = {"user": "maint", "commit": r1, "at": "2026-10-01T00:00:00Z", "footer": f"Reviewed at {r1[:7]} · round 1",
+              "state": "CHANGES_REQUESTED", "body": "x"}
+    rdir, _ = prepare(repo, tmp, state(h, m, number=1601, reviews=[review], perms={"maint": "admin"}))
+    assert os.path.exists(os.path.join(rdir, "new.diff"))
+    h2 = commit_tree(repo, m, {"README.md": "# x\n", "java/x/src/main/A.java": "class A { int b; }\n"})
+    rdir2, _ = prepare(repo, tmp, state(h2, m, number=1601, reviews=[review], perms={"maint": "admin"}))
+    assert rdir2 == rdir and load(rdir, "pr.json")["last_review"]["in_history"] is False and not os.path.exists(os.path.join(rdir, "new.diff"))
+    real = shutil.which("git")
+    fake = os.path.join(tmp, "fakegit")
+    os.makedirs(fake)
+    with open(os.path.join(fake, "git"), "w") as f:
+        f.write(f'#!/bin/sh\nfor x in "$@"; do [ "$x" = merge-tree ] && {{ echo "fake: no merge-tree" >&2; exit 129; }}; done\nexec "{real}" "$@"\n')
+    os.chmod(os.path.join(fake, "git"), 0o755)
+    env = dict(os.environ, PATH=fake + os.pathsep + os.environ["PATH"])
+    work = os.path.join(tmp, "work3")
+    fx = os.path.join(tmp, "state-1602.json")
+    with open(fx, "w") as f:
+        json.dump(state(h, m, number=1602), f)
+    py("prepare.py", "fetch", "--fixture", fx, "--pr", "1602", "--work", work, "--git", repo, env=env)
+    res = py("prepare.py", "trees", "--pr", "1602", "--work", work, "--git", repo, env=env, check=False)
+    assert res.returncode != 0 and "merge-tree failed (129)" in res.stderr and not os.path.exists(os.path.join(work, "1602", "r1", "pr.json")), (res.returncode, res.stderr[-300:])
+    os.remove(os.path.join(rdir, "trees", "main.manifest"))
+    res = py("prepare.py", "check-tree", "--tree", os.path.join(rdir, "trees", "main"), check=False)
+    assert res.returncode == 13 and "no manifest" in res.stdout, (res.returncode, res.stdout)
+    return "force push: no new.diff of the old head; merge-tree exit 129 -> an error, not a conflict; no manifest -> check-tree 13"
+
+
+def x19_verdict_precedent_followup(tmp):
+    """#836: "does not cover" for a precedent that must be assessed needs evidence; the Approve text names the follow-up cases."""
+    rdir, pr = fixture_round(tmp, "v1", "code", ["java/x/src/main/A.java"], "no-output-change")
+    hit = {"id": "P1", "source": "closed-pr", "ref": "#5", "title": "an earlier try", "by": "maint"}
+    edit(rdir, "precedents.json", lambda p: p["hits"].append(hit))
+    edit(rdir, "plan.json", lambda p: p.update(precedents=[{"id": "P1", "covers": False}]))
+    v = verdict(rdir)
+    assert any("P1" in x and "does not cover" in x for x in v["reasons"]["hold"]), v["reasons"]["hold"]
+    edit(rdir, "plan.json", lambda p: p["precedents"][0].update(evidence="E-scan"))
+    v = verdict(rdir)
+    assert not any("P1" in x for x in v["reasons"]["hold"]), v["reasons"]["hold"]
+    add_ev(rdir, pr, {"id": "E-lint", "condition": "Q3-lint", "state": "fail"})
+    dump(rdir, "cases.json", [{"id": "C9", "ideal": "x", "source": "pr-body", "main": "pass", "pr": "fail", "type": "request", "evidence": "E-lint"}])
+    dump(rdir, "decisions.json", {"maintainer_followup": ["Q3-lint", "C9"], "approve_ok": True})
+    v = verdict(rdir)
+    assert v["verdict"] == "Approve (follow-up by the maintainer: Q3-lint, case C9)", v["verdict"]
+    return f"no evidence -> Hold; with evidence -> no Hold; {v['verdict']}"
+
+
+def x20_run_tool_copies(tmp):
+    """#836: the run tool refuses a folder of trees/ without its manifest, and stops when the copy of the tree fails."""
+    bin_dir = os.path.join(tmp, "bin")
+    os.makedirs(bin_dir)
+    log = os.path.join(tmp, "docker.log")
+    with open(os.path.join(bin_dir, "docker"), "w") as f:
+        f.write("#!/bin/bash\nprintf '%s\\n' \"$@\" >> " + log + "\n")
+    os.chmod(os.path.join(bin_dir, "docker"), 0o755)
+    work = os.path.join(tmp, "work")
+    os.makedirs(work)
+    env = dict(os.environ, PATH=bin_dir + os.pathsep + os.environ["PATH"], VERDICT_WORK=work)
+    sh(["bash", os.path.join(SCRIPTS, "isolate.reference.sh"), "check"], env=env, check=False)
+    ids = [n for n in os.listdir(work) if n.startswith("env-check-")]
+    with open(os.path.join(work, ids[0]), "w") as f:
+        f.write("".join(f"I{i}=pass\n" for i in range(1, 7)) + "settings=x\n")
+    tree = os.path.join(tmp, "r1", "trees", "main")
+    os.makedirs(tree)
+    open(os.path.join(tree, "f"), "w").write("x")
+    r = sh(["bash", os.path.join(SCRIPTS, "isolate.reference.sh"), "run", tree, "lbl", "60", "true"], env=env, check=False)
+    assert r.returncode == 5 and "no manifest" in r.stdout, (r.returncode, r.stdout)
+    src = os.path.join(tmp, "src")
+    os.makedirs(src)
+    secret = os.path.join(src, "unreadable")
+    open(secret, "w").write("x")
+    os.chmod(secret, 0)
+    try:
+        if os.access(secret, os.R_OK):
+            raise Skip("this user can read a file with mode 000 (root)")
+        r = sh(["bash", os.path.join(SCRIPTS, "isolate.reference.sh"), "run", src, "lbl2", "60", "true"], env=env, check=False)
+    finally:
+        os.chmod(secret, 0o644)
+    assert r.returncode == 4 and "copy of the tree failed" in r.stdout and not os.path.exists(os.path.join(work, "manifest.jsonl")), (r.returncode, r.stdout)
+    return "trees/main without a manifest -> exit 5; an unreadable file in the source -> rsync fails -> exit 4, no run"
+
+
+def pdf_bytes(objects):
+    """A small PDF from object bodies (object 1 is the catalog), with a correct xref table."""
+    out, offsets = bytearray(b"%PDF-1.7\n"), []
+    for i, body in enumerate(objects, 1):
+        offsets.append(len(out))
+        out += f"{i} 0 obj\n".encode() + body + b"\nendobj\n"
+    xref = len(out)
+    out += f"xref\n0 {len(objects) + 1}\n0000000000 65535 f \n".encode() + b"".join(f"{o:010d} 00000 n \n".encode() for o in offsets)
+    out += f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n".encode()
+    return bytes(out)
+
+
+def x21_inspect_pdf(tmp):
+    """#836: inspect_pdf.py fails a PDF without a structure tree and a table that breaks Table > TR > TH/TD or has a cell without a child."""
+    if not shutil.which("qpdf"):
+        raise Skip("qpdf is not on PATH")
+    content = b"/TD <</MCID 0>> BDC EMC /TD <</MCID 1>> BDC EMC"
+
+    def tagged(table_kids, row_kids):
+        return pdf_bytes([
+            b"<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 5 0 R /MarkInfo << /Marked true >> >>",
+            b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+            b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents 4 0 R /StructParents 0 >>",
+            b"<< /Length %d >>\nstream\n" % len(content) + content + b"\nendstream",
+            b"<< /Type /StructTreeRoot /K [6 0 R] >>",
+            b"<< /Type /StructElem /S /Table /P 5 0 R /K [" + table_kids + b"] >>",
+            b"<< /Type /StructElem /S /TR /P 6 0 R /K [" + row_kids + b"] >>",
+            b"<< /Type /StructElem /S /TD /P 6 0 R /Pg 3 0 R /K 1 >>",
+            b"<< /Type /StructElem /S /TD /P 7 0 R /Pg 3 0 R /K 0 >>",
+            b"<< /Type /StructElem /S /TD /P 7 0 R >>"])
+    files = {"good": tagged(b"7 0 R", b"9 0 R"), "bad": tagged(b"7 0 R 8 0 R", b"9 0 R 10 0 R"),
+             "untagged": pdf_bytes([b"<< /Type /Catalog /Pages 2 0 R >>", b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+                                    b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] >>"])}
+    got = {}
+    for name, data in files.items():
+        path = os.path.join(tmp, f"{name}.pdf")
+        with open(path, "wb") as f:
+            f.write(data)
+        res = py("inspect_pdf.py", "--json", path, check=False)
+        got[name] = (res.returncode, json.loads(res.stdout)[0] if res.stdout.startswith("[") else res.stdout[-300:])
+    assert got["good"][0] == 0 and got["good"][1]["table"] == [], got["good"]
+    assert got["bad"][0] == 1 and sorted(got["bad"][1]["table"]) == ["TD in Table, not in TR", "TD without a child"], got["bad"]
+    assert got["untagged"][0] == 1 and got["untagged"][1]["tagged"] is False, got["untagged"]
+    return "Table > TR > TD -> 0; TD in Table and a TD without a child -> 1; no structure tree -> 1"
+
+
+def x22_bench_commit(tmp):
+    """#836: bench.py compare fails when a .commit file is missing or empty: the scores may come from different benchmark revisions."""
+    score = {"metrics": {"score": {f"{m}_mean": 0.9 for m in ("overall", "nid", "teds", "mhs")}, "missing_predictions": 0}, "documents": []}
+    paths = [os.path.join(tmp, f"{s}.json") for s in ("base", "head")]
+    for p in paths:
+        with open(p, "w") as f:
+            json.dump(score, f)
+    out = []
+    for label, commits, want in (("no .commit files", None, 1), ("empty commits", ("", ""), 1), ("same commit", ("abc", "abc"), 0)):
+        for p, c in zip(paths, commits or ("", "")):
+            if commits is None:
+                if os.path.exists(p + ".commit"):
+                    os.remove(p + ".commit")
+            else:
+                with open(p + ".commit", "w") as f:
+                    f.write(c + "\n")
+        res = py("bench.py", "compare", *paths, check=False)
+        assert res.returncode == want, (label, res.returncode, res.stdout)
+        out.append(f"{label} -> {res.returncode}")
+    return "; ".join(out)
+
+
+def x23_demo_count(tmp):
+    """#836: the demo README counts a changed line whose text is "---" (in the diff it starts with "----")."""
+    for side, text in (("b", "a\n---\nb\n"), ("h", "a\nb\n")):
+        os.makedirs(os.path.join(tmp, side))
+        with open(os.path.join(tmp, side, "x.md"), "w") as f:
+            f.write(text)
+    inp = os.path.join(tmp, "in.pdf")
+    open(inp, "wb").write(b"%PDF-1.4\n")
+    demo = os.path.join(tmp, "demo")
+    py("demo.py", "add", demo, "--case", "01-rule", "--title", "t", "--input", inp, "--command", "c", "--before", os.path.join(tmp, "b"),
+       "--after", os.path.join(tmp, "h"), "--expect", "e", "--look", "x.md")
+    readme = open(os.path.join(demo, "01-rule", "README.txt")).read()
+    assert "x.md: 1 changed lines" in readme, readme
+    return "a removed '---' line -> 1 changed lines"
+
+
+def x24_md_lists_quote(tmp):
+    """#836: md_lists.py reads the written number of an ordered list item inside a blockquote."""
+    if sh([sys.executable, "-I", "-c", "import markdown_it"], check=False).returncode:
+        raise Skip("markdown-it-py is not installed for this Python")
+    path = os.path.join(tmp, "q.md")
+    with open(path, "w") as f:
+        f.write("> 1. first\n>\n> 3. second\n")
+    res = py("md_lists.py", path, check=False)
+    assert res.returncode == 1 and "written 3, shown 2" in res.stdout, (res.returncode, res.stdout)
+    return "'> 3.' after '> 1.' -> written 3, shown 2"
+
+
+def x25_side_effects_names(tmp):
+    """#836: side_effects.sh converts a corpus without subfolders, and a PDF whose name has a space."""
+    corpus = os.path.join(tmp, "corpus")
+    os.makedirs(corpus)
+    for name in ("a b.pdf", "c.pdf"):
+        with open(os.path.join(corpus, name), "wb") as f:
+            f.write(b"%PDF-1.4\n")
+    fake = os.path.join(tmp, "bin")
+    os.makedirs(fake)
+    with open(os.path.join(fake, "java"), "w") as f:  # writes one output per input PDF; reads nothing
+        f.write('#!/bin/bash\nout=; prev=\nfor a in "$@"; do [ "$prev" = -o ] && out=$a; prev=$a; done\n'
+                'for a in "$@"; do case $a in *.pdf) mkdir -p "$out"; : > "$out/$(basename "$a" .pdf).md";; esac; done\n')
+    os.chmod(os.path.join(fake, "java"), 0o755)
+    env = dict(os.environ, PATH=fake + os.pathsep + os.environ.get("PATH", ""))
+    run_dir = os.path.join(tmp, "run")
+    os.makedirs(run_dir)
+    res = sh(["bash", os.path.join(SCRIPTS, "side_effects.sh"), "m.jar", "n.jar", corpus, os.path.join(run_dir, "out")], cwd=run_dir, env=env, check=False)
+    made = sorted(os.listdir(os.path.join(run_dir, "out", "main", "_top")))
+    log = open(os.path.join(run_dir, "out", "main.log")).read()
+    assert made == ["a b.md", "c.md"] and "main *:" not in log, (made, log, res.stderr[-300:])
+    return "outputs: " + ", ".join(made) + "; no run on an unexpanded folder pattern"
+
+
+def x26_kinds(tmp):
+    """#836: a test-only change needs Q1-tests; a mixed change needs Q1-solves and Q3-tests (a skip needs a reason)."""
+    with open(CATALOG) as f:
+        checks = {c["id"]: c for c in json.load(f)["checks"]}
+    assert V.needed(checks["Q1-tests"], "test", ["java/x/src/test/java/ATest.java"])
+    assert V.needed(checks["Q1-solves"], "mixed", ["java/x/src/main/A.java", "java/pom.xml"])
+    assert V.needed(checks["Q3-tests"], "mixed", ["java/x/src/main/A.java", "java/pom.xml"])
+    rdir, pr = fixture_round(tmp, "k1", "test", ["java/x/src/test/java/ATest.java"], "test")
+    edit(rdir, "plan.json", lambda p: p.update(checks=[c for c in p["checks"] if c["id"] != "Q1-tests"]))
+    v = verdict(rdir)
+    assert any("Q1-tests" in x for x in v["reasons"]["hold"]), v["reasons"]["hold"]
+    return "test -> Q1-tests (missing -> Hold); mixed -> Q1-solves and Q3-tests"
+
+
 EVALS = [("E1", e1_instruction_files), ("E2", e2_fake_precedent), ("E3", e3_measuring_tools_from_pr),
          ("E6", e6_dependabot_replay), ("E7", e7_fixture_pdf_replay), ("E8", e8_thead_against_earlier_decision),
          ("R703", r703_replay), ("R805", r805_replay), ("R806", r806_replay), ("U1", u_verdict_rules),
@@ -1807,7 +2073,12 @@ EVALS = [("E1", e1_instruction_files), ("E2", e2_fake_precedent), ("E3", e3_meas
          ("X9-revert", x9_revert), ("X9-new-hits", x9_new_hits),
          ("X4-ci-old-run", x4_ci_old_run), ("X10-tree-clean", x10_tree_clean), ("X11-promises", x11_promises),
          ("X12-gain", x12_gain), ("X13-save-report", x13_save_report),
-         ("X14-cla-fresh", x14_cla_fresh), ("X15-old-head", x15_old_head_files)]
+         ("X14-cla-fresh", x14_cla_fresh), ("X15-old-head", x15_old_head_files),
+         ("X16-scan-headers", x16_scan_headers), ("X17-suite-new-failing", x17_suite_new_failing),
+         ("X18-trees-round-files", x18_trees_round_files), ("X19-verdict-precedent-followup", x19_verdict_precedent_followup),
+         ("X20-runtool-copies", x20_run_tool_copies), ("X21-inspect-pdf", x21_inspect_pdf), ("X22-bench-commit", x22_bench_commit),
+         ("X23-demo-count", x23_demo_count), ("X24-md-lists-quote", x24_md_lists_quote),
+         ("X25-side-effects-names", x25_side_effects_names), ("X26-kinds", x26_kinds)]
 
 
 def main(argv):
