@@ -283,6 +283,8 @@ def compute(rdir: str, catalog_path: str) -> dict:
             r["hold"].append("Q1-reproduce: release and main did not run in the same environment")
         elif not (has_ev(q.get("release_evidence"), RUN_STATES) and has_ev(q.get("main_evidence"), RUN_STATES)):
             r["hold"].append("Q1-reproduce: the release run or the main run is missing for the current head and main")
+        elif not ev[q["release_evidence"]].get("env") or ev[q["release_evidence"]].get("env") != ev[q["main_evidence"]].get("env"):
+            r["hold"].append("Q1-reproduce: the release run and the main run need the same 'env' (references/evidence.md)")  # #836
         elif q.get("release") != ev[q["release_evidence"]]["state"] or q.get("main") != ev[q["main_evidence"]]["state"]:
             r["hold"].append("Q1-reproduce: plan.json states differ from the states of their runs")
         elif q.get("issue_environment_available") is False:
@@ -318,9 +320,12 @@ def compute(rdir: str, catalog_path: str) -> dict:
                     earlier_refs = {(h.get("source"), h.get("ref")) for h in json.load(f).get("hits", []) if isinstance(h, dict)}
             except (OSError, ValueError):
                 r["hold"].append(f"the precedents of round {pr['round'] - 1} cannot be read")
+    def is_new(h: dict) -> bool:
+        return earlier_refs is not None and (h.get("source"), h.get("ref")) not in earlier_refs
+
     for hid, h in hits.items():
         must = must_assess(h)
-        new = earlier_refs is not None and (h.get("source"), h.get("ref")) not in earlier_refs
+        new = is_new(h)
         if (must or new) and hid not in assessed:
             why = "reverts lines of it" if h.get("reverts") else f"new since round {pr['round'] - 1}" if new else ""
             r["hold"].append(f"precedent {hid} ({h['source']} {h['ref']}) is not assessed" + (f" ({why})" if why else ""))
@@ -334,7 +339,7 @@ def compute(rdir: str, catalog_path: str) -> dict:
             r["notes"].append(f"{hid} {h['ref']} is not a maintainer decision (no decider, or the author of this PR); ignored")
             continue
         if a.get("covers") is not True:
-            if must_assess(h) and not has_ev(a.get("evidence")):  # "does not cover" is a claim too (#836)
+            if (must_assess(h) or is_new(h)) and not has_ev(a.get("evidence")):  # "does not cover" is a claim too (#836)
                 r["hold"].append(f"precedent {hid}: 'does not cover' needs passing evidence")
             continue
         if not has_ev(a.get("evidence")):
@@ -398,6 +403,7 @@ def compute(rdir: str, catalog_path: str) -> dict:
             r["hold"].append(f"plan.json: a decide reason is not a string or an object with an id: {d!r}")
 
     # Objections
+    refuted = []
     for o in x.objections:
         if not isinstance(o, dict):
             r["hold"].append("objections.json has an entry that is not an object")
@@ -413,6 +419,9 @@ def compute(rdir: str, catalog_path: str) -> dict:
             st = "disputed"
         elif st == "fixed" and not has_ev(o.get("evidence")):
             st = "disputed"
+        if st == "refuted":  # the tools cannot tell who accepted it: verdict.md shows it to the user (#836)
+            refuted.append(f"{o.get('id')} ({o.get('severity')}{', security' if security else ''}): {str(o.get('claim', ''))[:80]}"
+                           f"; accepted by {o.get('accepted_by')}; evidence {o.get('evidence')}")
         if st in ("open", "disputed") and (sev >= 2 or security):
             r["hold"].append(f"objection {o.get('id')} ({o.get('severity')}) is {st}: {str(o.get('claim', ''))[:80]}")
         elif st in ("open", "disputed"):
@@ -469,7 +478,7 @@ def compute(rdir: str, catalog_path: str) -> dict:
         command = f"gh pr review {n} --comment --body-file review.md"
     return {"verdict": verdict, "pr": n, "round": pr.get("round"), "head": pr.get("head"), "main": pr.get("main"),
             "kind": kind, "reasons": r, "checks": rows, "post_command": command, "evidence_counted": len(x.evidence),
-            "decisions_used": raw_dec}
+            "decisions_used": raw_dec, "refuted_objections": refuted}
 
 
 def render(v: dict) -> str:
@@ -482,6 +491,7 @@ def render(v: dict) -> str:
             out.append(f"{label}:")
             out += [f"  - {x}" for x in v["reasons"][key]]
     out += ["", "User decisions used (decisions.json): " + (json.dumps(v["decisions_used"], ensure_ascii=False) if v["decisions_used"] else "none")]
+    out += ["", "Refuted objections (check each one at the post gate):"] + [f"  - {x}" for x in v["refuted_objections"]] if v["refuted_objections"] else []
     out += ["", "| Check | Q | Needed | Plan | State | Impact |", "|:--|:--|:--|:--|:--|:--|"]
     for c in v["checks"]:
         if c["needed"] or c["status"] != "not planned":

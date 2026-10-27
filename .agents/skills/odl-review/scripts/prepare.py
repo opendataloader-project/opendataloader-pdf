@@ -512,19 +512,25 @@ def fetch(a: argparse.Namespace) -> int:
     return 0
 
 
-TREES_OUTPUTS = {"pr.json", "kind.json", "files.json", "diff.patch", "trees", "quoted", "earlier-review.md", "new.diff"}
+TREES_OUTPUTS = {"pr.json", "kind.json", "files.json", "diff.patch", "trees", "quoted", "earlier-review.md", "new.diff", "head.txt"}
 FRESH_HEAD_MINUTES = 15
 
 
 def keep_old_head_files(rdir: str, head: str):
     """If the round folder holds the work of another head (the author pushed before a post), move every file that
     trees does not make into old-<sha8>/, so that no plan, record, report, or draft of the old head mixes with the new
-    head (#832). Returns (folder, names) or None."""
+    head (#832). The head of the files is in head.txt: pr.json is gone if an earlier trees run stopped (#836).
+    Returns (folder, names) or None."""
+    prev = None
     try:
-        with open(os.path.join(rdir, "pr.json"), encoding="utf-8") as f:
-            prev = json.load(f).get("head")
-    except (OSError, ValueError):
-        return None
+        with open(os.path.join(rdir, "head.txt"), encoding="utf-8") as f:
+            prev = f.read().strip()
+    except OSError:
+        try:
+            with open(os.path.join(rdir, "pr.json"), encoding="utf-8") as f:
+                prev = json.load(f).get("head")
+        except (OSError, ValueError):
+            return None
     if not prev or prev == head:
         return None
     keep = f"old-{prev[:8]}"
@@ -562,6 +568,8 @@ def trees(a: argparse.Namespace) -> int:
     moved = keep_old_head_files(rdir, st["head"])
     if moved:
         print(f"the head changed before a post: moved the files of the old head to {moved[0]}/: {moved[1]}")
+    with open(os.path.join(rdir, "head.txt"), "w", encoding="utf-8") as f:  # the files that stay are of this head
+        f.write(st["head"] + "\n")
     # No file of an older head stays if this run stops, or if this head has no new.diff (a force push, #836).
     for name in ("pr.json", "kind.json", "files.json", "diff.patch", "earlier-review.md", "new.diff"):
         if os.path.exists(os.path.join(rdir, name)):
