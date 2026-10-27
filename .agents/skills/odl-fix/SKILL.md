@@ -731,8 +731,11 @@ gh pr checks <PR> --repo "$REPO" --watch
 ### 6. Final report
 
 ```bash
-git worktree remove "$WORK/base-src"     # and "$WORK/src" and "$WORK/release-src" if you used them
+git worktree remove "$WORK/base-src"     # and "$WORK/src" if you used it
+if [ -d "$WORK/release-src" ]; then git worktree remove --force "$WORK/release-src"; fi
 ```
+
+`--force`: the copied test files in `$WORK/release-src` are untracked. Without `--force`, `git worktree remove` does not remove a worktree with untracked files.
 
 Report to the user:
 
