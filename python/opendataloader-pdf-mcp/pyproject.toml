@@ -4,7 +4,7 @@ version = "2.5.17.dev0"
 description = "MCP server for OpenDataLoader PDF — convert PDFs to Markdown, JSON, HTML, and more"
 readme = "README.md"
 license = "Apache-2.0"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "mcp[cli]>=1.29.1,<2",
     "opendataloader-pdf>=2.5.7,<3",

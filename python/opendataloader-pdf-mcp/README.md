@@ -7,7 +7,7 @@ Enables AI agents to convert PDFs to Markdown, JSON, HTML, and more via MCP.
 ## Prerequisites
 
 - Java 11+
-- Python 3.10+
+- Python 3.11+
 
 ## Installation
 

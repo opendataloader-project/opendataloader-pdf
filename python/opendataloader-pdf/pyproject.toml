@@ -4,7 +4,7 @@ version = "2.5.17.dev0"
 description = "A Python wrapper for the opendataloader-pdf Java CLI."
 readme = "README.md"
 license = "Apache-2.0"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 authors = [
     { name = "opendataloader-project", email = "open.dataloader@hancom.com" }
 ]
@@ -72,7 +72,7 @@ line-length = 100
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py311"
 exclude = ["dist", "build"]
 
 [tool.ruff.lint]
