@@ -6,7 +6,7 @@ Demonstrates processing multiple PDFs in a single invocation to avoid
 repeated Java JVM startup overhead. This is the recommended approach
 for large-scale document pipelines.
 
-Requires Python 3.10+.
+Requires Python 3.11+.
 
 Usage:
     pip install opendataloader-pdf

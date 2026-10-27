@@ -13,7 +13,7 @@ description: >-
 license: Apache-2.0
 compatibility: >-
   Requires git, a signed-in GitHub CLI (gh), a POSIX shell, JDK 17+ (tests
-  need it; code targets Java 11), Maven, Python 3.10+, uv, and curl 8.4.0+.
+  need it; code targets Java 11), Maven, Python 3.11+, uv, and curl 8.4.0+.
   Node.js 22.13+ with pnpm when the change touches java/, the Node wrapper, or
   CLI options; qpdf to inspect an original or a tagged PDF. Network: github.com,
   api.github.com, *.githubusercontent.com, pypi.org, files.pythonhosted.org,
@@ -89,7 +89,7 @@ Run this block one time, as one command. `mktemp -d` makes a new directory that 
 ```bash
 java -version          # 17 or later
 mvn -v
-python3 --version      # 3.10 or later
+python3 --version      # 3.11 or later
 uv --version
 gh auth status
 curl --version         # 8.4.0 or later, for attachments (step 4) and hybrid (Phase 2 step 2)
