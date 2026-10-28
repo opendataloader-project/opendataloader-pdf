@@ -53,8 +53,8 @@ public class AutoTaggingProcessor {
     private static final Map<OperatorStreamKey, Integer> structParentsIntegers = new LinkedHashMap<>();
     // annotation StructParent entries: int key -> single struct element (Link)
     private static final Map<Integer, COSObject> annotationStructParents = new HashMap<>();
-    private static final Map<COSString, COSObject> idToStructElement =
-            new TreeMap<>(AutoTaggingProcessor::compareIDStrings);
+    private static final TreeMap<COSString, COSObject> idToStructElement =
+            new TreeMap<>(COSString::compare);
     // First created struct element per page, used to rewrite page destinations to structure destinations.
     private static final Map<Integer, COSObject> pageNumberToFirstStructElement = new HashMap<>();
     private static final String FORMULA_REPLACEMENT_TEXT = "formula";
@@ -268,12 +268,13 @@ public class AutoTaggingProcessor {
     }
 
     public static void createIDTree(COSObject structTreeRoot, COSDocument cosDocument,
-                                    Map<COSString, COSObject> idToStructElement) {
-        Map<COSString, COSObject> sortedIDs = new TreeMap<>(AutoTaggingProcessor::compareIDStrings);
-        sortedIDs.putAll(idToStructElement);
+                                    SortedMap<COSString, COSObject> sortedIds) {
+        if (sortedIds.isEmpty()) {
+            return;
+        }
         COSObject names = COSArray.construct();
-        for (Map.Entry<COSString, COSObject> entry : sortedIDs.entrySet()) {
-            names.add(COSString.construct(entry.getKey().get()));
+        for (Map.Entry<COSString, COSObject> entry : sortedIds.entrySet()) {
+            names.add(new COSObject(entry.getKey()));
             names.add(entry.getValue());
         }
         COSObject idTree = COSDictionary.construct();
@@ -289,19 +290,6 @@ public class AutoTaggingProcessor {
             LOGGER.log(Level.WARNING, "Duplicate structure element ID {0}; keeping the first element",
                     Arrays.toString(idString.get()));
         }
-    }
-
-    public static int compareIDStrings(COSString first, COSString second) {
-        byte[] firstBytes = first.get();
-        byte[] secondBytes = second.get();
-        int commonLength = Math.min(firstBytes.length, secondBytes.length);
-        for (int i = 0; i < commonLength; i++) {
-            int comparison = Integer.compare(Byte.toUnsignedInt(firstBytes[i]), Byte.toUnsignedInt(secondBytes[i]));
-            if (comparison != 0) {
-                return comparison;
-            }
-        }
-        return Integer.compare(firstBytes.length, secondBytes.length);
     }
 
     private static COSObject addStructElement(COSObject parent, COSDocument cosDocument, String type, Integer pageNumber) {
