@@ -55,6 +55,8 @@ public class AutoTaggingProcessor {
     private static final Map<OperatorStreamKey, Integer> structParentsIntegers = new LinkedHashMap<>();
     // annotation StructParent entries: int key -> single struct element (Link)
     private static final Map<Integer, COSObject> annotationStructParents = new HashMap<>();
+    private static final TreeMap<COSString, COSObject> idToStructElement =
+            new TreeMap<>(COSString::compare);
     // First created struct element per page, used to rewrite page destinations to structure destinations.
     private static final Map<Integer, COSObject> pageNumberToFirstStructElement = new HashMap<>();
     private static final String FORMULA_REPLACEMENT_TEXT = "formula";
@@ -93,6 +95,7 @@ public class AutoTaggingProcessor {
         structParents.clear();
         structParentsIntegers.clear();
         annotationStructParents.clear();
+        idToStructElement.clear();
         pageNumberToFirstStructElement.clear();
         structElementIdToCaptionMap.clear();
         annotationBBoxesMap.clear();
@@ -106,6 +109,7 @@ public class AutoTaggingProcessor {
         setMarkInfo(catalog, cosDocument);
         COSObject structTreeRoot = createStructTreeRoot(catalog, cosDocument, document);
         createStructureTreeElements(document, contents, structTreeRoot, cosDocument);
+        createIDTree(structTreeRoot, cosDocument, idToStructElement);
         if (isPDF2_0) {
             updateDestinationsToStructureDestinations(document, catalog, cosDocument);
         }
@@ -263,6 +267,31 @@ public class AutoTaggingProcessor {
             if (entry.getKey() >= nextKey) nextKey = entry.getKey() + 1;
         }
         structTreeRoot.setKey(ASAtom.PARENT_TREE_NEXT_KEY, COSInteger.construct(nextKey));
+    }
+
+    public static void createIDTree(COSObject structTreeRoot, COSDocument cosDocument,
+                                    SortedMap<COSString, COSObject> sortedIds) {
+        if (sortedIds.isEmpty()) {
+            return;
+        }
+        COSObject names = COSArray.construct();
+        for (Map.Entry<COSString, COSObject> entry : sortedIds.entrySet()) {
+            names.add(new COSObject(entry.getKey()));
+            names.add(entry.getValue());
+        }
+        COSObject idTree = COSDictionary.construct();
+        idTree.setKey(ASAtom.NAMES, names);
+        structTreeRoot.setKey(ASAtom.ID_TREE, idTree);
+        cosDocument.addChangedObject(structTreeRoot);
+    }
+
+    private static void setStructElementID(COSObject structElement, COSObject id) {
+        structElement.setKey(ASAtom.ID, id);
+        COSString idString = (COSString) id.getDirectBase();
+        if (idToStructElement.putIfAbsent(idString, structElement) != null) {
+            LOGGER.log(Level.WARNING, "Duplicate structure element ID {0}; keeping the first element",
+                    Arrays.toString(idString.get()));
+        }
     }
 
     private static COSObject addStructElement(COSObject parent, COSDocument cosDocument, String type, Integer pageNumber) {
@@ -887,7 +916,7 @@ public class AutoTaggingProcessor {
         // it documents intent and silences SpotBugs DM_DEFAULT_ENCODING.
         footnoteCounter++;
         String noteId = "note-" + footnoteCounter;
-        noteObject.setKey(ASAtom.ID,
+        setStructElementID(noteObject,
                 COSString.construct(noteId.getBytes(java.nio.charset.StandardCharsets.US_ASCII)));
         if (usePdf2Footnote) {
             noteObject.setKey(ASAtom.NS, pdf2_0Namespace);
@@ -1015,7 +1044,8 @@ public class AutoTaggingProcessor {
     private static void createListStructElem(PDFList list, COSObject parent, COSDocument cosDocument) {
         COSObject listObject = addStructElement(parent, cosDocument, TaggedPDFConstants.L, list.getPageNumber());
         if (list.getNextList() != null) {
-            listObject.setKey(ASAtom.ID, COSString.construct(String.valueOf(list.getRecognizedStructureId()).getBytes()));
+            setStructElementID(listObject,
+                    COSString.construct(String.valueOf(list.getRecognizedStructureId()).getBytes()));
         }
         if (list.getPreviousList() != null) {
             addAttributeToStructElem(listObject, ASAtom.LIST, ASAtom.CONTINUED_LIST, COSBoolean.construct(true));
