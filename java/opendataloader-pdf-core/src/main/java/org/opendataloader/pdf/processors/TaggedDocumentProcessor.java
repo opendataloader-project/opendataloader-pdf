@@ -8,6 +8,7 @@ import org.verapdf.as.ASAtom;
 import org.verapdf.gf.model.impl.sa.GFSANode;
 import org.verapdf.gf.model.impl.sa.structelems.GFSAL;
 import org.verapdf.tools.AttributeHelper;
+import org.verapdf.tools.StaticResources;
 import org.verapdf.wcag.algorithms.entities.*;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextBlock;
@@ -55,7 +56,7 @@ public class TaggedDocumentProcessor {
             if (!shouldProcessPage(pageNumber)) {
                 continue;
             }
-            contents.get(pageNumber).addAll(artifacts.get(pageNumber));
+            contents.get(pageNumber).addAll(withoutArtifactText(artifacts.get(pageNumber), pageNumber));
         }
         for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
             if (!shouldProcessPage(pageNumber)) {
@@ -87,6 +88,43 @@ public class TaggedDocumentProcessor {
             }
         }
         return artifacts;
+    }
+
+    /**
+     * Removes the text lines that an {@code /Artifact} marked-content sequence painted (#801).
+     * The content outside the structure tree also contains untagged text, and that text stays.
+     * A header or footer stays, so --include-header-footer can show it.
+     */
+    private static List<IObject> withoutArtifactText(List<IObject> pageArtifacts, int pageNumber) {
+        ArtifactOperators operators = null;
+        List<IObject> result = new ArrayList<>(pageArtifacts.size());
+        for (IObject content : pageArtifacts) {
+            if (content instanceof TextLine) {
+                if (operators == null) {
+                    operators = ArtifactOperators.of(StaticResources.getDocument().getPage(pageNumber));
+                }
+                if (isArtifactText((TextLine) content, operators)) {
+                    continue;
+                }
+            }
+            result.add(content);
+        }
+        return result;
+    }
+
+    /** True if each chunk with text is an artifact. A space that the line processor added has no operator. */
+    private static boolean isArtifactText(TextLine line, ArtifactOperators operators) {
+        boolean hasText = false;
+        for (TextChunk chunk : line.getTextChunks()) {
+            if (chunk.isWhiteSpaceChunk() || chunk.isEmpty()) {
+                continue;
+            }
+            if (!operators.isArtifact(chunk)) {
+                return false;
+            }
+            hasText = true;
+        }
+        return hasText;
     }
 
     /**
