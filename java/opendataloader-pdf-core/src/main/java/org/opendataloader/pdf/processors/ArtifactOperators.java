@@ -63,8 +63,9 @@ final class ArtifactOperators {
     private final Map<String, Boolean> drawnOnlyInArtifacts = new HashMap<>();
     private final Map<String, COSKey> formKeys = new HashMap<>();
     private final Set<String> sharedNames = new HashSet<>();
-    private final Set<COSKey> formsRead = new HashSet<>();
-    private final Set<COSKey> formsReadInArtifacts = new HashSet<>();
+    /** For each form name, the forms read with that name: not in an artifact sequence, and in one. */
+    private final Map<String, Set<COSKey>> formsRead = new HashMap<>();
+    private final Map<String, Set<COSKey>> formsReadInArtifacts = new HashMap<>();
     private boolean incomplete;
 
     private ArtifactOperators() {
@@ -170,8 +171,9 @@ final class ArtifactOperators {
         if (knownKey != null && !knownKey.equals(formKey)) {
             sharedNames.add(name);
         }
-        // Each form is read one time for each value of drawnInArtifact. This also stops a cycle.
-        if (!(drawnInArtifact ? formsReadInArtifacts : formsRead).add(formKey)) {
+        // Each form is read one time for each name and each value of drawnInArtifact. This also stops a cycle.
+        Map<String, Set<COSKey>> seen = drawnInArtifact ? formsReadInArtifacts : formsRead;
+        if (!seen.computeIfAbsent(name, key -> new HashSet<>()).add(formKey)) {
             return;
         }
         PDXForm form = (PDXForm) drawn;
