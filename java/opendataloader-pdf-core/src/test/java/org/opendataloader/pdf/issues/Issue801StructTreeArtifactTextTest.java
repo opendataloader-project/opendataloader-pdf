@@ -107,6 +107,19 @@ class Issue801StructTreeArtifactTextTest {
         assertFalse(out.markdown.contains(ARTIFACT), "Markdown shows the text of a form drawn in an artifact: " + out.markdown);
     }
 
+    /** The page draws one form under two names. A stream info names the form by the name of its {@code Do}. */
+    @Test
+    void artifactTextInAFormWithTwoNamesIsNotOutput() throws IOException {
+        Output out = convert("two-name-form-artifact", 1, (doc, resources, font) -> {
+            PDFormXObject form = form(doc, resources, "/Artifact BMC\n" + text(font, 40, 260, ARTIFACT) + "EMC\n");
+            resources.put(COSName.getPDFName("A"), form);
+            resources.put(COSName.getPDFName("B"), form);
+            return "/A Do\n/B Do\n";
+        }, false);
+        assertTrue(out.markdown.contains(BODY), "the paragraph of the tree is missing: " + out.markdown);
+        assertFalse(out.markdown.contains(ARTIFACT), "Markdown shows the text of a form drawn under a second name: " + out.markdown);
+    }
+
     @Test
     void untaggedTextOutsideTheTreeStays() throws IOException {
         Output out = convert("untagged-text", 1, (doc, resources, font) -> text(font, 40, 260, ARTIFACT), false);
