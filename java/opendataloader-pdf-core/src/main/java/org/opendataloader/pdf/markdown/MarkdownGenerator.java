@@ -45,6 +45,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 public class MarkdownGenerator implements Closeable {
 
@@ -67,6 +68,8 @@ public class MarkdownGenerator implements Closeable {
     protected String imageFormat = Config.IMAGE_FORMAT_PNG;
     protected boolean includeHeaderFooter = false;
     protected static final String strikethroughTextMD = "~~";
+    private static final Pattern LEADING_HEADING_OR_BULLET_MARKER = Pattern.compile("^(?=(?:#{1,6}|[-+*])(?:[ \\t]|$))");
+    private static final Pattern LEADING_ORDERED_LIST_MARKER = Pattern.compile("^(\\d{1,9})(?=[.)](?:[ \\t]|$))");
 
     MarkdownGenerator(File inputPdf, Config config) throws IOException {
         String cutPdfFileName = inputPdf.getName();
@@ -295,7 +298,7 @@ public class MarkdownGenerator implements Closeable {
                 markdownWriter.write(MarkdownSyntax.LIST_ITEM);
                 markdownWriter.write(MarkdownSyntax.SPACE);
                 if (NumberingStyleNames.UNORDERED.equals(list.getNumberingStyle())) {
-                    itemText = getTextWithoutLabel(item);
+                    itemText = escapeLeadingBlockMarker(getTextWithoutLabel(item));
                 }
             }
             markdownWriter.write(getCorrectMarkdownString(itemText));
@@ -449,6 +452,15 @@ public class MarkdownGenerator implements Closeable {
             .replace("&", "&amp;")
             .replace("<", "&lt;")
             .replace(">", "&gt;");
+    }
+
+    /**
+     * Escapes a heading marker or a list marker at the start of a list item text. After "- ", CommonMark
+     * reads "# text" as a heading and "1. text" as a nested list; "\# text" and "1\. text" stay text.
+     */
+    protected static String escapeLeadingBlockMarker(String itemText) {
+        String escaped = LEADING_HEADING_OR_BULLET_MARKER.matcher(itemText).replaceFirst("\\\\");
+        return LEADING_ORDERED_LIST_MARKER.matcher(escaped).replaceFirst("$1\\\\");
     }
 
     public static void getTextFromLineForMarkdown(TextLine line, StringBuilder stringBuilder) {
