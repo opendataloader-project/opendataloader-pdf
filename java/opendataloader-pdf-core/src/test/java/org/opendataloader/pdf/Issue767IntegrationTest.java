@@ -39,19 +39,9 @@ class Issue767IntegrationTest {
 
     @Test
     void jsonOutputOmitsNullCharacterFromUnmappedToUnicodeEntry() throws IOException {
-        Path inputPdf = tempDir.resolve("issue-767-repro.pdf");
-        try (InputStream sample = getClass().getResourceAsStream(REPRO_PDF)) {
-            if (sample == null) {
-                throw new IOException("Missing regression PDF resource: " + REPRO_PDF);
-            }
-            Files.copy(sample, inputPdf);
-        }
-
         Config config = new Config();
-        config.setOutputFolder(tempDir.toString());
         config.setGenerateJSON(true);
-
-        DocumentProcessor.processFile(inputPdf.toString(), config);
+        convert(config);
 
         String json = Files.readString(tempDir.resolve("issue-767-repro.json"));
         assertFalse(json.contains("\\u0000"), "JSON text should not retain a null character");
@@ -65,5 +55,28 @@ class Issue767IntegrationTest {
                     + "GDPR-fines, the IT department, AI-agents, AI-systems, AI-policy, AI-generated summaries and "
                     + "ISO 27001-certification.")),
             "JSON text should preserve the full paragraph with the null character omitted");
+    }
+
+    @Test
+    void textOutputHasOneSpaceWhereTheNullCharacterWas() throws IOException {
+        Config config = new Config();
+        config.setGenerateText(true);
+        convert(config);
+
+        String text = Files.readString(tempDir.resolve("issue-767-repro.txt"));
+        assertFalse(text.contains("the IT  department"), "the text output has two spaces where the null character was");
+        assertTrue(text.contains("the IT department,"), "the text output lost the words around the null character: " + text);
+    }
+
+    private void convert(Config config) throws IOException {
+        Path inputPdf = tempDir.resolve("issue-767-repro.pdf");
+        try (InputStream sample = getClass().getResourceAsStream(REPRO_PDF)) {
+            if (sample == null) {
+                throw new IOException("Missing regression PDF resource: " + REPRO_PDF);
+            }
+            Files.copy(sample, inputPdf);
+        }
+        config.setOutputFolder(tempDir.toString());
+        DocumentProcessor.processFile(inputPdf.toString(), config);
     }
 }

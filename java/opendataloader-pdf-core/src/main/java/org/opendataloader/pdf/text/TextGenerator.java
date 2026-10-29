@@ -248,7 +248,9 @@ public class TextGenerator implements Closeable {
     }
 
     private String sanitize(String value) {
-        return value == null ? "" : value.replace("\u0000", " ");
+        // U+0000 comes from a <0000> ToUnicode entry. Leave it out, as the Markdown, HTML, and JSON
+        // writers do: a space here gave two spaces before a line break (#767).
+        return value == null ? "" : value.replace("\u0000", "");
     }
 
     private String compactWhitespace(String value) {
