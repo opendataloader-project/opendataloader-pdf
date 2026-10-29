@@ -508,7 +508,7 @@ def run_junit(ctx: Ctx, tree: str, cases: list[dict], out_dir: str, results: dic
     by_module: dict[str, list[dict]] = {}
     for k in cases:
         by_module.setdefault(k.get("module", MODULES[0]), []).append(k)
-    reports = []
+    reports: dict[str, str | None] = {}
     for module, ks in by_module.items():
         classes: dict[str, list[str]] = {}
         for k in ks:
@@ -522,14 +522,20 @@ def run_junit(ctx: Ctx, tree: str, cases: list[dict], out_dir: str, results: dic
         args = ctx.mvn() + ["test", "-pl", module] + (["-am"] if module != MODULES[0] else []) + [
             f"-Dtest={selector}", "-Dsurefire.failIfNoSpecifiedTests=false", "-Djava.awt.headless=true"]
         exits[module] = run_cmd(args, cwd=os.path.join(tree, "java"), log=os.path.join(out_dir, f"{module}.log"), env=java_env())
+        reports[module] = None
         if os.path.isdir(report_dir):
             keep = os.path.join(out_dir, f"reports-{module}")
             shutil.rmtree(keep, ignore_errors=True)
             shutil.copytree(report_dir, keep)
-            reports.append(keep)
-    parsed = parse_reports(reports)
-    for k in cases:
-        results[k["id"]] = parsed.get(case_key(k), {"status": "missing", "message": ""})
+            reports[module] = keep
+    results.update(junit_results(cases, reports))
+
+
+def junit_results(cases: list[dict], reports: dict) -> dict:
+    """{case id: result}. A case reads only the reports of its module: two modules can have the same test names."""
+    parsed = {module: parse_reports([d]) if d else {} for module, d in reports.items()}
+    return {k["id"]: parsed.get(k.get("module", MODULES[0]), {}).get(case_key(k), {"status": "missing", "message": ""})
+            for k in cases}
 
 
 def run_pytest(tree: str, cases: list[dict], out_dir: str, results: dict, exits: dict):
@@ -1315,8 +1321,23 @@ def contract_changes(frozen: dict, current: dict) -> tuple[list[str], list[str]]
             errors.append(f"invariant {iid}: formats {', '.join(removed)} removed after the freeze")
     for iid in sorted(set(cinv) - set(finv)):
         changes.append(f"new invariant {iid}")
-    if canonical(frozen.get("reporter")) != canonical(current.get("reporter")):
-        changes.append("reporter runs changed")
+    frep, crep = frozen.get("reporter"), current.get("reporter")
+    if frep and not crep:
+        errors.append("the reporter runs were removed after the freeze")
+    elif frep:
+        if crep.get("document") != frep.get("document"):
+            errors.append("reporter.document changed after the freeze")
+        cruns = {r.get("id"): r for r in crep.get("runs", [])}
+        for r in frep.get("runs", []):
+            now_r = cruns.get(r.get("id"))
+            if now_r is None:
+                errors.append(f"reporter run {r.get('id')} was removed after the freeze")
+            elif canonical(now_r) != canonical(r):
+                errors.append(f"reporter run {r.get('id')} changed after the freeze (add a new run instead)")
+        for rid in sorted(set(cruns) - {r.get("id") for r in frep.get("runs", [])}):
+            changes.append(f"new reporter run {rid}")
+    elif crep:
+        changes.append("new reporter runs")
     if (frozen.get("objective"), frozen.get("issue")) != (current.get("objective"), current.get("issue")):
         errors.append("issue or objective changed after the freeze")
     stripped = {k: v for k, v in current.items() if k != "amendments"}

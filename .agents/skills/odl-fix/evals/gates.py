@@ -459,6 +459,35 @@ def g22_pinning_control(tmp):
     return "failing control -> refused; no failure -> unpinned; revert run sees the base file in a full copy"
 
 
+def g23_module_keys(tmp):
+    """A JUnit case reads only the reports of its own Maven module: two modules can have the same test names (CodeRabbit on #849)."""
+    core, cli = os.path.join(tmp, "core"), os.path.join(tmp, "cli")
+    write(core, "TEST-org.example.SharedTest.xml", report_xml([("SharedTest", "sameName", "fail", "lost the header")]))
+    write(cli, "TEST-org.example.SharedTest.xml", report_xml([("SharedTest", "sameName", "pass", "")]))
+    cases = [case("P1", test="SharedTest#sameName"), {**case("G1", "guard", "SharedTest#sameName"), "module": "opendataloader-pdf-cli"}]
+    res = fg.junit_results(cases, {"opendataloader-pdf-core": core, "opendataloader-pdf-cli": cli})
+    assert (res["P1"]["status"], res["G1"]["status"]) == ("fail", "pass"), res
+    assert fg.junit_results(cases, {"opendataloader-pdf-core": None, "opendataloader-pdf-cli": cli})["P1"]["status"] == "missing"
+    return "same class and method in core and cli -> each case keeps its own result"
+
+
+def g24_reporter_only_grows(tmp):
+    """After the freeze, a reporter run cannot be removed or changed; a new run can be added (CodeRabbit on #849)."""
+    run1 = {"id": "R1", "options": ["--pages", "1"], "format": "json", "fix": {"types": {"header": ">0"}}}
+    frozen = contract(reporter={"document": "attachments/a1.pdf", "runs": [run1]})
+    amend = [{"n": 1, "what": "change the reporter runs", "why": "x"}]
+    removed = contract(amendments=amend)
+    assert any("reporter runs were removed" in e for e in fg.contract_changes(frozen, removed)[1])
+    weaker = contract(reporter={"document": "attachments/a1.pdf", "runs": [{**run1, "fix": {}}]}, amendments=amend)
+    assert any("R1 changed" in e for e in fg.contract_changes(frozen, weaker)[1])
+    other_doc = contract(reporter={"document": "attachments/a2.pdf", "runs": [run1]}, amendments=amend)
+    assert any("document changed" in e for e in fg.contract_changes(frozen, other_doc)[1])
+    grown = contract(reporter={"document": "attachments/a1.pdf", "runs": [run1, {**run1, "id": "R2"}]}, amendments=amend)
+    changes, errors = fg.contract_changes(frozen, grown)
+    assert not errors and "new reporter run R2" in changes, (changes, errors)
+    return "removed, weakened, or other document -> error; a new run -> listed"
+
+
 EVALS = [("G1-problem-reproduces", g1_problem_must_reproduce), ("G2-guard-on-base", g2_guard_holds_on_base),
          ("G3-reports", g3_reports), ("G4-fix-every-case", g4_fix_needs_every_case), ("G5-scope", g5_scope),
          ("G6-pinning", g6_pinning), ("G7-invariants", g7_invariants), ("G8-pdf-id", g8_pdf_document_id),
@@ -468,4 +497,5 @@ EVALS = [("G1-problem-reproduces", g1_problem_must_reproduce), ("G2-guard-on-bas
          ("G15-pull-request", g15_pull_request), ("G16-reporter", g16_reporter_expectations), ("G17-linters", g17_linters),
          ("G18-wrapper-runners", g18_wrapper_runners), ("G19-pinning-junit", g19_pinning_needs_junit),
          ("G20-formats-grow", g20_formats_only_grow), ("G21-review-body", g21_review_body_findings),
-         ("G22-pinning-control", g22_pinning_control)]
+         ("G22-pinning-control", g22_pinning_control), ("G23-module-keys", g23_module_keys),
+         ("G24-reporter-grows", g24_reporter_only_grows)]

@@ -112,7 +112,7 @@ Sandbox notes:
 
 A record has the gate, the state, the commit and its tree, the base commit, the contract hash, and, for the gates that use them, the jar hashes. `check` counts a record only if:
 
-- its tree is the tree of the current commit. A squash keeps the tree; a rebase or a code change does not;
+- its tree is the tree of the current commit. A squash keeps the tree; a rebase or a code change does not. `base-build` and `issue-corpus` read only the base tree, so they do not need this;
 - its base is the current base tree;
 - for `problem`, `fix`, `pinning`, `scope`, `invariants`, and `reporter`: its contract hash is the current contract;
 - for `problem`: the case test files are the same as at the run. A weaker test needs a new problem run;
@@ -125,7 +125,7 @@ A record has the gate, the state, the commit and its tree, the base commit, the 
 
 `freeze` keeps a copy of the approved contract in `$WORK/contract.lock`. It needs a passing `problem` record of that contract. After the freeze, the contract can only grow:
 
-- You cannot remove a case or an invariant. You cannot change the kind, the test, the symptom, or the module of a case, or the corpus or the options of an invariant.
+- You cannot remove a case, an invariant, a format of an invariant, or a reporter run. You cannot change the kind, the test, the symptom, the module, or the runner of a case, the corpus or the options of an invariant, the reporter document, or a reporter run. Add a new case or run instead.
 - Each change needs a new entry in `amendments`. `check` lists each change for Approval 2.
 - A new problem case needs a new `problem` run: it must fail on the base too.
 - A new guard case or a new scope entry does not need the user first. Show it at Approval 2.

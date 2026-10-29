@@ -322,13 +322,35 @@ def f21_graphql_failure(tmp):
     return "GraphQL failure for #21 -> exit 11"
 
 
+def f22_bot_state_line(tmp):
+    """A bot comment does not count, also when the bot has write access and its text looks like a state line (CodeRabbit on #849)."""
+    rows, _ = triage(tmp, [issue(22, created="2026-10-01T00:00:00Z")],
+                     {22: [comment("maintainer", "MEMBER", "2026-10-20T00:00:00Z", post("Which version?", "Waiting on: reporter · 2026-10-20")),
+                           comment("helper[bot]", "NONE", "2026-10-21T00:00:00Z", post("Status", "Working on it · 2026-10-21"), bot=True)]},
+                     perms={**TEAM, "helper[bot]": "write"})
+    assert (rows[22]["class"], rows[22]["footer"]["by"]) == ("waiting", "maintainer"), rows[22]
+    return "bot state line ignored -> the maintainer's line counts"
+
+
+def f23_judge_cannot_wait(tmp):
+    """A judgment cannot make a judge issue wait for others: post a state line for that (CodeRabbit on #849)."""
+    triage(tmp, [issue(94)], {94: [comment("maintainer", "MEMBER", "2026-01-10T00:00:00Z", "Which version do you use?")]}, perms=TEAM)
+    path = os.path.join(tmp, "issue-triage", "judgment.json")
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump({"94": {"class": "waiting", "reason": "we asked the reporter"}}, f)
+    res = run("triage-report", "--work", tmp, check=False)
+    assert res.returncode == 12 and "#94" in res.stdout, (res.returncode, res.stdout)
+    return "judge -> waiting by judgment -> exit 12"
+
+
 EVALS = [("F1-new", f1_new), ("F2-team-last", f2_team_last_without_state), ("F3-reporter", f3_waiting_on_reporter),
          ("F4-reply", f4_reply_after_state), ("F5-outsider", f5_state_line_by_outsider), ("F6-bot", f6_bot_after_state),
          ("F7-stale", f7_stale), ("F8-pr-wait", f8_waiting_on_a_pull_request), ("F9-upstream", f9_waiting_upstream),
          ("F10-open-pr", f10_open_pull_request), ("F19-mentioned-pr", f19_mentioned_pull_request), ("F11-backlog", f11_backlog), ("F12-maintainers", f12_maintainers),
          ("F13-working", f13_working_and_later_team_comment), ("F14-last-state", f14_last_state_counts),
          ("F15-footer", f15_footer_line), ("F16-append", f16_append), ("F17-count", f17_count), ("F18-report", f18_report),
-         ("F20-crlf", f20_crlf), ("F21-graphql", f21_graphql_failure)]
+         ("F20-crlf", f20_crlf), ("F21-graphql", f21_graphql_failure), ("F22-bot-state", f22_bot_state_line),
+         ("F23-judge-wait", f23_judge_cannot_wait)]
 
 _gates = importlib.util.spec_from_file_location("gate_evals", os.path.join(os.path.dirname(os.path.abspath(__file__)), "gates.py"))
 _gate_evals = importlib.util.module_from_spec(_gates)
