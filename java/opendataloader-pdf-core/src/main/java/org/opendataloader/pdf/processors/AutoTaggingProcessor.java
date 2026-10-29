@@ -1506,6 +1506,12 @@ public class AutoTaggingProcessor {
      * sequence per letter. Only operators with nothing painted between them are merged, so
      * {@code ChunksWriter} can emit them as one span. The dropped MCIDs are removed from the
      * element's {@code /K} and the later ones renumbered.
+     *
+     * <p>Two operators are merged only when their MCIDs also follow each other in the element's
+     * {@code /K}: a span is read as one piece, at the place of its first MCID. A scan's OCR text
+     * layer draws the left part of every line of a paragraph and then the right part, so the left
+     * parts are adjacent in the stream but not in the paragraph. Merged by the stream alone, they
+     * became one span, and the paragraph read the left parts of all its lines, then the right parts.
      */
     private static void mergeAdjacentTextShows(PDDocument document) {
         Map<COSObject, Integer> pagesPerParent = new IdentityHashMap<>();
@@ -1531,8 +1537,10 @@ public class AutoTaggingProcessor {
             }
             int[] anchor = new int[parents.size()];
             boolean[] merged = new boolean[parents.size()];
+            int[] position = kidPositions(parents);
             Integer previousOperator = null;
             Integer previousMcid = null;
+            int lastMcid = -1;
             for (int operator : new TreeSet<>(operators.keySet())) {
                 Set<StreamInfo> streamInfos = operators.get(operator);
                 // veraPDF gives -1 to a space that it inserts between the strings of one TJ.
@@ -1544,12 +1552,14 @@ public class AutoTaggingProcessor {
                 int mcid = streamInfos.iterator().next().getMcid();
                 anchor[mcid] = mcid;
                 if (previousOperator != null && parents.get(mcid) == parents.get(previousMcid)
+                    && position[lastMcid] >= 0 && position[mcid] == position[lastMcid] + 1
                     && onlyNonPainting(tokens, previousOperator, operator)) {
                     anchor[mcid] = previousMcid;
                     merged[mcid] = true;
                 } else {
                     previousMcid = mcid;
                 }
+                lastMcid = mcid;
                 previousOperator = operator;
             }
             int[] newMcid = new int[parents.size()];
@@ -1586,6 +1596,29 @@ public class AutoTaggingProcessor {
             parents.clear();
             parents.addAll(compacted);
         }
+    }
+
+    /** Each MCID's index in its element's {@code /K}, or -1 when it is not there as an integer. */
+    private static int[] kidPositions(List<COSObject> parents) {
+        int[] position = new int[parents.size()];
+        Arrays.fill(position, -1);
+        for (COSObject parent : identitySet(parents)) {
+            COSObject kids = parent.getKey(ASAtom.K);
+            if (kids == null || kids.getType() != COSObjType.COS_ARRAY) {
+                continue;
+            }
+            for (int i = 0; i < kids.size(); i++) {
+                COSObject kid = kids.at(i);
+                if (kid.getType() != COSObjType.COS_INTEGER) {
+                    continue;
+                }
+                int mcid = kid.getInteger().intValue();
+                if (mcid >= 0 && mcid < position.length && parents.get(mcid) == parent) {
+                    position[mcid] = i;
+                }
+            }
+        }
+        return position;
     }
 
     private static Set<COSObject> identitySet(List<COSObject> objects) {
