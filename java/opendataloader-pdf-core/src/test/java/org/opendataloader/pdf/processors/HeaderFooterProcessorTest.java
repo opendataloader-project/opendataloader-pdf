@@ -158,6 +158,52 @@ public class HeaderFooterProcessorTest {
     }
 
     /**
+     * #623: the hybrid backend gives its page headers as header elements. The same header at the
+     * same position on each page must stay one header, not a header in a header. Repeated text
+     * below it is detected as before, when the backend header text was dropped.
+     */
+    @Test
+    public void testBackendHeaderIsNotPutInAnotherHeader() {
+        initContainers();
+        List<List<IObject>> contents = new ArrayList<>();
+        List<SemanticHeaderOrFooter> backendHeaders = new ArrayList<>();
+        List<TextLine> backendHeaderLines = new ArrayList<>();
+        for (int page = 0; page < 2; page++) {
+            TextLine backendHeaderLine = new TextLine(new TextChunk(
+                new BoundingBox(page, 10.0, 700.0, 200.0, 720.0), "Report title", 10, 700.0));
+            SemanticHeaderOrFooter backendHeader = new SemanticHeaderOrFooter(SemanticType.HEADER);
+            backendHeader.addContents(List.of(backendHeaderLine));
+            List<IObject> pageContents = new ArrayList<>();
+            pageContents.add(backendHeader);
+            pageContents.add(new TextLine(new TextChunk(
+                new BoundingBox(page, 10.0, 670.0, 200.0, 690.0), "Chapter 1", 10, 670.0)));
+            // The body text is at a different position on each page, so it is not a footer
+            double bodyLeft = 10.0 + page * 300.0;
+            pageContents.add(new TextLine(new TextChunk(
+                new BoundingBox(page, bodyLeft, 300.0, bodyLeft + 190.0, 320.0), "Body text", 10, 300.0)));
+            contents.add(pageContents);
+            backendHeaders.add(backendHeader);
+            backendHeaderLines.add(backendHeaderLine);
+        }
+
+        HeaderFooterProcessor.processHeadersAndFooters(contents, false);
+
+        for (int page = 0; page < 2; page++) {
+            List<IObject> pageContents = contents.get(page);
+            Assertions.assertTrue(pageContents.contains(backendHeaders.get(page)),
+                "Page " + page + ": the backend header stays on the page");
+            Assertions.assertEquals(List.of(backendHeaderLines.get(page)), backendHeaders.get(page).getContents(),
+                "Page " + page + ": the backend header keeps its text");
+            Assertions.assertEquals(3, pageContents.size(), "Page " + page + ": " + pageContents);
+            Assertions.assertTrue(pageContents.get(0) instanceof SemanticHeaderOrFooter
+                && pageContents.get(0) != backendHeaders.get(page),
+                "Page " + page + ": the repeated line below the backend header is a header, as before");
+            Assertions.assertFalse(pageContents.get(2) instanceof SemanticHeaderOrFooter,
+                "Page " + page + ": the body text stays body text");
+        }
+    }
+
+    /**
      * Positive control: two closely spaced footer lines (gap < 30pt) should be
      * grouped into a single footer. Ensures the proximity check does not reject
      * legitimate multi-line footers.

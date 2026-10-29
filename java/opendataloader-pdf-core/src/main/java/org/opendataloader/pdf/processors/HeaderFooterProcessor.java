@@ -55,8 +55,11 @@ public class HeaderFooterProcessor {
             sortedContents.add(DocumentProcessor.sortPageContents(content));
         }
         List<List<IObject>> filteredSortedContents = new ArrayList<>();
+        // A header or footer that the hybrid backend gave (#623) is not a candidate:
+        // it would become a header in a header.
         for (List<IObject> content : sortedContents) {
-            filteredSortedContents.add(content.stream().filter(c -> !(c instanceof LineChunk) && !(c instanceof LineArtChunk)).collect(Collectors.toList()));
+            filteredSortedContents.add(content.stream().filter(c -> !(c instanceof LineChunk) && !(c instanceof LineArtChunk)
+                    && !(c instanceof SemanticHeaderOrFooter)).collect(Collectors.toList()));
         }
         List<SemanticHeaderOrFooter> footers = getHeadersOrFooters(filteredSortedContents, false);
         List<SemanticHeaderOrFooter> headers = getHeadersOrFooters(filteredSortedContents, true);

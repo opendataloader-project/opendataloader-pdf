@@ -21,6 +21,7 @@ import org.opendataloader.pdf.entities.SemanticFormula;
 import org.opendataloader.pdf.entities.SemanticPicture;
 import org.opendataloader.pdf.hybrid.HybridClient.HybridResponse;
 import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
@@ -53,7 +54,7 @@ import java.util.logging.Logger;
  *   <li>texts (label: text) → SemanticParagraph</li>
  *   <li>texts (label: section_header) → SemanticHeading</li>
  *   <li>texts (label: caption, footnote) → SemanticParagraph</li>
- *   <li>texts (label: page_header, page_footer) → Filtered out (furniture)</li>
+ *   <li>texts (label: page_header, page_footer) → SemanticParagraph in its own SemanticHeaderOrFooter</li>
  *   <li>tables → TableBorder with rows and cells</li>
  *   <li>pictures → SemanticPicture (with optional description)</li>
  * </ul>
@@ -260,11 +261,6 @@ public class DoclingSchemaTransformer implements HybridSchemaTransformer {
     private void transformText(JsonNode textNode, List<List<IObject>> result, Map<Integer, Double> pageHeights) {
         String label = getTextValue(textNode, "label");
 
-        // Skip furniture elements (page headers/footers)
-        if (LABEL_PAGE_HEADER.equals(label) || LABEL_PAGE_FOOTER.equals(label)) {
-            return;
-        }
-
         // Get provenance for position info
         JsonNode prov = textNode.get("prov");
         if (prov == null || !prov.isArray() || prov.size() == 0) {
@@ -300,9 +296,27 @@ public class DoclingSchemaTransformer implements HybridSchemaTransformer {
             object = createParagraph(text, bbox);
         }
 
-        if (object != null) {
+        if (LABEL_PAGE_HEADER.equals(label)) {
+            result.get(pageIndex).add(createHeaderOrFooter(SemanticType.HEADER, object));
+        } else if (LABEL_PAGE_FOOTER.equals(label)) {
+            result.get(pageIndex).add(createHeaderOrFooter(SemanticType.FOOTER, object));
+        } else {
             result.get(pageIndex).add(object);
         }
+    }
+
+    /**
+     * Puts a page header or footer text (furniture) in a header or footer element.
+     *
+     * <p>The writers show header and footer elements only with --include-header-footer.
+     * Dropping the text here left that option nothing to show (#623). Each text gets its own
+     * element: one box around texts at separate places (a top line and a stamp in the margin)
+     * can cover the body columns and stop the reading order from splitting them.
+     */
+    private SemanticHeaderOrFooter createHeaderOrFooter(SemanticType type, IObject object) {
+        SemanticHeaderOrFooter headerOrFooter = new SemanticHeaderOrFooter(type);
+        headerOrFooter.addContents(Collections.singletonList(object));
+        return headerOrFooter;
     }
 
     /**
