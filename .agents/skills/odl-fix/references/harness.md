@@ -99,7 +99,7 @@ A normalizer is a decision that a difference does not matter. Add one only with 
 | `invariants` | An invariant applies | For each invariant: no new error; each output file is equal, equal after its normalizers, or allowed. No output at all is a failure (for example, no hybrid server) |
 | `reporter` | The contract has `reporter` | Each run: the base expectations hold on base.jar, the fix expectations hold on fix.jar, and the outputs are equal after `fix_equals_base` |
 | `bench` | A file in `java/` changes, other than tests | `scripts/bench.sh` for both jars in `$WORK/bench`; `bench.py compare` exits 0; the fix meets the thresholds if the base does; no new `Error converting` |
-| `pr-watch` | `check --final` | Each CI check passed. Each critical or major CodeRabbit inline comment has a reply by a person in its thread. Each CodeRabbit review body with a critical or major finding outside the diff has a later comment or review by a person. `waiting` while a check runs |
+| `pr-watch` | `check --final` | Each CI check passed. Each critical or major CodeRabbit inline comment has an answer by a person in its thread. Each CodeRabbit review body with a critical or major finding outside the diff has a later answer by a person (a comment or a review). An answer has text: a bot command (`@coderabbitai review`) or an empty review does not count. `waiting` while a check runs |
 
 Sandbox notes:
 

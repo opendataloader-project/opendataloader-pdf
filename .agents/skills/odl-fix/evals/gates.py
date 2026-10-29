@@ -412,7 +412,16 @@ def g21_review_body_findings(tmp):
     assert fg.judge_pr(green, [], [rv], [person_later])["state"] == "pass"
     summary_only = {**rv, "body": "**Actionable comments posted: 0**\n<details><summary>Review details</summary> Major refactor? no</details>"}
     assert fg.judge_pr(green, [], [summary_only], [])["state"] == "pass"
-    return "outside-diff major -> open until a later comment by a person; a bot or an earlier comment does not count"
+    for command in ("@coderabbitai review", "@CodeRabbitAI full review", "/review", "  "):
+        later = {**person_later, "body": command}
+        assert fg.judge_pr(green, [], [rv], [later])["state"] == "fail", command
+    empty_review = {"user": {"login": "maintainer", "type": "User"}, "submitted_at": "2026-10-29T11:00:00Z", "body": ""}
+    assert fg.judge_pr(green, [], [rv, empty_review], [])["state"] == "fail", "GitHub makes an empty review for each inline reply"
+    addressed = {**person_later, "body": "@coderabbitai The loop has a limit of 32 levels: see line 41."}
+    assert fg.judge_pr(green, [], [rv], [addressed])["state"] == "pass"
+    major = {"id": 1, "user": {"login": "coderabbitai[bot]"}, "body": "**Major** · no limit"}
+    assert fg.judge_pr(green, [major, {"id": 2, "in_reply_to_id": 1, "user": {"login": "maintainer"}, "body": "@coderabbitai review"}])["state"] == "fail"
+    return "outside-diff major -> open until a later answer by a person; a bot, an earlier comment, a command, or an empty review does not count"
 
 
 def g22_pinning_control(tmp):

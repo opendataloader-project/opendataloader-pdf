@@ -1512,6 +1512,16 @@ def is_person(x: dict) -> bool:
     return user.get("type") != "Bot" and not (user.get("login") or "").endswith("[bot]")
 
 
+# A bot command is not an answer: "@coderabbitai review", "@coderabbitai full review", "/review"
+COMMAND_RE = re.compile(r"(@coderabbitai\s+[A-Za-z-]+(\s+[A-Za-z-]+)?|/[A-Za-z-]+)", re.I)
+
+
+def is_answer(x: dict) -> bool:
+    """A comment or review by a person with text. An empty review (GitHub makes one for each inline reply) or a command is not."""
+    body = (x.get("body") or "").strip()
+    return is_person(x) and bool(body) and not COMMAND_RE.fullmatch(body)
+
+
 def judge_pr(checks: list[dict], comments: list[dict], reviews: list[dict] | None = None,
              issue_comments: list[dict] | None = None) -> dict:
     """CI buckets and CodeRabbit findings. Critical and major need a reply from a person.
@@ -1526,9 +1536,9 @@ def judge_pr(checks: list[dict], comments: list[dict], reviews: list[dict] | Non
     for x in top:
         m = re.search(r"(Critical|Major|Minor|Trivial|Nitpick)", x.get("body") or "")
         sev = m.group(1).lower() if m else "unknown"
-        replied = any(y.get("in_reply_to_id") == x.get("id") and is_person(y) for y in comments)
+        replied = any(y.get("in_reply_to_id") == x.get("id") and is_answer(y) for y in comments)
         rows.append({"id": x.get("id"), "path": x.get("path"), "line": x.get("line"), "where": "inline", "severity": sev, "replied": replied})
-    later = [(x.get("created_at") or x.get("submitted_at") or "") for x in (issue_comments or []) + (reviews or []) + comments if is_person(x)]
+    later = [(x.get("created_at") or x.get("submitted_at") or "") for x in (issue_comments or []) + (reviews or []) + comments if is_answer(x)]
     for rv in reviews or []:
         if (rv.get("user") or {}).get("login") != "coderabbitai[bot]":
             continue
