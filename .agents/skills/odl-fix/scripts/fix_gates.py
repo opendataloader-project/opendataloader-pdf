@@ -1203,7 +1203,7 @@ def gate_reporter(ctx: Ctx, c: dict) -> dict:
         good = row["base"]["ok"] and row["fix"]["ok"] and row.get("equal", True)
         ok &= good
         rows.append({**row, "ok": good})
-    return {"state": "pass" if ok else "fail", "summary": {"runs": rows}}
+    return {"state": "pass" if ok else "fail", "summary": {"runs": rows, "document_sha256": sha256_file(doc)}}
 
 
 def gate_bench(ctx: Ctx, c: dict) -> dict:
@@ -1349,6 +1349,11 @@ def contract_changes(frozen: dict, current: dict) -> tuple[list[str], list[str]]
     return changes, errors
 
 
+def reporter_document_sha(ctx: Ctx, c: dict) -> str | None:
+    rep = c.get("reporter")
+    return sha256_file(os.path.join(ctx.work, rep["document"])) if rep else None
+
+
 def load_lock(ctx: Ctx) -> dict | None:
     path = os.path.join(ctx.work, "contract.lock")
     if not os.path.exists(path):
@@ -1406,6 +1411,9 @@ def compute_check(ctx: Ctx, final: bool = False) -> dict:
         errors.append("the contract is not frozen (Approval 1, then fix_gates.py freeze)")
     else:
         amend_changes, amend_errors = contract_changes(lock["contract"], c)
+        doc_sha = reporter_document_sha(ctx, c)
+        if lock.get("document_sha256") and doc_sha != lock["document_sha256"]:
+            amend_errors.append("the reporter's document changed after the freeze (the contract names its content, not only its path)")
         errors += amend_errors
     jars = {"base": sha256_file(ctx.jar("base")), "fix": sha256_file(ctx.jar("fix"))}
     gates = ["problem"] + required_gates(c, changes) + (["pr-watch"] if final else [])
@@ -1435,6 +1443,8 @@ def compute_check(ctx: Ctx, final: bool = False) -> dict:
             why = "base.jar changed after the build"
         if not why and g in USES_JARS and rec.get("jars") != jars:
             why = "for other jars"
+        if not why and g == "reporter" and rec["summary"].get("document_sha256") != reporter_document_sha(ctx, c):
+            why = "for another reporter document"
         rows.append({"gate": g, "state": rec["state"] if rec else "none", "ok": not why, "why": why})
     ok_self, self_errors, self_notes = selfcheck_state(ctx, tree)
     errors += self_errors
@@ -1681,7 +1691,8 @@ def main(argv: list[str] | None = None) -> int:
             if not rec or rec["state"] != "pass" or rec["contract"] != contract_hash(c) or rec["base"] != ctx.base():
                 raise Refused("freeze needs a passing problem record of this contract on this base")
             with open(os.path.join(ctx.work, "contract.lock"), "w", encoding="utf-8") as f:
-                json.dump({"sha256": contract_hash(c), "frozen_at": now(), "base": ctx.base(), "contract": c}, f, indent=1)
+                json.dump({"sha256": contract_hash(c), "frozen_at": now(), "base": ctx.base(), "contract": c,
+                           "document_sha256": reporter_document_sha(ctx, c)}, f, indent=1)
             print(f"frozen {contract_hash(c)[:8]}")
             return 0
         if a.cmd == "check":
