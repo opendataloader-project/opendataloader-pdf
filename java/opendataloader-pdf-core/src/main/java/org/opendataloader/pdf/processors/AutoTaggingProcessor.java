@@ -1373,6 +1373,11 @@ public class AutoTaggingProcessor {
      * ends read "3." "O" "ur Mental Shortcuts", the "O" outside both links. By centre, every
      * glyph goes to exactly one of two ranges that meet. A chunk without glyph positions is one
      * piece, placed by its own centre.
+     *
+     * <p>So is a chunk whose value has more characters than glyphs, as
+     * {@code --replace-invalid-chars} makes it with a replacement of more than one character for a
+     * glyph without Unicode. Cut, such a chunk stopped the tagged PDF with an
+     * {@code IndexOutOfBoundsException} in {@code TextChunk.getTextChunk}.
      */
     private static TextChunk glyphsWithin(TextChunk textChunk, double left, double right) {
         if (left >= right) {
