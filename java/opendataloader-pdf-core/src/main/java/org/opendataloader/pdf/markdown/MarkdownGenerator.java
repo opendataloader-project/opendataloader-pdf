@@ -32,6 +32,7 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.listLabelsDetection.NumberingStyleNames;
 
 import java.io.Closeable;
@@ -294,7 +295,7 @@ public class MarkdownGenerator implements Closeable {
                 markdownWriter.write(MarkdownSyntax.LIST_ITEM);
                 markdownWriter.write(MarkdownSyntax.SPACE);
                 if (NumberingStyleNames.UNORDERED.equals(list.getNumberingStyle())) {
-                    itemText = itemText.substring(item.getLabelLength());
+                    itemText = getTextWithoutLabel(item);
                 }
             }
             markdownWriter.write(getCorrectMarkdownString(itemText));
@@ -452,13 +453,42 @@ public class MarkdownGenerator implements Closeable {
 
     public static void getTextFromLineForMarkdown(TextLine line, StringBuilder stringBuilder) {
         for (TextChunk chunk : line.getTextChunks()) {
-            if (chunk.getIsStrikethroughText()) {
-                stringBuilder.append(strikethroughTextMD);
+            appendTextChunk(chunk, chunk.getValue(), stringBuilder);
+        }
+    }
+
+    /**
+     * Returns the Markdown text of a list item without its label. The label length counts the
+     * characters of the text, so the label characters are written without the strikethrough
+     * markup before the cut. Markup there would move the cut into the markup (#828).
+     */
+    private static String getTextWithoutLabel(ListItem item) {
+        List<TextLine> lines = item.getLines();
+        StringBuilder stringBuilder = new StringBuilder();
+        int labelCharactersLeft = item.getLabelLength();
+        for (TextChunk chunk : lines.get(0).getTextChunks()) {
+            String value = chunk.getValue();
+            int labelEnd = Math.min(labelCharactersLeft, value.length());
+            stringBuilder.append(value, 0, labelEnd);
+            labelCharactersLeft -= labelEnd;
+            if (labelEnd < value.length()) {
+                appendTextChunk(chunk, value.substring(labelEnd), stringBuilder);
             }
-            stringBuilder.append(chunk.getValue());
-            if (chunk.getIsStrikethroughText()) {
-                stringBuilder.append(strikethroughTextMD);
-            }
+        }
+        for (int i = 1; i < lines.size(); i++) {
+            TextChunkUtils.formatLineEnd(stringBuilder);
+            getTextFromLineForMarkdown(lines.get(i), stringBuilder);
+        }
+        return stringBuilder.substring(item.getLabelLength());
+    }
+
+    private static void appendTextChunk(TextChunk chunk, String value, StringBuilder stringBuilder) {
+        if (chunk.getIsStrikethroughText()) {
+            stringBuilder.append(strikethroughTextMD);
+        }
+        stringBuilder.append(value);
+        if (chunk.getIsStrikethroughText()) {
+            stringBuilder.append(strikethroughTextMD);
         }
     }
 
