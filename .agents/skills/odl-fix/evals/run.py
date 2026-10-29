@@ -301,12 +301,34 @@ def f18_report(tmp):
     return "missing, reasonless, weakening, unknown -> exit 12; ours first"
 
 
+def f20_crlf(tmp):
+    """A state line in a comment with CRLF line ends counts (CodeRabbit on #849: web UI comments can have CRLF)."""
+    body = "Which version do you use?\r\n\r\nWaiting on: reporter · 2026-10-20\r\n\r\n" + AI.replace("\n", "\r\n")
+    rows, _ = triage(tmp, [issue(20, created="2026-10-01T00:00:00Z")],
+                     {20: [comment("maintainer", "MEMBER", "2026-10-20T00:00:00Z", body)]}, perms=TEAM)
+    assert (rows[20]["class"], rows[20]["waiting_on"]) == ("waiting", ["reporter"]), rows[20]
+    return "CRLF state line -> waiting"
+
+
+def f21_graphql_failure(tmp):
+    """If the pull request links of an issue cannot be read, the triage is incomplete (exit 11), not silently "new" (CodeRabbit on #849)."""
+    data = {"repo": "o/r", "fetched_at": NOW, "total_count": 1, "issues": [issue(21)], "comments": {}, "closing_prs": {},
+            "permissions": {}, "refs": {}, "mentioned_prs": {}, "incomplete": [21]}
+    path = os.path.join(tmp, "fixture.json")
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f)
+    res = run("triage", "--fixture", path, "--work", tmp, check=False)
+    assert res.returncode == 11 and "#21" in res.stdout, (res.returncode, res.stdout)
+    return "GraphQL failure for #21 -> exit 11"
+
+
 EVALS = [("F1-new", f1_new), ("F2-team-last", f2_team_last_without_state), ("F3-reporter", f3_waiting_on_reporter),
          ("F4-reply", f4_reply_after_state), ("F5-outsider", f5_state_line_by_outsider), ("F6-bot", f6_bot_after_state),
          ("F7-stale", f7_stale), ("F8-pr-wait", f8_waiting_on_a_pull_request), ("F9-upstream", f9_waiting_upstream),
          ("F10-open-pr", f10_open_pull_request), ("F19-mentioned-pr", f19_mentioned_pull_request), ("F11-backlog", f11_backlog), ("F12-maintainers", f12_maintainers),
          ("F13-working", f13_working_and_later_team_comment), ("F14-last-state", f14_last_state_counts),
-         ("F15-footer", f15_footer_line), ("F16-append", f16_append), ("F17-count", f17_count), ("F18-report", f18_report)]
+         ("F15-footer", f15_footer_line), ("F16-append", f16_append), ("F17-count", f17_count), ("F18-report", f18_report),
+         ("F20-crlf", f20_crlf), ("F21-graphql", f21_graphql_failure)]
 
 _gates = importlib.util.spec_from_file_location("gate_evals", os.path.join(os.path.dirname(os.path.abspath(__file__)), "gates.py"))
 _gate_evals = importlib.util.module_from_spec(_gates)

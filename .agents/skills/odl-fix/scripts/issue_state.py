@@ -35,7 +35,8 @@ STALE_DAYS = 90
 AI_LINE = "<sub>🤖 This is an AI-generated comment and may contain mistakes.</sub>"
 AI = "---\n" + AI_LINE
 REF = r"(?:[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9._-]+)?#[0-9]+"
-FOOTER = re.compile(rf"^(Working on it|Waiting on: (?:reporter|maintainers|{REF}(?:, {REF})*)) · ([0-9]{{4}}-[0-9]{{2}}-[0-9]{{2}})[ \t]*$", re.M)
+# \r?: a comment that a person writes in the web UI can have CRLF line ends
+FOOTER = re.compile(rf"^(Working on it|Waiting on: (?:reporter|maintainers|{REF}(?:, {REF})*)) · ([0-9]{{4}}-[0-9]{{2}}-[0-9]{{2}})[ \t]*\r?$", re.M)
 
 # class: (whose turn, next action). The order is the order of the report.
 CLASSES = {
@@ -209,7 +210,10 @@ def collect(a: argparse.Namespace) -> dict:
         data["comments"][n] = [c for page in pages for c in page]
         q = gh_json(["api", "graphql", "-f", f"query={ISSUE_QUERY}", "-F", f"o={owner}", "-F", f"n={name}", "-F", f"i={n}"],
                     check=False) or {}
-        issue_node = ((q.get("data") or {}).get("repository") or {}).get("issue") or {}
+        issue_node = ((q.get("data") or {}).get("repository") or {}).get("issue")
+        if issue_node is None or q.get("errors"):
+            data.setdefault("incomplete", []).append(i["number"])  # no pull request links: the class could be wrong
+            issue_node = {}
         data["closing_prs"][n] = (issue_node.get("closedByPullRequestsReferences") or {}).get("nodes") or []
         sources = [(e or {}).get("source") or {} for e in (issue_node.get("timelineItems") or {}).get("nodes") or []]
         data["mentioned_prs"][n] = sorted({s["number"] for s in sources if s.get("number") and s.get("state") == "OPEN"
@@ -301,6 +305,9 @@ def cmd_triage(a: argparse.Namespace) -> int:
     if data.get("listed") and data.get("total_count") != len(data["issues"]):
         complete = False
         why.append(f"the list has {len(data['issues'])} issues, GitHub counts {data.get('total_count')}")
+    if data.get("incomplete"):
+        complete = False
+        why.append("the pull request links of " + ", ".join(f"#{n}" for n in data["incomplete"]) + " could not be read (GraphQL)")
     out = os.path.join(a.work, "issue-triage")
     os.makedirs(out, exist_ok=True)
     result = {"repo": data.get("repo"), "fetched_at": data.get("fetched_at"), "complete": complete, "incomplete_reasons": why,

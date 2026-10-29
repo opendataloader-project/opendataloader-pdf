@@ -233,6 +233,7 @@ def setup_repo(tmp):
     git(src, "config", "user.email", "eval@example.invalid")
     git(src, "config", "user.name", "eval")
     write(src, "java/opendataloader-pdf-core/src/main/java/org/x/A.java", "class A {}\n")
+    write(src, "samples/pdf/sample.pdf", "%PDF-1.7\n")
     git(src, "add", "-A")
     git(src, "commit", "-q", "-m", "base")
     git(src, "worktree", "add", "-q", "--detach", os.path.join(work, "base-src"), "HEAD")
@@ -382,6 +383,73 @@ def g19_pinning_needs_junit(tmp):
     return "Java change with only a pytest case -> pinning fails without a Maven run"
 
 
+def g20_formats_only_grow(tmp):
+    """After the freeze, an invariant cannot compare fewer output kinds: that weakens it (CodeRabbit on #849)."""
+    frozen = contract(invariants=[{"id": "I1", "corpus": "samples/pdf"}])
+    weaker = contract(invariants=[{"id": "I1", "corpus": "samples/pdf", "formats": ["json"]}],
+                      amendments=[{"n": 1, "what": "compare JSON only", "why": "faster"}])
+    errors = fg.contract_changes(frozen, weaker)[1]
+    assert any("formats" in e and "markdown" in e for e in errors), errors
+    more = contract(invariants=[{"id": "I1", "corpus": "samples/pdf", "formats": list(fg.KINDS)}],
+                    amendments=[{"n": 1, "what": "list the formats", "why": "explicit"}])
+    assert not fg.contract_changes(frozen, more)[1], fg.contract_changes(frozen, more)
+    return "a removed format -> error, also with an amendment"
+
+
+def g21_review_body_findings(tmp):
+    """A critical or major CodeRabbit finding outside the diff is in the review body, not in an inline thread (CodeRabbit on #849)."""
+    green = [{"name": "test", "bucket": "pass"}]
+    body = ("**Actionable comments posted: 1**\n<details><summary>Outside diff range comments (1)</summary>"
+            "<details><summary>A.java (1)</summary> `40-44`: **Major** · The loop has no limit.</details></details>\n"
+            "<details><summary>Review details</summary> Minor things</details>")
+    rv = {"id": 9, "user": {"login": "coderabbitai[bot]", "type": "Bot"}, "submitted_at": "2026-10-29T10:00:00Z", "body": body}
+    assert fg.judge_pr(green, [], [rv], [])["state"] == "fail"
+    bot_later = {"user": {"login": "github-actions[bot]", "type": "Bot"}, "created_at": "2026-10-29T11:00:00Z", "body": "x"}
+    assert fg.judge_pr(green, [], [rv], [bot_later])["state"] == "fail"
+    person_before = {"user": {"login": "maintainer", "type": "User"}, "created_at": "2026-10-29T09:00:00Z", "body": "x"}
+    assert fg.judge_pr(green, [], [rv], [person_before])["state"] == "fail"
+    person_later = {"user": {"login": "maintainer", "type": "User"}, "created_at": "2026-10-29T11:00:00Z", "body": "Fixed in abc."}
+    assert fg.judge_pr(green, [], [rv], [person_later])["state"] == "pass"
+    summary_only = {**rv, "body": "**Actionable comments posted: 0**\n<details><summary>Review details</summary> Major refactor? no</details>"}
+    assert fg.judge_pr(green, [], [summary_only], [])["state"] == "pass"
+    return "outside-diff major -> open until a later comment by a person; a bot or an earlier comment does not count"
+
+
+def g22_pinning_control(tmp):
+    """Pinning copies the whole tree and needs a passing control run: a case that fails without a revert proves nothing (CodeRabbit on #849)."""
+    ctx, src, work = setup_repo(tmp)
+    c = fg.load_contract(ctx)
+    seen = []
+
+    def fake(control_fails, revert_fails):
+        def run_cases(ctx_, tree, cases, out_dir):
+            assert os.path.exists(os.path.join(tree, "samples", "pdf", "sample.pdf")), "the copy misses files outside java/"
+            a_java = open(os.path.join(tree, "java/opendataloader-pdf-core/src/main/java/org/x/A.java")).read()
+            seen.append((os.path.basename(out_dir), a_java))
+            os.makedirs(os.path.join(out_dir, "reports-opendataloader-pdf-core"), exist_ok=True)
+            fails = control_fails if out_dir.endswith("control") else revert_fails
+            return ({k["id"]: {"status": "fail" if k["id"] in fails else "pass", "message": ""} for k in cases},
+                    {"opendataloader-pdf-core": 0})
+        return run_cases
+
+    real = fg.run_cases
+    try:
+        fg.run_cases = fake({"P1"}, {"P1"})
+        res = fg.gate_pinning(ctx, c)
+        assert res["state"] == "fail" and res["summary"]["control_failed"] == ["P1"], res
+        fg.run_cases = fake(set(), set())
+        assert fg.gate_pinning(ctx, c)["state"] == "fail"
+        seen.clear()
+        fg.run_cases = fake(set(), {"P1"})
+        res = fg.gate_pinning(ctx, c)
+        assert res["state"] == "pass" and res["summary"]["files"][0]["pinned_by"] == ["P1"], res
+        assert seen == [("control", "class A { int fixed; }\n"), ("00", "class A {}\n")], seen
+    finally:
+        fg.run_cases = real
+    assert fg.pinned_by({}, False) == ["compile"]
+    return "failing control -> refused; no failure -> unpinned; revert run sees the base file in a full copy"
+
+
 EVALS = [("G1-problem-reproduces", g1_problem_must_reproduce), ("G2-guard-on-base", g2_guard_holds_on_base),
          ("G3-reports", g3_reports), ("G4-fix-every-case", g4_fix_needs_every_case), ("G5-scope", g5_scope),
          ("G6-pinning", g6_pinning), ("G7-invariants", g7_invariants), ("G8-pdf-id", g8_pdf_document_id),
@@ -389,4 +457,6 @@ EVALS = [("G1-problem-reproduces", g1_problem_must_reproduce), ("G2-guard-on-bas
          ("G11-required-gates", g11_required_gates), ("G12-freshness", g12_check_freshness),
          ("G13-freeze-selfcheck", g13_check_needs_freeze_and_selfcheck), ("G14-report-paths", g14_report_has_no_local_paths),
          ("G15-pull-request", g15_pull_request), ("G16-reporter", g16_reporter_expectations), ("G17-linters", g17_linters),
-         ("G18-wrapper-runners", g18_wrapper_runners), ("G19-pinning-junit", g19_pinning_needs_junit)]
+         ("G18-wrapper-runners", g18_wrapper_runners), ("G19-pinning-junit", g19_pinning_needs_junit),
+         ("G20-formats-grow", g20_formats_only_grow), ("G21-review-body", g21_review_body_findings),
+         ("G22-pinning-control", g22_pinning_control)]
