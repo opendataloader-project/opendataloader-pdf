@@ -26,6 +26,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.pdmodel.documentinterchange.markedcontent.PDMarkedContent;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
@@ -39,8 +40,10 @@ import org.junit.jupiter.api.Test;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.testsupport.TestSamples;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -197,6 +200,46 @@ class LinkTextTaggingTest {
         return file;
     }
 
+    /**
+     * One line, "ABC read the guide here", whose "B" has no Unicode: the font's ToUnicode map gives
+     * it U+FFFD. A link starts on the "B" and covers the rest of the line.
+     */
+    private static Path writeUnmappedGlyph(Path dir, String name) throws IOException {
+        Path file = dir.resolve(name + ".pdf");
+        String line = "ABC read the guide here";
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.LETTER);
+            doc.addPage(page);
+            PDType1Font font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+            StringBuilder cmap = new StringBuilder("/CIDInit /ProcSet findresource begin 12 dict begin begincmap\n"
+                + "/CMapName /Unmapped def /CMapType 2 def\n1 begincodespacerange <00> <FF> endcodespacerange\n");
+            Set<Character> chars = new TreeSet<>();
+            for (char c : line.toCharArray()) {
+                chars.add(c);
+            }
+            cmap.append(chars.size()).append(" beginbfchar\n");
+            for (char c : chars) {
+                cmap.append(String.format("<%02X> <%04X>%n", (int) c, c == 'B' ? 0xFFFD : (int) c));
+            }
+            cmap.append("endbfchar\nendcmap\nCMapName currentdict /CMap defineresource pop\nend\nend\n");
+            PDStream toUnicode = new PDStream(doc,
+                new ByteArrayInputStream(cmap.toString().getBytes(StandardCharsets.US_ASCII)));
+            font.getCOSObject().setItem(COSName.TO_UNICODE, toUnicode);
+            try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
+                cs.beginText();
+                cs.setFont(font, SIZE);
+                cs.newLineAtOffset(X, Y);
+                cs.showText(line);
+                cs.endText();
+            }
+            float left = X + font.getStringWidth("A") / 1000 * SIZE - 0.3f;
+            float right = X + font.getStringWidth(line) / 1000 * SIZE;
+            page.getAnnotations().add(uriLink("https://guide", new PDRectangle(left, Y - 3, right - left, SIZE + 3)));
+            doc.save(file.toFile());
+        }
+        return file;
+    }
+
     private static PDAnnotationLink uriLink(String uri, PDRectangle rect) {
         PDAnnotationLink link = new PDAnnotationLink();
         link.setRectangle(rect);
@@ -207,7 +250,10 @@ class LinkTextTaggingTest {
     }
 
     private static File tag(String name, Path source) throws IOException {
-        Config config = new Config();
+        return tag(name, source, new Config());
+    }
+
+    private static File tag(String name, Path source, Config config) throws IOException {
         config.setOutputFolder(source.getParent().toString());
         config.setGenerateJSON(false);
         config.setGenerateTaggedPDF(true);
@@ -474,5 +520,21 @@ class LinkTextTaggingTest {
         String line = "Please read the full guide";
         String name = "link-many";
         assertEachGlyphAndLinkOnce(tag(name, writeManyLinks(TestSamples.emptyDirectory(name), name, line, 40)), line);
+    }
+
+    /**
+     * A link over part of a word with a glyph without Unicode, and a replacement of three
+     * characters for that glyph: the word has more characters than glyphs. Cut at the link's edge,
+     * it stopped the tagged PDF with an IndexOutOfBoundsException. The word goes to one side whole.
+     */
+    @Test
+    void aLinkOverAWordWithALongerReplacementGivesATaggedPdf() throws IOException {
+        String name = "link-replaced-glyph";
+        Config config = new Config();
+        config.setReplaceInvalidChars("[?]");
+        File tagged = tag(name, writeUnmappedGlyph(TestSamples.emptyDirectory(name), name), config);
+
+        assertThat(tagged).isFile();
+        assertEachGlyphAndLinkOnce(tagged, "A\uFFFDC read the guide here");
     }
 }
