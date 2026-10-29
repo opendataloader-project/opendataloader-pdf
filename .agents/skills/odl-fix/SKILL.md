@@ -36,7 +36,7 @@ Use this skill to fix one GitHub issue of opendataloader-pdf and send a pull req
 2. **Evidence is a run.** Run the reporter's command. It must fail on `before` and pass on the fix. Run it on the committed sample and on the reporter's document (locally). `before` is the release. For a regression that is not released, `before` is the base build. The harness runs the contract on the base build and on the fix and records each run. Write the command or the API call yourself (Rule 10).
 3. **Reproduce first.** If the failure does not occur, stop. Report the commands that you ran.
 4. **Do not commit an original.** Use the reporter's document only on your computer. Commit only samples that you make (see "Reproduction samples"). Do not upload, attach, or quote the original. This rule applies also to public documents.
-5. **One problem, smallest change.** The contract scope names the files that the fix can change. Each changed file must be needed by a case (the pinning gate). Write problems outside the diff in the pull request. Exception: tell a security vulnerability only to the user.
+5. **One problem, smallest change.** The contract scope names the files that the fix can change (the scope gate). Each changed Java main file must be needed by a JUnit case (the pinning gate). Write problems outside the diff in the pull request. Exception: tell a security vulnerability only to the user.
 6. **Show real output.** Each command, number, and example in a draft must come from a run on the final commit. Take the numbers from `fix_gates.py report`. If you cannot show it, the step is not complete.
 7. **The contract defines done; code checks it.** Write the contract before the fix. The user approves it at Approval 1. After that, it can only grow, with an amendment for each change. `fix_gates.py check` decides if the work is done. Do not decide it yourself, and do not start another agent to judge it (Phase 4).
 8. **Do not change this skill during a fix.** Record each problem with the text of this skill in the skill log. Do not record sandbox problems there (see "Skill feedback").
@@ -636,7 +636,7 @@ In a project clone, `origin` is the project. In a fork clone, `origin` is your f
 python3 -I .agents/skills/odl-fix/scripts/fix_gates.py pr-watch --work "$WORK" --pr <PR>
 ```
 
-Exit 0: each check passed, and each critical or major CodeRabbit comment has a reply. `waiting`: a check still runs (CodeRabbit needs some minutes). Run the command again later.
+Exit 0: each check passed, and each critical or major CodeRabbit finding has an answer by a person (text, not a bot command). `waiting`: a check still runs (CodeRabbit needs some minutes). Run the command again later.
 
 - **Test & Benchmark** runs for changes in `java/`, `python/`, `node/`, `scripts/`, `verification/`, `samples/`, `.github/workflows/`. **Skill Lint** and **Skill Smoke Test** run for `skills/odl-pdf/` and `skills/odl-pdf-maintenance/`. Other changes have no checks.
 - If the paths match but no checks show, run `gh run list --repo "$REPO" --branch <branch> --limit 5`. A run that waits for approval needs a maintainer. Report it and go to step 6.

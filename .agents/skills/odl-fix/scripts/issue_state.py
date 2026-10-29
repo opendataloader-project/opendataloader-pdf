@@ -51,7 +51,8 @@ CLASSES = {
     "pr": ("other", "An open pull request closes it: see the odl-review triage"),
     "waiting": ("other", "None: wait"),
 }
-FACT_TURN_US = {"new", "recheck", "decide", "working", "backlog", "stale"}
+# A judgment cannot move these to another person's turn: a post with a state line does that
+FACT_TURN_US = {"new", "recheck", "judge", "decide", "working", "backlog", "stale"}
 
 
 # ---------------------------------------------------------------- common
@@ -163,6 +164,8 @@ def counted_footers(comments, perms):
     """The state lines by writers, oldest first, and the logins of the other authors of state lines."""
     counted, ignored = [], set()
     for c in comments:
+        if is_bot(c.get("user")):
+            continue  # bot comments do not count, also with write access
         f = footer_of(c.get("body"))
         if not f:
             continue
