@@ -969,9 +969,16 @@ public class HybridDocumentProcessor {
             // and copy StreamInfos to SemanticFormula objects
             // Run even with no Java text: a page that draws its words as outlines
             // has none, and its nodes still take the outlines they lie over.
-            enrichTextStreamInfos(backendPage, javaTextChunks, new PagePaints(pageNumber));
+            Set<Integer> usedJavaIndices =
+                enrichTextStreamInfos(backendPage, javaTextChunks, new PagePaints(pageNumber));
             if (!javaTextChunks.isEmpty()) {
                 enrichFormulaStreamInfos(backendPage, javaTextChunks);
+                List<IObject> missed = paragraphsOfTextTheBackendMissed(backendPage, javaTextChunks, usedJavaIndices);
+                if (!missed.isEmpty()) {
+                    backendPage = new ArrayList<>(backendPage);
+                    backendPage.addAll(missed);
+                    entry.setValue(backendPage);
+                }
             }
 
             final int pg = pageNumber;
@@ -1014,10 +1021,50 @@ public class HybridDocumentProcessor {
      * This preserves the backend's structural decisions (heading/paragraph/reading order)
      * while using the Java TextChunks that carry StreamInfo.
      */
-    private static void enrichTextStreamInfos(List<IObject> backendPage, List<TextChunk> javaTextChunks,
-                                              PagePaints paints) {
+    private static Set<Integer> enrichTextStreamInfos(List<IObject> backendPage, List<TextChunk> javaTextChunks,
+                                                      PagePaints paints) {
         Set<Integer> usedJavaIndices = new HashSet<>();
         enrichTextStreamInfosRecursive(backendPage, javaTextChunks, usedJavaIndices, paints);
+        return usedJavaIndices;
+    }
+
+    /**
+     * Builds paragraphs from the stream text the backend returned no element for.
+     *
+     * <p>A backend can miss text the content stream holds. Docling under --force-ocr, with
+     * an OCR engine that cannot read Hangul, returned no item for Korean paragraphs. Their
+     * chunks matched nothing, were left out of the page, and the tagger wrote them as
+     * /Artifact, out of reach of assistive technology (PDFDLOSP-41). Text inside an element
+     * the backend did return (a picture, a table, a page header) stays as it is: the backend
+     * said what that area holds.
+     */
+    private static List<IObject> paragraphsOfTextTheBackendMissed(
+            List<IObject> backendPage, List<TextChunk> javaTextChunks, Set<Integer> usedJavaIndices) {
+        List<IObject> missed = new ArrayList<>();
+        for (int i = 0; i < javaTextChunks.size(); i++) {
+            TextChunk chunk = javaTextChunks.get(i);
+            if (!usedJavaIndices.contains(i) && !chunk.getStreamInfos().isEmpty()
+                    && !insideAnyElement(chunk, backendPage)) {
+                missed.add(chunk);
+            }
+        }
+        if (missed.isEmpty()) {
+            return missed;
+        }
+        return ParagraphProcessor.processParagraphs(TextLineProcessor.processTextLines(missed));
+    }
+
+    private static boolean insideAnyElement(TextChunk chunk, List<IObject> backendPage) {
+        double tol = 5.0;
+        double cx = chunk.getCenterX();
+        double cy = chunk.getCenterY();
+        for (IObject element : backendPage) {
+            if (cx >= element.getLeftX() - tol && cx <= element.getRightX() + tol
+                    && cy >= element.getBottomY() - tol && cy <= element.getTopY() + tol) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
