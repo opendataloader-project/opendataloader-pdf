@@ -15,6 +15,8 @@
  */
 package org.opendataloader.pdf.api.cli;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -35,6 +37,7 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -698,6 +701,38 @@ class CLIOptionsTest {
         Config config = CLIOptions.createConfigFromCommandLine(cmd);
 
         assertEquals(HybridConfig.DEFAULT_CHUNK_SIZE, config.getHybridConfig().getChunkSize());
+    }
+
+    /**
+     * The default of --hybrid-chunk-size is in HybridConfig, in the CLI option, and in
+     * options.json, from which the Python and Node wrappers are generated (#708). If one of them
+     * changes without {@code npm run sync}, the wrappers and the JVM give different defaults.
+     */
+    @Test
+    void testHybridChunkSizeDefault_isTheSameInEachSource() throws IOException {
+        String expected = String.valueOf(HybridConfig.DEFAULT_CHUNK_SIZE);
+        ObjectMapper mapper = new ObjectMapper();
+
+        ByteArrayOutputStream exported = new ByteArrayOutputStream();
+        CLIOptions.exportOptionsAsJson(new PrintStream(exported, true, StandardCharsets.UTF_8));
+        JsonNode cliOption = hybridChunkSizeOption(mapper.readTree(exported.toString(StandardCharsets.UTF_8)));
+        assertEquals(expected, cliOption.path("default").asText(), "default of the CLI option");
+        assertTrue(cliOption.path("description").asText().endsWith("Default: " + expected),
+                "the CLI help gives another default: " + cliOption.path("description").asText());
+
+        Path optionsJson = Paths.get("../../options.json");
+        assertTrue(Files.isRegularFile(optionsJson), "no options.json at " + optionsJson.toAbsolutePath());
+        JsonNode committed = hybridChunkSizeOption(mapper.readTree(optionsJson.toFile()));
+        assertEquals(expected, committed.path("default").asText(), "default in options.json (run npm run sync)");
+    }
+
+    private static JsonNode hybridChunkSizeOption(JsonNode root) {
+        for (JsonNode option : root.path("options")) {
+            if ("hybrid-chunk-size".equals(option.path("name").asText())) {
+                return option;
+            }
+        }
+        return fail("no hybrid-chunk-size option in " + root);
     }
 
     @FunctionalInterface

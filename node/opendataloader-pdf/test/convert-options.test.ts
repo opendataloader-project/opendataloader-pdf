@@ -105,6 +105,7 @@ describe('buildArgs()', () => {
       imageOutput: 'external',
       imageFormat: 'jpeg',
       sanitize: true,
+      hybridChunkSize: '10',
     };
 
     const args = buildArgs(options);
@@ -133,6 +134,8 @@ describe('buildArgs()', () => {
     expect(args).toContain('--image-format');
     expect(args).toContain('jpeg');
     expect(args).toContain('--sanitize');
+    expect(args).toContain('--hybrid-chunk-size');
+    expect(args[args.indexOf('--hybrid-chunk-size') + 1]).toBe('10');
   });
 
   it('should not include undefined options', () => {
@@ -229,6 +232,7 @@ describe('buildConvertOptions()', () => {
       htmlPageSeparator: '<hr>',
       imageOutput: 'external',
       imageFormat: 'jpeg',
+      hybridChunkSize: '10',
     };
     const result = buildConvertOptions(cliOptions);
     expect(result.outputDir).toBe('/output');
@@ -246,5 +250,6 @@ describe('buildConvertOptions()', () => {
     expect(result.htmlPageSeparator).toBe('<hr>');
     expect(result.imageOutput).toBe('external');
     expect(result.imageFormat).toBe('jpeg');
+    expect(result.hybridChunkSize).toBe('10');
   });
 });

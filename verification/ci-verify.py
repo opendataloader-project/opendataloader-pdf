@@ -401,8 +401,55 @@ def run_comparison(
 # Option coverage check
 # ---------------------------------------------------------------------------
 
+def _cli_help_text() -> str | None:
+    """Return the help that the bundled CLI JAR prints, or None if the JAR does not run.
+
+    The JAR prints its help when it gets no input. The --help of the Python wrapper comes from
+    argparse (generated from options.json), so it cannot show which options the JAR knows.
+    run_jar starts the same JAR with the same JVM options as the wrapper.
+    """
+    try:
+        result = subprocess.run(
+            [sys.executable, "-c",
+             "from opendataloader_pdf.runner import run_jar; run_jar([], quiet=True)"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=REPO_ROOT,
+            timeout=120,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        print(f"       [option coverage] cannot run the CLI JAR: {exc}")
+        return None
+    if result.returncode != 0 or not result.stdout.strip():
+        print(f"       [option coverage] the CLI JAR gave no help (exit {result.returncode}): "
+              f"{result.stderr[:200]}")
+        return None
+    return result.stdout
+
+
+def _help_option_names(help_text: str) -> set[str]:
+    """Return the option names in the option column of the JAR help.
+
+    An option line starts with at most 4 spaces (" -f,--format <arg>", "    --hybrid <arg>").
+    Wrapped description lines start in the description column, and they can name an option
+    ("--hybrid-url. Values: ..."), so a search of the whole text finds an option that is absent.
+    """
+    names: set[str] = set()
+    for line in help_text.splitlines():
+        stripped = line.lstrip(" ")
+        if stripped.startswith("-") and len(line) - len(stripped) <= 4:
+            names.update(stripped.split()[0].split(","))
+    return names
+
+
 def check_option_coverage() -> None:
-    """Read options.json and verify all non-hybrid options are in COVERED_OPTIONS."""
+    """Read options.json and verify all non-hybrid options are in COVERED_OPTIONS.
+
+    The options in HYBRID_OPTIONS have no behavioral check here, so verify at least that the
+    CLI JAR knows each of them.
+    """
     options_path = os.path.join(REPO_ROOT, "options.json")
     if not os.path.exists(options_path):
         # Fail closed: this is the authoritative option registry for the
@@ -427,8 +474,22 @@ def check_option_coverage() -> None:
         for flag in uncovered:
             print(f"  {flag}")
         sys.exit(1)
-    else:
-        print(f"Option coverage check passed ({len(COVERED_OPTIONS)} options covered).")
+
+    # Fail closed: the wrapper passes each option of options.json to the JAR, so an option
+    # that the JAR does not know would pass this gate without any check.
+    help_text = _cli_help_text()
+    if help_text is None:
+        print("ERROR: cannot read the help of the CLI JAR; cannot verify HYBRID_OPTIONS")
+        sys.exit(1)
+    absent = sorted(HYBRID_OPTIONS - _help_option_names(help_text))
+    if absent:
+        print("ERROR: The following HYBRID_OPTIONS are not in the help of the CLI JAR:")
+        for flag in absent:
+            print(f"  {flag}")
+        sys.exit(1)
+
+    print(f"Option coverage check passed ({len(COVERED_OPTIONS)} options covered, "
+          f"{len(HYBRID_OPTIONS)} hybrid options in the CLI JAR).")
 
 
 # ---------------------------------------------------------------------------
