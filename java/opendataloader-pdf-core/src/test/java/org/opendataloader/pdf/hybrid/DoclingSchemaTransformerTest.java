@@ -27,8 +27,10 @@ import org.opendataloader.pdf.entities.SemanticFormula;
 import org.opendataloader.pdf.entities.SemanticPicture;
 import org.opendataloader.pdf.hybrid.HybridClient.HybridResponse;
 import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
+import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 
 import java.util.HashMap;
@@ -128,27 +130,30 @@ public class DoclingSchemaTransformerTest {
     }
 
     @Test
-    void testFilterPageHeaderFooter() {
+    void testPageHeaderFooterBecomeHeaderAndFooter() {
         ObjectNode json = createDoclingDocument();
         ArrayNode texts = json.putArray("texts");
 
-        // Add page header - should be filtered
         ObjectNode headerNode = texts.addObject();
         headerNode.put("label", "page_header");
         headerNode.put("text", "Chapter 1");
         addProvenance(headerNode, 1, 100, 800, 200, 820);
 
-        // Add page footer - should be filtered
         ObjectNode footerNode = texts.addObject();
         footerNode.put("label", "page_footer");
         footerNode.put("text", "Page 1");
         addProvenance(footerNode, 1, 100, 20, 150, 40);
 
-        // Add regular text - should be kept
         ObjectNode textNode = texts.addObject();
         textNode.put("label", "text");
         textNode.put("text", "Content");
         addProvenance(textNode, 1, 100, 400, 200, 450);
+
+        // A second header text on the same page gets its own header element
+        ObjectNode secondHeaderNode = texts.addObject();
+        secondHeaderNode.put("label", "page_header");
+        secondHeaderNode.put("text", "Report");
+        addProvenance(secondHeaderNode, 1, 400, 800, 500, 820);
 
         HybridResponse response = new HybridResponse("", json, null);
         Map<Integer, Double> pageHeights = new HashMap<>();
@@ -156,9 +161,31 @@ public class DoclingSchemaTransformerTest {
 
         List<List<IObject>> result = transformer.transform(response, pageHeights);
 
+        // The writers show the header and the footer only with --include-header-footer (#623)
         Assertions.assertEquals(1, result.size());
-        Assertions.assertEquals(1, result.get(0).size());
-        Assertions.assertTrue(result.get(0).get(0) instanceof SemanticParagraph);
+        List<IObject> page = result.get(0);
+        Assertions.assertEquals(4, page.size());
+
+        assertHeaderOrFooter(page.get(0), SemanticType.HEADER, "Chapter 1", 100, 800, 200, 820);
+        assertHeaderOrFooter(page.get(1), SemanticType.HEADER, "Report", 400, 800, 500, 820);
+
+        Assertions.assertTrue(page.get(2) instanceof SemanticParagraph);
+        Assertions.assertEquals("Content", ((SemanticParagraph) page.get(2)).getValue());
+
+        assertHeaderOrFooter(page.get(3), SemanticType.FOOTER, "Page 1", 100, 20, 150, 40);
+    }
+
+    private static void assertHeaderOrFooter(IObject object, SemanticType type, String text,
+                                             double left, double bottom, double right, double top) {
+        Assertions.assertTrue(object instanceof SemanticHeaderOrFooter, "not a header or footer: " + object);
+        SemanticHeaderOrFooter headerOrFooter = (SemanticHeaderOrFooter) object;
+        Assertions.assertEquals(type, headerOrFooter.getSemanticType());
+        Assertions.assertEquals(1, headerOrFooter.getContents().size());
+        Assertions.assertEquals(text, ((SemanticParagraph) headerOrFooter.getContents().get(0)).getValue());
+        Assertions.assertEquals(left, headerOrFooter.getLeftX(), 0.01);
+        Assertions.assertEquals(bottom, headerOrFooter.getBottomY(), 0.01);
+        Assertions.assertEquals(right, headerOrFooter.getRightX(), 0.01);
+        Assertions.assertEquals(top, headerOrFooter.getTopY(), 0.01);
     }
 
     @Test
