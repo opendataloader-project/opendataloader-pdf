@@ -73,6 +73,8 @@ public class AutoTaggingProcessor {
     private static Map<SemanticHeading, Integer> normalizedLevels = new IdentityHashMap<>();
     private static boolean isPDF2_0 = false;
     private static final Map<BoundingBox, PDAnnotation> annotationBBoxesMap = new LinkedHashMap<>();
+    // Links over one text chunk that are compared each with each; the DP-Bench documents have up to 3.
+    private static final int MAX_LINKS_COMPARED = 16;
     private static int currentStructParent = 0;
     private static final int MAX_TOKENS_PER_STREAM = 100_000;
     // imageChunkCounter is per-call; tracked via the figureObject index across a document
@@ -1264,8 +1266,8 @@ public class AutoTaggingProcessor {
                 for (TextChunk textChunk : textLine.getTextChunks()) {
                     if (bBoxToAnnotation != null &&
                         (!isAnnotIntersectWithBoundingBox(bBoxToAnnotation.getKey(), textChunk.getBoundingBox()) ||
-                            TextChunkUtils.getTextChunkPartForRange(textChunk, -Double.MAX_VALUE,
-                                bBoxToAnnotation.getKey().getLeftX(), false) != null)) {
+                            glyphsWithin(textChunk, -Double.MAX_VALUE,
+                                bBoxToAnnotation.getKey().getLeftX()) != null)) {
                         createAnnotationStructElem(StaticResources.getDocument().getDocument(), cosObject,
                             bBoxToAnnotation.getValue(), streamInfos, textNode.getPageNumber());
                         annotationBBoxesMap.remove(bBoxToAnnotation.getKey());
@@ -1298,6 +1300,8 @@ public class AutoTaggingProcessor {
                                                                                   SortedMap<BoundingBox, PDAnnotation> annots) {
         Map.Entry<BoundingBox, PDAnnotation> currentBBoxToAnnotation = bBoxToAnnotation;
         double currentRightX = -Double.MAX_VALUE;
+        Set<BoundingBox> withinOthers = linksWithinOthers(annots.keySet(),
+            currentBBoxToAnnotation != null ? currentBBoxToAnnotation.getKey() : null);
         for (Map.Entry<BoundingBox, PDAnnotation> entry : annots.entrySet()) {
             // Reference equality is intentional: currentBBoxToAnnotation may have been
             // carried over from a previous TextChunk when the annotation spans multiple
@@ -1309,32 +1313,45 @@ public class AutoTaggingProcessor {
             // createAnnotationStructElem, so they will never reappear in a subsequent
             // getAnnotationsByBBox call, making the identity check safe and unambiguous.
             BoundingBox boundingBox = entry.getKey();
+            if (!annotationBBoxesMap.containsKey(boundingBox)) {
+                // Ended earlier in this chunk, when the link that sorts before it took over:
+                // taking it up again gave one annotation two Link elements.
+                continue;
+            }
+            if (withinOthers.contains(boundingBox)) {
+                // A link over text that a wider link, or the current one, also covers, as a producer
+                // can write the same link twice: the other link holds the text, whichever comes
+                // first. Switching between the two cut the entry after its first word.
+                continue;
+            }
             if (currentBBoxToAnnotation == null || !Objects.equals(currentBBoxToAnnotation.getKey(), entry.getKey())) {
                 if (currentBBoxToAnnotation != null) {
                     createAnnotationStructElem(StaticResources.getDocument().getDocument(), cosObject,
                         currentBBoxToAnnotation.getValue(), streamInfos, textChunk.getPageNumber());
                     annotationBBoxesMap.remove(currentBBoxToAnnotation.getKey());
                     streamInfos.clear();
-                    currentRightX = currentBBoxToAnnotation.getKey().getRightX();
+                    // Not moved to the ended link's right edge: a link carried over from the chunk
+                    // before has taken none of this chunk, and its glyphs here go to the next link.
+                    // A link that took glyphs here has moved it there already.
                 }
-                TextChunk textChunkPart = TextChunkUtils.getTextChunkPartForRange(textChunk,
-                    currentRightX, boundingBox.getLeftX(), false);
+                TextChunk textChunkPart = glyphsWithin(textChunk, currentRightX, boundingBox.getLeftX());
                 if (textChunkPart != null) {
                     streamInfos.addAll(textChunkPart.getStreamInfos());
                 }
                 addMcidChildren(streamInfos, textChunk.getPageNumber(), cosObject);
                 streamInfos.clear();
             }
-            TextChunk textChunkPart = TextChunkUtils.getTextChunkPartForRange(textChunk,
-                boundingBox.getLeftX(), boundingBox.getRightX(), false);
+            // From where the link before this one ended, when the two overlap: a glyph goes to one
+            // link only. A second link over the same text, as a producer can write it, holds none.
+            TextChunk textChunkPart = glyphsWithin(textChunk,
+                Math.max(boundingBox.getLeftX(), currentRightX), boundingBox.getRightX());
             if (textChunkPart != null) {
                 streamInfos.addAll(textChunkPart.getStreamInfos());
             }
-            currentRightX = boundingBox.getRightX();
+            currentRightX = Math.max(currentRightX, boundingBox.getRightX());
             currentBBoxToAnnotation = entry;
         }
-        TextChunk textChunkPart = TextChunkUtils.getTextChunkPartForRange(textChunk,
-            currentRightX, textChunk.getRightX(), false);
+        TextChunk textChunkPart = glyphsWithin(textChunk, currentRightX, Double.MAX_VALUE);
         if (textChunkPart != null) {
             createAnnotationStructElem(StaticResources.getDocument().getDocument(), cosObject,
                 currentBBoxToAnnotation.getValue(), streamInfos, textChunk.getPageNumber());
@@ -1344,6 +1361,42 @@ public class AutoTaggingProcessor {
             currentBBoxToAnnotation = null;
         }
         return currentBBoxToAnnotation;
+    }
+
+    /**
+     * The glyphs of a text chunk whose centre lies in {@code [left, right)}, or null when there are
+     * none.
+     *
+     * <p>A link's text is cut from the chunks it covers. Cut at the link's edges
+     * ({@link TextChunkUtils#getTextChunkPartForRange}), a glyph that starts exactly on the edge
+     * fell out of the link: a table of contents entry whose link starts where the number's link
+     * ends read "3." "O" "ur Mental Shortcuts", the "O" outside both links. By centre, every
+     * glyph goes to exactly one of two ranges that meet. A chunk without glyph positions is one
+     * piece, placed by its own centre.
+     */
+    private static TextChunk glyphsWithin(TextChunk textChunk, double left, double right) {
+        if (left >= right) {
+            return null;
+        }
+        String value = textChunk.getValue();
+        List<Double> ends = textChunk.getSymbolEnds();
+        if (value == null || value.isEmpty() || ends == null || ends.size() != value.length() + 1) {
+            BoundingBox box = textChunk.getBoundingBox();
+            double centre = (box.getLeftX() + box.getRightX()) / 2;
+            return centre >= left && centre < right ? textChunk : null;
+        }
+        int first = -1;
+        int last = -1;
+        for (int i = 0; i < value.length(); i++) {
+            double centre = (ends.get(i) + ends.get(i + 1)) / 2;
+            if (centre >= left && centre < right) {
+                if (first < 0) {
+                    first = i;
+                }
+                last = i;
+            }
+        }
+        return first < 0 ? null : TextChunk.getTextChunk(textChunk, first, last + 1);
     }
 
     private static Map.Entry<BoundingBox, PDAnnotation> getAnnotationByBBox(BoundingBox boundingBox) {
@@ -1364,6 +1417,53 @@ public class AutoTaggingProcessor {
             }
         }
         return result;
+    }
+
+    /**
+     * The links over a text chunk that take none of its text: each lies within the width of another
+     * of them that holds the text first. A wider link holds it first; of two links as wide, the
+     * current link, and then the one that comes first. One link is never left out: the widest, or
+     * over more than {@link #MAX_LINKS_COMPARED} links, the current one.
+     */
+    private static Set<BoundingBox> linksWithinOthers(Collection<BoundingBox> boxes, BoundingBox current) {
+        List<BoundingBox> list = new ArrayList<>(boxes);
+        List<Integer> others = new ArrayList<>();
+        if (list.size() <= MAX_LINKS_COMPARED) {
+            for (int j = 0; j < list.size(); j++) {
+                others.add(j);
+            }
+        } else if (list.indexOf(current) >= 0) {
+            // Compared each with each, the links of a page with thousands of them over one line
+            // took minutes: only the current link holds text first.
+            others.add(list.indexOf(current));
+        }
+        Set<BoundingBox> out = new HashSet<>();
+        for (int i = 0; i < list.size(); i++) {
+            BoundingBox box = list.get(i);
+            for (int j : others) {
+                BoundingBox other = list.get(j);
+                if (i != j && isWithin(box, other) && holdsTextFirst(other, j, box, i, current)) {
+                    out.add(box);
+                    break;
+                }
+            }
+        }
+        return out;
+    }
+
+    private static boolean holdsTextFirst(BoundingBox a, int aIndex, BoundingBox b, int bIndex, BoundingBox current) {
+        if (a.getWidth() != b.getWidth()) {
+            return a.getWidth() > b.getWidth();
+        }
+        if (a.equals(current) != b.equals(current)) {
+            return a.equals(current);
+        }
+        return aIndex < bIndex;
+    }
+
+    /** Whether a box lies across no more than another's width, a point either side allowed. */
+    private static boolean isWithin(BoundingBox inner, BoundingBox outer) {
+        return inner.getLeftX() >= outer.getLeftX() - 1 && inner.getRightX() <= outer.getRightX() + 1;
     }
 
     private static boolean isAnnotIntersectWithBoundingBox(BoundingBox annotBoundingBox, BoundingBox boundingBox) {
