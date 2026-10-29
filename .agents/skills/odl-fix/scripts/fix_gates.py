@@ -83,6 +83,7 @@ DEFAULT_INVARIANTS = (
     {"id": "native-samples", "corpus": "samples/pdf", "options": [], "formats": list(KINDS), "ignore": [], "allow": []},
     {"id": "native-issue-samples", "corpus": "@issue-samples", "options": [], "formats": list(KINDS), "ignore": [], "allow": []},
 )
+GH_TIMEOUT = 120  # seconds for one gh call of pr-watch
 ORDER = ("base-build", "build", "fix", "scope", "pinning", "static", "wrappers", "issue-corpus", "invariants", "reporter", "bench")
 
 
@@ -675,6 +676,13 @@ def judge_pinning(rows: list[dict]) -> bool:
     return all(r["pinned"] for r in rows)
 
 
+def pinned_by(results: dict, compiled: bool) -> list[str]:
+    """The cases that fail with one file reverted. Tests that no longer compile also need the file."""
+    if not compiled:
+        return ["compile"]
+    return [cid for cid, r in results.items() if r["status"] != "pass"]
+
+
 def gate_pinning(ctx: Ctx, c: dict) -> dict:
     require_clean(ctx.src, "fix tree")
     base = ctx.base()
@@ -683,32 +691,59 @@ def gate_pinning(ctx: Ctx, c: dict) -> dict:
     if changes and not junit:
         rows = [{"file": ch["path"], "status": ch["status"], "pinned": False, "pinned_by": []} for ch in changes]
         return {"state": "fail", "summary": {"files": rows, "note": "Java main code changed, but no JUnit case can pin it"}}
+    if not changes:
+        return {"state": "pass", "summary": {"files": [], "note": "no Java main file changed"}}
+    d = ctx.gate_dir("pinning")
+    tree = os.path.join(d, "tree")
+    shutil.rmtree(tree, ignore_errors=True)
+    os.makedirs(tree)
+    # The whole tree: a case can read files outside java/, for example samples/
+    archive = os.path.join(d, "head.tar")
+    with open(archive, "wb") as f:
+        if subprocess.run(["git", "-C", ctx.src, "archive", "HEAD"], stdout=f).returncode != 0:
+            raise Refused("git archive failed", 3)
+    if subprocess.run(["tar", "-x", "-f", archive, "-C", tree]).returncode != 0:
+        raise Refused("tar failed", 3)
+    os.remove(archive)
+
+    def clean_targets():
+        for target in glob.glob(os.path.join(tree, "java", "*", "target")):
+            shutil.rmtree(target, ignore_errors=True)
+
     rows = []
-    for i, ch in enumerate(changes):
-        d = os.path.join(ctx.gate_dir("pinning"), f"{i:02d}")
-        tree = os.path.join(d, "tree")
-        shutil.rmtree(tree, ignore_errors=True)
-        os.makedirs(tree)
-        archive = os.path.join(d, "java.tar")
-        with open(archive, "wb") as f:
-            if subprocess.run(["git", "-C", ctx.src, "archive", "HEAD", "java"], stdout=f).returncode != 0:
-                raise Refused("git archive failed", 3)
-        if subprocess.run(["tar", "-x", "-f", archive, "-C", tree]).returncode != 0:
-            raise Refused("tar failed", 3)
-        os.remove(archive)
-        if ch["status"] in ("A", "R"):
-            os.remove(os.path.join(tree, ch["path"]))
-        if ch["status"] in ("M", "R", "D"):
-            old = ch["old"] or ch["path"]
-            os.makedirs(os.path.dirname(os.path.join(tree, old)), exist_ok=True)
-            with open(os.path.join(tree, old), "wb") as f:
-                f.write(subprocess.run(["git", "-C", ctx.src, "show", f"{base}:{old}"], capture_output=True).stdout)
-        # The Java files are reverted, so the JUnit cases decide; the wrapper tests would fail without a jar
-        results, exits = run_cases(ctx, tree, junit, os.path.join(d, "run"))
-        failing = [cid for cid, r in results.items() if r["status"] != "pass"]
-        compiled = any(os.path.isdir(os.path.join(d, "run", f"reports-{m}")) for m in exits)
-        pinned_by = failing if compiled else ["compile"]
-        rows.append({"file": ch["path"], "status": ch["status"], "pinned": bool(pinned_by), "pinned_by": pinned_by})
+    try:
+        # Control run: if a case fails in the copy before any revert, its failures prove nothing
+        control, _ = run_cases(ctx, tree, junit, os.path.join(d, "control"))
+        broken = [cid for cid, r in control.items() if r["status"] != "pass"]
+        if broken:
+            return {"state": "fail", "summary": {"files": [], "control_failed": broken,
+                                                 "note": "the JUnit cases fail in the copy before a revert"}}
+        for i, ch in enumerate(changes):
+            touched = [ch["path"]] + ([ch["old"]] if ch.get("old") else [])
+            saved = {rel: (open(os.path.join(tree, rel), "rb").read() if os.path.exists(os.path.join(tree, rel)) else None)
+                     for rel in touched}
+            if ch["status"] in ("A", "R"):
+                os.remove(os.path.join(tree, ch["path"]))
+            if ch["status"] in ("M", "R", "D"):
+                old = ch["old"] or ch["path"]
+                os.makedirs(os.path.dirname(os.path.join(tree, old)), exist_ok=True)
+                with open(os.path.join(tree, old), "wb") as f:
+                    f.write(subprocess.run(["git", "-C", ctx.src, "show", f"{base}:{old}"], capture_output=True).stdout)
+            clean_targets()  # no class file of the reverted code stays
+            run_dir = os.path.join(d, f"{i:02d}")
+            results, exits = run_cases(ctx, tree, junit, run_dir)
+            by = pinned_by(results, any(os.path.isdir(os.path.join(run_dir, f"reports-{m}")) for m in exits))
+            rows.append({"file": ch["path"], "status": ch["status"], "pinned": bool(by), "pinned_by": by})
+            for rel, data in saved.items():
+                path = os.path.join(tree, rel)
+                if data is None:
+                    if os.path.exists(path):
+                        os.remove(path)
+                else:
+                    os.makedirs(os.path.dirname(path), exist_ok=True)
+                    with open(path, "wb") as f:
+                        f.write(data)
+    finally:
         shutil.rmtree(tree, ignore_errors=True)
     return {"state": "pass" if judge_pinning(rows) else "fail", "summary": {"files": rows}}
 
@@ -1275,6 +1310,9 @@ def contract_changes(frozen: dict, current: dict) -> tuple[list[str], list[str]]
                 changes.append(f"invariant {iid}: allow {a['file']} ({a['reason']})")
         if now_i.get("corpus") != inv.get("corpus") or now_i.get("options", []) != inv.get("options", []):
             errors.append(f"invariant {iid}: corpus or options changed after the freeze")
+        removed = sorted(set(inv.get("formats", KINDS)) - set(now_i.get("formats", KINDS)))
+        if removed:
+            errors.append(f"invariant {iid}: formats {', '.join(removed)} removed after the freeze")
     for iid in sorted(set(cinv) - set(finv)):
         changes.append(f"new invariant {iid}")
     if canonical(frozen.get("reporter")) != canonical(current.get("reporter")):
@@ -1462,8 +1500,24 @@ def report_text(ctx: Ctx) -> str:
 # ---------------------------------------------------------------- pull request
 
 
-def judge_pr(checks: list[dict], comments: list[dict]) -> dict:
-    """CI buckets and CodeRabbit comments. Critical and major need a reply from a person."""
+def outside_diff_section(body: str) -> str:
+    """The "Outside diff range comments" part of a CodeRabbit review body: findings on lines that the diff does not show."""
+    m = re.search(r"Outside diff range comments \([0-9]+\)(.*?)(?=Nitpick comments \([0-9]+\)|Review details|Additional comments \([0-9]+\)|\Z)",
+                  body or "", re.S)
+    return m.group(1) if m else ""
+
+
+def is_person(x: dict) -> bool:
+    user = x.get("user") or {}
+    return user.get("type") != "Bot" and not (user.get("login") or "").endswith("[bot]")
+
+
+def judge_pr(checks: list[dict], comments: list[dict], reviews: list[dict] | None = None,
+             issue_comments: list[dict] | None = None) -> dict:
+    """CI buckets and CodeRabbit findings. Critical and major need a reply from a person.
+
+    Inline findings need a reply in their thread. Findings in a review body (outside the diff) need a later
+    comment or review by a person."""
     buckets = {}
     for ch in checks:
         buckets[ch.get("bucket") or "unknown"] = buckets.get(ch.get("bucket") or "unknown", 0) + 1
@@ -1472,8 +1526,17 @@ def judge_pr(checks: list[dict], comments: list[dict]) -> dict:
     for x in top:
         m = re.search(r"(Critical|Major|Minor|Trivial|Nitpick)", x.get("body") or "")
         sev = m.group(1).lower() if m else "unknown"
-        replied = any(y.get("in_reply_to_id") == x.get("id") and not (y.get("user") or {}).get("login", "").endswith("[bot]") for y in comments)
-        rows.append({"id": x.get("id"), "path": x.get("path"), "line": x.get("line"), "severity": sev, "replied": replied})
+        replied = any(y.get("in_reply_to_id") == x.get("id") and is_person(y) for y in comments)
+        rows.append({"id": x.get("id"), "path": x.get("path"), "line": x.get("line"), "where": "inline", "severity": sev, "replied": replied})
+    later = [(x.get("created_at") or x.get("submitted_at") or "") for x in (issue_comments or []) + (reviews or []) + comments if is_person(x)]
+    for rv in reviews or []:
+        if (rv.get("user") or {}).get("login") != "coderabbitai[bot]":
+            continue
+        found = re.findall(r"\b(Critical|Major)\b", outside_diff_section(rv.get("body")))
+        if found:
+            at = rv.get("submitted_at") or ""
+            rows.append({"id": rv.get("id"), "path": None, "line": None, "where": "review body, outside the diff",
+                         "severity": "critical" if "Critical" in found else "major", "replied": any(t > at for t in later)})
     open_items = [r for r in rows if r["severity"] in ("critical", "major", "unknown") and not r["replied"]]
     failing = buckets.get("fail", 0) + buckets.get("cancel", 0)
     pending = buckets.get("pending", 0)
@@ -1483,16 +1546,22 @@ def judge_pr(checks: list[dict], comments: list[dict]) -> dict:
 
 def cmd_pr_watch(a, ctx: Ctx) -> int:
     def gh_json(args, ok_codes=(0,)):
-        res = subprocess.run(["gh", *args], capture_output=True, text=True)
+        try:
+            res = subprocess.run(["gh", *args], capture_output=True, text=True, timeout=GH_TIMEOUT)
+        except subprocess.TimeoutExpired:
+            raise Refused(f"gh {' '.join(args[:3])}: no answer in {GH_TIMEOUT} s", 3)
         if res.returncode not in ok_codes:
             raise Refused(f"gh {' '.join(args[:3])}: {res.stderr.strip()[:300]}", 3)
         return json.loads(res.stdout or "null")
     # gh pr checks exits 1 while a check fails and 8 while a check is pending; the JSON is the same.
     pr = gh_json(["pr", "view", str(a.pr), "--repo", a.repo, "--json", "headRefOid,state"])
     checks = gh_json(["pr", "checks", str(a.pr), "--repo", a.repo, "--json", "name,bucket,state"], (0, 1, 8)) or []
-    pages = gh_json(["api", f"repos/{a.repo}/pulls/{a.pr}/comments?per_page=100", "--paginate", "--slurp"]) or []
-    comments = [x for page in pages for x in page]
-    j = judge_pr(checks, comments)
+    def pages(path):
+        return [x for page in gh_json(["api", f"{path}?per_page=100", "--paginate", "--slurp"]) or [] for x in page]
+    comments = pages(f"repos/{a.repo}/pulls/{a.pr}/comments")
+    reviews = pages(f"repos/{a.repo}/pulls/{a.pr}/reviews")
+    issue_comments = pages(f"repos/{a.repo}/issues/{a.pr}/comments")
+    j = judge_pr(checks, comments, reviews, issue_comments)
     c = load_contract(ctx)
     try:
         pr_tree = ctx.tree(pr["headRefOid"])

@@ -92,14 +92,14 @@ A normalizer is a decision that a difference does not matter. Add one only with 
 | `build` | Always | `scripts/build-java.sh` (all Java tests, Javadoc, enforcer) succeeds with 0 failures and 0 errors; `$WORK/fix.jar` |
 | `fix` | Always | Each case passes on the fix tree |
 | `scope` | Always | Each changed file that is not a test matches the scope |
-| `pinning` | Java main code changes | Each changed Java main file, reverted alone in a copy of the tree, makes a JUnit case fail (or the tests do not compile). Without a JUnit case, the gate fails. An unpinned file is a change that no case needs: remove it, or add the case |
+| `pinning` | Java main code changes | In a copy of the whole tree, the JUnit cases first pass without a revert (the control run). Then each changed Java main file, reverted alone, makes a JUnit case fail (or the tests do not compile). Without a JUnit case, or with a failing control run, the gate fails. An unpinned file is a change that no case needs: remove it, or add the case |
 | `static` | A Java file, or a source file of the Python or Node wrapper (not a generated file), changes | On the changed files in both trees: checkstyle and SpotBugs (Java), ruff and black (Python), eslint and prettier (Node). No count of a tool, file, and rule grows; a new file has none. Each tool ran (for Maven: on each module) |
 | `wrappers` | `java/`, `python/`, `node/`, or `options.json` changes | `build-python.sh`, `build-node.sh`, and `verification/ci-verify.py` (in `$WORK/venv`) exit 0 |
 | `issue-corpus` | `@issue-samples` is in an invariant | The `Issue*Test` classes of the base tree run; their PDFs (`target/test-samples/`) go to `$WORK/corpus/issue-samples` |
 | `invariants` | An invariant applies | For each invariant: no new error; each output file is equal, equal after its normalizers, or allowed. No output at all is a failure (for example, no hybrid server) |
 | `reporter` | The contract has `reporter` | Each run: the base expectations hold on base.jar, the fix expectations hold on fix.jar, and the outputs are equal after `fix_equals_base` |
 | `bench` | A file in `java/` changes, other than tests | `scripts/bench.sh` for both jars in `$WORK/bench`; `bench.py compare` exits 0; the fix meets the thresholds if the base does; no new `Error converting` |
-| `pr-watch` | `check --final` | Each CI check passed; each critical or major CodeRabbit comment has a reply by a person. `waiting` while a check runs |
+| `pr-watch` | `check --final` | Each CI check passed. Each critical or major CodeRabbit inline comment has a reply by a person in its thread. Each CodeRabbit review body with a critical or major finding outside the diff has a later comment or review by a person. `waiting` while a check runs |
 
 Sandbox notes:
 
