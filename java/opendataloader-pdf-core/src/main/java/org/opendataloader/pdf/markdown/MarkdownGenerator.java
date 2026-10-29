@@ -21,6 +21,7 @@ import org.opendataloader.pdf.entities.SemanticFormula;
 import org.opendataloader.pdf.entities.EnrichedImageChunk;
 import org.opendataloader.pdf.entities.SemanticPicture;
 import org.opendataloader.pdf.utils.Base64ImageUtils;
+import org.opendataloader.pdf.utils.ContentSanitizer;
 import org.opendataloader.pdf.utils.GeneratorUtils;
 import org.opendataloader.pdf.utils.ImagesUtils;
 import org.opendataloader.pdf.utils.OutputType;
@@ -32,6 +33,7 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.StreamInfo;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.listLabelsDetection.NumberingStyleNames;
 
@@ -312,6 +314,58 @@ public class MarkdownGenerator implements Closeable {
         }
     }
 
+    /**
+     * Returns the number of characters of the label at the start of the text of a list item. The label length
+     * of the item counts the characters before sanitization. A replacement of the sanitizer keeps the stream
+     * infos of the text that it replaced, so it counts as the length of that text. A replacement that starts in
+     * the label and ends in the body stays in the item text.
+     *
+     * @param item The list item
+     * @return the number of characters to remove from the start of the item text
+     */
+    private static int getLabelEnd(ListItem item) {
+        int remaining = item.getLabelLength();
+        if (remaining <= 0 || item.getLines().isEmpty()) {
+            return 0;
+        }
+        int end = 0;
+        for (TextChunk chunk : item.getFirstLine().getTextChunks()) {
+            int valueLength = chunk.getValue().length();
+            int replacedLength = getReplacedLength(chunk);
+            int length = replacedLength < 0 ? valueLength : replacedLength;
+            if (length > remaining) {
+                return replacedLength < 0 ? end + remaining : end;
+            }
+            end += valueLength;
+            remaining -= length;
+            if (remaining == 0) {
+                break;
+            }
+        }
+        return end;
+    }
+
+    /**
+     * Returns the length of the text that a replacement of the sanitizer replaced, or -1 if the chunk is not a
+     * replacement. A longer replacement has a stream info for its extra characters. A shorter replacement has
+     * stream infos for more characters than its value.
+     *
+     * @param chunk The text chunk
+     * @return the length of the replaced text, or -1
+     */
+    private static int getReplacedLength(TextChunk chunk) {
+        int length = 0;
+        boolean hasExtraCharacters = false;
+        for (StreamInfo streamInfo : chunk.getStreamInfos()) {
+            if (streamInfo.getOperatorIndex() == ContentSanitizer.EXTRA_CHARACTERS_OPERATOR_INDEX) {
+                hasExtraCharacters = true;
+            } else {
+                length += streamInfo.getEndIndex() - streamInfo.getStartIndex();
+            }
+        }
+        return hasExtraCharacters || length > chunk.getValue().length() ? length : -1;
+    }
+
     protected void writeTOC(SemanticTOC toc) throws IOException {
         for (IObject item : toc.getTOCItems()) {
             if (item instanceof SemanticTOC) {
@@ -472,14 +526,15 @@ public class MarkdownGenerator implements Closeable {
     }
 
     /**
-     * Returns the Markdown text of a list item without its label. The label length counts the
+     * Returns the Markdown text of a list item without its label. The label end (getLabelEnd) counts the
      * characters of the text, so the label characters are written without the strikethrough
      * markup before the cut. Markup there would move the cut into the markup (#828).
      */
     private static String getTextWithoutLabel(ListItem item) {
         List<TextLine> lines = item.getLines();
         StringBuilder stringBuilder = new StringBuilder();
-        int labelCharactersLeft = item.getLabelLength();
+        int labelLength = getLabelEnd(item);
+        int labelCharactersLeft = labelLength;
         for (TextChunk chunk : lines.get(0).getTextChunks()) {
             String value = chunk.getValue();
             int labelEnd = Math.min(labelCharactersLeft, value.length());
@@ -493,7 +548,7 @@ public class MarkdownGenerator implements Closeable {
             TextChunkUtils.formatLineEnd(stringBuilder);
             getTextFromLineForMarkdown(lines.get(i), stringBuilder);
         }
-        return stringBuilder.substring(item.getLabelLength());
+        return stringBuilder.substring(labelLength);
     }
 
     private static void appendTextChunk(TextChunk chunk, String value, StringBuilder stringBuilder) {
