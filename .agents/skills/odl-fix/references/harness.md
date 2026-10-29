@@ -117,13 +117,14 @@ A record has the gate, the state, the commit and its tree, the base commit, the 
 - for `problem`, `fix`, `pinning`, `scope`, `invariants`, and `reporter`: its contract hash is the current contract;
 - for `problem`: the case test files are the same as at the run. A weaker test needs a new problem run;
 - for `build`, `base-build`, `invariants`, `reporter`, and `bench`: the jars are the same files;
+- for `reporter`: the reporter's document has the same content as at the freeze;
 - the fix tree has no uncommitted changes.
 
 `check` tells you which gate to run again.
 
 ## Freeze and amendments
 
-`freeze` keeps a copy of the approved contract in `$WORK/contract.lock`. It needs a passing `problem` record of that contract. After the freeze, the contract can only grow:
+`freeze` keeps a copy of the approved contract in `$WORK/contract.lock`, and the hash of the reporter's document. It needs a passing `problem` record of that contract. After the freeze, the contract can only grow:
 
 - You cannot remove a case, an invariant, a format of an invariant, or a reporter run. You cannot change the kind, the test, the symptom, the module, or the runner of a case, the corpus or the options of an invariant, the reporter document, or a reporter run. Add a new case or run instead.
 - Each change needs a new entry in `amendments`. `check` lists each change for Approval 2.

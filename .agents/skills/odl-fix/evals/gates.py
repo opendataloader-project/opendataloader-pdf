@@ -223,7 +223,7 @@ def g11_required_gates(tmp):
     return "Java main -> all gates; README -> 4; Python -> wrappers, no pinning"
 
 
-def setup_repo(tmp):
+def setup_repo(tmp, c_extra=None):
     """A repository with a base commit, a base tree, and a fix commit; a contract; jars; records of each gate."""
     work = os.path.join(tmp, "work")
     src = os.path.join(tmp, "src")
@@ -243,13 +243,14 @@ def setup_repo(tmp):
     git(src, "add", "-A")
     git(src, "commit", "-q", "-m", "fix")
     write(work, "env.sh", f"SRC='{src}'\n")
-    write(work, "contract.json", json.dumps(contract()))
+    write(work, "attachments/a1.pdf", "%PDF-1.7 the reporter's document\n")
+    write(work, "contract.json", json.dumps(contract(**(c_extra or {}))))
     write(work, "base.jar", "base", "w")
     write(work, "fix.jar", "fix", "w")
     ctx = fg.Ctx(work)
     c = fg.load_contract(ctx)
     with open(os.path.join(work, "contract.lock"), "w", encoding="utf-8") as f:
-        json.dump({"sha256": fg.contract_hash(c), "contract": c}, f)
+        json.dump({"sha256": fg.contract_hash(c), "contract": c, "document_sha256": fg.reporter_document_sha(ctx, c)}, f)
     jars = {"base": fg.sha256_file(ctx.jar("base")), "fix": fg.sha256_file(ctx.jar("fix"))}
     for g in ["problem"] + fg.required_gates(c, fg.changed_files(ctx)):
         summary = {}
@@ -258,6 +259,8 @@ def setup_repo(tmp):
                        "cases": [{"id": "P1", "status": "fail", "verdict": "reproduced"}, {"id": "G1", "status": "pass", "verdict": "holds"}]}
         if g == "fix":
             summary = {"cases": [{"id": "P1", "status": "pass"}, {"id": "G1", "status": "pass"}]}
+        if g == "reporter":
+            summary = {"runs": [], "document_sha256": fg.reporter_document_sha(ctx, c)}
         fg.append_record(ctx, {"gate": g, "state": "pass", "head": ctx.head(), "tree": ctx.tree(), "base": ctx.base(),
                                "contract": fg.contract_hash(c),
                                "jars": jars, "summary": summary})
@@ -488,6 +491,20 @@ def g24_reporter_only_grows(tmp):
     return "removed, weakened, or other document -> error; a new run -> listed"
 
 
+def g25_reporter_document_content(tmp):
+    """The contract names the content of the reporter's document, not only its path (CodeRabbit on #849)."""
+    rep = {"document": "attachments/a1.pdf", "runs": [{"id": "R1", "options": [], "format": "json", "fix": {"types": {"paragraph": ">0"}}}]}
+    ctx, src, work = setup_repo(tmp, {"reporter": rep})
+    chk = fg.compute_check(ctx)
+    assert chk["ok"] and "reporter" in [r["gate"] for r in chk["gates"]], chk
+    write(work, "attachments/a1.pdf", "%PDF-1.7 another document under the same name\n")
+    chk = fg.compute_check(ctx)
+    why = {r["gate"]: r["why"] for r in chk["gates"]}
+    assert not chk["ok"] and why["reporter"] == "for another reporter document", why
+    assert any("document changed after the freeze" in e for e in chk["errors"]), chk["errors"]
+    return "same path, other content -> the reporter record is stale and check names the change"
+
+
 EVALS = [("G1-problem-reproduces", g1_problem_must_reproduce), ("G2-guard-on-base", g2_guard_holds_on_base),
          ("G3-reports", g3_reports), ("G4-fix-every-case", g4_fix_needs_every_case), ("G5-scope", g5_scope),
          ("G6-pinning", g6_pinning), ("G7-invariants", g7_invariants), ("G8-pdf-id", g8_pdf_document_id),
@@ -498,4 +515,4 @@ EVALS = [("G1-problem-reproduces", g1_problem_must_reproduce), ("G2-guard-on-bas
          ("G18-wrapper-runners", g18_wrapper_runners), ("G19-pinning-junit", g19_pinning_needs_junit),
          ("G20-formats-grow", g20_formats_only_grow), ("G21-review-body", g21_review_body_findings),
          ("G22-pinning-control", g22_pinning_control), ("G23-module-keys", g23_module_keys),
-         ("G24-reporter-grows", g24_reporter_only_grows)]
+         ("G24-reporter-grows", g24_reporter_only_grows), ("G25-reporter-document", g25_reporter_document_content)]
