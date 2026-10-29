@@ -19,6 +19,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.opendataloader.pdf.api.Config;
+import org.verapdf.wcag.algorithms.entities.content.TextChunk;
+import org.verapdf.wcag.algorithms.entities.content.TextLine;
+import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
+import org.verapdf.wcag.algorithms.entities.lists.ListItem;
+import org.verapdf.wcag.algorithms.entities.lists.PDFList;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.listLabelsDetection.NumberingStyleNames;
+
+import java.io.IOException;
+import java.io.StringWriter;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -180,6 +189,49 @@ public class MarkdownGeneratorTest {
     @Test
     void testFormatLinkDestination_handlesNull() {
         assertNull(MarkdownGenerator.formatMarkdownLinkDestination(null));
+    }
+
+    // ----- markers at the start of an unordered list item (#827) -----
+
+    /**
+     * The label of an item can be the bullet glyph alone (label length 1, as for the items of a hybrid
+     * backend). The space after the glyph then stays before the item text, and CommonMark still reads
+     * "-  # text" as a heading and "-  1. text" as a nested list.
+     */
+    @Test
+    void testWriteList_escapesMarkerAfterTheSpaceThatTheLabelLeaves() throws IOException {
+        assertEquals("-  \\# of users in the plan\n-  1\\. Introduction to the plan\n-    \\- three spaces\n",
+            writeUnorderedList(bulletItem("\u2022 # of users in the plan"),
+                bulletItem("\u2022 1. Introduction to the plan"), bulletItem("\u2022   - three spaces")),
+            "the item text starts a heading or a nested list");
+    }
+
+    /** After four spaces, CommonMark reads an indented code block, so the text stays as it is. */
+    @Test
+    void testWriteList_keepsMarkerAfterFourSpaces() throws IOException {
+        assertEquals("-     # four spaces\n", writeUnorderedList(bulletItem("\u2022    # four spaces")));
+    }
+
+    /** An item whose label is its first character, the bullet glyph. */
+    private static ListItem bulletItem(String text) {
+        BoundingBox box = new BoundingBox(0, 10.0, 10.0, 200.0, 22.0);
+        TextChunk chunk = new TextChunk(box, text, 12.0, 12.0);
+        chunk.adjustSymbolEndsToBoundingBox(null);
+        ListItem item = new ListItem(box, 1L);
+        item.add(new TextLine(chunk));
+        item.setLabelLength(1);
+        return item;
+    }
+
+    private static String writeUnorderedList(ListItem... items) throws IOException {
+        PDFList list = new PDFList();
+        list.setNumberingStyle(NumberingStyleNames.UNORDERED);
+        for (ListItem item : items) {
+            list.add(item);
+        }
+        StringWriter out = new StringWriter();
+        new MarkdownGenerator(out, new Config()).writeList(list);
+        return out.toString();
     }
 
     // ----- getCorrectMarkdownString (`#637`) -----

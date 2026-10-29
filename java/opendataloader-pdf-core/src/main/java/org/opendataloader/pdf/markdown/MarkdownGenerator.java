@@ -68,8 +68,8 @@ public class MarkdownGenerator implements Closeable {
     protected String imageFormat = Config.IMAGE_FORMAT_PNG;
     protected boolean includeHeaderFooter = false;
     protected static final String strikethroughTextMD = "~~";
-    private static final Pattern LEADING_HEADING_OR_BULLET_MARKER = Pattern.compile("^(?=(?:#{1,6}|[-+*])(?:[ \\t]|$))");
-    private static final Pattern LEADING_ORDERED_LIST_MARKER = Pattern.compile("^(\\d{1,9})(?=[.)](?:[ \\t]|$))");
+    private static final Pattern LEADING_HEADING_OR_BULLET_MARKER = Pattern.compile("^( {0,3})(?=(?:#{1,6}|[-+*])(?:[ \\t]|$))");
+    private static final Pattern LEADING_ORDERED_LIST_MARKER = Pattern.compile("^( {0,3}\\d{1,9})(?=[.)](?:[ \\t]|$))");
 
     MarkdownGenerator(File inputPdf, Config config) throws IOException {
         String cutPdfFileName = inputPdf.getName();
@@ -455,11 +455,12 @@ public class MarkdownGenerator implements Closeable {
     }
 
     /**
-     * Escapes a heading marker or a list marker at the start of a list item text. After "- ", CommonMark
-     * reads "# text" as a heading and "1. text" as a nested list; "\# text" and "1\. text" stay text.
+     * Escapes a heading marker or a list marker at the start of a list item text, also after up to three
+     * spaces. After "- ", CommonMark reads "# text" as a heading and "1. text" as a nested list; "\# text"
+     * and "1\. text" stay text. After four spaces, CommonMark reads an indented code block instead.
      */
     protected static String escapeLeadingBlockMarker(String itemText) {
-        String escaped = LEADING_HEADING_OR_BULLET_MARKER.matcher(itemText).replaceFirst("\\\\");
+        String escaped = LEADING_HEADING_OR_BULLET_MARKER.matcher(itemText).replaceFirst("$1\\\\");
         return LEADING_ORDERED_LIST_MARKER.matcher(escaped).replaceFirst("$1\\\\");
     }
 
