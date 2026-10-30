@@ -44,8 +44,8 @@
   prepare.py triage-report --work WORK
       Local. Merges WORK/triage/judgment.json (the agent's class and answers for each pull request) and
       writes WORK/triage/triage.md. Exit 12: the triage is incomplete, a judgment is missing or unknown,
-      a class is weaker than the facts, a changed class has no reason, or a concern (no problem, more
-      than one problem, a direction to decide) has the class review.
+      a class is weaker than the facts, a changed class has no reason, or a direction to decide (a new
+      option, default, schema, or dependency) has the class review.
   prepare.py strip-outputs DIR
       Remove links, special files, and agent instruction files from the outputs of an isolated run
       (scripts/isolate.reference.sh calls it). Prints the two counts.
@@ -1166,8 +1166,9 @@ def triage_report(a: argparse.Namespace) -> int:
                           + "; ".join(r["blocked"] + r["decide"])[:200] + ")")
         if cls != r["class"] and not reason:
             refuse.append(f"#{r['number']}: the class changes {r['class']} -> {cls} without a reason")
-        concerns = [k for k, bad in (("problem", j.get("problem") == "none"), ("one_problem", j.get("one_problem") is False),
-                                     ("direction", j.get("direction") == "decide")) if bad]
+        # Only a direction is the maintainers' choice. No linked issue (the target is what the PR claims) and more than one
+        # change (the review splits the cases by purpose) are for the review, not a reason to wait.
+        concerns = [k for k, bad in (("direction", j.get("direction") == "decide"),) if bad]
         for k in ("problem", "one_problem", "direction"):
             if k not in j:
                 refuse.append(f"#{r['number']}: no answer for {k!r}")

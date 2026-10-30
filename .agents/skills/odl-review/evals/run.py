@@ -1300,7 +1300,7 @@ def x5_triage_report(tmp):
     for label, change, needle in (("missing", lambda j: j.pop("3"), "#3: no judgment"),
                                   ("weaker", lambda j: j["2"].update({"class": "review", "reason": "CLA soon"}), "#2: 'review' is weaker"),
                                   ("no reason", lambda j: j["1"].update({"class": "close"}), "without a reason"),
-                                  ("concern", lambda j: j["1"].update({"one_problem": False}), "one_problem needs decide"),
+                                  ("concern", lambda j: j["1"].update({"direction": "decide"}), "direction needs decide"),
                                   ("no answer", lambda j: j["1"].pop("direction"), "no answer for 'direction'")):
         j = json.loads(json.dumps(good))
         change(j)
@@ -1309,6 +1309,8 @@ def x5_triage_report(tmp):
         assert r.returncode == 12 and needle in r.stdout, (label, r.returncode, r.stdout)
         out.append(label)
     good["1"].update({"class": "decide", "reason": "adds a new option", "direction": "decide"})
+    assert good["5"]["class"] == "review", good["5"]
+    good["5"].update({"problem": "none", "one_problem": False})  # no issue, two changes: the review handles them (#863)
     dump(tdir, "judgment.json", good)
     r = py("prepare.py", "triage-report", "--work", work, check=False)
     assert r.returncode == 0, r.stdout
@@ -1988,10 +1990,14 @@ def x26_kinds(tmp):
 
 
 def x27_verdict_records(tmp):
-    """#836: verdict.md lists each refuted objection for the post gate; the release run and the main run of Q1-reproduce need the same env."""
+    """#836: verdict.md lists each refuted objection for the post gate; a refuted security objection needs the user's acceptance;
+    the release run and the main run of Q1-reproduce need the same env."""
     rdir, pr = fixture_round(tmp, "v2", "code", ["java/x/src/main/A.java"], "no-output-change")
     dump(rdir, "objections.json", [{"id": "O1", "claim": "the record is of another run", "input": "x",
                                     "severity": "major", "status": "refuted", "security": True, "evidence": "E-scan"}])
+    v = verdict(rdir)
+    assert v["verdict"] == "Hold" and any("O1" in x and "security_refutations_ok" in x for x in v["reasons"]["hold"]), v["reasons"]["hold"]
+    dump(rdir, "decisions.json", {"security_refutations_ok": ["O1"]})
     v = verdict(rdir)
     text = V.render(v)
     assert v["refuted_objections"] and "Refuted objections" in text and "O1 (major, security)" in text and "evidence E-scan" in text, text
@@ -2007,7 +2013,7 @@ def x27_verdict_records(tmp):
         f.write("\n".join(json.dumps(rec) for rec in recs) + "\n")
     hold = verdict(rdir2)["reasons"]["hold"]
     assert any("same 'env'" in x for x in hold), hold
-    return "a refuted security objection is listed in verdict.md; release and main runs with different env -> Hold"
+    return "a refuted security objection holds until the user accepts it, then verdict.md lists it; release and main runs with different env -> Hold"
 
 
 def x29_bounds(tmp):
@@ -2033,6 +2039,11 @@ def x29_bounds(tmp):
     add_ev(rdir, pr, {"id": "E-sk", "condition": "skip:Q2-benchmark", "state": "pass", "claim": "no call path"})
     assert verdict(rdir)["verdict"] == "Approve", verdict(rdir)["reasons"]["hold"]
     out.append("a skip with a passing record of its reason -> Approve")
+    edit(rdir, "plan.json", lambda p: [c.update(reason=" ") for c in p["checks"] if c["id"] == "Q2-benchmark"])
+    v = verdict(rdir)
+    assert v["verdict"] == "Hold" and any("Q2-benchmark: skipped without a reason" in x for x in v["reasons"]["hold"]), v["reasons"]["hold"]
+    edit(rdir, "plan.json", lambda p: [c.update(reason="no call path to the output") for c in p["checks"] if c["id"] == "Q2-benchmark"])
+    out.append("a skip record without a reason in the plan -> Hold")
     for main, target, want in (("pass", False, "Request changes"), ("pass", True, "Decide (1), then Approve"), ("fail", False, "Approve")):
         dump(rdir, "cases.json", [{"id": 1, "ideal": "the issue's table keeps its rows", "source": "issue", "target": True,
                                    "main": "fail", "pr": "pass", "type": "request", "evidence": "E-t"},
