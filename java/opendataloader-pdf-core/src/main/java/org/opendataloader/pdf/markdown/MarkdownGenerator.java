@@ -56,6 +56,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MarkdownGenerator implements Closeable {
@@ -81,6 +82,10 @@ public class MarkdownGenerator implements Closeable {
     protected static final String strikethroughTextMD = "~~";
     private static final Pattern LEADING_HEADING_OR_BULLET_MARKER = Pattern.compile("^( {0,3})(?=(?:#{1,6}|[-+*])(?:[ \\t\\n]|$))");
     private static final Pattern LEADING_ORDERED_LIST_MARKER = Pattern.compile("^( {0,3}\\d{1,9})(?=[.)](?:[ \\t\\n]|$))");
+    protected static final String LIST_SEPARATOR_MD = "<!-- -->";
+    private static final Pattern ORDERED_LABEL = Pattern.compile("(\\d{1,9})([.)])");
+    protected boolean useStructTree = false;
+    private boolean previousContentIsOrderedList = false;
     /**
      * Stands for an image in the text of a line until the text is escaped (#642). It is a noncharacter, which
      * Unicode keeps for internal use, so the text of a document does not have it.
@@ -114,6 +119,7 @@ public class MarkdownGenerator implements Closeable {
         this.embedImages = config.isEmbedImages();
         this.imageFormat = config.getImageFormat();
         this.includeHeaderFooter = config.isIncludeHeaderFooter();
+        this.useStructTree = config.isUseStructTree();
     }
 
     /**
@@ -128,6 +134,7 @@ public class MarkdownGenerator implements Closeable {
         this.embedImages = false;
         this.imageFormat = config.getImageFormat();
         this.includeHeaderFooter = config.isIncludeHeaderFooter();
+        this.useStructTree = config.isUseStructTree();
     }
 
     public void writeToMarkdown(List<List<IObject>> contents) {
@@ -270,6 +277,7 @@ public class MarkdownGenerator implements Closeable {
     }
 
     protected void write(IObject object) throws IOException {
+        boolean isOrderedList = false;
         if (object instanceof SemanticHeaderOrFooter) {
             writeHeaderOrFooter((SemanticHeaderOrFooter) object);
         } else if (object instanceof SemanticPicture) {
@@ -287,10 +295,11 @@ public class MarkdownGenerator implements Closeable {
         } else if (object instanceof TableBorder) {
             writeTable((TableBorder) object);
         } else if (object instanceof PDFList) {
-            writeList((PDFList) object);
+            isOrderedList = writeList((PDFList) object);
         } else if (object instanceof SemanticTOC) {
             writeTOC((SemanticTOC) object);
         }
+        previousContentIsOrderedList = isOrderedList;
     }
 
     /**
@@ -424,15 +433,34 @@ public class MarkdownGenerator implements Closeable {
         }
     }
 
-    protected void writeList(PDFList list) throws IOException {
-        for (ListItem item : list.getListItems()) {
+    /**
+     * Writes a list.
+     *
+     * @param list The list to write
+     * @return whether the list was written as a Markdown ordered list
+     */
+    protected boolean writeList(PDFList list) throws IOException {
+        List<String> orderedMarkers = getOrderedListMarkers(list);
+        if (orderedMarkers != null && previousContentIsOrderedList) {
+            // CommonMark joins two ordered lists that follow each other and takes the start
+            // number of the first one only, so a comment ends the previous list.
+            markdownWriter.write(LIST_SEPARATOR_MD);
+            writeContentsSeparator();
+        }
+        List<ListItem> items = list.getListItems();
+        for (int index = 0; index < items.size(); index++) {
+            ListItem item = items.get(index);
             String itemText;
             if (!isInsideTable()) {
-                markdownWriter.write(MarkdownSyntax.LIST_ITEM);
+                markdownWriter.write(orderedMarkers != null ? orderedMarkers.get(index) : MarkdownSyntax.LIST_ITEM);
                 markdownWriter.write(MarkdownSyntax.SPACE);
             }
-            if (!isInsideTable() && NumberingStyleNames.UNORDERED.equals(list.getNumberingStyle())) {
-                itemText = escapeLeadingBlockMarker(getTextWithoutLabel(item));
+            if (orderedMarkers != null) {
+                itemText = escapeLeadingBlockMarker(stripLeadingWhitespace(getTextWithoutLabel(item)));
+            } else if (!isInsideTable() && NumberingStyleNames.UNORDERED.equals(list.getNumberingStyle())) {
+                String textWithoutLabel = getTextWithoutLabel(item);
+                itemText = escapeLeadingBlockMarker(useStructTree ? stripLeadingWhitespace(textWithoutLabel)
+                        : textWithoutLabel);
             } else {
                 itemText = endLink(GeneratorUtils.getTextFromLines(item.getLines(), this::appendLine));
             }
@@ -445,6 +473,57 @@ public class MarkdownGenerator implements Closeable {
                 writeContents(itemContents, false);
             }
         }
+        return orderedMarkers != null;
+    }
+
+    /**
+     * The Markdown ordered list markers of a tagged list, or {@code null} if the list is written
+     * with {@code -} markers. A list is written as a Markdown ordered list only when its
+     * {@code /ListNumbering} gives an ordered style and the labels are {@code 1.}, {@code 2.}, ...
+     * (or {@code 1)}, ...) without gaps, so that a CommonMark viewer shows the number of each label.
+     * Items with nested contents keep the {@code -} marker, because nested blocks are not indented.
+     */
+    protected List<String> getOrderedListMarkers(PDFList list) {
+        String numberingStyle = list.getNumberingStyle();
+        if (!useStructTree || isInsideTable() || numberingStyle == null
+                || NumberingStyleNames.UNKNOWN.equals(numberingStyle)
+                || NumberingStyleNames.UNORDERED.equals(numberingStyle)) {
+            return null;
+        }
+        List<String> markers = new ArrayList<>();
+        long expectedNumber = -1;
+        String delimiter = null;
+        for (ListItem item : list.getListItems()) {
+            if (!item.getContents().isEmpty() || item.getLines().isEmpty()) {
+                return null;
+            }
+            String firstLine = item.getFirstLine().getValue();
+            int labelEnd = getLabelEnd(item);
+            if (labelEnd <= 0 || labelEnd > firstLine.length()) {
+                return null;
+            }
+            Matcher matcher = ORDERED_LABEL.matcher(firstLine.substring(0, labelEnd).trim());
+            if (!matcher.matches()) {
+                return null;
+            }
+            long number = Long.parseLong(matcher.group(1));
+            if ((expectedNumber >= 0 && number != expectedNumber)
+                    || (delimiter != null && !delimiter.equals(matcher.group(2)))) {
+                return null;
+            }
+            delimiter = matcher.group(2);
+            expectedNumber = number + 1;
+            markers.add(number + delimiter);
+        }
+        return markers.isEmpty() ? null : markers;
+    }
+
+    private static String stripLeadingWhitespace(String text) {
+        int start = 0;
+        while (start < text.length() && Character.isWhitespace(text.charAt(start))) {
+            start++;
+        }
+        return text.substring(start);
     }
 
     /**
@@ -688,8 +767,13 @@ public class MarkdownGenerator implements Closeable {
             }
         }
         appendInlineImages(images, nextImage, stringBuilder);
+        // A tagged label on a line of its own (as a "-" above the body) is not text before a line end: a
+        // hyphen there would be read as a hyphenation and joined with the body.
+        boolean isLabelOnItsOwnLine = useStructTree && labelLength > 0 && stringBuilder.length() == labelLength;
         for (int i = 1; i < lines.size(); i++) {
-            TextChunkUtils.formatLineEnd(stringBuilder);
+            if (i > 1 || !isLabelOnItsOwnLine) {
+                TextChunkUtils.formatLineEnd(stringBuilder);
+            }
             appendLine(lines.get(i), stringBuilder);
         }
         closeLink(openLink, stringBuilder);
