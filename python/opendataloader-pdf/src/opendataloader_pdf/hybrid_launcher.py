@@ -29,6 +29,14 @@ def _free_port() -> int:
         return s.getsockname()[1]
 
 
+def _in_use(port: int) -> bool:
+    try:
+        with socket.create_connection((_HOST, port), timeout=1):
+            return True
+    except OSError:
+        return False
+
+
 def _server_command(port: int, args: Sequence[str]) -> List[str]:
     # Host and port come last: for a repeated option, argparse keeps the last value
     return [sys.executable, "-m", _SERVER_MODULE, *args, "--host", _HOST, "--port", str(port)]
@@ -49,7 +57,7 @@ class HybridServer:
     Args:
         args: Server options, as for the opendataloader-pdf-hybrid command
             (for example ["--force-ocr", "--ocr-lang", "ko,en"]).
-        port: Port on 127.0.0.1. Default: a free port.
+        port: Port on 127.0.0.1. Default: a free port. A port in use raises OSError.
         startup_timeout: Seconds to wait until the server answers. Default: 600.
     """
 
@@ -85,7 +93,12 @@ class HybridServer:
         """Start the server and wait until it answers."""
         if self._process is not None:
             raise RuntimeError("The hybrid server is already started")
-        self.port = self._requested_port or _free_port()
+        port = self._requested_port or _free_port()
+        # The server opens its port only after it loads its models. Until then, a
+        # server that already listens there would answer the health check in its place.
+        if _in_use(port):
+            raise OSError(f"Port {port} on {_HOST} is in use. Give another port, or none")
+        self.port = port
         # The server logs to stdout. Send the log to stderr (file descriptor 2),
         # so that it does not mix with the output of convert(to_stdout=True).
         self._process = subprocess.Popen(

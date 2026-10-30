@@ -218,10 +218,10 @@ opendataloader_pdf.convert(
 **Python, without a second terminal** — `HybridServer` starts the backend server for the time of a `with` block, and stops it after the block:
 
 ```python
-from opendataloader_pdf import HybridServer
+import opendataloader_pdf
 
 # The server loads its models once. The first start can take minutes while the models download
-with HybridServer() as server:
+with opendataloader_pdf.HybridServer() as server:
     opendataloader_pdf.convert(
         input_path=["file1.pdf", "file2.pdf", "folder/"],
         output_dir="output/",
