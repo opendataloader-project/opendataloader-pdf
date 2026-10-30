@@ -42,8 +42,16 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Deque;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -72,6 +80,26 @@ public class MarkdownGenerator implements Closeable {
     protected static final String strikethroughTextMD = "~~";
     private static final Pattern LEADING_HEADING_OR_BULLET_MARKER = Pattern.compile("^( {0,3})(?=(?:#{1,6}|[-+*])(?:[ \\t\\n]|$))");
     private static final Pattern LEADING_ORDERED_LIST_MARKER = Pattern.compile("^( {0,3}\\d{1,9})(?=[.)](?:[ \\t\\n]|$))");
+    /**
+     * Stands for an image in the text of a line until the text is escaped (#642). It is a noncharacter, which
+     * Unicode keeps for internal use, so the text of a document does not have it.
+     */
+    private static final char INLINE_IMAGE = '\uFDD0';
+    /**
+     * An image in a line is at most this many times as high as the font size of the line. A line that is higher
+     * than this is not written across the page, and holds no image.
+     */
+    private static final double MAX_INLINE_IMAGE_HEIGHT = 2;
+    /**
+     * An image in a line is at most this many font sizes before the first word or after the last word, about the
+     * width of a space. An image a column gap away is in the next column.
+     */
+    private static final double MAX_INLINE_IMAGE_DISTANCE = 0.5;
+    /** The images in a line of the page that is written, in the order of their centres, by line. */
+    private final Map<TextLine, List<ImageChunk>> inlineImagesByLine = new IdentityHashMap<>();
+    private final Set<ImageChunk> inlineImages = Collections.newSetFromMap(new IdentityHashMap<>());
+    /** The Markdown of the images that the text being written stands for, in order. */
+    private final Deque<String> pendingInlineImages = new ArrayDeque<>();
 
     MarkdownGenerator(File inputPdf, Config config) throws IOException {
         String cutPdfFileName = inputPdf.getName();
@@ -105,6 +133,7 @@ public class MarkdownGenerator implements Closeable {
                 if (selectedPageNumbers.isEmpty() || selectedPageNumbers.contains(pageNumber + 1)) {
                     writePageSeparator(pageNumber);
                 }
+                findInlineImages(contents.get(pageNumber));
                 for (IObject content : contents.get(pageNumber)) {
                     if (!isSupportedContent(content)) {
                         continue;
@@ -139,7 +168,97 @@ public class MarkdownGenerator implements Closeable {
             content instanceof TableBorder ||
             content instanceof PDFList ||
             content instanceof SemanticTOC ||
-            (content instanceof ImageChunk && isImageSupported);
+            (content instanceof ImageChunk && isImageSupported && !inlineImages.contains(content));
+    }
+
+    /**
+     * Finds the images of the page that are in a line of text, as the icon of a button in a sentence (#642).
+     * Such an image is written in its line, not as a block.
+     *
+     * @param pageContents The contents of the page
+     */
+    private void findInlineImages(List<IObject> pageContents) {
+        inlineImagesByLine.clear();
+        inlineImages.clear();
+        if (!isImageSupported) {
+            return;
+        }
+        List<ImageChunk> images = new ArrayList<>();
+        List<TextLine> lines = new ArrayList<>();
+        collectImagesAndLines(pageContents, images, lines);
+        for (ImageChunk image : images) {
+            TextLine line = getLineOfImage(image, lines);
+            if (line != null) {
+                inlineImagesByLine.computeIfAbsent(line, key -> new ArrayList<>()).add(image);
+                inlineImages.add(image);
+            }
+        }
+        for (List<ImageChunk> lineImages : inlineImagesByLine.values()) {
+            lineImages.sort(Comparator.comparingDouble(MarkdownGenerator::getCenterX));
+        }
+    }
+
+    /** Collects the images and the lines of text that this writer writes, also in lists, tables, and headers. */
+    private void collectImagesAndLines(List<IObject> contents, List<ImageChunk> images, List<TextLine> lines) {
+        for (IObject content : contents) {
+            if (content instanceof ImageChunk) {
+                images.add((ImageChunk) content);
+            } else if (content instanceof SemanticHeaderOrFooter) {
+                if (includeHeaderFooter) {
+                    collectImagesAndLines(((SemanticHeaderOrFooter) content).getContents(), images, lines);
+                }
+            } else if (content instanceof SemanticTextNode) {
+                for (TextColumn column : ((SemanticTextNode) content).getColumns()) {
+                    lines.addAll(column.getLines());
+                }
+            } else if (content instanceof PDFList) {
+                for (ListItem item : ((PDFList) content).getListItems()) {
+                    lines.addAll(item.getLines());
+                    collectImagesAndLines(item.getContents(), images, lines);
+                }
+            } else if (content instanceof TableBorder) {
+                TableBorder table = (TableBorder) content;
+                for (int rowNumber = 0; rowNumber < table.getNumberOfRows(); rowNumber++) {
+                    for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
+                        TableBorderCell cell = table.getRow(rowNumber).getCell(colNumber);
+                        if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
+                            collectImagesAndLines(cell.getContents(), images, lines);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Returns the line that holds the image, or null. The centre of the image is in the height of the line, the
+     * line and the image are at most {@link #MAX_INLINE_IMAGE_HEIGHT} times as high as the font size of the line,
+     * and the image is in the line or at most {@link #MAX_INLINE_IMAGE_DISTANCE} font sizes before its first word
+     * or after its last word. Of two such lines, the nearer one.
+     */
+    private static TextLine getLineOfImage(ImageChunk image, List<TextLine> lines) {
+        double centerY = (image.getBottomY() + image.getTopY()) / 2;
+        TextLine nearest = null;
+        double nearestDistance = Double.MAX_VALUE;
+        for (TextLine line : lines) {
+            double fontSize = line.getFontSize();
+            if (!Objects.equals(line.getPageNumber(), image.getPageNumber()) || line.getTextChunks().isEmpty()
+                    || fontSize <= 0 || line.getHeight() > MAX_INLINE_IMAGE_HEIGHT * fontSize
+                    || centerY < line.getBottomY() || centerY > line.getTopY()
+                    || image.getHeight() > MAX_INLINE_IMAGE_HEIGHT * fontSize) {
+                continue;
+            }
+            double distance = Math.max(0, Math.max(line.getLeftX() - image.getRightX(), image.getLeftX() - line.getRightX()));
+            if (distance <= MAX_INLINE_IMAGE_DISTANCE * fontSize && distance < nearestDistance) {
+                nearest = line;
+                nearestDistance = distance;
+            }
+        }
+        return nearest;
+    }
+
+    private static double getCenterX(ImageChunk image) {
+        return (image.getLeftX() + image.getRightX()) / 2;
     }
 
     protected void writeContentsSeparator() throws IOException {
@@ -205,36 +324,45 @@ public class MarkdownGenerator implements Closeable {
     }
 
     protected void writeImage(ImageChunk image) {
-        try {
-            String absolutePath = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, image.getIndex(), imageFormat);
-            String relativePath = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectoryName(), "/", image.getIndex(), imageFormat);
-
-            if (ImagesUtils.isImageFileExists(absolutePath)) {
-                String imageSource;
-                if (embedImages) {
-                    File imageFile = new File(absolutePath);
-                    imageSource = Base64ImageUtils.toDataUri(imageFile, imageFormat);
-                    if (imageSource == null) {
-                        LOGGER.log(Level.WARNING, "Failed to convert image to Base64: {0}", absolutePath);
-                    }
-                } else {
-                    imageSource = formatMarkdownLinkDestination(relativePath);
-                }
-                if (imageSource != null) {
-                    // No "image N" fallback: PDF/UA forbids false alternatives,
-                    // and an empty Markdown alt lets screen readers skip the
-                    // image as a decorative element rather than reading a
-                    // meaningless synthetic label.
-                    String altText = (image instanceof EnrichedImageChunk && ((EnrichedImageChunk) image).hasDescription())
-                            ? ((EnrichedImageChunk) image).sanitizeDescription()
-                            : "";
-                    String imageString = String.format(MarkdownSyntax.IMAGE_FORMAT, getCorrectMarkdownString(altText), imageSource);
-                    markdownWriter.write(imageString);
-                }
+        String imageString = getImageMarkdown(image);
+        if (imageString != null) {
+            try {
+                markdownWriter.write(imageString);
+            } catch (IOException e) {
+                LOGGER.log(Level.WARNING, "Unable to write image for markdown output: " + e.getMessage());
             }
-        } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Unable to write image for markdown output: " + e.getMessage());
         }
+    }
+
+    /**
+     * Returns the Markdown of the image, or null if its file is not there or cannot be embedded.
+     */
+    private String getImageMarkdown(ImageChunk image) {
+        String absolutePath = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, image.getIndex(), imageFormat);
+        String relativePath = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectoryName(), "/", image.getIndex(), imageFormat);
+
+        if (!ImagesUtils.isImageFileExists(absolutePath)) {
+            return null;
+        }
+        String imageSource;
+        if (embedImages) {
+            File imageFile = new File(absolutePath);
+            imageSource = Base64ImageUtils.toDataUri(imageFile, imageFormat);
+            if (imageSource == null) {
+                LOGGER.log(Level.WARNING, "Failed to convert image to Base64: {0}", absolutePath);
+                return null;
+            }
+        } else {
+            imageSource = formatMarkdownLinkDestination(relativePath);
+        }
+        // No "image N" fallback: PDF/UA forbids false alternatives,
+        // and an empty Markdown alt lets screen readers skip the
+        // image as a decorative element rather than reading a
+        // meaningless synthetic label.
+        String altText = (image instanceof EnrichedImageChunk && ((EnrichedImageChunk) image).hasDescription())
+                ? ((EnrichedImageChunk) image).sanitizeDescription()
+                : "";
+        return String.format(MarkdownSyntax.IMAGE_FORMAT, getCorrectMarkdownString(altText), imageSource);
     }
 
     /**
@@ -295,15 +423,17 @@ public class MarkdownGenerator implements Closeable {
 
     protected void writeList(PDFList list) throws IOException {
         for (ListItem item : list.getListItems()) {
-            String itemText = GeneratorUtils.getTextFromLines(item.getLines(), OutputType.MD);
+            String itemText;
             if (!isInsideTable()) {
                 markdownWriter.write(MarkdownSyntax.LIST_ITEM);
                 markdownWriter.write(MarkdownSyntax.SPACE);
-                if (NumberingStyleNames.UNORDERED.equals(list.getNumberingStyle())) {
-                    itemText = escapeLeadingBlockMarker(getTextWithoutLabel(item));
-                }
             }
-            markdownWriter.write(getCorrectMarkdownString(itemText));
+            if (!isInsideTable() && NumberingStyleNames.UNORDERED.equals(list.getNumberingStyle())) {
+                itemText = escapeLeadingBlockMarker(getTextWithoutLabel(item));
+            } else {
+                itemText = GeneratorUtils.getTextFromLines(item.getLines(), this::appendLine);
+            }
+            markdownWriter.write(replaceInlineImages(getCorrectMarkdownString(itemText)));
             writeLineBreak();
 
             List<IObject> itemContents = item.getContents();
@@ -386,7 +516,7 @@ public class MarkdownGenerator implements Closeable {
     }
 
     protected void writeSemanticTextNode(SemanticTextNode textNode) throws IOException {
-        String value = GeneratorUtils.getTextFromTextNode(textNode, OutputType.MD);
+        String value = GeneratorUtils.getTextFromTextNode(textNode, this::appendLine);
         if (StaticContainers.isKeepLineBreaks()) {
             if (textNode instanceof SemanticHeading) {
                 value = value.replace(MarkdownSyntax.LINE_BREAK, MarkdownSyntax.SPACE);
@@ -398,7 +528,7 @@ public class MarkdownGenerator implements Closeable {
             value = value.replace(MarkdownSyntax.LINE_BREAK, MarkdownSyntax.SPACE);
         }
 
-        markdownWriter.write(getCorrectMarkdownString(value));
+        markdownWriter.write(replaceInlineImages(getCorrectMarkdownString(value)));
     }
 
 
@@ -530,25 +660,143 @@ public class MarkdownGenerator implements Closeable {
      * characters of the text, so the label characters are written without the strikethrough
      * markup before the cut. Markup there would move the cut into the markup (#828).
      */
-    private static String getTextWithoutLabel(ListItem item) {
+    private String getTextWithoutLabel(ListItem item) {
         List<TextLine> lines = item.getLines();
         StringBuilder stringBuilder = new StringBuilder();
         int labelLength = getLabelEnd(item);
         int labelCharactersLeft = labelLength;
+        List<ImageChunk> images = inlineImagesByLine.getOrDefault(lines.get(0), Collections.emptyList());
+        int nextImage = 0;
         for (TextChunk chunk : lines.get(0).getTextChunks()) {
             String value = chunk.getValue();
             int labelEnd = Math.min(labelCharactersLeft, value.length());
             stringBuilder.append(value, 0, labelEnd);
             labelCharactersLeft -= labelEnd;
             if (labelEnd < value.length()) {
-                appendTextChunk(chunk, value.substring(labelEnd), stringBuilder);
+                nextImage = appendChunkWithImages(chunk, labelEnd, images, nextImage, stringBuilder);
             }
         }
+        appendInlineImages(images, nextImage, stringBuilder);
         for (int i = 1; i < lines.size(); i++) {
             TextChunkUtils.formatLineEnd(stringBuilder);
-            getTextFromLineForMarkdown(lines.get(i), stringBuilder);
+            appendLine(lines.get(i), stringBuilder);
         }
         return stringBuilder.substring(labelLength);
+    }
+
+    /**
+     * Appends the Markdown text of the line, with a stand-in at the place of each image in the line (#642).
+     */
+    private void appendLine(TextLine line, StringBuilder stringBuilder) {
+        List<ImageChunk> images = inlineImagesByLine.get(line);
+        if (images == null) {
+            getTextFromLineForMarkdown(line, stringBuilder);
+            return;
+        }
+        int nextImage = 0;
+        for (TextChunk chunk : line.getTextChunks()) {
+            nextImage = appendChunkWithImages(chunk, 0, images, nextImage, stringBuilder);
+        }
+        appendInlineImages(images, nextImage, stringBuilder);
+    }
+
+    /**
+     * Appends the characters of the chunk from {@code start}, with a stand-in before the first character that
+     * starts right of the centre of each image that goes in the chunk.
+     *
+     * @return the index of the next image of the line
+     */
+    private int appendChunkWithImages(TextChunk chunk, int start, List<ImageChunk> images, int nextImage,
+                                      StringBuilder stringBuilder) {
+        String value = chunk.getValue();
+        while (nextImage < images.size()) {
+            int index = getCharacterIndex(chunk, getCenterX(images.get(nextImage)));
+            if (index >= value.length()) {
+                break;
+            }
+            if (index > start) {
+                appendTextAfterImage(chunk, value.substring(start, index), stringBuilder);
+                start = index;
+            }
+            appendInlineImage(images.get(nextImage++), stringBuilder);
+        }
+        if (start < value.length()) {
+            appendTextAfterImage(chunk, value.substring(start), stringBuilder);
+        }
+        return nextImage;
+    }
+
+    /**
+     * Returns the index of the first character of the chunk that starts at or right of {@code x}, or the length
+     * of the value if none does. Without a position for each character, the chunk is one place: 0 if it starts
+     * at or right of {@code x}, else the length.
+     */
+    private static int getCharacterIndex(TextChunk chunk, double x) {
+        String value = chunk.getValue();
+        List<Double> symbolEnds = chunk.getSymbolEnds();
+        if (symbolEnds == null || symbolEnds.size() != value.length() + 1) {
+            return chunk.getLeftX() >= x ? 0 : value.length();
+        }
+        for (int i = 0; i < value.length(); i++) {
+            if (symbolEnds.get(i) >= x) {
+                return i;
+            }
+        }
+        return value.length();
+    }
+
+    /** Appends the text; after a stand-in, one space separates them. */
+    private static void appendTextAfterImage(TextChunk chunk, String value, StringBuilder stringBuilder) {
+        if (stringBuilder.length() > 0 && stringBuilder.charAt(stringBuilder.length() - 1) == INLINE_IMAGE) {
+            value = value.stripLeading();
+            if (value.isEmpty()) {
+                return;
+            }
+            stringBuilder.append(MarkdownSyntax.SPACE);
+        }
+        appendTextChunk(chunk, value, stringBuilder);
+    }
+
+    private void appendInlineImages(List<ImageChunk> images, int nextImage, StringBuilder stringBuilder) {
+        for (int i = nextImage; i < images.size(); i++) {
+            appendInlineImage(images.get(i), stringBuilder);
+        }
+    }
+
+    /** Appends a stand-in for the image, after one space, and keeps its Markdown for {@link #replaceInlineImages}. */
+    private void appendInlineImage(ImageChunk image, StringBuilder stringBuilder) {
+        String imageString = getImageMarkdown(image);
+        if (imageString == null) {
+            return;
+        }
+        if (stringBuilder.length() > 0 && !Character.isWhitespace(stringBuilder.charAt(stringBuilder.length() - 1))) {
+            stringBuilder.append(MarkdownSyntax.SPACE);
+        }
+        stringBuilder.append(INLINE_IMAGE);
+        pendingInlineImages.add(imageString);
+    }
+
+    /**
+     * Puts the Markdown of each image in the place of its stand-in, after the text is escaped. An image whose
+     * stand-in is not in the text goes after the text, so that no image is lost.
+     */
+    private String replaceInlineImages(String value) {
+        if (pendingInlineImages.isEmpty()) {
+            return value;
+        }
+        StringBuilder stringBuilder = new StringBuilder(value.length());
+        for (int i = 0; i < value.length(); i++) {
+            char character = value.charAt(i);
+            if (character == INLINE_IMAGE && !pendingInlineImages.isEmpty()) {
+                stringBuilder.append(pendingInlineImages.poll());
+            } else {
+                stringBuilder.append(character);
+            }
+        }
+        while (!pendingInlineImages.isEmpty()) {
+            stringBuilder.append(MarkdownSyntax.SPACE).append(pendingInlineImages.poll());
+        }
+        return stringBuilder.toString();
     }
 
     private static void appendTextChunk(TextChunk chunk, String value, StringBuilder stringBuilder) {
