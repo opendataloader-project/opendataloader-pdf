@@ -875,8 +875,10 @@ def _reexec_with_utf8_if_needed():
             [sys.executable, "-X", "utf8", __file__] + sys.argv[1:],
         )
     except OSError as e:
-        logger.error(f"Failed to re-exec into UTF-8 mode: {e}. Continuing without it - "
-                     "on a non-UTF-8-locale system, docling model loading may still fail (#673).")
+        logger.error(
+            f"Failed to re-exec into UTF-8 mode: {e}. Continuing without it - "
+            "on a non-UTF-8-locale system, docling model loading may still fail (#673)."
+        )
 
 
 def _check_dependencies():
