@@ -82,6 +82,8 @@ def convert_pdf(
         "text": ".txt",
         "html": ".html",
         "markdown": ".md",
+        # Deprecated values, kept for compatibility. Removal rules: CONTRIBUTING.md,
+        # "Compatibility of Released Options".
         "markdown-with-html": ".md",
         "markdown-with-images": ".md",
     }
