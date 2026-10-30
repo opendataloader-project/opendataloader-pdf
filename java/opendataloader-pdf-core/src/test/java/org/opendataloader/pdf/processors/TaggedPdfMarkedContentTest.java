@@ -307,6 +307,19 @@ class TaggedPdfMarkedContentTest {
             }
             assertEquals(normalized(expected.toString()), normalized(read.toString()),
                     "the text of the tags, in the order of the structure tree");
+
+            // The words of one part of a line follow each other in the stream and in the
+            // paragraph, so they still share one MCID.
+            List<String> parts = new ArrayList<>();
+            for (String[] visual : SCAN_LINES) {
+                parts.add(visual[0]);
+                parts.add(visual[1]);
+            }
+            List<String> spans = new ArrayList<>();
+            for (int mcid : treeMcids) {
+                spans.add(normalized(text.getOrDefault(mcid, "")));
+            }
+            assertEquals(parts, spans, "the text of each MCID, in the order of the structure tree");
         }
     }
 
