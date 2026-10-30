@@ -348,15 +348,25 @@ def g17_linters(tmp):
     """Static analysis fails only for a finding that the change adds: the same tool, file, and rule counted on both trees."""
     ruff = "src/opendataloader_pdf/x.py:3:1: F401 [*] `os` imported but unused\nFound 1 error.\n"
     assert fg.parse_ruff(ruff) == {"ruff src/opendataloader_pdf/x.py:F401": 1}, fg.parse_ruff(ruff)
-    eslint = "/w/node/opendataloader-pdf/src/a.ts:4:7: 'x' is assigned a value but never used. [Error/@typescript-eslint/no-unused-vars]\n"
-    assert fg.parse_eslint(eslint, "/w/node/opendataloader-pdf") == {"eslint src/a.ts:@typescript-eslint/no-unused-vars": 1}
-    found = {"base": {"ruff": {"ruff a.py:F401": 1}, "checkstyle": {"A.java: NeedBraces": 2}},
+    # ESLint 10 (#854): --format json; a parse error has no rule; an ignored file is not in the output
+    eslint = json.dumps([
+        {"filePath": "/w/node/opendataloader-pdf/src/a.ts", "messages": [
+            {"ruleId": "@typescript-eslint/no-unused-vars", "severity": 1, "line": 4},
+            {"ruleId": "@typescript-eslint/no-unused-vars", "severity": 1, "line": 9}]},
+        {"filePath": "/w/node/opendataloader-pdf/src/b.ts", "messages": [{"ruleId": None, "fatal": True, "severity": 2}]},
+        {"filePath": "/w/node/opendataloader-pdf/src/c.ts", "messages": []}])
+    assert fg.parse_eslint(eslint, "/w/node/opendataloader-pdf") == {
+        "eslint src/a.ts:@typescript-eslint/no-unused-vars": 2, "eslint src/b.ts:fatal": 1}, fg.parse_eslint(eslint, "/w/node/opendataloader-pdf")
+    assert fg.parse_eslint("[]", "/w") == {}
+    unix = "The unix formatter is no longer part of core ESLint. Install it manually with `npm install -D eslint-formatter-unix`\n"
+    assert fg.parse_eslint(unix, "/w") is None and fg.parse_eslint('{"x": 1}', "/w") is None
+    found ={"base": {"ruff": {"ruff a.py:F401": 1}, "checkstyle": {"A.java: NeedBraces": 2}},
              "fix": {"ruff": {"ruff a.py:F401": 1, "ruff a.py:E711": 1}, "checkstyle": {"A.java: NeedBraces": 2}}}
     assert fg.new_findings(found) == {"ruff a.py:E711": 1}, fg.new_findings(found)
     py = [{"status": "M", "path": "python/opendataloader-pdf/src/opendataloader_pdf/x.py"}]
     gen = [{"status": "M", "path": "python/opendataloader-pdf/src/opendataloader_pdf/cli_options_generated.py"}]
     assert "static" in fg.required_gates(contract(), py) and "static" not in fg.required_gates(contract(), gen)
-    return "ruff and eslint lines parsed; only a grown count fails; generated files skipped"
+    return "ruff lines and ESLint JSON parsed (no JSON -> None); only a grown count fails; generated files skipped"
 
 
 def g18_wrapper_runners(tmp):
