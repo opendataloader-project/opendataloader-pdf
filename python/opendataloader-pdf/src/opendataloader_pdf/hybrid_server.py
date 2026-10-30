@@ -74,6 +74,7 @@ import logging.config
 import os
 import re
 import secrets
+import subprocess
 import sys
 import tempfile
 import threading
@@ -838,6 +839,24 @@ def _is_utf8_encoding_name(encoding_name):
         return False
 
 
+def _run_utf8_child_on_windows(argv):
+    """Run the UTF-8-mode child process on Windows and return its exit code.
+
+    Windows has no exec. ``os.execv`` there starts a new process and ends this
+    one, which detaches the server from its console and from any supervisor
+    waiting on this process. ``os.execv`` also joins ``argv`` without quoting,
+    so an argument with spaces is split. A child process keeps the caller
+    waiting for the real server, and ``subprocess`` quotes each argument.
+    """
+    child = subprocess.Popen(argv)
+    try:
+        return child.wait()
+    except KeyboardInterrupt:
+        # Ctrl+C also reaches the child on the shared console, so it shuts down.
+        # Wait for it and pass its exit code on.
+        return child.wait()
+
+
 def _reexec_with_utf8_if_needed():
     """Re-launch this process in Python UTF-8 mode (PEP 540) if it isn't already.
 
@@ -858,6 +877,11 @@ def _reexec_with_utf8_if_needed():
     uninstalled checkout. Re-running the same file path has no such
     requirement and preserves that invocation shape exactly.
 
+    On POSIX the process is replaced with ``os.execv``. On Windows, where
+    ``os.execv`` does not replace the process, the child runs as a subprocess
+    and this process exits with the child's exit code (see
+    ``_run_utf8_child_on_windows``).
+
     Skips the re-exec when the locale's preferred encoding is already UTF-8
     (true on most Linux/macOS deployments, and on Windows systems with the
     "Beta: Use Unicode UTF-8" setting enabled), even though
@@ -869,11 +893,11 @@ def _reexec_with_utf8_if_needed():
         return
     if _is_utf8_encoding_name(locale.getpreferredencoding(False)):
         return
+    argv = [sys.executable, "-X", "utf8", __file__] + sys.argv[1:]
     try:
-        os.execv(
-            sys.executable,
-            [sys.executable, "-X", "utf8", __file__] + sys.argv[1:],
-        )
+        if os.name == "nt":
+            sys.exit(_run_utf8_child_on_windows(argv))
+        os.execv(sys.executable, argv)
     except OSError as e:
         logger.error(
             f"Failed to re-exec into UTF-8 mode: {e}. Continuing without it - "

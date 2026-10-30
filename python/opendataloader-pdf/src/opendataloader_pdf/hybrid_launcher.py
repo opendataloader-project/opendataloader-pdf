@@ -38,8 +38,20 @@ def _in_use(port: int) -> bool:
 
 
 def _server_command(port: int, args: Sequence[str]) -> List[str]:
+    # -X utf8 starts the server in UTF-8 mode, so it never re-execs itself (see hybrid_server).
     # Host and port come last: for a repeated option, argparse keeps the last value
-    return [sys.executable, "-m", _SERVER_MODULE, *args, "--host", _HOST, "--port", str(port)]
+    return [
+        sys.executable,
+        "-X",
+        "utf8",
+        "-m",
+        _SERVER_MODULE,
+        *args,
+        "--host",
+        _HOST,
+        "--port",
+        str(port),
+    ]
 
 
 class HybridServer:

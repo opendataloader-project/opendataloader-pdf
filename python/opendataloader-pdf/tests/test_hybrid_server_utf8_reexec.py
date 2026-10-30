@@ -15,8 +15,76 @@ import sys
 from types import SimpleNamespace
 from unittest.mock import patch
 
+import pytest
+
 from opendataloader_pdf import hybrid_server
 from opendataloader_pdf.hybrid_server import _is_utf8_encoding_name, _reexec_with_utf8_if_needed
+
+PYTHON = "/usr/bin/python3"
+
+# Written as sitecustomize.py on PYTHONPATH: every interpreter that starts records its UTF-8 mode
+SITECUSTOMIZE_PROBE = """\
+import os
+import sys
+
+with open(os.environ["UTF8_MODE_RECORD"], "a", encoding="ascii") as record:
+    record.write(f"{sys.flags.utf8_mode}\\n")
+"""
+
+
+def _non_utf8_process(monkeypatch, argv):
+    """Make the guard see a process that is not in UTF-8 mode, on a cp949 locale.
+
+    Only hybrid_server's own view of sys and locale is replaced. Patching the
+    real sys.flags breaks pytest's failure report, which reads sys.flags.verbose.
+    """
+    fake_sys = SimpleNamespace(**{k: v for k, v in vars(sys).items() if not k.startswith("__")})
+    fake_sys.flags = SimpleNamespace(utf8_mode=0)
+    fake_sys.executable = PYTHON
+    fake_sys.argv = argv
+    monkeypatch.setattr(hybrid_server, "sys", fake_sys)
+    monkeypatch.setattr(
+        hybrid_server,
+        "locale",
+        SimpleNamespace(getpreferredencoding=lambda do_setlocale=True: "cp949"),
+    )
+
+
+def _fake_os(monkeypatch, name):
+    """Replace the os module the guard sees with one that reports `name`.
+
+    Returns the list that records every os.execv call.
+    """
+    execv_calls = []
+    fake = SimpleNamespace(
+        name=name,
+        execv=lambda program, argv: execv_calls.append((program, argv)),
+    )
+    monkeypatch.setattr(hybrid_server, "os", fake)
+    return execv_calls
+
+
+def _fake_popen(monkeypatch, waits):
+    """Replace subprocess.Popen in hybrid_server.
+
+    Each child's wait() returns the next item of `waits`, or raises it when it
+    is an exception. Returns the list of (argv, kwargs) for every spawned child.
+    """
+    spawned = []
+
+    def popen(argv, **kwargs):
+        spawned.append((argv, kwargs))
+
+        def wait():
+            result = waits.pop(0)
+            if isinstance(result, BaseException):
+                raise result
+            return result
+
+        return SimpleNamespace(wait=wait)
+
+    monkeypatch.setattr(hybrid_server, "subprocess", SimpleNamespace(Popen=popen), raising=False)
+    return spawned
 
 
 class TestIsUtf8EncodingName:
@@ -187,6 +255,83 @@ class TestReexecWithUtf8IfNeeded:
         assert call_order == ["reexec_guard", "check_dependencies"]
 
 
+class TestReexecPlatformBranches:
+    """os.execv replaces the process on POSIX. Windows has no exec: there the
+    child runs as a subprocess and this process exits with its exit code."""
+
+    def test_posix_replaces_process_with_execv(self, monkeypatch):
+        _non_utf8_process(monkeypatch, ["opendataloader-pdf-hybrid", "--port", "5002"])
+        execv_calls = _fake_os(monkeypatch, "posix")
+        spawned = _fake_popen(monkeypatch, waits=[])
+
+        _reexec_with_utf8_if_needed()
+
+        assert spawned == []
+        assert len(execv_calls) == 1
+        program, argv = execv_calls[0]
+        assert program == PYTHON
+        assert argv == [PYTHON, "-X", "utf8", hybrid_server.__file__, "--port", "5002"]
+
+    def test_windows_runs_utf8_child_and_exits_with_its_code(self, monkeypatch):
+        _non_utf8_process(monkeypatch, ["opendataloader-pdf-hybrid", "--port", "5002"])
+        execv_calls = _fake_os(monkeypatch, "nt")
+        spawned = _fake_popen(monkeypatch, waits=[7])
+
+        with pytest.raises(SystemExit) as exit_info:
+            _reexec_with_utf8_if_needed()
+
+        assert exit_info.value.code == 7
+        assert execv_calls == []
+        # Exact argv, list form, no shell, stdio inherited (no redirection kwargs)
+        assert spawned == [
+            ([PYTHON, "-X", "utf8", hybrid_server.__file__, "--port", "5002"], {}),
+        ]
+
+    def test_windows_keeps_arguments_with_spaces_intact(self, monkeypatch):
+        args = ["--ocr-lang", "ko, en", "--models-dir", "C:\\Users\\Some User\\models"]
+        _non_utf8_process(monkeypatch, ["opendataloader-pdf-hybrid", *args])
+        _fake_os(monkeypatch, "nt")
+        spawned = _fake_popen(monkeypatch, waits=[0])
+
+        with pytest.raises(SystemExit):
+            _reexec_with_utf8_if_needed()
+
+        [(argv, _)] = spawned
+        assert argv[-len(args) :] == args
+        # Each argument with a space is one element, and subprocess quotes it on Windows
+        command_line = subprocess.list2cmdline(argv)
+        assert '"ko, en"' in command_line
+        assert '"C:\\Users\\Some User\\models"' in command_line
+
+    def test_windows_ctrl_c_waits_for_child_and_exits_with_its_code(self, monkeypatch):
+        _non_utf8_process(monkeypatch, ["opendataloader-pdf-hybrid"])
+        _fake_os(monkeypatch, "nt")
+        spawned = _fake_popen(monkeypatch, waits=[KeyboardInterrupt(), 3])
+
+        with pytest.raises(SystemExit) as exit_info:
+            _reexec_with_utf8_if_needed()
+
+        assert exit_info.value.code == 3
+        assert len(spawned) == 1
+
+    def test_windows_child_start_failure_is_logged_not_raised(self, monkeypatch, caplog):
+        _non_utf8_process(monkeypatch, ["opendataloader-pdf-hybrid"])
+        _fake_os(monkeypatch, "nt")
+
+        def popen_fails(argv, **kwargs):
+            raise OSError("The system cannot find the file specified")
+
+        monkeypatch.setattr(
+            hybrid_server, "subprocess", SimpleNamespace(Popen=popen_fails), raising=False
+        )
+
+        caplog.set_level("ERROR", logger=hybrid_server.logger.name)
+        _reexec_with_utf8_if_needed()  # must not raise
+
+        errors = [r.message for r in caplog.records if r.levelname == "ERROR"]
+        assert any("Failed to re-exec" in e for e in errors), errors
+
+
 class TestReexecEndToEnd:
     """Real-subprocess proof that the guard's re-exec mechanism actually works,
     beyond the mocked-``os.execv`` unit tests above.
@@ -198,7 +343,7 @@ class TestReexecEndToEnd:
     avoids: re-exec-by-`-m` breaks when the package isn't import-resolvable).
     """
 
-    def test_direct_script_invocation_survives_reexec_without_module_error(self):
+    def test_direct_script_invocation_survives_reexec_without_module_error(self, tmp_path):
         """Running the file directly must re-exec cleanly, not crash with
         ModuleNotFoundError - the exact regression `-m`-based re-exec caused.
 
@@ -255,9 +400,23 @@ class TestReexecEndToEnd:
             "would not exercise the re-exec branch at all"
         )
 
+        # The exit status alone cannot show the re-exec happened: without the guard
+        # the script still reaches --help. A sitecustomize on PYTHONPATH runs in every
+        # interpreter that starts, and records sys.flags.utf8_mode. Only this direct
+        # run gets it; the probe above keeps the plain environment.
+        probe_dir = tmp_path / "probe"
+        probe_dir.mkdir()
+        (probe_dir / "sitecustomize.py").write_text(SITECUSTOMIZE_PROBE, encoding="utf-8")
+        record = tmp_path / "utf8_mode.txt"
+        child_env = {
+            **env,
+            "PYTHONPATH": os.pathsep.join(filter(None, [str(probe_dir), env.get("PYTHONPATH")])),
+            "UTF8_MODE_RECORD": str(record),
+        }
+
         result = subprocess.run(
             [sys.executable, hybrid_server.__file__, "--help"],
-            env=env,
+            env=child_env,
             capture_output=True,
             text=True,
             timeout=30,
@@ -273,3 +432,6 @@ class TestReexecEndToEnd:
             or "Missing dependencies" in result.stdout
             or result.returncode == 0
         ), (result.returncode, result.stdout, result.stderr)
+        # The parent records 0 before it re-execs; the child must record 1.
+        assert record.exists(), result.stderr
+        assert record.read_text(encoding="ascii").split() == ["0", "1"], result.stderr
