@@ -22,11 +22,14 @@ compatibility: >-
   api.github.com, *.githubusercontent.com, pypi.org, files.pythonhosted.org,
   repo.maven.apache.org, artifactory.openpreservation.org (veraPDF),
   registry.npmjs.org; huggingface.co, *.hf.co for hybrid.
+disable-model-invocation: true
 metadata:
   project: opendataloader-pdf
 ---
 
 # Fix an opendataloader-pdf issue
+
+The user starts this skill by its name: `/odl-fix` in Claude Code, `$odl-fix` in Codex. Do not start it yourself. Two settings keep the agents from starting it: `disable-model-invocation` in this file (Claude Code) and `agents/openai.yaml` (Codex).
 
 Use this skill to fix one GitHub issue of opendataloader-pdf and send a pull request. If the issue has more than one problem, make a sub-issue for each extra problem. Fix one problem in each pull request. The user approves each post to GitHub. Before you choose an issue, the issue triage shows which issues wait for us (see "Issue triage").
 

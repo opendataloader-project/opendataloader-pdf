@@ -343,6 +343,17 @@ def f23_judge_cannot_wait(tmp):
     return "judge -> waiting by judgment -> exit 12"
 
 
+def s1_explicit_invocation(tmp):
+    """The agents start this skill only on the user's call: Claude Code and Codex settings (#854 follow-up)."""
+    with open(os.path.join(SKILL, "SKILL.md"), encoding="utf-8") as f:
+        front = f.read().split("\n---\n", 1)[0].splitlines()
+    assert front[0] == "---" and "disable-model-invocation: true" in front, front[:3]
+    with open(os.path.join(SKILL, "agents", "openai.yaml"), encoding="utf-8") as f:
+        lines = [line.rstrip() for line in f if not line.lstrip().startswith("#")]
+    assert lines[lines.index("policy:") + 1] == "  allow_implicit_invocation: false", lines
+    return "disable-model-invocation: true; policy.allow_implicit_invocation: false"
+
+
 EVALS = [("F1-new", f1_new), ("F2-team-last", f2_team_last_without_state), ("F3-reporter", f3_waiting_on_reporter),
          ("F4-reply", f4_reply_after_state), ("F5-outsider", f5_state_line_by_outsider), ("F6-bot", f6_bot_after_state),
          ("F7-stale", f7_stale), ("F8-pr-wait", f8_waiting_on_a_pull_request), ("F9-upstream", f9_waiting_upstream),
@@ -350,7 +361,7 @@ EVALS = [("F1-new", f1_new), ("F2-team-last", f2_team_last_without_state), ("F3-
          ("F13-working", f13_working_and_later_team_comment), ("F14-last-state", f14_last_state_counts),
          ("F15-footer", f15_footer_line), ("F16-append", f16_append), ("F17-count", f17_count), ("F18-report", f18_report),
          ("F20-crlf", f20_crlf), ("F21-graphql", f21_graphql_failure), ("F22-bot-state", f22_bot_state_line),
-         ("F23-judge-wait", f23_judge_cannot_wait)]
+         ("F23-judge-wait", f23_judge_cannot_wait), ("S1-explicit-invocation", s1_explicit_invocation)]
 
 _gates = importlib.util.spec_from_file_location("gate_evals", os.path.join(os.path.dirname(os.path.abspath(__file__)), "gates.py"))
 _gate_evals = importlib.util.module_from_spec(_gates)

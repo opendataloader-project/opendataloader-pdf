@@ -29,11 +29,14 @@ compatibility: >-
   tools in scripts/ need Python 3.10 or later; inspect_pdf.py also needs qpdf.
   Builds and tests need Java 17 or later and Maven, and for changes in python/
   or node/ also Node and pnpm.
+disable-model-invocation: true
 metadata:
   project: opendataloader-pdf
 ---
 
 # Merge verdict for opendataloader-pdf pull requests
+
+The user starts this skill by its name: `/odl-review` in Claude Code, `$odl-review` in Codex. Do not start it yourself. Two settings keep the agents from starting it: `disable-model-invocation` in this file (Claude Code) and `agents/openai.yaml` (Codex).
 
 > What must be safe even if the agent is wrong is code. What needs judgment is the agent's. What cannot be undone is the user's.
 

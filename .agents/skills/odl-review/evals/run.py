@@ -2103,6 +2103,17 @@ def x27_verdict_records(tmp):
     return "a refuted security objection is listed in verdict.md; release and main runs with different env -> Hold"
 
 
+def x28_explicit_invocation(tmp):
+    """The agents start this skill only on the user's call: Claude Code and Codex settings (#854 follow-up)."""
+    with open(os.path.join(SKILL, "SKILL.md"), encoding="utf-8") as f:
+        front = f.read().split("\n---\n", 1)[0].splitlines()
+    assert front[0] == "---" and "disable-model-invocation: true" in front, front[:3]
+    with open(os.path.join(SKILL, "agents", "openai.yaml"), encoding="utf-8") as f:
+        lines = [line.rstrip() for line in f if not line.lstrip().startswith("#")]
+    assert lines[lines.index("policy:") + 1] == "  allow_implicit_invocation: false", lines
+    return "disable-model-invocation: true; policy.allow_implicit_invocation: false"
+
+
 EVALS = [("E1", e1_instruction_files), ("E2", e2_fake_precedent), ("E3", e3_measuring_tools_from_pr),
          ("E6", e6_dependabot_replay), ("E7", e7_fixture_pdf_replay), ("E8", e8_thead_against_earlier_decision),
          ("R703", r703_replay), ("R805", r805_replay), ("R806", r806_replay), ("U1", u_verdict_rules),
@@ -2124,7 +2135,7 @@ EVALS = [("E1", e1_instruction_files), ("E2", e2_fake_precedent), ("E3", e3_meas
          ("X20-runtool-copies", x20_run_tool_copies), ("X21-inspect-pdf", x21_inspect_pdf), ("X22-bench-commit", x22_bench_commit),
          ("X23-demo-count", x23_demo_count), ("X24-md-lists-quote", x24_md_lists_quote),
          ("X25-side-effects-names", x25_side_effects_names), ("X26-kinds", x26_kinds),
-         ("X27-verdict-records", x27_verdict_records)]
+         ("X27-verdict-records", x27_verdict_records), ("X28-explicit-invocation", x28_explicit_invocation)]
 
 
 def main(argv):
