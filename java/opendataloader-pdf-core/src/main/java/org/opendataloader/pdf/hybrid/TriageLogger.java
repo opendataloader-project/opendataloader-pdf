@@ -100,8 +100,28 @@ public class TriageLogger {
             String hybridBackend,
             Map<Integer, TriageResult> triageResults) throws IOException {
 
-        Path outputPath = outputDir.resolve(DEFAULT_FILENAME);
-        Files.createDirectories(outputDir);
+        writeToFile(outputDir.resolve(DEFAULT_FILENAME), documentName, hybridBackend, triageResults);
+    }
+
+    /**
+     * Writes triage results to a JSON file.
+     *
+     * @param outputPath     The path of the file.
+     * @param documentName   The name of the processed document.
+     * @param hybridBackend  The hybrid backend used (e.g., "docling-fast").
+     * @param triageResults  Map of page number to triage result.
+     * @throws IOException If writing the file fails.
+     */
+    public void writeToFile(
+            Path outputPath,
+            String documentName,
+            String hybridBackend,
+            Map<Integer, TriageResult> triageResults) throws IOException {
+
+        Path folder = outputPath.toAbsolutePath().getParent();
+        if (folder != null) {
+            Files.createDirectories(folder);
+        }
 
         ObjectNode root = createTriageJson(documentName, hybridBackend, triageResults);
 

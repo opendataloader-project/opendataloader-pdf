@@ -167,7 +167,7 @@ COVERED_OPTIONS = {
 HYBRID_OPTIONS = {
     "--hybrid", "--hybrid-mode", "--hybrid-timeout",
     "--hybrid-fallback", "--hybrid-url",
-    "--hybrid-chunk-size", "--hybrid-availability-timeout",
+    "--hybrid-chunk-size", "--hybrid-availability-timeout", "--hybrid-triage-log",
 }
 
 # ---------------------------------------------------------------------------

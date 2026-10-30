@@ -271,6 +271,14 @@
       "required": false,
       "default": "3000",
       "description": "Time in milliseconds that the availability check of the hybrid backend waits to connect, and then again for the answer. Raise it for a backend with a slow start, such as a serverless one. Default: 3000"
+    },
+    {
+      "name": "hybrid-triage-log",
+      "shortName": null,
+      "type": "boolean",
+      "required": false,
+      "default": false,
+      "description": "With --hybrid, write the triage decision of each page (Java or backend, the confidence, and the signals) to triage/<name>.json in the output folder"
     }
   ]
 }

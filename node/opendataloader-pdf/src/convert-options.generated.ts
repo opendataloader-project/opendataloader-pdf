@@ -73,6 +73,8 @@ export interface ConvertOptions {
   includeLinks?: boolean;
   /** Time in milliseconds that the availability check of the hybrid backend waits to connect, and then again for the answer. Raise it for a backend with a slow start, such as a serverless one. Default: 3000 */
   hybridAvailabilityTimeout?: string;
+  /** With --hybrid, write the triage decision of each page (Java or backend, the confidence, and the signals) to triage/<name>.json in the output folder */
+  hybridTriageLog?: boolean;
 }
 
 /**
@@ -113,6 +115,7 @@ export interface CliOptions {
   sanitizeRules?: string;
   includeLinks?: boolean;
   hybridAvailabilityTimeout?: string;
+  hybridTriageLog?: boolean;
 }
 
 /**
@@ -222,6 +225,9 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   }
   if (cliOptions.hybridAvailabilityTimeout) {
     convertOptions.hybridAvailabilityTimeout = cliOptions.hybridAvailabilityTimeout;
+  }
+  if (cliOptions.hybridTriageLog) {
+    convertOptions.hybridTriageLog = true;
   }
 
   return convertOptions;
@@ -346,6 +352,9 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.hybridAvailabilityTimeout) {
     args.push('--hybrid-availability-timeout', options.hybridAvailabilityTimeout);
+  }
+  if (options.hybridTriageLog) {
+    args.push('--hybrid-triage-log');
   }
 
   return args;

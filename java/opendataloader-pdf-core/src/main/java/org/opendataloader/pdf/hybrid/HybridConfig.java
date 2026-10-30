@@ -48,6 +48,7 @@ public class HybridConfig {
     private int timeoutMs = DEFAULT_TIMEOUT_MS;
     private int availabilityTimeoutMs = DEFAULT_AVAILABILITY_TIMEOUT_MS;
     private boolean fallbackToJava = false;
+    private boolean writeTriageLog = false;
     private int maxConcurrentRequests = DEFAULT_MAX_CONCURRENT_REQUESTS;
     private int chunkSize = DEFAULT_CHUNK_SIZE;
 
@@ -145,6 +146,25 @@ public class HybridConfig {
      */
     public void setFallbackToJava(boolean fallbackToJava) {
         this.fallbackToJava = fallbackToJava;
+    }
+
+    /**
+     * Checks if the triage decision of each page is written to {@code triage/<name>.json} in the output folder.
+     *
+     * @return true if the triage log is written, false otherwise.
+     */
+    public boolean isWriteTriageLog() {
+        return writeTriageLog;
+    }
+
+    /**
+     * Sets whether the triage decision of each page is written to {@code triage/<name>.json} in the output
+     * folder (#741).
+     *
+     * @param writeTriageLog true to write the triage log, false to write none.
+     */
+    public void setWriteTriageLog(boolean writeTriageLog) {
+        this.writeTriageLog = writeTriageLog;
     }
 
     /**

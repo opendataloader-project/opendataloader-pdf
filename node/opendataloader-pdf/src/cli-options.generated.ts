@@ -41,4 +41,5 @@ export function registerCliOptions(program: Command): void {
   program.option('--sanitize-rules <value>', 'Path to a JSON file of sanitization rules. Only the rules of the file run, in place of the built-in rules. Turns on --sanitize');
   program.option('--include-links', 'Write the URI links of the PDF (http, https, mailto) as links in Markdown and HTML output. No links with --sanitize, or when the hybrid backend makes the text');
   program.option('--hybrid-availability-timeout <value>', 'Time in milliseconds that the availability check of the hybrid backend waits to connect, and then again for the answer. Raise it for a backend with a slow start, such as a serverless one. Default: 3000');
+  program.option('--hybrid-triage-log', 'With --hybrid, write the triage decision of each page (Java or backend, the confidence, and the signals) to triage/<name>.json in the output folder');
 }

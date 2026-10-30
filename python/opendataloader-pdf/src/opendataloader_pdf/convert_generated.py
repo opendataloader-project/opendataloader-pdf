@@ -45,6 +45,7 @@ def convert(
     sanitize_rules: Optional[str] = None,
     include_links: bool = False,
     hybrid_availability_timeout: Optional[str] = None,
+    hybrid_triage_log: bool = False,
 ) -> None:
     """
     Convert PDF(s) into the requested output format(s).
@@ -85,6 +86,7 @@ def convert(
         sanitize_rules: Path to a JSON file of sanitization rules. Only the rules of the file run, in place of the built-in rules. Turns on --sanitize
         include_links: Write the URI links of the PDF (http, https, mailto) as links in Markdown and HTML output. No links with --sanitize, or when the hybrid backend makes the text
         hybrid_availability_timeout: Time in milliseconds that the availability check of the hybrid backend waits to connect, and then again for the answer. Raise it for a backend with a slow start, such as a serverless one. Default: 3000
+        hybrid_triage_log: With --hybrid, write the triage decision of each page (Java or backend, the confidence, and the signals) to triage/<name>.json in the output folder
     """
     args: List[str] = []
 
@@ -170,5 +172,7 @@ def convert(
         args.append("--include-links")
     if hybrid_availability_timeout:
         args.extend(["--hybrid-availability-timeout", hybrid_availability_timeout])
+    if hybrid_triage_log:
+        args.append("--hybrid-triage-log")
 
     run_jar(args, quiet)
