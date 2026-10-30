@@ -839,22 +839,37 @@ def _is_utf8_encoding_name(encoding_name):
         return False
 
 
-def _run_utf8_child_on_windows(argv):
-    """Run the UTF-8-mode child process on Windows and return its exit code.
+def _wait_for_utf8_child(child):
+    """Wait for the UTF-8-mode child on Windows and return its exit status.
 
     Windows has no exec. ``os.execv`` there starts a new process and ends this
     one, which detaches the server from its console and from any supervisor
     waiting on this process. ``os.execv`` also joins ``argv`` without quoting,
-    so an argument with spaces is split. A child process keeps the caller
-    waiting for the real server, and ``subprocess`` quotes each argument.
+    so an argument with spaces is split. The child keeps the caller waiting for
+    the real server, and ``subprocess`` quotes each argument.
+
+    Ctrl+C also reaches the child on the shared console, so it shuts down; this
+    waits for it. A second Ctrl+C means the user wants out now, so the child is
+    killed and this process does not exit while the server still runs.
     """
-    child = subprocess.Popen(argv)
     try:
-        return child.wait()
+        code = child.wait()
     except KeyboardInterrupt:
-        # Ctrl+C also reaches the child on the shared console, so it shuts down.
-        # Wait for it and pass its exit code on.
-        return child.wait()
+        try:
+            code = child.wait()
+        except KeyboardInterrupt:
+            child.kill()
+            code = child.wait()
+    # Windows reports a crash as an unsigned 32-bit status, such as 0xC0000005.
+    # sys.exit takes a C int, so pass the same bits as a signed value.
+    return code - 2**32 if code >= 2**31 else code
+
+
+def _log_reexec_failure(error):
+    logger.error(
+        f"Failed to re-exec into UTF-8 mode: {error}. Continuing without it - "
+        "on a non-UTF-8-locale system, docling model loading may still fail (#673)."
+    )
 
 
 def _reexec_with_utf8_if_needed():
@@ -880,7 +895,7 @@ def _reexec_with_utf8_if_needed():
     On POSIX the process is replaced with ``os.execv``. On Windows, where
     ``os.execv`` does not replace the process, the child runs as a subprocess
     and this process exits with the child's exit code (see
-    ``_run_utf8_child_on_windows``).
+    ``_wait_for_utf8_child``).
 
     Skips the re-exec when the locale's preferred encoding is already UTF-8
     (true on most Linux/macOS deployments, and on Windows systems with the
@@ -894,15 +909,17 @@ def _reexec_with_utf8_if_needed():
     if _is_utf8_encoding_name(locale.getpreferredencoding(False)):
         return
     argv = [sys.executable, "-X", "utf8", __file__] + sys.argv[1:]
+    if os.name == "nt":
+        try:
+            child = subprocess.Popen(argv)
+        except OSError as e:
+            _log_reexec_failure(e)
+            return
+        sys.exit(_wait_for_utf8_child(child))
     try:
-        if os.name == "nt":
-            sys.exit(_run_utf8_child_on_windows(argv))
         os.execv(sys.executable, argv)
     except OSError as e:
-        logger.error(
-            f"Failed to re-exec into UTF-8 mode: {e}. Continuing without it - "
-            "on a non-UTF-8-locale system, docling model loading may still fail (#673)."
-        )
+        _log_reexec_failure(e)
 
 
 def _check_dependencies():

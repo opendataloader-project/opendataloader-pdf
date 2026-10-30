@@ -112,6 +112,12 @@ class TestIsUtf8EncodingName:
 
 
 class TestReexecWithUtf8IfNeeded:
+    @pytest.fixture(autouse=True)
+    def posix_os(self, monkeypatch):
+        """These tests cover the POSIX os.execv path. On Windows the guard would
+        take the subprocess branch instead, so pin os.name to POSIX here."""
+        _fake_os(monkeypatch, "posix")
+
     def test_noop_when_utf8_mode_already_active(self, monkeypatch):
         """No re-exec when the interpreter is already running in UTF-8 mode."""
         monkeypatch.setattr(
@@ -313,6 +319,47 @@ class TestReexecPlatformBranches:
 
         assert exit_info.value.code == 3
         assert len(spawned) == 1
+
+    def test_windows_crash_status_is_passed_on_as_signed_32_bit(self, monkeypatch):
+        """Windows reports a crash as an unsigned status (0xC0000005 here). The
+        parent must exit with the same bits, which sys.exit takes as a signed int."""
+        _non_utf8_process(monkeypatch, ["opendataloader-pdf-hybrid"])
+        _fake_os(monkeypatch, "nt")
+        _fake_popen(monkeypatch, waits=[0xC0000005])
+
+        with pytest.raises(SystemExit) as exit_info:
+            _reexec_with_utf8_if_needed()
+
+        assert exit_info.value.code == 0xC0000005 - 2**32
+        assert exit_info.value.code & 0xFFFFFFFF == 0xC0000005
+
+    def test_windows_second_ctrl_c_kills_child_before_exiting(self, monkeypatch):
+        _non_utf8_process(monkeypatch, ["opendataloader-pdf-hybrid"])
+        _fake_os(monkeypatch, "nt")
+        events = []
+
+        def popen(argv, **kwargs):
+            def wait():
+                events.append("wait")
+                if events.count("wait") < 3:
+                    raise KeyboardInterrupt
+                return 1
+
+            def kill():
+                events.append("kill")
+
+            return SimpleNamespace(wait=wait, kill=kill)
+
+        monkeypatch.setattr(
+            hybrid_server, "subprocess", SimpleNamespace(Popen=popen), raising=False
+        )
+
+        with pytest.raises(SystemExit) as exit_info:
+            _reexec_with_utf8_if_needed()
+
+        # The parent waits for the child only after it has been killed
+        assert events == ["wait", "wait", "kill", "wait"]
+        assert exit_info.value.code == 1
 
     def test_windows_child_start_failure_is_logged_not_raised(self, monkeypatch, caplog):
         _non_utf8_process(monkeypatch, ["opendataloader-pdf-hybrid"])
