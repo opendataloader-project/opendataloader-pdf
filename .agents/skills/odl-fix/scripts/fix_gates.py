@@ -833,11 +833,11 @@ def wrapper_files(changes: list[dict], pkg: str, exts: tuple[str, ...]) -> list[
             and ch["status"] != "D" and not GENERATED_RE.search(ch["path"])]
 
 
-def run_capture(args: list[str], cwd: str, log: str, env: dict | None = None) -> tuple[int, str]:
+def run_capture(args: list[str], cwd: str, log: str, env: dict | None = None, stdout_only: bool = False) -> tuple[int, str]:
     res = subprocess.run(args, cwd=cwd, capture_output=True, text=True, env={**os.environ, **(env or {})})
     with open(log, "a", encoding="utf-8") as f:
         f.write(f"$ {' '.join(args)}\n{res.stdout}{res.stderr}\nexit {res.returncode}\n")
-    return res.returncode, res.stdout + res.stderr
+    return res.returncode, res.stdout if stdout_only else res.stdout + res.stderr
 
 
 def parse_ruff(text: str) -> dict:
@@ -848,11 +848,24 @@ def parse_ruff(text: str) -> dict:
     return counts
 
 
-def parse_eslint(text: str, tree: str) -> dict:
+def parse_eslint(text: str, tree: str) -> dict | None:
+    """ESLint --format json: [{filePath, messages: [{ruleId, ...}]}]. None if the output is not this JSON.
+
+    A message without a rule is a parse error: its key is "fatal".
+    """
+    try:
+        files = json.loads(text)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(files, list):
+        return None
     counts: dict[str, int] = {}
-    for m in re.finditer(r"^(.+?):[0-9]+:[0-9]+: .*\[(?:Error|Warning)/([^\]]+)\]$", text, re.M):
-        key = f"eslint {os.path.relpath(m.group(1), tree) if m.group(1).startswith('/') else m.group(1)}:{m.group(2)}"
-        counts[key] = counts.get(key, 0) + 1
+    for f in files:
+        path = f.get("filePath") or ""
+        rel = os.path.relpath(path, tree) if os.path.isabs(path) else path
+        for m in f.get("messages") or []:
+            key = f"eslint {rel}:{m.get('ruleId') or 'fatal'}"
+            counts[key] = counts.get(key, 0) + 1
     return counts
 
 
@@ -911,10 +924,14 @@ def node_lint(ctx: Ctx, tree: str, side: str, files: list[str], problems: list) 
         if code != 0:
             problems.append(f"{side} pnpm install: exit {code}")
             return out
-    code, text = run_capture(["pnpm", "exec", "eslint", "--format", "unix", *files], pkg, log)
-    if code not in (0, 1):
-        problems.append(f"{side} eslint: exit {code}")
-    out["eslint"] = parse_eslint(text, pkg)
+    # Core ESLint has no unix formatter since v9 (#854). A file that the ESLint configuration does not
+    # cover (for example a test) is not a finding: --no-warn-ignored.
+    code, text = run_capture(["pnpm", "exec", "eslint", "--format", "json", "--no-warn-ignored", *files], pkg, log,
+                             stdout_only=True)
+    found = parse_eslint(text, pkg) if code in (0, 1) else None
+    if found is None:
+        problems.append(f"{side} eslint: exit {code}" + (", no JSON output" if code in (0, 1) else ""))
+    out["eslint"] = found or {}
     for f in files:
         code, _ = run_capture(["pnpm", "exec", "prettier", "--check", f], pkg, log)
         if code not in (0, 1):
