@@ -215,6 +215,23 @@ opendataloader_pdf.convert(
 )
 ```
 
+**Python, without a second terminal** — `HybridServer` starts the backend server for the time of a `with` block, and stops it after the block:
+
+```python
+from opendataloader_pdf import HybridServer
+
+# The server loads its models once. The first start can take minutes while the models download
+with HybridServer() as server:
+    opendataloader_pdf.convert(
+        input_path=["file1.pdf", "file2.pdf", "folder/"],
+        output_dir="output/",
+        hybrid="docling-fast",
+        hybrid_url=server.url
+    )
+```
+
+Give server options in `args`, as for `opendataloader-pdf-hybrid`: `HybridServer(args=["--force-ocr", "--ocr-lang", "ko,en"])`. The server listens on 127.0.0.1 at a free port (`port=` sets the port). Its log goes to stderr.
+
 ### OCR for Scanned PDFs
 
 Start the backend with `--force-ocr` for image-based PDFs with no selectable text:
