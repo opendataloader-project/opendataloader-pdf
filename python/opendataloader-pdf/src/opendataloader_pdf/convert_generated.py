@@ -36,7 +36,6 @@ def convert(
     hybrid_mode: Optional[str] = None,
     hybrid_url: Optional[str] = None,
     hybrid_timeout: Optional[str] = None,
-    hybrid_availability_timeout: Optional[str] = None,
     hybrid_chunk_size: Optional[str] = None,
     hybrid_fallback: bool = False,
     to_stdout: bool = False,
@@ -45,6 +44,7 @@ def convert(
     space_ratio: Optional[str] = None,
     sanitize_rules: Optional[str] = None,
     include_links: bool = False,
+    hybrid_availability_timeout: Optional[str] = None,
 ) -> None:
     """
     Convert PDF(s) into the requested output format(s).
@@ -76,7 +76,6 @@ def convert(
         hybrid_mode: Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)
         hybrid_url: Hybrid backend server URL (overrides default)
         hybrid_timeout: Hybrid backend request timeout in milliseconds (0 = use the backend's own default). Default: 0
-        hybrid_availability_timeout: Time in milliseconds that the availability check of the hybrid backend waits for an answer. Raise it for a backend with a slow start, such as a serverless one. Default: 3000
         hybrid_chunk_size: Maximum number of pages to send to the hybrid backend in a single request. Large documents are split into batches of this size; smaller values increase the number of backend requests (the full PDF is re-sent per batch). Default: 50
         hybrid_fallback: Opt in to Java fallback on hybrid backend error (default: disabled)
         to_stdout: Write output to stdout instead of file (single format only)
@@ -85,6 +84,7 @@ def convert(
         space_ratio: Set the ratio used to calculate the automatic space-insertion threshold (threshold = space-ratio * font size). If the horizontal gap between two adjacent symbols exceeds this threshold, an extra space is inserted to text value. Accepts decimals (e.g., 0.17). Default: 0.17
         sanitize_rules: Path to a JSON file of sanitization rules. Only the rules of the file run, in place of the built-in rules. Turns on --sanitize
         include_links: Write the URI links of the PDF (http, https, mailto) as links in Markdown and HTML output. No links with --sanitize, or when the hybrid backend makes the text
+        hybrid_availability_timeout: Time in milliseconds that the availability check of the hybrid backend waits to connect, and then again for the answer. Raise it for a backend with a slow start, such as a serverless one. Default: 3000
     """
     args: List[str] = []
 
@@ -152,8 +152,6 @@ def convert(
         args.extend(["--hybrid-url", hybrid_url])
     if hybrid_timeout:
         args.extend(["--hybrid-timeout", hybrid_timeout])
-    if hybrid_availability_timeout:
-        args.extend(["--hybrid-availability-timeout", hybrid_availability_timeout])
     if hybrid_chunk_size:
         args.extend(["--hybrid-chunk-size", hybrid_chunk_size])
     if hybrid_fallback:
@@ -170,5 +168,7 @@ def convert(
         args.extend(["--sanitize-rules", sanitize_rules])
     if include_links:
         args.append("--include-links")
+    if hybrid_availability_timeout:
+        args.extend(["--hybrid-availability-timeout", hybrid_availability_timeout])
 
     run_jar(args, quiet)

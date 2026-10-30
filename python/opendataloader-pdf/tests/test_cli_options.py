@@ -306,3 +306,13 @@ class TestConvertHybridAvailabilityTimeout:
         args = mock_run.call_args[0][0]
         assert "--hybrid-availability-timeout" in args
         assert args[args.index("--hybrid-availability-timeout") + 1] == "60000"
+
+    def test_hybrid_availability_timeout_is_the_last_parameter(self):
+        """A new parameter goes last: a caller that passes the earlier ones by position keeps working."""
+        import inspect
+
+        from opendataloader_pdf.convert_generated import convert
+
+        names = list(inspect.signature(convert).parameters)
+        assert names[-1] == "hybrid_availability_timeout"
+        assert names.index("hybrid_chunk_size") == names.index("hybrid_timeout") + 1

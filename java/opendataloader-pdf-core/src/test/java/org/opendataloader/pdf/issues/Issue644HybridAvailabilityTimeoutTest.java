@@ -45,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * serverless platform answers its first request only after a cold start, so the conversion stops with
  * "Hybrid server is not available".
  *
- * <p>Each case starts a mock backend whose health check answers after {@link #COLD_START_SECONDS} s, as such a
+ * <p>The cases start a mock backend whose health check answers after {@link #COLD_START_SECONDS} s, as such a
  * backend after a cold start. The option {@code --hybrid-availability-timeout} sets how long the check waits.
  */
 class Issue644HybridAvailabilityTimeoutTest {
@@ -63,8 +63,11 @@ class Issue644HybridAvailabilityTimeoutTest {
         server = new MockWebServer();
         server.start();
         baseUrl = server.url("").toString().replaceFirst("/$", "");
-        server.enqueue(new MockResponse.Builder().code(200).body("ok")
-            .headersDelay(COLD_START_SECONDS, TimeUnit.SECONDS).build());
+    }
+
+    /** The health check of the mock backend answers after {@code seconds}. */
+    private void answerHealthCheckAfter(long seconds) {
+        server.enqueue(new MockResponse.Builder().code(200).body("ok").headersDelay(seconds, TimeUnit.SECONDS).build());
     }
 
     @AfterEach
@@ -75,6 +78,7 @@ class Issue644HybridAvailabilityTimeoutTest {
     /** The Java API: an availability timeout of 10 s lets the check wait for the cold start. */
     @Test
     void checkWaitsForTheAvailabilityTimeoutOfTheConfig() throws Exception {
+        answerHealthCheckAfter(COLD_START_SECONDS);
         HybridConfig config = new HybridConfig();
         config.setUrl(baseUrl);
         try {
@@ -94,6 +98,7 @@ class Issue644HybridAvailabilityTimeoutTest {
     /** The CLI: {@code --hybrid-availability-timeout 10000} lets the check wait for the cold start. */
     @Test
     void checkWaitsForTheAvailabilityTimeoutOfTheCli() throws Exception {
+        answerHealthCheckAfter(COLD_START_SECONDS);
         Config config = configFrom("--hybrid", "docling-fast", "--hybrid-url", baseUrl,
             "--hybrid-availability-timeout", "10000");
         DoclingFastServerClient client = new DoclingFastServerClient(config.getHybridConfig());
@@ -116,11 +121,25 @@ class Issue644HybridAvailabilityTimeoutTest {
     /** Without the option, the check waits 3 s, as before: a backend that answers after 4 s is not available. */
     @Test
     void checkWithoutTheOptionStopsAfterThreeSeconds() throws Exception {
+        answerHealthCheckAfter(COLD_START_SECONDS);
         Config config = configFrom("--hybrid", "docling-fast", "--hybrid-url", baseUrl);
         DoclingFastServerClient client = new DoclingFastServerClient(config.getHybridConfig());
         try {
             IOException exception = assertThrows(IOException.class, client::checkAvailability);
             assertTrue(exception.getMessage().contains("Hybrid server is not available"), exception.getMessage());
+        } finally {
+            client.shutdown();
+        }
+    }
+
+    /** Without the option, the check still waits for an answer that comes within 3 s, as before. */
+    @Test
+    void checkWithoutTheOptionWaitsForAnAnswerWithinThreeSeconds() throws Exception {
+        answerHealthCheckAfter(2);
+        Config config = configFrom("--hybrid", "docling-fast", "--hybrid-url", baseUrl);
+        DoclingFastServerClient client = new DoclingFastServerClient(config.getHybridConfig());
+        try {
+            assertDoesNotThrow(client::checkAvailability);
         } finally {
             client.shutdown();
         }

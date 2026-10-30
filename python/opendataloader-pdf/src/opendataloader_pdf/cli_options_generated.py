@@ -235,15 +235,6 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "description": "Hybrid backend request timeout in milliseconds (0 = use the backend's own default). Default: 0",
     },
     {
-        "name": "hybrid-availability-timeout",
-        "python_name": "hybrid_availability_timeout",
-        "short_name": None,
-        "type": "string",
-        "required": False,
-        "default": "3000",
-        "description": "Time in milliseconds that the availability check of the hybrid backend waits for an answer. Raise it for a backend with a slow start, such as a serverless one. Default: 3000",
-    },
-    {
         "name": "hybrid-chunk-size",
         "python_name": "hybrid_chunk_size",
         "short_name": None,
@@ -314,6 +305,15 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "required": False,
         "default": False,
         "description": "Write the URI links of the PDF (http, https, mailto) as links in Markdown and HTML output. No links with --sanitize, or when the hybrid backend makes the text",
+    },
+    {
+        "name": "hybrid-availability-timeout",
+        "python_name": "hybrid_availability_timeout",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": "3000",
+        "description": "Time in milliseconds that the availability check of the hybrid backend waits to connect, and then again for the answer. Raise it for a backend with a slow start, such as a serverless one. Default: 3000",
     },
 ]
 

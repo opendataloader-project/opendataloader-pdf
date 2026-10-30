@@ -26,7 +26,7 @@ public class HybridConfig {
     /** Default timeout for backend requests in milliseconds. */
     public static final int DEFAULT_TIMEOUT_MS = 0;
 
-    /** Default time in milliseconds that the availability check waits for the backend to answer. */
+    /** Default time in milliseconds that the availability check waits to connect, and then for the answer. */
     public static final int DEFAULT_AVAILABILITY_TIMEOUT_MS = 3000;
 
     /** Default maximum concurrent requests to the backend. */
@@ -105,7 +105,8 @@ public class HybridConfig {
     }
 
     /**
-     * Gets the time in milliseconds that the availability check waits for the backend to answer.
+     * Gets the time in milliseconds that the availability check waits to connect to the backend, and then again
+     * for its answer.
      *
      * @return The availability timeout in milliseconds.
      */
@@ -114,8 +115,9 @@ public class HybridConfig {
     }
 
     /**
-     * Sets the time in milliseconds that the availability check waits for the backend to answer. A backend
-     * with a slow start, such as one on a serverless platform, can need more than the default (#644).
+     * Sets the time in milliseconds that the availability check waits to connect to the backend, and then again
+     * for its answer. A backend with a slow start, such as one on a serverless platform, can need more than the
+     * default (#644).
      *
      * @param availabilityTimeoutMs The availability timeout in milliseconds.
      * @throws IllegalArgumentException if the value is not positive.

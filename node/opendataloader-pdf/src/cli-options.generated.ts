@@ -32,7 +32,6 @@ export function registerCliOptions(program: Command): void {
   program.option('--hybrid-mode <value>', 'Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)');
   program.option('--hybrid-url <value>', 'Hybrid backend server URL (overrides default)');
   program.option('--hybrid-timeout <value>', 'Hybrid backend request timeout in milliseconds (0 = use the backend\'s own default). Default: 0');
-  program.option('--hybrid-availability-timeout <value>', 'Time in milliseconds that the availability check of the hybrid backend waits for an answer. Raise it for a backend with a slow start, such as a serverless one. Default: 3000');
   program.option('--hybrid-chunk-size <value>', 'Maximum number of pages to send to the hybrid backend in a single request. Large documents are split into batches of this size; smaller values increase the number of backend requests (the full PDF is re-sent per batch). Default: 50');
   program.option('--hybrid-fallback', 'Opt in to Java fallback on hybrid backend error (default: disabled)');
   program.option('--to-stdout', 'Write output to stdout instead of file (single format only)');
@@ -41,4 +40,5 @@ export function registerCliOptions(program: Command): void {
   program.option('--space-ratio <value>', 'Set the ratio used to calculate the automatic space-insertion threshold (threshold = space-ratio * font size). If the horizontal gap between two adjacent symbols exceeds this threshold, an extra space is inserted to text value. Accepts decimals (e.g., 0.17). Default: 0.17');
   program.option('--sanitize-rules <value>', 'Path to a JSON file of sanitization rules. Only the rules of the file run, in place of the built-in rules. Turns on --sanitize');
   program.option('--include-links', 'Write the URI links of the PDF (http, https, mailto) as links in Markdown and HTML output. No links with --sanitize, or when the hybrid backend makes the text');
+  program.option('--hybrid-availability-timeout <value>', 'Time in milliseconds that the availability check of the hybrid backend waits to connect, and then again for the answer. Raise it for a backend with a slow start, such as a serverless one. Default: 3000');
 }

@@ -55,8 +55,6 @@ export interface ConvertOptions {
   hybridUrl?: string;
   /** Hybrid backend request timeout in milliseconds (0 = use the backend's own default). Default: 0 */
   hybridTimeout?: string;
-  /** Time in milliseconds that the availability check of the hybrid backend waits for an answer. Raise it for a backend with a slow start, such as a serverless one. Default: 3000 */
-  hybridAvailabilityTimeout?: string;
   /** Maximum number of pages to send to the hybrid backend in a single request. Large documents are split into batches of this size; smaller values increase the number of backend requests (the full PDF is re-sent per batch). Default: 50 */
   hybridChunkSize?: string;
   /** Opt in to Java fallback on hybrid backend error (default: disabled) */
@@ -73,6 +71,8 @@ export interface ConvertOptions {
   sanitizeRules?: string;
   /** Write the URI links of the PDF (http, https, mailto) as links in Markdown and HTML output. No links with --sanitize, or when the hybrid backend makes the text */
   includeLinks?: boolean;
+  /** Time in milliseconds that the availability check of the hybrid backend waits to connect, and then again for the answer. Raise it for a backend with a slow start, such as a serverless one. Default: 3000 */
+  hybridAvailabilityTimeout?: string;
 }
 
 /**
@@ -104,7 +104,6 @@ export interface CliOptions {
   hybridMode?: string;
   hybridUrl?: string;
   hybridTimeout?: string;
-  hybridAvailabilityTimeout?: string;
   hybridChunkSize?: string;
   hybridFallback?: boolean;
   toStdout?: boolean;
@@ -113,6 +112,7 @@ export interface CliOptions {
   spaceRatio?: string;
   sanitizeRules?: string;
   includeLinks?: boolean;
+  hybridAvailabilityTimeout?: string;
 }
 
 /**
@@ -196,9 +196,6 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   if (cliOptions.hybridTimeout) {
     convertOptions.hybridTimeout = cliOptions.hybridTimeout;
   }
-  if (cliOptions.hybridAvailabilityTimeout) {
-    convertOptions.hybridAvailabilityTimeout = cliOptions.hybridAvailabilityTimeout;
-  }
   if (cliOptions.hybridChunkSize) {
     convertOptions.hybridChunkSize = cliOptions.hybridChunkSize;
   }
@@ -222,6 +219,9 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   }
   if (cliOptions.includeLinks) {
     convertOptions.includeLinks = true;
+  }
+  if (cliOptions.hybridAvailabilityTimeout) {
+    convertOptions.hybridAvailabilityTimeout = cliOptions.hybridAvailabilityTimeout;
   }
 
   return convertOptions;
@@ -320,9 +320,6 @@ export function buildArgs(options: ConvertOptions): string[] {
   if (options.hybridTimeout) {
     args.push('--hybrid-timeout', options.hybridTimeout);
   }
-  if (options.hybridAvailabilityTimeout) {
-    args.push('--hybrid-availability-timeout', options.hybridAvailabilityTimeout);
-  }
   if (options.hybridChunkSize) {
     args.push('--hybrid-chunk-size', options.hybridChunkSize);
   }
@@ -346,6 +343,9 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.includeLinks) {
     args.push('--include-links');
+  }
+  if (options.hybridAvailabilityTimeout) {
+    args.push('--hybrid-availability-timeout', options.hybridAvailabilityTimeout);
   }
 
   return args;
