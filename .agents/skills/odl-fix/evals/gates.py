@@ -223,7 +223,7 @@ def g11_required_gates(tmp):
     return "Java main -> all gates; README -> 4; Python -> wrappers, no pinning"
 
 
-def setup_repo(tmp, c_extra=None):
+def setup_repo(tmp, c_extra=None, work_files=None):
     """A repository with a base commit, a base tree, and a fix commit; a contract; jars; records of each gate."""
     work = os.path.join(tmp, "work")
     src = os.path.join(tmp, "src")
@@ -244,6 +244,8 @@ def setup_repo(tmp, c_extra=None):
     git(src, "commit", "-q", "-m", "fix")
     write(work, "env.sh", f"SRC='{src}'\n")
     write(work, "attachments/a1.pdf", "%PDF-1.7 the reporter's document\n")
+    for rel, text in (work_files or {}).items():
+        write(work, rel, text)
     write(work, "contract.json", json.dumps(contract(**(c_extra or {}))))
     write(work, "base.jar", "base", "w")
     write(work, "fix.jar", "fix", "w")
@@ -255,7 +257,7 @@ def setup_repo(tmp, c_extra=None):
     for g in ["problem"] + fg.required_gates(c, fg.changed_files(ctx)):
         summary = {}
         if g == "problem":
-            summary = {"tests_digest": fg.files_digest(src, fg.case_files(ctx, c)),
+            summary = {"tests_digest": fg.files_digest(src, fg.case_files(ctx, c)), "patches_digest": fg.patches_digest(ctx, c),
                        "cases": [{"id": "P1", "status": "fail", "verdict": "reproduced"}, {"id": "G1", "status": "pass", "verdict": "holds"}]}
         if g == "fix":
             summary = {"cases": [{"id": "P1", "status": "pass"}, {"id": "G1", "status": "pass"}]}
@@ -515,6 +517,85 @@ def g25_reporter_document_content(tmp):
     return "same path, other content -> the reporter record is stale and check names the change"
 
 
+A_JAVA = "java/opendataloader-pdf-core/src/main/java/org/x/A.java"
+MUTATION_PATCH = (f"diff --git a/{A_JAVA} b/{A_JAVA}\n--- a/{A_JAVA}\n+++ b/{A_JAVA}\n"
+                  "@@ -1 +1 @@\n-class A {}\n+class A { int defect; }\n")
+
+
+def mutation(cid="M1", **over):
+    k = {"id": cid, "kind": "mutation", "test": "Issue1Test#findsTheDefect", "patch": "mutations/m1.patch",
+         "misses": ["ATest"], "why": "A reads the default, not the configured value"}
+    k.update(over)
+    return k
+
+
+def g26_mutation_contract(tmp):
+    """An issue that asks only for tests has no problem case: a mutation case, a defect patch of main code, stands for it (#854)."""
+    write(tmp, "mutations/m1.patch", MUTATION_PATCH)
+    tests_only = contract(scope=[], cases=[mutation(), case("G1", "guard", "Issue1Test#defaultStays")])
+    assert fg.validate_contract(tests_only, tmp) == [], fg.validate_contract(tests_only, tmp)
+    mixed = contract(cases=[case("P1"), mutation(),
+                            mutation("M2", runner="vitest", test="test/a.test.ts::finds it", misses=["test/a.test.ts"]),
+                            mutation("M3", runner="pytest", test="tests/test_a.py::test_finds_it", misses=["tests/test_a.py::test_old"])])
+    assert fg.validate_contract(mixed, tmp) == [], fg.validate_contract(mixed, tmp)
+    assert fg.patch_paths(MUTATION_PATCH) == ([A_JAVA], [])
+    write(tmp, "mutations/test.patch", MUTATION_PATCH.replace("src/main/java/org/x/A.java", "src/test/java/org/x/ATest.java"))
+    write(tmp, "mutations/new.patch", "diff --git a/x/B.java b/x/B.java\nnew file mode 100644\n--- /dev/null\n+++ b/x/B.java\n"
+          "@@ -0,0 +1 @@\n+class B {}\n")
+    write(tmp, "mutations/empty.patch", "")
+    with_p1 = lambda **over: contract(cases=[case("P1"), mutation(**over)])  # noqa: E731
+    bad = {"only guards": contract(scope=[], cases=[case("G1", "guard")]),
+           "a problem case without scope": contract(scope=[], cases=[case("P1"), mutation()]),
+           "no patch file": with_p1(patch="mutations/none.patch"), "a patch outside $WORK": with_p1(patch="../m1.patch"),
+           "a patch of a test": with_p1(patch="mutations/test.patch"), "a patch that makes a file": with_p1(patch="mutations/new.patch"),
+           "an empty patch": with_p1(patch="mutations/empty.patch"), "no misses": with_p1(misses=[]),
+           "misses is not a test": with_p1(misses=["ATest#x#y"]),
+           "vitest misses with a test name": with_p1(runner="vitest", test="test/a.test.ts::x", misses=["test/a.test.ts::x"]),
+           "no why": with_p1(why="")}
+    for name, c in bad.items():
+        assert fg.validate_contract(c, tmp), name
+    return f"tests-only and mixed contracts ok; {len(bad)} bad contracts refused"
+
+
+def g27_mutation_verdicts(tmp):
+    """A mutation case counts only if its test passes on the base, the tests in misses pass with the patch, and its test fails."""
+    base_pass = {"M1": {"status": "pass", "message": ""}}
+    good = {"applied": True, "misses": {"passed": 12, "failed": [], "exit": 0}, "detect": {"status": "fail", "message": "expected 10"}}
+
+    def judge(results, run):
+        j = fg.judge_problem([mutation()], results, None if run is None else {"M1": run})
+        return j["ok"], j["cases"][0]["verdict"]
+
+    assert judge(base_pass, good) == (True, "detected; the base tests miss it (12 tests)"), judge(base_pass, good)
+    bad = {"the test fails on the base": ({"M1": {"status": "fail", "message": "x"}}, good),
+           "the patch does not apply": (base_pass, {"applied": False}), "no mutation run": (base_pass, None),
+           "the base tests find it": (base_pass, {**good, "misses": {"passed": 11, "failed": ["ATest#x"], "exit": 1}}),
+           "no base test ran": (base_pass, {**good, "misses": {"passed": 0, "failed": [], "exit": 1}}),
+           "not detected": (base_pass, {**good, "detect": {"status": "pass", "message": ""}}),
+           "no result with the patch": (base_pass, {**good, "detect": {"status": "missing", "message": ""}})}
+    for name, (results, run) in bad.items():
+        ok, verdict = judge(results, run)
+        assert not ok, (name, verdict)
+    return f"detected and missed -> ok; {len(bad)} other states -> the problem gate fails"
+
+
+def g28_mutation_patch_frozen(tmp):
+    """The problem record holds the content of each patch; patch or misses cannot change after the freeze (#854)."""
+    m = mutation(test="Issue1Test#reporterCase")
+    ctx, src, work = setup_repo(tmp, {"cases": [case("P1"), m, case("G1", "guard", "Issue1Test#defaultStays")]},
+                                work_files={"mutations/m1.patch": MUTATION_PATCH})
+    chk = fg.compute_check(ctx)
+    assert chk["ok"], chk
+    write(work, "mutations/m1.patch", MUTATION_PATCH.replace("int defect", "int other"))
+    why = {r["gate"]: r["why"] for r in fg.compute_check(ctx)["gates"]}
+    assert why["problem"] == "a mutation patch changed after the problem run", why
+    frozen = contract(cases=[case("P1"), m])
+    for change in ({"misses": ["ATest", "BTest"]}, {"patch": "mutations/m2.patch"}):
+        grown = contract(cases=[case("P1"), {**m, **change}], amendments=[{"n": 1, "what": "x", "why": "y"}])
+        assert any("M1 changed" in e for e in fg.contract_changes(frozen, grown)[1]), change
+    return "other patch content -> the problem record is stale; changed misses or patch path -> error"
+
+
 EVALS = [("G1-problem-reproduces", g1_problem_must_reproduce), ("G2-guard-on-base", g2_guard_holds_on_base),
          ("G3-reports", g3_reports), ("G4-fix-every-case", g4_fix_needs_every_case), ("G5-scope", g5_scope),
          ("G6-pinning", g6_pinning), ("G7-invariants", g7_invariants), ("G8-pdf-id", g8_pdf_document_id),
@@ -525,4 +606,6 @@ EVALS = [("G1-problem-reproduces", g1_problem_must_reproduce), ("G2-guard-on-bas
          ("G18-wrapper-runners", g18_wrapper_runners), ("G19-pinning-junit", g19_pinning_needs_junit),
          ("G20-formats-grow", g20_formats_only_grow), ("G21-review-body", g21_review_body_findings),
          ("G22-pinning-control", g22_pinning_control), ("G23-module-keys", g23_module_keys),
-         ("G24-reporter-grows", g24_reporter_only_grows), ("G25-reporter-document", g25_reporter_document_content)]
+         ("G24-reporter-grows", g24_reporter_only_grows), ("G25-reporter-document", g25_reporter_document_content),
+         ("G26-mutation-contract", g26_mutation_contract), ("G27-mutation-verdicts", g27_mutation_verdicts),
+         ("G28-mutation-frozen", g28_mutation_patch_frozen)]

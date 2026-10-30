@@ -36,8 +36,8 @@ Use this skill to fix one GitHub issue of opendataloader-pdf and send a pull req
 ## Rules
 
 1. **Get approval before you post.** Each GitHub write needs a yes from the user. The user gives it at Approval 1, at Approval 2, at a stop, or in the final report. Two exceptions: the fixed claim comment, and pushes that fix CI on the approved pull request. Local commits are not GitHub writes.
-2. **Evidence is a run.** Run the reporter's command. It must fail on `before` and pass on the fix. Run it on the committed sample and on the reporter's document (locally). `before` is the release. For a regression that is not released, `before` is the base build. The harness runs the contract on the base build and on the fix and records each run. Write the command or the API call yourself (Rule 10).
-3. **Reproduce first.** If the failure does not occur, stop. Report the commands that you ran.
+2. **Evidence is a run.** Run the reporter's command. It must fail on `before` and pass on the fix. Run it on the committed sample and on the reporter's document (locally). `before` is the release. For a regression that is not released, `before` is the base build. The harness runs the contract on the base build and on the fix and records each run. Write the command or the API call yourself (Rule 10). If the issue asks only for tests, the run is a mutation case (see "Issues that ask only for tests").
+3. **Reproduce first.** If the failure does not occur, stop. Report the commands that you ran. If the issue asks only for tests, the failure is a defect that the tests of the base do not find: show it with a mutation case.
 4. **Do not commit an original.** Use the reporter's document only on your computer. Commit only samples that you make (see "Reproduction samples"). Do not upload, attach, or quote the original. This rule applies also to public documents.
 5. **One problem, smallest change.** The contract scope names the files that the fix can change (the scope gate). Each changed Java main file must be needed by a JUnit case (the pinning gate). Write problems outside the diff in the pull request. Exception: tell a security vulnerability only to the user.
 6. **Show real output.** Each command, number, and example in a draft must come from a run on the final commit. Take the numbers from `fix_gates.py report`. If you cannot show it, the step is not complete.
@@ -340,6 +340,8 @@ echo $! > "$WORK/hybrid.pid"
 - If the fix changes `python/opendataloader-pdf/src/opendataloader_pdf/hybrid_server.py`, start a second server from the repository for the fix runs: `(cd python/opendataloader-pdf && uv run --extra hybrid opendataloader-pdf-hybrid --host 127.0.0.1 --port 5003)`. For the fix runs, use `--hybrid-url http://127.0.0.1:5003`: in the contract, give each reporter run `fix_options` with this URL.
 - Before the final report, stop each server: `kill "$(cat "$WORK/hybrid.pid")"`.
 
+If the issue asks only for tests (the code is correct, and a test is missing), the release and `main` do not fail. Do not use this table. Show the gap with mutation cases (step 3).
+
 | Release | `main` | Action | `before` |
 |:--|:--|:--|:--|
 | fails | fails | Continue | release |
@@ -370,11 +372,29 @@ Write the tests and the contract before the fix. The contract says what "fixed" 
 |:--|:--|:--|:--|
 | `problem` | An expected result of the issue | Fails with the symptom | Passes |
 | `guard` | A variant with the same cause, or an output that must not change | Passes | Passes |
+| `mutation` | A defect that the tests of the base do not find (an issue that asks only for tests) | Passes. With its patch, the tests in `misses` pass and the case fails | Passes |
 
 - Write one problem case for each expected result of the issue.
 - Write the guards before the fix. List the variants of the input that have the same cause and the same code path: counts (one, two, many), positions (top, margin, between columns), pages (one, two), layouts (one column, two columns), and each related option on and off. Write one guard for each variant that the base handles correctly. A variant that the base also gets wrong is a problem case.
 - Write a guard for each output that the plan does not change. Example: without `--include-header-footer`, the output has no header text.
 - The reason, from #623: the first fix put the two header items of a page in one element. Its box covered both body columns, and the default output mixed the columns. A guard for "two header items far apart on a two-column page", written before the fix, finds this in the first run.
+
+**Issues that ask only for tests.** Some issues ask for a test of code that is correct, for example "a regression in this loop would pass CI". The new test passes on the base, so it cannot be a problem case. A mutation case shows the gap instead:
+
+1. Name the defect that the issue fears. Example from #706: the loop reads the default chunk size, not the configured one.
+2. Put the defect into the base tree and save it as a patch. Then restore the base tree:
+
+   ```bash
+   mkdir -p "$WORK/mutations"
+   git -C "$WORK/base-src" diff > "$WORK/mutations/m1.patch"
+   git -C "$WORK/base-src" checkout -- .
+   ```
+
+   The patch changes only files that exist, and only code outside the tests. Make one patch for each defect.
+3. In `misses`, name the tests of the base that cover the changed code: JUnit classes or methods, pytest files or node ids, or vitest files.
+4. The problem gate runs the case on the base (it must pass). Then it applies the patch, runs the tests in `misses` (they must pass), and runs the case (it must fail).
+
+If the tests in `misses` also fail with the patch, the base finds this defect already. It is not a gap. Find another defect, or tell the user that the tests of the base cover the issue. If no case is a problem case, only tests change: `scope` can be empty (`[]`).
 
 **Contract.**
 
@@ -385,7 +405,7 @@ python3 -I .agents/skills/odl-fix/scripts/fix_gates.py template --issue "$N" > "
 Fill in the fields (see [references/harness.md](references/harness.md)):
 
 - `scope`: the files that the fix will change, other than tests.
-- `cases`: the problem cases with their symptom text, and the guards with their reason.
+- `cases`: the problem cases with their symptom text, the guards with their reason, and the mutation cases with their `patch`, `misses`, and `why`.
 - `reporter`: the reporter's document in `$WORK/attachments`, and the runs of step 2 with their expectations. The expectations stay in `$WORK`. The tool reports only pass or fail for them.
 - `invariants`: one for each option set of the reporter that changes the code path, for example `--hybrid` with the local server of step 2. The tool adds the native corpus invariants for each change of Java main code.
 
@@ -396,7 +416,7 @@ git add <test files> && git commit -m "wip: failing test for #$N"
 python3 -I .agents/skills/odl-fix/scripts/fix_gates.py gate problem --work "$WORK"
 ```
 
-**Pass: each problem case is `reproduced`, and each guard `holds`.** A compile error, a skip, or a failure with another message is not a reproduction. Some tests skip without a message (`assumeTrue`).
+**Pass: each problem case is `reproduced`, each guard `holds`, and each mutation case is `detected; the base tests miss it`.** A compile error, a skip, or a failure with another message is not a reproduction. Some tests skip without a message (`assumeTrue`).
 
 ### 4. Root cause, Intent Spec, and Approval 1
 
