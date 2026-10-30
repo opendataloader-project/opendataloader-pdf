@@ -54,10 +54,11 @@ The tool reads `SRC` from `$WORK/env.sh` (the fix tree). `--src` sets it. The ba
 | Field | Content |
 |:--|:--|
 | `issue`, `objective` | The issue number, and the reporter's pain point, quoted |
-| `scope` | The files that the fix can change, other than tests. Globs are allowed (`*` matches `/` too). Generated files and documentation that the fix must update are in the scope too |
+| `scope` | The files that the fix can change, other than tests. Globs are allowed (`*` matches `/` too). Generated files and documentation that the fix must update are in the scope too. Empty (`[]`) only if no case is a problem case: then only tests change |
 | `cases` | Tests. `runner` `junit` (the default): `Class#method`, and `module` is `opendataloader-pdf-core` (the default) or `opendataloader-pdf-cli`. `runner` `pytest`: `tests/<file>.py::[Class::]test` in `python/opendataloader-pdf`, with `extras` (for example `["hybrid"]`). `runner` `vitest`: `test/<file>.test.ts::<test name>` in `node/opendataloader-pdf` |
-| `cases[].kind = problem` | Fails on the base with `symptom` in its failure message, passes on the fix. At least one |
+| `cases[].kind = problem` | Fails on the base with `symptom` in its failure message, passes on the fix. At least one problem case or mutation case |
 | `cases[].kind = guard` | Passes on the base and on the fix. A variant of the input, or an output that must not change. `why` says which |
+| `cases[].kind = mutation` | For an issue that asks only for tests. Passes on the base and on the fix. `patch`: a file in `$WORK` (`git diff` on the base tree) that changes existing files outside the tests. `misses`: the tests of the base that cover that code (JUnit `Class` or `Class#method`, pytest `tests/<file>.py[::test]`, vitest `test/<file>.test.ts`). `why`: the defect that the patch makes. With the patch on the base, the tests in `misses` pass and the case fails |
 | `support` | Other test files that the case tests need and that the base does not have. The problem gate copies them too |
 | `reporter` | The reporter's document in `$WORK` and the runs on it. Not committed, not quoted |
 | `reporter.runs[]` | `options` (a list; the tool adds `-f`, `-o`, and the document), `fix_options` (for fix.jar only, for example the second hybrid server of a `hybrid_server.py` fix), `format` (`json`, `markdown`, `html`, `text`), `base` and `fix` expectations, `fix_equals_base` (normalizers) |
@@ -87,7 +88,7 @@ A normalizer is a decision that a difference does not matter. Add one only with 
 
 | Gate | Required when | Pass |
 |:--|:--|:--|
-| `problem` | Always (Phase 2; `run` does not run it). The pytest and vitest cases need the jar of the base tree (`base-build`) | On the base tree, with the case test files copied in: each problem case fails with its symptom; each guard passes. A compile error, a skip, or no test is no result. The base tree is restored |
+| `problem` | Always (Phase 2; `run` does not run it). The pytest and vitest cases need the jar of the base tree (`base-build`) | On the base tree, with the case test files copied in: each problem case fails with its symptom; each guard and each mutation case passes. Then, for each mutation case, on the base tree with its patch: the tests in `misses` (the base versions) pass, and the case fails. A compile error, a skip, or no test is no result. The base tree is restored |
 | `base-build` | Always | `mvn clean package -DskipTests` on the base tree; `$WORK/base.jar` |
 | `build` | Always | `scripts/build-java.sh` (all Java tests, Javadoc, enforcer) succeeds with 0 failures and 0 errors; `$WORK/fix.jar` |
 | `fix` | Always | Each case passes on the fix tree |
@@ -115,7 +116,7 @@ A record has the gate, the state, the commit and its tree, the base commit, the 
 - its tree is the tree of the current commit. A squash keeps the tree; a rebase or a code change does not. `base-build` and `issue-corpus` read only the base tree, so they do not need this;
 - its base is the current base tree;
 - for `problem`, `fix`, `pinning`, `scope`, `invariants`, and `reporter`: its contract hash is the current contract;
-- for `problem`: the case test files are the same as at the run. A weaker test needs a new problem run;
+- for `problem`: the case test files and the mutation patches are the same as at the run. A weaker test needs a new problem run;
 - for `build`, `base-build`, `invariants`, `reporter`, and `bench`: the jars are the same files;
 - for `reporter`: the reporter's document has the same content as at the freeze;
 - the fix tree has no uncommitted changes.
@@ -126,7 +127,7 @@ A record has the gate, the state, the commit and its tree, the base commit, the 
 
 `freeze` keeps a copy of the approved contract in `$WORK/contract.lock`, and the hash of the reporter's document. It needs a passing `problem` record of that contract. After the freeze, the contract can only grow:
 
-- You cannot remove a case, an invariant, a format of an invariant, or a reporter run. You cannot change the kind, the test, the symptom, the module, or the runner of a case, the corpus or the options of an invariant, the reporter document, or a reporter run. Add a new case or run instead.
+- You cannot remove a case, an invariant, a format of an invariant, or a reporter run. You cannot change the kind, the test, the symptom, the module, the runner, the patch path, or the misses of a case, the corpus or the options of an invariant, the reporter document, or a reporter run. Add a new case or run instead.
 - Each change needs a new entry in `amendments`. `check` lists each change for Approval 2.
 - A new problem case needs a new `problem` run: it must fail on the base too.
 - A new guard case or a new scope entry does not need the user first. Show it at Approval 2.

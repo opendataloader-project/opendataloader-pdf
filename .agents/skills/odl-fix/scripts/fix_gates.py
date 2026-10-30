@@ -7,7 +7,8 @@
       Checks the contract. Exit 2: the contract is not valid.
   fix_gates.py gate NAME --work WORK [--src DIR] [--offline]
       Runs one gate and appends its record to WORK/records.jsonl. Exit 13: the gate failed.
-      problem     on the base tree: each problem case fails with its symptom, each guard passes
+      problem     on the base tree: each problem case fails with its symptom, each guard passes; with the
+                  patch of each mutation case, the tests in its misses pass and the case fails
       base-build  builds WORK/base.jar from the base tree
       build       ./scripts/build-java.sh on the fix tree; copies WORK/fix.jar
       fix         on the fix tree: each case passes
@@ -39,6 +40,7 @@ The agent judges what the contract says. This tool judges whether the code does 
 from __future__ import annotations
 
 import argparse
+import contextlib
 import datetime
 import fnmatch
 import glob
@@ -63,6 +65,11 @@ FORMAT_EXT = {"json": ".json", "markdown": ".md", "html": ".html", "text": ".txt
 TEST_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*#[A-Za-z_][A-Za-z0-9_]*$")
 PYTEST_RE = re.compile(r"^tests/[A-Za-z0-9_./-]+\.py(::[A-Za-z_][A-Za-z0-9_]*)+$")
 VITEST_RE = re.compile(r"^test/[A-Za-z0-9_./-]+\.test\.(ts|mts|js)::.+$")
+# The tests in "misses" of a mutation case: a class or a method, a test file or a node id, a test file
+MISSES_RE = {"junit": re.compile(r"^[A-Za-z_][A-Za-z0-9_]*(#[A-Za-z_][A-Za-z0-9_]*)?$"),
+             "pytest": re.compile(r"^tests/[A-Za-z0-9_./-]+\.py(::[A-Za-z_][A-Za-z0-9_]*)*$"),
+             "vitest": re.compile(r"^test/[A-Za-z0-9_./-]+\.test\.(ts|mts|js)$")}
+KIND_NAMES = ("problem", "guard", "mutation")
 COUNT_RE = re.compile(r"^(=|>|>=|<|<=)?([0-9]+)$")
 HYBRID_URL_RE = re.compile(r"^http://127\.0\.0\.1:[0-9]{1,5}$")
 SELFCHECK = (
@@ -276,6 +283,46 @@ def check_expect(e, where: str, errors: list):
             errors.append(f"{where}: {k} must be a list")
 
 
+def patch_paths(text: str) -> tuple[list[str], list[str]]:
+    """(paths, errors) of a mutation patch (git diff). It can only change files that exist on the base."""
+    paths, errors = [], []
+    for line in text.splitlines():
+        m = re.fullmatch(r"diff --git a/(\S+) b/(\S+)", line)
+        if m:
+            if m.group(1) != m.group(2):
+                errors.append(f"renames {m.group(1)}")
+            paths.append(m.group(2))
+        elif line.startswith(("new file mode", "deleted file mode", "rename from", "copy from", "GIT binary patch", "Binary files")):
+            errors.append(f"has '{line.strip()}': change existing text files only")
+    if not paths:
+        errors.append("changes no file (make it with git diff on the base tree)")
+    return paths, errors
+
+
+def check_mutation(k: dict, work: str, errors: list):
+    cid = k["id"]
+    if not (k.get("why") or "").strip():
+        errors.append(f"case {cid}: a mutation case needs why: the defect that the patch makes")
+    rel = k.get("patch") or ""
+    path = os.path.realpath(os.path.join(work, rel))
+    if not rel or not path.startswith(os.path.realpath(work) + os.sep):
+        errors.append(f"case {cid}: patch is a file in $WORK")
+    elif not os.path.isfile(path):
+        errors.append(f"case {cid}: no patch {rel}")
+    else:
+        paths, problems = patch_paths(read_text(path))
+        errors += [f"case {cid}: the patch {p}" for p in problems]
+        for p in paths:
+            if is_test_path(p) or p.startswith("/") or ".." in p.split("/"):
+                errors.append(f"case {cid}: the patch changes {p}: change only code outside the tests")
+    misses, pattern = k.get("misses"), MISSES_RE.get(runner_of(k))
+    if not isinstance(misses, list) or not misses:
+        errors.append(f"case {cid}: misses: the tests of the base that cover the code of the patch")
+    elif pattern and not all(isinstance(s, str) and pattern.fullmatch(s) for s in misses):
+        errors.append(f"case {cid}: misses are " + {"junit": "Class or Class#method", "pytest": "tests/<file>.py[::test]",
+                                                   "vitest": "test/<file>.test.ts"}[runner_of(k)])
+
+
 def validate_contract(c, work: str) -> list[str]:
     errors = []
     if not isinstance(c, dict):
@@ -284,13 +331,14 @@ def validate_contract(c, work: str) -> list[str]:
         errors.append("issue: the issue number")
     if not (c.get("objective") or "").strip():
         errors.append("objective: the reporter's pain point, quoted")
-    scope = c.get("scope")
-    if not isinstance(scope, list) or not scope or not all(isinstance(s, str) and s for s in scope):
-        errors.append("scope: the files (or globs) that the fix can change, other than tests")
     cases = c.get("cases")
     if not isinstance(cases, list) or not cases:
-        errors.append("cases: at least one problem case")
+        errors.append("cases: at least one problem or mutation case")
         cases = []
+    # Only tests change when no case is a problem (an issue that asks for tests): the scope can be empty
+    scope, needs_scope = c.get("scope"), any(isinstance(k, dict) and k.get("kind") == "problem" for k in cases)
+    if not isinstance(scope, list) or (needs_scope and not scope) or not all(isinstance(s, str) and s for s in scope):
+        errors.append("scope: the files (or globs) that the fix can change, other than tests")
     ids = set()
     for k in cases:
         cid = k.get("id") if isinstance(k, dict) else None
@@ -298,8 +346,8 @@ def validate_contract(c, work: str) -> list[str]:
             errors.append(f"case {cid!r}: a unique id")
             continue
         ids.add(cid)
-        if k.get("kind") not in ("problem", "guard"):
-            errors.append(f"case {cid}: kind is problem or guard")
+        if k.get("kind") not in KIND_NAMES:
+            errors.append(f"case {cid}: kind is problem, guard, or mutation")
         runner = k.get("runner", "junit")
         pattern = {"junit": TEST_RE, "pytest": PYTEST_RE, "vitest": VITEST_RE}.get(runner)
         if pattern is None:
@@ -313,8 +361,10 @@ def validate_contract(c, work: str) -> list[str]:
             errors.append(f"case {cid}: extras are names of Python extras")
         if k.get("kind") == "problem" and not (k.get("symptom") or "").strip():
             errors.append(f"case {cid}: a problem case needs the symptom text of its failure message")
-    if cases and not any(k.get("kind") == "problem" for k in cases if isinstance(k, dict)):
-        errors.append("cases: at least one problem case")
+        if k.get("kind") == "mutation" and pattern is not None:
+            check_mutation(k, work, errors)
+    if cases and not any(k.get("kind") in ("problem", "mutation") for k in cases if isinstance(k, dict)):
+        errors.append("cases: at least one problem or mutation case")
     for s in c.get("support", []):
         if not isinstance(s, str) or s.startswith("/") or ".." in s.split("/"):
             errors.append(f"support {s!r}: a path in the repository")
@@ -538,19 +588,36 @@ def junit_results(cases: list[dict], reports: dict) -> dict:
             for k in cases}
 
 
-def run_pytest(tree: str, cases: list[dict], out_dir: str, results: dict, exits: dict):
+@contextlib.contextmanager
+def python_package(tree: str):
     """The Python wrapper tests need the CLI jar of the tree (base-build or build) and README.md in the package."""
     pkg = os.path.join(tree, PY_PKG)
-    log = os.path.join(out_dir, "pytest.log")
-    if os.path.exists(log):
-        os.remove(log)
     readme = os.path.join(pkg, "README.md")
     made = not os.path.exists(readme)
     if made:
         shutil.copyfile(os.path.join(tree, "README.md"), readme)
     shutil.rmtree(os.path.join(pkg, "src", "opendataloader_pdf", "jar"), ignore_errors=True)
-    extras = sorted({e for k in cases for e in k.get("extras", [])})
     try:
+        yield pkg
+    finally:
+        if made and os.path.exists(readme):
+            os.remove(readme)
+
+
+def node_build(pkg: str, log: str) -> int:
+    """The Node wrapper tests need the CLI jar of the tree: pnpm run build copies it."""
+    code = run_cmd(["pnpm", "install", "--frozen-lockfile"], cwd=pkg, log=log)
+    if code == 0:
+        code = run_cmd(["pnpm", "run", "build"], cwd=pkg, log=log, env=java_env())
+    return code
+
+
+def run_pytest(tree: str, cases: list[dict], out_dir: str, results: dict, exits: dict):
+    log = os.path.join(out_dir, "pytest.log")
+    if os.path.exists(log):
+        os.remove(log)
+    extras = sorted({e for k in cases for e in k.get("extras", [])})
+    with python_package(tree) as pkg:
         # One run for each case: pytest runs nothing if one node id of the list does not exist
         for i, k in enumerate(cases):
             xml = os.path.join(out_dir, f"pytest-{k['id']}.xml")
@@ -561,20 +628,14 @@ def run_pytest(tree: str, cases: list[dict], out_dir: str, results: dict, exits:
                 "pytest", "-p", "no:cacheprovider", f"--junitxml={xml}", k["test"]]
             exits[f"pytest-{k['id']}"] = run_cmd(args, cwd=pkg, log=log, env=java_env())
             results[k["id"]] = match_pytest(k, read_testcases([xml]) if os.path.exists(xml) else [])
-    finally:
-        if made and os.path.exists(readme):
-            os.remove(readme)
 
 
 def run_vitest(tree: str, cases: list[dict], out_dir: str, results: dict, exits: dict):
-    """The Node wrapper tests need the CLI jar of the tree: pnpm run build copies it."""
     pkg = os.path.join(tree, NODE_PKG)
     log = os.path.join(out_dir, "vitest.log")
     if os.path.exists(log):
         os.remove(log)
-    code = run_cmd(["pnpm", "install", "--frozen-lockfile"], cwd=pkg, log=log)
-    if code == 0:
-        code = run_cmd(["pnpm", "run", "build"], cwd=pkg, log=log, env=java_env())
+    code = node_build(pkg, log)
     exits["vitest-build"] = code
     for k in cases:
         file, name = k["test"].split("::", 1)
@@ -600,8 +661,66 @@ def run_cases(ctx: Ctx, tree: str, cases: list[dict], out_dir: str) -> tuple[dic
     return results, exits
 
 
-def judge_problem(cases: list[dict], results: dict) -> dict:
-    """On the base: a problem case must fail with its symptom; a guard must pass."""
+def run_misses(ctx: Ctx, tree: str, case: dict, out_dir: str) -> dict:
+    """Runs the tests in "misses" of a mutation case (classes, methods, or files). {"passed", "failed", "exit"}."""
+    runner, selectors = runner_of(case), case["misses"]
+    log = os.path.join(out_dir, "misses.log")
+    xml = os.path.join(out_dir, f"misses-{runner}.xml")
+    for stale in (log, xml):
+        if os.path.exists(stale):
+            os.remove(stale)
+    if runner == "junit":
+        module = case.get("module", MODULES[0])
+        report_dir = os.path.join(tree, "java", module, "target", "surefire-reports")
+        shutil.rmtree(report_dir, ignore_errors=True)
+        code = run_cmd(ctx.mvn() + ["test", "-pl", module] + (["-am"] if module != MODULES[0] else []) + [
+            f"-Dtest={','.join(selectors)}", "-Dsurefire.failIfNoSpecifiedTests=false", "-Djava.awt.headless=true"],
+            cwd=os.path.join(tree, "java"), log=log, env=java_env())
+        keep = os.path.join(out_dir, "misses-reports")
+        shutil.rmtree(keep, ignore_errors=True)
+        if os.path.isdir(report_dir):
+            shutil.copytree(report_dir, keep)
+        xmls = sorted(glob.glob(os.path.join(keep, "TEST-*.xml")))
+    elif runner == "pytest":
+        with python_package(tree) as pkg:
+            code = run_cmd(["uv", "run"] + [x for e in case.get("extras", []) for x in ("--extra", e)] + [
+                "--reinstall-package", "opendataloader-pdf", "pytest", "-p", "no:cacheprovider", f"--junitxml={xml}",
+                *selectors], cwd=pkg, log=log, env=java_env())
+        xmls = [xml]
+    else:
+        pkg = os.path.join(tree, NODE_PKG)
+        code = node_build(pkg, log)
+        if code == 0:
+            code = run_cmd(["pnpm", "exec", "vitest", "--run", *selectors, "--reporter=junit", f"--outputFile={xml}"],
+                           cwd=pkg, log=log, env=java_env())
+        xmls = [xml]
+    tcs = read_testcases([p for p in xmls if os.path.exists(p)])
+    return {"passed": sum(t["status"] == "pass" for t in tcs),
+            "failed": [f"{t['classname'].rsplit('.', 1)[-1]}#{t['name']}" for t in tcs if t["status"] in ("fail", "error")][:20],
+            "exit": code}
+
+
+def judge_mutation(base: dict, mutation: dict | None) -> tuple[str, bool]:
+    """A mutation case: its test passes on the base; with the patch, the tests in misses pass and its test fails."""
+    if base["status"] != "pass":
+        return f"does not pass on the base ({base['status']})", False
+    if not mutation or not mutation.get("applied"):
+        return "the patch does not apply to the base", False
+    misses = mutation["misses"]
+    if misses["failed"]:
+        return f"the base tests find the defect too ({', '.join(misses['failed'][:3])})", False
+    if not misses["passed"]:
+        return "no result for the tests in misses (compile error, or no test)", False
+    detect = mutation.get("detect") or {"status": "missing"}
+    if detect["status"] == "pass":
+        return "not detected: the test passes with the patch", False
+    if detect["status"] not in ("fail", "error"):
+        return "no result with the patch (compile error, skip, or no test)", False
+    return f"detected; the base tests miss it ({misses['passed']} tests)", True
+
+
+def judge_problem(cases: list[dict], results: dict, mutations: dict | None = None) -> dict:
+    """On the base: a problem case must fail with its symptom; a guard must pass; a mutation case must find its patch."""
     rows, ok = [], True
     for k in cases:
         r = results.get(k["id"], {"status": "missing", "message": ""})
@@ -613,6 +732,8 @@ def judge_problem(cases: list[dict], results: dict) -> dict:
             else:
                 verdict = "no result (compile error, skip, or no test)"
             good = verdict == "reproduced"
+        elif k["kind"] == "mutation":
+            verdict, good = judge_mutation(r, (mutations or {}).get(k["id"]))
         else:
             verdict = "holds" if r["status"] == "pass" else f"does not hold on the base ({r['status']})"
             good = r["status"] == "pass"
@@ -647,28 +768,73 @@ def files_digest(tree: str, files: list[str]) -> str:
     return h.hexdigest()
 
 
+def patches_digest(ctx: Ctx, c: dict) -> str | None:
+    """The content of the mutation patches. None if the contract has no mutation case."""
+    muts = [k for k in c["cases"] if k["kind"] == "mutation"]
+    if not muts:
+        return None
+    h = hashlib.sha256()
+    for k in muts:
+        h.update(k["id"].encode() + b"\0" + (sha256_file(os.path.join(ctx.work, k["patch"])) or "missing").encode() + b"\0")
+    return h.hexdigest()
+
+
+def copy_case_files(ctx: Ctx, files: list[str]):
+    for f in files:
+        dst = os.path.join(ctx.base_src, f)
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
+        shutil.copyfile(os.path.join(ctx.src, f), dst)
+
+
+def restore_base(ctx: Ctx, files: list[str], tracked: set[str]):
+    """Restores the base tree: the tracked files from git, the copied files that the base does not have are removed."""
+    restore = [f for f in files if f in tracked]
+    if restore:
+        git(ctx.base_src, "checkout", "--", *restore)
+    for f in files:
+        if f not in tracked and os.path.exists(os.path.join(ctx.base_src, f)):
+            os.remove(os.path.join(ctx.base_src, f))
+
+
+def run_mutation(ctx: Ctx, k: dict, files: list[str], tracked: set[str]) -> dict:
+    """On the base tree with the patch of a mutation case: first the tests in misses (the base versions), then the case."""
+    out_dir = os.path.join(ctx.gate_dir("problem"), f"mutation-{k['id']}")
+    os.makedirs(out_dir, exist_ok=True)
+    patch = os.path.join(ctx.work, k["patch"])
+    changed, _ = patch_paths(read_text(patch))
+    if run_cmd(["git", "-C", ctx.base_src, "apply", "--check", patch], log=os.path.join(out_dir, "apply.log")) != 0:
+        return {"applied": False}
+    try:
+        git(ctx.base_src, "apply", patch)
+        misses = run_misses(ctx, ctx.base_src, k, out_dir)
+        copy_case_files(ctx, files)
+        results, exits = run_cases(ctx, ctx.base_src, [k], out_dir)
+    finally:
+        restore_base(ctx, files, tracked)
+        git(ctx.base_src, "checkout", "--", *changed)
+    require_clean(ctx.base_src, "base tree after the mutation run")
+    return {"applied": True, "misses": misses, "detect": results.get(k["id"], {"status": "missing", "message": ""}),
+            "exits": exits}
+
+
 def gate_problem(ctx: Ctx, c: dict) -> dict:
     require_clean(ctx.src, "fix tree")
     require_clean(ctx.base_src, "base tree")
     files = case_files(ctx, c)
     tracked = set(git(ctx.base_src, "ls-files", "--", *files).split())
     try:
-        for f in files:
-            dst = os.path.join(ctx.base_src, f)
-            os.makedirs(os.path.dirname(dst), exist_ok=True)
-            shutil.copyfile(os.path.join(ctx.src, f), dst)
+        copy_case_files(ctx, files)
         results, exits = run_cases(ctx, ctx.base_src, c["cases"], ctx.gate_dir("problem"))
     finally:
-        restore = [f for f in files if f in tracked]
-        if restore:
-            git(ctx.base_src, "checkout", "--", *restore)
-        for f in files:
-            if f not in tracked and os.path.exists(os.path.join(ctx.base_src, f)):
-                os.remove(os.path.join(ctx.base_src, f))
+        restore_base(ctx, files, tracked)
     require_clean(ctx.base_src, "base tree after the problem run")
-    j = judge_problem(c["cases"], results)
+    mutations = {k["id"]: run_mutation(ctx, k, files, tracked) for k in c["cases"] if k["kind"] == "mutation"}
+    j = judge_problem(c["cases"], results, mutations)
     return {"state": "pass" if j["ok"] else "fail",
-            "summary": {**j, "maven_exit": exits, "copied": files, "tests_digest": files_digest(ctx.src, files)}}
+            "summary": {**j, "maven_exit": exits, "copied": files, "tests_digest": files_digest(ctx.src, files),
+                        "patches_digest": patches_digest(ctx, c),
+                        "mutations": {cid: {"applied": m["applied"], "misses": m.get("misses"),
+                                            "detect": (m.get("detect") or {}).get("status")} for cid, m in mutations.items()}}}
 
 
 def gate_fix(ctx: Ctx, c: dict) -> dict:
@@ -1311,8 +1477,8 @@ def contract_changes(frozen: dict, current: dict) -> tuple[list[str], list[str]]
         now_k = ccases.get(cid)
         if now_k is None:
             errors.append(f"case {cid} was removed after the freeze")
-        elif any(now_k.get(f) != k.get(f) for f in ("kind", "test", "symptom", "module", "runner")):
-            errors.append(f"case {cid} changed after the freeze (kind, test, symptom, or module)")
+        elif any(now_k.get(f) != k.get(f) for f in ("kind", "test", "symptom", "module", "runner", "patch", "misses")):
+            errors.append(f"case {cid} changed after the freeze (kind, test, symptom, module, patch, or misses)")
     for cid in sorted(set(ccases) - set(fcases)):
         changes.append(f"new {ccases[cid]['kind']} case {cid}: {ccases[cid]['test']}")
     for s in current.get("scope", []):
@@ -1448,6 +1614,8 @@ def compute_check(ctx: Ctx, final: bool = False) -> dict:
                 why = "for another contract (a new case must fail on the base too)"
             elif rec["summary"].get("tests_digest") != files_digest(ctx.src, case_files(ctx, c)):
                 why = "the case test files changed after the problem run"
+            elif rec["summary"].get("patches_digest") != patches_digest(ctx, c):
+                why = "a mutation patch changed after the problem run"
         elif g not in BASE_ONLY and record_tree(ctx, rec) != tree:
             why = "for another commit (other content)"
         elif rec["base"] != base:
@@ -1506,6 +1674,11 @@ def report_text(ctx: Ctx) -> str:
             b, a = before.get(k["id"], {}), after.get(k["id"], {})
             lines.append(f"| {k['id']} | {k['kind']} | `{k['test']}` | {b.get('verdict', b.get('status', 'not run'))} | {a.get('status', 'not run')} |")
         lines.append("")
+        muts = [k for k in c["cases"] if k["kind"] == "mutation"]
+        if muts:
+            lines.append("Mutation cases: each patch puts a defect into the code of `main`. The tests in misses pass with it; the case test fails.")
+            lines += [f"- {k['id']}: {k['why']} (misses: {', '.join(f'`{s}`' for s in k['misses'])})" for k in muts]
+            lines.append("")
     if rec.get("reporter") and rec["reporter"]["summary"].get("runs"):
         lines += ["The reporter's document (not shared): " + "; ".join(
             f"{r['id']} {'pass' if r['ok'] else 'fail'}" for r in rec["reporter"]["summary"]["runs"]) + ".", ""]
@@ -1680,8 +1853,8 @@ def main(argv: list[str] | None = None) -> int:
         ctx = Ctx(a.work, a.src, a.base_src, a.offline)
         if a.cmd == "validate":
             c = load_contract(ctx)
-            print(f"contract {contract_hash(c)[:8]}: {sum(k['kind'] == 'problem' for k in c['cases'])} problem, "
-                  f"{sum(k['kind'] == 'guard' for k in c['cases'])} guard cases")
+            print(f"contract {contract_hash(c)[:8]}: " + ", ".join(
+                f"{sum(k['kind'] == kind for k in c['cases'])} {kind}" for kind in KIND_NAMES) + " cases")
             return 0
         if a.cmd == "gate":
             rec = run_gate(ctx, a.name)
