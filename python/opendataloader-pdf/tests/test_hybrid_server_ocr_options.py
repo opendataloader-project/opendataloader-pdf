@@ -336,6 +336,9 @@ def _run_main_to_warning(argv, monkeypatch, caplog):
     monkeypatch.setattr("sys.argv", ["opendataloader-pdf-hybrid", *argv])
 
     # Skip dep import checks — pytest already runs inside the [hybrid] env.
+    # #673: main() now re-execs into UTF-8 mode as its first action; stub it
+    # so main() proceeds directly under pytest instead of replacing the process.
+    monkeypatch.setattr(hybrid_server, "_reexec_with_utf8_if_needed", lambda: None)
     monkeypatch.setattr(hybrid_server, "_check_dependencies", lambda: None)
 
     # Avoid building a real DocumentConverter / FastAPI app.
@@ -408,9 +411,10 @@ def test_no_ocr_alone_emits_no_warning(monkeypatch, caplog):
 
 def test_main_exits_when_tesseract_binary_missing(monkeypatch, caplog):
     """Selecting `--ocr-engine tesseract` without the binary on PATH exits at startup."""
-    monkeypatch.setattr(
-        "sys.argv", ["opendataloader-pdf-hybrid", "--ocr-engine", "tesseract"]
-    )
+    monkeypatch.setattr("sys.argv", ["opendataloader-pdf-hybrid", "--ocr-engine", "tesseract"])
+    # #673: main() now re-execs into UTF-8 mode as its first action; stub it
+    # so main() proceeds directly under pytest instead of replacing the process.
+    monkeypatch.setattr(hybrid_server, "_reexec_with_utf8_if_needed", lambda: None)
     monkeypatch.setattr(hybrid_server, "_check_dependencies", lambda: None)
     monkeypatch.setattr(hybrid_server, "create_app", lambda **kwargs: object())
     monkeypatch.setattr("shutil.which", lambda _name: None)
@@ -437,6 +441,9 @@ def test_main_skips_engine_check_when_no_ocr(monkeypatch, caplog):
         "sys.argv",
         ["opendataloader-pdf-hybrid", "--no-ocr", "--ocr-engine", "tesseract"],
     )
+    # #673: main() now re-execs into UTF-8 mode as its first action; stub it
+    # so main() proceeds directly under pytest instead of replacing the process.
+    monkeypatch.setattr(hybrid_server, "_reexec_with_utf8_if_needed", lambda: None)
     monkeypatch.setattr(hybrid_server, "_check_dependencies", lambda: None)
     monkeypatch.setattr(hybrid_server, "create_app", lambda **kwargs: object())
     monkeypatch.setattr("shutil.which", spy_which)
