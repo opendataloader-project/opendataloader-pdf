@@ -315,6 +315,15 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "default": "3000",
         "description": "Time in milliseconds that the availability check of the hybrid backend waits to connect, and then again for the answer. Raise it for a backend with a slow start, such as a serverless one. Default: 3000",
     },
+    {
+        "name": "hybrid-triage-log",
+        "python_name": "hybrid_triage_log",
+        "short_name": None,
+        "type": "boolean",
+        "required": False,
+        "default": False,
+        "description": "With --hybrid, write the triage decision of each page (Java or backend, the confidence, and the signals) to <name>_triage.json in the output folder",
+    },
 ]
 
 

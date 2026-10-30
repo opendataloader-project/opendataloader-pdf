@@ -200,6 +200,10 @@ public class CLIOptions {
             + "check of the hybrid backend waits to connect, and then again for the answer. Raise it for a backend "
             + "with a slow start, such as a serverless one. Default: 3000";
 
+    private static final String HYBRID_TRIAGE_LOG_LONG_OPTION = "hybrid-triage-log";
+    private static final String HYBRID_TRIAGE_LOG_DESC = "With --hybrid, write the triage decision of each page "
+            + "(Java or backend, the confidence, and the signals) to <name>_triage.json in the output folder";
+
     private static final String HYBRID_CHUNK_SIZE_LONG_OPTION = "hybrid-chunk-size";
     private static final String HYBRID_CHUNK_SIZE_DESC = "Maximum number of pages to send to the hybrid "
             + "backend in a single request. Large documents are split into batches of this size; "
@@ -287,6 +291,7 @@ public class CLIOptions {
             // Last: the Python convert() takes its parameters in this order, also by position.
             new OptionDefinition(HYBRID_AVAILABILITY_TIMEOUT_LONG_OPTION, null, "string", "3000",
                     HYBRID_AVAILABILITY_TIMEOUT_DESC, true),
+            new OptionDefinition(HYBRID_TRIAGE_LOG_LONG_OPTION, null, "boolean", false, HYBRID_TRIAGE_LOG_DESC, true),
 
             // Legacy options (not exported, for backward compatibility)
             new OptionDefinition(HYBRID_OCR_LONG_OPTION, null, "string", null, HYBRID_OCR_DESC, false),
@@ -750,6 +755,9 @@ public class CLIOptions {
         }
         if (commandLine.hasOption(HYBRID_FALLBACK_LONG_OPTION)) {
             config.getHybridConfig().setFallbackToJava(true);
+        }
+        if (commandLine.hasOption(HYBRID_TRIAGE_LOG_LONG_OPTION)) {
+            config.getHybridConfig().setWriteTriageLog(true);
         }
         if (commandLine.hasOption(TO_STDOUT_LONG_OPTION)) {
             config.setOutputStdout(true);

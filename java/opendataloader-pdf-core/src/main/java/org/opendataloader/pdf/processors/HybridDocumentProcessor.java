@@ -61,6 +61,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Map;
 import java.util.Set;
@@ -87,6 +88,9 @@ import java.util.stream.Collectors;
 public class HybridDocumentProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(HybridDocumentProcessor.class.getCanonicalName());
+
+    /** The end of the name of a triage log: {@code <name>_triage.json}. */
+    private static final String TRIAGE_LOG_SUFFIX = "_triage.json";
 
     /**
      * Stores the last hybrid server timings collected during {@link #processBackendPath}.
@@ -192,7 +196,9 @@ public class HybridDocumentProcessor {
     }
 
     /**
-     * Processes a document using hybrid mode with triage-based routing.
+     * Processes a document using hybrid mode with triage-based routing. With
+     * {@link org.opendataloader.pdf.hybrid.HybridConfig#isWriteTriageLog()}, the triage decision of each page goes
+     * to {@code <name>_triage.json} in the output folder.
      *
      * @param inputPdfName   The path to the input PDF file.
      * @param config         The configuration settings.
@@ -204,7 +210,8 @@ public class HybridDocumentProcessor {
             String inputPdfName,
             Config config,
             Set<Integer> pagesToProcess) throws IOException {
-        return processDocument(inputPdfName, config, pagesToProcess, null);
+        Path triageLog = config.getHybridConfig().isWriteTriageLog() ? getTriageLogPath(inputPdfName, config) : null;
+        return processDocumentWithTriageLog(inputPdfName, config, pagesToProcess, triageLog);
     }
 
     /**
@@ -222,6 +229,29 @@ public class HybridDocumentProcessor {
             Config config,
             Set<Integer> pagesToProcess,
             Path outputDir) throws IOException {
+        return processDocumentWithTriageLog(inputPdfName, config, pagesToProcess,
+            outputDir == null ? null : outputDir.resolve(TriageLogger.DEFAULT_FILENAME));
+    }
+
+    /**
+     * Returns the triage log of the document: {@code <name>_triage.json} in the output folder, next to the other
+     * outputs. Each document has its own log, so the documents of one run do not write over each other's (#741).
+     */
+    private static Path getTriageLogPath(String inputPdfName, Config config) {
+        Path input = Path.of(inputPdfName).toAbsolutePath();
+        Path inputName = input.getFileName();
+        String fileName = inputName != null ? inputName.toString() : "document";
+        String name = fileName.toLowerCase(Locale.ROOT).endsWith(".pdf")
+            ? fileName.substring(0, fileName.length() - 4) : fileName;
+        Path folder = config.getOutputFolder() != null ? Path.of(config.getOutputFolder()) : input.getParent();
+        return folder != null ? folder.resolve(name + TRIAGE_LOG_SUFFIX) : Path.of(name + TRIAGE_LOG_SUFFIX);
+    }
+
+    private static List<List<IObject>> processDocumentWithTriageLog(
+            String inputPdfName,
+            Config config,
+            Set<Integer> pagesToProcess,
+            Path triageLog) throws IOException {
 
         lastHybridTimings = null; // Reset for this processing run
         lastElementMetadata = null;
@@ -280,9 +310,9 @@ public class HybridDocumentProcessor {
         // Log triage summary
         logTriageSummary(triageResults);
 
-        // Log triage results to JSON file if output directory is specified
-        if (outputDir != null) {
-            logTriageToFile(inputPdfName, config.getHybrid(), triageResults, outputDir);
+        // Log triage results to JSON file if a triage log is specified
+        if (triageLog != null) {
+            logTriageToFile(inputPdfName, config.getHybrid(), triageResults, triageLog);
         }
 
         // Phase 3: Split pages by decision
@@ -1354,18 +1384,18 @@ public class HybridDocumentProcessor {
      * @param inputPdfName   The path to the input PDF file.
      * @param hybridBackend  The hybrid backend used.
      * @param triageResults  Map of page number to triage result.
-     * @param outputDir      The output directory for the triage log.
+     * @param triageLog      The path of the triage log.
      */
     private static void logTriageToFile(
             String inputPdfName,
             String hybridBackend,
             Map<Integer, TriageResult> triageResults,
-            Path outputDir) {
+            Path triageLog) {
 
         try {
             String documentName = Path.of(inputPdfName).getFileName().toString();
             TriageLogger triageLogger = new TriageLogger();
-            triageLogger.logToFile(outputDir, documentName, hybridBackend, triageResults);
+            triageLogger.writeToFile(triageLog, documentName, hybridBackend, triageResults);
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Failed to write triage log: {0}", e.getMessage());
         }
