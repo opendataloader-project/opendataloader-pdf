@@ -76,6 +76,12 @@ class TestCLIOptions:
         assert rules_opt["default"] is None
         assert rules_opt["python_name"] == "sanitize_rules"
 
+    def test_include_links_option_exists(self):
+        links_opt = next(opt for opt in CLI_OPTIONS if opt["name"] == "include-links")
+        assert links_opt["type"] == "boolean"
+        assert links_opt["default"] is False
+        assert links_opt["python_name"] == "include_links"
+
     def test_hybrid_chunk_size_option_exists(self):
         option_names = [opt["name"] for opt in CLI_OPTIONS]
         assert "hybrid-chunk-size" in option_names
@@ -221,13 +227,26 @@ class TestSanitizeRulesOption:
         args = mock_run.call_args[0][0]
         assert args[args.index("--sanitize-rules") + 1] == ""
 
-    def test_sanitize_rules_is_the_last_convert_parameter(self):
+    def test_new_convert_parameters_are_at_the_end(self):
         """A new parameter at the end does not move the positional arguments of older callers."""
         import inspect
 
         from opendataloader_pdf.convert_generated import convert
 
-        assert list(inspect.signature(convert).parameters)[-1] == "sanitize_rules"
+        assert list(inspect.signature(convert).parameters)[-2:] == [
+            "sanitize_rules",
+            "include_links",
+        ]
+
+    def test_convert_passes_include_links(self):
+        from unittest.mock import patch
+
+        from opendataloader_pdf.convert_generated import convert
+
+        with patch("opendataloader_pdf.convert_generated.run_jar", return_value="") as mock_run:
+            convert(input_path="test.pdf", output_dir="out", include_links=True)
+
+        assert "--include-links" in mock_run.call_args[0][0]
 
     def test_convert_default_does_not_emit_sanitize_rules(self):
         from unittest.mock import patch

@@ -297,6 +297,15 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "default": None,
         "description": "Path to a JSON file of sanitization rules. Only the rules of the file run, in place of the built-in rules. Turns on --sanitize",
     },
+    {
+        "name": "include-links",
+        "python_name": "include_links",
+        "short_name": None,
+        "type": "boolean",
+        "required": False,
+        "default": False,
+        "description": "Write the URI links of the PDF (http, https, mailto) as links in Markdown and HTML output. No links with --sanitize, or when the hybrid backend makes the text",
+    },
 ]
 
 

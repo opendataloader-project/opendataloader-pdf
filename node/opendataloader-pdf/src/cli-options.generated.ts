@@ -39,4 +39,5 @@ export function registerCliOptions(program: Command): void {
   program.option('--image-resolution <value>', 'Set the rendering resolution for images in DPI. Higher values improve image quality but increase memory consumption; lower values reduce memory usage at the cost of detail. Accepts positive decimal DPI values (e.g., 144.0). Default: 144.0.');
   program.option('--space-ratio <value>', 'Set the ratio used to calculate the automatic space-insertion threshold (threshold = space-ratio * font size). If the horizontal gap between two adjacent symbols exceeds this threshold, an extra space is inserted to text value. Accepts decimals (e.g., 0.17). Default: 0.17');
   program.option('--sanitize-rules <value>', 'Path to a JSON file of sanitization rules. Only the rules of the file run, in place of the built-in rules. Turns on --sanitize');
+  program.option('--include-links', 'Write the URI links of the PDF (http, https, mailto) as links in Markdown and HTML output. No links with --sanitize, or when the hybrid backend makes the text');
 }

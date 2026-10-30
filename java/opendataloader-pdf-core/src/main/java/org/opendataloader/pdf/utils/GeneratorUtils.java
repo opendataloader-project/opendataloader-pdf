@@ -13,8 +13,10 @@ import java.util.function.BiConsumer;
 
 public class GeneratorUtils {
 
+    /** Gets the text of a text node. A link of --include-links can go on over the line ends. */
     public static String getTextFromTextNode(SemanticTextNode textNode, OutputType outputType) {
-        return getTextFromTextNode(textNode, getLineWriter(outputType));
+        TextLinks.OpenLink link = new TextLinks.OpenLink();
+        return closeLink(getTextFromTextNode(textNode, getLineWriter(outputType, link)), outputType, link);
     }
 
     /**
@@ -34,8 +36,10 @@ public class GeneratorUtils {
         return stringBuilder.toString();
     }
 
+    /** Gets the text of the lines. A link of --include-links can go on over the line ends. */
     public static String getTextFromLines(List<TextLine> textLines, OutputType outputType) {
-        return getTextFromLines(textLines, getLineWriter(outputType));
+        TextLinks.OpenLink link = new TextLinks.OpenLink();
+        return closeLink(getTextFromLines(textLines, getLineWriter(outputType, link)), outputType, link);
     }
 
     /**
@@ -51,14 +55,34 @@ public class GeneratorUtils {
         return stringBuilder.toString();
     }
 
-    private static BiConsumer<TextLine, StringBuilder> getLineWriter(OutputType outputType) {
+    /** The line writer of the output type. A link at the end of a line stays open in {@code link}. */
+    private static BiConsumer<TextLine, StringBuilder> getLineWriter(OutputType outputType, TextLinks.OpenLink link) {
         switch (outputType) {
             case MD:
-                return MarkdownGenerator::getTextFromLineForMarkdown;
+                return (line, stringBuilder) -> MarkdownGenerator.getTextFromLineForMarkdown(line, stringBuilder, link);
             case HTML:
-                return HtmlGenerator::getTextFromLineForHTML;
+                return (line, stringBuilder) -> HtmlGenerator.getTextFromLineForHTML(line, stringBuilder, link);
             default:
                 return (line, stringBuilder) -> { };
         }
+    }
+
+    /** Ends the link that the text ends in, if one is open. */
+    private static String closeLink(String text, OutputType outputType, TextLinks.OpenLink link) {
+        if (link.getUri() == null) {
+            return text;
+        }
+        StringBuilder stringBuilder = new StringBuilder(text);
+        switch (outputType) {
+            case MD:
+                MarkdownGenerator.closeLink(link, stringBuilder);
+                break;
+            case HTML:
+                HtmlGenerator.closeLink(link, stringBuilder);
+                break;
+            default:
+                break;
+        }
+        return stringBuilder.toString();
     }
 }

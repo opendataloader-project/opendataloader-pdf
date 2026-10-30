@@ -81,6 +81,7 @@ public class Config {
     private final HybridConfig hybridConfig = new HybridConfig();
     private boolean includeHeaderFooter = false;
     private boolean detectStrikethrough = false;
+    private boolean includeLinks = false;
     private Double spaceRatio;
 
     /** Table detection method: default (border-based detection). */
@@ -893,6 +894,25 @@ public class Config {
 
     public void setDetectStrikethrough(boolean detectStrikethrough) {
         this.detectStrikethrough = detectStrikethrough;
+    }
+
+    /**
+     * Checks if the URI links of the PDF are written as links in the Markdown and HTML output.
+     *
+     * @return true if the URI links are written, false otherwise.
+     */
+    public boolean isIncludeLinks() {
+        return includeLinks;
+    }
+
+    /**
+     * Enables or disables the URI links (http, https, mailto) of the PDF as links in the Markdown and HTML
+     * output. The output has no links with sensitive data filtering, or when the hybrid backend makes the text.
+     *
+     * @param includeLinks true to write the URI links, false to write only their text.
+     */
+    public void setIncludeLinks(boolean includeLinks) {
+        this.includeLinks = includeLinks;
     }
 
     private boolean outputStdout = false;
