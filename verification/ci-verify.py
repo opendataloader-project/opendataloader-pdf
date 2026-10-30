@@ -1185,6 +1185,7 @@ def verify_sanitize_rules_file() -> None:
 # ---------------------------------------------------------------------------
 
 def main() -> None:
+    """Run each CLI check, write the report, and exit with 1 if a check failed."""
     check_option_coverage()
 
     print("=" * 60)
