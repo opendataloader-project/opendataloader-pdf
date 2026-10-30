@@ -24,6 +24,7 @@ import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
 import org.verapdf.wcag.algorithms.entities.lists.PDFList;
+import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.listLabelsDetection.NumberingStyleNames;
 
 import java.io.IOException;
@@ -206,19 +207,34 @@ public class MarkdownGeneratorTest {
             "the item text starts a heading or a nested list");
     }
 
+    /** With {@code --keep-line-breaks}, the first line of an item can be the marker alone. */
+    @Test
+    void testWriteList_escapesMarkerAtTheEndOfTheFirstLine() throws IOException {
+        StaticContainers.setKeepLineBreaks(true);   // DocumentProcessor sets it for each document
+        try {
+            assertEquals("-  \\#\ncontinuation\n-  1\\.\ncontinuation\n",
+                writeUnorderedList(bulletItem("\u2022 #", "continuation"), bulletItem("\u2022 1.", "continuation")),
+                "the item text starts a heading or a nested list");
+        } finally {
+            StaticContainers.setKeepLineBreaks(false);
+        }
+    }
+
     /** After four spaces, CommonMark reads an indented code block, so the text stays as it is. */
     @Test
     void testWriteList_keepsMarkerAfterFourSpaces() throws IOException {
         assertEquals("-     # four spaces\n", writeUnorderedList(bulletItem("\u2022    # four spaces")));
     }
 
-    /** An item whose label is its first character, the bullet glyph. */
-    private static ListItem bulletItem(String text) {
+    /** An item with one text line for each value. Its label is its first character, the bullet glyph. */
+    private static ListItem bulletItem(String... lines) {
         BoundingBox box = new BoundingBox(0, 10.0, 10.0, 200.0, 22.0);
-        TextChunk chunk = new TextChunk(box, text, 12.0, 12.0);
-        chunk.adjustSymbolEndsToBoundingBox(null);
         ListItem item = new ListItem(box, 1L);
-        item.add(new TextLine(chunk));
+        for (String line : lines) {
+            TextChunk chunk = new TextChunk(box, line, 12.0, 12.0);
+            chunk.adjustSymbolEndsToBoundingBox(null);
+            item.add(new TextLine(chunk));
+        }
         item.setLabelLength(1);
         return item;
     }
