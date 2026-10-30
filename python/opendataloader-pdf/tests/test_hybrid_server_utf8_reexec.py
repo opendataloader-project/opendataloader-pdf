@@ -30,8 +30,26 @@ class TestReexecWithUtf8IfNeeded:
             _reexec_with_utf8_if_needed()
         mock_execv.assert_not_called()
 
+    def test_noop_when_locale_already_utf8(self, monkeypatch):
+        """No re-exec when sys.flags.utf8_mode is 0 but the locale's preferred
+        encoding is already UTF-8 (true on most Linux/macOS deployments) -
+        open() already defaults to UTF-8 there without forcing UTF-8 mode, so
+        re-execing would only add an unnecessary restart on every startup."""
+        monkeypatch.setattr(
+            "opendataloader_pdf.hybrid_server.sys.flags",
+            SimpleNamespace(utf8_mode=0),
+        )
+        monkeypatch.setattr(
+            "opendataloader_pdf.hybrid_server.locale.getpreferredencoding",
+            lambda do_setlocale=True: "UTF-8",
+        )
+        with patch("opendataloader_pdf.hybrid_server.os.execv") as mock_execv:
+            _reexec_with_utf8_if_needed()
+        mock_execv.assert_not_called()
+
     def test_reexecs_with_utf8_flag_when_not_active(self, monkeypatch):
-        """Re-exec with -X utf8, by file path, when UTF-8 mode is inactive.
+        """Re-exec with -X utf8, by file path, when UTF-8 mode is inactive and
+        the locale isn't UTF-8 either (e.g. cp949 on Korean Windows).
 
         Re-exec targets __file__ rather than `-m opendataloader_pdf.hybrid_server`
         - the `-m` form requires the package to be import-resolvable, which
@@ -40,6 +58,10 @@ class TestReexecWithUtf8IfNeeded:
         monkeypatch.setattr(
             "opendataloader_pdf.hybrid_server.sys.flags",
             SimpleNamespace(utf8_mode=0),
+        )
+        monkeypatch.setattr(
+            "opendataloader_pdf.hybrid_server.locale.getpreferredencoding",
+            lambda do_setlocale=True: "cp949",
         )
         monkeypatch.setattr("opendataloader_pdf.hybrid_server.sys.executable", "/usr/bin/python3")
         monkeypatch.setattr(
@@ -65,6 +87,10 @@ class TestReexecWithUtf8IfNeeded:
             "opendataloader_pdf.hybrid_server.sys.flags",
             SimpleNamespace(utf8_mode=0),
         )
+        monkeypatch.setattr(
+            "opendataloader_pdf.hybrid_server.locale.getpreferredencoding",
+            lambda do_setlocale=True: "cp949",
+        )
         monkeypatch.setattr("opendataloader_pdf.hybrid_server.sys.executable", "/usr/bin/python3")
         monkeypatch.setattr(
             "opendataloader_pdf.hybrid_server.sys.argv",
@@ -82,6 +108,10 @@ class TestReexecWithUtf8IfNeeded:
         monkeypatch.setattr(
             "opendataloader_pdf.hybrid_server.sys.flags",
             SimpleNamespace(utf8_mode=0),
+        )
+        monkeypatch.setattr(
+            "opendataloader_pdf.hybrid_server.locale.getpreferredencoding",
+            lambda do_setlocale=True: "cp949",
         )
         monkeypatch.setattr(
             "opendataloader_pdf.hybrid_server.os.execv",
@@ -130,9 +160,13 @@ class TestReexecEndToEnd:
 
     def test_direct_script_invocation_survives_reexec_without_module_error(self):
         """Running the file directly must re-exec cleanly, not crash with
-        ModuleNotFoundError - the exact regression `-m`-based re-exec caused."""
+        ModuleNotFoundError - the exact regression `-m`-based re-exec caused.
+
+        Forces LC_ALL=C (a genuinely non-UTF-8 locale) so the guard actually
+        takes the re-exec branch here, regardless of this host's own locale."""
         env = dict(os.environ)
         env.pop("PYTHONUTF8", None)
+        env["LC_ALL"] = "C"
 
         result = subprocess.run(
             [sys.executable, hybrid_server.__file__, "--help"],
