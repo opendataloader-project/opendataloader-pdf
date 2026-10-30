@@ -53,6 +53,7 @@ Show that the pull request fixes its target, as the user sees the output.
 - The target input on the release, `main`, and the merge, in each output format that the issue or the PR names.
 - The tests of the pull request: do they fail on `main` with the symptom, assert the expected result (not the current output), and copy the measurements of the trigger? See "The tests of the pull request" in `references/samples.md`.
 - The code path from the changed lines to the output of the target.
+- The kind sets the proof (SKILL.md, "Kinds"). For `docs`, the target is the text: each command, option, and number agrees with its source (the code, `options.json`, or a run of `main`). It needs no target run and no acceptance test.
 
 Proof: an acceptance test (`references/samples.md`) that fails on `main` with the symptom and passes on the merge, or one that fails on the merge. Give the test file, the command, and the output. A compile error or a skip is not a fail. The test asserts the ideal output: any correct implementation must pass it. A test that only prints its output is not a proof.
 

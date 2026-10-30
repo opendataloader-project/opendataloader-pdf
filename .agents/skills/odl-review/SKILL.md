@@ -76,7 +76,7 @@ Do the triage before a batch: when the user asks which pull requests to look at 
 |:--|:--|:--|
 | `blocked` | a draft, a base other than `main`, a CLA status that is pending or failed, a merge conflict, a branch with more than 100 commits (history that `main` does not have, for example from before a rewrite of `main`), a failing or unfinished check of a workflow of this repository (also a pull_request workflow of `main` with no run for the head), or our requested changes with no push and no author comment after them | No action: wait |
 | `limit` | 3 counted rounds, and a push, an author comment, or requested changes after the last | Round limit report (Outputs 4) |
-| `decide` | the same closing issue as another open pull request | The maintainers choose one pull request first |
+| `decide` | the same closing issue as another open pull request; by your judgment, also a direction to decide (step 3) | The maintainers choose first: one pull request, or the new behavior |
 | `re-review` | a push or an author comment after our last counted review | The next round |
 | `reviewed` | a counted review at this head, and nothing new | None |
 | `review` | none of these | Round 1 |
@@ -92,11 +92,11 @@ Do the triage before a batch: when the user asks which pull requests to look at 
 {"812": {"class": "decide", "problem": "issue", "one_problem": true, "direction": "decide", "reason": "adds a new CLI option"}}
 ```
 
-   - `problem`: `issue` (a linked issue), `repro` (a reproduction in the body), or `none`.
-   - `one_problem`: false if the title, the body, or the files show more than one change.
+   - `problem`: `issue` (a linked issue), `repro` (a reproduction in the body), or `none`. With `none`, the target is what the pull request claims; it is no reason to wait.
+   - `one_problem`: false if the title, the body, or the files show more than one change. The review then splits the cases by purpose (kind `mixed`); it is no reason to wait.
    - `direction`: `fits`, or `decide` if it adds an option, a default, a schema, or a dependency without a decision.
    - `class`: the class of the tool, or a stricter one (`review`, `re-review`, `reviewed` < `decide` < `blocked`, `limit` < `close`). A changed class needs a `reason`. Use `close` only for a duplicate, a fix that is already on `main`, or a direction that the maintainers rejected; give the pull request, the commit, or the decision in the reason.
-4. Run `python3 -I scripts/prepare.py triage-report --work $WORK`. Exit 12: a judgment is missing, weaker than the facts, has no reason for a changed class, or gives `review` to a concern (`problem` none, more than one problem, a direction to decide). Correct the judgment; do not change `triage.json`.
+4. Run `python3 -I scripts/prepare.py triage-report --work $WORK`. Exit 12: a judgment is missing, weaker than the facts, has no reason for a changed class, or gives `review` to a direction to decide. Correct the judgment; do not change `triage.json`.
 5. Show `$WORK/triage/triage.md`. It is sorted: the author waits for us, then a linked issue, then the oldest. Recommend the pull requests for this batch, and the action for each `decide`, `limit`, and `close`. The user selects at the start gate. A close comment (Outputs 3; for a duplicate, name the other pull request in place of the decision) and a question to the maintainers are drafts for the post gate.
 
 ## Constraints
@@ -173,7 +173,7 @@ The review asks three questions, in this order. Each question has its proof and 
 | # | Question | Proof | If it fails |
 |:--|:--|:--|:--|
 | 1 | **Safety.** Does the change do something harmful, or something that the title and the body do not say? | the scan; each changed line, read with the safety checklist; runs in isolation | Security report (user only), or Hold |
-| 2 | **Target.** Does the PR fix its target, as the user sees the output? | the code path; the target input on the release, `main`, and the merge; the tests of the PR on `main` (they fail with the symptom) and on the merge (they pass) | Request changes |
+| 2 | **Target.** Does the PR fix its target, as the user sees the output? | the proof of the kind ("Kinds"). For a bug fix or a feature: the code path, the target input on the release, `main`, and the merge, and the tests of the PR on `main` (they fail with the symptom) and on the merge (they pass). For docs: each command, option, and number against its source | Request changes |
 | 3 | **Regressions.** Does each output that works on `main` still work? | the test suite, the corpus, the benchmark, the tagged-PDF structure, and the output formats; cases on both sides of a changed threshold | Request changes |
 
 If the three answers are yes, the verdict is Approve. The other gates stay: the CLA, CI, and a second maintainer who reads each sensitive file (a workflow, the build, tooling, an agent instruction, a skill) before an approval.
@@ -226,7 +226,7 @@ Answer the three questions of "Bounds" in order. You choose how.
 
 **1. Safety.** Before any run of the head, read each changed line and each scan hit with the safety checklist (C2). Look carefully for an input that an attacker controls and that reaches a dangerous action, and for behavior that the title and the body do not state. A finding goes to the user only (C5). If a fork CI run waits or must be rerun, answer this question first: the CI approval needs its Q2-security record, and a CI run takes time (#721).
 
-**2. Target.** Show the fix with runs, not with reading alone: the target input on the release, `main`, and the merge, as the user sees the output; and the tests of the PR on `main` and on the merge (the target checklist). If the PR has no test that pins the target, write an acceptance test ("Samples and the demo"). The review then asks the author to add it.
+**2. Target.** The kind sets the proof ("Kinds"). For a bug fix or a feature, show the fix with runs, not with reading alone: the target input on the release, `main`, and the merge, as the user sees the output; and the tests of the PR on `main` and on the merge (the target checklist). If the PR has no test that pins the target, write an acceptance test ("Samples and the demo"). The review then asks the author to add it. For `no-output-change` and `dependency`, show that the outputs stay the same and that the changed lines ran. For `docs`, check each command, option, and number against its source (the code, `options.json`, or a run of `main`); it needs no target run and no acceptance test. For `test` and `tooling`, show that the tests check expected results, or that the scripts do what they say.
 
 **3. Regressions.** Run the needed checks of the catalog on `main` and on the merge, with the regression checklist. A regression is an input that `main` handles and the merge does not.
 
@@ -242,7 +242,7 @@ When the card, the cases, and the drafts are ready, read the change and the evid
 - **Target.** An expected result without its source, a hidden trade-off, or an acceptance test that refuses a correct output.
 - **Bounds.** A request outside the bounds; a risk that appeared after the plan (a changed output) without a check; a draft sentence without evidence; a sentence that tells the author how to change the code.
 
-A doubt counts only inside the bounds. Settle each doubt with a run if you can. An objection is a doubt that you cannot settle at once. It has a claim, an input or a record that shows it, and the expected result; without these it is a question. Put each objection in `objections.json`. A refutation is a run of the objection's input on the right SHAs. Merge the objections that make the same claim, make all corrections, then run the changed tests once. Do not doubt again after the corrections. `verdict.py` holds for each open objection that is `major` or more.
+A doubt counts only inside the bounds. Settle each doubt with a run if you can. An objection is a doubt that you cannot settle at once. It has a claim, an input or a record that shows it, and the expected result; without these it is a question. Put each objection in `objections.json`. A refutation is a run of the objection's input on the right SHAs. You cannot clear a security objection alone: its refutation counts only after the user accepts it at the post gate (`security_refutations_ok`; to the user only, C5). Merge the objections that make the same claim, make all corrections, then run the changed tests once. Do not doubt again after the corrections. `verdict.py` holds for each open objection that is `major` or more.
 
 ## Samples and the demo
 
@@ -276,7 +276,7 @@ Run `python3 -I scripts/verdict.py --round-dir $WORK/<n>/r<k>`. Do not change it
 - `Recommend close`: a valid earlier decision that rejected the same contribution, or a bug fix whose problem `main` does not have (in the same environment). An earlier decision never gives Approve.
 - `Decide (n), then …`: open trade-offs, decide reasons (a new option, default, schema, or dependency), a failed precedent check, a target that changes a safety property.
 - `Request changes`: a failed check with the impact "block" (also an unclear target, Q1-purpose), a request case that fails (a target row, or a regression), a weakened safety property, a merge conflict. A request case that `main` also fails and that is not a target row is only a note.
-- `Hold`: a sensitive file that no second maintainer has read (`sensitive_ok`; it does not stop a request for changes), a needed check without evidence (an `n/a` record is not evidence), an unverified skip, `cannot` without the user's answer, an unexplained scan hit, an unassessed precedent or a partial precedent search, an open `major` objection, a failing CI check without an explanation or a pending one, a kind that does not fit the files, a stale, missing, or malformed input.
+- `Hold`: a sensitive file that no second maintainer has read (`sensitive_ok`; it does not stop a request for changes), a needed check without evidence (an `n/a` record is not evidence), an unverified skip, `cannot` without the user's answer, an unexplained scan hit, an unassessed precedent or a partial precedent search, an open or disputed objection that is `major` or a security objection (a refuted security objection that the user has not accepted is disputed), a failing CI check without an explanation or a pending one, a kind that does not fit the files, a stale, missing, or malformed input.
 - `Approve`, `Approve (unverified: X)` with gaps that the user accepted, or `Approve (follow-up by the maintainer: X)` for a new linter finding (Q3-lint) and the items in `maintainer_followup`. A security check cannot be accepted as a gap. The post command is `--approve` only if the user said so, the PR is not the user's own, and no gap is open; else `--comment`.
 
 `verdict.md` lists each user decision from `decisions.json` that it used. The tools cannot tell who wrote that file, so show the list at the post gate.

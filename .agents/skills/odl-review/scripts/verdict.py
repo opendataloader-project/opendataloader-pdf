@@ -21,8 +21,10 @@ Rules that the agent cannot change:
   - Evidence counts only for the current head and main SHAs.
   - The catalog sets which checks are needed (by kind, by changed path, and by file category) and
     the impact of each check, not the plan. A kind must fit the changed files.
-  - Only a skip with a passing record of its reason makes a needed check not applicable; an "n/a"
-    record does not.
+  - Only a skip with a reason in plan.json and a passing record of that reason makes a needed check
+    not applicable; an "n/a" record does not.
+  - A refuted security objection counts only after the user accepted the refutation
+    (security_refutations_ok): the agent cannot clear a security objection alone.
   - A record that an explanation, an assessment, or a case points to must have a real state.
   - Approve is impossible with: a needed check without evidence, an unexplained scan hit, an open or
     disputed objection of major or higher, a failing or pending CI check without an explanation,
@@ -154,7 +156,7 @@ def compute(rdir: str, catalog_path: str) -> dict:
     answers = lambda key: {k: v for k, v in raw_dec[key].items() if isinstance(v, str)} if isinstance(raw_dec.get(key), dict) else {}  # noqa: E731
     dec = {"tradeoffs": answers("tradeoffs"), "decided_checks": answers("decided_checks"),
            "accept_gaps": as_list(raw_dec.get("accept_gaps")), "sensitive_ok": as_list(raw_dec.get("sensitive_ok")),
-           "followup": as_list(raw_dec.get("maintainer_followup")),
+           "followup": as_list(raw_dec.get("maintainer_followup")), "security_refutations_ok": as_list(raw_dec.get("security_refutations_ok")),
            **{k: raw_dec.get(k) is True for k in ("approve_ok", "cla_not_required", "post_while_deciding")}}
     ev = {r.get("id"): r for r in x.evidence if isinstance(r.get("id"), str)}
     r = {k: [] for k in ("blocked", "close", "security", "decide", "block", "followup", "hold", "gaps", "notes")}
@@ -237,7 +239,7 @@ def compute(rdir: str, catalog_path: str) -> dict:
         if status not in ("planned", "done", "skipped", "cannot", "not planned"):
             r["hold"].append(f"{cid}: unknown status {status!r} in plan.json")
             status = "not planned"
-        verified_skip = need and status == "skipped" and any(
+        verified_skip = need and status == "skipped" and bool(str((p or {}).get("reason") or "").strip()) and any(
             e.get("condition") == f"skip:{cid}" and e.get("state") == "pass" for e in x.evidence)
         if need and status in ("skipped", "cannot") and state == "fail":
             r["notes"].append(f"{cid}: the plan says {status}, but a record fails; the fail counts")
@@ -247,7 +249,7 @@ def compute(rdir: str, catalog_path: str) -> dict:
             elif verified_skip:
                 state = "n/a"
             else:
-                r["hold"].append(f"{cid}: skipped without a passing record skip:{cid} of its reason ({(p or {}).get('reason', 'no reason')})")
+                r["hold"].append(f"{cid}: skipped without a reason and a passing record skip:{cid} that shows it ({(p or {}).get('reason') or 'no reason'})")
         elif need and status == "cannot":
             if impact == "security":
                 r["hold"].append(f"{cid}: a security check cannot be waived; get the capability or hold")
@@ -415,7 +417,7 @@ def compute(rdir: str, catalog_path: str) -> dict:
         if not isinstance(o, dict):
             r["hold"].append("objections.json has an entry that is not an object")
             continue
-        sev, st = SEV.get(o.get("severity"), 2), o.get("status")
+        sev, st, why = SEV.get(o.get("severity"), 2), o.get("status"), ""
         security = o.get("security") not in (None, False, "false", "no", 0)
         if st not in OBJECTION_STATES:
             r["hold"].append(f"objection {o.get('id')}: unknown status {st!r}")
@@ -424,13 +426,16 @@ def compute(rdir: str, catalog_path: str) -> dict:
             (r["security"] if security else r["block"]).append(f"objection {o.get('id')}: {str(o.get('claim', ''))[:80]}")
         elif st == "refuted" and not has_ev(o.get("evidence"), RUN_STATES):
             st = "disputed"
+        elif st == "refuted" and security and str(o.get("id")) not in dec["security_refutations_ok"]:
+            st = "disputed"  # the agent cannot clear a security objection alone (C5)
+            why = "; the user has not accepted the refutation (security_refutations_ok)"
         elif st == "fixed" and not has_ev(o.get("evidence")):
             st = "disputed"
         if st == "refuted":  # the tools cannot tell if the run refutes the claim: verdict.md shows it to the user (#836)
             refuted.append(f"{o.get('id')} ({o.get('severity')}{', security' if security else ''}): {str(o.get('claim', ''))[:80]}"
                            f"; evidence {o.get('evidence')}")
         if st in ("open", "disputed") and (sev >= 2 or security):
-            r["hold"].append(f"objection {o.get('id')} ({o.get('severity')}) is {st}: {str(o.get('claim', ''))[:80]}")
+            r["hold"].append(f"objection {o.get('id')} ({o.get('severity')}) is {st}{why}: {str(o.get('claim', ''))[:80]}")
         elif st in ("open", "disputed"):
             r["notes"].append(f"objection {o.get('id')} ({o.get('severity')}) is {st}")
 
