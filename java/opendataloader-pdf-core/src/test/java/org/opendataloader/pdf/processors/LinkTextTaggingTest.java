@@ -36,15 +36,19 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageFitDestination;
 import org.apache.pdfbox.text.PDFMarkedContentExtractor;
 import org.apache.pdfbox.text.TextPosition;
+import org.apache.pdfbox.util.Matrix;
 import org.junit.jupiter.api.Test;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.testsupport.TestSamples;
 
+import java.awt.geom.Point2D;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -53,6 +57,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -69,6 +74,8 @@ class LinkTextTaggingTest {
     private static final float X = 72;
     private static final float Y = 700;
     private static final float SIZE = 12;
+    private static final String ALPHA = "Alpha first entry here";
+    private static final String BRAVO = "Bravo second entry here";
 
     /**
      * A page with one line, the entry's number and then the entry, drawn by one operator. One link
@@ -238,6 +245,46 @@ class LinkTextTaggingTest {
             doc.save(file.toFile());
         }
         return file;
+    }
+
+    /**
+     * Two entries, each on its own line under its own link, on a Letter page that {@code boxes}
+     * changes: a page box or the rotation. {@code toPage} places the lines and the links, which
+     * are laid out as the page is seen, on the page.
+     */
+    private static Path writeEntries(Path dir, String name, Consumer<PDPage> boxes, Matrix toPage)
+            throws IOException {
+        Path file = dir.resolve(name + ".pdf");
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.LETTER);
+            boxes.accept(page);
+            doc.addPage(page);
+            PDType1Font font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+            String[][] entries = {{ALPHA, "533", "https://alpha"}, {BRAVO, "503", "https://bravo"}};
+            try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
+                for (String[] entry : entries) {
+                    cs.beginText();
+                    cs.setFont(font, SIZE);
+                    cs.setTextMatrix(Matrix.getTranslateInstance(105, Float.parseFloat(entry[1])).multiply(toPage));
+                    cs.showText(entry[0]);
+                    cs.endText();
+                }
+            }
+            for (String[] entry : entries) {
+                float right = 105 + font.getStringWidth(entry[0]) / 1000 * SIZE + 2;
+                float baseline = Float.parseFloat(entry[1]);
+                page.getAnnotations().add(uriLink(entry[2], onPage(toPage, 105, baseline - 3, right, baseline + SIZE)));
+            }
+            doc.save(file.toFile());
+        }
+        return file;
+    }
+
+    /** The box from (left, bottom) to (right, top), placed on the page by {@code toPage}. */
+    private static PDRectangle onPage(Matrix toPage, float left, float bottom, float right, float top) {
+        Point2D.Float a = toPage.transformPoint(left, bottom);
+        Point2D.Float b = toPage.transformPoint(right, top);
+        return new PDRectangle(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(a.x - b.x), Math.abs(a.y - b.y));
     }
 
     private static PDAnnotationLink uriLink(String uri, PDRectangle rect) {
@@ -536,5 +583,78 @@ class LinkTextTaggingTest {
 
         assertThat(tagged).isFile();
         assertEachGlyphAndLinkOnce(tagged, "A\uFFFDC read the guide here");
+    }
+
+    private static void assertEachEntryInItsLink(String name, Consumer<PDPage> boxes, Matrix toPage)
+            throws IOException {
+        File tagged = tag(name, writeEntries(TestSamples.emptyDirectory(name), name, boxes, toPage));
+        try (PDDocument doc = Loader.loadPDF(tagged)) {
+            Map<Integer, String> text = textByMcid(doc.getPage(0));
+            List<Map.Entry<String, List<Integer>>> elements = elements(doc);
+
+            assertThat(linkTexts(elements, text))
+                .containsExactly(ALPHA.replaceAll("\\s+", ""), BRAVO.replaceAll("\\s+", ""));
+            assertThat(outsideLinks(elements, text)).isEmpty();
+        }
+        assertEachGlyphAndLinkOnce(tagged, ALPHA + BRAVO);
+    }
+
+    /** Page boxes at the origin, and no rotation: each entry is in its own link. */
+    @Test
+    void eachEntryIsInItsLinkOnAPageAtTheOrigin() throws IOException {
+        assertEachEntryInItsLink("link-page-origin", page -> { }, new Matrix());
+    }
+
+    /**
+     * A MediaBox that starts at (33, 33): each entry is in its own link, as at the origin. The text
+     * is placed from the CropBox's lower-left corner, and the links were not: each link was
+     * compared with the text 33 points away from it.
+     */
+    @Test
+    void eachEntryIsInItsLinkOnAPageWhoseMediaBoxIsOffTheOrigin() throws IOException {
+        assertEachEntryInItsLink("link-mediabox-offset",
+            page -> page.setMediaBox(new PDRectangle(33, 33, 612, 792)), new Matrix());
+    }
+
+    /** The same, with only the CropBox off the origin. */
+    @Test
+    void eachEntryIsInItsLinkOnAPageWhoseCropBoxIsOffTheOrigin() throws IOException {
+        assertEachEntryInItsLink("link-cropbox-offset",
+            page -> page.setCropBox(new PDRectangle(33, 33, 540, 740)), new Matrix());
+    }
+
+    /**
+     * The same, on a page turned a quarter, whose lines are drawn turned back so that they read
+     * across the page as it is seen: the text is turned with the page, and the links were not.
+     */
+    @Test
+    void eachEntryIsInItsLinkOnARotatedPage() throws IOException {
+        assertEachEntryInItsLink("link-page-rotated", page -> page.setRotation(90), new Matrix(0, 1, -1, 0, 612, 0));
+    }
+
+    /**
+     * The contents on page 1 of a PDF/UA reference document, whose MediaBox starts at (33, 33): each
+     * entry is in its own link. "of Maturation" was in the link of another entry, and the links of
+     * "An Overview of Maturation and Growth" and "Development of the Brain" were empty.
+     */
+    @Test
+    void eachContentsEntryOfTheBookChapterIsInItsLink() throws IOException {
+        String name = "link-book-chapter";
+        Path source = Files.copy(Paths.get("../../samples/pdf/pdfua-1-reference-suite-1-1/PDFUA-Ref-2-08_BookChapter.pdf"),
+            TestSamples.emptyDirectory(name).resolve(name + ".pdf"));
+        Config config = new Config();
+        config.setPages("1");
+        try (PDDocument doc = Loader.loadPDF(tag(name, source, config))) {
+            Map<Integer, String> text = textByMcid(doc.getPage(0));
+
+            assertThat(linkTexts(elements(doc), text)).containsExactly(
+                "AnOverviewofMaturationandGrowth",
+                "DevelopmentoftheBrain",
+                "MotorDevelopment",
+                "FocusonResearch:SportsParticipationandSelf-EsteemAmongAdolescentFemales",
+                "Puberty:ThePhysicalTransitionfromChildtoAdult",
+                "CausesandCorrelatesofPhysicalDevelopment",
+                "ApplyingDevelopmentalThemestoPhysicalDevelopment");
+        }
     }
 }
