@@ -18,6 +18,7 @@ import urllib.request
 import pytest
 
 import opendataloader_pdf
+from opendataloader_pdf import hybrid_launcher
 
 SYMPTOM = "the hybrid server must be started by hand: opendataloader_pdf has no HybridServer"
 
@@ -266,6 +267,14 @@ def test_port_in_use_raises(stub, started):
             HybridServer(args=["--record", str(stub)], port=port).start()
 
     assert started == []
+
+
+def test_server_command_starts_server_in_utf8_mode():
+    """The server starts in UTF-8 mode, so it never has to re-exec itself to get it."""
+    command = hybrid_launcher._server_command(5000, ["--ocr-lang", "ko, en"])
+    assert command[:5] == [sys.executable, "-X", "utf8", "-m", hybrid_launcher._SERVER_MODULE]
+    # An argument with a space stays one element; host and port come last
+    assert command[5:] == ["--ocr-lang", "ko, en", "--host", "127.0.0.1", "--port", "5000"]
 
 
 def test_import_loads_no_hybrid_dependency():
