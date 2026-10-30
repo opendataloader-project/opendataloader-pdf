@@ -41,6 +41,7 @@ public class StaticLayoutContainers {
     private static final ThreadLocal<Map<String, byte[]>> embeddedImageBytes = ThreadLocal.withInitial(ConcurrentHashMap::new);
     private static final ThreadLocal<TextLinks> textLinks = new ThreadLocal<>();
 
+    /** Resets the layout state of the thread for the next document. */
     public static void clearContainers() {
         currentContentId.set(1L);
         headings.set(Collections.synchronizedList(new LinkedList<>()));

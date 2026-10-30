@@ -165,6 +165,7 @@ public final class TextLinks {
         return uris;
     }
 
+    /** Takes the glyphs at the ends of each link that are not text of the link out of it (see the class comment). */
     private static void leaveOutEdges(String value, List<Double> ends, Link[] links) {
         int end;
         for (int start = 0; start < links.length; start = end) {
@@ -187,6 +188,10 @@ public final class TextLinks {
         }
     }
 
+    /**
+     * Whether a glyph at an end of a link is not text of the link: whitespace, or a glyph that is not a letter or a
+     * digit and reaches out of the link box.
+     */
     private static boolean isOutOfLink(String value, List<Double> ends, int index, Link link) {
         char character = value.charAt(index);
         if (Character.isWhitespace(character)) {
@@ -196,14 +201,17 @@ public final class TextLinks {
             || ends.get(index + 1) > link.getBox().getRightX() + EDGE_TOLERANCE);
     }
 
+    /** Whether the link is over the chunk: more than half of one box is in the other, as in the tagged PDF. */
     private static boolean isOver(BoundingBox linkBox, BoundingBox chunkBox) {
         return linkBox.getIntersectionPercent(chunkBox) > 0.5d || chunkBox.getIntersectionPercent(linkBox) > 0.5d;
     }
 
+    /** The URI links of the page, read once for each page. */
     private List<Link> getLinks(Integer pageNumber) {
         return pageLinks.computeIfAbsent(pageNumber, this::readLinks);
     }
 
+    /** Reads the link annotations of the page that have a URI with an http, https, or mailto address. */
     private List<Link> readLinks(Integer pageNumber) {
         List<PDPage> pages = document.getPages();
         if (pageNumber == null || pageNumber < 0 || pageNumber >= pages.size()) {
@@ -293,6 +301,7 @@ public final class TextLinks {
         }
     }
 
+    /** A link annotation: its box in the page space of the text, and its URI. */
     private static final class Link {
         private final BoundingBox box;
         private final String uri;

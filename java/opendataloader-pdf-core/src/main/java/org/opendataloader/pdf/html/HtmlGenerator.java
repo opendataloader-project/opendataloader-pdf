@@ -520,6 +520,7 @@ public class HtmlGenerator implements Closeable {
             .replace(">", "&gt;");
     }
 
+    /** Appends the text of the line. A link at the end of the line ends there. */
     public static void getTextFromLineForHTML(TextLine line, StringBuilder stringBuilder) {
         TextLinks.OpenLink link = new TextLinks.OpenLink();
         getTextFromLineForHTML(line, stringBuilder, link);
@@ -558,6 +559,7 @@ public class HtmlGenerator implements Closeable {
         link.setUri(null);
     }
 
+    /** Appends the escaped text, in a span with the text decoration of the chunk if it has one. */
     private static void appendText(TextChunk chunk, String value, StringBuilder stringBuilder) {
         String style = getTextStyle(chunk);
         if (!style.isEmpty()) {

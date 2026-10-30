@@ -289,6 +289,7 @@ class Issue676UriLinksTest {
         }
     }
 
+    /** A URI action with the address, for a link on a page. */
     private static Function<PDPage, PDAction> uri(String address) {
         return page -> {
             PDActionURI action = new PDActionURI();
@@ -302,6 +303,7 @@ class Issue676UriLinksTest {
         Path write(Path dir, String name) throws IOException;
     }
 
+    /** The paragraph sample: a link with the action over "release notes" on the second line. */
     private static Sample writeParagraph(Function<PDPage, PDAction> action) {
         return (dir, name) -> writeLines(dir, name, FONT_SIZE, PARAGRAPH, LEADING, 1, "release notes", action);
     }
@@ -449,6 +451,7 @@ class Issue676UriLinksTest {
         return pdf;
     }
 
+    /** Adds a link annotation with the box and the action to the page. */
     private static PDAnnotationLink addLink(PDPage page, float left, float bottom, float right, float top,
                                             PDAction action) throws IOException {
         PDAnnotationLink link = new PDAnnotationLink();
@@ -465,15 +468,18 @@ class Issue676UriLinksTest {
         }
     }
 
+    /** A text object that shows the text at {@code x} on the baseline {@link #TOP}. */
     private static String text(String font, float x, String text) {
         return "BT /" + font + " " + FONT_SIZE + " Tf " + x + " " + TOP + " Td (" + text + ") Tj ET\n";
     }
 
+    /** Shows the text in {@link #FONT_SIZE}. */
     private static void showText(PDPageContentStream cs, PDType1Font font, float x, float baseline, String text)
             throws IOException {
         showText(cs, font, FONT_SIZE, x, baseline, text);
     }
 
+    /** Shows the text with its start on the baseline at {@code x}. */
     private static void showText(PDPageContentStream cs, PDType1Font font, float fontSize, float x, float baseline,
                                  String text) throws IOException {
         cs.beginText();
@@ -483,14 +489,17 @@ class Issue676UriLinksTest {
         cs.endText();
     }
 
+    /** The width of the text in {@link #FONT_SIZE}. */
     private static float width(PDType1Font font, String text) throws IOException {
         return width(font, FONT_SIZE, text);
     }
 
+    /** The width of the text in the font size. */
     private static float width(PDType1Font font, float fontSize, String text) throws IOException {
         return font.getStringWidth(text) / 1000 * fontSize;
     }
 
+    /** Writes the sample, converts it to Markdown and HTML with the options, and gives both outputs. */
     private static Output convert(String name, Sample sample, Consumer<Config> options) throws IOException {
         Path dir = TestSamples.emptyDirectory("issue-676-" + name);
         Path pdf = sample.write(dir, name);
@@ -503,6 +512,7 @@ class Issue676UriLinksTest {
         return new Output(Files.readString(dir.resolve(name + ".md")), Files.readString(dir.resolve(name + ".html")));
     }
 
+    /** The Markdown and the HTML output of a sample. */
     private static final class Output {
         final String markdown;
         final String html;
