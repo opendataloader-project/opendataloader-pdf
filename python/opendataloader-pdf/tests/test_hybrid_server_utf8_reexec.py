@@ -482,3 +482,56 @@ class TestReexecEndToEnd:
         # The parent records 0 before it re-execs; the child must record 1.
         assert record.exists(), result.stderr
         assert record.read_text(encoding="ascii").split() == ["0", "1"], result.stderr
+
+
+class TestHybridServerStartsOnNonUtf8Locale:
+    """Symptom-level check for #673. docling opens its model files with open() and
+    no encoding. This stand-in for docling does the same read on a UTF-8 file with
+    an em dash (byte 0xe2). On a non-UTF-8 locale, main() must get past that read."""
+
+    @pytest.mark.skipif(sys.platform == "win32", reason="LC_ALL does not set the Windows code page")
+    def test_main_gets_past_a_utf8_read_without_encoding(self, tmp_path):
+        docling = tmp_path / "docling"
+        docling.mkdir()
+        (docling / "model_config.txt").write_bytes("layout model \u2014 heron\n".encode("utf-8"))
+        (docling / "__init__.py").write_text(
+            "import os\n"
+            "with open(os.path.join(os.path.dirname(__file__), 'model_config.txt')) as f:\n"
+            "    CONFIG = f.read()\n",
+            encoding="utf-8",
+        )
+        env = dict(os.environ, LC_ALL="C", PYTHONUTF8="0", PYTHONCOERCECLOCALE="0")
+
+        probe = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                "import locale, sys; print(sys.flags.utf8_mode, locale.getpreferredencoding())",
+            ],
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        utf8_mode, encoding = probe.stdout.split()
+        assert utf8_mode == "0" and "utf" not in encoding.lower(), probe.stdout
+
+        # The call the opendataloader-pdf-hybrid command makes: main() with its arguments
+        src = os.path.dirname(os.path.dirname(os.path.abspath(hybrid_server.__file__)))
+        env["PYTHONPATH"] = os.pathsep.join([str(tmp_path), src])
+        command = (
+            "import sys; from opendataloader_pdf.hybrid_server import main; "
+            "sys.argv = ['opendataloader-pdf-hybrid', '--help']; main()"
+        )
+        result = subprocess.run(
+            [sys.executable, "-c", command],
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+        output = result.stdout + result.stderr
+        assert "UnicodeDecodeError" not in output, output
+        # Without the hybrid extra, the server stops at the dependency check;
+        # with it, --help exits 0
+        assert result.returncode == 0 or "Missing dependencies" in output, output
