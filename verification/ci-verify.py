@@ -6,6 +6,7 @@ Three-level verification: Smoke / Content assertion / Comparison.
 
 import atexit
 import glob
+import importlib.resources
 import json
 import os
 import re
@@ -406,20 +407,23 @@ def _cli_help_text() -> str | None:
 
     The JAR prints its help when it gets no input. The --help of the Python wrapper comes from
     argparse (generated from options.json), so it cannot show which options the JAR knows.
-    run_jar starts the same JAR with the same JVM options as the wrapper.
+    Java starts directly, not through run_jar, so that the timeout stops the JVM itself.
     """
     try:
-        result = subprocess.run(
-            [sys.executable, "-c",
-             "from opendataloader_pdf.runner import run_jar; run_jar([], quiet=True)"],
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            cwd=REPO_ROOT,
-            timeout=120,
-        )
-    except (OSError, subprocess.TimeoutExpired) as exc:
+        jar = importlib.resources.files("opendataloader_pdf").joinpath(
+            "jar", "opendataloader-pdf-cli.jar")
+        with importlib.resources.as_file(jar) as jar_path:
+            result = subprocess.run(
+                ["java", "-Djava.awt.headless=true", "-Dapple.awt.UIElement=true",
+                 "-jar", str(jar_path)],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                cwd=REPO_ROOT,
+                timeout=120,
+            )
+    except (ImportError, OSError, subprocess.TimeoutExpired) as exc:
         print(f"       [option coverage] cannot run the CLI JAR: {exc}")
         return None
     if result.returncode != 0 or not result.stdout.strip():
