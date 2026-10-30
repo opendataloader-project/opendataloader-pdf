@@ -225,9 +225,13 @@ class TestReexecEndToEnd:
         # pass for the wrong reason again - the exact failure mode found in
         # review.
         probe = subprocess.run(
-            [sys.executable, "-c", "import locale, sys; "
-             "print(sys.flags.utf8_mode); "
-             "print(locale.getpreferredencoding(False))"],
+            [
+                sys.executable,
+                "-c",
+                "import locale, sys; "
+                "print(sys.flags.utf8_mode); "
+                "print(locale.getpreferredencoding(False))",
+            ],
             env=env,
             capture_output=True,
             text=True,
@@ -235,7 +239,9 @@ class TestReexecEndToEnd:
         )
         probe_lines = probe.stdout.splitlines()
         assert probe.returncode == 0 and len(probe_lines) >= 2, (
-            probe.returncode, probe.stdout, probe.stderr,
+            probe.returncode,
+            probe.stdout,
+            probe.stderr,
         )
         probe_utf8_mode, probe_encoding = probe_lines[0].strip(), probe_lines[1].strip()
         assert probe_utf8_mode == "0", (
