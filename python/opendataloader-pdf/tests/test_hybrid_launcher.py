@@ -254,6 +254,20 @@ def test_args_cannot_set_host_or_port(stub, started, args):
     assert started == []
 
 
+def test_port_in_use_raises(stub, started):
+    """Another server on the port would answer the health check before ours opens it."""
+    HybridServer = hybrid_server_class()
+
+    with socket.socket() as other:
+        other.bind(("127.0.0.1", 0))
+        other.listen()
+        port = other.getsockname()[1]
+        with pytest.raises(OSError, match="in use"):
+            HybridServer(args=["--record", str(stub)], port=port).start()
+
+    assert started == []
+
+
 def test_import_loads_no_hybrid_dependency():
     """The package has no dependencies, so an import must not need the hybrid extra."""
     code = (
