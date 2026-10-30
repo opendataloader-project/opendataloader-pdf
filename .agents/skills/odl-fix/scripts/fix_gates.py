@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """The harness of odl-fix: a contract defines the problem and the fix as tests; code computes "done".
 
-  fix_gates.py template --issue N
-      Prints a contract skeleton for $WORK/contract.json.
+  fix_gates.py template --issue N[,N...]
+      Prints a contract skeleton for $WORK/contract.json. Several numbers: several issues in one pull request.
   fix_gates.py validate --work WORK
       Checks the contract. Exit 2: the contract is not valid.
   fix_gates.py gate NAME --work WORK [--src DIR] [--offline]
@@ -329,6 +329,10 @@ def validate_contract(c, work: str) -> list[str]:
         return ["the contract must be an object"]
     if not isinstance(c.get("issue"), int):
         errors.append("issue: the issue number")
+    issues = c.get("issues")
+    if issues is not None and not (isinstance(issues, list) and len(issues) > 1 and all(isinstance(n, int) for n in issues)
+                                   and len(set(issues)) == len(issues) and issues[0] == c.get("issue")):
+        errors.append("issues: two or more issue numbers of one pull request, each one time, the first one is issue")
     if not (c.get("objective") or "").strip():
         errors.append("objective: the reporter's pain point, quoted")
     cases = c.get("cases")
@@ -431,9 +435,11 @@ def effective_invariants(c: dict, changes: list[dict]) -> list[dict]:
     return out
 
 
-def template(issue: int) -> dict:
+def template(issue: int, issues: list[int] | None = None) -> dict:
+    """A contract skeleton. With issues (several issues in one pull request), issue is the first of them."""
     return {
         "issue": issue,
+        **({"issues": issues} if issues and len(issues) > 1 else {}),
         "objective": "\"<the reporter's pain point, quoted>\"",
         "scope": ["java/opendataloader-pdf-core/src/main/java/org/opendataloader/pdf/<package>/<Class>.java"],
         "cases": [
@@ -1521,8 +1527,8 @@ def contract_changes(frozen: dict, current: dict) -> tuple[list[str], list[str]]
             changes.append(f"new reporter run {rid}")
     elif crep:
         changes.append("new reporter runs")
-    if (frozen.get("objective"), frozen.get("issue")) != (current.get("objective"), current.get("issue")):
-        errors.append("issue or objective changed after the freeze")
+    if [frozen.get(f) for f in ("objective", "issue", "issues")] != [current.get(f) for f in ("objective", "issue", "issues")]:
+        errors.append("issue, issues, or objective changed after the freeze")
     stripped = {k: v for k, v in current.items() if k != "amendments"}
     fstripped = {k: v for k, v in frozen.items() if k != "amendments"}
     if canonical(stripped) != canonical(fstripped) and len(current.get("amendments", [])) <= len(frozen.get("amendments", [])):
@@ -1822,7 +1828,7 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
     t = sub.add_parser("template")
-    t.add_argument("--issue", type=int)
+    t.add_argument("--issue", help="N, or N,N,... for several issues in one pull request")
     t.add_argument("--selfcheck", action="store_true", help="print the self-check items instead")
     for name in ("validate", "gate", "run", "freeze", "check", "report", "pr-watch"):
         p = sub.add_parser(name)
@@ -1845,10 +1851,11 @@ def main(argv: list[str] | None = None) -> int:
             if a.selfcheck:
                 print("\n".join(f"{i + 1}. {s}" for i, s in enumerate(SELFCHECK)))
                 print(json.dumps({"head": "<HEAD sha>", "items": {str(i + 1): "ok" for i in range(len(SELFCHECK))}}, indent=1))
-            elif a.issue is None:
-                raise Refused("template needs --issue N (or --selfcheck)")
+            elif a.issue is None or not re.fullmatch(r"[0-9]+(,[0-9]+)*", a.issue):
+                raise Refused("template needs --issue N or --issue N,N,... (or --selfcheck)")
             else:
-                print(json.dumps(template(a.issue), indent=1))
+                issues = [int(n) for n in a.issue.split(",")]
+                print(json.dumps(template(issues[0], issues), indent=1))
             return 0
         ctx = Ctx(a.work, a.src, a.base_src, a.offline)
         if a.cmd == "validate":

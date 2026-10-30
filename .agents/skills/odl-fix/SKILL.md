@@ -39,7 +39,7 @@ Use this skill to fix one GitHub issue of opendataloader-pdf and send a pull req
 2. **Evidence is a run.** Run the reporter's command. It must fail on `before` and pass on the fix. Run it on the committed sample and on the reporter's document (locally). `before` is the release. For a regression that is not released, `before` is the base build. The harness runs the contract on the base build and on the fix and records each run. Write the command or the API call yourself (Rule 10). If the issue asks only for tests, the run is a mutation case (see "Issues that ask only for tests").
 3. **Reproduce first.** If the failure does not occur, stop. Report the commands that you ran. If the issue asks only for tests, the failure is a defect that the tests of the base do not find: show it with a mutation case.
 4. **Do not commit an original.** Use the reporter's document only on your computer. Commit only samples that you make (see "Reproduction samples"). Do not upload, attach, or quote the original. This rule applies also to public documents.
-5. **One problem, smallest change.** The contract scope names the files that the fix can change (the scope gate). Each changed Java main file must be needed by a JUnit case (the pinning gate). Write problems outside the diff in the pull request. Exception: tell a security vulnerability only to the user.
+5. **One problem, smallest change.** The contract scope names the files that the fix can change (the scope gate). Each changed Java main file must be needed by a JUnit case (the pinning gate). Write problems outside the diff in the pull request. Exception: tell a security vulnerability only to the user. If the user asks for several issues in one pull request, see "Several issues in one pull request".
 6. **Show real output.** Each command, number, and example in a draft must come from a run on the final commit. Take the numbers from `fix_gates.py report`. If you cannot show it, the step is not complete.
 7. **The contract defines done; code checks it.** Write the contract before the fix. The user approves it at Approval 1. After that, it can only grow, with an amendment for each change. `fix_gates.py check` decides if the work is done. Do not decide it yourself, and do not start another agent to judge it (Phase 4).
 8. **Do not change this skill during a fix.** Record each problem with the text of this skill in the skill log. Do not record sandbox problems there (see "Skill feedback").
@@ -139,6 +139,18 @@ Do the triage when the user asks which issues to look at, or gives no issue numb
 5. Show `$WORK/issue-triage/triage.md`. Our turn comes first. Recommend the issues for this session and the action for each: a fix (this procedure), a question, a decision, or a close comment. Each post is a draft for the user's approval (Rule 1).
 
 The issue state has evals: `python3 -I .agents/skills/odl-fix/evals/run.py`. If the triage gives a wrong class, add an eval for that case first. Then change the tool.
+
+## Several issues in one pull request
+
+Fix one issue in each pull request (Rule 5). If the user asks for several issues in one pull request, do the procedure one time for all of them, with these changes. Example from #854: four issues that ask for tests of one feature.
+
+| Step | Change |
+|:--|:--|
+| Phase 1 steps 3 to 5 | Read each issue. Each issue must have one problem. If an issue has more, make sub-issues for it as for one issue |
+| Phase 1 step 6 | Post the claim on each issue. Use the first issue for `N`, `$WORK`, and the branch name |
+| Phase 2 step 3 | `template --issue <first>,<second>,...` writes `issue` (the first issue) and `issues` (each issue). Write cases for each issue, and write the issue number in each `why`. Quote the pain point of each issue in `objective` |
+| Phase 5 step 2 | Write one `Fixes <link>` line for each issue in the commit message |
+| Phase 5 step 3 | Write one `Resolves #<n>` line for each issue in the pull request. Write Objective, Approach, and Evidence for each issue |
 
 ## Phase 1: Prepare
 

@@ -54,6 +54,7 @@ The tool reads `SRC` from `$WORK/env.sh` (the fix tree). `--src` sets it. The ba
 | Field | Content |
 |:--|:--|
 | `issue`, `objective` | The issue number, and the reporter's pain point, quoted |
+| `issues` | Only for several issues in one pull request: each issue number, the first one is `issue` (`template --issue 706,707`). It cannot change after the freeze |
 | `scope` | The files that the fix can change, other than tests. Globs are allowed (`*` matches `/` too). Generated files and documentation that the fix must update are in the scope too. Empty (`[]`) only if no case is a problem case: then only tests change |
 | `cases` | Tests. `runner` `junit` (the default): `Class#method`, and `module` is `opendataloader-pdf-core` (the default) or `opendataloader-pdf-cli`. `runner` `pytest`: `tests/<file>.py::[Class::]test` in `python/opendataloader-pdf`, with `extras` (for example `["hybrid"]`). `runner` `vitest`: `test/<file>.test.ts::<test name>` in `node/opendataloader-pdf` |
 | `cases[].kind = problem` | Fails on the base with `symptom` in its failure message, passes on the fix. At least one problem case or mutation case |
