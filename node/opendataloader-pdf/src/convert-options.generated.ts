@@ -73,7 +73,7 @@ export interface ConvertOptions {
   includeLinks?: boolean;
   /** Time in milliseconds that the availability check of the hybrid backend waits to connect, and then again for the answer. Raise it for a backend with a slow start, such as a serverless one. Default: 3000 */
   hybridAvailabilityTimeout?: string;
-  /** With --hybrid, write the triage decision of each page (Java or backend, the confidence, and the signals) to <name>_triage.json in the output folder */
+  /** With --hybrid, write the triage decision of each page (Java or backend, the confidence, and the signals) to triage/<name>.json in the output folder */
   hybridTriageLog?: boolean;
 }
 

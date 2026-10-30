@@ -278,7 +278,7 @@
       "type": "boolean",
       "required": false,
       "default": false,
-      "description": "With --hybrid, write the triage decision of each page (Java or backend, the confidence, and the signals) to <name>_triage.json in the output folder"
+      "description": "With --hybrid, write the triage decision of each page (Java or backend, the confidence, and the signals) to triage/<name>.json in the output folder"
     }
   ]
 }

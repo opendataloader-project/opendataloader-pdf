@@ -149,7 +149,7 @@ public class HybridConfig {
     }
 
     /**
-     * Checks if the triage decision of each page is written to {@code <name>_triage.json} in the output folder.
+     * Checks if the triage decision of each page is written to {@code triage/<name>.json} in the output folder.
      *
      * @return true if the triage log is written, false otherwise.
      */
@@ -158,8 +158,8 @@ public class HybridConfig {
     }
 
     /**
-     * Sets whether the triage decision of each page is written to {@code <name>_triage.json} in the output
-     * folder, next to the other outputs (#741).
+     * Sets whether the triage decision of each page is written to {@code triage/<name>.json} in the output
+     * folder (#741).
      *
      * @param writeTriageLog true to write the triage log, false to write none.
      */

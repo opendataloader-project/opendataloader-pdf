@@ -322,7 +322,7 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "type": "boolean",
         "required": False,
         "default": False,
-        "description": "With --hybrid, write the triage decision of each page (Java or backend, the confidence, and the signals) to <name>_triage.json in the output folder",
+        "description": "With --hybrid, write the triage decision of each page (Java or backend, the confidence, and the signals) to triage/<name>.json in the output folder",
     },
 ]
 

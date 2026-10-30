@@ -202,7 +202,7 @@ public class CLIOptions {
 
     private static final String HYBRID_TRIAGE_LOG_LONG_OPTION = "hybrid-triage-log";
     private static final String HYBRID_TRIAGE_LOG_DESC = "With --hybrid, write the triage decision of each page "
-            + "(Java or backend, the confidence, and the signals) to <name>_triage.json in the output folder";
+            + "(Java or backend, the confidence, and the signals) to triage/<name>.json in the output folder";
 
     private static final String HYBRID_CHUNK_SIZE_LONG_OPTION = "hybrid-chunk-size";
     private static final String HYBRID_CHUNK_SIZE_DESC = "Maximum number of pages to send to the hybrid "

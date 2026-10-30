@@ -89,8 +89,8 @@ public class HybridDocumentProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(HybridDocumentProcessor.class.getCanonicalName());
 
-    /** The end of the name of a triage log: {@code <name>_triage.json}. */
-    private static final String TRIAGE_LOG_SUFFIX = "_triage.json";
+    /** The folder of the triage logs in the output folder: {@code triage/<name>.json}. */
+    private static final String TRIAGE_LOG_FOLDER = "triage";
 
     /**
      * Stores the last hybrid server timings collected during {@link #processBackendPath}.
@@ -198,7 +198,7 @@ public class HybridDocumentProcessor {
     /**
      * Processes a document using hybrid mode with triage-based routing. With
      * {@link org.opendataloader.pdf.hybrid.HybridConfig#isWriteTriageLog()}, the triage decision of each page goes
-     * to {@code <name>_triage.json} in the output folder.
+     * to {@code triage/<name>.json} in the output folder.
      *
      * @param inputPdfName   The path to the input PDF file.
      * @param config         The configuration settings.
@@ -234,8 +234,9 @@ public class HybridDocumentProcessor {
     }
 
     /**
-     * Returns the triage log of the document: {@code <name>_triage.json} in the output folder, next to the other
-     * outputs. Each document has its own log, so the documents of one run do not write over each other's (#741).
+     * Returns the triage log of the document: {@code triage/<name>.json} in the output folder. Each document has
+     * its own log, so the documents of one run do not write over each other's logs (#741). The folder keeps the
+     * logs apart from the outputs: {@code <name>_triage.json} is also the JSON output of {@code <name>_triage.pdf}.
      */
     private static Path getTriageLogPath(String inputPdfName, Config config) {
         Path input = Path.of(inputPdfName).toAbsolutePath();
@@ -244,7 +245,8 @@ public class HybridDocumentProcessor {
         String name = fileName.toLowerCase(Locale.ROOT).endsWith(".pdf")
             ? fileName.substring(0, fileName.length() - 4) : fileName;
         Path folder = config.getOutputFolder() != null ? Path.of(config.getOutputFolder()) : input.getParent();
-        return folder != null ? folder.resolve(name + TRIAGE_LOG_SUFFIX) : Path.of(name + TRIAGE_LOG_SUFFIX);
+        Path logs = folder != null ? folder.resolve(TRIAGE_LOG_FOLDER) : Path.of(TRIAGE_LOG_FOLDER);
+        return logs.resolve(name + ".json");
     }
 
     private static List<List<IObject>> processDocumentWithTriageLog(

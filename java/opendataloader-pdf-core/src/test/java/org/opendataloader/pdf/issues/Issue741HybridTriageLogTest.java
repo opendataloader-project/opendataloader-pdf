@@ -48,7 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * <p>Each case converts text-only PDFs with {@code --hybrid docling-fast} against a mock backend that answers the
  * health check, and that answers each conversion with an empty document. The option
- * {@code --hybrid-triage-log} writes {@code <name>_triage.json} next to the other outputs. The samples and the
+ * {@code --hybrid-triage-log} writes {@code triage/<name>.json} in the output folder. The samples and the
  * outputs stay in {@code target/test-samples/}, in the folders whose names start with {@code issue-741}.
  */
 class Issue741HybridTriageLogTest {
@@ -87,7 +87,7 @@ class Issue741HybridTriageLogTest {
         }
     }
 
-    /** The Java API: with the triage log on, the decision of each page is in {@code <name>_triage.json}. */
+    /** The Java API: with the triage log on, the decision of each page is in {@code triage/<name>.json}. */
     @Test
     void triageLogOfTheConfigIsWrittenNextToTheOutputs() throws Exception {
         Path directory = TestSamples.emptyDirectory("issue-741-api");
@@ -102,10 +102,10 @@ class Issue741HybridTriageLogTest {
         }
         DocumentProcessor.processFile(pdf.toString(), config);
 
-        assertTriageLog(directory.resolve("plan_triage.json"), "plan.pdf", 2);
+        assertTriageLog(directory.resolve("triage").resolve("plan.json"), "plan.pdf", 2);
     }
 
-    /** The CLI: {@code --hybrid-triage-log} writes the triage log next to the other outputs. */
+    /** The CLI: {@code --hybrid-triage-log} writes the triage log in the output folder. */
     @Test
     void triageLogOfTheCliIsWrittenNextToTheOutputs() throws Exception {
         Path directory = TestSamples.emptyDirectory("issue-741-cli");
@@ -116,7 +116,7 @@ class Issue741HybridTriageLogTest {
                 "-o", directory.toString(), "-f", "json", pdf.toString()}));
         DocumentProcessor.processFile(pdf.toString(), config);
 
-        assertTriageLog(directory.resolve("plan_triage.json"), "plan.pdf", 1);
+        assertTriageLog(directory.resolve("triage").resolve("plan.json"), "plan.pdf", 1);
     }
 
     /** Two documents converted to one folder each have their own triage log: neither log replaces the other. */
@@ -134,8 +134,32 @@ class Issue741HybridTriageLogTest {
             DocumentProcessor.processFile(pdf.toString(), config);
         }
 
-        assertTriageLog(directory.resolve("first_triage.json"), "first.pdf", 1);
-        assertTriageLog(directory.resolve("second_triage.json"), "second.pdf", 3);
+        assertTriageLog(directory.resolve("triage").resolve("first.json"), "first.pdf", 1);
+        assertTriageLog(directory.resolve("triage").resolve("second.json"), "second.pdf", 3);
+    }
+
+    /**
+     * The triage log does not replace an output of another document: {@code foo_triage.json} is the JSON output of
+     * {@code foo_triage.pdf}, and the log of {@code foo.pdf} goes to {@code triage/foo.json}.
+     */
+    @Test
+    void triageLogDoesNotReplaceTheOutputOfAnotherDocument() throws Exception {
+        Path directory = TestSamples.emptyDirectory("issue-741-names");
+        Path plain = directory.resolve("foo.pdf");
+        Path named = directory.resolve("foo_triage.pdf");
+        TestSamples.writeTextPdf(named, 1, "The document whose name ends with triage.");
+        TestSamples.writeTextPdf(plain, 1, "The plan of the site office has three parts.");
+        for (Path pdf : new Path[]{named, plain}) {
+            Config config = CLIOptions.createConfigFromCommandLine(new DefaultParser().parse(CLIOptions.defineOptions(),
+                new String[]{"--hybrid", "docling-fast", "--hybrid-url", serverUrl(), "--hybrid-triage-log",
+                    "-o", directory.toString(), "-f", "json", pdf.toString()}));
+            DocumentProcessor.processFile(pdf.toString(), config);
+        }
+
+        JsonNode output = new ObjectMapper().readTree(directory.resolve("foo_triage.json").toFile());
+        assertEquals("foo_triage.pdf", output.get("file name").asText(), "the JSON output of foo_triage.pdf");
+        assertTriageLog(directory.resolve("triage").resolve("foo.json"), "foo.pdf", 1);
+        assertTriageLog(directory.resolve("triage").resolve("foo_triage.json"), "foo_triage.pdf", 1);
     }
 
     /** Without the option, the output folder has no triage log, as before. */
@@ -168,7 +192,7 @@ class Issue741HybridTriageLogTest {
 
     /** The log names the document, and has one decision of the Java path or the backend for each page. */
     private static void assertTriageLog(Path log, String document, int pages) throws IOException {
-        assertTrue(Files.exists(log), "no triage log: " + log.getFileName());
+        assertTrue(Files.exists(log), "no triage log: triage/" + log.getFileName());
         JsonNode root = new ObjectMapper().readTree(log.toFile());
         assertEquals(document, root.get("document").asText());
         assertEquals("docling-fast", root.get("hybrid").asText());
