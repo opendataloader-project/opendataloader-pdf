@@ -16,7 +16,31 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from opendataloader_pdf import hybrid_server
-from opendataloader_pdf.hybrid_server import _reexec_with_utf8_if_needed
+from opendataloader_pdf.hybrid_server import _is_utf8_encoding_name, _reexec_with_utf8_if_needed
+
+
+class TestIsUtf8EncodingName:
+    def test_canonical_name_matches(self):
+        assert _is_utf8_encoding_name("UTF-8") is True
+        assert _is_utf8_encoding_name("utf8") is True
+        assert _is_utf8_encoding_name("utf_8") is True
+
+    def test_windows_cp65001_alias_matches(self):
+        """cp65001 is Windows' ANSI-codepage name for UTF-8 (codepage 65001,
+        e.g. from the "Beta: Use Unicode UTF-8" system setting). A naive
+        string comparison against "utf-8" misses it; codec canonicalization
+        must not."""
+        assert _is_utf8_encoding_name("cp65001") is True
+        assert _is_utf8_encoding_name("CP65001") is True
+
+    def test_non_utf8_encoding_does_not_match(self):
+        assert _is_utf8_encoding_name("cp949") is False
+        assert _is_utf8_encoding_name("ANSI_X3.4-1968") is False
+
+    def test_unknown_encoding_name_does_not_match(self):
+        """An unrecognized encoding name must not raise - codecs.lookup can
+        LookupError on garbage input."""
+        assert _is_utf8_encoding_name("not-a-real-encoding") is False
 
 
 class TestReexecWithUtf8IfNeeded:
@@ -42,6 +66,22 @@ class TestReexecWithUtf8IfNeeded:
         monkeypatch.setattr(
             "opendataloader_pdf.hybrid_server.locale.getpreferredencoding",
             lambda do_setlocale=True: "UTF-8",
+        )
+        with patch("opendataloader_pdf.hybrid_server.os.execv") as mock_execv:
+            _reexec_with_utf8_if_needed()
+        mock_execv.assert_not_called()
+
+    def test_noop_when_locale_is_utf8_alias(self, monkeypatch):
+        """No re-exec when the locale reports a UTF-8 alias like cp65001
+        (Windows codepage 65001) rather than the canonical "UTF-8" string -
+        regression test for the naive-string-comparison bug this replaced."""
+        monkeypatch.setattr(
+            "opendataloader_pdf.hybrid_server.sys.flags",
+            SimpleNamespace(utf8_mode=0),
+        )
+        monkeypatch.setattr(
+            "opendataloader_pdf.hybrid_server.locale.getpreferredencoding",
+            lambda do_setlocale=True: "cp65001",
         )
         with patch("opendataloader_pdf.hybrid_server.os.execv") as mock_execv:
             _reexec_with_utf8_if_needed()
@@ -162,11 +202,52 @@ class TestReexecEndToEnd:
         """Running the file directly must re-exec cleanly, not crash with
         ModuleNotFoundError - the exact regression `-m`-based re-exec caused.
 
-        Forces LC_ALL=C (a genuinely non-UTF-8 locale) so the guard actually
-        takes the re-exec branch here, regardless of this host's own locale."""
+        Forces a genuinely non-UTF-8-mode, non-UTF-8-locale environment so
+        the guard actually takes the re-exec branch here, regardless of this
+        host's own locale. LC_ALL=C alone is NOT sufficient: CPython
+        auto-enables UTF-8 mode as a legacy-C-locale fallback whenever the
+        locale resolves to POSIX C/POSIX, *unless* PYTHONUTF8 is explicitly
+        forced to 0 - verified empirically: `LC_ALL=C` alone yields
+        sys.flags.utf8_mode == 1 on this dev environment, which would make
+        this test's assertions below pass trivially without ever exercising
+        the re-exec branch. PYTHONCOERCECLOCALE=0 additionally disables PEP
+        538's locale-coercion attempt, for defense in depth across platforms.
+        """
         env = dict(os.environ)
-        env.pop("PYTHONUTF8", None)
         env["LC_ALL"] = "C"
+        env["PYTHONUTF8"] = "0"
+        env["PYTHONCOERCECLOCALE"] = "0"
+
+        # Self-verifying: prove the forced environment actually produces a
+        # non-UTF-8-mode, non-UTF-8-locale process *before* trusting the main
+        # assertions below. Without this, a future Python/OS change that
+        # silently restores UTF-8 mode under this env would make the test
+        # pass for the wrong reason again - the exact failure mode found in
+        # review.
+        probe = subprocess.run(
+            [sys.executable, "-c", "import locale, sys; "
+             "print(sys.flags.utf8_mode); "
+             "print(locale.getpreferredencoding(False))"],
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        probe_lines = probe.stdout.splitlines()
+        assert probe.returncode == 0 and len(probe_lines) >= 2, (
+            probe.returncode, probe.stdout, probe.stderr,
+        )
+        probe_utf8_mode, probe_encoding = probe_lines[0].strip(), probe_lines[1].strip()
+        assert probe_utf8_mode == "0", (
+            "test environment failed to force sys.flags.utf8_mode == 0 "
+            f"(got {probe_utf8_mode!r}); this test would not exercise the "
+            "re-exec branch at all"
+        )
+        assert not _is_utf8_encoding_name(probe_encoding), (
+            "test environment failed to force a non-UTF-8 locale "
+            f"(getpreferredencoding returned {probe_encoding!r}); this test "
+            "would not exercise the re-exec branch at all"
+        )
 
         result = subprocess.run(
             [sys.executable, hybrid_server.__file__, "--help"],
