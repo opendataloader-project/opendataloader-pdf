@@ -16,6 +16,8 @@
 package org.opendataloader.pdf.processors;
 
 import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.autotagging.PagePaints;
+import org.opendataloader.pdf.entities.DrawnTextChunk;
 import org.opendataloader.pdf.entities.EnrichedImageChunk;
 import org.opendataloader.pdf.entities.SemanticFormula;
 import org.opendataloader.pdf.entities.SemanticPicture;
@@ -46,6 +48,7 @@ import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextColumn;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.StreamInfo;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
 import java.io.IOException;
@@ -932,8 +935,10 @@ public class HybridDocumentProcessor {
 
             // Replace backend TextChunks with Java TextChunks that carry StreamInfo,
             // and copy StreamInfos to SemanticFormula objects
+            // Run even with no Java text: a page that draws its words as outlines
+            // has none, and its nodes still take the outlines they lie over.
+            enrichTextStreamInfos(backendPage, javaTextChunks, new PagePaints(pageNumber));
             if (!javaTextChunks.isEmpty()) {
-                enrichTextStreamInfos(backendPage, javaTextChunks);
                 enrichFormulaStreamInfos(backendPage, javaTextChunks);
             }
 
@@ -977,11 +982,10 @@ public class HybridDocumentProcessor {
      * This preserves the backend's structural decisions (heading/paragraph/reading order)
      * while using the Java TextChunks that carry StreamInfo.
      */
-    private static void enrichTextStreamInfos(List<IObject> backendPage, List<TextChunk> javaTextChunks) {
-        if (javaTextChunks.isEmpty()) return;
-
+    private static void enrichTextStreamInfos(List<IObject> backendPage, List<TextChunk> javaTextChunks,
+                                              PagePaints paints) {
         Set<Integer> usedJavaIndices = new HashSet<>();
-        enrichTextStreamInfosRecursive(backendPage, javaTextChunks, usedJavaIndices);
+        enrichTextStreamInfosRecursive(backendPage, javaTextChunks, usedJavaIndices, paints);
     }
 
     /**
@@ -990,14 +994,14 @@ public class HybridDocumentProcessor {
      * and any other container that holds nested IObjects.
      */
     private static void enrichTextStreamInfosRecursive(
-            List<IObject> objects, List<TextChunk> javaTextChunks, Set<Integer> usedJavaIndices) {
+            List<IObject> objects, List<TextChunk> javaTextChunks, Set<Integer> usedJavaIndices, PagePaints paints) {
 
         for (IObject obj : objects) {
             if (obj instanceof SemanticFormula) {
                 // Formula inside table/list — enrich StreamInfos by bbox overlap
                 enrichSingleFormula((SemanticFormula) obj, javaTextChunks);
             } else if (obj instanceof SemanticTextNode) {
-                enrichSingleTextNode((SemanticTextNode) obj, javaTextChunks, usedJavaIndices);
+                enrichSingleTextNode((SemanticTextNode) obj, javaTextChunks, usedJavaIndices, paints);
             } else if (obj instanceof TableBorder) {
                 TableBorder table = (TableBorder) obj;
                 for (int rowNumber = 0; rowNumber < table.getNumberOfRows(); rowNumber++) {
@@ -1005,7 +1009,7 @@ public class HybridDocumentProcessor {
                     for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
                         TableBorderCell cell = row.getCell(colNumber);
                         if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
-                            enrichTextStreamInfosRecursive(cell.getContents(), javaTextChunks, usedJavaIndices);
+                            enrichTextStreamInfosRecursive(cell.getContents(), javaTextChunks, usedJavaIndices, paints);
                         }
                     }
                 }
@@ -1017,7 +1021,7 @@ public class HybridDocumentProcessor {
                         replaceLineChunksWithJava(line, javaTextChunks, usedJavaIndices);
                     }
                     // Enrich nested contents (images, paragraphs, sub-lists)
-                    enrichTextStreamInfosRecursive(item.getContents(), javaTextChunks, usedJavaIndices);
+                    enrichTextStreamInfosRecursive(item.getContents(), javaTextChunks, usedJavaIndices, paints);
                 }
             }
         }
@@ -1026,10 +1030,12 @@ public class HybridDocumentProcessor {
     /**
      * Replaces a single SemanticTextNode's TextChunks with the Java TextChunks
      * drawn inside its bounding box, and records the text source in
-     * ElementMetadata: "stream" when chunks matched, "ocr-fallback" when none did.
+     * ElementMetadata: "stream" when chunks matched, "outlines" when the page draws
+     * the node's text as paths, "ocr-fallback" when nothing on the page matched.
      */
     private static void enrichSingleTextNode(
-            SemanticTextNode textNode, List<TextChunk> javaTextChunks, Set<Integer> usedJavaIndices) {
+            SemanticTextNode textNode, List<TextChunk> javaTextChunks, Set<Integer> usedJavaIndices,
+            PagePaints paints) {
 
         double nLeft = textNode.getLeftX();
         double nRight = textNode.getRightX();
@@ -1053,6 +1059,24 @@ public class HybridDocumentProcessor {
         }
 
         if (matched.isEmpty()) {
+            // The text may be drawn as outlines: no text operator, a filled path per
+            // letter. Those paths are its content, and what the backend read is
+            // what they say.
+            // Real text in the box means the words are on the page as text, read
+            // by a node that matched it: a path here is an underline or a bullet.
+            List<StreamInfo> outlines = holdsJavaText(textNode.getBoundingBox(), javaTextChunks)
+                ? List.of() : paints.takeInside(textNode.getBoundingBox(), tol);
+            String text = textNode.getValue();
+            if (!outlines.isEmpty() && text != null && !text.isBlank()) {
+                DrawnTextChunk drawn = new DrawnTextChunk(new BoundingBox(textNode.getBoundingBox()), text);
+                drawn.getStreamInfos().addAll(outlines);
+                textNode.getColumns().clear();
+                TextColumn column = new TextColumn();
+                column.add(new TextLine(drawn));
+                textNode.getColumns().add(column);
+                recordTextSource(textNode, "outlines", null);
+                return;
+            }
             LOGGER.fine(() -> "enrichSingleTextNode: no Java TextChunk matched for backend node at bbox ["
                 + String.format("%.1f,%.1f,%.1f,%.1f", nLeft, nBottom, nRight, nTop) + "]");
             recordTextSource(textNode, "ocr-fallback", null);
@@ -1070,11 +1094,23 @@ public class HybridDocumentProcessor {
         textNode.getColumns().add(newCol);
     }
 
+    /** Whether a Java text chunk that carries stream info has its centre in the box. */
+    private static boolean holdsJavaText(BoundingBox box, List<TextChunk> javaTextChunks) {
+        for (TextChunk chunk : javaTextChunks) {
+            if (!chunk.getStreamInfos().isEmpty()
+                && chunk.getCenterX() >= box.getLeftX() && chunk.getCenterX() <= box.getRightX()
+                && chunk.getCenterY() >= box.getBottomY() && chunk.getCenterY() <= box.getTopY()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Records the text source decision in ElementMetadata for a SemanticTextNode.
      *
      * @param textNode   the text node whose metadata to update
-     * @param source     "stream" or "ocr-fallback"
+     * @param source     "stream", "outlines" or "ocr-fallback"
      * @param similarity the stream-OCR similarity score, or null if not applicable
      */
     private static void recordTextSource(SemanticTextNode textNode, String source, Double similarity) {
