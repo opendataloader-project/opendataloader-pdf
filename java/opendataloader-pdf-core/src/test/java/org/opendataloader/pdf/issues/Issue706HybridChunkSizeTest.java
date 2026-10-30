@@ -119,7 +119,9 @@ class Issue706HybridChunkSizeTest {
 
     @Test
     void selectedPagesAreSortedAndSplitByTheConfiguredChunkSize() throws Exception {
-        // --pages gives pages with gaps. Each request covers its chunk from the first to the last page.
+        // --pages gives pages with gaps. A chunk has 2 selected pages, but its request has one range
+        // from the first to the last page, so the range also covers the pages between (2 in 1-3).
+        // This test keeps the current requests. A change of the request format must update it.
         Config config = new Config();
         config.setPages("9,1,5,3,7");
         config.getHybridConfig().setChunkSize(2);

@@ -1,7 +1,13 @@
 """Unit tests for auto-generated cli_options module"""
 
+import json
+from pathlib import Path
+
 import pytest
 from opendataloader_pdf.cli_options_generated import CLI_OPTIONS, add_options_to_parser
+from opendataloader_pdf.runner import run_jar
+
+OPTIONS_JSON = Path(__file__).resolve().parents[3] / "options.json"
 
 
 class TestCLIOptions:
@@ -76,6 +82,26 @@ class TestCLIOptions:
         chunk_opt = next(opt for opt in CLI_OPTIONS if opt["name"] == "hybrid-chunk-size")
         assert chunk_opt["type"] == "string"
         assert chunk_opt["default"] == "50"
+
+    def test_hybrid_chunk_size_default_matches_the_cli_jar(self):
+        """options.json and the generated options give the default of the JAR (#708).
+
+        This is not a Java test: `npm run sync` builds and tests the JAR before it exports
+        options.json, so a Java test would stop the sync that makes options.json new.
+        """
+
+        def chunk_size_default(options):
+            return next(opt["default"] for opt in options if opt["name"] == "hybrid-chunk-size")
+
+        exported = json.loads(run_jar(["--export-options"], quiet=True))
+        committed = json.loads(OPTIONS_JSON.read_text(encoding="utf-8"))
+        jar_default = chunk_size_default(exported["options"])
+        assert (
+            chunk_size_default(committed["options"]) == jar_default
+        ), "options.json has another default than the JAR: run npm run sync"
+        assert (
+            chunk_size_default(CLI_OPTIONS) == jar_default
+        ), "the generated Python options have another default than the JAR: run npm run sync"
 
 
 
