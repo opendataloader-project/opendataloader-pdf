@@ -39,6 +39,131 @@ public class BulletedParagraphUtils {
     public static final String KOREAN_CHAPTER_REGEX = "^(제\\d+[장조절])";
 
     /**
+     * Roman numeral section title: "I. INTRODUCTION", "III. METHODOLOGY", etc.
+     */
+    private static final Pattern ROMAN_SECTION_PATTERN =
+            Pattern.compile("^(XII|VIII|VII|XI|VI|IV|IX|III|II|X|V|I)\\.\\s+[A-Za-z0-9].*$");
+
+    /**
+     * Alpha subsection title: "A. Network Architecture", "B. Experimental Results", etc.
+     */
+    private static final Pattern ALPHA_SUBSECTION_PATTERN =
+            Pattern.compile("^[A-Z]\\.\\s+[A-Za-z0-9].*$");
+
+    /**
+     * Numeric section title: "1. Introduction", "2. Related Work", "1.1 Overview", etc.
+     */
+    private static final Pattern NUMERIC_SECTION_PATTERN =
+            Pattern.compile("^(\\d+\\.|\\d+\\.\\d+|\\d+\\))\\s+[A-Za-z0-9].*$");
+
+    /**
+     * Standard unnumbered major section headers across academic papers and technical reports.
+     */
+    private static final Pattern STANDARD_SECTION_NAMES_PATTERN =
+            Pattern.compile("^(ABSTRACT|INTRODUCTION|RELATED WORK|BACKGROUND|PRELIMINARIES|METHOD|METHODOLOGY|MODEL|PROPOSED APPROACH|EXPERIMENTS|EXPERIMENTAL SETUP|RESULTS|DISCUSSION|EVALUATION|LIMITATIONS|CONCLUSION|CONCLUSIONS|FUTURE WORK|REFERENCES|BIBLIOGRAPHY|APPENDIX|APPENDICES|ACKNOWLEDGMENT|ACKNOWLEDGMENTS)\\s*[:\\.\\-—–]?$", Pattern.CASE_INSENSITIVE);
+
+    /**
+     * Checks if a text line is a Roman numeral section title (e.g. "I. INTRODUCTION", "III. METHODOLOGY").
+     *
+     * @param line the text line to check
+     * @return true if the line is a Roman numeral section title, false otherwise
+     */
+    public static boolean isRomanSectionTitle(TextLine line) {
+        if (line == null || line.getValue() == null) return false;
+        String val = line.getValue().trim();
+        return !isAuthorAffiliationLine(val) && ROMAN_SECTION_PATTERN.matcher(val).find();
+    }
+
+    /**
+     * Checks if a text line is an alphabetical subsection title (e.g. "A. Network Architecture", "B. Experimental Results").
+     *
+     * @param line the text line to check
+     * @return true if the line is an alphabetical subsection title, false otherwise
+     */
+    public static boolean isAlphaSubsectionTitle(TextLine line) {
+        if (line == null || line.getValue() == null) return false;
+        String val = line.getValue().trim();
+        return !isAuthorAffiliationLine(val) && ALPHA_SUBSECTION_PATTERN.matcher(val).find();
+    }
+
+    /**
+     * Checks if a text line is a numeric section title (e.g. "1. Introduction", "2. Related Work", "1.1 Overview").
+     *
+     * @param line the text line to check
+     * @return true if the line is a numeric section title, false otherwise
+     */
+    public static boolean isNumericSectionTitle(TextLine line) {
+        if (line == null || line.getValue() == null) return false;
+        String val = line.getValue().trim();
+        return !isAuthorAffiliationLine(val) && NUMERIC_SECTION_PATTERN.matcher(val).find();
+    }
+
+    /**
+     * Checks if a text line is a section or subsection title across standard academic and technical document conventions,
+     * e.g. {@code "I. INTRODUCTION"}, {@code "B. Experimental Results"}, {@code "1. Introduction"}, or {@code "METHODOLOGY"}.
+     * Used by {@link org.opendataloader.pdf.processors.HeadingProcessor} to promote these lines to headings.
+     *
+     * @param line the text line to check
+     * @return true if the line is a recognized section or subsection title, false otherwise
+     */
+    public static boolean isIeeeSectionTitle(TextLine line) {
+        if (line == null || line.getValue() == null) {
+            return false;
+        }
+        String val = line.getValue().trim();
+        if (isAuthorAffiliationLine(val)) {
+            return false;
+        }
+        if (val.length() > 80 || val.split("\\s+").length > 10) {
+            return false;
+        }
+        if (val.matches("^(XII|VIII|VII|XI|VI|IV|IX|III|II|X|V|I|[A-Z]|\\d+)[\\.\\)]\\s+(This|The|We|In|Here|Our|For|With|By|To|From)\\b.*")) {
+            return false;
+        }
+
+        return ROMAN_SECTION_PATTERN.matcher(val).matches()
+            || ALPHA_SUBSECTION_PATTERN.matcher(val).matches()
+            || NUMERIC_SECTION_PATTERN.matcher(val).matches()
+            || STANDARD_SECTION_NAMES_PATTERN.matcher(val).matches();
+    }
+
+    /**
+     * Checks if a text string is an author affiliation or contact metadata line (e.g. emails, web links, or author address blocks).
+     *
+     * @param text the text string to check
+     * @return true if the text contains email, URL, or author list metadata, false otherwise
+     */
+    private static boolean isAuthorAffiliationLine(String text) {
+        if (text == null) return false;
+        String trimmed = text.trim();
+        // Email address or URL in line (e.g. {user1, user2}@domain.edu or https://...)
+        if (trimmed.contains("@") || trimmed.toLowerCase().contains("http:") || trimmed.toLowerCase().contains("https:")) {
+            return true;
+        }
+        // Short or long comma-delimited author lists with initials (e.g. "A. Smith, B. Jones")
+        if (trimmed.contains(",")) {
+            String[] parts = trimmed.split(",");
+            if (parts.length >= 2) {
+                boolean allInitials = true;
+                for (String part : parts) {
+                    if (!part.trim().matches("^[A-Z]\\.\\s+.*")) {
+                        allInitials = false;
+                        break;
+                    }
+                }
+                if (allInitials) {
+                    return true;
+                }
+            }
+        }
+        // Long author block lines with multiple comma-separated names and affiliations
+        if (trimmed.length() > 100 && trimmed.chars().filter(ch -> ch == ',').count() >= 3) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Gets the first character label from a text node.
      *
      * @param semanticTextNode the text node to extract the label from
