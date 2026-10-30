@@ -4,6 +4,7 @@ import org.opendataloader.pdf.autotagging.ChunksWriter;
 import org.opendataloader.pdf.autotagging.OperatorStreamKey;
 import org.verapdf.operator.Operator;
 import org.verapdf.parser.Operators;
+import org.opendataloader.pdf.entities.DrawnTextChunk;
 import org.opendataloader.pdf.entities.EnrichedImageChunk;
 import org.opendataloader.pdf.entities.SemanticFootnote;
 import org.opendataloader.pdf.entities.SemanticFormula;
@@ -878,11 +879,13 @@ public class AutoTaggingProcessor {
             TaggedPDFConstants.H + normalizedLevel,
             heading.getPageNumber());
         processTextNode(heading, headingObject);
+        discardIfEmpty(parent, headingObject);
     }
 
     private static void createParagraphStructElem(SemanticParagraph paragraph, COSObject parent, COSDocument cosDocument) {
         COSObject paragraphObject = addStructElement(parent, cosDocument, TaggedPDFConstants.P, paragraph.getPageNumber());
         processTextNode(paragraph, paragraphObject);
+        discardIfEmpty(parent, paragraphObject);
     }
 
     /**
@@ -931,11 +934,13 @@ public class AutoTaggingProcessor {
             noteObject.setKey(ASAtom.NOTE_TYPE, COSName.construct(ASAtom.getASAtom("Footnote")));
         }
         processTextNode(footnote, noteObject);
+        discardIfEmpty(parent, noteObject);
     }
 
     private static void createCaptionStructElem(SemanticCaption caption, COSObject parent, COSDocument cosDocument, boolean isFirstChild) {
         COSObject captionObject = addStructElement(parent, cosDocument, TaggedPDFConstants.CAPTION, caption.getPageNumber(), isFirstChild);
         processTextNode(caption, captionObject);
+        discardIfEmpty(parent, captionObject);
     }
 
     /**
@@ -977,6 +982,7 @@ public class AutoTaggingProcessor {
             }
         }
         processTextNode(caption, captionObject);
+        discardIfEmpty(parent, captionObject);
     }
 
     private static void createFigureStructElem(ImageChunk image, COSObject parent, COSDocument cosDocument) {
@@ -1100,6 +1106,7 @@ public class AutoTaggingProcessor {
                 SemanticTextNode lblTextNode = new SemanticTextNode();
                 lblTextNode.add(new TextLine(listItem.getFirstLine(), 0, listItem.getLabelLength()));
                 processTextNode(lblTextNode, lblObject);
+                discardIfEmpty(listItemObject, lblObject);
             }
             COSObject lBodyObject = addStructElement(listItemObject, cosDocument, TaggedPDFConstants.LBODY, listItem.getPageNumber());
             SemanticTextNode lBodyTextNode = new SemanticTextNode();
@@ -1112,8 +1119,15 @@ public class AutoTaggingProcessor {
             }
             processTextNode(lBodyTextNode, lBodyObject);
             addKids(listItem.getContents(), lBodyObject, cosDocument);
+            discardIfEmpty(listItemObject, lBodyObject);
+            discardIfEmpty(listObject, listItemObject);
         }
         addCaptionIfPresent(list, listObject, cosDocument);
+        if (list.getNextList() == null && list.getPreviousList() == null) {
+            // A list continued on another page is named by the other part's
+            // /Ref, so it stays even when this part holds nothing.
+            discardIfEmpty(parent, listObject);
+        }
     }
 
     private static void createTOCStructElem(SemanticTOC toc, COSObject parent, COSDocument cosDocument) {
@@ -1267,9 +1281,16 @@ public class AutoTaggingProcessor {
     private static void processTextNode(SemanticTextNode textNode, COSObject cosObject) {
         Map.Entry<BoundingBox, PDAnnotation> bBoxToAnnotation = null;
         List<StreamInfo> streamInfos = new ArrayList<>();
+        List<DrawnTextChunk> drawn = new ArrayList<>();
+        boolean holdsText = false;
         for (TextColumn textColumn : textNode.getColumns()) {
             for (TextLine textLine : textColumn.getLines()) {
                 for (TextChunk textChunk : textLine.getTextChunks()) {
+                    if (textChunk instanceof DrawnTextChunk) {
+                        drawn.add((DrawnTextChunk) textChunk);
+                        continue;
+                    }
+                    holdsText = true;
                     if (bBoxToAnnotation != null &&
                         (!isAnnotIntersectWithBoundingBox(bBoxToAnnotation.getKey(), textChunk.getBoundingBox()) ||
                             glyphsWithin(textChunk, -Double.MAX_VALUE,
@@ -1297,6 +1318,82 @@ public class AutoTaggingProcessor {
         } else {
             addMcidChildren(streamInfos, textNode.getPageNumber(), cosObject);
         }
+        if (!drawn.isEmpty()) {
+            processDrawnText(drawn, textNode.getPageNumber(), holdsText ? null : cosObject, cosObject);
+        }
+    }
+
+    /**
+     * Tags text the page draws as graphics: its paint operators become the
+     * content, and what OCR read becomes /ActualText, which replaces that content
+     * for a reader. ActualText replaces everything under its element, so it goes
+     * on the element itself only when the element holds nothing else; beside real
+     * text it goes on a Span of its own, or it would hide that text.
+     *
+     * @param element the element to carry it, or null for a Span under {@code parent}
+     */
+    private static void processDrawnText(List<DrawnTextChunk> drawn, Integer pageNumber, COSObject element,
+                                         COSObject parent) {
+        COSObject target = element != null ? element
+            : addStructElement(parent, StaticResources.getDocument().getDocument(), TaggedPDFConstants.SPAN, pageNumber);
+        List<StreamInfo> streamInfos = new ArrayList<>();
+        StringBuilder text = new StringBuilder();
+        for (DrawnTextChunk chunk : drawn) {
+            streamInfos.addAll(chunk.getStreamInfos());
+            if (text.length() > 0) {
+                text.append(' ');
+            }
+            text.append(chunk.getValue());
+        }
+        addMcidChildren(streamInfos, pageNumber, target);
+        if (holdsContent(target)) {
+            String actualText = stripPuaCodePoints(text.toString().trim());
+            if (!actualText.isEmpty()) {
+                target.setKey(ASAtom.ACTUAL_TEXT,
+                    COSString.construct(actualText.getBytes(StandardCharsets.UTF_16), true));
+            }
+        } else if (element == null) {
+            discardIfEmpty(parent, target);
+        }
+    }
+
+    /** Whether an element has a kid: marked content, an object reference or another element. */
+    private static boolean holdsContent(COSObject element) {
+        COSObject k = element.getKey(ASAtom.K);
+        return k != null && !k.empty() && (k.getType() != COSObjType.COS_ARRAY || k.size() > 0);
+    }
+
+    /**
+     * Takes back an element just created when nothing was put in it.
+     *
+     * <p>An element is created before its content is attached, and text whose
+     * content the page does not draw as anything a tag can hold attaches none:
+     * OCR text a backend read off a picture or off outlines no path was matched
+     * to. Left in, it is a heading or paragraph a reader is told about and that
+     * then says nothing (2 H1 and 20 P on 01030000000141 in docling-fast mode).
+     */
+    private static void discardIfEmpty(COSObject parent, COSObject element) {
+        if (holdsContent(element) || element.knownKey(ASAtom.ALT) || element.knownKey(ASAtom.ACTUAL_TEXT)) {
+            return;
+        }
+        COSObject k = parent.getKey(ASAtom.K);
+        if (k != null && k.getType() == COSObjType.COS_ARRAY) {
+            for (int i = k.size() - 1; i >= 0; i--) {
+                if (sameObject(k.at(i), element)) {
+                    k.remove(i);
+                    break;
+                }
+            }
+        } else if (k != null && sameObject(k, element)) {
+            parent.removeKey(ASAtom.K);
+        }
+        pageNumberToFirstStructElement.values().removeIf(first -> sameObject(first, element));
+        // A note is given its /ID before its content; the ID tree must not name it.
+        idToStructElement.values().removeIf(named -> sameObject(named, element));
+    }
+
+    private static boolean sameObject(COSObject a, COSObject b) {
+        return a == b || a.getKey() != null && a.getKey().equals(b.getKey());
     }
 
     private static Map.Entry<BoundingBox, PDAnnotation> processAnnotsForTextChunk(COSObject cosObject,
