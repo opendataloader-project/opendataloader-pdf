@@ -11,6 +11,7 @@ import importlib.util
 import json
 import os
 import subprocess
+import sys
 
 SKILL = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _spec = importlib.util.spec_from_file_location("fix_gates", os.path.join(SKILL, "scripts", "fix_gates.py"))
@@ -596,6 +597,22 @@ def g28_mutation_patch_frozen(tmp):
     return "other patch content -> the problem record is stale; changed misses or patch path -> error"
 
 
+def g29_several_issues(tmp):
+    """The user can put several issues in one pull request: the contract lists them, and the list cannot change after the freeze (#854)."""
+    t = fg.template(706, [706, 707, 708])
+    assert (t["issue"], t["issues"]) == (706, [706, 707, 708]) and "issues" not in fg.template(706, [706]), t
+    ok = contract(issue=706, issues=[706, 707])
+    assert fg.validate_contract(ok, tmp) == [], fg.validate_contract(ok, tmp)
+    for bad in ([707, 706], [706], [706, 706], [706, "707"], 707):
+        assert fg.validate_contract(contract(issue=706, issues=bad), tmp), bad
+    grown = contract(issue=706, issues=[706, 707, 708], amendments=[{"n": 1, "what": "x", "why": "y"}])
+    assert "issue, issues, or objective changed after the freeze" in fg.contract_changes(ok, grown)[1]
+    res = subprocess.run([sys.executable, "-I", os.path.join(SKILL, "scripts", "fix_gates.py"), "template", "--issue", "706,707"],
+                         capture_output=True, text=True)
+    assert res.returncode == 0 and json.loads(res.stdout)["issues"] == [706, 707], res.stdout + res.stderr
+    return "template --issue 706,707 -> issues; wrong order, one issue, a repeat, or a string -> refused; a change after the freeze -> error"
+
+
 EVALS = [("G1-problem-reproduces", g1_problem_must_reproduce), ("G2-guard-on-base", g2_guard_holds_on_base),
          ("G3-reports", g3_reports), ("G4-fix-every-case", g4_fix_needs_every_case), ("G5-scope", g5_scope),
          ("G6-pinning", g6_pinning), ("G7-invariants", g7_invariants), ("G8-pdf-id", g8_pdf_document_id),
@@ -608,4 +625,4 @@ EVALS = [("G1-problem-reproduces", g1_problem_must_reproduce), ("G2-guard-on-bas
          ("G22-pinning-control", g22_pinning_control), ("G23-module-keys", g23_module_keys),
          ("G24-reporter-grows", g24_reporter_only_grows), ("G25-reporter-document", g25_reporter_document_content),
          ("G26-mutation-contract", g26_mutation_contract), ("G27-mutation-verdicts", g27_mutation_verdicts),
-         ("G28-mutation-frozen", g28_mutation_patch_frozen)]
+         ("G28-mutation-frozen", g28_mutation_patch_frozen), ("G29-several-issues", g29_several_issues)]
