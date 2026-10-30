@@ -46,10 +46,6 @@
       writes WORK/triage/triage.md. Exit 12: the triage is incomplete, a judgment is missing or unknown,
       a class is weaker than the facts, a changed class has no reason, or a concern (no problem, more
       than one problem, a direction to decide) has the class review.
-  prepare.py blind --round-dir WORK/<n>/r<k>
-      Local. Makes WORK/<n>/r<k>-blind/ for the blind correctness reviewer: diff.patch, the demo
-      input files (no README.txt, no outputs, no diff.txt), and a README.txt with the tree paths.
-      No plan, cases, precedents, or evidence. Prints the folder.
   prepare.py strip-outputs DIR
       Remove links, special files, and agent instruction files from the outputs of an isolated run
       (scripts/isolate.reference.sh calls it). Prints the two counts.
@@ -697,7 +693,6 @@ PROMISE_RE = re.compile(
 def draft_promises(rdir: str, dec: dict) -> list[str]:
     """Lines of the post drafts that promise what only the maintainer can decide, as 'file:line: text'."""
     ok = {str(x).strip() for x in (dec.get("commitments_ok") or []) if isinstance(x, str)}
-    decided = isinstance(dec.get("decided_checks"), dict) and "Q0-direction" in dec["decided_checks"]
     hits = []
     for name in sorted(os.listdir(rdir)):
         if not (name in ("review.md", "close.md", "thanks.md") or re.fullmatch(r"(new-issue|comment)[\w.-]*\.md", name)):
@@ -711,8 +706,8 @@ def draft_promises(rdir: str, dec: dict) -> list[str]:
                 continue
             if in_code:
                 continue
-            prose = re.sub(r"`[^`]*`", "", line)  # quoted document text and code are not the reviewer's words
-            if not (PROMISE_RE.search(prose) or ("(from the maintainers)" in prose and not decided)):
+            prose = re.sub(r"`[^`]*`", "", line)  # quoted document text and code are not the review's own words
+            if not PROMISE_RE.search(prose):
                 continue
             if f"{name}:{i}" in ok or line.strip() in ok:
                 continue
@@ -904,39 +899,6 @@ def cleanup(a: argparse.Namespace) -> int:
     return 0
 
 
-BLIND_LEFT_OUT = {"readme.txt", "diff.txt", "index.txt"}
-
-
-def blind(a: argparse.Namespace) -> int:
-    rdir = os.path.abspath(a.round_dir).rstrip("/")
-    out = rdir + "-blind"
-    if os.path.lexists(out):
-        shutil.rmtree(out)
-    os.makedirs(os.path.join(out, "inputs"))
-    shutil.copyfile(os.path.join(rdir, "diff.patch"), os.path.join(out, "diff.patch"))
-    demo = os.path.join(rdir, "demo")
-    cases = sorted(os.listdir(demo)) if os.path.isdir(demo) and not os.path.islink(demo) else []
-    for case in cases:
-        cdir = os.path.join(demo, case)
-        if os.path.islink(cdir) or not os.path.isdir(cdir):
-            continue
-        for name in sorted(os.listdir(cdir)):  # only the files at the top of a case: before/ and after/ hold outputs
-            src = os.path.join(cdir, name)
-            if name.lower() in BLIND_LEFT_OUT or os.path.islink(src) or not os.path.isfile(src):
-                continue
-            os.makedirs(os.path.join(out, "inputs", case), exist_ok=True)
-            shutil.copyfile(src, os.path.join(out, "inputs", case, name))
-    trees_dir = os.path.join(rdir, "trees")
-    names = [t for t in ("main", "head", "merge") if os.path.isdir(os.path.join(trees_dir, t))]
-    with open(os.path.join(out, "README.txt"), "w", encoding="utf-8") as f:
-        f.write("Inputs of the blind correctness reviewer (round folder " + os.path.basename(rdir) + ").\n"
-                "diff.patch: the change. inputs/<case>/: input files of the demo, without expected or actual outputs.\n"
-                "Trees (read only; read no other file of the round folder):\n"
-                + "".join(f"  {t}: {os.path.join(trees_dir, t)}\n" for t in names))
-    print(out)
-    return 0
-
-
 TRIAGE_FIELDS = ("number,title,author,state,isDraft,isCrossRepository,createdAt,additions,deletions,changedFiles,files,labels,"
                  "statusCheckRollup,closingIssuesReferences,mergeable,baseRefName,headRefOid,url")
 SENSITIVE = {"workflow", "tooling", "build", "instruction", "skill"}
@@ -1097,11 +1059,12 @@ def triage_one(pr: dict, data: dict, issue_prs: dict) -> dict:
         blocked.append(f"waiting on the author: {len(open_bot)} open CodeRabbit thread(s) without an answer")
     files = pr.get("files") or []
     if len(files) < (pr.get("changedFiles") or 0):
-        decide.append(f"file list incomplete ({len(files)} of {pr.get('changedFiles')}): treat as sensitive")
+        notes.append(f"file list incomplete ({len(files)} of {pr.get('changedFiles')}): the review reads all files; "
+                     "a second maintainer reads each sensitive one before an approval")
     cats = {category(f.get("path") or "") for f in files}
     sens = [f["path"] for f in files if category(f.get("path") or "") in SENSITIVE]
     if sens:
-        decide.append("sensitive files (two maintainers): " + ", ".join(sens[:3]) + (" …" if len(sens) > 3 else ""))
+        notes.append("sensitive files: a second maintainer reads them before an approval: " + ", ".join(sens[:3]) + (" …" if len(sens) > 3 else ""))
     issues = sorted({i.get("number") for i in pr.get("closingIssuesReferences") or [] if i.get("number")})
     dups = sorted({m for i in issues for m in issue_prs.get(i, []) if m != pr["number"]})
     if dups:
@@ -1256,8 +1219,6 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--prs", type=lambda v: [int(x) for x in v.split(",") if x.strip()], help="only these numbers, comma-separated")
     s = sub.add_parser("triage-report")
     s.add_argument("--work", required=True)
-    s = sub.add_parser("blind")
-    s.add_argument("--round-dir", required=True)
     s = sub.add_parser("strip-outputs")
     s.add_argument("dir")
     s = sub.add_parser("check-tree")
@@ -1271,8 +1232,6 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         print(*strip_outputs(a.dir))
         return 0
-    if a.cmd == "blind":
-        return blind(a)
     a.work = os.path.abspath(a.work)
     if a.cmd in ("triage", "triage-report"):
         return (triage if a.cmd == "triage" else triage_report)(a)

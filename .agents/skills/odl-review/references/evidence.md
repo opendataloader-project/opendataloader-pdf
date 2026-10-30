@@ -13,14 +13,14 @@ Write one JSON line to `$WORK/<n>/r<k>/evidence.jsonl` for each piece of evidenc
  "output": "demo/02-regression-a/after/straddle_unmapped.md",
  "expected": "AB appears one time", "main_output": "AB appears one time",
  "env": "linux/arm64 temurin-17 C.UTF-8 2 CPUs",
- "source": "correctness reviewer, confirmed by run 704-r1-confirm-merge"}
+ "source": "run 704-r1-confirm-merge"}
 ```
 
-- `condition` is a check id of `catalog.json`, an invented check id of `plan.json`, `skip:<check id>` (the panel verified a skip reason), or a free word for records that cases, explanations, or assessments point to.
+- `condition` is a check id of `catalog.json`, an invented check id of `plan.json`, `skip:<check id>` (the record that shows a skip reason), or a free word for records that cases, explanations, or assessments point to.
 - `state` is `pass`, `fail`, `none` (no evidence), or `n/a` (with the reason in `claim`).
 - `head` and `main` are the SHAs that the evidence is for. `verdict.py` counts only records with the current pair.
 - `env` gives the OS, the architecture, the JDK, the locale, and the CPU count of the run. Compare two runs only if they ran in the same environment (Q1-reproduce).
-- `source` says who made the evidence. A reviewer finding counts only after your own run or reading confirms it. A panel member's record counts only after your confirmation.
+- `source` says what made the evidence: a tool, a run (its label), or a reading (the files that you read). A finding from a reading counts only after a run or the code confirms it.
 - A linter result counts only if its log shows the goal line of the tool (for example `--- checkstyle:` for each Maven module). An empty list does not prove that the tool ran.
 
 The card and the review draft use only records with the current `(head, main)` pair. Each line of the card and each sentence of the draft points to one record ID (keep the IDs in `review.trace`). Each record names a saved output. Save also the inputs that the card quotes: the issue text (`issue-<N>.md`) and the release version (`release/version.txt`).

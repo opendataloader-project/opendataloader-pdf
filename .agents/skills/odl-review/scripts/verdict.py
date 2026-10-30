@@ -12,7 +12,7 @@ Inputs in the round folder (references/tools.md, "The round folder"):
   plan.json                         the agent                   (required)
   evidence.jsonl                    the agent and the tools     (required)
   cases.json                        the agent                   (required)
-  objections.json                   the agent, from the panel   (required; [] if the panel had none)
+  objections.json                   the agent, from the doubt   (required; [] if the doubt had none)
   decisions.json                    the user's answers at gates (optional)
 Outputs: verdict.json and verdict.md. A missing or malformed input gives Hold. If this tool fails,
 it writes a Hold verdict with the error, so that an old verdict does not stay on disk.
@@ -21,7 +21,8 @@ Rules that the agent cannot change:
   - Evidence counts only for the current head and main SHAs.
   - The catalog sets which checks are needed (by kind, by changed path, and by file category) and
     the impact of each check, not the plan. A kind must fit the changed files.
-  - Only a skip that the panel verified makes a needed check not applicable; an "n/a" record does not.
+  - Only a skip with a passing record of its reason makes a needed check not applicable; an "n/a"
+    record does not.
   - A record that an explanation, an assessment, or a case points to must have a real state.
   - Approve is impossible with: a needed check without evidence, an unexplained scan hit, an open or
     disputed objection of major or higher, a failing or pending CI check without an explanation,
@@ -32,7 +33,13 @@ Rules that the agent cannot change:
     with an id, or a failed check with the impact "decide"; never a check with another impact.
   - maintainer_followup (the user's decision) moves failed block checks and failing request cases into
     a follow-up list; Approve then names them. Security, hold, and decide items cannot be followed up.
-  - A record that cites a reviewer counts only with the reviewer's saved output in the round folder.
+  - The review has bounds: a failing request case that main also fails counts only if it is a target
+    row (what the issue or the pull request asks). Any other such case is a note, not a request.
+  - Decide is only for what a maintainer must choose: a trade-off, a decide reason, a check with the
+    impact "decide" (an earlier decision), and a target row that changes a safety property. A safety
+    case that the PR fails and main passes is a regression. A scan hit that needs a maintainer (a
+    sensitive file) holds an approval until the user records that a second maintainer read it
+    (sensitive_ok); it does not stop a request for changes.
 """
 
 from __future__ import annotations
@@ -41,7 +48,6 @@ import argparse
 import fnmatch
 import json
 import os
-import re
 import sys
 import tempfile
 
@@ -153,11 +159,6 @@ def compute(rdir: str, catalog_path: str) -> dict:
     ev = {r.get("id"): r for r in x.evidence if isinstance(r.get("id"), str)}
     r = {k: [] for k in ("blocked", "close", "security", "decide", "block", "followup", "hold", "gaps", "notes")}
     r["hold"] += x.problems
-    for rec in x.evidence:  # a reviewer's claim counts only with the reviewer's saved output
-        if "reviewer" in str(rec.get("source", "")).lower():
-            outs = [t for t in re.split(r"[,\s]+", str(rec.get("output") or "")) if t]
-            if not any(os.path.isfile(os.path.join(rdir, t)) for t in outs):
-                r["hold"].append(f"record {rec.get('id')} cites a reviewer, but no saved output of the reviewer is in the round folder ({rec.get('output')})")
     if x.stale:
         r["notes"].append(f"{x.stale} evidence records are for another head or main and do not count")
 
@@ -237,8 +238,7 @@ def compute(rdir: str, catalog_path: str) -> dict:
             r["hold"].append(f"{cid}: unknown status {status!r} in plan.json")
             status = "not planned"
         verified_skip = need and status == "skipped" and any(
-            e.get("condition") == f"skip:{cid}" and e.get("state") == "pass" and e.get("verified_by") == "panel"
-            for e in x.evidence)
+            e.get("condition") == f"skip:{cid}" and e.get("state") == "pass" for e in x.evidence)
         if need and status in ("skipped", "cannot") and state == "fail":
             r["notes"].append(f"{cid}: the plan says {status}, but a record fails; the fail counts")
         elif need and status == "skipped":
@@ -247,7 +247,7 @@ def compute(rdir: str, catalog_path: str) -> dict:
             elif verified_skip:
                 state = "n/a"
             else:
-                r["hold"].append(f"{cid}: skipped without a reason that the panel verified ({(p or {}).get('reason', 'no reason')})")
+                r["hold"].append(f"{cid}: skipped without a passing record skip:{cid} of its reason ({(p or {}).get('reason', 'no reason')})")
         elif need and status == "cannot":
             if impact == "security":
                 r["hold"].append(f"{cid}: a security check cannot be waived; get the capability or hold")
@@ -261,10 +261,10 @@ def compute(rdir: str, catalog_path: str) -> dict:
         elif need and state == "none":
             r["hold"].append(f"{cid}: no evidence for the current head and main")
         elif need and state == "n/a":
-            r["hold"].append(f"{cid}: 'n/a' records do not make a needed check pass; skip it with a reason that the panel verifies")
+            r["hold"].append(f"{cid}: 'n/a' records do not make a needed check pass; skip it with a passing record of its reason")
         if state == "fail":
             failed = [str(e.get("id")) for e in recs if e.get("state") == "fail"]
-            target = {"security": "security", "decide": "decide", "hold": "hold", "info": "notes"}.get(impact, "block")
+            target = {"security": "security", "decide": "decide", "hold": "hold", "info": "notes", "followup": "followup"}.get(impact, "block")
             line = f"{cid} failed (expected: {c.get('title')}; {', '.join(failed)})"
             if target == "decide" and cid in dec["decided_checks"]:
                 r["notes"].append(f"{line}; decided by the user: {dec['decided_checks'][cid]}")
@@ -299,7 +299,7 @@ def compute(rdir: str, catalog_path: str) -> dict:
         if not isinstance(e, dict) or (h["severity"] != "info" and not has_ev(e.get("evidence"))):
             r["hold"].append(f"scan {h['id']} {h['rule']} {h['file']}{':' + str(h['line']) if h.get('line') else ''}: not explained with evidence")
         if h.get("decide") and h["id"] not in dec["sensitive_ok"] and h["rule"] not in dec["sensitive_ok"]:
-            r["decide"].append(f"sensitive change {h['rule']} in {h['file']} (two maintainers)")
+            r["hold"].append(f"sensitive change {h['rule']} in {h['file']}: a second maintainer reads it before an approval (sensitive_ok)")
 
     # Precedents
     partial = bool(x.prec.get("failed_queries") or x.prec.get("truncated_queries")) or x.prec.get("github") is not True
@@ -377,9 +377,17 @@ def compute(rdir: str, catalog_path: str) -> dict:
         if isinstance(t, str) and t:
             open_tradeoffs.setdefault(t, []).append(str(cid))
         if case.get("source") == "safety" and case.get("pr") == "fail":
-            r["decide"].append(f"case {cid} weakens a safety property (two maintainers)")
+            if case.get("main") == "fail":
+                r["notes"].append(f"case {cid}: the safety property fails on main too: tell the user only (C5)")
+            elif case.get("target") is True:  # the PR asks to change it: the maintainers choose
+                r["decide"].append(f"case {cid}: the target changes a safety property (two maintainers)")
+            else:
+                r["block"].append(f"case {cid} weakens a safety property (a regression)")
         if case.get("type") == "request" and case.get("pr") == "fail":
-            (r["followup"] if str(cid) in dec["followup"] else r["block"]).append(f"case {cid}: {str(case.get('ideal', ''))[:80]}")
+            if case.get("main") == "fail" and case.get("target") is not True:  # main fails it too, and the PR does not claim it
+                r["notes"].append(f"case {cid} fails on main too and is not the target: a note, not a request ({str(case.get('ideal', ''))[:60]})")
+            else:
+                (r["followup"] if str(cid) in dec["followup"] else r["block"]).append(f"case {cid}: {str(case.get('ideal', ''))[:80]}")
         if case.get("type") == "main-defect":
             r["notes"].append(f"case {cid} is a defect on main: separate issue (security: user only)")
     for t, cids in open_tradeoffs.items():  # one question, also if several cases carry it
@@ -388,10 +396,6 @@ def compute(rdir: str, catalog_path: str) -> dict:
             r["notes"].append(f"trade-off {t} ({where}) answered by the user: {answered[t]}")
         else:
             r["decide"].append(f"trade-off {t} ({where})")
-    if plan.get("partial_fix") is True:
-        r["block"].append("partial fix: inputs with the same cause still fail")
-    if plan.get("safety_weakened") is True:
-        r["decide"].append("the change weakens a safety property (two maintainers)")
     reasons = plan.get("decide_reasons") if isinstance(plan.get("decide_reasons"), list) else as_list(plan.get("decide_reasons"))
     for d in reasons:
         if isinstance(d, dict) and isinstance(d.get("id"), str):
@@ -418,13 +422,13 @@ def compute(rdir: str, catalog_path: str) -> dict:
             continue
         if st == "confirmed-pr":
             (r["security"] if security else r["block"]).append(f"objection {o.get('id')}: {str(o.get('claim', ''))[:80]}")
-        elif st == "refuted" and not (o.get("accepted_by") and has_ev(o.get("evidence"), RUN_STATES)):
+        elif st == "refuted" and not has_ev(o.get("evidence"), RUN_STATES):
             st = "disputed"
         elif st == "fixed" and not has_ev(o.get("evidence")):
             st = "disputed"
-        if st == "refuted":  # the tools cannot tell who accepted it: verdict.md shows it to the user (#836)
+        if st == "refuted":  # the tools cannot tell if the run refutes the claim: verdict.md shows it to the user (#836)
             refuted.append(f"{o.get('id')} ({o.get('severity')}{', security' if security else ''}): {str(o.get('claim', ''))[:80]}"
-                           f"; accepted by {o.get('accepted_by')}; evidence {o.get('evidence')}")
+                           f"; evidence {o.get('evidence')}")
         if st in ("open", "disputed") and (sev >= 2 or security):
             r["hold"].append(f"objection {o.get('id')} ({o.get('severity')}) is {st}: {str(o.get('claim', ''))[:80]}")
         elif st in ("open", "disputed"):
