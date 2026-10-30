@@ -63,7 +63,7 @@ public class ElementMetadata {
     /** Regionlist resolution metadata for label 7. */
     private RegionlistResolution regionlistResolution;
 
-    /** Text source decision: "stream", "ocr", or "ocr-fallback". */
+    /** Text source decision: "stream", "ocr", "outlines", or "ocr-fallback". */
     private String textSource;
 
     /** Stream vs OCR text similarity score (auto mode only). */
