@@ -43,6 +43,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.processors.DocumentProcessor;
 import org.opendataloader.pdf.testsupport.TestSamples;
@@ -57,6 +59,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -246,12 +249,15 @@ class Review805_ListMarkersTest {
     //    the label. The Markdown file must still contain each item.
     // ---------------------------------------------------------------------------------------
 
-    @Test
-    void sanitizedListKeepsEachItemInTheMarkdown() throws IOException {
-        Path directory = TestSamples.emptyDirectory("review-805-sanitize-joined-label");
-        Path pdf = directory.resolve("review-805-sanitize-joined-label.pdf");
+    @ParameterizedTest(name = "ListNumbering {0}")
+    @NullSource
+    @ValueSource(strings = {PDListAttributeObject.LIST_NUMBERING_DISC})
+    void sanitizedListKeepsEachItemInTheMarkdown(String listNumbering) throws IOException {
+        String name = "review-805-sanitize-joined-label" + (listNumbering == null ? "" : "-" + listNumbering.toLowerCase(Locale.ROOT));
+        Path directory = TestSamples.emptyDirectory(name);
+        Path pdf = directory.resolve(name + ".pdf");
         try (TaggedListPdf sample = new TaggedListPdf()) {
-            PDStructureElement list = sample.list(sample.documentElement, null);
+            PDStructureElement list = sample.list(sample.documentElement, listNumbering);
             sample.joinedItem(list, 72, "------------------------------", "@x.com");
             sample.joinedItem(list, 72, "------------------------------", "@x.com");
             sample.save(pdf);
@@ -264,7 +270,7 @@ class Review805_ListMarkersTest {
         config.getFilterConfig().setFilterSensitiveData(true);
         DocumentProcessor.processFile(pdf.toString(), config);
 
-        String markdown = new String(Files.readAllBytes(directory.resolve("review-805-sanitize-joined-label.md")),
+        String markdown = new String(Files.readAllBytes(directory.resolve(name + ".md")),
                 StandardCharsets.UTF_8);
         // The built-in e-mail rule replaces the address; each of the two items keeps its text.
         assertThat(markdown.split("email@example.com", -1)).as("items with text in: %s", markdown).hasSize(3);
