@@ -57,7 +57,8 @@ class HybridServer:
     Args:
         args: Server options, as for the opendataloader-pdf-hybrid command
             (for example ["--force-ocr", "--ocr-lang", "ko,en"]).
-        port: Port on 127.0.0.1. Default: a free port. A port in use raises OSError.
+        port: Port on 127.0.0.1. Default: a free port. If something listens on the
+            port, start() raises OSError.
         startup_timeout: Seconds to wait until the server answers. Default: 600.
     """
 
