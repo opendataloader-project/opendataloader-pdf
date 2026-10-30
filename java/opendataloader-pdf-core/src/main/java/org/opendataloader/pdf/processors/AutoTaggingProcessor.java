@@ -13,7 +13,9 @@ import org.verapdf.as.io.ASMemoryInStream;
 import org.verapdf.cos.*;
 
 import org.verapdf.gf.model.factory.chunks.GraphicsState;
+import org.verapdf.gf.model.factory.chunks.Matrix;
 import org.verapdf.gf.model.impl.operator.textshow.PUAHelper;
+import org.verapdf.gf.model.impl.sa.GFSAPage;
 import org.verapdf.pd.*;
 import org.verapdf.pd.actions.PDAction;
 import org.verapdf.pd.form.PDAcroForm;
@@ -602,12 +604,16 @@ public class AutoTaggingProcessor {
         PDPage page = document.getPages().get(pageNumber);
         List<PDAnnotation> annotations = page.getAnnotations();
         if (annotations == null) return;
+        // The text is placed from the CropBox's lower-left corner and turned with /Rotate. Each
+        // annotation's box is placed the same way, or a link is compared with text elsewhere (#848).
+        Matrix pageMatrix = GFSAPage.createCurrentTransformationMatrix(page);
         boolean pageChanged = false;
         for (PDAnnotation annotation : annotations) {
             COSObject annotObj = annotation.getObject();
             if (annotObj == null || annotObj.empty()) continue;
 
-            BoundingBox boundingBox = new BoundingBox(page.getPageNumber(), annotation.getRect());
+            BoundingBox boundingBox = pageMatrix.transformBoundingBox(
+                new BoundingBox(page.getPageNumber(), annotation.getRect()));
             if (needToAddAnnotationToStructTree(annotation, page, boundingBox)) {
                 annotationBBoxesMap.put(boundingBox, annotation);
                 setAnnotationContents(annotation, annotObj);
