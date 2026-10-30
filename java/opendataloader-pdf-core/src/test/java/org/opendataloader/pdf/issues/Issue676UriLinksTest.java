@@ -32,6 +32,8 @@ import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructur
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureTreeRoot;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.interactive.action.PDAction;
 import org.apache.pdfbox.pdmodel.interactive.action.PDActionGoTo;
 import org.apache.pdfbox.pdmodel.interactive.action.PDActionURI;
@@ -43,6 +45,7 @@ import org.opendataloader.pdf.api.cli.CLIOptions;
 import org.opendataloader.pdf.processors.DocumentProcessor;
 import org.opendataloader.pdf.testsupport.TestSamples;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
@@ -118,6 +121,16 @@ class Issue676UriLinksTest {
         "Read the steps at https://example.com/configure-access-to-",
         "serial-console.html before you connect to the server.",
     };
+    // An icon in a line, as the button icons of #642: 11 pt, on the baseline, 3 pt after the words.
+    private static final float ICON_SIZE = 11;
+    private static final float ICON_GAP = 3;
+    private static final String RETRY_URI = "https://example.com/retry";
+    private static final String[] ICON_LINES = {
+        "The upload page shows the state of each file that you send to the server.",
+        "If the upload fails, click the Retry button",
+        "The page also gives the size of each file and the time of the upload.",
+    };
+    private static final String ICON_LINE_END = "to start the upload again.";
     private static final String[] BODY = {
         "Each test writes a report at the end of the run. The report gives the time,",
         "the number of the checks, and the result of each check. Keep the reports",
@@ -204,6 +217,14 @@ class Issue676UriLinksTest {
             config -> applyCommandLine(config, "--include-links"));
         assertTrue(out.markdown.contains("Read the [release notes](" + NOTES_MD_DESTINATION + ") before you install"),
             "the Markdown output of the command line lost the link over the text: " + out.markdown);
+    }
+
+    /** An image in the line right after a link (#642) is not in the link: the link ends before it. */
+    @Test
+    void markdownEndsTheLinkBeforeAnImageInTheLine() throws IOException {
+        Output out = convert("icon", Issue676UriLinksTest::writeLinkBeforeIcon, INCLUDE_LINKS);
+        assertTrue(out.markdown.contains("click the [Retry button](" + RETRY_URI + ") ![]("),
+            "the Markdown output lost the link before an image in the line: " + out.markdown);
     }
 
     /** The reporter's path: a tagged PDF with a {@code Link} element in a {@code P}, and --use-struct-tree. */
@@ -376,6 +397,44 @@ class Issue676UriLinksTest {
             doc.save(pdf.toFile());
         }
         return pdf;
+    }
+
+    /** A link over "Retry button" at the end of the words of the second line, and an icon after it. */
+    private static Path writeLinkBeforeIcon(Path dir, String name) throws IOException {
+        Path pdf = dir.resolve(name + ".pdf");
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.LETTER);
+            doc.addPage(page);
+            PDType1Font font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+            PDImageXObject icon = LosslessFactory.createFromImage(doc, pattern(22));
+            String words = ICON_LINES[1];
+            float baseline = TOP - LEADING;
+            float iconLeft = LEFT + width(font, words) + ICON_GAP;
+            try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
+                showText(cs, font, LEFT, TOP, ICON_LINES[0]);
+                showText(cs, font, LEFT, baseline, words);
+                cs.drawImage(icon, iconLeft, baseline, ICON_SIZE, ICON_SIZE);
+                showText(cs, font, iconLeft + ICON_SIZE + ICON_GAP, baseline, ICON_LINE_END);
+                showText(cs, font, LEFT, TOP - 2 * LEADING, ICON_LINES[2]);
+                showBody(cs, font, TOP - 2 * LEADING - BODY_GAP);
+            }
+            float linkLeft = LEFT + width(font, words.substring(0, words.indexOf("Retry button")));
+            addLink(page, linkLeft - LINK_EDGE, baseline - LINK_BELOW, LEFT + width(font, words) + LINK_EDGE,
+                baseline - LINK_BELOW + LINK_HEIGHT, uri(RETRY_URI).apply(page));
+            doc.save(pdf.toFile());
+        }
+        return pdf;
+    }
+
+    /** A square image of two colors, as the icons of #642. */
+    private static BufferedImage pattern(int pixels) {
+        BufferedImage image = new BufferedImage(pixels, pixels, BufferedImage.TYPE_INT_RGB);
+        for (int x = 0; x < pixels; x++) {
+            for (int y = 0; y < pixels; y++) {
+                image.setRGB(x, y, (x + y) % 2 == 0 ? 0x2E7D32 : 0xFFFFFF);
+            }
+        }
+        return image;
     }
 
     /**
