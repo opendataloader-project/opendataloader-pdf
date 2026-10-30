@@ -285,3 +285,24 @@ class TestConvertHybridChunkSize:
 
         args = mock_run.call_args[0][0]
         assert "--hybrid-chunk-size" not in args
+
+
+class TestConvertHybridAvailabilityTimeout:
+    """convert() must forward hybrid_availability_timeout to the JVM CLI (#644)"""
+
+    def test_hybrid_availability_timeout_option_exists(self):
+        option = next(opt for opt in CLI_OPTIONS if opt["name"] == "hybrid-availability-timeout")
+        assert option["type"] == "string"
+        assert option["default"] == "3000"
+
+    def test_convert_passes_hybrid_availability_timeout(self):
+        from unittest.mock import patch
+
+        from opendataloader_pdf.convert_generated import convert
+
+        with patch("opendataloader_pdf.convert_generated.run_jar", return_value="") as mock_run:
+            convert(input_path="test.pdf", output_dir="out", hybrid_availability_timeout="60000")
+
+        args = mock_run.call_args[0][0]
+        assert "--hybrid-availability-timeout" in args
+        assert args[args.index("--hybrid-availability-timeout") + 1] == "60000"

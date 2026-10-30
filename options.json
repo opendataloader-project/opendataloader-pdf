@@ -201,6 +201,14 @@
       "description": "Hybrid backend request timeout in milliseconds (0 = use the backend's own default). Default: 0"
     },
     {
+      "name": "hybrid-availability-timeout",
+      "shortName": null,
+      "type": "string",
+      "required": false,
+      "default": "3000",
+      "description": "Time in milliseconds that the availability check of the hybrid backend waits for an answer. Raise it for a backend with a slow start, such as a serverless one. Default: 3000"
+    },
+    {
       "name": "hybrid-chunk-size",
       "shortName": null,
       "type": "string",
