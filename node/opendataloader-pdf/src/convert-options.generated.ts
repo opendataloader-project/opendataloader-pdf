@@ -69,6 +69,8 @@ export interface ConvertOptions {
   spaceRatio?: string;
   /** Path to a JSON file of sanitization rules. Only the rules of the file run, in place of the built-in rules. Turns on --sanitize */
   sanitizeRules?: string;
+  /** Write the URI links of the PDF (http, https, mailto) as links in Markdown and HTML output. No links with --sanitize, or when the hybrid backend makes the text */
+  includeLinks?: boolean;
 }
 
 /**
@@ -107,6 +109,7 @@ export interface CliOptions {
   imageResolution?: string;
   spaceRatio?: string;
   sanitizeRules?: string;
+  includeLinks?: boolean;
 }
 
 /**
@@ -210,6 +213,9 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   }
   if (cliOptions.sanitizeRules !== undefined && cliOptions.sanitizeRules !== null) {
     convertOptions.sanitizeRules = cliOptions.sanitizeRules;
+  }
+  if (cliOptions.includeLinks) {
+    convertOptions.includeLinks = true;
   }
 
   return convertOptions;
@@ -328,6 +334,9 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.sanitizeRules !== undefined && options.sanitizeRules !== null) {
     args.push('--sanitize-rules', options.sanitizeRules);
+  }
+  if (options.includeLinks) {
+    args.push('--include-links');
   }
 
   return args;

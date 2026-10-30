@@ -43,6 +43,7 @@ def convert(
     image_resolution: Optional[str] = None,
     space_ratio: Optional[str] = None,
     sanitize_rules: Optional[str] = None,
+    include_links: bool = False,
 ) -> None:
     """
     Convert PDF(s) into the requested output format(s).
@@ -81,6 +82,7 @@ def convert(
         image_resolution: Set the rendering resolution for images in DPI. Higher values improve image quality but increase memory consumption; lower values reduce memory usage at the cost of detail. Accepts positive decimal DPI values (e.g., 144.0). Default: 144.0.
         space_ratio: Set the ratio used to calculate the automatic space-insertion threshold (threshold = space-ratio * font size). If the horizontal gap between two adjacent symbols exceeds this threshold, an extra space is inserted to text value. Accepts decimals (e.g., 0.17). Default: 0.17
         sanitize_rules: Path to a JSON file of sanitization rules. Only the rules of the file run, in place of the built-in rules. Turns on --sanitize
+        include_links: Write the URI links of the PDF (http, https, mailto) as links in Markdown and HTML output. No links with --sanitize, or when the hybrid backend makes the text
     """
     args: List[str] = []
 
@@ -162,5 +164,7 @@ def convert(
         args.extend(["--space-ratio", space_ratio])
     if sanitize_rules is not None:
         args.extend(["--sanitize-rules", sanitize_rules])
+    if include_links:
+        args.append("--include-links")
 
     run_jar(args, quiet)

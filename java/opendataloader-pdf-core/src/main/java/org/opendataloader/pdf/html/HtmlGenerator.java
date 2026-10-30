@@ -25,6 +25,7 @@ import org.opendataloader.pdf.utils.Base64ImageUtils;
 import org.opendataloader.pdf.utils.GeneratorUtils;
 import org.opendataloader.pdf.utils.ImagesUtils;
 import org.opendataloader.pdf.utils.OutputType;
+import org.opendataloader.pdf.utils.TextLinks;
 import org.verapdf.wcag.algorithms.entities.*;
 import org.verapdf.wcag.algorithms.entities.content.*;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
@@ -88,6 +89,10 @@ public class HtmlGenerator implements Closeable {
     protected static final String strikethroughTextHtmlOpeningTag = "<del>";
     /** Closing tag for strikethrough text*/
     protected static final String strikethroughTextHtmlClosingTag = "</del>";;
+    /** Start tag of a link, for its escaped address */
+    private static final String LINK_START_TAG = "<a href=\"%s\">";
+    /** Closing tag of a link */
+    private static final String LINK_CLOSE_TAG = "</a>";
 
     /**
      * Creates a new HtmlGenerator for the specified PDF file.
@@ -516,16 +521,52 @@ public class HtmlGenerator implements Closeable {
     }
 
     public static void getTextFromLineForHTML(TextLine line, StringBuilder stringBuilder) {
+        TextLinks.OpenLink link = new TextLinks.OpenLink();
+        getTextFromLineForHTML(line, stringBuilder, link);
+        closeLink(link, stringBuilder);
+    }
+
+    /**
+     * Appends the text of the line. The text of a URI link becomes an {@code <a>} element. A link at the end of the
+     * line stays open (see {@link TextLinks.OpenLink}).
+     */
+    public static void getTextFromLineForHTML(TextLine line, StringBuilder stringBuilder, TextLinks.OpenLink link) {
         for (TextChunk chunk : line.getTextChunks()) {
-            String style = getTextStyle(chunk);
-            if (!style.isEmpty()) {
-                String styleAttribute = String.format(HtmlSyntax.HTML_STYLE_ATTRIBUTE, style.trim());
-                stringBuilder.append(String.format(HtmlSyntax.HTML_SPAN_START_TAG, styleAttribute));
-                stringBuilder.append(escapeHtmlText(chunk.getValue()));
-                stringBuilder.append(HtmlSyntax.HTML_SPAN_CLOSE_TAG);
-            } else {
-                stringBuilder.append(escapeHtmlText(chunk.getValue()));
+            for (TextLinks.Part part : TextLinks.split(chunk, 0)) {
+                if (!link.isContinuedBy(part)) {
+                    closeLink(link, stringBuilder);
+                    if (part.getUri() != null) {
+                        stringBuilder.append(String.format(LINK_START_TAG, escapeHtmlAttribute(part.getUri())));
+                        link.setUri(part.getUri());
+                    }
+                }
+                appendText(chunk, part.getText(), stringBuilder);
             }
+        }
+    }
+
+    /** Ends the open link. The whitespace at the end of the text, as a line end, stays after the link. */
+    public static void closeLink(TextLinks.OpenLink link, StringBuilder stringBuilder) {
+        if (link.getUri() == null) {
+            return;
+        }
+        int textEnd = stringBuilder.length();
+        while (textEnd > 0 && Character.isWhitespace(stringBuilder.charAt(textEnd - 1))) {
+            textEnd--;
+        }
+        stringBuilder.insert(textEnd, LINK_CLOSE_TAG);
+        link.setUri(null);
+    }
+
+    private static void appendText(TextChunk chunk, String value, StringBuilder stringBuilder) {
+        String style = getTextStyle(chunk);
+        if (!style.isEmpty()) {
+            String styleAttribute = String.format(HtmlSyntax.HTML_STYLE_ATTRIBUTE, style.trim());
+            stringBuilder.append(String.format(HtmlSyntax.HTML_SPAN_START_TAG, styleAttribute));
+            stringBuilder.append(escapeHtmlText(value));
+            stringBuilder.append(HtmlSyntax.HTML_SPAN_CLOSE_TAG);
+        } else {
+            stringBuilder.append(escapeHtmlText(value));
         }
     }
 

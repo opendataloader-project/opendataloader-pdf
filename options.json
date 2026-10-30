@@ -255,6 +255,14 @@
       "required": false,
       "default": null,
       "description": "Path to a JSON file of sanitization rules. Only the rules of the file run, in place of the built-in rules. Turns on --sanitize"
+    },
+    {
+      "name": "include-links",
+      "shortName": null,
+      "type": "boolean",
+      "required": false,
+      "default": false,
+      "description": "Write the URI links of the PDF (http, https, mailto) as links in Markdown and HTML output. No links with --sanitize, or when the hybrid backend makes the text"
     }
   ]
 }

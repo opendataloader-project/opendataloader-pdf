@@ -16,6 +16,7 @@
 package org.opendataloader.pdf.containers;
 
 import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.utils.TextLinks;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 
 import java.io.File;
@@ -38,6 +39,7 @@ public class StaticLayoutContainers {
     private static final ThreadLocal<String> imageFormat = new ThreadLocal<>();
     private static final ThreadLocal<Map<Integer, Double>> replacementCharRatios = ThreadLocal.withInitial(ConcurrentHashMap::new);
     private static final ThreadLocal<Map<String, byte[]>> embeddedImageBytes = ThreadLocal.withInitial(ConcurrentHashMap::new);
+    private static final ThreadLocal<TextLinks> textLinks = new ThreadLocal<>();
 
     public static void clearContainers() {
         currentContentId.set(1L);
@@ -49,6 +51,7 @@ public class StaticLayoutContainers {
         imageFormat.set(Config.IMAGE_FORMAT_PNG);
         replacementCharRatios.get().clear();
         embeddedImageBytes.get().clear();
+        textLinks.set(null);
     }
 
     public static long getCurrentContentId() {
@@ -92,6 +95,15 @@ public class StaticLayoutContainers {
 
     public static void setIsUseStructTree(Boolean isUseStructTree) {
         StaticLayoutContainers.isUseStructTree.set(isUseStructTree);
+    }
+
+    /** The links of --include-links for the Markdown and HTML output, or null for output without links. */
+    public static TextLinks getTextLinks() {
+        return textLinks.get();
+    }
+
+    public static void setTextLinks(TextLinks textLinks) {
+        StaticLayoutContainers.textLinks.set(textLinks);
     }
 
     public static int incrementImageIndex() {

@@ -125,6 +125,9 @@ PDF_STRIKETHROUGH = os.path.join(REPO_ROOT, "samples/pdf/strikethrough.pdf")
 # Flip to False to re-enable the check once that lands.
 STRIKETHROUGH_KNOWN_ISSUE = True
 PDF_INVALID_CHARS = os.path.join(REPO_ROOT, "samples/pdf/invalid-chars.pdf")
+# One URI link annotation over the address of the code of the paper.
+PDF_LINKS         = os.path.join(REPO_ROOT, "samples/pdf/1901.03003.pdf")
+PDF_LINKS_URI     = "https://github.com/Canjie-Luo/MORAN_v2"
 PDF_SANITIZE      = os.path.join(REPO_ROOT, "samples/pdf/sanitize-target.pdf")
 PDF_SAFETY        = os.path.join(REPO_ROOT, "samples/pdf/safety-trigger.pdf")
 PDF_FAKE_JPG      = os.path.join(REPO_ROOT, "samples/pdf/fake-jpg.pdf")
@@ -152,7 +155,7 @@ STACK_TRACE_LEAK_MARKERS = (
 COVERED_OPTIONS = {
     "--format", "--output-dir", "--quiet", "--to-stdout",
     "--password", "--keep-line-breaks", "--replace-invalid-chars",
-    "--pages", "--include-header-footer", "--detect-strikethrough",
+    "--pages", "--include-header-footer", "--detect-strikethrough", "--include-links",
     "--sanitize", "--sanitize-rules", "--content-safety-off", "--use-struct-tree",
     "--table-method", "--reading-order", "--threads",
     "--image-output", "--image-format", "--image-dir",
@@ -1496,6 +1499,32 @@ def main() -> None:
                     "--detect-strikethrough", md_file, must_contain=["~~"]
                 )
             record("--detect-strikethrough", ok)
+
+    # ------------------------------------------------------------------
+    # --include-links
+    # ------------------------------------------------------------------
+    print("\n--- --include-links ---")
+    if not os.path.exists(PDF_LINKS):
+        record("--include-links [SKIPPED: fixture missing]", None)
+    else:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = run_cli([
+                PDF_LINKS,
+                "--include-links",
+                "--format", "markdown,html",
+                "--image-output", "off",
+                "--output-dir", tmpdir,
+            ])
+            ok = result.returncode == 0
+            if ok:
+                md_file = _find_file_by_ext(tmpdir, ".md")
+                html_file = _find_file_by_ext(tmpdir, ".html")
+                ok = md_file is not None and html_file is not None and assert_content(
+                    "--include-links", md_file, must_contain=["](" + PDF_LINKS_URI + ")"]
+                ) and assert_content(
+                    "--include-links", html_file, must_contain=['<a href="' + PDF_LINKS_URI + '">']
+                )
+            record("--include-links", ok)
 
     # ------------------------------------------------------------------
     # --sanitize

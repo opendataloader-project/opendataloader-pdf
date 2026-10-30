@@ -472,6 +472,26 @@ class CLIOptionsTest {
     }
 
     @Test
+    void testCreateConfig_defaultIncludeLinksIsFalse() throws ParseException {
+        String[] args = {testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertFalse(config.isIncludeLinks(), "the output should have no links without --include-links");
+    }
+
+    @Test
+    void testCreateConfig_withIncludeLinks() throws ParseException {
+        String[] args = {"--include-links", testPdf.getAbsolutePath()};
+        CommandLine cmd = parser.parse(options, args);
+
+        Config config = CLIOptions.createConfigFromCommandLine(cmd);
+
+        assertTrue(config.isIncludeLinks(), "--include-links should write the links");
+    }
+
+    @Test
     void testCreateConfig_withThreadsZero_throws() throws ParseException {
         String[] args = {"--threads", "0", testPdf.getAbsolutePath()};
         CommandLine cmd = parser.parse(options, args);

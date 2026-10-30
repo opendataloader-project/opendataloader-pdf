@@ -25,6 +25,7 @@ import org.opendataloader.pdf.utils.ContentSanitizer;
 import org.opendataloader.pdf.utils.GeneratorUtils;
 import org.opendataloader.pdf.utils.ImagesUtils;
 import org.opendataloader.pdf.utils.OutputType;
+import org.opendataloader.pdf.utils.TextLinks;
 import org.verapdf.wcag.algorithms.entities.*;
 import org.verapdf.wcag.algorithms.entities.content.*;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
@@ -100,6 +101,8 @@ public class MarkdownGenerator implements Closeable {
     private final Set<ImageChunk> inlineImages = Collections.newSetFromMap(new IdentityHashMap<>());
     /** The Markdown of the images that the text being written stands for, in order. */
     private final Deque<String> pendingInlineImages = new ArrayDeque<>();
+    /** The link of --include-links that the text being written ends in (see {@link TextLinks.OpenLink}). */
+    private final TextLinks.OpenLink openLink = new TextLinks.OpenLink();
 
     MarkdownGenerator(File inputPdf, Config config) throws IOException {
         String cutPdfFileName = inputPdf.getName();
@@ -431,7 +434,7 @@ public class MarkdownGenerator implements Closeable {
             if (!isInsideTable() && NumberingStyleNames.UNORDERED.equals(list.getNumberingStyle())) {
                 itemText = escapeLeadingBlockMarker(getTextWithoutLabel(item));
             } else {
-                itemText = GeneratorUtils.getTextFromLines(item.getLines(), this::appendLine);
+                itemText = endLink(GeneratorUtils.getTextFromLines(item.getLines(), this::appendLine));
             }
             markdownWriter.write(replaceInlineImages(getCorrectMarkdownString(itemText)));
             writeLineBreak();
@@ -516,7 +519,7 @@ public class MarkdownGenerator implements Closeable {
     }
 
     protected void writeSemanticTextNode(SemanticTextNode textNode) throws IOException {
-        String value = GeneratorUtils.getTextFromTextNode(textNode, this::appendLine);
+        String value = endLink(GeneratorUtils.getTextFromTextNode(textNode, this::appendLine));
         if (StaticContainers.isKeepLineBreaks()) {
             if (textNode instanceof SemanticHeading) {
                 value = value.replace(MarkdownSyntax.LINE_BREAK, MarkdownSyntax.SPACE);
@@ -649,9 +652,17 @@ public class MarkdownGenerator implements Closeable {
         return LEADING_ORDERED_LIST_MARKER.matcher(escaped).replaceFirst("$1\\\\");
     }
 
+    /** Appends the text of the line. A link at the end of the line ends there. */
     public static void getTextFromLineForMarkdown(TextLine line, StringBuilder stringBuilder) {
+        TextLinks.OpenLink link = new TextLinks.OpenLink();
+        getTextFromLineForMarkdown(line, stringBuilder, link);
+        closeLink(link, stringBuilder);
+    }
+
+    /** Appends the text of the line. A link at its end stays open (see {@link TextLinks.OpenLink}). */
+    public static void getTextFromLineForMarkdown(TextLine line, StringBuilder stringBuilder, TextLinks.OpenLink link) {
         for (TextChunk chunk : line.getTextChunks()) {
-            appendTextChunk(chunk, chunk.getValue(), stringBuilder);
+            appendTextChunk(chunk, 0, chunk.getValue().length(), stringBuilder, link);
         }
     }
 
@@ -681,6 +692,7 @@ public class MarkdownGenerator implements Closeable {
             TextChunkUtils.formatLineEnd(stringBuilder);
             appendLine(lines.get(i), stringBuilder);
         }
+        closeLink(openLink, stringBuilder);
         return stringBuilder.substring(labelLength);
     }
 
@@ -690,7 +702,7 @@ public class MarkdownGenerator implements Closeable {
     private void appendLine(TextLine line, StringBuilder stringBuilder) {
         List<ImageChunk> images = inlineImagesByLine.get(line);
         if (images == null) {
-            getTextFromLineForMarkdown(line, stringBuilder);
+            getTextFromLineForMarkdown(line, stringBuilder, openLink);
             return;
         }
         int nextImage = 0;
@@ -715,13 +727,13 @@ public class MarkdownGenerator implements Closeable {
                 break;
             }
             if (index > start) {
-                appendTextAfterImage(chunk, value.substring(start, index), stringBuilder);
+                appendTextAfterImage(chunk, start, index, stringBuilder);
                 start = index;
             }
             appendInlineImage(images.get(nextImage++), stringBuilder);
         }
         if (start < value.length()) {
-            appendTextAfterImage(chunk, value.substring(start), stringBuilder);
+            appendTextAfterImage(chunk, start, value.length(), stringBuilder);
         }
         return nextImage;
     }
@@ -745,16 +757,22 @@ public class MarkdownGenerator implements Closeable {
         return value.length();
     }
 
-    /** Appends the text; after a stand-in, one space separates them. */
-    private static void appendTextAfterImage(TextChunk chunk, String value, StringBuilder stringBuilder) {
+    /**
+     * Appends the characters of the chunk from {@code start} to {@code end}. After a stand-in, one space separates
+     * them.
+     */
+    private void appendTextAfterImage(TextChunk chunk, int start, int end, StringBuilder stringBuilder) {
         if (stringBuilder.length() > 0 && stringBuilder.charAt(stringBuilder.length() - 1) == INLINE_IMAGE) {
-            value = value.stripLeading();
-            if (value.isEmpty()) {
+            String value = chunk.getValue();
+            while (start < end && Character.isWhitespace(value.charAt(start))) {
+                start++;
+            }
+            if (start == end) {
                 return;
             }
             stringBuilder.append(MarkdownSyntax.SPACE);
         }
-        appendTextChunk(chunk, value, stringBuilder);
+        appendTextChunk(chunk, start, end, stringBuilder, openLink);
     }
 
     private void appendInlineImages(List<ImageChunk> images, int nextImage, StringBuilder stringBuilder) {
@@ -763,12 +781,16 @@ public class MarkdownGenerator implements Closeable {
         }
     }
 
-    /** Appends a stand-in for the image, after one space, and keeps its Markdown for {@link #replaceInlineImages}. */
+    /**
+     * Appends a stand-in for the image, after one space, and keeps its Markdown for {@link #replaceInlineImages}.
+     * An open link ends before the image.
+     */
     private void appendInlineImage(ImageChunk image, StringBuilder stringBuilder) {
         String imageString = getImageMarkdown(image);
         if (imageString == null) {
             return;
         }
+        closeLink(openLink, stringBuilder);
         if (stringBuilder.length() > 0 && !Character.isWhitespace(stringBuilder.charAt(stringBuilder.length() - 1))) {
             stringBuilder.append(MarkdownSyntax.SPACE);
         }
@@ -799,7 +821,74 @@ public class MarkdownGenerator implements Closeable {
         return stringBuilder.toString();
     }
 
-    private static void appendTextChunk(TextChunk chunk, String value, StringBuilder stringBuilder) {
+    /** Ends the link that the text ends in, if one is open. */
+    private String endLink(String text) {
+        if (openLink.getUri() == null) {
+            return text;
+        }
+        StringBuilder stringBuilder = new StringBuilder(text);
+        closeLink(openLink, stringBuilder);
+        return stringBuilder.toString();
+    }
+
+    /**
+     * Appends the characters of the chunk from {@code start} to {@code end}. The text of a URI link becomes a Markdown
+     * link.
+     */
+    private static void appendTextChunk(TextChunk chunk, int start, int end, StringBuilder stringBuilder,
+                                        TextLinks.OpenLink link) {
+        for (TextLinks.Part part : TextLinks.split(chunk, start, end)) {
+            String text = part.getText();
+            if (!link.isContinuedBy(part)) {
+                closeLink(link, stringBuilder);
+                if (part.getUri() != null) {
+                    stringBuilder.append('[');
+                    link.setUri(part.getUri());
+                }
+            }
+            if (part.getUri() != null) {
+                text = text.replace("\\", "\\\\").replace("[", "\\[").replace("]", "\\]");
+            }
+            appendText(chunk, text, stringBuilder);
+        }
+    }
+
+    /** Ends the open link. The whitespace at the end of the text, as a line end, stays after the link. */
+    public static void closeLink(TextLinks.OpenLink link, StringBuilder stringBuilder) {
+        if (link.getUri() == null) {
+            return;
+        }
+        int textEnd = stringBuilder.length();
+        while (textEnd > 0 && Character.isWhitespace(stringBuilder.charAt(textEnd - 1))) {
+            textEnd--;
+        }
+        stringBuilder.insert(textEnd, "](" + formatMarkdownUriDestination(link.getUri()) + ")");
+        link.setUri(null);
+    }
+
+    /**
+     * Writes a URI as a CommonMark link destination without angle brackets: {@link #getCorrectMarkdownString}
+     * escapes the angle brackets of the whole text later, and CommonMark reads the entities back in a destination.
+     * A backslash escapes each parenthesis and backslash, and spaces and control characters are percent-encoded,
+     * so the destination ends at its closing parenthesis.
+     */
+    static String formatMarkdownUriDestination(String uri) {
+        StringBuilder sb = new StringBuilder(uri.length());
+        for (int i = 0; i < uri.length(); i++) {
+            char c = uri.charAt(i);
+            if (c == '(' || c == ')' || c == '\\') {
+                sb.append('\\').append(c);
+            } else if (c <= ' ' || c == '\u007F') {
+                sb.append(String.format("%%%02X", (int) c));
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
+
+    /** Appends the text, in strikethrough markup if the chunk is struck through. */
+    private static void appendText(TextChunk chunk, String value, StringBuilder stringBuilder) {
         if (chunk.getIsStrikethroughText()) {
             stringBuilder.append(strikethroughTextMD);
         }

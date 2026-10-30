@@ -30,6 +30,7 @@ import org.opendataloader.pdf.text.TextGenerator;
 import org.opendataloader.pdf.utils.ContentSanitizer;
 import org.opendataloader.pdf.utils.FileUtils;
 import org.opendataloader.pdf.utils.ImagesUtils;
+import org.opendataloader.pdf.utils.TextLinks;
 import org.opendataloader.pdf.utils.TextNodeUtils;
 import org.verapdf.as.ASAtom;
 import org.verapdf.containers.StaticCoreContainers;
@@ -728,6 +729,9 @@ public class DocumentProcessor {
      */
     public static void generateOutputs(String inputPdfName, List<List<IObject>> contents, Config config,
                                            Map<Long, ElementMetadata> elementMetadata) throws IOException {
+        // Before stdout mode: it can write Markdown.
+        StaticLayoutContainers.setTextLinks(config.isGenerateMarkdown() || config.isGenerateHtml()
+            ? TextLinks.forOutput(config) : null);
         // Stdout mode: write primary format to stdout, skip file I/O
         if (config.isOutputStdout()) {
             java.io.Writer stdoutWriter = new java.io.BufferedWriter(

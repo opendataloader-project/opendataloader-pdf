@@ -169,6 +169,11 @@ public class CLIOptions {
     private static final String DETECT_STRIKETHROUGH_LONG_OPTION = "detect-strikethrough";
     private static final String DETECT_STRIKETHROUGH_DESC = "Detect strikethrough text and wrap with ~~ in Markdown output or <del></del> tag in HTML output (experimental)";
 
+    // ===== Include Links =====
+    private static final String INCLUDE_LINKS_LONG_OPTION = "include-links";
+    private static final String INCLUDE_LINKS_DESC = "Write the URI links of the PDF (http, https, mailto) as links in "
+            + "Markdown and HTML output. No links with --sanitize, or when the hybrid backend makes the text";
+
     // ===== Hybrid Mode =====
     private static final String HYBRID_LONG_OPTION = "hybrid";
     private static final String HYBRID_DESC = "Hybrid backend (requires a running server). "
@@ -271,8 +276,9 @@ public class CLIOptions {
             new OptionDefinition(IMAGE_RESOLUTION_LONG_OPTION, null, "string", null, IMAGE_RESOLUTION_DESC, true),
             new OptionDefinition(EXPORT_OPTIONS_LONG_OPTION, null, "boolean", null, null, false),
             new OptionDefinition(SPACE_RATIO_LONG_OPTION, null, "string", null, SPACE_RATIO_DESC, true),
-            // Last, so the new parameter of the generated Python convert() does not move positional arguments.
+            // Last, so the new parameters of the generated Python convert() do not move positional arguments.
             new OptionDefinition(SANITIZE_RULES_LONG_OPTION, null, "string", null, SANITIZE_RULES_DESC, true),
+            new OptionDefinition(INCLUDE_LINKS_LONG_OPTION, null, "boolean", false, INCLUDE_LINKS_DESC, true),
 
             // Legacy options (not exported, for backward compatibility)
             new OptionDefinition(HYBRID_OCR_LONG_OPTION, null, "string", null, HYBRID_OCR_DESC, false),
@@ -363,6 +369,9 @@ public class CLIOptions {
         }
         if (commandLine.hasOption(DETECT_STRIKETHROUGH_LONG_OPTION)) {
             config.setDetectStrikethrough(true);
+        }
+        if (commandLine.hasOption(INCLUDE_LINKS_LONG_OPTION)) {
+            config.setIncludeLinks(true);
         }
         if (commandLine.hasOption(CLIOptions.READING_ORDER_LONG_OPTION)) {
             config.setReadingOrder(commandLine.getOptionValue(CLIOptions.READING_ORDER_LONG_OPTION));

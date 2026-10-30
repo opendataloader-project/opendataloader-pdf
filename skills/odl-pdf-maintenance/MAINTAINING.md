@@ -85,6 +85,9 @@ When cutting an ODL release, re-verify the skill's principles against current be
   changes nothing, with no message. A match that overlaps a kept match is dropped. Only an INFO log
   line tells you, and `--quiet` removes it. So a run with custom rules can succeed and still mask
   nothing. Check one output.
+- **Link output** — the URI links of the PDF go to the Markdown and HTML output only on request.
+  Sensitive-data masking turns them off, and so does text that the hybrid backend makes. Only a
+  WARNING log line tells you, so a run can succeed with no links. Check one output.
 - **Backend/OCR runs server-side** — OCR/enrichment execute on the hybrid backend, not the client,
   and need a reachable server; a "success" with no backend is a silent local fallback.
 - **Parser/preprocessing crash class** — the crash-before-page-handling hazard assumes a malformed
