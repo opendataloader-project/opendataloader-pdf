@@ -6,7 +6,7 @@ import subprocess
 import sys
 import tempfile
 import importlib.resources as resources
-from typing import List
+from typing import List, Optional
 
 # The consistent name of the JAR file bundled with the package
 _JAR_NAME = "opendataloader-pdf-cli.jar"
@@ -25,7 +25,97 @@ def _temp_dir_options() -> List[str]:
     for name in _JAVA_OPTION_VARS:
         if "-Djava.io.tmpdir=" in os.environ.get(name, ""):
             return []
-    return [f"-Djava.io.tmpdir={tempfile.gettempdir()}"]
+    return [f"-Djava.io.tmpdir={_ascii_path(tempfile.gettempdir())}"]
+
+
+def _short_path(path: str) -> Optional[str]:
+    """Return the Windows short (8.3) form of an existing path, or None.
+
+    Returns None on other platforms, if the path does not exist, or if the
+    volume does not create short names.
+    """
+    if os.name != "nt":
+        return None
+    # ctypes.windll exists only on Windows, so import here
+    import ctypes
+    from ctypes import wintypes
+
+    get_short_path = ctypes.windll.kernel32.GetShortPathNameW
+    get_short_path.argtypes = [wintypes.LPCWSTR, wintypes.LPWSTR, wintypes.DWORD]
+    get_short_path.restype = wintypes.DWORD
+
+    length = get_short_path(path, None, 0)
+    if length == 0:
+        return None
+    buffer = ctypes.create_unicode_buffer(length)
+    if get_short_path(path, buffer, length) == 0:
+        return None
+    return buffer.value
+
+
+def _ascii_path(path: str) -> str:
+    """Return a form of an existing path that the Java launcher can read.
+
+    On Windows the Java launcher decodes the command line with the ANSI code
+    page of the system, not UTF-8. Characters outside that code page (Greek,
+    Cyrillic, CJK on a Western-locale system) become "?", so Java cannot find
+    the file. The short (8.3) form of a path is ASCII and keeps its meaning.
+    Return the path unchanged if it is ASCII or has no ASCII short form.
+    """
+    if path.isascii():
+        return path
+    short = _short_path(os.path.abspath(path))
+    return short if short and short.isascii() else path
+
+
+# Options whose value is an output folder that can be missing before the run
+_OUTPUT_DIR_OPTIONS = {"--output-dir", "-o", "--image-dir"}
+
+
+def _ascii_output_dir(path: str) -> str:
+    """Create an output folder, so that it has a short form, then shorten it."""
+    if path.isascii():
+        return path
+    try:
+        os.makedirs(path, exist_ok=True)
+    except OSError:
+        return path
+    return _ascii_path(path)
+
+
+def _ascii_input(arg: str) -> str:
+    """Shorten an argument only if it names an existing file or folder."""
+    if arg.isascii() or not os.path.exists(arg):
+        return arg
+    return _ascii_path(arg)
+
+
+def _make_jvm_safe_args(args: List[str]) -> List[str]:
+    """Return the CLI arguments with non-ASCII paths changed to short paths.
+
+    Only existing paths and the values of output folder options change, so
+    other values (passwords, separators) stay as they are.
+    """
+    safe_args: List[str] = []
+    expect_output_dir = False
+    for arg in args:
+        # subprocess accepts pathlib.Path arguments, so accept them here too
+        arg = os.fspath(arg)
+        if expect_output_dir:
+            safe_args.append(_ascii_output_dir(arg))
+            expect_output_dir = False
+        elif arg in _OUTPUT_DIR_OPTIONS:
+            safe_args.append(arg)
+            expect_output_dir = True
+        elif arg.startswith("-") and "=" in arg:
+            option, value = arg.split("=", 1)
+            if option in _OUTPUT_DIR_OPTIONS:
+                safe_args.append(f"{option}={_ascii_output_dir(value)}")
+            else:
+                safe_args.append(f"{option}={_ascii_input(value)}")
+        else:
+            safe_args.append(_ascii_input(arg))
+    return safe_args
 
 
 def run_jar(args: List[str], quiet: bool = False) -> str:
@@ -44,8 +134,8 @@ def run_jar(args: List[str], quiet: bool = False) -> str:
                 "-Dapple.awt.UIElement=true",
                 *_temp_dir_options(),
                 "-jar",
-                str(jar_path),
-                *args,
+                _ascii_path(str(jar_path)),
+                *_make_jvm_safe_args(args),
             ]
 
             if quiet:
