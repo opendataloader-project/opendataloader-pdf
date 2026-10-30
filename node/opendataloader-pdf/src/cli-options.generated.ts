@@ -40,4 +40,5 @@ export function registerCliOptions(program: Command): void {
   program.option('--space-ratio <value>', 'Set the ratio used to calculate the automatic space-insertion threshold (threshold = space-ratio * font size). If the horizontal gap between two adjacent symbols exceeds this threshold, an extra space is inserted to text value. Accepts decimals (e.g., 0.17). Default: 0.17');
   program.option('--sanitize-rules <value>', 'Path to a JSON file of sanitization rules. Only the rules of the file run, in place of the built-in rules. Turns on --sanitize');
   program.option('--include-links', 'Write the URI links of the PDF (http, https, mailto) as links in Markdown and HTML output. No links with --sanitize, or when the hybrid backend makes the text');
+  program.option('--hybrid-availability-timeout <value>', 'Time in milliseconds that the availability check of the hybrid backend waits to connect, and then again for the answer. Raise it for a backend with a slow start, such as a serverless one. Default: 3000');
 }

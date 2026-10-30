@@ -26,6 +26,9 @@ public class HybridConfig {
     /** Default timeout for backend requests in milliseconds. */
     public static final int DEFAULT_TIMEOUT_MS = 0;
 
+    /** Default time in milliseconds that the availability check waits to connect, and then for the answer. */
+    public static final int DEFAULT_AVAILABILITY_TIMEOUT_MS = 3000;
+
     /** Default maximum concurrent requests to the backend. */
     public static final int DEFAULT_MAX_CONCURRENT_REQUESTS = 4;
 
@@ -43,6 +46,7 @@ public class HybridConfig {
 
     private String url;
     private int timeoutMs = DEFAULT_TIMEOUT_MS;
+    private int availabilityTimeoutMs = DEFAULT_AVAILABILITY_TIMEOUT_MS;
     private boolean fallbackToJava = false;
     private int maxConcurrentRequests = DEFAULT_MAX_CONCURRENT_REQUESTS;
     private int chunkSize = DEFAULT_CHUNK_SIZE;
@@ -98,6 +102,31 @@ public class HybridConfig {
             throw new IllegalArgumentException("Timeout must be non-negative: " + timeoutMs);
         }
         this.timeoutMs = timeoutMs;
+    }
+
+    /**
+     * Gets the time in milliseconds that the availability check waits to connect to the backend, and then again
+     * for its answer.
+     *
+     * @return The availability timeout in milliseconds.
+     */
+    public int getAvailabilityTimeoutMs() {
+        return availabilityTimeoutMs;
+    }
+
+    /**
+     * Sets the time in milliseconds that the availability check waits to connect to the backend, and then again
+     * for its answer. A backend with a slow start, such as one on a serverless platform, can need more than the
+     * default (#644).
+     *
+     * @param availabilityTimeoutMs The availability timeout in milliseconds.
+     * @throws IllegalArgumentException if the value is not positive.
+     */
+    public void setAvailabilityTimeoutMs(int availabilityTimeoutMs) {
+        if (availabilityTimeoutMs <= 0) {
+            throw new IllegalArgumentException("Availability timeout must be positive: " + availabilityTimeoutMs);
+        }
+        this.availabilityTimeoutMs = availabilityTimeoutMs;
     }
 
     /**

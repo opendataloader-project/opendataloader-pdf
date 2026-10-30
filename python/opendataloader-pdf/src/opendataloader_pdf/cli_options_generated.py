@@ -306,6 +306,15 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "default": False,
         "description": "Write the URI links of the PDF (http, https, mailto) as links in Markdown and HTML output. No links with --sanitize, or when the hybrid backend makes the text",
     },
+    {
+        "name": "hybrid-availability-timeout",
+        "python_name": "hybrid_availability_timeout",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": "3000",
+        "description": "Time in milliseconds that the availability check of the hybrid backend waits to connect, and then again for the answer. Raise it for a backend with a slow start, such as a serverless one. Default: 3000",
+    },
 ]
 
 

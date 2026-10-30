@@ -195,6 +195,11 @@ public class CLIOptions {
     private static final String HYBRID_TIMEOUT_DESC = "Hybrid backend request timeout in "
             + "milliseconds (0 = use the backend's own default). Default: 0";
 
+    private static final String HYBRID_AVAILABILITY_TIMEOUT_LONG_OPTION = "hybrid-availability-timeout";
+    private static final String HYBRID_AVAILABILITY_TIMEOUT_DESC = "Time in milliseconds that the availability "
+            + "check of the hybrid backend waits to connect, and then again for the answer. Raise it for a backend "
+            + "with a slow start, such as a serverless one. Default: 3000";
+
     private static final String HYBRID_CHUNK_SIZE_LONG_OPTION = "hybrid-chunk-size";
     private static final String HYBRID_CHUNK_SIZE_DESC = "Maximum number of pages to send to the hybrid "
             + "backend in a single request. Large documents are split into batches of this size; "
@@ -279,6 +284,9 @@ public class CLIOptions {
             // Last, so the new parameters of the generated Python convert() do not move positional arguments.
             new OptionDefinition(SANITIZE_RULES_LONG_OPTION, null, "string", null, SANITIZE_RULES_DESC, true),
             new OptionDefinition(INCLUDE_LINKS_LONG_OPTION, null, "boolean", false, INCLUDE_LINKS_DESC, true),
+            // Last: the Python convert() takes its parameters in this order, also by position.
+            new OptionDefinition(HYBRID_AVAILABILITY_TIMEOUT_LONG_OPTION, null, "string", "3000",
+                    HYBRID_AVAILABILITY_TIMEOUT_DESC, true),
 
             // Legacy options (not exported, for backward compatibility)
             new OptionDefinition(HYBRID_OCR_LONG_OPTION, null, "string", null, HYBRID_OCR_DESC, false),
@@ -715,6 +723,15 @@ public class CLIOptions {
                     throw new IllegalArgumentException(
                             String.format("Invalid timeout value '%s'. Must be a non-negative integer.", timeoutValue));
                 }
+            }
+        }
+        if (commandLine.hasOption(HYBRID_AVAILABILITY_TIMEOUT_LONG_OPTION)) {
+            String value = commandLine.getOptionValue(HYBRID_AVAILABILITY_TIMEOUT_LONG_OPTION);
+            try {
+                config.getHybridConfig().setAvailabilityTimeoutMs(Integer.parseInt(value == null ? "" : value.trim()));
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException(String.format(
+                        "Invalid --hybrid-availability-timeout value '%s'. Must be a positive integer.", value), e);
             }
         }
         if (commandLine.hasOption(HYBRID_CHUNK_SIZE_LONG_OPTION)) {

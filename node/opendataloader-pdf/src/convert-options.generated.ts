@@ -71,6 +71,8 @@ export interface ConvertOptions {
   sanitizeRules?: string;
   /** Write the URI links of the PDF (http, https, mailto) as links in Markdown and HTML output. No links with --sanitize, or when the hybrid backend makes the text */
   includeLinks?: boolean;
+  /** Time in milliseconds that the availability check of the hybrid backend waits to connect, and then again for the answer. Raise it for a backend with a slow start, such as a serverless one. Default: 3000 */
+  hybridAvailabilityTimeout?: string;
 }
 
 /**
@@ -110,6 +112,7 @@ export interface CliOptions {
   spaceRatio?: string;
   sanitizeRules?: string;
   includeLinks?: boolean;
+  hybridAvailabilityTimeout?: string;
 }
 
 /**
@@ -216,6 +219,9 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   }
   if (cliOptions.includeLinks) {
     convertOptions.includeLinks = true;
+  }
+  if (cliOptions.hybridAvailabilityTimeout) {
+    convertOptions.hybridAvailabilityTimeout = cliOptions.hybridAvailabilityTimeout;
   }
 
   return convertOptions;
@@ -337,6 +343,9 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.includeLinks) {
     args.push('--include-links');
+  }
+  if (options.hybridAvailabilityTimeout) {
+    args.push('--hybrid-availability-timeout', options.hybridAvailabilityTimeout);
   }
 
   return args;
