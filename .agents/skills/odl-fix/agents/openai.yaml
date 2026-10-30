@@ -1,0 +1,3 @@
+# Codex: the user starts this skill with $odl-fix. Codex does not start it from a prompt.
+policy:
+  allow_implicit_invocation: false

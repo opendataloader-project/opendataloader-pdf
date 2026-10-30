@@ -1,5 +1,8 @@
 # Agent instructions
 
-When you fix a GitHub issue in this repository, follow the procedure in [.agents/skills/odl-fix/SKILL.md](.agents/skills/odl-fix/SKILL.md).
+This repository has two agent skills. They run only when the user starts them by name. Do not start them yourself, and do not follow their procedures without that call.
 
-When you review a pull request from another person, follow the procedure in [.agents/skills/odl-review/SKILL.md](.agents/skills/odl-review/SKILL.md).
+| Skill | Use | Claude Code | Codex |
+|:--|:--|:--|:--|
+| [odl-fix](.agents/skills/odl-fix/SKILL.md) | Fix a GitHub issue and open a pull request | `/odl-fix` | `$odl-fix` |
+| [odl-review](.agents/skills/odl-review/SKILL.md) | Review a pull request from another person | `/odl-review` | `$odl-review` |
