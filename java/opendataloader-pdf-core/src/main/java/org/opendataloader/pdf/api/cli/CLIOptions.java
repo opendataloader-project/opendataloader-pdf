@@ -637,15 +637,16 @@ public class CLIOptions {
                 case "markdown":
                     config.setGenerateMarkdown(true);
                     break;
+                // Deprecated values, kept for compatibility. Removal rules: CONTRIBUTING.md,
+                // "Compatibility of Released Options".
                 case "markdown-with-html":
-                    System.err.println("[WARN] --format markdown-with-html is deprecated and will be removed "
-                            + "in the next major release. Use --format markdown --markdown-with-html instead.");
+                    System.err.println("[WARN] --format markdown-with-html is deprecated. It still works, "
+                            + "but use --format markdown --markdown-with-html instead.");
                     config.setUseHTMLInMarkdown(true);
                     break;
                 case "markdown-with-images":
-                    System.err.println("[WARN] --format markdown-with-images is deprecated and will be removed "
-                            + "in the next major release. Use --format markdown with --image-output "
-                            + "(off|embedded|external) instead.");
+                    System.err.println("[WARN] --format markdown-with-images is deprecated. It still works, "
+                            + "but use --format markdown with --image-output (off|embedded|external) instead.");
                     config.setGenerateMarkdown(true);
                     break;
                 case "tagged-pdf":

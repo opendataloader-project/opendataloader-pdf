@@ -112,6 +112,14 @@ To suggest a new feature:
 - Do not add MDX files. `content/docs/reference/` is generated at release time
   and is not tracked.
 
+## 🔁 Compatibility of Released Options
+
+Users run the CLI and the wrappers from scripts. A removed option or value breaks these scripts on update.
+
+- Do not remove an option, an option value, or a public API that a release has shipped.
+- To replace one, keep the old one working, leave it out of the help and the docs, and print a deprecation warning that names the replacement. Do not promise a removal date or version in the warning.
+- Remove one only for a reason that outweighs compatibility: a security problem, a wrong or harmful output, or a change that it blocks. Code cleanup, a better name, or a shorter option list is not such a reason. Give the reason in the pull request and in the release notes.
+
 ## ✅ Commit Message Guidelines
 
 Use the following format:
