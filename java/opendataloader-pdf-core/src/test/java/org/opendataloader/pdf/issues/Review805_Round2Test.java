@@ -95,6 +95,9 @@ class Review805_Round2Test {
 
         assertThat(rendered.get("Background")).as("shown number of the paragraph '1. Background' (" + lines + ")")
                 .isIn(null, 1);
+        // null alone would also pass if the "1." were dropped, so the line must still show it.
+        assertThat(lines).as("the paragraph still starts with its number (" + lines + ")")
+                .anyMatch(l -> l.matches("^1\\\\?\\. Background$"));
     }
 
     /** N1b, rule 4: a paragraph that starts with "1." before an ordered list does not renumber the list. */
@@ -149,6 +152,26 @@ class Review805_Round2Test {
         }
 
         assertThat(markdownLines(none, true)).as("Markdown with an explicit /None").isEqualTo(markdownLines(absent, true));
+    }
+
+    /**
+     * A {@code Lbl} of a bullet and two spaces in separate chunks, with a body that starts with "(". The line
+     * of the item has one space after the bullet, so the label length (3) reaches into the body.
+     */
+    @Test
+    void bulletLabelWithSeparateSpacesKeepsTheParenthesisOfTheBody() throws IOException {
+        Path pdf = pdf("review-805-r2-split-label");
+        try (Review805_ListMarkersTest.TaggedListPdf sample = new Review805_ListMarkersTest.TaggedListPdf()) {
+            PDStructureElement list = sample.list(sample.documentElement, null);
+            sample.splitLabelItem(list, 72, new String[] {"\u2022", "  "}, "(first) item");
+            sample.splitLabelItem(list, 72, new String[] {"\u2022", "  "}, "(second) item");
+            sample.save(pdf);
+        }
+
+        List<String> lines = markdownLines(pdf, true);
+
+        assertThat(lines).as("Markdown: a bullet list that keeps the parenthesis (" + lines + ")")
+                .anyMatch(l -> l.matches("^-\\s+\\(first\\) item$")).anyMatch(l -> l.matches("^-\\s+\\(second\\) item$"));
     }
 
     /** M5, rule 4: a nested ordered list that starts at 3 is still a list in a viewer, with its numbers. */

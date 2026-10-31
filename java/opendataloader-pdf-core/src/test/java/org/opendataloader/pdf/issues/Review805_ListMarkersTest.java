@@ -548,6 +548,43 @@ class Review805_ListMarkersTest {
             return lBody;
         }
 
+        /**
+         * Writes one item with the body directly after the label, in one text object (no gap). Each part of
+         * the label is its own {@code Span} in the {@code Lbl}.
+         */
+        void splitLabelItem(PDStructureElement list, float x, String[] labelParts, String body) throws IOException {
+            PDStructureElement item = new PDStructureElement(StandardStructureTypes.LI, list);
+            list.appendKid(item);
+            PDStructureElement lbl = new PDStructureElement(StandardStructureTypes.LBL, item);
+            item.appendKid(lbl);
+            PDStructureElement lBody = new PDStructureElement(StandardStructureTypes.L_BODY, item);
+            item.appendKid(lBody);
+            content.beginText();
+            content.setFont(helvetica, 12);
+            content.newLineAtOffset(x, y);
+            for (String labelPart : labelParts) {
+                PDStructureElement span = new PDStructureElement(StandardStructureTypes.SPAN, lbl);
+                lbl.appendKid(span);
+                showMarkedText(labelPart, span);
+            }
+            showMarkedText(body, lBody);
+            content.endText();
+            y -= 20;
+        }
+
+        private void showMarkedText(String text, PDStructureElement element) throws IOException {
+            int mcid = parents.size();
+            COSDictionary properties = new COSDictionary();
+            properties.setInt(COSName.MCID, mcid);
+            content.beginMarkedContent(COSName.getPDFName(element.getStructureType()),
+                    PDPropertyList.create(properties));
+            content.showText(text);
+            content.endMarkedContent();
+            element.setPage(page);
+            element.getCOSObject().setInt(COSName.K, mcid);
+            parents.add(element);
+        }
+
         /** Writes one item with the body directly after the label, in one text object (no gap). */
         void joinedItem(PDStructureElement list, float x, String label, String body) throws IOException {
             PDStructureElement item = new PDStructureElement(StandardStructureTypes.LI, list);
