@@ -321,11 +321,18 @@ public class TaggedDocumentProcessor {
         return 0;
     }
 
+    /**
+     * Returns the number of characters of the text chunks of a node. A whitespace chunk does not count:
+     * TextLineProcessor drops it from the line, so counting it would put the label end inside the body.
+     */
     private static int getTextChunksLength(INode node) {
         int result = 0;
         for (INode child : node.getChildren()) {
             if (child instanceof SemanticSpan) {
-                result += (((SemanticSpan)child).getColumns().get(0).getFirstLine().getFirstTextChunk().getValue().length());
+                TextChunk chunk = ((SemanticSpan)child).getColumns().get(0).getFirstLine().getFirstTextChunk();
+                if (!chunk.isWhiteSpaceChunk()) {
+                    result += chunk.getValue().length();
+                }
             } else {
                 result += getTextChunksLength(child);
             }
