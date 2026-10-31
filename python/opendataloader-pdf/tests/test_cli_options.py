@@ -233,11 +233,14 @@ class TestSanitizeRulesOption:
 
         from opendataloader_pdf.convert_generated import convert
 
-        assert list(inspect.signature(convert).parameters)[-4:] == [
+        # ``timeout`` is a wrapper-level parameter, not a CLI option, so it is
+        # appended after the generated CLI parameters.
+        assert list(inspect.signature(convert).parameters)[-5:] == [
             "sanitize_rules",
             "include_links",
             "hybrid_availability_timeout",
             "hybrid_triage_log",
+            "timeout",
         ]
 
     def test_convert_passes_include_links(self):
