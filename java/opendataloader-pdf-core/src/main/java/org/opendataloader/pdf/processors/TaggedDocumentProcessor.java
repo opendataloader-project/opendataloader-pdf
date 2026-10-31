@@ -24,6 +24,7 @@ import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderRow;
 import org.verapdf.wcag.algorithms.semanticalgorithms.consumers.TableChecker;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.listLabelsDetection.NumberingStyleNames;
 
 import java.util.*;
 
@@ -255,7 +256,42 @@ public class TaggedDocumentProcessor {
                 processStructElem(child, node);
             }
         }
+        if (list.getNumberingStyle() == null || NumberingStyleNames.UNKNOWN.equals(list.getNumberingStyle())) {
+            if (hasSameLabelOnEachItem(list)) {
+                list.setNumberingStyle(NumberingStyleNames.UNORDERED);
+            }
+        }
         addObjectToContent(list);
+    }
+
+    /**
+     * Whether a list has two or more items and each item has the same {@code Lbl}. Without
+     * {@code /ListNumbering} such a label is a bullet: producers can omit the attribute (Chrome
+     * does so for CSS-drawn markers). Labels that differ from item to item are content, and so
+     * are labels with a letter or digit.
+     */
+    private static boolean hasSameLabelOnEachItem(PDFList list) {
+        if (list.getListItems().size() < 2) {
+            return false;
+        }
+        String firstLabel = null;
+        for (ListItem item : list.getListItems()) {
+            int labelLength = item.getLabelLength();
+            if (labelLength <= 0 || item.getLines().isEmpty()) {
+                return false;
+            }
+            String firstLine = item.getFirstLine().getValue();
+            if (labelLength > firstLine.length()) {
+                return false;
+            }
+            String label = firstLine.substring(0, labelLength).trim();
+            if (label.isEmpty() || label.codePoints().anyMatch(Character::isLetterOrDigit)
+                    || (firstLabel != null && !firstLabel.equals(label))) {
+                return false;
+            }
+            firstLabel = label;
+        }
+        return true;
     }
 
     private static ListItem processListItem(INode node) {
@@ -285,11 +321,18 @@ public class TaggedDocumentProcessor {
         return 0;
     }
 
+    /**
+     * Returns the number of characters of the text chunks of a node. A whitespace chunk does not count:
+     * TextLineProcessor drops it from the line, so counting it would put the label end inside the body.
+     */
     private static int getTextChunksLength(INode node) {
         int result = 0;
         for (INode child : node.getChildren()) {
             if (child instanceof SemanticSpan) {
-                result += (((SemanticSpan)child).getColumns().get(0).getFirstLine().getFirstTextChunk().getValue().length());
+                TextChunk chunk = ((SemanticSpan)child).getColumns().get(0).getFirstLine().getFirstTextChunk();
+                if (!chunk.isWhiteSpaceChunk()) {
+                    result += chunk.getValue().length();
+                }
             } else {
                 result += getTextChunksLength(child);
             }

@@ -56,6 +56,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MarkdownGenerator implements Closeable {
@@ -81,6 +82,19 @@ public class MarkdownGenerator implements Closeable {
     protected static final String strikethroughTextMD = "~~";
     private static final Pattern LEADING_HEADING_OR_BULLET_MARKER = Pattern.compile("^( {0,3})(?=(?:#{1,6}|[-+*])(?:[ \\t\\n]|$))");
     private static final Pattern LEADING_ORDERED_LIST_MARKER = Pattern.compile("^( {0,3}\\d{1,9})(?=[.)](?:[ \\t\\n]|$))");
+    protected static final String LIST_SEPARATOR_MD = "<!-- -->";
+    private static final Pattern ORDERED_LABEL = Pattern.compile("(\\d{1,9})([.)])");
+    private static final Pattern ORDERED_LIST_ITEM_START = Pattern.compile("^ {0,3}\\d{1,9}([.)])(?:[ \\t\\n]|$)");
+    protected boolean useStructTree = false;
+    /**
+     * The delimiter ({@code .} or {@code )}) of the ordered list that the Markdown written so far ends in, or null.
+     * CommonMark continues that list with the next ordered list item that has the same delimiter, also after blank
+     * lines. Only a block that is not a list item ends it (CommonMark 0.31.2, 5.3). A block that writes nothing, as
+     * an image whose file is not written, keeps it.
+     */
+    private String openOrderedListDelimiter = null;
+    /** Whether that list is a tagged list that {@link #getOrderedListMarkers} wrote as an ordered list. */
+    private boolean isOpenOrderedListTagged = false;
     /**
      * Stands for an image in the text of a line until the text is escaped (#642). It is a noncharacter, which
      * Unicode keeps for internal use, so the text of a document does not have it.
@@ -114,6 +128,7 @@ public class MarkdownGenerator implements Closeable {
         this.embedImages = config.isEmbedImages();
         this.imageFormat = config.getImageFormat();
         this.includeHeaderFooter = config.isIncludeHeaderFooter();
+        this.useStructTree = config.isUseStructTree();
     }
 
     /**
@@ -128,6 +143,7 @@ public class MarkdownGenerator implements Closeable {
         this.embedImages = false;
         this.imageFormat = config.getImageFormat();
         this.includeHeaderFooter = config.isIncludeHeaderFooter();
+        this.useStructTree = config.isUseStructTree();
     }
 
     public void writeToMarkdown(List<List<IObject>> contents) {
@@ -277,6 +293,7 @@ public class MarkdownGenerator implements Closeable {
         } else if (object instanceof ImageChunk) {
             writeImage((ImageChunk) object);
         } else if (object instanceof SemanticFormula) {
+            endOrderedList();
             writeFormula((SemanticFormula) object);
         } else if (object instanceof SemanticHeading) {
             writeHeading((SemanticHeading) object);
@@ -285,12 +302,29 @@ public class MarkdownGenerator implements Closeable {
         } else if (object instanceof SemanticTextNode) {
             writeSemanticTextNode((SemanticTextNode) object);
         } else if (object instanceof TableBorder) {
+            endOrderedList();
             writeTable((TableBorder) object);
         } else if (object instanceof PDFList) {
             writeList((PDFList) object);
         } else if (object instanceof SemanticTOC) {
+            endOrderedList();
             writeTOC((SemanticTOC) object);
         }
+    }
+
+    /** Notes that a block that is not an ordered list item is written, so no ordered list is open. */
+    private void endOrderedList() {
+        openOrderedListDelimiter = null;
+        isOpenOrderedListTagged = false;
+    }
+
+    /**
+     * Writes an HTML comment that ends the open ordered list, so that CommonMark does not continue it with the
+     * next ordered list item and the viewer shows the number of that item.
+     */
+    private void writeOrderedListSeparator() throws IOException {
+        markdownWriter.write(LIST_SEPARATOR_MD);
+        writeContentsSeparator();
     }
 
     /**
@@ -329,6 +363,7 @@ public class MarkdownGenerator implements Closeable {
     protected void writeImage(ImageChunk image) {
         String imageString = getImageMarkdown(image);
         if (imageString != null) {
+            endOrderedList();
             try {
                 markdownWriter.write(imageString);
             } catch (IOException e) {
@@ -394,6 +429,7 @@ public class MarkdownGenerator implements Closeable {
                             ? picture.sanitizeDescription()
                             : "";
                     String imageString = String.format(MarkdownSyntax.IMAGE_FORMAT, getCorrectMarkdownString(altText), imageSource);
+                    endOrderedList();
                     markdownWriter.write(imageString);
                 }
             }
@@ -425,14 +461,30 @@ public class MarkdownGenerator implements Closeable {
     }
 
     protected void writeList(PDFList list) throws IOException {
-        for (ListItem item : list.getListItems()) {
+        List<String> orderedMarkers = getOrderedListMarkers(list);
+        String delimiter = orderedMarkers == null ? null : getOrderedListDelimiter(orderedMarkers.get(0));
+        if (delimiter != null && delimiter.equals(openOrderedListDelimiter)) {
+            // CommonMark would continue the open ordered list (a list before, or a paragraph that starts with a
+            // number) and take its start number, so a comment ends it.
+            writeOrderedListSeparator();
+        }
+        List<ListItem> items = list.getListItems();
+        for (int index = 0; index < items.size(); index++) {
+            ListItem item = items.get(index);
             String itemText;
             if (!isInsideTable()) {
-                markdownWriter.write(MarkdownSyntax.LIST_ITEM);
+                if (orderedMarkers == null) {
+                    endOrderedList();
+                }
+                markdownWriter.write(orderedMarkers != null ? orderedMarkers.get(index) : MarkdownSyntax.LIST_ITEM);
                 markdownWriter.write(MarkdownSyntax.SPACE);
             }
-            if (!isInsideTable() && NumberingStyleNames.UNORDERED.equals(list.getNumberingStyle())) {
-                itemText = escapeLeadingBlockMarker(getTextWithoutLabel(item));
+            if (orderedMarkers != null) {
+                itemText = escapeLeadingBlockMarker(stripLeadingWhitespace(getTextWithoutLabel(item)));
+            } else if (!isInsideTable() && NumberingStyleNames.UNORDERED.equals(list.getNumberingStyle())) {
+                String textWithoutLabel = getTextWithoutLabel(item);
+                itemText = escapeLeadingBlockMarker(useStructTree ? stripLeadingWhitespace(textWithoutLabel)
+                        : textWithoutLabel);
             } else {
                 itemText = endLink(GeneratorUtils.getTextFromLines(item.getLines(), this::appendLine));
             }
@@ -445,6 +497,69 @@ public class MarkdownGenerator implements Closeable {
                 writeContents(itemContents, false);
             }
         }
+        if (delimiter != null) {
+            openOrderedListDelimiter = delimiter;
+            isOpenOrderedListTagged = true;
+        }
+    }
+
+    /**
+     * Returns the delimiter of the ordered list item that the text starts with, as CommonMark reads it at the start
+     * of a line, or null.
+     */
+    private static String getOrderedListDelimiter(String text) {
+        Matcher matcher = ORDERED_LIST_ITEM_START.matcher(text);
+        return matcher.find() ? matcher.group(1) : null;
+    }
+
+    /**
+     * The Markdown ordered list markers of a tagged list, or {@code null} if the list is written
+     * with {@code -} markers. A list is written as a Markdown ordered list only when its
+     * {@code /ListNumbering} gives an ordered style and the labels are {@code 1.}, {@code 2.}, ...
+     * (or {@code 1)}, ...) without gaps, so that a CommonMark viewer shows the number of each label.
+     * Items with nested contents keep the {@code -} marker, because nested blocks are not indented.
+     */
+    protected List<String> getOrderedListMarkers(PDFList list) {
+        String numberingStyle = list.getNumberingStyle();
+        if (!useStructTree || isInsideTable() || numberingStyle == null
+                || NumberingStyleNames.UNKNOWN.equals(numberingStyle)
+                || NumberingStyleNames.UNORDERED.equals(numberingStyle)) {
+            return null;
+        }
+        List<String> markers = new ArrayList<>();
+        long expectedNumber = -1;
+        String delimiter = null;
+        for (ListItem item : list.getListItems()) {
+            if (!item.getContents().isEmpty() || item.getLines().isEmpty()) {
+                return null;
+            }
+            String firstLine = item.getFirstLine().getValue();
+            int labelEnd = getLabelEnd(item);
+            if (labelEnd <= 0 || labelEnd > firstLine.length()) {
+                return null;
+            }
+            Matcher matcher = ORDERED_LABEL.matcher(firstLine.substring(0, labelEnd).trim());
+            if (!matcher.matches()) {
+                return null;
+            }
+            long number = Long.parseLong(matcher.group(1));
+            if ((expectedNumber >= 0 && number != expectedNumber)
+                    || (delimiter != null && !delimiter.equals(matcher.group(2)))) {
+                return null;
+            }
+            delimiter = matcher.group(2);
+            expectedNumber = number + 1;
+            markers.add(number + delimiter);
+        }
+        return markers.isEmpty() ? null : markers;
+    }
+
+    private static String stripLeadingWhitespace(String text) {
+        int start = 0;
+        while (start < text.length() && Character.isWhitespace(text.charAt(start))) {
+            start++;
+        }
+        return text.substring(start);
     }
 
     /**
@@ -531,7 +646,19 @@ public class MarkdownGenerator implements Closeable {
             value = value.replace(MarkdownSyntax.LINE_BREAK, MarkdownSyntax.SPACE);
         }
 
-        markdownWriter.write(replaceInlineImages(getCorrectMarkdownString(value)));
+        String text = replaceInlineImages(getCorrectMarkdownString(value));
+        if (!text.isEmpty() || textNode instanceof SemanticHeading) {
+            String delimiter = isInsideTable() || textNode instanceof SemanticHeading ? null
+                    : getOrderedListDelimiter(text);
+            if (delimiter != null && isOpenOrderedListTagged && delimiter.equals(openOrderedListDelimiter)) {
+                // A paragraph that starts with a number, as "1. Background", is an ordered list item in
+                // CommonMark. After a tagged ordered list, a comment keeps it from taking the next number.
+                writeOrderedListSeparator();
+            }
+            endOrderedList();
+            openOrderedListDelimiter = delimiter;
+        }
+        markdownWriter.write(text);
     }
 
 
@@ -688,8 +815,13 @@ public class MarkdownGenerator implements Closeable {
             }
         }
         appendInlineImages(images, nextImage, stringBuilder);
+        // A tagged label on a line of its own (as a "-" above the body) is not text before a line end: a
+        // hyphen there would be read as a hyphenation and joined with the body.
+        boolean isLabelOnItsOwnLine = useStructTree && labelLength > 0 && stringBuilder.length() == labelLength;
         for (int i = 1; i < lines.size(); i++) {
-            TextChunkUtils.formatLineEnd(stringBuilder);
+            if (i > 1 || !isLabelOnItsOwnLine) {
+                TextChunkUtils.formatLineEnd(stringBuilder);
+            }
             appendLine(lines.get(i), stringBuilder);
         }
         closeLink(openLink, stringBuilder);
