@@ -32,6 +32,7 @@ public class TaggedDocumentProcessor {
     private static List<List<IObject>> contents;
     private static Stack<List<IObject>> contentsStack = new Stack<>();
     private static Set<Integer> pagesToProcess;
+    private static boolean ignoreArtifacts = false;
 
     public static List<List<IObject>> processDocument(String inputPdfName, Config config, Set<Integer> pages) {
         pagesToProcess = pages;
@@ -43,20 +44,22 @@ public class TaggedDocumentProcessor {
         }
         ITree tree = StaticContainers.getDocument().getTree();
         processStructElem(tree.getRoot(), null);
-        List<List<IObject>> artifacts = collectArtifacts(totalPages);
-        for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
-            if (!shouldProcessPage(pageNumber)) {
-                continue;
+        if (!ignoreArtifacts) {
+            List<List<IObject>> artifacts = collectArtifacts(totalPages);
+            for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
+                if (!shouldProcessPage(pageNumber)) {
+                    continue;
+                }
+                artifacts.set(pageNumber, TextLineProcessor.processTextLines(artifacts.get(pageNumber)));
             }
-            artifacts.set(pageNumber, TextLineProcessor.processTextLines(artifacts.get(pageNumber)));
-        }
 
-        HeaderFooterProcessor.processHeadersAndFooters(artifacts, true);
-        for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
-            if (!shouldProcessPage(pageNumber)) {
-                continue;
+            HeaderFooterProcessor.processHeadersAndFooters(artifacts, true);
+            for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
+                if (!shouldProcessPage(pageNumber)) {
+                    continue;
+                }
+                contents.get(pageNumber).addAll(withoutArtifactText(artifacts.get(pageNumber), pageNumber));
             }
-            contents.get(pageNumber).addAll(withoutArtifactText(artifacts.get(pageNumber), pageNumber));
         }
         for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
             if (!shouldProcessPage(pageNumber)) {
@@ -538,5 +541,9 @@ public class TaggedDocumentProcessor {
             }
         }
         return result;
+    }
+
+    public static void setIgnoreArtifacts(boolean ignoreArtifacts) {
+        TaggedDocumentProcessor.ignoreArtifacts = ignoreArtifacts;
     }
 }
