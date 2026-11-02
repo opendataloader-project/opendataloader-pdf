@@ -434,3 +434,31 @@ def test_streaming_relay_error_is_reported_when_the_bound_later_expires(
         runner.run_jar(["doc.pdf"], quiet=False, timeout=2)
 
     assert isinstance(excinfo.value.__cause__, subprocess.TimeoutExpired)
+
+
+def _fail_if_started(monkeypatch):
+    """Make any attempt to start the JVM fail the test."""
+    started = MagicMock(side_effect=AssertionError("the JVM must not be started"))
+    monkeypatch.setattr(runner.subprocess, "run", started)
+    monkeypatch.setattr(runner.subprocess, "Popen", started)
+
+
+@pytest.mark.parametrize("quiet", [True, False])
+@pytest.mark.parametrize("timeout", [0, -1, -0.5, float("nan")])
+def test_a_timeout_that_is_not_positive_is_rejected(monkeypatch, patched_jar, quiet, timeout):
+    """``hybrid_timeout="0"`` means "no limit" in the same signature, so a caller
+    can pass ``0`` expecting that. ``ValueError`` tells them at once, instead of a
+    ``TimeoutExpired`` that fires before the JVM has done anything."""
+    _fail_if_started(monkeypatch)
+
+    with pytest.raises(ValueError, match="timeout"):
+        runner.run_jar(["doc.pdf"], quiet=quiet, timeout=timeout)
+
+
+def test_convert_rejects_a_timeout_that_is_not_positive(monkeypatch, patched_jar):
+    from opendataloader_pdf import convert
+
+    _fail_if_started(monkeypatch)
+
+    with pytest.raises(ValueError, match="timeout"):
+        convert(input_path="doc.pdf", timeout=0)

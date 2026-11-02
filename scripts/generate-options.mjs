@@ -351,7 +351,7 @@ function generatePythonConvert() {
     lines.push(`        ${snakeName}: ${opt.description}`);
   }
 
-  lines.push('        timeout: Wall-clock limit in seconds for the CLI process. None (default) waits indefinitely. On expiry the JVM is killed and subprocess.TimeoutExpired is raised. Not a CLI option: the JAR declares no processing bound, so this is enforced by the wrapper.');
+  lines.push('        timeout: Wall-clock limit in seconds for the CLI process. None (default) waits indefinitely. Must be greater than 0: 0 raises ValueError and does not mean no limit. On expiry the JVM is killed and subprocess.TimeoutExpired is raised. Not a CLI option: the JAR declares no processing bound, so this is enforced by the wrapper.');
 
   lines.push('    """');
 
@@ -439,6 +439,7 @@ function generatePythonConvertOptionsMdx() {
   // same reason input_path is added by hand above.
   rows.push(['`timeout`', '`float`', '`None`',
     'Wall-clock limit in seconds for the CLI process. `None` waits indefinitely. '
+    + 'Must be greater than 0: `0` raises `ValueError` and does not mean no limit. '
     + 'On expiry the JVM is killed and `subprocess.TimeoutExpired` is raised.']);
 
   lines.push(...formatTable(['Parameter', 'Type', 'Default', 'Description'], rows));
