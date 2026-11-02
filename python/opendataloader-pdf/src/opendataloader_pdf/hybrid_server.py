@@ -865,6 +865,190 @@ def _wait_for_utf8_child(child):
     return code - 2**32 if code >= 2**31 else code
 
 
+# Windows ends the process it is told to end and leaves that process's children
+# running, so a UTF-8 child started with Popen outlives this process when only
+# this process is ended (terminate(), Task Manager, taskkill /PID without /T).
+# The child is put in a Job Object that kills its processes when the job's last
+# handle closes, which happens when this process ends for any reason. The handle
+# is held here until the process exits; closing it earlier would end the child.
+JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE = 0x00002000
+_utf8_child_job = None
+
+
+class _WindowsJobApi:
+    """The Win32 calls that bind a process to a kill-on-close Job Object.
+
+    Built only on Windows: ctypes and the kernel32 bindings load here and nowhere
+    else. A failed call raises OSError carrying the Windows error code.
+    """
+
+    _PROCESS_TERMINATE = 0x0001
+    _PROCESS_SET_QUOTA = 0x0100
+    _JOB_OBJECT_EXTENDED_LIMIT_INFORMATION = 9
+
+    def __init__(self):
+        import ctypes
+
+        class _BasicLimitInformation(ctypes.Structure):
+            _fields_ = [
+                ("PerProcessUserTimeLimit", ctypes.c_int64),
+                ("PerJobUserTimeLimit", ctypes.c_int64),
+                ("LimitFlags", ctypes.c_uint32),
+                ("MinimumWorkingSetSize", ctypes.c_size_t),
+                ("MaximumWorkingSetSize", ctypes.c_size_t),
+                ("ActiveProcessLimit", ctypes.c_uint32),
+                ("Affinity", ctypes.c_size_t),
+                ("PriorityClass", ctypes.c_uint32),
+                ("SchedulingClass", ctypes.c_uint32),
+            ]
+
+        class _IoCounters(ctypes.Structure):
+            _fields_ = [
+                ("ReadOperationCount", ctypes.c_uint64),
+                ("WriteOperationCount", ctypes.c_uint64),
+                ("OtherOperationCount", ctypes.c_uint64),
+                ("ReadTransferCount", ctypes.c_uint64),
+                ("WriteTransferCount", ctypes.c_uint64),
+                ("OtherTransferCount", ctypes.c_uint64),
+            ]
+
+        class _ExtendedLimitInformation(ctypes.Structure):
+            _fields_ = [
+                ("BasicLimitInformation", _BasicLimitInformation),
+                ("IoInfo", _IoCounters),
+                ("ProcessMemoryLimit", ctypes.c_size_t),
+                ("JobMemoryLimit", ctypes.c_size_t),
+                ("PeakProcessMemoryUsed", ctypes.c_size_t),
+                ("PeakJobMemoryUsed", ctypes.c_size_t),
+            ]
+
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        self._ctypes = ctypes
+        self._info_struct = _ExtendedLimitInformation
+        # Handles are pointer-sized: declare them, or ctypes truncates them to int.
+        self._create = kernel32.CreateJobObjectW
+        self._create.argtypes = [ctypes.c_void_p, ctypes.c_wchar_p]
+        self._create.restype = ctypes.c_void_p
+        self._set_information = kernel32.SetInformationJobObject
+        self._set_information.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_int,
+            ctypes.c_void_p,
+            ctypes.c_uint32,
+        ]
+        self._set_information.restype = ctypes.c_int
+        self._open = kernel32.OpenProcess
+        self._open.argtypes = [ctypes.c_uint32, ctypes.c_int, ctypes.c_uint32]
+        self._open.restype = ctypes.c_void_p
+        self._assign = kernel32.AssignProcessToJobObject
+        self._assign.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
+        self._assign.restype = ctypes.c_int
+        self._close = kernel32.CloseHandle
+        self._close.argtypes = [ctypes.c_void_p]
+        self._close.restype = ctypes.c_int
+
+    def _error(self, call):
+        code = self._ctypes.get_last_error()
+        return OSError(code, f"{call} failed with Windows error {code}")
+
+    def create_job(self):
+        handle = self._create(None, None)
+        if not handle:
+            raise self._error("CreateJobObjectW")
+        return handle
+
+    def set_limit_flags(self, job, flags):
+        info = self._info_struct()
+        info.BasicLimitInformation.LimitFlags = flags
+        ok = self._set_information(
+            job,
+            self._JOB_OBJECT_EXTENDED_LIMIT_INFORMATION,
+            self._ctypes.byref(info),
+            self._ctypes.sizeof(info),
+        )
+        if not ok:
+            raise self._error("SetInformationJobObject")
+
+    def open_process(self, pid):
+        handle = self._open(self._PROCESS_SET_QUOTA | self._PROCESS_TERMINATE, False, pid)
+        if not handle:
+            raise self._error("OpenProcess")
+        return handle
+
+    def assign(self, job, process):
+        if not self._assign(job, process):
+            raise self._error("AssignProcessToJobObject")
+
+    def close(self, handle):
+        self._close(handle)
+
+
+def _assign_to_kill_on_close_job(child, api):
+    """Put `child` in a new job that kills it when the job closes. Return the job handle.
+
+    Returns None after a warning when any step fails. The child then runs unbound,
+    as it did before this guard, and startup goes on. A job created before a later
+    step failed is closed, which ends nothing, since the child was not assigned to it.
+
+    Popen cannot start the child suspended, so there is a short window between the
+    child's start and its assignment to the job. A parent that is ended inside that
+    window leaves the child running. Closing the window would need CREATE_SUSPENDED
+    and ResumeThread, which Popen does not expose.
+    """
+    job = None
+    assigned = False
+    step = "create_job"
+    try:
+        job = api.create_job()
+        step = "set_limit_flags"
+        api.set_limit_flags(job, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE)
+        step = "open_process"
+        process = api.open_process(child.pid)
+        try:
+            step = "assign"
+            api.assign(job, process)
+            assigned = True
+        finally:
+            api.close(process)
+    except Exception as error:
+        # Closing a job the child is bound to would end the child, so only an
+        # unassigned job is closed here.
+        if job is not None and not assigned:
+            api.close(job)
+        _warn_job_not_bound(step, error)
+        return None
+    return job
+
+
+def _warn_job_not_bound(step, error):
+    hint = (
+        " The parent may already be in a job that does not allow nested jobs."
+        if step == "assign"
+        else ""
+    )
+    logger.warning(
+        f"Could not bind the UTF-8 child to a kill-on-close Job Object at step {step}: "
+        f"{error}. The child runs unbound, so if this process is ended without it "
+        f"(terminate(), Task Manager, taskkill /PID without /T), the child keeps "
+        f"running.{hint}"
+    )
+
+
+def _bind_child_to_kill_on_close_job(child):
+    """Windows only: keep the UTF-8 child tied to this process. Never raises."""
+    global _utf8_child_job
+    try:
+        api = _WindowsJobApi()
+    except Exception as error:
+        logger.warning(
+            f"Could not load the Windows Job Object API: {error}. The child runs unbound, "
+            "so if this process is ended without it, the child keeps running."
+        )
+        _utf8_child_job = None
+        return
+    _utf8_child_job = _assign_to_kill_on_close_job(child, api)
+
+
 def _log_reexec_failure(error):
     logger.error(
         f"Failed to re-exec into UTF-8 mode: {error}. Continuing without it - "
@@ -895,7 +1079,9 @@ def _reexec_with_utf8_if_needed():
     On POSIX the process is replaced with ``os.execv``. On Windows, where
     ``os.execv`` does not replace the process, the child runs as a subprocess
     and this process exits with the child's exit code (see
-    ``_wait_for_utf8_child``).
+    ``_wait_for_utf8_child``). The child is also bound to a kill-on-close Job
+    Object, so it ends when this process ends for any reason (see
+    ``_bind_child_to_kill_on_close_job``).
 
     Skips the re-exec when the locale's preferred encoding is already UTF-8
     (true on most Linux/macOS deployments, and on Windows systems with the
@@ -915,6 +1101,7 @@ def _reexec_with_utf8_if_needed():
         except OSError as e:
             _log_reexec_failure(e)
             return
+        _bind_child_to_kill_on_close_job(child)
         sys.exit(_wait_for_utf8_child(child))
     try:
         os.execv(sys.executable, argv)
