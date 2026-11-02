@@ -1,6 +1,7 @@
 """
 Low-level JAR runner for opendataloader-pdf.
 """
+import math
 import os
 import subprocess
 import sys
@@ -81,10 +82,11 @@ def run_jar(args: List[str], quiet: bool = False, timeout: Optional[float] = Non
             stop waiting on a conversion that does not return. It must be
             positive: ``0`` is **not** "no timeout" here, unlike
             ``--hybrid-timeout``, so it is rejected rather than read as an
-            immediate one. Pass ``None`` to wait indefinitely. The bound
-            applies to the JVM process itself: a child process that the JVM
-            starts is not killed with it, and in streaming mode one that keeps
-            the output pipe open can keep the call from returning.
+            immediate one. Pass ``None``, or ``float("inf")``, to wait
+            indefinitely. The bound applies to the JVM process itself: a child
+            process that the JVM starts is not killed with it, and in streaming
+            mode one that keeps the output pipe open can keep the call from
+            returning.
 
     Raises:
         ValueError: If ``timeout`` is not ``None`` and not greater than zero.
@@ -95,6 +97,10 @@ def run_jar(args: List[str], quiet: bool = False, timeout: Optional[float] = Non
     # `not timeout > 0` also rejects NaN, which `timeout <= 0` would let through.
     if timeout is not None and not timeout > 0:
         raise ValueError(f"timeout must be a positive number of seconds or None, got {timeout!r}")
+    if timeout == math.inf:
+        # An infinite bound is no bound. subprocess.run cannot take it: it
+        # raises OverflowError after the JVM has started.
+        timeout = None
 
     try:
         # Access the embedded JAR inside the package

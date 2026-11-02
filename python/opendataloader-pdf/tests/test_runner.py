@@ -8,6 +8,7 @@ yet and is allowed to print the captured streams — but only once
 """
 
 import io
+import os
 import subprocess
 import sys
 import tempfile
@@ -462,3 +463,19 @@ def test_convert_rejects_a_timeout_that_is_not_positive(monkeypatch, patched_jar
 
     with pytest.raises(ValueError, match="timeout"):
         convert(input_path="doc.pdf", timeout=0)
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="the java stand-in is a POSIX shell script")
+@pytest.mark.parametrize("quiet", [True, False])
+def test_an_infinite_timeout_means_no_limit(monkeypatch, tmp_path, patched_jar, quiet):
+    """``float("inf")`` is greater than 0, so the check lets it through. It must
+    mean no limit, as ``None`` does: quiet mode passed it to ``subprocess.run``,
+    which raised ``OverflowError`` after the JVM had started."""
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    java = bin_dir / "java"
+    java.write_text("#!/bin/sh\necho 'stand-in done'\n")
+    java.chmod(0o755)
+    monkeypatch.setenv("PATH", os.pathsep.join([str(bin_dir), os.environ["PATH"]]))
+
+    assert runner.run_jar(["doc.pdf"], quiet=quiet, timeout=float("inf")) == "stand-in done\n"
