@@ -88,6 +88,10 @@ When cutting an ODL release, re-verify the skill's principles against current be
 - **Link output** — the URI links of the PDF go to the Markdown and HTML output only on request.
   Sensitive-data masking turns them off, and so does text that the hybrid backend makes. Only a
   WARNING log line tells you, so a run can succeed with no links. Check one output.
+- **No text from a scanned PDF in local mode**: a scanned or image-only document gives an output
+  with images and no text, and the run exits 0. Only one WARNING log line per document tells you,
+  and `--quiet` removes it. So the skill's "verify real text is present" check stays necessary.
+  Re-check if the warning, its condition, or the exit code changes.
 - **Backend/OCR runs server-side** — OCR/enrichment execute on the hybrid backend, not the client,
   and need a reachable server; a "success" with no backend is a silent local fallback.
 - **Parser/preprocessing crash class** — the crash-before-page-handling hazard assumes a malformed
