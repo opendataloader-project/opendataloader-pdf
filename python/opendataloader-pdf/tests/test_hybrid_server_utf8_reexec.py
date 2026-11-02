@@ -305,6 +305,7 @@ class TestReexecPlatformBranches:
         """The Windows branch also binds the child to a Job Object. Those Win32 calls
         need Windows, so these tests use a fake that records nothing and fails nothing."""
         monkeypatch.setattr(hybrid_server, "_WindowsJobApi", _FakeJobApi)
+        monkeypatch.setattr(hybrid_server, "_utf8_child_job", None)
 
     def test_posix_replaces_process_with_execv(self, monkeypatch):
         _non_utf8_process(monkeypatch, ["opendataloader-pdf-hybrid", "--port", "5002"])
@@ -693,6 +694,17 @@ class TestWindowsKillOnCloseJob:
         if failing_call != "create_job":
             # A job created before the failure is released, not left open
             assert ("close", "JOB") in api.calls
+
+    def test_a_failure_after_assignment_keeps_the_bound_job_open(self, monkeypatch, caplog):
+        api = _FakeJobApi(fail_at="close")
+        caplog.set_level("WARNING", logger=hybrid_server.logger.name)
+        code = self._run_windows(monkeypatch, lambda: api, child_exit=0, events=api.calls)
+
+        assert code == 0
+        assert ("close", "JOB") not in api.calls
+        assert hybrid_server._utf8_child_job == "JOB"
+        warnings = [r.getMessage() for r in caplog.records if r.levelname == "WARNING"]
+        assert any("process handle" in w for w in warnings), warnings
 
     def test_refused_nesting_is_logged_with_its_likely_cause(self, monkeypatch, caplog):
         """On Windows 8+ a job may nest in another job unless the outer job forbids it.
