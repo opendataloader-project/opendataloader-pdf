@@ -28,6 +28,7 @@ import org.opendataloader.pdf.pdf.PDFWriter;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.text.TextGenerator;
 import org.opendataloader.pdf.utils.ContentSanitizer;
+import org.opendataloader.pdf.utils.ExtractedText;
 import org.opendataloader.pdf.utils.FileUtils;
 import org.opendataloader.pdf.utils.ImagesUtils;
 import org.opendataloader.pdf.utils.TextLinks;
@@ -303,6 +304,7 @@ public class DocumentProcessor {
             contents = HybridDocumentProcessor.processDocument(inputPdfName, config, pagesToProcess);
         } else {
             contents = processDocument(inputPdfName, config, pagesToProcess);
+            warnIfNoText(inputPdfName, contents, config, pagesToProcess);
         }
         sortContents(contents, config);
         ContentSanitizer contentSanitizer = new ContentSanitizer(config.getFilterConfig().getFilterRules(),
@@ -329,6 +331,22 @@ public class DocumentProcessor {
         if (config.getFilterConfig().isFilterHiddenText()) {
             LOGGER.log(Level.WARNING, "--filter-hidden-text applies to the native Java pipeline only; "
                 + "ignored with {0}.", mode);
+        }
+    }
+
+    /**
+     * A scanned or image-only PDF gives no text in local mode, and the output then holds only
+     * images. Log one warning for the document, so that the caller can route it to OCR (#548).
+     * Not done for an empty page selection, which getValidPageNumbers already reports.
+     */
+    private static void warnIfNoText(String inputPdfName, List<List<IObject>> contents, Config config,
+                                     Set<Integer> pagesToProcess) {
+        if (pagesToProcess != null && pagesToProcess.isEmpty()) {
+            return;
+        }
+        if (!ExtractedText.isPresent(contents, config.isIncludeHeaderFooter())) {
+            LOGGER.log(Level.WARNING, "No text was extracted from '" + displayName(inputPdfName)
+                + "'. It may be a scanned or image-only PDF. To extract its text with OCR, use hybrid mode (--hybrid).");
         }
     }
 
