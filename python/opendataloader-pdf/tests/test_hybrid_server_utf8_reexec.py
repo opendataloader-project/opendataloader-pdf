@@ -81,10 +81,45 @@ def _fake_popen(monkeypatch, waits):
                 raise result
             return result
 
-        return SimpleNamespace(wait=wait)
+        return SimpleNamespace(pid=4242, wait=wait)
 
     monkeypatch.setattr(hybrid_server, "subprocess", SimpleNamespace(Popen=popen), raising=False)
     return spawned
+
+
+class _FakeJobApi:
+    """Stands in for hybrid_server._WindowsJobApi, which needs Windows.
+
+    Records every call in order. `fail_at` names the call that raises, the way
+    a failed Win32 call raises OSError with its error code.
+    """
+
+    def __init__(self, fail_at=None, error_code=5):
+        self.calls = []
+        self.fail_at = fail_at
+        self.error_code = error_code
+
+    def _call(self, name, *args):
+        self.calls.append((name, *args))
+        if name == self.fail_at:
+            raise OSError(self.error_code, f"{name} failed")
+
+    def create_job(self):
+        self._call("create_job")
+        return "JOB"
+
+    def set_limit_flags(self, job, flags):
+        self._call("set_limit_flags", job, flags)
+
+    def open_process(self, pid):
+        self._call("open_process", pid)
+        return "PROC"
+
+    def assign(self, job, process):
+        self._call("assign", job, process)
+
+    def close(self, handle):
+        self._call("close", handle)
 
 
 class TestIsUtf8EncodingName:
@@ -265,6 +300,12 @@ class TestReexecPlatformBranches:
     """os.execv replaces the process on POSIX. Windows has no exec: there the
     child runs as a subprocess and this process exits with its exit code."""
 
+    @pytest.fixture(autouse=True)
+    def no_job_object(self, monkeypatch):
+        """The Windows branch also binds the child to a Job Object. Those Win32 calls
+        need Windows, so these tests use a fake that records nothing and fails nothing."""
+        monkeypatch.setattr(hybrid_server, "_WindowsJobApi", _FakeJobApi)
+
     def test_posix_replaces_process_with_execv(self, monkeypatch):
         _non_utf8_process(monkeypatch, ["opendataloader-pdf-hybrid", "--port", "5002"])
         execv_calls = _fake_os(monkeypatch, "posix")
@@ -348,7 +389,7 @@ class TestReexecPlatformBranches:
             def kill():
                 events.append("kill")
 
-            return SimpleNamespace(wait=wait, kill=kill)
+            return SimpleNamespace(pid=4242, wait=wait, kill=kill)
 
         monkeypatch.setattr(
             hybrid_server, "subprocess", SimpleNamespace(Popen=popen), raising=False
@@ -535,3 +576,180 @@ class TestHybridServerStartsOnNonUtf8Locale:
         # Without the hybrid extra, the server stops at the dependency check;
         # with it, --help exits 0
         assert result.returncode == 0 or "Missing dependencies" in output, output
+
+
+class _FakeWinFunction:
+    """One kernel32 function: records its arguments and returns `result`."""
+
+    def __init__(self, result):
+        self.result = result
+        self.calls = []
+        self.argtypes = None
+        self.restype = None
+
+    def __call__(self, *args):
+        self.calls.append(args)
+        return self.result
+
+
+class _FakeKernel32:
+    """Stands in for ctypes.WinDLL("kernel32") so the real _WindowsJobApi can be built on Linux."""
+
+    def __init__(self):
+        self.CreateJobObjectW = _FakeWinFunction(result=0x1234)
+        self.SetInformationJobObject = _FakeWinFunction(result=1)
+        self.OpenProcess = _FakeWinFunction(result=0x5678)
+        self.AssignProcessToJobObject = _FakeWinFunction(result=1)
+        self.CloseHandle = _FakeWinFunction(result=1)
+
+
+class TestWindowsKillOnCloseJob:
+    """Windows ends the process it is told to end, not that process's children.
+    So the UTF-8 child goes into a Job Object with JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE:
+    when this process ends for any reason, the OS ends the child too (review round 2,
+    row 5 of #683). These tests run on Linux; the Win32 calls are replaced by _FakeJobApi."""
+
+    KILL_ON_JOB_CLOSE = 0x00002000  # JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE in winnt.h
+
+    @pytest.fixture(autouse=True)
+    def no_job_held(self, monkeypatch):
+        monkeypatch.setattr(hybrid_server, "_utf8_child_job", None)
+
+    def _run_windows(self, monkeypatch, make_api, child_exit=0, events=None):
+        """Run the Windows branch with make_api() as the Job Object API.
+
+        Returns the exit code the parent ends with. The fake child logs its start
+        and its wait() into `events`, so the order of events can be checked.
+        """
+        events = [] if events is None else events
+        _non_utf8_process(monkeypatch, ["opendataloader-pdf-hybrid", "--port", "5002"])
+        _fake_os(monkeypatch, "nt")
+        monkeypatch.setattr(hybrid_server, "_WindowsJobApi", make_api)
+
+        def popen(argv, **kwargs):
+            events.append(("popen",))
+
+            def wait():
+                events.append(("wait",))
+                return child_exit
+
+            return SimpleNamespace(pid=4242, wait=wait)
+
+        monkeypatch.setattr(
+            hybrid_server, "subprocess", SimpleNamespace(Popen=popen), raising=False
+        )
+        with pytest.raises(SystemExit) as exit_info:
+            _reexec_with_utf8_if_needed()
+        return exit_info.value.code
+
+    def test_child_is_assigned_to_the_job_before_the_parent_waits_for_it(self, monkeypatch):
+        api = _FakeJobApi()
+        code = self._run_windows(monkeypatch, lambda: api, child_exit=0, events=api.calls)
+
+        assert code == 0
+        assert api.calls == [
+            ("popen",),
+            ("create_job",),
+            ("set_limit_flags", "JOB", self.KILL_ON_JOB_CLOSE),
+            ("open_process", 4242),
+            ("assign", "JOB", "PROC"),
+            ("close", "PROC"),
+            ("wait",),
+        ]
+
+    def test_job_is_configured_with_kill_on_job_close_and_no_other_limit(self, monkeypatch):
+        api = _FakeJobApi()
+        self._run_windows(monkeypatch, lambda: api, events=api.calls)
+
+        limits = [c[2] for c in api.calls if c[0] == "set_limit_flags"]
+        assert limits == [self.KILL_ON_JOB_CLOSE]
+        assert hybrid_server.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE == self.KILL_ON_JOB_CLOSE
+
+    def test_job_handle_stays_open_for_the_life_of_this_process(self, monkeypatch):
+        """Closing the last handle to the job ends the child, so on success the handle
+        is held in a module global and never closed."""
+        api = _FakeJobApi()
+        self._run_windows(monkeypatch, lambda: api, events=api.calls)
+
+        assert hybrid_server._utf8_child_job == "JOB"
+        assert ("close", "JOB") not in api.calls
+
+    @pytest.mark.parametrize(
+        "failing_call", ["create_job", "set_limit_flags", "open_process", "assign"]
+    )
+    def test_a_failed_step_is_logged_and_the_child_still_runs(
+        self, monkeypatch, caplog, failing_call
+    ):
+        api = _FakeJobApi(fail_at=failing_call)
+        caplog.set_level("WARNING", logger=hybrid_server.logger.name)
+        code = self._run_windows(monkeypatch, lambda: api, child_exit=5, events=api.calls)
+
+        # The parent still waits for the child and exits with its code
+        assert code == 5
+        assert api.calls[-1] == ("wait",)
+        assert hybrid_server._utf8_child_job is None
+        warnings = [r.getMessage() for r in caplog.records if r.levelname == "WARNING"]
+        assert any(failing_call in w for w in warnings), warnings
+        if failing_call != "create_job":
+            # A job created before the failure is released, not left open
+            assert ("close", "JOB") in api.calls
+
+    def test_refused_nesting_is_logged_with_its_likely_cause(self, monkeypatch, caplog):
+        """On Windows 8+ a job may nest in another job unless the outer job forbids it.
+        When it forbids it, AssignProcessToJobObject fails with ERROR_ACCESS_DENIED (5).
+        The child then runs in the parent's own job. The warning says so, and startup goes on."""
+        api = _FakeJobApi(fail_at="assign", error_code=5)
+        caplog.set_level("WARNING", logger=hybrid_server.logger.name)
+        code = self._run_windows(monkeypatch, lambda: api, child_exit=0)
+
+        assert code == 0
+        warnings = [r.getMessage() for r in caplog.records if r.levelname == "WARNING"]
+        assert any("nested" in w for w in warnings), warnings
+
+    def test_job_api_that_cannot_load_is_logged_not_raised(self, monkeypatch, caplog):
+        def cannot_load():
+            raise OSError("kernel32 is not available")
+
+        caplog.set_level("WARNING", logger=hybrid_server.logger.name)
+        code = self._run_windows(monkeypatch, cannot_load, child_exit=3)
+
+        assert code == 3
+        warnings = [r.getMessage() for r in caplog.records if r.levelname == "WARNING"]
+        assert any("kernel32 is not available" in w for w in warnings), warnings
+
+    def test_posix_path_never_builds_the_job_api(self, monkeypatch):
+        _non_utf8_process(monkeypatch, ["opendataloader-pdf-hybrid"])
+        execv_calls = _fake_os(monkeypatch, "posix")
+
+        def must_not_be_built():
+            raise AssertionError("POSIX must not build the Job Object API")
+
+        monkeypatch.setattr(hybrid_server, "_WindowsJobApi", must_not_be_built)
+        _reexec_with_utf8_if_needed()
+
+        assert len(execv_calls) == 1
+
+    @pytest.mark.skipif(sys.maxsize <= 2**32, reason="the struct size checked here is 64-bit")
+    def test_win32_wrapper_sends_the_extended_limit_struct_with_kill_on_close(self, monkeypatch):
+        """Runs the real _WindowsJobApi against a fake kernel32. Checks the struct the
+        wrapper sends to SetInformationJobObject: JOBOBJECT_EXTENDED_LIMIT_INFORMATION
+        is 144 bytes on 64-bit Windows, and LimitFlags carries KILL_ON_JOB_CLOSE."""
+        import ctypes
+
+        kernel32 = _FakeKernel32()
+        monkeypatch.setattr(ctypes, "WinDLL", lambda *args, **kwargs: kernel32, raising=False)
+
+        api = hybrid_server._WindowsJobApi()
+        job = api.create_job()
+        api.set_limit_flags(job, hybrid_server.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE)
+
+        [(handle, info_class, info_ref, size)] = kernel32.SetInformationJobObject.calls
+        assert job == 0x1234 and handle == 0x1234
+        assert info_class == 9  # JobObjectExtendedLimitInformation
+        assert size == 144 == ctypes.sizeof(info_ref._obj)
+        assert info_ref._obj.BasicLimitInformation.LimitFlags == self.KILL_ON_JOB_CLOSE
+
+    def test_ctypes_is_not_imported_at_module_level(self):
+        """ctypes and the Win32 bindings load only on Windows, inside _WindowsJobApi.
+        A module-level import would load them on every platform."""
+        assert "ctypes" not in vars(hybrid_server)
