@@ -313,6 +313,7 @@ def test_streaming_success_waits_for_the_full_relay(monkeypatch, patched_jar):
     including a ``--to-stdout`` payload -- which is worse than the wait it saves.
     The timeout bounds the JVM; once the JVM is gone the relay runs to EOF.
     """
+
     def slow_lines():
         yield "first line\n"
         # Outlast the join bound while the process has already exited.
@@ -412,9 +413,7 @@ def test_streaming_timeout_keeps_a_line_whose_relay_is_still_blocked(monkeypatch
     assert excinfo.value.output == b"line already read\n"
 
 
-def test_streaming_relay_error_is_reported_when_the_bound_later_expires(
-    monkeypatch, patched_jar
-):
+def test_streaming_relay_error_is_reported_when_the_bound_later_expires(monkeypatch, patched_jar):
     """A relay failure must not be masked by a timeout that expires afterwards.
 
     Once the caller's stdout is gone the JVM keeps working -- Java's
@@ -426,9 +425,7 @@ def test_streaming_relay_error_is_reported_when_the_bound_later_expires(
     real_popen = subprocess.Popen
     # Writes once, then keeps working silently past the bound.
     busy_child = [sys.executable, "-c", "import time; print('started', flush=True); time.sleep(30)"]
-    monkeypatch.setattr(
-        runner.subprocess, "Popen", lambda _cmd, **kw: real_popen(busy_child, **kw)
-    )
+    monkeypatch.setattr(runner.subprocess, "Popen", lambda _cmd, **kw: real_popen(busy_child, **kw))
     monkeypatch.setattr(runner.sys, "stdout", _BrokenStdout())
 
     with pytest.raises(BrokenPipeError) as excinfo:
