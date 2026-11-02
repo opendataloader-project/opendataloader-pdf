@@ -868,20 +868,11 @@ def _wait_for_utf8_child(child):
 # Windows ends the process it is told to end and leaves that process's children
 # running, so a UTF-8 child started with Popen outlives this process when only
 # this process is ended (terminate(), Task Manager, taskkill /PID without /T).
-# The child is put in a Job Object that kills its processes when the job's last
-# handle closes, which happens when this process ends for any reason. The handle
-# is held here until the process exits; closing it earlier would end the child.
 JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE = 0x00002000
 _utf8_child_job = None
 
 
 class _WindowsJobApi:
-    """The Win32 calls that bind a process to a kill-on-close Job Object.
-
-    Built only on Windows: ctypes and the kernel32 bindings load here and nowhere
-    else. A failed call raises OSError carrying the Windows error code.
-    """
-
     _PROCESS_TERMINATE = 0x0001
     _PROCESS_SET_QUOTA = 0x0100
     _JOB_OBJECT_EXTENDED_LIMIT_INFORMATION = 9
@@ -984,11 +975,7 @@ class _WindowsJobApi:
 
 
 def _assign_to_kill_on_close_job(child, api):
-    """Put `child` in a new job that kills it when the job closes. Return the job handle.
-
-    Returns None after a warning when any step fails. The child then runs unbound,
-    as it did before this guard, and startup goes on. A job created before a later
-    step failed is closed, which ends nothing, since the child was not assigned to it.
+    """Return a kill-on-close job holding `child`, or None when a step fails before assignment.
 
     Popen cannot start the child suspended, so there is a short window between the
     child's start and its assignment to the job. A parent that is ended inside that
@@ -1011,9 +998,13 @@ def _assign_to_kill_on_close_job(child, api):
         finally:
             api.close(process)
     except Exception as error:
-        # Closing a job the child is bound to would end the child, so only an
-        # unassigned job is closed here.
-        if job is not None and not assigned:
+        if assigned:
+            # The child is already bound, so the job must stay open: closing it would end the child.
+            logger.warning(
+                f"Could not close a process handle after binding the UTF-8 child: {error}"
+            )
+            return job
+        if job is not None:
             api.close(job)
         _warn_job_not_bound(step, error)
         return None
@@ -1035,16 +1026,11 @@ def _warn_job_not_bound(step, error):
 
 
 def _bind_child_to_kill_on_close_job(child):
-    """Windows only: keep the UTF-8 child tied to this process. Never raises."""
     global _utf8_child_job
     try:
         api = _WindowsJobApi()
     except Exception as error:
-        logger.warning(
-            f"Could not load the Windows Job Object API: {error}. The child runs unbound, "
-            "so if this process is ended without it, the child keeps running."
-        )
-        _utf8_child_job = None
+        _warn_job_not_bound("load_api", error)
         return
     _utf8_child_job = _assign_to_kill_on_close_job(child, api)
 
@@ -1079,9 +1065,7 @@ def _reexec_with_utf8_if_needed():
     On POSIX the process is replaced with ``os.execv``. On Windows, where
     ``os.execv`` does not replace the process, the child runs as a subprocess
     and this process exits with the child's exit code (see
-    ``_wait_for_utf8_child``). The child is also bound to a kill-on-close Job
-    Object, so it ends when this process ends for any reason (see
-    ``_bind_child_to_kill_on_close_job``).
+    ``_wait_for_utf8_child``).
 
     Skips the re-exec when the locale's preferred encoding is already UTF-8
     (true on most Linux/macOS deployments, and on Windows systems with the
