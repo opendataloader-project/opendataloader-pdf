@@ -97,10 +97,11 @@ def run_jar(args: List[str], quiet: bool = False, timeout: Optional[float] = Non
     # `not timeout > 0` also rejects NaN, which `timeout <= 0` would let through.
     if timeout is not None and not timeout > 0:
         raise ValueError(f"timeout must be a positive number of seconds or None, got {timeout!r}")
-    if timeout == math.inf:
-        # An infinite bound is no bound. subprocess.run cannot take it: it
-        # raises OverflowError after the JVM has started.
-        timeout = None
+    # An infinite bound is no bound, but subprocess cannot take it: it converts
+    # the bound to an integer and raises OverflowError after the JVM has started.
+    # Wait without a bound instead, on the path of a bounded run, which kills
+    # the JVM on an interrupt.
+    wait_timeout = None if timeout == math.inf else timeout
 
     try:
         # Access the embedded JAR inside the package
@@ -135,7 +136,7 @@ def run_jar(args: List[str], quiet: bool = False, timeout: Optional[float] = Non
                     errors="replace",
                     # subprocess.run kills the child and reaps it before
                     # raising TimeoutExpired, so no JVM is left behind.
-                    timeout=timeout,
+                    timeout=wait_timeout,
                 )
                 if result.stdout:
                     _write_stdout(result.stdout)
@@ -170,7 +171,7 @@ def run_jar(args: List[str], quiet: bool = False, timeout: Optional[float] = Non
                     )
                     reader.start()
                     try:
-                        return_code = process.wait(timeout=timeout)
+                        return_code = process.wait(timeout=wait_timeout)
                     except BaseException as stopped:
                         # Kill before propagating, for the timeout and for an
                         # interrupt alike: the caller stops waiting, but an

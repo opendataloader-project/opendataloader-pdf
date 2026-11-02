@@ -3,7 +3,8 @@
 Without a timeout, a KeyboardInterrupt in run_jar(quiet=False) ends the call at once. With a
 timeout, it must do the same, also while the JVM prints nothing: the caller set the bound so that
 the call does not hang. A java stand-in on PATH prints one line and then waits, like a stuck JVM.
-The interrupt goes to the Python process only, as from `kill -INT` or a signal handler.
+The interrupt goes to the Python process only, as from `kill -INT` or a signal handler. With a
+timeout, also an infinite one, the JVM is killed too.
 """
 
 import os
@@ -34,7 +35,7 @@ CHILD = textwrap.dedent(
 )
 
 
-@pytest.mark.parametrize("timeout", ["none", "60"])
+@pytest.mark.parametrize("timeout", ["none", "60", "inf"])
 def test_interrupt_ends_a_streaming_run_at_once(tmp_path, timeout):
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
@@ -60,6 +61,10 @@ def test_interrupt_ends_a_streaming_run_at_once(tmp_path, timeout):
         except subprocess.TimeoutExpired:
             pytest.fail(f"run_jar(timeout={timeout}) did not end within 5 s after SIGINT")
         assert b"KeyboardInterrupt" in child.stderr.read()
+        if timeout != "none":
+            # The stand-in is gone before the kill below: nothing is left in its group.
+            with pytest.raises(ProcessLookupError):
+                os.killpg(child.pid, 0)
     finally:
         try:
             os.killpg(child.pid, signal.SIGKILL)  # the stand-in is in the same group
