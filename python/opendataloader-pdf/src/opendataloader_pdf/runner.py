@@ -78,18 +78,24 @@ def run_jar(args: List[str], quiet: bool = False, timeout: Optional[float] = Non
             ``subprocess.TimeoutExpired`` is raised. The CLI declares no
             processing bound of its own -- ``--hybrid-timeout`` covers the
             hybrid HTTP call only -- so this is the only way for a caller to
-            stop waiting on a conversion that does not return. Note that ``0``
-            is **not** "no timeout" here, unlike ``--hybrid-timeout``: it means
-            an immediate one. Pass ``None`` to wait indefinitely. The bound
+            stop waiting on a conversion that does not return. It must be
+            positive: ``0`` is **not** "no timeout" here, unlike
+            ``--hybrid-timeout``, so it is rejected rather than read as an
+            immediate one. Pass ``None`` to wait indefinitely. The bound
             applies to the JVM process itself: a child process that the JVM
             starts is not killed with it, and in streaming mode one that keeps
             the output pipe open can keep the call from returning.
 
     Raises:
+        ValueError: If ``timeout`` is not ``None`` and not greater than zero.
         FileNotFoundError: If the 'java' command is not found.
         subprocess.CalledProcessError: If the CLI returns a non-zero exit code.
         subprocess.TimeoutExpired: If ``timeout`` elapses before the CLI exits.
     """
+    # `not timeout > 0` also rejects NaN, which `timeout <= 0` would let through.
+    if timeout is not None and not timeout > 0:
+        raise ValueError(f"timeout must be a positive number of seconds or None, got {timeout!r}")
+
     try:
         # Access the embedded JAR inside the package
         jar_ref = resources.files("opendataloader_pdf").joinpath("jar", _JAR_NAME)
@@ -159,22 +165,28 @@ def run_jar(args: List[str], quiet: bool = False, timeout: Optional[float] = Non
                     reader.start()
                     try:
                         return_code = process.wait(timeout=timeout)
-                    except subprocess.TimeoutExpired as expired:
-                        # Kill before propagating: the caller stops waiting, but
-                        # an unkilled JVM keeps the CPU and its output directory.
+                    except BaseException as stopped:
+                        # Kill before propagating, for the timeout and for an
+                        # interrupt alike: the caller stops waiting, but an
+                        # unkilled JVM keeps the CPU and its output directory.
+                        # An interrupt must not leave the JVM running either:
+                        # leaving the `with` block would close the pipe while
+                        # the relay thread still reads it, and wait for the JVM.
                         process.kill()
                         process.wait()
                         reader.join(timeout=_RELAY_JOIN_TIMEOUT_S)
-                        # Attach what the JAR had already emitted to the original
-                        # exception rather than raising a second one, so the
-                        # traceback still points at the wait() that timed out.
-                        # Bytes, or None if nothing arrived, as subprocess.run
-                        # documents for TimeoutExpired.output in quiet mode.
-                        expired.output = "".join(output_lines).encode("utf-8") or None
-                        if relay_errors:
-                            # The relay failed first; that is the cause the
-                            # caller needs, with the timeout attached.
-                            raise relay_errors[0] from expired
+                        if isinstance(stopped, subprocess.TimeoutExpired):
+                            # Attach what the JAR had already emitted to the
+                            # original exception rather than raising a second
+                            # one, so the traceback still points at the wait()
+                            # that timed out. Bytes, or None if nothing arrived,
+                            # as subprocess.run documents for
+                            # TimeoutExpired.output in quiet mode.
+                            stopped.output = "".join(output_lines).encode("utf-8") or None
+                            if relay_errors:
+                                # The relay failed first; that is the cause the
+                                # caller needs, with the timeout attached.
+                                raise relay_errors[0] from stopped
                         raise
                     # Success: the JVM has exited, so the pipe reaches EOF and
                     # the relay ends on its own. Joining WITHOUT a bound here is

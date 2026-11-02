@@ -88,7 +88,7 @@ def convert(
         include_links: Write the URI links of the PDF (http, https, mailto) as links in Markdown and HTML output. No links with --sanitize, or when the hybrid backend makes the text
         hybrid_availability_timeout: Time in milliseconds that the availability check of the hybrid backend waits to connect, and then again for the answer. Raise it for a backend with a slow start, such as a serverless one. Default: 3000
         hybrid_triage_log: With --hybrid, write the triage decision of each page (Java or backend, the confidence, and the signals) to triage/<name>.json in the output folder
-        timeout: Wall-clock limit in seconds for the CLI process. None (default) waits indefinitely. On expiry the JVM is killed and subprocess.TimeoutExpired is raised. Not a CLI option: the JAR declares no processing bound, so this is enforced by the wrapper.
+        timeout: Wall-clock limit in seconds for the CLI process. None (default) waits indefinitely. Must be greater than 0: 0 raises ValueError and does not mean no limit. On expiry the JVM is killed and subprocess.TimeoutExpired is raised. Not a CLI option: the JAR declares no processing bound, so this is enforced by the wrapper.
     """
     args: List[str] = []
 
