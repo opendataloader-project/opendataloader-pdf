@@ -307,8 +307,19 @@ public class ListProcessor {
                                              ListItem listItem) {
         boolean isListItem = true;
         TextLine previousTextLine = null;
+        TextLine lineAbove = null;
         for (int index = currentInfo.getIndex() + 1; index < nextIndex; index++) {
             IObject content = pageContents.get(index);
+            if (content != null && (isAboveListItem(listItem, content) || continuesLine(lineAbove, content))) {
+                // The content stream can draw a page element, as a column title, between two items (#626).
+                // An object above the item is not its content: it stays on the page, with the lines that
+                // continue it.
+                lineAbove = content instanceof TextLine ? (TextLine) content : null;
+                continue;
+            }
+            if (content != null) {
+                lineAbove = null;
+            }
             if (content instanceof TextLine) {
                 TextLine currentTextLine = (TextLine) content;
                 if (previousTextLine != null) {
@@ -341,6 +352,20 @@ public class ListProcessor {
                 listItem.getContents().add(previousTextLine);
             }
         }
+    }
+
+    /**
+     * Whether the object is completely above the first line of the item. The items of a list are in one column
+     * (their lines start at about the same x), so such an object is not a part of the item.
+     */
+    private static boolean isAboveListItem(ListItem listItem, IObject object) {
+        return object.getBottomY() > listItem.getFirstLine().getTopY();
+    }
+
+    /** Whether the object is a line that continues the given line in one paragraph. */
+    private static boolean continuesLine(TextLine line, IObject object) {
+        return line != null && object instanceof TextLine
+                && ChunksMergeUtils.mergeLeadingProbability(line, (TextLine) object) >= LIST_ITEM_PROBABILITY;
     }
 
     private static void addContentToLastPageListItem(int nextIndex, ListItemInfo currentInfo, List<IObject> pageContents,
