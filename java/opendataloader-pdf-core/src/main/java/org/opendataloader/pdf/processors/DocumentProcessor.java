@@ -513,7 +513,7 @@ public class DocumentProcessor {
                     }
                     propagateState.run();
                     List<IObject> pageContents = contents.get(pageNumber);
-                    pageContents = ParagraphProcessor.processParagraphs(pageContents);
+                    pageContents = ParagraphProcessor.processPageParagraphs(pageContents);
                     if (structured) {
                         pageContents = ListProcessor.processListsFromTextNodes(pageContents);
                         HeadingProcessor.processHeadings(pageContents, false);
