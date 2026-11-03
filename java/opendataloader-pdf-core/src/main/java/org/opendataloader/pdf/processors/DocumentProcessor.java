@@ -44,6 +44,7 @@ import org.verapdf.gf.model.impl.cos.GFCosInfo;
 import org.verapdf.gf.model.impl.sa.GFSAPDFDocument;
 import org.verapdf.parser.PDFFlavour;
 import org.verapdf.pd.PDDocument;
+import org.verapdf.pd.structure.PDStructTreeRoot;
 import org.verapdf.tools.StaticResources;
 import org.verapdf.wcag.algorithms.entities.*;
 import org.verapdf.wcag.algorithms.entities.content.LineChunk;
@@ -808,6 +809,12 @@ public class DocumentProcessor {
      * @throws IOException if unable to read the PDF file, or if the JVM
      *         temporary directory is not writable
      */
+    /** Whether the structure tree root of the document has a parent tree. */
+    private static boolean hasParentTree(PDDocument pdDocument) {
+        PDStructTreeRoot root = pdDocument.getStructTreeRoot();
+        return root != null && root.getParentTree() != null;
+    }
+
     public static void preprocessing(String pdfName, Config config) throws IOException {
         LOGGER.log(Level.INFO, () -> "File name: " + pdfName);
         validateTempDirWritable();
@@ -838,11 +845,17 @@ public class DocumentProcessor {
         StaticContainers.setDocument(document);
         if (config.isUseStructTree()) {
             document.parseStructureTreeRoot();
-            if (document.getTree() != null) {
-                StaticLayoutContainers.setIsUseStructTree(true);
-            } else {
+            if (document.getTree() == null) {
                 StaticLayoutContainers.setIsUseStructTree(false);
                 LOGGER.log(Level.WARNING, "The document has no structure tree. The 'use-struct-tree' option will be ignored.");
+            } else if (!hasParentTree(pdDocument)) {
+                // Without a parent tree, the tree cannot map the marked content of the pages to its elements
+                // (ISO 32000-1, 14.7.4.4), and that content would be left out (#877).
+                StaticLayoutContainers.setIsUseStructTree(false);
+                LOGGER.log(Level.WARNING, "The structure tree of the document has no parent tree. "
+                    + "The 'use-struct-tree' option will be ignored.");
+            } else {
+                StaticLayoutContainers.setIsUseStructTree(true);
             }
         }
         StaticContainers.setFileName(pdfName);
