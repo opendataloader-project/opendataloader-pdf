@@ -54,6 +54,8 @@ public class TextLineProcessor {
     /** A roman numeral, as the page label of a preface. */
     private static final Pattern ROMAN_NUMERAL =
         Pattern.compile("(?i)m{0,3}(c[md]|d?c{0,3})(x[cl]|l?x{0,3})(i[xv]|v?i{0,3})");
+    /** A page reference of two words, as {@code p. 12}, {@code pp. 12-14}, or {@code B 7}. */
+    private static final Pattern PAGE_REFERENCE = Pattern.compile("\\p{L}{1,4}\\.?\\s+\\d[\\p{L}\\d.\\-\u2013]*");
     private static final Comparator<TextChunk> TEXT_CHUNK_COMPARATOR =
         Comparator.comparingDouble(o -> o.getBoundingBox().getLeftX());
 
@@ -120,10 +122,10 @@ public class TextLineProcessor {
      * the same place, and text with a letter after each gap. Each line is split at its gap; the parts before the
      * gaps are one paragraph, and the parts after them are another, so that each column is read as one.
      *
-     * <p>A table of contents has page numbers or page labels, as {@code iv} or {@code A-12}, after its gaps, so
-     * its lines stay one line each. A line with a list label, as a bullet, also stays one line. Single-spaced rows
-     * of a form stay one line each; two or three rows of a form with more spacing have the layout of a signature
-     * block, so they are split too.
+     * <p>A table of contents has page numbers or page labels, as {@code iv}, {@code A}, {@code A-12}, or
+     * {@code p. 12}, after its gaps, so its lines stay one line each. A line with a list label, as a bullet, also
+     * stays one line. Single-spaced rows of a form stay one line each; two or three rows of a form with more
+     * spacing have the layout of a signature block, so they are split too.
      */
     public static List<IObject> splitTwoColumnBlocks(List<IObject> contents) {
         List<Integer> indexes = new ArrayList<>();
@@ -210,12 +212,19 @@ public class TextLineProcessor {
         return text.codePoints().anyMatch(Character::isLetter) && !isPageLabel(text) ? gap : null;
     }
 
-    /** Whether the text is one word with a digit, as {@code A-12}, or a roman numeral in one case, as {@code iv}. */
+    /**
+     * Whether the text is a page label: a page reference of two words, as {@code p. 12}; or one word that is one
+     * character, as {@code A}, that has a digit, as {@code A-12}, or that is a roman numeral in one case, as
+     * {@code iv}.
+     */
     private static boolean isPageLabel(String text) {
+        if (PAGE_REFERENCE.matcher(text).matches()) {
+            return true;
+        }
         if (text.codePoints().anyMatch(Character::isWhitespace)) {
             return false;
         }
-        if (text.codePoints().anyMatch(Character::isDigit)) {
+        if (text.codePointCount(0, text.length()) == 1 || text.codePoints().anyMatch(Character::isDigit)) {
             return true;
         }
         return ROMAN_NUMERAL.matcher(text).matches() && (text.equals(text.toLowerCase(Locale.ROOT))
