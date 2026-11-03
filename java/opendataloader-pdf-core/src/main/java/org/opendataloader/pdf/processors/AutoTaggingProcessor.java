@@ -1,7 +1,8 @@
 package org.opendataloader.pdf.processors;
 
 import org.opendataloader.pdf.autotagging.ChunksWriter;
-import org.opendataloader.pdf.autotagging.OperatorStreamKey;
+import org.opendataloader.pdf.contentstream.ContentStreamTokens;
+import org.opendataloader.pdf.contentstream.OperatorStreamKey;
 import org.verapdf.operator.Operator;
 import org.verapdf.parser.Operators;
 import org.opendataloader.pdf.entities.DrawnTextChunk;
@@ -159,7 +160,7 @@ public class AutoTaggingProcessor {
             COSObject contentsObject = page.getKey(ASAtom.CONTENTS);
             PDResourcesHandler resourceHandler = PDResourcesHandler.getInstance(page.getResources(), page.isInheritedResources());
             List<Object> processedTokens = new ChunksWriter(new GraphicsState(resourceHandler),
-                resourceHandler).processTokens(ChunksWriter.getTokens(page.getContent()), operatorStreamKey);
+                resourceHandler).processTokens(ContentStreamTokens.getTokens(page.getContent()), operatorStreamKey);
             if (processedTokens.size() <= MAX_TOKENS_PER_STREAM) {
                 if (contentsObject != null && contentsObject.isIndirect() != null && contentsObject.isIndirect()) {
                     setUpContents(contentsObject, processedTokens);
@@ -1626,7 +1627,7 @@ public class AutoTaggingProcessor {
                 || identitySet(parents).stream().anyMatch(p -> pagesPerParent.get(p) > 1)) {
                 continue;
             }
-            List<Object> tokens = ChunksWriter.getTokens(document.getPage(key.getPageNumber()).getContent());
+            List<Object> tokens = ContentStreamTokens.getTokens(document.getPage(key.getPageNumber()).getContent());
             // getTokens returns an empty list when the stream cannot be read; keep the
             // unmerged MCIDs rather than fail the whole document.
             if (Collections.max(operators.keySet()) >= tokens.size()) {

@@ -7,7 +7,7 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.opendataloader.pdf.api.Config;
-import org.opendataloader.pdf.autotagging.ChunksWriter;
+import org.opendataloader.pdf.contentstream.ContentStreamTokens;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.entities.DrawnTextChunk;
 import org.verapdf.as.ASAtom;
@@ -63,7 +63,7 @@ class DrawnTextTaggingTest {
         }
         StaticLayoutContainers.clearContainers();
         DocumentProcessor.preprocessing(pdf.toString(), new Config());
-        List<Object> tokens = ChunksWriter.getTokens(StaticResources.getDocument().getPages().get(0).getContent());
+        List<Object> tokens = ContentStreamTokens.getTokens(StaticResources.getDocument().getPages().get(0).getContent());
         fills = new ArrayList<>();
         for (int i = 0; i < tokens.size(); i++) {
             if (tokens.get(i) instanceof Operator && "f".equals(((Operator) tokens.get(i)).getOperator())) {

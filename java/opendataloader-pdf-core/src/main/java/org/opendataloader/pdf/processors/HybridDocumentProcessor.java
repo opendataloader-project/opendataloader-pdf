@@ -16,7 +16,7 @@
 package org.opendataloader.pdf.processors;
 
 import org.opendataloader.pdf.api.Config;
-import org.opendataloader.pdf.autotagging.PagePaints;
+import org.opendataloader.pdf.contentstream.PagePaints;
 import org.opendataloader.pdf.entities.DrawnTextChunk;
 import org.opendataloader.pdf.entities.EnrichedImageChunk;
 import org.opendataloader.pdf.entities.SemanticFormula;

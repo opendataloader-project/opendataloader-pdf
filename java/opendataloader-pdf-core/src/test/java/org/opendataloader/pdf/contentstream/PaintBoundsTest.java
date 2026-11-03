@@ -1,4 +1,4 @@
-package org.opendataloader.pdf.autotagging;
+package org.opendataloader.pdf.contentstream;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -70,7 +70,7 @@ class PaintBoundsTest {
             document.save(pdf.toFile());
         }
         DocumentProcessor.preprocessing(pdf.toString(), new Config());
-        List<Object> tokens = ChunksWriter.getTokens(StaticResources.getDocument().getPages().get(0).getContent());
+        List<Object> tokens = ContentStreamTokens.getTokens(StaticResources.getDocument().getPages().get(0).getContent());
 
         Map<OperatorStreamKey, Map<Integer, BoundingBox>> bounds = PaintBounds.of(0);
 
@@ -104,7 +104,7 @@ class PaintBoundsTest {
             document.save(pdf.toFile());
         }
         DocumentProcessor.preprocessing(pdf.toString(), new Config());
-        List<Object> tokens = ChunksWriter.getTokens(StaticResources.getDocument().getPages().get(0).getContent());
+        List<Object> tokens = ContentStreamTokens.getTokens(StaticResources.getDocument().getPages().get(0).getContent());
 
         Map<Integer, BoundingBox> page = PaintBounds.of(0).get(new OperatorStreamKey(0, null));
 
@@ -134,7 +134,7 @@ class PaintBoundsTest {
             document.save(pdf.toFile());
         }
         DocumentProcessor.preprocessing(pdf.toString(), new Config());
-        List<Object> tokens = ChunksWriter.getTokens(StaticResources.getDocument().getPages().get(0).getContent());
+        List<Object> tokens = ContentStreamTokens.getTokens(StaticResources.getDocument().getPages().get(0).getContent());
         int doIndex = indexesOf(tokens, "Do").get(0);
         String formName = ((COSBase) tokens.get(doIndex - 1)).getString();
 

@@ -1,4 +1,4 @@
-package org.opendataloader.pdf.autotagging;
+package org.opendataloader.pdf.contentstream;
 
 import org.junit.jupiter.api.Test;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;

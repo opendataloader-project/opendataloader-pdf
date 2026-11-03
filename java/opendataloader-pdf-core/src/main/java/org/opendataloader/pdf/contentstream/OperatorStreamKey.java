@@ -1,4 +1,4 @@
-package org.opendataloader.pdf.autotagging;
+package org.opendataloader.pdf.contentstream;
 
 import java.util.Objects;
 
