@@ -1,4 +1,4 @@
-package org.opendataloader.pdf.contentstream;
+package org.opendataloader.pdf.autotagging;
 
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.StreamInfo;

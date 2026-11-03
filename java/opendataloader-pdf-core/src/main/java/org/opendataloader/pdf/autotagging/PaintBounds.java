@@ -1,4 +1,6 @@
-package org.opendataloader.pdf.contentstream;
+package org.opendataloader.pdf.autotagging;
+
+import org.opendataloader.pdf.contentstream.ContentStreamTokens;
 
 import org.verapdf.cos.COSBase;
 import org.verapdf.cos.COSName;

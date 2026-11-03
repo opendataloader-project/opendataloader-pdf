@@ -1,4 +1,4 @@
-package org.opendataloader.pdf.contentstream;
+package org.opendataloader.pdf.autotagging;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -9,6 +9,7 @@ import org.apache.pdfbox.util.Matrix;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.contentstream.ContentStreamTokens;
 import org.opendataloader.pdf.processors.DocumentProcessor;
 import org.verapdf.cos.COSBase;
 import org.verapdf.operator.Operator;
