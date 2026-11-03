@@ -15,6 +15,7 @@
  */
 package org.opendataloader.pdf.processors;
 
+import org.opendataloader.pdf.utils.BulletedParagraphUtils;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
@@ -35,8 +36,10 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public class TextLineProcessor {
 
@@ -48,6 +51,9 @@ public class TextLineProcessor {
     private static final double MAX_COLUMN_ROW_DISTANCE = 4;
     /** A block of two columns, as a signature block, has at most this many lines. */
     private static final int MAX_COLUMN_BLOCK_LINES = 3;
+    /** A roman numeral, as the page label of a preface. */
+    private static final Pattern ROMAN_NUMERAL =
+        Pattern.compile("(?i)m{0,3}(c[md]|d?c{0,3})(x[cl]|l?x{0,3})(i[xv]|v?i{0,3})");
     private static final Comparator<TextChunk> TEXT_CHUNK_COMPARATOR =
         Comparator.comparingDouble(o -> o.getBoundingBox().getLeftX());
 
@@ -109,11 +115,15 @@ public class TextLineProcessor {
 
     /**
      * Makes one paragraph of each column of a block of two columns (#878). A signature block has this layout: two
-     * or three lines, one below the other with more than single spacing between them, each with one gap of at
-     * least {@link #MIN_COLUMN_GAP} font sizes, the gaps at the same place, and text with a letter after each gap.
-     * Each line is split at its gap; the parts before the gaps are one paragraph, and the parts after them are
-     * another, so that each column is read as one. A table of contents has page numbers after its gaps, and the
-     * rows of a form are single spaced, so they stay one line each.
+     * or three lines, one after the other in the contents and one below the other on the page, with more than
+     * single spacing between them, each with one gap of at least {@link #MIN_COLUMN_GAP} font sizes, the gaps at
+     * the same place, and text with a letter after each gap. Each line is split at its gap; the parts before the
+     * gaps are one paragraph, and the parts after them are another, so that each column is read as one.
+     *
+     * <p>A table of contents has page numbers or page labels, as {@code iv} or {@code A-12}, after its gaps, so
+     * its lines stay one line each. A line with a list label, as a bullet, also stays one line. Single-spaced rows
+     * of a form stay one line each; two or three rows of a form with more spacing have the layout of a signature
+     * block, so they are split too.
      */
     public static List<IObject> splitTwoColumnBlocks(List<IObject> contents) {
         List<Integer> indexes = new ArrayList<>();
@@ -128,7 +138,8 @@ public class TextLineProcessor {
         int start = 0;
         while (start < indexes.size()) {
             int end = start;
-            while (end + 1 < indexes.size() && gaps.get(end) != null && gaps.get(end + 1) != null
+            while (end + 1 < indexes.size() && indexes.get(end + 1) == indexes.get(end).intValue() + 1
+                    && gaps.get(end) != null && gaps.get(end + 1) != null
                     && areRowsOfColumns((TextLine) contents.get(indexes.get(end)), gaps.get(end),
                     (TextLine) contents.get(indexes.get(end + 1)), gaps.get(end + 1))) {
                 end++;
@@ -163,8 +174,14 @@ public class TextLineProcessor {
         return newContents;
     }
 
-    /** The one gap of at least {@link #MIN_COLUMN_GAP} font sizes, as {start, end}, with a letter after it, or null. */
+    /**
+     * The one gap of at least {@link #MIN_COLUMN_GAP} font sizes, as {start, end}, with a letter after it and no
+     * page label, or null. A line with a list label has none.
+     */
     private static double[] getColumnGap(TextLine line) {
+        if (BulletedParagraphUtils.isLabeledLine(line)) {
+            return null;
+        }
         double minGap = MIN_COLUMN_GAP * line.getFontSize();
         double[] gap = null;
         TextChunk previous = null;
@@ -183,12 +200,26 @@ public class TextLineProcessor {
         if (gap == null) {
             return null;
         }
+        StringBuilder after = new StringBuilder();
         for (TextChunk chunk : line.getTextChunks()) {
-            if (chunk.getLeftX() >= gap[1] && chunk.getValue().codePoints().anyMatch(Character::isLetter)) {
-                return gap;
+            if (chunk.getLeftX() >= gap[1]) {
+                after.append(chunk.getValue());
             }
         }
-        return null;
+        String text = after.toString().trim();
+        return text.codePoints().anyMatch(Character::isLetter) && !isPageLabel(text) ? gap : null;
+    }
+
+    /** Whether the text is one word with a digit, as {@code A-12}, or a roman numeral in one case, as {@code iv}. */
+    private static boolean isPageLabel(String text) {
+        if (text.codePoints().anyMatch(Character::isWhitespace)) {
+            return false;
+        }
+        if (text.codePoints().anyMatch(Character::isDigit)) {
+            return true;
+        }
+        return ROMAN_NUMERAL.matcher(text).matches() && (text.equals(text.toLowerCase(Locale.ROOT))
+            || text.equals(text.toUpperCase(Locale.ROOT)));
     }
 
     /** Whether the line below is the next row of the columns: more than single spacing, the gaps at one place. */
