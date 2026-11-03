@@ -22,6 +22,7 @@ import org.verapdf.wcag.algorithms.entities.content.TextBlock;
 import org.verapdf.wcag.algorithms.entities.content.TextColumn;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.enums.TextAlignment;
+import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.CaptionUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
@@ -32,8 +33,39 @@ import java.util.*;
 public class ParagraphProcessor {
 
     public static final double DIFFERENT_LINES_PROBABILITY = 0.75;
+    /**
+     * Two lines whose baselines are more than this many times the usual distance apart have an empty line
+     * between them, so they are in two paragraphs (#876).
+     */
+    private static final double EMPTY_LINE_RATIO = 1.5;
+    /** The width of the classes of the distances between baselines, relative to the font size. */
+    private static final double LEADING_CLASS_WIDTH = 0.05;
+    /** The usual distance must occur this many times on the page, or the font size has none. */
+    private static final int MIN_USUAL_LEADING_COUNT = 3;
+    /** Distances between baselines out of this range, relative to the font size, are not counted. */
+    private static final double MIN_LEADING = 0.8;
+    private static final double MAX_LEADING = 3;
+    /** Two lines start at the same x when their left ends are this many font sizes apart or less. */
+    private static final double SAME_X_RATIO = 0.3;
+    /** The largest distance between baselines of single spacing, relative to the font size. */
+    private static final double MAX_SINGLE_LEADING = 1.6;
+    /** The usual distances between baselines on the page, by font size class; a page runs on one thread. */
+    private static final ThreadLocal<Map<Long, Double>> USUAL_LEADINGS = ThreadLocal.withInitial(HashMap::new);
 
     public static List<IObject> processParagraphs(List<IObject> contents) {
+        return processParagraphs(contents, false);
+    }
+
+    /**
+     * Detects the paragraphs of the body text of a page. A line after an empty line starts a paragraph there
+     * (#876); the lines in a table cell, a list item, a header, or a footer keep the rules of
+     * {@link #processParagraphs(List)}.
+     */
+    public static List<IObject> processPageParagraphs(List<IObject> contents) {
+        return processParagraphs(contents, true);
+    }
+
+    private static List<IObject> processParagraphs(List<IObject> contents, boolean breakAtEmptyLines) {
         DocumentProcessor.setIndexesForContentsList(contents);
         List<TextBlock> blocks = new ArrayList<>();
         for (IObject content : contents) {
@@ -41,16 +73,90 @@ public class ParagraphProcessor {
                 blocks.add(new TextBlock((TextLine) content));
             }
         }
-        blocks = detectParagraphsWithJustifyAlignments(blocks);
-        blocks = detectFirstAndLastLinesOfParagraphsWithJustifyAlignments(blocks);
-        blocks = detectParagraphsWithLeftAlignments(blocks, true);
-        blocks = detectParagraphsWithLeftAlignments(blocks, false);
-        blocks = detectFirstLinesOfParagraphWithLeftAlignments(blocks);
-        blocks = detectParagraphsWithCenterAlignments(blocks);
-        blocks = detectParagraphsWithRightAlignments(blocks);
-        blocks = detectTwoLinesParagraphs(blocks);
-        blocks = processOtherLines(blocks);
+        USUAL_LEADINGS.set(breakAtEmptyLines ? getUsualLeadings(blocks) : new HashMap<>());
+        try {
+            blocks = detectParagraphsWithJustifyAlignments(blocks);
+            blocks = detectFirstAndLastLinesOfParagraphsWithJustifyAlignments(blocks);
+            blocks = detectParagraphsWithLeftAlignments(blocks, true);
+            blocks = detectParagraphsWithLeftAlignments(blocks, false);
+            blocks = detectFirstLinesOfParagraphWithLeftAlignments(blocks);
+            blocks = detectParagraphsWithCenterAlignments(blocks);
+            blocks = detectParagraphsWithRightAlignments(blocks);
+            blocks = detectTwoLinesParagraphs(blocks);
+            blocks = processOtherLines(blocks);
+        } finally {
+            USUAL_LEADINGS.remove();
+        }
         return getContentsWithDetectedParagraphs(contents, blocks);
+    }
+
+    /**
+     * The usual distance between the baselines of the lines of the page, for each font size class, relative to
+     * the font size. It is the most common distance between two lines that follow each other, one below the
+     * other, in that font size, among the distances of single spacing that occur at least
+     * {@link #MIN_USUAL_LEADING_COUNT} times. On a page of short paragraphs, the distance with an empty line
+     * occurs more often than the single spacing, so it is not the usual one (#876). A page with no such single
+     * spacing, as a double-spaced page, takes the most common distance.
+     */
+    private static Map<Long, Double> getUsualLeadings(List<TextBlock> lines) {
+        Map<Long, Map<Long, Integer>> counts = new HashMap<>();
+        for (int i = 1; i < lines.size(); i++) {
+            TextLine above = lines.get(i - 1).getLastLine();
+            TextLine below = lines.get(i).getFirstLine();
+            double fontSize = above.getFontSize();
+            double distance = above.getBaseLine() - below.getBaseLine();
+            if (fontSize > 0 && NodeUtils.areCloseNumbers(fontSize, below.getFontSize(), 1e-1)
+                    && distance > MIN_LEADING * fontSize && distance < MAX_LEADING * fontSize
+                    && BoundingBox.areHorizontalOverlapping(above.getBoundingBox(), below.getBoundingBox())) {
+                counts.computeIfAbsent(getFontSizeClass(fontSize), size -> new HashMap<>())
+                    .merge(Math.round(distance / fontSize / LEADING_CLASS_WIDTH), 1, Integer::sum);
+            }
+        }
+        Map<Long, Double> leadings = new HashMap<>();
+        for (Map.Entry<Long, Map<Long, Integer>> size : counts.entrySet()) {
+            Long single = getMostCommonLeading(size.getValue(), MAX_SINGLE_LEADING);
+            Long usual = single != null ? single : getMostCommonLeading(size.getValue(), MAX_LEADING);
+            if (usual != null) {
+                leadings.put(size.getKey(), usual * LEADING_CLASS_WIDTH);
+            }
+        }
+        return leadings;
+    }
+
+    /** The most common distance class up to the maximum that occurs often enough, the smaller one of a tie. */
+    private static Long getMostCommonLeading(Map<Long, Integer> counts, double maxLeading) {
+        Long usual = null;
+        for (Map.Entry<Long, Integer> entry : counts.entrySet()) {
+            if (entry.getValue() < MIN_USUAL_LEADING_COUNT || entry.getKey() * LEADING_CLASS_WIDTH > maxLeading) {
+                continue;
+            }
+            if (usual == null || entry.getValue() > counts.get(usual)
+                    || (entry.getValue().equals(counts.get(usual)) && entry.getKey() < usual)) {
+                usual = entry.getKey();
+            }
+        }
+        return usual;
+    }
+
+    private static long getFontSizeClass(double fontSize) {
+        return Math.round(fontSize * 2);
+    }
+
+    /**
+     * Whether an empty line is between the lines: they start at the same x, and they are farther apart than the
+     * lines of the page usually are. Lines that start at different x, as a centered formula and the text after
+     * it, keep the other rules: their reading order comes from the paragraph.
+     */
+    private static boolean isEmptyLineBetween(TextBlock previousBlock, TextBlock nextBlock) {
+        TextLine above = previousBlock.getLastLine();
+        TextLine below = nextBlock.getFirstLine();
+        Double usualLeading = USUAL_LEADINGS.get().get(getFontSizeClass(above.getFontSize()));
+        if (usualLeading == null
+                || Math.abs(above.getLeftX() - below.getLeftX()) > SAME_X_RATIO * above.getFontSize()) {
+            return false;
+        }
+        double distance = above.getBaseLine() - below.getBaseLine();
+        return distance > EMPTY_LINE_RATIO * usualLeading * above.getFontSize();
     }
 
     private static List<IObject> getContentsWithDetectedParagraphs(List<IObject> contents, List<TextBlock> blocks) {
@@ -505,7 +611,7 @@ public class ParagraphProcessor {
 
     private static double getDifferentLinesProbability(TextBlock previousBlock, TextBlock nextBlock,
                                                        boolean areSupportNotSingleLines, boolean areShouldBeCloseLines) {
-        if (previousBlock.isHiddenText() != nextBlock.isHiddenText()) {
+        if (previousBlock.isHiddenText() != nextBlock.isHiddenText() || isEmptyLineBetween(previousBlock, nextBlock)) {
             return 0;
         }
         if (previousBlock.getLinesNumber() == 1 && nextBlock.getLinesNumber() == 1) {
