@@ -20,6 +20,7 @@ import org.opendataloader.pdf.utils.BulletedParagraphUtils;
 import org.verapdf.as.ASAtom;
 import org.verapdf.wcag.algorithms.entities.INode;
 import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.*;
 import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
@@ -536,6 +537,85 @@ public class ListProcessor {
             }
         }
         return DocumentProcessor.removeNullObjectsFromList(contents);
+    }
+
+    /**
+     * Puts a list below a line that starts with a bullet into an item of that line (#755). The list detection
+     * needs two items, so one such line stays a paragraph, and the list below it is its sibling. The line is the
+     * parent item of the list when the list follows it without an empty line, in the same font size, and with its
+     * markers at or after the text of the line. A numbered line, as a section title, is not a parent item.
+     */
+    public static List<IObject> nestListsBelowBulletLines(List<IObject> contents) {
+        IObject previous = null;
+        int previousIndex = -1;
+        for (int index = 0; index < contents.size(); index++) {
+            IObject object = contents.get(index);
+            if (object == null || isLineOfText(object, previous)) {
+                continue;
+            }
+            if (object instanceof PDFList && previous instanceof SemanticParagraph
+                    && isParentLine((SemanticParagraph) previous, (PDFList) object)) {
+                PDFList parent = createParentList((SemanticParagraph) previous, (PDFList) object);
+                contents.set(previousIndex, parent);
+                contents.set(index, null);
+                previous = parent;
+                continue;
+            }
+            previous = object;
+            previousIndex = index;
+        }
+        return DocumentProcessor.removeNullObjectsFromList(contents);
+    }
+
+    /** Whether the object is a line in the box of the paragraph before it, as an underline of its text. */
+    private static boolean isLineOfText(IObject object, IObject previous) {
+        if (!(previous instanceof SemanticParagraph) || !(object instanceof LineChunk || object instanceof LineArtChunk)) {
+            return false;
+        }
+        double tolerance = getMaxXGap(((SemanticParagraph) previous).getFontSize());
+        return object.getLeftX() >= previous.getLeftX() - tolerance && object.getRightX() <= previous.getRightX() + tolerance
+                && object.getBottomY() >= previous.getBottomY() - tolerance && object.getTopY() <= previous.getTopY() + tolerance;
+    }
+
+    private static boolean isParentLine(SemanticParagraph paragraph, PDFList list) {
+        TextLine line = paragraph.getFirstLine();
+        if (line == null || list.getListItems().isEmpty() || !BulletedParagraphUtils.startsWithBullet(line)) {
+            return false;
+        }
+        double fontSize = line.getFontSize();
+        TextLine listLine = list.getListItems().get(0).getFirstLine();
+        double maxXGap = getMaxXGap(fontSize);
+        int textIndex = getBulletLabelLength(line);
+        if (listLine == null || Math.abs(listLine.getFontSize() - fontSize) > maxXGap || textIndex >= line.getValue().length()) {
+            return false;
+        }
+        double gap = paragraph.getBottomY() - list.getTopY();
+        return gap >= -maxXGap && gap <= fontSize
+                && list.getLeftX() > paragraph.getLeftX() + maxXGap
+                && list.getLeftX() >= line.getSymbolStartCoordinate(textIndex) - maxXGap;
+    }
+
+    /** The length of the bullet at the start of the line and of the white space after it. */
+    private static int getBulletLabelLength(TextLine line) {
+        String value = line.getValue();
+        int index = line.getConnectedLineArtLabel() != null ? 0 : 1;
+        while (index < value.length() && Character.isWhitespace(value.charAt(index))) {
+            index++;
+        }
+        return index;
+    }
+
+    private static PDFList createParentList(SemanticParagraph paragraph, PDFList list) {
+        ListItem item = new ListItem(new BoundingBox(), null);
+        for (TextLine textLine : paragraph.getFirstColumn().getLines()) {
+            item.add(textLine);
+        }
+        item.setLabelLength(getBulletLabelLength(item.getFirstLine()));
+        item.getContents().add(list);
+        PDFList parent = new PDFList();
+        parent.setNumberingStyle(NumberingStyleNames.UNORDERED);
+        parent.add(item);
+        return parent;
     }
 
     private static List<ListItemTextInfo> calculateTextChildrenInfo(List<SemanticTextNode> textNodes) {
