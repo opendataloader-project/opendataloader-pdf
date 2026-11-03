@@ -479,6 +479,7 @@ public class DocumentProcessor {
                         pageContents = SpecialTableProcessor.detectSpecialTables(pageContents);
                     }
                     pageContents = TextLineProcessor.processTextLines(pageContents);
+                    pageContents = TextLineProcessor.splitTwoColumnBlocks(pageContents);
                     contents.set(pageNumber, pageContents);
                 })
             ).get();
