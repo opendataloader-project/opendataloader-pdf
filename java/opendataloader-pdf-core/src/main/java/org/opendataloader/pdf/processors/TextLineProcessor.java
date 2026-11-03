@@ -151,7 +151,7 @@ public class TextLineProcessor {
                 TextBlock left = null;
                 TextBlock right = null;
                 for (int k = start; k <= end; k++) {
-                    List<TextLine> parts = splitAt((TextLine) contents.get(indexes.get(k)), gaps.get(k)[0]);
+                    List<TextLine> parts = splitAt((TextLine) contents.get(indexes.get(k)), gaps.get(k)[1]);
                     left = addLine(left, parts.get(0));
                     right = addLine(right, parts.get(1));
                     splitLines.put(indexes.get(k), new ArrayList<>());
@@ -213,9 +213,9 @@ public class TextLineProcessor {
     }
 
     /**
-     * Whether the text is a page label: a page reference of two words, as {@code p. 12}; or one word that is one
-     * character, as {@code A}, that has a digit, as {@code A-12}, or that is a roman numeral in one case, as
-     * {@code iv}.
+     * Whether the text is a page label: a page reference of two words, as {@code p. 12}; or one word, with or
+     * without a period at its end, that is one character, as {@code A}, that has a digit, as {@code A-12}, or that
+     * is a roman numeral in one case, as {@code iv}.
      */
     private static boolean isPageLabel(String text) {
         if (PAGE_REFERENCE.matcher(text).matches()) {
@@ -224,11 +224,12 @@ public class TextLineProcessor {
         if (text.codePoints().anyMatch(Character::isWhitespace)) {
             return false;
         }
-        if (text.codePointCount(0, text.length()) == 1 || text.codePoints().anyMatch(Character::isDigit)) {
+        String word = text.length() > 1 && text.endsWith(".") ? text.substring(0, text.length() - 1) : text;
+        if (word.codePointCount(0, word.length()) == 1 || word.codePoints().anyMatch(Character::isDigit)) {
             return true;
         }
-        return ROMAN_NUMERAL.matcher(text).matches() && (text.equals(text.toLowerCase(Locale.ROOT))
-            || text.equals(text.toUpperCase(Locale.ROOT)));
+        return ROMAN_NUMERAL.matcher(word).matches() && (word.equals(word.toLowerCase(Locale.ROOT))
+            || word.equals(word.toUpperCase(Locale.ROOT)));
     }
 
     /** Whether the line below is the next row of the columns: more than single spacing, the gaps at one place. */
@@ -248,12 +249,15 @@ public class TextLineProcessor {
         return block;
     }
 
-    /** The two lines of the chunks before and after the x, without the white space at the gap. */
+    /**
+     * The two lines of the chunks that start before the x, the end of the gap, and of the others, without the
+     * white space at the gap.
+     */
     private static List<TextLine> splitAt(TextLine line, double x) {
         List<TextChunk> leftChunks = new ArrayList<>();
         List<TextChunk> rightChunks = new ArrayList<>();
         for (TextChunk chunk : line.getTextChunks()) {
-            (chunk.getRightX() <= x ? leftChunks : rightChunks).add(chunk);
+            (chunk.getLeftX() < x ? leftChunks : rightChunks).add(chunk);
         }
         while (!leftChunks.isEmpty() && leftChunks.get(leftChunks.size() - 1).isWhiteSpaceChunk()) {
             leftChunks.remove(leftChunks.size() - 1);
