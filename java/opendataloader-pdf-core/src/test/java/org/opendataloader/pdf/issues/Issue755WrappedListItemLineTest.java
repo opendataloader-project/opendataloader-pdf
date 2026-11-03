@@ -131,6 +131,26 @@ class Issue755WrappedListItemLineTest {
             "a dash line is lost: " + document);
     }
 
+    /**
+     * Guard: in a list of short items, the widest item is not a full line. A body line above the list ends at
+     * the right margin, so one dash line below the widest item is not a wrap of its line.
+     */
+    @Test
+    void dashLineBelowTheWidestShortItemStaysOutOfItsText() throws IOException {
+        List<Line> lines = Arrays.asList(
+            new Line("The members of the board meet in the town hall on the first day of each", 69.1f),
+            new Line("o", MARKER, 2), new Line("Approval of the minutes", TEXT),
+            new Line("o", MARKER), new Line("Allowance of the mayor and of the deputies", TEXT),
+            new Line("- part of the allowance", TEXT),
+            new Line("o", MARKER), new Line("Budget of the town for the year", TEXT));
+        JsonNode document = convert("widest-short-item", lines);
+
+        JsonNode item = itemThatContains(document, "Allowance of the mayor");
+        assertTrue(item != null && !item.path("content").asText().contains("part of the allowance"),
+            "a dash line below the widest short item is in the text of the item: " + document);
+        assertTrue(document.toString().contains("part of the allowance"), "the dash line is lost: " + document);
+    }
+
     /** Guard: a wrapped line without a label stays a line of its item. */
     @Test
     void wrappedLineWithoutALabelIsATextLineOfItsItem() throws IOException {
