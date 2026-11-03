@@ -324,6 +324,15 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "default": False,
         "description": "With --hybrid, write the triage decision of each page (Java or backend, the confidence, and the signals) to triage/<name>.json in the output folder",
     },
+    {
+        "name": "filter-hidden-text",
+        "python_name": "filter_hidden_text",
+        "short_name": None,
+        "type": "string",
+        "required": False,
+        "default": "off",
+        "description": "Filter hidden (low-contrast) text via per-page rendering. Values: on, off. Default: off (opt-in; expensive, runs as sequential post-processing)",
+    },
 ]
 
 

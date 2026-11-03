@@ -94,6 +94,11 @@ public class CLIOptions {
     private static final String CONTENT_SAFETY_OFF_DESC = "Disable content safety filters. "
             + "Values: all, hidden-text, off-page, tiny, hidden-ocg, background";
 
+    // ===== Filter Hidden Text =====
+    private static final String FILTER_HIDDEN_TEXT_LONG_OPTION = "filter-hidden-text";
+    private static final String FILTER_HIDDEN_TEXT_DESC = "Filter hidden (low-contrast) text via per-page rendering. "
+            + "Values: on, off. Default: off (opt-in; expensive, runs as sequential post-processing)";
+
     // ===== Sanitize =====
     private static final String SANITIZE_LONG_OPTION = "sanitize";
     private static final String SANITIZE_DESC = "Enable sensitive data sanitization. "
@@ -292,6 +297,7 @@ public class CLIOptions {
             new OptionDefinition(HYBRID_AVAILABILITY_TIMEOUT_LONG_OPTION, null, "string", "3000",
                     HYBRID_AVAILABILITY_TIMEOUT_DESC, true),
             new OptionDefinition(HYBRID_TRIAGE_LOG_LONG_OPTION, null, "boolean", false, HYBRID_TRIAGE_LOG_DESC, true),
+            new OptionDefinition(FILTER_HIDDEN_TEXT_LONG_OPTION, null, "string", "off", FILTER_HIDDEN_TEXT_DESC, true),
 
             // Legacy options (not exported, for backward compatibility)
             new OptionDefinition(HYBRID_OCR_LONG_OPTION, null, "string", null, HYBRID_OCR_DESC, false),
@@ -412,6 +418,7 @@ public class CLIOptions {
             }
         }
         applyContentSafetyOption(config, commandLine);
+        applyFilterHiddenTextOption(config, commandLine);
         applySanitizeOption(config, commandLine);
         applyFormatOption(config, commandLine);
         applyTableMethodOption(config, commandLine);
@@ -569,6 +576,31 @@ public class CLIOptions {
                             "Unsupported value '%s'. Supported values: all, hidden-text, off-page, tiny, hidden-ocg, background",
                             value));
             }
+        }
+    }
+
+    /**
+     * Applies {@code --filter-hidden-text on|off}. Runs after
+     * {@link #applyContentSafetyOption} so an explicit opt-in wins over a
+     * {@code --content-safety-off hidden-text} disable.
+     */
+    private static void applyFilterHiddenTextOption(Config config, CommandLine commandLine) {
+        if (!commandLine.hasOption(FILTER_HIDDEN_TEXT_LONG_OPTION)) {
+            return;
+        }
+        String value = commandLine.getOptionValue(FILTER_HIDDEN_TEXT_LONG_OPTION);
+        String normalized = value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
+        switch (normalized) {
+            case "on":
+                config.getFilterConfig().setFilterHiddenText(true);
+                break;
+            case "off":
+                config.getFilterConfig().setFilterHiddenText(false);
+                break;
+            default:
+                throw new IllegalArgumentException(String.format(
+                        "Option --%s requires a value of 'on' or 'off' (got '%s').",
+                        FILTER_HIDDEN_TEXT_LONG_OPTION, value));
         }
     }
 

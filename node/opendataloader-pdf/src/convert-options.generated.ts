@@ -75,6 +75,8 @@ export interface ConvertOptions {
   hybridAvailabilityTimeout?: string;
   /** With --hybrid, write the triage decision of each page (Java or backend, the confidence, and the signals) to triage/<name>.json in the output folder */
   hybridTriageLog?: boolean;
+  /** Filter hidden (low-contrast) text via per-page rendering. Values: on, off. Default: off (opt-in; expensive, runs as sequential post-processing) */
+  filterHiddenText?: string;
 }
 
 /**
@@ -116,6 +118,7 @@ export interface CliOptions {
   includeLinks?: boolean;
   hybridAvailabilityTimeout?: string;
   hybridTriageLog?: boolean;
+  filterHiddenText?: string;
 }
 
 /**
@@ -228,6 +231,9 @@ export function buildConvertOptions(cliOptions: CliOptions): ConvertOptions {
   }
   if (cliOptions.hybridTriageLog) {
     convertOptions.hybridTriageLog = true;
+  }
+  if (cliOptions.filterHiddenText) {
+    convertOptions.filterHiddenText = cliOptions.filterHiddenText;
   }
 
   return convertOptions;
@@ -355,6 +361,9 @@ export function buildArgs(options: ConvertOptions): string[] {
   }
   if (options.hybridTriageLog) {
     args.push('--hybrid-triage-log');
+  }
+  if (options.filterHiddenText) {
+    args.push('--filter-hidden-text', options.filterHiddenText);
   }
 
   return args;
