@@ -97,7 +97,8 @@ public class CLIOptions {
     // ===== Filter Hidden Text =====
     private static final String FILTER_HIDDEN_TEXT_LONG_OPTION = "filter-hidden-text";
     private static final String FILTER_HIDDEN_TEXT_DESC = "Filter hidden (low-contrast) text via per-page rendering. "
-            + "Values: on, off. Default: off (opt-in; expensive, runs as sequential post-processing)";
+            + "Values: on, off. Default: off (opt-in; expensive, runs as sequential post-processing). "
+            + "Applies to the native Java pipeline only; ignored with --hybrid and --use-struct-tree";
 
     // ===== Sanitize =====
     private static final String SANITIZE_LONG_OPTION = "sanitize";

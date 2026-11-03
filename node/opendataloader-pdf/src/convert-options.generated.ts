@@ -75,7 +75,7 @@ export interface ConvertOptions {
   hybridAvailabilityTimeout?: string;
   /** With --hybrid, write the triage decision of each page (Java or backend, the confidence, and the signals) to triage/<name>.json in the output folder */
   hybridTriageLog?: boolean;
-  /** Filter hidden (low-contrast) text via per-page rendering. Values: on, off. Default: off (opt-in; expensive, runs as sequential post-processing) */
+  /** Filter hidden (low-contrast) text via per-page rendering. Values: on, off. Default: off (opt-in; expensive, runs as sequential post-processing). Applies to the native Java pipeline only; ignored with --hybrid and --use-struct-tree */
   filterHiddenText?: string;
 }
 
