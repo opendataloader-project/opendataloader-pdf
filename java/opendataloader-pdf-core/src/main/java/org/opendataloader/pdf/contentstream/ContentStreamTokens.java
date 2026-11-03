@@ -31,7 +31,7 @@ import java.util.logging.Logger;
  * Reads the tokens of a content stream: operands and operators in stream order.
  *
  * <p>The index of a token in the returned list is the operator index that a
- * {@code StreamInfo} and {@link OperatorStreamKey} refer to.
+ * {@code StreamInfo} and {@link org.opendataloader.pdf.autotagging.OperatorStreamKey} refer to.
  */
 public final class ContentStreamTokens {
 

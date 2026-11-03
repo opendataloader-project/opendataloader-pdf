@@ -2,7 +2,7 @@ package org.opendataloader.pdf.processors;
 
 import org.opendataloader.pdf.autotagging.ChunksWriter;
 import org.opendataloader.pdf.contentstream.ContentStreamTokens;
-import org.opendataloader.pdf.contentstream.OperatorStreamKey;
+import org.opendataloader.pdf.autotagging.OperatorStreamKey;
 import org.verapdf.operator.Operator;
 import org.verapdf.parser.Operators;
 import org.opendataloader.pdf.entities.DrawnTextChunk;

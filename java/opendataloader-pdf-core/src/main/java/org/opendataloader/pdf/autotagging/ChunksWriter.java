@@ -1,7 +1,6 @@
 package org.opendataloader.pdf.autotagging;
 
 import org.opendataloader.pdf.contentstream.ContentStreamTokens;
-import org.opendataloader.pdf.contentstream.OperatorStreamKey;
 import org.opendataloader.pdf.processors.AutoTaggingProcessor;
 import org.verapdf.as.ASAtom;
 import org.verapdf.cos.*;
