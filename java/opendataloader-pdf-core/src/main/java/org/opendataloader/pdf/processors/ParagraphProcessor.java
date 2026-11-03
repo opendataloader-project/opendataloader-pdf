@@ -19,6 +19,7 @@ import org.opendataloader.pdf.utils.BulletedParagraphUtils;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.content.TextBlock;
+import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextColumn;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.enums.TextAlignment;
@@ -49,8 +50,10 @@ public class ParagraphProcessor {
     private static final double SAME_X_RATIO = 0.3;
     /** The largest distance between baselines of single spacing, relative to the font size. */
     private static final double MAX_SINGLE_LEADING = 1.6;
-    /** The usual distances between baselines on the page, by font size class; a page runs on one thread. */
-    private static final ThreadLocal<Map<Long, Double>> USUAL_LEADINGS = ThreadLocal.withInitial(HashMap::new);
+    /** The width of a space, relative to the font size. */
+    private static final double SPACE_WIDTH_RATIO = 0.25;
+    /** The lines of the page whose body text is in detection, or none; a page runs on one thread. */
+    private static final ThreadLocal<PageLines> PAGE_LINES = new ThreadLocal<>();
 
     public static List<IObject> processParagraphs(List<IObject> contents) {
         return processParagraphs(contents, false);
@@ -73,7 +76,9 @@ public class ParagraphProcessor {
                 blocks.add(new TextBlock((TextLine) content));
             }
         }
-        USUAL_LEADINGS.set(breakAtEmptyLines ? getUsualLeadings(blocks) : new HashMap<>());
+        if (breakAtEmptyLines) {
+            PAGE_LINES.set(new PageLines(blocks));
+        }
         try {
             blocks = detectParagraphsWithJustifyAlignments(blocks);
             blocks = detectFirstAndLastLinesOfParagraphsWithJustifyAlignments(blocks);
@@ -85,7 +90,7 @@ public class ParagraphProcessor {
             blocks = detectTwoLinesParagraphs(blocks);
             blocks = processOtherLines(blocks);
         } finally {
-            USUAL_LEADINGS.remove();
+            PAGE_LINES.remove();
         }
         return getContentsWithDetectedParagraphs(contents, blocks);
     }
@@ -143,20 +148,97 @@ public class ParagraphProcessor {
     }
 
     /**
-     * Whether an empty line is between the lines: they start at the same x, and they are farther apart than the
-     * lines of the page usually are. Lines that start at different x, as a centered formula and the text after
-     * it, keep the other rules: their reading order comes from the paragraph.
+     * Whether an empty line is between the lines: they start at the same x, they are farther apart than the
+     * lines of the page usually are, and the line above is not full. Lines that start at different x, as a
+     * centered formula and the text after it, keep the other rules: their reading order comes from the paragraph.
+     * A full line, as a line of a double-spaced paragraph on a page with single spacing, continues on the line
+     * below.
      */
     private static boolean isEmptyLineBetween(TextBlock previousBlock, TextBlock nextBlock) {
+        PageLines page = PAGE_LINES.get();
+        if (page == null) {
+            return false;
+        }
         TextLine above = previousBlock.getLastLine();
         TextLine below = nextBlock.getFirstLine();
-        Double usualLeading = USUAL_LEADINGS.get().get(getFontSizeClass(above.getFontSize()));
-        if (usualLeading == null
-                || Math.abs(above.getLeftX() - below.getLeftX()) > SAME_X_RATIO * above.getFontSize()) {
+        Double usualLeading = page.getUsualLeading(above);
+        if (usualLeading == null || !areAtSameX(above, below)) {
             return false;
         }
         double distance = above.getBaseLine() - below.getBaseLine();
-        return distance > EMPTY_LINE_RATIO * usualLeading * above.getFontSize();
+        return distance > EMPTY_LINE_RATIO * usualLeading * above.getFontSize() && !isFullLine(page, above, below);
+    }
+
+    private static boolean areAtSameX(TextLine line, TextLine other) {
+        return Math.abs(line.getLeftX() - other.getLeftX()) <= SAME_X_RATIO * line.getFontSize();
+    }
+
+    /**
+     * Whether the first word of the line below and a space do not fit after the line above, before the right
+     * end of the longest line of the page that starts at the same x in the same font size class.
+     */
+    private static boolean isFullLine(PageLines page, TextLine above, TextLine below) {
+        return page.getRightEnd(above) - above.getRightX()
+            < getFirstWordWidth(below) + SPACE_WIDTH_RATIO * above.getFontSize();
+    }
+
+    private static double getFirstWordWidth(TextLine line) {
+        for (TextChunk chunk : line.getTextChunks()) {
+            String value = chunk.getValue();
+            int start = 0;
+            while (start < value.length() && Character.isWhitespace(value.charAt(start))) {
+                start++;
+            }
+            if (start == value.length()) {
+                continue;
+            }
+            int end = start;
+            while (end < value.length() && !Character.isWhitespace(value.charAt(end))) {
+                end++;
+            }
+            Double left = chunk.getSymbolStartCoordinate(start);
+            Double right = chunk.getSymbolEndCoordinate(end - 1);
+            if (left != null && right != null && right >= left) {
+                return right - left;
+            }
+            return chunk.getWidth() * (end - start) / value.length();
+        }
+        return 0;
+    }
+
+    /** The lines of the body text of a page, their usual distances, and the right ends found for them. */
+    private static final class PageLines {
+        private final List<TextLine> lines = new ArrayList<>();
+        private final Map<Long, Double> usualLeadings;
+        private final Map<TextLine, Double> rightEnds = new IdentityHashMap<>();
+
+        private PageLines(List<TextBlock> blocks) {
+            for (TextBlock block : blocks) {
+                lines.addAll(block.getLines());
+            }
+            usualLeadings = getUsualLeadings(blocks);
+        }
+
+        /** The usual distance between baselines in the font size class of the line, or null. */
+        private Double getUsualLeading(TextLine line) {
+            return usualLeadings.get(getFontSizeClass(line.getFontSize()));
+        }
+
+        /** The right end of the longest line of the page that starts at the x of the line, in its font size class. */
+        private double getRightEnd(TextLine line) {
+            Double rightEnd = rightEnds.get(line);
+            if (rightEnd == null) {
+                rightEnd = line.getRightX();
+                long fontSizeClass = getFontSizeClass(line.getFontSize());
+                for (TextLine other : lines) {
+                    if (getFontSizeClass(other.getFontSize()) == fontSizeClass && areAtSameX(line, other)) {
+                        rightEnd = Math.max(rightEnd, other.getRightX());
+                    }
+                }
+                rightEnds.put(line, rightEnd);
+            }
+            return rightEnd;
+        }
     }
 
     private static List<IObject> getContentsWithDetectedParagraphs(List<IObject> contents, List<TextBlock> blocks) {

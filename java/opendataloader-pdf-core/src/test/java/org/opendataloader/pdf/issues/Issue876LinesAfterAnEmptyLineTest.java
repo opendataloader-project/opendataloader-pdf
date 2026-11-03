@@ -65,6 +65,7 @@ class Issue876LinesAfterAnEmptyLineTest {
     void lineAfterAnEmptyLineBelowATitleIsNotInTheTitle() throws IOException {
         JsonNode document = convert("title-vote", singleSpacedPage());
 
+        assertTrue(elementThatContains(document, VOTE) != null, "the line after the empty line is missing: " + document);
         JsonNode title = elementThatContains(document, TITLE);
         assertTrue(title != null && !title.path("content").asText().contains(VOTE),
             "the line after the empty line is merged with the title: " + document);
@@ -75,6 +76,7 @@ class Issue876LinesAfterAnEmptyLineTest {
     void twoTitlesWithAnEmptyLineBetweenThemAreNotOneParagraph() throws IOException {
         JsonNode document = convert("two-titles", singleSpacedPage());
 
+        assertTrue(elementThatContains(document, APPROVAL) != null, "the second title is missing: " + document);
         JsonNode title = elementThatContains(document, PUBLIC);
         assertTrue(title != null && !title.path("content").asText().contains(APPROVAL),
             "the two titles with an empty line between them are merged: " + document);
@@ -102,6 +104,7 @@ class Issue876LinesAfterAnEmptyLineTest {
             new Line("Adopted by all the votes of the board.", 497, false)));
         JsonNode document = convert("short-paragraphs", lines);
 
+        assertTrue(elementThatContains(document, VOTE) != null, "the line after the empty line is missing: " + document);
         JsonNode title = elementThatContains(document, TITLE);
         assertTrue(title != null && !title.path("content").asText().contains(VOTE),
             "the line after the empty line is merged with the title on a page of short paragraphs: " + document);
@@ -132,6 +135,53 @@ class Issue876LinesAfterAnEmptyLineTest {
         JsonNode paragraph = elementThatContains(document, "The members of the board meet in the town hall");
         assertTrue(paragraph != null && paragraph.path("content").asText().contains("signs the minutes of the day"),
             "the lines of a double-spaced paragraph are not one paragraph: " + document);
+    }
+
+    /**
+     * Guard: a double-spaced paragraph stays one paragraph on a page that also has a single-spaced paragraph in the
+     * same font size, at the same x. Each line of the two paragraphs is filled with words to a width of 300 pt.
+     */
+    @Test
+    void linesOfADoubleSpacedParagraphStayOneParagraphOnAPageWithSingleSpacing() throws IOException {
+        List<Line> lines = new ArrayList<>();
+        float baseline = 700;
+        for (String text : wrap("The members of the board meet in the town hall on the first day of each month. The "
+                + "secretary of the board writes the minutes of the meeting, and the mayor signs them before the next "
+                + "meeting of the board.")) {
+            lines.add(new Line(text, baseline, false));
+            baseline -= 12;
+        }
+        baseline -= 12;
+        List<String> doubleSpaced = wrap("The mayor opens the meeting and gives the agenda of the day to the members "
+            + "of the board. Each member can ask for one more point of the agenda, and the board votes on it before "
+            + "the other points.");
+        for (String text : doubleSpaced) {
+            lines.add(new Line(text, baseline, false));
+            baseline -= 24;
+        }
+        JsonNode document = convert("double-spaced-below-single", lines);
+
+        String last = doubleSpaced.get(doubleSpaced.size() - 1);
+        JsonNode paragraph = elementThatContains(document, doubleSpaced.get(0));
+        assertTrue(doubleSpaced.size() >= 3 && paragraph != null && paragraph.path("content").asText().contains(last),
+            "the lines of a double-spaced paragraph are not one paragraph: " + document);
+    }
+
+    /** The lines of the text in Helvetica, each with as many words as fit in 300 pt. */
+    private static List<String> wrap(String text) throws IOException {
+        PDType1Font font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+        List<String> lines = new ArrayList<>();
+        String line = "";
+        for (String word : text.split(" ")) {
+            String longer = line.isEmpty() ? word : line + " " + word;
+            if (!line.isEmpty() && font.getStringWidth(longer) / 1000 * SIZE > 300) {
+                lines.add(line);
+                longer = word;
+            }
+            line = longer;
+        }
+        lines.add(line);
+        return lines;
     }
 
     /**
