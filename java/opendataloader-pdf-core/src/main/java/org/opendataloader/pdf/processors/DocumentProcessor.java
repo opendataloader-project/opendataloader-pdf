@@ -296,8 +296,10 @@ public class DocumentProcessor {
                     + "A well-tagged PDF already carries reading order and structure; "
                     + "drop --use-struct-tree if you want the hybrid backend instead.");
             }
+            warnIfHiddenTextFilterIgnored(config, "--use-struct-tree");
             contents = TaggedDocumentProcessor.processDocument(inputPdfName, config, pagesToProcess);
         } else if (config.isHybridEnabled()) {
+            warnIfHiddenTextFilterIgnored(config, "--hybrid");
             contents = HybridDocumentProcessor.processDocument(inputPdfName, config, pagesToProcess);
         } else {
             contents = processDocument(inputPdfName, config, pagesToProcess);
@@ -316,6 +318,18 @@ public class DocumentProcessor {
 
         return new ExtractionResult(contents, extractionNs, HybridDocumentProcessor.getLastHybridTimings(),
             remappedMetadata, StaticResources.getDocument());
+    }
+
+    /**
+     * The contrast-based hidden-text filter runs in the native pipeline only (see
+     * {@link #processDocument}). Say so when {@code --filter-hidden-text on} meets a mode
+     * that skips it, instead of dropping the option silently.
+     */
+    private static void warnIfHiddenTextFilterIgnored(Config config, String mode) {
+        if (config.getFilterConfig().isFilterHiddenText()) {
+            LOGGER.log(Level.WARNING, "--filter-hidden-text applies to the native Java pipeline only; "
+                + "ignored with {0}.", mode);
+        }
     }
 
     /**
