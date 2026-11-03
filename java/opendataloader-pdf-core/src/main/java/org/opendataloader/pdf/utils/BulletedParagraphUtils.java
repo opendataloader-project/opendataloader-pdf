@@ -98,6 +98,21 @@ public class BulletedParagraphUtils {
     }
 
     /**
+     * Checks if a text line starts with a bullet: a bullet character or a graphical bullet, not a number or a
+     * letter.
+     *
+     * @param textLine the text line to check
+     * @return true if the line starts with a bullet, false otherwise
+     */
+    public static boolean startsWithBullet(TextLine textLine) {
+        String value = textLine.getValue();
+        if (value != null && !value.isEmpty() && POSSIBLE_LABELS.indexOf(value.charAt(0)) != -1) {
+            return true;
+        }
+        return textLine.getConnectedLineArtLabel() != null;
+    }
+
+    /**
      * Checks if a text node has a connected line art label (graphical bullet).
      *
      * @param textNode the text node to check

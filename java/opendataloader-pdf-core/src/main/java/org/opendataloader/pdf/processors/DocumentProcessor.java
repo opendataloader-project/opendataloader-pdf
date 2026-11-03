@@ -515,6 +515,7 @@ public class DocumentProcessor {
                     pageContents = ParagraphProcessor.processParagraphs(pageContents);
                     if (structured) {
                         pageContents = ListProcessor.processListsFromTextNodes(pageContents);
+                        pageContents = ListProcessor.nestListsBelowBulletLines(pageContents);
                         HeadingProcessor.processHeadings(pageContents, false);
                     }
                     contents.set(pageNumber, pageContents);
