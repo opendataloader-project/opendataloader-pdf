@@ -28,6 +28,7 @@ import org.opendataloader.pdf.utils.TextLinks;
 import org.verapdf.wcag.algorithms.entities.BaseObject;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticTOC;
+import org.verapdf.wcag.algorithms.entities.SemanticTOCI;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextBlock;
@@ -82,6 +83,7 @@ class HtmlGeneratorHooksTest {
         final List<Integer> startedPages = new ArrayList<>();
         final List<String> itemIndexes = new ArrayList<>();
         final List<String> orderErrors = new ArrayList<>();
+        final List<String> containerEvents = new ArrayList<>();
 
         MarkingHtmlGenerator(File inputPdf, Config config) throws IOException {
             super(inputPdf, config);
@@ -96,7 +98,8 @@ class HtmlGeneratorHooksTest {
         }
 
         private void checkNotEntered(String hook, IObject object) {
-            if (entered.contains(object)) {
+            // By identity: entities compare by their boxes, and two empty boxes are equal.
+            if (entered.stream().anyMatch(container -> container == object)) {
                 orderErrors.add(hook + ": its element is entered already");
             }
         }
@@ -115,6 +118,7 @@ class HtmlGeneratorHooksTest {
         protected void enterContainer(IObject container) {
             entered.push(container);
             maxDepth = Math.max(maxDepth, entered.size());
+            containerEvents.add("enter " + container.getClass().getSimpleName());
         }
 
         @Override
@@ -123,6 +127,7 @@ class HtmlGeneratorHooksTest {
                 orderErrors.add("leaveContainer: not the last element entered");
             }
             entered.pop();
+            containerEvents.add("leave " + container.getClass().getSimpleName());
         }
 
         @Override
@@ -374,6 +379,51 @@ class HtmlGeneratorHooksTest {
         assertThat(count(marked, "<h[1-6]>" + node)).isEqualTo(headings);
         assertThat(count(marked, "<figcaption>" + node)).isEqualTo(captions);
         assertThat(count(marked, node)).isEqualTo(paragraphs + headings + captions);
+    }
+
+    private static SemanticTOCI tocItem(String text) {
+        BoundingBox box = new BoundingBox(0, 0, 0, 100, 10);
+        SemanticTOCI item = new SemanticTOCI(box, null);
+        item.add(new TextLine(new TextChunk(box, text, 10, 0.0)));
+        item.setContents(new ArrayList<>());
+        return item;
+    }
+
+    @Test
+    void aTableOfContentsGoesThroughTheHooksOfAList() throws IOException {
+        // TOC detection is off on main, so no sample has a table of contents: build one, with a
+        // table of contents inside it.
+        SemanticTOC inner = new SemanticTOC();
+        inner.add(tocItem("Background"));
+        SemanticTOC toc = new SemanticTOC();
+        toc.add(tocItem("Introduction"));
+        toc.add(inner);
+
+        MarkingHtmlGenerator marking = new MarkingHtmlGenerator(new File("toc.pdf"), config(tempDir.resolve("toc"))) {
+            @Override
+            protected String getTextFromLines(List<TextLine> lines) {
+                return LINES_MARK + super.getTextFromLines(lines);
+            }
+        };
+        try (MarkingHtmlGenerator generator = marking) {
+            generator.writeTOC(toc);
+        }
+
+        String list = "<ul style=\"list-style-type: none;\" data-hook=\"list\">\n";
+        String item = "<li data-hook=\"item\">";
+        String text = "<p data-hook=\"item-text\">" + LINES_MARK;
+        assertThat(marking.output()).endsWith(list
+            + item + text + "Introduction</p></li>\n"
+            + item + "\n" + list + item + text + "Background</p></li>\n</ul>\n</li>\n"
+            + "</ul>\n");
+        // The inner table of contents is entered for its <li>, then for its <ul>.
+        assertThat(marking.containerEvents).containsExactly(
+            "enter SemanticTOC", "enter SemanticTOCI", "leave SemanticTOCI",
+            "enter SemanticTOC", "enter SemanticTOC", "enter SemanticTOCI", "leave SemanticTOCI",
+            "leave SemanticTOC", "leave SemanticTOC", "leave SemanticTOC");
+        // So the <ul> of the inner one is asked for its attributes when its <li> is entered.
+        assertThat(marking.orderErrors).containsExactly("getListAttributes: its element is entered already");
+        assertThat(marking.entered).isEmpty();
     }
 
     @Test
