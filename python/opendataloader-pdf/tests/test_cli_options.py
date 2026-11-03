@@ -235,11 +235,12 @@ class TestSanitizeRulesOption:
 
         # ``timeout`` is a wrapper-level parameter, not a CLI option, so it is
         # appended after the generated CLI parameters.
-        assert list(inspect.signature(convert).parameters)[-5:] == [
+        assert list(inspect.signature(convert).parameters)[-6:] == [
             "sanitize_rules",
             "include_links",
             "hybrid_availability_timeout",
             "hybrid_triage_log",
+            "filter_hidden_text",
             "timeout",
         ]
 
@@ -330,3 +331,33 @@ class TestConvertHybridTriageLog:
             convert(input_path="test.pdf", output_dir="out", hybrid_triage_log=True)
 
         assert "--hybrid-triage-log" in mock_run.call_args[0][0]
+
+
+class TestConvertFilterHiddenText:
+    """convert() must forward filter_hidden_text to the JVM CLI"""
+
+    def test_filter_hidden_text_option_exists(self):
+        option = next(opt for opt in CLI_OPTIONS if opt["name"] == "filter-hidden-text")
+        assert option["type"] == "string"
+        assert option["default"] == "off"
+
+    def test_convert_passes_filter_hidden_text(self):
+        from unittest.mock import patch
+
+        from opendataloader_pdf.convert_generated import convert
+
+        with patch("opendataloader_pdf.convert_generated.run_jar", return_value="") as mock_run:
+            convert(input_path="test.pdf", output_dir="out", filter_hidden_text="on")
+
+        args = mock_run.call_args[0][0]
+        assert args[args.index("--filter-hidden-text") + 1] == "on"
+
+    def test_convert_default_does_not_emit_filter_hidden_text(self):
+        from unittest.mock import patch
+
+        from opendataloader_pdf.convert_generated import convert
+
+        with patch("opendataloader_pdf.convert_generated.run_jar", return_value="") as mock_run:
+            convert(input_path="test.pdf", output_dir="out")
+
+        assert "--filter-hidden-text" not in mock_run.call_args[0][0]

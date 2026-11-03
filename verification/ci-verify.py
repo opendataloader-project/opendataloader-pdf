@@ -156,7 +156,8 @@ COVERED_OPTIONS = {
     "--format", "--output-dir", "--quiet", "--to-stdout",
     "--password", "--keep-line-breaks", "--replace-invalid-chars",
     "--pages", "--include-header-footer", "--detect-strikethrough", "--include-links",
-    "--sanitize", "--sanitize-rules", "--content-safety-off", "--use-struct-tree",
+    "--sanitize", "--sanitize-rules", "--content-safety-off", "--filter-hidden-text",
+    "--use-struct-tree",
     "--table-method", "--reading-order", "--threads",
     "--image-output", "--image-format", "--image-dir",
     "--markdown-with-html",
@@ -1181,6 +1182,63 @@ def verify_sanitize_rules_file() -> None:
 
 
 # ---------------------------------------------------------------------------
+# --filter-hidden-text: the contrast-based hidden-text filter is opt-in.
+# safety-trigger.pdf has three "Hidden text line N" lines in white on white.
+# ---------------------------------------------------------------------------
+
+HIDDEN_TEXT_LINES = ["Hidden text line 1", "Hidden text line 2", "Hidden text line 3"]
+VISIBLE_TEXT_LINE = "Safety Trigger Test Document"
+
+
+def verify_filter_hidden_text() -> None:
+    print("\n--- --filter-hidden-text ---")
+    if not os.path.exists(PDF_SAFETY):
+        record("--filter-hidden-text [SKIPPED: fixture missing]", None)
+        return
+
+    # 1. The control: the filter is off by default, so the hidden lines stay.
+    #    Without it, a fixture without hidden text would also pass the "on" check.
+    with tempfile.TemporaryDirectory() as tmpdir:
+        result = run_cli([PDF_SAFETY, "--format", "text", "--output-dir", tmpdir])
+        ok = result.returncode == 0
+        if ok:
+            txt_file = _find_file_by_ext(tmpdir, ".txt")
+            ok = txt_file is not None and assert_content(
+                "--filter-hidden-text default", txt_file, must_contain=HIDDEN_TEXT_LINES
+            )
+        record("--filter-hidden-text default (off) keeps the hidden text", ok)
+
+    # 2. "on" removes the hidden lines and keeps the visible text.
+    with tempfile.TemporaryDirectory() as tmpdir:
+        result = run_cli([
+            PDF_SAFETY, "--filter-hidden-text", "on", "--format", "text",
+            "--output-dir", tmpdir,
+        ])
+        ok = result.returncode == 0
+        if ok:
+            txt_file = _find_file_by_ext(tmpdir, ".txt")
+            ok = txt_file is not None and assert_content(
+                "--filter-hidden-text on", txt_file,
+                must_contain=[VISIBLE_TEXT_LINE], must_not_contain=HIDDEN_TEXT_LINES,
+            )
+        record("--filter-hidden-text on removes the hidden text", ok)
+
+    # 3. A value other than on/off is rejected before processing: non-zero
+    #    exit, no output file, no stack trace.
+    with tempfile.TemporaryDirectory() as tmpdir:
+        result = run_cli([
+            PDF_SAFETY, "--filter-hidden-text", "maybe", "--format", "text",
+            "--output-dir", tmpdir,
+        ])
+        ok = (
+            result.returncode != 0
+            and _find_file_by_ext(tmpdir, ".txt") is None
+            and _assert_no_leak("--filter-hidden-text maybe", result.stdout, result.stderr)
+        )
+        record("--filter-hidden-text maybe → non-zero exit + no leak", ok)
+
+
+# ---------------------------------------------------------------------------
 # Main test suite
 # ---------------------------------------------------------------------------
 
@@ -1891,6 +1949,7 @@ def main() -> None:
     verify_markdown_with_html()
     verify_sanitization_rules()
     verify_sanitize_rules_file()
+    verify_filter_hidden_text()
 
     # ------------------------------------------------------------------
     # Summary
