@@ -213,9 +213,9 @@ public class TextLineProcessor {
     }
 
     /**
-     * Whether the text is a page label: a page reference of two words, as {@code p. 12}; or one word, with or
-     * without a period at its end, that is one character, as {@code A}, that has a digit, as {@code A-12}, or that
-     * is a roman numeral in one case, as {@code iv}.
+     * Whether the text is a page label: a page reference of two words, as {@code p. 12}; or one word whose parts,
+     * between hyphens and periods, are each one character, a part with a digit, or a roman numeral in one case,
+     * as {@code A}, {@code A-12}, {@code iv.}, or {@code A-IV}.
      */
     private static boolean isPageLabel(String text) {
         if (PAGE_REFERENCE.matcher(text).matches()) {
@@ -224,12 +224,25 @@ public class TextLineProcessor {
         if (text.codePoints().anyMatch(Character::isWhitespace)) {
             return false;
         }
-        String word = text.length() > 1 && text.endsWith(".") ? text.substring(0, text.length() - 1) : text;
-        if (word.codePointCount(0, word.length()) == 1 || word.codePoints().anyMatch(Character::isDigit)) {
+        boolean hasPart = false;
+        for (String part : text.split("[-.\u2013]")) {
+            if (part.isEmpty()) {
+                continue;
+            }
+            if (!isPageLabelPart(part)) {
+                return false;
+            }
+            hasPart = true;
+        }
+        return hasPart;
+    }
+
+    private static boolean isPageLabelPart(String part) {
+        if (part.codePointCount(0, part.length()) == 1 || part.codePoints().anyMatch(Character::isDigit)) {
             return true;
         }
-        return ROMAN_NUMERAL.matcher(word).matches() && (word.equals(word.toLowerCase(Locale.ROOT))
-            || word.equals(word.toUpperCase(Locale.ROOT)));
+        return ROMAN_NUMERAL.matcher(part).matches() && (part.equals(part.toLowerCase(Locale.ROOT))
+            || part.equals(part.toUpperCase(Locale.ROOT)));
     }
 
     /** Whether the line below is the next row of the columns: more than single spacing, the gaps at one place. */
