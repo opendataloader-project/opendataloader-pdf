@@ -24,6 +24,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.autotagging.ChunksWriter;
 import org.opendataloader.pdf.processors.DocumentProcessor;
+import org.verapdf.cos.COSObjType;
 import org.verapdf.operator.Operator;
 import org.verapdf.pd.PDContentStream;
 import org.verapdf.tools.StaticResources;
@@ -61,6 +62,36 @@ class ContentStreamTokensTest {
         assertThat(operators).containsExactly("re", "f");
         assertThat(tokens).hasSize(6);
         assertThat(tokens.indexOf(tokens.stream().filter(Operator.class::isInstance).findFirst().get())).isEqualTo(4);
+    }
+
+    @Test
+    void readsAContentsArrayAsOneStreamInItsOrder() throws Exception {
+        Path pdf = tempDir.resolve("two-streams.pdf");
+        try (PDDocument document = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.LETTER);
+            document.addPage(page);
+            try (PDPageContentStream content = new PDPageContentStream(document, page)) {
+                content.addRect(10, 20, 30, 40);
+                content.fill();
+            }
+            try (PDPageContentStream content = new PDPageContentStream(document, page,
+                PDPageContentStream.AppendMode.APPEND, false)) {
+                content.moveTo(0, 0);
+                content.lineTo(100, 100);
+                content.stroke();
+            }
+            document.save(pdf.toFile());
+        }
+        DocumentProcessor.preprocessing(pdf.toString(), new Config());
+        PDContentStream page = StaticResources.getDocument().getPages().get(0).getContent();
+        assertThat(page.getContents().getType()).isEqualTo(COSObjType.COS_ARRAY);
+
+        List<Object> tokens = ContentStreamTokens.getTokens(page);
+
+        List<String> operators = tokens.stream().filter(Operator.class::isInstance)
+            .map(token -> ((Operator) token).getOperator()).collect(Collectors.toList());
+        assertThat(operators).containsExactly("re", "f", "m", "l", "S");
+        assertThat(tokens).hasSize(13);
     }
 
     @Test

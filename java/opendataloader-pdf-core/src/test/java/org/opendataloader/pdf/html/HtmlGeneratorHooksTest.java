@@ -229,6 +229,26 @@ class HtmlGeneratorHooksTest {
         }
     }
 
+    private static final String LINES_MARK = "[lines]";
+    private static final String NODE_MARK = "[node]";
+
+    /** Puts a mark of its own before the text that each text hook gives. */
+    static class TextMarkingHtmlGenerator extends HtmlGenerator {
+        TextMarkingHtmlGenerator(File inputPdf, Config config) throws IOException {
+            super(inputPdf, config);
+        }
+
+        @Override
+        protected String getTextFromLines(List<TextLine> lines) {
+            return LINES_MARK + super.getTextFromLines(lines);
+        }
+
+        @Override
+        protected String getTextFromTextNode(SemanticTextNode textNode) {
+            return NODE_MARK + super.getTextFromTextNode(textNode);
+        }
+    }
+
     private Config config(Path outputFolder) throws IOException {
         Files.createDirectories(outputFolder);
         Config config = new Config();
@@ -315,6 +335,64 @@ class HtmlGeneratorHooksTest {
             String[] parts = i.split("/");
             return Integer.parseInt(parts[0]) < Integer.parseInt(parts[1]);
         });
+    }
+
+    @Test
+    void eachElementTakesItsTextFromItsTextHook() throws IOException {
+        assumeTrue(Files.exists(SAMPLE), "Sample not found: " + SAMPLE.toAbsolutePath());
+        File input = SAMPLE.toFile();
+
+        String plain;
+        String marked;
+        try (ExtractionResult extraction = DocumentProcessor.extractContents(input.getPath(), new Config())) {
+            try (HtmlGenerator generator = new HtmlGenerator(input, config(tempDir.resolve("plain")))) {
+                generator.writeToHtml(extraction.getContents());
+            }
+            plain = Files.readString(tempDir.resolve("plain/1901.03003.html"), StandardCharsets.UTF_8);
+            try (HtmlGenerator generator = new TextMarkingHtmlGenerator(input, config(tempDir.resolve("text")))) {
+                generator.writeToHtml(extraction.getContents());
+            }
+            marked = Files.readString(tempDir.resolve("text/1901.03003.html"), StandardCharsets.UTF_8);
+        }
+        String lines = Pattern.quote(LINES_MARK);
+        String node = Pattern.quote(NODE_MARK);
+
+        assertThat(marked.replace(LINES_MARK, "").replace(NODE_MARK, "")).isEqualTo(plain);
+        // The text of a list item comes from getTextFromLines, and only that text does.
+        int listItems = count(plain, "<li><p>");
+        assertThat(listItems).isPositive();
+        assertThat(count(marked, "<li><p>" + lines)).isEqualTo(listItems);
+        assertThat(count(marked, lines)).isEqualTo(listItems);
+        // The text of a paragraph, a heading and a caption comes from getTextFromTextNode.
+        int paragraphs = count(plain, "<p>") - listItems;
+        int headings = count(plain, "<h[1-6]>");
+        int captions = count(plain, "<figcaption>");
+        assertThat(paragraphs).isPositive();
+        assertThat(headings).isPositive();
+        assertThat(captions).isPositive();
+        assertThat(count(marked, "(?<!<li>)<p>" + node)).isEqualTo(paragraphs);
+        assertThat(count(marked, "<h[1-6]>" + node)).isEqualTo(headings);
+        assertThat(count(marked, "<figcaption>" + node)).isEqualTo(captions);
+        assertThat(count(marked, node)).isEqualTo(paragraphs + headings + captions);
+    }
+
+    @Test
+    void startPageIsCalledForTheSelectedPagesOnly() throws IOException {
+        assumeTrue(Files.exists(SAMPLE), "Sample not found: " + SAMPLE.toAbsolutePath());
+        File input = SAMPLE.toFile();
+        Config config = config(tempDir.resolve("pages"));
+        config.setPages("1,3");
+
+        MarkingHtmlGenerator marking;
+        try (ExtractionResult extraction = DocumentProcessor.extractContents(input.getPath(), config)) {
+            assertThat(extraction.getContents()).hasSizeGreaterThan(3);
+            marking = new MarkingHtmlGenerator(input, config);
+            try (MarkingHtmlGenerator generator = marking) {
+                generator.writeToHtml(extraction.getContents());
+            }
+        }
+
+        assertThat(marking.startedPages).containsExactly(0, 2);
     }
 
     @Test
