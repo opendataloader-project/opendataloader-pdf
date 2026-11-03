@@ -265,7 +265,7 @@ public class ListProcessor {
         PDFList list = new PDFList();
         list.setNumberingStyle(interval.getNumberingStyle());
         list.setCommonPrefix(interval.getCommonPrefix());
-        double rightX = getListRightX(interval, startIndex, endIndex, pageContents);
+        double rightX = getColumnRightX(interval, startIndex, endIndex, pageContents);
         boolean isListSet = false;
         for (int index = startIndex; index <= endIndex; index++) {
             ListItemTextInfo currentInfo = interval.getListItemsInfos().get(index);
@@ -433,8 +433,9 @@ public class ListProcessor {
 
     /**
      * Whether a line that starts with a label character only wraps the text of the item (#875): the line starts
-     * where the item text starts, after the label, and its first word does not fit at the end of the line above.
-     * Lines below a line that is not full can be the items of a nested list, so they are not a wrap.
+     * where the item text starts, after the label, and its first word does not fit between the end of the line
+     * above and the right edge of the text column. Lines below a line that is not full can be the items of a
+     * nested list, so they are not a wrap.
      */
     private static boolean wrapsItemText(ListItem listItem, TextLine lineAbove, TextLine line, double rightX) {
         Double textStart = getItemTextStart(listItem);
@@ -473,17 +474,30 @@ public class ListProcessor {
         return end > start ? line.getSymbolEndCoordinate(end - 1) : null;
     }
 
-    /** The right edge of the list: the right end of the widest first line of its items. */
-    private static double getListRightX(TextListInterval interval, int startIndex, int endIndex,
-                                        List<IObject> pageContents) {
+    /**
+     * The right edge of the text column of the list: the right end of the widest text of the page that is
+     * beside the items, as a body line of the same column. The widest item alone is not the edge: in a list of
+     * short items, it is not a full line. The text of another column is not beside the items.
+     */
+    private static double getColumnRightX(TextListInterval interval, int startIndex, int endIndex,
+                                          List<IObject> pageContents) {
+        double leftX = Double.POSITIVE_INFINITY;
         double rightX = Double.NEGATIVE_INFINITY;
         for (int index = startIndex; index <= endIndex; index++) {
             IObject object = pageContents.get(interval.getListItemsInfos().get(index).getIndex());
             if (object != null) {
+                leftX = Math.min(leftX, object.getLeftX());
                 rightX = Math.max(rightX, object.getRightX());
             }
         }
-        return rightX;
+        double columnRightX = rightX;
+        for (IObject object : pageContents) {
+            if ((object instanceof TextLine || object instanceof SemanticTextNode || object instanceof PDFList)
+                    && object.getLeftX() < rightX && object.getRightX() > leftX) {
+                columnRightX = Math.max(columnRightX, object.getRightX());
+            }
+        }
+        return columnRightX;
     }
 
     private static double getMaxXGap(double fontSize) {
