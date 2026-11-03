@@ -27,12 +27,14 @@ import org.opendataloader.pdf.processors.ExtractionResult;
 import org.opendataloader.pdf.utils.TextLinks;
 import org.verapdf.wcag.algorithms.entities.BaseObject;
 import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.SemanticTOC;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextBlock;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
+import org.verapdf.wcag.algorithms.entities.lists.PDFList;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorderCell;
 
@@ -41,7 +43,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -68,12 +72,16 @@ class HtmlGeneratorHooksTest {
         StaticLayoutContainers.clearContainers();
     }
 
-    /** Puts an attribute named after each hook where it is called, and follows the containers. */
+    /**
+     * Puts an attribute named after each hook where it is called, and follows the containers. Each attribute
+     * hook also checks that the element it is for is not entered yet, and that the element that holds it is.
+     */
     static class MarkingHtmlGenerator extends HtmlGenerator {
-        int depth;
+        final Deque<IObject> entered = new ArrayDeque<>();
         int maxDepth;
         final List<Integer> startedPages = new ArrayList<>();
         final List<String> itemIndexes = new ArrayList<>();
+        final List<String> orderErrors = new ArrayList<>();
 
         MarkingHtmlGenerator(File inputPdf, Config config) throws IOException {
             super(inputPdf, config);
@@ -85,6 +93,12 @@ class HtmlGeneratorHooksTest {
 
         String output() throws IOException {
             return Files.readString(htmlFilePath, StandardCharsets.UTF_8);
+        }
+
+        private void checkNotEntered(String hook, IObject object) {
+            if (entered.contains(object)) {
+                orderErrors.add(hook + ": its element is entered already");
+            }
         }
 
         @Override
@@ -99,28 +113,42 @@ class HtmlGeneratorHooksTest {
 
         @Override
         protected void enterContainer(IObject container) {
-            depth++;
-            maxDepth = Math.max(maxDepth, depth);
+            entered.push(container);
+            maxDepth = Math.max(maxDepth, entered.size());
         }
 
         @Override
         protected void leaveContainer(IObject container) {
-            depth--;
+            if (entered.peek() != container) {
+                orderErrors.add("leaveContainer: not the last element entered");
+            }
+            entered.pop();
         }
 
         @Override
         protected String getListAttributes(BaseObject list) {
+            checkNotEntered("getListAttributes", list);
             return super.getListAttributes(list) + mark("list");
         }
 
         @Override
         protected String getListItemAttributes(List<? extends IObject> items, int index) {
             itemIndexes.add(index + "/" + items.size());
+            checkNotEntered("getListItemAttributes", items.get(index));
+            IObject holder = entered.peek();
+            boolean heldByItsList = holder instanceof PDFList && ((PDFList) holder).getListItems() == items
+                || holder instanceof SemanticTOC && ((SemanticTOC) holder).getTOCItems() == items;
+            if (!heldByItsList) {
+                orderErrors.add("getListItemAttributes: its list is not the last element entered");
+            }
             return mark("item");
         }
 
         @Override
         protected String getListItemTextAttributes(TextBlock item) {
+            if (entered.peek() != item) {
+                orderErrors.add("getListItemTextAttributes: its item is not the last element entered");
+            }
             return mark("item-text");
         }
 
@@ -141,12 +169,63 @@ class HtmlGeneratorHooksTest {
 
         @Override
         protected String getTableAttributes(TableBorder table) {
+            checkNotEntered("getTableAttributes", table);
             return mark("table");
         }
 
         @Override
         protected String getCellAttributes(TableBorderCell cell) {
+            if (!(entered.peek() instanceof TableBorder)) {
+                orderErrors.add("getCellAttributes: its table is not the last element entered");
+            }
             return mark("cell");
+        }
+    }
+
+    /** Returns null from every attribute hook. */
+    static class NullHtmlGenerator extends HtmlGenerator {
+        NullHtmlGenerator(File inputPdf, Config config) throws IOException {
+            super(inputPdf, config);
+        }
+
+        @Override
+        protected String getListAttributes(BaseObject list) {
+            return null;
+        }
+
+        @Override
+        protected String getListItemAttributes(List<? extends IObject> items, int index) {
+            return null;
+        }
+
+        @Override
+        protected String getListItemTextAttributes(TextBlock item) {
+            return null;
+        }
+
+        @Override
+        protected String getTextNodeAttributes(SemanticTextNode textNode) {
+            return null;
+        }
+
+        @Override
+        protected String getImageAttributes(BaseObject image) {
+            return null;
+        }
+
+        @Override
+        protected String getFormulaAttributes(SemanticFormula formula) {
+            return null;
+        }
+
+        @Override
+        protected String getTableAttributes(TableBorder table) {
+            return null;
+        }
+
+        @Override
+        protected String getCellAttributes(TableBorderCell cell) {
+            return null;
         }
     }
 
@@ -173,6 +252,7 @@ class HtmlGeneratorHooksTest {
 
         String plain;
         String marked;
+        String nulls;
         int pages;
         MarkingHtmlGenerator marking;
         try (ExtractionResult extraction = DocumentProcessor.extractContents(input.getPath(), new Config())) {
@@ -187,7 +267,18 @@ class HtmlGeneratorHooksTest {
                 generator.writeToHtml(extraction.getContents());
             }
             marked = marking.output();
+
+            try (HtmlGenerator generator = new NullHtmlGenerator(input, config(tempDir.resolve("nulls")))) {
+                generator.writeToHtml(extraction.getContents());
+            }
+            nulls = Files.readString(tempDir.resolve("nulls/1901.03003.html"), StandardCharsets.UTF_8);
         }
+
+        // A hook that returns null adds no attributes. Only the list loses its default style.
+        assertThat(nulls).isEqualTo(plain.replace("<ul style=\"list-style-type: none;\">", "<ul>"));
+
+        // Each attribute hook is called before its element is entered, inside the element that holds it.
+        assertThat(marking.orderErrors).isEmpty();
 
         // The hooks change nothing else: without their attributes and head content, the HTML is the same.
         String unmarked = MARK.matcher(marked).replaceAll("").replace(HEAD_CONTENT, "");
@@ -218,7 +309,7 @@ class HtmlGeneratorHooksTest {
         }
         assertThat(pages).isPositive();
         assertThat(marking.startedPages).isEqualTo(allPages);
-        assertThat(marking.depth).isZero();
+        assertThat(marking.entered).isEmpty();
         assertThat(marking.maxDepth).isGreaterThan(1);
         assertThat(marking.itemIndexes).contains("0/1").allMatch(i -> {
             String[] parts = i.split("/");
@@ -259,6 +350,16 @@ class HtmlGeneratorHooksTest {
             chunk -> "A".equals(chunk.getValue()) ? "color: red;" : "");
 
         assertThat(text.toString()).isEqualTo("<span style=\"color: red;\">A</span>B");
+    }
+
+    @Test
+    void aChunkWithANullStyleHasNoSpan() {
+        TextLine line = new TextLine(new TextChunk(new BoundingBox(0, 0, 0, 10, 10), "A", 12, 0.0));
+        StringBuilder text = new StringBuilder();
+
+        HtmlGenerator.getTextFromLineForHTML(line, text, new TextLinks.OpenLink(), chunk -> null);
+
+        assertThat(text.toString()).isEqualTo("A");
     }
 
     @Test

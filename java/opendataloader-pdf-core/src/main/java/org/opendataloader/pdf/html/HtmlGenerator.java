@@ -94,8 +94,9 @@ public class HtmlGenerator implements Closeable {
     private static final String LINK_START_TAG = "<a href=\"%s\">";
     /** Closing tag of a link */
     private static final String LINK_CLOSE_TAG = "</a>";
-    /** Attributes of a list start tag: the list writes no bullets of its own. */
-    private static final String LIST_ATTRIBUTES = " style=\"list-style-type: none;\"";
+    /** Attributes of {@link HtmlSyntax#HTML_UNORDERED_LIST_TAG}: the list writes no bullets of its own. */
+    private static final String LIST_ATTRIBUTES = HtmlSyntax.HTML_UNORDERED_LIST_TAG.substring(
+        "<ul".length(), HtmlSyntax.HTML_UNORDERED_LIST_TAG.length() - 1);
 
     /**
      * Creates a new HtmlGenerator for the specified PDF file.
@@ -257,8 +258,8 @@ public class HtmlGenerator implements Closeable {
                     String altText = (image instanceof EnrichedImageChunk && ((EnrichedImageChunk) image).hasDescription())
                             ? ((EnrichedImageChunk) image).sanitizeDescription()
                             : "";
-                    String imageString = String.format("<img src=\"%s\" alt=\"%s\"%s>", escapedSource,
-                        escapeHtmlAttribute(altText), getImageAttributes(image));
+                    String imageString = startTag(String.format("<img src=\"%s\" alt=\"%s\">", escapedSource,
+                        escapeHtmlAttribute(altText)), getImageAttributes(image));
                     htmlWriter.write(imageString);
                     htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
                 }
@@ -316,14 +317,14 @@ public class HtmlGenerator implements Closeable {
      * @throws IOException if unable to write to the output
      */
     protected void writeList(PDFList list) throws IOException {
-        htmlWriter.write("<ul" + getListAttributes(list) + ">");
+        htmlWriter.write(startTag("<ul>", getListAttributes(list)));
         htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
         enterContainer(list);
         List<ListItem> items = list.getListItems();
         for (int index = 0; index < items.size(); index++) {
             ListItem item = items.get(index);
-            enterContainer(item);
             htmlWriter.write(startTag(HtmlSyntax.HTML_LIST_ITEM_TAG, getListItemAttributes(items, index)));
+            enterContainer(item);
 
             htmlWriter.write(startTag(HtmlSyntax.HTML_PARAGRAPH_TAG, getListItemTextAttributes(item)));
             String value = getTextFromLines(item.getLines());
@@ -343,21 +344,23 @@ public class HtmlGenerator implements Closeable {
     }
 
     protected void writeTOC(SemanticTOC toc) throws IOException {
-        htmlWriter.write("<ul" + getListAttributes(toc) + ">");
+        htmlWriter.write(startTag("<ul>", getListAttributes(toc)));
         htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
         enterContainer(toc);
         List<IObject> items = toc.getTOCItems();
         for (int index = 0; index < items.size(); index++) {
             IObject item = items.get(index);
-            enterContainer(item);
             if (item instanceof SemanticTOC) {
                 htmlWriter.write(startTag(HtmlSyntax.HTML_LIST_ITEM_TAG, getListItemAttributes(items, index)));
+                enterContainer(item);
                 htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
                 writeTOC((SemanticTOC) item);
                 htmlWriter.write(HtmlSyntax.HTML_LIST_ITEM_CLOSE_TAG);
+                leaveContainer(item);
             } else if (item instanceof SemanticTOCI) {
                 SemanticTOCI tocItem = (SemanticTOCI) item;
                 htmlWriter.write(startTag(HtmlSyntax.HTML_LIST_ITEM_TAG, getListItemAttributes(items, index)));
+                enterContainer(item);
                 htmlWriter.write(startTag(HtmlSyntax.HTML_PARAGRAPH_TAG, getListItemTextAttributes(tocItem)));
                 String value = getTextFromLines(tocItem.getLines());
                 htmlWriter.write(value);
@@ -366,9 +369,9 @@ public class HtmlGenerator implements Closeable {
                     write(object);
                 }
                 htmlWriter.write(HtmlSyntax.HTML_LIST_ITEM_CLOSE_TAG);
+                leaveContainer(item);
             }
             htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
-            leaveContainer(item);
         }
         htmlWriter.write(HtmlSyntax.HTML_UNORDERED_LIST_CLOSE_TAG);
         htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
@@ -465,7 +468,7 @@ public class HtmlGenerator implements Closeable {
      */
     protected void writeHeading(SemanticHeading heading) throws IOException {
         int headingLevel = Math.min(6, Math.max(1, heading.getHeadingLevel()));
-        htmlWriter.write("<h" + headingLevel + getTextNodeAttributes(heading) + ">");
+        htmlWriter.write(startTag("<h" + headingLevel + ">", getTextNodeAttributes(heading)));
         htmlWriter.write(getTextFromTextNode(heading));
         htmlWriter.write("</h" + headingLevel + ">");
         htmlWriter.write(HtmlSyntax.HTML_LINE_BREAK);
@@ -483,9 +486,8 @@ public class HtmlGenerator implements Closeable {
         if (rowSpan != 1) {
             cellTag.append(" rowspan=\"").append(rowSpan).append("\"");
         }
-        cellTag.append(getCellAttributes(cell));
         cellTag.append(">");
-        htmlWriter.write(cellTag.toString());
+        htmlWriter.write(startTag(cellTag.toString(), getCellAttributes(cell)));
     }
 
     /**
@@ -560,7 +562,7 @@ public class HtmlGenerator implements Closeable {
     /**
      * Appends the text of the line, as {@link #getTextFromLineForHTML(TextLine, StringBuilder, TextLinks.OpenLink)}
      * does, with the CSS declarations of each chunk given by {@code textStyle}. A chunk with no declarations
-     * (an empty string) is written without a span.
+     * (an empty string or null) is written without a span.
      */
     public static void getTextFromLineForHTML(TextLine line, StringBuilder stringBuilder, TextLinks.OpenLink link,
                                               Function<TextChunk, String> textStyle) {
@@ -593,7 +595,7 @@ public class HtmlGenerator implements Closeable {
 
     /** Appends the escaped text, in a span with the style if there is one. */
     private static void appendText(String style, String value, StringBuilder stringBuilder) {
-        if (!style.isEmpty()) {
+        if (style != null && !style.isEmpty()) {
             String styleAttribute = String.format(HtmlSyntax.HTML_STYLE_ATTRIBUTE, style.trim());
             stringBuilder.append(String.format(HtmlSyntax.HTML_SPAN_START_TAG, styleAttribute));
             stringBuilder.append(escapeHtmlText(value));
@@ -603,7 +605,12 @@ public class HtmlGenerator implements Closeable {
         }
     }
 
-    /** The CSS declarations of the text decoration of the chunk, or an empty string. */
+    /**
+     * The CSS declarations of the text decoration of the chunk, or an empty string. A static method is not
+     * overridden: a subclass that styles text differently passes its own function to
+     * {@link #getTextFromLineForHTML(TextLine, StringBuilder, TextLinks.OpenLink, Function)}, and can start
+     * from this one.
+     */
     protected static String getTextStyle(TextChunk chunk) {
         StringBuilder style = new StringBuilder();
         if (chunk.getIsStrikethroughText() || chunk.getIsUnderlinedText()) {
@@ -619,13 +626,17 @@ public class HtmlGenerator implements Closeable {
     // A subclass can write more into <head>, follow the pages and the elements that hold
     // others, and add attributes to the start tags. An attribute hook returns the text to put
     // in the start tag before its '>', starting with a space (for example ` style="..."`), or
-    // an empty string. The defaults write the HTML that this class writes on its own.
+    // an empty string; null is taken as an empty string. The defaults write the HTML that this
+    // class writes on its own.
+    //
+    // The attributes of an element are asked for before the element is entered, so the
+    // elements entered at that time are the ones that hold it.
 
     /**
      * The start tag with the attributes before its closing {@code '>'}.
      *
      * @param tag a start tag that ends with {@code '>'}
-     * @param attributes attributes that start with a space, or an empty string
+     * @param attributes attributes that start with a space, an empty string, or null
      * @return the start tag with the attributes
      */
     protected static String startTag(String tag, String attributes) {
@@ -644,7 +655,7 @@ public class HtmlGenerator implements Closeable {
     }
 
     /**
-     * Called before each page that is written, before its separator.
+     * Called before each page that --pages selects (every page by default), before its separator.
      *
      * @param pageNumber the page number (0-indexed)
      */
@@ -652,9 +663,10 @@ public class HtmlGenerator implements Closeable {
     }
 
     /**
-     * Called when the writing of an element that holds others starts: a list, a list item, a table of
-     * contents, an item of one, or a table. The elements written until {@link #leaveContainer(IObject)}
-     * are inside it.
+     * Called when the writing of an HTML element that holds others starts: the {@code <ul>} of a list or a
+     * table of contents, the {@code <li>} of an item of one, or a {@code <table>}. The elements written until
+     * {@link #leaveContainer(IObject)} are inside it. An item of a table of contents that is itself a table of
+     * contents is entered twice: once for its {@code <li>} and once for the {@code <ul>} inside it.
      *
      * @param container the element
      */
