@@ -23,11 +23,14 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.junit.jupiter.api.Test;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.processors.DocumentProcessor;
 import org.opendataloader.pdf.testsupport.TestSamples;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -107,6 +110,67 @@ class Issue878SignatureBlockColumnsTest {
             "a row of the form is split: " + markdown);
     }
 
+    /**
+     * Guard (review of #885): the lines of a table of contents with page labels that have letters, as {@code ix}
+     * and {@code A-12}, far from their titles, 26 pt apart, stay one line each.
+     */
+    @Test
+    void linesOfATableOfContentsWithPageLabelsStayOneLine() throws IOException {
+        List<Line> lines = Arrays.asList(
+            new Line("Preface of the book", 72, 700), new Line("iv", 500, 700),
+            new Line("Introduction to the plan", 72, 674), new Line("ix", 500, 674),
+            new Line("Appendix of the tables", 72, 648), new Line("A-12", 500, 648));
+        String markdown = convertMarkdown("toc-labels", lines, null);
+
+        assertTrue(lineThatContains(markdown, "Introduction to the plan").matches(".*the plan\\s+ix\\b.*"),
+            "a line of the table of contents with page labels is split: " + markdown);
+    }
+
+    /**
+     * Guard (review of #885): an image between the two rows of the signature block, in the order of the page
+     * content, keeps its place in the output: after the roles and before the names.
+     */
+    @Test
+    void anImageBetweenTheRowsKeepsItsPlace() throws IOException {
+        JsonNode document = convertJson("image-between", signatureBlock(), (pdf, content) -> {
+            BufferedImage image = new BufferedImage(100, 20, BufferedImage.TYPE_INT_RGB);
+            for (int x = 0; x < 100; x++) {
+                image.setRGB(x, x / 5, 0xFFFFFF);
+            }
+            PDImageXObject xObject = LosslessFactory.createFromImage(pdf, image);
+            content.drawImage(xObject, 103.4f, 582, 100, 20);
+        });
+
+        List<JsonNode> kids = new ArrayList<>();
+        document.path("kids").forEach(kids::add);
+        int role = indexOfElementThatContains(kids, LEFT_ROLE);
+        int name = indexOfElementThatContains(kids, LEFT_NAME);
+        int image = -1;
+        for (int i = 0; i < kids.size(); i++) {
+            if ("image".equals(kids.get(i).path("type").asText())) {
+                image = i;
+            }
+        }
+        assertTrue(role >= 0 && role < image && image < name,
+            "the image between the rows is not after the roles and before the names: " + document);
+    }
+
+    /**
+     * Guard (review of #885): two lines with a bullet drawn as a square before each, a text, and a far value,
+     * 26 pt apart, keep their bullets: each line stays one element with its value, and it has a list level.
+     */
+    @Test
+    void linesWithDrawnBulletsKeepTheirBullets() throws IOException {
+        List<Line> lines = Arrays.asList(
+            new Line("First point of the vote", 84, 606, true), new Line("Adopted by the board", 310.2f, 606),
+            new Line("Second point of the vote", 84, 580, true), new Line("Rejected by the board", 310.2f, 580));
+        JsonNode document = convertJson("drawn-bullets", lines);
+
+        JsonNode line = elementThatContains(document, "Second point of the vote");
+        assertTrue(line != null && line.path("content").asText().contains("Rejected by the board")
+                && line.has("level"), "a line with a drawn bullet lost its bullet: " + document);
+    }
+
     /** The last line of the paragraph of the issue, and the signature block below it. */
     private static List<Line> signatureBlock() {
         return new ArrayList<>(Arrays.asList(
@@ -136,9 +200,22 @@ class Issue878SignatureBlockColumnsTest {
         return found;
     }
 
+    private static int indexOfElementThatContains(List<JsonNode> kids, String text) {
+        for (int i = 0; i < kids.size(); i++) {
+            if (kids.get(i).toString().contains(text)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     private static JsonNode convertJson(String name, List<Line> lines) throws IOException {
+        return convertJson(name, lines, null);
+    }
+
+    private static JsonNode convertJson(String name, List<Line> lines, Drawing drawing) throws IOException {
         Path directory = TestSamples.emptyDirectory("issue-878-" + name);
-        Path pdf = writeSample(directory, name, lines);
+        Path pdf = writeSample(directory, name, lines, drawing);
         Config config = new Config();
         config.setOutputFolder(directory.toString());
         config.setGenerateJSON(true);
@@ -147,8 +224,12 @@ class Issue878SignatureBlockColumnsTest {
     }
 
     private static String convertMarkdown(String name, List<Line> lines) throws IOException {
+        return convertMarkdown(name, lines, null);
+    }
+
+    private static String convertMarkdown(String name, List<Line> lines, Drawing drawing) throws IOException {
         Path directory = TestSamples.emptyDirectory("issue-878-" + name);
-        Path pdf = writeSample(directory, name, lines);
+        Path pdf = writeSample(directory, name, lines, drawing);
         Config config = new Config();
         config.setOutputFolder(directory.toString());
         config.setGenerateMarkdown(true);
@@ -156,20 +237,36 @@ class Issue878SignatureBlockColumnsTest {
         return Files.readString(directory.resolve(name + ".md"));
     }
 
-    /** Writes one A4 page in Helvetica, each text at its place. */
-    private static Path writeSample(Path directory, String name, List<Line> lines) throws IOException {
+    /**
+     * Writes one A4 page in Helvetica, each text at its place. The drawing, if any, comes after the texts above
+     * the middle of the page and before the others.
+     */
+    private static Path writeSample(Path directory, String name, List<Line> lines, Drawing drawing)
+            throws IOException {
         Path pdf = directory.resolve(name + ".pdf");
         try (PDDocument document = new PDDocument()) {
             PDPage page = new PDPage(PDRectangle.A4);
             document.addPage(page);
             PDType1Font font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
             try (PDPageContentStream content = new PDPageContentStream(document, page)) {
+                boolean drawn = drawing == null;
                 for (Line line : lines) {
+                    if (!drawn && line.baseline < 590) {
+                        drawing.draw(document, content);
+                        drawn = true;
+                    }
+                    if (line.bullet) {
+                        content.addRect(line.x - 12, line.baseline + 2, 4, 4);
+                        content.fill();
+                    }
                     content.beginText();
                     content.setFont(font, SIZE);
                     content.newLineAtOffset(line.x, line.baseline);
                     content.showText(line.text);
                     content.endText();
+                }
+                if (!drawn) {
+                    drawing.draw(document, content);
                 }
             }
             document.save(pdf.toFile());
@@ -177,15 +274,27 @@ class Issue878SignatureBlockColumnsTest {
         return pdf;
     }
 
+    /** Draws on the page of a sample. */
+    private interface Drawing {
+        void draw(PDDocument document, PDPageContentStream content) throws IOException;
+    }
+
     private static final class Line {
         final String text;
         final float x;
         final float baseline;
+        /** Whether a square is drawn before the text, as a bullet. */
+        final boolean bullet;
 
         Line(String text, float x, float baseline) {
+            this(text, x, baseline, false);
+        }
+
+        Line(String text, float x, float baseline, boolean bullet) {
             this.text = text;
             this.x = x;
             this.baseline = baseline;
+            this.bullet = bullet;
         }
     }
 }
