@@ -24,6 +24,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.autotagging.ChunksWriter;
 import org.opendataloader.pdf.processors.DocumentProcessor;
+import org.verapdf.cos.COSBase;
 import org.verapdf.cos.COSObjType;
 import org.verapdf.operator.Operator;
 import org.verapdf.pd.PDContentStream;
@@ -92,6 +93,9 @@ class ContentStreamTokensTest {
             .map(token -> ((Operator) token).getOperator()).collect(Collectors.toList());
         assertThat(operators).containsExactly("re", "f", "m", "l", "S");
         assertThat(tokens).hasSize(13);
+        assertThat(tokens.subList(0, 4)).allMatch(COSBase.class::isInstance);
+        assertThat(tokens.subList(0, 4).stream().map(token -> ((COSBase) token).getReal()))
+            .containsExactly(10.0, 20.0, 30.0, 40.0);
     }
 
     @Test
