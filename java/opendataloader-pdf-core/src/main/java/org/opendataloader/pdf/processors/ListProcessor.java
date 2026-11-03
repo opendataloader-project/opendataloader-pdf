@@ -265,6 +265,7 @@ public class ListProcessor {
         PDFList list = new PDFList();
         list.setNumberingStyle(interval.getNumberingStyle());
         list.setCommonPrefix(interval.getCommonPrefix());
+        double rightX = getListRightX(interval, startIndex, endIndex, pageContents);
         boolean isListSet = false;
         for (int index = startIndex; index <= endIndex; index++) {
             ListItemTextInfo currentInfo = interval.getListItemsInfos().get(index);
@@ -286,12 +287,13 @@ public class ListProcessor {
                 TextLine textLine = (TextLine) object;
                 listItem.add(textLine);
             }
-            if (index != endIndex) {
-                addContentToListItem(nextIndex, currentInfo, pageContents, listItem);
-            } else {
-                addContentToLastPageListItem(nextIndex, currentInfo, pageContents, listItem);
-            }
+            // The label length tells where the item text starts, which the lines below the item need.
             listItem.setLabelLength(currentInfo.getLabelLength());
+            if (index != endIndex) {
+                addContentToListItem(nextIndex, currentInfo, pageContents, listItem, rightX);
+            } else {
+                addContentToLastPageListItem(nextIndex, currentInfo, pageContents, listItem, rightX);
+            }
             if (isHybrid) {
                 listItem.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
             }
@@ -304,7 +306,7 @@ public class ListProcessor {
     }
 
     private static void addContentToListItem(int nextIndex, ListItemInfo currentInfo, List<IObject> pageContents,
-                                             ListItem listItem) {
+                                             ListItem listItem, double rightX) {
         boolean isListItem = true;
         TextLine previousTextLine = null;
         TextLine lineAbove = null;
@@ -323,7 +325,7 @@ public class ListProcessor {
             if (content instanceof TextLine) {
                 TextLine currentTextLine = (TextLine) content;
                 if (previousTextLine != null) {
-                    if (isListItem && isListItemLine(listItem, previousTextLine, currentTextLine)) {
+                    if (isListItem && isListItemLine(listItem, previousTextLine, currentTextLine, rightX)) {
                         listItem.add(previousTextLine);
                     } else {
                         isListItem = false;
@@ -333,7 +335,7 @@ public class ListProcessor {
                 previousTextLine = currentTextLine;
             } else if (content != null) {
                 if (previousTextLine != null) {
-                    if (isListItem && isListItemLine(listItem, previousTextLine, null)) {
+                    if (isListItem && isListItemLine(listItem, previousTextLine, null, rightX)) {
                         listItem.add(previousTextLine);
                     } else {
                         isListItem = false;
@@ -346,7 +348,7 @@ public class ListProcessor {
             pageContents.set(index, null);
         }
         if (previousTextLine != null) {
-            if (isListItem && isListItemLine(listItem, previousTextLine, null)) {
+            if (isListItem && isListItemLine(listItem, previousTextLine, null, rightX)) {
                 listItem.add(previousTextLine);
             } else {
                 listItem.getContents().add(previousTextLine);
@@ -369,7 +371,7 @@ public class ListProcessor {
     }
 
     private static void addContentToLastPageListItem(int nextIndex, ListItemInfo currentInfo, List<IObject> pageContents,
-                                                     ListItem listItem) {
+                                                     ListItem listItem, double rightX) {
         TextLine previousTextLine = null;
         Integer previousIndex = null;
         for (int index = currentInfo.getIndex() + 1; index < nextIndex; index++) {
@@ -379,7 +381,7 @@ public class ListProcessor {
             }
             TextLine nextLine = (TextLine) content;
             if (previousTextLine != null) {
-                if (isListItemLine(listItem, previousTextLine, nextLine)) {
+                if (isListItemLine(listItem, previousTextLine, nextLine, rightX)) {
                     listItem.add(previousTextLine);
                     pageContents.set(previousIndex, null);
                 } else {
@@ -391,14 +393,14 @@ public class ListProcessor {
             previousIndex = index;
         }
         if (previousTextLine != null) {
-            if (isListItemLine(listItem, previousTextLine, null)) {
+            if (isListItemLine(listItem, previousTextLine, null, rightX)) {
                 listItem.add(previousTextLine);
                 pageContents.set(previousIndex, null);
             }
         }
     }
 
-    private static boolean isListItemLine(ListItem listItem, TextLine currentLine, TextLine nextLine) {
+    private static boolean isListItemLine(ListItem listItem, TextLine currentLine, TextLine nextLine, double rightX) {
         TextLine listLine = listItem.getLastLine();
         if (ChunksMergeUtils.mergeLeadingProbability(listLine, currentLine) < LIST_ITEM_PROBABILITY) {
             return false;
@@ -420,13 +422,68 @@ public class ListProcessor {
                 return false;
             }
         }
-        if (BulletedParagraphUtils.isLabeledLine(currentLine)) {
+        if (BulletedParagraphUtils.isLabeledLine(currentLine) && !wrapsItemText(listItem, listLine, currentLine, rightX)) {
             return false;
         }
         if (currentLine.isListLine()) {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Whether a line that starts with a label character only wraps the text of the item (#875): the line starts
+     * where the item text starts, after the label, and its first word does not fit at the end of the line above.
+     * Lines below a line that is not full can be the items of a nested list, so they are not a wrap.
+     */
+    private static boolean wrapsItemText(ListItem listItem, TextLine lineAbove, TextLine line, double rightX) {
+        Double textStart = getItemTextStart(listItem);
+        double maxXGap = getMaxXGap(line.getFontSize());
+        if (textStart == null || Math.abs(line.getLeftX() - textStart) > maxXGap) {
+            return false;
+        }
+        Double firstWordEnd = getFirstWordEnd(line);
+        return firstWordEnd != null && lineAbove.getRightX() + maxXGap + firstWordEnd - line.getLeftX() > rightX;
+    }
+
+    /** The x where the text of the item starts, after its label, or null if the item has no label. */
+    private static Double getItemTextStart(ListItem listItem) {
+        TextLine firstLine = listItem.getFirstLine();
+        String value = firstLine.getValue();
+        int index = listItem.getLabelLength();
+        if (index <= 0) {
+            return null;
+        }
+        while (index < value.length() && Character.isWhitespace(value.charAt(index))) {
+            index++;
+        }
+        return index < value.length() ? firstLine.getSymbolStartCoordinate(index) : null;
+    }
+
+    private static Double getFirstWordEnd(TextLine line) {
+        String value = line.getValue();
+        int start = 0;
+        while (start < value.length() && Character.isWhitespace(value.charAt(start))) {
+            start++;
+        }
+        int end = start;
+        while (end < value.length() && !Character.isWhitespace(value.charAt(end))) {
+            end++;
+        }
+        return end > start ? line.getSymbolEndCoordinate(end - 1) : null;
+    }
+
+    /** The right edge of the list: the right end of the widest first line of its items. */
+    private static double getListRightX(TextListInterval interval, int startIndex, int endIndex,
+                                        List<IObject> pageContents) {
+        double rightX = Double.NEGATIVE_INFINITY;
+        for (int index = startIndex; index <= endIndex; index++) {
+            IObject object = pageContents.get(interval.getListItemsInfos().get(index).getIndex());
+            if (object != null) {
+                rightX = Math.max(rightX, object.getRightX());
+            }
+        }
+        return rightX;
     }
 
     private static double getMaxXGap(double fontSize) {
