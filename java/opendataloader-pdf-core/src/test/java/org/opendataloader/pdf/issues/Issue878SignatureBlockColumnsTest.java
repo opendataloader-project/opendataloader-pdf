@@ -155,8 +155,8 @@ class Issue878SignatureBlockColumnsTest {
     /**
      * Guard (review of #885): each page label of a table of contents stays with its title, also when the next row
      * has a word far from its title. The labels are a word with a digit ({@code A-12}), a letter ({@code A}), two
-     * words of a page reference ({@code p. 12} and {@code B 7}), and labels with a period ({@code iv.} and
-     * {@code A.}). A line without a gap separates the groups,
+     * words of a page reference ({@code p. 12} and {@code B 7}), labels with a period ({@code iv.} and
+     * {@code A.}), and a letter with a roman numeral ({@code A-IV}). A line without a gap separates the groups,
      * so that each label is the only one that can make its row a row of two columns.
      */
     @Test
@@ -164,7 +164,7 @@ class Issue878SignatureBlockColumnsTest {
         String[][] entries = {
             {"Appendix of the tables", "A-12"}, {"Annex of the budget", "A"},
             {"Notes of the secretary", "p. 12"}, {"List of the members", "B 7"},
-            {"Preface of the book", "iv."}, {"Foreword of the mayor", "A."}};
+            {"Preface of the book", "iv."}, {"Foreword of the mayor", "A."}, {"Annex of the laws", "A-IV"}};
         List<Line> lines = new ArrayList<>();
         float baseline = 740;
         for (String[] entry : entries) {
