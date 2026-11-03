@@ -380,7 +380,7 @@ public class MarkdownGenerator implements Closeable {
      * Returns the Markdown of the image, or null if its file is not there or cannot be embedded.
      */
     private String getImageMarkdown(ImageChunk image) {
-        String absolutePath = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, image.getIndex(), imageFormat);
+        String absolutePath = getImageFilePath(image.getIndex());
         String relativePath = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectoryName(), "/", image.getIndex(), imageFormat);
 
         if (!ImagesUtils.isImageFileExists(absolutePath)) {
@@ -414,7 +414,7 @@ public class MarkdownGenerator implements Closeable {
      */
     protected void writePicture(SemanticPicture picture) {
         try {
-            String absolutePath = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(), File.separator, picture.getPictureIndex(), imageFormat);
+            String absolutePath = getImageFilePath(picture.getPictureIndex());
             String relativePath = String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectoryName(), "/", picture.getPictureIndex(), imageFormat);
 
             if (ImagesUtils.isImageFileExists(absolutePath)) {
@@ -1068,14 +1068,33 @@ public class MarkdownGenerator implements Closeable {
         return column;
     }
 
-    /** The number of the contents at the start of an item that are lists, not counting contents not written. */
+    /** The number of the contents at the start of an item that are lists, not counting contents that write nothing. */
     private int countLeadingLists(List<IObject> contents) {
         int count = 0;
         while (count < contents.size()
-                && (contents.get(count) instanceof PDFList || !isSupportedContent(contents.get(count)))) {
+                && (contents.get(count) instanceof PDFList || writesNothing(contents.get(count)))) {
             count++;
         }
         return count;
+    }
+
+    /** Whether the content writes nothing: it is not supported, or it is an image without an image file. */
+    private boolean writesNothing(IObject content) {
+        if (!isSupportedContent(content)) {
+            return true;
+        }
+        if (content instanceof SemanticPicture) {
+            return !ImagesUtils.isImageFileExists(getImageFilePath(((SemanticPicture) content).getPictureIndex()));
+        }
+        if (content instanceof ImageChunk) {
+            return !ImagesUtils.isImageFileExists(getImageFilePath(((ImageChunk) content).getIndex()));
+        }
+        return false;
+    }
+
+    private String getImageFilePath(Integer index) {
+        return String.format(MarkdownSyntax.IMAGE_FILE_NAME_FORMAT, StaticLayoutContainers.getImagesDirectory(),
+                File.separator, index, imageFormat);
     }
 
     @Override
