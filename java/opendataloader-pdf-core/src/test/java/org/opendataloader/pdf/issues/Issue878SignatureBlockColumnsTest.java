@@ -37,6 +37,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -127,6 +128,36 @@ class Issue878SignatureBlockColumnsTest {
     }
 
     /**
+     * Guard (review of #885): each page label of a table of contents stays with its title, also when the next row
+     * has a word far from its title. The labels are a word with a digit ({@code A-12}), a letter ({@code A}), and
+     * two words of a page reference ({@code p. 12} and {@code B 7}). A line without a gap separates the groups,
+     * so that each label is the only one that can make its row a row of two columns.
+     */
+    @Test
+    void pageLabelsNextToOtherRowsStayWithTheirTitles() throws IOException {
+        String[][] entries = {
+            {"Appendix of the tables", "A-12"}, {"Annex of the budget", "A"},
+            {"Notes of the secretary", "p. 12"}, {"List of the members", "B 7"}};
+        List<Line> lines = new ArrayList<>();
+        float baseline = 740;
+        for (String[] entry : entries) {
+            lines.add(new Line(entry[0], 72, baseline));
+            lines.add(new Line(entry[1], 500, baseline));
+            lines.add(new Line("Other notes of the board", 72, baseline - 26));
+            lines.add(new Line("Notes", 500, baseline - 26));
+            lines.add(new Line("The board reads the notes before each meeting.", 72, baseline - 52));
+            baseline -= 78;
+        }
+        String markdown = convertMarkdown("toc-label-forms", lines, null);
+
+        for (String[] entry : entries) {
+            String pattern = ".*" + Pattern.quote(entry[0]) + "\\s+" + Pattern.quote(entry[1]) + "(\\s.*)?";
+            assertTrue(lineThatContains(markdown, entry[0]).matches(pattern),
+                "the page label " + entry[1] + " is not with its title: " + markdown);
+        }
+    }
+
+    /**
      * Guard (review of #885): an image between the two rows of the signature block, in the order of the page
      * content, keeps its place in the output: after the roles and before the names.
      */
@@ -166,6 +197,9 @@ class Issue878SignatureBlockColumnsTest {
             new Line("Second point of the vote", 84, 580, true), new Line("Rejected by the board", 310.2f, 580));
         JsonNode document = convertJson("drawn-bullets", lines);
 
+        JsonNode first = elementThatContains(document, "First point of the vote");
+        assertTrue(first != null && first.path("content").asText().contains("Adopted by the board")
+                && first.has("level"), "the first line with a drawn bullet lost its bullet: " + document);
         JsonNode line = elementThatContains(document, "Second point of the vote");
         assertTrue(line != null && line.path("content").asText().contains("Rejected by the board")
                 && line.has("level"), "a line with a drawn bullet lost its bullet: " + document);
