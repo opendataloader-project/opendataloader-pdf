@@ -515,7 +515,6 @@ public class DocumentProcessor {
                     pageContents = ParagraphProcessor.processParagraphs(pageContents);
                     if (structured) {
                         pageContents = ListProcessor.processListsFromTextNodes(pageContents);
-                        pageContents = ListProcessor.nestListsBelowBulletLines(pageContents);
                         HeadingProcessor.processHeadings(pageContents, false);
                     }
                     contents.set(pageNumber, pageContents);
@@ -542,6 +541,12 @@ public class DocumentProcessor {
             if (structured) {
                 // Cross-page post-processing (must be sequential)
                 ListProcessor.checkNeighborLists(contents);
+                // After the links between pages, so that a list that goes on in the next page keeps its link.
+                for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
+                    if (shouldProcessPage(pageNumber, pagesToProcess)) {
+                        contents.set(pageNumber, ListProcessor.nestListsBelowBulletLines(contents.get(pageNumber)));
+                    }
+                }
                 TableBorderProcessor.checkNeighborTables(contents);
                 HeadingProcessor.detectHeadingsLevels();
                 LevelProcessor.detectLevels(contents);

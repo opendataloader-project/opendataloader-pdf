@@ -62,6 +62,8 @@ class Issue755NestedListBelowBulletLineTest {
     private static final float PITCH = 12.3f;
 
     private static final String PARENT = "Public part";
+    /** The markers that share the baseline of the text after them. */
+    private static final List<String> MARKERS = Arrays.asList("-", "o", "1.", "2.");
 
     /** The layout of the issue: the list is in the item of the dash line. */
     @Test
@@ -103,6 +105,45 @@ class Issue755NestedListBelowBulletLineTest {
         JsonNode item = itemThatContains(document, PARENT);
         assertTrue(item != null && item.path("kids").toString().contains("Approval of the minutes"),
             "the list below the underlined dash line is not in its item: " + document);
+    }
+
+    /** Variant: two lists follow the dash line, one after the other; both are in its item. */
+    @Test
+    void twoListsBelowADashLineAreInTheItemOfTheLine() throws IOException {
+        List<Line> lines = agenda(new Line("-", DASH), new Line(PARENT, DASH_TEXT));
+        lines.addAll(Arrays.asList(
+            new Line("o", MARKER), new Line("Approval of the minutes of the last meeting", TEXT),
+            new Line("o", MARKER), new Line("Allowance of the mayor and of the deputies", TEXT),
+            new Line("1.", MARKER), new Line("Budget of the town for the year", TEXT),
+            new Line("2.", MARKER), new Line("Sale of a part of the public land", TEXT),
+            new Line("The secretary of the meeting signs the minutes.", BODY)));
+        JsonNode document = convertPages("two-lists", Arrays.asList(lines));
+
+        JsonNode item = itemThatContains(document, PARENT);
+        assertTrue(item != null && item.path("kids").toString().contains("Approval of the minutes")
+                && item.path("kids").toString().contains("Sale of a part of the public land"),
+            "the second list below the dash line is not in its item: " + document);
+    }
+
+    /**
+     * Guard: a list that goes on in the next page stays linked to its next part. The links between pages are made
+     * before the list goes into the item of the dash line.
+     */
+    @Test
+    void listThatGoesOnInTheNextPageKeepsItsLink() throws IOException {
+        List<Line> first = agenda(new Line("-", DASH), new Line(PARENT, DASH_TEXT));
+        first.addAll(Arrays.asList(
+            new Line("o", MARKER), new Line("Approval of the minutes of the last meeting", TEXT),
+            new Line("o", MARKER), new Line("Allowance of the mayor and of the deputies", TEXT)));
+        List<Line> second = new ArrayList<>(Arrays.asList(
+            new Line("o", MARKER), new Line("Budget of the town for the year", TEXT),
+            new Line("o", MARKER), new Line("Sale of a part of the public land", TEXT),
+            new Line("The secretary of the meeting signs the minutes.", BODY)));
+        JsonNode document = convertPages("next-page", Arrays.asList(first, second));
+
+        String json = document.toString();
+        assertTrue(json.contains("\"next list id\"") && json.contains("\"previous list id\""),
+            "the list on the first page is not linked to its next part: " + document);
     }
 
     /** Guard: a line without a bullet, above an indented list, stays a paragraph. */
@@ -202,6 +243,17 @@ class Issue755NestedListBelowBulletLineTest {
         return new ObjectMapper().readTree(directory.resolve(name + ".json").toFile());
     }
 
+    private static JsonNode convertPages(String name, List<List<Line>> pages) throws IOException {
+        Path directory = TestSamples.emptyDirectory("issue-755-nest-" + name);
+        Path pdf = directory.resolve(name + ".pdf");
+        writePages(pdf, pages);
+        Config config = new Config();
+        config.setOutputFolder(directory.toString());
+        config.setGenerateJSON(true);
+        DocumentProcessor.processFile(pdf.toString(), config);
+        return new ObjectMapper().readTree(directory.resolve(name + ".json").toFile());
+    }
+
     private static List<String> markdownLines(String name, List<Line> lines) throws IOException {
         Path directory = TestSamples.emptyDirectory("issue-755-nest-" + name);
         Path pdf = directory.resolve(name + ".pdf");
@@ -223,34 +275,45 @@ class Issue755NestedListBelowBulletLineTest {
      * line only moves the baseline.
      */
     private static void writeSample(Path pdf, List<Line> lines) throws IOException {
+        writePages(pdf, Arrays.asList(lines));
+    }
+
+    /** Writes one A4 page for each list of lines, as {@link #writeSample} does. */
+    private static void writePages(Path pdf, List<List<Line>> pages) throws IOException {
         try (PDDocument document = new PDDocument()) {
-            PDPage page = new PDPage(PDRectangle.A4);
-            document.addPage(page);
-            PDType1Font font = new PDType1Font(Standard14Fonts.FontName.COURIER);
-            float baseline = 750.3f + PITCH;
-            boolean afterMarker = false;
-            try (PDPageContentStream content = new PDPageContentStream(document, page)) {
-                for (Line line : lines) {
-                    if (!afterMarker) {
-                        baseline -= PITCH;
-                    }
-                    afterMarker = "o".equals(line.text) || "-".equals(line.text);
-                    if (line.text.isEmpty()) {
-                        continue;
-                    }
-                    content.beginText();
-                    content.setFont(font, SIZE);
-                    content.newLineAtOffset(line.x, baseline);
-                    content.showText(line.text);
-                    content.endText();
-                    if (line.underlined) {
-                        // The underline of the issue: 0.2 pt below the baseline, 1.2 pt thick.
-                        content.addRect(line.x, baseline - 1.4f, line.text.length() * SIZE * 0.6f, 1.2f);
-                        content.fill();
-                    }
-                }
+            for (List<Line> lines : pages) {
+                writePage(document, lines);
             }
             document.save(pdf.toFile());
+        }
+    }
+
+    private static void writePage(PDDocument document, List<Line> lines) throws IOException {
+        PDPage page = new PDPage(PDRectangle.A4);
+        document.addPage(page);
+        PDType1Font font = new PDType1Font(Standard14Fonts.FontName.COURIER);
+        float baseline = 750.3f + PITCH;
+        boolean afterMarker = false;
+        try (PDPageContentStream content = new PDPageContentStream(document, page)) {
+            for (Line line : lines) {
+                if (!afterMarker) {
+                    baseline -= PITCH;
+                }
+                afterMarker = MARKERS.contains(line.text);
+                if (line.text.isEmpty()) {
+                    continue;
+                }
+                content.beginText();
+                content.setFont(font, SIZE);
+                content.newLineAtOffset(line.x, baseline);
+                content.showText(line.text);
+                content.endText();
+                if (line.underlined) {
+                    // The underline of the issue: 0.2 pt below the baseline, 1.2 pt thick.
+                    content.addRect(line.x, baseline - 1.4f, line.text.length() * SIZE * 0.6f, 1.2f);
+                    content.fill();
+                }
+            }
         }
     }
 

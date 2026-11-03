@@ -548,23 +548,45 @@ public class ListProcessor {
     public static List<IObject> nestListsBelowBulletLines(List<IObject> contents) {
         IObject previous = null;
         int previousIndex = -1;
+        ListItem parentItem = null;
         for (int index = 0; index < contents.size(); index++) {
             IObject object = contents.get(index);
             if (object == null || isLineOfText(object, previous)) {
                 continue;
             }
+            if (object instanceof PDFList && parentItem != null && isNextChildList(previous, (PDFList) object)) {
+                // A second list that goes on below the first child list is a child of the same line too.
+                parentItem.getContents().add(object);
+                contents.set(index, null);
+                previous = object;
+                continue;
+            }
+            parentItem = null;
             if (object instanceof PDFList && previous instanceof SemanticParagraph
                     && isParentLine((SemanticParagraph) previous, (PDFList) object)) {
                 PDFList parent = createParentList((SemanticParagraph) previous, (PDFList) object);
                 contents.set(previousIndex, parent);
                 contents.set(index, null);
-                previous = parent;
+                parentItem = parent.getListItems().get(0);
+                previous = object;
                 continue;
             }
             previous = object;
             previousIndex = index;
         }
         return DocumentProcessor.removeNullObjectsFromList(contents);
+    }
+
+    /** Whether the list goes on below the child list, without an empty line, with its markers at the same x. */
+    private static boolean isNextChildList(IObject childList, PDFList list) {
+        TextLine line = list.getListItems().isEmpty() ? null : list.getListItems().get(0).getFirstLine();
+        if (!(childList instanceof PDFList) || line == null) {
+            return false;
+        }
+        double fontSize = line.getFontSize();
+        double gap = childList.getBottomY() - list.getTopY();
+        return gap >= -getMaxXGap(fontSize) && gap <= fontSize
+                && Math.abs(list.getLeftX() - childList.getLeftX()) <= getMaxXGap(fontSize);
     }
 
     /** Whether the object is a line in the box of the paragraph before it, as an underline of its text. */
@@ -615,6 +637,9 @@ public class ListProcessor {
         PDFList parent = new PDFList();
         parent.setNumberingStyle(NumberingStyleNames.UNORDERED);
         parent.add(item);
+        // The IDs are set before this step: the list takes the ID of the paragraph that it replaces.
+        parent.setRecognizedStructureId(paragraph.getRecognizedStructureId());
+        item.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
         return parent;
     }
 
