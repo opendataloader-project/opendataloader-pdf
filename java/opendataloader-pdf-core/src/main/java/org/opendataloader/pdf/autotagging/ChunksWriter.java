@@ -1,14 +1,14 @@
 package org.opendataloader.pdf.autotagging;
 
+import org.opendataloader.pdf.contentstream.ContentStreamTokens;
+import org.opendataloader.pdf.contentstream.OperatorStreamKey;
 import org.opendataloader.pdf.processors.AutoTaggingProcessor;
 import org.verapdf.as.ASAtom;
-import org.verapdf.as.io.ASInputStream;
 import org.verapdf.cos.*;
 import org.verapdf.gf.model.factory.chunks.ChunkParser;
 import org.verapdf.gf.model.factory.chunks.GraphicsState;
 import org.verapdf.operator.Operator;
 import org.verapdf.parser.Operators;
-import org.verapdf.parser.PDFStreamParser;
 import org.verapdf.pd.PDContentStream;
 import org.verapdf.pd.PDExtGState;
 import org.verapdf.pd.PDResourcesHandler;
@@ -48,23 +48,12 @@ public class ChunksWriter {
         this.enteredForms = enteredForms;
     }
 
+    /**
+     * @deprecated Use {@link ContentStreamTokens#getTokens(PDContentStream)}.
+     */
+    @Deprecated
     public static List<Object> getTokens(PDContentStream pdContentStream) {
-        if (pdContentStream != null) {
-            try {
-                COSObject contentStream = pdContentStream.getContents();
-                if (contentStream.getType() == COSObjType.COS_STREAM || contentStream.getType() == COSObjType.COS_ARRAY) {
-                    try (ASInputStream opStream = contentStream.getDirectBase().getData(COSStream.FilterFlags.DECODE)) {
-                        try (PDFStreamParser streamParser = new PDFStreamParser(opStream)) {
-                            streamParser.parseTokens();
-                            return streamParser.getTokens();
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                CHUNKS_LOGGER.warning("Failed to read content stream tokens: " + e.getMessage());
-            }
-        }
-        return Collections.emptyList();
+        return ContentStreamTokens.getTokens(pdContentStream);
     }
 
     /**
@@ -151,7 +140,7 @@ public class ChunksWriter {
                     try {
                         AutoTaggingProcessor.setUpContents(pdxForm.getObject(), new ChunksWriter(xFormGraphicsState,
                             resourceHandler.getExtendedResources(pdxForm.getResources()), enteredForms).processTokens(
-                                ChunksWriter.getTokens(pdxForm), xObjectOperatorStreamKey));
+                                ContentStreamTokens.getTokens(pdxForm), xObjectOperatorStreamKey));
                     } finally {
                         if (formKey != null) {
                             enteredForms.remove(formKey);

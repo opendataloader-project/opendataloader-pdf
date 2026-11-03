@@ -1,4 +1,4 @@
-package org.opendataloader.pdf.autotagging;
+package org.opendataloader.pdf.contentstream;
 
 import org.verapdf.cos.COSBase;
 import org.verapdf.cos.COSName;
@@ -48,7 +48,7 @@ public final class PaintBounds {
         Map<OperatorStreamKey, Map<Integer, BoundingBox>> bounds = new HashMap<>();
         PDPage page = StaticResources.getDocument().getPages().get(pageNumber);
         PDResourcesHandler resources = PDResourcesHandler.getInstance(page.getResources(), page.isInheritedResources());
-        walk(ChunksWriter.getTokens(page.getContent()), new OperatorStreamKey(pageNumber, null),
+        walk(ContentStreamTokens.getTokens(page.getContent()), new OperatorStreamKey(pageNumber, null),
             identity(), resources, bounds, new HashSet<>());
         return bounds;
     }
@@ -142,7 +142,7 @@ public final class PaintBounds {
         PDXForm form = (PDXForm) drawn;
         double[] matrix = form.getMatrix();
         double[] formCtm = matrix != null && matrix.length == 6 ? multiply(matrix, ctm) : ctm;
-        walk(ChunksWriter.getTokens(form), new OperatorStreamKey(key.getPageNumber(), name.getString()), formCtm,
+        walk(ContentStreamTokens.getTokens(form), new OperatorStreamKey(key.getPageNumber(), name.getString()), formCtm,
             resources.getExtendedResources(form.getResources()), bounds, entered);
     }
 

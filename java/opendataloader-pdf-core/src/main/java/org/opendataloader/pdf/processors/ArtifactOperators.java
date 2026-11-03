@@ -15,7 +15,7 @@
  */
 package org.opendataloader.pdf.processors;
 
-import org.opendataloader.pdf.autotagging.ChunksWriter;
+import org.opendataloader.pdf.contentstream.ContentStreamTokens;
 import org.verapdf.as.ASAtom;
 import org.verapdf.cos.COSBase;
 import org.verapdf.cos.COSKey;
@@ -46,7 +46,7 @@ import java.util.logging.Logger;
  * <p>ISO 32000-1 14.8.2.2: an artifact is not part of the content. veraPDF gives the content of a
  * page that has no MCID as one list, so text in an {@code /Artifact} sequence and untagged text are
  * not separated there. This class reads the content streams with the tokens that veraPDF uses
- * ({@link ChunksWriter#getTokens}), so the operator index of a {@link StreamInfo} points to the same
+ * ({@link ContentStreamTokens#getTokens}), so the operator index of a {@link StreamInfo} points to the same
  * operator. A stream info names a form XObject only by the name of its {@code Do} operator. If two
  * forms of a page have the same name, the operators of that name are not used.
  */
@@ -76,7 +76,7 @@ final class ArtifactOperators {
         ArtifactOperators result = new ArtifactOperators();
         try {
             PDResourcesHandler resources = PDResourcesHandler.getInstance(page.getResources(), page.isInheritedResources());
-            result.read(ChunksWriter.getTokens(page.getContent()), resources, null, false, 0);
+            result.read(ContentStreamTokens.getTokens(page.getContent()), resources, null, false, 0);
         } catch (RuntimeException e) {
             LOGGER.log(Level.WARNING, "Cannot read the artifact sequences of a page: " + e.getMessage());
             return new ArtifactOperators();
@@ -177,7 +177,7 @@ final class ArtifactOperators {
             return;
         }
         PDXForm form = (PDXForm) drawn;
-        read(ChunksWriter.getTokens(form), resources.getExtendedResources(form.getResources()), name, drawnInArtifact, depth + 1);
+        read(ContentStreamTokens.getTokens(form), resources.getExtendedResources(form.getResources()), name, drawnInArtifact, depth + 1);
     }
 
     private static boolean isArtifactTag(List<COSBase> arguments) {
