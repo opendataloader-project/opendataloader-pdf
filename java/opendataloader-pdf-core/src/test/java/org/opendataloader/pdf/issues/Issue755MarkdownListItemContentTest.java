@@ -23,13 +23,16 @@ import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.junit.jupiter.api.Test;
 import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.entities.SemanticPicture;
 import org.opendataloader.pdf.markdown.MarkdownGenerator;
 import org.opendataloader.pdf.processors.DocumentProcessor;
 import org.opendataloader.pdf.testsupport.TestSamples;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
+import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
+import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.geometry.MultiBoundingBox;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
 import org.verapdf.wcag.algorithms.entities.lists.PDFList;
@@ -168,6 +171,35 @@ class Issue755MarkdownListItemContentTest {
         assertEquals("2. second", lineThatContains(lines, "second"), "the number of the item changed: " + lines);
     }
 
+    /** A picture without an image file writes nothing, so the nested list after it is still the first block. */
+    @Test
+    void nestedListAfterAPictureWithoutAFileIsIndented() throws IOException {
+        PDFList outer = list(NumberingStyleNames.UNORDERED, item("-", "outer item"));
+        outer.getListItems().get(0).getContents().add(new SemanticPicture(new BoundingBox(), 9999));
+        outer.getListItems().get(0).getContents().add(list(NumberingStyleNames.UNORDERED, item("-", "inner item")));
+
+        List<String> lines = render(false, outer);
+
+        assertEquals("  - inner item", lineThatContains(lines, "inner item"),
+            "the nested list after a picture that writes nothing is not indented: " + lines);
+    }
+
+    /** With image output on, an image without an image file writes nothing too. */
+    @Test
+    void nestedListAfterAnImageWithoutAFileIsIndented() throws IOException {
+        PDFList outer = list(NumberingStyleNames.UNORDERED, item("-", "outer item"));
+        outer.getListItems().get(0).getContents().add(new ImageChunk(new BoundingBox(0, 0, 0, 10, 10)));
+        outer.getListItems().get(0).getContents().add(list(NumberingStyleNames.UNORDERED, item("-", "inner item")));
+
+        StaticContainers.setKeepLineBreaks(false);
+        Generator generator = new Generator(new StringWriter(), new Config(), true);
+        List<String> lines = Arrays.stream(generator.render(Arrays.asList(outer)).split("\n"))
+            .filter(line -> !line.isBlank()).collect(Collectors.toList());
+
+        assertEquals("  - inner item", lineThatContains(lines, "inner item"),
+            "the nested list after an image that writes nothing is not indented: " + lines);
+    }
+
     private static String lineThatContains(List<String> lines, String text) {
         Optional<String> line = lines.stream().filter(value -> value.contains(text)).findFirst();
         return line.orElse("<missing: " + text + ">");
@@ -179,6 +211,11 @@ class Issue755MarkdownListItemContentTest {
         Generator(StringWriter out, Config config) {
             super(out, config);
             this.out = out;
+        }
+
+        Generator(StringWriter out, Config config, boolean imageSupported) {
+            this(out, config);
+            this.isImageSupported = imageSupported;
         }
 
         String render(List<IObject> contents) throws IOException {
