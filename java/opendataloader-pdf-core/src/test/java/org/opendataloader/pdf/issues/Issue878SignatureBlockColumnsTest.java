@@ -70,6 +70,9 @@ class Issue878SignatureBlockColumnsTest {
         JsonNode role = elementThatContains(document, LEFT_ROLE);
         assertTrue(role != null && !role.path("content").asText().contains(RIGHT_ROLE),
             "the roles of the two columns are one element: " + document);
+        assertTrue(role == elementThatContains(document, LEFT_NAME)
+                && elementThatContains(document, RIGHT_ROLE) == elementThatContains(document, RIGHT_NAME),
+            "a role and its name are not one element: " + document);
     }
 
     /** The Markdown of the issue layout: each role comes with its name, the left column first. */
@@ -83,6 +86,28 @@ class Issue878SignatureBlockColumnsTest {
         int rightName = markdown.indexOf(RIGHT_NAME);
         assertTrue(leftRole >= 0 && leftRole < leftName && leftName < rightRole && rightRole < rightName,
             "a role does not come with its name: " + markdown);
+        assertTrue(paragraphThatContains(markdown, LEFT_ROLE).contains(LEFT_NAME)
+                && paragraphThatContains(markdown, RIGHT_ROLE).contains(RIGHT_NAME),
+            "a role and its name are not one paragraph: " + markdown);
+    }
+
+    /**
+     * Guard (review of #885): a small mark drawn over a word of the left role, as a footnote mark, keeps the
+     * word with its role: the word comes before the name below it, not after it in the right column.
+     */
+    @Test
+    void aMarkOverTheLeftRoleKeepsItInTheLeftColumn() throws IOException {
+        String markdown = convertMarkdown("mark-over-role", signatureBlock(), (pdf, content) -> {
+            content.beginText();
+            content.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 6);
+            content.newLineAtOffset(135, 610);
+            content.showText("1");
+            content.endText();
+        });
+
+        int word = markdown.indexOf("Mayor");
+        assertTrue(word >= 0 && word < markdown.indexOf(LEFT_NAME),
+            "a word of the left role is not in the left column: " + markdown);
     }
 
     /** Guard: the lines of a table of contents, a title and its page number far apart, stay one line each. */
@@ -129,15 +154,17 @@ class Issue878SignatureBlockColumnsTest {
 
     /**
      * Guard (review of #885): each page label of a table of contents stays with its title, also when the next row
-     * has a word far from its title. The labels are a word with a digit ({@code A-12}), a letter ({@code A}), and
-     * two words of a page reference ({@code p. 12} and {@code B 7}). A line without a gap separates the groups,
+     * has a word far from its title. The labels are a word with a digit ({@code A-12}), a letter ({@code A}), two
+     * words of a page reference ({@code p. 12} and {@code B 7}), and labels with a period ({@code iv.} and
+     * {@code A.}). A line without a gap separates the groups,
      * so that each label is the only one that can make its row a row of two columns.
      */
     @Test
     void pageLabelsNextToOtherRowsStayWithTheirTitles() throws IOException {
         String[][] entries = {
             {"Appendix of the tables", "A-12"}, {"Annex of the budget", "A"},
-            {"Notes of the secretary", "p. 12"}, {"List of the members", "B 7"}};
+            {"Notes of the secretary", "p. 12"}, {"List of the members", "B 7"},
+            {"Preface of the book", "iv."}, {"Foreword of the mayor", "A."}};
         List<Line> lines = new ArrayList<>();
         float baseline = 740;
         for (String[] entry : entries) {
@@ -212,6 +239,11 @@ class Issue878SignatureBlockColumnsTest {
             new Line("month. All the points of the agenda are done, and the meeting closes.", 69.1f, 632),
             new Line(LEFT_ROLE, 103.4f, 606), new Line(RIGHT_ROLE, 310.2f, 606),
             new Line(LEFT_NAME, 95.9f, 568), new Line(RIGHT_NAME, 310.2f, 568)));
+    }
+
+    private static String paragraphThatContains(String markdown, String text) {
+        return Arrays.stream(markdown.split("\n\n")).filter(paragraph -> paragraph.contains(text)).findFirst()
+            .orElse("<missing: " + text + ">");
     }
 
     private static String lineThatContains(String markdown, String text) {
