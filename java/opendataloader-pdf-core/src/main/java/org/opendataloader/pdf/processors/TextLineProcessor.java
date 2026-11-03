@@ -18,6 +18,7 @@ package org.opendataloader.pdf.processors;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
+import org.verapdf.wcag.algorithms.entities.content.TextBlock;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
@@ -28,15 +29,25 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ListUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class TextLineProcessor {
 
     private static final double ONE_LINE_PROBABILITY = 0.75;
+    /** The gap between two columns of a block is at least this many font sizes. */
+    private static final double MIN_COLUMN_GAP = 6;
+    /** The rows of a block of two columns are this many font sizes apart: more than single spacing. */
+    private static final double MIN_COLUMN_ROW_DISTANCE = 1.8;
+    private static final double MAX_COLUMN_ROW_DISTANCE = 4;
+    /** A block of two columns, as a signature block, has at most this many lines. */
+    private static final int MAX_COLUMN_BLOCK_LINES = 3;
     private static final Comparator<TextChunk> TEXT_CHUNK_COMPARATOR =
         Comparator.comparingDouble(o -> o.getBoundingBox().getLeftX());
 
@@ -94,6 +105,134 @@ public class TextLineProcessor {
         }
         linkTextLinesWithConnectedLineArtBullet(newContents);
         return newContents;
+    }
+
+    /**
+     * Makes one paragraph of each column of a block of two columns (#878). A signature block has this layout: two
+     * or three lines, one below the other with more than single spacing between them, each with one gap of at
+     * least {@link #MIN_COLUMN_GAP} font sizes, the gaps at the same place, and text with a letter after each gap.
+     * Each line is split at its gap; the parts before the gaps are one paragraph, and the parts after them are
+     * another, so that each column is read as one. A table of contents has page numbers after its gaps, and the
+     * rows of a form are single spaced, so they stay one line each.
+     */
+    public static List<IObject> splitTwoColumnBlocks(List<IObject> contents) {
+        List<Integer> indexes = new ArrayList<>();
+        List<double[]> gaps = new ArrayList<>();
+        for (int i = 0; i < contents.size(); i++) {
+            if (contents.get(i) instanceof TextLine) {
+                indexes.add(i);
+                gaps.add(getColumnGap((TextLine) contents.get(i)));
+            }
+        }
+        Map<Integer, List<IObject>> splitLines = new HashMap<>();
+        int start = 0;
+        while (start < indexes.size()) {
+            int end = start;
+            while (end + 1 < indexes.size() && gaps.get(end) != null && gaps.get(end + 1) != null
+                    && areRowsOfColumns((TextLine) contents.get(indexes.get(end)), gaps.get(end),
+                    (TextLine) contents.get(indexes.get(end + 1)), gaps.get(end + 1))) {
+                end++;
+            }
+            int size = end - start + 1;
+            if (size >= 2 && size <= MAX_COLUMN_BLOCK_LINES) {
+                TextBlock left = null;
+                TextBlock right = null;
+                for (int k = start; k <= end; k++) {
+                    List<TextLine> parts = splitAt((TextLine) contents.get(indexes.get(k)), gaps.get(k)[0]);
+                    left = addLine(left, parts.get(0));
+                    right = addLine(right, parts.get(1));
+                    splitLines.put(indexes.get(k), new ArrayList<>());
+                }
+                splitLines.put(indexes.get(start), Arrays.asList(ParagraphProcessor.createParagraphFromTextBlock(left),
+                    ParagraphProcessor.createParagraphFromTextBlock(right)));
+            }
+            start = end + 1;
+        }
+        if (splitLines.isEmpty()) {
+            return contents;
+        }
+        List<IObject> newContents = new ArrayList<>(contents.size() + splitLines.size());
+        for (int i = 0; i < contents.size(); i++) {
+            List<IObject> lines = splitLines.get(i);
+            if (lines != null) {
+                newContents.addAll(lines);
+            } else {
+                newContents.add(contents.get(i));
+            }
+        }
+        return newContents;
+    }
+
+    /** The one gap of at least {@link #MIN_COLUMN_GAP} font sizes, as {start, end}, with a letter after it, or null. */
+    private static double[] getColumnGap(TextLine line) {
+        double minGap = MIN_COLUMN_GAP * line.getFontSize();
+        double[] gap = null;
+        TextChunk previous = null;
+        for (TextChunk chunk : line.getTextChunks()) {
+            if (chunk.isWhiteSpaceChunk() || chunk.isEmpty()) {
+                continue;
+            }
+            if (previous != null && chunk.getLeftX() - previous.getRightX() >= minGap) {
+                if (gap != null) {
+                    return null;
+                }
+                gap = new double[] {previous.getRightX(), chunk.getLeftX()};
+            }
+            previous = chunk;
+        }
+        if (gap == null) {
+            return null;
+        }
+        for (TextChunk chunk : line.getTextChunks()) {
+            if (chunk.getLeftX() >= gap[1] && chunk.getValue().codePoints().anyMatch(Character::isLetter)) {
+                return gap;
+            }
+        }
+        return null;
+    }
+
+    /** Whether the line below is the next row of the columns: more than single spacing, the gaps at one place. */
+    private static boolean areRowsOfColumns(TextLine above, double[] aboveGap, TextLine below, double[] belowGap) {
+        double fontSize = above.getFontSize();
+        double distance = above.getBaseLine() - below.getBaseLine();
+        return Math.abs(fontSize - below.getFontSize()) <= 0.1 * fontSize
+                && distance >= MIN_COLUMN_ROW_DISTANCE * fontSize && distance <= MAX_COLUMN_ROW_DISTANCE * fontSize
+                && aboveGap[0] < belowGap[1] && belowGap[0] < aboveGap[1];
+    }
+
+    private static TextBlock addLine(TextBlock block, TextLine line) {
+        if (block == null) {
+            return new TextBlock(line);
+        }
+        block.add(Collections.singletonList(line));
+        return block;
+    }
+
+    /** The two lines of the chunks before and after the x, without the white space at the gap. */
+    private static List<TextLine> splitAt(TextLine line, double x) {
+        List<TextChunk> leftChunks = new ArrayList<>();
+        List<TextChunk> rightChunks = new ArrayList<>();
+        for (TextChunk chunk : line.getTextChunks()) {
+            (chunk.getRightX() <= x ? leftChunks : rightChunks).add(chunk);
+        }
+        while (!leftChunks.isEmpty() && leftChunks.get(leftChunks.size() - 1).isWhiteSpaceChunk()) {
+            leftChunks.remove(leftChunks.size() - 1);
+        }
+        while (!rightChunks.isEmpty() && rightChunks.get(0).isWhiteSpaceChunk()) {
+            rightChunks.remove(0);
+        }
+        List<TextLine> lines = new ArrayList<>(2);
+        lines.add(newLine(leftChunks));
+        lines.add(newLine(rightChunks));
+        return lines;
+    }
+
+    private static TextLine newLine(List<TextChunk> chunks) {
+        TextLine line = new TextLine(chunks.get(0));
+        for (int i = 1; i < chunks.size(); i++) {
+            line.add(chunks.get(i));
+        }
+        return line;
     }
 
     private static TextLine getTextLineWithSpaces(TextLine textLine, double threshold,
