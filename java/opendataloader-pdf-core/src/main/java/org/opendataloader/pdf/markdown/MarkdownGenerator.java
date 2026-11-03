@@ -63,6 +63,8 @@ public class MarkdownGenerator implements Closeable {
 
     protected static final Logger LOGGER = Logger.getLogger(MarkdownGenerator.class.getCanonicalName());
     protected final java.io.Writer markdownWriter;
+    /** The writer under {@link #markdownWriter}: it indents the nested lists of a list item. */
+    private final IndentingWriter indentingWriter;
     protected final String markdownFileName;
     protected int tableNesting = 0;
     protected boolean isImageSupported;
@@ -121,7 +123,8 @@ public class MarkdownGenerator implements Closeable {
     MarkdownGenerator(File inputPdf, Config config) throws IOException {
         String cutPdfFileName = inputPdf.getName();
         this.markdownFileName = config.getOutputFolder() + File.separator + cutPdfFileName.substring(0, cutPdfFileName.length() - 3) + "md";
-        this.markdownWriter = new FileWriter(markdownFileName, StandardCharsets.UTF_8);
+        this.indentingWriter = new IndentingWriter(new FileWriter(markdownFileName, StandardCharsets.UTF_8));
+        this.markdownWriter = indentingWriter;
         this.isImageSupported = !config.isImageOutputOff() && config.isGenerateMarkdown();
         this.markdownPageSeparator = config.getMarkdownPageSeparator();
         this.selectedPageNumbers = new HashSet<>(config.getPageNumbers());
@@ -136,7 +139,8 @@ public class MarkdownGenerator implements Closeable {
      */
     public MarkdownGenerator(java.io.Writer writer, Config config) {
         this.markdownFileName = null;
-        this.markdownWriter = writer;
+        this.indentingWriter = new IndentingWriter(writer);
+        this.markdownWriter = indentingWriter;
         this.isImageSupported = false;
         this.markdownPageSeparator = config.getMarkdownPageSeparator();
         this.selectedPageNumbers = new HashSet<>(config.getPageNumbers());
@@ -488,13 +492,27 @@ public class MarkdownGenerator implements Closeable {
             } else {
                 itemText = endLink(GeneratorUtils.getTextFromLines(item.getLines(), this::appendLine));
             }
-            markdownWriter.write(replaceInlineImages(getCorrectMarkdownString(itemText)));
+            String writtenText = replaceInlineImages(getCorrectMarkdownString(itemText));
+            markdownWriter.write(writtenText);
             writeLineBreak();
 
             List<IObject> itemContents = item.getContents();
             if (!itemContents.isEmpty()) {
                 writeLineBreak();
-                writeContents(itemContents, false);
+                // CommonMark keeps a block in the item only when it is indented to the start of the item text.
+                // Only the nested lists before the first other block are indented: the list processor can give
+                // an item text that is not its own (#876), and an indent would put that text in the item.
+                int nestedLists = isInsideTable() ? 0 : countLeadingLists(itemContents);
+                if (nestedLists > 0) {
+                    String marker = orderedMarkers != null ? orderedMarkers.get(index) : MarkdownSyntax.LIST_ITEM;
+                    indentingWriter.indent(getContentColumn(marker, writtenText));
+                    try {
+                        writeContents(itemContents.subList(0, nestedLists), false);
+                    } finally {
+                        indentingWriter.outdent();
+                    }
+                }
+                writeContents(itemContents.subList(nestedLists, itemContents.size()), false);
             }
         }
         if (delimiter != null) {
@@ -517,7 +535,7 @@ public class MarkdownGenerator implements Closeable {
      * with {@code -} markers. A list is written as a Markdown ordered list only when its
      * {@code /ListNumbering} gives an ordered style and the labels are {@code 1.}, {@code 2.}, ...
      * (or {@code 1)}, ...) without gaps, so that a CommonMark viewer shows the number of each label.
-     * Items with nested contents keep the {@code -} marker, because nested blocks are not indented.
+     * Items with nested contents keep the {@code -} marker, because only their nested lists are indented.
      */
     protected List<String> getOrderedListMarkers(PDFList list) {
         String numberingStyle = list.getNumberingStyle();
@@ -1030,10 +1048,89 @@ public class MarkdownGenerator implements Closeable {
         }
     }
 
+    /**
+     * The column where CommonMark starts the content of an item line: after the marker and its space, and after
+     * the number of an ordered list that the item text starts with. The item of a tagged list with nested
+     * contents keeps its label in the text ("- 1. text"), and CommonMark reads that label as a nested list.
+     */
+    private static int getContentColumn(String marker, String text) {
+        int column = marker.length() + MarkdownSyntax.SPACE.length();
+        Matcher matcher = ORDERED_LIST_ITEM_START.matcher(text);
+        if (matcher.find()) {
+            int end = matcher.end(1);
+            int spaces = 0;
+            while (end + spaces < text.length() && text.charAt(end + spaces) == ' ') {
+                spaces++;
+            }
+            // CommonMark: 1 to 4 spaces after a marker start the content; more spaces start an indented block.
+            column += end + (spaces == 0 || spaces > 4 ? 1 : spaces);
+        }
+        return column;
+    }
+
+    /** The number of the contents at the start of an item that are lists, not counting contents not written. */
+    private int countLeadingLists(List<IObject> contents) {
+        int count = 0;
+        while (count < contents.size()
+                && (contents.get(count) instanceof PDFList || !isSupportedContent(contents.get(count)))) {
+            count++;
+        }
+        return count;
+    }
+
     @Override
     public void close() throws IOException {
         if (markdownWriter != null) {
             markdownWriter.close();
+        }
+    }
+
+    /**
+     * A writer that starts each line with the current indentation (#880). An empty line gets no indentation, so
+     * the output has no spaces at the end of a line.
+     */
+    private static final class IndentingWriter extends java.io.Writer {
+        private final java.io.Writer writer;
+        private final Deque<Integer> widths = new ArrayDeque<>();
+        private String indentation = "";
+        private boolean atLineStart = true;
+
+        IndentingWriter(java.io.Writer writer) {
+            this.writer = writer;
+        }
+
+        void indent(int width) {
+            widths.push(width);
+            indentation += " ".repeat(width);
+        }
+
+        void outdent() {
+            indentation = indentation.substring(0, indentation.length() - widths.pop());
+        }
+
+        @Override
+        public void write(char[] buffer, int offset, int length) throws IOException {
+            int start = offset;
+            for (int i = offset; i < offset + length; i++) {
+                char character = buffer[i];
+                if (atLineStart && character != '\n' && !indentation.isEmpty()) {
+                    writer.write(buffer, start, i - start);
+                    writer.write(indentation);
+                    start = i;
+                }
+                atLineStart = character == '\n';
+            }
+            writer.write(buffer, start, offset + length - start);
+        }
+
+        @Override
+        public void flush() throws IOException {
+            writer.flush();
+        }
+
+        @Override
+        public void close() throws IOException {
+            writer.close();
         }
     }
 }
