@@ -15,6 +15,7 @@
  */
 package org.opendataloader.pdf.cli;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
@@ -27,7 +28,9 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Handler;
@@ -36,6 +39,7 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class CLIMainTest {
 
@@ -702,6 +706,71 @@ class CLIMainTest {
             logger.setLevel(priorLevel);
             logger.setUseParentHandlers(priorUseParent);
         }
+    }
+
+    @Test
+    void testResolveArgumentsPrefersCommandLine() {
+        String[] args = {"input.pdf"};
+
+        assertSame(args, CLIMain.resolveArguments(args, "[\"other.pdf\"]"));
+        assertSame(args, CLIMain.resolveArguments(args, null));
+    }
+
+    /**
+     * On Windows the Java launcher turns non-ASCII arguments into "?", so the
+     * Python wrapper passes them as JSON in OPENDATALOADER_PDF_ARGS.
+     */
+    @Test
+    void testResolveArgumentsReadsJsonWithoutCommandLine() throws IOException {
+        String[] expected = {"έγγραφο.pdf", "--markdown-page-separator", "\n--- %page-number% ---\n"};
+        String json = new ObjectMapper().writeValueAsString(expected);
+
+        assertArrayEquals(expected, CLIMain.resolveArguments(new String[0], json));
+    }
+
+    @Test
+    void testResolveArgumentsRejectsValueThatIsNotArrayOfStrings() {
+        for (String json : new String[]{"input.pdf", "{\"a\": 1}", "[\"input.pdf\", null]", "null"}) {
+            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> CLIMain.resolveArguments(new String[0], json), json);
+            assertTrue(exception.getMessage().contains(CLIMain.ARGS_ENVIRONMENT_VARIABLE), json);
+        }
+    }
+
+    /**
+     * Arguments from OPENDATALOADER_PDF_ARGS keep their Unicode names, so the
+     * output file and the image links in Markdown use the real names, not
+     * Windows short (8.3) names.
+     */
+    @Test
+    void testNonAsciiNamesFromEnvironmentArgumentsReachOutput() throws IOException {
+        Path samplePdf = Paths.get("../../samples/pdf/1901.03003.pdf");
+        assumeTrue(Files.exists(samplePdf), "Sample PDF not found");
+        Path inputPdf;
+        try {
+            inputPdf = tempDir.resolve("έγγραφο.pdf");
+        } catch (InvalidPathException exception) {
+            // A POSIX JVM in a non-UTF-8 locale cannot store Greek file names
+            assumeTrue(false, "File system cannot store non-ASCII file names");
+            return;
+        }
+        Files.copy(samplePdf, inputPdf);
+        Path outputDir = tempDir.resolve("έξοδος");
+        Path imageDir = tempDir.resolve("εικόνες");
+        String json = new ObjectMapper().writeValueAsString(new String[]{
+            inputPdf.toString(),
+            "--output-dir", outputDir.toString(),
+            "--format", "markdown",
+            "--image-output", "external",
+            "--image-dir", imageDir.toString(),
+            "--quiet"
+        });
+
+        int exitCode = CLIMain.run(CLIMain.resolveArguments(new String[0], json));
+
+        assertEquals(0, exitCode);
+        String markdown = Files.readString(outputDir.resolve("έγγραφο.md"), StandardCharsets.UTF_8);
+        assertTrue(markdown.contains("](<εικόνες/"), "Markdown links must name the image folder");
     }
 
     private static String captureStdoutOf(Runnable action) {

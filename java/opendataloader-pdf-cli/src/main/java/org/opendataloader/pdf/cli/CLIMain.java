@@ -15,6 +15,8 @@
  */
 package org.opendataloader.pdf.cli;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.cli.*;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.api.OpenDataLoaderPDF;
@@ -27,7 +29,9 @@ import org.verapdf.exceptions.InvalidPasswordException;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,6 +41,16 @@ public class CLIMain {
     private static final Logger LOGGER = Logger.getLogger(CLIMain.class.getCanonicalName());
 
     private static final String HELP = "[options] <INPUT FILE OR FOLDER>...\n Options:";
+
+    /**
+     * Environment variable with the arguments as a JSON array of strings, read
+     * only when the command line has no arguments. On Windows the Java launcher
+     * decodes the command line with the ANSI code page of the system, so
+     * characters outside it (Greek, Cyrillic, CJK on a Western-locale system)
+     * become "?". The Python wrapper passes such arguments here, with non-ASCII
+     * characters written as JSON escapes, so the value is ASCII.
+     */
+    static final String ARGS_ENVIRONMENT_VARIABLE = "OPENDATALOADER_PDF_ARGS";
 
     private enum InputSource { CLI_ARGUMENT, DIRECTORY_CHILD }
 
@@ -71,10 +85,42 @@ public class CLIMain {
     }
 
     public static void main(String[] args) {
+        try {
+            args = resolveArguments(args, System.getenv(ARGS_ENVIRONMENT_VARIABLE));
+        } catch (IllegalArgumentException exception) {
+            System.out.println(exception.getMessage());
+            System.exit(2);
+        }
         int exitCode = run(args);
         if (exitCode != 0) {
             System.exit(exitCode);
         }
+    }
+
+    /**
+     * Returns the command-line arguments, or the arguments of
+     * {@link #ARGS_ENVIRONMENT_VARIABLE} if the command line has none.
+     *
+     * @param args command-line arguments
+     * @param argumentsJson value of the environment variable, or null if it is not set
+     * @return the arguments to run with
+     * @throws IllegalArgumentException if the value is not a JSON array of strings
+     */
+    static String[] resolveArguments(String[] args, String argumentsJson) {
+        if (args.length > 0 || argumentsJson == null) {
+            return args;
+        }
+        String[] arguments;
+        try {
+            arguments = new ObjectMapper().readValue(argumentsJson, String[].class);
+        } catch (JsonProcessingException exception) {
+            arguments = null;
+        }
+        if (arguments == null || Arrays.stream(arguments).anyMatch(Objects::isNull)) {
+            throw new IllegalArgumentException(
+                ARGS_ENVIRONMENT_VARIABLE + " must be a JSON array of strings");
+        }
+        return arguments;
     }
 
     /**
