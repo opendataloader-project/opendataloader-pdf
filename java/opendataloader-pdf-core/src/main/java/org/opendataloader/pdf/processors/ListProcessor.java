@@ -113,8 +113,11 @@ public class ListProcessor {
         // The lines of each page, before the lists take some of them. The lines of a table cell keep the rules
         // without empty lines, as in the paragraph detection.
         List<ParagraphProcessor.PageLines> pagesLines = new ArrayList<>(contents.size());
+        // For each object of each page that a list took into one of its items, that list (#888).
+        List<PDFList[]> pagesOwners = new ArrayList<>(contents.size());
         for (List<IObject> pageContents : contents) {
             pagesLines.add(isTableCell || intervalsList.isEmpty() ? null : ParagraphProcessor.getPageLines(pageContents));
+            pagesOwners.add(intervalsList.isEmpty() ? null : new PDFList[pageContents.size()]);
         }
         for (TextListInterval interval : intervalsList) {
 //            if (interval.getNumberOfColumns() > 1/*== interval.getNumberOfListItems()*/) {//to fix bounding box for multi-column lists
@@ -129,28 +132,40 @@ public class ListProcessor {
             interval.setCommonSuffixLengthToAllInfos();
             for (int i = 0; i < interval.getNumberOfListItems(); i++) {
                 ListItemInfo currentInfo = interval.getListItemsInfos().get(i);
+                int page = isTableCell ? 0 : currentPageNumber;
                 if (!Objects.equals(currentInfo.getPageNumber(), currentPageNumber)) {
-                    int page = isTableCell ? 0 : currentPageNumber;
-                    PDFList list = calculateList(interval, index, i - 1, contents.get(page), pagesLines.get(page));
-                    for (ListItem listItem : list.getListItems()) {
-                        listItem.setContents(processListItemContent(listItem.getContents()));
-                    }
-                    if (previousList != null) {
-                        PDFList.setListConnected(previousList, list);
+                    if (index < i) {
+                        PDFList list = calculateListPart(interval, index, i - 1, contents.get(page), pagesLines.get(page),
+                            pagesOwners.get(page), -1);
+                        if (previousList != null) {
+                            PDFList.setListConnected(previousList, list);
+                        }
+                        previousList = list;
                     }
                     currentPageNumber = currentInfo.getPageNumber();
                     index = i;
-                    previousList = list;
+                } else if (index < i) {
+                    int otherListIndex = getIndexOfOtherListWithItem(interval, i, contents.get(page), pagesOwners.get(page));
+                    if (otherListIndex >= 0) {
+                        // The item before ends before the other list, so that it does not take that list. The items
+                        // after this item make a new list, in their place.
+                        PDFList list = calculateListPart(interval, index, i - 1, contents.get(page), pagesLines.get(page),
+                            pagesOwners.get(page), otherListIndex);
+                        if (previousList != null) {
+                            PDFList.setListConnected(previousList, list);
+                        }
+                        previousList = null;
+                        index = i + 1;
+                    }
                 }
             }
-            int page = isTableCell ? 0 : currentPageNumber;
-            PDFList list = calculateList(interval, index, interval.getNumberOfListItems() - 1, contents.get(page),
-                pagesLines.get(page));
-            for (ListItem listItem : list.getListItems()) {
-                listItem.setContents(processListItemContent(listItem.getContents()));
-            }
-            if (previousList != null) {
-                PDFList.setListConnected(previousList, list);
+            if (index < interval.getNumberOfListItems()) {
+                int page = isTableCell ? 0 : currentPageNumber;
+                PDFList list = calculateListPart(interval, index, interval.getNumberOfListItems() - 1, contents.get(page),
+                    pagesLines.get(page), pagesOwners.get(page), -1);
+                if (previousList != null) {
+                    PDFList.setListConnected(previousList, list);
+                }
             }
         }
         contents.replaceAll(DocumentProcessor::removeNullObjectsFromList);
@@ -267,17 +282,47 @@ public class ListProcessor {
                 line, value, true);
     }
 
-    private static PDFList calculateList(TextListInterval interval, int startIndex, int endIndex, List<IObject> pageContents,
-                                         ParagraphProcessor.PageLines pageLines) {
-        return calculateList(interval, startIndex, endIndex, pageContents, false, pageLines);
+    /** Makes the list of the items, as {@link #calculateList}, and detects the paragraphs and lists in its items. */
+    private static PDFList calculateListPart(TextListInterval interval, int startIndex, int endIndex,
+                                             List<IObject> pageContents, ParagraphProcessor.PageLines pageLines,
+                                             PDFList[] owners, int lastItemEnd) {
+        PDFList list = calculateList(interval, startIndex, endIndex, pageContents, false, pageLines, owners, lastItemEnd);
+        for (ListItem listItem : list.getListItems()) {
+            listItem.setContents(processListItemContent(listItem.getContents()));
+        }
+        return list;
+    }
+
+    /**
+     * The index of another list that took the item into one of its items, if that list is between the item before
+     * and the item, and its numbering style is another one (#888), or -1. The item before takes the content up to
+     * its next item, so it would take that list, with the item in it. Two lists of one style there, as the numbers
+     * of the exercises of a page with two columns, stay as they are.
+     */
+    private static int getIndexOfOtherListWithItem(TextListInterval interval, int item, List<IObject> pageContents,
+                                                   PDFList[] owners) {
+        int itemIndex = interval.getListItemsInfos().get(item).getIndex();
+        PDFList owner = owners != null && pageContents.get(itemIndex) == null ? owners[itemIndex] : null;
+        if (owner == null || Objects.equals(owner.getNumberingStyle(), interval.getNumberingStyle())) {
+            return -1;
+        }
+        for (int index = interval.getListItemsInfos().get(item - 1).getIndex() + 1; index < itemIndex; index++) {
+            if (pageContents.get(index) == owner) {
+                return index;
+            }
+        }
+        return -1;
     }
 
     /**
      * Makes the list of the items from the start index to the end index, which are on one page. The lines of the
-     * page, if not null, find the empty lines below the last item.
+     * page, if not null, find the empty lines below the last item. The owners, if not null, get the list for each
+     * object of the page that it takes. If the last item end is not negative, the last item takes the content up
+     * to that index, as the other items do.
      */
     private static PDFList calculateList(TextListInterval interval, int startIndex, int endIndex, List<IObject> pageContents,
-                                         boolean isHybrid, ParagraphProcessor.PageLines pageLines) {
+                                         boolean isHybrid, ParagraphProcessor.PageLines pageLines, PDFList[] owners,
+                                         int lastItemEnd) {
         PDFList list = new PDFList();
         list.setNumberingStyle(interval.getNumberingStyle());
         list.setCommonPrefix(interval.getCommonPrefix());
@@ -306,9 +351,12 @@ public class ListProcessor {
             // The label length tells where the item text starts, which the lines below the item need.
             listItem.setLabelLength(currentInfo.getLabelLength());
             if (index != endIndex) {
-                addContentToListItem(nextIndex, currentInfo, pageContents, listItem, rightX);
+                addContentToListItem(nextIndex, currentInfo, pageContents, listItem, rightX, list, owners);
+            } else if (lastItemEnd >= 0) {
+                addContentToListItem(lastItemEnd, currentInfo, pageContents, listItem, rightX, list, owners);
             } else {
-                addContentToLastPageListItem(nextIndex, currentInfo, pageContents, listItem, rightX, pageLines);
+                addContentToLastPageListItem(nextIndex, currentInfo, pageContents, listItem, rightX, pageLines, list,
+                    owners);
             }
             if (isHybrid) {
                 listItem.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
@@ -322,7 +370,7 @@ public class ListProcessor {
     }
 
     private static void addContentToListItem(int nextIndex, ListItemInfo currentInfo, List<IObject> pageContents,
-                                             ListItem listItem, double rightX) {
+                                             ListItem listItem, double rightX, PDFList list, PDFList[] owners) {
         boolean isListItem = true;
         TextLine previousTextLine = null;
         TextLine lineAbove = null;
@@ -361,7 +409,9 @@ public class ListProcessor {
                 }
                 listItem.getContents().add(content);
             }
-            pageContents.set(index, null);
+            if (content != null) {
+                take(pageContents, index, list, owners);
+            }
         }
         if (previousTextLine != null) {
             if (isListItem && isListItemLine(listItem, previousTextLine, null, rightX)) {
@@ -380,6 +430,14 @@ public class ListProcessor {
         return object.getBottomY() > listItem.getFirstLine().getTopY();
     }
 
+    /** Takes the object at the index out of the page, into an item of the list, and keeps which list took it. */
+    private static void take(List<IObject> pageContents, int index, PDFList list, PDFList[] owners) {
+        pageContents.set(index, null);
+        if (owners != null) {
+            owners[index] = list;
+        }
+    }
+
     /** Whether the object is a line that continues the given line in one paragraph. */
     private static boolean continuesLine(TextLine line, IObject object) {
         return line != null && object instanceof TextLine
@@ -388,7 +446,8 @@ public class ListProcessor {
 
     private static void addContentToLastPageListItem(int nextIndex, ListItemInfo currentInfo, List<IObject> pageContents,
                                                      ListItem listItem, double rightX,
-                                                     ParagraphProcessor.PageLines pageLines) {
+                                                     ParagraphProcessor.PageLines pageLines, PDFList list,
+                                                     PDFList[] owners) {
         TextLine previousTextLine = null;
         Integer previousIndex = null;
         for (int index = currentInfo.getIndex() + 1; index < nextIndex; index++) {
@@ -400,7 +459,7 @@ public class ListProcessor {
             if (previousTextLine != null) {
                 if (isLastItemLine(listItem, previousTextLine, nextLine, rightX, pageLines)) {
                     listItem.add(previousTextLine);
-                    pageContents.set(previousIndex, null);
+                    take(pageContents, previousIndex, list, owners);
                 } else {
                     previousTextLine = null;
                     break;
@@ -412,7 +471,7 @@ public class ListProcessor {
         if (previousTextLine != null) {
             if (isLastItemLine(listItem, previousTextLine, null, rightX, pageLines)) {
                 listItem.add(previousTextLine);
-                pageContents.set(previousIndex, null);
+                take(pageContents, previousIndex, list, owners);
             }
         }
     }
@@ -557,7 +616,8 @@ public class ListProcessor {
                 continue;
             }
             textListInterval.setCommonSuffixLengthToAllInfos();
-            PDFList list = calculateList(textListInterval, 0, interval.getNumberOfListItems() - 1, contents, isHybrid, null);
+            PDFList list = calculateList(textListInterval, 0, interval.getNumberOfListItems() - 1, contents, isHybrid,
+                null, null, -1);
             if (isHybrid) {
                 for (ListItem listItem : list.getListItems()) {
                     processTextNodeListItemContent(listItem.getContents());
