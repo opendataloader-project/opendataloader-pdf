@@ -100,6 +100,8 @@ class Issue876LastListItemBeforeAnEmptyLineTest {
         JsonNode item = elementThatContains(elements, "One deputy member of the council");
         JsonNode vote = elementThatContains(elements, VOTE);
         assertTrue(item != null && vote != null, "a line of the page is missing: " + document);
+        assertTrue("list item".equals(item.path("type").asText()),
+            "the line before the empty line is not a list item: " + document);
         assertTrue(!item.path("content").asText().contains(VOTE) && vote != item,
             "the line after the empty line is in the text of the last item of the page: " + document);
     }
