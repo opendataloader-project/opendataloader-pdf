@@ -171,8 +171,9 @@ public class ListProcessor {
         contents.replaceAll(DocumentProcessor::removeNullObjectsFromList);
     }
 
-    private static List<IObject> processListItemContent(List<IObject> contents) {
-        List<IObject> newContents = ParagraphProcessor.processParagraphs(contents);
+    /** Detects the paragraphs and the lists of the content of an item; the lines of its page find the empty lines. */
+    private static List<IObject> processListItemContent(List<IObject> contents, ParagraphProcessor.PageLines pageLines) {
+        List<IObject> newContents = ParagraphProcessor.processParagraphs(contents, pageLines);
         newContents = ListProcessor.processListsFromTextNodes(newContents);
         List<List<IObject>> contentsList = new ArrayList<>(1);
         contentsList.add(newContents);
@@ -288,7 +289,7 @@ public class ListProcessor {
                                              PDFList[] owners, int lastItemEnd) {
         PDFList list = calculateList(interval, startIndex, endIndex, pageContents, false, pageLines, owners, lastItemEnd);
         for (ListItem listItem : list.getListItems()) {
-            listItem.setContents(processListItemContent(listItem.getContents()));
+            listItem.setContents(processListItemContent(listItem.getContents(), pageLines));
         }
         return list;
     }
