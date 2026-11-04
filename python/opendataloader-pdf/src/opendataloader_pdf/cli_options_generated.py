@@ -331,7 +331,7 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "type": "string",
         "required": False,
         "default": "off",
-        "description": "Filter hidden (low-contrast) text via per-page rendering. Values: on, off. Default: off (opt-in; expensive, runs as sequential post-processing). Applies to the native Java pipeline only; ignored with --hybrid and --use-struct-tree",
+        "description": "Filter hidden (low-contrast) text via per-page rendering. Can also remove visible text: text on images, thin characters such as minus signs and dashes, and the OCR text of scanned pages. Values: on, off. Default: off (opt-in; expensive, runs as sequential post-processing). Applies to the native Java pipeline only; ignored with --hybrid and --use-struct-tree",
     },
 ]
 
