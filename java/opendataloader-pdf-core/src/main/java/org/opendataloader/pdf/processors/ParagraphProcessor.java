@@ -68,14 +68,27 @@ public class ParagraphProcessor {
         return processParagraphs(contents, true);
     }
 
-    private static List<IObject> processParagraphs(List<IObject> contents, boolean breakAtEmptyLines) {
-        DocumentProcessor.setIndexesForContentsList(contents);
+    /**
+     * The lines of the body text of a page, for {@link #isEmptyLineBetween(PageLines, TextLine, TextLine)}. The
+     * list detection uses them before the paragraphs are made (#876).
+     */
+    static PageLines getPageLines(List<IObject> contents) {
+        return new PageLines(getTextBlocks(contents));
+    }
+
+    private static List<TextBlock> getTextBlocks(List<IObject> contents) {
         List<TextBlock> blocks = new ArrayList<>();
         for (IObject content : contents) {
             if (content instanceof TextLine) {
                 blocks.add(new TextBlock((TextLine) content));
             }
         }
+        return blocks;
+    }
+
+    private static List<IObject> processParagraphs(List<IObject> contents, boolean breakAtEmptyLines) {
+        DocumentProcessor.setIndexesForContentsList(contents);
+        List<TextBlock> blocks = getTextBlocks(contents);
         if (breakAtEmptyLines) {
             PAGE_LINES.set(new PageLines(blocks));
         }
@@ -147,20 +160,21 @@ public class ParagraphProcessor {
         return Math.round(fontSize * 2);
     }
 
-    /**
-     * Whether an empty line is between the lines: they start at the same x, they are farther apart than the
-     * lines of the page usually are, and the line above is not full. Lines that start at different x, as a
-     * centered formula and the text after it, keep the other rules: their reading order comes from the paragraph.
-     * A full line, as a line of a double-spaced paragraph on a page with single spacing, continues on the line
-     * below.
-     */
     private static boolean isEmptyLineBetween(TextBlock previousBlock, TextBlock nextBlock) {
-        PageLines page = PAGE_LINES.get();
+        return isEmptyLineBetween(PAGE_LINES.get(), previousBlock.getLastLine(), nextBlock.getFirstLine());
+    }
+
+    /**
+     * Whether an empty line is between the lines of the page: they start at the same x, they are farther apart
+     * than the lines of the page usually are, and the line above is not full. Lines that start at different x, as
+     * a centered formula and the text after it, keep the other rules: their reading order comes from the paragraph.
+     * A full line, as a line of a double-spaced paragraph on a page with single spacing, continues on the line
+     * below. Without the lines of the page, no empty line is found.
+     */
+    static boolean isEmptyLineBetween(PageLines page, TextLine above, TextLine below) {
         if (page == null) {
             return false;
         }
-        TextLine above = previousBlock.getLastLine();
-        TextLine below = nextBlock.getFirstLine();
         Double usualLeading = page.getUsualLeading(above);
         if (usualLeading == null || !areAtSameX(above, below)) {
             return false;
@@ -207,7 +221,7 @@ public class ParagraphProcessor {
     }
 
     /** The lines of the body text of a page, their usual distances, and the right ends found for them. */
-    private static final class PageLines {
+    static final class PageLines {
         private final List<TextLine> lines = new ArrayList<>();
         private final Map<Long, Double> usualLeadings;
         private final Map<TextLine, Double> rightEnds = new IdentityHashMap<>();
