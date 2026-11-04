@@ -71,6 +71,13 @@ class Issue430IntegrationTest {
     }
 
     @Test
+    void testProcessFile_syntacticallyInvalidPath_throwsInvalidPdfFileException() {
+        // A NUL character makes Path.of throw InvalidPathException on every platform.
+        assertThrows(InvalidPdfFileException.class,
+            () -> OpenDataLoaderPDF.processFile("bad\0name.pdf", jsonConfig(tempDir.resolve("out"))));
+    }
+
+    @Test
     void testProcessFile_nonExistentPath_throwsInvalidPdfFileException() {
         Path missing = tempDir.resolve("does-not-exist.pdf");
         assertThrows(InvalidPdfFileException.class,
