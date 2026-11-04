@@ -911,7 +911,7 @@ public class DocumentProcessor {
             path = Path.of(pdfName);
         } catch (InvalidPathException cause) {
             throw new InvalidPdfFileException(
-                "'" + displayName(pdfName) + "' is not a valid file path.", cause);
+                "'" + pdfName + "' is not a valid file path.", cause);
         }
         Path fileName = path.getFileName();
         String name = fileName != null ? fileName.toString() : pdfName;
