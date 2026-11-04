@@ -295,15 +295,20 @@ public class ListProcessor {
 
     /**
      * The index of another list that took the item into one of its items, if that list is between the item before
-     * and the item, and its numbering style is another one (#888), or -1. The item before takes the content up to
-     * its next item, so it would take that list, with the item in it. Two lists of one style there, as the numbers
-     * of the exercises of a page with two columns, stay as they are.
+     * and the item, its numbering style is another one, and it does not start after the start of the item before
+     * (#888), or -1. The item before takes the content up to its next item, so it would take that list, with the
+     * item in it. Two lists of one style there, as the numbers of the exercises of a page with two columns, stay as
+     * they are. A list that starts after the start of the item before is a list in that item.
      */
     private static int getIndexOfOtherListWithItem(TextListInterval interval, int item, List<IObject> pageContents,
                                                    PDFList[] owners) {
         int itemIndex = interval.getListItemsInfos().get(item).getIndex();
         PDFList owner = owners != null && pageContents.get(itemIndex) == null ? owners[itemIndex] : null;
         if (owner == null || Objects.equals(owner.getNumberingStyle(), interval.getNumberingStyle())) {
+            return -1;
+        }
+        TextLine lineBefore = interval.getListItemsInfos().get(item - 1).getListItemValue();
+        if (owner.getLeftX() > lineBefore.getLeftX() + getMaxXGap(lineBefore.getFontSize())) {
             return -1;
         }
         for (int index = interval.getListItemsInfos().get(item - 1).getIndex() + 1; index < itemIndex; index++) {

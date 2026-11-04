@@ -144,6 +144,33 @@ class Issue888ListBetweenTheItemsOfAnotherListTest {
             "The second point of the agenda");
     }
 
+    /**
+     * Guard: a numbered list below a bulleted item, with its numbers after the bullet, stays in the item, also when
+     * its numbers go on below the next bulleted item (review of #890).
+     */
+    @Test
+    void indentedListThatGoesOnBelowTheNextItemStaysInTheItem() throws IOException {
+        Page page = new Page()
+            .line("The members of the board meet in the town hall on the first day")
+            .line("of each month, and the agenda of the day has two points:")
+            .afterEmptyLine("- The first point of the agenda, which has parts:")
+            .line("1. The first part of the agenda", INDENT)
+            .line("2. The second part of the agenda", INDENT)
+            .line("- The second point of the agenda, which has a part:")
+            .line("3. The third part of the agenda", INDENT)
+            .afterEmptyLine("The mayor opens the meeting and gives the agenda of the day to")
+            .line("the members of the board of the town.");
+        JsonNode document = convert("nested-list-goes-on", page);
+
+        List<JsonNode> elements = elements(document);
+        JsonNode item = elementThatContains(elements, "The first point of the agenda");
+        JsonNode part = elementThatContains(elements, "The first part of the agenda");
+        assertTrue(item != null && part != null && descendants(item).contains(part),
+            "the numbered list below the bulleted item is not in the item: " + document);
+        assertInOrder(document, elements, "The first point of the agenda", "The first part of the agenda",
+            "The second point of the agenda", "The third part of the agenda");
+    }
+
     /** Guard: a paragraph between two bulleted items, with no other list, stays in the first item. */
     @Test
     void paragraphBetweenTwoBulletedItemsStaysInTheFirstItem() throws IOException {
