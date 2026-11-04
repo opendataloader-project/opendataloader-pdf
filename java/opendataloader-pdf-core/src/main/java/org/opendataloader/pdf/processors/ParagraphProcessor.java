@@ -61,8 +61,8 @@ public class ParagraphProcessor {
 
     /**
      * Detects the paragraphs of the body text of a page. A line after an empty line starts a paragraph there
-     * (#876); the lines in a table cell, a list item, a header, or a footer keep the rules of
-     * {@link #processParagraphs(List)}.
+     * (#876); the lines in a table cell, a header, or a footer keep the rules of {@link #processParagraphs(List)}.
+     * The content of a list item of the page gets the same rule from {@link #processParagraphs(List, PageLines)}.
      */
     public static List<IObject> processPageParagraphs(List<IObject> contents) {
         return processParagraphs(contents, true);
@@ -89,8 +89,22 @@ public class ParagraphProcessor {
     private static List<IObject> processParagraphs(List<IObject> contents, boolean breakAtEmptyLines) {
         DocumentProcessor.setIndexesForContentsList(contents);
         List<TextBlock> blocks = getTextBlocks(contents);
-        if (breakAtEmptyLines) {
-            PAGE_LINES.set(new PageLines(blocks));
+        return detectParagraphs(contents, blocks, breakAtEmptyLines ? new PageLines(blocks) : null);
+    }
+
+    /**
+     * Detects the paragraphs of the content of a list item. If the lines of the page of the item are not null, a
+     * line after an empty line starts a paragraph, as in the body text of the page (#876): the text of a section,
+     * whose title is a list item until the heading detection, is the content of that item.
+     */
+    static List<IObject> processParagraphs(List<IObject> contents, PageLines pageLines) {
+        DocumentProcessor.setIndexesForContentsList(contents);
+        return detectParagraphs(contents, getTextBlocks(contents), pageLines);
+    }
+
+    private static List<IObject> detectParagraphs(List<IObject> contents, List<TextBlock> blocks, PageLines pageLines) {
+        if (pageLines != null) {
+            PAGE_LINES.set(pageLines);
         }
         try {
             blocks = detectParagraphsWithJustifyAlignments(blocks);
