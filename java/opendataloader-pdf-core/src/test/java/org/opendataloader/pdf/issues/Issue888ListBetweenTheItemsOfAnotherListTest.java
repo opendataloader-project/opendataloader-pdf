@@ -112,11 +112,14 @@ class Issue888ListBetweenTheItemsOfAnotherListTest {
         JsonNode document = convert("table-of-contents", page);
 
         List<JsonNode> elements = elements(document);
-        JsonNode chapter = elementThatContains(elements, "2. Core and periphery of the town");
         JsonNode part = elementThatContains(elements, "Part I: New streets");
-        assertTrue(chapter != null && part != null, "a line of the table of contents is missing: " + document);
-        assertTrue(!descendants(chapter).contains(part),
-            "the list of the parts is in the item of a chapter above it: " + document);
+        assertTrue(part != null && elementThatContains(elements, "2. Core and periphery of the town") != null,
+            "a line of the table of contents is missing: " + document);
+        for (JsonNode element : elements) {
+            assertTrue(!"list item".equals(element.path("type").asText())
+                    || !element.path("content").asText().matches("\\d+\\. .*") || !descendants(element).contains(part),
+                "the list of the parts is in the item of a chapter above it: " + document);
+        }
         assertInOrder(document, elements, "2. Core and periphery", "Part I: New streets", "3. The street as a market",
             "Part II: From one town", "5. The bridges of the town");
     }
