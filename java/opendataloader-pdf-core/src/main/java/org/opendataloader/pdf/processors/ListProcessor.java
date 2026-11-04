@@ -110,6 +110,12 @@ public class ListProcessor {
                 info.getListItemValue().setListLine(true);
             }
         }
+        // The lines of each page, before the lists take some of them. The lines of a table cell keep the rules
+        // without empty lines, as in the paragraph detection.
+        List<ParagraphProcessor.PageLines> pagesLines = new ArrayList<>(contents.size());
+        for (List<IObject> pageContents : contents) {
+            pagesLines.add(isTableCell || intervalsList.isEmpty() ? null : ParagraphProcessor.getPageLines(pageContents));
+        }
         for (TextListInterval interval : intervalsList) {
 //            if (interval.getNumberOfColumns() > 1/*== interval.getNumberOfListItems()*/) {//to fix bounding box for multi-column lists
 //                continue;
@@ -124,7 +130,8 @@ public class ListProcessor {
             for (int i = 0; i < interval.getNumberOfListItems(); i++) {
                 ListItemInfo currentInfo = interval.getListItemsInfos().get(i);
                 if (!Objects.equals(currentInfo.getPageNumber(), currentPageNumber)) {
-                    PDFList list = calculateList(interval, index, i - 1, contents.get(isTableCell ? 0 : currentPageNumber));
+                    int page = isTableCell ? 0 : currentPageNumber;
+                    PDFList list = calculateList(interval, index, i - 1, contents.get(page), pagesLines.get(page));
                     for (ListItem listItem : list.getListItems()) {
                         listItem.setContents(processListItemContent(listItem.getContents()));
                     }
@@ -136,7 +143,9 @@ public class ListProcessor {
                     previousList = list;
                 }
             }
-            PDFList list = calculateList(interval, index, interval.getNumberOfListItems() - 1, contents.get(isTableCell ? 0 : currentPageNumber));
+            int page = isTableCell ? 0 : currentPageNumber;
+            PDFList list = calculateList(interval, index, interval.getNumberOfListItems() - 1, contents.get(page),
+                pagesLines.get(page));
             for (ListItem listItem : list.getListItems()) {
                 listItem.setContents(processListItemContent(listItem.getContents()));
             }
@@ -258,11 +267,17 @@ public class ListProcessor {
                 line, value, true);
     }
 
-    private static PDFList calculateList(TextListInterval interval, int startIndex, int endIndex, List<IObject> pageContents) {
-        return calculateList(interval, startIndex, endIndex, pageContents, false);
+    private static PDFList calculateList(TextListInterval interval, int startIndex, int endIndex, List<IObject> pageContents,
+                                         ParagraphProcessor.PageLines pageLines) {
+        return calculateList(interval, startIndex, endIndex, pageContents, false, pageLines);
     }
 
-    private static PDFList calculateList(TextListInterval interval, int startIndex, int endIndex, List<IObject> pageContents, boolean isHybrid) {
+    /**
+     * Makes the list of the items from the start index to the end index, which are on one page. The lines of the
+     * page, if not null, find the empty lines below the last item.
+     */
+    private static PDFList calculateList(TextListInterval interval, int startIndex, int endIndex, List<IObject> pageContents,
+                                         boolean isHybrid, ParagraphProcessor.PageLines pageLines) {
         PDFList list = new PDFList();
         list.setNumberingStyle(interval.getNumberingStyle());
         list.setCommonPrefix(interval.getCommonPrefix());
@@ -293,7 +308,7 @@ public class ListProcessor {
             if (index != endIndex) {
                 addContentToListItem(nextIndex, currentInfo, pageContents, listItem, rightX);
             } else {
-                addContentToLastPageListItem(nextIndex, currentInfo, pageContents, listItem, rightX);
+                addContentToLastPageListItem(nextIndex, currentInfo, pageContents, listItem, rightX, pageLines);
             }
             if (isHybrid) {
                 listItem.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
@@ -372,7 +387,8 @@ public class ListProcessor {
     }
 
     private static void addContentToLastPageListItem(int nextIndex, ListItemInfo currentInfo, List<IObject> pageContents,
-                                                     ListItem listItem, double rightX) {
+                                                     ListItem listItem, double rightX,
+                                                     ParagraphProcessor.PageLines pageLines) {
         TextLine previousTextLine = null;
         Integer previousIndex = null;
         for (int index = currentInfo.getIndex() + 1; index < nextIndex; index++) {
@@ -382,7 +398,7 @@ public class ListProcessor {
             }
             TextLine nextLine = (TextLine) content;
             if (previousTextLine != null) {
-                if (isListItemLine(listItem, previousTextLine, nextLine, rightX)) {
+                if (isLastItemLine(listItem, previousTextLine, nextLine, rightX, pageLines)) {
                     listItem.add(previousTextLine);
                     pageContents.set(previousIndex, null);
                 } else {
@@ -394,11 +410,23 @@ public class ListProcessor {
             previousIndex = index;
         }
         if (previousTextLine != null) {
-            if (isListItemLine(listItem, previousTextLine, null, rightX)) {
+            if (isLastItemLine(listItem, previousTextLine, null, rightX, pageLines)) {
                 listItem.add(previousTextLine);
                 pageContents.set(previousIndex, null);
             }
         }
+    }
+
+    /**
+     * Whether the line continues the text of the last item of the list on the page. A line after an empty line
+     * does not (#876): the item of a section title takes no line of the paragraph after the empty line below the
+     * title, so the title stays a line of its own. The lines of the page find the empty lines, as in the
+     * paragraph detection.
+     */
+    private static boolean isLastItemLine(ListItem listItem, TextLine line, TextLine nextLine, double rightX,
+                                          ParagraphProcessor.PageLines pageLines) {
+        return !ParagraphProcessor.isEmptyLineBetween(pageLines, listItem.getLastLine(), line)
+            && isListItemLine(listItem, line, nextLine, rightX);
     }
 
     private static boolean isListItemLine(ListItem listItem, TextLine currentLine, TextLine nextLine, double rightX) {
@@ -529,7 +557,7 @@ public class ListProcessor {
                 continue;
             }
             textListInterval.setCommonSuffixLengthToAllInfos();
-            PDFList list = calculateList(textListInterval, 0, interval.getNumberOfListItems() - 1, contents, isHybrid);
+            PDFList list = calculateList(textListInterval, 0, interval.getNumberOfListItems() - 1, contents, isHybrid, null);
             if (isHybrid) {
                 for (ListItem listItem : list.getListItems()) {
                     processTextNodeListItemContent(listItem.getContents());
