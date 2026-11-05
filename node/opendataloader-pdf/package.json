@@ -61,7 +61,7 @@
     "@typescript-eslint/eslint-plugin": "^8.70.0",
     "@typescript-eslint/parser": "^8.70.0",
     "eslint": "^10.10.0",
-    "glob": "^13.0.6",
+    "glob": "^14.0.3",
     "globals": "^17.12.0",
     "prettier": "^3.9.6",
     "tsup": "^8.5.1",
