@@ -429,6 +429,20 @@ def f25_viewer_required(tmp):
     return "no viewer -> exit 11; --me wins over the fixture; a bad --me login -> exit 2; a gh login is kept"
 
 
+def f26_unknown_permission(tmp):
+    """If the permission of a state line author cannot be read, the triage is incomplete (exit 11): the line could
+    make the author an owner (CodeRabbit on #894). A confirmed reader is still ignored, with a complete triage."""
+    claim = post("I'm working on this and will link a pull request here.", "Working on it · 2026-10-20")
+    c = {26: [comment("colleague", "MEMBER", "2026-10-20T00:00:00Z", claim)]}
+    _, res = triage(tmp, [issue(26)], c, perms={"colleague": "unknown"}, check=False)
+    assert res.returncode == 11 and "colleague" in res.stdout, (res.returncode, res.stdout)
+    rows, res = triage(tmp, [issue(26)], c, perms={"colleague": "read"})
+    assert rows[26]["group"] == "unowned" and any("colleague" in x for x in rows[26]["notes"]), rows[26]
+    rows, _ = triage(tmp, [issue(26)], c, perms={"colleague": "write"})
+    assert (rows[26]["class"], rows[26]["group"]) == ("working", "owned"), rows[26]
+    return "unknown permission -> exit 11; read -> ignored; write -> owned"
+
+
 def s1_explicit_invocation(tmp):
     """The agents start this skill only on the user's call: Claude Code and Codex settings (#854 follow-up)."""
     with open(os.path.join(SKILL, "SKILL.md"), encoding="utf-8") as f:
@@ -448,7 +462,8 @@ EVALS = [("F1-new", f1_new), ("F2-team-last", f2_team_last_without_state), ("F3-
          ("F15-footer", f15_footer_line), ("F16-append", f16_append), ("F17-count", f17_count), ("F18-report", f18_report),
          ("F20-crlf", f20_crlf), ("F21-graphql", f21_graphql_failure), ("F22-bot-state", f22_bot_state_line),
          ("F23-judge-wait", f23_judge_cannot_wait), ("F24-owner-groups", f24_owner_groups),
-         ("F25-viewer", f25_viewer_required), ("S1-explicit-invocation", s1_explicit_invocation)]
+         ("F25-viewer", f25_viewer_required), ("F26-unknown-permission", f26_unknown_permission),
+         ("S1-explicit-invocation", s1_explicit_invocation)]
 
 _gates = importlib.util.spec_from_file_location("gate_evals", os.path.join(os.path.dirname(os.path.abspath(__file__)), "gates.py"))
 _gate_evals = importlib.util.module_from_spec(_gates)

@@ -353,6 +353,10 @@ def cmd_triage(a: argparse.Namespace) -> int:
     if data.get("incomplete"):
         complete = False
         why.append("the pull request links of " + ", ".join(f"#{n}" for n in data["incomplete"]) + " could not be read (GraphQL)")
+    unknown = sorted(login for login, perm in (data.get("permissions") or {}).items() if perm == "unknown")
+    if unknown:
+        complete = False  # their state lines are not counted, so the class and the owners can be wrong
+        why.append("the permission of " + ", ".join(unknown) + " could not be read: their state lines cannot be counted")
     viewer = data.get("viewer")
     if not viewer:
         complete = False
