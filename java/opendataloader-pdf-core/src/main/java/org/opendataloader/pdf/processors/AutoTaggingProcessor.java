@@ -127,15 +127,16 @@ public class AutoTaggingProcessor {
         setMarkInfo(catalog, cosDocument);
         COSObject structTreeRoot = createStructTreeRoot(catalog, cosDocument, document);
         createStructureTreeElements(document, contents, structTreeRoot, cosDocument);
-        // Before anything reads the elements: giving up a shared form can remove elements that
-        // the ID tree and the structure destinations would otherwise still point at.
+        // Giving up a form's structure can remove elements it left empty: a shared form here,
+        // and a form whose rewrite carries no MCID while the pages are rewritten. The ID tree and
+        // the structure destinations read the elements, so they are built after both.
         demoteSharedForms(document);
+        mergeAdjacentTextShows(document);
+        updatePages(document, cosDocument);
         createIDTree(structTreeRoot, cosDocument, idToStructElement);
         if (isPDF2_0) {
             updateDestinationsToStructureDestinations(document, catalog, cosDocument);
         }
-        mergeAdjacentTextShows(document);
-        updatePages(document, cosDocument);
         createParentTree(cosDocument, structTreeRoot);
         cosDocument.getTrailer().removeKey(ASAtom.ENCRYPT);
     }
@@ -163,9 +164,6 @@ public class AutoTaggingProcessor {
         List<PDPage> rawPages = document.getPages();
         for (int pageNumber = 0; pageNumber < rawPages.size(); pageNumber++) {
             PDPage page = rawPages.get(pageNumber);
-            if (isPDF2_0) {
-                updateAdditionalAction(page.getObject(), cosDocument, document);
-            }
             OperatorStreamKey operatorStreamKey = new OperatorStreamKey(pageNumber, null);
             Integer structParent = structParentsIntegers.get(operatorStreamKey);
             if (structParent != null) {
@@ -807,6 +805,7 @@ public class AutoTaggingProcessor {
 
     private static void updateDestinationsToStructureDestinations(PDDocument document, PDCatalog catalog, COSDocument cosDocument) {
         for (PDPage page: document.getPages()) {
+            updateAdditionalAction(page.getObject(), cosDocument, document);
             List<PDAnnotation> annotations = page.getAnnotations();
             if (annotations == null) continue;
             for (PDAnnotation annotation : annotations) {
