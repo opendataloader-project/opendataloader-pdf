@@ -65,7 +65,10 @@ GROUPS = {
     "owned": ("Team turn, another owner", "Another team member owns these. Do not take one without the owner."),
     "others": ("Waiting for others", "None of these waits for the team."),
 }
-LOGIN = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})")
+# The current GitHub rule for a new login: 39 characters or fewer, letters, digits, and single hyphens
+# between them. Only --me is checked: a login that gh gives can come from an older account with other rules.
+LOGIN = re.compile(r"[A-Za-z0-9](?:-?[A-Za-z0-9])*")
+LOGIN_MAX = 39
 
 
 # ---------------------------------------------------------------- common
@@ -351,7 +354,7 @@ def cmd_triage(a: argparse.Namespace) -> int:
         complete = False
         why.append("the pull request links of " + ", ".join(f"#{n}" for n in data["incomplete"]) + " could not be read (GraphQL)")
     viewer = data.get("viewer")
-    if not viewer or not LOGIN.fullmatch(viewer):
+    if not viewer:
         complete = False
         why.append("the login of the viewer is unknown, so the groups are not known: use --me LOGIN")
     out = os.path.join(a.work, "issue-triage")
@@ -379,9 +382,10 @@ def cmd_triage(a: argparse.Namespace) -> int:
 # ---------------------------------------------------------------- report
 
 
-def cell(text, width: int = 70) -> str:
+def cell(text, width: int | None = 70) -> str:
+    """One table cell: one line, | escaped, cut to width (None: not cut)."""
     text = re.sub(r"\s+", " ", str(text or "")).replace("|", "\\|").strip()
-    return text if len(text) <= width else text[: width - 1] + "…"
+    return text if width is None or len(text) <= width else text[: width - 1] + "…"
 
 
 def cmd_report(a: argparse.Namespace) -> int:
@@ -443,8 +447,10 @@ def cmd_report(a: argparse.Namespace) -> int:
             notes = ([r["reason"]] if r["reason"] else []) + r["notes"]
             if r["class"] == "judge":
                 notes.append("no state line: add one with the next post")
-            lines.append(f"| #{r['number']} | {cell(r['title'])} | {cell(owner, 60)} | {cls} | {cell(', '.join(r['waiting_on']), 40)} "
-                         f"| {cell(state, 40)} | {cell(CLASSES[r['final']][1], 60)} | {cell('; '.join(notes), 120)} |")
+            # An owned row gives the viewer no action: its owner acts. The Owner cell is not cut, so each owner shows.
+            action = "None: the owner acts" if g == "owned" else CLASSES[r["final"]][1]
+            lines.append(f"| #{r['number']} | {cell(r['title'])} | {cell(owner, None)} | {cls} | {cell(', '.join(r['waiting_on']), 40)} "
+                         f"| {cell(state, 40)} | {cell(action, 60)} | {cell('; '.join(notes), 120)} |")
     with open(os.path.join(out, "triage.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
     print(os.path.join(out, "triage.md"))
@@ -461,8 +467,8 @@ def numbers(text: str) -> list[int]:
 
 
 def login(text: str) -> str:
-    if not LOGIN.fullmatch(text or ""):
-        raise argparse.ArgumentTypeError("use a GitHub login")
+    if len(text or "") > LOGIN_MAX or not LOGIN.fullmatch(text or ""):
+        raise argparse.ArgumentTypeError("use a GitHub login: letters, digits, and single hyphens between them, 39 or fewer")
     return text
 
 

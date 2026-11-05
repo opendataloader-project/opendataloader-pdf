@@ -397,7 +397,16 @@ def f24_owner_groups(tmp):
     assert section(6) == heads[3], md
     assert "colleague (assigned)" in md and "colleague (state line)" in md and "me (assigned, state line)" in md, md
     assert "for me: 2 mine, 1 with no owner, 3 owned by other team members, 1 wait for others" in md, md
-    return "assignee or last state line -> owner; mine, unowned, owned, others; owned judge needs no judgment"
+    # CodeRabbit on #894: an owned row gives no action to the viewer, and its Owner cell is not cut.
+    owned = md[md.index(heads[2]):md.index(heads[3])]
+    assert "Continue the fix" not in owned and "judgment.json" not in owned and "the owner acts" in owned, owned
+    many = ["maintainer-number-" + str(k) for k in range(1, 6)]
+    triage(tmp, [issue(9, assignees=many)], perms={"me": "write"})
+    run("triage-report", "--work", tmp)
+    with open(os.path.join(tmp, "issue-triage", "triage.md"), encoding="utf-8") as f:
+        md = f.read()
+    assert all(f"{m} (assigned)" in md for m in many), md
+    return "assignee or last state line -> owner; mine, unowned, owned, others; owned judge needs no judgment; owned: no action, all owners"
 
 
 def f25_viewer_required(tmp):
@@ -408,10 +417,16 @@ def f25_viewer_required(tmp):
     assert rows[1]["group"] == "mine", rows[1]
     rows, _ = triage(tmp, [issue(1, assignees=["colleague"])], viewer="me", me="colleague")
     assert rows[1]["group"] == "mine", rows[1]
-    for bad in ("", "a b", "me;rm", "-x"):
+    for bad in ("", "a b", "me;rm", "-x", "alice-", "alice--bob", "a" * 40):  # CodeRabbit on #894: GitHub login rules
         res = run("triage", "--fixture", os.path.join(tmp, "fixture.json"), "--work", tmp, "--me=" + bad, check=False)
         assert res.returncode == 2, (bad, res.returncode)
-    return "no viewer -> exit 11; --me wins over the fixture; a bad login -> exit 2"
+    for good in ("a", "hyunhee-jo", "a1-b2-c3", "a" * 39):
+        rows, _ = triage(tmp, [issue(1, assignees=[good])], viewer=None, me=good)
+        assert rows[1]["group"] == "mine", (good, rows[1])
+    # A login that gh gives is not checked against the current rules: older accounts can break them.
+    rows, _ = triage(tmp, [issue(1, assignees=["old--name-"])], viewer="old--name-")
+    assert rows[1]["group"] == "mine", rows[1]
+    return "no viewer -> exit 11; --me wins over the fixture; a bad --me login -> exit 2; a gh login is kept"
 
 
 def s1_explicit_invocation(tmp):
