@@ -66,6 +66,16 @@ class ExtractedTextTest {
         assertFalse(ExtractedText.isPresent(List.of(List.of(paragraph(" \t "))), false));
     }
 
+    /**
+     * The output writers drop U+0000, so text made only of it gives no text in the output.
+     */
+    @Test
+    void nulCharactersAreNotText() {
+        assertFalse(ExtractedText.isPresent(List.of(List.of(paragraph("\u0000 \u0000"))), false));
+        assertFalse(ExtractedText.isPresent(List.of(List.of(new TextChunk("\u0000"))), false));
+        assertTrue(ExtractedText.isPresent(List.of(List.of(paragraph("\u0000a"))), false));
+    }
+
     @Test
     void aParagraphOnAnyPageIsText() {
         IObject image = new ImageChunk(new BoundingBox(0, 0, 0, 100, 100));

@@ -127,7 +127,10 @@ public final class ExtractedText {
         return false;
     }
 
+    /**
+     * The output writers drop U+0000, so it does not count as text.
+     */
     private static boolean isText(String value) {
-        return value != null && !value.isBlank();
+        return value != null && !value.replace("\u0000", "").isBlank();
     }
 }
