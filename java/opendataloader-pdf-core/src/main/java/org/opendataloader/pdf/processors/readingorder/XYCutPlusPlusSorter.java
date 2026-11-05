@@ -538,7 +538,8 @@ public class XYCutPlusPlusSorter {
 
     /**
      * Check if the band is line art and elements in its box, the others have a valid vertical cut,
-     * and each element of the band lies across that cut.
+     * and each line art of the band lies across that cut. An element in the box of the line art,
+     * for example a page number at the side of a footer box, can be anywhere in the box.
      */
     private static boolean liesAcrossGutterOfOthers(List<IObject> band, List<IObject> others) {
         if (band.isEmpty() || others.size() < 2 || !isLineArtWithContents(band)) {
@@ -549,7 +550,8 @@ public class XYCutPlusPlusSorter {
             return false;
         }
         for (IObject obj : band) {
-            if (obj.getRightX() <= gutter.start() || obj.getLeftX() >= gutter.end()) {
+            if (obj instanceof LineArtChunk
+                    && (obj.getRightX() <= gutter.start() || obj.getLeftX() >= gutter.end())) {
                 return false;
             }
         }
@@ -584,17 +586,18 @@ public class XYCutPlusPlusSorter {
 
     /**
      * Sort the two columns one after the other. Elements in the gutter (for example a page
-     * number) are put back by their Y position, as cross-layout elements are.
+     * number) are put back by their Y position, as cross-layout elements are. An element that
+     * goes from the gutter into a column goes with that column, by its center.
      */
     private static List<IObject> segmentColumnsFirst(List<IObject> objects, CutInfo gutter,
                                                      boolean preferHorizontalFirst) {
         List<IObject> columns = new ArrayList<>();
         List<IObject> inGutter = new ArrayList<>();
         for (IObject obj : objects) {
-            if (isLeftOfGutter(obj, gutter) || isRightOfGutter(obj, gutter)) {
-                columns.add(obj);
-            } else {
+            if (isInsideGutter(obj, gutter)) {
                 inGutter.add(obj);
+            } else {
+                columns.add(obj);
             }
         }
         List<IObject> sortedColumns = flatMapRecursive(
@@ -608,6 +611,11 @@ public class XYCutPlusPlusSorter {
 
     private static boolean isRightOfGutter(IObject obj, CutInfo gutter) {
         return obj.getLeftX() >= gutter.end() - GUTTER_EDGE_TOLERANCE;
+    }
+
+    private static boolean isInsideGutter(IObject obj, CutInfo gutter) {
+        return obj.getLeftX() >= gutter.start() - GUTTER_EDGE_TOLERANCE
+                && obj.getRightX() <= gutter.end() + GUTTER_EDGE_TOLERANCE;
     }
 
     /**
