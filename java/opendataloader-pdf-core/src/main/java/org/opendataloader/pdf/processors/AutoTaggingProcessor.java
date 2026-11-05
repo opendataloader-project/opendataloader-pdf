@@ -127,6 +127,9 @@ public class AutoTaggingProcessor {
         setMarkInfo(catalog, cosDocument);
         COSObject structTreeRoot = createStructTreeRoot(catalog, cosDocument, document);
         createStructureTreeElements(document, contents, structTreeRoot, cosDocument);
+        // Before anything reads the elements: giving up a shared form can remove elements that
+        // the ID tree and the structure destinations would otherwise still point at.
+        demoteSharedForms(document);
         createIDTree(structTreeRoot, cosDocument, idToStructElement);
         if (isPDF2_0) {
             updateDestinationsToStructureDestinations(document, catalog, cosDocument);
@@ -157,7 +160,6 @@ public class AutoTaggingProcessor {
         for (OperatorStreamKey operatorStreamKey : structParents.keySet()) {
             structParentsIntegers.put(operatorStreamKey, currentStructParent++);
         }
-        demoteSharedForms(document);
         List<PDPage> rawPages = document.getPages();
         for (int pageNumber = 0; pageNumber < rawPages.size(); pageNumber++) {
             PDPage page = rawPages.get(pageNumber);
