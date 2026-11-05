@@ -1,0 +1,299 @@
+/*
+ * Copyright 2025-2026 Hancom Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.opendataloader.pdf.processors;
+
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.contentstream.operator.Operator;
+import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSBase;
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.COSStream;
+import org.apache.pdfbox.pdfparser.PDFStreamParser;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.documentinterchange.markedcontent.PDPropertyList;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceStream;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.containers.StaticLayoutContainers;
+import org.opendataloader.pdf.contentstream.ContentStreamTokens;
+import org.opendataloader.pdf.entities.DrawnTextChunk;
+import org.verapdf.tools.StaticResources;
+import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
+import org.verapdf.wcag.algorithms.entities.content.TextChunk;
+import org.verapdf.wcag.algorithms.entities.content.TextLine;
+import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.StreamInfo;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/**
+ * A form that the page draws more than once.
+ *
+ * <p>A budget's list bullet is a triangle form, {@code /Fm0}, drawn 3 times on a page, each draw
+ * in its own Figure in the source. The form got {@code /StructParents} and its stream was
+ * rewritten at each draw, the second and third time from the stream already rewritten, whose
+ * operator indexes had moved: the MCIDs were dropped, {@code /StructParents} stayed, and the
+ * structure kept MCRs and a parent-tree entry for nothing. PDF/UA-1 7.20 test 2 (veraPDF
+ * {@code isUniqueSemanticParent}: the form has {@code /StructParents} and is referenced more
+ * than once) failed on the 2nd and 3rd draw.
+ */
+class SharedFormTaggingTest {
+
+    @TempDir
+    Path dir;
+
+    private String formName;
+    private int fillIndex;
+
+    /** {@code pages} pages that each draw the one triangle form {@code draws} times. */
+    private void openPages(int pages, int draws) throws Exception {
+        Path pdf = dir.resolve("triangles.pdf");
+        try (PDDocument document = new PDDocument()) {
+            PDAppearanceStream form = new PDAppearanceStream(document);
+            form.setBBox(new PDRectangle(0, 0, 12, 12));
+            try (PDPageContentStream content = new PDPageContentStream(document, form)) {
+                content.setNonStrokingColor(0f, 0f, 0f);
+                content.moveTo(0, 0);
+                content.lineTo(12, 0);
+                content.lineTo(6, 12);
+                content.closePath();
+                content.fill();
+            }
+            for (int p = 0; p < pages; p++) {
+                PDPage page = new PDPage(PDRectangle.LETTER);
+                document.addPage(page);
+                try (PDPageContentStream content = new PDPageContentStream(document, page)) {
+                    for (int i = 0; i < draws; i++) {
+                        COSDictionary properties = new COSDictionary();
+                        properties.setInt(COSName.MCID, i);
+                        content.beginMarkedContent(COSName.getPDFName("Figure"), PDPropertyList.create(properties));
+                        content.saveGraphicsState();
+                        content.transform(org.apache.pdfbox.util.Matrix.getTranslateInstance(100 + 30 * i, 500));
+                        content.drawForm(form);
+                        content.restoreGraphicsState();
+                        content.endMarkedContent();
+                    }
+                }
+            }
+            document.save(pdf.toFile());
+        }
+        StaticLayoutContainers.clearContainers();
+        DocumentProcessor.preprocessing(pdf.toString(), new Config());
+        org.verapdf.pd.PDPage first = StaticResources.getDocument().getPages().get(0);
+        formName = first.getResources().getXObjectNames().iterator().next().getValue();
+        List<Object> tokens = ContentStreamTokens.getTokens(
+            (org.verapdf.pd.images.PDXForm) first.getResources().getXObject(org.verapdf.as.ASAtom.getASAtom(formName)));
+        fillIndex = -1;
+        for (int i = 0; i < tokens.size(); i++) {
+            if (tokens.get(i) instanceof org.verapdf.operator.Operator
+                && "f".equals(((org.verapdf.operator.Operator) tokens.get(i)).getOperator())) {
+                fillIndex = i;
+            }
+        }
+        assertTrue(fillIndex >= 0);
+    }
+
+    /** A paragraph whose only content is the form's fill, as OCR of a drawn glyph gives it. */
+    private List<IObject> paragraphOnForm(int pageNumber, int operatorIndex) {
+        DrawnTextChunk chunk = new DrawnTextChunk(new BoundingBox(pageNumber, 100, 500, 112, 512), "▼");
+        chunk.getStreamInfos().add(new StreamInfo(operatorIndex, formName, 0, 0));
+        SemanticParagraph paragraph = new SemanticParagraph();
+        paragraph.add(new TextLine(chunk));
+        paragraph.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+        return List.of(paragraph);
+    }
+
+    private Path tag(List<List<IObject>> contents) throws IOException {
+        AutoTaggingProcessor.tagDocument(StaticResources.getDocument(), contents, 1.7f);
+        Path out = dir.resolve("triangles_tagged.pdf");
+        StaticResources.getDocument().saveAs(out.toString());
+        return out;
+    }
+
+    private static List<Object> tokensOf(org.apache.pdfbox.contentstream.PDContentStream stream) throws IOException {
+        return new PDFStreamParser(stream).parse();
+    }
+
+    private static COSStream formOf(PDDocument document, int page) {
+        COSDictionary xObjects = (COSDictionary) document.getPage(page).getResources().getCOSObject()
+            .getDictionaryObject(COSName.XOBJECT);
+        return (COSStream) xObjects.getDictionaryObject(xObjects.keySet().iterator().next());
+    }
+
+    /** MCIDs that the marked content of these tokens carries. */
+    private static List<Integer> mcidsIn(List<Object> tokens) {
+        List<Integer> mcids = new ArrayList<>();
+        for (int i = 1; i < tokens.size(); i++) {
+            if (tokens.get(i) instanceof Operator && "BDC".equals(((Operator) tokens.get(i)).getName())
+                && tokens.get(i - 1) instanceof COSDictionary) {
+                mcids.add(((COSDictionary) tokens.get(i - 1)).getInt(COSName.MCID));
+            }
+        }
+        return mcids;
+    }
+
+    /** Names of the marked-content sequences open at each {@code Do}, innermost last. */
+    private static List<String> sequencesAtDo(List<Object> tokens) {
+        List<String> open = new ArrayList<>();
+        List<String> found = new ArrayList<>();
+        for (int i = 0; i < tokens.size(); i++) {
+            if (!(tokens.get(i) instanceof Operator)) {
+                continue;
+            }
+            String name = ((Operator) tokens.get(i)).getName();
+            if ("BMC".equals(name) || "BDC".equals(name)) {
+                open.add(((COSName) tokens.get(i - (("BDC".equals(name)) ? 2 : 1))).getName());
+            } else if ("EMC".equals(name)) {
+                open.remove(open.size() - 1);
+            } else if ("Do".equals(name)) {
+                found.add(String.join("/", open));
+            }
+        }
+        return found;
+    }
+
+    private static int mcrsInto(COSBase node, COSStream form) {
+        if (node instanceof org.apache.pdfbox.cos.COSObject) {
+            node = ((org.apache.pdfbox.cos.COSObject) node).getObject();
+        }
+        int count = 0;
+        if (node instanceof COSArray) {
+            for (COSBase kid : (COSArray) node) {
+                count += mcrsInto(kid, form);
+            }
+        } else if (node instanceof COSDictionary) {
+            COSDictionary dictionary = (COSDictionary) node;
+            if (COSName.getPDFName("MCR").equals(dictionary.getCOSName(COSName.TYPE))
+                && dictionary.getDictionaryObject(COSName.getPDFName("Stm")) == form) {
+                return 1;
+            }
+            count += mcrsInto(dictionary.getDictionaryObject(COSName.K), form);
+        }
+        return count;
+    }
+
+    private static COSBase structTreeRoot(PDDocument document) {
+        return document.getDocumentCatalog().getCOSObject().getDictionaryObject(COSName.getPDFName("StructTreeRoot"));
+    }
+
+    /** Keys of the parent tree, from its flat /Nums. */
+    private static List<Integer> parentTreeKeys(PDDocument document) {
+        COSDictionary tree = (COSDictionary) ((COSDictionary) structTreeRoot(document))
+            .getDictionaryObject(COSName.getPDFName("ParentTree"));
+        COSArray nums = (COSArray) tree.getDictionaryObject(COSName.getPDFName("Nums"));
+        List<Integer> keys = new ArrayList<>();
+        for (int i = 0; i < nums.size(); i += 2) {
+            keys.add(((org.apache.pdfbox.cos.COSInteger) nums.getObject(i)).intValue());
+        }
+        return keys;
+    }
+
+    @Test
+    void aFormDrawnThreeTimesCarriesNoStructureAndIsArtifactEverywhere() throws Exception {
+        openPages(1, 3);
+        Path out = tag(List.of(paragraphOnForm(0, fillIndex)));
+
+        try (PDDocument document = Loader.loadPDF(out.toFile())) {
+            COSStream form = formOf(document, 0);
+            assertNull(form.getItem(COSName.getPDFName("StructParents")), "7.20 test 2: no /StructParents on a shared form");
+            List<Object> formTokens = tokensOf(new PDFormXObject(form));
+            assertEquals(List.of(), mcidsIn(formTokens), "no MCID in the form");
+            assertTrue(sequencesAtDo(tokensOf(document.getPage(0))).stream().allMatch("Artifact"::equals),
+                "every draw is an artifact: " + sequencesAtDo(tokensOf(document.getPage(0))));
+            assertEquals(3, sequencesAtDo(tokensOf(document.getPage(0))).size());
+            assertEquals(0, mcrsInto(structTreeRoot(document), form), "no MCR into the form");
+            assertEquals(List.of(), parentTreeKeys(document), "no parent-tree entry for the form");
+            // The form's own paint is wrapped, so the page stays clean for 7.1 test 3.
+            long fillsInArtifact = 0;
+            int depth = 0;
+            for (Object token : formTokens) {
+                if (token instanceof Operator) {
+                    String name = ((Operator) token).getName();
+                    depth += "BMC".equals(name) ? 1 : "EMC".equals(name) ? -1 : 0;
+                    if ("f".equals(name) && depth == 1) {
+                        fillsInArtifact++;
+                    }
+                }
+            }
+            assertEquals(1, fillsInArtifact, "the fill is inside one sequence");
+        }
+    }
+
+    @Test
+    void aFormDrawnOnTwoPagesIsOneObjectAndSharedToo() throws Exception {
+        openPages(2, 1);
+        Path out = tag(List.of(paragraphOnForm(0, fillIndex), paragraphOnForm(1, fillIndex)));
+
+        try (PDDocument document = Loader.loadPDF(out.toFile())) {
+            COSStream form = formOf(document, 0);
+            assertNull(form.getItem(COSName.getPDFName("StructParents")));
+            assertEquals(List.of(), mcidsIn(tokensOf(new PDFormXObject(form))));
+            assertEquals(0, mcrsInto(structTreeRoot(document), form));
+            assertEquals(List.of(), parentTreeKeys(document));
+        }
+    }
+
+    /** What a form drawn once keeps: the MCID in its stream, the MCR, the parent-tree entry. */
+    @Test
+    void aFormDrawnOnceStaysTagged() throws Exception {
+        openPages(1, 1);
+        Path out = tag(List.of(paragraphOnForm(0, fillIndex)));
+
+        try (PDDocument document = Loader.loadPDF(out.toFile())) {
+            COSStream form = formOf(document, 0);
+            assertNotNull(form.getItem(COSName.getPDFName("StructParents")));
+            assertEquals(List.of(0), mcidsIn(tokensOf(new PDFormXObject(form))));
+            assertEquals(1, mcrsInto(structTreeRoot(document), form));
+            assertTrue(parentTreeKeys(document).contains(form.getInt(COSName.getPDFName("StructParents"))));
+        }
+    }
+
+    /**
+     * A piece that names an operator of the form the writer never reaches (here a path
+     * construction operator, whose paint comes later) leaves the form with no MCID. It must not
+     * keep {@code /StructParents} or an entry in the parent tree.
+     */
+    @Test
+    void aFormWhoseContentCarriesNoMcidGetsNoStructParents() throws Exception {
+        openPages(1, 1);
+        Path out = tag(List.of(paragraphOnForm(0, 0)));
+
+        try (PDDocument document = Loader.loadPDF(out.toFile())) {
+            COSStream form = formOf(document, 0);
+            assertNull(form.getItem(COSName.getPDFName("StructParents")));
+            assertEquals(List.of(), mcidsIn(tokensOf(new PDFormXObject(form))));
+            assertEquals(0, mcrsInto(structTreeRoot(document), form));
+            assertEquals(List.of(), parentTreeKeys(document));
+            assertEquals(List.of("Artifact"), sequencesAtDo(tokensOf(document.getPage(0))));
+        }
+    }
+}

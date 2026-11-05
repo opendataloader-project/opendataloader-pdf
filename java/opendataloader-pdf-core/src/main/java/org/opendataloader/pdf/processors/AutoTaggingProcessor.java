@@ -1,6 +1,7 @@
 package org.opendataloader.pdf.processors;
 
 import org.opendataloader.pdf.autotagging.ChunksWriter;
+import org.opendataloader.pdf.autotagging.FormUses;
 import org.opendataloader.pdf.contentstream.ContentStreamTokens;
 import org.opendataloader.pdf.autotagging.OperatorStreamKey;
 import org.verapdf.operator.Operator;
@@ -57,6 +58,9 @@ public class AutoTaggingProcessor {
     private static final Map<OperatorStreamKey, Map<Integer, Set<StreamInfo>>> operatorIndexesToStreamInfosMap = new LinkedHashMap<>();
     private static final Map<OperatorStreamKey, List<COSObject>> structParents = new LinkedHashMap<>();
     private static final Map<OperatorStreamKey, Integer> structParentsIntegers = new LinkedHashMap<>();
+    /** Forms drawn more than once: their content is artifact, whatever the pieces they held. */
+    private static final Set<COSKey> sharedForms = new HashSet<>();
+    private static final Set<COSKey> rewrittenSharedForms = new HashSet<>();
     // annotation StructParent entries: int key -> single struct element (Link)
     private static final Map<Integer, COSObject> annotationStructParents = new HashMap<>();
     private static final TreeMap<COSString, COSObject> idToStructElement =
@@ -100,6 +104,8 @@ public class AutoTaggingProcessor {
         operatorIndexesToStreamInfosMap.clear();
         structParents.clear();
         structParentsIntegers.clear();
+        sharedForms.clear();
+        rewrittenSharedForms.clear();
         annotationStructParents.clear();
         idToStructElement.clear();
         pageNumberToFirstStructElement.clear();
@@ -145,6 +151,7 @@ public class AutoTaggingProcessor {
         for (OperatorStreamKey operatorStreamKey : structParents.keySet()) {
             structParentsIntegers.put(operatorStreamKey, currentStructParent++);
         }
+        demoteSharedForms(document);
         List<PDPage> rawPages = document.getPages();
         for (int pageNumber = 0; pageNumber < rawPages.size(); pageNumber++) {
             PDPage page = rawPages.get(pageNumber);
@@ -181,6 +188,90 @@ public class AutoTaggingProcessor {
                 cosDocument.addChangedObject(page.getObject());
             }
         }
+    }
+
+    /**
+     * Takes the structure back from forms that are drawn more than once.
+     *
+     * <p>A form has one {@code /StructParents}, so the marked content in it can have one parent
+     * only, and PDF/UA-1 7.20 test 2 fails a form with {@code /StructParents} that is drawn
+     * twice. Nothing here tells which draw an operator of the form belongs to either: an element
+     * holds "operator 25 of /Fm0", and the form is drawn three times. Worse, ChunksWriter rewrote
+     * the form at each draw, the second time from the stream it had already rewritten, whose
+     * operator indexes had moved: every MCID was dropped, the form kept its {@code /StructParents},
+     * and the elements kept MCRs and parent-tree entries that pointed at nothing. Measured on a
+     * budget whose list bullet, a triangle form, is drawn 3 times on a page: UA-1 7.20 failed on
+     * the 2nd and 3rd draw.
+     *
+     * <p>The content of such a form is artifact in every draw instead: the elements lose the MCRs
+     * into it and the parent tree its entries, and ChunksWriter wraps the form's paints as
+     * artifacts, once, with no {@code /StructParents}. Drawn once per page on two pages counts
+     * the same: the form is one object.
+     */
+    private static void demoteSharedForms(PDDocument document) {
+        Map<OperatorStreamKey, COSObject> formOf = new LinkedHashMap<>();
+        for (OperatorStreamKey key : structParents.keySet()) {
+            if (key.getXObjectName() == null) {
+                continue;
+            }
+            PDXObject xObject = findXObject(document.getPage(key.getPageNumber()).getResources(),
+                ASAtom.getASAtom(key.getXObjectName()), 0);
+            if (xObject instanceof PDXForm && xObject.getObject().getKey() != null) {
+                formOf.put(key, xObject.getObject());
+            }
+        }
+        if (formOf.isEmpty()) {
+            return;
+        }
+        Map<COSKey, Integer> uses = FormUses.of(document.getPages());
+        for (Map.Entry<OperatorStreamKey, COSObject> entry : formOf.entrySet()) {
+            COSKey formKey = entry.getValue().getKey();
+            if (uses.getOrDefault(formKey, 0) > 1) {
+                sharedForms.add(formKey);
+                releaseFormTagging(entry.getKey(), entry.getValue());
+            }
+        }
+    }
+
+    /**
+     * Withdraws what the structure holds in a form: the MCRs of the elements into it, and the
+     * form's parent-tree entry. The elements stay, with whatever else they hold.
+     */
+    public static void releaseFormTagging(OperatorStreamKey key, COSObject form) {
+        List<COSObject> parents = structParents.remove(key);
+        structParentsIntegers.remove(key);
+        operatorIndexesToStreamInfosMap.remove(key);
+        if (parents == null) {
+            return;
+        }
+        COSKey formKey = form.getKey();
+        for (COSObject parent : identitySet(parents)) {
+            COSObject kids = parent.getKey(ASAtom.K);
+            if (kids == null || kids.getType() != COSObjType.COS_ARRAY) {
+                continue;
+            }
+            for (int i = kids.size() - 1; i >= 0; i--) {
+                COSObject kid = kids.at(i);
+                if (kid.getType() != COSObjType.COS_DICT || !ASAtom.MCR.equals(kid.getNameKey(ASAtom.TYPE))) {
+                    continue;
+                }
+                COSObject stm = kid.getKey(ASAtom.STM);
+                if (stm != null && formKey.equals(stm.getKey())) {
+                    kids.remove(i);
+                }
+            }
+        }
+    }
+
+    /** Whether this form is drawn more than once, so that its content is artifact. */
+    public static boolean isSharedForm(PDXForm form) {
+        COSKey key = form.getObject().getKey();
+        return key != null && sharedForms.contains(key);
+    }
+
+    /** True once for a shared form: the one rewrite it needs, however often it is drawn. */
+    public static boolean claimSharedFormRewrite(PDXForm form) {
+        return rewrittenSharedForms.add(form.getObject().getKey());
     }
 
     private static void setMarkInfo(PDCatalog catalog, COSDocument cosDocument) {
