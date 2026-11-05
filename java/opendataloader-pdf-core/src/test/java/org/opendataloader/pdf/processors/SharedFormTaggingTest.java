@@ -264,17 +264,23 @@ class SharedFormTaggingTest {
             assertEquals(List.of(), parentTreeKeys(document), "no parent-tree entry for the form");
             // The form's own paint is wrapped, so the page stays clean for 7.1 test 3.
             long fillsInArtifact = 0;
-            int depth = 0;
-            for (Object token : formTokens) {
-                if (token instanceof Operator) {
-                    String name = ((Operator) token).getName();
-                    depth += "BMC".equals(name) ? 1 : "EMC".equals(name) ? -1 : 0;
-                    if ("f".equals(name) && depth == 1) {
-                        fillsInArtifact++;
-                    }
+            List<String> open = new ArrayList<>();
+            for (int i = 0; i < formTokens.size(); i++) {
+                if (!(formTokens.get(i) instanceof Operator)) {
+                    continue;
+                }
+                String name = ((Operator) formTokens.get(i)).getName();
+                if ("BMC".equals(name)) {
+                    open.add(((COSName) formTokens.get(i - 1)).getName());
+                } else if ("BDC".equals(name)) {
+                    open.add(((COSName) formTokens.get(i - 2)).getName());
+                } else if ("EMC".equals(name)) {
+                    open.remove(open.size() - 1);
+                } else if ("f".equals(name) && open.equals(List.of("Artifact"))) {
+                    fillsInArtifact++;
                 }
             }
-            assertEquals(1, fillsInArtifact, "the fill is inside one sequence");
+            assertEquals(1, fillsInArtifact, "the fill is inside one /Artifact sequence");
         }
     }
 
