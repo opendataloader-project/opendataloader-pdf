@@ -41,8 +41,10 @@ _ARGS_ENV_VAR = "OPENDATALOADER_PDF_ARGS"
 def _short_path(path: str) -> Optional[str]:
     """Return the Windows short (8.3) form of an existing path, or None.
 
-    Returns None on other platforms, if the path does not exist, or if the
-    volume does not create short names.
+    Returns None on other platforms or if the path does not exist. If the
+    path has no short name, for example on a volume that does not create
+    8.3 names, GetShortPathNameW returns the long path, so this function
+    returns that path, not None.
     """
     if not _ON_WINDOWS:
         return None
