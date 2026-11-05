@@ -100,6 +100,29 @@ class Issue294ColumnContinuesBelowGapTest {
     }
 
     @Test
+    void leftColumnComesFirstWhenThePageNumberIsAtTheSideOfTheFooterBox() {
+        // As above, but the page number is at the right end of the box across the bottom of the page.
+        List<IObject> objects = reportedPage(249.687);
+        objects.removeIf(object -> "PN".equals(label(object)));
+        objects.add(line("PN", 683.0, 30.772, 701.57, 39.772));
+        objects.add(lineArt(48.06, 500.842, 703.14, 501.382));
+        objects.add(lineArt(48.06, 27.592, 703.14, 43.402));
+        objects.add(lineArt(48.0, 128.362, 366.6, 167.302));
+        assertEquals(Arrays.asList("L1", "L2", "L3", "L4", "L5", "L6",
+                "R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "PN"), sortedLabels(objects), SYMPTOM);
+    }
+
+    @Test
+    void markerThatStartsInTheGutterStaysWithTheRightColumn() {
+        // A narrow marker on the first line of the right column starts in the gutter.
+        List<IObject> objects = reportedPage(249.687);
+        objects.add(line("RM", 380.0, 476.727, 395.0, 488.25));
+        assertEquals(Arrays.asList("L1", "L2", "L3", "L4", "L5", "L6",
+                "RM", "R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8"),
+                withoutPageNumber(sortedLabels(objects)), SYMPTOM);
+    }
+
+    @Test
     void pageNumberInTheGutterStaysLast() {
         List<String> order = sortedLabels(reportedPage(249.687));
         assertEquals("PN", order.get(order.size() - 1),
@@ -220,15 +243,32 @@ class Issue294ColumnContinuesBelowGapTest {
         assertEquals(Arrays.asList("L1", "L2", "R1", "R2", "N"), sortedLabels(objects));
     }
 
+    @Test
+    void notesBelowColumnsThatEndAlmostLevelComeAfterBothColumns() {
+        // The right column ends 5 pt below the left column, in the gap above the first note.
+        List<IObject> objects = new ArrayList<>();
+        objects.add(line("L1", 48.18, 300, 365.69, 488.25));
+        objects.add(line("L2", 48.18, 150, 365.69, 290));
+        objects.add(line("R1", 385.5, 300, 703.03, 488.25));
+        objects.add(line("R2", 385.5, 145, 703.03, 290));
+        objects.add(line("N1", 48.18, 100, 365.69, 121.4));
+        objects.add(line("N2", 48.18, 40, 365.69, 70));
+        assertEquals(Arrays.asList("L1", "L2", "R1", "R2", "N1", "N2"), sortedLabels(objects));
+    }
+
     /** The labels of the text lines in the sorted order. Line art has no text in the output. */
     private static List<String> sortedLabels(List<IObject> objects) {
         List<String> labels = new ArrayList<>();
         for (IObject object : XYCutPlusPlusSorter.sort(objects)) {
             if (object instanceof TextLine) {
-                labels.add(((TextLine) object).getTextChunks().get(0).getValue());
+                labels.add(label(object));
             }
         }
         return labels;
+    }
+
+    private static String label(IObject object) {
+        return object instanceof TextLine ? ((TextLine) object).getTextChunks().get(0).getValue() : null;
     }
 
     private static List<String> withoutPageNumber(List<String> labels) {
