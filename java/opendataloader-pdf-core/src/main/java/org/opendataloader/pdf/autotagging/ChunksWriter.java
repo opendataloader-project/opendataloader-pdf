@@ -171,6 +171,17 @@ public class ChunksWriter {
             case Operators.S_STROKE:
                 processContentOperator(result, rawOperator, arguments, operatorIndex, operatorIndexesToStreamInfosMap, operatorName, operatorStreamKey);
                 break;
+            case Operators.SH:
+                // A shading paints the whole clip at once and takes no path, so it was
+                // never wrapped: every other paint operator is, and the rewrite drops the
+                // producer's own marked content. Measured on a 71-page budget: 7 sh
+                // operators stayed outside any marked-content sequence, which fails
+                // PDF/UA-1 7.1 (test 3) and UA-2 8.2.2.1. Nothing tags a shading, so it
+                // becomes an artifact unless an element owns its operator. A path still
+                // buffered here is not what sh paints; it must not end up inside the span.
+                flushPendingPath(result);
+                processContentOperator(result, rawOperator, arguments, operatorIndex, operatorIndexesToStreamInfosMap, operatorName, operatorStreamKey);
+                break;
             case org.verapdf.model.tools.constants.Operators.GS:
                 PDExtGState extGState = this.resourceHandler.getExtGState(getLastCOSName(arguments));
                 this.graphicsState.copyPropertiesFromExtGState(extGState);
