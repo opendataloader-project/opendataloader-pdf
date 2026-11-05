@@ -58,6 +58,11 @@ public class AutoTaggingProcessor {
     private static final Map<OperatorStreamKey, Map<Integer, Set<StreamInfo>>> operatorIndexesToStreamInfosMap = new LinkedHashMap<>();
     private static final Map<OperatorStreamKey, List<COSObject>> structParents = new LinkedHashMap<>();
     private static final Map<OperatorStreamKey, Integer> structParentsIntegers = new LinkedHashMap<>();
+    /**
+     * The form each key of a form was made for. A key is a page and the name a {@code Do} uses,
+     * and one name can mean different forms in different resource dictionaries.
+     */
+    private static final Map<OperatorStreamKey, COSKey> formOwners = new HashMap<>();
     /** Forms drawn more than once: their content is artifact, whatever the pieces they held. */
     private static final Set<COSKey> sharedForms = new HashSet<>();
     private static final Set<COSKey> rewrittenSharedForms = new HashSet<>();
@@ -105,6 +110,7 @@ public class AutoTaggingProcessor {
         structParents.clear();
         structParentsIntegers.clear();
         sharedForms.clear();
+        formOwners.clear();
         rewrittenSharedForms.clear();
         annotationStructParents.clear();
         idToStructElement.clear();
@@ -238,6 +244,11 @@ public class AutoTaggingProcessor {
      * form's parent-tree entry. The elements stay, with whatever else they hold.
      */
     public static void releaseFormTagging(OperatorStreamKey key, COSObject form) {
+        COSKey owner = formOwners.get(key);
+        if (owner != null && !owner.equals(form.getKey())) {
+            // The key is another form's: its pieces and parent-tree entry are not this form's to take.
+            return;
+        }
         List<COSObject> parents = structParents.remove(key);
         structParentsIntegers.remove(key);
         operatorIndexesToStreamInfosMap.remove(key);
@@ -1857,6 +1868,13 @@ public class AutoTaggingProcessor {
         }
         for (StreamInfo streamInfo : streamInfoList) {
             OperatorStreamKey operatorStreamKey = new OperatorStreamKey(pageNumber, streamInfo.getXObjectName());
+            if (streamInfo.getXObjectName() != null && !formOwners.containsKey(operatorStreamKey)) {
+                PDXObject owner = findXObject(StaticResources.getDocument().getPage(pageNumber).getResources(),
+                    ASAtom.getASAtom(streamInfo.getXObjectName()), 0);
+                if (owner != null && owner.getObject().getKey() != null) {
+                    formOwners.put(operatorStreamKey, owner.getObject().getKey());
+                }
+            }
             List<COSObject> list = structParents.computeIfAbsent(operatorStreamKey, x -> new ArrayList<>());
             Set<StreamInfo> sameOperator = operatorIndexesToStreamInfosMap
                 .computeIfAbsent(operatorStreamKey, x -> new HashMap<>())
@@ -1929,15 +1947,30 @@ public class AutoTaggingProcessor {
         }
         PDResources resources = form.getResources();
         for (ASAtom name : resources.getXObjectNames()) {
-            if (operatorIndexesToStreamInfosMap.containsKey(new OperatorStreamKey(pageNumber, name.getValue()))) {
+            PDXObject xObject = resources.getXObject(name);
+            if (operatorIndexesToStreamInfosMap.containsKey(new OperatorStreamKey(pageNumber, name.getValue()))
+                && ownsKey(new OperatorStreamKey(pageNumber, name.getValue()), xObject)) {
                 return true;
             }
-            PDXObject xObject = resources.getXObject(name);
-            if (xObject instanceof PDXForm && holdsTaggedForm((PDXForm) xObject, pageNumber, depth + 1)) {
+            // A form drawn more than once lost its entry but is still rewritten, so the form that
+            // draws it has to be entered.
+            if (xObject instanceof PDXForm && (isSharedForm((PDXForm) xObject)
+                || holdsTaggedForm((PDXForm) xObject, pageNumber, depth + 1))) {
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * Whether this key was made for this form. A name stands for different forms in different
+     * resource dictionaries (a page's {@code /Fm0} and the {@code /Fm0} of a form on it), and a
+     * key that is read for the wrong one hands the form the other one's pieces and parent-tree
+     * entry. A key with no known owner is taken as the form's.
+     */
+    public static boolean ownsKey(OperatorStreamKey key, PDXObject form) {
+        COSKey owner = formOwners.get(key);
+        return owner == null || form != null && owner.equals(form.getObject().getKey());
     }
 
     /**

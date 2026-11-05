@@ -110,10 +110,15 @@ public class ChunksWriter {
             case Operators.DO:
                 OperatorStreamKey xObjectOperatorStreamKey = new OperatorStreamKey(operatorStreamKey.getPageNumber(), arguments.get(0).getString());
                 Integer xObjectStructParent = AutoTaggingProcessor.getStructParentsIntegers().get(xObjectOperatorStreamKey);
-                boolean ownContent = AutoTaggingProcessor.getOperatorIndexesToStreamInfosMap().containsKey(xObjectOperatorStreamKey)
-                        && xObjectStructParent != null;
                 COSName drawnName = getLastCOSName(arguments);
-                PDXObject drawn = ownContent || drawnName == null ? null : resourceHandler.getXObject(drawnName);
+                PDXObject named = drawnName == null ? null : resourceHandler.getXObject(drawnName);
+                // The key is a page and a name, and a name can mean another form here than where
+                // the key was made: only the form it was made for owns what it holds.
+                boolean ownContent = AutoTaggingProcessor.getOperatorIndexesToStreamInfosMap().containsKey(xObjectOperatorStreamKey)
+                        && xObjectStructParent != null
+                        && named instanceof PDXForm
+                        && AutoTaggingProcessor.ownsKey(xObjectOperatorStreamKey, named);
+                PDXObject drawn = ownContent ? null : named;
                 // A form with nothing of its own to tag is still entered when a form it draws has.
                 boolean innerContent = !ownContent && drawn instanceof PDXForm
                         && AutoTaggingProcessor.holdsTaggedForm((PDXForm) drawn, operatorStreamKey.getPageNumber(), 0);
@@ -156,10 +161,14 @@ public class ChunksWriter {
                             enteredForms.remove(formKey);
                         }
                     }
-                    if (ownContent && carriesMcid(rewritten)) {
+                    if (!ownContent) {
+                        // Entered only to reach a form it draws: no parent-tree entry is made for
+                        // it, so a /StructParents it came with names nothing, or another structure's entry.
+                        pdxObject.getObject().removeKey(ASAtom.STRUCT_PARENTS);
+                    } else if (carriesMcid(rewritten)) {
                         pdxObject.setKey(ASAtom.STRUCT_PARENTS,
                             COSInteger.construct(xObjectStructParent));
-                    } else if (ownContent) {
+                    } else {
                         // The elements hold pieces of this form that no operator of it got to
                         // carry. /StructParents with no MCID in the form names a parent-tree
                         // entry for nothing, and fails PDF/UA-1 7.20 test 2 when the form is drawn
