@@ -132,6 +132,36 @@ class SharedFormTaggingTest {
         return List.of(paragraph);
     }
 
+    /** Real text, not outlines read by OCR: it has no /ActualText to keep an element alive. */
+    private List<IObject> textParagraphOnForm(int pageNumber, int operatorIndex) {
+        TextChunk chunk = new TextChunk(new BoundingBox(pageNumber, 100, 500, 112, 512), "Notice", 12.0, 12.0);
+        chunk.adjustSymbolEndsToBoundingBox(null);
+        chunk.getStreamInfos().add(new StreamInfo(operatorIndex, formName, 0, 6));
+        SemanticParagraph paragraph = new SemanticParagraph();
+        paragraph.add(new TextLine(chunk));
+        paragraph.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+        return List.of(paragraph);
+    }
+
+    private static int elementsOfType(COSBase node, String type) {
+        if (node instanceof org.apache.pdfbox.cos.COSObject) {
+            node = ((org.apache.pdfbox.cos.COSObject) node).getObject();
+        }
+        int count = 0;
+        if (node instanceof COSArray) {
+            for (COSBase kid : (COSArray) node) {
+                count += elementsOfType(kid, type);
+            }
+        } else if (node instanceof COSDictionary) {
+            COSDictionary dictionary = (COSDictionary) node;
+            if (type.equals(dictionary.getNameAsString(COSName.S))) {
+                count++;
+            }
+            count += elementsOfType(dictionary.getDictionaryObject(COSName.K), type);
+        }
+        return count;
+    }
+
     private Path tag(List<List<IObject>> contents) throws IOException {
         AutoTaggingProcessor.tagDocument(StaticResources.getDocument(), contents, 1.7f);
         Path out = dir.resolve("triangles_tagged.pdf");
@@ -294,6 +324,32 @@ class SharedFormTaggingTest {
             assertEquals(0, mcrsInto(structTreeRoot(document), form));
             assertEquals(List.of(), parentTreeKeys(document));
             assertEquals(List.of("Artifact"), sequencesAtDo(tokensOf(document.getPage(0))));
+        }
+    }
+
+    /**
+     * A paragraph whose only content was in a form that is drawn more than once is left with
+     * nothing: a reader is told of a paragraph that says nothing. It is taken out, as it is when
+     * it is made with nothing in it.
+     */
+    @Test
+    void aParagraphThatLosesItsOnlyContentIsRemoved() throws Exception {
+        openPages(1, 3);
+        Path out = tag(List.of(textParagraphOnForm(0, fillIndex)));
+
+        try (PDDocument document = Loader.loadPDF(out.toFile())) {
+            assertEquals(0, elementsOfType(structTreeRoot(document), "P"), "no empty paragraph");
+        }
+    }
+
+    @Test
+    void aParagraphOnAFormDrawnOnceKeepsItsContent() throws Exception {
+        openPages(1, 1);
+        Path out = tag(List.of(textParagraphOnForm(0, fillIndex)));
+
+        try (PDDocument document = Loader.loadPDF(out.toFile())) {
+            assertEquals(1, elementsOfType(structTreeRoot(document), "P"));
+            assertEquals(1, mcrsInto(structTreeRoot(document), formOf(document, 0)));
         }
     }
 }

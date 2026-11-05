@@ -272,6 +272,24 @@ public class AutoTaggingProcessor {
                 }
             }
         }
+        // An element whose only content was in the form is a heading or paragraph that a reader
+        // is told about and that then says nothing; the elements above it may be left empty too.
+        for (COSObject parent : identitySet(parents)) {
+            discardWhileEmpty(parent);
+        }
+    }
+
+    private static void discardWhileEmpty(COSObject element) {
+        while (element != null && !element.empty()
+            && !TaggedPDFConstants.DOCUMENT.equals(element.getNameKeyStringValue(ASAtom.S))) {
+            COSObject up = element.getKey(ASAtom.P);
+            if (up == null || up.empty() || holdsContent(element)
+                || element.knownKey(ASAtom.ALT) || element.knownKey(ASAtom.ACTUAL_TEXT)) {
+                return;
+            }
+            discardIfEmpty(up, element);
+            element = up;
+        }
     }
 
     /** Whether this form is drawn more than once, so that its content is artifact. */
