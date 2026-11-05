@@ -117,6 +117,24 @@ public class ChunksWriter {
                 // A form with nothing of its own to tag is still entered when a form it draws has.
                 boolean innerContent = !ownContent && drawn instanceof PDXForm
                         && AutoTaggingProcessor.holdsTaggedForm((PDXForm) drawn, operatorStreamKey.getPageNumber(), 0);
+                if (!ownContent && drawn instanceof PDXForm && AutoTaggingProcessor.isSharedForm((PDXForm) drawn)) {
+                    // Drawn more than once: its content is artifact in every draw (see
+                    // AutoTaggingProcessor#demoteSharedForms). Rewritten once, not at each draw:
+                    // the second pass would read the stream the first one wrote.
+                    PDXForm shared = (PDXForm) drawn;
+                    COSKey sharedKey = shared.getObject().getKey();
+                    if (!enteredForms.contains(sharedKey) && AutoTaggingProcessor.claimSharedFormRewrite(shared)) {
+                        enteredForms.add(sharedKey);
+                        try {
+                            rewriteForm(shared, xObjectOperatorStreamKey);
+                        } finally {
+                            enteredForms.remove(sharedKey);
+                        }
+                        shared.getObject().removeKey(ASAtom.STRUCT_PARENTS);
+                    }
+                    processContentOperator(result, rawOperator, arguments, operatorIndex, operatorIndexesToStreamInfosMap, operatorName, operatorStreamKey);
+                    break;
+                }
                 if (ownContent || innerContent) {
                     PDXObject pdxObject = drawn != null ? drawn : resourceHandler.getXObject(drawnName);
                     // A form drawn from inside itself is not entered again; a cycle needs an
@@ -126,24 +144,30 @@ public class ChunksWriter {
                         processContentOperator(result, rawOperator, arguments, operatorIndex, operatorIndexesToStreamInfosMap, operatorName, operatorStreamKey);
                         break;
                     }
-                    if (ownContent) {
-                        pdxObject.setKey(ASAtom.STRUCT_PARENTS,
-                            COSInteger.construct(xObjectStructParent));
-                    }
-                    StaticResources.getDocument().getDocument().addChangedObject(pdxObject.getObject());
                     PDXForm pdxForm = (PDXForm)pdxObject;
-                    GraphicsState xFormGraphicsState = graphicsState.clone();
                     if (formKey != null) {
                         enteredForms.add(formKey);
                     }
+                    List<Object> rewritten;
                     try {
-                        AutoTaggingProcessor.setUpContents(pdxForm.getObject(), new ChunksWriter(xFormGraphicsState,
-                            resourceHandler.getExtendedResources(pdxForm.getResources()), enteredForms).processTokens(
-                                ContentStreamTokens.getTokens(pdxForm), xObjectOperatorStreamKey));
+                        rewritten = rewriteForm(pdxForm, xObjectOperatorStreamKey);
                     } finally {
                         if (formKey != null) {
                             enteredForms.remove(formKey);
                         }
+                    }
+                    if (ownContent && carriesMcid(rewritten)) {
+                        pdxObject.setKey(ASAtom.STRUCT_PARENTS,
+                            COSInteger.construct(xObjectStructParent));
+                    } else if (ownContent) {
+                        // The elements hold pieces of this form that no operator of it got to
+                        // carry. /StructParents with no MCID in the form names a parent-tree
+                        // entry for nothing, and fails PDF/UA-1 7.20 test 2 when the form is drawn
+                        // again. The form's paints are artifact now, and so is its Do.
+                        pdxObject.getObject().removeKey(ASAtom.STRUCT_PARENTS);
+                        AutoTaggingProcessor.releaseFormTagging(xObjectOperatorStreamKey, pdxObject.getObject());
+                        processContentOperator(result, rawOperator, arguments, operatorIndex, operatorIndexesToStreamInfosMap, operatorName, operatorStreamKey);
+                        break;
                     }
                     // Preserve the Do operator in the parent stream so the XObject is still invoked
                     result.addAll(arguments);
@@ -221,6 +245,32 @@ public class ChunksWriter {
 //                    }
                 break;
         }
+    }
+
+    /** Rewrites the stream of a form in place, wrapping what it draws; the new tokens are returned. */
+    private List<Object> rewriteForm(PDXForm form, OperatorStreamKey formKey) throws IOException {
+        StaticResources.getDocument().getDocument().addChangedObject(form.getObject());
+        List<Object> tokens = new ChunksWriter(graphicsState.clone(),
+            resourceHandler.getExtendedResources(form.getResources()), enteredForms).processTokens(
+                ContentStreamTokens.getTokens(form), formKey);
+        AutoTaggingProcessor.setUpContents(form.getObject(), tokens);
+        return tokens;
+    }
+
+    /** Whether a marked-content sequence of these tokens carries an MCID. */
+    private static boolean carriesMcid(List<Object> tokens) {
+        for (int i = 1; i < tokens.size(); i++) {
+            Object token = tokens.get(i);
+            Object properties = tokens.get(i - 1);
+            if (token instanceof Operator && Operators.BDC.equals(((Operator) token).getOperator())
+                && properties instanceof COSDictionary) {
+                COSObject mcid = new COSObject((COSDictionary) properties).getKey(ASAtom.MCID);
+                if (mcid != null && !mcid.empty()) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private void processContentOperator(List<Object> result, Operator rawOperator, List<COSBase> arguments, int operatorIndex,
