@@ -72,6 +72,8 @@ public class AutoTaggingProcessor {
             new TreeMap<>(COSString::compare);
     // First created struct element per page, used to rewrite page destinations to structure destinations.
     private static final Map<Integer, COSObject> pageNumberToFirstStructElement = new HashMap<>();
+    /** Pages whose first element was discarded, to be given the next one if none follows. */
+    private static final Set<Integer> pagesWithoutFirstElement = new HashSet<>();
     private static final String FORMULA_REPLACEMENT_TEXT = "formula";
     private static final String IMAGE_REPLACEMENT_TEXT = "image ";
     private static final String ANNOTATION_REPLACEMENT_TEXT = "Annotation";
@@ -115,6 +117,7 @@ public class AutoTaggingProcessor {
         annotationStructParents.clear();
         idToStructElement.clear();
         pageNumberToFirstStructElement.clear();
+        pagesWithoutFirstElement.clear();
         structElementIdToCaptionMap.clear();
         annotationBBoxesMap.clear();
         normalizedLevels.clear();
@@ -133,6 +136,7 @@ public class AutoTaggingProcessor {
         demoteSharedForms(document);
         mergeAdjacentTextShows(document);
         updatePages(document, cosDocument);
+        restoreFirstElements(document, structTreeRoot);
         createIDTree(structTreeRoot, cosDocument, idToStructElement);
         if (isPDF2_0) {
             updateDestinationsToStructureDestinations(document, catalog, cosDocument);
@@ -1509,9 +1513,61 @@ public class AutoTaggingProcessor {
         } else if (k != null && sameObject(k, element)) {
             parent.removeKey(ASAtom.K);
         }
-        pageNumberToFirstStructElement.values().removeIf(first -> sameObject(first, element));
+        pageNumberToFirstStructElement.entrySet().removeIf(first -> {
+            boolean gone = sameObject(first.getValue(), element);
+            if (gone) {
+                pagesWithoutFirstElement.add(first.getKey());
+            }
+            return gone;
+        });
         // A note is given its /ID before its content; the ID tree must not name it.
         idToStructElement.values().removeIf(named -> sameObject(named, element));
+    }
+
+    /**
+     * Gives each page whose first element was discarded, and that no later element filled, the
+     * first element left on it, in the order of the tree.
+     *
+     * <p>While the elements are created, the next one on the page takes the place of a discarded
+     * one. An element a form's release leaves empty is discarded after the last is created, and
+     * the page then had no element for a structure destination to name: the link or the GoTo
+     * action to it lost its target.
+     */
+    private static void restoreFirstElements(PDDocument document, COSObject structTreeRoot) {
+        pagesWithoutFirstElement.removeAll(pageNumberToFirstStructElement.keySet());
+        if (pagesWithoutFirstElement.isEmpty()) {
+            return;
+        }
+        Map<COSKey, Integer> pageOf = new HashMap<>();
+        for (int i : pagesWithoutFirstElement) {
+            COSKey key = document.getPages().get(i).getObject().getObjectKey();
+            if (key != null) {
+                pageOf.put(key, i);
+            }
+        }
+        firstElementsOf(structTreeRoot.getKey(ASAtom.K), pageOf, 0);
+        pagesWithoutFirstElement.clear();
+    }
+
+    private static void firstElementsOf(COSObject node, Map<COSKey, Integer> pageOf, int depth) {
+        if (node == null || pageOf.isEmpty() || depth > 512) {
+            return;
+        }
+        if (node.getType() == COSObjType.COS_ARRAY) {
+            for (int i = 0; i < node.size() && !pageOf.isEmpty(); i++) {
+                firstElementsOf(node.at(i), pageOf, depth + 1);
+            }
+            return;
+        }
+        if (node.getType() != COSObjType.COS_DICT || !ASAtom.STRUCT_ELEM.equals(node.getNameKey(ASAtom.TYPE))) {
+            return;
+        }
+        COSObject page = node.getKey(ASAtom.PG);
+        Integer number = page != null ? pageOf.remove(page.getObjectKey()) : null;
+        if (number != null) {
+            pageNumberToFirstStructElement.put(number, node);
+        }
+        firstElementsOf(node.getKey(ASAtom.K), pageOf, depth + 1);
     }
 
     private static boolean sameObject(COSObject a, COSObject b) {

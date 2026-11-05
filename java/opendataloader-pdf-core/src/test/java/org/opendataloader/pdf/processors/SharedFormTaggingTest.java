@@ -358,4 +358,93 @@ class SharedFormTaggingTest {
             assertEquals(1, mcrsInto(structTreeRoot(document), formOf(document, 0)));
         }
     }
+
+    /**
+     * A page whose first element was in a shared form, and whose second is page text: a link to
+     * the page must still name an element of it. The release takes the first element out after
+     * the last is made, so no later element took its place, and the PDF 2.0 link lost /Dest.
+     */
+    @Test
+    void aLinkToAPageWhoseFirstElementIsGivenUpNamesTheNextOne() throws Exception {
+        Path pdf = dir.resolve("linked.pdf");
+        try (PDDocument document = new PDDocument()) {
+            PDAppearanceStream form = new PDAppearanceStream(document);
+            form.setBBox(new PDRectangle(0, 0, 12, 12));
+            try (PDPageContentStream content = new PDPageContentStream(document, form)) {
+                content.moveTo(0, 0);
+                content.lineTo(12, 0);
+                content.lineTo(6, 12);
+                content.closePath();
+                content.fill();
+            }
+            PDPage page = new PDPage(PDRectangle.LETTER);
+            document.addPage(page);
+            try (PDPageContentStream content = new PDPageContentStream(document, page)) {
+                for (int i = 0; i < 2; i++) {
+                    content.saveGraphicsState();
+                    content.transform(org.apache.pdfbox.util.Matrix.getTranslateInstance(100 + 30 * i, 500));
+                    content.drawForm(form);
+                    content.restoreGraphicsState();
+                }
+                content.beginText();
+                content.setFont(new org.apache.pdfbox.pdmodel.font.PDType1Font(
+                    org.apache.pdfbox.pdmodel.font.Standard14Fonts.FontName.HELVETICA), 12);
+                content.newLineAtOffset(72, 400);
+                content.showText("Hello");
+                content.endText();
+            }
+            org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink link =
+                new org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink();
+            link.setRectangle(new PDRectangle(72, 300, 100, 20));
+            org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageFitDestination dest =
+                new org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageFitDestination();
+            dest.setPage(page);
+            link.setDestination(dest);
+            page.getAnnotations().add(link);
+            document.save(pdf.toFile());
+        }
+        StaticLayoutContainers.clearContainers();
+        DocumentProcessor.preprocessing(pdf.toString(), new Config());
+        org.verapdf.pd.PDPage first = StaticResources.getDocument().getPages().get(0);
+        formName = first.getResources().getXObjectNames().iterator().next().getValue();
+        List<Object> formTokens = ContentStreamTokens.getTokens(
+            (org.verapdf.pd.images.PDXForm) first.getResources().getXObject(org.verapdf.as.ASAtom.getASAtom(formName)));
+        int fill = -1;
+        for (int i = 0; i < formTokens.size(); i++) {
+            if (formTokens.get(i) instanceof org.verapdf.operator.Operator
+                && "f".equals(((org.verapdf.operator.Operator) formTokens.get(i)).getOperator())) {
+                fill = i;
+            }
+        }
+        List<Object> pageTokens = ContentStreamTokens.getTokens(first.getContent());
+        int show = -1;
+        for (int i = 0; i < pageTokens.size(); i++) {
+            if (pageTokens.get(i) instanceof org.verapdf.operator.Operator
+                && "Tj".equals(((org.verapdf.operator.Operator) pageTokens.get(i)).getOperator())) {
+                show = i;
+            }
+        }
+        assertTrue(fill >= 0 && show >= 0);
+        TextChunk hello = new TextChunk(new BoundingBox(0, 72, 400, 100, 412), "Hello", 12.0, 12.0);
+        hello.adjustSymbolEndsToBoundingBox(null);
+        hello.getStreamInfos().add(new StreamInfo(show, null, 0, 5));
+        SemanticParagraph second = new SemanticParagraph();
+        second.add(new TextLine(hello));
+        second.setRecognizedStructureId(StaticLayoutContainers.incrementContentId());
+        List<IObject> page = new ArrayList<>(textParagraphOnForm(0, fill));
+        page.add(second);
+
+        AutoTaggingProcessor.tagDocument(StaticResources.getDocument(), List.of(page), 2.0f);
+        Path out = dir.resolve("linked_tagged.pdf");
+        StaticResources.getDocument().saveAs(out.toString());
+
+        try (PDDocument document = Loader.loadPDF(out.toFile())) {
+            assertEquals(1, elementsOfType(structTreeRoot(document), "P"), "the paragraph on the form is gone");
+            COSDictionary annotation = document.getPage(0).getAnnotations().get(0).getCOSObject();
+            COSBase destination = annotation.getDictionaryObject(COSName.DEST);
+            assertNotNull(destination, "the link keeps its destination");
+            COSBase target = ((COSArray) destination).getObject(0);
+            assertEquals("P", ((COSDictionary) target).getNameAsString(COSName.S), "it names the paragraph left");
+        }
+    }
 }
