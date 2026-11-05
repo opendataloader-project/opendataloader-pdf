@@ -4,7 +4,11 @@ allowBuilds:
   esbuild: true
 
 overrides:
-  minimatch@<10.2.3: '>=10.2.3'
+  # GHSA-g3hv-75wg-m249 is fixed only in minimatch 11. eslint, @eslint/config-array
+  # and @typescript-eslint/typescript-estree still declare ^10, but they only call
+  # `new Minimatch(p, { dot, flipNegate }).match()` and `minimatch(f, p, { dot })`,
+  # which 11 keeps; lint results are identical. Drop this when they allow ^11.
+  minimatch@<11.0.1: '>=11.0.1 <12'
   flatted@<3.4.2: '>=3.4.2'
   postcss@<8.5.23: '>=8.5.23'
   source-map-js@<1.2.2: '>=1.2.2'
