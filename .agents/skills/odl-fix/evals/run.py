@@ -440,7 +440,11 @@ def f26_unknown_permission(tmp):
     assert rows[26]["group"] == "unowned" and any("colleague" in x for x in rows[26]["notes"]), rows[26]
     rows, _ = triage(tmp, [issue(26)], c, perms={"colleague": "write"})
     assert (rows[26]["class"], rows[26]["group"]) == ("working", "owned"), rows[26]
-    return "unknown permission -> exit 11; read -> ignored; write -> owned"
+    # A bot is never counted, so an unknown permission of a bot does not stop the triage (CodeRabbit on #894).
+    bot = {26: c[26] + [comment("helper[bot]", "NONE", "2026-10-21T00:00:00Z", post("Status", "Working on it · 2026-10-21"), bot=True)]}
+    rows, _ = triage(tmp, [issue(26)], bot, perms={"colleague": "write", "helper[bot]": "unknown"})
+    assert rows[26]["owners"] == ["colleague"], rows[26]
+    return "unknown permission -> exit 11; read -> ignored; write -> owned; an unknown bot -> no stop"
 
 
 def s1_explicit_invocation(tmp):
