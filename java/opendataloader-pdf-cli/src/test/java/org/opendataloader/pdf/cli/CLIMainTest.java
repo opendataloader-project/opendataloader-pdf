@@ -730,7 +730,8 @@ class CLIMainTest {
 
     @Test
     void testResolveArgumentsRejectsValueThatIsNotArrayOfStrings() {
-        for (String json : new String[]{"input.pdf", "{\"a\": 1}", "[\"input.pdf\", null]", "null"}) {
+        for (String json : new String[]{"input.pdf", "{\"a\": 1}", "[\"input.pdf\", null]", "null",
+                "[1]", "[true]", "[[\"input.pdf\"]]"}) {
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> CLIMain.resolveArguments(new String[0], json), json);
             assertTrue(exception.getMessage().contains(CLIMain.ARGS_ENVIRONMENT_VARIABLE), json);

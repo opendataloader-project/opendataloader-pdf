@@ -16,6 +16,7 @@
 package org.opendataloader.pdf.cli;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.cli.*;
 import org.opendataloader.pdf.api.Config;
@@ -29,9 +30,7 @@ import org.verapdf.exceptions.InvalidPasswordException;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -110,15 +109,24 @@ public class CLIMain {
         if (args.length > 0 || argumentsJson == null) {
             return args;
         }
-        String[] arguments;
+        // Read a tree, not String[]: Jackson would turn 1 or true into the string "1" or "true".
+        JsonNode node;
         try {
-            arguments = new ObjectMapper().readValue(argumentsJson, String[].class);
+            node = new ObjectMapper().readTree(argumentsJson);
         } catch (JsonProcessingException exception) {
-            arguments = null;
+            node = null;
         }
-        if (arguments == null || Arrays.stream(arguments).anyMatch(Objects::isNull)) {
+        if (node == null || !node.isArray()) {
             throw new IllegalArgumentException(
                 ARGS_ENVIRONMENT_VARIABLE + " must be a JSON array of strings");
+        }
+        String[] arguments = new String[node.size()];
+        for (int i = 0; i < arguments.length; i++) {
+            if (!node.get(i).isTextual()) {
+                throw new IllegalArgumentException(
+                    ARGS_ENVIRONMENT_VARIABLE + " must be a JSON array of strings");
+            }
+            arguments[i] = node.get(i).textValue();
         }
         return arguments;
     }
