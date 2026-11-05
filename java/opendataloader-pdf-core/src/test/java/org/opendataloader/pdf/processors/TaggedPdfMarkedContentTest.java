@@ -260,10 +260,10 @@ class TaggedPdfMarkedContentTest {
     /**
      * Text-show operators of one element that are adjacent in the stream share one MCID only when
      * they also follow each other in the element. A caller that builds the paragraph from the visual
-     * lines, as the Hancom AI route of odl-pdfua does, hands the tagger the words in line order. The
-     * left parts of the three lines are adjacent in the stream, and they became one span: the
-     * paragraph read "The first line starts the second line starts the third line starts and then it
-     * ends here; …", the left parts and then the right parts.
+     * lines hands the tagger the words in line order. The left parts of the three lines are adjacent
+     * in the stream, and they became one span: the paragraph read "The first line starts the second
+     * line starts the third line starts and then it ends here; …", the left parts and then the right
+     * parts.
      */
     @Test
     void textShowsAdjacentInTheStreamOnlyShareAnMcidInReadingOrder(@TempDir Path dir) throws IOException {
