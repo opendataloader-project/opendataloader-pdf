@@ -175,4 +175,44 @@ class ShadingTaggingTest {
             assertEquals(2, artifacts, "each shading is wrapped as /Artifact BMC <name> sh EMC");
         }
     }
+
+    /**
+     * A path that is built and not painted before an {@code sh} is not content a conforming file
+     * has, but it must not end up inside the shading's span: {@code sh} does not paint it, and the
+     * span would carry construction operators that nothing in it paints. It stays where it was.
+     */
+    @Test
+    void aPathLeftOpenBeforeAShadingStaysOutsideItsSpan(@TempDir Path dir) throws IOException {
+        Path source = dir.resolve("open-path.pdf");
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.LETTER);
+            doc.addPage(page);
+            try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
+                cs.addRect(100, 380, 200, 40);
+                cs.shadingFill(axialShading());
+            }
+            doc.save(source.toFile());
+        }
+        Config config = new Config();
+        config.setOutputFolder(dir.toString());
+        config.setGenerateJSON(false);
+        config.setGenerateTaggedPDF(true);
+        DocumentProcessor.processFile(source.toString(), config);
+
+        try (PDDocument doc = Loader.loadPDF(dir.resolve("open-path_tagged.pdf").toFile())) {
+            List<Object> tokens = new PDFStreamParser(doc.getPage(0)).parse();
+            int rect = -1;
+            int span = -1;
+            for (int i = 0; i < tokens.size(); i++) {
+                if (tokens.get(i) instanceof Operator && "re".equals(((Operator) tokens.get(i)).getName())) {
+                    rect = i;
+                }
+                if (tokens.get(i) instanceof Operator && "BMC".equals(((Operator) tokens.get(i)).getName())) {
+                    span = i;
+                }
+            }
+            assertTrue(rect >= 0 && span >= 0, "the path and the span are in the output");
+            assertTrue(rect < span, "the path comes before the span");
+        }
+    }
 }
