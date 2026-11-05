@@ -241,6 +241,8 @@ def collect(a: argparse.Namespace) -> dict:
         data["mentioned_prs"][n] = sorted({s["number"] for s in sources if s.get("number") and s.get("state") == "OPEN"
                                            and (s.get("repository") or {}).get("nameWithOwner") == repo})
         for c in data["comments"][n]:
+            if is_bot(c.get("user")):
+                continue  # a bot comment never counts, so its permission is not needed
             login = (c.get("user") or {}).get("login")
             if login and footer_of(c.get("body")) and login not in data["permissions"]:
                 data["permissions"][login] = (gh(["api", f"repos/{repo}/collaborators/{login}/permission", "--jq", ".permission"],
@@ -353,7 +355,9 @@ def cmd_triage(a: argparse.Namespace) -> int:
     if data.get("incomplete"):
         complete = False
         why.append("the pull request links of " + ", ".join(f"#{n}" for n in data["incomplete"]) + " could not be read (GraphQL)")
-    unknown = sorted(login for login, perm in (data.get("permissions") or {}).items() if perm == "unknown")
+    authors = {(c.get("user") or {}).get("login") for cs in (data.get("comments") or {}).values() for c in cs
+               if not is_bot(c.get("user")) and footer_of(c.get("body"))}  # the persons whose state lines can count
+    unknown = sorted(login for login, perm in (data.get("permissions") or {}).items() if perm == "unknown" and login in authors)
     if unknown:
         complete = False  # their state lines are not counted, so the class and the owners can be wrong
         why.append("the permission of " + ", ".join(unknown) + " could not be read: their state lines cannot be counted")
@@ -471,6 +475,7 @@ def numbers(text: str) -> list[int]:
 
 
 def login(text: str) -> str:
+    """The value of --me: a GitHub login by the current rules (LOGIN, LOGIN_MAX), or a usage error (exit 2)."""
     if len(text or "") > LOGIN_MAX or not LOGIN.fullmatch(text or ""):
         raise argparse.ArgumentTypeError("use a GitHub login: letters, digits, and single hyphens between them, 39 or fewer")
     return text
