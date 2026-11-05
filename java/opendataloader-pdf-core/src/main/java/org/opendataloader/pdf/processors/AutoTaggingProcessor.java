@@ -223,10 +223,10 @@ public class AutoTaggingProcessor {
         if (formOf.isEmpty()) {
             return;
         }
-        Map<COSKey, Integer> uses = FormUses.of(document.getPages());
+        FormUses uses = FormUses.of(document.getPages());
         for (Map.Entry<OperatorStreamKey, COSObject> entry : formOf.entrySet()) {
             COSKey formKey = entry.getValue().getKey();
-            if (uses.getOrDefault(formKey, 0) > 1) {
+            if (uses.usesOf(formKey) > 1) {
                 sharedForms.add(formKey);
                 releaseFormTagging(entry.getKey(), entry.getValue());
             }
