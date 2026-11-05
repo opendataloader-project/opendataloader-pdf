@@ -35,6 +35,7 @@ def run(*args, check=True):
 
 
 def issue(n, author="reporter", assoc="NONE", created="2026-06-01T00:00:00Z", assignees=()):
+    """An open issue in the shape of the GitHub REST API."""
     return {"number": n, "title": f"issue {n}", "html_url": f"https://example.invalid/issues/{n}",
             "user": {"login": author, "type": "User"}, "author_association": assoc, "created_at": created,
             "assignees": [{"login": a, "type": "User"} for a in assignees]}
@@ -52,6 +53,7 @@ def post(text, state):
 
 def triage(tmp, issues, comments=None, prs=None, perms=None, refs=None, total=None, only=None, check=True, mentions=None,
            viewer="me", me=None):
+    """Run the triage on a fixture; give the rows by number and the process result. viewer=None leaves it out."""
     data = {"repo": "o/r", "fetched_at": NOW, "total_count": len(issues) if total is None else total,
             "issues": issues, "comments": {str(k): v for k, v in (comments or {}).items()},
             "closing_prs": {str(k): v for k, v in (prs or {}).items()}, "permissions": perms or {}, "refs": refs or {},
@@ -388,6 +390,7 @@ def f24_owner_groups(tmp):
     assert at == sorted(at), at
 
     def section(n):
+        """The heading of the section that has the row of issue n."""
         pos = md.index(f"| #{n} |")
         return max((h for h in heads if md.index(h) < pos), key=md.index)
 
@@ -400,6 +403,7 @@ def f24_owner_groups(tmp):
     # CodeRabbit on #894: an owned row gives no action to the viewer, and its Owner cell is not cut.
     owned = md[md.index(heads[2]):md.index(heads[3])]
     assert "Continue the fix" not in owned and "judgment.json" not in owned and "the owner acts" in owned, owned
+    assert "add one with the next post" not in owned, owned  # CodeRabbit on #894: no instruction in an owned judge row
     many = ["maintainer-number-" + str(k) for k in range(1, 6)]
     triage(tmp, [issue(9, assignees=many)], perms={"me": "write"})
     run("triage-report", "--work", tmp)

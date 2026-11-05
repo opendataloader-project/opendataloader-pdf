@@ -345,6 +345,7 @@ def triage_one(issue: dict, data: dict) -> dict:
 
 
 def cmd_triage(a: argparse.Namespace) -> int:
+    """Classify each open issue, write triage.json, and print the counts. Exit 11: the triage is incomplete."""
     data = collect(a)
     rows = [triage_one(i, data) for i in data["issues"]]
     rows.sort(key=lambda r: (list(CLASSES).index(r["class"]), r["created"], r["number"]))
@@ -397,6 +398,7 @@ def cell(text, width: int | None = 70) -> str:
 
 
 def cmd_report(a: argparse.Namespace) -> int:
+    """Merge judgment.json into the triage and write triage.md, one section for each group. Exit 12: see the module text."""
     out = os.path.join(a.work, "issue-triage")
     with open(os.path.join(out, "triage.json"), encoding="utf-8") as f:
         tri = json.load(f)
@@ -453,7 +455,7 @@ def cmd_report(a: argparse.Namespace) -> int:
             via = r.get("owner_via") or {}
             owner = "; ".join(f"{o} ({', '.join(via.get(o) or [])})" for o in r.get("owners") or []) or "none"
             notes = ([r["reason"]] if r["reason"] else []) + r["notes"]
-            if r["class"] == "judge":
+            if r["class"] == "judge" and g != "owned":  # an owned row gives the viewer no instruction
                 notes.append("no state line: add one with the next post")
             # An owned row gives the viewer no action: its owner acts. The Owner cell is not cut, so each owner shows.
             action = "None: the owner acts" if g == "owned" else CLASSES[r["final"]][1]
@@ -482,6 +484,7 @@ def login(text: str) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Parse the command line and run footer, triage, or triage-report."""
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
     f = sub.add_parser("footer")
