@@ -34,9 +34,10 @@ def run(*args, check=True):
     return res
 
 
-def issue(n, author="reporter", assoc="NONE", created="2026-06-01T00:00:00Z"):
+def issue(n, author="reporter", assoc="NONE", created="2026-06-01T00:00:00Z", assignees=()):
     return {"number": n, "title": f"issue {n}", "html_url": f"https://example.invalid/issues/{n}",
-            "user": {"login": author, "type": "User"}, "author_association": assoc, "created_at": created}
+            "user": {"login": author, "type": "User"}, "author_association": assoc, "created_at": created,
+            "assignees": [{"login": a, "type": "User"} for a in assignees]}
 
 
 def comment(login, assoc, at, body, bot=False):
@@ -49,15 +50,18 @@ def post(text, state):
     return f"{text}\n\n{state}\n\n{AI}"
 
 
-def triage(tmp, issues, comments=None, prs=None, perms=None, refs=None, total=None, only=None, check=True, mentions=None):
+def triage(tmp, issues, comments=None, prs=None, perms=None, refs=None, total=None, only=None, check=True, mentions=None,
+           viewer="me", me=None):
     data = {"repo": "o/r", "fetched_at": NOW, "total_count": len(issues) if total is None else total,
             "issues": issues, "comments": {str(k): v for k, v in (comments or {}).items()},
             "closing_prs": {str(k): v for k, v in (prs or {}).items()}, "permissions": perms or {}, "refs": refs or {},
             "mentioned_prs": {str(k): v for k, v in (mentions or {}).items()}}
+    if viewer:
+        data["viewer"] = viewer
     path = os.path.join(tmp, "fixture.json")
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f)
-    args = ["triage", "--fixture", path, "--work", tmp] + (["--issues", only] if only else [])
+    args = ["triage", "--fixture", path, "--work", tmp] + (["--issues", only] if only else []) + (["--me", me] if me else [])
     res = run(*args, check=check)
     out = os.path.join(tmp, "issue-triage", "triage.json")
     rows = {}
@@ -279,7 +283,7 @@ def f18_report(tmp):
     comments = {94: [comment("maintainer", "MEMBER", "2026-01-10T00:00:00Z", "Good idea.")],
                 4: [comment("maintainer", "MEMBER", "2026-10-20T00:00:00Z", post("Which version?", "Waiting on: reporter · 2026-10-20")),
                     comment("reporter", "NONE", "2026-10-22T00:00:00Z", "Thanks!")]}
-    triage(tmp, issues, comments, perms=TEAM)
+    triage(tmp, issues, comments, perms=TEAM, viewer="maintainer")  # the maintainer wrote the state line of #4: it is theirs
     path = os.path.join(tmp, "issue-triage", "judgment.json")
 
     def report(judgment):
@@ -343,6 +347,73 @@ def f23_judge_cannot_wait(tmp):
     return "judge -> waiting by judgment -> exit 12"
 
 
+def f24_owner_groups(tmp):
+    """#652: the triage showed an issue that another team member owns as my turn (2026-11-05). The owners are the
+    assignees and the author of the last counted state line. Only my issues and the issues with no owner are mine to take."""
+    claim = post("I'm working on this and will link a pull request here.", "Working on it · 2026-10-20")
+    issues = [issue(652, created="2026-07-24T00:00:00Z", assignees=["colleague"]),
+              issue(294, assignees=["me"]),
+              issue(767, created="2026-10-06T00:00:00Z"),
+              issue(1),
+              issue(5),
+              issue(94, assignees=["colleague"]),
+              issue(6, created="2026-10-01T00:00:00Z")]
+    comments = {652: [comment("colleague", "MEMBER", "2026-07-30T00:00:00Z", "The gray image is a shadow in the PDF."),
+                      comment("reporter", "NONE", "2026-08-06T00:00:00Z", "It breaks the image mapping.")],
+                294: [comment("me", "MEMBER", "2026-10-20T00:00:00Z", claim)],
+                767: [comment("me", "MEMBER", "2026-10-26T00:00:00Z", post("The text fix is merged.", "Waiting on: reporter · 2026-10-26")),
+                      comment("reporter", "NONE", "2026-10-27T00:00:00Z", "The upstream pull requests are open.")],
+                5: [comment("colleague", "MEMBER", "2026-10-20T00:00:00Z", claim)],
+                94: [comment("colleague", "MEMBER", "2026-01-10T00:00:00Z", "This is possible. We can plan it.")],
+                6: [comment("me", "MEMBER", "2026-10-20T00:00:00Z", post("Which version?", "Waiting on: reporter · 2026-10-20"))]}
+    rows, res = triage(tmp, issues, comments, perms={"me": "write", "colleague": "write"})
+    want = {652: ("recheck", "owned", ["colleague"]), 294: ("working", "mine", ["me"]), 767: ("recheck", "mine", ["me"]),
+            1: ("new", "unowned", []), 5: ("working", "owned", ["colleague"]), 94: ("judge", "owned", ["colleague"]),
+            6: ("waiting", "others", ["me"])}
+    for n, (cls, group, owners) in want.items():
+        r = rows[n]
+        assert (r["class"], r["group"], r["owners"]) == (cls, group, owners), (n, r)
+    assert rows[652]["owner_via"] == {"colleague": ["assigned"]} and rows[5]["owner_via"] == {"colleague": ["state line"]}, rows
+    assert rows[294]["owner_via"] == {"me": ["assigned", "state line"]}, rows[294]
+    assert "for me: 2 mine, 1 unowned, 3 owned by others" in res.stdout, res.stdout
+
+    # The judge row that another person owns needs no judgment from me.
+    with open(os.path.join(tmp, "issue-triage", "judgment.json"), "w", encoding="utf-8") as f:
+        json.dump({}, f)
+    res = run("triage-report", "--work", tmp)
+    with open(os.path.join(tmp, "issue-triage", "triage.md"), encoding="utf-8") as f:
+        md = f.read()
+    heads = ["## My turn", "## Team turn, no owner", "## Team turn, another owner", "## Waiting for others"]
+    at = [md.index(h) for h in heads]
+    assert at == sorted(at), at
+
+    def section(n):
+        pos = md.index(f"| #{n} |")
+        return max((h for h in heads if md.index(h) < pos), key=md.index)
+
+    assert section(294) == section(767) == heads[0], md
+    assert section(1) == heads[1], md
+    assert section(652) == section(5) == section(94) == heads[2], md
+    assert section(6) == heads[3], md
+    assert "colleague (assigned)" in md and "colleague (state line)" in md and "me (assigned, state line)" in md, md
+    assert "for me: 2 mine, 1 with no owner, 3 owned by other team members, 1 wait for others" in md, md
+    return "assignee or last state line -> owner; mine, unowned, owned, others; owned judge needs no judgment"
+
+
+def f25_viewer_required(tmp):
+    """Without the login of the viewer, the triage cannot find my issues: exit 11. --me sets the login."""
+    _, res = triage(tmp, [issue(1, assignees=["colleague"])], viewer=None, check=False)
+    assert res.returncode == 11 and "--me" in res.stdout, (res.returncode, res.stdout)
+    rows, _ = triage(tmp, [issue(1, assignees=["colleague"])], viewer=None, me="colleague")
+    assert rows[1]["group"] == "mine", rows[1]
+    rows, _ = triage(tmp, [issue(1, assignees=["colleague"])], viewer="me", me="colleague")
+    assert rows[1]["group"] == "mine", rows[1]
+    for bad in ("", "a b", "me;rm", "-x"):
+        res = run("triage", "--fixture", os.path.join(tmp, "fixture.json"), "--work", tmp, "--me=" + bad, check=False)
+        assert res.returncode == 2, (bad, res.returncode)
+    return "no viewer -> exit 11; --me wins over the fixture; a bad login -> exit 2"
+
+
 def s1_explicit_invocation(tmp):
     """The agents start this skill only on the user's call: Claude Code and Codex settings (#854 follow-up)."""
     with open(os.path.join(SKILL, "SKILL.md"), encoding="utf-8") as f:
@@ -361,7 +432,8 @@ EVALS = [("F1-new", f1_new), ("F2-team-last", f2_team_last_without_state), ("F3-
          ("F13-working", f13_working_and_later_team_comment), ("F14-last-state", f14_last_state_counts),
          ("F15-footer", f15_footer_line), ("F16-append", f16_append), ("F17-count", f17_count), ("F18-report", f18_report),
          ("F20-crlf", f20_crlf), ("F21-graphql", f21_graphql_failure), ("F22-bot-state", f22_bot_state_line),
-         ("F23-judge-wait", f23_judge_cannot_wait), ("S1-explicit-invocation", s1_explicit_invocation)]
+         ("F23-judge-wait", f23_judge_cannot_wait), ("F24-owner-groups", f24_owner_groups),
+         ("F25-viewer", f25_viewer_required), ("S1-explicit-invocation", s1_explicit_invocation)]
 
 _gates = importlib.util.spec_from_file_location("gate_evals", os.path.join(os.path.dirname(os.path.abspath(__file__)), "gates.py"))
 _gate_evals = importlib.util.module_from_spec(_gates)

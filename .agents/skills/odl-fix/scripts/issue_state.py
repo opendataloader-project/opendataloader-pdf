@@ -6,17 +6,22 @@
       repository), or OWNER/REPO#N (an issue upstream). Only #N and OWNER/REPO#N can be combined.
       With --append, ends the draft FILE with the state line and the AI disclosure.
       Exit 2: an unknown WHO or date, or a FILE that already has a state line or the AI disclosure.
-  issue_state.py triage --repo OWNER/REPO --work WORK [--issues N,N]
-  issue_state.py triage --fixture DATA.json --work WORK [--issues N,N]
+  issue_state.py triage --repo OWNER/REPO --work WORK [--issues N,N] [--me LOGIN]
+  issue_state.py triage --fixture DATA.json --work WORK [--issues N,N] [--me LOGIN]
       Network (gh), read-only; or offline from a fixture with the same shapes (for the evals).
       Writes WORK/issue-triage/triage.json: for each open issue the facts and a class from them.
       A state line counts only if a person with write access wrote it, as the review-state footer
-      of odl-review. Exit 11: the list length is not GitHub's count of open issues.
+      of odl-review. The owners of an issue are its assignees and the author of its last counted
+      state line. The group says whose work it is for the viewer (--me, or the signed-in gh user):
+      mine (the team's turn, and the viewer is an owner), unowned (the team's turn, no owner),
+      owned (the team's turn, another person owns it), others (another person's turn).
+      Exit 11: the list length is not GitHub's count of open issues, or the viewer is unknown.
   issue_state.py triage-report --work WORK
       Local. Merges WORK/issue-triage/judgment.json (the agent's class for each issue that needs one)
-      and writes WORK/issue-triage/triage.md. Exit 12: the triage is incomplete, a judge row has no
-      judgment, a class is unknown, a changed class has no reason, or a judgment makes an issue that
-      waits for us wait for another person (post a comment with a state line for that).
+      and writes WORK/issue-triage/triage.md, one section for each group. Exit 12: the triage is
+      incomplete, a judge row that is not owned by another person has no judgment, a class is
+      unknown, a changed class has no reason, or a judgment makes an issue that waits for us wait
+      for another person (post a comment with a state line for that).
 """
 
 from __future__ import annotations
@@ -53,6 +58,14 @@ CLASSES = {
 }
 # A judgment cannot move these to another person's turn: a post with a state line does that
 FACT_TURN_US = {"new", "recheck", "judge", "decide", "working", "backlog", "stale"}
+# group: the heading of its section in the report. The order is the order of the report.
+GROUPS = {
+    "mine": ("My turn", "You own these: you are an assignee, or you wrote the last state line."),
+    "unowned": ("Team turn, no owner", "Nobody owns these. Anyone on the team can take one: assign yourself or post the claim."),
+    "owned": ("Team turn, another owner", "Another team member owns these. Do not take one without the owner."),
+    "others": ("Waiting for others", "None of these waits for the team."),
+}
+LOGIN = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})")
 
 
 # ---------------------------------------------------------------- common
@@ -183,6 +196,8 @@ def collect(a: argparse.Namespace) -> dict:
         with open(a.fixture, encoding="utf-8") as f:
             data = json.load(f)
         data.setdefault("missing", [])
+        if a.me:
+            data["viewer"] = a.me
         if a.issues:
             want = set(a.issues)
             data["missing"] += [{"number": n, "state": "not found"} for n in sorted(want - {i["number"] for i in data["issues"]})]
@@ -196,6 +211,7 @@ def collect(a: argparse.Namespace) -> dict:
     data = {"repo": repo, "listed": not a.issues, "issues": [], "missing": [], "comments": {}, "closing_prs": {},
             "mentioned_prs": {}, "permissions": {}, "refs": {},
             "fetched_at": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}
+    data["viewer"] = a.me or (gh(["api", "user", "--jq", ".login"], check=False) or "").strip() or None
     if a.issues:
         for n in a.issues:
             i = gh_json(["api", f"repos/{repo}/issues/{n}"], check=False)
@@ -233,6 +249,26 @@ def collect(a: argparse.Namespace) -> dict:
                     o, r, num = split_ref(ref, repo)
                     data["refs"][ref] = (gh(["api", f"repos/{o}/{r}/issues/{num}", "--jq", ".state"], check=False) or "").strip() or "unknown"
     return data
+
+
+def group_of(cls: str, owners: list[str], viewer) -> str:
+    """Whose work the issue is for the viewer. GitHub logins do not depend on case."""
+    if CLASSES[cls][0] == "other":
+        return "others"
+    if viewer and viewer.lower() in {o.lower() for o in owners}:
+        return "mine"
+    return "owned" if owners else "unowned"
+
+
+def owners_of(issue: dict, last) -> dict:
+    """{login: [why]}: the assignees, then the author of the last counted state line."""
+    via = {}
+    for u in issue.get("assignees") or []:
+        if (u or {}).get("login"):
+            via.setdefault(u["login"], []).append("assigned")
+    if last:
+        via.setdefault(last["by"], []).append("state line")
+    return via
 
 
 def triage_one(issue: dict, data: dict) -> dict:
@@ -293,11 +329,14 @@ def triage_one(issue: dict, data: dict) -> dict:
         cls = "judge"
         notes.append("the team answered, but no state line counts")
     times = [c.get("created_at") for c in comments if c.get("created_at")] + [issue.get("created_at") or ""]
+    via = owners_of(issue, last)
     return {"number": issue["number"], "title": issue.get("title") or "", "url": issue.get("html_url"),
             "author": user.get("login"), "author_kind": "bot" if is_bot(user) else "team" if team_issue else "external",
             "created": (issue.get("created_at") or "")[:10], "last_activity": max(times)[:10], "class": cls,
             "turn": CLASSES[cls][0], "waiting_on": waiting_on, "footer": last, "after": after,
-            "closing_prs": [p["number"] for p in prs], "mentioned_prs": mentioned, "notes": notes}
+            "closing_prs": [p["number"] for p in prs], "mentioned_prs": mentioned, "notes": notes,
+            "assignees": [u["login"] for u in issue.get("assignees") or [] if (u or {}).get("login")],
+            "owners": list(via), "owner_via": via, "group": group_of(cls, list(via), data.get("viewer"))}
 
 
 def cmd_triage(a: argparse.Namespace) -> int:
@@ -311,18 +350,26 @@ def cmd_triage(a: argparse.Namespace) -> int:
     if data.get("incomplete"):
         complete = False
         why.append("the pull request links of " + ", ".join(f"#{n}" for n in data["incomplete"]) + " could not be read (GraphQL)")
+    viewer = data.get("viewer")
+    if not viewer or not LOGIN.fullmatch(viewer):
+        complete = False
+        why.append("the login of the viewer is unknown, so the groups are not known: use --me LOGIN")
     out = os.path.join(a.work, "issue-triage")
     os.makedirs(out, exist_ok=True)
     result = {"repo": data.get("repo"), "fetched_at": data.get("fetched_at"), "complete": complete, "incomplete_reasons": why,
-              "listed": data.get("listed"), "total_count": data.get("total_count"), "missing": data.get("missing", []), "rows": rows}
+              "listed": data.get("listed"), "total_count": data.get("total_count"), "missing": data.get("missing", []),
+              "viewer": viewer, "rows": rows}
     with open(os.path.join(out, "triage.json"), "w", encoding="utf-8") as f:
         json.dump(result, f, indent=1)
-    counts = {}
+    counts, groups = {}, {}
     for r in rows:
         counts[r["class"]] = counts.get(r["class"], 0) + 1
+        groups[r["group"]] = groups.get(r["group"], 0) + 1
     print(os.path.join(out, "triage.json"))
     print(f"{len(rows)} issues: " + ", ".join(f"{counts[k]} {k}" for k in CLASSES if k in counts)
           + (f"; not open or not found: {', '.join(str(m['number']) for m in result['missing'])}" if result["missing"] else ""))
+    print(f"for {viewer or '(unknown)'}: {groups.get('mine', 0)} mine, {groups.get('unowned', 0)} unowned, "
+          f"{groups.get('owned', 0)} owned by others, {groups.get('others', 0)} wait for others")
     if not complete:
         print("incomplete: " + "; ".join(why))
         return 11
@@ -354,10 +401,11 @@ def cmd_report(a: argparse.Namespace) -> int:
         if key not in rows:
             errors.append(f"#{key}: not in the triage")
     final = []
+    viewer = tri.get("viewer")
     for key, r in rows.items():
         j = judgment.get(key) or {}
         cls, reason = j.get("class") or r["class"], (j.get("reason") or "").strip()
-        if r["class"] == "judge" and not j:
+        if r["class"] == "judge" and not j and r.get("group") != "owned":
             errors.append(f"#{key}: judge needs a judgment (class and reason)")
         elif cls not in CLASSES or cls == "judge" and j:
             errors.append(f"#{key}: unknown class {cls!r}")
@@ -365,26 +413,38 @@ def cmd_report(a: argparse.Namespace) -> int:
             errors.append(f"#{key}: a changed class needs a reason")
         elif r["class"] in FACT_TURN_US and CLASSES[cls][0] == "other":
             errors.append(f"#{key}: {r['class']} waits for us; to make it wait, post a comment with a state line")
-        final.append({**r, "final": cls, "reason": reason})
+        owners = r.get("owners") or []
+        group = group_of(cls, owners, viewer) if cls in CLASSES else r.get("group")  # an unknown class is an error above
+        final.append({**r, "final": cls, "reason": reason, "final_group": group})
     if errors:
         for e in errors:
             print(f"error: {e}")
         return 12
-    final.sort(key=lambda r: (list(CLASSES).index(r["final"]), r["created"], r["number"]))
-    us = [r for r in final if CLASSES[r["final"]][0] == "us"]
+    final.sort(key=lambda r: (list(GROUPS).index(r["final_group"]), list(CLASSES).index(r["final"]), r["created"], r["number"]))
+    n = {g: sum(1 for r in final if r["final_group"] == g) for g in GROUPS}
     lines = [f"# Issue triage: {tri.get('repo')}", "",
-             f"Fetched {tri.get('fetched_at')}. {len(final)} open issues: {len(us)} wait for us, {len(final) - len(us)} wait for others.", "",
-             "| Issue | Title | Class | Turn | Waiting on | Last state | Next | Notes |",
-             "|:--|:--|:--|:--|:--|:--|:--|:--|"]
-    for r in final:
-        f = r.get("footer")
-        state = f"{f['state']} ({f['at'][:10]}, {f['by']})" if f else "none"
-        cls = r["final"] if r["final"] == r["class"] else f"{r['final']} (fact: {r['class']})"
-        notes = ([r["reason"]] if r["reason"] else []) + r["notes"]
-        if r["class"] == "judge":
-            notes.append("no state line: add one with the next post")
-        lines.append(f"| #{r['number']} | {cell(r['title'])} | {cls} | {CLASSES[r['final']][0]} | {cell(', '.join(r['waiting_on']), 40)} "
-                     f"| {cell(state, 40)} | {cell(CLASSES[r['final']][1], 60)} | {cell('; '.join(notes), 120)} |")
+             f"Fetched {tri.get('fetched_at')}. {len(final)} open issues; for {viewer}: {n['mine']} mine, {n['unowned']} with no owner, "
+             f"{n['owned']} owned by other team members, {n['others']} wait for others.",
+             "", "Owners: the assignees, and the author of the last counted state line."]
+    for g, (head, text) in GROUPS.items():
+        lines += ["", f"## {head} ({n[g]})", "", text, ""]
+        rows_g = [r for r in final if r["final_group"] == g]
+        if not rows_g:
+            lines.append("None.")
+            continue
+        lines += ["| Issue | Title | Owner | Class | Waiting on | Last state | Next | Notes |",
+                  "|:--|:--|:--|:--|:--|:--|:--|:--|"]
+        for r in rows_g:
+            f = r.get("footer")
+            state = f"{f['state']} ({f['at'][:10]}, {f['by']})" if f else "none"
+            cls = r["final"] if r["final"] == r["class"] else f"{r['final']} (fact: {r['class']})"
+            via = r.get("owner_via") or {}
+            owner = "; ".join(f"{o} ({', '.join(via.get(o) or [])})" for o in r.get("owners") or []) or "none"
+            notes = ([r["reason"]] if r["reason"] else []) + r["notes"]
+            if r["class"] == "judge":
+                notes.append("no state line: add one with the next post")
+            lines.append(f"| #{r['number']} | {cell(r['title'])} | {cell(owner, 60)} | {cls} | {cell(', '.join(r['waiting_on']), 40)} "
+                         f"| {cell(state, 40)} | {cell(CLASSES[r['final']][1], 60)} | {cell('; '.join(notes), 120)} |")
     with open(os.path.join(out, "triage.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
     print(os.path.join(out, "triage.md"))
@@ -398,6 +458,12 @@ def numbers(text: str) -> list[int]:
     if not re.fullmatch(r"[0-9]+(,[0-9]+)*", text or ""):
         raise argparse.ArgumentTypeError("use N,N")
     return [int(x) for x in text.split(",")]
+
+
+def login(text: str) -> str:
+    if not LOGIN.fullmatch(text or ""):
+        raise argparse.ArgumentTypeError("use a GitHub login")
+    return text
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -414,6 +480,7 @@ def main(argv: list[str] | None = None) -> int:
     t.add_argument("--fixture")
     t.add_argument("--work", required=True)
     t.add_argument("--issues", type=numbers)
+    t.add_argument("--me", type=login, help="the viewer's GitHub login; default: the signed-in gh user")
     r = sub.add_parser("triage-report")
     r.add_argument("--work", required=True)
     a = ap.parse_args(argv)
