@@ -16,11 +16,14 @@
 package org.opendataloader.pdf.processors.readingorder;
 
 import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
+import java.util.OptionalDouble;
 
 /**
  * XY-Cut++ algorithm for reading order detection based on arXiv:2504.10258.
@@ -66,6 +69,14 @@ public class XYCutPlusPlusSorter {
      *  Elements narrower than this fraction of the region width are considered
      *  potential outliers that may bridge column gaps (e.g., page numbers, footnote markers). */
     static final double NARROW_ELEMENT_WIDTH_RATIO = 0.1;
+
+    /** Rounding tolerance for the edges of the gutter, which are computed from the cut position and gap. */
+    private static final double GUTTER_EDGE_TOLERANCE = 1e-6;
+
+    /** Sort by topY descending (PDF: top to bottom), then by bottomY descending. */
+    private static final Comparator<IObject> TOP_TO_BOTTOM = Comparator
+            .comparingDouble((IObject o) -> -o.getBoundingBox().getTopY())
+            .thenComparingDouble(o -> -o.getBoundingBox().getBottomY());
 
     private XYCutPlusPlusSorter() {
         // Utility class - prevent instantiation
@@ -346,8 +357,17 @@ public class XYCutPlusPlusSorter {
         if (hasValidHorizontalCut && hasValidVerticalCut) {
             // Both cuts available - prefer larger gap
             useHorizontalCut = horizontalCut.gap > verticalCut.gap;
+            if (useHorizontalCut) {
+                CutInfo gutter = findColumnGutter(objects);
+                Optional<CutInfo> cutOutsideColumns = findHorizontalCutOutsideColumns(objects, horizontalCut, gutter);
+                if (!cutOutsideColumns.isPresent()) {
+                    return segmentColumnsFirst(objects, gutter, preferHorizontalFirst);
+                }
+                horizontalCut = cutOutsideColumns.get();
+            }
         } else if (hasValidHorizontalCut) {
             useHorizontalCut = true;
+            horizontalCut = findCutThatUncoversColumns(objects, horizontalCut);
         } else if (hasValidVerticalCut) {
             useHorizontalCut = false;
         } else {
@@ -373,6 +393,224 @@ public class XYCutPlusPlusSorter {
     }
 
     /**
+     * Find the gutter between two columns: the largest vertical gap between the elements that
+     * are not narrow. A narrow element, for example a page number, can be in the gutter.
+     */
+    private static CutInfo findColumnGutter(List<IObject> objects) {
+        List<IObject> wide = withoutNarrowElements(objects);
+        return wide.size() >= 2 ? findVerticalCutByEdges(wide) : new CutInfo(0, 0);
+    }
+
+    /**
+     * Find a horizontal cut that is not a gap inside one column of a two-column region (issue #294).
+     *
+     * @param objects       List of objects in the region
+     * @param horizontalCut The largest horizontal gap
+     * @param gutter        The gutter between the columns
+     * @return horizontalCut; or, if it is inside the longer column, the largest gap above the end of
+     *         the shorter column that is wider than the gutter; or empty if the columns must be cut first
+     */
+    private static Optional<CutInfo> findHorizontalCutOutsideColumns(List<IObject> objects, CutInfo horizontalCut,
+                                                                     CutInfo gutter) {
+        OptionalDouble shorterColumnEnd = findShorterColumnEndIfGapInsideColumn(objects, horizontalCut, gutter);
+        if (!shorterColumnEnd.isPresent()) {
+            return Optional.of(horizontalCut);
+        }
+        CutInfo sectionCut = largestGap(findHorizontalGaps(objects), shorterColumnEnd.getAsDouble());
+        if (sectionCut.gap >= MIN_GAP_THRESHOLD && sectionCut.gap > gutter.gap) {
+            return Optional.of(sectionCut);
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Check if the horizontal gap is a gap inside the longer column of a two-column region.
+     * <p>
+     * The shorter column ends above the gap, and the longer column has content above the gap and
+     * an element that is not narrow below it. The gap then goes across the region only because the
+     * shorter column has ended.
+     * Find the first gap of the longer column below the end of the shorter column that is at
+     * least as wide as the gutter. If the longer column continues below the end of the shorter
+     * column by at least that gap, the longer column continues there. If not, the columns end
+     * almost at the same level, and the gap separates the content below them.
+     *
+     * @return The lowest bottom of the shorter column, or empty if the gap is not inside the longer column
+     */
+    private static OptionalDouble findShorterColumnEndIfGapInsideColumn(List<IObject> objects,
+                                                                        CutInfo horizontalCut,
+                                                                        CutInfo gutter) {
+        if (gutter.gap < MIN_GAP_THRESHOLD) {
+            return OptionalDouble.empty();
+        }
+        List<IObject> left = new ArrayList<>();
+        List<IObject> right = new ArrayList<>();
+        for (IObject obj : objects) {
+            if (isLeftOfGutter(obj, gutter)) {
+                left.add(obj);
+            } else if (isRightOfGutter(obj, gutter)) {
+                right.add(obj);
+            }
+        }
+        if (left.isEmpty() || right.isEmpty()) {
+            return OptionalDouble.empty();
+        }
+        BoundingBox leftRegion = calculateBoundingRegion(left);
+        BoundingBox rightRegion = calculateBoundingRegion(right);
+        boolean leftIsLonger = leftRegion.getBottomY() < rightRegion.getBottomY();
+        List<IObject> longerColumn = leftIsLonger ? left : right;
+        BoundingBox longerRegion = leftIsLonger ? leftRegion : rightRegion;
+        double shorterColumnEnd = (leftIsLonger ? rightRegion : leftRegion).getBottomY();
+        double cutY = horizontalCut.position;
+        if (shorterColumnEnd < cutY || longerRegion.getTopY() < cutY || !hasWideElementBelow(longerColumn, cutY,
+                calculateBoundingRegion(objects).getWidth() * NARROW_ELEMENT_WIDTH_RATIO)) {
+            return OptionalDouble.empty();
+        }
+        for (CutInfo gap : findHorizontalGaps(longerColumn)) {
+            if (gap.start() < shorterColumnEnd && gap.gap >= gutter.gap) {
+                double continuationBelowShorterEnd = shorterColumnEnd - gap.end();
+                return continuationBelowShorterEnd >= gap.gap
+                        ? OptionalDouble.of(shorterColumnEnd) : OptionalDouble.empty();
+            }
+        }
+        return OptionalDouble.empty();
+    }
+
+    /**
+     * Check if an element below cutY is at least minWidth wide. A narrow element below the gap,
+     * for example a page number, does not continue a column.
+     */
+    private static boolean hasWideElementBelow(List<IObject> objects, double cutY, double minWidth) {
+        for (IObject obj : objects) {
+            if (obj.getCenterY() <= cutY && obj.getBoundingBox().getWidth() >= minWidth) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Find the horizontal cut when no vertical cut is valid (issue #294).
+     * <p>
+     * Line art across the top or the bottom of the region, for example a rule below the page
+     * header or a box around the page footer, can bridge the gutter of a two-column body. Then no
+     * vertical cut is valid, and the largest gap can be a gap inside one column. If the elements
+     * above the first gap, below the last gap, or both, are line art (and elements in its box)
+     * that lies across the gutter of the other elements, cut at that gap first, so that the body
+     * can be cut into its columns.
+     *
+     * @param objects    List of objects in the region
+     * @param largestCut The largest horizontal gap
+     * @return The first or the last gap of the region, or largestCut
+     */
+    private static CutInfo findCutThatUncoversColumns(List<IObject> objects, CutInfo largestCut) {
+        List<CutInfo> validGaps = new ArrayList<>();
+        for (CutInfo gap : findHorizontalGaps(objects)) {
+            if (gap.gap >= MIN_GAP_THRESHOLD) {
+                validGaps.add(gap);
+            }
+        }
+        if (validGaps.size() < 2) {
+            return largestCut;
+        }
+        CutInfo firstGap = validGaps.get(0);
+        CutInfo lastGap = validGaps.get(validGaps.size() - 1);
+        List<IObject> top = new ArrayList<>();
+        List<IObject> bottom = new ArrayList<>();
+        List<IObject> middle = new ArrayList<>();
+        for (IObject obj : objects) {
+            // Use center Y, as splitByHorizontalCut does
+            if (obj.getCenterY() > firstGap.position) {
+                top.add(obj);
+            } else if (obj.getCenterY() <= lastGap.position) {
+                bottom.add(obj);
+            } else {
+                middle.add(obj);
+            }
+        }
+        if (liesAcrossGutterOfOthers(top, concat(middle, bottom))) {
+            return firstGap;
+        }
+        if (liesAcrossGutterOfOthers(bottom, concat(top, middle))) {
+            return lastGap;
+        }
+        return liesAcrossGutterOfOthers(concat(top, bottom), middle) ? firstGap : largestCut;
+    }
+
+    /**
+     * Check if the band is line art and elements in its box, the others have a valid vertical cut,
+     * and each element of the band lies across that cut.
+     */
+    private static boolean liesAcrossGutterOfOthers(List<IObject> band, List<IObject> others) {
+        if (band.isEmpty() || others.size() < 2 || !isLineArtWithContents(band)) {
+            return false;
+        }
+        CutInfo gutter = findBestVerticalCutWithProjection(others);
+        if (gutter.gap < MIN_GAP_THRESHOLD) {
+            return false;
+        }
+        for (IObject obj : band) {
+            if (obj.getRightX() <= gutter.start() || obj.getLeftX() >= gutter.end()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean isLineArtWithContents(List<IObject> band) {
+        for (IObject obj : band) {
+            if (!(obj instanceof LineArtChunk) && !isInsideLineArt(obj, band)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean isInsideLineArt(IObject obj, List<IObject> band) {
+        for (IObject other : band) {
+            if (other instanceof LineArtChunk && other.getLeftX() <= obj.getLeftX()
+                    && other.getRightX() >= obj.getRightX() && other.getBottomY() <= obj.getBottomY()
+                    && other.getTopY() >= obj.getTopY()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static List<IObject> concat(List<IObject> first, List<IObject> second) {
+        List<IObject> result = new ArrayList<>(first);
+        result.addAll(second);
+        return result;
+    }
+
+    /**
+     * Sort the two columns one after the other. Elements in the gutter (for example a page
+     * number) are put back by their Y position, as cross-layout elements are.
+     */
+    private static List<IObject> segmentColumnsFirst(List<IObject> objects, CutInfo gutter,
+                                                     boolean preferHorizontalFirst) {
+        List<IObject> columns = new ArrayList<>();
+        List<IObject> inGutter = new ArrayList<>();
+        for (IObject obj : objects) {
+            if (isLeftOfGutter(obj, gutter) || isRightOfGutter(obj, gutter)) {
+                columns.add(obj);
+            } else {
+                inGutter.add(obj);
+            }
+        }
+        List<IObject> sortedColumns = flatMapRecursive(
+                splitByVerticalCut(columns, gutter.position), preferHorizontalFirst);
+        return mergeCrossLayoutElements(sortedColumns, inGutter);
+    }
+
+    private static boolean isLeftOfGutter(IObject obj, CutInfo gutter) {
+        return obj.getRightX() <= gutter.start() + GUTTER_EDGE_TOLERANCE;
+    }
+
+    private static boolean isRightOfGutter(IObject obj, CutInfo gutter) {
+        return obj.getLeftX() >= gutter.end() - GUTTER_EDGE_TOLERANCE;
+    }
+
+    /**
      * Container for cut information including position and gap size.
      */
     private static class CutInfo {
@@ -382,6 +620,16 @@ public class XYCutPlusPlusSorter {
         CutInfo(double position, double gap) {
             this.position = position;
             this.gap = gap;
+        }
+
+        /** The lower edge of the gap: its left edge (vertical gap) or its bottom (horizontal gap). */
+        double start() {
+            return position - gap / 2.0;
+        }
+
+        /** The upper edge of the gap: its right edge (vertical gap) or its top (horizontal gap). */
+        double end() {
+            return position + gap / 2.0;
         }
     }
 
@@ -419,28 +667,34 @@ public class XYCutPlusPlusSorter {
         // footnote markers) may bridge an otherwise clear column gap.
         // Retry without elements narrower than 10% of the region width.
         if (objects.size() >= 3) {
-            BoundingBox region = calculateBoundingRegion(objects);
-            if (region != null) {
-                double regionWidth = region.getWidth();
-                double narrowThreshold = regionWidth * NARROW_ELEMENT_WIDTH_RATIO;
-                List<IObject> filtered = new ArrayList<>();
-                for (IObject obj : objects) {
-                    BoundingBox bbox = obj.getBoundingBox();
-                    double width = bbox.getWidth();
-                    if (width >= narrowThreshold) {
-                        filtered.add(obj);
-                    }
-                }
-                if (filtered.size() >= 2 && filtered.size() < objects.size()) {
-                    CutInfo filteredCut = findVerticalCutByEdges(filtered);
-                    if (filteredCut.gap > edgeCut.gap && filteredCut.gap >= MIN_GAP_THRESHOLD) {
-                        return filteredCut;
-                    }
+            List<IObject> filtered = withoutNarrowElements(objects);
+            if (filtered.size() >= 2 && filtered.size() < objects.size()) {
+                CutInfo filteredCut = findVerticalCutByEdges(filtered);
+                if (filteredCut.gap > edgeCut.gap && filteredCut.gap >= MIN_GAP_THRESHOLD) {
+                    return filteredCut;
                 }
             }
         }
 
         return edgeCut;
+    }
+
+    /**
+     * Remove the elements that are narrower than NARROW_ELEMENT_WIDTH_RATIO of the region width.
+     */
+    private static List<IObject> withoutNarrowElements(List<IObject> objects) {
+        BoundingBox region = calculateBoundingRegion(objects);
+        if (region == null) {
+            return new ArrayList<>(objects);
+        }
+        double narrowThreshold = region.getWidth() * NARROW_ELEMENT_WIDTH_RATIO;
+        List<IObject> filtered = new ArrayList<>();
+        for (IObject obj : objects) {
+            if (obj.getBoundingBox().getWidth() >= narrowThreshold) {
+                filtered.add(obj);
+            }
+        }
+        return filtered;
     }
 
     /**
@@ -485,14 +739,17 @@ public class XYCutPlusPlusSorter {
         if (objects.size() < 2) {
             return new CutInfo(0, 0);
         }
+        return largestGap(findHorizontalGaps(objects), Double.NEGATIVE_INFINITY);
+    }
 
-        // Sort by topY descending (PDF: top to bottom)
+    /**
+     * Find the gaps in the projection of the objects onto the Y-axis, from top to bottom.
+     */
+    private static List<CutInfo> findHorizontalGaps(List<IObject> objects) {
         List<IObject> sorted = new ArrayList<>(objects);
-        sorted.sort(Comparator.comparingDouble((IObject o) -> -o.getBoundingBox().getTopY())
-                .thenComparingDouble(o -> -o.getBoundingBox().getBottomY()));
+        sorted.sort(TOP_TO_BOTTOM);
 
-        double largestGap = 0;
-        double cutPosition = 0;
+        List<CutInfo> gaps = new ArrayList<>();
         Double prevBottom = null;
 
         for (IObject obj : sorted) {
@@ -500,17 +757,28 @@ public class XYCutPlusPlusSorter {
             double bottom = obj.getBottomY();
 
             if (prevBottom != null && prevBottom > top) {
-                double gap = prevBottom - top;
-                if (gap > largestGap) {
-                    largestGap = gap;
-                    cutPosition = (prevBottom + top) / 2.0;
-                }
+                gaps.add(new CutInfo((prevBottom + top) / 2.0, prevBottom - top));
             }
 
             prevBottom = (prevBottom == null) ? bottom : Math.min(prevBottom, bottom);
         }
 
-        return new CutInfo(cutPosition, largestGap);
+        return gaps;
+    }
+
+    /**
+     * Find the largest gap whose lower edge is at or above lowestStart. Of equal gaps, the highest one.
+     *
+     * @return CutInfo of the gap, or a gap of 0 if there is no such gap
+     */
+    private static CutInfo largestGap(List<CutInfo> gaps, double lowestStart) {
+        CutInfo largest = new CutInfo(0, 0);
+        for (CutInfo gap : gaps) {
+            if (gap.gap > largest.gap && gap.start() >= lowestStart) {
+                largest = gap;
+            }
+        }
+        return largest;
     }
 
     /**
