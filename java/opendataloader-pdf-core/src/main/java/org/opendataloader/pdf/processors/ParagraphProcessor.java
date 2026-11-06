@@ -502,7 +502,33 @@ public class ParagraphProcessor {
         if (!CaptionUtils.areOverlapping(previousBlock.getLastLine(), nextBlock.getFirstLine().getBoundingBox())) {
             return false;
         }
+        if (isHeavierLine(previousBlock.getLastLine(), nextBlock.getFirstLine())) {
+            return false;
+        }
         return true;
+    }
+
+    /**
+     * Whether each word of the line is in a heavier font than each word of the other line, for example a bold heading
+     * above a regular text. A line that only starts with a bold word is not heavier.
+     */
+    private static boolean isHeavierLine(TextLine line, TextLine otherLine) {
+        double lightest = Double.POSITIVE_INFINITY;
+        for (TextChunk chunk : line.getTextChunks()) {
+            if (!chunk.isWhiteSpaceChunk() && !chunk.isEmpty()) {
+                lightest = Math.min(lightest, chunk.getFontWeight());
+            }
+        }
+        double heaviest = Double.NEGATIVE_INFINITY;
+        for (TextChunk chunk : otherLine.getTextChunks()) {
+            if (!chunk.isWhiteSpaceChunk() && !chunk.isEmpty()) {
+                heaviest = Math.max(heaviest, chunk.getFontWeight());
+            }
+        }
+        if (lightest == Double.POSITIVE_INFINITY || heaviest == Double.NEGATIVE_INFINITY) {
+            return false;
+        }
+        return lightest > heaviest && !NodeUtils.areCloseNumbers(lightest, heaviest, 1e-1);
     }
 
     private static List<TextBlock> detectTwoLinesParagraphs(List<TextBlock> textBlocks) {
