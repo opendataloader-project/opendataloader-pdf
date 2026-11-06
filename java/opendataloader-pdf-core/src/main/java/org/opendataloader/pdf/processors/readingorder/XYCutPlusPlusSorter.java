@@ -19,6 +19,7 @@ import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
+import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 
 import java.util.ArrayList;
@@ -126,14 +127,36 @@ public class XYCutPlusPlusSorter {
             return validObjects;
         }
 
-        // Phase 1: Pre-mask cross-layout elements. A page header or footer is a cross-layout element too: it keeps
-        // its place at the top or the bottom of the page, and it does not hide the gutter between the columns (#396).
-        List<IObject> crossLayoutElements = identifyCrossLayoutElements(validObjects, beta);
+        // Page headers come first and page footers last. They do not take part in the cuts of the page body: a
+        // header or a footer across the gutter would hide the gutter between the columns (#396).
+        List<IObject> headers = new ArrayList<>();
+        List<IObject> footers = new ArrayList<>();
+        List<IObject> body = new ArrayList<>();
         for (IObject obj : validObjects) {
-            if (obj instanceof SemanticHeaderOrFooter && !crossLayoutElements.contains(obj)) {
-                crossLayoutElements.add(obj);
+            if (obj instanceof SemanticHeaderOrFooter) {
+                boolean footer = ((SemanticHeaderOrFooter) obj).getSemanticType() == SemanticType.FOOTER;
+                (footer ? footers : headers).add(obj);
+            } else {
+                body.add(obj);
             }
         }
+        if (headers.isEmpty() && footers.isEmpty()) {
+            return sortBody(validObjects, beta, densityThreshold);
+        }
+        List<IObject> result = sortByYThenX(headers);
+        result.addAll(sortBody(body, beta, densityThreshold));
+        result.addAll(sortByYThenX(footers));
+        return result;
+    }
+
+    /** Sort the objects of the page body, which are not null and have a bounding box. */
+    private static List<IObject> sortBody(List<IObject> validObjects, double beta, double densityThreshold) {
+        if (validObjects.size() <= 1) {
+            return new ArrayList<>(validObjects);
+        }
+
+        // Phase 1: Pre-mask cross-layout elements
+        List<IObject> crossLayoutElements = identifyCrossLayoutElements(validObjects, beta);
         List<IObject> remainingObjects = new ArrayList<>(validObjects);
         remainingObjects.removeAll(crossLayoutElements);
 
@@ -412,33 +435,42 @@ public class XYCutPlusPlusSorter {
      * the columns go on below the gap, and the columns are cut first, also if the gap is larger than the gutter.
      * <p>
      * Each side of the vertical cut has content directly above and below the gap: on each side, the gap between the
-     * elements above and the elements below is at most {@link #MAX_GAP_BETWEEN_PARAGRAPHS} font sizes of the text.
-     * If one side has no content at the gap, or a larger gap, as above a section that starts below both columns, the
+     * elements above and the elements below is at most {@link #MAX_GAP_BETWEEN_PARAGRAPHS} font sizes of the text
+     * at the gap. The font size is the smallest font size of the text elements directly above and below the gap. If
+     * one side has no content at the gap, or a larger gap, as above a section that starts below both columns, the
      * gap is not only between paragraphs.
      */
     private static boolean isGapBetweenParagraphsOfColumns(List<IObject> objects, CutInfo verticalCut,
                                                            CutInfo horizontalCut) {
-        double[] lowestBottomAbove = {Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY};
-        double[] highestTopBelow = {Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY};
-        List<Double> fontSizes = new ArrayList<>();
+        IObject[] lowestAbove = new IObject[2];
+        IObject[] highestBelow = new IObject[2];
         for (IObject obj : objects) {
             int side = obj.getCenterX() < verticalCut.position ? 0 : 1;
             if (obj.getCenterY() > horizontalCut.position) {
-                lowestBottomAbove[side] = Math.min(lowestBottomAbove[side], obj.getBottomY());
-            } else {
-                highestTopBelow[side] = Math.max(highestTopBelow[side], obj.getTopY());
-            }
-            if (obj instanceof SemanticTextNode) {
-                fontSizes.add(((SemanticTextNode) obj).getFontSize());
+                if (lowestAbove[side] == null || obj.getBottomY() < lowestAbove[side].getBottomY()) {
+                    lowestAbove[side] = obj;
+                }
+            } else if (highestBelow[side] == null || obj.getTopY() > highestBelow[side].getTopY()) {
+                highestBelow[side] = obj;
             }
         }
-        if (fontSizes.isEmpty()) {
+        double fontSize = Double.POSITIVE_INFINITY;
+        for (int side = 0; side < 2; side++) {
+            if (lowestAbove[side] == null || highestBelow[side] == null) {
+                return false;
+            }
+            for (IObject obj : new IObject[] {lowestAbove[side], highestBelow[side]}) {
+                if (obj instanceof SemanticTextNode) {
+                    fontSize = Math.min(fontSize, ((SemanticTextNode) obj).getFontSize());
+                }
+            }
+        }
+        if (fontSize == Double.POSITIVE_INFINITY) {
             return false;
         }
-        fontSizes.sort(Double::compare);
-        double maxGap = MAX_GAP_BETWEEN_PARAGRAPHS * fontSizes.get(fontSizes.size() / 2);
+        double maxGap = MAX_GAP_BETWEEN_PARAGRAPHS * fontSize;
         for (int side = 0; side < 2; side++) {
-            if (lowestBottomAbove[side] - highestTopBelow[side] > maxGap) {
+            if (lowestAbove[side].getBottomY() - highestBelow[side].getTopY() > maxGap) {
                 return false;
             }
         }
