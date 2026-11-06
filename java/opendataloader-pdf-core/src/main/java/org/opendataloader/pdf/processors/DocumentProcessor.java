@@ -852,7 +852,7 @@ public class DocumentProcessor {
 
     public static void preprocessing(String pdfName, Config config) throws IOException {
         LOGGER.log(Level.INFO, () -> "File name: " + pdfName);
-        // Validate the path syntax and extension first (cheap, no I/O); existence
+        // Validate the path syntax first (cheap, no I/O); existence
         // and content are then checked just-in-time by validatePdfMagicNumber to
         // avoid a time-of-check/time-of-use race.
         validateInputPath(pdfName);
@@ -916,8 +916,13 @@ public class DocumentProcessor {
 
     /**
      * Validates the input path before any file content is read: rejects a
-     * {@code null}/blank path, a syntactically invalid path, and a name that
-     * does not end in {@code .pdf} (case-insensitive).
+     * {@code null}/blank path and a syntactically invalid path.
+     *
+     * <p>The file name is not checked. A caller may keep a PDF under any name,
+     * such as a generated one without an extension, so whether the input is a
+     * PDF is decided by its content in {@link #validatePdfMagicNumber(String)}.
+     * Choosing files by extension belongs to whoever chooses them, as the CLI
+     * does when it scans a folder.
      *
      * <p>Existence, regular-file and readability are intentionally <em>not</em>
      * checked here — those are surfaced just-in-time by
@@ -931,25 +936,18 @@ public class DocumentProcessor {
      * already does for content-validity failures.
      *
      * @param pdfName the path to the input file
-     * @throws InvalidPdfFileException if the path is null/blank, syntactically
-     *         invalid, or does not have a {@code .pdf} extension
+     * @throws InvalidPdfFileException if the path is null/blank or syntactically
+     *         invalid
      */
     private static void validateInputPath(String pdfName) throws InvalidPdfFileException {
         if (pdfName == null || pdfName.isBlank()) {
             throw new InvalidPdfFileException("Input PDF path is null or blank.");
         }
-        Path path;
         try {
-            path = Path.of(pdfName);
+            Path.of(pdfName);
         } catch (InvalidPathException cause) {
             throw new InvalidPdfFileException(
                 "'" + pdfName + "' is not a valid file path.", cause);
-        }
-        Path fileName = path.getFileName();
-        String name = fileName != null ? fileName.toString() : pdfName;
-        if (!name.toLowerCase(Locale.ROOT).endsWith(".pdf")) {
-            throw new InvalidPdfFileException(
-                "'" + displayName(pdfName) + "' is not a PDF file (expected a .pdf extension).");
         }
     }
 

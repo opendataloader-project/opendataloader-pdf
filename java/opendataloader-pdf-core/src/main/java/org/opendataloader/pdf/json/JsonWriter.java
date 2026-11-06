@@ -33,6 +33,7 @@ import org.verapdf.pd.PDDocument;
 import org.verapdf.tools.StaticResources;
 import org.opendataloader.pdf.hybrid.ElementMetadata;
 import org.opendataloader.pdf.json.serializers.SerializerUtil;
+import org.opendataloader.pdf.utils.FileUtils;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter;
 import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
@@ -96,7 +97,7 @@ public class JsonWriter {
                                    Map<String, Object> hybridInfo,
                                    boolean includeHeaderFooter) throws IOException {
         StaticLayoutContainers.resetImageIndex();
-        String jsonFileName = outputFolder + File.separator + inputPDF.getName().substring(0, inputPDF.getName().length() - 3) + "json";
+        String jsonFileName = outputFolder + File.separator + FileUtils.getBaseName(inputPDF.getName()) + ".json";
         try (JsonGenerator jsonGenerator = getJsonGenerator(jsonFileName)) {
             jsonGenerator.writeStartObject();
             writeDocumentInfo(jsonGenerator, inputPDF.getName());

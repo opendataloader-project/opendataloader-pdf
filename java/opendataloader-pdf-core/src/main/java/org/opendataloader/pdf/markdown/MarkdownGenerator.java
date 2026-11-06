@@ -22,6 +22,7 @@ import org.opendataloader.pdf.entities.EnrichedImageChunk;
 import org.opendataloader.pdf.entities.SemanticPicture;
 import org.opendataloader.pdf.utils.Base64ImageUtils;
 import org.opendataloader.pdf.utils.ContentSanitizer;
+import org.opendataloader.pdf.utils.FileUtils;
 import org.opendataloader.pdf.utils.GeneratorUtils;
 import org.opendataloader.pdf.utils.ImagesUtils;
 import org.opendataloader.pdf.utils.OutputType;
@@ -122,7 +123,7 @@ public class MarkdownGenerator implements Closeable {
 
     MarkdownGenerator(File inputPdf, Config config) throws IOException {
         String cutPdfFileName = inputPdf.getName();
-        this.markdownFileName = config.getOutputFolder() + File.separator + cutPdfFileName.substring(0, cutPdfFileName.length() - 3) + "md";
+        this.markdownFileName = config.getOutputFolder() + File.separator + FileUtils.getBaseName(cutPdfFileName) + ".md";
         this.indentingWriter = new IndentingWriter(new FileWriter(markdownFileName, StandardCharsets.UTF_8));
         this.markdownWriter = indentingWriter;
         this.isImageSupported = !config.isImageOutputOff() && config.isGenerateMarkdown();

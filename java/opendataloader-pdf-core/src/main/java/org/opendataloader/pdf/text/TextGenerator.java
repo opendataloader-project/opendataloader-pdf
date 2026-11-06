@@ -16,6 +16,7 @@
 package org.opendataloader.pdf.text;
 
 import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.utils.FileUtils;
 import org.verapdf.wcag.algorithms.entities.*;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
 import org.verapdf.wcag.algorithms.entities.lists.PDFList;
@@ -60,7 +61,7 @@ public class TextGenerator implements Closeable {
 
     public TextGenerator(File inputPdf, Config config) throws IOException {
         String cutPdfFileName = inputPdf.getName();
-        this.textFileName = config.getOutputFolder() + File.separator + cutPdfFileName.substring(0, cutPdfFileName.length() - 3) + "txt";
+        this.textFileName = config.getOutputFolder() + File.separator + FileUtils.getBaseName(cutPdfFileName) + ".txt";
         this.textWriter = new FileWriter(textFileName, StandardCharsets.UTF_8);
         this.textPageSeparator = config.getTextPageSeparator();
         this.selectedPageNumbers = new HashSet<>(config.getPageNumbers());

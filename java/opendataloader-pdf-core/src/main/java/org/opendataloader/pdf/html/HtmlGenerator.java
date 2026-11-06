@@ -22,6 +22,7 @@ import org.opendataloader.pdf.entities.EnrichedImageChunk;
 import org.opendataloader.pdf.entities.SemanticPicture;
 import org.opendataloader.pdf.markdown.MarkdownSyntax;
 import org.opendataloader.pdf.utils.Base64ImageUtils;
+import org.opendataloader.pdf.utils.FileUtils;
 import org.opendataloader.pdf.utils.GeneratorUtils;
 import org.opendataloader.pdf.utils.ImagesUtils;
 import org.opendataloader.pdf.utils.OutputType;
@@ -108,7 +109,7 @@ public class HtmlGenerator implements Closeable {
     public HtmlGenerator(File inputPdf, Config config) throws IOException {
         this.pdfFileName = inputPdf.getName();
         this.pdfFilePath = inputPdf.toPath().toAbsolutePath();
-        this.htmlFileName = pdfFileName.substring(0, pdfFileName.length() - 3) + "html";
+        this.htmlFileName = FileUtils.getBaseName(pdfFileName) + ".html";
         this.htmlFilePath = Path.of(config.getOutputFolder(), htmlFileName);
         this.htmlWriter = new FileWriter(htmlFilePath.toFile(), StandardCharsets.UTF_8);
         this.htmlPageSeparator = escapeHtmlAttribute(config.getHtmlPageSeparator());
