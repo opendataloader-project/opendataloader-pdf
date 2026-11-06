@@ -436,8 +436,8 @@ public class XYCutPlusPlusSorter {
      * <p>
      * Each side of the vertical cut has content directly above and below the gap: on each side, the gap between the
      * elements above and the elements below is at most {@link #MAX_GAP_BETWEEN_PARAGRAPHS} font sizes of the text
-     * at the gap. The font size is the smallest font size of the text elements directly above and below the gap. If
-     * one side has no content at the gap, or a larger gap, as above a section that starts below both columns, the
+     * of that side at the gap: the smallest font size of the text elements of that side directly above and below the
+     * gap. If one side has no text at the gap, or a larger gap, as above a section that starts below both columns, the
      * gap is not only between paragraphs.
      */
     private static boolean isGapBetweenParagraphsOfColumns(List<IObject> objects, CutInfo verticalCut,
@@ -454,23 +454,18 @@ public class XYCutPlusPlusSorter {
                 highestBelow[side] = obj;
             }
         }
-        double fontSize = Double.POSITIVE_INFINITY;
         for (int side = 0; side < 2; side++) {
             if (lowestAbove[side] == null || highestBelow[side] == null) {
                 return false;
             }
+            double fontSize = Double.POSITIVE_INFINITY;
             for (IObject obj : new IObject[] {lowestAbove[side], highestBelow[side]}) {
                 if (obj instanceof SemanticTextNode) {
                     fontSize = Math.min(fontSize, ((SemanticTextNode) obj).getFontSize());
                 }
             }
-        }
-        if (fontSize == Double.POSITIVE_INFINITY) {
-            return false;
-        }
-        double maxGap = MAX_GAP_BETWEEN_PARAGRAPHS * fontSize;
-        for (int side = 0; side < 2; side++) {
-            if (lowestAbove[side].getBottomY() - highestBelow[side].getTopY() > maxGap) {
+            double gap = lowestAbove[side].getBottomY() - highestBelow[side].getTopY();
+            if (fontSize == Double.POSITIVE_INFINITY || gap > MAX_GAP_BETWEEN_PARAGRAPHS * fontSize) {
                 return false;
             }
         }
