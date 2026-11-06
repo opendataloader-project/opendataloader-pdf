@@ -109,7 +109,7 @@ public class HtmlGenerator implements Closeable {
     public HtmlGenerator(File inputPdf, Config config) throws IOException {
         this.pdfFileName = inputPdf.getName();
         this.pdfFilePath = inputPdf.toPath().toAbsolutePath();
-        this.htmlFileName = FileUtils.getBaseName(pdfFileName) + ".html";
+        this.htmlFileName = FileUtils.getOutputBaseName(pdfFileName) + ".html";
         this.htmlFilePath = Path.of(config.getOutputFolder(), htmlFileName);
         this.htmlWriter = new FileWriter(htmlFilePath.toFile(), StandardCharsets.UTF_8);
         this.htmlPageSeparator = escapeHtmlAttribute(config.getHtmlPageSeparator());

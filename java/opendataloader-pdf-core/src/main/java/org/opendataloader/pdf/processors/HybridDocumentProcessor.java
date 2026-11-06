@@ -35,6 +35,7 @@ import org.opendataloader.pdf.hybrid.TriageLogger;
 import org.opendataloader.pdf.hybrid.TriageProcessor;
 import org.opendataloader.pdf.hybrid.TriageProcessor.TriageDecision;
 import org.opendataloader.pdf.hybrid.TriageProcessor.TriageResult;
+import org.opendataloader.pdf.utils.FileUtils;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
@@ -61,7 +62,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Map;
 import java.util.Set;
@@ -242,8 +242,7 @@ public class HybridDocumentProcessor {
         Path input = Path.of(inputPdfName).toAbsolutePath();
         Path inputName = input.getFileName();
         String fileName = inputName != null ? inputName.toString() : "document";
-        String name = fileName.toLowerCase(Locale.ROOT).endsWith(".pdf")
-            ? fileName.substring(0, fileName.length() - 4) : fileName;
+        String name = FileUtils.getOutputBaseName(fileName);
         Path folder = config.getOutputFolder() != null ? Path.of(config.getOutputFolder()) : input.getParent();
         Path logs = folder != null ? folder.resolve(TRIAGE_LOG_FOLDER) : Path.of(TRIAGE_LOG_FOLDER);
         return logs.resolve(name + ".json");

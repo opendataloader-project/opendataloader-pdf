@@ -799,7 +799,7 @@ public class DocumentProcessor {
                 imagesDirectory = config.getImageDir();
             } else {
                 String fileName = Paths.get(inputPdfName).getFileName().toString();
-                imagesDirectory = config.getOutputFolder() + File.separator + FileUtils.getBaseName(fileName) + MarkdownSyntax.IMAGES_DIRECTORY_SUFFIX;
+                imagesDirectory = config.getOutputFolder() + File.separator + FileUtils.getOutputBaseName(fileName) + MarkdownSyntax.IMAGES_DIRECTORY_SUFFIX;
             }
             StaticLayoutContainers.setImagesDirectory(imagesDirectory);
             ImagesUtils imagesUtils = new ImagesUtils(config.getImageResolution());

@@ -28,6 +28,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -115,6 +116,42 @@ class Issue430IntegrationTest {
                 "3f2b9c1e-input.html", "3f2b9c1e-input.txt")) {
             assertTrue(Files.exists(outputDir.resolve(output)), output + " must be generated");
         }
+    }
+
+    @Test
+    void testProcessFile_pdfWithAnotherExtension_succeeds() throws Exception {
+        // A real PDF named .txt: the content decides, so it converts.
+        File source = new File(SAMPLE_PDF);
+        assertTrue(source.exists(), "Sample PDF not found at " + source.getAbsolutePath());
+
+        Path input = tempDir.resolve("scan.txt");
+        Files.copy(source.toPath(), input);
+        Path outputDir = tempDir.resolve("output");
+
+        OpenDataLoaderPDF.processFile(input.toAbsolutePath().toString(), jsonConfig(outputDir));
+
+        assertTrue(Files.exists(outputDir.resolve("scan.txt.json")),
+            "JSON output must be generated for a PDF named .txt");
+    }
+
+    @Test
+    void testProcessFile_outputBesideInput_doesNotOverwriteInput() throws Exception {
+        // A PDF named like a JSON output, converted into its own folder: the JSON
+        // output gets its own name, and the input is left as it was.
+        File source = new File(SAMPLE_PDF);
+        assertTrue(source.exists(), "Sample PDF not found at " + source.getAbsolutePath());
+
+        Path folder = tempDir.resolve("same");
+        Files.createDirectory(folder);
+        Path input = folder.resolve("report.json");
+        Files.copy(source.toPath(), input);
+        byte[] before = Files.readAllBytes(input);
+
+        OpenDataLoaderPDF.processFile(input.toAbsolutePath().toString(), jsonConfig(folder));
+
+        assertArrayEquals(before, Files.readAllBytes(input), "the input must not be overwritten");
+        assertTrue(Files.exists(folder.resolve("report.json.json")),
+            "JSON output must be generated next to the input under its own name");
     }
 
     @Test
