@@ -38,7 +38,9 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 public class TextLineProcessor {
@@ -54,6 +56,12 @@ public class TextLineProcessor {
     /** A roman numeral, as the page label of a preface. */
     private static final Pattern ROMAN_NUMERAL =
         Pattern.compile("(?i)m{0,3}(c[md]|d?c{0,3})(x[cl]|l?x{0,3})(i[xv]|v?i{0,3})");
+    /** A leader of a table of contents is less than this many font sizes high: a row of dots or dashes. */
+    private static final double MAX_LEADER_HEIGHT = 0.3;
+    /** Each end of the gap that a leader fills is narrower than this many font sizes. */
+    private static final double MAX_LEADER_END_GAP = 3;
+    /** The baselines of the parts of one row are at most this many font sizes apart. */
+    private static final double MAX_ROW_BASELINE_DIFFERENCE = 0.25;
     /** A page reference of two words, as {@code p. 12}, {@code pp. 12-14}, or {@code B 7}. */
     private static final Pattern PAGE_REFERENCE = Pattern.compile("\\p{L}{1,4}\\.?\\s+\\d[\\p{L}\\d.\\-\u2013]*");
     private static final Comparator<TextChunk> TEXT_CHUNK_COMPARATOR =
@@ -111,8 +119,147 @@ public class TextLineProcessor {
                 newContents.set(i, getTextLineWithSpaces(textLine, threshold, chunksAfterWhitespace));
             }
         }
+        newContents = joinRowsWithLeaders(newContents, chunksAfterWhitespace);
         linkTextLinesWithConnectedLineArtBullet(newContents);
         return newContents;
+    }
+
+    /**
+     * Makes one line of each row of a table of contents whose parts are lines of their own (#389). A page can draw
+     * the columns of a table of contents in turn: the page numbers of all the rows, then the titles, then the
+     * numbers. Then the parts of a row are not one after the other in the contents, and each part is a line.
+     *
+     * <p>A leader, a line art that is thin and wide, shows a row: the line that ends just before the leader and the
+     * page label that starts just after it, on one baseline, are one line. A number label just before that line, on
+     * the same baseline and nearer than a column gap, is a part of the row too. Each row takes the place of its first
+     * part in the contents.
+     */
+    private static List<IObject> joinRowsWithLeaders(List<IObject> contents, Set<TextChunk> chunksAfterWhitespace) {
+        List<LineArtChunk> leaders = new ArrayList<>();
+        List<TextLine> lines = new ArrayList<>();
+        NavigableMap<Double, List<TextLine>> linesByBaseline = new TreeMap<>();
+        double maxFontSize = 0;
+        for (IObject content : contents) {
+            if (content instanceof LineArtChunk) {
+                leaders.add((LineArtChunk) content);
+            } else if (content instanceof TextLine) {
+                TextLine line = (TextLine) content;
+                lines.add(line);
+                linesByBaseline.computeIfAbsent(line.getBaseLine(), key -> new ArrayList<>()).add(line);
+                maxFontSize = Math.max(maxFontSize, line.getFontSize());
+            }
+        }
+        if (leaders.isEmpty() || lines.size() < 2) {
+            return contents;
+        }
+        Map<TextLine, TextLine> nextParts = new IdentityHashMap<>();
+        Map<TextLine, TextLine> previousParts = new IdentityHashMap<>();
+        for (LineArtChunk leader : leaders) {
+            double middle = (leader.getBottomY() + leader.getTopY()) / 2;
+            TextLine before = null;
+            TextLine after = null;
+            for (List<TextLine> sameBaseline : linesByBaseline.subMap(middle - maxFontSize, true,
+                    middle + MAX_ROW_BASELINE_DIFFERENCE * maxFontSize, true).values()) {
+                for (TextLine line : sameBaseline) {
+                    if (!isLeaderOfLine(leader, line)) {
+                        continue;
+                    }
+                    double maxGap = MAX_LEADER_END_GAP * line.getFontSize();
+                    double gapBefore = leader.getLeftX() - line.getRightX();
+                    double gapAfter = line.getLeftX() - leader.getRightX();
+                    if (gapBefore >= 0 && gapBefore < maxGap
+                            && (before == null || line.getRightX() > before.getRightX())) {
+                        before = line;
+                    } else if (gapAfter >= 0 && gapAfter < maxGap
+                            && (after == null || line.getLeftX() < after.getLeftX())) {
+                        after = line;
+                    }
+                }
+            }
+            if (before != null && after != null && !nextParts.containsKey(before) && !previousParts.containsKey(after)
+                    && areOnOneRow(before, after) && isPageLabel(after.getValue().trim())) {
+                nextParts.put(before, after);
+                previousParts.put(after, before);
+            }
+        }
+        if (nextParts.isEmpty()) {
+            return contents;
+        }
+        List<TextLine> rowStarts = new ArrayList<>();
+        for (TextLine line : lines) {
+            if (nextParts.containsKey(line) && !previousParts.containsKey(line)) {
+                rowStarts.add(line);
+            }
+        }
+        for (TextLine first : rowStarts) {
+            double maxDifference = MAX_ROW_BASELINE_DIFFERENCE * first.getFontSize();
+            TextLine label = null;
+            for (List<TextLine> sameBaseline : linesByBaseline.subMap(first.getBaseLine() - maxDifference, true,
+                    first.getBaseLine() + maxDifference, true).values()) {
+                for (TextLine line : sameBaseline) {
+                    double gap = first.getLeftX() - line.getRightX();
+                    if (gap >= 0 && gap < MIN_COLUMN_GAP * first.getFontSize() && !nextParts.containsKey(line)
+                            && !previousParts.containsKey(line) && areOnOneRow(line, first) && isNumberLabel(line)
+                            && (label == null || line.getRightX() > label.getRightX())) {
+                        label = line;
+                    }
+                }
+            }
+            if (label != null) {
+                nextParts.put(label, first);
+                previousParts.put(first, label);
+            }
+        }
+        List<IObject> newContents = new ArrayList<>(contents.size());
+        Set<TextLine> placedRows = Collections.newSetFromMap(new IdentityHashMap<>());
+        for (IObject content : contents) {
+            if (!nextParts.containsKey(content) && !previousParts.containsKey(content)) {
+                newContents.add(content);
+                continue;
+            }
+            TextLine first = (TextLine) content;
+            while (previousParts.containsKey(first)) {
+                first = previousParts.get(first);
+            }
+            if (placedRows.add(first)) {
+                TextLine row = new TextLine();
+                for (TextLine part = first; part != null; part = nextParts.get(part)) {
+                    for (TextChunk chunk : part.getTextChunks()) {
+                        row.add(chunk);
+                    }
+                }
+                double threshold = row.getFontSize() * StaticContainers.getTextLineSpaceRatio();
+                newContents.add(getTextLineWithSpaces(row, threshold, chunksAfterWhitespace));
+            }
+        }
+        return newContents;
+    }
+
+    /**
+     * Whether the line art can be a leader of the line: less than {@link #MAX_LEADER_HEIGHT} font sizes high, wider
+     * than one font size, and with its middle between a quarter of a font size below the baseline of the line and
+     * one font size above it.
+     */
+    private static boolean isLeaderOfLine(LineArtChunk lineArt, TextLine line) {
+        double fontSize = line.getFontSize();
+        BoundingBox box = lineArt.getBoundingBox();
+        double middle = (box.getBottomY() + box.getTopY()) / 2;
+        return box.getHeight() < MAX_LEADER_HEIGHT * fontSize && box.getWidth() > fontSize
+            && middle > line.getBaseLine() - MAX_ROW_BASELINE_DIFFERENCE * fontSize
+            && middle < line.getBaseLine() + fontSize;
+    }
+
+    /** Whether the two lines are parts of one row: their baselines are near, and both are hidden or both are not. */
+    private static boolean areOnOneRow(TextLine first, TextLine second) {
+        double fontSize = Math.min(first.getFontSize(), second.getFontSize());
+        return Math.abs(first.getBaseLine() - second.getBaseLine()) <= MAX_ROW_BASELINE_DIFFERENCE * fontSize
+            && first.isHiddenText() == second.isHiddenText();
+    }
+
+    /** Whether the line is one word of the form of a page label, as {@code 01}, {@code 2.1}, or {@code IV}. */
+    private static boolean isNumberLabel(TextLine line) {
+        String text = line.getValue().trim();
+        return text.codePoints().noneMatch(Character::isWhitespace) && isPageLabel(text);
     }
 
     /**
