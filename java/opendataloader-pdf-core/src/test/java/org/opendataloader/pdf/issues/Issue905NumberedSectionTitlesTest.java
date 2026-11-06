@@ -86,6 +86,26 @@ class Issue905NumberedSectionTitlesTest {
         assertTrue(list == null || !list.toString().contains("2) Cleaning"), SYMPTOM + ": " + document);
     }
 
+    /**
+     * Four numbered titles drawn first, and text only between the titles (2) and (3): the title (3) comes after that
+     * text, and the lists of the titles before and after it are not one list again.
+     */
+    @Test
+    void numberedTitlesWithTextBetweenTwoOfThemComeBeforeAndAfterIt() throws IOException {
+        List<Line> lines = new ArrayList<>();
+        lines.add(new Line(LEFT, 760, TITLE_SIZE, true, "1) Daily checks"));
+        lines.add(new Line(LEFT, 740, TITLE_SIZE, true, "2) Weekly checks"));
+        lines.add(new Line(LEFT, 640, TITLE_SIZE, true, "3) Cleaning"));
+        lines.add(new Line(LEFT, 620, TITLE_SIZE, true, "4) Storage"));
+        lines.add(new Line(LEFT, 710, SIZE, false, "Look at the filter and at the tray of the product each week."));
+        lines.add(new Line(LEFT, 696, SIZE, false, "Change the filter when the display shows the filter icon."));
+        lines.add(new Line(LEFT, 682, SIZE, false, "Empty the tray, so that it does not run over."));
+        JsonNode document = convertJson("four-titles", Arrays.asList(lines));
+
+        assertBefore(document, "2) Weekly checks", "Look at the filter");
+        assertBefore(document, "so that it does not run over", "3) Cleaning");
+    }
+
     /** Guard: a numbered list with a caption that the content stream draws between two items stays one list. */
     @Test
     void numberedListWithACaptionDrawnBetweenItemsStaysOneList() throws IOException {
@@ -98,7 +118,7 @@ class Issue905NumberedSectionTitlesTest {
         lines.add(new Line(LEFT, 662, SIZE, false, "4. Find the mass of the box when it is full."));
         JsonNode document = convertJson("caption", Arrays.asList(lines));
 
-        assertOneList(document, "1. Find the length", "4. Find the mass");
+        assertOneList(document, "1. Find the length", "2. Find the area", "3. Find the volume", "4. Find the mass");
     }
 
     /** Guard: a numbered list whose items go on in lines at the numbers, drawn in their order, stays one list. */
@@ -113,7 +133,7 @@ class Issue905NumberedSectionTitlesTest {
         lines.add(new Line(LEFT, 686, SIZE, false, "3. Keep the small parts away from children."));
         JsonNode document = convertJson("lines-at-numbers", Arrays.asList(lines));
 
-        assertOneList(document, "1. Read all the steps", "3. Keep the small parts");
+        assertOneList(document, "1. Read all the steps", "2. Put the parts", "3. Keep the small parts");
     }
 
     /**
@@ -131,13 +151,16 @@ class Issue905NumberedSectionTitlesTest {
         }
         JsonNode document = convertJson("two-columns", Arrays.asList(lines));
 
-        assertOneList(document, "1. Read all the steps", "3. Keep the parts dry");
+        assertOneList(document, "1. Read all the steps", "2. Put the parts", "3. Keep the parts dry");
     }
 
-    private static void assertOneList(JsonNode document, String first, String last) {
-        JsonNode list = listWithItem(document, first);
+    /** Asserts that one list has an item for each text, in its own content. */
+    private static void assertOneList(JsonNode document, String... items) {
+        JsonNode list = listWithItem(document, items[0]);
         assertNotNull(list, "the list is lost: " + document);
-        assertSame(list, listWithItem(document, last), "the list is split: " + document);
+        for (String item : items) {
+            assertSame(list, listWithItem(document, item), "the list is split at " + item + ": " + document);
+        }
     }
 
     /** Asserts that the first text comes before the second text in the output. */
