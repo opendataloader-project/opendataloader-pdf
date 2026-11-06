@@ -68,6 +68,8 @@ class Issue389TocRowsWithLeadersTest {
     private static final float TOP = 700;
     private static final String SYMPTOM = "a row of the table of contents is not one line";
     private static final PDType1Font FONT = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+    /** The font of the spaces that the page content draws as texts of their own. */
+    private static final PDType1Font SPACE_FONT = new PDType1Font(Standard14Fonts.FontName.TIMES_ROMAN);
 
     private static final Entry[] ENTRIES = {
         new Entry("01", "Introduction", "03"), new Entry("02", "Background of the plan", "09"),
@@ -166,6 +168,79 @@ class Issue389TocRowsWithLeadersTest {
     }
 
     /**
+     * Titles whose page content draws each space as a text of its own, in another font: each row has one space
+     * between the words of its title.
+     */
+    @Test
+    void titlesWithSpacesOfTheirOwnHaveOneSpaceBetweenWords() throws IOException {
+        List<Item> items = new ArrayList<>();
+        for (Item item : tableOfContents(ENTRIES, 0, true, new ArrayList<>())) {
+            items.add(item.text != null && item.text.contains(" ") ? item.withSpacesOfTheirOwn() : item);
+        }
+        String markdown = convertMarkdown("spaces", items);
+
+        assertRowsInOrder(markdown, ENTRIES);
+    }
+
+    /**
+     * A table with borders below the table of contents, which the page content draws after the titles and before
+     * the numbers: each row is one line, and the table comes after the rows with its cells.
+     */
+    @Test
+    void aTableBetweenTheColumnsInThePageContentStaysBelowTheRows() throws IOException {
+        List<Item> table = new ArrayList<>();
+        float top = TOP - ENTRIES.length * ROW_DISTANCE - 40;
+        for (int i = 0; i <= 2; i++) {
+            table.add(Item.rule(100, 340, top - i * 20, top - i * 20));
+            table.add(Item.rule(100 + i * 120, 100 + i * 120, top, top - 40));
+        }
+        String[][] cells = {{"North", "East"}, {"South", "West"}};
+        for (int row = 0; row < 2; row++) {
+            for (int column = 0; column < 2; column++) {
+                table.add(Item.text(cells[row][column], 106 + column * 120, top - 14 - row * 20));
+            }
+        }
+        String markdown = convertMarkdown("table-between", tableOfContents(ENTRIES, 0, true, table));
+
+        assertRowsInOrder(markdown, ENTRIES);
+        int lastRow = markdown.indexOf(ENTRIES[ENTRIES.length - 1].row());
+        int north = markdown.indexOf("North");
+        assertTrue(lastRow < north && north < markdown.indexOf("East")
+                && markdown.indexOf("East") < markdown.indexOf("South")
+                && markdown.indexOf("South") < markdown.indexOf("West"),
+            "the table is not after the rows with its cells in order: " + markdown);
+    }
+
+    /**
+     * A table of contents without numbers, and a column of a form to its left, its values 20 pt before the titles:
+     * the value that is a number stays in its column, out of the row on its baseline. The rows come in their order;
+     * without numbers, the rows can be one paragraph.
+     */
+    @Test
+    void aNumberOfAnotherColumnStaysOutOfTheRows() throws IOException {
+        Entry[] entries = new Entry[ENTRIES.length];
+        for (int i = 0; i < entries.length; i++) {
+            entries[i] = new Entry(null, ENTRIES[i].title, ENTRIES[i].page);
+        }
+        String[] values = {"Year of the plan", "2026", "Budget of the town"};
+        List<Item> items = new ArrayList<>();
+        for (int i = 0; i < values.length; i++) {
+            items.add(Item.text(values[i], TITLE_X + 200 - 20 - width(values[i]), TOP - i * ROW_DISTANCE));
+        }
+        items.addAll(tableOfContents(entries, 200, true, new ArrayList<>()));
+        String markdown = convertMarkdown("number-of-another-column", items);
+
+        int previous = -1;
+        for (Entry entry : entries) {
+            int index = markdown.indexOf(entry.row());
+            assertTrue(index > previous, SYMPTOM + ", or the rows are not in their order (" + entry.row() + "): "
+                + markdown);
+            previous = index;
+        }
+        assertTrue(markdown.contains(String.join(" ", values)), "the number is not in its column: " + markdown);
+    }
+
+    /**
      * Asserts that each entry is a line of its own, with the number, the title, and the page number in this order
      * and no other text, and that the entries come in their order.
      */
@@ -173,8 +248,8 @@ class Issue389TocRowsWithLeadersTest {
         List<String> lines = Arrays.asList(markdown.split("\n"));
         int previous = -1;
         for (Entry entry : entries) {
-            Pattern row = Pattern.compile("[^\\p{Alnum}]*" + Pattern.quote(entry.number + " " + entry.title + " "
-                + entry.page));
+            Pattern row = Pattern.compile("[^\\p{Alnum}]*" + Pattern.quote(entry.row()),
+                Pattern.UNICODE_CHARACTER_CLASS);
             int index = -1;
             for (int i = 0; i < lines.size(); i++) {
                 if (row.matcher(lines.get(i).trim()).matches()) {
@@ -182,8 +257,7 @@ class Issue389TocRowsWithLeadersTest {
                     break;
                 }
             }
-            assertTrue(index >= 0, SYMPTOM + " (" + entry.number + " " + entry.title + " " + entry.page + "): "
-                + markdown);
+            assertTrue(index >= 0, SYMPTOM + " (" + entry.row() + "): " + markdown);
             assertTrue(index > previous, "the rows of the table of contents are not in their order: " + markdown);
             previous = index;
         }
@@ -194,6 +268,11 @@ class Issue389TocRowsWithLeadersTest {
      * the titles, then the numbers, then the leaders. Else each row in turn.
      */
     private static List<Item> tableOfContents(Entry[] entries, float shift, boolean byColumns) {
+        return tableOfContents(entries, shift, byColumns, new ArrayList<>());
+    }
+
+    /** The items of a table of contents by columns, with the other items after the titles and before the numbers. */
+    private static List<Item> tableOfContents(Entry[] entries, float shift, boolean byColumns, List<Item> other) {
         List<Item> pages = new ArrayList<>();
         List<Item> titles = new ArrayList<>();
         List<Item> numbers = new ArrayList<>();
@@ -203,7 +282,9 @@ class Issue389TocRowsWithLeadersTest {
             float baseline = TOP - i * ROW_DISTANCE;
             pages.add(Item.text(entry.page, PAGE_END_X + shift - width(entry.page), baseline));
             titles.add(Item.text(entry.title, TITLE_X + shift, baseline));
-            numbers.add(Item.text(entry.number, NUMBER_X + shift, baseline + NUMBER_RISE));
+            if (entry.number != null) {
+                numbers.add(Item.text(entry.number, NUMBER_X + shift, baseline + NUMBER_RISE));
+            }
             leaders.add(Item.leader(TITLE_X + shift + width(entry.title) + LEADER_GAP, LEADER_END_X + shift,
                 baseline + LEADER_RISE));
         }
@@ -211,11 +292,15 @@ class Issue389TocRowsWithLeadersTest {
         if (byColumns) {
             items.addAll(pages);
             items.addAll(titles);
+            items.addAll(other);
             items.addAll(numbers);
             items.addAll(leaders);
         } else {
             for (int i = 0; i < entries.length; i++) {
-                items.addAll(Arrays.asList(numbers.get(i), titles.get(i), pages.get(i), leaders.get(i)));
+                if (entries[i].number != null) {
+                    items.add(numbers.get(i));
+                }
+                items.addAll(Arrays.asList(titles.get(i), pages.get(i), leaders.get(i)));
             }
         }
         return items;
@@ -251,8 +336,25 @@ class Issue389TocRowsWithLeadersTest {
                         content.beginText();
                         content.setFont(FONT, SIZE);
                         content.newLineAtOffset(item.x, item.y);
-                        content.showText(item.text);
+                        if (item.spacesOfTheirOwn) {
+                            String[] words = item.text.split(" ");
+                            for (int i = 0; i < words.length; i++) {
+                                if (i > 0) {
+                                    content.setFont(SPACE_FONT, SIZE);
+                                    content.showText(" ");
+                                    content.setFont(FONT, SIZE);
+                                }
+                                content.showText(words[i]);
+                            }
+                        } else {
+                            content.showText(item.text);
+                        }
                         content.endText();
+                    } else if (item.rule) {
+                        content.setLineWidth(1);
+                        content.moveTo(item.x, item.y);
+                        content.lineTo(item.endX, item.endY);
+                        content.stroke();
                     } else {
                         content.beginMarkedContent(COSName.ARTIFACT);
                         content.saveGraphicsState();
@@ -277,33 +379,54 @@ class Issue389TocRowsWithLeadersTest {
         final String title;
         final String page;
 
+        /** The number, or null for a row without a number. */
         Entry(String number, String title, String page) {
             this.number = number;
             this.title = title;
             this.page = page;
         }
+
+        /** The text of the row: the number, the title, and the page number. */
+        String row() {
+            return (number == null ? "" : number + " ") + title + " " + page;
+        }
     }
 
-    /** A text at its baseline, or a leader from x to the end x. */
+    /** A text at its baseline, a leader from x to the end x, or a rule of a table border. */
     private static final class Item {
         final String text;
         final float x;
         final float y;
         final float endX;
+        final float endY;
+        final boolean rule;
+        /** Whether the page content draws each space of the text as a text of its own. */
+        final boolean spacesOfTheirOwn;
 
-        private Item(String text, float x, float y, float endX) {
+        private Item(String text, float x, float y, float endX, float endY, boolean rule, boolean spacesOfTheirOwn) {
             this.text = text;
             this.x = x;
             this.y = y;
             this.endX = endX;
+            this.endY = endY;
+            this.rule = rule;
+            this.spacesOfTheirOwn = spacesOfTheirOwn;
         }
 
         static Item text(String text, float x, float baseline) {
-            return new Item(text, x, baseline, x);
+            return new Item(text, x, baseline, x, baseline, false, false);
         }
 
         static Item leader(float x, float endX, float y) {
-            return new Item(null, x, y, endX);
+            return new Item(null, x, y, endX, y, false, false);
+        }
+
+        static Item rule(float x, float endX, float y, float endY) {
+            return new Item(null, x, y, endX, endY, true, false);
+        }
+
+        Item withSpacesOfTheirOwn() {
+            return new Item(text, x, y, endX, endY, rule, true);
         }
     }
 }

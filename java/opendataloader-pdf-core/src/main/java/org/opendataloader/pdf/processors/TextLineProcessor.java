@@ -31,6 +31,7 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.utils.TextChunkUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -62,6 +63,8 @@ public class TextLineProcessor {
     private static final double MAX_LEADER_END_GAP = 3;
     /** The baselines of the parts of one row are at most this many font sizes apart. */
     private static final double MAX_ROW_BASELINE_DIFFERENCE = 0.25;
+    /** The labels of the rows of a table of contents start or end at most this many font sizes apart. */
+    private static final double MAX_LABEL_ALIGNMENT_DIFFERENCE = 0.25;
     /** A page reference of two words, as {@code p. 12}, {@code pp. 12-14}, or {@code B 7}. */
     private static final Pattern PAGE_REFERENCE = Pattern.compile("\\p{L}{1,4}\\.?\\s+\\d[\\p{L}\\d.\\-\u2013]*");
     private static final Comparator<TextChunk> TEXT_CHUNK_COMPARATOR =
@@ -119,7 +122,7 @@ public class TextLineProcessor {
                 newContents.set(i, getTextLineWithSpaces(textLine, threshold, chunksAfterWhitespace));
             }
         }
-        newContents = joinRowsWithLeaders(newContents, chunksAfterWhitespace);
+        newContents = joinRowsWithLeaders(newContents);
         linkTextLinesWithConnectedLineArtBullet(newContents);
         return newContents;
     }
@@ -131,10 +134,11 @@ public class TextLineProcessor {
      *
      * <p>A leader, a line art that is thin and wide, shows a row: the line that ends just before the leader and the
      * page label that starts just after it, on one baseline, are one line. A number label just before that line, on
-     * the same baseline and nearer than a column gap, is a part of the row too. Each row takes the place of its first
-     * part in the contents.
+     * the same baseline and nearer than a column gap, is a part of the row too, if it is in a column of labels or the
+     * row is the only one. Each row takes the place of its first part in the contents, with one space between its
+     * parts.
      */
-    private static List<IObject> joinRowsWithLeaders(List<IObject> contents, Set<TextChunk> chunksAfterWhitespace) {
+    private static List<IObject> joinRowsWithLeaders(List<IObject> contents) {
         List<LineArtChunk> leaders = new ArrayList<>();
         List<TextLine> lines = new ArrayList<>();
         NavigableMap<Double, List<TextLine>> linesByBaseline = new TreeMap<>();
@@ -191,6 +195,7 @@ public class TextLineProcessor {
                 rowStarts.add(line);
             }
         }
+        Map<TextLine, TextLine> labels = new IdentityHashMap<>();
         for (TextLine first : rowStarts) {
             double maxDifference = MAX_ROW_BASELINE_DIFFERENCE * first.getFontSize();
             TextLine label = null;
@@ -205,9 +210,14 @@ public class TextLineProcessor {
                     }
                 }
             }
-            if (label != null) {
-                nextParts.put(label, first);
-                previousParts.put(first, label);
+            if (label != null && !labels.containsValue(label)) {
+                labels.put(first, label);
+            }
+        }
+        for (Map.Entry<TextLine, TextLine> entry : labels.entrySet()) {
+            if (rowStarts.size() == 1 || isInAColumnOfLabels(entry.getValue(), labels.values())) {
+                nextParts.put(entry.getValue(), entry.getKey());
+                previousParts.put(entry.getKey(), entry.getValue());
             }
         }
         List<IObject> newContents = new ArrayList<>(contents.size());
@@ -224,12 +234,14 @@ public class TextLineProcessor {
             if (placedRows.add(first)) {
                 TextLine row = new TextLine();
                 for (TextLine part = first; part != null; part = nextParts.get(part)) {
+                    if (part != first) {
+                        row.add(getSpaceChunk(row.getLastTextChunk().getTextEnd(), part.getFirstTextChunk()));
+                    }
                     for (TextChunk chunk : part.getTextChunks()) {
                         row.add(chunk);
                     }
                 }
-                double threshold = row.getFontSize() * StaticContainers.getTextLineSpaceRatio();
-                newContents.add(getTextLineWithSpaces(row, threshold, chunksAfterWhitespace));
+                newContents.add(row);
             }
         }
         return newContents;
@@ -249,11 +261,26 @@ public class TextLineProcessor {
             && middle < line.getBaseLine() + fontSize;
     }
 
-    /** Whether the two lines are parts of one row: their baselines are near, and both are hidden or both are not. */
+    /** Whether the two lines are parts of one row: their baselines are near. */
     private static boolean areOnOneRow(TextLine first, TextLine second) {
         double fontSize = Math.min(first.getFontSize(), second.getFontSize());
-        return Math.abs(first.getBaseLine() - second.getBaseLine()) <= MAX_ROW_BASELINE_DIFFERENCE * fontSize
-            && first.isHiddenText() == second.isHiddenText();
+        return Math.abs(first.getBaseLine() - second.getBaseLine()) <= MAX_ROW_BASELINE_DIFFERENCE * fontSize;
+    }
+
+    /**
+     * Whether the label is in a column of labels: another label starts or ends at most
+     * {@link #MAX_LABEL_ALIGNMENT_DIFFERENCE} font sizes from where it starts or ends. A number of another column
+     * next to a row is alone in its place.
+     */
+    private static boolean isInAColumnOfLabels(TextLine label, Collection<TextLine> labels) {
+        double maxDifference = MAX_LABEL_ALIGNMENT_DIFFERENCE * label.getFontSize();
+        for (TextLine other : labels) {
+            if (other != label && (Math.abs(other.getLeftX() - label.getLeftX()) <= maxDifference
+                    || Math.abs(other.getRightX() - label.getRightX()) <= maxDifference)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Whether the line is one word of the form of a page label, as {@code 01}, {@code 2.1}, or {@code IV}. */
@@ -452,19 +479,24 @@ public class TextLineProcessor {
             boolean hasGap = currentStart - previousEnd > threshold;
             boolean hadWhitespace = chunksAfterWhitespace.contains(currentTextChunk);
             if (hasGap || hadWhitespace) {
-                TextChunk spaceChunk = new TextChunk(new BoundingBox(currentTextChunk.getBoundingBox()), " ", currentTextChunk.getFontName(),
-                    currentTextChunk.getFontSize(), currentTextChunk.getFontWeight(), currentTextChunk.getItalicAngle(), currentTextChunk.getBaseLine(),
-                    currentTextChunk.getFontColor(), null, currentTextChunk.getSlantDegree());
-                spaceChunk.setTextStart(previousEnd);
-                spaceChunk.setTextEnd(currentStart);
-                spaceChunk.adjustSymbolEndsToBoundingBox(null);
-                newLine.add(spaceChunk);
+                newLine.add(getSpaceChunk(previousEnd, currentTextChunk));
             }
             previousEnd = currentTextChunk.getTextEnd();
             newLine.add(currentTextChunk);
         }
 
         return newLine;
+    }
+
+    /** A space from the end of the previous text to the start of the chunk, in the font of the chunk. */
+    private static TextChunk getSpaceChunk(double previousEnd, TextChunk chunk) {
+        TextChunk spaceChunk = new TextChunk(new BoundingBox(chunk.getBoundingBox()), " ", chunk.getFontName(),
+            chunk.getFontSize(), chunk.getFontWeight(), chunk.getItalicAngle(), chunk.getBaseLine(),
+            chunk.getFontColor(), null, chunk.getSlantDegree());
+        spaceChunk.setTextStart(previousEnd);
+        spaceChunk.setTextEnd(chunk.getTextStart());
+        spaceChunk.adjustSymbolEndsToBoundingBox(null);
+        return spaceChunk;
     }
 
     private static void linkTextLinesWithConnectedLineArtBullet(List<IObject> contents) {
