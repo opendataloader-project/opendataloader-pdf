@@ -145,6 +145,25 @@ class Issue354BulletsAcrossSectionTitlesTest {
         assertBefore(document, "After the work", "Take the old parts");
     }
 
+    /**
+     * One column, two sections, with the titles drawn first in the page content: one list for the bullets of each
+     * section, and the second title between them.
+     */
+    @Test
+    void bulletsOfTwoSectionsInOneColumnWithTitlesDrawnFirstAreTwoLists() throws IOException {
+        List<Line> lines = new ArrayList<>();
+        lines.add(title(LEFT, 760, "Before you start"));
+        lines.add(title(LEFT, 660, "While you work"));
+        bullets(lines, LEFT, 742, "Read all the steps first.", "Put the parts on a table.", "Keep the parts dry.");
+        bullets(lines, LEFT, 642, "Turn off the power.", "Use the tools of the box.", "Do not use force.");
+        JsonNode document = convertJson("one-column-titles-first", Arrays.asList(lines));
+
+        assertSectionLists(document, "Read all the steps", "Keep the parts dry", "Turn off the power",
+            "Do not use force");
+        assertBefore(document, "Keep the parts dry", "While you work");
+        assertBefore(document, "While you work", "Turn off the power");
+    }
+
     /** Titles in the font size of the bullets, only in bold: one list for the bullets of each section. */
     @Test
     void bulletsOfTwoSectionsWithBoldTitlesInTheirSizeAreTwoLists() throws IOException {

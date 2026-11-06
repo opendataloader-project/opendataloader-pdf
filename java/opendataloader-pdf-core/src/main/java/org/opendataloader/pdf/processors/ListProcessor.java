@@ -249,7 +249,8 @@ public class ListProcessor {
             }
             PageText text = textOfPage.apply(below.getPageNumber());
             if (bullets ? hasTitleBetween(text.getLines(), above.getListItemValue(), below.getListItemValue())
-                    : hasTextOutsideTheItemsBetween(text, above, below)) {
+                    : hasTextOutsideTheItemsBetween(text, above.getListItemValue(), above.getIndex(),
+                        below.getListItemValue(), below.getIndex())) {
                 parts.add(createIntervalPart(interval, start, i));
                 start = i;
             }
@@ -336,12 +337,12 @@ public class ListProcessor {
 
     /**
      * Whether a line of the column between the lines of two items, at the items or to the left of them, is not in the
-     * part of the content order from the first item to the second item, so that the first item cannot take it. The
-     * lines of an item, and the text that the content stream draws between two items, are in that part.
+     * part of the content order from the first item to the second item (their indexes in the contents), so that the
+     * first item cannot take it. The lines of an item, and the text that the content stream draws between two items,
+     * are in that part.
      */
-    private static boolean hasTextOutsideTheItemsBetween(PageText text, ListItemTextInfo item, ListItemTextInfo nextItem) {
-        TextLine itemLine = item.getListItemValue();
-        TextLine nextItemLine = nextItem.getListItemValue();
+    private static boolean hasTextOutsideTheItemsBetween(PageText text, TextLine itemLine, int itemIndex,
+                                                         TextLine nextItemLine, int nextItemIndex) {
         double maxXGap = getMaxXGap(itemLine.getFontSize());
         List<TextLine> lines = text.getLines();
         for (int index = getFirstLineBelow(lines, itemLine.getBaseLine()); index < lines.size()
@@ -352,7 +353,7 @@ public class ListProcessor {
                 continue;
             }
             Integer lineIndex = text.getIndex(line);
-            if (lineIndex != null && (lineIndex < item.getIndex() || lineIndex > nextItem.getIndex())) {
+            if (lineIndex != null && (lineIndex < itemIndex || lineIndex > nextItemIndex)) {
                 return true;
             }
         }
@@ -1119,6 +1120,7 @@ public class ListProcessor {
         SemanticTextNode middleContent = null;
         for (List<IObject> pageContents : contents) {
             DocumentProcessor.setIndexesForContentsList(pageContents);
+            PageText[] pageText = new PageText[1];
             for (IObject content : pageContents) {
                 if (content instanceof TableBorder) {
                     TableBorder tableBorder = (TableBorder) content;
@@ -1128,7 +1130,8 @@ public class ListProcessor {
                     PDFList currentList = (PDFList) content;
                     if (previousList != null) {
                         if (previousList.getNextList() == null && currentList.getPreviousList() == null) {
-                            if (isNeighborLists(previousList, currentList, middleContent)) {
+                            if (isNeighborLists(previousList, currentList, middleContent)
+                                    && !isBreakBetweenLists(pageContents, pageText, previousList, currentList)) {
                                 if (middleContent != null) {
                                     addMiddleContentToList(previousList, currentList, middleContent, pageContents);
                                 }
@@ -1166,6 +1169,30 @@ public class ListProcessor {
             }
         }
         contents.replaceAll(DocumentProcessor::removeNullObjectsFromList);
+    }
+
+    /**
+     * Whether a break is between two lists of one style on one page, so that they stay apart, as the list detection
+     * split them (see {@link #splitAtBreaksBetweenItems}): a title between two lists of bullets, or text of the column
+     * between two numbered lists that is not between them in the content order. The text of the page is made once, in
+     * the holder, when a check needs it.
+     */
+    private static boolean isBreakBetweenLists(List<IObject> pageContents, PageText[] pageText, PDFList list,
+                                               PDFList nextList) {
+        if (list.getListItems().isEmpty() || nextList.getListItems().isEmpty()
+                || !Objects.equals(list.getPageNumber(), nextList.getPageNumber())
+                || !Objects.equals(list.getNumberingStyle(), nextList.getNumberingStyle())) {
+            return false;
+        }
+        if (pageText[0] == null) {
+            pageText[0] = new PageText(pageContents);
+        }
+        TextLine itemLine = list.getLastListItem().getFirstLine();
+        TextLine nextItemLine = nextList.getFirstListItem().getFirstLine();
+        if (NumberingStyleNames.UNORDERED.equals(list.getNumberingStyle())) {
+            return hasTitleBetween(pageText[0].getLines(), itemLine, nextItemLine);
+        }
+        return hasTextOutsideTheItemsBetween(pageText[0], itemLine, list.getIndex(), nextItemLine, nextList.getIndex());
     }
 
     private static void addMiddleContentToList(PDFList previousList, PDFList currentList, SemanticTextNode middleContent, List<IObject> pageContents) {
