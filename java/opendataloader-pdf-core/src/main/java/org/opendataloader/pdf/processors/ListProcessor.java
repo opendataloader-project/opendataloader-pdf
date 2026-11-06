@@ -215,7 +215,7 @@ public class ListProcessor {
         Map<Integer, List<TextLine>> pagesLines = new HashMap<>();
         for (TextListInterval interval : intervalsList) {
             List<TextListInterval> parts = splitAtTitlesBetweenItems(interval, page -> pagesLines.computeIfAbsent(
-                isTableCell ? 0 : page, index -> getLinesByBaseline(contents.get(index))));
+                isTableCell ? Integer.valueOf(0) : page, index -> getLinesByBaseline(contents.get(index))));
             for (TextListInterval part : parts) {
                 if (part.getListItemsInfos().size() > 1) {
                     result.add(part);
