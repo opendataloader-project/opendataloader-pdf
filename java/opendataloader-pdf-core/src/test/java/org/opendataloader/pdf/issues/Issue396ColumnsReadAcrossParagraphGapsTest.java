@@ -176,6 +176,27 @@ class Issue396ColumnsReadAcrossParagraphGapsTest {
     }
 
     /**
+     * Guard: a section of two columns of 16 pt text above a section of two columns of 9 pt text, 24 pt apart, are read
+     * one after the other. The gap is more than two font sizes of the 9 pt text at the gap. It is less than two font
+     * sizes of the 16 pt text, which has as many paragraphs as the 9 pt text.
+     */
+    @Test
+    void smallTextBelowAWideGapStartsANewSectionAlsoBelowLargerText() throws IOException {
+        Page page = new Page();
+        page.text(16, 19, 38);
+        float end = page.column(LEFT_X, TOP, "Amber", 2, "Basil", 4);
+        page.column(RIGHT_X, TOP, "Delta", 3, "Ember", 3);
+        page.text(9, 11, 22);
+        float below = end - 36;
+        page.column(LEFT_X, below, "Grove", 3, "Haven", 2);
+        page.column(RIGHT_X, below, "Ivory", 2, "Jewel", 3);
+
+        String markdown = convert("text-sizes", page);
+
+        assertOrder(SYMPTOM, markdown, "Amber", "Basil", "Delta", "Ember", "Grove", "Haven", "Ivory", "Jewel");
+    }
+
+    /**
      * Guard: a form with a field of one line in each column of each row is read row by row, as the rows of a table.
      * The fields fill their columns with a line to write on, the gap between the columns is 15 pt, and the rows are
      * 30 pt apart.
@@ -262,6 +283,16 @@ class Issue396ColumnsReadAcrossParagraphGapsTest {
     private static final class Page {
         final List<Line> lines = new ArrayList<>();
         int nextWord;
+        float size = SIZE;
+        float lineDistance = LINE_DISTANCE;
+        float paragraphDistance = PARAGRAPH_DISTANCE;
+
+        /** Sets the font size and the distances of the lines of the next columns. */
+        void text(float fontSize, float lines, float paragraphs) {
+            size = fontSize;
+            lineDistance = lines;
+            paragraphDistance = paragraphs;
+        }
 
         void header(String text) {
             float size = 9;
@@ -283,14 +314,14 @@ class Issue396ColumnsReadAcrossParagraphGapsTest {
                 List<String> text = paragraph((String) paragraphs[index], (Integer) paragraphs[index + 1]);
                 for (int i = 0; i < text.size(); i++) {
                     if (index > 0 || i > 0) {
-                        baseline -= i == 0 ? PARAGRAPH_DISTANCE : LINE_DISTANCE;
+                        baseline -= i == 0 ? paragraphDistance : lineDistance;
                     }
                     String line = text.get(i);
                     float spacing = 0;
                     if (i < text.size() - 1) {
-                        spacing = (WIDTH - width(REGULAR, SIZE, line)) / (line.split(" ").length - 1);
+                        spacing = (WIDTH - width(REGULAR, size, line)) / (line.split(" ").length - 1);
                     }
-                    lines.add(new Line(REGULAR, SIZE, x, baseline, line, spacing));
+                    lines.add(new Line(REGULAR, size, x, baseline, line, spacing));
                 }
             }
             return baseline;
@@ -302,14 +333,14 @@ class Issue396ColumnsReadAcrossParagraphGapsTest {
             StringBuilder line = new StringBuilder(name);
             while (result.size() < lineCount - 1) {
                 String word = WORDS[nextWord++ % WORDS.length];
-                if (width(REGULAR, SIZE, line + " " + word) > WIDTH) {
+                if (width(REGULAR, size, line + " " + word) > WIDTH) {
                     result.add(line.toString());
                     line = new StringBuilder(word);
                 } else {
                     line.append(' ').append(word);
                 }
             }
-            while (width(REGULAR, SIZE, line + " " + WORDS[nextWord % WORDS.length]) < WIDTH / 2) {
+            while (width(REGULAR, size, line + " " + WORDS[nextWord % WORDS.length]) < WIDTH / 2) {
                 line.append(' ').append(WORDS[nextWord++ % WORDS.length]);
             }
             result.add(line.toString());
