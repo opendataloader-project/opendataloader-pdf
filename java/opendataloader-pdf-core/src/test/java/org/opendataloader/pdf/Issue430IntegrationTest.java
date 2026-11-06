@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * over {@link OpenDataLoaderPDF#processFile(String, Config)}.
  *
  * <p>Every input-validity failure (null/blank path, invalid path, missing file,
- * directory, non-{@code .pdf} name, non-PDF content) is reported as a single
+ * directory, non-PDF content) is reported as a single
  * checked type, {@link InvalidPdfFileException} (a subtype of {@link IOException}),
  * so a caller can catch it to skip the bad file and continue — mirroring how the
  * CLI gracefully skips bad inputs during a directory scan. The closing
@@ -93,13 +93,38 @@ class Issue430IntegrationTest {
     }
 
     @Test
-    void testProcessFile_nonPdfExtension_throwsInvalidPdfFileException() throws Exception {
-        // Real %PDF- content, but the name does not end in .pdf — rejected on the
-        // extension check before any content is read.
-        Path notPdf = tempDir.resolve("document.txt");
-        Files.write(notPdf, "%PDF-1.4 ...".getBytes());
-        assertThrows(InvalidPdfFileException.class,
+    void testProcessFile_pdfWithoutExtension_succeeds() throws Exception {
+        // A caller may keep its inputs under generated names without an extension.
+        // The content is a PDF, so the name does not matter.
+        File source = new File(SAMPLE_PDF);
+        assertTrue(source.exists(), "Sample PDF not found at " + source.getAbsolutePath());
+
+        Path input = tempDir.resolve("3f2b9c1e-input");
+        Files.copy(source.toPath(), input);
+        Path outputDir = tempDir.resolve("output");
+        Config config = jsonConfig(outputDir);
+        config.setGenerateMarkdown(true);
+        config.setGenerateHtml(true);
+        config.setGenerateText(true);
+
+        OpenDataLoaderPDF.processFile(input.toAbsolutePath().toString(), config);
+
+        // Each output is named after the whole input name, as it would be after
+        // the name without ".pdf".
+        for (String output : List.of("3f2b9c1e-input.json", "3f2b9c1e-input.md",
+                "3f2b9c1e-input.html", "3f2b9c1e-input.txt")) {
+            assertTrue(Files.exists(outputDir.resolve(output)), output + " must be generated");
+        }
+    }
+
+    @Test
+    void testProcessFile_nonPdfNameAndContent_throwsInvalidPdfFileException() throws Exception {
+        // Neither the name nor the content is a PDF: rejected by the magic-number guard.
+        Path notPdf = tempDir.resolve("notes.txt");
+        Files.write(notPdf, "plain text, not a PDF".getBytes());
+        InvalidPdfFileException thrown = assertThrows(InvalidPdfFileException.class,
             () -> OpenDataLoaderPDF.processFile(notPdf.toString(), jsonConfig(tempDir.resolve("out"))));
+        assertTrue(thrown.getMessage().contains("missing %PDF- header"), thrown.getMessage());
     }
 
     @Test

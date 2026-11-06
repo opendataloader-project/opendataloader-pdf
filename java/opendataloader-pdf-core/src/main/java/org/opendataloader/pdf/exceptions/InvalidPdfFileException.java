@@ -21,9 +21,9 @@ import java.io.IOException;
  * Thrown when an input file cannot be processed as a PDF. Several failure modes
  * share this exception type, distinguished by message wording:
  * <ul>
- *   <li><em>Invalid path</em> — the path is {@code null}/blank, is not a
- *       syntactically valid path, or does not end in {@code .pdf}. Detected
- *       before any file content is read.</li>
+ *   <li><em>Invalid path</em> — the path is {@code null}/blank or is not a
+ *       syntactically valid path. Detected before any file content is read.
+ *       The file name is not checked: a PDF is recognized by its content.</li>
  *   <li><em>Missing file or directory</em> — the path does not resolve to an
  *       existing file, or a directory was passed in place of a file. Detected
  *       just-in-time when the input stream is opened.</li>
