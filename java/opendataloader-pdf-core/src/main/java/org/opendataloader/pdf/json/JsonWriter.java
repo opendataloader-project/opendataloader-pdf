@@ -92,12 +92,24 @@ public class JsonWriter {
         writeToJson(inputPDF, outputFolder, contents, elementMetadata, hybridInfo, false);
     }
 
+    /**
+     * Writes the contents as {@code <name>.json} in the output folder, where
+     * {@code <name>} is {@link FileUtils#getOutputBaseName(String)} of the input name.
+     *
+     * @param inputPDF the input PDF, which names the output
+     * @param outputFolder the folder the JSON file is written to
+     * @param contents the contents of each page
+     * @param elementMetadata hybrid metadata of the elements, by element id
+     * @param hybridInfo hybrid information written after the document information, or {@code null}
+     * @param includeHeaderFooter whether page headers and footers are written
+     * @throws IOException if the JSON file cannot be written
+     */
     public static void writeToJson(File inputPDF, String outputFolder, List<List<IObject>> contents,
                                    Map<Long, ElementMetadata> elementMetadata,
                                    Map<String, Object> hybridInfo,
                                    boolean includeHeaderFooter) throws IOException {
         StaticLayoutContainers.resetImageIndex();
-        String jsonFileName = outputFolder + File.separator + FileUtils.getBaseName(inputPDF.getName()) + ".json";
+        String jsonFileName = outputFolder + File.separator + FileUtils.getOutputBaseName(inputPDF.getName()) + ".json";
         try (JsonGenerator jsonGenerator = getJsonGenerator(jsonFileName)) {
             jsonGenerator.writeStartObject();
             writeDocumentInfo(jsonGenerator, inputPDF.getName());

@@ -60,6 +60,17 @@ public class PDFWriter {
     private final List<List<PDAnnotation>> annotations = new ArrayList<>();
     private final List<BoundingBox> pageBoundingBoxes = new ArrayList<>();
 
+    /**
+     * Writes a copy of the input with the contents drawn as annotations, as
+     * {@code <name>_annotated.pdf} in the output folder, where {@code <name>} is
+     * {@link FileUtils#getOutputBaseName(String)} of the input name.
+     *
+     * @param inputPDF the input PDF
+     * @param password the password of the input, or {@code null}
+     * @param outputFolder the folder the annotated PDF is written to
+     * @param contents the contents of each page
+     * @throws IOException if the annotated PDF cannot be written
+     */
     public void updatePDF(File inputPDF, String password, String outputFolder, List<List<IObject>> contents) throws IOException {
         try (PDDocument document = Loader.loadPDF(inputPDF, password)) {
             for (int pageNumber = 0; pageNumber < StaticContainers.getDocument().getNumberOfPages(); pageNumber++) {
@@ -80,7 +91,7 @@ public class PDFWriter {
             document.setAllSecurityToBeRemoved(true);
 
             String outputFileName = outputFolder + File.separator +
-                    FileUtils.getBaseName(inputPDF.getName()) + "_annotated.pdf";
+                    FileUtils.getOutputBaseName(inputPDF.getName()) + "_annotated.pdf";
             document.save(outputFileName);
             LOGGER.log(Level.INFO, "Created {0}", outputFileName);
         } catch (Exception ex) {

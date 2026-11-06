@@ -156,7 +156,7 @@ public class AutoTaggingProcessor {
         }
         tagDocument(document, contents, null);
         String outputFileName = outputFolder + File.separator +
-                FileUtils.getBaseName(inputPDF.getName()) + "_tagged.pdf";
+                FileUtils.getOutputBaseName(inputPDF.getName()) + "_tagged.pdf";
         document.saveAs(outputFileName);
         LOGGER.log(Level.INFO, "Created {0}", outputFileName);
     }

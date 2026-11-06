@@ -121,9 +121,17 @@ public class MarkdownGenerator implements Closeable {
     /** The link of --include-links that the text being written ends in (see {@link TextLinks.OpenLink}). */
     private final TextLinks.OpenLink openLink = new TextLinks.OpenLink();
 
+    /**
+     * Opens {@code <name>.md} in the output folder, where {@code <name>} is
+     * {@link FileUtils#getOutputBaseName(String)} of the input name.
+     *
+     * @param inputPdf the input PDF, which names the output
+     * @param config the configuration settings
+     * @throws IOException if the Markdown file cannot be created
+     */
     MarkdownGenerator(File inputPdf, Config config) throws IOException {
         String cutPdfFileName = inputPdf.getName();
-        this.markdownFileName = config.getOutputFolder() + File.separator + FileUtils.getBaseName(cutPdfFileName) + ".md";
+        this.markdownFileName = config.getOutputFolder() + File.separator + FileUtils.getOutputBaseName(cutPdfFileName) + ".md";
         this.indentingWriter = new IndentingWriter(new FileWriter(markdownFileName, StandardCharsets.UTF_8));
         this.markdownWriter = indentingWriter;
         this.isImageSupported = !config.isImageOutputOff() && config.isGenerateMarkdown();

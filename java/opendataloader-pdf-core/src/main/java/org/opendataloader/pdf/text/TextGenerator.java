@@ -59,9 +59,17 @@ public class TextGenerator implements Closeable {
     private final Set<Integer> selectedPageNumbers;
     private final boolean includeHeaderFooter;
 
+    /**
+     * Opens {@code <name>.txt} in the output folder, where {@code <name>} is
+     * {@link FileUtils#getOutputBaseName(String)} of the input name.
+     *
+     * @param inputPdf the input PDF, which names the output
+     * @param config the configuration settings
+     * @throws IOException if the text file cannot be created
+     */
     public TextGenerator(File inputPdf, Config config) throws IOException {
         String cutPdfFileName = inputPdf.getName();
-        this.textFileName = config.getOutputFolder() + File.separator + FileUtils.getBaseName(cutPdfFileName) + ".txt";
+        this.textFileName = config.getOutputFolder() + File.separator + FileUtils.getOutputBaseName(cutPdfFileName) + ".txt";
         this.textWriter = new FileWriter(textFileName, StandardCharsets.UTF_8);
         this.textPageSeparator = config.getTextPageSeparator();
         this.selectedPageNumbers = new HashSet<>(config.getPageNumbers());
