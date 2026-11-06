@@ -104,6 +104,35 @@ class Issue904StepsDrawnOutOfOrderTest {
             SYMPTOM + " (the note of (2) is not between (2) and (3)): " + document);
     }
 
+    /** Six steps drawn in the order (1), (5), (3), (2), (4), (6): one list of the six steps, in their order. */
+    @Test
+    void sixStepsDrawnOutOfOrderAreOneListInOrder() throws IOException {
+        String[][] steps = {{"(1) Connect the power cable."}, {"(2) Read the message."}, {"(3) Touch the start button."},
+            {"(4) Wait for the tank."}, {"(5) Close the cover."}, {"(6) The main screen comes up."}};
+        JsonNode document = convertJson("six-out-of-order", steps(steps, 0, 4, 2, 1, 3, 5));
+
+        assertStepsInOrder(document, "(1) Connect", "(2) Read", "(3) Touch", "(4) Wait", "(5) Close", "(6) The main");
+    }
+
+    /**
+     * Guard: an indented list below the last step that goes on with the numbers of the steps, drawn in the step (1),
+     * is not one list with the steps.
+     */
+    @Test
+    void indentedListThatGoesOnWithTheNumbersIsNotOneListWithTheSteps() throws IOException {
+        List<Line> lines = new ArrayList<>();
+        lines.add(new Line(STEP_X, TOP, "(1) Open the box of the product."));
+        lines.add(new Line(TEXT_X, TOP - 2 * STEP_DISTANCE, "(3) Keep the box for a later move."));
+        lines.add(new Line(TEXT_X, TOP - 2 * STEP_DISTANCE - LINE_DISTANCE, "(4) Keep the papers in the box."));
+        lines.add(new Line(STEP_X, TOP - STEP_DISTANCE, "(2) Take out the product."));
+        JsonNode document = convertJson("indented-goes-on", lines);
+
+        JsonNode indented = listWithItem(document, "(3) Keep the box");
+        assertNotNull(indented, "the indented list is lost: " + document);
+        assertTrue(!indented.toString().contains("(1) Open the box"),
+            "the indented list is one list with the steps: " + document);
+    }
+
     /** Guard: steps drawn in their order stay one list of the four steps, in their order. */
     @Test
     void stepsDrawnInOrderStayOneListInOrder() throws IOException {

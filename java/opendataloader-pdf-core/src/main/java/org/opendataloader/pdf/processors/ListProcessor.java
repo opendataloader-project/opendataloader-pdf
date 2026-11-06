@@ -533,43 +533,76 @@ public class ListProcessor {
         if (list.getListItems().isEmpty() || NumberingStyleNames.UNORDERED.equals(list.getNumberingStyle())) {
             return;
         }
-        for (ListItem item : new ArrayList<>(list.getListItems())) {
+        // After a list moves, a list that did not go on with the numbers before can go on now, as (5) and (6) in the
+        // step (1) after (3) and (4) moved. So the search starts again after each move.
+        PDFList next = findListThatGoesOnWithTheNumbers(list);
+        while (next != null) {
+            ListItem lastItem = list.getLastListItem();
+            takeContentBetween(lastItem, next.getFirstListItem(), list, pageContents, owners);
+            list.add(next);
+            next = findListThatGoesOnWithTheNumbers(list);
+        }
+    }
+
+    /** Takes out of its item and returns a list in an item of the list that goes on with its numbers, or null. */
+    private static PDFList findListThatGoesOnWithTheNumbers(PDFList list) {
+        for (ListItem item : list.getListItems()) {
             Iterator<IObject> contents = item.getContents().iterator();
             while (contents.hasNext()) {
                 IObject content = contents.next();
                 if (content instanceof PDFList && goesOnWithTheNumbers(list, (PDFList) content)) {
-                    PDFList next = (PDFList) content;
-                    ListItem lastItem = list.getLastListItem();
                     contents.remove();
-                    takeContentBetween(lastItem, next.getFirstListItem(), list, pageContents, owners);
-                    list.add(next);
+                    return (PDFList) content;
                 }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Takes into the item the text, the lists, the figures, and the tables of the page that are completely between
+     * the item and the next item: below the last line of the item, above the first line of the next item, and at the
+     * text of the items (to the right of their labels, in the column of the list). An object that goes on below the
+     * first line of the next item stays on the page.
+     */
+    private static void takeContentBetween(ListItem item, ListItem nextItem, PDFList list, List<IObject> pageContents,
+                                           PDFList[] owners) {
+        TextLine itemLine = item.getLastLine();
+        TextLine nextLine = nextItem.getFirstLine();
+        double maxXGap = getMaxXGap(item.getFirstLine().getFontSize());
+        for (int index = 0; index < pageContents.size(); index++) {
+            IObject object = pageContents.get(index);
+            if (object != null && isBetweenLines(object, itemLine, nextLine)
+                    && object.getLeftX() > list.getLeftX() + maxXGap && object.getLeftX() < list.getRightX()) {
+                item.getContents().add(object);
+                take(pageContents, index, list, owners);
             }
         }
     }
 
     /**
-     * Takes into the item the text and the lists of the page between the item and the next item: below the last line
-     * of the item, above the first line of the next item, and at the text of the items (to the right of their
-     * labels, in the column of the list).
+     * Whether the object is completely between the two lines: the baselines of its lines between their baselines,
+     * or, for a figure or a table, its box below the baseline of the line above and above the top of the line below.
      */
-    private static void takeContentBetween(ListItem item, ListItem nextItem, PDFList list, List<IObject> pageContents,
-                                           PDFList[] owners) {
-        double top = item.getLastLine().getBaseLine();
-        double bottom = nextItem.getFirstLine().getBaseLine();
-        double maxXGap = getMaxXGap(item.getFirstLine().getFontSize());
-        for (int index = 0; index < pageContents.size(); index++) {
-            IObject object = pageContents.get(index);
-            if (!(object instanceof TextLine || object instanceof SemanticTextNode || object instanceof PDFList)) {
-                continue;
-            }
-            double middle = (object.getTopY() + object.getBottomY()) / 2;
-            if (middle < top && middle > bottom && object.getLeftX() > list.getLeftX() + maxXGap
-                    && object.getLeftX() < list.getRightX()) {
-                item.getContents().add(object);
-                take(pageContents, index, list, owners);
-            }
+    private static boolean isBetweenLines(IObject object, TextLine lineAbove, TextLine lineBelow) {
+        TextLine first;
+        TextLine last;
+        if (object instanceof TextLine) {
+            first = (TextLine) object;
+            last = first;
+        } else if (object instanceof SemanticTextNode) {
+            first = ((SemanticTextNode) object).getFirstLine();
+            last = ((SemanticTextNode) object).getLastLine();
+        } else if (object instanceof PDFList && !((PDFList) object).getListItems().isEmpty()) {
+            first = ((PDFList) object).getFirstListItem().getFirstLine();
+            last = ((PDFList) object).getLastListItem().getLastLine();
+        } else if (object instanceof ImageChunk || object instanceof TableBorder) {
+            return object.getTopY() < lineAbove.getBaseLine() && object.getBottomY() > lineBelow.getTopY();
+        } else {
+            return false;
         }
+        return first != null && last != null && first.getBaseLine() < lineAbove.getBaseLine()
+                && last.getBaseLine() > lineBelow.getBaseLine();
     }
 
     /**
