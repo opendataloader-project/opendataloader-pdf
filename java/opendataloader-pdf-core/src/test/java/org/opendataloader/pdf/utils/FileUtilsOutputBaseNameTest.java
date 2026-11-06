@@ -50,6 +50,7 @@ class FileUtilsOutputBaseNameTest {
         assertEquals("scan.txt", FileUtils.getOutputBaseName("scan.txt"));
     }
 
+    /** For each format, the output of an input named like that format gets another name. */
     @Test
     void outputNeverTakesTheNameOfItsInput() {
         for (String input : new String[] {"report.json", "notes.md", "page.html", "scan.txt"}) {

@@ -93,6 +93,10 @@ class Issue430IntegrationTest {
             () -> OpenDataLoaderPDF.processFile(dir.toString(), jsonConfig(tempDir.resolve("out"))));
     }
 
+    /**
+     * A PDF whose name has no extension converts, and each text output is named
+     * after the whole input name.
+     */
     @Test
     void testProcessFile_pdfWithoutExtension_succeeds() throws Exception {
         // A caller may keep its inputs under generated names without an extension.

@@ -835,21 +835,24 @@ public class DocumentProcessor {
         }
     }
 
-    /**
-     * Performs preprocessing on a PDF document.
-     * Initializes static containers and parses the document structure.
-     *
-     * @param pdfName the path to the PDF file
-     * @param config the configuration settings
-     * @throws IOException if unable to read the PDF file, or if the JVM
-     *         temporary directory is not writable
-     */
     /** Whether the structure tree root of the document has a parent tree. */
     private static boolean hasParentTree(PDDocument pdDocument) {
         PDStructTreeRoot root = pdDocument.getStructTreeRoot();
         return root != null && root.getParentTree() != null;
     }
 
+    /**
+     * Performs preprocessing on a PDF document.
+     * Initializes static containers and parses the document structure.
+     *
+     * <p>The input is accepted by its content, whatever its name: a missing
+     * {@code %PDF-} header is rejected, a name without {@code .pdf} is not.
+     *
+     * @param pdfName the path to the PDF file
+     * @param config the configuration settings
+     * @throws IOException if unable to read the PDF file, or if the JVM
+     *         temporary directory is not writable
+     */
     public static void preprocessing(String pdfName, Config config) throws IOException {
         LOGGER.log(Level.INFO, () -> "File name: " + pdfName);
         // Validate the path syntax first (cheap, no I/O); existence
