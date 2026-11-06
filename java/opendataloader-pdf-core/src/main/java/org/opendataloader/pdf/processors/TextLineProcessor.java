@@ -65,6 +65,14 @@ public class TextLineProcessor {
     private static final double MAX_ROW_BASELINE_DIFFERENCE = 0.25;
     /** The labels of the rows of a table of contents start or end at most this many font sizes apart. */
     private static final double MAX_LABEL_ALIGNMENT_DIFFERENCE = 0.25;
+    /** A table without lines whose first column has the numbers of its rows has at least this many rows. */
+    private static final int MIN_NUMBERED_ROWS = 3;
+    /** The first lines of the cells of a row have their baselines at most this many font sizes from its number. */
+    private static final double MAX_CELL_BASELINE_DIFFERENCE = 0.5;
+    /** The lines of a cell, and of a column of text, are at most this many font sizes apart. */
+    private static final double MAX_CELL_LINE_DISTANCE = 2;
+    /** The number of a row of a table without lines: one to three digits. */
+    private static final Pattern ROW_NUMBER = Pattern.compile("\\d{1,3}");
     /** A page reference of two words, as {@code p. 12}, {@code pp. 12-14}, or {@code B 7}. */
     private static final Pattern PAGE_REFERENCE = Pattern.compile("\\p{L}{1,4}\\.?\\s+\\d[\\p{L}\\d.\\-\u2013]*");
     private static final Comparator<TextChunk> TEXT_CHUNK_COMPARATOR =
@@ -123,6 +131,7 @@ public class TextLineProcessor {
             }
         }
         newContents = joinRowsWithLeaders(newContents);
+        newContents = joinRowsOfNumberedTables(newContents);
         linkTextLinesWithConnectedLineArtBullet(newContents);
         return newContents;
     }
@@ -245,6 +254,207 @@ public class TextLineProcessor {
             }
         }
         return newContents;
+    }
+
+    /**
+     * Makes one line of each row of a table without lines whose first column has the numbers of its rows (#906), as
+     * a legend below a figure: a number, a name, and a description in each row. A page can draw such a table column by
+     * column, so each cell is a line of its own, and the lines of each column become one paragraph or one list.
+     *
+     * <p>The numbers are lines of one number each, at one x, that go on from the top as 1, 2, 3 (at least
+     * {@link #MIN_NUMBERED_ROWS} rows). A column of the table is the lines that start at one x to the right of the
+     * numbers: one first line in each row, at the baseline of its number, and no line of that column just above the
+     * first row or just below the last row. Text of another column of the page goes on there, so it is not a column
+     * of the table. Each row becomes one line: the number and the first line of each cell, with one space between
+     * them, in the place of the first of them in the contents. The other lines of a cell stay lines of their own,
+     * just after their row; the last row has no other lines.
+     */
+    private static List<IObject> joinRowsOfNumberedTables(List<IObject> contents) {
+        List<TextLine> lines = new ArrayList<>();
+        List<TextLine> numbers = new ArrayList<>();
+        for (IObject content : contents) {
+            if (content instanceof TextLine && !((TextLine) content).isHiddenText()) {
+                TextLine line = (TextLine) content;
+                lines.add(line);
+                if (ROW_NUMBER.matcher(line.getValue().trim()).matches()) {
+                    numbers.add(line);
+                }
+            }
+        }
+        if (numbers.size() < MIN_NUMBERED_ROWS) {
+            return contents;
+        }
+        Map<TextLine, List<TextLine>> rowsOfMembers = new IdentityHashMap<>();
+        for (List<TextLine> column : getColumnsOfRowNumbers(numbers)) {
+            addRowsOfNumberedTable(column, lines, rowsOfMembers);
+        }
+        if (rowsOfMembers.isEmpty()) {
+            return contents;
+        }
+        List<IObject> newContents = new ArrayList<>(contents.size());
+        Set<List<TextLine>> placedRows = Collections.newSetFromMap(new IdentityHashMap<>());
+        for (IObject content : contents) {
+            List<TextLine> row = rowsOfMembers.get(content);
+            if (row == null) {
+                newContents.add(content);
+            } else if (placedRows.add(row)) {
+                newContents.addAll(row);
+            }
+        }
+        return newContents;
+    }
+
+    /**
+     * The columns of row numbers: runs of at least {@link #MIN_NUMBERED_ROWS} numbers that start, end, or have their
+     * middle at one x (within {@link #MAX_LABEL_ALIGNMENT_DIFFERENCE} font sizes), as 9 and 10 in a centered column,
+     * and go on from the top as n, n + 1, n + 2.
+     */
+    private static List<List<TextLine>> getColumnsOfRowNumbers(List<TextLine> numbers) {
+        List<TextLine> sorted = new ArrayList<>(numbers);
+        sorted.sort((first, second) -> Double.compare(second.getBaseLine(), first.getBaseLine()));
+        List<List<TextLine>> runs = new ArrayList<>();
+        for (TextLine number : sorted) {
+            int value = Integer.parseInt(number.getValue().trim());
+            List<TextLine> run = null;
+            for (List<TextLine> candidate : runs) {
+                TextLine last = candidate.get(candidate.size() - 1);
+                double maxDifference = MAX_LABEL_ALIGNMENT_DIFFERENCE * number.getFontSize();
+                if (Integer.parseInt(last.getValue().trim()) + 1 == value
+                        && (Math.abs(last.getLeftX() - number.getLeftX()) <= maxDifference
+                        || Math.abs(last.getRightX() - number.getRightX()) <= maxDifference
+                        || Math.abs(last.getCenterX() - number.getCenterX()) <= maxDifference)) {
+                    run = candidate;
+                    break;
+                }
+            }
+            if (run == null) {
+                run = new ArrayList<>();
+                runs.add(run);
+            }
+            run.add(number);
+        }
+        runs.removeIf(run -> run.size() < MIN_NUMBERED_ROWS);
+        return runs;
+    }
+
+    /**
+     * Finds the columns of the table of the column of row numbers, and puts each line of a row (the row as one line,
+     * then the other lines of its cells) in the map, for each of its members: its number, the first lines and the
+     * other lines of its cells.
+     */
+    private static void addRowsOfNumberedTable(List<TextLine> numbers, List<TextLine> lines,
+                                               Map<TextLine, List<TextLine>> rowsOfMembers) {
+        double fontSize = numbers.get(0).getFontSize();
+        double baselineDifference = MAX_CELL_BASELINE_DIFFERENCE * fontSize;
+        double alignment = MAX_LABEL_ALIGNMENT_DIFFERENCE * fontSize;
+        double numbersRight = Double.NEGATIVE_INFINITY;
+        for (TextLine number : numbers) {
+            numbersRight = Math.max(numbersRight, number.getRightX());
+        }
+        // The first lines of the cells of each row, by the x where they start.
+        List<NavigableMap<Double, TextLine>> firstLines = new ArrayList<>();
+        for (TextLine number : numbers) {
+            NavigableMap<Double, TextLine> row = new TreeMap<>();
+            for (TextLine line : lines) {
+                if (line.getLeftX() > numbersRight && !rowsOfMembers.containsKey(line)
+                        && Math.abs(line.getBaseLine() - number.getBaseLine()) <= baselineDifference) {
+                    row.put(line.getLeftX(), line);
+                }
+            }
+            firstLines.add(row);
+        }
+        List<Double> columns = new ArrayList<>();
+        for (double x : firstLines.get(0).keySet()) {
+            if (isColumnOfTable(x, numbers, firstLines, lines, alignment)) {
+                columns.add(x);
+            }
+        }
+        if (columns.isEmpty()) {
+            return;
+        }
+        for (int i = 0; i < numbers.size(); i++) {
+            TextLine number = numbers.get(i);
+            List<TextLine> members = new ArrayList<>();
+            members.add(number);
+            TextLine row = new TextLine();
+            for (TextChunk chunk : number.getTextChunks()) {
+                row.add(chunk);
+            }
+            List<TextLine> otherLines = new ArrayList<>();
+            for (double x : columns) {
+                TextLine first = firstLines.get(i).floorEntry(x + alignment).getValue();
+                members.add(first);
+                row.add(getSpaceChunk(row.getLastTextChunk().getTextEnd(), first.getFirstTextChunk()));
+                for (TextChunk chunk : first.getTextChunks()) {
+                    row.add(chunk);
+                }
+                if (i + 1 < numbers.size()) {
+                    otherLines.addAll(getOtherLinesOfCell(first, numbers.get(i + 1).getBaseLine() + baselineDifference,
+                        lines, alignment, fontSize));
+                }
+            }
+            members.addAll(otherLines);
+            List<TextLine> rowLines = new ArrayList<>();
+            rowLines.add(row);
+            rowLines.addAll(otherLines);
+            for (TextLine member : members) {
+                rowsOfMembers.put(member, rowLines);
+            }
+        }
+    }
+
+    /**
+     * Whether the lines that start at the x are a column of the table: each row has one first line there, and no line
+     * starts there just above the first row or just below the last row, as the text of another column of the page.
+     */
+    private static boolean isColumnOfTable(double x, List<TextLine> numbers, List<NavigableMap<Double, TextLine>> firstLines,
+                                           List<TextLine> lines, double alignment) {
+        for (NavigableMap<Double, TextLine> row : firstLines) {
+            if (row.subMap(x - alignment, true, x + alignment, true).size() != 1) {
+                return false;
+            }
+        }
+        TextLine top = firstLines.get(0).floorEntry(x + alignment).getValue();
+        TextLine bottom = firstLines.get(firstLines.size() - 1).floorEntry(x + alignment).getValue();
+        double maxDistance = MAX_CELL_LINE_DISTANCE * numbers.get(0).getFontSize();
+        for (TextLine line : lines) {
+            if (Math.abs(line.getLeftX() - x) > alignment) {
+                continue;
+            }
+            double above = line.getBaseLine() - top.getBaseLine();
+            double below = bottom.getBaseLine() - line.getBaseLine();
+            if ((above > 0 && above <= maxDistance && line != top) || (below > 0 && below <= maxDistance && line != bottom)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * The other lines of the cell of the first line: the lines below it that start at its x, each at most
+     * {@link #MAX_CELL_LINE_DISTANCE} font sizes below the line above it, and above the bottom (the top of the next
+     * row).
+     */
+    private static List<TextLine> getOtherLinesOfCell(TextLine first, double bottom, List<TextLine> lines,
+                                                      double alignment, double fontSize) {
+        List<TextLine> candidates = new ArrayList<>();
+        for (TextLine line : lines) {
+            if (line != first && Math.abs(line.getLeftX() - first.getLeftX()) <= alignment
+                    && line.getBaseLine() < first.getBaseLine() && line.getBaseLine() > bottom) {
+                candidates.add(line);
+            }
+        }
+        candidates.sort((one, other) -> Double.compare(other.getBaseLine(), one.getBaseLine()));
+        List<TextLine> cell = new ArrayList<>();
+        TextLine above = first;
+        for (TextLine line : candidates) {
+            if (above.getBaseLine() - line.getBaseLine() > MAX_CELL_LINE_DISTANCE * fontSize) {
+                break;
+            }
+            cell.add(line);
+            above = line;
+        }
+        return cell;
     }
 
     /**
