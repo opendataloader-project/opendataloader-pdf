@@ -517,7 +517,75 @@ public class ListProcessor {
         if (list.getListItems().isEmpty()) {
             LOGGER.log(Level.WARNING, "List is not added to contents");
         }
+        appendListsThatGoOnWithTheNumbers(list, pageContents, owners);
         return list;
+    }
+
+    /**
+     * Moves each list in an item of the list to the end of the list, when that list goes on with the numbers of the
+     * list, in its column and below its last item (#904). The content stream can draw numbered steps out of their
+     * order, as (1), (3), (2), (4). The list detection then makes the list of (3) and (4) first, and the step (1)
+     * takes it, because it is between (1) and (2) in the content order. A list that starts with other numbers, or that
+     * is indented, stays in its item. The item that was the last item takes the content of the page between it and
+     * the items after it, as the other items take the content up to their next item.
+     */
+    private static void appendListsThatGoOnWithTheNumbers(PDFList list, List<IObject> pageContents, PDFList[] owners) {
+        if (list.getListItems().isEmpty() || NumberingStyleNames.UNORDERED.equals(list.getNumberingStyle())) {
+            return;
+        }
+        for (ListItem item : new ArrayList<>(list.getListItems())) {
+            Iterator<IObject> contents = item.getContents().iterator();
+            while (contents.hasNext()) {
+                IObject content = contents.next();
+                if (content instanceof PDFList && goesOnWithTheNumbers(list, (PDFList) content)) {
+                    PDFList next = (PDFList) content;
+                    ListItem lastItem = list.getLastListItem();
+                    contents.remove();
+                    takeContentBetween(lastItem, next.getFirstListItem(), list, pageContents, owners);
+                    list.add(next);
+                }
+            }
+        }
+    }
+
+    /**
+     * Takes into the item the text and the lists of the page between the item and the next item: below the last line
+     * of the item, above the first line of the next item, and at the text of the items (to the right of their
+     * labels, in the column of the list).
+     */
+    private static void takeContentBetween(ListItem item, ListItem nextItem, PDFList list, List<IObject> pageContents,
+                                           PDFList[] owners) {
+        double top = item.getLastLine().getBaseLine();
+        double bottom = nextItem.getFirstLine().getBaseLine();
+        double maxXGap = getMaxXGap(item.getFirstLine().getFontSize());
+        for (int index = 0; index < pageContents.size(); index++) {
+            IObject object = pageContents.get(index);
+            if (!(object instanceof TextLine || object instanceof SemanticTextNode || object instanceof PDFList)) {
+                continue;
+            }
+            double middle = (object.getTopY() + object.getBottomY()) / 2;
+            if (middle < top && middle > bottom && object.getLeftX() > list.getLeftX() + maxXGap
+                    && object.getLeftX() < list.getRightX()) {
+                item.getContents().add(object);
+                take(pageContents, index, list, owners);
+            }
+        }
+    }
+
+    /**
+     * Whether the other list goes on with the numbers of the list: the same numbering style, the same x (within the
+     * x interval of the items), its first item below the last item of the list, and its labels after the labels of
+     * the list.
+     */
+    private static boolean goesOnWithTheNumbers(PDFList list, PDFList other) {
+        if (other.getListItems().isEmpty() || !Objects.equals(list.getNumberingStyle(), other.getNumberingStyle())) {
+            return false;
+        }
+        ListItem lastItem = list.getLastListItem();
+        TextLine firstLine = other.getFirstListItem().getFirstLine();
+        return Math.abs(other.getLeftX() - list.getLeftX()) <= getMaxXGap(firstLine.getFontSize())
+                && firstLine.getBaseLine() < lastItem.getLastLine().getBaseLine()
+                && isNeighborLists(list, other, null);
     }
 
     private static void addContentToListItem(int nextIndex, ListItemInfo currentInfo, List<IObject> pageContents,
