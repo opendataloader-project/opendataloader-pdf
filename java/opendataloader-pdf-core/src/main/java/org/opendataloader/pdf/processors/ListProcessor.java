@@ -212,10 +212,10 @@ public class ListProcessor {
             }
         }
         List<TextListInterval> result = new ArrayList<>(intervalsList.size());
-        Map<Integer, List<TextLine>> pagesLines = new HashMap<>();
+        Map<Integer, PageText> pagesText = new HashMap<>();
         for (TextListInterval interval : intervalsList) {
-            List<TextListInterval> parts = splitAtTitlesBetweenItems(interval, page -> pagesLines.computeIfAbsent(
-                isTableCell ? Integer.valueOf(0) : page, index -> getLinesByBaseline(contents.get(index))));
+            List<TextListInterval> parts = splitAtBreaksBetweenItems(interval, page -> pagesText.computeIfAbsent(
+                isTableCell ? Integer.valueOf(0) : page, index -> new PageText(contents.get(index))));
             for (TextListInterval part : parts) {
                 if (part.getListItemsInfos().size() > 1) {
                     result.add(part);
@@ -227,24 +227,29 @@ public class ListProcessor {
     }
 
     /**
-     * Splits a list of bullets where a title is between two items, as the title of the next section (#354). The list
-     * detection joins a bullet to the list of the bullet above it in the column, and the content stream can draw the
-     * titles of a page before or after its bullets. A numbered list stays as it is: its numbers go on across a line
-     * between two items. The function gives the lines of a page from the top (see {@link #getLinesByBaseline}).
+     * Splits a list where the text between two items shows that they are not items of one list. A list of bullets
+     * ends at a title between two items, as the title of the next section (#354): the list detection joins a bullet
+     * to the list of the bullet above it in the column, and the content stream can draw the titles of a page before or
+     * after its bullets. A numbered list ends where text of its column between two items is not in their part of the
+     * content order (#905), as the text below two numbered section titles that the content stream draws one after the
+     * other: the first item cannot take that text, and the list would come before it. A numbered list goes on across
+     * a caption or a note that the content stream draws between its items. The function gives the text of a page.
      */
-    private static List<TextListInterval> splitAtTitlesBetweenItems(TextListInterval interval,
-                                                                    Function<Integer, List<TextLine>> linesOfPage) {
-        if (!NumberingStyleNames.UNORDERED.equals(interval.getNumberingStyle())) {
-            return Collections.singletonList(interval);
-        }
+    private static List<TextListInterval> splitAtBreaksBetweenItems(TextListInterval interval,
+                                                                    Function<Integer, PageText> textOfPage) {
+        boolean bullets = NumberingStyleNames.UNORDERED.equals(interval.getNumberingStyle());
         List<ListItemTextInfo> infos = interval.getListItemsInfos();
         List<TextListInterval> parts = new ArrayList<>();
         int start = 0;
         for (int i = 1; i < infos.size(); i++) {
             ListItemTextInfo above = infos.get(i - 1);
             ListItemTextInfo below = infos.get(i);
-            if (Objects.equals(above.getPageNumber(), below.getPageNumber()) && hasTitleBetween(
-                    linesOfPage.apply(below.getPageNumber()), above.getListItemValue(), below.getListItemValue())) {
+            if (!Objects.equals(above.getPageNumber(), below.getPageNumber())) {
+                continue;
+            }
+            PageText text = textOfPage.apply(below.getPageNumber());
+            if (bullets ? hasTitleBetween(text.getLines(), above.getListItemValue(), below.getListItemValue())
+                    : hasTextOutsideTheItemsBetween(text, above, below)) {
                 parts.add(createIntervalPart(interval, start, i));
                 start = i;
             }
@@ -264,30 +269,94 @@ public class ListProcessor {
     }
 
     /**
-     * The lines of the contents that are not hidden and not empty, the text lines and the lines of the paragraphs and
-     * headings, in the order of their baselines from the top of the page.
+     * The lines of the contents of a page that are not hidden and not empty, the text lines and the lines of the
+     * paragraphs, the headings, and the lists, in the order of their baselines from the top of the page, and the index
+     * in the contents of each line, or of its paragraph, heading, or list.
      */
-    private static List<TextLine> getLinesByBaseline(List<IObject> contents) {
-        List<TextLine> lines = new ArrayList<>();
-        for (IObject object : contents) {
-            if (object instanceof TextLine) {
-                addVisibleLine(lines, (TextLine) object);
-            } else if (object instanceof SemanticTextNode) {
-                for (TextColumn column : ((SemanticTextNode) object).getColumns()) {
-                    for (TextLine line : column.getLines()) {
-                        addVisibleLine(lines, line);
+    private static final class PageText {
+        private final List<TextLine> lines;
+        private final Map<TextLine, Integer> indexes;
+
+        private PageText(List<IObject> contents) {
+            lines = new ArrayList<>();
+            indexes = new IdentityHashMap<>();
+            for (int index = 0; index < contents.size(); index++) {
+                IObject object = contents.get(index);
+                if (object instanceof TextLine) {
+                    add((TextLine) object, index);
+                } else if (object instanceof SemanticTextNode) {
+                    addTextNode((SemanticTextNode) object, index);
+                } else if (object instanceof PDFList) {
+                    addList((PDFList) object, index);
+                }
+            }
+            lines.sort((first, second) -> Double.compare(second.getBaseLine(), first.getBaseLine()));
+        }
+
+        private void addTextNode(SemanticTextNode textNode, int index) {
+            for (TextColumn column : textNode.getColumns()) {
+                for (TextLine line : column.getLines()) {
+                    add(line, index);
+                }
+            }
+        }
+
+        private void addList(PDFList list, int index) {
+            for (ListItem item : list.getListItems()) {
+                for (TextLine line : item.getLines()) {
+                    add(line, index);
+                }
+                for (IObject content : item.getContents()) {
+                    if (content instanceof SemanticTextNode) {
+                        addTextNode((SemanticTextNode) content, index);
+                    } else if (content instanceof PDFList) {
+                        addList((PDFList) content, index);
                     }
                 }
             }
         }
-        lines.sort((first, second) -> Double.compare(second.getBaseLine(), first.getBaseLine()));
-        return lines;
+
+        private void add(TextLine line, int index) {
+            if (!line.isHiddenText() && !line.getValue().isEmpty()) {
+                lines.add(line);
+                indexes.put(line, index);
+            }
+        }
+
+        /** The lines, in the order of their baselines from the top of the page. */
+        private List<TextLine> getLines() {
+            return lines;
+        }
+
+        /** The index in the contents of the line, or of its paragraph, heading, or list, or null. */
+        private Integer getIndex(TextLine line) {
+            return indexes.get(line);
+        }
     }
 
-    private static void addVisibleLine(List<TextLine> lines, TextLine line) {
-        if (!line.isHiddenText() && !line.getValue().isEmpty()) {
-            lines.add(line);
+    /**
+     * Whether a line of the column between the lines of two items, at the items or to the left of them, is not in the
+     * part of the content order from the first item to the second item, so that the first item cannot take it. The
+     * lines of an item, and the text that the content stream draws between two items, are in that part.
+     */
+    private static boolean hasTextOutsideTheItemsBetween(PageText text, ListItemTextInfo item, ListItemTextInfo nextItem) {
+        TextLine itemLine = item.getListItemValue();
+        TextLine nextItemLine = nextItem.getListItemValue();
+        double maxXGap = getMaxXGap(itemLine.getFontSize());
+        List<TextLine> lines = text.getLines();
+        for (int index = getFirstLineBelow(lines, itemLine.getBaseLine()); index < lines.size()
+                && lines.get(index).getBaseLine() > nextItemLine.getBaseLine(); index++) {
+            TextLine line = lines.get(index);
+            if (line.getLeftX() >= itemLine.getRightX() || line.getRightX() <= itemLine.getLeftX()
+                    || line.getLeftX() >= itemLine.getLeftX() + maxXGap) {
+                continue;
+            }
+            Integer lineIndex = text.getIndex(line);
+            if (lineIndex != null && (lineIndex < item.getIndex() || lineIndex > nextItem.getIndex())) {
+                return true;
+            }
         }
+        return false;
     }
 
     /**
@@ -861,15 +930,15 @@ public class ListProcessor {
         List<ListItemTextInfo> textChildrenInfo = calculateTextChildrenInfo(textNodes);
         List<INode> nodes = new LinkedList<>(textNodes);
         Set<ListInterval> intervals = ListUtils.getChildrenListIntervals(ListLabelsUtils.getListItemsIntervals(textChildrenInfo), nodes);
-        List<TextLine> lines = null;
+        PageText text = null;
         for (ListInterval interval : intervals) {
             updateListInterval(interval, textNodesIndexes);
             List<TextListInterval> parts = Collections.singletonList(new TextListInterval(interval));
-            if (!isHybrid && NumberingStyleNames.UNORDERED.equals(interval.getNumberingStyle())) {
-                // A list of paragraphs that each start with a bullet ends at a title between them too (#354).
-                List<TextLine> pageLines = lines != null ? lines : getLinesByBaseline(contents);
-                lines = pageLines;
-                parts = splitAtTitlesBetweenItems(parts.get(0), page -> pageLines);
+            if (!isHybrid) {
+                // A list of paragraphs ends where the text between two of them ends a list of lines too (#354, #905).
+                PageText pageText = text != null ? text : new PageText(contents);
+                text = pageText;
+                parts = splitAtBreaksBetweenItems(parts.get(0), page -> pageText);
             }
             for (TextListInterval textListInterval : parts) {
                 if ((parts.size() > 1 && textListInterval.getNumberOfListItems() < 2) || !isCorrectList(textListInterval)) {
@@ -1166,7 +1235,7 @@ public class ListProcessor {
      * Whether the content between two lists of bullets on one page is a title between them, as the title of a
      * section (#354): its first line is in a larger or a heavier font than the last item, it starts at the bullets or
      * to the left of them, and it does not go on from the last item. The lists stay apart, as
-     * {@link #splitAtTitlesBetweenItems} made them.
+     * {@link #splitAtBreaksBetweenItems} made them.
      */
     private static boolean startsTextBetweenBulletLists(PDFList previousList, SemanticTextNode middleContent,
                                                         PDFList currentList) {
