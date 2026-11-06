@@ -502,17 +502,22 @@ public class ParagraphProcessor {
         if (!CaptionUtils.areOverlapping(previousBlock.getLastLine(), nextBlock.getFirstLine().getBoundingBox())) {
             return false;
         }
-        if (isHeavierLine(previousBlock.getLastLine(), nextBlock.getFirstLine())) {
+        if (isHeadingAbove(previousBlock.getLastLine(), nextBlock.getFirstLine())) {
             return false;
         }
         return true;
     }
 
     /**
-     * Whether each word of the line is in a heavier font than each word of the other line, for example a bold heading
-     * above a regular text. A line that only starts with a bold word is not heavier.
+     * Whether the line is a heading above the paragraph whose first line is the other line: each word of the line is
+     * in a heavier font than each word of the other line, for example a bold heading above a regular text, and the
+     * line does not start to the right of the other line. A line that only starts with a bold word is not a heading,
+     * and an indented first line is not a heading.
      */
-    private static boolean isHeavierLine(TextLine line, TextLine otherLine) {
+    private static boolean isHeadingAbove(TextLine line, TextLine otherLine) {
+        if (line.getLeftX() > otherLine.getLeftX() && !areAtSameX(line, otherLine)) {
+            return false;
+        }
         double lightest = Double.POSITIVE_INFINITY;
         for (TextChunk chunk : line.getTextChunks()) {
             if (!chunk.isWhiteSpaceChunk() && !chunk.isEmpty()) {
