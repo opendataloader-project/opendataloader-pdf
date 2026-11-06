@@ -137,6 +137,24 @@ class Issue396ColumnsReadAcrossParagraphGapsTest {
     }
 
     /**
+     * A column of 9 pt text and a column of 16 pt text: the gap between two paragraphs of the left column (16 pt) is
+     * inside a gap between two paragraphs of the right column (24 pt). Each gap is less than two font sizes of the text
+     * of its column, so the columns are read column by column.
+     */
+    @Test
+    void columnsOfDifferentTextSizesAreReadColumnByColumn() throws IOException {
+        Page page = new Page();
+        page.text(9, 11, 26.4f);
+        page.column(LEFT_X, TOP, "Amber", 5, "Basil", 6);
+        page.text(16, 19, 42.4f);
+        page.column(RIGHT_X, TOP, "Delta", 3, "Ember", 3);
+
+        String markdown = convert("text-sizes-columns", page);
+
+        assertOrder(SYMPTOM, markdown, "Amber", "Basil", "Delta", "Ember");
+    }
+
+    /**
      * Guard: a heading at the left below two columns that end at the same height starts a new section. The columns
      * of the new section start below the heading. The gap above the heading is less than two font sizes, but the right
      * column has no text below the gap until the new section, so the sections are read one after the other.
