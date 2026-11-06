@@ -265,9 +265,10 @@ public class TextLineProcessor {
      * {@link #MIN_NUMBERED_ROWS} rows). A column of the table is the lines that start at one x to the right of the
      * numbers: one first line in each row, at the baseline of its number, and no line of that column just above the
      * first row or just below the last row. Text of another column of the page goes on there, so it is not a column
-     * of the table. Each row becomes one line: the number and the first line of each cell, with one space between
-     * them, in the place of the first of them in the contents. The other lines of a cell stay lines of their own,
-     * just after their row; the last row has no other lines.
+     * of the table, and a table with such a column is not joined. Each row becomes one line: the number and the first
+     * line of each cell, with one space between them. The other lines of a cell stay lines of their own, just after
+     * their row; the last row has no other lines. The table takes the place of its first line in the contents, with
+     * its rows in the order of their numbers.
      */
     private static List<IObject> joinRowsOfNumberedTables(List<IObject> contents) {
         List<TextLine> lines = new ArrayList<>();
@@ -284,24 +285,46 @@ public class TextLineProcessor {
         if (numbers.size() < MIN_NUMBERED_ROWS) {
             return contents;
         }
-        Map<TextLine, List<TextLine>> rowsOfMembers = new IdentityHashMap<>();
+        Map<TextLine, List<TextLine>> tablesOfMembers = new IdentityHashMap<>();
         for (List<TextLine> column : getColumnsOfRowNumbers(numbers)) {
-            addRowsOfNumberedTable(column, lines, rowsOfMembers);
+            addNumberedTables(column, lines, tablesOfMembers);
         }
-        if (rowsOfMembers.isEmpty()) {
+        if (tablesOfMembers.isEmpty()) {
             return contents;
         }
+        // Each table takes the place of its first member in the contents, with its rows in the order of their numbers.
         List<IObject> newContents = new ArrayList<>(contents.size());
-        Set<List<TextLine>> placedRows = Collections.newSetFromMap(new IdentityHashMap<>());
+        Set<List<TextLine>> placedTables = Collections.newSetFromMap(new IdentityHashMap<>());
         for (IObject content : contents) {
-            List<TextLine> row = rowsOfMembers.get(content);
-            if (row == null) {
+            List<TextLine> table = tablesOfMembers.get(content);
+            if (table == null) {
                 newContents.add(content);
-            } else if (placedRows.add(row)) {
-                newContents.addAll(row);
+            } else if (placedTables.add(table)) {
+                newContents.addAll(table);
             }
         }
         return newContents;
+    }
+
+    /**
+     * Joins the rows of the table of the column of row numbers. If no table has these rows, as when two tables far
+     * apart go on with the same numbers and their columns are at other places, the column is split at its largest gap
+     * between two numbers, and each part is tried again.
+     */
+    private static void addNumberedTables(List<TextLine> numbers, List<TextLine> lines,
+                                          Map<TextLine, List<TextLine>> tablesOfMembers) {
+        if (addRowsOfNumberedTable(numbers, lines, tablesOfMembers) || numbers.size() < 2 * MIN_NUMBERED_ROWS) {
+            return;
+        }
+        int split = MIN_NUMBERED_ROWS;
+        for (int i = MIN_NUMBERED_ROWS; i <= numbers.size() - MIN_NUMBERED_ROWS; i++) {
+            if (numbers.get(i - 1).getBaseLine() - numbers.get(i).getBaseLine()
+                    > numbers.get(split - 1).getBaseLine() - numbers.get(split).getBaseLine()) {
+                split = i;
+            }
+        }
+        addNumberedTables(new ArrayList<>(numbers.subList(0, split)), lines, tablesOfMembers);
+        addNumberedTables(new ArrayList<>(numbers.subList(split, numbers.size())), lines, tablesOfMembers);
     }
 
     /**
@@ -338,51 +361,64 @@ public class TextLineProcessor {
     }
 
     /**
-     * Finds the columns of the table of the column of row numbers, and puts each line of a row (the row as one line,
-     * then the other lines of its cells) in the map, for each of its members: its number, the first lines and the
-     * other lines of its cells.
+     * Finds the columns of the table of the column of row numbers, and puts the lines of the table (each row as one
+     * line, then the other lines of its cells, in the order of the numbers) in the map, for each of its members: the
+     * numbers, the first lines and the other lines of the cells. Returns false, and changes nothing, if the rows are
+     * not the rows of one table: no column has a first line in each row, a column with a first line in each row goes
+     * on above or below the rows, or two columns have the same line in a row.
      */
-    private static void addRowsOfNumberedTable(List<TextLine> numbers, List<TextLine> lines,
-                                               Map<TextLine, List<TextLine>> rowsOfMembers) {
+    private static boolean addRowsOfNumberedTable(List<TextLine> numbers, List<TextLine> lines,
+                                                  Map<TextLine, List<TextLine>> tablesOfMembers) {
         double fontSize = numbers.get(0).getFontSize();
-        double baselineDifference = MAX_CELL_BASELINE_DIFFERENCE * fontSize;
         double alignment = MAX_LABEL_ALIGNMENT_DIFFERENCE * fontSize;
         double numbersRight = Double.NEGATIVE_INFINITY;
         for (TextLine number : numbers) {
             numbersRight = Math.max(numbersRight, number.getRightX());
         }
-        // The first lines of the cells of each row, by the x where they start.
         List<NavigableMap<Double, TextLine>> firstLines = new ArrayList<>();
         for (TextLine number : numbers) {
-            NavigableMap<Double, TextLine> row = new TreeMap<>();
-            for (TextLine line : lines) {
-                if (line.getLeftX() > numbersRight && !rowsOfMembers.containsKey(line)
-                        && Math.abs(line.getBaseLine() - number.getBaseLine()) <= baselineDifference) {
-                    row.put(line.getLeftX(), line);
-                }
-            }
-            firstLines.add(row);
+            firstLines.add(getFirstLinesOfRow(number, numbersRight, lines, tablesOfMembers));
         }
         List<Double> columns = new ArrayList<>();
-        for (double x : firstLines.get(0).keySet()) {
-            if (isColumnOfTable(x, numbers, firstLines, lines, alignment)) {
+        for (double x : getStartsOfCells(firstLines, alignment)) {
+            int rows = countRowsWithFirstLine(x, firstLines, alignment);
+            if (rows == firstLines.size() && hasOneFirstLineInEachRow(x, firstLines, alignment)) {
+                if (goesOnBeyondTheRows(x, firstLines, lines, alignment)) {
+                    return false;
+                }
                 columns.add(x);
+            } else if (rows > 1) {
+                // A column with first lines in some rows only: the rows would not have all their cells.
+                return false;
             }
         }
         if (columns.isEmpty()) {
-            return;
+            return false;
         }
+        List<List<TextLine>> cells = new ArrayList<>();
+        for (NavigableMap<Double, TextLine> row : firstLines) {
+            List<TextLine> rowCells = new ArrayList<>();
+            for (double x : columns) {
+                TextLine first = row.floorEntry(x + alignment).getValue();
+                if (rowCells.contains(first)) {
+                    return false;
+                }
+                rowCells.add(first);
+            }
+            cells.add(rowCells);
+        }
+        double baselineDifference = MAX_CELL_BASELINE_DIFFERENCE * fontSize;
+        List<TextLine> table = new ArrayList<>();
+        List<TextLine> members = new ArrayList<>();
         for (int i = 0; i < numbers.size(); i++) {
             TextLine number = numbers.get(i);
-            List<TextLine> members = new ArrayList<>();
             members.add(number);
             TextLine row = new TextLine();
             for (TextChunk chunk : number.getTextChunks()) {
                 row.add(chunk);
             }
             List<TextLine> otherLines = new ArrayList<>();
-            for (double x : columns) {
-                TextLine first = firstLines.get(i).floorEntry(x + alignment).getValue();
+            for (TextLine first : cells.get(i)) {
                 members.add(first);
                 row.add(getSpaceChunk(row.getLastTextChunk().getTextEnd(), first.getFirstTextChunk()));
                 for (TextChunk chunk : first.getTextChunks()) {
@@ -390,44 +426,103 @@ public class TextLineProcessor {
                 }
                 if (i + 1 < numbers.size()) {
                     otherLines.addAll(getOtherLinesOfCell(first, numbers.get(i + 1).getBaseLine() + baselineDifference,
-                        lines, alignment, fontSize));
+                        lines, alignment, first.getFontSize()));
                 }
             }
             members.addAll(otherLines);
-            List<TextLine> rowLines = new ArrayList<>();
-            rowLines.add(row);
-            rowLines.addAll(otherLines);
-            for (TextLine member : members) {
-                rowsOfMembers.put(member, rowLines);
-            }
+            table.add(row);
+            table.addAll(otherLines);
         }
+        for (TextLine member : members) {
+            tablesOfMembers.put(member, table);
+        }
+        return true;
     }
 
     /**
-     * Whether the lines that start at the x are a column of the table: each row has one first line there, and no line
-     * starts there just above the first row or just below the last row, as the text of another column of the page.
+     * The first lines of the cells of the row of the number, by the x where they start: the lines to the right of the
+     * numbers whose baselines are at most {@link #MAX_CELL_BASELINE_DIFFERENCE} times the smaller font size from the
+     * baseline of the number. Of two lines that start at one x, the line nearer to the number is the first line.
      */
-    private static boolean isColumnOfTable(double x, List<TextLine> numbers, List<NavigableMap<Double, TextLine>> firstLines,
-                                           List<TextLine> lines, double alignment) {
+    private static NavigableMap<Double, TextLine> getFirstLinesOfRow(TextLine number, double numbersRight,
+                                                                    List<TextLine> lines,
+                                                                    Map<TextLine, List<TextLine>> tablesOfMembers) {
+        NavigableMap<Double, TextLine> row = new TreeMap<>();
+        for (TextLine line : lines) {
+            double difference = Math.abs(line.getBaseLine() - number.getBaseLine());
+            if (line.getLeftX() <= numbersRight || tablesOfMembers.containsKey(line)
+                    || difference > MAX_CELL_BASELINE_DIFFERENCE * Math.min(number.getFontSize(), line.getFontSize())) {
+                continue;
+            }
+            TextLine other = row.get(line.getLeftX());
+            if (other == null || difference < Math.abs(other.getBaseLine() - number.getBaseLine())) {
+                row.put(line.getLeftX(), line);
+            }
+        }
+        return row;
+    }
+
+    /** The x where the first lines of the rows start, one for each group of starts within the alignment, in order. */
+    private static List<Double> getStartsOfCells(List<NavigableMap<Double, TextLine>> firstLines, double alignment) {
+        TreeMap<Double, Boolean> starts = new TreeMap<>();
+        for (NavigableMap<Double, TextLine> row : firstLines) {
+            for (double x : row.keySet()) {
+                starts.put(x, Boolean.TRUE);
+            }
+        }
+        List<Double> groups = new ArrayList<>();
+        for (double x : starts.keySet()) {
+            if (groups.isEmpty() || x - groups.get(groups.size() - 1) > 2 * alignment) {
+                groups.add(x);
+            }
+        }
+        return groups;
+    }
+
+    /** The number of rows with a first line that starts at most the alignment from the x. */
+    private static int countRowsWithFirstLine(double x, List<NavigableMap<Double, TextLine>> firstLines,
+                                              double alignment) {
+        int rows = 0;
+        for (NavigableMap<Double, TextLine> row : firstLines) {
+            if (!row.subMap(x - alignment, true, x + 2 * alignment, true).isEmpty()) {
+                rows++;
+            }
+        }
+        return rows;
+    }
+
+    /** Whether each row has one first line that starts at the x. */
+    private static boolean hasOneFirstLineInEachRow(double x, List<NavigableMap<Double, TextLine>> firstLines,
+                                                    double alignment) {
         for (NavigableMap<Double, TextLine> row : firstLines) {
             if (row.subMap(x - alignment, true, x + alignment, true).size() != 1) {
                 return false;
             }
         }
+        return true;
+    }
+
+    /**
+     * Whether a line that starts at the x is just above the first row or just below the last row, at most
+     * {@link #MAX_CELL_LINE_DISTANCE} font sizes of the lines of the column from it, as the text of another column of
+     * the page, a header of the column, or more lines of the last cell.
+     */
+    private static boolean goesOnBeyondTheRows(double x, List<NavigableMap<Double, TextLine>> firstLines,
+                                               List<TextLine> lines, double alignment) {
         TextLine top = firstLines.get(0).floorEntry(x + alignment).getValue();
         TextLine bottom = firstLines.get(firstLines.size() - 1).floorEntry(x + alignment).getValue();
-        double maxDistance = MAX_CELL_LINE_DISTANCE * numbers.get(0).getFontSize();
+        double maxDistance = MAX_CELL_LINE_DISTANCE * Math.max(top.getFontSize(), bottom.getFontSize());
         for (TextLine line : lines) {
             if (Math.abs(line.getLeftX() - x) > alignment) {
                 continue;
             }
             double above = line.getBaseLine() - top.getBaseLine();
             double below = bottom.getBaseLine() - line.getBaseLine();
-            if ((above > 0 && above <= maxDistance && line != top) || (below > 0 && below <= maxDistance && line != bottom)) {
-                return false;
+            if ((above > 0 && above <= maxDistance) || (below > 0 && below <= maxDistance)) {
+                return true;
             }
         }
-        return true;
+        return false;
     }
 
     /**
