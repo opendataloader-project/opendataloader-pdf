@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -124,8 +125,24 @@ class Issue388BoldStepHeadingsTest {
                 new Run("stays in the tank for a long time is not safe.", false)));
         JsonNode document = convertJson("bold-word", lines);
 
-        assertTrue(elementThatContains(document, "Note:") == elementThatContains(document, "is not safe."),
-            "the paragraph that starts with a bold word is split: " + document);
+        assertSameElement(document, "Note:", "is not safe.", "the paragraph that starts with a bold word is split");
+    }
+
+    /**
+     * Guard: a paragraph whose first line is indented and all bold, and whose other lines are regular, stays one
+     * paragraph. The indent shows that the line starts the paragraph; a step heading is not indented from its text.
+     */
+    @Test
+    void indentedBoldFirstLineStaysInItsParagraph() throws IOException {
+        List<Line> lines = Arrays.asList(
+            new Line(TEXT_X, 700, new Run("Keep the machine away from heat and from", true)),
+            new Line(HEADING_X, 700 - LINE_DISTANCE,
+                new Run("direct sun. Put it on a flat floor, at a short distance", false)),
+            new Line(HEADING_X, 700 - 2 * LINE_DISTANCE, new Run("from the wall, so that air can move.", false)));
+        JsonNode document = convertJson("indented-bold-first-line", lines);
+
+        assertSameElement(document, "Keep the machine", "air can move.",
+            "the paragraph with an indented bold first line is split");
     }
 
     /** Guard: a paragraph in one font whose first line is indented stays one paragraph. */
@@ -138,20 +155,36 @@ class Issue388BoldStepHeadingsTest {
             new Line(HEADING_X, 700 - 2 * LINE_DISTANCE, new Run("it shows the temperature on the display.", false)));
         JsonNode document = convertJson("indented-first-line", lines);
 
-        assertTrue(elementThatContains(document, "The machine makes")
-                == elementThatContains(document, "on the display."),
-            "the paragraph with an indented first line is split: " + document);
+        assertSameElement(document, "The machine makes", "on the display.",
+            "the paragraph with an indented first line is split");
     }
 
-    /** Asserts that the heading of each step is an element without the text of the step. */
+    /**
+     * Asserts that the heading of each step is an element without the text of the step, and that one element has all
+     * the lines of the text.
+     */
     private static void assertHeadingsAreAlone(JsonNode document, String[][] steps) {
         for (String[] step : steps) {
             JsonNode heading = elementThatContains(document, step[0]);
-            assertTrue(heading != null && !heading.path("content").asText().contains(step[1]),
-                SYMPTOM + " (" + step[0] + "): " + document);
-            assertTrue(elementThatContains(document, step[1]) != null, "the text of the step is lost (" + step[0]
-                + "): " + document);
+            assertTrue(heading != null, "the heading of the step is lost (" + step[0] + "): " + document);
+            for (int i = 1; i < step.length; i++) {
+                assertFalse(heading.path("content").asText().contains(step[i]),
+                    SYMPTOM + " (" + step[0] + "): " + document);
+            }
+            JsonNode text = elementThatContains(document, step[1]);
+            assertTrue(text != null, "the text of the step is lost (" + step[0] + "): " + document);
+            for (int i = 2; i < step.length; i++) {
+                assertTrue(text.path("content").asText().contains(step[i]),
+                    "the text of the step is not one element (" + step[0] + "): " + document);
+            }
         }
+    }
+
+    /** Asserts that an element contains the first text, and that the same element contains the second text. */
+    private static void assertSameElement(JsonNode document, String first, String second, String symptom) {
+        JsonNode element = elementThatContains(document, first);
+        assertTrue(element != null, "the text is lost (" + first + "): " + document);
+        assertTrue(element == elementThatContains(document, second), symptom + ": " + document);
     }
 
     /** The lines of the steps: each heading in bold, and its text below it, indented. */
