@@ -59,6 +59,13 @@
             <groupId>org.verapdf</groupId>
             <artifactId>wcag-algorithms</artifactId>
         </dependency>
+        <!-- CLIMain reads the arguments of OPENDATALOADER_PDF_ARGS with
+             ObjectMapper. Core already puts it on the classpath; the version
+             comes from the parent pom. -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
         <!-- CLIMainTest and FormatLogRegressionTest build fixture PDFs with
              PDDocument / PDPage / StandardProtectionPolicy. No main code here
              touches PDFBox, but the scope must stay compile: core reaches

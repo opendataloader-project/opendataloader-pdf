@@ -8,6 +8,7 @@ yet and is allowed to print the captured streams — but only once
 """
 
 import io
+import json
 import os
 import subprocess
 import sys
@@ -162,11 +163,12 @@ _JAVA_OPTION_VARS = ("JAVA_TOOL_OPTIONS", "JDK_JAVA_OPTIONS", "_JAVA_OPTIONS")
 
 
 def _capture_command(monkeypatch):
-    """Record the command that run_jar passes to subprocess.run."""
+    """Record the command and environment that run_jar passes to subprocess.run."""
     seen = {}
 
-    def fake_run(command, **_kwargs):
+    def fake_run(command, **kwargs):
         seen["command"] = command
+        seen["env"] = kwargs.get("env")
         return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
 
     monkeypatch.setattr(runner.subprocess, "run", fake_run)
@@ -476,3 +478,165 @@ def test_an_infinite_timeout_means_no_limit(monkeypatch, tmp_path, patched_jar, 
     monkeypatch.setenv("PATH", os.pathsep.join([str(bin_dir), os.environ["PATH"]]))
 
     assert runner.run_jar(["doc.pdf"], quiet=quiet, timeout=float("inf")) == "stand-in done\n"
+
+
+# --------------------------------------------------------------------------- #
+# Non-ASCII arguments
+#
+# On Windows the Java launcher decodes argv with the system ANSI code page, so
+# non-ASCII arguments become "?". The runner passes them as JSON in
+# OPENDATALOADER_PDF_ARGS instead. The JAR path and the temporary folder are
+# JVM options, so they get their ASCII short (8.3) form.
+# --------------------------------------------------------------------------- #
+@pytest.fixture
+def on_windows(monkeypatch):
+    monkeypatch.setattr(runner, "_ON_WINDOWS", True)
+
+
+@pytest.fixture
+def fake_short_paths(monkeypatch):
+    """Give every existing path a short form, as Windows does, on any OS."""
+    shorts = {}
+
+    def fake_short_path(path):
+        if not os.path.exists(path):
+            return None
+        return shorts.setdefault(path, f"SHORT~{len(shorts) + 1}")
+
+    monkeypatch.setattr(runner, "_short_path", fake_short_path)
+    return shorts
+
+
+def test_jar_arguments_keeps_ascii_arguments_on_command_line(on_windows):
+    args = ["input.pdf", "--format", "markdown", "--output-dir", "out"]
+    assert runner._jar_arguments(args) == (args, None)
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX behaviour")
+def test_jar_arguments_keeps_non_ascii_arguments_on_command_line_on_posix():
+    """On POSIX the JVM decodes argv as UTF-8."""
+    args = ["έγγραφο.pdf", "--image-dir", "εικόνες"]
+    assert runner._jar_arguments(args) == (args, None)
+
+
+def test_jar_arguments_passes_non_ascii_arguments_in_environment(monkeypatch, on_windows):
+    """All arguments move to OPENDATALOADER_PDF_ARGS, so Java gets the real
+    names of files and folders, and of the image folder in Markdown links."""
+    monkeypatch.setenv("SOME_USER_VARIABLE", "kept")
+    args = ["έγγραφο.pdf", "--image-dir", "εικόνες", "--password", "κωδικός"]
+
+    jar_args, env = runner._jar_arguments(args)
+
+    assert jar_args == []
+    assert env["SOME_USER_VARIABLE"] == "kept"
+    value = env["OPENDATALOADER_PDF_ARGS"]
+    assert value.isascii()
+    assert json.loads(value) == args
+
+
+def test_jar_arguments_accepts_path_objects(tmp_path, on_windows):
+    """subprocess accepts pathlib.Path arguments, so callers can pass them."""
+    greek = tmp_path / "έγγραφο.pdf"
+
+    _, env = runner._jar_arguments([greek, "--output-dir", tmp_path])
+
+    assert json.loads(env["OPENDATALOADER_PDF_ARGS"]) == [str(greek), "--output-dir", str(tmp_path)]
+
+
+def test_run_jar_passes_non_ascii_arguments_in_environment(
+    monkeypatch, patched_jar, no_java_options, on_windows
+):
+    seen = _capture_command(monkeypatch)
+
+    runner.run_jar(["έγγραφο.pdf", "--quiet"], quiet=True)
+
+    command = seen["command"]
+    assert command[-2] == "-jar", command
+    assert json.loads(seen["env"]["OPENDATALOADER_PDF_ARGS"]) == ["έγγραφο.pdf", "--quiet"]
+
+
+def test_run_jar_keeps_environment_for_ascii_arguments(
+    monkeypatch, patched_jar, no_java_options, on_windows
+):
+    seen = _capture_command(monkeypatch)
+
+    runner.run_jar(["input.pdf"], quiet=True)
+
+    assert seen["command"][-1] == "input.pdf"
+    assert seen["env"] is None
+
+
+def test_ascii_path_keeps_path_without_ascii_short_form(tmp_path, monkeypatch):
+    """If the volume creates no short names, Windows returns the long path.
+    Keep the original path then."""
+    greek = tmp_path / "έγγραφο.pdf"
+    greek.write_bytes(b"%PDF-1.4")
+    monkeypatch.setattr(runner, "_short_path", lambda path: path)
+
+    assert runner._ascii_path(str(greek)) == str(greek)
+
+
+def test_passes_ascii_temp_dir_to_java(
+    monkeypatch, tmp_path, patched_jar, no_java_options, fake_short_paths
+):
+    """A user name with non-ASCII characters puts the temporary folder on a
+    non-ASCII path. Java must get its short form."""
+    temp_dir = tmp_path / "Στράτος"
+    temp_dir.mkdir()
+    monkeypatch.setattr(runner.tempfile, "gettempdir", lambda: str(temp_dir))
+    seen = _capture_command(monkeypatch)
+
+    runner.run_jar(["input.pdf"], quiet=True)
+
+    assert f"-Djava.io.tmpdir={fake_short_paths[str(temp_dir)]}" in seen["command"]
+
+
+def test_passes_ascii_jar_path_to_java(monkeypatch, tmp_path, no_java_options, fake_short_paths):
+    """A virtual environment in a non-ASCII user folder puts the JAR on a
+    non-ASCII path. Java must get its short form."""
+    jar = tmp_path / "Στράτος" / "opendataloader-pdf-cli.jar"
+    jar.parent.mkdir()
+    jar.write_bytes(b"")
+    traversable = MagicMock()
+    traversable.joinpath = lambda *_a, **_kw: jar
+    monkeypatch.setattr(runner.resources, "files", lambda _pkg: traversable)
+    monkeypatch.setattr(runner.resources, "as_file", lambda p: _FakeAsFile(p))
+    seen = _capture_command(monkeypatch)
+
+    runner.run_jar(["input.pdf"], quiet=True)
+
+    command = seen["command"]
+    assert command[command.index("-jar") + 1] == fake_short_paths[str(jar)]
+
+
+def _has_ascii_short_path(path):
+    """Ask Windows for the short form of a path, apart from the runner code."""
+    import ctypes
+    from ctypes import wintypes
+
+    get_short_path = ctypes.windll.kernel32.GetShortPathNameW
+    get_short_path.argtypes = [wintypes.LPCWSTR, wintypes.LPWSTR, wintypes.DWORD]
+    get_short_path.restype = wintypes.DWORD
+
+    path = os.path.abspath(path)
+    length = get_short_path(path, None, 0)
+    if length == 0:
+        return False
+    buffer = ctypes.create_unicode_buffer(length)
+    if get_short_path(path, buffer, length) == 0:
+        return False
+    return buffer.value.isascii()
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows short-path behaviour")
+def test_ascii_path_shortens_non_ascii_path_on_windows(tmp_path):
+    """A non-ASCII path is replaced by an ASCII short path pointing at the same
+    folder. A volume without short names keeps the path."""
+    folder = tmp_path / "Στράτος"
+    folder.mkdir()
+    result = runner._ascii_path(str(folder))
+    if _has_ascii_short_path(str(folder)):
+        assert result.isascii()
+        assert os.path.samefile(result, str(folder))
+    else:
+        assert result == str(folder)
