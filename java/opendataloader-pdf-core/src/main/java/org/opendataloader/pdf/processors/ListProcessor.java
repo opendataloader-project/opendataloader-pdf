@@ -52,6 +52,7 @@ public class ListProcessor {
     private static final Logger LOGGER = Logger.getLogger(ListProcessor.class.getCanonicalName());
 
     private static final double LIST_ITEM_PROBABILITY = 0.7;
+    private static final double FONT_TOLERANCE = 0.1;
     private static final double LIST_ITEM_BASELINE_DIFFERENCE = 1.2;
     private static final double LIST_ITEM_X_INTERVAL_RATIO = 0.3;
     private static final Pattern ATTACHMENTS_PATTERN = Pattern.compile("^붙\\s*임\\s*(?=.)");
@@ -104,7 +105,7 @@ public class ListProcessor {
     }
 
     public static void processLists(List<List<IObject>> contents, boolean isTableCell) {
-        List<TextListInterval> intervalsList = getTextLabelListIntervals(contents);
+        List<TextListInterval> intervalsList = getTextLabelListIntervals(contents, isTableCell);
         for (TextListInterval interval : intervalsList) {
             for (ListItemTextInfo info : interval.getListItemsInfos()) {
                 info.getListItemValue().setListLine(true);
@@ -186,7 +187,7 @@ public class ListProcessor {
         DocumentProcessor.setIDs(contents, true);
     }
 
-    private static List<TextListInterval> getTextLabelListIntervals(List<List<IObject>> contents) {
+    private static List<TextListInterval> getTextLabelListIntervals(List<List<IObject>> contents, boolean isTableCell) {
         List<TextListInterval> listIntervals = new ArrayList<>();
         for (List<IObject> pageContents : contents) {
             for (int i = 0; i < pageContents.size(); i++) {
@@ -209,9 +210,112 @@ public class ListProcessor {
                 intervalsList.add(interval);
             }
         }
-        List<TextListInterval> result = new ArrayList<>(intervalsList);
+        List<TextListInterval> result = new ArrayList<>(intervalsList.size());
+        for (TextListInterval interval : intervalsList) {
+            for (TextListInterval part : splitAtTextBetweenItems(interval, contents, isTableCell)) {
+                if (part.getListItemsInfos().size() > 1) {
+                    result.add(part);
+                }
+            }
+        }
         Collections.reverse(result);
         return result;
+    }
+
+    /**
+     * Splits a list of bullets where a title is between two items, as the title of the next section (#354). The list
+     * detection joins a bullet to the list of the bullet above it in the column, and the content stream can draw the
+     * titles of a page before or after its bullets. A numbered list stays as it is: its numbers go on across a line
+     * between two items.
+     */
+    private static List<TextListInterval> splitAtTextBetweenItems(TextListInterval interval,
+                                                                  List<List<IObject>> contents, boolean isTableCell) {
+        if (!NumberingStyleNames.UNORDERED.equals(interval.getNumberingStyle())) {
+            return Collections.singletonList(interval);
+        }
+        List<ListItemTextInfo> infos = interval.getListItemsInfos();
+        List<TextListInterval> parts = new ArrayList<>();
+        int start = 0;
+        for (int i = 1; i < infos.size(); i++) {
+            ListItemTextInfo above = infos.get(i - 1);
+            ListItemTextInfo below = infos.get(i);
+            if (Objects.equals(above.getPageNumber(), below.getPageNumber()) && hasLineThatStartsTextBetween(
+                    contents.get(isTableCell ? 0 : below.getPageNumber()), above.getListItemValue(),
+                    below.getListItemValue())) {
+                parts.add(createIntervalPart(interval, start, i));
+                start = i;
+            }
+        }
+        if (start == 0) {
+            return Collections.singletonList(interval);
+        }
+        parts.add(createIntervalPart(interval, start, infos.size()));
+        return parts;
+    }
+
+    /** The items of the interval from the start index to the end index (exclusive), with its numbering style. */
+    private static TextListInterval createIntervalPart(TextListInterval interval, int start, int end) {
+        TextListInterval part = new TextListInterval(new ArrayList<>(interval.getListItemsInfos().subList(start, end)));
+        part.setNumberingStyle(interval.getNumberingStyle());
+        return part;
+    }
+
+    /**
+     * Whether a line of the page, between the lines of two items and in their column, is a title there: it is in a
+     * larger or a heavier font than the item above, it starts at the items or to the left of them, and it does not
+     * go on from the line above it. A line in the font of the items, as a paragraph of an item or a caption, is a
+     * part of the item above (#876).
+     */
+    private static boolean hasLineThatStartsTextBetween(List<IObject> pageContents, TextLine itemLine,
+                                                        TextLine nextItemLine) {
+        List<TextLine> lines = new ArrayList<>();
+        for (IObject object : pageContents) {
+            if (object instanceof TextLine && object != itemLine && object != nextItemLine) {
+                TextLine line = (TextLine) object;
+                if (!line.isHiddenText() && !line.getValue().isEmpty()
+                        && line.getBaseLine() < itemLine.getBaseLine() && line.getBaseLine() > nextItemLine.getBaseLine()
+                        && line.getLeftX() < itemLine.getRightX() && line.getRightX() > itemLine.getLeftX()) {
+                    lines.add(line);
+                }
+            }
+        }
+        lines.sort((first, second) -> Double.compare(second.getBaseLine(), first.getBaseLine()));
+        double maxXGap = getMaxXGap(itemLine.getFontSize());
+        TextLine lineAbove = itemLine;
+        for (TextLine line : lines) {
+            if (line.getLeftX() < itemLine.getLeftX() + maxXGap && !continuesLine(lineAbove, line)
+                    && isInALargerOrHeavierFont(line, itemLine)) {
+                return true;
+            }
+            lineAbove = line;
+        }
+        return false;
+    }
+
+    /**
+     * Whether the line is in a larger font than the other line, or each of its words is in a heavier font than each
+     * word of the other line, as a title above a text. The sizes and the weights are compared with the tolerance of
+     * the paragraph detection (0.1).
+     */
+    private static boolean isInALargerOrHeavierFont(TextLine line, TextLine otherLine) {
+        if (line.getFontSize() > otherLine.getFontSize()
+                && !NodeUtils.areCloseNumbers(line.getFontSize(), otherLine.getFontSize(), FONT_TOLERANCE)) {
+            return true;
+        }
+        double lightest = Double.POSITIVE_INFINITY;
+        for (TextChunk chunk : line.getTextChunks()) {
+            if (!chunk.isWhiteSpaceChunk() && !chunk.isEmpty()) {
+                lightest = Math.min(lightest, chunk.getFontWeight());
+            }
+        }
+        double heaviest = Double.NEGATIVE_INFINITY;
+        for (TextChunk chunk : otherLine.getTextChunks()) {
+            if (!chunk.isWhiteSpaceChunk() && !chunk.isEmpty()) {
+                heaviest = Math.max(heaviest, chunk.getFontWeight());
+            }
+        }
+        return lightest != Double.POSITIVE_INFINITY && heaviest != Double.NEGATIVE_INFINITY && lightest > heaviest
+                && !NodeUtils.areCloseNumbers(lightest, heaviest, FONT_TOLERANCE);
     }
 
     private static void processListItem(List<TextListInterval> listIntervals, ListItemTextInfo listItemTextInfo) {
@@ -886,6 +990,9 @@ public class ListProcessor {
     }
 
     private static boolean isMiddleContentPartOfList(PDFList previousList, SemanticTextNode middleContent, PDFList currentList) {
+        if (startsTextBetweenBulletLists(previousList, middleContent, currentList)) {
+            return false;
+        }
         if (middleContent.getLeftX() < currentList.getLeftX()) {
             return false;
         }
@@ -902,6 +1009,28 @@ public class ListProcessor {
             }
         }
         return true;
+    }
+
+    /**
+     * Whether the content between two lists of bullets on one page is a title between them, as the title of a
+     * section (#354): its first line is in a larger or a heavier font than the last item, it starts at the bullets or
+     * to the left of them, and it does not go on from the last item. The lists stay apart, as
+     * {@link #splitAtTextBetweenItems} made them.
+     */
+    private static boolean startsTextBetweenBulletLists(PDFList previousList, SemanticTextNode middleContent,
+                                                        PDFList currentList) {
+        if (!NumberingStyleNames.UNORDERED.equals(previousList.getNumberingStyle())
+                || !NumberingStyleNames.UNORDERED.equals(currentList.getNumberingStyle())) {
+            return false;
+        }
+        ListItem lastItem = previousList.getLastListItem();
+        TextLine line = middleContent.getFirstLine();
+        if (line == null || !Objects.equals(lastItem.getPageNumber(), middleContent.getPageNumber())) {
+            return false;
+        }
+        TextLine itemLine = lastItem.getFirstLine();
+        return line.getLeftX() < itemLine.getLeftX() + getMaxXGap(itemLine.getFontSize())
+                && !continuesLine(lastItem.getLastLine(), line) && isInALargerOrHeavierFont(line, itemLine);
     }
 
     private static List<ListItemTextInfo> getTextChildrenInfosForNeighborLists(PDFList previousList, PDFList currentList) {
