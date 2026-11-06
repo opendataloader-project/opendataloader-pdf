@@ -85,17 +85,7 @@ class Issue906NumberedTableRowsTest {
         }
         JsonNode document = convertJson("legend", lines);
 
-        int previous = -1;
-        for (int i = 0; i < NAMES.length; i++) {
-            JsonNode element = elementThatContains(document, NAMES[i]);
-            assertNotNull(element, "the name of row " + (i + 1) + " is lost: " + document);
-            String content = element.path("content").asText();
-            assertTrue(content.startsWith((i + 1) + " ") && content.contains(DESCRIPTIONS[i]),
-                SYMPTOM + " (row " + (i + 1) + " is not one element): " + document);
-            int index = document.toString().indexOf(NAMES[i]);
-            assertTrue(index > previous, SYMPTOM + " (row " + (i + 1) + " is out of order): " + document);
-            previous = index;
-        }
+        assertRows(document, NAMES.length);
     }
 
     /**
@@ -118,17 +108,136 @@ class Issue906NumberedTableRowsTest {
         }
         JsonNode document = convertJson("two-line-cell", lines);
 
-        for (int i = 0; i < rows.length; i++) {
-            JsonNode element = elementThatContains(document, NAMES[i]);
-            assertNotNull(element, "the name of row " + (i + 1) + " is lost: " + document);
-            String content = element.path("content").asText();
-            assertTrue(content.startsWith((i + 1) + " ") && content.contains(DESCRIPTIONS[i]),
-                SYMPTOM + " (row " + (i + 1) + " is not one element): " + document);
-        }
+        assertRows(document, rows.length);
         String text = document.toString();
         assertTrue(text.indexOf(NAMES[1]) < text.indexOf("The mode stays")
                 && text.indexOf("The mode stays") < text.indexOf(NAMES[2]),
             SYMPTOM + " (the second line of row 2 is not between row 2 and row 3): " + document);
+    }
+
+    /**
+     * A legend whose columns the page content draws from the bottom up, with the reading order off: the rows come in
+     * the order of their numbers.
+     */
+    @Test
+    void rowsOfALegendDrawnFromTheBottomComeInTheOrderOfTheirNumbers() throws IOException {
+        List<Line> lines = new ArrayList<>();
+        for (int i = 2; i >= 0; i--) {
+            lines.add(new Line(DESCRIPTION_X, TOP - i * ROW_DISTANCE, false, DESCRIPTIONS[i]));
+        }
+        for (int i = 2; i >= 0; i--) {
+            lines.add(new Line(NAME_X, TOP - i * ROW_DISTANCE, true, NAMES[i]));
+        }
+        for (int i = 2; i >= 0; i--) {
+            lines.add(Line.centered(NUMBER_CENTER, TOP - i * ROW_DISTANCE, true, String.valueOf(i + 1)));
+        }
+        JsonNode document = convertJson("bottom-up", lines, Config.READING_ORDER_OFF);
+
+        assertRows(document, 3);
+    }
+
+    /**
+     * Two legends on one page, far apart, whose numbers go on from the first to the second, and whose columns are at
+     * other places: each row of each legend is one element.
+     */
+    @Test
+    void rowsOfTwoLegendsWithNumbersThatGoOnAreOneElementEach() throws IOException {
+        List<Line> lines = new ArrayList<>();
+        for (int i = 0; i < 6; i++) {
+            float baseline = TOP - i * ROW_DISTANCE - (i < 3 ? 0 : 200);
+            float shift = i < 3 ? 0 : 40;
+            lines.add(new Line(NAME_X + shift, baseline, true, NAMES[i]));
+            lines.add(new Line(DESCRIPTION_X + shift, baseline, false, DESCRIPTIONS[i]));
+        }
+        for (int i = 0; i < 6; i++) {
+            lines.add(Line.centered(NUMBER_CENTER, TOP - i * ROW_DISTANCE - (i < 3 ? 0 : 200), true,
+                String.valueOf(i + 1)));
+        }
+        JsonNode document = convertJson("two-legends", lines);
+
+        assertRows(document, 6);
+    }
+
+    /**
+     * A legend with numbers in 16 pt and descriptions in 6 pt, the first two of two lines 7 pt apart: the first line of
+     * each description is in its row.
+     */
+    @Test
+    void firstLineOfASmallDescriptionIsInItsRow() throws IOException {
+        List<Line> lines = new ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            float baseline = TOP - i * 3 * ROW_DISTANCE;
+            lines.add(new Line(DESCRIPTION_X, baseline, false, DESCRIPTIONS[i], 6));
+            if (i < 2) {
+                lines.add(new Line(DESCRIPTION_X, baseline - 7, false, "Then wait for the sound.", 6));
+            }
+        }
+        for (int i = 0; i < 3; i++) {
+            lines.add(Line.centered(NUMBER_CENTER, TOP - i * 3 * ROW_DISTANCE, true, String.valueOf(i + 1), 16));
+        }
+        JsonNode document = convertJson("small-descriptions", lines);
+
+        for (int i = 0; i < 3; i++) {
+            JsonNode element = elementThatContains(document, DESCRIPTIONS[i]);
+            assertNotNull(element, "the description of row " + (i + 1) + " is lost: " + document);
+            assertTrue(element.path("content").asText().startsWith((i + 1) + " "),
+                SYMPTOM + " (the first line of row " + (i + 1) + " is not in its row): " + document);
+        }
+    }
+
+    /**
+     * Guard: a legend with a header just above its column of descriptions is not joined in part: no row has its number
+     * and its name without its description.
+     */
+    @Test
+    void legendWithAHeaderIsNotJoinedInPart() throws IOException {
+        List<Line> lines = new ArrayList<>();
+        lines.add(new Line(DESCRIPTION_X, TOP + ROW_DISTANCE, true, "What it does"));
+        for (int i = 0; i < 3; i++) {
+            lines.add(new Line(NAME_X, TOP - i * ROW_DISTANCE, true, NAMES[i]));
+        }
+        for (int i = 0; i < 3; i++) {
+            lines.add(new Line(DESCRIPTION_X, TOP - i * ROW_DISTANCE, false, DESCRIPTIONS[i]));
+        }
+        for (int i = 0; i < 3; i++) {
+            lines.add(Line.centered(NUMBER_CENTER, TOP - i * ROW_DISTANCE, true, String.valueOf(i + 1)));
+        }
+        JsonNode document = convertJson("header", lines);
+
+        for (int i = 0; i < 3; i++) {
+            JsonNode element = elementThatContains(document, NAMES[i]);
+            assertNotNull(element, "the name of row " + (i + 1) + " is lost: " + document);
+            String content = element.path("content").asText();
+            assertTrue(!content.startsWith((i + 1) + " " + NAMES[i]) || content.contains(DESCRIPTIONS[i]),
+                "row " + (i + 1) + " is joined without its description: " + document);
+        }
+    }
+
+    /**
+     * Guard: a legend whose name and description of row 1 the page content draws one after the other, so that they are
+     * one line already, is not joined in part: no row has its number and its name without its description.
+     */
+    @Test
+    void legendWithACellOfTwoColumnsIsNotJoinedInPart() throws IOException {
+        List<Line> lines = new ArrayList<>();
+        for (int i = 2; i >= 0; i--) {
+            lines.add(new Line(NAME_X, TOP - i * ROW_DISTANCE, true, NAMES[i]));
+        }
+        for (int i = 0; i < 3; i++) {
+            lines.add(new Line(DESCRIPTION_X, TOP - i * ROW_DISTANCE, false, DESCRIPTIONS[i]));
+        }
+        for (int i = 0; i < 3; i++) {
+            lines.add(Line.centered(NUMBER_CENTER, TOP - i * ROW_DISTANCE, true, String.valueOf(i + 1)));
+        }
+        JsonNode document = convertJson("cell-of-two-columns", lines);
+
+        for (int i = 0; i < 3; i++) {
+            JsonNode element = elementThatContains(document, NAMES[i]);
+            assertNotNull(element, "the name of row " + (i + 1) + " is lost: " + document);
+            String content = element.path("content").asText();
+            assertTrue(!content.startsWith((i + 1) + " " + NAMES[i]) || content.contains(DESCRIPTIONS[i]),
+                "row " + (i + 1) + " is joined without its description: " + document);
+        }
     }
 
     /**
@@ -175,6 +284,30 @@ class Issue906NumberedTableRowsTest {
         }
     }
 
+    /**
+     * Asserts one element for each of the first rows of the legend: it starts with the number of the row, it has the
+     * name and the description of the row once, it has no name and no description of another row, and the rows come
+     * in the order of their numbers.
+     */
+    private static void assertRows(JsonNode document, int rows) {
+        int previous = -1;
+        for (int i = 0; i < rows; i++) {
+            JsonNode element = elementThatContains(document, NAMES[i]);
+            assertNotNull(element, "the name of row " + (i + 1) + " is lost: " + document);
+            String content = element.path("content").asText();
+            assertTrue(content.startsWith((i + 1) + " ") && content.indexOf(DESCRIPTIONS[i])
+                    == content.lastIndexOf(DESCRIPTIONS[i]) && content.contains(DESCRIPTIONS[i]),
+                SYMPTOM + " (row " + (i + 1) + " is not one element): " + document);
+            for (int j = 0; j < rows; j++) {
+                assertTrue(j == i || (!content.contains(DESCRIPTIONS[j]) && !content.contains(NAMES[j] + " ")),
+                    SYMPTOM + " (row " + (i + 1) + " has a part of row " + (j + 1) + "): " + document);
+            }
+            int index = document.toString().indexOf(NAMES[i]);
+            assertTrue(index > previous, SYMPTOM + " (row " + (i + 1) + " is out of order): " + document);
+            previous = index;
+        }
+    }
+
     /** The deepest element whose own content contains the text, or null. */
     private static JsonNode elementThatContains(JsonNode document, String text) {
         List<JsonNode> stack = new ArrayList<>();
@@ -210,6 +343,10 @@ class Issue906NumberedTableRowsTest {
     }
 
     private static JsonNode convertJson(String name, List<Line> lines) throws IOException {
+        return convertJson(name, lines, Config.READING_ORDER_XYCUT);
+    }
+
+    private static JsonNode convertJson(String name, List<Line> lines, String readingOrder) throws IOException {
         Path directory = TestSamples.emptyDirectory("issue-906-" + name);
         Path pdf = directory.resolve(name + ".pdf");
         try (PDDocument document = new PDDocument()) {
@@ -220,10 +357,10 @@ class Issue906NumberedTableRowsTest {
                     PDType1Font font = line.bold ? BOLD : REGULAR;
                     float x = line.x;
                     if (line.centered) {
-                        x -= font.getStringWidth(line.text) / 1000 * SIZE / 2;
+                        x -= font.getStringWidth(line.text) / 1000 * line.size / 2;
                     }
                     content.beginText();
-                    content.setFont(font, SIZE);
+                    content.setFont(font, line.size);
                     content.newLineAtOffset(x, line.baseline);
                     content.showText(line.text);
                     content.endText();
@@ -235,32 +372,43 @@ class Issue906NumberedTableRowsTest {
         config.setOutputFolder(directory.toString());
         config.setGenerateJSON(true);
         config.setGenerateMarkdown(true);
+        config.setReadingOrder(readingOrder);
         DocumentProcessor.processFile(pdf.toString(), config);
         return new ObjectMapper().readTree(directory.resolve(name + ".json").toFile());
     }
 
-    /** A line at its place, in the bold or the regular font; a centered line has its middle at x. */
+    /** A line at its place and size, in the bold or the regular font; a centered line has its middle at x. */
     private static final class Line {
         final float x;
         final float baseline;
         final boolean bold;
         final String text;
         final boolean centered;
+        final float size;
 
         Line(float x, float baseline, boolean bold, String text) {
-            this(x, baseline, bold, text, false);
+            this(x, baseline, bold, text, false, SIZE);
         }
 
-        private Line(float x, float baseline, boolean bold, String text, boolean centered) {
+        Line(float x, float baseline, boolean bold, String text, float size) {
+            this(x, baseline, bold, text, false, size);
+        }
+
+        private Line(float x, float baseline, boolean bold, String text, boolean centered, float size) {
             this.x = x;
             this.baseline = baseline;
             this.bold = bold;
             this.text = text;
             this.centered = centered;
+            this.size = size;
         }
 
         static Line centered(float x, float baseline, boolean bold, String text) {
-            return new Line(x, baseline, bold, text, true);
+            return new Line(x, baseline, bold, text, true, SIZE);
+        }
+
+        static Line centered(float x, float baseline, boolean bold, String text, float size) {
+            return new Line(x, baseline, bold, text, true, size);
         }
     }
 }
