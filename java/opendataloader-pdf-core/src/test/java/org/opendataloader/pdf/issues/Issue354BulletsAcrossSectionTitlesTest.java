@@ -145,6 +145,45 @@ class Issue354BulletsAcrossSectionTitlesTest {
         assertBefore(document, "After the work", "Take the old parts");
     }
 
+    /** Titles in the font size of the bullets, only in bold: one list for the bullets of each section. */
+    @Test
+    void bulletsOfTwoSectionsWithBoldTitlesInTheirSizeAreTwoLists() throws IOException {
+        List<Line> lines = new ArrayList<>();
+        float y = 760;
+        lines.add(new Line(LEFT, y, new Run("Before you start", true)));
+        y = bullets(lines, LEFT, y - TITLE_BELOW, "Read all the steps first.", "Put the parts on a table.",
+            "Keep the parts dry.");
+        lines.add(new Line(LEFT, y - TITLE_ABOVE, new Run("While you work", true)));
+        bullets(lines, LEFT, y - TITLE_ABOVE - TITLE_BELOW, "Turn off the power.", "Use the tools of the box.",
+            "Do not use force.");
+        JsonNode document = convertJson("bold-titles", Arrays.asList(lines));
+
+        assertSectionLists(document, "Read all the steps", "Keep the parts dry", "Turn off the power",
+            "Do not use force");
+        assertBefore(document, "Keep the parts dry", "While you work");
+        assertBefore(document, "While you work", "Turn off the power");
+    }
+
+    /**
+     * Two sections with one bullet each, with the titles drawn first in the page content: the two bullets are not one
+     * list, and the second title is between them.
+     */
+    @Test
+    void bulletsOfTwoSectionsWithOneBulletEachAreNotOneList() throws IOException {
+        List<Line> lines = new ArrayList<>();
+        lines.add(title(LEFT, 760, "Before you start"));
+        lines.add(title(LEFT, 760 - TITLE_BELOW - TITLE_ABOVE, "After the work"));
+        lines.add(bullet(LEFT, 760 - TITLE_BELOW, "Read all the steps first."));
+        lines.add(bullet(LEFT, 760 - 2 * TITLE_BELOW - TITLE_ABOVE, "Take the old parts to a collection point."));
+        JsonNode document = convertJson("one-bullet-each", Arrays.asList(lines));
+
+        JsonNode list = listWithItem(document, "Read all the steps");
+        assertTrue(list == null || !list.toString().contains("Take the old parts"),
+            SYMPTOM + " (one bullet in each section): " + document);
+        assertBefore(document, "Read all the steps", "After the work");
+        assertBefore(document, "After the work", "Take the old parts");
+    }
+
     /** Guard: one list without titles, whose items have lines that start at the text of the item, stays one list. */
     @Test
     void bulletsWithWrappedLinesStayOneList() throws IOException {
