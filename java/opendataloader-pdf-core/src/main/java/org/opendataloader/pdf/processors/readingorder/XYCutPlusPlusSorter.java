@@ -16,6 +16,8 @@
 package org.opendataloader.pdf.processors.readingorder;
 
 import org.verapdf.wcag.algorithms.entities.IObject;
+import org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter;
+import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 
@@ -70,6 +72,12 @@ public class XYCutPlusPlusSorter {
      *  potential outliers that may bridge column gaps (e.g., page numbers, footnote markers). */
     static final double NARROW_ELEMENT_WIDTH_RATIO = 0.1;
 
+    /**
+     * A horizontal gap across two columns of text is a gap between the paragraphs of the columns, and not between
+     * two parts of the page, if in each column it is at most this many font sizes of the text (#396).
+     */
+    static final double MAX_GAP_BETWEEN_PARAGRAPHS = 2.0;
+
     /** Rounding tolerance for the edges of the gutter, which are computed from the cut position and gap. */
     private static final double GUTTER_EDGE_TOLERANCE = 1e-6;
 
@@ -118,8 +126,14 @@ public class XYCutPlusPlusSorter {
             return validObjects;
         }
 
-        // Phase 1: Pre-mask cross-layout elements
+        // Phase 1: Pre-mask cross-layout elements. A page header or footer is a cross-layout element too: it keeps
+        // its place at the top or the bottom of the page, and it does not hide the gutter between the columns (#396).
         List<IObject> crossLayoutElements = identifyCrossLayoutElements(validObjects, beta);
+        for (IObject obj : validObjects) {
+            if (obj instanceof SemanticHeaderOrFooter && !crossLayoutElements.contains(obj)) {
+                crossLayoutElements.add(obj);
+            }
+        }
         List<IObject> remainingObjects = new ArrayList<>(validObjects);
         remainingObjects.removeAll(crossLayoutElements);
 
@@ -356,7 +370,8 @@ public class XYCutPlusPlusSorter {
         boolean useHorizontalCut;
         if (hasValidHorizontalCut && hasValidVerticalCut) {
             // Both cuts available - prefer larger gap
-            useHorizontalCut = horizontalCut.gap > verticalCut.gap;
+            useHorizontalCut = horizontalCut.gap > verticalCut.gap
+                    && !isGapBetweenParagraphsOfColumns(objects, verticalCut, horizontalCut);
             if (useHorizontalCut) {
                 CutInfo gutter = findColumnGutter(objects);
                 Optional<CutInfo> cutOutsideColumns = findHorizontalCutOutsideColumns(objects, horizontalCut, gutter);
@@ -390,6 +405,44 @@ public class XYCutPlusPlusSorter {
             }
             return flatMapRecursive(groups, preferHorizontalFirst);
         }
+    }
+
+    /**
+     * Check if the horizontal gap only goes across two columns of text between their paragraphs (issue #396). Then
+     * the columns go on below the gap, and the columns are cut first, also if the gap is larger than the gutter.
+     * <p>
+     * Each side of the vertical cut has content directly above and below the gap: on each side, the gap between the
+     * elements above and the elements below is at most {@link #MAX_GAP_BETWEEN_PARAGRAPHS} font sizes of the text.
+     * If one side has no content at the gap, or a larger gap, as above a section that starts below both columns, the
+     * gap is not only between paragraphs.
+     */
+    private static boolean isGapBetweenParagraphsOfColumns(List<IObject> objects, CutInfo verticalCut,
+                                                           CutInfo horizontalCut) {
+        double[] lowestBottomAbove = {Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY};
+        double[] highestTopBelow = {Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY};
+        List<Double> fontSizes = new ArrayList<>();
+        for (IObject obj : objects) {
+            int side = obj.getCenterX() < verticalCut.position ? 0 : 1;
+            if (obj.getCenterY() > horizontalCut.position) {
+                lowestBottomAbove[side] = Math.min(lowestBottomAbove[side], obj.getBottomY());
+            } else {
+                highestTopBelow[side] = Math.max(highestTopBelow[side], obj.getTopY());
+            }
+            if (obj instanceof SemanticTextNode) {
+                fontSizes.add(((SemanticTextNode) obj).getFontSize());
+            }
+        }
+        if (fontSizes.isEmpty()) {
+            return false;
+        }
+        fontSizes.sort(Double::compare);
+        double maxGap = MAX_GAP_BETWEEN_PARAGRAPHS * fontSizes.get(fontSizes.size() / 2);
+        for (int side = 0; side < 2; side++) {
+            if (lowestBottomAbove[side] - highestTopBelow[side] > maxGap) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
