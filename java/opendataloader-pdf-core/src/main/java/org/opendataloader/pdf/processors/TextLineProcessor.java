@@ -73,6 +73,8 @@ public class TextLineProcessor {
     private static final double MAX_CELL_LINE_DISTANCE = 2;
     /** The number of a row of a table without lines: one to three digits. */
     private static final Pattern ROW_NUMBER = Pattern.compile("\\d{1,3}");
+    /** The label of a numbered list item: one to three digits and a period or a parenthesis, as {@code 4.}. */
+    private static final Pattern LIST_NUMBER = Pattern.compile("\\d{1,3}[.)]");
     /** A page reference of two words, as {@code p. 12}, {@code pp. 12-14}, or {@code B 7}. */
     private static final Pattern PAGE_REFERENCE = Pattern.compile("\\p{L}{1,4}\\.?\\s+\\d[\\p{L}\\d.\\-\u2013]*");
     private static final Comparator<TextChunk> TEXT_CHUNK_COMPARATOR =
@@ -121,6 +123,7 @@ public class TextLineProcessor {
                 pendingWhitespace = false;
             }
         }
+        keepLabelsWithTheirText(newContents);
         for (int i = 0; i < newContents.size(); i++) {
             IObject content = newContents.get(i);
             if (content instanceof TextLine) {
@@ -134,6 +137,72 @@ public class TextLineProcessor {
         newContents = joinRowsOfNumberedTables(newContents);
         linkTextLinesWithConnectedLineArtBullet(newContents);
         return newContents;
+    }
+
+    /**
+     * Puts the label of a list item in one line with the text of the item (#913). A page can paint the label, then
+     * the text of another column on almost the same baseline, and the text of the item later. The lines follow the
+     * order of the contents, so the label and the text of the other column are one line, across the gutter.
+     *
+     * <p>If a line starts with a number label, its next chunk starts at least {@link #MIN_COLUMN_GAP} font sizes
+     * after the label, and another line on the row starts less than this distance after the label and ends before
+     * that chunk, the label goes to that line. The label and the text take the place of the label, so that the item
+     * stays with the items before it, and the rest of the line follows them as a line of its own.
+     */
+    private static void keepLabelsWithTheirText(List<IObject> contents) {
+        for (int i = 0; i < contents.size(); i++) {
+            if (!(contents.get(i) instanceof TextLine)) {
+                continue;
+            }
+            TextLine line = (TextLine) contents.get(i);
+            List<TextChunk> chunks = new ArrayList<>(line.getTextChunks());
+            chunks.sort(TEXT_CHUNK_COMPARATOR);
+            double minGap = MIN_COLUMN_GAP * chunks.get(0).getFontSize();
+            int far = 1;
+            while (far < chunks.size() && chunks.get(far).getLeftX() - chunks.get(far - 1).getRightX() < minGap) {
+                far++;
+            }
+            if (far == chunks.size()) {
+                continue;
+            }
+            TextLine label = newLine(chunks.subList(0, far));
+            if (!LIST_NUMBER.matcher(label.getValue().trim()).matches()) {
+                continue;
+            }
+            int text = findTextOfLabel(contents, label, chunks.get(far).getLeftX(), minGap, line.isHiddenText());
+            if (text < 0) {
+                continue;
+            }
+            List<TextChunk> labelAndText = new ArrayList<>(chunks.subList(0, far));
+            labelAndText.addAll(((TextLine) contents.remove(text)).getTextChunks());
+            if (text < i) {
+                i--;
+            }
+            contents.set(i, newLine(labelAndText));
+            contents.add(++i, newLine(chunks.subList(far, chunks.size())));
+        }
+    }
+
+    /**
+     * The index of the line that starts first after the label, on its row, less than the gap after the label, and
+     * that ends before the x; or -1.
+     */
+    private static int findTextOfLabel(List<IObject> contents, TextLine label, double x, double maxGap,
+                                       boolean hiddenText) {
+        int text = -1;
+        for (int i = 0; i < contents.size(); i++) {
+            if (!(contents.get(i) instanceof TextLine)) {
+                continue;
+            }
+            TextLine other = (TextLine) contents.get(i);
+            double gap = other.getLeftX() - label.getRightX();
+            if (gap >= 0 && gap < maxGap && other.getRightX() <= x && other.isHiddenText() == hiddenText
+                    && areOnOneRow(label, other)
+                    && (text < 0 || other.getLeftX() < ((TextLine) contents.get(text)).getLeftX())) {
+                text = i;
+            }
+        }
+        return text;
     }
 
     /**
