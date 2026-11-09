@@ -17,11 +17,15 @@ package org.opendataloader.pdf.issues;
 
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDFormContentStream;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
+import org.apache.pdfbox.util.Matrix;
 import org.junit.jupiter.api.Test;
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.processors.DocumentProcessor;
@@ -86,8 +90,16 @@ class Issue396RulesPaintedTogetherTest {
         /** All rules one after the other without marked content, before the text. */
         TOGETHER_WITHOUT_MARKED_CONTENT,
         /** Each rule in an artifact of its own. */
-        EACH_IN_ITS_OWN_ARTIFACT
+        EACH_IN_ITS_OWN_ARTIFACT,
+        /**
+         * All rules in one form that the page draws two times, each time in an artifact: before the text, and after
+         * the text, moved down below the columns. The paints of the two draws have the same operators of the form.
+         */
+        IN_A_FORM_DRAWN_TWO_TIMES
     }
+
+    /** The distance that the second draw of the form moves the rules down, to below the columns. */
+    private static final float SECOND_DRAW_DOWN = 650;
 
     @Test
     void rulesPaintedTogetherInOneArtifactDoNotHideTheGutter() throws IOException {
@@ -160,6 +172,20 @@ class Issue396RulesPaintedTogetherTest {
         assertOrder(SYMPTOM, markdown, page.expected());
     }
 
+    /**
+     * Variant: the page draws the form of the two rules two times, the second time below the columns. The lines of
+     * the second draw have the same paint operators as the lines of the first draw.
+     */
+    @Test
+    void rulesOfAFormDrawnTwoTimesDoNotHideTheGutter() throws IOException {
+        Page page = twoColumns();
+        page.rule(LEFT_X, 675.6f, WIDTH, RULE);
+
+        String markdown = convert("rules-form", Paint.IN_A_FORM_DRAWN_TWO_TIMES, page);
+
+        assertOrder(SYMPTOM, markdown, page.expected());
+    }
+
     /** Variant that main gets right: each rule is a line art of its own. */
     @Test
     void rulesPaintedInArtifactsOfTheirOwnKeepTheColumnsApart() throws IOException {
@@ -223,22 +249,25 @@ class Issue396RulesPaintedTogetherTest {
         try (PDDocument document = new PDDocument()) {
             PDPage page = new PDPage(PDRectangle.A4);
             document.addPage(page);
+            PDFormXObject form = null;
+            if (paint == Paint.IN_A_FORM_DRAWN_TWO_TIMES) {
+                form = new PDFormXObject(document);
+                form.setBBox(PDRectangle.A4);
+                form.setResources(new PDResources());
+                try (PDFormContentStream formContent = new PDFormContentStream(form)) {
+                    for (float[] rule : sample.rules) {
+                        formContent.addRect(rule[0], rule[1], rule[2], rule[3]);
+                        formContent.fill();
+                    }
+                }
+            }
             try (PDPageContentStream content = new PDPageContentStream(document, page)) {
-                if (paint == Paint.TOGETHER_IN_ONE_ARTIFACT) {
+                if (form != null) {
                     content.beginMarkedContent(COSName.ARTIFACT);
-                }
-                for (float[] rule : sample.rules) {
-                    if (paint == Paint.EACH_IN_ITS_OWN_ARTIFACT) {
-                        content.beginMarkedContent(COSName.ARTIFACT);
-                    }
-                    content.addRect(rule[0], rule[1], rule[2], rule[3]);
-                    content.fill();
-                    if (paint == Paint.EACH_IN_ITS_OWN_ARTIFACT) {
-                        content.endMarkedContent();
-                    }
-                }
-                if (paint == Paint.TOGETHER_IN_ONE_ARTIFACT) {
+                    content.drawForm(form);
                     content.endMarkedContent();
+                } else {
+                    paintRules(content, paint, sample.rules);
                 }
                 for (Line line : sample.lines) {
                     content.beginText();
@@ -247,6 +276,14 @@ class Issue396RulesPaintedTogetherTest {
                     content.newLineAtOffset(line.x, line.baseline);
                     content.showText(line.text);
                     content.endText();
+                }
+                if (form != null) {
+                    content.saveGraphicsState();
+                    content.transform(Matrix.getTranslateInstance(0, -SECOND_DRAW_DOWN));
+                    content.beginMarkedContent(COSName.ARTIFACT);
+                    content.drawForm(form);
+                    content.endMarkedContent();
+                    content.restoreGraphicsState();
                 }
             }
             document.save(pdf.toFile());
@@ -257,6 +294,26 @@ class Issue396RulesPaintedTogetherTest {
         config.setGenerateMarkdown(true);
         DocumentProcessor.processFile(pdf.toString(), config);
         return new String(Files.readAllBytes(directory.resolve(name + ".md")), StandardCharsets.UTF_8);
+    }
+
+    /** Paints the rules in the page contents, in marked content as the paint says. */
+    private static void paintRules(PDPageContentStream content, Paint paint, List<float[]> rules) throws IOException {
+        if (paint == Paint.TOGETHER_IN_ONE_ARTIFACT) {
+            content.beginMarkedContent(COSName.ARTIFACT);
+        }
+        for (float[] rule : rules) {
+            if (paint == Paint.EACH_IN_ITS_OWN_ARTIFACT) {
+                content.beginMarkedContent(COSName.ARTIFACT);
+            }
+            content.addRect(rule[0], rule[1], rule[2], rule[3]);
+            content.fill();
+            if (paint == Paint.EACH_IN_ITS_OWN_ARTIFACT) {
+                content.endMarkedContent();
+            }
+        }
+        if (paint == Paint.TOGETHER_IN_ONE_ARTIFACT) {
+            content.endMarkedContent();
+        }
     }
 
     private static float width(PDType1Font font, float size, String text) {

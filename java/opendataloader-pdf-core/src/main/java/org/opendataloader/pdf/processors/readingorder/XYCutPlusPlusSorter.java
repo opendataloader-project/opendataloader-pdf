@@ -208,8 +208,9 @@ public class XYCutPlusPlusSorter {
      * <p>
      * Without the IDs of marked content, veraPDF makes one line art of the paths that a page paints one after the
      * other, with one box around all of them. Each line that such a path paints is also a {@link LineChunk} of the
-     * page, with the same paint operator. A line art that already has lines, or that has more than
-     * {@link #MAX_RULES_OF_LINE_ART} paints or lines, does not change.
+     * page, with the same paint operator. A form that the page draws two or more times paints its lines with the
+     * same operators each time, so a line art keeps only the lines in its box. A line art that already has lines, or
+     * that has more than {@link #MAX_RULES_OF_LINE_ART} paints or lines, does not change.
      *
      * @param pageContents The contents of one page, with its lines
      */
@@ -239,7 +240,7 @@ public class XYCutPlusPlusSorter {
             List<LineChunk> orderedLines = new ArrayList<>();
             for (StreamInfo paint : lineArt.getStreamInfos()) {
                 for (LineChunk line : linesOfPaint.getOrDefault(paintKey(paint), Collections.emptyList())) {
-                    if (lines.add(line)) {
+                    if (isInside(line.getBoundingBox(), lineArt.getBoundingBox()) && lines.add(line)) {
                         orderedLines.add(line);
                     }
                 }
@@ -308,6 +309,13 @@ public class XYCutPlusPlusSorter {
                 && second.getLeftX() <= first.getRightX() + RULE_TOUCH_TOLERANCE
                 && first.getBottomY() <= second.getTopY() + RULE_TOUCH_TOLERANCE
                 && second.getBottomY() <= first.getTopY() + RULE_TOUCH_TOLERANCE;
+    }
+
+    private static boolean isInside(BoundingBox inner, BoundingBox outer) {
+        return inner.getLeftX() >= outer.getLeftX() - RULE_TOUCH_TOLERANCE
+                && inner.getRightX() <= outer.getRightX() + RULE_TOUCH_TOLERANCE
+                && inner.getBottomY() >= outer.getBottomY() - RULE_TOUCH_TOLERANCE
+                && inner.getTopY() <= outer.getTopY() + RULE_TOUCH_TOLERANCE;
     }
 
     private static boolean isSameBox(BoundingBox first, BoundingBox second) {
