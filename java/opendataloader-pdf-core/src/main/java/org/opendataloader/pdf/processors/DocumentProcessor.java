@@ -509,6 +509,7 @@ public class DocumentProcessor {
                     if (structured) {
                         TextDecorationProcessor.processStrikethroughAndUnderlinedText(pageContents, pageNumber, config.isDetectStrikethrough());
                         pageContents = TableBorderProcessor.processTableBorders(pageContents, pageNumber);
+                        XYCutPlusPlusSorter.keepLinesOfLineArt(pageContents);
                         pageContents = pageContents.stream().filter(x -> !(x instanceof LineChunk)).collect(Collectors.toList());
                         pageContents = SpecialTableProcessor.detectSpecialTables(pageContents);
                     }
