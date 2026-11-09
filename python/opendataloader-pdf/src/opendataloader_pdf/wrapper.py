@@ -2,14 +2,24 @@ import argparse
 import subprocess
 import sys
 import warnings
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from .cli_options_generated import add_options_to_parser
-from .convert_generated import convert
+from .convert_generated import _build_args, convert
 from .runner import run_jar
 
 # Re-export for backward compatibility
 __all__ = ["convert", "run", "run_jar", "main"]
+
+
+def _run_for_cli(input_path: Union[str, List[str]], quiet: bool = False, **options) -> None:
+    """Run the JAR for the bundled CLI, and write its output to the console.
+
+    convert() returns the output and writes nothing to the console, so that a
+    library caller gets no console output. The CLI and the deprecated run()
+    write the output, as the JAR does.
+    """
+    run_jar(_build_args(input_path, quiet=quiet, **options), quiet, relay=True)
 
 
 # Deprecated : Use `convert()` instead. This function will be removed in a future version.
@@ -76,7 +86,7 @@ def run(
     if generate_annotated_pdf:
         formats.append("pdf")
 
-    convert(
+    _run_for_cli(
         input_path=input_path,
         output_dir=output_folder,
         password=password,
@@ -104,7 +114,7 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
 
     try:
-        convert(**vars(args))
+        _run_for_cli(**vars(args))
         return 0
     except FileNotFoundError as err:
         print(err, file=sys.stderr)

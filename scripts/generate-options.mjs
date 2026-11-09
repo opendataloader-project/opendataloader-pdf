@@ -313,9 +313,8 @@ function generatePythonConvert() {
   lines.push('');
   lines.push('');
 
-  // Generate function signature
-  lines.push('def convert(');
-  lines.push('    input_path: Union[str, List[str]],');
+  // Generate the parameters, shared by _build_args() and convert()
+  const paramLines = ['    input_path: Union[str, List[str]],'];
 
   for (const opt of options.options) {
     const snakeName = toSnakeCase(opt.name);
@@ -333,29 +332,15 @@ function generatePythonConvert() {
       defaultVal = 'None';
     }
 
-    lines.push(`    ${snakeName}: ${typeHint} = ${defaultVal},`);
+    paramLines.push(`    ${snakeName}: ${typeHint} = ${defaultVal},`);
   }
 
-  // Wrapper-level parameters: enforced in Python, not passed to the JAR.
-  lines.push('    timeout: Optional[float] = None,');
-
-  lines.push(') -> None:');
-  lines.push('    """');
-  lines.push('    Convert PDF(s) into the requested output format(s).');
-  lines.push('');
-  lines.push('    Args:');
-  lines.push('        input_path: One or more input PDF file paths or directories');
-
-  for (const opt of options.options) {
-    const snakeName = toSnakeCase(opt.name);
-    lines.push(`        ${snakeName}: ${opt.description}`);
-  }
-
-  lines.push('        timeout: Wall-clock limit in seconds for the CLI process. None (default) waits indefinitely. Must be greater than 0: 0 raises ValueError and does not mean no limit. On expiry the JVM is killed and subprocess.TimeoutExpired is raised. Not a CLI option: the JAR declares no processing bound, so this is enforced by the wrapper.');
-
-  lines.push('    """');
-
-  // Generate function body
+  // _build_args(): the CLI arguments of convert(). The bundled CLI uses it
+  // too, so that only the CLI writes the JAR output to the console.
+  lines.push('def _build_args(');
+  lines.push(...paramLines);
+  lines.push(') -> List[str]:');
+  lines.push('    """Build the CLI arguments for the given input paths and options."""');
   lines.push('    args: List[str] = []');
   lines.push('');
   lines.push('    # Build input paths');
@@ -390,7 +375,45 @@ function generatePythonConvert() {
   }
 
   lines.push('');
-  lines.push('    run_jar(args, quiet, timeout=timeout)');
+  lines.push('    return args');
+  lines.push('');
+  lines.push('');
+
+  // Generate function signature
+  lines.push('def convert(');
+  lines.push(...paramLines);
+
+  // Wrapper-level parameters: enforced in Python, not passed to the JAR.
+  lines.push('    timeout: Optional[float] = None,');
+
+  lines.push(') -> str:');
+  lines.push('    """');
+  lines.push('    Convert PDF(s) into the requested output format(s).');
+  lines.push('');
+  lines.push('    Args:');
+  lines.push('        input_path: One or more input PDF file paths or directories');
+
+  for (const opt of options.options) {
+    const snakeName = toSnakeCase(opt.name);
+    lines.push(`        ${snakeName}: ${opt.description}`);
+  }
+
+  lines.push('        timeout: Wall-clock limit in seconds for the CLI process. None (default) waits indefinitely. Must be greater than 0: 0 raises ValueError and does not mean no limit. On expiry the JVM is killed and subprocess.TimeoutExpired is raised. Not a CLI option: the JAR declares no processing bound, so this is enforced by the wrapper.');
+
+  lines.push('');
+  lines.push('    Returns:');
+  lines.push('        The standard output of the CLI, for example the content with to_stdout. Nothing is written to the console when the CLI succeeds.');
+  lines.push('    """');
+
+  // Generate function body
+  lines.push('    args = _build_args(');
+  lines.push('        input_path,');
+  for (const opt of options.options) {
+    const snakeName = toSnakeCase(opt.name);
+    lines.push(`        ${snakeName}=${snakeName},`);
+  }
+  lines.push('    )');
+  lines.push('    return run_jar(args, quiet, timeout=timeout, relay=False)');
   lines.push('');
 
   const outputPath = join(ROOT_DIR, 'python/opendataloader-pdf/src/opendataloader_pdf/convert_generated.py');
