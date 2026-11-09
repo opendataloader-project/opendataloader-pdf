@@ -60,6 +60,7 @@ class Issue913ListLabelAndHeadingTest {
     private static final float ITEM_TEXT_X = 70.2f;
     private static final float RIGHT_X = 303.3f;
     private static final float WIDTH = 241;
+    private static final float NARROW_WIDTH = 150;
     private static final float TOP = 722;
     private static final float LABEL_ROW = 266;
     private static final float HEADING_ABOVE_LABEL = 2.03f;
@@ -107,6 +108,35 @@ class Issue913ListLabelAndHeadingTest {
         String markdown = convert("heading-on-label-row", Paint.LABEL_BEFORE_THE_HEADING);
 
         assertOrder(COLUMNS, markdown, EXPECTED);
+    }
+
+    /**
+     * Variant: three columns, each 150 pt wide. The page paints the labels of the first two columns and a heading of
+     * the third column on one row, one after the other, and later the text of each item with the paragraph below it.
+     */
+    @Test
+    void labelsOfTwoColumnsPaintedBeforeAHeadingOfTheThirdStayWithTheirItems() throws IOException {
+        Page page = new Page();
+        float[] columns = {LEFT_X, 222, 393};
+        String[] above = {"Alder", "Beech", "Maple"};
+        String[] below = {"Daisy", "Elder", "Nettle"};
+        for (int i = 0; i < columns.length; i++) {
+            page.paragraph(REGULAR, BODY, columns[i], NARROW_WIDTH, TOP, 30, above[i]);
+        }
+        page.text(REGULAR, BODY, columns[0], LABEL_ROW, "4.");
+        page.text(REGULAR, BODY, columns[1], LABEL_ROW, "7.");
+        page.text(BOLD, HEADING, columns[2], LABEL_ROW + HEADING_ABOVE_LABEL, "3.2 Lower Plain");
+        page.paragraph(REGULAR, BODY, columns[2], NARROW_WIDTH, LABEL_ROW - PARAGRAPH_DISTANCE, 10, below[2]);
+        String[] texts = {"Willow notes:", "Rowan notes:"};
+        for (int i = 0; i < texts.length; i++) {
+            page.text(ITALIC, BODY, columns[i] + ITEM_TEXT_X - LEFT_X, LABEL_ROW, texts[i]);
+            page.paragraph(REGULAR, BODY, columns[i], NARROW_WIDTH, LABEL_ROW - PARAGRAPH_DISTANCE, 10, below[i]);
+        }
+
+        String markdown = write("labels-of-two-columns", page);
+
+        assertTrue(hasLine(markdown, "4. Willow notes:") && hasLine(markdown, "7. Rowan notes:"),
+            ITEM + ":\n" + markdown);
     }
 
     /** Variant that main gets right: the page paints the label just before the text of its item. */
@@ -169,6 +199,16 @@ class Issue913ListLabelAndHeadingTest {
         page.text(ITALIC, BODY, ITEM_TEXT_X, LABEL_ROW, "Willow notes:");
         page.paragraph(REGULAR, BODY, LEFT_X, LABEL_ROW - PARAGRAPH_DISTANCE, 12, "Daisy");
         return write(name, page);
+    }
+
+    /** Whether a line of the Markdown output, without its list or heading marker, is the text. */
+    private static boolean hasLine(String markdown, String text) {
+        for (String line : markdown.split("\n")) {
+            if (line.replaceFirst("^(- |#+ )", "").trim().equals(text)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Asserts that the words are in the Markdown output, in their order; if not, fails with the symptom. */
@@ -239,18 +279,23 @@ class Issue913ListLabelAndHeadingTest {
          * starts with its name, and its last line has half of the width. Returns the baseline of the last line.
          */
         float paragraph(PDType1Font font, float size, float x, float top, int lineCount, String name) {
+            return paragraph(font, size, x, WIDTH, top, lineCount, name);
+        }
+
+        /** Paints a paragraph as above, in a column of the given width. */
+        float paragraph(PDType1Font font, float size, float x, float width, float top, int lineCount, String name) {
             List<String> text = new ArrayList<>();
             StringBuilder line = new StringBuilder(name);
             while (text.size() < lineCount - 1) {
                 String word = WORDS[nextWord++ % WORDS.length];
-                if (width(font, size, line + " " + word) > WIDTH) {
+                if (width(font, size, line + " " + word) > width) {
                     text.add(line.toString());
                     line = new StringBuilder(word);
                 } else {
                     line.append(' ').append(word);
                 }
             }
-            while (width(font, size, line + " " + WORDS[nextWord % WORDS.length]) < WIDTH / 2) {
+            while (width(font, size, line + " " + WORDS[nextWord % WORDS.length]) < width / 2) {
                 line.append(' ').append(WORDS[nextWord++ % WORDS.length]);
             }
             text.add(line.toString());
@@ -259,7 +304,7 @@ class Issue913ListLabelAndHeadingTest {
                 String value = text.get(i);
                 float spacing = 0;
                 if (i < text.size() - 1) {
-                    spacing = (WIDTH - width(font, size, value)) / (value.split(" ").length - 1);
+                    spacing = (width - width(font, size, value)) / (value.split(" ").length - 1);
                 }
                 lines.add(new Line(font, size, x, baseline, value, spacing));
                 if (i < text.size() - 1) {
