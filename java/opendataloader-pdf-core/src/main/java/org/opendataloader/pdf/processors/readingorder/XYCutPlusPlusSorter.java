@@ -19,14 +19,21 @@ import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
+import org.verapdf.wcag.algorithms.entities.content.LineChunk;
 import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.StreamInfo;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalDouble;
+import java.util.Set;
 
 /**
  * XY-Cut++ algorithm for reading order detection based on arXiv:2504.10258.
@@ -78,6 +85,18 @@ public class XYCutPlusPlusSorter {
      * two parts of the page, if in each column it is at most this many font sizes of the text (#396).
      */
     static final double MAX_GAP_BETWEEN_PARAGRAPHS = 2.0;
+
+    /** A line that is at most this many points thick is a rule (#396). A thicker line is a bar or a box. */
+    static final double MAX_RULE_WIDTH = 2.0;
+
+    /**
+     * Rules that are nearer to each other than this many points draw one shape, for example a frame (#396). The box
+     * of a line art and the box around its rules can also differ by this many points.
+     */
+    static final double RULE_TOUCH_TOLERANCE = 1.0;
+
+    /** A line art of more lines than this is a drawing, not rules. This also limits the work to compare them. */
+    static final int MAX_RULES_OF_LINE_ART = 16;
 
     /** Rounding tolerance for the edges of the gutter, which are computed from the cut position and gap. */
     private static final double GUTTER_EDGE_TOLERANCE = 1e-6;
@@ -155,14 +174,19 @@ public class XYCutPlusPlusSorter {
             return new ArrayList<>(validObjects);
         }
 
+        // Rules that the page paints one after the other are one line art, with one box around all of them. Each
+        // rule takes part in the cuts alone, so that the box does not hide the gutter between columns (#396).
+        Map<IObject, LineArtChunk> lineArtOfRule = new IdentityHashMap<>();
+        List<IObject> objects = withRulesOfLineArt(validObjects, lineArtOfRule);
+
         // Phase 1: Pre-mask cross-layout elements
-        List<IObject> crossLayoutElements = identifyCrossLayoutElements(validObjects, beta);
-        List<IObject> remainingObjects = new ArrayList<>(validObjects);
+        List<IObject> crossLayoutElements = identifyCrossLayoutElements(objects, beta);
+        List<IObject> remainingObjects = new ArrayList<>(objects);
         remainingObjects.removeAll(crossLayoutElements);
 
         if (remainingObjects.isEmpty()) {
             // All objects are cross-layout, just sort by Y
-            return sortByYThenX(validObjects);
+            return lineArtInPlaceOfItsRules(sortByYThenX(objects), lineArtOfRule);
         }
 
         // Phase 2: Compute density ratio for adaptive axis selection
@@ -173,7 +197,165 @@ public class XYCutPlusPlusSorter {
         List<IObject> sortedMain = recursiveSegment(remainingObjects, preferHorizontalFirst);
 
         // Phase 4: Merge cross-layout elements back at appropriate positions
-        return mergeCrossLayoutElements(sortedMain, crossLayoutElements);
+        return lineArtInPlaceOfItsRules(mergeCrossLayoutElements(sortedMain, crossLayoutElements), lineArtOfRule);
+    }
+
+    // ========== RULES OF LINE ART ==========
+
+    /**
+     * Keep in each line art of the page the lines that it paints (issue #396). {@link #sort} uses them to find the
+     * rules of a line art. Call this before the lines are removed from the page contents.
+     * <p>
+     * Without the IDs of marked content, veraPDF makes one line art of the paths that a page paints one after the
+     * other, with one box around all of them. Each line that such a path paints is also a {@link LineChunk} of the
+     * page, with the same paint operator. A line art that already has lines, or that has more than
+     * {@link #MAX_RULES_OF_LINE_ART} paints or lines, does not change.
+     *
+     * @param pageContents The contents of one page, with its lines
+     */
+    public static void keepLinesOfLineArt(List<IObject> pageContents) {
+        Map<String, List<LineChunk>> linesOfPaint = new HashMap<>();
+        for (IObject obj : pageContents) {
+            if (obj instanceof LineChunk) {
+                for (StreamInfo paint : ((LineChunk) obj).getStreamInfos()) {
+                    linesOfPaint.computeIfAbsent(paintKey(paint), key -> new ArrayList<>()).add((LineChunk) obj);
+                }
+            }
+        }
+        if (linesOfPaint.isEmpty()) {
+            return;
+        }
+        for (IObject obj : pageContents) {
+            if (!(obj instanceof LineArtChunk)) {
+                continue;
+            }
+            LineArtChunk lineArt = (LineArtChunk) obj;
+            List<LineChunk> knownLines = lineArt.getLineChunks();
+            if ((knownLines != null && !knownLines.isEmpty())
+                    || lineArt.getStreamInfos().size() > MAX_RULES_OF_LINE_ART) {
+                continue;
+            }
+            Set<LineChunk> lines = Collections.newSetFromMap(new IdentityHashMap<>());
+            List<LineChunk> orderedLines = new ArrayList<>();
+            for (StreamInfo paint : lineArt.getStreamInfos()) {
+                for (LineChunk line : linesOfPaint.getOrDefault(paintKey(paint), Collections.emptyList())) {
+                    if (lines.add(line)) {
+                        orderedLines.add(line);
+                    }
+                }
+            }
+            if (orderedLines.size() >= 2 && orderedLines.size() <= MAX_RULES_OF_LINE_ART) {
+                lineArt.setLineChunks(orderedLines);
+            }
+        }
+    }
+
+    private static String paintKey(StreamInfo paint) {
+        return paint.getOperatorIndex() + "/" + paint.getXObjectName();
+    }
+
+    /**
+     * Find the rules of a line art (issue #396): its lines, if each paint of the line art is a line, each line is a
+     * rule, no two rules touch, and the box of the line art is the box around its rules. A rule is a horizontal or a
+     * vertical line that is at most {@link #MAX_RULE_WIDTH} thick.
+     *
+     * @return The boxes of the rules; or an empty list if the line art is not two or more such rules, for example a
+     *         drawing, a frame, or a bar. Then the box of the line art takes part in the cuts.
+     */
+    private static List<BoundingBox> findRulesOfLineArt(LineArtChunk lineArt) {
+        List<LineChunk> lines = lineArt.getLineChunks();
+        if (lines == null || lines.size() < 2 || lines.size() > MAX_RULES_OF_LINE_ART
+                || lineArt.getStreamInfos().isEmpty()) {
+            return Collections.emptyList();
+        }
+        for (StreamInfo paint : lineArt.getStreamInfos()) {
+            if (!isPaintOfALine(paint, lines)) {
+                return Collections.emptyList();
+            }
+        }
+        List<BoundingBox> rules = new ArrayList<>();
+        BoundingBox aroundRules = null;
+        for (LineChunk line : lines) {
+            if (!(line.isHorizontalLine() || line.isVerticalLine()) || line.getWidth() > MAX_RULE_WIDTH) {
+                return Collections.emptyList();
+            }
+            for (BoundingBox rule : rules) {
+                if (areNear(rule, line.getBoundingBox())) {
+                    return Collections.emptyList();
+                }
+            }
+            rules.add(new BoundingBox(line.getBoundingBox()));
+            aroundRules = aroundRules == null ? new BoundingBox(line.getBoundingBox())
+                    : aroundRules.union(line.getBoundingBox());
+        }
+        return isSameBox(aroundRules, lineArt.getBoundingBox()) ? rules : Collections.emptyList();
+    }
+
+    private static boolean isPaintOfALine(StreamInfo paint, List<LineChunk> lines) {
+        String key = paintKey(paint);
+        for (LineChunk line : lines) {
+            for (StreamInfo linePaint : line.getStreamInfos()) {
+                if (paintKey(linePaint).equals(key)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean areNear(BoundingBox first, BoundingBox second) {
+        return first.getLeftX() <= second.getRightX() + RULE_TOUCH_TOLERANCE
+                && second.getLeftX() <= first.getRightX() + RULE_TOUCH_TOLERANCE
+                && first.getBottomY() <= second.getTopY() + RULE_TOUCH_TOLERANCE
+                && second.getBottomY() <= first.getTopY() + RULE_TOUCH_TOLERANCE;
+    }
+
+    private static boolean isSameBox(BoundingBox first, BoundingBox second) {
+        return Math.abs(first.getLeftX() - second.getLeftX()) <= RULE_TOUCH_TOLERANCE
+                && Math.abs(first.getRightX() - second.getRightX()) <= RULE_TOUCH_TOLERANCE
+                && Math.abs(first.getBottomY() - second.getBottomY()) <= RULE_TOUCH_TOLERANCE
+                && Math.abs(first.getTopY() - second.getTopY()) <= RULE_TOUCH_TOLERANCE;
+    }
+
+    /**
+     * Put a line art for each rule of a line art that is only rules. The map gets the line art of each of these
+     * objects.
+     */
+    private static List<IObject> withRulesOfLineArt(List<IObject> objects, Map<IObject, LineArtChunk> lineArtOfRule) {
+        List<IObject> result = new ArrayList<>();
+        for (IObject obj : objects) {
+            List<BoundingBox> rules = obj instanceof LineArtChunk
+                    ? findRulesOfLineArt((LineArtChunk) obj) : Collections.emptyList();
+            if (rules.isEmpty()) {
+                result.add(obj);
+                continue;
+            }
+            for (BoundingBox rule : rules) {
+                LineArtChunk ruleObject = new LineArtChunk(rule);
+                lineArtOfRule.put(ruleObject, (LineArtChunk) obj);
+                result.add(ruleObject);
+            }
+        }
+        return result;
+    }
+
+    /** Put each line art back at the place of its first rule, and remove the objects of its rules. */
+    private static List<IObject> lineArtInPlaceOfItsRules(List<IObject> sorted,
+                                                          Map<IObject, LineArtChunk> lineArtOfRule) {
+        if (lineArtOfRule.isEmpty()) {
+            return sorted;
+        }
+        List<IObject> result = new ArrayList<>();
+        Set<LineArtChunk> placed = Collections.newSetFromMap(new IdentityHashMap<>());
+        for (IObject obj : sorted) {
+            LineArtChunk lineArt = lineArtOfRule.get(obj);
+            if (lineArt == null) {
+                result.add(obj);
+            } else if (placed.add(lineArt)) {
+                result.add(lineArt);
+            }
+        }
+        return result;
     }
 
     // ========== PHASE 1: CROSS-LAYOUT DETECTION ==========
