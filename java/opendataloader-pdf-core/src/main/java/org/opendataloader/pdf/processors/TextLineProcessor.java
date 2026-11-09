@@ -147,7 +147,8 @@ public class TextLineProcessor {
      * <p>If a line starts with a number label, its next chunk starts at least {@link #MIN_COLUMN_GAP} font sizes
      * after the label, and another line on the row starts less than this distance after the label and ends before
      * that chunk, the label goes to that line. The label and the text take the place of the label, so that the item
-     * stays with the items before it, and the rest of the line follows them as a line of its own.
+     * stays with the items before it, and the rest of the line follows them as a line of its own. The rest can start
+     * with the label of an item of the next column, so it is checked in turn.
      */
     private static void keepLabelsWithTheirText(List<IObject> contents) {
         for (int i = 0; i < contents.size(); i++) {
@@ -156,6 +157,9 @@ public class TextLineProcessor {
             }
             TextLine line = (TextLine) contents.get(i);
             List<TextChunk> chunks = new ArrayList<>(line.getTextChunks());
+            if (chunks.isEmpty()) {
+                continue;
+            }
             chunks.sort(TEXT_CHUNK_COMPARATOR);
             double minGap = MIN_COLUMN_GAP * chunks.get(0).getFontSize();
             int far = 1;
@@ -179,7 +183,7 @@ public class TextLineProcessor {
                 i--;
             }
             contents.set(i, newLine(labelAndText));
-            contents.add(++i, newLine(chunks.subList(far, chunks.size())));
+            contents.add(i + 1, newLine(chunks.subList(far, chunks.size())));
         }
     }
 
