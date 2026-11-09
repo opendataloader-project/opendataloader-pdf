@@ -135,12 +135,23 @@ def _relay_lines(stream: IO[str], sink: List[str], errors: List[Exception]) -> N
         stream.close()
 
 
-def run_jar(args: List[str], quiet: bool = False, timeout: Optional[float] = None) -> str:
+def run_jar(
+    args: List[str],
+    quiet: bool = False,
+    timeout: Optional[float] = None,
+    *,
+    relay: bool = True,
+) -> str:
     """Run the opendataloader-pdf JAR with the given arguments.
 
     Args:
         args: Arguments to pass to the CLI.
         quiet: Suppress the JAR's log stream (stderr) and return its stdout.
+        relay: Write the JAR's output to the console as well as returning it
+            (the default). The bundled CLI uses this. ``False`` writes nothing
+            to the console when the JAR succeeds, whatever ``quiet`` is: the
+            JAR's stdout is returned and its log stream (stderr) is dropped.
+            ``convert()`` uses ``False``.
         timeout: Wall-clock limit in seconds for the JAR process. ``None``
             (the default) waits indefinitely, which is the historical
             behaviour. On expiry the JVM is killed and
@@ -190,11 +201,12 @@ def run_jar(args: List[str], quiet: bool = False, timeout: Optional[float] = Non
                 *jar_args,
             ]
 
-            if quiet:
+            if quiet or not relay:
                 # Quiet mode → suppress the JAR's log stream (stderr) but
                 # relay its stdout to the caller: --to-stdout content and the
                 # folder summary line arrive on stdout, and swallowing them
                 # breaks pipe consumers (`... --quiet --to-stdout | jq`).
+                # Without relay (the library API) → only return the stdout.
                 result = subprocess.run(
                     command,
                     env=env,
@@ -208,7 +220,7 @@ def run_jar(args: List[str], quiet: bool = False, timeout: Optional[float] = Non
                     # raising TimeoutExpired, so no JVM is left behind.
                     timeout=wait_timeout,
                 )
-                if result.stdout:
+                if relay and result.stdout:
                     _write_stdout(result.stdout)
                 return result.stdout
 
@@ -307,10 +319,11 @@ def run_jar(args: List[str], quiet: bool = False, timeout: Optional[float] = Non
         print(f"Return code: {error.returncode}", file=sys.stderr)
         # Streaming mode already wrote the JAR's output live to stdout, so
         # re-printing the captured copy would duplicate it. Only surface the
-        # captured streams in quiet mode, where the caller has not seen them.
+        # captured streams in quiet mode or without relay, where the caller
+        # has not seen them.
         # Note: CalledProcessError.output and .stdout are aliases for the same
         # attribute — printing both produces the same content twice.
-        if quiet:
+        if quiet or not relay:
             if error.stdout:
                 print(f"Stdout: {error.stdout}", file=sys.stderr)
             if error.stderr:

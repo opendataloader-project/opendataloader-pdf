@@ -9,7 +9,7 @@ from typing import List, Optional, Union
 from .runner import run_jar
 
 
-def convert(
+def _build_args(
     input_path: Union[str, List[str]],
     output_dir: Optional[str] = None,
     password: Optional[str] = None,
@@ -47,51 +47,8 @@ def convert(
     hybrid_availability_timeout: Optional[str] = None,
     hybrid_triage_log: bool = False,
     filter_hidden_text: Optional[str] = None,
-    timeout: Optional[float] = None,
-) -> None:
-    """
-    Convert PDF(s) into the requested output format(s).
-
-    Args:
-        input_path: One or more input PDF file paths or directories
-        output_dir: Directory where output files are written. Default: input file directory
-        password: Password for encrypted PDF files
-        format: Output formats (comma-separated). Values: json, text, html, pdf, markdown, tagged-pdf. Default: json. For HTML inside Markdown use --markdown-with-html. For image extraction control use --image-output.
-        quiet: Suppress console logging output
-        content_safety_off: Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg, background
-        sanitize: Enable sensitive data sanitization. Replaces emails, phone numbers, IPs, credit cards, and URLs with placeholders
-        keep_line_breaks: Preserve original line breaks in extracted text
-        replace_invalid_chars: Replacement character for invalid/unrecognized characters. Default: space
-        use_struct_tree: Use PDF structure tree (tagged PDF) for reading order and semantic structure. Output quality depends on tag quality. Takes precedence over --hybrid: when both are set on a tagged PDF, the structure tree is used and the hybrid backend is not called
-        table_method: Table detection method. Values: default (border-based), cluster (border + cluster). Default: default
-        reading_order: Reading order algorithm. Values: off, xycut. Default: xycut
-        markdown_page_separator: Separator between pages in Markdown output. Use %page-number% for page numbers. Default: none
-        markdown_with_html: Allow HTML tags inside Markdown output for complex structures such as multi-row-span tables. Implies --format markdown.
-        text_page_separator: Separator between pages in text output. Use %page-number% for page numbers. Default: none
-        html_page_separator: Separator between pages in HTML output. Use %page-number% for page numbers. Default: none
-        image_output: Image output mode. Values: off (no images), embedded (Base64 data URIs), external (file references). Default: external
-        image_format: Output format for extracted images. Values: png, jpeg. Default: png
-        image_dir: Directory for extracted images (applies only with --image-output external)
-        pages: Pages to extract (e.g., "1,3,5-7"). Default: all pages
-        include_header_footer: Include page headers and footers in output
-        detect_strikethrough: Detect strikethrough text and wrap with ~~ in Markdown output or <del></del> tag in HTML output (experimental)
-        hybrid: Hybrid backend (requires a running server). Quick start: pip install "opendataloader-pdf[hybrid]" && opendataloader-pdf-hybrid --port 5002. For remote servers use --hybrid-url. Values: off (default), docling-fast. Ignored when --use-struct-tree is set on a tagged PDF (structure tree takes precedence)
-        hybrid_mode: Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)
-        hybrid_url: Hybrid backend server URL (overrides default)
-        hybrid_timeout: Hybrid backend request timeout in milliseconds (0 = use the backend's own default). Default: 0
-        hybrid_chunk_size: Maximum number of pages to send to the hybrid backend in a single request. Large documents are split into batches of this size; smaller values increase the number of backend requests (the full PDF is re-sent per batch). Default: 50
-        hybrid_fallback: Opt in to Java fallback on hybrid backend error (default: disabled)
-        to_stdout: Write output to stdout instead of file (single format only)
-        threads: Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode
-        image_resolution: Set the rendering resolution for images in DPI. Higher values improve image quality but increase memory consumption; lower values reduce memory usage at the cost of detail. Accepts positive decimal DPI values (e.g., 144.0). Default: 144.0.
-        space_ratio: Set the ratio used to calculate the automatic space-insertion threshold (threshold = space-ratio * font size). If the horizontal gap between two adjacent symbols exceeds this threshold, an extra space is inserted to text value. Accepts decimals (e.g., 0.17). Default: 0.17
-        sanitize_rules: Path to a JSON file of sanitization rules. Only the rules of the file run, in place of the built-in rules. Turns on --sanitize
-        include_links: Write the URI links of the PDF (http, https, mailto) as links in Markdown and HTML output. No links with --sanitize, or when the hybrid backend makes the text
-        hybrid_availability_timeout: Time in milliseconds that the availability check of the hybrid backend waits to connect, and then again for the answer. Raise it for a backend with a slow start, such as a serverless one. Default: 3000
-        hybrid_triage_log: With --hybrid, write the triage decision of each page (Java or backend, the confidence, and the signals) to triage/<name>.json in the output folder
-        filter_hidden_text: Filter hidden (low-contrast) text via per-page rendering. Can also remove visible text: text on images, thin characters such as minus signs and dashes, and the OCR text of scanned pages. Values: on, off. Default: off (opt-in; expensive, runs as sequential post-processing). Applies to the native Java pipeline only; ignored with --hybrid and --use-struct-tree
-        timeout: Wall-clock limit in seconds for the CLI process. None (default) waits indefinitely. Must be greater than 0: 0 raises ValueError and does not mean no limit. On expiry the JVM is killed and subprocess.TimeoutExpired is raised. Not a CLI option: the JAR declares no processing bound, so this is enforced by the wrapper.
-    """
+) -> List[str]:
+    """Build the CLI arguments for the given input paths and options."""
     args: List[str] = []
 
     # Build input paths
@@ -181,4 +138,132 @@ def convert(
     if filter_hidden_text:
         args.extend(["--filter-hidden-text", filter_hidden_text])
 
-    run_jar(args, quiet, timeout=timeout)
+    return args
+
+
+def convert(
+    input_path: Union[str, List[str]],
+    output_dir: Optional[str] = None,
+    password: Optional[str] = None,
+    format: Optional[Union[str, List[str]]] = None,
+    quiet: bool = False,
+    content_safety_off: Optional[Union[str, List[str]]] = None,
+    sanitize: bool = False,
+    keep_line_breaks: bool = False,
+    replace_invalid_chars: Optional[str] = None,
+    use_struct_tree: bool = False,
+    table_method: Optional[str] = None,
+    reading_order: Optional[str] = None,
+    markdown_page_separator: Optional[str] = None,
+    markdown_with_html: bool = False,
+    text_page_separator: Optional[str] = None,
+    html_page_separator: Optional[str] = None,
+    image_output: Optional[str] = None,
+    image_format: Optional[str] = None,
+    image_dir: Optional[str] = None,
+    pages: Optional[str] = None,
+    include_header_footer: bool = False,
+    detect_strikethrough: bool = False,
+    hybrid: Optional[str] = None,
+    hybrid_mode: Optional[str] = None,
+    hybrid_url: Optional[str] = None,
+    hybrid_timeout: Optional[str] = None,
+    hybrid_chunk_size: Optional[str] = None,
+    hybrid_fallback: bool = False,
+    to_stdout: bool = False,
+    threads: Optional[str] = None,
+    image_resolution: Optional[str] = None,
+    space_ratio: Optional[str] = None,
+    sanitize_rules: Optional[str] = None,
+    include_links: bool = False,
+    hybrid_availability_timeout: Optional[str] = None,
+    hybrid_triage_log: bool = False,
+    filter_hidden_text: Optional[str] = None,
+    timeout: Optional[float] = None,
+) -> str:
+    """
+    Convert PDF(s) into the requested output format(s).
+
+    Args:
+        input_path: One or more input PDF file paths or directories
+        output_dir: Directory where output files are written. Default: input file directory
+        password: Password for encrypted PDF files
+        format: Output formats (comma-separated). Values: json, text, html, pdf, markdown, tagged-pdf. Default: json. For HTML inside Markdown use --markdown-with-html. For image extraction control use --image-output.
+        quiet: Suppress console logging output
+        content_safety_off: Disable content safety filters. Values: all, hidden-text, off-page, tiny, hidden-ocg, background
+        sanitize: Enable sensitive data sanitization. Replaces emails, phone numbers, IPs, credit cards, and URLs with placeholders
+        keep_line_breaks: Preserve original line breaks in extracted text
+        replace_invalid_chars: Replacement character for invalid/unrecognized characters. Default: space
+        use_struct_tree: Use PDF structure tree (tagged PDF) for reading order and semantic structure. Output quality depends on tag quality. Takes precedence over --hybrid: when both are set on a tagged PDF, the structure tree is used and the hybrid backend is not called
+        table_method: Table detection method. Values: default (border-based), cluster (border + cluster). Default: default
+        reading_order: Reading order algorithm. Values: off, xycut. Default: xycut
+        markdown_page_separator: Separator between pages in Markdown output. Use %page-number% for page numbers. Default: none
+        markdown_with_html: Allow HTML tags inside Markdown output for complex structures such as multi-row-span tables. Implies --format markdown.
+        text_page_separator: Separator between pages in text output. Use %page-number% for page numbers. Default: none
+        html_page_separator: Separator between pages in HTML output. Use %page-number% for page numbers. Default: none
+        image_output: Image output mode. Values: off (no images), embedded (Base64 data URIs), external (file references). Default: external
+        image_format: Output format for extracted images. Values: png, jpeg. Default: png
+        image_dir: Directory for extracted images (applies only with --image-output external)
+        pages: Pages to extract (e.g., "1,3,5-7"). Default: all pages
+        include_header_footer: Include page headers and footers in output
+        detect_strikethrough: Detect strikethrough text and wrap with ~~ in Markdown output or <del></del> tag in HTML output (experimental)
+        hybrid: Hybrid backend (requires a running server). Quick start: pip install "opendataloader-pdf[hybrid]" && opendataloader-pdf-hybrid --port 5002. For remote servers use --hybrid-url. Values: off (default), docling-fast. Ignored when --use-struct-tree is set on a tagged PDF (structure tree takes precedence)
+        hybrid_mode: Hybrid triage mode. Values: auto (default, dynamic triage), full (skip triage, all pages to backend)
+        hybrid_url: Hybrid backend server URL (overrides default)
+        hybrid_timeout: Hybrid backend request timeout in milliseconds (0 = use the backend's own default). Default: 0
+        hybrid_chunk_size: Maximum number of pages to send to the hybrid backend in a single request. Large documents are split into batches of this size; smaller values increase the number of backend requests (the full PDF is re-sent per batch). Default: 50
+        hybrid_fallback: Opt in to Java fallback on hybrid backend error (default: disabled)
+        to_stdout: Write output to stdout instead of file (single format only)
+        threads: Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode
+        image_resolution: Set the rendering resolution for images in DPI. Higher values improve image quality but increase memory consumption; lower values reduce memory usage at the cost of detail. Accepts positive decimal DPI values (e.g., 144.0). Default: 144.0.
+        space_ratio: Set the ratio used to calculate the automatic space-insertion threshold (threshold = space-ratio * font size). If the horizontal gap between two adjacent symbols exceeds this threshold, an extra space is inserted to text value. Accepts decimals (e.g., 0.17). Default: 0.17
+        sanitize_rules: Path to a JSON file of sanitization rules. Only the rules of the file run, in place of the built-in rules. Turns on --sanitize
+        include_links: Write the URI links of the PDF (http, https, mailto) as links in Markdown and HTML output. No links with --sanitize, or when the hybrid backend makes the text
+        hybrid_availability_timeout: Time in milliseconds that the availability check of the hybrid backend waits to connect, and then again for the answer. Raise it for a backend with a slow start, such as a serverless one. Default: 3000
+        hybrid_triage_log: With --hybrid, write the triage decision of each page (Java or backend, the confidence, and the signals) to triage/<name>.json in the output folder
+        filter_hidden_text: Filter hidden (low-contrast) text via per-page rendering. Can also remove visible text: text on images, thin characters such as minus signs and dashes, and the OCR text of scanned pages. Values: on, off. Default: off (opt-in; expensive, runs as sequential post-processing). Applies to the native Java pipeline only; ignored with --hybrid and --use-struct-tree
+        timeout: Wall-clock limit in seconds for the CLI process. None (default) waits indefinitely. Must be greater than 0: 0 raises ValueError and does not mean no limit. On expiry the JVM is killed and subprocess.TimeoutExpired is raised. Not a CLI option: the JAR declares no processing bound, so this is enforced by the wrapper.
+
+    Returns:
+        The standard output of the CLI, for example the content with to_stdout. Nothing is written to the console when the CLI succeeds.
+    """
+    args = _build_args(
+        input_path,
+        output_dir=output_dir,
+        password=password,
+        format=format,
+        quiet=quiet,
+        content_safety_off=content_safety_off,
+        sanitize=sanitize,
+        keep_line_breaks=keep_line_breaks,
+        replace_invalid_chars=replace_invalid_chars,
+        use_struct_tree=use_struct_tree,
+        table_method=table_method,
+        reading_order=reading_order,
+        markdown_page_separator=markdown_page_separator,
+        markdown_with_html=markdown_with_html,
+        text_page_separator=text_page_separator,
+        html_page_separator=html_page_separator,
+        image_output=image_output,
+        image_format=image_format,
+        image_dir=image_dir,
+        pages=pages,
+        include_header_footer=include_header_footer,
+        detect_strikethrough=detect_strikethrough,
+        hybrid=hybrid,
+        hybrid_mode=hybrid_mode,
+        hybrid_url=hybrid_url,
+        hybrid_timeout=hybrid_timeout,
+        hybrid_chunk_size=hybrid_chunk_size,
+        hybrid_fallback=hybrid_fallback,
+        to_stdout=to_stdout,
+        threads=threads,
+        image_resolution=image_resolution,
+        space_ratio=space_ratio,
+        sanitize_rules=sanitize_rules,
+        include_links=include_links,
+        hybrid_availability_timeout=hybrid_availability_timeout,
+        hybrid_triage_log=hybrid_triage_log,
+        filter_hidden_text=filter_hidden_text,
+    )
+    return run_jar(args, quiet, timeout=timeout, relay=False)
