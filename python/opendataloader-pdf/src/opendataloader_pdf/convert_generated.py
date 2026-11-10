@@ -225,7 +225,7 @@ def convert(
         timeout: Wall-clock limit in seconds for the CLI process. None (default) waits indefinitely. Must be greater than 0: 0 raises ValueError and does not mean no limit. On expiry the JVM is killed and subprocess.TimeoutExpired is raised. Not a CLI option: the JAR declares no processing bound, so this is enforced by the wrapper.
 
     Returns:
-        The standard output of the CLI, for example the content with to_stdout. Nothing is written to the console when the CLI succeeds.
+        The standard output of the CLI, for example the content with to_stdout. Nothing is written to the console. On a failure, the raised error has the messages of the CLI in its notes.
     """
     args = _build_args(
         input_path,

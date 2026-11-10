@@ -2,9 +2,10 @@
 
 Issue #572: run_jar both returned the JAR's stdout and wrote it to the console,
 and convert() used it, so a library call wrote to the caller's console and
-returned None. convert() now returns the JAR's stdout and writes nothing on
-success, with or without quiet, as convert() of the Node package does. The
-bundled CLI and the deprecated run() keep their console output.
+returned None. convert() now returns the JAR's stdout and writes nothing to
+the console, with or without quiet, as convert() of the Node package does. On
+a failure, the message goes into the notes of the raised error. The bundled
+CLI and the deprecated run() keep their console output.
 
 A java stand-in on PATH writes one log line to stderr and one result line to
 stdout, as the JAR does. capfd checks the file descriptors, so a write by the
@@ -117,13 +118,81 @@ def test_deprecated_run_with_debug_prints_the_jar_output(stand_in, capfd):
 
 
 @pytest.mark.parametrize("quiet", [True, False])
-def test_convert_failure_raises_with_the_jar_stdout(stand_in, capfd, monkeypatch, quiet):
+def test_convert_failure_raises_with_the_jar_stdout(stand_in, monkeypatch, quiet):
     monkeypatch.setenv("ODL_TEST_EXIT_CODE", "3")
     with pytest.raises(subprocess.CalledProcessError) as raised:
         convert(input_path="doc.pdf", quiet=quiet)
     assert raised.value.returncode == 3
     assert RESULT in raised.value.output
-    assert "Error running opendataloader-pdf CLI." in capfd.readouterr().err
+
+
+SLEEPING_JAVA = "#!/bin/sh\nexec sleep 30\n"
+
+
+@pytest.fixture(params=["exit-code", "no-java", "timeout"])
+def failure(request, stand_in, monkeypatch, tmp_path):
+    """A convert() call that fails: the JAR exits with code 3, java is not on
+    PATH, or the JAR does not end before the timeout.
+
+    Returns the kind, the error type, the extra options of convert(), and the
+    texts that the failure message contains.
+    """
+    kind = request.param
+    if kind == "exit-code":
+        monkeypatch.setenv("ODL_TEST_EXIT_CODE", "3")
+        return (
+            kind,
+            subprocess.CalledProcessError,
+            {},
+            (
+                "Error running opendataloader-pdf CLI.",
+                "Return code: 3",
+                LOG,
+            ),
+        )
+    if kind == "no-java":
+        empty_bin = tmp_path / "empty-bin"
+        empty_bin.mkdir()
+        monkeypatch.setenv("PATH", str(empty_bin))
+        return kind, FileNotFoundError, {}, ("'java' command not found",)
+    (tmp_path / "bin" / "java").write_text(SLEEPING_JAVA)
+    return kind, subprocess.TimeoutExpired, {"timeout": 0.5}, ("timed out after 0.5s",)
+
+
+@pytest.mark.parametrize("quiet", [True, False])
+def test_convert_failure_writes_nothing_to_the_console(failure, capfd, quiet):
+    kind, error_type, options, _texts = failure
+    with pytest.raises(error_type):
+        convert(input_path="doc.pdf", quiet=quiet, **options)
+    captured = capfd.readouterr()
+    assert (captured.out, captured.err) == ("", ""), (
+        f"convert() wrote to the console on a failure ({kind}, quiet={quiet}): "
+        f"stdout={captured.out!r} stderr={captured.err!r}"
+    )
+
+
+@pytest.mark.parametrize("quiet", [True, False])
+def test_convert_failure_keeps_the_message_in_the_error(failure, capfd, quiet):
+    kind, error_type, options, texts = failure
+    with pytest.raises(error_type) as raised:
+        convert(input_path="doc.pdf", quiet=quiet, **options)
+    capfd.readouterr()
+    notes = "\n".join(getattr(raised.value, "__notes__", []))
+    missing = [text for text in texts if text not in notes]
+    assert not missing, (
+        f"the error of convert() does not have the failure message ({kind}, quiet={quiet}): "
+        f"missing={missing!r} notes={notes!r}"
+    )
+
+
+@pytest.mark.parametrize("quiet", [True, False])
+def test_cli_without_java_prints_the_message(stand_in, capfd, monkeypatch, tmp_path, quiet):
+    empty_bin = tmp_path / "empty-bin"
+    empty_bin.mkdir()
+    monkeypatch.setenv("PATH", str(empty_bin))
+    argv = ["doc.pdf", "--quiet"] if quiet else ["doc.pdf"]
+    assert wrapper.main(argv) == 1
+    assert "'java' command not found" in capfd.readouterr().err
 
 
 WAITING_JAVA = '#!/bin/sh\n: > "$ODL_TEST_READY"\nexec sleep 60\n'

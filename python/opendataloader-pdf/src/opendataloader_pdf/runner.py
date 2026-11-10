@@ -135,6 +135,19 @@ def _relay_lines(stream: IO[str], sink: List[str], errors: List[Exception]) -> N
         stream.close()
 
 
+def _report_failure(error: BaseException, message: str, relay: bool) -> None:
+    """Write a failure message to stderr, or, without relay, add it to the error.
+
+    Without relay (the library API), nothing goes to the console, also on a
+    failure. The message goes into the notes of the error, which a traceback
+    shows.
+    """
+    if relay:
+        print(message, file=sys.stderr)
+    else:
+        error.add_note(message)
+
+
 def run_jar(
     args: List[str],
     quiet: bool = False,
@@ -149,9 +162,10 @@ def run_jar(
         quiet: Suppress the JAR's log stream (stderr) and return its stdout.
         relay: Write the JAR's output to the console as well as returning it
             (the default). The bundled CLI uses this. ``False`` writes nothing
-            to the console when the JAR succeeds, whatever ``quiet`` is: the
-            JAR's stdout is returned and its log stream (stderr) is dropped.
-            ``convert()`` uses ``False``.
+            to the console, whatever ``quiet`` is: the JAR's stdout is
+            returned and its log stream (stderr) is dropped. On a failure, the
+            message that ``True`` writes to stderr goes into the notes of the
+            raised error instead. ``convert()`` uses ``False``.
         timeout: Wall-clock limit in seconds for the JAR process. ``None``
             (the default) waits indefinitely, which is the historical
             behaviour. On expiry the JVM is killed and
@@ -298,25 +312,22 @@ def run_jar(
                     )
                 return captured_output
 
-    except FileNotFoundError:
-        print(
+    except FileNotFoundError as error:
+        _report_failure(
+            error,
             "Error: 'java' command not found. Please ensure Java is installed and in your system's PATH.",
-            file=sys.stderr,
+            relay,
         )
         raise
 
     except subprocess.TimeoutExpired as error:
         # The JVM has already been killed; surface the bound that was hit so a
         # timeout is distinguishable from a crash in the caller's logs.
-        print(
-            f"opendataloader-pdf CLI timed out after {error.timeout}s.",
-            file=sys.stderr,
-        )
+        _report_failure(error, f"opendataloader-pdf CLI timed out after {error.timeout}s.", relay)
         raise
 
     except subprocess.CalledProcessError as error:
-        print("Error running opendataloader-pdf CLI.", file=sys.stderr)
-        print(f"Return code: {error.returncode}", file=sys.stderr)
+        lines = ["Error running opendataloader-pdf CLI.", f"Return code: {error.returncode}"]
         # Streaming mode already wrote the JAR's output live to stdout, so
         # re-printing the captured copy would duplicate it. Only surface the
         # captured streams in quiet mode or without relay, where the caller
@@ -325,7 +336,8 @@ def run_jar(
         # attribute — printing both produces the same content twice.
         if quiet or not relay:
             if error.stdout:
-                print(f"Stdout: {error.stdout}", file=sys.stderr)
+                lines.append(f"Stdout: {error.stdout}")
             if error.stderr:
-                print(f"Stderr: {error.stderr}", file=sys.stderr)
+                lines.append(f"Stderr: {error.stderr}")
+        _report_failure(error, "\n".join(lines), relay)
         raise
