@@ -213,7 +213,7 @@ def convert(
         hybrid_timeout: Hybrid backend request timeout in milliseconds (0 = use the backend's own default). Default: 0
         hybrid_chunk_size: Maximum number of pages to send to the hybrid backend in a single request. Large documents are split into batches of this size; smaller values increase the number of backend requests (the full PDF is re-sent per batch). Default: 50
         hybrid_fallback: Opt in to Java fallback on hybrid backend error (default: disabled)
-        to_stdout: Write output to stdout instead of file (single format only)
+        to_stdout: Write output to stdout instead of files. Supports one format: text or markdown
         threads: Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode
         image_resolution: Set the rendering resolution for images in DPI. Higher values improve image quality but increase memory consumption; lower values reduce memory usage at the cost of detail. Accepts positive decimal DPI values (e.g., 144.0). Default: 144.0.
         space_ratio: Set the ratio used to calculate the automatic space-insertion threshold (threshold = space-ratio * font size). If the horizontal gap between two adjacent symbols exceeds this threshold, an extra space is inserted to text value. Accepts decimals (e.g., 0.17). Default: 0.17

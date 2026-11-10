@@ -47,9 +47,11 @@ Streaming output to stdout is handy for piping, but two silent traps apply (SKIL
 "Silent-failure hazards"; `option-interactions.md` §A.3):
 
 - Some output kinds (typically the structured / markup-heavy ones) **never stream**
-  — you get empty stdout on a zero exit. Write those to a file and read the file.
-- A stdout stream carries **at most one** text-like kind; request several and the
-  rest are silently dropped.
+  — depending on the version, you get empty stdout on a zero exit, or the tool
+  refuses the request. Write those to a file and read the file.
+- A stdout stream carries **at most one** text-like kind; request several and,
+  depending on the version, the rest are silently dropped or the tool refuses the
+  request.
 
 Also suppress the tool's own log lines (find the quiet option in `--help`) so they
 don't pollute the stream, and VERIFY the pipe actually carried non-empty, parseable

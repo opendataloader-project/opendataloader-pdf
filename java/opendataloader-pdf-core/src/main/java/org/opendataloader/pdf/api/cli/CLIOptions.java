@@ -224,7 +224,7 @@ public class CLIOptions {
 
     // ===== Stdout Output =====
     private static final String TO_STDOUT_LONG_OPTION = "to-stdout";
-    private static final String TO_STDOUT_DESC = "Write output to stdout instead of file (single format only)";
+    private static final String TO_STDOUT_DESC = "Write output to stdout instead of files. Supports one format: text or markdown";
 
     // ===== Threads =====
     private static final String THREADS_LONG_OPTION = "threads";
@@ -340,7 +340,26 @@ public class CLIOptions {
             config.setOutputFolder(file.isDirectory() ? file.getAbsolutePath() : file.getParent());
         }
         applyAllTo(config, commandLine);
+        checkStdoutFormat(config, commandLine);
         return config;
+    }
+
+    /**
+     * Refuses {@code --to-stdout} with a format that stdout cannot carry. Stdout carries exactly one of text and
+     * Markdown; without this check, the other formats write nothing, and a second format is dropped, on a zero exit.
+     * JSON counts only when {@code --format} names it: the CLI turns JSON on by default, and stdout never carried it.
+     */
+    private static void checkStdoutFormat(Config config, CommandLine commandLine) {
+        if (!config.isOutputStdout()) {
+            return;
+        }
+        int stdoutFormats = (config.isGenerateText() ? 1 : 0) + (config.isGenerateMarkdown() ? 1 : 0);
+        boolean otherFormat = (commandLine.hasOption(FORMAT_OPTION) && config.isGenerateJSON())
+            || config.isGenerateHtml() || config.isGeneratePDF() || config.isGenerateTaggedPDF();
+        if (stdoutFormats != 1 || otherFormat) {
+            throw new IllegalArgumentException(
+                "Option --" + TO_STDOUT_LONG_OPTION + " supports exactly one format: --format text or --format markdown.");
+        }
     }
 
     /**

@@ -66,8 +66,10 @@ lint is a floor, not a ceiling. Never read a green lint as "the skill is current
 The lint sees coupling in the *text*; it cannot see a **behavior/semantics** change in ODL itself.
 When cutting an ODL release, re-verify the skill's principles against current behavior for:
 
-- **stdout streaming** — which output kinds stream vs. only write to a file, and their precedence.
-  Re-check if stdout routing changes (SKILL.md silent-failure hazard + format-guide).
+- **stdout streaming** — which output kinds stream vs. only write to a file, their precedence, and
+  whether a request that cannot stream is refused or gives empty output on a zero exit.
+  Re-check if stdout routing changes (SKILL.md silent-failure hazard + format-guide +
+  option-interactions §A.3).
 - **Enrichment gating** — enrichment (formula, figure description) only runs when the *whole*
   document is routed to the AI backend; pages judged "simple" in a mixed/auto mode silently skip it.
 - **Structure-tagged input pre-empting the backend** — a source that already carries a usable

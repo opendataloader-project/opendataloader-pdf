@@ -59,7 +59,7 @@ export interface ConvertOptions {
   hybridChunkSize?: string;
   /** Opt in to Java fallback on hybrid backend error (default: disabled) */
   hybridFallback?: boolean;
-  /** Write output to stdout instead of file (single format only) */
+  /** Write output to stdout instead of files. Supports one format: text or markdown */
   toStdout?: boolean;
   /** Number of worker threads for per-page processing. Default: 1 (sequential, stable). Values >1 (experimental) run pages in parallel for faster throughput; output may vary slightly on some PDFs. Capped at the number of available CPU cores. Applies to the native Java pipeline only; ignored in --hybrid mode */
   threads?: string;

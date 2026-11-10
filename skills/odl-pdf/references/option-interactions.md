@@ -42,12 +42,14 @@ mandatory, do not rely on the exit code or the file's existence; VERIFY the
 required content is present, or fail closed.
 
 ### A.3 Some structured outputs never stream to stdout
-Certain output kinds are only ever written to files. Asking to stream one yields
-**empty stdout on a zero exit** — and a zero exit with an empty pipe is not
-success. Route such an output through a file and read the file (or parse the file
-and pipe the parsed *result*). A related trap: a stream that carries "at most one"
-text-like output will **silently drop the rest** if you request several at once —
-expect exactly one, and confirm what actually arrived.
+Certain output kinds are only ever written to files. Depending on the version,
+asking to stream one yields **empty stdout on a zero exit**, or the tool refuses
+the request with an error — and a zero exit with an empty pipe is not success.
+Route such an output through a file and read the file (or parse the file and pipe
+the parsed *result*). A related trap: a stream that carries "at most one"
+text-like output will **silently drop the rest** if you request several at once
+(newer versions refuse the request instead) — expect exactly one, and confirm what
+actually arrived.
 
 ### A.4 A structure-tagged input path can pre-empt the backend
 When the source already carries a usable structure tree and you *also* request the
