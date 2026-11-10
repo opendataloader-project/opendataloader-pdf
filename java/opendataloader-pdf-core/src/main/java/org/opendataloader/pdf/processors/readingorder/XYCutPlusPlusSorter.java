@@ -17,6 +17,7 @@ package org.opendataloader.pdf.processors.readingorder;
 
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter;
+import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
 import org.verapdf.wcag.algorithms.entities.content.LineArtChunk;
 import org.verapdf.wcag.algorithms.entities.content.LineChunk;
@@ -584,7 +585,8 @@ public class XYCutPlusPlusSorter {
         if (hasValidHorizontalCut && hasValidVerticalCut) {
             // Both cuts available - prefer larger gap
             useHorizontalCut = horizontalCut.gap > verticalCut.gap
-                    && !isGapBetweenParagraphsOfColumns(objects, verticalCut, horizontalCut);
+                    && !isGapBetweenParagraphsOfColumns(objects, verticalCut, horizontalCut)
+                    && !isGapInsideASectionOfOneColumn(objects, verticalCut, horizontalCut);
             if (useHorizontalCut) {
                 CutInfo gutter = findColumnGutter(objects);
                 Optional<CutInfo> cutOutsideColumns = findHorizontalCutOutsideColumns(objects, horizontalCut, gutter);
@@ -660,6 +662,50 @@ public class XYCutPlusPlusSorter {
             }
         }
         return true;
+    }
+
+    /**
+     * Check if the horizontal gap across two columns starts a new section in one column only (issue #920). Then the
+     * section of the other column goes on below the gap, and the columns are cut first, also if the gap is larger
+     * than the gutter.
+     * <p>
+     * Each side of the vertical cut has content above and below the gap, and an element that is not narrow and not a
+     * line art, so that it is a column and not a margin with notes or a decoration. On exactly one side, the first
+     * element below the gap is a heading. The other side goes on below the gap, and its section starts above the
+     * gap: that side has a heading above the gap. If both sides start with a heading below the gap, as in a grid of
+     * boxes, or if no side does, or if the other side has no heading above the gap, as below a section that goes
+     * across both columns, the gap can go between two parts of the page, and this check does not apply.
+     */
+    private static boolean isGapInsideASectionOfOneColumn(List<IObject> objects, CutInfo verticalCut,
+                                                          CutInfo horizontalCut) {
+        BoundingBox region = calculateBoundingRegion(objects);
+        double narrowWidth = region != null ? region.getWidth() * NARROW_ELEMENT_WIDTH_RATIO : 0;
+        boolean[] hasContentAbove = new boolean[2];
+        boolean[] hasHeadingAbove = new boolean[2];
+        boolean[] hasWideElement = new boolean[2];
+        IObject[] highestBelow = new IObject[2];
+        for (IObject obj : objects) {
+            int side = obj.getCenterX() < verticalCut.position ? 0 : 1;
+            if (!(obj instanceof LineArtChunk) && obj.getBoundingBox().getWidth() >= narrowWidth) {
+                hasWideElement[side] = true;
+            }
+            if (obj.getCenterY() > horizontalCut.position) {
+                hasContentAbove[side] = true;
+                hasHeadingAbove[side] |= obj instanceof SemanticHeading;
+            } else if (highestBelow[side] == null || obj.getTopY() > highestBelow[side].getTopY()) {
+                highestBelow[side] = obj;
+            }
+        }
+        for (int side = 0; side < 2; side++) {
+            if (!hasContentAbove[side] || highestBelow[side] == null || !hasWideElement[side]) {
+                return false;
+            }
+        }
+        boolean leftStartsWithHeading = highestBelow[0] instanceof SemanticHeading;
+        if (leftStartsWithHeading == (highestBelow[1] instanceof SemanticHeading)) {
+            return false;
+        }
+        return hasHeadingAbove[leftStartsWithHeading ? 1 : 0];
     }
 
     /**
