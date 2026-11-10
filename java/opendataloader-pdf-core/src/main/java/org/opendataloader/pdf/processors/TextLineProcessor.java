@@ -61,6 +61,8 @@ public class TextLineProcessor {
     private static final double MAX_LEADER_HEIGHT = 0.3;
     /** Each end of the gap that a leader fills is narrower than this many font sizes. */
     private static final double MAX_LEADER_END_GAP = 3;
+    /** A line art is an underline and not a leader if a text of its row lies over at least this part of its width. */
+    private static final double MIN_UNDERLINED_WIDTH = 0.5;
     /** The baselines of the parts of one row are at most this many font sizes apart. */
     private static final double MAX_ROW_BASELINE_DIFFERENCE = 0.25;
     /** The labels of the rows of a table of contents start or end at most this many font sizes apart. */
@@ -215,10 +217,11 @@ public class TextLineProcessor {
      * numbers. Then the parts of a row are not one after the other in the contents, and each part is a line.
      *
      * <p>A leader, a line art that is thin and wide, shows a row: the line that ends just before the leader and the
-     * page label that starts just after it, on one baseline, are one line. A number label just before that line, on
-     * the same baseline and nearer than a column gap, is a part of the row too, if it is in a column of labels or the
-     * row is the only one. Each row takes the place of its first part in the contents, with one space between its
-     * parts.
+     * page label that starts just after it, on one baseline, are one line. A line art with a text right above it,
+     * over at least half of its width, is an underline of that text and not a leader (#919). A number label just
+     * before that line, on the same baseline and nearer than a column gap, is a part of the row too, if it is in a
+     * column of labels or the row is the only one. Each row takes the place of its first part in the contents, with
+     * one space between its parts.
      */
     private static List<IObject> joinRowsWithLeaders(List<IObject> contents) {
         List<LineArtChunk> leaders = new ArrayList<>();
@@ -244,12 +247,14 @@ public class TextLineProcessor {
             double middle = (leader.getBottomY() + leader.getTopY()) / 2;
             TextLine before = null;
             TextLine after = null;
+            boolean underline = false;
             for (List<TextLine> sameBaseline : linesByBaseline.subMap(middle - maxFontSize, true,
                     middle + MAX_ROW_BASELINE_DIFFERENCE * maxFontSize, true).values()) {
                 for (TextLine line : sameBaseline) {
                     if (!isLeaderOfLine(leader, line)) {
                         continue;
                     }
+                    underline |= isUnderlineOf(leader, line);
                     double maxGap = MAX_LEADER_END_GAP * line.getFontSize();
                     double gapBefore = leader.getLeftX() - line.getRightX();
                     double gapAfter = line.getLeftX() - leader.getRightX();
@@ -262,7 +267,8 @@ public class TextLineProcessor {
                     }
                 }
             }
-            if (before != null && after != null && !nextParts.containsKey(before) && !previousParts.containsKey(after)
+            if (!underline && before != null && after != null && !nextParts.containsKey(before)
+                    && !previousParts.containsKey(after)
                     && areOnOneRow(before, after) && isPageLabel(after.getValue().trim())) {
                 nextParts.put(before, after);
                 previousParts.put(after, before);
@@ -637,6 +643,17 @@ public class TextLineProcessor {
         return box.getHeight() < MAX_LEADER_HEIGHT * fontSize && box.getWidth() > fontSize
             && middle > line.getBaseLine() - MAX_ROW_BASELINE_DIFFERENCE * fontSize
             && middle < line.getBaseLine() + fontSize;
+    }
+
+    /**
+     * Whether the line art is an underline of the line (#919): the line lies over at least
+     * {@link #MIN_UNDERLINED_WIDTH} of the width of the line art. A leader fills the gap between two parts of a row,
+     * so no text lies over it.
+     */
+    private static boolean isUnderlineOf(LineArtChunk lineArt, TextLine line) {
+        double overlap = Math.min(line.getRightX(), lineArt.getRightX())
+            - Math.max(line.getLeftX(), lineArt.getLeftX());
+        return overlap >= MIN_UNDERLINED_WIDTH * lineArt.getBoundingBox().getWidth();
     }
 
     /** Whether the two lines are parts of one row: their baselines are near. */
