@@ -49,10 +49,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * formats. With the check, the CLI ends with exit code 2 before it reads the PDF. The first line of stdout names the
  * formats that {@code --to-stdout} supports.
  *
- * <p>The sample is a one-page PDF with one line of text, made in the test.
+ * <p>The sample is a one-page PDF, made in the test: a title in 24 pt bold and one line of text in 10 pt. Markdown
+ * gives the title a heading marker, and text does not.
  */
 class Issue492ToStdoutFormatTest {
 
+    private static final String TITLE = "Stdout sample title";
     private static final String TEXT = "Stdout sample text";
     private static final String NOTHING = "--to-stdout wrote nothing and ended with exit code 0";
     private static final String DROPPED = "--to-stdout dropped a requested format and ended with exit code 0";
@@ -92,7 +94,7 @@ class Issue492ToStdoutFormatTest {
     @ParameterizedTest
     @ValueSource(strings = {"text", "markdown", "markdown-with-images", "markdown-with-html"})
     void textOrMarkdownGoesToStdout(String format) throws IOException {
-        assertWritten(run("--to-stdout", "--format", format));
+        assertWritten(run("--to-stdout", "--format", format), !format.equals("text"));
     }
 
     /**
@@ -101,7 +103,7 @@ class Issue492ToStdoutFormatTest {
      */
     @Test
     void hiddenMarkdownOptionGoesToStdout() throws IOException {
-        assertWritten(run("--to-stdout", "--markdown"));
+        assertWritten(run("--to-stdout", "--markdown"), true);
     }
 
     /** Guard: without {@code --to-stdout}, two formats still give two files. */
@@ -121,9 +123,11 @@ class Issue492ToStdoutFormatTest {
         assertTrue(outputFiles().isEmpty(), "the CLI wrote output files: " + outputFiles());
     }
 
-    private void assertWritten(Result result) {
+    private void assertWritten(Result result, boolean markdown) {
         assertEquals(0, result.exitCode, "the conversion to stdout failed: " + result.stdout);
         assertTrue(result.stdout.contains(TEXT), "stdout does not have the text of the PDF: " + result.stdout);
+        boolean heading = result.stdout.lines().anyMatch(line -> line.matches("#{1,6} " + TITLE));
+        assertEquals(markdown, heading, (markdown ? "stdout is not Markdown: " : "stdout is not text: ") + result.stdout);
     }
 
     private List<Path> outputFiles() throws IOException {
@@ -144,8 +148,13 @@ class Issue492ToStdoutFormatTest {
                 document.addPage(page);
                 try (PDPageContentStream content = new PDPageContentStream(document, page)) {
                     content.beginText();
-                    content.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
+                    content.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD), 24);
                     content.newLineAtOffset(72, 700);
+                    content.showText(TITLE);
+                    content.endText();
+                    content.beginText();
+                    content.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 10);
+                    content.newLineAtOffset(72, 660);
                     content.showText(TEXT);
                     content.endText();
                 }
