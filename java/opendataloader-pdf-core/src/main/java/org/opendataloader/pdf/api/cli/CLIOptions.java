@@ -371,6 +371,10 @@ public class CLIOptions {
      * options applied without paying for the positional-arg-based output-folder
      * fallback that {@link #createConfigFromCommandLine} performs.
      *
+     * <p>This method does not check the formats of {@code --to-stdout}: stdout carries only one
+     * of text and Markdown. {@link #createConfigFromCommandLine} checks them for the bundled CLI.
+     * A downstream CLI that writes to stdout must check them itself.
+     *
      * @param config       Config to populate
      * @param commandLine  parsed CommandLine
      */

@@ -750,6 +750,50 @@ class CLIOptionsTest {
         return fail("no hybrid-chunk-size option in " + root);
     }
 
+    // ===== --to-stdout (#492) =====
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "json", "html", "pdf", "tagged-pdf", "markdown,text", "markdown,json"})
+    void testCreateConfig_toStdoutRefusesAFormatThatStdoutCannotCarry(String formats) throws ParseException {
+        CommandLine cmd = parser.parse(options, toStdoutArgs(formats));
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+            () -> CLIOptions.createConfigFromCommandLine(cmd));
+        assertTrue(error.getMessage().contains("--format text or --format markdown"), error.getMessage());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"text", "markdown", "markdown-with-images", "markdown-with-html"})
+    void testCreateConfig_toStdoutAcceptsTextOrMarkdown(String format) throws ParseException {
+        Config config = CLIOptions.createConfigFromCommandLine(parser.parse(options, toStdoutArgs(format)));
+
+        assertTrue(config.isOutputStdout());
+    }
+
+    @Test
+    void testCreateConfig_toStdoutAcceptsTheHiddenMarkdownOption() throws ParseException {
+        String[] args = {"--to-stdout", "--markdown", testPdf.getAbsolutePath()};
+
+        Config config = CLIOptions.createConfigFromCommandLine(parser.parse(options, args));
+
+        assertTrue(config.isGenerateMarkdown());
+    }
+
+    @Test
+    void testCreateConfig_withoutToStdoutAcceptsTwoFormats() throws ParseException {
+        String[] args = {"--format", "markdown,json", testPdf.getAbsolutePath()};
+
+        Config config = CLIOptions.createConfigFromCommandLine(parser.parse(options, args));
+
+        assertTrue(config.isGenerateMarkdown() && config.isGenerateJSON());
+    }
+
+    private String[] toStdoutArgs(String formats) {
+        return formats.isEmpty()
+            ? new String[]{"--to-stdout", testPdf.getAbsolutePath()}
+            : new String[]{"--to-stdout", "--format", formats, testPdf.getAbsolutePath()};
+    }
+
     @FunctionalInterface
     private interface ThrowingRunnable {
         void run() throws Exception;
