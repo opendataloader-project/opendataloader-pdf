@@ -402,7 +402,7 @@ function generatePythonConvert() {
 
   lines.push('');
   lines.push('    Returns:');
-  lines.push('        The standard output of the CLI, for example the content with to_stdout. Nothing is written to the console when the CLI succeeds.');
+  lines.push('        The standard output of the CLI, for example the content with to_stdout. Nothing is written to the console. On a failure, the raised error has the messages of the CLI in its notes.');
   lines.push('    """');
 
   // Generate function body
