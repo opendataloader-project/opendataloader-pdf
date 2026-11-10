@@ -23,7 +23,7 @@
 
     <groupId>org.opendataloader</groupId>
     <artifactId>opendataloader-pdf-parent</artifactId>
-    <version>2.5.21-SNAPSHOT</version>
+    <version>2.5.22-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>OpenDataLoader PDF</name>
