@@ -96,6 +96,25 @@ jobs:
           done
           echo "all keys present"
 
+      # The PATH python cannot see a CLI installed in an isolated env
+      # (pipx, `uv tool`); the version must come from the CLI's own interpreter.
+      - name: detect-env.sh reads the version from the CLI's own env
+        if: matrix.os != 'windows-latest'
+        run: |
+          tmp=$(mktemp -d)
+          python -m venv "$tmp/env"
+          site=$("$tmp/env/bin/python" -c "import sysconfig; print(sysconfig.get_path('purelib'))")
+          mkdir -p "$site/opendataloader_pdf-9.9.9.dist-info" "$tmp/bin"
+          printf 'Metadata-Version: 2.1\nName: opendataloader-pdf\nVersion: 9.9.9\n' \
+            > "$site/opendataloader_pdf-9.9.9.dist-info/METADATA"
+          printf '#!%s\n' "$tmp/env/bin/python" > "$tmp/bin/opendataloader-pdf"
+          chmod +x "$tmp/bin/opendataloader-pdf"
+          out=$(PATH="$tmp/bin:$PATH" bash skills/odl-pdf/scripts/detect-env.sh)
+          echo "$out"
+          rm -rf "$tmp"
+          echo "$out" | grep -q "^ODL_VERSION=9.9.9$" \
+            || { echo "expected ODL_VERSION=9.9.9"; exit 1; }
+
       # --- hybrid-health.sh (no server running is expected) --------------
       - name: hybrid-health.sh handles no-server gracefully
         run: |
