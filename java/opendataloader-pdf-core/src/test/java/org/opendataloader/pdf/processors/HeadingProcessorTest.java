@@ -71,4 +71,155 @@ public class HeadingProcessorTest {
         Assertions.assertEquals(1, headings.get(0).getHeadingLevel());
         Assertions.assertEquals(2, headings.get(1).getHeadingLevel());
     }
+
+    @Test
+    public void testIeeeRomanSectionIsHeading() {
+        StaticContainers.setIsDataLoader(true);
+        StaticLayoutContainers.setHeadings(new ArrayList<>());
+        List<IObject> contents = new ArrayList<>();
+
+        SemanticParagraph section = new SemanticParagraph();
+        section.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 30.0, 20.0, 40.0),
+            "I. INTRODUCTION", "Font1", 10, 700, 0, 20.0, new double[]{0.0}, null, 0)));
+        contents.add(section);
+
+        SemanticParagraph body = new SemanticParagraph();
+        body.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 10.0, 20.0, 20.0),
+            "This paper introduces...", "Font1", 10, 400, 0, 12.0, new double[]{0.5}, null, 0)));
+        contents.add(body);
+
+        HeadingProcessor.processHeadings(contents, false);
+        Assertions.assertInstanceOf(SemanticHeading.class, contents.get(0),
+            "I. INTRODUCTION should be classified as a heading");
+    }
+
+    @Test
+    public void testConsecutiveRomanNumeralsAreList() {
+        StaticContainers.setIsDataLoader(true);
+        StaticLayoutContainers.setHeadings(new ArrayList<>());
+        List<IObject> contents = new ArrayList<>();
+
+        SemanticParagraph item1 = new SemanticParagraph();
+        item1.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 30.0, 20.0, 40.0),
+            "I. First item", "Font1", 14, 700, 0, 20.0, new double[]{0.0}, null, 0)));
+        contents.add(item1);
+
+        SemanticParagraph item2 = new SemanticParagraph();
+        item2.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 20.0, 20.0, 30.0),
+            "II. Second item", "Font1", 14, 700, 0, 20.0, new double[]{0.0}, null, 0)));
+        contents.add(item2);
+
+        HeadingProcessor.processHeadings(contents, false);
+        Assertions.assertFalse(contents.get(0) instanceof SemanticHeading,
+            "First consecutive roman item should stay as a list, not become a heading");
+        Assertions.assertFalse(contents.get(1) instanceof SemanticHeading,
+            "Second consecutive roman item should stay as a list, not become a heading");
+    }
+
+    @Test
+    public void testDropCapIsNotHeading() {
+        StaticContainers.setIsDataLoader(true);
+        StaticLayoutContainers.setHeadings(new ArrayList<>());
+        List<IObject> contents = new ArrayList<>();
+
+        SemanticParagraph dropCap = new SemanticParagraph();
+        dropCap.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 30.0, 20.0, 40.0),
+            "V", "Font1", 48, 400, 0, 50.0, new double[]{0.0}, null, 0)));
+        contents.add(dropCap);
+
+        SemanticParagraph body = new SemanticParagraph();
+        body.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 10.0, 20.0, 20.0),
+            "ISUAL Place Recognition serves as...", "Font1", 10, 400, 0, 12.0,
+            new double[]{0.5}, null, 0)));
+        contents.add(body);
+
+        HeadingProcessor.processHeadings(contents, false);
+        Assertions.assertFalse(contents.get(0) instanceof SemanticHeading,
+            "A single-letter drop cap should not be classified as a heading");
+    }
+
+    @Test
+    public void testTwoCharacterHeadingIsPreserved() {
+        StaticContainers.setIsDataLoader(true);
+        StaticLayoutContainers.setHeadings(new ArrayList<>());
+        List<IObject> contents = new ArrayList<>();
+
+        SemanticParagraph shortHeading = new SemanticParagraph();
+        shortHeading.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 30.0, 20.0, 40.0),
+            "AI", "Font1", 16, 700, 0, 50.0, new double[]{0.0}, null, 0)));
+        contents.add(shortHeading);
+
+        HeadingProcessor.processHeadings(contents, false);
+        Assertions.assertTrue(contents.get(0) instanceof SemanticHeading,
+            "A two-character standalone uppercase title like AI should be classified as a heading");
+    }
+
+    @Test
+    public void testEquationIsNotHeading() {
+        StaticContainers.setIsDataLoader(true);
+        StaticLayoutContainers.setHeadings(new ArrayList<>());
+        List<IObject> contents = new ArrayList<>();
+
+        SemanticParagraph eq = new SemanticParagraph();
+        eq.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 30.0, 20.0, 40.0),
+            "Uj[t] = βUj[t − 1] + Ij[t] (2)", "Font1", 12, 700, 0, 30.0, new double[]{0.0}, null, 0)));
+        contents.add(eq);
+
+        HeadingProcessor.processHeadings(contents, false);
+        Assertions.assertFalse(contents.get(0) instanceof SemanticHeading,
+            "An equation line should not be classified as a heading");
+    }
+
+    @Test
+    public void testTableHeaderIsNotHeading() {
+        StaticContainers.setIsDataLoader(true);
+        StaticLayoutContainers.setHeadings(new ArrayList<>());
+        List<IObject> contents = new ArrayList<>();
+
+        SemanticParagraph th = new SemanticParagraph();
+        th.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 30.0, 20.0, 40.0),
+            "Strategy Acc. P@100R R@100P", "Font1", 10, 700, 0, 20.0, new double[]{0.0}, null, 0)));
+        contents.add(th);
+
+        HeadingProcessor.processHeadings(contents, false);
+        Assertions.assertFalse(contents.get(0) instanceof SemanticHeading,
+            "A table header row should not be classified as a heading");
+    }
+
+    @Test
+    public void testNumberedTableHeaderIsNotHeading() {
+        StaticContainers.setIsDataLoader(true);
+        StaticLayoutContainers.setHeadings(new ArrayList<>());
+        List<IObject> contents = new ArrayList<>();
+
+        SemanticParagraph th = new SemanticParagraph();
+        th.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 30.0, 20.0, 40.0),
+            "1. Strategy Acc. P@100R R@100P", "Font1", 10, 700, 0, 20.0, new double[]{0.0}, null, 0)));
+        contents.add(th);
+
+        HeadingProcessor.processHeadings(contents, false);
+        Assertions.assertFalse(contents.get(0) instanceof SemanticHeading,
+            "A numbered table header row should not be classified as a heading");
+    }
+
+    @Test
+    public void testShortHeadingWithoutDropCapLayoutEvidenceIsPreserved() {
+        StaticContainers.setIsDataLoader(true);
+        StaticLayoutContainers.setHeadings(new ArrayList<>());
+        List<IObject> contents = new ArrayList<>();
+
+        SemanticParagraph shortHeading = new SemanticParagraph();
+        shortHeading.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 30.0, 20.0, 40.0),
+            "ML", "Font1", 16, 700, 0, 50.0, new double[]{0.0}, null, 0)));
+        contents.add(shortHeading);
+
+        SemanticParagraph body = new SemanticParagraph();
+        body.add(new TextLine(new TextChunk(new BoundingBox(0, 10.0, 10.0, 20.0, 20.0),
+            "CNN-based models are used...", "Font1", 14, 400, 0, 12.0, new double[]{0.5}, null, 0)));
+        contents.add(body);
+
+        HeadingProcessor.processHeadings(contents, false);
+        Assertions.assertTrue(contents.get(0) instanceof SemanticHeading,
+            "ML heading followed by CNN-based text should remain a heading without drop cap layout evidence");
+    }
 }
