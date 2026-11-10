@@ -259,7 +259,7 @@ CLI_OPTIONS: List[Dict[str, Any]] = [
         "type": "boolean",
         "required": False,
         "default": False,
-        "description": "Write output to stdout instead of file (single format only)",
+        "description": "Write output to stdout instead of files. Supports one format: text or markdown",
     },
     {
         "name": "threads",

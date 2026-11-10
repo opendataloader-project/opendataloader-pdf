@@ -147,8 +147,9 @@ confirm the current option names from help when you act on one.
   existence or the zero exit.
 
 - **Some structured outputs never stream to stdout.** Certain output kinds are only
-  ever written to files; asking to stream them yields an empty stdout on a zero
-  exit. **A zero exit with an empty pipe is not success.** Route such outputs
+  ever written to files. Depending on the installed version, asking to stream them
+  yields an empty stdout on a zero exit, or the tool refuses the request with an
+  error. **A zero exit with an empty pipe is not success.** Route such outputs
   through a file and read the file (or pipe the parsed *result* of the file).
 
 - **A structure-tagged input path can pre-empt the AI backend.** When the source
