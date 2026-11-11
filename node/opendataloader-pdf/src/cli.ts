@@ -71,8 +71,11 @@ async function main(): Promise<number> {
     if (!isJavaExit) {
       const message = err instanceof Error ? err.message : String(err);
       console.error(message);
+      return 1;
     }
-    return 1;
+    // A process terminated by a signal has no exit code; keep a nonzero
+    // fallback for that case while preserving normal Java exit codes.
+    return (err as Error & { exitCode?: number | null }).exitCode ?? 1;
   }
 }
 

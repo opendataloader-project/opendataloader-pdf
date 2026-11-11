@@ -143,7 +143,7 @@ function executeJar(args: string[], executionOptions: JarExecutionOptions = {}):
         // stderr was already streamed live to the parent in CLI mode, and
         // re-printing risks leaking anything sensitive Java logged
         // (e.g. a --password value echoed by an underlying library).
-        (error as Error & { isJavaExit?: boolean }).isJavaExit = true;
+        Object.assign(error, { isJavaExit: true, exitCode: code });
         reject(error);
       }
     });
