@@ -84,8 +84,14 @@ java -Djava.io.tmpdir="$T/jtmp" -Djava.awt.headless=true -jar "$JAR" samples/pdf
 
 The command above does not use the hybrid backend. An upgrade of a Python package that the `hybrid` extra installs (docling, easyocr, torchvision, Pillow, and the other packages in `python/opendataloader-pdf/uv.lock`) cannot change that output. For such a package, also compare the output of hybrid mode.
 
+Do the runs in this order:
+
+1. On `main`, with `JAR="$T/base.jar"`: `OUT="$T/hybrid-baseline-1"`, then `OUT="$T/hybrid-baseline-2"`.
+2. On the upgrade branch, after its build, with `JAR="$T/upgrade.jar"`: `OUT="$T/hybrid-after"`.
+
 ```bash
 OUT="$T/hybrid-baseline-1"    # one new directory for each run
+cp README.md python/opendataloader-pdf/README.md    # uv run builds the package: the build reads this file
 curl -sS -m 5 -o /dev/null http://127.0.0.1:5002/health && echo "a server answers on port 5002 already: stop it first"
 (cd python/opendataloader-pdf && uv run --extra hybrid opendataloader-pdf-hybrid --host 127.0.0.1 --port 5002 > "$T/hybrid.log" 2>&1 & echo $! > "$T/hybrid.pid")
 ready=no
@@ -103,13 +109,15 @@ else
   echo "the server did not start:"; tail -20 "$T/hybrid.log"
 fi
 kill "$(cat "$T/hybrid.pid")" 2>/dev/null
+rm -f python/opendataloader-pdf/README.md
 ```
 
+- `uv run` builds the Python package of this checkout. The build needs `README.md` in the package directory and the jar in `java/opendataloader-pdf-cli/target/` (`./scripts/build-java.sh`). The copy of `README.md` is not a tracked file: remove it after the run.
 - The port must be free before the start. If another server answers on it, the health check passes for that server, and the output does not come from this checkout.
 - The conversion runs only if this server is alive and answers in 10 minutes. If it does not, the end of `$T/hybrid.log` is printed. Do not go on.
 - `--hybrid-mode full` sends each page to the backend. With the default mode, the backend gets only some pages.
 - Do not add `--hybrid-fallback`. A backend error must stop the run, or the output is the Java output again.
-- Make the hybrid baseline two times: run the commands again with `OUT="$T/hybrid-baseline-2"`. For the upgrade, use `OUT="$T/hybrid-after"`. If the two baseline outputs differ, that difference comes from the backend and not from an upgrade. Compare the upgrade only where the two baselines agree.
+- The two baselines show the differences that come from the backend and not from an upgrade. Compare the upgrade only in the files where the two baselines agree (see "Comparison").
 - For an OCR package, start the server with `--force-ocr` in each run.
 - Start the server of the upgrade branch from that branch, so that it uses the upgraded lockfile. After each run, make sure that no server answers on the port.
 
@@ -118,9 +126,15 @@ kill "$(cat "$T/hybrid.pid")" 2>/dev/null
 Do the byte comparison first. It needs no interpretation.
 
 ```bash
-for f in "$BASE"/*.json; do
-  cmp -s "$f" "$AFTER/$(basename "$f")" || echo "DIFFERS: $(basename "$f")"
-done
+same() {    # same <directory> <directory>
+  for f in "$1"/*.json; do
+    cmp -s "$f" "$2/$(basename "$f")" || echo "DIFFERS: $(basename "$f")"
+  done
+}
+same "$BASE" "$AFTER"
+# for a package of the hybrid backend:
+same "$T/hybrid-baseline-1" "$T/hybrid-baseline-2"    # these files change without an upgrade
+same "$T/hybrid-baseline-1" "$T/hybrid-after"         # a file that is only in this list changed with the upgrade
 ```
 
 Identical output is the strongest result. If a file differs, count the element types before you decide. The file size does not show what changed.
