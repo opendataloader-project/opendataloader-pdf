@@ -65,34 +65,45 @@ Make the baseline on `main` before you make the upgrade branch. Keep it out of t
 
 ```bash
 ./scripts/build-java.sh
-T="${TMPDIR:-/tmp}/deps"; BASE="$T/baseline"; mkdir -p "$BASE" "$T/jtmp"
+T="${TMPDIR:-/tmp}/deps"; BASE="$T/baseline"; rm -rf "$BASE"; mkdir -p "$BASE" "$T/jtmp"
 cp "$(find java/opendataloader-pdf-cli/target -maxdepth 1 -name 'opendataloader-pdf-cli-*.jar' \
   ! -name 'original-*' ! -name '*-sources.jar' ! -name '*-javadoc.jar')" "$T/base.jar"
 JAR="$T/base.jar"
-java -Djava.io.tmpdir="$T/jtmp" -Djava.awt.headless=true -jar "$JAR" samples/pdf -o "$BASE" -f json -q
+java -Djava.io.tmpdir="$T/jtmp" -Djava.awt.headless=true -jar "$JAR" samples/pdf -o "$BASE" -f json -q \
+  || echo "the conversion failed: do not compare this output"
 ```
 
 - Set `java.io.tmpdir` to a directory that you can write. The conversion writes font metrics and page content to temporary files. If it cannot write them, the JSON looks correct, but most of the text is missing.
 - For a bump of veraPDF, wcag-algorithms, or PDFBox, add `pdf` to `-f`, and compare the PDF files too. The comment in `java/pom.xml` tells you that the tests pass with a PDFBox version that does not agree with wcag-algorithms.
-- On the upgrade branch, build again, copy the jar to `$T/upgrade.jar`, and make the output with the same command in a second directory (`AFTER`). The copies keep the two jars apart: a build replaces the jar in `target/`.
+- Each output directory must be empty before its run, and each run must end without an error. Do not compare an output of a run that failed.
+- On the upgrade branch, build again, copy the jar to `$T/upgrade.jar`, set `JAR="$T/upgrade.jar"`, and make the output with the same command in a second, empty directory (`AFTER`). The copies keep the two jars apart: a build replaces the jar in `target/`.
 
 ### Packages of the hybrid backend
 
 The command above does not use the hybrid backend. An upgrade of a Python package that the `hybrid` extra installs (docling, easyocr, torchvision, Pillow, and the other packages in `python/opendataloader-pdf/uv.lock`) cannot change that output. For such a package, also compare the output of hybrid mode.
 
 ```bash
+curl -sS -m 5 -o /dev/null http://127.0.0.1:5002/health && echo "a server answers on port 5002 already: stop it first"
 (cd python/opendataloader-pdf && uv run --extra hybrid opendataloader-pdf-hybrid --host 127.0.0.1 --port 5002 > "$T/hybrid.log" 2>&1 & echo $! > "$T/hybrid.pid")
+ready=no
 for i in $(seq 120); do
-  curl -sS -o /dev/null http://127.0.0.1:5002/health && break
-  kill -0 "$(cat "$T/hybrid.pid")" 2>/dev/null || { echo "the server stopped:"; tail -20 "$T/hybrid.log"; break; }
+  kill -0 "$(cat "$T/hybrid.pid")" 2>/dev/null || break
+  curl -sS -m 5 -o /dev/null http://127.0.0.1:5002/health && { ready=yes; break; }
   sleep 5
 done
-java -Djava.io.tmpdir="$T/jtmp" -Djava.awt.headless=true -jar "$JAR" samples/pdf -o "$T/hybrid-baseline" -f json -q \
-  --hybrid docling-fast --hybrid-mode full --hybrid-url http://127.0.0.1:5002
-kill "$(cat "$T/hybrid.pid")"
+if [ "$ready" = yes ]; then
+  rm -rf "$T/hybrid-baseline"
+  java -Djava.io.tmpdir="$T/jtmp" -Djava.awt.headless=true -jar "$JAR" samples/pdf -o "$T/hybrid-baseline" -f json -q \
+    --hybrid docling-fast --hybrid-mode full --hybrid-url http://127.0.0.1:5002 \
+    || echo "the conversion failed: do not compare this output"
+else
+  echo "the server did not start:"; tail -20 "$T/hybrid.log"
+fi
+kill "$(cat "$T/hybrid.pid")" 2>/dev/null
 ```
 
-- If the server stops, or does not answer in 10 minutes, read `$T/hybrid.log`. Do not go on.
+- The port must be free before the start. If another server answers on it, the health check passes for that server, and the output does not come from this checkout.
+- The conversion runs only if this server is alive and answers in 10 minutes. If it does not, the end of `$T/hybrid.log` is printed. Do not go on.
 - `--hybrid-mode full` sends each page to the backend. With the default mode, the backend gets only some pages.
 - Do not add `--hybrid-fallback`. A backend error must stop the run, or the output is the Java output again.
 - Make the hybrid baseline two times, in two directories. If the two outputs differ, that difference comes from the backend and not from an upgrade. Compare the upgrade only where the two baselines agree.
@@ -140,7 +151,8 @@ For tier 3 and for major versions, run the benchmark after the comparison. Run i
 BENCH="$T/bench"    # a clone of the benchmark for this comparison only; bench.sh makes it
 bench_one() {       # bench_one <name> <absolute path of the jar>
   rm -rf "$BENCH/prediction/opendataloader/markdown" "$BENCH/prediction/opendataloader/evaluation.json"
-  BENCH_DIR="$BENCH" ./scripts/bench.sh --skip-build --check-regression --force --jar-path "$2"
+  JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:+$JAVA_TOOL_OPTIONS }-Djava.awt.headless=true -Djava.io.tmpdir=$T/jtmp" \
+    BENCH_DIR="$BENCH" ./scripts/bench.sh --skip-build --check-regression --force --jar-path "$2"
   cp "$BENCH/prediction/opendataloader/evaluation.json" "$T/bench-$1.json"
   git -C "$BENCH" rev-parse HEAD > "$T/bench-$1.json.commit"
 }
@@ -151,6 +163,7 @@ python3 -c "import json, sys; print('missing predictions:', [json.load(open(p))[
 ```
 
 - Give `--jar-path` an absolute path. `bench.sh` changes to the folder of the benchmark before the path is read.
+- `JAVA_TOOL_OPTIONS` gives the Java of the benchmark the same temporary directory as the sample runs.
 - `--force` makes the benchmark convert the documents again. Without it, the benchmark skips the conversion when an `evaluation.json` exists, and it scores old predictions.
 - `bench.py compare` exits 1 if the two runs used different revisions of the benchmark, if a mean drops, if a document drops more than 0.05, or if the upgrade misses more predictions than `main`.
 - The two counts of missing predictions must be 0. If both runs miss the same documents, `bench.py compare` does not fail.
