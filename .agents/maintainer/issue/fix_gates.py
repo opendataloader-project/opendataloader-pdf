@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The harness of odl-fix: a contract defines the problem and the fix as tests; code computes "done".
+"""The issue harness: a contract defines the problem and the fix as tests; code computes "done".
 
   fix_gates.py template --issue N[,N...]
       Prints a contract skeleton for $WORK/contract.json. Several numbers: several issues in one pull request.
@@ -23,7 +23,7 @@
   fix_gates.py run --work WORK [--gates A,B] [--offline]
       Runs the required gates of the change (not problem, not pr-watch), in order.
   fix_gates.py freeze --work WORK
-      After Approval 1: keeps the approved contract. Needs a passing problem record of this contract.
+      After the user approves the contract: keeps the approved contract. Needs a passing problem record of this contract.
   fix_gates.py check --work WORK [--final]
       Computes the result from the records: each required gate passed for the current commits,
       jars, and contract; the contract only grew after the freeze, with an amendment for each change;
@@ -54,7 +54,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-REVIEW_SCRIPTS = os.path.normpath(os.path.join(HERE, "..", "..", "odl-review", "scripts"))
+REVIEW_SCRIPTS = os.path.normpath(os.path.join(HERE, "..", "review"))
 MODULES = ("opendataloader-pdf-core", "opendataloader-pdf-cli")
 PY_PKG = "python/opendataloader-pdf"
 NODE_PKG = "node/opendataloader-pdf"
@@ -1438,7 +1438,7 @@ BASE_ONLY = {"base-build", "issue-corpus"}  # they read only the base tree
 
 
 def run_gate(ctx: Ctx, name: str) -> dict:
-    # base-build runs in Phase 2 step 1, before the contract exists; the gates of USES_CONTRACT need it
+    # base-build runs before the contract exists; the gates of USES_CONTRACT need it
     c = load_contract(ctx) if name in USES_CONTRACT or os.path.exists(contract_path(ctx)) else {}
     result = GATES[name](ctx, c)
     rec = {"gate": name, "state": result["state"], "head": ctx.head(), "tree": ctx.tree(), "base": ctx.base(),
@@ -1597,7 +1597,7 @@ def compute_check(ctx: Ctx, final: bool = False) -> dict:
     lock = load_lock(ctx)
     amend_changes = []
     if lock is None:
-        errors.append("the contract is not frozen (Approval 1, then fix_gates.py freeze)")
+        errors.append("the contract is not frozen (the user approves it, then fix_gates.py freeze)")
     else:
         amend_changes, amend_errors = contract_changes(lock["contract"], c)
         doc_sha = reporter_document_sha(ctx, c)
@@ -1716,7 +1716,7 @@ def report_text(ctx: Ctx) -> str:
     if rec.get("bench"):
         lines.append("- Benchmark: " + "; ".join(rec["bench"]["summary"].get("compare", [])[:6]))
     if chk["contract_changes"]:
-        lines += ["", "Contract changes after Approval 1:"] + [f"- {x}" for x in chk["contract_changes"]]
+        lines += ["", "Contract changes after the freeze:"] + [f"- {x}" for x in chk["contract_changes"]]
     if chk["selfcheck_notes"]:
         lines += ["", "Self-check notes:"] + [f"- {x}" for x in chk["selfcheck_notes"]]
     if not chk["ok"]:

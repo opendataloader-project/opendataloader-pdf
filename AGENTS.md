@@ -1,8 +1,3 @@
 # Agent instructions
 
-This repository has two agent skills. They run only when the user starts them by name. Do not start them yourself, and do not follow their procedures without that call.
-
-| Skill | Use | Claude Code | Codex |
-|:--|:--|:--|:--|
-| [odl-fix](.agents/skills/odl-fix/SKILL.md) | Fix a GitHub issue and open a pull request | `/odl-fix` | `$odl-fix` |
-| [odl-review](.agents/skills/odl-review/SKILL.md) | Review a pull request from another person | `/odl-review` | `$odl-review` |
+The folder [.agents/maintainer/](.agents/maintainer/README.md) has the rules and tools of this repository for maintenance work: upgrades of dependencies, fixes of issues, and reviews of pull requests. Use them only when the user asks for that work. Do not start that work yourself, and do not follow those files without that request.

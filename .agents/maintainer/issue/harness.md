@@ -1,23 +1,23 @@
 # The harness: contract, gates, records
 
-`scripts/fix_gates.py` decides when a fix is done. You write the contract. The user approves it. The tool runs the gates and computes the result. Do not decide "done" yourself.
+`fix_gates.py` (in this folder) decides when a fix is done. You write the contract. The user approves it. The tool runs the gates and computes the result. Do not decide "done" yourself.
 
 ```bash
-FG=.agents/skills/odl-fix/scripts/fix_gates.py
+FG=.agents/maintainer/issue/fix_gates.py
 python3 -I "$FG" template --issue "$N" > "$WORK/contract.json"   # a skeleton
 python3 -I "$FG" validate --work "$WORK"                          # exit 2: not valid
-python3 -I "$FG" gate problem --work "$WORK"                      # Phase 2
-python3 -I "$FG" freeze --work "$WORK"                            # after Approval 1
-python3 -I "$FG" run --work "$WORK"                               # Phase 3: the required gates
-python3 -I "$FG" check --work "$WORK"                             # Phase 4: DONE or NOT DONE (exit 13)
+python3 -I "$FG" gate problem --work "$WORK"                      # before the fix
+python3 -I "$FG" freeze --work "$WORK"                            # after the user approves the contract
+python3 -I "$FG" run --work "$WORK"                               # after the fix: the required gates
+python3 -I "$FG" check --work "$WORK"                             # DONE or NOT DONE (exit 13)
 python3 -I "$FG" report --work "$WORK"                            # $WORK/evidence.md
-python3 -I "$FG" pr-watch --work "$WORK" --pr <PR>                # Phase 5, after the push
+python3 -I "$FG" pr-watch --work "$WORK" --pr <PR>                # after the push
 python3 -I "$FG" check --work "$WORK" --final                     # before the final report
 ```
 
 Exit codes: 0 pass, 2 a usage or contract problem, 3 an environment problem (a tree with uncommitted changes, no base tree, no jar), 13 a gate failed or the work is not done.
 
-The tool reads `SRC` from `$WORK/env.sh` (the fix tree). `--src` sets it. The base tree is `$WORK/base-src`. `--offline` adds `-o` to the Maven commands that the tool starts (not to `scripts/build-java.sh`).
+The tool reads `SRC` from `$WORK/env.sh` (the fix tree). `--src` sets it. The tool finds the repository scripts that it uses (`side_effects.sh`, `bench.py`) in `.agents/maintainer/review/`, next to this folder. The base tree is `$WORK/base-src`. `--offline` adds `-o` to the Maven commands that the tool starts (not to `scripts/build-java.sh`).
 
 ## Contract (`$WORK/contract.json`)
 
@@ -89,7 +89,7 @@ A normalizer is a decision that a difference does not matter. Add one only with 
 
 | Gate | Required when | Pass |
 |:--|:--|:--|
-| `problem` | Always (Phase 2; `run` does not run it). The pytest and vitest cases need the jar of the base tree (`base-build`) | On the base tree, with the case test files copied in: each problem case fails with its symptom; each guard and each mutation case passes. Then, for each mutation case, on the base tree with its patch: the tests in `misses` (the base versions) pass, and the case fails. A compile error, a skip, or no test is no result. The base tree is restored |
+| `problem` | Always (before the fix; `run` does not run it). The pytest and vitest cases need the jar of the base tree (`base-build`) | On the base tree, with the case test files copied in: each problem case fails with its symptom; each guard and each mutation case passes. Then, for each mutation case, on the base tree with its patch: the tests in `misses` (the base versions) pass, and the case fails. A compile error, a skip, or no test is no result. The base tree is restored |
 | `base-build` | Always | `mvn clean package -DskipTests` on the base tree; `$WORK/base.jar` |
 | `build` | Always | `scripts/build-java.sh` (all Java tests, Javadoc, enforcer) succeeds with 0 failures and 0 errors; `$WORK/fix.jar` |
 | `fix` | Always | Each case passes on the fix tree |
@@ -110,6 +110,16 @@ Sandbox notes:
 - Run `reporter` where you may open the reporter's document.
 - The tool keeps the value of `JAVA_TOOL_OPTIONS` (for example `-Djava.net.preferIPv4Stack=true`) and adds `-Djava.awt.headless=true` and `-Djava.io.tmpdir=$TMPDIR`.
 
+## If a gate fails
+
+- A case, `build`, `wrappers`, or `static`: fix the code, commit, and run again.
+- `pinning`: no case needs a changed file. Remove the change, or add the case that needs it.
+- `scope`: a changed file is outside the scope. Remove the change, or add the file to `scope` with an amendment.
+- `invariants` or `reporter`: an output differs. If the difference is a defect, fix it, and add a guard case for its input. If the difference is intended but the contract does not allow it, it is a design decision: stop and ask the user. After the user's yes, add the `allow` or the normalizer with an amendment.
+- `bench`: a drop that you cannot remove. Stop. The user decides.
+
+Run the gates again after each later code change. Later changes come from a gate, a rebase, a review, or CI.
+
 ## Records and freshness
 
 A record has the gate, the state, the commit and its tree, the base commit, the contract hash, and, for the gates that use them, the jar hashes. `check` counts a record only if:
@@ -129,10 +139,10 @@ A record has the gate, the state, the commit and its tree, the base commit, the 
 `freeze` keeps a copy of the approved contract in `$WORK/contract.lock`, and the hash of the reporter's document. It needs a passing `problem` record of that contract. After the freeze, the contract can only grow:
 
 - You cannot remove a case, an invariant, a format of an invariant, or a reporter run. You cannot change the kind, the test, the symptom, the module, the runner, the patch path, or the misses of a case, the corpus or the options of an invariant, the reporter document, or a reporter run. Add a new case or run instead.
-- Each change needs a new entry in `amendments`. `check` lists each change for Approval 2.
+- Each change needs a new entry in `amendments`. `check` lists each change. Show the list to the user before the push.
 - A new problem case needs a new `problem` run: it must fail on the base too.
-- A new guard case or a new scope entry does not need the user first. Show it at Approval 2.
-- A new `allow` or a new `ignore` lowers the bar. It is a design decision: ask the user first (see "Stop and ask the user" in SKILL.md).
+- A new guard case or a new scope entry does not need the user first. Show it to the user before the push.
+- A new `allow` or a new `ignore` lowers the bar. It is a design decision: ask the user first (stop and ask the user first).
 
 ## Self-check (`$WORK/selfcheck.json`)
 
@@ -155,8 +165,8 @@ The harness cannot read code for these risks. Read each changed line for each it
 {"head": "<a commit with the current content>", "items": {"1": "ok", "2": "ok", "7": "note: <text for the review notes>"}}
 ```
 
-Each item is `ok` or `note: <text>`. A note goes to the review notes. Any other text is an open finding: fix it first. A vulnerability is not a note: tell the user only (Rule 5).
+Each item is `ok` or `note: <text>`. A note goes to the review notes. Any other text is an open finding: fix it first. A vulnerability is not a note: tell the user only.
 
 ## Evals
 
-`python3 -I .agents/skills/odl-fix/evals/run.py` runs the evals of the harness (G) with the evals of the issue state (F). If the harness accepts wrong work or refuses right work, add an eval for that case first. Then change the tool.
+`python3 -I -B .agents/maintainer/issue/evals/run.py` runs the evals of the harness. If the harness accepts wrong work or refuses right work, add an eval for that case first. Then change the tool.
