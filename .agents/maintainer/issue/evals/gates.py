@@ -1,8 +1,8 @@
-"""Evals of the odl-fix harness (scripts/fix_gates.py). Offline: no Maven, no jar, no network.
+"""Evals of the issue harness (fix_gates.py). Offline: no Maven, no jar, no network.
 
 The judges get the files that the gates read (surefire XML, side_effects.sh output folders, records),
 and check() gets a small git repository with a base tree. Each eval names the weakness it guards.
-evals/run.py runs them with the issue-state evals.
+evals/run.py runs them.
 """
 
 from __future__ import annotations
@@ -13,8 +13,8 @@ import os
 import subprocess
 import sys
 
-SKILL = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_spec = importlib.util.spec_from_file_location("fix_gates", os.path.join(SKILL, "scripts", "fix_gates.py"))
+HARNESS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_spec = importlib.util.spec_from_file_location("fix_gates", os.path.join(HARNESS, "fix_gates.py"))
 fg = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(fg)
 
@@ -607,7 +607,7 @@ def g29_several_issues(tmp):
         assert fg.validate_contract(contract(issue=706, issues=bad), tmp), bad
     grown = contract(issue=706, issues=[706, 707, 708], amendments=[{"n": 1, "what": "x", "why": "y"}])
     assert "issue, issues, or objective changed after the freeze" in fg.contract_changes(ok, grown)[1]
-    res = subprocess.run([sys.executable, "-I", os.path.join(SKILL, "scripts", "fix_gates.py"), "template", "--issue", "706,707"],
+    res = subprocess.run([sys.executable, "-I", os.path.join(HARNESS, "fix_gates.py"), "template", "--issue", "706,707"],
                          capture_output=True, text=True)
     assert res.returncode == 0 and json.loads(res.stdout)["issues"] == [706, 707], res.stdout + res.stderr
     return "template --issue 706,707 -> issues; wrong order, one issue, a repeat, or a string -> refused; a change after the freeze -> error"

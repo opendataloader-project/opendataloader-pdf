@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The harness of odl-fix: a contract defines the problem and the fix as tests; code computes "done".
+"""The issue harness: a contract defines the problem and the fix as tests; code computes "done".
 
   fix_gates.py template --issue N[,N...]
       Prints a contract skeleton for $WORK/contract.json. Several numbers: several issues in one pull request.
@@ -54,7 +54,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-REVIEW_SCRIPTS = os.path.normpath(os.path.join(HERE, "..", "..", "odl-review", "scripts"))
+REVIEW_SCRIPTS = os.path.normpath(os.path.join(HERE, "..", "review"))
 MODULES = ("opendataloader-pdf-core", "opendataloader-pdf-cli")
 PY_PKG = "python/opendataloader-pdf"
 NODE_PKG = "node/opendataloader-pdf"

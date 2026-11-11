@@ -1,3 +1,0 @@
-# Codex: the user starts this skill with $odl-review. Codex does not start it from a prompt.
-policy:
-  allow_implicit_invocation: false

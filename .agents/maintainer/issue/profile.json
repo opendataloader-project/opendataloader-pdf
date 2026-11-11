@@ -1,0 +1,5 @@
+{
+  "interface": 1,
+  "harness": ["python3", "-I", "-B", ".agents/maintainer/issue/fix_gates.py"],
+  "feedback_issue": "odl skills feedback"
+}
