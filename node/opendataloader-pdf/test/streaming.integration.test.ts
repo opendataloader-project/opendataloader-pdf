@@ -33,9 +33,13 @@ interface Capture {
   exitCode: number | null;
 }
 
-function captureSubprocess(command: string, args: string[]): Promise<Capture> {
+function captureSubprocess(
+  command: string,
+  args: string[],
+  env: NodeJS.ProcessEnv = process.env,
+): Promise<Capture> {
   return new Promise((resolve, reject) => {
-    const proc = spawn(command, args);
+    const proc = spawn(command, args, { env });
     const start = Date.now();
     const cap: Capture = { stdout: '', stderr: '', timeline: [], exitCode: null };
 
@@ -55,8 +59,10 @@ function captureSubprocess(command: string, args: string[]): Promise<Capture> {
   });
 }
 
-const runCli = (args: string[]) => captureSubprocess('node', [cliPath, ...args]);
-const runJar = (args: string[]) => captureSubprocess('java', ['-jar', jarPath, ...args]);
+const runCli = (args: string[], env?: NodeJS.ProcessEnv) =>
+  captureSubprocess('node', [cliPath, ...args], env);
+const runJar = (args: string[], env?: NodeJS.ProcessEnv) =>
+  captureSubprocess('java', ['-jar', jarPath, ...args], env);
 
 describe('CLI streaming contract', () => {
   beforeAll(() => {
@@ -83,6 +89,37 @@ describe('CLI streaming contract', () => {
     }
     if (!fs.existsSync(samplePdf)) {
       throw new Error(`Sample PDF not found at ${samplePdf}`);
+    }
+  }, 60000);
+
+  it('returns the Java CLI exit code for an invalid option', async () => {
+    const args = [samplePdf, '--hybrid-chunk-size', '0'];
+    const java = await runJar(args);
+    const node = await runCli(args);
+
+    expect(java.exitCode).toBe(2);
+    expect(node.exitCode).toBe(java.exitCode);
+    expect(node.stdout).toBe(java.stdout);
+    expect(node.stdout).toContain('Invalid chunk size');
+  }, 60000);
+
+  it('returns the Java CLI exit code when the temporary directory is unusable', async () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'odl-exit-code-'));
+    const notADirectory = path.join(tmpDir, 'file');
+    fs.writeFileSync(notADirectory, '');
+    const env = { ...process.env, JAVA_TOOL_OPTIONS: `"-Djava.io.tmpdir=${notADirectory}"` };
+    delete env.JDK_JAVA_OPTIONS;
+    delete env._JAVA_OPTIONS;
+    try {
+      const java = await runJar([samplePdf], env);
+      const node = await runCli([samplePdf], env);
+
+      expect(java.exitCode).toBe(3);
+      expect(node.exitCode).toBe(java.exitCode);
+      expect(node.stdout).toBe(java.stdout);
+      expect(node.stdout).toContain('temporary directory');
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
     }
   }, 60000);
 
