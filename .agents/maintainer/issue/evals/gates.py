@@ -197,7 +197,7 @@ def g9_contract_rules(tmp):
 
 
 def g10_contract_only_grows(tmp):
-    """After Approval 1 the contract can only grow, and each change needs an amendment; a frozen case cannot change."""
+    """After the freeze the contract can only grow, and each change needs an amendment; a frozen case cannot change."""
     frozen = contract()
     grown = contract(cases=frozen["cases"] + [case("G2", "guard", "Issue1Test#twoColumns")])
     changes, errors = fg.contract_changes(frozen, grown)

@@ -49,4 +49,4 @@ Paths are under `java/opendataloader-pdf-core/src/test/java/org/opendataloader/p
 
 ## Files for the author
 
-If PDFBox cannot build the structure, give the PDF files instead. `gh pr review` cannot attach files. At the post gate, plan that the maintainer attaches them in the browser, in a comment after the review.
+If PDFBox cannot build the structure, give the PDF files instead. `gh pr review` cannot attach files. When the review is ready to post, plan that the maintainer attaches them in the browser, in a comment after the review.

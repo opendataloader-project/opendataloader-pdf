@@ -28,6 +28,9 @@ EVALS = list(_gate_evals.EVALS)
 def main(argv):
     only = argv[argv.index("-k") + 1] if "-k" in argv else None
     failed = 0
+    if only and not any(only in name for name, _ in EVALS):
+        print(f"no eval matches -k {only}")
+        return 2
     for name, fn in EVALS:
         if only and only not in name:
             continue

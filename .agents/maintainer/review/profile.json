@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "about": "Review profile of this repository. It describes what a pull request review of this repository needs beyond the generic checks: path categories, bots, scan rules, tools, and the file catalog.json. Read from the main branch only.",
+  "about": "Review profile of this repository: the path categories, the bots, the scan rules, the tools, and the checks (catalog.json).",
   "catalog": "catalog.json",
   "source_dirs": ["(^|/)(java/[^/]+/src|python/[^/]+/src|python/[^/]+/tests|node/[^/]+/src|node/[^/]+/test)/"],
   "categories": {
@@ -28,6 +28,5 @@
   "tools": {"side_effects": {"file": "side_effects.sh", "where": "isolated", "checks": ["Q2-corpus", "Q2-tagged"]}, "bench": {"file": "bench.py", "where": "host (isolated conversion first)", "checks": ["Q2-benchmark"]}, "inspect_pdf": {"file": "inspect_pdf.py", "where": "isolated (reads bytes that the PR's code made)", "needs": ["qpdf"], "checks": ["Q2-tagged"]}, "md_lists": {"file": "md_lists.py", "where": "isolated (reads Markdown that the PR's code made)", "needs": ["markdown-it-py"], "checks": ["Q2-format"]}},
   "docs": {"tools": "tools.md", "checks": "checks.md", "samples": "samples.md"},
   "merge": {"method": "rebase"},
-  "feedback": {"tracking_title": "odl skills feedback"},
   "evals": "evals/run.py"
 }

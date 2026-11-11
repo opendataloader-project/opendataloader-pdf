@@ -6,12 +6,12 @@
 FG=.agents/maintainer/issue/fix_gates.py
 python3 -I "$FG" template --issue "$N" > "$WORK/contract.json"   # a skeleton
 python3 -I "$FG" validate --work "$WORK"                          # exit 2: not valid
-python3 -I "$FG" gate problem --work "$WORK"                      # Phase 2
-python3 -I "$FG" freeze --work "$WORK"                            # after Approval 1
-python3 -I "$FG" run --work "$WORK"                               # Phase 3: the required gates
-python3 -I "$FG" check --work "$WORK"                             # Phase 4: DONE or NOT DONE (exit 13)
+python3 -I "$FG" gate problem --work "$WORK"                      # before the fix
+python3 -I "$FG" freeze --work "$WORK"                            # after the user approves the contract
+python3 -I "$FG" run --work "$WORK"                               # after the fix: the required gates
+python3 -I "$FG" check --work "$WORK"                             # DONE or NOT DONE (exit 13)
 python3 -I "$FG" report --work "$WORK"                            # $WORK/evidence.md
-python3 -I "$FG" pr-watch --work "$WORK" --pr <PR>                # Phase 5, after the push
+python3 -I "$FG" pr-watch --work "$WORK" --pr <PR>                # after the push
 python3 -I "$FG" check --work "$WORK" --final                     # before the final report
 ```
 
@@ -89,7 +89,7 @@ A normalizer is a decision that a difference does not matter. Add one only with 
 
 | Gate | Required when | Pass |
 |:--|:--|:--|
-| `problem` | Always (Phase 2; `run` does not run it). The pytest and vitest cases need the jar of the base tree (`base-build`) | On the base tree, with the case test files copied in: each problem case fails with its symptom; each guard and each mutation case passes. Then, for each mutation case, on the base tree with its patch: the tests in `misses` (the base versions) pass, and the case fails. A compile error, a skip, or no test is no result. The base tree is restored |
+| `problem` | Always (before the fix; `run` does not run it). The pytest and vitest cases need the jar of the base tree (`base-build`) | On the base tree, with the case test files copied in: each problem case fails with its symptom; each guard and each mutation case passes. Then, for each mutation case, on the base tree with its patch: the tests in `misses` (the base versions) pass, and the case fails. A compile error, a skip, or no test is no result. The base tree is restored |
 | `base-build` | Always | `mvn clean package -DskipTests` on the base tree; `$WORK/base.jar` |
 | `build` | Always | `scripts/build-java.sh` (all Java tests, Javadoc, enforcer) succeeds with 0 failures and 0 errors; `$WORK/fix.jar` |
 | `fix` | Always | Each case passes on the fix tree |
@@ -139,9 +139,9 @@ A record has the gate, the state, the commit and its tree, the base commit, the 
 `freeze` keeps a copy of the approved contract in `$WORK/contract.lock`, and the hash of the reporter's document. It needs a passing `problem` record of that contract. After the freeze, the contract can only grow:
 
 - You cannot remove a case, an invariant, a format of an invariant, or a reporter run. You cannot change the kind, the test, the symptom, the module, the runner, the patch path, or the misses of a case, the corpus or the options of an invariant, the reporter document, or a reporter run. Add a new case or run instead.
-- Each change needs a new entry in `amendments`. `check` lists each change for Approval 2.
+- Each change needs a new entry in `amendments`. `check` lists each change. Show the list to the user before the push.
 - A new problem case needs a new `problem` run: it must fail on the base too.
-- A new guard case or a new scope entry does not need the user first. Show it at Approval 2.
+- A new guard case or a new scope entry does not need the user first. Show it to the user before the push.
 - A new `allow` or a new `ignore` lowers the bar. It is a design decision: ask the user first (stop and ask the user first).
 
 ## Self-check (`$WORK/selfcheck.json`)

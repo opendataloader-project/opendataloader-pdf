@@ -11,7 +11,7 @@ python3 --version      # 3.11 or later
 uv --version
 gh auth status
 curl --version         # 8.4.0 or later, for attachments and hybrid
-node -v; pnpm -v       # only for changes in java/, node/, or CLI options (Node.js 22.13 or later)
+node -v; pnpm -v       # only for changes in java/, python/, node/, or CLI options (Node.js 22.13 or later)
 qpdf --version         # to inspect an original or a tagged PDF
 ```
 
@@ -24,7 +24,7 @@ These commands download packages that are not in a local cache. Show this list t
 - `uvx`: the latest release and the release that the reporter used. `ruff` and `black` for changes in `python/` (the `static` gate).
 - `python3 -m pip download`: an old release, only if `uvx` cannot run it (see "Troubleshooting").
 - `uv run` and `scripts/build-python.sh`: Python packages. `build-python.sh` installs the `hybrid` extra (docling, several GB).
-- `pnpm install`, `scripts/build-node.sh`, and `scripts/test-node.sh`: Node packages, for changes in `java/`, `node/`, or CLI options.
+- `pnpm install`, `scripts/build-node.sh`, and `scripts/test-node.sh`: Node packages, for changes in `java/`, `python/`, `node/`, or CLI options. The `wrappers` gate builds the Python and the Node wrapper for each of these changes.
 - Maven: dependencies and plugins.
 - `scripts/bench.sh`: the bench repository and its Python packages, for changes in `java/`.
 - If the reporter used `hybrid`: the `hybrid` extra in `$WORK/hybrid-venv`, and the models from huggingface.co.
@@ -86,8 +86,8 @@ echo $! > "$WORK/hybrid.pid"
 - The server runs in the background. Wait until `curl -sS http://127.0.0.1:5002/health` answers.
 - Add the server options that the reporter used. Put each value from the issue in single quotes.
 - For `--hybrid-url`, use only `http://127.0.0.1:<port>`.
-- If the fix changes `python/opendataloader-pdf/src/opendataloader_pdf/hybrid_server.py`, start a second server from the repository for the fix runs: `(cd python/opendataloader-pdf && uv run --extra hybrid opendataloader-pdf-hybrid --host 127.0.0.1 --port 5003)`. For the fix runs, use `--hybrid-url http://127.0.0.1:5003`: in the contract, give each reporter run `fix_options` with this URL.
-- Before the final report, stop each server: `kill "$(cat "$WORK/hybrid.pid")"`.
+- If the fix changes `python/opendataloader-pdf/src/opendataloader_pdf/hybrid_server.py`, start a second server from the repository for the fix runs, in the background: `(cd python/opendataloader-pdf && uv run --extra hybrid opendataloader-pdf-hybrid --host 127.0.0.1 --port 5003 > "$WORK/hybrid-fix.log" 2>&1 & echo $! > "$WORK/hybrid-fix.pid")`. Wait until `curl -sS http://127.0.0.1:5003/health` answers. For the fix runs, use `--hybrid-url http://127.0.0.1:5003`: in the contract, give each reporter run `fix_options` with this URL.
+- Before the final report, stop each server that you started: `kill "$(cat "$WORK/hybrid.pid")"`, and `kill "$(cat "$WORK/hybrid-fix.pid")"` for the second server. Then make sure that no server answers on port 5002 or 5003.
 
 ## 6. Tests
 

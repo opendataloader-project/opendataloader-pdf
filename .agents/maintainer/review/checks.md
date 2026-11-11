@@ -4,7 +4,7 @@ The commands run in an isolated run: the run copy is at `/work/tree`, and the ou
 
 ## Safety list of this repository
 
-The generic safety checklist applies. These items are the ones that only this repository has. Read each one against each changed line.
+These safety items are specific to this repository. Read each one against each changed line.
 
 1. Input: a PDF is the attacker input. Loops and recursion over PDF objects have a limit; a bad object is skipped; no allocation is sized from a document value.
 2. Paths: no document or backend text in a file path.

@@ -67,13 +67,31 @@ Make the baseline on `main` before you make the upgrade branch. Keep it out of t
 ./scripts/build-java.sh
 JAR=$(find java/opendataloader-pdf-cli/target -maxdepth 1 -name 'opendataloader-pdf-cli-*.jar' \
   ! -name 'original-*' ! -name '*-sources.jar' ! -name '*-javadoc.jar')
-BASE="$TMPDIR/deps/baseline"; mkdir -p "$BASE" "$TMPDIR/deps/jtmp"
-java -Djava.io.tmpdir="$TMPDIR/deps/jtmp" -Djava.awt.headless=true -jar "$JAR" samples/pdf -o "$BASE" -f json -q
+T="${TMPDIR:-/tmp}/deps"; BASE="$T/baseline"; mkdir -p "$BASE" "$T/jtmp"
+java -Djava.io.tmpdir="$T/jtmp" -Djava.awt.headless=true -jar "$JAR" samples/pdf -o "$BASE" -f json -q
 ```
 
 - Set `java.io.tmpdir` to a directory that you can write. The conversion writes font metrics and page content to temporary files. If it cannot write them, the JSON looks correct, but most of the text is missing.
 - For a bump of veraPDF, wcag-algorithms, or PDFBox, add `pdf` to `-f`, and compare the PDF files too. The comment in `java/pom.xml` tells you that the tests pass with a PDFBox version that does not agree with wcag-algorithms.
 - Make the output of the upgrade branch with the same command in a second directory (`AFTER`).
+
+### Packages of the hybrid backend
+
+The command above does not use the hybrid backend. An upgrade of a Python package that the `hybrid` extra installs (docling, easyocr, torchvision, Pillow, and the other packages in `python/opendataloader-pdf/uv.lock`) cannot change that output. For such a package, also compare the output of hybrid mode.
+
+```bash
+(cd python/opendataloader-pdf && uv run --extra hybrid opendataloader-pdf-hybrid --host 127.0.0.1 --port 5002 > "$T/hybrid.log" 2>&1 & echo $! > "$T/hybrid.pid")
+until curl -sS http://127.0.0.1:5002/health; do sleep 2; done
+java -Djava.io.tmpdir="$T/jtmp" -Djava.awt.headless=true -jar "$JAR" samples/pdf -o "$T/hybrid-baseline" -f json -q \
+  --hybrid docling-fast --hybrid-mode full --hybrid-url http://127.0.0.1:5002
+kill "$(cat "$T/hybrid.pid")"
+```
+
+- `--hybrid-mode full` sends each page to the backend. With the default mode, the backend gets only some pages.
+- Do not add `--hybrid-fallback`. A backend error must stop the run, or the output is the Java output again.
+- Make the hybrid baseline two times, in two directories. If the two outputs differ, that difference comes from the backend and not from an upgrade. Compare the upgrade only where the two baselines agree.
+- For an OCR package, start the server with `--force-ocr` in each run.
+- Start the server of the upgrade branch from that branch, so that it uses the upgraded lockfile. After each run, make sure that no server answers on the port.
 
 ## Comparison
 
@@ -110,11 +128,23 @@ for k in sorted(set(a) | set(b)):
 
 ## Benchmark
 
-For tier 3 and for major versions, run the benchmark after the comparison.
+For tier 3 and for major versions, run the benchmark after the comparison. Run it for the jar of `main` and for the jar of the upgrade, and compare the two scores. `--check-regression` alone compares with fixed thresholds: a score can drop and stay above them.
 
 ```bash
-./scripts/bench.sh --check-regression
+BENCH="$T/bench"    # a clone of the benchmark for this comparison only; bench.sh makes it
+for side in base upgrade; do
+  # JAR: the jar of main for "base", the jar of the upgrade branch for "upgrade"
+  rm -rf "$BENCH/prediction/opendataloader/markdown" "$BENCH/prediction/opendataloader/evaluation.json"
+  BENCH_DIR="$BENCH" ./scripts/bench.sh --skip-build --check-regression --force --jar-path "$JAR"
+  cp "$BENCH/prediction/opendataloader/evaluation.json" "$T/bench-$side.json"
+  git -C "$BENCH" rev-parse HEAD > "$T/bench-$side.json.commit"
+done
+python3 -I .agents/maintainer/review/bench.py compare "$T/bench-base.json" "$T/bench-upgrade.json"
 ```
+
+- `--force` makes the benchmark convert the documents again. Without it, the benchmark skips the conversion when an `evaluation.json` exists, and it scores old predictions.
+- `bench.py compare` exits 1 if the two runs used different revisions of the benchmark, if a mean drops, if a document drops more than 0.05, or if predictions are missing.
+- The benchmark runs the jar only. It does not show a change of a package of the hybrid backend.
 
 It reports NID (reading order), TEDS (table structure), MHS (heading structure), the F1 of table detection, and the speed.
 
