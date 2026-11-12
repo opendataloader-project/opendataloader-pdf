@@ -457,6 +457,10 @@ public class AutoTaggingProcessor {
     public static COSObject createStructureTreeElements(PDDocument document, List<List<IObject>> contents,
                                                         COSObject structTreeRoot, COSDocument cosDocument) {
         COSObject seDocument = addStructElement(structTreeRoot, cosDocument, TaggedPDFConstants.DOCUMENT, null);
+        if (pdf2_0Namespace != null) {
+            // PDF/UA-2 clause 8.2.5.2: the root Document element belongs to the PDF 2.0 namespace.
+            seDocument.setKey(ASAtom.NS, pdf2_0Namespace);
+        }
         normalizedLevels = buildNormalizedHeadingLevels(contents);
         for (int pageNumber = 0; pageNumber < contents.size(); pageNumber++) {
             processAnnotations(document, cosDocument, pageNumber);
