@@ -954,6 +954,8 @@ public class HybridDocumentProcessor {
             boolean generateTaggedPdf,
             Map<EnrichedImageChunk, Long> pictureSwapOriginalIds) {
 
+        // Backend chunks that lie over text the page already shows; see chunksOverNativeText.
+        Map<Integer, Set<TextChunk>> overNativeTextByPage = new HashMap<>();
         for (Map.Entry<Integer, List<IObject>> entry : backendResults.entrySet()) {
             int pageNumber = entry.getKey();
             List<IObject> backendPage = entry.getValue();
@@ -1054,6 +1056,8 @@ public class HybridDocumentProcessor {
                 }
             }
 
+            overNativeTextByPage.put(pageNumber, chunksOverNativeText(entry.getValue(), javaTextChunks));
+
             final int pg = pageNumber;
             final int javaTotal = javaTextChunks.size();
             LOGGER.fine(() -> "Page " + pg + ": enrichment complete — "
@@ -1069,7 +1073,9 @@ public class HybridDocumentProcessor {
         // falls back to the Java path, which has to find the content streams as they were.
         if (generateTaggedPdf) {
             for (Map.Entry<Integer, List<IObject>> entry : backendResults.entrySet()) {
-                synthesizeInvisibleTextForOcrFallback(entry.getValue(), entry.getKey());
+                synthesizeInvisibleTextForOcrFallback(
+                    entry.getValue(), entry.getKey(),
+                    overNativeTextByPage.getOrDefault(entry.getKey(), Set.of()));
             }
         }
     }
@@ -1095,6 +1101,9 @@ public class HybridDocumentProcessor {
             this.textLength = textLength;
         }
     }
+
+    /** How far, in points, a chunk's centre may lie outside a node's box and still count as under it. */
+    private static final double TEXT_MATCH_TOLERANCE = 5.0;
 
     /** Text render mode 3: neither filled, stroked nor clipped, so the text is not drawn. */
     private static final int INVISIBLE_TEXT_RENDER_MODE = 3;
@@ -1133,10 +1142,13 @@ public class HybridDocumentProcessor {
      *
      * @param objects the page's content tree after enrichment; chunks without a StreamInfo get one
      * @param pageNumber the page the tree belongs to
+     * @param overNativeText chunks (by identity) with text the page already shows under them; they
+     *     get no invisible copy, so a plain text extractor reads that text once
      */
-    private static void synthesizeInvisibleTextForOcrFallback(List<IObject> objects, int pageNumber) {
+    private static void synthesizeInvisibleTextForOcrFallback(
+            List<IObject> objects, int pageNumber, Set<TextChunk> overNativeText) {
         try {
-            addOcrFallbackText(objects, pageNumber);
+            addOcrFallbackText(objects, pageNumber, overNativeText);
         } catch (IOException | RuntimeException e) {
             // Nothing the tagger reads is changed until a page's new content stream exists, so a page
             // that fails is skipped as it was. Nothing may escape from here: the caller would fall back
@@ -1153,9 +1165,11 @@ public class HybridDocumentProcessor {
      *
      * @param objects the page's content tree after enrichment
      * @param pageNumber the page the tree belongs to
+     * @param overNativeText chunks to leave out because the page shows their text already
      * @throws IOException if the new content stream cannot be written
      */
-    private static void addOcrFallbackText(List<IObject> objects, int pageNumber) throws IOException {
+    private static void addOcrFallbackText(
+            List<IObject> objects, int pageNumber, Set<TextChunk> overNativeText) throws IOException {
         List<TextChunk> orderedChunks = new ArrayList<>();
         // By identity: a chunk reached twice must get one operator, not two.
         Set<TextChunk> seenChunks = Collections.newSetFromMap(new IdentityHashMap<>());
@@ -1181,6 +1195,9 @@ public class HybridDocumentProcessor {
                 }
                 continue;
             }
+            if (overNativeText.contains(chunk)) {
+                continue;
+            }
             if (toAsciiOrReplacementChar(chunk.getValue()).isEmpty()) {
                 continue;
             }
@@ -1196,6 +1213,27 @@ public class HybridDocumentProcessor {
             return;
         }
         rewritePageContentStream(pageNumber, objects, pendingByInsertIndex);
+    }
+
+    /**
+     * The chunks of a page that have no StreamInfo although the page shows text under them: some
+     * native text chunk has its centre in the chunk's box, widened by the matching tolerance. Such a
+     * chunk is not OCR text the page lacks; its words are drawn already (another node took them, or
+     * they are drawn text the tagger reads from the stream), and an invisible copy would make a
+     * reader see them twice. Compared by identity, like the walk in {@link #addOcrFallbackText}.
+     */
+    private static Set<TextChunk> chunksOverNativeText(List<IObject> objects, List<TextChunk> javaTextChunks) {
+        Set<TextChunk> over = Collections.newSetFromMap(new IdentityHashMap<>());
+        if (javaTextChunks.isEmpty()) {
+            return over;
+        }
+        forEachIObject(objects, obj -> {
+            if (obj instanceof TextChunk && ((TextChunk) obj).getStreamInfos().isEmpty()
+                    && holdsJavaText(obj.getBoundingBox(), javaTextChunks, TEXT_MATCH_TOLERANCE)) {
+                over.add((TextChunk) obj);
+            }
+        });
+        return over;
     }
 
     /**
@@ -1950,10 +1988,15 @@ public class HybridDocumentProcessor {
 
     /** Whether a Java text chunk that carries stream info has its centre in the box. */
     private static boolean holdsJavaText(BoundingBox box, List<TextChunk> javaTextChunks) {
+        return holdsJavaText(box, javaTextChunks, 0);
+    }
+
+    /** As above, with the box widened by {@code tol} on every side, as the matching of nodes to chunks is. */
+    private static boolean holdsJavaText(BoundingBox box, List<TextChunk> javaTextChunks, double tol) {
         for (TextChunk chunk : javaTextChunks) {
             if (!chunk.getStreamInfos().isEmpty()
-                && chunk.getCenterX() >= box.getLeftX() && chunk.getCenterX() <= box.getRightX()
-                && chunk.getCenterY() >= box.getBottomY() && chunk.getCenterY() <= box.getTopY()) {
+                && chunk.getCenterX() >= box.getLeftX() - tol && chunk.getCenterX() <= box.getRightX() + tol
+                && chunk.getCenterY() >= box.getBottomY() - tol && chunk.getCenterY() <= box.getTopY() + tol) {
                 return true;
             }
         }
