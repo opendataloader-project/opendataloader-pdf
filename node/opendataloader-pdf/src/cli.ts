@@ -69,7 +69,10 @@ async function main(): Promise<number> {
     const isJavaExit =
       err instanceof Error && (err as Error & { isJavaExit?: boolean }).isJavaExit === true;
     if (!isJavaExit) {
-      const message = err instanceof Error ? err.message : String(err);
+      // Print the message of an Error only. Do not print another rejection
+      // value with String(): the argument list for Java holds the --password
+      // value, and such a value could contain it.
+      const message = err instanceof Error ? err.message : 'The opendataloader-pdf CLI failed.';
       console.error(message);
       return 1;
     }
