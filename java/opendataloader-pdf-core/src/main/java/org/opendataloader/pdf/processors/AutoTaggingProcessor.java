@@ -317,7 +317,10 @@ public class AutoTaggingProcessor {
         cosDocument.addChangedObject(catalog.getObject());
     }
 
-    private static COSObject createContentsIndirect(COSDocument cosDocument, List<Object> tokens) throws IOException {
+    // Package-private (not private): HybridDocumentProcessor.rewritePageContentStream reuses this
+    // to build a fresh content-stream object for its OCR-fallback invisible-text insertion, the same
+    // way this class builds one for the final tagged output.
+    static COSObject createContentsIndirect(COSDocument cosDocument, List<Object> tokens) throws IOException {
         COSObject streamObj = COSIndirect.construct(COSStream.construct(), cosDocument);
         setUpContents(streamObj, tokens);
         cosDocument.addObject(streamObj);
