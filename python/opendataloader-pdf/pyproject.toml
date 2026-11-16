@@ -66,6 +66,11 @@ dev = [
 
 [tool.uv]
 package = true
+# Resolve uv.lock only for Python 3.11.5 and later. soupsieve 3.0 and later
+# (beautifulsoup4 -> docling, hybrid extra) require 3.11.5. Without this, uv
+# adds a soupsieve 2.x fork for Python 3.11.0-3.11.4, and GHSA alerts flag it.
+# requires-python stays >=3.11: this changes the lock, not the package.
+environments = ["python_full_version >= '3.11.5'"]
 
 [tool.black]
 line-length = 100
