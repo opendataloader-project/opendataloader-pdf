@@ -194,6 +194,96 @@ export function convert(
   return executeJar(argsOrError, { streamOutput: false });
 }
 
+/** The output formats that convertBytes() returns, and the extension of their output file. */
+const BYTES_FORMATS: Record<string, string> = {
+  markdown: 'md',
+  text: 'txt',
+  json: 'json',
+  html: 'html',
+};
+/** The options that convertBytes() sets itself. */
+const SET_BY_BYTES_INPUT = ['outputDir', 'toStdout', 'imageDir'];
+
+/** Options of {@link convertBytes}: the options of {@link convert}, without those that it sets itself. */
+export interface ConvertBytesOptions extends Omit<
+  ConvertOptions,
+  'outputDir' | 'toStdout' | 'imageDir' | 'format' | 'imageOutput'
+> {
+  /** One output format: markdown (default), text, json, or html. */
+  format?: 'markdown' | 'text' | 'json' | 'html';
+  /** off (default, no images) or embedded (Base64 data URIs). external is not possible: the folder is removed. */
+  imageOutput?: 'off' | 'embedded';
+  /** The base name of the PDF and of its output, for example the "file name" in the JSON. Default: document. */
+  name?: string;
+}
+
+/**
+ * Converts the bytes of one PDF and returns the output as a string.
+ *
+ * The bytes go to `<name>.pdf` in a new temporary folder that only the current user can open.
+ * {@link convert} runs on that file, and convertBytes() returns the content of the output file.
+ * The folder is removed after the run, also after an error. Each call starts one Java process,
+ * as each call of {@link convert} does.
+ *
+ * @param data - The bytes of the PDF (a Buffer or a Uint8Array).
+ * @param options - The output format, the base name, and the other options of {@link convert}.
+ * @returns The output in the given format.
+ */
+export async function convertBytes(
+  data: Uint8Array,
+  options: ConvertBytesOptions = {},
+): Promise<string> {
+  if (!(data instanceof Uint8Array)) {
+    throw new TypeError(
+      `data must be a Buffer or a Uint8Array, not ${data === null ? 'null' : typeof data}`,
+    );
+  }
+  if (data.byteLength === 0) {
+    throw new Error('data is empty');
+  }
+  const given = options as Record<string, unknown>;
+  for (const key of SET_BY_BYTES_INPUT) {
+    if (given[key] !== undefined) {
+      throw new Error(`convertBytes() sets ${key} itself: remove the ${key} option`);
+    }
+  }
+  const { format = 'markdown', imageOutput = 'off', name = 'document', ...rest } = options;
+  if (typeof format !== 'string' || !Object.prototype.hasOwnProperty.call(BYTES_FORMATS, format)) {
+    throw new Error(
+      `format must be one of ${Object.keys(BYTES_FORMATS).join(', ')} (one format), not ${JSON.stringify(format)}`,
+    );
+  }
+  if (imageOutput !== 'off' && imageOutput !== 'embedded') {
+    throw new Error(
+      `imageOutput must be off or embedded with bytes input, not ${JSON.stringify(imageOutput)}`,
+    );
+  }
+  if (
+    typeof name !== 'string' ||
+    !name ||
+    path.basename(name) !== name ||
+    name === '.' ||
+    name === '..'
+  ) {
+    throw new Error(`name must be a file name without a folder, not ${JSON.stringify(name)}`);
+  }
+
+  const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'opendataloader-pdf-'));
+  try {
+    const pdf = path.join(folder, `${name}.pdf`);
+    fs.writeFileSync(pdf, data, { mode: 0o600, flag: 'wx' });
+    const out = path.join(folder, 'out');
+    await convert(pdf, { ...rest, outputDir: out, format, imageOutput });
+    const result = path.join(out, `${name}.${BYTES_FORMATS[format]}`);
+    if (!fs.existsSync(result)) {
+      throw new Error(`the conversion wrote no output (${path.basename(result)})`);
+    }
+    return fs.readFileSync(result, 'utf8');
+  } finally {
+    fs.rmSync(folder, { recursive: true, force: true });
+  }
+}
+
 /**
  * Internal entry point used by the bundled CLI. Streams Java's stdout and
  * stderr to the parent process in real time (so long-running conversions like

@@ -1,0 +1,16 @@
+{
+  "description": "Cases for the bytes input of the Python and Node packages (#94). For each case, the output of the bytes input must be equal to the output that convert() writes for the same PDF as a file named <name>.pdf. Option names are the CLI names; each test maps them to the names of its package. Without image-output, the bytes input uses off, and the file conversion of the case uses off too.",
+  "name": "document",
+  "cases": [
+    {"id": "markdown", "pdf": "samples/pdf/1901.03003.pdf", "options": {"format": "markdown"}},
+    {"id": "text", "pdf": "samples/pdf/1901.03003.pdf", "options": {"format": "text"}},
+    {"id": "json", "pdf": "samples/pdf/1901.03003.pdf", "options": {"format": "json"}},
+    {"id": "html", "pdf": "samples/pdf/1901.03003.pdf", "options": {"format": "html"}},
+    {"id": "markdown-images-embedded", "pdf": "samples/pdf/1901.03003.pdf", "options": {"format": "markdown", "image-output": "embedded"}},
+    {"id": "text-images-embedded", "pdf": "samples/pdf/1901.03003.pdf", "options": {"format": "text", "image-output": "embedded"}},
+    {"id": "json-images-embedded", "pdf": "samples/pdf/1901.03003.pdf", "options": {"format": "json", "image-output": "embedded"}},
+    {"id": "html-images-embedded", "pdf": "samples/pdf/1901.03003.pdf", "options": {"format": "html", "image-output": "embedded"}},
+    {"id": "password", "pdf": "samples/pdf/password-protected.pdf", "options": {"format": "markdown", "password": "test"}},
+    {"id": "pages", "pdf": "samples/pdf/1901.03003.pdf", "options": {"format": "json", "pages": "2"}}
+  ]
+}

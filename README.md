@@ -559,6 +559,27 @@ opendataloader_pdf.convert(
 
 [Full CLI Options Reference](https://opendataloader.org/docs/reference/cli-options)
 
+### PDF Bytes In, String Out
+
+Convert a PDF that you have in memory, and get the output as a string:
+
+```python
+markdown = opendataloader_pdf.convert_bytes(pdf_bytes)                   # format="markdown" (default)
+json_text = opendataloader_pdf.convert_bytes(pdf_bytes, format="json", password="...")
+```
+
+```typescript
+import { convertBytes } from '@opendataloader/pdf';
+
+const markdown = await convertBytes(pdfBuffer);                     // format: 'markdown' (default)
+const jsonText = await convertBytes(pdfBuffer, { format: 'json', pages: '1-3' });
+```
+
+- One format for each call: `markdown`, `text`, `json`, or `html`. The other options of `convert()` apply, except the output folder, `to_stdout`, and the image folder.
+- Images are off by default. Use `image_output="embedded"` (`imageOutput: 'embedded'`) for Base64 images.
+- The bytes go to a private temporary file, which is removed after the call. Each call starts one Java process: for many files, `convert()` with a list of paths is faster.
+- For a file, `convert(..., format="markdown", to_stdout=True)` (`toStdout: true`) also returns the output as a string.
+
 ## PDF Accessibility & PDF/UA Conversion
 
 **Problem**: Millions of existing PDFs lack structure tags, failing accessibility regulations (EAA, ADA/Section 508, Korea Digital Inclusion Act). Manual remediation costs $50–200 per document and doesn't scale.
