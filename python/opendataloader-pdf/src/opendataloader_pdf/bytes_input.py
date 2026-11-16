@@ -53,7 +53,8 @@ def convert_bytes(
         raise TypeError(
             f"data must be bytes, a bytearray, or a memoryview, not {type(data).__name__}"
         )
-    if memoryview(data).nbytes == 0:
+    view = memoryview(data)
+    if view.nbytes == 0:
         raise ValueError("data is empty")
     for key in _SET_BY_BYTES_INPUT:
         if key in options:
@@ -75,7 +76,8 @@ def convert_bytes(
             pdf, os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_BINARY", 0), 0o600
         )
         with os.fdopen(descriptor, "wb") as file:
-            file.write(data)
+            # A strided view (for example view[::2]) is not one block of memory: copy its bytes.
+            file.write(view if view.c_contiguous else view.tobytes())
         out = Path(folder) / "out"
         convert(
             input_path=str(pdf),

@@ -19,6 +19,34 @@ const JAR_NAME = 'opendataloader-pdf-cli.jar';
 
 // Environment variables that the JVM reads options from.
 const JAVA_OPTION_VARS = ['JAVA_TOOL_OPTIONS', 'JDK_JAVA_OPTIONS', '_JAVA_OPTIONS'];
+// Environment variable that the CLI reads its arguments from, as a JSON array, when the command
+// line has none.
+const ARGS_ENV_VAR = 'OPENDATALOADER_PDF_ARGS';
+
+const NON_ASCII = /[\u0080-￿]/g;
+const isAscii = (value: string) => value.search(NON_ASCII) === -1;
+
+/**
+ * Returns the arguments for the command line of the JAR, and the environment of the process.
+ *
+ * On Windows the Java launcher decodes the command line with the ANSI code page, so characters
+ * outside it become "?", and Java cannot find a non-ASCII input path. The CLI also reads its
+ * arguments from OPENDATALOADER_PDF_ARGS, so pass them there, as the Python package does.
+ * Non-ASCII characters are written as JSON escapes, so the value is ASCII.
+ */
+function jarArguments(args: string[]): {
+  args: string[];
+  env?: Record<string, string | undefined>;
+} {
+  if (process.platform !== 'win32' || args.every(isAscii)) {
+    return { args };
+  }
+  const json = JSON.stringify(args).replace(
+    NON_ASCII,
+    (char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`,
+  );
+  return { args: [], env: { ...process.env, [ARGS_ENV_VAR]: json } };
+}
 
 /**
  * Returns the option that gives Java the temporary folder of this runtime.
@@ -35,6 +63,12 @@ function tempDirOptions(): string[] {
   // probe file, as Java does. If that fails, add nothing and let Java keep
   // its own default.
   const dir = os.tmpdir();
+  // On Windows the Java launcher turns characters outside the ANSI code page into "?", so the
+  // option would name a folder that does not exist. Add nothing: the default of Java on Windows
+  // is the folder of TMP or TEMP, which it reads as Unicode.
+  if (process.platform === 'win32' && !isAscii(dir)) {
+    return [];
+  }
   const probe = path.join(dir, `opendataloader-${process.pid}-${randomUUID()}.probe`);
   try {
     fs.closeSync(fs.openSync(probe, 'wx'));
@@ -70,16 +104,19 @@ function executeJar(args: string[], executionOptions: JarExecutionOptions = {}):
     // Force headless AWT so macOS doesn't surface a Dock icon (and steal focus)
     // every time the JVM touches ImageIO/PDFBox rendering. Safe on all OSes —
     // the CLI never opens a UI window, only manipulates BufferedImages.
+    const jar = jarArguments(args);
     const commandArgs = [
       '-Djava.awt.headless=true',
       '-Dapple.awt.UIElement=true',
       ...tempDirOptions(),
       '-jar',
       jarPath,
-      ...args,
+      ...jar.args,
     ];
 
-    const javaProcess = spawn(command, commandArgs);
+    const javaProcess = jar.env
+      ? spawn(command, commandArgs, { env: jar.env })
+      : spawn(command, commandArgs);
 
     let stdout = '';
     let stderr = '';

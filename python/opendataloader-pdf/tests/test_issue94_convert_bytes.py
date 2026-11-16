@@ -199,6 +199,20 @@ def test_bytearray_and_memoryview_are_accepted(monkeypatch):
     assert [record["bytes"] for record in seen] == [STAND_IN_PDF, STAND_IN_PDF]
 
 
+def test_a_strided_memoryview_gives_its_bytes(monkeypatch, tmp_path):
+    convert_bytes = _convert_bytes()
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp_path))
+    seen = []
+    monkeypatch.setattr(convert_generated, "run_jar", _stand_in(seen))
+    backing = bytearray(len(STAND_IN_PDF) * 2)
+    backing[::2] = STAND_IN_PDF
+    view = memoryview(backing)[::2]
+
+    convert_bytes(view, format="markdown")
+
+    assert seen[0]["bytes"] == STAND_IN_PDF
+
+
 @pytest.mark.parametrize(
     "data, options",
     [
