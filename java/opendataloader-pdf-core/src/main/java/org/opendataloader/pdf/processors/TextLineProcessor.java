@@ -135,6 +135,7 @@ public class TextLineProcessor {
                 newContents.set(i, getTextLineWithSpaces(textLine, threshold, chunksAfterWhitespace));
             }
         }
+        newContents = keepLinesOfWrappedCellsTogether(newContents);
         newContents = joinRowsWithLeaders(newContents);
         newContents = joinRowsOfNumberedTables(newContents);
         linkTextLinesWithConnectedLineArtBullet(newContents);
@@ -209,6 +210,164 @@ public class TextLineProcessor {
             }
         }
         return text;
+    }
+
+    /**
+     * Keeps the lines of a wrapped cell of a table without lines together (#936). A page can draw the next column of
+     * a row before the other lines of a cell whose text wraps. The lines follow the order of the contents, so the
+     * first line of the cell and the next column are one line, and the other lines of the cell come after it: the
+     * next column is then between the lines of the cell.
+     *
+     * <p>The parts of a line are its runs of text between gaps of at least {@link #MIN_COLUMN_GAP} font sizes. The
+     * other lines of a part are the lines just after the line in the contents that start where the part starts, end
+     * before the next part, have one part, and are less than {@link #MIN_COLUMN_ROW_DISTANCE} font sizes below the
+     * line before them. The line is a row of a table if another line, {@link #MIN_COLUMN_ROW_DISTANCE} to
+     * {@link #MAX_COLUMN_ROW_DISTANCE} font sizes above it or below its last other line, has a part that starts where
+     * the part starts and a later part at the place of the next part; one row of a form with a line below its left
+     * part is not a table. Then the row is split before the next part: the part and the parts before it stay in the
+     * place of the line, and the other parts follow the other lines of the cell as a line of their own, as when the
+     * page draws them last. A page that draws a row from the right draws its first column after the other lines of
+     * the cell: a line on the row just after them that ends before the first part goes before that part, with one
+     * space between them.
+     */
+    private static List<IObject> keepLinesOfWrappedCellsTogether(List<IObject> contents) {
+        NavigableMap<Double, List<TextLine>> linesByBaseline = new TreeMap<>();
+        for (IObject content : contents) {
+            if (content instanceof TextLine) {
+                TextLine line = (TextLine) content;
+                linesByBaseline.computeIfAbsent(line.getBaseLine(), key -> new ArrayList<>()).add(line);
+            }
+        }
+        List<IObject> newContents = new ArrayList<>(contents);
+        for (int i = 0; i < newContents.size(); i++) {
+            if (!(newContents.get(i) instanceof TextLine)) {
+                continue;
+            }
+            TextLine line = (TextLine) newContents.get(i);
+            List<double[]> parts = getParts(line);
+            int part = -1;
+            int end = i + 1;
+            TextLine last = line;
+            while (end < newContents.size() && newContents.get(end) instanceof TextLine) {
+                int otherPart = getPartOfOtherLine(line, parts, last, (TextLine) newContents.get(end));
+                if (otherPart < 0 || (part >= 0 && otherPart != part)) {
+                    break;
+                }
+                part = otherPart;
+                last = (TextLine) newContents.get(end);
+                end++;
+            }
+            if (part < 0 || !isRowOfATable(line, last, parts.get(part), parts.get(part + 1), linesByBaseline)) {
+                continue;
+            }
+            List<TextLine> split = splitAt(line, parts.get(part + 1)[0]);
+            TextLine row = split.get(0);
+            if (end < newContents.size() && newContents.get(end) instanceof TextLine
+                    && isPartBeforeTheRow((TextLine) newContents.get(end), line, parts.get(0))) {
+                TextLine before = (TextLine) newContents.remove(end);
+                row = new TextLine();
+                for (TextChunk chunk : before.getTextChunks()) {
+                    row.add(chunk);
+                }
+                row.add(getSpaceChunk(row.getLastTextChunk().getTextEnd(), split.get(0).getFirstTextChunk()));
+                for (TextChunk chunk : split.get(0).getTextChunks()) {
+                    row.add(chunk);
+                }
+            }
+            newContents.set(i, row);
+            newContents.add(end, split.get(1));
+            i = end;
+        }
+        return newContents;
+    }
+
+    /**
+     * Whether the line after the other lines of a cell is a part of the row before its first part, as the number of a
+     * row that the page draws from the right: on the row, with one part that ends before the first part, and with the
+     * font size and the hidden-text state of the row.
+     */
+    private static boolean isPartBeforeTheRow(TextLine candidate, TextLine row, double[] firstPart) {
+        double fontSize = row.getFontSize();
+        return candidate.isHiddenText() == row.isHiddenText() && areOnOneRow(row, candidate)
+                && Math.abs(candidate.getFontSize() - fontSize) <= 0.1 * fontSize
+                && getParts(candidate).size() == 1 && candidate.getRightX() < firstPart[0];
+    }
+
+    /** The runs of text of the line between gaps of at least {@link #MIN_COLUMN_GAP} font sizes, as {left, right}. */
+    private static List<double[]> getParts(TextLine line) {
+        double minGap = MIN_COLUMN_GAP * line.getFontSize();
+        List<double[]> parts = new ArrayList<>();
+        for (TextChunk chunk : line.getTextChunks()) {
+            if (chunk.isWhiteSpaceChunk() || chunk.isEmpty()) {
+                continue;
+            }
+            double[] previous = parts.isEmpty() ? null : parts.get(parts.size() - 1);
+            if (previous == null || chunk.getLeftX() - previous[1] >= minGap) {
+                parts.add(new double[] {chunk.getLeftX(), chunk.getRightX()});
+            } else {
+                previous[1] = Math.max(previous[1], chunk.getRightX());
+            }
+        }
+        return parts;
+    }
+
+    /**
+     * The index of the part, not the last one, of which the line below is an other line; or -1. The line below starts
+     * where the part starts, ends before the next part, has one part, the font size and the hidden-text state of the
+     * line, and is less than {@link #MIN_COLUMN_ROW_DISTANCE} font sizes below the line above it.
+     */
+    private static int getPartOfOtherLine(TextLine line, List<double[]> parts, TextLine above, TextLine below) {
+        double fontSize = line.getFontSize();
+        double distance = above.getBaseLine() - below.getBaseLine();
+        if (below.isHiddenText() != line.isHiddenText() || Math.abs(below.getFontSize() - fontSize) > 0.1 * fontSize
+                || distance <= MAX_ROW_BASELINE_DIFFERENCE * fontSize || distance >= MIN_COLUMN_ROW_DISTANCE * fontSize
+                || getParts(below).size() != 1) {
+            return -1;
+        }
+        double alignment = MAX_LABEL_ALIGNMENT_DIFFERENCE * fontSize;
+        for (int k = 0; k + 1 < parts.size(); k++) {
+            if (Math.abs(below.getLeftX() - parts.get(k)[0]) <= alignment && below.getRightX() < parts.get(k + 1)[0]) {
+                return k;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Whether another line is a row of the columns of the part and the next part: {@link #MIN_COLUMN_ROW_DISTANCE} to
+     * {@link #MAX_COLUMN_ROW_DISTANCE} font sizes above the line or below its last other line, with a part that starts
+     * where the part starts, and a later part that starts, ends, or has its middle where the next part does.
+     */
+    private static boolean isRowOfATable(TextLine line, TextLine last, double[] part, double[] next,
+                                         NavigableMap<Double, List<TextLine>> linesByBaseline) {
+        double fontSize = line.getFontSize();
+        double alignment = MAX_LABEL_ALIGNMENT_DIFFERENCE * fontSize;
+        double near = MIN_COLUMN_ROW_DISTANCE * fontSize;
+        double far = MAX_COLUMN_ROW_DISTANCE * fontSize;
+        List<TextLine> rows = new ArrayList<>();
+        linesByBaseline.subMap(line.getBaseLine() + near, true, line.getBaseLine() + far, true).values()
+            .forEach(rows::addAll);
+        linesByBaseline.subMap(last.getBaseLine() - far, true, last.getBaseLine() - near, true).values()
+            .forEach(rows::addAll);
+        for (TextLine other : rows) {
+            if (other.isHiddenText() != line.isHiddenText()) {
+                continue;
+            }
+            List<double[]> otherParts = getParts(other);
+            for (int a = 0; a < otherParts.size(); a++) {
+                if (Math.abs(otherParts.get(a)[0] - part[0]) > alignment) {
+                    continue;
+                }
+                for (int b = a + 1; b < otherParts.size(); b++) {
+                    double[] candidate = otherParts.get(b);
+                    if (Math.abs(candidate[0] - next[0]) <= alignment || Math.abs(candidate[1] - next[1]) <= alignment
+                            || Math.abs(candidate[0] + candidate[1] - next[0] - next[1]) / 2 <= alignment) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     /**
