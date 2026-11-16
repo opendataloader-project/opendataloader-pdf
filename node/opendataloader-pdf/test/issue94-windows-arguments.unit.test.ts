@@ -122,7 +122,13 @@ describe('the JAR on Windows', () => {
     ).toBe(false);
   });
 
-  it('keeps ASCII arguments and an ASCII temporary folder on the command line on Windows', async () => {
+  it('keeps ASCII arguments and an ASCII temporary folder on the command line on Windows', async ({
+    skip,
+  }) => {
+    // The paths of this case are in the temporary folder of the system; they are ASCII only if it is.
+    if (!isAscii(testRoot)) {
+      skip('the temporary folder of this system has a non-ASCII path');
+    }
     const calls = captureSpawn();
     const temp = path.join(testRoot, 'temp');
     fs.mkdirSync(temp);
