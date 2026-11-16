@@ -70,7 +70,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  *   <li>The label is the text in the {@code Form} element; else the next element in the same parent,
  *       if its text is on the line of the control; else {@code Desc}. The label is not also a
  *       paragraph.</li>
- *   <li>{@code pb}, {@code tv}, the default mode, and the HTML and text outputs keep their output.</li>
+ *   <li>{@code pb}, {@code tv}, the default mode, and the HTML and text outputs keep their output: a
+ *       label from {@code Desc} is not text of the page, so they leave it out, also in a table cell.</li>
  * </ul>
  *
  * <p>The samples and the outputs stay in {@code target/test-samples/issue-929-*}.
@@ -157,6 +158,38 @@ class Issue929TaggedFormFieldsTest {
             .map(node -> node.path("content").asText())
             .collect(Collectors.toList());
         assertThat(paragraphs).contains("A paragraph further down");
+    }
+
+    @Test
+    void paragraphWithLinesAboveAndBelowTheControlStaysAParagraph() throws IOException {
+        Output output = convert("issue-929-lines-around", Issue929TaggedFormFieldsTest::writeLinesAroundControl, true);
+
+        String paragraphs = output.json.findParents("type").stream()
+            .filter(node -> "paragraph".equals(node.path("type").asText()))
+            .map(node -> node.path("content").asText())
+            .collect(Collectors.joining(" "));
+        assertThat(paragraphs).contains("Line above the box", "Line below the box");
+        assertThat(formFields(output.json)).noneMatch(field -> field.contains("Line above the box"));
+    }
+
+    @Test
+    void textOfATableCellLeavesOutALabelFromDesc() throws IOException {
+        String name = "issue-929-table-cell";
+        Path directory = TestSamples.emptyDirectory(name);
+        Path pdf = directory.resolve(name + ".pdf");
+        writeFieldInTableCell(pdf);
+        Config config = new Config();
+        config.setOutputFolder(directory.toString());
+        config.setGenerateJSON(false);
+        config.setGenerateHtml(true);
+        config.setGenerateText(true);
+        config.setUseStructTree(true);
+        DocumentProcessor.processFile(pdf.toString(), config);
+
+        for (String extension : new String[]{".html", ".txt"}) {
+            String output = Files.readString(directory.resolve(name + extension), StandardCharsets.UTF_8);
+            assertThat(output).as(name + extension).contains("Cell text").doesNotContain("Cell desc");
+        }
     }
 
     @Test
@@ -261,6 +294,37 @@ class Issue929TaggedFormFieldsTest {
             page.control(form, 737.17f, false, true);
             PDStructureElement paragraph = page.element(StandardStructureTypes.P, page.root);
             page.text(paragraph, 30, 680, "A paragraph further down");
+            page.save(pdf);
+        }
+    }
+
+    /**
+     * A check box with no text on its line. The next element is a paragraph with one line 10 pt above
+     * the box and one line 10 pt below it: the union of the two lines covers the box, no line does.
+     */
+    private static void writeLinesAroundControl(Path pdf) throws IOException {
+        try (TaggedPage page = new TaggedPage()) {
+            PDStructureElement form = page.element(StandardStructureTypes.FORM, page.root);
+            form.getCOSObject().setItem(COSName.A, splitAttributes(PDPrintFieldAttributeObject.ROLE_CB, "on", "Desc around"));
+            page.control(form, 737.17f, false, true);
+            PDStructureElement paragraph = page.element(StandardStructureTypes.P, page.root);
+            page.text(paragraph, LABEL_LEFT, 737.17f + CONTROL_SIZE + 10, "Line above the box");
+            page.text(paragraph, LABEL_LEFT, 737.17f - 10 - FONT_SIZE, "Line below the box");
+            page.save(pdf);
+        }
+    }
+
+    /** A one-row table: a check box with only Desc in the first cell, text in the second cell. */
+    private static void writeFieldInTableCell(Path pdf) throws IOException {
+        try (TaggedPage page = new TaggedPage()) {
+            PDStructureElement table = page.element(StandardStructureTypes.TABLE, page.root);
+            PDStructureElement row = page.element(StandardStructureTypes.TR, table);
+            PDStructureElement first = page.element(StandardStructureTypes.TD, row);
+            PDStructureElement form = page.element(StandardStructureTypes.FORM, first);
+            form.getCOSObject().setItem(COSName.A, splitAttributes(PDPrintFieldAttributeObject.ROLE_CB, "on", "Cell desc"));
+            page.control(form, 737.17f, false, true);
+            PDStructureElement second = page.element(StandardStructureTypes.TD, row);
+            page.text(second, 120, 737.17f + LABEL_RISE, "Cell text");
             page.save(pdf);
         }
     }

@@ -16,6 +16,7 @@ import org.verapdf.wcag.algorithms.entities.*;
 import org.verapdf.wcag.algorithms.entities.content.ImageChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextBlock;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
+import org.verapdf.wcag.algorithms.entities.content.TextColumn;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
 import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
@@ -275,7 +276,7 @@ public class TaggedDocumentProcessor {
         boolean labelOnPage = true;
         if (label == null) {
             INode next = getNextSibling(node, parent);
-            if (next != null && control != null && isOnLineOf(getBoundingBox(next, SemanticSpan.class), control)) {
+            if (next != null && control != null && hasTextLineOnLineOf(next, control)) {
                 formFieldLabels.add(next);
                 label = createLabel(getLabelContents(next));
             }
@@ -374,6 +375,28 @@ public class TaggedDocumentProcessor {
             }
         }
         return box;
+    }
+
+    /**
+     * True if a text line of the element is on the line of the control. Each line is checked alone: the
+     * lines above and below the control of a paragraph do not make it the label.
+     */
+    private static boolean hasTextLineOnLineOf(INode node, BoundingBox control) {
+        if (node instanceof SemanticSpan) {
+            for (TextColumn column : ((SemanticSpan) node).getColumns()) {
+                for (TextLine line : column.getLines()) {
+                    if (isOnLineOf(line.getBoundingBox(), control)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        for (INode child : node.getChildren()) {
+            if (hasTextLineOnLineOf(child, control)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** True if the text is on the page of the control and covers half of the height of the lower of the two. */

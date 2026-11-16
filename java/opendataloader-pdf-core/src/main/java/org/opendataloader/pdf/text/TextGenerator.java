@@ -118,8 +118,7 @@ public class TextGenerator implements Closeable {
     private void writeContents(List<IObject> contents, int indentLevel) throws IOException {
         boolean first = true;
         for (IObject content : contents) {
-            if (content instanceof SemanticFormField && !((SemanticFormField) content).isLabelOnPage()) {
-                // The label is the Desc attribute, not text of the page (#929).
+            if (isLabelFromDesc(content)) {
                 continue;
             }
             if (!first) {
@@ -208,7 +207,15 @@ public class TextGenerator implements Closeable {
         return builder.toString();
     }
 
+    /** True for a form field whose label is the Desc attribute, not text of the page (#929). */
+    private static boolean isLabelFromDesc(IObject content) {
+        return content instanceof SemanticFormField && !((SemanticFormField) content).isLabelOnPage();
+    }
+
     private String extractPlainText(IObject content) {
+        if (isLabelFromDesc(content)) {
+            return "";
+        }
         if (content instanceof SemanticHeaderOrFooter) {
             if (includeHeaderFooter) {
                 return collectPlainText(((SemanticHeaderOrFooter) content).getContents());
