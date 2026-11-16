@@ -52,9 +52,16 @@ const realPlatform = process.platform;
 let testRoot: string;
 let saved: Record<string, string | undefined>;
 
+// A -Djava.io.tmpdir in one of these makes the package add no option of its own.
+const JAVA_OPTION_VARS = ['JAVA_TOOL_OPTIONS', 'JDK_JAVA_OPTIONS', '_JAVA_OPTIONS'];
+
 beforeEach(() => {
   testRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'issue94-windows-'));
   saved = { TMPDIR: process.env.TMPDIR, TMP: process.env.TMP, TEMP: process.env.TEMP };
+  for (const name of JAVA_OPTION_VARS) {
+    saved[name] = process.env[name];
+    delete process.env[name];
+  }
 });
 
 afterEach(() => {
