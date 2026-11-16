@@ -222,14 +222,14 @@ public class TextLineProcessor {
      * other lines of a part are the lines just after the line in the contents that start where the part starts, end
      * before the next part, have one part, and are less than {@link #MIN_COLUMN_ROW_DISTANCE} font sizes below the
      * line before them. The line is a row of a table if another line, {@link #MIN_COLUMN_ROW_DISTANCE} to
-     * {@link #MAX_COLUMN_ROW_DISTANCE} font sizes above it or below its last other line, has a part that starts where
-     * the part starts and a later part at the place of the next part; one row of a form with a line below its left
-     * part is not a table. Then the row is split before the next part: the part and the parts before it stay in the
-     * place of the line, and the other parts follow the other lines of the cell as a line of their own, as when the
-     * page draws them last. The rest can have a wrapped cell too, when the page draws the other lines of each cell in
-     * turn, so it is checked in turn. A page that draws a row from the right draws its first column after the other
-     * lines of the cell: a line on the row just after them that ends before the first part goes before that part,
-     * with one space between them.
+     * {@link #MAX_COLUMN_ROW_DISTANCE} font sizes above it or below the lowest other line of its row, has a part that
+     * starts where the part starts and a later part at the place of the next part; one row of a form with a line
+     * below its left part is not a table. Then the row is split before the next part: the part and the parts before
+     * it stay in the place of the line, and the other parts follow the other lines of the cell as a line of their
+     * own, as when the page draws them last. The rest can have a wrapped cell too, when the page draws the other lines
+     * of each cell in turn, so it is checked in turn. A page that draws a row from the right draws its first column
+     * after the other lines of the cell: a line on the row just after them that ends before the first part goes
+     * before that part, with one space between them.
      */
     private static List<IObject> keepLinesOfWrappedCellsTogether(List<IObject> contents) {
         NavigableMap<Double, List<TextLine>> linesByBaseline = new TreeMap<>();
@@ -240,6 +240,8 @@ public class TextLineProcessor {
             }
         }
         List<IObject> newContents = new ArrayList<>(contents);
+        // The lowest baseline of the cells that an earlier split took from the row of each rest.
+        Map<TextLine, Double> bottomsOfRests = new IdentityHashMap<>();
         for (int i = 0; i < newContents.size(); i++) {
             if (!(newContents.get(i) instanceof TextLine)) {
                 continue;
@@ -258,7 +260,8 @@ public class TextLineProcessor {
                 last = (TextLine) newContents.get(end);
                 end++;
             }
-            if (part < 0 || !isRowOfATable(line, last, parts.get(part), parts.get(part + 1), linesByBaseline)) {
+            double bottom = Math.min(last.getBaseLine(), bottomsOfRests.getOrDefault(line, Double.POSITIVE_INFINITY));
+            if (part < 0 || !isRowOfATable(line, bottom, parts.get(part), parts.get(part + 1), linesByBaseline)) {
                 continue;
             }
             List<TextLine> split = splitAt(line, parts.get(part + 1)[0]);
@@ -277,6 +280,7 @@ public class TextLineProcessor {
             }
             newContents.set(i, row);
             newContents.add(end, split.get(1));
+            bottomsOfRests.put(split.get(1), bottom);
             // The rest can have a wrapped cell too, whose other lines follow it: check it next.
             i = end - 1;
         }
@@ -337,10 +341,11 @@ public class TextLineProcessor {
 
     /**
      * Whether another line is a row of the columns of the part and the next part: {@link #MIN_COLUMN_ROW_DISTANCE} to
-     * {@link #MAX_COLUMN_ROW_DISTANCE} font sizes above the line or below its last other line, with a part that starts
-     * where the part starts, and a later part that starts, ends, or has its middle where the next part does.
+     * {@link #MAX_COLUMN_ROW_DISTANCE} font sizes above the line or below the bottom, the lowest baseline of its row,
+     * with a part that starts where the part starts, and a later part that starts, ends, or has its middle where the
+     * next part does.
      */
-    private static boolean isRowOfATable(TextLine line, TextLine last, double[] part, double[] next,
+    private static boolean isRowOfATable(TextLine line, double bottom, double[] part, double[] next,
                                          NavigableMap<Double, List<TextLine>> linesByBaseline) {
         double fontSize = line.getFontSize();
         double alignment = MAX_LABEL_ALIGNMENT_DIFFERENCE * fontSize;
@@ -349,8 +354,7 @@ public class TextLineProcessor {
         List<TextLine> rows = new ArrayList<>();
         linesByBaseline.subMap(line.getBaseLine() + near, true, line.getBaseLine() + far, true).values()
             .forEach(rows::addAll);
-        linesByBaseline.subMap(last.getBaseLine() - far, true, last.getBaseLine() - near, true).values()
-            .forEach(rows::addAll);
+        linesByBaseline.subMap(bottom - far, true, bottom - near, true).values().forEach(rows::addAll);
         for (TextLine other : rows) {
             if (other.isHiddenText() != line.isHiddenText()) {
                 continue;
