@@ -431,12 +431,13 @@ Combine formats: `format="json,markdown"`
 
 | Field | Description |
 |-------|-------------|
-| `type` | Element type: heading, paragraph, table, list, image, caption, formula |
+| `type` | Element type: heading, paragraph, table, list, image, caption, formula, form field |
 | `id` | Unique identifier for cross-referencing |
 | `page number` | 1-indexed page reference |
 | `bounding box` | `[left, bottom, right, top]` in PDF points (72pt = 1 inch) |
 | `heading level` | Heading depth (1+) |
 | `content` | Extracted text |
+| `field role`, `checked` | Form field (tagged PDF with `--use-struct-tree`): `check box` or `radio button`; `on`, `off`, or `neutral` |
 
 [Full JSON Schema](https://opendataloader.org/docs/reference/json-schema)
 
@@ -444,7 +445,7 @@ Combine formats: `format="json,markdown"`
 
 ### Tagged PDF Support
 
-When a PDF has structure tags, OpenDataLoader extracts the **exact layout** the author intended — no guessing, no heuristics. Headings, lists, tables, and reading order are preserved from the source.
+When a PDF has structure tags, OpenDataLoader extracts the **exact layout** the author intended — no guessing, no heuristics. Headings, lists, tables, and reading order are preserved from the source. Printed check boxes and radio buttons (`Form` elements with `PrintField` attributes) become `form field` elements in JSON and task list items (`- [x]`, `- [ ]`) in Markdown.
 
 > **Output quality depends on tag quality.** Not all tagged PDFs are well-tagged. For PDFs with sparse or incorrect tags, the default heuristic mode or `--hybrid docling-fast` often produces better results.
 

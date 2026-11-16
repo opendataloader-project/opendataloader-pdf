@@ -17,6 +17,7 @@ package org.opendataloader.pdf.markdown;
 
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
+import org.opendataloader.pdf.entities.SemanticFormField;
 import org.opendataloader.pdf.entities.SemanticFormula;
 import org.opendataloader.pdf.entities.EnrichedImageChunk;
 import org.opendataloader.pdf.entities.SemanticPicture;
@@ -102,6 +103,9 @@ public class MarkdownGenerator implements Closeable {
      * Stands for an image in the text of a line until the text is escaped (#642). It is a noncharacter, which
      * Unicode keeps for internal use, so the text of a document does not have it.
      */
+    /** The GFM task list marker of a check box or a radio button that is on, and of one that is not (#929). */
+    private static final String TASK_CHECKED = "[x]";
+    private static final String TASK_UNCHECKED = "[ ]";
     private static final char INLINE_IMAGE = '\uFDD0';
     /**
      * An image in a line is at most this many times as high as the font size of the line. A line that is higher
@@ -310,6 +314,8 @@ public class MarkdownGenerator implements Closeable {
             writeFormula((SemanticFormula) object);
         } else if (object instanceof SemanticHeading) {
             writeHeading((SemanticHeading) object);
+        } else if (object instanceof SemanticFormField) {
+            writeFormField((SemanticFormField) object);
         } else if (object instanceof SemanticParagraph) {
             writeParagraph((SemanticParagraph) object);
         } else if (object instanceof SemanticTextNode) {
@@ -740,6 +746,18 @@ public class MarkdownGenerator implements Closeable {
 
     protected void writeParagraph(SemanticParagraph textNode) throws IOException {
         writeSemanticTextNode(textNode);
+    }
+
+    /** Writes a check box or a radio button as a GFM task list item: {@code - [x] label} or {@code - [ ] label}. */
+    protected void writeFormField(SemanticFormField field) throws IOException {
+        endOrderedList();
+        markdownWriter.write(MarkdownSyntax.LIST_ITEM);
+        markdownWriter.write(MarkdownSyntax.SPACE);
+        markdownWriter.write(field.isChecked() ? TASK_CHECKED : TASK_UNCHECKED);
+        markdownWriter.write(MarkdownSyntax.SPACE);
+        String label = endLink(GeneratorUtils.getTextFromTextNode(field, this::appendLine))
+            .replace(MarkdownSyntax.LINE_BREAK, MarkdownSyntax.SPACE);
+        markdownWriter.write(replaceInlineImages(getCorrectMarkdownString(label)));
     }
 
     protected void writeHeading(SemanticHeading heading) throws IOException {

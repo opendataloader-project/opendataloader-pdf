@@ -1,5 +1,6 @@
 package org.opendataloader.pdf.utils;
 
+import org.opendataloader.pdf.entities.SemanticFormField;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter;
 import org.verapdf.wcag.algorithms.entities.SemanticTextNode;
@@ -56,6 +57,12 @@ public class ContentSanitizer {
     }
 
     private void processObject(IObject obj) {
+        if (obj instanceof SemanticFormField) {
+            SemanticFormField field = (SemanticFormField) obj;
+            if (field.getDescription() != null) {
+                field.setDescription(sanitizeText(field.getDescription()));
+            }
+        }
         if (obj instanceof SemanticTextNode) {
             processSemanticTextNode((SemanticTextNode) obj);
         } else if (obj instanceof TextLine) {
@@ -108,6 +115,26 @@ public class ContentSanitizer {
                 }
             }
         }
+    }
+
+    /** The text with the replacements of the rules. Of two overlapping matches, the earlier and longer one. */
+    protected String sanitizeText(String text) {
+        List<ReplacementInfo> replacements = findAllReplacements(text);
+        if (replacements.isEmpty()) {
+            return text;
+        }
+        replacements.sort(Comparator.comparingInt((ReplacementInfo a) -> a.originalStart)
+            .thenComparing(Comparator.comparingInt((ReplacementInfo a) -> a.originalEnd).reversed()));
+        StringBuilder result = new StringBuilder();
+        int position = 0;
+        for (ReplacementInfo replacement : replacements) {
+            if (replacement.originalStart < position) {
+                continue;
+            }
+            result.append(text, position, replacement.originalStart).append(replacement.replacementText);
+            position = replacement.originalEnd;
+        }
+        return result.append(text.substring(position)).toString();
     }
 
     private void processTextLine(TextLine textLine) {

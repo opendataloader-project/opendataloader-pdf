@@ -16,6 +16,7 @@
 package org.opendataloader.pdf.text;
 
 import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.entities.SemanticFormField;
 import org.opendataloader.pdf.utils.FileUtils;
 import org.verapdf.wcag.algorithms.entities.*;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
@@ -115,11 +116,17 @@ public class TextGenerator implements Closeable {
     }
 
     private void writeContents(List<IObject> contents, int indentLevel) throws IOException {
-        for (int index = 0; index < contents.size(); index++) {
-            write(contents.get(index), indentLevel);
-            if (index < contents.size() - 1) {
+        boolean first = true;
+        for (IObject content : contents) {
+            if (content instanceof SemanticFormField && !((SemanticFormField) content).isLabelOnPage()) {
+                // The label is the Desc attribute, not text of the page (#929).
+                continue;
+            }
+            if (!first) {
                 textWriter.write(lineSeparator);
             }
+            write(content, indentLevel);
+            first = false;
         }
     }
 

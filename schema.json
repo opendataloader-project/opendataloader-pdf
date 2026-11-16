@@ -108,6 +108,7 @@
         { "$ref": "#/$defs/textBlock" },
         { "$ref": "#/$defs/list" },
         { "$ref": "#/$defs/image" },
+        { "$ref": "#/$defs/formField" },
         { "$ref": "#/$defs/headerFooter" }
       ]
     },
@@ -330,6 +331,37 @@
               "enum": ["png", "jpeg"]
             }
           }
+        }
+      ]
+    },
+    "formField": {
+      "allOf": [
+        { "$ref": "#/$defs/baseElement" },
+        {
+          "type": "object",
+          "description": "A label from the page has the text properties; a label from the Desc attribute has only content",
+          "properties": {
+            "type": { "const": "form field" },
+            "font": { "$ref": "#/$defs/textProperties/properties/font" },
+            "font size": { "$ref": "#/$defs/textProperties/properties/font size" },
+            "text color": { "$ref": "#/$defs/textProperties/properties/text color" },
+            "content": { "$ref": "#/$defs/textProperties/properties/content" },
+            "field role": {
+              "type": "string",
+              "description": "Role of the field",
+              "enum": ["check box", "radio button"]
+            },
+            "checked": {
+              "type": "string",
+              "description": "State of the field (off if the PDF gives no state)",
+              "enum": ["on", "off", "neutral"]
+            },
+            "description": {
+              "type": "string",
+              "description": "Desc attribute of the field"
+            }
+          },
+          "required": ["content", "field role", "checked"]
         }
       ]
     },

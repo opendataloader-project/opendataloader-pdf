@@ -17,6 +17,7 @@ package org.opendataloader.pdf.html;
 
 import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
+import org.opendataloader.pdf.entities.SemanticFormField;
 import org.opendataloader.pdf.entities.SemanticFormula;
 import org.opendataloader.pdf.entities.EnrichedImageChunk;
 import org.opendataloader.pdf.entities.SemanticPicture;
@@ -184,6 +185,9 @@ public class HtmlGenerator implements Closeable {
             writeFormula((SemanticFormula) object);
         } else if (object instanceof SemanticHeading) {
             writeHeading((SemanticHeading) object);
+        } else if (object instanceof SemanticFormField && !((SemanticFormField) object).isLabelOnPage()) {
+            // The label is the Desc attribute, not text of the page (#929).
+            return;
         } else if (object instanceof SemanticParagraph) {
             writeParagraph((SemanticParagraph) object);
         } else if (object instanceof SemanticTextNode) {
