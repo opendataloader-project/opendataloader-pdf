@@ -114,6 +114,37 @@ class Issue936WrappedCellColumnWordTest {
         assertCellsKeepTheirLines(document, ROWS_OF_THREE_LINES);
     }
 
+    /**
+     * A row with two wrapped cells, a name of three lines in the first column and a text of two lines in the second.
+     * The page draws the first lines of the row, then the other lines of the name, then the other line of the text:
+     * the lines of each cell stay together, and the result comes after them.
+     */
+    @Test
+    void twoWrappedCellsOfARowKeepTheirLines() throws IOException {
+        List<Line> lines = new ArrayList<>();
+        float row = TOP;
+        lines.add(new Line(NUMBER_X, row, "Item"));
+        lines.add(new Line(TEXT_X, row + FIRST_LINE_RISE, "Approve the plan of"));
+        lines.add(new Line(RESULT_X, row, "Accepted"));
+        lines.add(new Line(NUMBER_X, row - LINE_DISTANCE, "number"));
+        lines.add(new Line(NUMBER_X, row - 2 * LINE_DISTANCE, "one"));
+        lines.add(new Line(TEXT_X, row + FIRST_LINE_RISE - LINE_DISTANCE, "Pat Doe"));
+        row -= 2 * LINE_DISTANCE + LAST_LINE_TO_NEXT_ROW;
+        lines.add(new Line(NUMBER_X, row, "Next"));
+        lines.add(new Line(TEXT_X, row + FIRST_LINE_RISE, "Approve the budget"));
+        lines.add(new Line(RESULT_X, row, "Rejected"));
+        JsonNode document = convertJson("two-wrapped-cells", lines);
+
+        String text = documentText(document);
+        List<String> contents = contents(document);
+        assertTrue(contents.stream().anyMatch(content -> content.contains("Item number one"))
+                && contents.stream().anyMatch(content -> content.contains("Approve the plan of Pat Doe")),
+            SYMPTOM + " (the lines of a cell are not together): " + text);
+        int result = text.indexOf("Accepted");
+        assertTrue(result > text.indexOf("Pat Doe") && result < text.indexOf("Approve the budget"),
+            SYMPTOM + " (the result is not between the cells and the next row): " + text);
+    }
+
     /** Guard: the page draws the result after all the lines of the text. The base keeps this order. */
     @Test
     void wrappedCellsDrawnFromTheLeftStayInOrder() throws IOException {

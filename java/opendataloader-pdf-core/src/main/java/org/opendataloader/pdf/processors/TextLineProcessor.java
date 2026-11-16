@@ -226,9 +226,10 @@ public class TextLineProcessor {
      * the part starts and a later part at the place of the next part; one row of a form with a line below its left
      * part is not a table. Then the row is split before the next part: the part and the parts before it stay in the
      * place of the line, and the other parts follow the other lines of the cell as a line of their own, as when the
-     * page draws them last. A page that draws a row from the right draws its first column after the other lines of
-     * the cell: a line on the row just after them that ends before the first part goes before that part, with one
-     * space between them.
+     * page draws them last. The rest can have a wrapped cell too, when the page draws the other lines of each cell in
+     * turn, so it is checked in turn. A page that draws a row from the right draws its first column after the other
+     * lines of the cell: a line on the row just after them that ends before the first part goes before that part,
+     * with one space between them.
      */
     private static List<IObject> keepLinesOfWrappedCellsTogether(List<IObject> contents) {
         NavigableMap<Double, List<TextLine>> linesByBaseline = new TreeMap<>();
@@ -276,7 +277,8 @@ public class TextLineProcessor {
             }
             newContents.set(i, row);
             newContents.add(end, split.get(1));
-            i = end;
+            // The rest can have a wrapped cell too, whose other lines follow it: check it next.
+            i = end - 1;
         }
         return newContents;
     }
