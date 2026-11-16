@@ -72,6 +72,9 @@ public class JsonName {
     public static final String IMAGE_FORMAT = "format";
     public static final String FORMULA_TYPE = "formula";
     public static final String DESCRIPTION = "description";
+    public static final String FORM_FIELD_TYPE = "form field";
+    public static final String FIELD_ROLE = "field role";
+    public static final String CHECKED = "checked";
     public static final String ALT = "alt";
     public static final String ALT_SOURCE = "alt_source";
     public static final String AI_SCORE = "ai_score";

@@ -221,6 +221,20 @@ function generateJsonSchemaMdx() {
     ''
   );
 
+  // Form fields
+  lines.push(
+    '## Form fields',
+    '',
+    'With `--use-struct-tree`, a check box or a radio button of a tagged PDF (a `Form` element with `PrintField` attributes) is a `form field` element. Its `content` is the label. It also has the text properties, except when the label comes from the `Desc` attribute.',
+    '',
+    ...formatTable(['Field', 'Type', 'Required', 'Description'], [
+      ['`field role`', '`string`', 'Yes', '`check box` or `radio button`'],
+      ['`checked`', '`string`', 'Yes', '`on`, `off`, or `neutral` (`off` if the PDF gives no state)'],
+      ['`description`', '`string`', 'No', 'The `Desc` attribute of the field']
+    ]),
+    ''
+  );
+
   // Headers and footers
   lines.push(
     '## Headers and footers',

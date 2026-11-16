@@ -4,7 +4,10 @@ import org.opendataloader.pdf.api.Config;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.entities.EnrichedImageChunk;
 import org.opendataloader.pdf.entities.SemanticFootnote;
+import org.opendataloader.pdf.entities.SemanticFormField;
 import org.verapdf.as.ASAtom;
+import org.verapdf.cos.COSObjType;
+import org.verapdf.cos.COSObject;
 import org.verapdf.gf.model.impl.sa.GFSANode;
 import org.verapdf.gf.model.impl.sa.structelems.GFSAL;
 import org.verapdf.tools.AttributeHelper;
@@ -34,10 +37,24 @@ public class TaggedDocumentProcessor {
     private static Stack<List<IObject>> contentsStack = new Stack<>();
     private static Set<Integer> pagesToProcess;
     private static boolean ignoreArtifacts = false;
+    /** The elements that are the label of a form field, so they are not also a paragraph (#929). */
+    private static final Set<INode> formFieldLabels = Collections.newSetFromMap(new IdentityHashMap<>());
+    /** The next sibling of each child of the parents that have a form field, so each parent is read once. */
+    private static final Map<INode, INode> nextSiblings = new IdentityHashMap<>();
+    private static final Set<INode> parentsWithNextSiblings = Collections.newSetFromMap(new IdentityHashMap<>());
+    private static final ASAtom PRINT_FIELD = ASAtom.getASAtom(AttributeHelper.PRINT_FIELD);
+    private static final ASAtom ROLE = ASAtom.getASAtom("Role");
+    private static final ASAtom CHECKED = ASAtom.getASAtom("checked");
+    /** The PDF 2.0 spelling of {@code checked}. */
+    private static final ASAtom CHECKED_PDF_2_0 = ASAtom.getASAtom("Checked");
+    private static final ASAtom DESC = ASAtom.getASAtom("Desc");
 
     public static List<List<IObject>> processDocument(String inputPdfName, Config config, Set<Integer> pages) {
         pagesToProcess = pages;
         contentsStack.clear();
+        formFieldLabels.clear();
+        nextSiblings.clear();
+        parentsWithNextSiblings.clear();
         contents = new ArrayList<>();
         int totalPages = StaticContainers.getDocument().getNumberOfPages();
         for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
@@ -142,6 +159,9 @@ public class TaggedDocumentProcessor {
     }
 
     private static void processStructElem(INode node, INode parent) {
+        if (formFieldLabels.contains(node)) {
+            return;
+        }
         if (node instanceof SemanticFigure) {
             processImage((SemanticFigure) node, parent);
             return;
@@ -182,6 +202,13 @@ public class TaggedDocumentProcessor {
             case FENOTE:
                 processFootnote(node);
                 break;
+            case FORM:
+                if (!processFormField(node, parent)) {
+                    for (INode child : node.getChildren()) {
+                        processStructElem(child, node);
+                    }
+                }
+                break;
             default:
                 for (INode child : node.getChildren()) {
                     processStructElem(child, node);
@@ -218,6 +245,190 @@ public class TaggedDocumentProcessor {
             } else {
                 addObjectToContent(content);
             }
+        }
+        return ParagraphProcessor.createParagraphFromTextBlock(textBlock);
+    }
+
+    /**
+     * Adds a check box or a radio button: a {@code Form} element with a {@code PrintField} role
+     * {@code cb} or {@code rb} (#929). The label is the text in the element; else the next element in
+     * the same parent, if its text is on the line of the drawn control; else the {@code Desc} attribute.
+     *
+     * @return false for another {@code Form} element, which keeps its output
+     */
+    private static boolean processFormField(INode node, INode parent) {
+        String[] printField = getPrintField(node);
+        if (printField == null) {
+            return false;
+        }
+        String role = printField[0];
+        String checked = printField[1];
+        String description = printField[2];
+        BoundingBox control = getBoundingBox(node, SemanticFigure.class);
+        BoundingBox place = control != null ? control : getBoundingBox(node, SemanticSpan.class);
+        if (place == null) {
+            return false;
+        }
+        List<IObject> labelContents = new ArrayList<>();
+        processChildContents(node, labelContents);
+        SemanticParagraph label = createLabel(labelContents);
+        boolean labelOnPage = true;
+        if (label == null) {
+            INode next = getNextSibling(node, parent);
+            if (next != null && control != null && isOnLineOf(getBoundingBox(next, SemanticSpan.class), control)) {
+                formFieldLabels.add(next);
+                label = createLabel(getLabelContents(next));
+            }
+        }
+        if (label == null) {
+            TextChunk chunk = new TextChunk(new BoundingBox(place), description != null ? description : "",
+                place.getHeight(), place.getBottomY());
+            chunk.adjustSymbolEndsToBoundingBox(null);
+            TextBlock textBlock = new TextBlock(new MultiBoundingBox());
+            textBlock.add(new TextLine(chunk));
+            label = ParagraphProcessor.createParagraphFromTextBlock(textBlock);
+            labelOnPage = false;
+        }
+        SemanticFormField field = new SemanticFormField(label, role, checked, description, labelOnPage);
+        if (control != null && Objects.equals(control.getPageNumber(), field.getPageNumber())) {
+            field.getBoundingBox().union(control);
+        }
+        addObjectToContent(field);
+        return true;
+    }
+
+    /**
+     * Reads the {@code PrintField} attributes of the element: its role, its checked state, and its
+     * {@code Desc}. An attribute dictionary can hold one key or all keys. A missing checked state is
+     * {@code off}.
+     *
+     * @return the role, the checked state, and the description (or null), or null if the role is not
+     *     {@code cb} or {@code rb}
+     */
+    private static String[] getPrintField(INode node) {
+        if (!(node instanceof GFSANode)) {
+            return null;
+        }
+        COSObject attributes = ((GFSANode) node).getStructElem().getStructElemDictionary().getObject().getKey(ASAtom.A);
+        List<COSObject> dictionaries = new ArrayList<>();
+        if (attributes != null && attributes.getType() == COSObjType.COS_ARRAY) {
+            for (int i = 0; i < attributes.size(); i++) {
+                dictionaries.add(attributes.at(i));
+            }
+        } else if (attributes != null) {
+            dictionaries.add(attributes);
+        }
+        String role = null;
+        String checked = null;
+        String checkedPdf20 = null;
+        String description = null;
+        for (COSObject dictionary : dictionaries) {
+            if (dictionary == null || dictionary.getType() != COSObjType.COS_DICT
+                    || !PRINT_FIELD.equals(dictionary.getNameKey(ASAtom.O))) {
+                continue;
+            }
+            role = getTextValue(dictionary, ROLE, role);
+            checked = getTextValue(dictionary, CHECKED, checked);
+            checkedPdf20 = getTextValue(dictionary, CHECKED_PDF_2_0, checkedPdf20);
+            description = getTextValue(dictionary, DESC, description);
+        }
+        String fieldRole = "cb".equals(role) ? SemanticFormField.CHECK_BOX
+            : "rb".equals(role) ? SemanticFormField.RADIO_BUTTON : null;
+        if (fieldRole == null) {
+            return null;
+        }
+        String state = checkedPdf20 != null ? checkedPdf20 : checked;
+        if (!SemanticFormField.ON.equals(state) && !SemanticFormField.NEUTRAL.equals(state)) {
+            state = SemanticFormField.OFF;
+        }
+        return new String[]{fieldRole, state, description};
+    }
+
+    /** The value of a name or a text string key, or the given value if the key is missing. */
+    private static String getTextValue(COSObject dictionary, ASAtom key, String missing) {
+        COSObject value = dictionary.getKey(key);
+        if (value == null || value.empty()) {
+            return missing;
+        }
+        if (value.getType() == COSObjType.COS_NAME) {
+            return value.getName().getValue();
+        }
+        return value.getType() == COSObjType.COS_STRING ? value.getString() : missing;
+    }
+
+    /** The union of the boxes of the element and its descendants of the given kind, or null. */
+    private static BoundingBox getBoundingBox(INode node, Class<? extends INode> kind) {
+        BoundingBox box = null;
+        if (kind.isInstance(node)) {
+            box = new BoundingBox(node.getBoundingBox());
+        }
+        for (INode child : node.getChildren()) {
+            BoundingBox childBox = getBoundingBox(child, kind);
+            if (childBox == null) {
+                continue;
+            }
+            if (box == null) {
+                box = childBox;
+            } else if (Objects.equals(box.getPageNumber(), childBox.getPageNumber())) {
+                box.union(childBox);
+            }
+        }
+        return box;
+    }
+
+    /** True if the text is on the page of the control and covers half of the height of the lower of the two. */
+    private static boolean isOnLineOf(BoundingBox text, BoundingBox control) {
+        if (text == null || !Objects.equals(text.getPageNumber(), control.getPageNumber())) {
+            return false;
+        }
+        double overlap = Math.min(text.getTopY(), control.getTopY()) - Math.max(text.getBottomY(), control.getBottomY());
+        return overlap > 0 && overlap >= 0.5 * Math.min(text.getHeight(), control.getHeight());
+    }
+
+    /** The next element in the same parent if it is a text element (no type, {@code Span}, or {@code P}), or null. */
+    private static INode getNextSibling(INode node, INode parent) {
+        if (parent == null) {
+            return null;
+        }
+        if (parentsWithNextSiblings.add(parent)) {
+            List<INode> siblings = parent.getChildren();
+            for (int i = 0; i < siblings.size() - 1; i++) {
+                nextSiblings.put(siblings.get(i), siblings.get(i + 1));
+            }
+        }
+        INode next = nextSiblings.get(node);
+        if (next == null) {
+            return null;
+        }
+        SemanticType type = next.getInitialSemanticType();
+        return type == null || type == SemanticType.SPAN || type == SemanticType.PARAGRAPH ? next : null;
+    }
+
+    private static List<IObject> getLabelContents(INode label) {
+        if (label instanceof SemanticSpan) {
+            List<IObject> contents = new ArrayList<>();
+            contents.add(((SemanticSpan) label).getColumns().get(0).getFirstLine().getFirstTextChunk());
+            return contents;
+        }
+        return getContents(label);
+    }
+
+    /** A paragraph of the text lines of the contents, or null if they have no text. The other contents go to the page. */
+    private static SemanticParagraph createLabel(List<IObject> contents) {
+        TextBlock textBlock = new TextBlock(new MultiBoundingBox());
+        for (IObject content : TextLineProcessor.processTextLines(contents)) {
+            if (content instanceof TextLine) {
+                textBlock.add((TextLine) content);
+            } else {
+                addObjectToContent(content);
+            }
+        }
+        boolean hasText = false;
+        for (TextLine line : textBlock.getLines()) {
+            hasText |= !line.getValue().isBlank();
+        }
+        if (!hasText) {
+            return null;
         }
         return ParagraphProcessor.createParagraphFromTextBlock(textBlock);
     }
