@@ -26,6 +26,7 @@ import org.verapdf.pd.form.PDFormField;
 import org.verapdf.pd.images.PDXObject;
 import org.verapdf.pd.images.PDXForm;
 import org.verapdf.pd.PDResources;
+import org.verapdf.tools.AttributeHelper;
 import org.verapdf.tools.StaticResources;
 import org.verapdf.tools.TaggedPDFConstants;
 import org.verapdf.wcag.algorithms.entities.*;
@@ -1368,44 +1369,7 @@ public class AutoTaggingProcessor {
 
     public static void addAttributeToStructElem(COSObject structElement, ASAtom ownerASAtom, ASAtom attributeName,
                                                  COSObject attributeValue) {
-        COSObject aObject = structElement.getKey(ASAtom.A);
-        COSObject owner = COSName.construct(ownerASAtom);
-        if (aObject.empty()) {
-            aObject = COSDictionary.construct();
-            aObject.setKey(ASAtom.O, owner);
-            aObject.setKey(attributeName, attributeValue);
-        } else if (aObject.getType() == COSObjType.COS_DICT) {
-            COSObject ownerObject = aObject.getKey(ASAtom.O);
-            if (owner.equals(ownerObject)) {
-                aObject.setKey(attributeName, attributeValue);
-            } else {
-                COSObject previousADictionary = aObject;
-                aObject = COSArray.construct();
-                aObject.add(previousADictionary);
-                addAttributeDictionaryToArray(owner, attributeName, attributeValue, aObject);
-            }
-        } else if (aObject.getType() == COSObjType.COS_ARRAY) {
-            boolean isAttributeSet = false;
-            for (COSObject dictionary : (COSArray) aObject.getDirectBase()) {
-                if (owner.equals(dictionary.getKey(ASAtom.O))) {
-                    dictionary.setKey(attributeName, attributeValue);
-                    isAttributeSet = true;
-                    break;
-                }
-            }
-            if (!isAttributeSet) {
-                addAttributeDictionaryToArray(owner, attributeName, attributeValue, aObject);
-            }
-        }
-        structElement.setKey(ASAtom.A, aObject);
-    }
-
-    private static void addAttributeDictionaryToArray(COSObject owner, ASAtom attributeName, COSObject attributeValue,
-                                                      COSObject aObject) {
-        COSObject newADictionary = COSDictionary.construct();
-        newADictionary.setKey(ASAtom.O, owner);
-        newADictionary.setKey(attributeName, attributeValue);
-        aObject.add(newADictionary);
+        AttributeHelper.setAttributeValue(structElement, ownerASAtom, attributeName, attributeValue);
     }
 
     private static void processTextNode(SemanticTextNode textNode, COSObject cosObject) {
