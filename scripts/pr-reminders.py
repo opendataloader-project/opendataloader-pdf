@@ -15,8 +15,8 @@ Each reminder carries MARKER. A PR gets at most MAX_REMINDERS of them, at least
 REMIND_INTERVAL_DAYS apart; after that it is labeled STALE_LABEL instead.
 
 If neither holds, a PR whose last review decision by a user with write access
-requests changes, and whose author has not answered it (no push, no comment, no
-reply in a review thread), gets one reminder REVIEW_DAYS after the review.
+requests changes, and whose author has not answered it (no push, comment,
+review, or reply in a review thread), gets one reminder REVIEW_DAYS after the review.
 REVIEW_DAYS after that reminder, it is labeled STALE_LABEL: a maintainer can
 close it. This reminder carries REVIEW_MARKER and does not count toward
 MAX_REMINDERS.
@@ -144,7 +144,19 @@ def fetch_open_prs(repo):
         if threads.get("totalCount", 0) > len(threads["nodes"]) or any(
                 t["comments"].get("totalCount", 0) > len(t["comments"]["nodes"]) for t in threads["nodes"]):
             pr["reviewComments"] = fetch_all_review_comments(repo, pr["number"])
+            fill_cut_threads(threads["nodes"], pr["reviewComments"])
     return prs
+
+
+def fill_cut_threads(threads, comments):
+    """Give each thread that the query cut all its comments. A REST reply points to the first comment of its thread."""
+    roots = {c["url"]: c["id"] for c in comments if not c["replyTo"]}
+    for thread in threads:
+        nodes = thread["comments"]["nodes"]
+        if not nodes or thread["comments"].get("totalCount", 0) <= len(nodes) or nodes[0]["url"] not in roots:
+            continue
+        root = roots[nodes[0]["url"]]
+        thread["comments"]["nodes"] = [c for c in comments if root in (c["id"], c["replyTo"])]
 
 
 def rest_items(path):
@@ -168,9 +180,11 @@ def fetch_all_reviews(repo, number):
 
 
 def fetch_all_review_comments(repo, number):
-    """All comments in the review threads of a PR: only the time and the author."""
-    return [{"createdAt": c["created_at"], "author": {"login": rest_login(c.get("user"))}}
-            for c in rest_items(f"repos/{repo}/pulls/{number}/comments")]
+    """All comments in the review threads of a PR, oldest first, in the form of the query."""
+    comments = [{"id": c.get("id"), "replyTo": c.get("in_reply_to_id"), "url": c.get("html_url"),
+                 "createdAt": c["created_at"], "author": {"login": rest_login(c.get("user"))}, "body": c.get("body") or ""}
+                for c in rest_items(f"repos/{repo}/pulls/{number}/comments")]
+    return sorted(comments, key=lambda c: c["createdAt"])
 
 
 def fetch_all_comments(repo, number):
@@ -256,7 +270,7 @@ def unanswered_change_request(pr, maintainers):
     """The last review decision of a maintainer, if it requests changes and the author has not answered it.
 
     The author answers with a push (the head is no longer the reviewed commit),
-    a comment, or a reply in a review thread after the review.
+    a comment, a reply in a review thread, or a review after the review.
     """
     # Only the permission check counts here: an org member with read access is MEMBER too.
     author = login(pr)
@@ -273,8 +287,9 @@ def unanswered_change_request(pr, maintainers):
     replies = pr.get("reviewComments")  # set when the query cut the review threads
     if replies is None:
         replies = [c for t in pr["reviewThreads"]["nodes"] for c in t["comments"]["nodes"]]
-    answers = list(pr["comments"]["nodes"]) + replies
-    if any(login(c) == author and ts(c["createdAt"]) > reviewed for c in answers):
+    times = [c["createdAt"] for c in list(pr["comments"]["nodes"]) + replies if login(c) == author]
+    times += [r["submittedAt"] for r in pr["reviews"]["nodes"] if login(r) == author and r["submittedAt"]]
+    if any(ts(time) > reviewed for time in times):
         return None
     return last
 
