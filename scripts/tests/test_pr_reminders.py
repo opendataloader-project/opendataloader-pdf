@@ -4,6 +4,7 @@ Run from the repository root: python3 -m unittest discover -s scripts/tests
 """
 
 import importlib.util
+import json
 import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -170,6 +171,48 @@ class ReminderBudgetTest(unittest.TestCase):
         pull = pr(reviews=[review("COMMENTED", 16, reviewer=reminders.CODERABBIT, association="NONE")],
                   threads=[coderabbit_thread(16)], comments=[reminder(20), reminder(15, reminders.MARKER)])
         self.assertEqual([(1, "comment")], kinds(plan(pull)))
+
+
+class CutListsTest(unittest.TestCase):
+    """The query reads at most 50 reviews, 100 review threads, and 50 comments in each thread."""
+
+    def fetch(self, pull, rest):
+        # One GraphQL page with the PR, and the REST lists for the reviews and the review comments.
+        page = {"data": {"repository": {"pullRequests": {
+            "pageInfo": {"hasNextPage": False, "endCursor": None}, "nodes": [pull]}}}}
+
+        def fake_gh(*args, input=None):
+            if args[:2] == ("api", "graphql"):
+                return json.dumps(page)
+            path = args[2]
+            return "\n".join(json.dumps(item) for item in rest[path.rsplit("/", 1)[1]])
+
+        original = reminders.gh
+        reminders.gh = fake_gh
+        try:
+            return reminders.fetch_open_prs("o/r")
+        finally:
+            reminders.gh = original
+
+    def test_reads_all_reviews_when_the_query_cut_them(self):
+        later = [review("COMMENTED", 39 - n / 10) for n in range(50)]
+        pull = pr(reviews=later)
+        pull["reviews"]["totalCount"] = 51
+        prs = self.fetch(pull, {"reviews": [rest_review(r) for r in [review("CHANGES_REQUESTED", 40)] + later]})
+        self.assertEqual([(1, "comment")], kinds(plan(*prs)))
+
+    def test_reads_all_review_comments_when_the_query_cut_a_thread(self):
+        pull = pr(reviews=[review("CHANGES_REQUESTED", 70)], comments=[reminder(40)], threads=[coderabbit_thread(80)])
+        pull["reviewThreads"]["nodes"][0]["comments"]["totalCount"] = 51
+        prs = self.fetch(pull, {"comments": [{"created_at": at(35), "user": {"login": AUTHOR}}]})
+        self.assertEqual([], plan(*prs))
+
+
+def rest_review(node):
+    """A review of the GraphQL fixture as the REST API gives it."""
+    return {"state": node["state"], "html_url": node["url"], "submitted_at": node["submittedAt"],
+            "author_association": node["authorAssociation"], "commit_id": node["commit"]["oid"],
+            "user": {"login": node["author"]["login"], "type": node["author"]["__typename"]}}
 
 
 class MaintainerLoginsTest(unittest.TestCase):

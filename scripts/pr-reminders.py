@@ -90,11 +90,11 @@ query($owner: String!, $name: String!, $cursor: String) {
           oid
           status { contexts { context state } }
         } } }
-        reviewThreads(first: 100) { nodes {
+        reviewThreads(first: 100) { totalCount nodes {
           isResolved isOutdated
-          comments(first: 50) { nodes { url createdAt author { login } body } }
+          comments(first: 50) { totalCount nodes { url createdAt author { login } body } }
         } }
-        reviews(last: 50) { nodes {
+        reviews(last: 50) { totalCount nodes {
           state url submittedAt authorAssociation
           author { __typename login }
           commit { oid }
@@ -136,7 +136,41 @@ def fetch_open_prs(repo):
     for pr in prs:
         if pr["comments"]["totalCount"] > len(pr["comments"]["nodes"]):
             pr["comments"]["nodes"] = fetch_all_comments(repo, pr["number"])
+        # It keeps only the last 50 reviews; an older change request must count too.
+        if pr["reviews"].get("totalCount", 0) > len(pr["reviews"]["nodes"]):
+            pr["reviews"]["nodes"] = fetch_all_reviews(repo, pr["number"])
+        # It keeps only 100 review threads and 50 comments in each; a later reply of the author must count too.
+        threads = pr["reviewThreads"]
+        if threads.get("totalCount", 0) > len(threads["nodes"]) or any(
+                t["comments"].get("totalCount", 0) > len(t["comments"]["nodes"]) for t in threads["nodes"]):
+            pr["reviewComments"] = fetch_all_review_comments(repo, pr["number"])
     return prs
+
+
+def rest_items(path):
+    out = gh("api", "--paginate", path, "--jq", ".[]")
+    return [json.loads(line) for line in out.splitlines() if line]
+
+
+def rest_login(user):
+    return re.sub(r"\[bot\]$", "", (user or {}).get("login") or "")
+
+
+def fetch_all_reviews(repo, number):
+    """All reviews of a PR, in the form of the query."""
+    return [{
+        "state": r["state"], "url": r["html_url"], "submittedAt": r.get("submitted_at"),
+        "authorAssociation": r["author_association"],
+        "author": {"__typename": "Bot" if (r.get("user") or {}).get("type") == "Bot" else "User",
+                   "login": rest_login(r.get("user"))},
+        "commit": {"oid": r.get("commit_id")},
+    } for r in rest_items(f"repos/{repo}/pulls/{number}/reviews")]
+
+
+def fetch_all_review_comments(repo, number):
+    """All comments in the review threads of a PR: only the time and the author."""
+    return [{"createdAt": c["created_at"], "author": {"login": rest_login(c.get("user"))}}
+            for c in rest_items(f"repos/{repo}/pulls/{number}/comments")]
 
 
 def fetch_all_comments(repo, number):
@@ -236,8 +270,10 @@ def unanswered_change_request(pr, maintainers):
     if (last["commit"] or {}).get("oid") != pr["commits"]["nodes"][0]["commit"]["oid"]:
         return None
     reviewed = ts(last["submittedAt"])
-    answers = list(pr["comments"]["nodes"])
-    answers += [c for t in pr["reviewThreads"]["nodes"] for c in t["comments"]["nodes"]]
+    replies = pr.get("reviewComments")  # set when the query cut the review threads
+    if replies is None:
+        replies = [c for t in pr["reviewThreads"]["nodes"] for c in t["comments"]["nodes"]]
+    answers = list(pr["comments"]["nodes"]) + replies
     if any(login(c) == author and ts(c["createdAt"]) > reviewed for c in answers):
         return None
     return last
