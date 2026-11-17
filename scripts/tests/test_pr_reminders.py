@@ -108,6 +108,11 @@ class ChangesRequestedTest(unittest.TestCase):
     def test_a_reply_of_the_author_in_a_review_thread_is_an_answer(self):
         self.assertEqual([], plan(pr(reviews=[review("CHANGES_REQUESTED", 40)], threads=[thread(35)])))
 
+    def test_a_review_of_the_author_after_the_review_is_an_answer(self):
+        self.assertEqual([], plan(pr(reviews=[review("CHANGES_REQUESTED", 70),
+                                              review("COMMENTED", 35, reviewer=AUTHOR, association="CONTRIBUTOR")],
+                                     comments=[reminder(40)])))
+
     def test_labels_the_pull_request_30_days_after_the_reminder(self):
         actions = plan(pr(reviews=[review("CHANGES_REQUESTED", 60)], comments=[reminder(30)]))
         self.assertEqual([(1, "label", reminders.STALE_LABEL)], actions)
@@ -204,8 +209,27 @@ class CutListsTest(unittest.TestCase):
     def test_reads_all_review_comments_when_the_query_cut_a_thread(self):
         pull = pr(reviews=[review("CHANGES_REQUESTED", 70)], comments=[reminder(40)], threads=[coderabbit_thread(80)])
         pull["reviewThreads"]["nodes"][0]["comments"]["totalCount"] = 51
-        prs = self.fetch(pull, {"comments": [{"created_at": at(35), "user": {"login": AUTHOR}}]})
+        prs = self.fetch(pull, {"comments": [rest_comment(1, None, 80, reminders.CODERABBIT),
+                                             rest_comment(2, 1, 35, AUTHOR)]})
         self.assertEqual([], plan(*prs))
+
+    def test_reads_all_comments_of_a_cut_coderabbit_thread(self):
+        # 50 comments of a CodeRabbit thread come with the query; the reply of the author is the 51st.
+        first = coderabbit_thread(20)["comments"]["nodes"][0]
+        others = [{"url": f"u{n}", "createdAt": at(19), "author": {"login": "someone"}, "body": "+1"} for n in range(49)]
+        cut = {"isResolved": False, "isOutdated": False, "comments": {"totalCount": 51, "nodes": [first] + others}}
+        pull = pr(reviews=[review("COMMENTED", 20, reviewer=reminders.CODERABBIT, association="NONE")], threads=[cut])
+        self.assertEqual([(1, "comment")], kinds(plan(pull)))
+        rest = [rest_comment(1, None, 20, reminders.CODERABBIT, url=first["url"])]
+        rest += [rest_comment(10 + n, 1, 19, "someone") for n in range(49)] + [rest_comment(99, 1, 18, AUTHOR)]
+        prs = self.fetch(pull, {"comments": rest})
+        self.assertEqual([], plan(*prs))
+
+
+def rest_comment(number, reply_to, days_ago, who, url=None):
+    """A review comment as the REST API gives it. A reply points to the first comment of its thread."""
+    return {"id": number, "in_reply_to_id": reply_to, "html_url": url or f"https://github.com/o/r/pull/1#r{number}",
+            "created_at": at(days_ago), "user": {"login": who}, "body": "text"}
 
 
 def rest_review(node):
