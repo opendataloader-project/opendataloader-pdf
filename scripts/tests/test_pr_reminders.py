@@ -17,6 +17,7 @@ NOW = datetime(2026, 6, 1, tzinfo=timezone.utc)
 AUTHOR = "contributor"
 MAINTAINER = "maintainer"
 HEAD = "head-commit"
+REVIEW_MARKER = getattr(reminders, "REVIEW_MARKER", reminders.MARKER)
 
 
 def at(days_ago):
@@ -38,8 +39,8 @@ def comment(days_ago, who=AUTHOR, body="text", association="CONTRIBUTOR"):
     return {"createdAt": at(days_ago), "body": body, "authorAssociation": association, "author": {"login": who}}
 
 
-def reminder(days_ago):
-    return comment(days_ago, who=reminders.WORKFLOW_BOT, body="Hi\n" + reminders.MARKER, association="NONE")
+def reminder(days_ago, marker=REVIEW_MARKER):
+    return comment(days_ago, who=reminders.WORKFLOW_BOT, body="Hi\n" + marker, association="NONE")
 
 
 def pr(reviews=(), comments=(), threads=(), labels=(), cla="SUCCESS", head=HEAD, created=120):
@@ -69,19 +70,30 @@ def thread(days_ago, who=AUTHOR):
     ]}}
 
 
-def plan(*prs, maintainers=frozenset()):
+def coderabbit_thread(days_ago):
+    return {"isResolved": False, "isOutdated": False, "comments": {"nodes": [
+        {"url": "https://github.com/o/r/pull/1#discussion_r3", "createdAt": at(days_ago),
+         "author": {"login": reminders.CODERABBIT}, "body": "**Check the input**"},
+    ]}}
+
+
+def plan(*prs, maintainers=frozenset({MAINTAINER})):
     return reminders.plan(list(prs), NOW, maintainers)
+
+
+def kinds(actions):
+    return [(number, kind) for number, kind, _ in actions]
 
 
 class ChangesRequestedTest(unittest.TestCase):
 
     def test_reminds_the_author_30_days_after_a_change_request(self):
         actions = plan(pr(reviews=[review("CHANGES_REQUESTED", 30)]))
-        self.assertEqual([(1, "comment")], [(number, kind) for number, kind, _ in actions])
+        self.assertEqual([(1, "comment")], kinds(actions))
         body = actions[0][2]
         self.assertIn(f"@{AUTHOR}", body)
         self.assertIn("#pullrequestreview-30", body)
-        self.assertIn(reminders.MARKER, body)
+        self.assertIn(REVIEW_MARKER, body)
 
     def test_waits_before_30_days(self):
         self.assertEqual([], plan(pr(reviews=[review("CHANGES_REQUESTED", 29)])))
@@ -108,19 +120,24 @@ class ChangesRequestedTest(unittest.TestCase):
 
     def test_a_reminder_before_the_review_does_not_count(self):
         actions = plan(pr(reviews=[review("CHANGES_REQUESTED", 40)], comments=[reminder(50)]))
-        self.assertEqual([(1, "comment")], [(number, kind) for number, kind, _ in actions])
+        self.assertEqual([(1, "comment")], kinds(actions))
 
     def test_a_late_reminder_gives_the_author_30_days(self):
         # A review older than 60 days with no reminder yet (for example when the rule starts) gets the reminder first.
         actions = plan(pr(reviews=[review("CHANGES_REQUESTED", 90)]))
-        self.assertEqual([(1, "comment")], [(number, kind) for number, kind, _ in actions])
+        self.assertEqual([(1, "comment")], kinds(actions))
+
+    def test_a_cla_reminder_after_the_review_is_no_review_reminder(self):
+        # The CLA was signed after its reminder: the change request still needs its own reminder.
+        actions = plan(pr(reviews=[review("CHANGES_REQUESTED", 40)], comments=[reminder(37, reminders.MARKER)]))
+        self.assertEqual([(1, "comment")], kinds(actions))
 
     def test_a_later_approval_replaces_the_change_request(self):
         self.assertEqual([], plan(pr(reviews=[review("CHANGES_REQUESTED", 40), review("APPROVED", 35)])))
 
     def test_a_later_comment_review_keeps_the_change_request(self):
         actions = plan(pr(reviews=[review("CHANGES_REQUESTED", 40), review("COMMENTED", 35)]))
-        self.assertEqual([(1, "comment")], [(number, kind) for number, kind, _ in actions])
+        self.assertEqual([(1, "comment")], kinds(actions))
 
     def test_a_dismissed_review_is_no_change_request(self):
         self.assertEqual([], plan(pr(reviews=[review("DISMISSED", 40)])))
@@ -129,19 +146,30 @@ class ChangesRequestedTest(unittest.TestCase):
         self.assertEqual([], plan(pr(reviews=[review("CHANGES_REQUESTED", 40, reviewer="other",
                                                      association="CONTRIBUTOR")])))
 
+    def test_an_org_member_without_write_access_does_not_count(self):
+        self.assertEqual([], plan(pr(reviews=[review("CHANGES_REQUESTED", 40, reviewer="reader")])))
+        actions = plan(pr(reviews=[review("CHANGES_REQUESTED", 40), review("APPROVED", 35, reviewer="reader")]))
+        self.assertEqual([(1, "comment")], kinds(actions))
+
     def test_a_maintainer_with_a_private_membership_counts(self):
         # GITHUB_TOKEN reports a private member as CONTRIBUTOR; the permission check finds the maintainer.
-        pull = pr(reviews=[review("CHANGES_REQUESTED", 40, association="CONTRIBUTOR")])
-        self.assertEqual([], plan(pull))
-        actions = plan(pull, maintainers=frozenset({MAINTAINER}))
-        self.assertEqual([(1, "comment")], [(number, kind) for number, kind, _ in actions])
+        actions = plan(pr(reviews=[review("CHANGES_REQUESTED", 40, association="CONTRIBUTOR")]))
+        self.assertEqual([(1, "comment")], kinds(actions))
 
     def test_an_unsigned_cla_keeps_the_cla_reminder(self):
         actions = plan(pr(reviews=[review("CHANGES_REQUESTED", 40)], cla="PENDING"))
-        kinds = [(number, kind) for number, kind, _ in actions]
-        self.assertEqual([(1, "label"), (1, "comment")], kinds)
+        self.assertEqual([(1, "label"), (1, "comment")], kinds(actions))
         self.assertIn("CLA", actions[1][2])
         self.assertNotIn("#pullrequestreview-", actions[1][2])
+
+
+class ReminderBudgetTest(unittest.TestCase):
+
+    def test_a_review_reminder_does_not_use_the_cla_and_coderabbit_budget(self):
+        # One review reminder and one CodeRabbit reminder: the CodeRabbit rule may still send its second one.
+        pull = pr(reviews=[review("COMMENTED", 16, reviewer=reminders.CODERABBIT, association="NONE")],
+                  threads=[coderabbit_thread(16)], comments=[reminder(20), reminder(15, reminders.MARKER)])
+        self.assertEqual([(1, "comment")], kinds(plan(pull)))
 
 
 class MaintainerLoginsTest(unittest.TestCase):
