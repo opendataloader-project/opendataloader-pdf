@@ -21,13 +21,18 @@ import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.content.TextChunk;
 import org.verapdf.wcag.algorithms.entities.content.TextLine;
+import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
 import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.lists.ListItem;
 import org.verapdf.wcag.algorithms.entities.lists.PDFList;
+import org.verapdf.wcag.algorithms.entities.lists.TextListInterval;
+import org.verapdf.wcag.algorithms.entities.lists.info.ListItemTextInfo;
 import org.verapdf.wcag.algorithms.entities.maps.AccumulatedNodeMapper;
 import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ListLabelsUtils;
 
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
 
 public class ListProcessorTest {
@@ -145,5 +150,50 @@ public class ListProcessorTest {
             "Content should not be empty after processing");
         Assertions.assertTrue(contents.get(0).size() <= originalSize,
             "Content size should not exceed original size");
+    }
+
+    /**
+     * The list detection skips the comparison of two lines that cannot be items of one list. A skipped pair must be a
+     * pair that the comparison does not join, for each value of its flags.
+     */
+    @Test
+    public void testCanBeItemsOfOneListSkipsOnlyPairsThatDoNotJoin() {
+        StaticContainers.setIsDataLoader(true);
+        String[] lines = {"1. First", "2. Second", "3) Third", "10. Tenth", "11. Eleventh", "a) alpha", "b) beta",
+            "A. Upper", "B. Upper", "aa. double", "bb. double", "i. roman", "ii. roman", "iv. roman", "I. INTRODUCTION",
+            "II. METHOD", "V. RESULTS", "VI. CONCLUSION", "• bullet", "• next", "- dash", "* star",
+            "o option", "가. 항목", "나. 항목", "① circled", "② circled",
+            "(1) paren", "(2) paren", "[1] ref", "[2] ref", "Chapter 1", "Chapter 2", "The results show", "In this paper",
+            "Data were", "model accuracy", "vector x", "x = 1", "1", "2", "a", "b", "I", "V", ")"};
+        int skipped = 0;
+        for (String previous : lines) {
+            for (String current : lines) {
+                TextListInterval interval = new TextListInterval();
+                interval.getListItemsInfos().add(createInfo(0, previous));
+                if (ListProcessor.canBeItemsOfOneList(interval, createInfo(1, current), new IdentityHashMap<>())) {
+                    continue;
+                }
+                skipped++;
+                for (boolean isSequential : new boolean[]{false, true}) {
+                    for (boolean isUnordered : new boolean[]{false, true}) {
+                        TextListInterval freshInterval = new TextListInterval();
+                        freshInterval.getListItemsInfos().add(createInfo(0, previous));
+                        Assertions.assertFalse(ListLabelsUtils.isTwoListItemsOfOneList(freshInterval,
+                            createInfo(1, current), isSequential, isUnordered), previous + " -> " + current);
+                    }
+                }
+            }
+        }
+        Assertions.assertTrue(skipped > 0);
+        TextListInterval interval = new TextListInterval();
+        interval.getListItemsInfos().add(createInfo(0, "1. First"));
+        Assertions.assertTrue(ListProcessor.canBeItemsOfOneList(interval, createInfo(1, "2. Second"),
+            new IdentityHashMap<>()));
+    }
+
+    private static ListItemTextInfo createInfo(int index, String value) {
+        TextLine line = new TextLine(new TextChunk(new BoundingBox(0, 10.0, 30.0 - 10 * index, 20.0,
+            40.0 - 10 * index), value, 10, 30.0 - 10 * index));
+        return new ListItemTextInfo(index, SemanticType.PARAGRAPH, line, value, true);
     }
 }

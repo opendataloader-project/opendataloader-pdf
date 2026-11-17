@@ -39,6 +39,7 @@ import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ChunksMergeUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ListLabelsUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.ListUtils;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.NodeUtils;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.listLabelsDetection.ListLabelsDetectionAlgorithm;
 import org.verapdf.wcag.algorithms.semanticalgorithms.utils.listLabelsDetection.NumberingStyleNames;
 
 import java.util.*;
@@ -190,6 +191,7 @@ public class ListProcessor {
 
     private static List<TextListInterval> getTextLabelListIntervals(List<List<IObject>> contents, boolean isTableCell) {
         List<TextListInterval> listIntervals = new ArrayList<>();
+        Map<ListItemTextInfo, Integer> startLabels = new IdentityHashMap<>();
         for (List<IObject> pageContents : contents) {
             for (int i = 0; i < pageContents.size(); i++) {
                 IObject content = pageContents.get(i);
@@ -202,7 +204,7 @@ public class ListProcessor {
                     continue;
                 }
                 ListItemTextInfo listItemTextInfo = createListItemTextInfo(i, line, value);
-                processListItem(listIntervals, listItemTextInfo);
+                processListItem(listIntervals, listItemTextInfo, startLabels);
             }
         }
         LinkedHashSet<TextListInterval> intervalsList = new LinkedHashSet<>();
@@ -429,7 +431,8 @@ public class ListProcessor {
         return !chunk.isWhiteSpaceChunk() && !chunk.isEmpty() && chunk.getValue().codePoints().anyMatch(Character::isLetterOrDigit);
     }
 
-    private static void processListItem(List<TextListInterval> listIntervals, ListItemTextInfo listItemTextInfo) {
+    private static void processListItem(List<TextListInterval> listIntervals, ListItemTextInfo listItemTextInfo,
+                                        Map<ListItemTextInfo, Integer> startLabels) {
         double maxXGap = getMaxXGap(listItemTextInfo.getListItemValue().getFontSize());
         boolean isSingle = true;
         boolean shouldHaveSameLeft = false;
@@ -449,6 +452,7 @@ public class ListProcessor {
             boolean haveSameLeft = NodeUtils.areCloseNumbers(leftDifference, 0, maxXGap);
             try {
                 if (NodeUtils.areCloseNumbers(leftDifference, 0, 4 * maxXGap) &&
+                        canBeItemsOfOneList(interval, listItemTextInfo, startLabels) &&
                         ListLabelsUtils.isTwoListItemsOfOneList(interval, listItemTextInfo,
                                 !haveSameLeft, isUnordered)) {
                     listIntervals.add(interval);
@@ -484,6 +488,43 @@ public class ListProcessor {
             listInterval.getListItemsInfos().add(listItemTextInfo);
             listIntervals.add(listInterval);
         }
+    }
+
+    /**
+     * Whether {@link ListLabelsUtils#isTwoListItemsOfOneList} can join the item to the interval. It cannot if the
+     * interval is one line that no item joined yet (unknown numbering style), the two lines start with different
+     * characters, and no numbering style reads a label at the start of both lines. Then the item is not a bullet of
+     * the same kind, the lines have no common start, and no numbering style can number both of them. Each line is
+     * compared with the lines of up to {@link #MAX_LIST_INTERVAL_LOOKBACK} intervals, so the labels at the start of
+     * a line are read once, into {@code startLabels}, and not for each comparison.
+     */
+    static boolean canBeItemsOfOneList(TextListInterval interval, ListItemTextInfo listItemTextInfo,
+                                       Map<ListItemTextInfo, Integer> startLabels) {
+        if (!NumberingStyleNames.UNKNOWN.equals(interval.getNumberingStyle())) {
+            return true;
+        }
+        ListItemTextInfo previousInfo = interval.getLastListItemInfo();
+        String previous = previousInfo.getListItem();
+        String current = listItemTextInfo.getListItem();
+        if (previous.isEmpty() || current.isEmpty() || previous.charAt(0) == current.charAt(0)) {
+            return true;
+        }
+        int previousLabels = startLabels.computeIfAbsent(previousInfo, ListProcessor::getStartLabels);
+        return previousLabels != 0 &&
+            (previousLabels & startLabels.computeIfAbsent(listItemTextInfo, ListProcessor::getStartLabels)) != 0;
+    }
+
+    /** The numbering styles that read a label at the start of the line: one bit for each style. */
+    private static int getStartLabels(ListItemTextInfo info) {
+        int labels = 0;
+        int bit = 1;
+        for (ListLabelsDetectionAlgorithm algorithm : NumberingStyleNames.getMap().values()) {
+            if (algorithm.getListItemInfo(info, 0) != null) {
+                labels |= bit;
+            }
+            bit <<= 1;
+        }
+        return labels;
     }
 
     private static ListItemTextInfo createListItemTextInfo(int i, TextLine line, String value) {
