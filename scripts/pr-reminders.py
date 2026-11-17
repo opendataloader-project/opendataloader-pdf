@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Remind external contributors about unsigned CLAs and open CodeRabbit comments.
+"""Remind external contributors about unsigned CLAs, open CodeRabbit comments, and requested changes.
 
 Runs from .github/workflows/pr-reminders.yml. Talks to GitHub only through
 `gh api`, so it works locally with your own `gh` login and in Actions with
@@ -13,6 +13,11 @@ A PR gets a reminder when either holds:
 
 Each reminder carries MARKER. A PR gets at most MAX_REMINDERS of them, at least
 REMIND_INTERVAL_DAYS apart; after that it is labeled STALE_LABEL instead.
+
+If neither holds, a PR whose last review decision by a maintainer requests
+changes, and whose author has not answered it (no push, no comment, no reply in
+a review thread), gets one reminder REVIEW_DAYS after the review. REVIEW_DAYS
+after that reminder, it is labeled STALE_LABEL: a maintainer can close it.
 """
 
 import argparse
@@ -27,6 +32,7 @@ CLA_DAYS = 3
 CODERABBIT_DAYS = 7
 REMIND_INTERVAL_DAYS = 14
 MAX_REMINDERS = 2
+REVIEW_DAYS = 30
 
 CLA_CONTEXT = "license/cla"
 CODERABBIT = "coderabbitai"
@@ -39,10 +45,13 @@ STALE_LABEL = "stale"
 # Created on the first live run if missing: (color, description).
 LABELS = {
     CLA_LABEL: ("fbca04", "The author has not signed the CLA yet"),
-    STALE_LABEL: ("ededed", "No response after the maximum number of reminders"),
+    STALE_LABEL: ("ededed", "No response after the reminders"),
 }
 SKIP_ASSOCIATIONS = {"OWNER", "MEMBER", "COLLABORATOR"}
 MAINTAINER_PERMISSIONS = {"admin", "maintain", "write"}
+# Review states that decide a PR. A later COMMENTED review keeps the decision,
+# and a dismissed review has the state DISMISSED.
+DECISIONS = {"APPROVED", "CHANGES_REQUESTED"}
 
 FOOTER = "---\n<sub>🤖 This is an automated reminder and may contain mistakes.</sub>"
 CLA_TEXT = (
@@ -56,6 +65,12 @@ CODERABBIT_TEXT = (
     "automated reviewer and can be wrong. If you think a suggestion doesn't "
     "apply, just reply in the thread with your reasoning. That's a perfectly "
     "fine way to resolve it."
+)
+REVIEW_TEXT = (
+    "A maintainer requested changes in [this review]({url}). Are you still "
+    "working on this pull request? If you push the changes or reply here, we "
+    "will review it again. If there is no answer in the next {days} days, a "
+    "maintainer may close it. You can reopen it at any time."
 )
 
 QUERY = """
@@ -75,7 +90,11 @@ query($owner: String!, $name: String!, $cursor: String) {
           isResolved isOutdated
           comments(first: 50) { nodes { url createdAt author { login } body } }
         } }
-        reviews(last: 50) { nodes { submittedAt author { login } commit { oid } } }
+        reviews(last: 50) { nodes {
+          state url submittedAt authorAssociation
+          author { __typename login }
+          commit { oid }
+        } }
         comments(last: 100) { totalCount nodes { createdAt body authorAssociation author { login } } }
       }
     }
@@ -190,16 +209,68 @@ def build_body(author, cla, threads):
     return "\n\n".join(parts) + "\n"
 
 
+def build_review_body(author, url):
+    text = REVIEW_TEXT.format(url=url, days=REVIEW_DAYS)
+    return f"Hi @{author}, thanks for your contribution!\n\n{text}\n\n{FOOTER}\n{MARKER}\n"
+
+
+def unanswered_change_request(pr, maintainers):
+    """The last review decision of a maintainer, if it requests changes and the author has not answered it.
+
+    The author answers with a push (the head is no longer the reviewed commit),
+    a comment, or a reply in a review thread after the review.
+    """
+    author = login(pr)
+    decisions = [r for r in pr["reviews"]["nodes"]
+                 if r["submittedAt"] and r["state"] in DECISIONS and login(r) != author and is_maintainer(r, maintainers)]
+    if not decisions:
+        return None
+    last = max(decisions, key=lambda r: ts(r["submittedAt"]))
+    if last["state"] != "CHANGES_REQUESTED":
+        return None
+    if (last["commit"] or {}).get("oid") != pr["commits"]["nodes"][0]["commit"]["oid"]:
+        return None
+    reviewed = ts(last["submittedAt"])
+    answers = list(pr["comments"]["nodes"])
+    answers += [c for t in pr["reviewThreads"]["nodes"] for c in t["comments"]["nodes"]]
+    if any(login(c) == author and ts(c["createdAt"]) > reviewed for c in answers):
+        return None
+    return last
+
+
+def review_actions(pr, now, maintainers, labels):
+    """One reminder REVIEW_DAYS after an unanswered change request, the stale label REVIEW_DAYS after that."""
+    review = unanswered_change_request(pr, maintainers)
+    if not review:
+        return []
+    reviewed = ts(review["submittedAt"])
+    sent = [ts(c["createdAt"]) for c in pr["comments"]["nodes"] if is_reminder(c, maintainers)]
+    sent = [time for time in sent if time > reviewed]
+    if not sent:
+        if now - reviewed < timedelta(days=REVIEW_DAYS):
+            return []
+        return [(pr["number"], "comment", build_review_body(login(pr), review["url"]))]
+    if STALE_LABEL in labels or now - max(sent) < timedelta(days=REVIEW_DAYS):
+        return []
+    return [(pr["number"], "label", STALE_LABEL)]
+
+
+def logins_to_check(prs):
+    """The PR authors, the reminder authors, and the reviewers with a review decision."""
+    logins = {login(pr) for pr in prs if (pr.get("author") or {}).get("__typename") == "User"}
+    logins |= {login(c) for pr in prs for c in pr["comments"]["nodes"] if MARKER in c["body"] or MANUAL_FOOTER in c["body"]}
+    logins |= {login(r) for pr in prs for r in pr["reviews"]["nodes"]
+               if r["state"] in DECISIONS and (r.get("author") or {}).get("__typename") == "User"}
+    return logins - {"", WORKFLOW_BOT}
+
+
 def fetch_maintainers(repo, prs):
-    """Logins with write access among the PR authors and the reminder authors.
+    """Logins with write access among the PR authors, the reminder authors, and the reviewers.
 
     authorAssociation is not enough: a token that cannot see private org
     membership, like GITHUB_TOKEN, reports a private member as CONTRIBUTOR.
     """
-    logins = {login(pr) for pr in prs if (pr.get("author") or {}).get("__typename") == "User"}
-    logins |= {login(c) for pr in prs for c in pr["comments"]["nodes"] if MARKER in c["body"] or MANUAL_FOOTER in c["body"]}
-    logins -= {"", WORKFLOW_BOT}
-    return {name for name in logins if permission(repo, name) in MAINTAINER_PERMISSIONS}
+    return {name for name in logins_to_check(prs) if permission(repo, name) in MAINTAINER_PERMISSIONS}
 
 
 def permission(repo, name):
@@ -231,6 +302,7 @@ def plan(prs, now, maintainers=frozenset()):
             actions.append((pr["number"], "label", CLA_LABEL))
         threads = open_coderabbit_threads(pr, now)
         if not cla and not threads:
+            actions += review_actions(pr, now, maintainers, labels)
             continue
         sent = sorted(ts(c["createdAt"]) for c in pr["comments"]["nodes"] if is_reminder(c, maintainers))
         if len(sent) >= MAX_REMINDERS:

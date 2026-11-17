@@ -1,7 +1,7 @@
 # pr-reminders.yml
-# Reminds external contributors about an unsigned CLA or open CodeRabbit
-# comments, and keeps the needs-cla label in sync. Rules and thresholds live in
-# scripts/pr-reminders.py.
+# Reminds external contributors about an unsigned CLA, open CodeRabbit
+# comments, or requested changes, and keeps the needs-cla label in sync. Rules
+# and thresholds live in scripts/pr-reminders.py.
 #
 # Dry run by default: the planned comments and labels go to the job summary.
 # Set the repository variable PR_REMINDERS_LIVE=true to post them.
@@ -30,6 +30,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+
+      - name: Test the reminder rules
+        run: python3 -m unittest discover -s scripts/tests
 
       - name: Check open PRs
         env:
