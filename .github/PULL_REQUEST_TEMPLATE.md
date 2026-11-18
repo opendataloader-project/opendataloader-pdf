@@ -1,19 +1,42 @@
-<!-- Thank you for your contribution! -->
-
-<!-- STEPS TO FOLLOW:
-  1. Add a description of the changes (frequently the same as the commit description)
-  2. Enter the issue number next to "Resolves #" below (if there is no tracking issue resolved, **remove that section**)
-  3. Make sure the PR title follows the **Commit Message Formatting**: https://www.conventionalcommits.org/en/v1.0.0/#summary.
-  4. Follow the steps in the checklist below, starting with the **Commit Message Formatting**.
+<!--
+Title: use Conventional Commits, for example "fix(core): keep the rows of a split table in order".
+A squash merge uses the title as the commit message on main.
+Fix one problem in each pull request.
 -->
 
-<!-- Uncomment this section with the issue number if an issue is being resolved
+## Objective
+
+<!-- The problem for the user, and what is different after this change. -->
+
+## Approach
+
+<!-- How the change fixes the problem, and why you chose this way. -->
+
+## Evidence
+
+<!--
+The commands that you ran, and their results.
+If the output changes, show a short before and after.
+CI runs the tests and the benchmark again.
+-->
+
+## Review notes
+
+<!-- Optional: risks, open questions, and problems that you saw outside this change. -->
+
+## AI assistance
+
+<!-- If an AI tool helped, name the tool and the model, and say what you checked yourself. If no AI tool helped, remove this section. -->
+
 **Issue resolved by this Pull Request:**
 Resolves #
---->
 
 **Checklist:**
 
-- [ ] Documentation has been updated, if necessary.
-- [ ] Examples have been added, if necessary.
-- [ ] Tests have been added, if necessary.
+<!-- Remove each line that does not apply to this change. -->
+
+- [ ] Tests cover the change.
+- [ ] I ran `npm run sync`, because I changed CLI options.
+- [ ] No released option, option value, or public API is removed ([compatibility rules](https://github.com/opendataloader-project/opendataloader-pdf/blob/main/CONTRIBUTING.md#-compatibility-of-released-options)).
+- [ ] A maintainer agreed to this new option, default, output field, or dependency: <!-- link -->
+- [ ] The documentation is updated.

@@ -1,0 +1,96 @@
+name: Bug report
+description: A wrong result, an error, or a crash.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        We reproduce each bug before we fix it. For this, we need the exact command and, if possible, the document.
+        Do not attach a document that contains private or confidential data.
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened
+      description: The wrong output, the error message, or the crash. Paste the text, not a screenshot of the text.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+
+  - type: dropdown
+    id: interface
+    attributes:
+      label: How you run it
+      options:
+        - CLI (opendataloader-pdf)
+        - Python package (opendataloader-pdf)
+        - Node.js package (@opendataloader/pdf)
+        - Java library (opendataloader-pdf-core)
+        - MCP server (opendataloader-pdf-mcp)
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: "Python: `pip show opendataloader-pdf`. Node.js: `npm ls @opendataloader/pdf`. Java: the version in your pom.xml or build.gradle."
+      placeholder: "2.5.22"
+    validations:
+      required: true
+
+  - type: textarea
+    id: command
+    attributes:
+      label: Command or code
+      description: The exact command, or the smallest code that shows the problem. Include all options.
+      render: shell
+    validations:
+      required: true
+
+  - type: dropdown
+    id: hybrid
+    attributes:
+      label: Hybrid mode
+      options:
+        - "No"
+        - "Yes, local server (opendataloader-pdf-hybrid)"
+        - "Yes, remote server (--hybrid-url)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: document
+    attributes:
+      label: Document
+      description: |
+        Attach the PDF (drag it here), or a smaller PDF that shows the same problem.
+        If you cannot share it, describe it: the number of pages, scanned or digital, tagged or not, and the part that fails (for example, "a table that continues on the next page").
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      render: text
+      value: |
+        OS:
+        java -version:
+        Python or Node.js version:
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you submit
+      options:
+        - label: I searched the existing issues.
+        - label: The problem also occurs with the latest release.

@@ -148,13 +148,15 @@ Resolves #<N>
 
 **Checklist:**
 
-- [ ] Documentation has been updated, if necessary.
-- [ ] Examples have been added, if necessary.
-- [ ] Tests have been added, if necessary.
+- [ ] Tests cover the change.
+- [ ] I ran `npm run sync`, because I changed CLI options.
+- [ ] No released option, option value, or public API is removed ([compatibility rules](https://github.com/opendataloader-project/opendataloader-pdf/blob/main/CONTRIBUTING.md#-compatibility-of-released-options)).
+- [ ] A maintainer agreed to this new option, default, output field, or dependency: <link>
+- [ ] The documentation is updated.
 ```
 
-- If a checklist item is not necessary, tick it. Give the reason in the description.
-- A sub-issue draft uses the sections of `.github/ISSUE_TEMPLATE/bug_report.md`.
+- Remove each checklist line that does not apply to the change.
+- A sub-issue draft uses the field labels of `.github/ISSUE_TEMPLATE/bug_report.yml` as `###` headings, in the same order. An issue that the form makes has the same headings.
 - A fork clone: `--head` of `gh pr create` does not accept an organization as owner. For a fork that an organization owns, use `gh api "repos/$REPO/pulls" -f base=main -f head="<org>:<branch>" -f title='<title>' -F body=@"$WORK/pr.md"`.
 - **Test & Benchmark** runs for changes in `java/`, `python/`, `node/`, `scripts/`, `verification/`, `samples/`, `.github/workflows/`. **Skill Lint** and **Skill Smoke Test** run for `skills/odl-pdf/` and `skills/odl-pdf-maintenance/`. Other changes have no checks.
 - The CI benchmark does not run your jar (the `bench` gate does). It is not evidence.

@@ -1,0 +1,43 @@
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A new option, a new default, a new output field, or a new dependency needs a decision by the maintainers.
+        Describe the problem first. If you want to send a pull request, wait for that decision.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What you cannot do today, and why it is important for your work.
+    validations:
+      required: true
+
+  - type: textarea
+    id: today
+    attributes:
+      label: What you do today
+      description: Your workaround, if you have one.
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea
+      description: The behavior that you propose. A short example of the input and the output helps.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: Other solutions that you considered.
+
+  - type: dropdown
+    id: contribute
+    attributes:
+      label: Can you send a pull request after a decision?
+      options:
+        - "Yes"
+        - "Maybe"
+        - "No"
