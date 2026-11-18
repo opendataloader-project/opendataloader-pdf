@@ -17,7 +17,8 @@ Fix one problem in each pull request.
 <!--
 The commands that you ran, and their results.
 If the output changes, show a short before and after.
-If the change touches the code, CI runs the tests and the benchmark again.
+CI runs the tests and the benchmark again when the change touches a path in the `paths` filter of
+.github/workflows/test-benchmark.yml (for example java/, python/, or node/).
 -->
 
 ## Review notes
