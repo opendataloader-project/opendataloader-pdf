@@ -22,23 +22,27 @@ We appreciate various kinds of contributions, including but not limited to:
 
 If you have questions:
 
-1. Check the [README](./README.md) and
-   existing [issues](https://github.com/opendataloader-project/opendataloader-pdf/issues) first.
-2. If your question hasn't been addressed, open a new issue using the `Question` label.
+1. Check the [README](./README.md), the
+   existing [issues](https://github.com/opendataloader-project/opendataloader-pdf/issues), and
+   the [discussions](https://github.com/opendataloader-project/opendataloader-pdf/discussions) first.
+2. If your question has no answer, ask it
+   in [Discussions Q&A](https://github.com/opendataloader-project/opendataloader-pdf/discussions/categories/q-a).
 
 ---
 
 ## 🐛 How to Report Bugs
 
-When reporting a bug, please include the following:
+Use the **Bug report** issue form. We reproduce each bug before we fix it, so the form asks for:
 
-- A clear and descriptive title
-- Steps to reproduce the issue
-- Expected vs actual behavior
-- Environment info (OS, version, etc.)
-- Logs or screenshots if available
+- What happened, and what you expected
+- How you run it (CLI, Python, Node.js, Java, or the MCP server), and the version
+- The exact command or code, with all options
+- The document, or a description of it if you cannot share it
+- Your environment (OS, `java -version`)
 
-Use the **Bug Report** issue template when creating the issue.
+Do not attach a document that contains private or confidential data.
+
+To report a security issue, see [SECURITY.md](.github/SECURITY.md). Do not open a public issue for it.
 
 ---
 
@@ -46,9 +50,12 @@ Use the **Bug Report** issue template when creating the issue.
 
 To suggest a new feature:
 
-1. Search existing issues to avoid duplicates.
-2. If it's new, open a new issue using the **Feature Request** template.
-3. Describe your idea, use cases, and possible alternatives.
+1. Search the existing issues and discussions to avoid duplicates.
+2. Post your idea
+   in [Discussions Ideas](https://github.com/opendataloader-project/opendataloader-pdf/discussions/categories/ideas).
+   Describe the problem first, then your idea and the alternatives.
+3. A new option, a new default, a new output field, or a new dependency needs a decision by the maintainers. Wait for
+   that decision before you send a pull request.
 
 ---
 
@@ -72,7 +79,7 @@ To suggest a new feature:
 
 4. **Build** the project:
 
-   **Prerequisites:** Java 11+, Maven, Python 3.11+, uv, Node.js 24 (current active LTS), pnpm via `corepack enable pnpm`
+   **Prerequisites:** Java 17+ (the code targets Java 11, the tests need Java 17, and CI uses Java 21), Maven, Python 3.11+, uv, Node.js 24 (current active LTS), pnpm via `corepack enable pnpm`
 
    Node 24 and pnpm 11.21.0 are what CI builds against. Enabling Corepack once
    picks the pnpm version up from the `packageManager` field, so there is no
@@ -90,24 +97,46 @@ To suggest a new feature:
 
    > **Important**: If you modified any CLI options in Java, you **must** run `npm run sync` before committing. This regenerates `options.json` and all Python/Node.js bindings. Forgetting this silently breaks the wrappers.
 
-5. Make your changes and commit them.
+5. Make your changes, **test** them, and commit them:
+
+   ```bash
+   ./scripts/test-java.sh
+   ./scripts/test-python.sh
+   ./scripts/test-node.sh
+
+   # Or build and test all packages, as CI does
+   ./scripts/build-all.sh
+   ```
 6. **Push** your branch:
 
    ```bash
    git push origin my-feature
    ```
 
-7. **Open a Pull Request** (PR) against the `main` branch.
-8. Respond to review comments and update your PR as needed.
+7. **Open a Pull Request** (PR) against the `main` branch, and fill in the pull request template.
+8. Respond to review comments and update your PR as needed (see below).
+
+### After You Open a Pull Request
+
+- CodeRabbit reviews the pull request automatically. Answer each of its comments: change the code, or reply why not.
+- CI runs the tests and the benchmark.
+- A maintainer reviews the pull request.
+- If you are not a maintainer, a bot reminds you when the CLA is not signed after 3 days, or when a CodeRabbit
+  comment has no answer after 7 days. After 2 reminders, the pull request gets the `stale` label.
+- If a maintainer requests changes and you do not answer, a reminder comes after 30 days, and the `stale` label
+  30 days after that. A maintainer can close a pull request that has the `stale` label.
 
 ---
 
 ## 🧹 Coding Style & Guidelines
 
-- Follow existing code conventions.
-- Run linters/formatters before committing.
+- Follow existing code conventions and `.editorconfig`. Each new Java file starts with the header
+  in `LICENSE_TEMPLATE/license.txt`.
+- CI does not run a linter or a formatter. For Python, use `ruff` and `black` with the settings
+  in `python/opendataloader-pdf/pyproject.toml`. For Node.js, run `pnpm lint` in `node/opendataloader-pdf`.
 - Write unit tests for any new or changed logic.
-- Run `./scripts/bench.sh` before submitting a PR — CI will fail if benchmark scores drop below thresholds.
+- CI runs the benchmark (`./scripts/bench.sh`) on pull requests that change the code, and fails if the scores drop
+  below the thresholds. You can run it locally before you submit; it downloads the benchmark repository.
 - Keep your changes minimal and focused.
 - Do not add MDX files. `content/docs/reference/` is generated at release time
   and is not tracked.
@@ -122,17 +151,17 @@ Users run the CLI and the wrappers from scripts. A removed option or value break
 
 ## ✅ Commit Message Guidelines
 
-Use the following format:
+Use [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/#summary):
 
 ```
-<type> <short summary>
+<type>(<scope>): <short summary>
 ```
 
-### Common types:
+For example: `fix(core): look for the next row below the lowest line of a split row`.
 
-- Add: New feature
-- Fix: Bug fix
-- Update: Code update
+- Common types: `feat`, `fix`, `perf`, `refactor`, `test`, `docs`, `chore`, `ci`.
+- Use the same format for the pull request title. We merge by squash or by rebase, and a squash merge uses the title
+  as the commit message on `main`.
 
 ## 🤖 Agent Skill Maintenance
 
@@ -149,12 +178,9 @@ The `skills/odl-pdf-maintenance/` directory is developer-only and is **not** par
 
 ## 📝 CLA / DCO Requirements
 
-Depending on your contribution, we may ask you to sign:
-
-- CLA – Contributor License Agreement
-- DCO – Developer Certificate of Origin
-
-To sign the DCO, add `Signed-off-by` to your commit message:
+- **CLA (Contributor License Agreement):** on your first pull request, a bot asks you to sign the CLA. We can merge
+  your pull request only after you sign it.
+- **DCO (Developer Certificate of Origin):** to sign the DCO, add `Signed-off-by` to your commit message:
 
 ```
 git commit -s -m "your message"
@@ -163,4 +189,5 @@ git commit -s -m "your message"
 Make sure your Git config contains your real name and email.
 
 Thank you again for helping us improve this project! 🙌
-If you have any questions, open an issue or join the discussion.
+If you have any questions, ask them
+in [Discussions Q&A](https://github.com/opendataloader-project/opendataloader-pdf/discussions/categories/q-a).

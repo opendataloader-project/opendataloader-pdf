@@ -2,12 +2,12 @@
 
 ## Reporting a Vulnerability
 
-If you think you've identified a security issue in the project repository, please DO NOT report the issue publicly via
-the GitHub issue tracker, etc.
+If you think you have found a security issue in this project, do not report it in a public issue, discussion, or pull
+request.
 
-Instead, send an email with as many details as possible. This is a private mailing list for the maintainers team.
-
-Please do not create a public issue.
+Report it privately: open the **Security** tab of this repository and select **Report a vulnerability**, or go to
+https://github.com/opendataloader-project/opendataloader-pdf/security/advisories/new. Give as many details as possible.
+Only you and the maintainers can see the report.
 
 ### Security Vulnerability Response
 

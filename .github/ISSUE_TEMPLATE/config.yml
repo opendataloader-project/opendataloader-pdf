@@ -1,1 +1,11 @@
 blank_issues_enabled: false
+contact_links:
+  - name: Question
+    url: https://github.com/opendataloader-project/opendataloader-pdf/discussions/categories/q-a
+    about: Ask how to use OpenDataLoader PDF.
+  - name: Feature idea
+    url: https://github.com/opendataloader-project/opendataloader-pdf/discussions/categories/ideas
+    about: Suggest a new feature or a change of behavior. The maintainers decide on ideas there.
+  - name: Security vulnerability
+    url: https://github.com/opendataloader-project/opendataloader-pdf/security/advisories/new
+    about: Report it privately. Do not open a public issue.

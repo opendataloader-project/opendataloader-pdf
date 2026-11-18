@@ -1,0 +1,20 @@
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: What you want to do
+    validations:
+      required: true
+
+  - type: textarea
+    id: tried
+    attributes:
+      label: What you tried
+      description: The command or the code, and what happened.
+      render: shell
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: "Python: `pip show opendataloader-pdf`. Node.js: `npm ls @opendataloader/pdf`."
