@@ -139,7 +139,8 @@ To suggest a new feature:
   in `python/opendataloader-pdf/pyproject.toml`. For Node.js, run `pnpm lint` in `node/opendataloader-pdf`.
 - Write unit tests for any new or changed logic.
 - On the same pull requests, CI runs the benchmark (`./scripts/bench.sh`), and fails if the scores drop below the
-  thresholds. You can run it locally before you submit; it downloads the benchmark repository.
+  thresholds. To run it locally, build the Java package first (`./scripts/build-java.sh`): `bench.sh` uses the JAR
+  that is already in `java/opendataloader-pdf-cli/target`. It also downloads the benchmark repository.
 - Keep your changes minimal and focused.
 - Do not add MDX files. `content/docs/reference/` is generated at release time
   and is not tracked.
