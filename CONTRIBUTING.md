@@ -120,7 +120,9 @@ To suggest a new feature:
 ### After You Open a Pull Request
 
 - CodeRabbit reviews the pull request automatically. Answer each of its comments: change the code, or reply why not.
-- If the pull request changes the code, CI runs the tests and the benchmark.
+- If the pull request changes `java/`, `python/`, `node/`, `samples/`, `verification/`, or the build and benchmark
+  scripts, CI runs the tests and the benchmark. The `paths` filter in `.github/workflows/test-benchmark.yml` has the
+  full list. A change outside it (for example, `scripts/test-node.sh` or only the documentation) does not start them.
 - A maintainer reviews the pull request.
 - If you are not a maintainer, a bot reminds you when the CLA is not signed after 3 days, or when a CodeRabbit
   comment has no answer after 7 days. After 2 reminders, the pull request gets the `stale` label.
@@ -136,8 +138,8 @@ To suggest a new feature:
 - CI does not run a linter or a formatter. For Python, use `ruff` and `black` with the settings
   in `python/opendataloader-pdf/pyproject.toml`. For Node.js, run `pnpm lint` in `node/opendataloader-pdf`.
 - Write unit tests for any new or changed logic.
-- CI runs the benchmark (`./scripts/bench.sh`) on pull requests that change the code, and fails if the scores drop
-  below the thresholds. You can run it locally before you submit; it downloads the benchmark repository.
+- On the same pull requests, CI runs the benchmark (`./scripts/bench.sh`), and fails if the scores drop below the
+  thresholds. You can run it locally before you submit; it downloads the benchmark repository.
 - Keep your changes minimal and focused.
 - Do not add MDX files. `content/docs/reference/` is generated at release time
   and is not tracked.
