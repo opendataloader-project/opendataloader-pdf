@@ -17,7 +17,7 @@ Fix one problem in each pull request.
 <!--
 The commands that you ran, and their results.
 If the output changes, show a short before and after.
-CI runs the tests and the benchmark again.
+If the change touches the code, CI runs the tests and the benchmark again.
 -->
 
 ## Review notes

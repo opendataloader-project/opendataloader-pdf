@@ -100,12 +100,13 @@ To suggest a new feature:
 5. Make your changes, **test** them, and commit them:
 
    ```bash
-   ./scripts/test-java.sh
-   ./scripts/test-python.sh
-   ./scripts/test-node.sh
-
-   # Or build and test all packages, as CI does
+   # Build and test all packages, as CI does
    ./scripts/build-all.sh
+
+   # Or one package: each script builds the package and runs its tests
+   ./scripts/build-java.sh
+   ./scripts/build-python.sh   # installs the hybrid extra (several GB)
+   ./scripts/build-node.sh
    ```
 6. **Push** your branch:
 
@@ -119,7 +120,7 @@ To suggest a new feature:
 ### After You Open a Pull Request
 
 - CodeRabbit reviews the pull request automatically. Answer each of its comments: change the code, or reply why not.
-- CI runs the tests and the benchmark.
+- If the pull request changes the code, CI runs the tests and the benchmark.
 - A maintainer reviews the pull request.
 - If you are not a maintainer, a bot reminds you when the CLA is not signed after 3 days, or when a CodeRabbit
   comment has no answer after 7 days. After 2 reminders, the pull request gets the `stale` label.
