@@ -70,7 +70,11 @@ package = true
 # (beautifulsoup4 -> docling, hybrid extra) require 3.11.5. Without this, uv
 # adds a soupsieve 2.x fork for Python 3.11.0-3.11.4, and GHSA alerts flag it.
 # requires-python stays >=3.11: this changes the lock, not the package.
-environments = ["python_full_version >= '3.11.5'"]
+#
+# Emscripten is left out because torch (docling, hybrid extra) has no wheel for
+# it. uv 0.13 and later cannot resolve that fork, so every relock fails, and
+# the release relocks when it sets the version.
+environments = ["python_full_version >= '3.11.5' and sys_platform != 'emscripten'"]
 
 [tool.black]
 line-length = 100
