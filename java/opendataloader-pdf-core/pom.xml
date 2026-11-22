@@ -154,6 +154,16 @@
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp-jvm</artifactId>
         </dependency>
+        <!--
+          okhttp asks for an older kotlin-stdlib (see kotlin.version in
+          java/pom.xml). Declared here, so that the projects that use core get
+          kotlin.version too: the dependencyManagement of java/pom.xml alone
+          applies only to this build.
+        -->
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
