@@ -29,9 +29,9 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    # Explicit pass-through (least privilege) — only the 6 secrets preflight uses.
+    # Explicit pass-through (least privilege) — only the 5 secrets preflight uses.
+    # npm needs none: it publishes with trusted publishing (OIDC).
     secrets:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
       MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
       MAVEN_GPG_KEY: ${{ secrets.MAVEN_GPG_KEY }}
@@ -154,10 +154,13 @@ jobs:
 
       - name: '[Node.js] Publish to npm'
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-        run: pnpm publish --no-git-checks
+        # Trusted publishing: npm trades the OIDC token of this job (id-token:
+        # write) for a short-lived publish token, and adds provenance. npm, not
+        # pnpm, because npm documents it (11.5.1 or later; preflight checks the
+        # version). The package has no workspace: or catalog: versions and no
+        # lifecycle scripts, so npm packs the same files that pnpm did.
+        run: npm publish
         working-directory: ./node/opendataloader-pdf
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       # =================================================================
       # 5. GITHUB RELEASE (only on tag push)

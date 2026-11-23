@@ -6,7 +6,8 @@
 # (and risk a partial publish). This gates the release job via `needs`.
 #
 # Checks (auth-only — no publish, no dry-run):
-#   npm     : `npm whoami` with NODE_AUTH_TOKEN
+#   npm     : trusted publishing — trade a GitHub Actions OIDC token for a
+#             publish token, as `npm publish` does (no npm token is stored)
 #   maven   : Sonatype Central Portal /published (200 vs 401)
 #   gpg     : import key + sign+verify a dummy file with the passphrase
 #   github  : push permission for the homepage-sync PAT on the homepage repo
@@ -26,6 +27,11 @@ MAVEN_NS="org.opendataloader"
 MAVEN_NAME="opendataloader-pdf-core"
 MAVEN_PROBE_VERSION="0.0.0"          # any value; we only read 200-vs-401
 NPM_REGISTRY="https://registry.npmjs.org"
+NPM_AUDIENCE="npm:registry.npmjs.org"
+NPM_PACKAGE="@opendataloader/pdf"
+NPM_PACKAGE_ESCAPED="@opendataloader%2fpdf"  # the name in a registry URL
+NPM_MIN_VERSION="11.5.1"                     # the first npm with trusted publishing
+NPM_TRUSTED_WORKFLOW=".github/workflows/release.yml"  # as set on npmjs.com
 GH_REPO="opendataloader-project/opendataloader.org"
 PYPI_AUDIENCE="pypi"
 
@@ -45,17 +51,62 @@ require_env() {
   fi
 }
 
-# --- 1. npm -----------------------------------------------------------------
+# --- 1. npm (trusted publishing) --------------------------------------------
+# `npm publish` trades the OIDC token of the job for a short-lived publish token
+# (POST /-/npm/v1/oidc/token/exchange/package/<name>). When the exchange fails,
+# npm does not stop: it publishes without a token, and fails after Maven Central
+# and PyPI have published. So this check makes the same exchange first.
 check_npm() {
-  local label="npm (NPM_TOKEN)"
-  require_env NODE_AUTH_TOKEN || { fail "$label"; return; }
-  # npm reads NODE_AUTH_TOKEN from the env via the registry auth config that
-  # setup-node writes; whoami is a pure authenticated call, no publish.
-  if npm whoami --registry="$NPM_REGISTRY" >/dev/null 2>&1; then
-    pass "$label"
-  else
-    fail "$label"
+  local label="npm trusted publishing (${NPM_PACKAGE})"
+  require_env ACTIONS_ID_TOKEN_REQUEST_URL || { fail "$label (no id-token permission)"; return; }
+  require_env ACTIONS_ID_TOKEN_REQUEST_TOKEN || { fail "$label (no id-token permission)"; return; }
+
+  # setup-node of preflight and of the release job installs the same Node, so
+  # the same npm.
+  local version
+  version="$(npm --version 2>/dev/null || echo 0)"
+  if [ "$(printf '%s\n' "$NPM_MIN_VERSION" "$version" | sort -V | head -n1)" != "$NPM_MIN_VERSION" ]; then
+    fail "$label (npm $version; trusted publishing needs $NPM_MIN_VERSION or later)"
+    return
   fi
+
+  local id_token
+  id_token="$(curl -sS --config /dev/stdin \
+    "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=${NPM_AUDIENCE}" 2>/dev/null <<EOF | jq -r '.value // empty' 2>/dev/null || echo ""
+header = "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}"
+EOF
+)"
+  if [ -z "$id_token" ]; then
+    fail "$label (no OIDC token)"
+    return
+  fi
+  echo "::add-mask::$id_token"
+
+  # npm trusts only the workflow set on npmjs.com. When release.yml calls this
+  # workflow, GITHUB_WORKFLOW_REF names release.yml. Run on its own from the
+  # Actions tab, it names preflight.yml, and npm refuses the exchange.
+  case "${GITHUB_WORKFLOW_REF:-}" in
+    */"${NPM_TRUSTED_WORKFLOW}"@*) ;;
+    *)
+      pass "$label (OIDC token only; the exchange runs when release.yml calls preflight)"
+      return
+      ;;
+  esac
+
+  # The body holds the publish token: it goes to /dev/null, so it is not kept.
+  local code
+  code="$(curl -sS -o /dev/null -w '%{http_code}' -X POST --config /dev/stdin \
+    "${NPM_REGISTRY}/-/npm/v1/oidc/token/exchange/package/${NPM_PACKAGE_ESCAPED}" <<EOF || true
+header = "Authorization: Bearer ${id_token}"
+EOF
+)"
+  [ -z "$code" ] && code="000"
+
+  case "$code" in
+    2??) pass "$label" ;;
+    000|5??) fail "$label (HTTP $code — npm unreachable? not necessarily a configuration fault)" ;;
+    *) fail "$label (HTTP $code — the trusted publisher of the package on npmjs.com does not match this run)" ;;
+  esac
 }
 
 # --- 2. Maven Central (Sonatype Central Portal) -----------------------------
