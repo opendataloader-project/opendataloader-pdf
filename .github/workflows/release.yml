@@ -136,6 +136,41 @@ jobs:
       # =================================================================
       # 4. DEPLOY (only on tag push)
       # =================================================================
+      # The npm dist-tag, chosen before any deploy, so that "latest" stays on
+      # the highest stable release:
+      # - a prerelease (vN.N.N-suffix) goes to "next": npm refuses one without --tag.
+      # - a stable version not above the highest published stable version (a fix
+      #   of an older line) goes to "latest-N.N". An explicit --tag latest would
+      #   move "latest" back.
+      # - a higher stable version gets no --tag: npm puts it on "latest".
+      # The package is published already, so a failed lookup stops the release
+      # here, before Maven Central and PyPI.
+      - name: '[Node.js] Choose the npm dist-tag'
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        run: |
+          set -euo pipefail
+          tag=""
+          if [[ "$VERSION" == *-* ]]; then
+            tag=next
+          else
+            name="$(node -p 'require("./package.json").name')"
+            npm view "$name" versions --json > "$RUNNER_TEMP/npm-versions.json"
+            highest="$(node -e '
+              const v = [].concat(JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")));
+              console.log(v.filter((x) => !x.includes("-")).join("\n"));
+            ' "$RUNNER_TEMP/npm-versions.json" | sort -V | tail -n1)"
+            if [ -n "$highest" ]; then
+              top="$(printf '%s\n' "$highest" "$VERSION" | sort -V | tail -n1)"
+              if [ "$VERSION" = "$highest" ] || [ "$top" != "$VERSION" ]; then
+                tag="latest-${VERSION%.*}"
+              fi
+            fi
+            echo "highest published stable version: ${highest:-none}"
+          fi
+          echo "npm dist-tag for $VERSION: ${tag:-latest (no --tag)}"
+          echo "NPM_DIST_TAG=$tag" >> "$GITHUB_ENV"
+        working-directory: ./node/opendataloader-pdf
+
       - name: '[Java] Deploy to Maven Central'
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         run: mvn -B -pl opendataloader-pdf-core deploy -P release
@@ -159,23 +194,12 @@ jobs:
         # pnpm, because npm documents it (11.5.1 or later; preflight checks the
         # version). The package has no workspace: or catalog: versions and no
         # lifecycle scripts, so npm packs the same files that pnpm did.
-        # The dist-tag, so that "latest" stays on the highest stable release:
-        # - a prerelease (vN.N.N-suffix) goes to "next": npm refuses one without --tag.
-        # - a stable version below "latest" (a fix of an older line) goes to
-        #   "latest-N.N". An explicit --tag latest would move "latest" back.
-        # - else no --tag: npm puts the version on "latest", and refuses it if
-        #   a higher stable version is published.
+        # NPM_DIST_TAG comes from "Choose the npm dist-tag"; empty means no --tag.
         run: |
           set -euo pipefail
+          tag="${NPM_DIST_TAG?the dist-tag step did not run}"
           args=()
-          if [[ "$VERSION" == *-* ]]; then
-            args=(--tag next)
-          elif latest="$(npm view "$(node -p 'require("./package.json").name')" dist-tags.latest 2>/dev/null)" \
-              && [ -n "$latest" ] \
-              && [ "$(printf '%s\n' "$latest" "$VERSION" | sort -V | tail -n1)" != "$VERSION" ]; then
-            args=(--tag "latest-${VERSION%.*}")
-          fi
-          echo "npm publish ${args[*]:-(tag latest)} for $VERSION"
+          if [ -n "$tag" ]; then args=(--tag "$tag"); fi
           npm publish "${args[@]}"
         working-directory: ./node/opendataloader-pdf
 
