@@ -8,8 +8,6 @@ on:
   # — NOT `secrets: inherit`, which would hand preflight every repo secret).
   workflow_call:
     secrets:
-      NPM_TOKEN:
-        required: true
       MAVEN_CENTRAL_USERNAME:
         required: true
       MAVEN_CENTRAL_PASSWORD:
@@ -28,21 +26,20 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read    # checkout + GitHub repo read (homepage-sync PAT check)
-      id-token: write   # mint OIDC token for the PyPI check
+      id-token: write   # mint OIDC tokens for the npm and PyPI checks
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
 
+      # The Node of the release job, so the npm check sees the npm that publishes.
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
           node-version: '24'
-          registry-url: 'https://registry.npmjs.org'
 
       - name: Verify deploy credentials
         run: ./scripts/preflight.sh
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
           MAVEN_GPG_KEY: ${{ secrets.MAVEN_GPG_KEY }}
