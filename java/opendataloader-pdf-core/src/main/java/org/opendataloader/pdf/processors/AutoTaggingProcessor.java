@@ -814,17 +814,22 @@ public class AutoTaggingProcessor {
             structElement.setKey(ASAtom.ALT, contents);
         }
         annotationStructParents.put(annotation.getIntegerKey(ASAtom.STRUCT_PARENT).intValue(), structElement);
-        // Create OBJR pointing to the annotation
-        COSObject objr = COSDictionary.construct();
-        objr.setKey(ASAtom.TYPE, COSName.construct(ASAtom.OBJR));
-        objr.setKey(ASAtom.OBJ, annotation.getObject());
-        objr.setKey(ASAtom.PG, cosDocument.getPDDocument().getPages().get(pageNumber).getObject());
+        COSObject pageObject = cosDocument.getPDDocument().getPages().get(pageNumber).getObject();
+        COSObject objr = createAnnotationObjectReference(annotation.getObject(), pageObject);
         COSObject kArray = COSArray.construct();
         kArray.add(objr);
         structElement.setKey(ASAtom.K, kArray);
         if (streamInfos != null) {
             addMcidChildren(streamInfos, pageNumber, structElement);
         }
+    }
+
+    public static COSObject createAnnotationObjectReference(COSObject annotation, COSObject page) {
+        COSObject objr = COSDictionary.construct();
+        objr.setKey(ASAtom.TYPE, COSName.construct(ASAtom.OBJR));
+        objr.setKey(ASAtom.OBJ, annotation);
+        objr.setKey(ASAtom.PG, page);
+        return objr;
     }
 
     private static void updateDestinationsToStructureDestinations(PDDocument document, PDCatalog catalog, COSDocument cosDocument) {
