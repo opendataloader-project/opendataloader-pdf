@@ -159,7 +159,12 @@ jobs:
         # pnpm, because npm documents it (11.5.1 or later; preflight checks the
         # version). The package has no workspace: or catalog: versions and no
         # lifecycle scripts, so npm packs the same files that pnpm did.
-        run: npm publish
+        # npm refuses a prerelease version (vN.N.N-suffix) without --tag. It
+        # goes to "next", so "latest" stays on the last stable release.
+        run: |
+          set -euo pipefail
+          if [[ "$VERSION" == *-* ]]; then tag=next; else tag=latest; fi
+          npm publish --tag "$tag"
         working-directory: ./node/opendataloader-pdf
 
       # =================================================================
