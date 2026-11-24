@@ -25,12 +25,14 @@ import org.junit.jupiter.api.Test;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.entities.SemanticFormula;
 import org.opendataloader.pdf.entities.SemanticPicture;
+import org.opendataloader.pdf.entities.TableCellTextChunk;
 import org.opendataloader.pdf.hybrid.HybridClient.HybridResponse;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter;
 import org.verapdf.wcag.algorithms.entities.SemanticHeading;
 import org.verapdf.wcag.algorithms.entities.SemanticParagraph;
 import org.verapdf.wcag.algorithms.entities.enums.SemanticType;
+import org.verapdf.wcag.algorithms.entities.geometry.BoundingBox;
 import org.verapdf.wcag.algorithms.entities.tables.tableBorders.TableBorder;
 
 import java.util.HashMap;
@@ -881,6 +883,81 @@ public class DoclingSchemaTransformerTest {
         Assertions.assertTrue(pic1.hasDescription());
         Assertions.assertFalse(pic2.hasDescription());
         Assertions.assertTrue(pic3.hasDescription());
+    }
+
+    @Test
+    void testTableCellKeepsGridBoxAndRecordsDoclingTextBox() {
+        // 2x1 table, 300pt wide: the even split gives each cell 150pt. The label sits in the left
+        // cell's right half. The paragraph keeps the grid box (so json/markdown are unchanged); the
+        // box Docling gave the text is kept apart, for the tagged PDF.
+        TableBorder table = transformOneRowTable(true);
+        SemanticParagraph label = (SemanticParagraph) table.getRow(0).getCell(0).getContents().get(0);
+        Assertions.assertEquals(50.0, label.getBoundingBox().getLeftX(), 1e-6);
+        Assertions.assertEquals(200.0, label.getBoundingBox().getRightX(), 1e-6);
+        BoundingBox textBox = cellChunk(label).getTextBox();
+        // Page height 842, TOPLEFT t=100 b=112 -> bottom-left y 730..742
+        Assertions.assertEquals(80.0, textBox.getLeftX(), 1e-6);
+        Assertions.assertEquals(140.0, textBox.getRightX(), 1e-6);
+        Assertions.assertEquals(730.0, textBox.getBottomY(), 1e-6);
+        Assertions.assertEquals(742.0, textBox.getTopY(), 1e-6);
+    }
+
+    @Test
+    void testTableCellTextBoxFallsBackToGridBoxWithoutCellBox() {
+        TableBorder table = transformOneRowTable(false);
+        SemanticParagraph label = (SemanticParagraph) table.getRow(0).getCell(0).getContents().get(0);
+        BoundingBox textBox = cellChunk(label).getTextBox();
+        Assertions.assertEquals(50.0, textBox.getLeftX(), 1e-6);
+        Assertions.assertEquals(200.0, textBox.getRightX(), 1e-6);
+    }
+
+    @Test
+    void testTableCellTextBoxFallsBackToGridBoxForEmptyCellBox() {
+        // Docling gave the text a box with no width: not usable, so the grid box stands.
+        ObjectNode json = oneRowTableJson();
+        ObjectNode bbox = ((ObjectNode) json.get("tables").get(0).get("data").get("table_cells").get(0)).putObject("bbox");
+        bbox.put("l", 80.0);
+        bbox.put("r", 80.0);
+        bbox.put("t", 100.0);
+        bbox.put("b", 112.0);
+        bbox.put("coord_origin", "TOPLEFT");
+        TableBorder table = (TableBorder) transform(json).get(0).get(0);
+        SemanticParagraph label = (SemanticParagraph) table.getRow(0).getCell(0).getContents().get(0);
+        Assertions.assertEquals(50.0, cellChunk(label).getTextBox().getLeftX(), 1e-6);
+        Assertions.assertEquals(200.0, cellChunk(label).getTextBox().getRightX(), 1e-6);
+    }
+
+    private static TableCellTextChunk cellChunk(SemanticParagraph paragraph) {
+        return (TableCellTextChunk) paragraph.getFirstLine().getFirstTextChunk();
+    }
+
+    /** A 300pt-wide table of one row and two cells; the left cell has a Docling text box only if asked. */
+    private TableBorder transformOneRowTable(boolean withCellBox) {
+        ObjectNode json = oneRowTableJson();
+        if (withCellBox) {
+            ObjectNode bbox = ((ObjectNode) json.get("tables").get(0).get("data").get("table_cells").get(0)).putObject("bbox");
+            bbox.put("l", 80.0);
+            bbox.put("r", 140.0);
+            bbox.put("t", 100.0);
+            bbox.put("b", 112.0);
+            bbox.put("coord_origin", "TOPLEFT");
+        }
+        return (TableBorder) transform(json).get(0).get(0);
+    }
+
+    private ObjectNode oneRowTableJson() {
+        ObjectNode json = createDoclingDocument();
+        ObjectNode tableNode = json.putArray("tables").addObject();
+        tableNode.put("label", "table");
+        addProvenance(tableNode, 1, 50, 700, 350, 800);
+        ObjectNode data = tableNode.putObject("data");
+        ArrayNode row = data.putArray("grid").addArray();
+        row.addObject().put("text", "Label:");
+        row.addObject().put("text", "Value");
+        ArrayNode tableCells = data.putArray("table_cells");
+        addTableCell(tableCells, 0, 0, 1, 1, "Label:");
+        addTableCell(tableCells, 0, 1, 1, 1, "Value");
+        return json;
     }
 
     // Helper methods

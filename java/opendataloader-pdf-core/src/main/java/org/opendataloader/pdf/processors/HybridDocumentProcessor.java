@@ -22,6 +22,7 @@ import org.opendataloader.pdf.entities.DrawnTextChunk;
 import org.opendataloader.pdf.entities.EnrichedImageChunk;
 import org.opendataloader.pdf.entities.SemanticFormula;
 import org.opendataloader.pdf.entities.SemanticPicture;
+import org.opendataloader.pdf.entities.TableCellTextChunk;
 import org.opendataloader.pdf.hybrid.DoclingSchemaTransformer;
 import org.opendataloader.pdf.hybrid.ElementMetadata;
 import org.opendataloader.pdf.hybrid.HybridClient;
@@ -1229,11 +1230,23 @@ public class HybridDocumentProcessor {
         }
         forEachIObject(objects, obj -> {
             if (obj instanceof TextChunk && ((TextChunk) obj).getStreamInfos().isEmpty()
-                    && holdsJavaText(obj.getBoundingBox(), javaTextChunks, TEXT_MATCH_TOLERANCE)) {
+                    && holdsJavaText(drawnBox(obj), javaTextChunks, TEXT_MATCH_TOLERANCE)) {
                 over.add((TextChunk) obj);
             }
         });
         return over;
+    }
+
+    /**
+     * Where the page draws a chunk's text. A table cell's chunk keeps the cell's even-split box, so
+     * the backend's box for the text itself is used instead.
+     *
+     * @param chunk a chunk of backend text
+     * @return the box the backend gave a table cell's text, else the chunk's own box
+     */
+    private static BoundingBox drawnBox(IObject chunk) {
+        return chunk instanceof TableCellTextChunk
+            ? ((TableCellTextChunk) chunk).getTextBox() : chunk.getBoundingBox();
     }
 
     /**
