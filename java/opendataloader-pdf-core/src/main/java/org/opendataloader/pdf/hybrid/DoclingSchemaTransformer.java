@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.opendataloader.pdf.containers.StaticLayoutContainers;
 import org.opendataloader.pdf.entities.SemanticFormula;
 import org.opendataloader.pdf.entities.SemanticPicture;
+import org.opendataloader.pdf.entities.TableCellTextChunk;
 import org.opendataloader.pdf.hybrid.HybridClient.HybridResponse;
 import org.verapdf.wcag.algorithms.entities.IObject;
 import org.verapdf.wcag.algorithms.entities.SemanticHeaderOrFooter;
@@ -356,9 +357,19 @@ public class DoclingSchemaTransformer implements HybridSchemaTransformer {
      * Creates a SemanticParagraph from Docling text element.
      */
     private SemanticParagraph createParagraph(String text, BoundingBox bbox) {
-        // Create a text chunk and wrap in TextLine
         TextChunk textChunk = new TextChunk(bbox, text, 12.0, 12.0);
         textChunk.adjustSymbolEndsToBoundingBox(null);
+        return createParagraph(textChunk);
+    }
+
+    /**
+     * Creates a SemanticParagraph around a ready-made chunk, so a subclass such as
+     * {@link TableCellTextChunk} reaches the paragraph unchanged.
+     *
+     * @param textChunk the chunk to wrap
+     * @return the paragraph holding it as its only line
+     */
+    private SemanticParagraph createParagraph(TextChunk textChunk) {
         TextLine textLine = new TextLine(textChunk);
 
         // Create paragraph using default constructor and add content
@@ -568,7 +579,9 @@ public class DoclingSchemaTransformer implements HybridSchemaTransformer {
                 cell.setBoundingBox(new BoundingBox(pageIndex, cellLeft, cellBottom, cellRight, cellTop));
 
                 if (!cellText.isEmpty()) {
-                    SemanticParagraph content = createParagraph(cellText, cell.getBoundingBox());
+                    BoundingBox textBox = cellTextBox(cellNode, pageIndex, pageHeights.get(pageNo), cell.getBoundingBox());
+                    SemanticParagraph content = createParagraph(
+                        new TableCellTextChunk(cell.getBoundingBox(), cellText, textBox));
                     cell.addContentObject(content);
                 }
 
@@ -630,6 +643,27 @@ public class DoclingSchemaTransformer implements HybridSchemaTransformer {
         }
 
         return new BoundingBox(pageIndex, left, bottom, right, top);
+    }
+
+    /**
+     * The box Docling gave a cell's own text. The even-split box of the cell can lie over empty
+     * space when the text is drawn at the edge of a wide column, so the tagged PDF needs this box
+     * to tell whether the page already shows the text.
+     *
+     * @param cellNode   the Docling table cell, may be null
+     * @param pageIndex  zero-based page index
+     * @param pageHeight height of the page in points, used to flip a top-left box; may be null
+     * @param gridBox    the cell's even-split box, used when Docling gave no usable box
+     * @return the box Docling gave the text, or {@code gridBox}
+     */
+    private BoundingBox cellTextBox(JsonNode cellNode, int pageIndex, Double pageHeight, BoundingBox gridBox) {
+        JsonNode bboxNode = cellNode == null ? null : cellNode.get("bbox");
+        if (bboxNode == null || !bboxNode.isObject()) {
+            return gridBox;
+        }
+        BoundingBox box = extractBoundingBox(bboxNode, pageIndex, pageHeight);
+        boolean usable = box.getRightX() > box.getLeftX() && box.getTopY() > box.getBottomY();
+        return usable ? box : gridBox;
     }
 
     /**
