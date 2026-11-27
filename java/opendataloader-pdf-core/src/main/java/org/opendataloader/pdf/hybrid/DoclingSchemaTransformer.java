@@ -568,7 +568,13 @@ public class DoclingSchemaTransformer implements HybridSchemaTransformer {
                 cell.setBoundingBox(new BoundingBox(pageIndex, cellLeft, cellBottom, cellRight, cellTop));
 
                 if (!cellText.isEmpty()) {
-                    SemanticParagraph content = createParagraph(cellText, cell.getBoundingBox());
+                    // The text takes the box docling gives for the cell. The slot of an
+                    // even grid is not where the cell is when the columns have
+                    // different widths, and the stream words are matched by this box.
+                    BoundingBox ownBox = cellNode == null ? null
+                        : extractCellBox(cellNode.get("bbox"), pageIndex, pageHeights.get(pageNo));
+                    SemanticParagraph content = createParagraph(cellText,
+                        ownBox != null ? ownBox : cell.getBoundingBox());
                     cell.addContentObject(content);
                 }
 
@@ -588,6 +594,21 @@ public class DoclingSchemaTransformer implements HybridSchemaTransformer {
         }
 
         result.get(pageIndex).add(table);
+    }
+
+    /**
+     * Extracts the box of a table cell, or null when the cell has none: docling gives
+     * no box, or an empty one, for a cell it found no text position for.
+     */
+    private BoundingBox extractCellBox(JsonNode bboxNode, int pageIndex, Double pageHeight) {
+        if (bboxNode == null || !bboxNode.isObject()) {
+            return null;
+        }
+        BoundingBox box = extractBoundingBox(bboxNode, pageIndex, pageHeight);
+        if (box.getRightX() <= box.getLeftX() || box.getTopY() <= box.getBottomY()) {
+            return null;
+        }
+        return box;
     }
 
     /**

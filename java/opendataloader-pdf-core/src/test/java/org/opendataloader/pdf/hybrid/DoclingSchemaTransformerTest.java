@@ -324,6 +324,70 @@ public class DoclingSchemaTransformerTest {
     }
 
     @Test
+    void testTableCellTextTakesTheBoxOfItsCell() {
+        // 1x2 table of 300pt: a label column of 200pt and a number column of 100pt.
+        // The even grid puts the border at x=200; docling says it is at x=250.
+        TableBorder table = transformOneRowTable(true);
+
+        IObject label = table.getRow(0).getCell(0).getContents().get(0);
+        IObject number = table.getRow(0).getCell(1).getContents().get(0);
+        Assertions.assertEquals(50, label.getLeftX(), 0.01);
+        Assertions.assertEquals(250, label.getRightX(), 0.01);
+        Assertions.assertEquals(250, number.getLeftX(), 0.01);
+        Assertions.assertEquals(350, number.getRightX(), 0.01);
+        // TOPLEFT box on a page of 842pt: t=442, b=462
+        Assertions.assertEquals(400, label.getTopY(), 0.01);
+        Assertions.assertEquals(380, label.getBottomY(), 0.01);
+    }
+
+    @Test
+    void testTableCellTextWithoutABoxTakesItsGridSlot() {
+        TableBorder table = transformOneRowTable(false);
+
+        IObject label = table.getRow(0).getCell(0).getContents().get(0);
+        IObject number = table.getRow(0).getCell(1).getContents().get(0);
+        Assertions.assertEquals(50, label.getLeftX(), 0.01);
+        Assertions.assertEquals(200, label.getRightX(), 0.01);
+        Assertions.assertEquals(200, number.getLeftX(), 0.01);
+        Assertions.assertEquals(350, number.getRightX(), 0.01);
+    }
+
+    private TableBorder transformOneRowTable(boolean withCellBoxes) {
+        ObjectNode json = createDoclingDocument();
+        ObjectNode tableNode = json.putArray("tables").addObject();
+        tableNode.put("label", "table");
+        addProvenance(tableNode, 1, 50, 380, 350, 400);
+
+        ObjectNode data = tableNode.putObject("data");
+        ArrayNode row = data.putArray("grid").addArray();
+        row.addObject().put("text", "Production area");
+        row.addObject().put("text", "1,649");
+
+        ArrayNode tableCells = data.putArray("table_cells");
+        addTableCell(tableCells, 0, 0, 1, 1, "Production area");
+        addTableCell(tableCells, 0, 1, 1, 1, "1,649");
+        if (withCellBoxes) {
+            double[][] columns = {{50, 250}, {250, 350}};
+            for (int col = 0; col < columns.length; col++) {
+                ObjectNode bbox = ((ObjectNode) tableCells.get(col)).putObject("bbox");
+                bbox.put("l", columns[col][0]);
+                bbox.put("t", 442);
+                bbox.put("r", columns[col][1]);
+                bbox.put("b", 462);
+                bbox.put("coord_origin", "TOPLEFT");
+            }
+        } else {
+            // docling writes null for a cell it has no text position for
+            ((ObjectNode) tableCells.get(0)).putNull("bbox");
+        }
+
+        Map<Integer, Double> pageHeights = new HashMap<>();
+        pageHeights.put(1, 842.0);
+        List<List<IObject>> result = transformer.transform(new HybridResponse("", json, null), pageHeights);
+        return (TableBorder) result.get(0).get(0);
+    }
+
+    @Test
     void testTransformMultiplePages() {
         ObjectNode json = createDoclingDocument();
         ArrayNode texts = json.putArray("texts");

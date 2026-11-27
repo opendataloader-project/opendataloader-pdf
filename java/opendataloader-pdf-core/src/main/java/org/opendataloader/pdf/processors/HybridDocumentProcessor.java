@@ -1015,16 +1015,167 @@ public class HybridDocumentProcessor {
      * Replaces backend TextChunks with Java TextChunks that have StreamInfo.
      *
      * <p>Backend-generated TextChunks lack StreamInfo (needed for MCID/struct-tree).
-     * For each backend SemanticTextNode, we find Java TextChunks whose centers fall
-     * within the node's bbox and replace the backend TextChunk with the Java ones.
+     * Each Java TextChunk goes to the one backend text node (or list line) whose box
+     * holds it, and each node swaps its backend TextChunk for the Java ones it got.
      * This preserves the backend's structural decisions (heading/paragraph/reading order)
      * while using the Java TextChunks that carry StreamInfo.
+     *
+     * <p>All chunks are assigned before any node changes. Taking the chunks node by
+     * node, each node with a 5pt margin, gave a word to the first node that reached
+     * it: a table cell took the number of the cell next to it, and a heading took the
+     * first line of the paragraph below (#722).
      */
     private static Set<Integer> enrichTextStreamInfos(List<IObject> backendPage, List<TextChunk> javaTextChunks,
                                                       PagePaints paints) {
+        List<TextTarget> targets = new ArrayList<>();
+        collectTextTargets(backendPage, null, targets);
+
         Set<Integer> usedJavaIndices = new HashSet<>();
-        enrichTextStreamInfosRecursive(backendPage, javaTextChunks, usedJavaIndices, paints);
+        Map<Object, List<TextChunk>> chunksOfOwner = new IdentityHashMap<>();
+        for (int i = 0; i < javaTextChunks.size(); i++) {
+            TextChunk javaChunk = javaTextChunks.get(i);
+            if (javaChunk.getStreamInfos().isEmpty()) continue;
+            TextTarget target = targetOf(javaChunk, targets);
+            if (target != null) {
+                chunksOfOwner.computeIfAbsent(target.owner, k -> new ArrayList<>()).add(javaChunk);
+                usedJavaIndices.add(i);
+            }
+        }
+
+        enrichTextStreamInfosRecursive(backendPage, javaTextChunks, chunksOfOwner, paints);
         return usedJavaIndices;
+    }
+
+    /** How far outside a box the centre of a chunk may lie when no box holds it. */
+    private static final double MATCH_TOLERANCE = 5.0;
+
+    /**
+     * A backend text node or list line that takes Java TextChunks, with its box as the
+     * backend gave it. The box is a copy: the node's own box changes with its chunks.
+     */
+    private static final class TextTarget {
+        final Object owner;
+        final BoundingBox box;
+        /** For a text in a table cell, the slot of the cell in the grid of the table; else null. */
+        final BoundingBox slot;
+
+        TextTarget(Object owner, BoundingBox box, BoundingBox slot) {
+            this.owner = owner;
+            this.box = new BoundingBox(box);
+            this.slot = slot;
+        }
+    }
+
+    /**
+     * Collects the text nodes and list lines that take Java TextChunks, in reading
+     * order. Handles TableBorder cells, PDFList items, and their nested contents.
+     */
+    private static void collectTextTargets(List<IObject> objects, BoundingBox slot, List<TextTarget> targets) {
+        for (IObject obj : objects) {
+            if (obj instanceof SemanticFormula) {
+                continue;
+            }
+            if (obj instanceof SemanticTextNode) {
+                targets.add(new TextTarget(obj, obj.getBoundingBox(), slot));
+            } else if (obj instanceof TableBorder) {
+                TableBorder tableBorder = (TableBorder) obj;
+                for (int rowNumber = 0; rowNumber < tableBorder.getNumberOfRows(); rowNumber++) {
+                    TableBorderRow row = tableBorder.getRow(rowNumber);
+                    for (int colNumber = 0; colNumber < tableBorder.getNumberOfColumns(); colNumber++) {
+                        TableBorderCell cell = row.getCell(colNumber);
+                        if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
+                            collectTextTargets(cell.getContents(), cell.getBoundingBox(), targets);
+                        }
+                    }
+                }
+            } else if (obj instanceof PDFList) {
+                for (ListItem item : ((PDFList) obj).getListItems()) {
+                    for (TextLine line : item.getLines()) {
+                        if (lacksStreamInfo(line)) {
+                            targets.add(new TextTarget(line, line.getBoundingBox(), slot));
+                        }
+                    }
+                    collectTextTargets(item.getContents(), slot, targets);
+                }
+            }
+        }
+    }
+
+    /**
+     * Finds the node a Java TextChunk belongs to, or null.
+     *
+     * <ol>
+     *   <li>The node whose box holds the centre of the chunk. If several do, the one
+     *       that covers most of the chunk, then the first.</li>
+     *   <li>Else the nearest node whose box is within 5pt of the centre: a backend box
+     *       can be tighter than the glyphs.</li>
+     *   <li>Else the text of the table cell whose slot in the even grid is nearest
+     *       within 5pt, which is how every word was matched before: the backend put
+     *       the word in the box of no cell, and outside every node the tagger would
+     *       write it as /Artifact.</li>
+     * </ol>
+     */
+    private static TextTarget targetOf(TextChunk chunk, List<TextTarget> targets) {
+        double cx = chunk.getCenterX();
+        double cy = chunk.getCenterY();
+
+        TextTarget best = null;
+        double bestShare = -1;
+        for (TextTarget target : targets) {
+            if (holds(target.box, cx, cy, 0)) {
+                double share = sharedArea(target.box, chunk.getBoundingBox());
+                if (share > bestShare) {
+                    best = target;
+                    bestShare = share;
+                }
+            }
+        }
+        if (best != null) {
+            return best;
+        }
+
+        double bestDistance = Double.MAX_VALUE;
+        for (TextTarget target : targets) {
+            if (holds(target.box, cx, cy, MATCH_TOLERANCE)) {
+                double distance = distance(target.box, cx, cy);
+                if (distance < bestDistance) {
+                    best = target;
+                    bestDistance = distance;
+                }
+            }
+        }
+        if (best != null) {
+            return best;
+        }
+
+        for (TextTarget target : targets) {
+            if (target.slot != null && holds(target.slot, cx, cy, MATCH_TOLERANCE)) {
+                double distance = distance(target.slot, cx, cy);
+                if (distance < bestDistance) {
+                    best = target;
+                    bestDistance = distance;
+                }
+            }
+        }
+        return best;
+    }
+
+    private static boolean holds(BoundingBox box, double x, double y, double tol) {
+        return x >= box.getLeftX() - tol && x <= box.getRightX() + tol
+            && y >= box.getBottomY() - tol && y <= box.getTopY() + tol;
+    }
+
+    private static double sharedArea(BoundingBox a, BoundingBox b) {
+        double width = Math.min(a.getRightX(), b.getRightX()) - Math.max(a.getLeftX(), b.getLeftX());
+        double height = Math.min(a.getTopY(), b.getTopY()) - Math.max(a.getBottomY(), b.getBottomY());
+        return Math.max(0, width) * Math.max(0, height);
+    }
+
+    /** The distance from a point to a box; 0 inside the box. */
+    private static double distance(BoundingBox box, double x, double y) {
+        double dx = Math.max(Math.max(box.getLeftX() - x, x - box.getRightX()), 0);
+        double dy = Math.max(Math.max(box.getBottomY() - y, y - box.getTopY()), 0);
+        return Math.hypot(dx, dy);
     }
 
     /**
@@ -1068,18 +1219,20 @@ public class HybridDocumentProcessor {
 
     /**
      * Recursively walks the IObject tree and replaces TextChunks in SemanticTextNodes
-     * with Java TextChunks that carry StreamInfo. Handles TableBorder cells, PDFList items,
+     * with the Java TextChunks assigned to them. Handles TableBorder cells, PDFList items,
      * and any other container that holds nested IObjects.
      */
     private static void enrichTextStreamInfosRecursive(
-            List<IObject> objects, List<TextChunk> javaTextChunks, Set<Integer> usedJavaIndices, PagePaints paints) {
+            List<IObject> objects, List<TextChunk> javaTextChunks, Map<Object, List<TextChunk>> chunksOfOwner,
+            PagePaints paints) {
 
         for (IObject obj : objects) {
             if (obj instanceof SemanticFormula) {
                 // Formula inside table/list — enrich StreamInfos by bbox overlap
                 enrichSingleFormula((SemanticFormula) obj, javaTextChunks);
             } else if (obj instanceof SemanticTextNode) {
-                enrichSingleTextNode((SemanticTextNode) obj, javaTextChunks, usedJavaIndices, paints);
+                enrichSingleTextNode((SemanticTextNode) obj, chunksOfOwner.getOrDefault(obj, List.of()),
+                    javaTextChunks, paints);
             } else if (obj instanceof TableBorder) {
                 TableBorder table = (TableBorder) obj;
                 for (int rowNumber = 0; rowNumber < table.getNumberOfRows(); rowNumber++) {
@@ -1087,7 +1240,7 @@ public class HybridDocumentProcessor {
                     for (int colNumber = 0; colNumber < table.getNumberOfColumns(); colNumber++) {
                         TableBorderCell cell = row.getCell(colNumber);
                         if (cell.getRowNumber() == rowNumber && cell.getColNumber() == colNumber) {
-                            enrichTextStreamInfosRecursive(cell.getContents(), javaTextChunks, usedJavaIndices, paints);
+                            enrichTextStreamInfosRecursive(cell.getContents(), javaTextChunks, chunksOfOwner, paints);
                         }
                     }
                 }
@@ -1096,10 +1249,10 @@ public class HybridDocumentProcessor {
                 for (ListItem item : list.getListItems()) {
                     // Enrich ListItem's own text lines (used by AutoTaggingProcessor for Lbl/LBody)
                     for (TextLine line : item.getLines()) {
-                        replaceLineChunksWithJava(line, javaTextChunks, usedJavaIndices);
+                        replaceLineChunksWithJava(line, chunksOfOwner.getOrDefault(line, List.of()));
                     }
                     // Enrich nested contents (images, paragraphs, sub-lists)
-                    enrichTextStreamInfosRecursive(item.getContents(), javaTextChunks, usedJavaIndices, paints);
+                    enrichTextStreamInfosRecursive(item.getContents(), javaTextChunks, chunksOfOwner, paints);
                 }
             }
         }
@@ -1107,34 +1260,13 @@ public class HybridDocumentProcessor {
 
     /**
      * Replaces a single SemanticTextNode's TextChunks with the Java TextChunks
-     * drawn inside its bounding box, and records the text source in
+     * assigned to it, and records the text source in
      * ElementMetadata: "stream" when chunks matched, "outlines" when the page draws
      * the node's text as paths, "ocr-fallback" when nothing on the page matched.
      */
     private static void enrichSingleTextNode(
-            SemanticTextNode textNode, List<TextChunk> javaTextChunks, Set<Integer> usedJavaIndices,
+            SemanticTextNode textNode, List<TextChunk> matched, List<TextChunk> javaTextChunks,
             PagePaints paints) {
-
-        double nLeft = textNode.getLeftX();
-        double nRight = textNode.getRightX();
-        double nBottom = textNode.getBottomY();
-        double nTop = textNode.getTopY();
-
-        List<TextChunk> matched = new ArrayList<>();
-        double tol = 5.0;
-        for (int i = 0; i < javaTextChunks.size(); i++) {
-            if (usedJavaIndices.contains(i)) continue;
-            TextChunk javaChunk = javaTextChunks.get(i);
-            if (javaChunk.getStreamInfos().isEmpty()) continue;
-
-            double jCx = javaChunk.getCenterX();
-            double jCy = javaChunk.getCenterY();
-
-            if (jCx >= nLeft - tol && jCx <= nRight + tol && jCy >= nBottom - tol && jCy <= nTop + tol) {
-                matched.add(javaChunk);
-                usedJavaIndices.add(i);
-            }
-        }
 
         if (matched.isEmpty()) {
             // The text may be drawn as outlines: no text operator, a filled path per
@@ -1143,7 +1275,7 @@ public class HybridDocumentProcessor {
             // Real text in the box means the words are on the page as text, read
             // by a node that matched it: a path here is an underline or a bullet.
             List<StreamInfo> outlines = holdsJavaText(textNode.getBoundingBox(), javaTextChunks)
-                ? List.of() : paints.takeInside(textNode.getBoundingBox(), tol);
+                ? List.of() : paints.takeInside(textNode.getBoundingBox(), MATCH_TOLERANCE);
             String text = textNode.getValue();
             if (!outlines.isEmpty() && text != null && !text.isBlank()) {
                 DrawnTextChunk drawn = new DrawnTextChunk(new BoundingBox(textNode.getBoundingBox()), text);
@@ -1156,7 +1288,8 @@ public class HybridDocumentProcessor {
                 return;
             }
             LOGGER.fine(() -> "enrichSingleTextNode: no Java TextChunk matched for backend node at bbox ["
-                + String.format("%.1f,%.1f,%.1f,%.1f", nLeft, nBottom, nRight, nTop) + "]");
+                + String.format("%.1f,%.1f,%.1f,%.1f", textNode.getLeftX(), textNode.getBottomY(),
+                    textNode.getRightX(), textNode.getTopY()) + "]");
             recordTextSource(textNode, "ocr-fallback", null);
             return;
         }
@@ -1202,7 +1335,7 @@ public class HybridDocumentProcessor {
     }
 
     /**
-     * Swaps a list line's backend chunks for the Java chunks drawn inside it.
+     * Swaps a list line's backend chunks for the Java chunks assigned to it.
      *
      * <p>Two things were wrong with matching each backend chunk to one Java chunk
      * by centre proximity. A backend chunk is a whole OCR line while a Java chunk
@@ -1222,51 +1355,23 @@ public class HybridDocumentProcessor {
      * {@link #enrichSingleTextNode} already does for paragraphs. That asymmetry
      * between paragraphs and lists was the defect.
      */
-    private static void replaceLineChunksWithJava(
-            TextLine line, List<TextChunk> javaTextChunks, Set<Integer> usedJavaIndices) {
-        if (line.getTextChunks().isEmpty()) {
-            return;
-        }
-        // Already carrying stream provenance: nothing to recover.
-        boolean allHaveStreamInfo = true;
-        for (TextChunk c : line.getTextChunks()) {
-            if (c.getStreamInfos().isEmpty()) {
-                allHaveStreamInfo = false;
-                break;
-            }
-        }
-        if (allHaveStreamInfo) {
-            return;
-        }
-
-        double lLeft = line.getLeftX();
-        double lRight = line.getRightX();
-        double lBottom = line.getBottomY();
-        double lTop = line.getTopY();
-        double tol = 5.0;
-
-        List<TextChunk> matched = new ArrayList<>();
-        List<Integer> matchedIndices = new ArrayList<>();
-        for (int i = 0; i < javaTextChunks.size(); i++) {
-            if (usedJavaIndices.contains(i)) continue;
-            TextChunk javaChunk = javaTextChunks.get(i);
-            if (javaChunk.getStreamInfos().isEmpty()) continue;
-            double jCx = javaChunk.getCenterX();
-            double jCy = javaChunk.getCenterY();
-            if (jCx >= lLeft - tol && jCx <= lRight + tol
-                    && jCy >= lBottom - tol && jCy <= lTop + tol) {
-                matched.add(javaChunk);
-                matchedIndices.add(i);
-            }
-        }
+    private static void replaceLineChunksWithJava(TextLine line, List<TextChunk> matched) {
         if (matched.isEmpty()) {
             LOGGER.fine(() -> "replaceLineChunksWithJava: no Java TextChunk inside list line");
             return;
         }
-
         line.getTextChunks().clear();
         line.getTextChunks().addAll(matched);
-        usedJavaIndices.addAll(matchedIndices);
+    }
+
+    /** Whether a list line has a chunk without stream provenance, so has something to recover. */
+    private static boolean lacksStreamInfo(TextLine line) {
+        for (TextChunk c : line.getTextChunks()) {
+            if (c.getStreamInfos().isEmpty()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
